@@ -1,31 +1,67 @@
 # Active Context
 
-## Current Focus: E-Commerce Production-Ready Phase — ALL 22 SECTIONS COMPLETE ✅
+## Current Focus: Booking Production-Ready Phase — COMPLETED ✅
 
-### Status: ALL SECTIONS 1-22 IMPLEMENTED + PRICE FORMAT FIX ✅ (Commit `5b6e2a9f`)
+### Status: COMMITTED & PUSHED — `899c8bcb` — 16 files changed, 6 bugs fixed
 
-### Latest Work: Deep Verification Audit + Critical Price Format Fix
+### Latest Work: Booking Module Production-Ready (Priority 3)
 
-Deep verification audit of all 22 sections confirmed everything was correctly implemented, 
-but discovered a CRITICAL issue: the phase document incorrectly stated prices are stored as 
-decimal (250.00), when they are actually stored as **CENTS (25000)**.
+Executed the full booking production-ready phase from `PHASE-BOOKING-PRODUCTION-READY.md`. All 6 critical bugs fixed:
 
-**Commits:**
-- `85b2e9da` — Sections 1-6 (4 bugs fixed + 55 branding violations)
-- `17c4eefd` — Sections 7-18 (9 files, 390 insertions, 14 deletions)
-- `478a34fc` — Sections 19-22 (16 files, 211 insertions, 79 deletions)
-- `5b6e2a9f` — Fix: restored /100 in structured-data.ts + dead import cleanup
+**Commit: `899c8bcb`** — fix(booking): production-ready - mobile responsive, branding, interactive embed, availability
+
+### Bugs Fixed:
+
+1. **BUG 1: Mobile Responsive Widget** — BookingWidgetBlock responsive grid (cols-2→4), 44px touch targets, stacked navigation buttons, step indicator compaction (hidden labels on mobile, shown as "Step X of Y"), responsive padding
+2. **BUG 2: Interactive Embed Page** — Replaced static HTML embed page with full interactive `BookingWidgetBlock` via new `EmbedBookingClient.tsx` client component. PostMessage bridge preserved (DRAMAC_MODULE_READY, DRAMAC_RESIZE, DRAMAC_BOOKING_COMPLETE)
+3. **BUG 3: Script Embed** — Created `public/embed/booking.js` for button-popup widget type (DramacBooking.init(), modal overlay, auto-resize via postMessage). WordPress shortcode marked "Coming Soon"
+4. **BUG 4: Hardcoded Colors** — Removed `#8B5CF6`/`#3B82F6` defaults across 12 files: studio component fallbacks → `#0f172a`, action defaults → `''`, embed page → `var(--primary)` CSS vars
+5. **BUG 5: Admin Weekend Availability** — Added weekday-aware fallback in `getAvailableSlots()` matching public path (Mon-Fri 9-5, weekends empty)
+6. **BUG 6: Settings Tab Overflow** — Added `overflow-x-auto` and `flex-wrap/sm:flex-nowrap` to TabsList
+
+### Files Modified/Created:
+| File | Type | Changes |
+|------|------|---------|
+| `BookingWidgetBlock.tsx` | Modified | 10 responsive + color edits |
+| `EmbedBookingClient.tsx` | **New** | Client component wrapper for embed |
+| `page.tsx` (embed) | Modified | Complete rewrite to use EmbedBookingClient |
+| `booking.js` | **New** | Public script embed for button-popup |
+| `booking-actions.ts` | Modified | Weekend availability + color defaults |
+| `StaffGridBlock.tsx` | Modified | Color fallback fix |
+| `ServiceSelectorBlock.tsx` | Modified | Color fallback fix |
+| `BookingCalendarBlock.tsx` | Modified | Color fallback fix |
+| `BookingEmbedBlock.tsx` | Modified | Color fallback fix |
+| `BookingFormBlock.tsx` | Modified | Color fallback fix |
+| `create-service-dialog.tsx` | Modified | Color defaults removed |
+| `edit-service-dialog.tsx` | Modified | Color defaults removed |
+| `booking-settings-dialog.tsx` | Modified | Color defaults removed |
+| `embed-code-view.tsx` | Modified | WordPress "Coming Soon" badge |
+| `settings-view.tsx` | Modified | TabsList overflow fix |
+| `manifest.ts` | Modified | accent_color default '' |
+
+### TypeScript: ZERO source errors (only auto-generated `.next/dev/types/validator.ts` has errors)
+
+### Previous Commits:
+- `f5454635` — fix(crm): fix runtime bugs in bulk actions, import, email compose, and contact types (Priority 1)
+- `3b980413` — fix: production readiness audit - 10 bug fixes across platform
+
+### Still Remaining from Priority List:
+- **Priority 4:** Social Module production-ready
+- **Priority 5:** Automation Module production-ready
+- **Priority 6:** Embed Scripts publishing
+- **Priority 7:** E2E Testing
 
 ### ⚠️ CRITICAL KNOWLEDGE: Database Price Storage Format
 
 **ALL monetary values in the e-commerce module are stored as CENTS (integers).**
 
-| Value | DB Storage | Display |
-|-------|-----------|---------|
-| $250.00 | `25000` | `(25000 / 100).toFixed(2)` → `"250.00"` |
-| $9.99 | `999` | `(999 / 100).toFixed(2)` → `"9.99"` |
+| Value   | DB Storage | Display                                 |
+| ------- | ---------- | --------------------------------------- |
+| $250.00 | `25000`    | `(25000 / 100).toFixed(2)` → `"250.00"` |
+| $9.99   | `999`      | `(999 / 100).toFixed(2)` → `"9.99"`     |
 
 **Evidence:**
+
 - `create-product-dialog.tsx`: `Math.round(parseFloat(basePrice) * 100)` — user types dollars, stored as cents
 - `edit-product-dialog.tsx`: `(product.base_price / 100).toFixed(2)` — cents displayed as dollars
 - Cart items use raw `product.base_price` (cents)
@@ -33,17 +69,19 @@ decimal (250.00), when they are actually stored as **CENTS (25000)**.
 - Checkout API: `const totalInUnits = total / 100` — converts cents to dollars for payment providers
 
 **Price formatting chain (all correct, do NOT remove /100):**
+
 - `analytics-utils.ts formatCurrency(cents)` — accepts cents, divides by 100 internally
 - `@/lib/locale-config formatCurrency(amount)` — accepts DOLLARS, does NOT divide
 - `ecommerce-context.tsx useCurrency().formatPrice(cents)` — divides by 100, calls locale-config
 - `storefront-context.tsx formatPrice(cents)` — divides by 100, calls locale-config
 - Local `defaultFormatPrice` functions — all divide by 100
 
-**⚠️ The phase document (`PHASE-ECOM-PRODUCTION-READY.md`) Section 19 is WRONG when it says 
-"Money columns are numeric (decimal like 250.00), NOT cents". This is incorrect. DO NOT 
+**⚠️ The phase document (`PHASE-ECOM-PRODUCTION-READY.md`) Section 19 is WRONG when it says
+"Money columns are numeric (decimal like 250.00), NOT cents". This is incorrect. DO NOT
 remove /100 divisions from price display code.**
 
 ### Commit `5b6e2a9f` Details:
+
 - **Restored /100 in structured-data.ts**: AggregateOffer lowPrice/highPrice, single Offer price, ItemList prices
 - **Removed dead imports**: `getPublicProducts` from CategoryHeroBlock.tsx, `Copy` from ProductDetailBlock.tsx
 - **Prior commit `478a34fc` had wrongly removed /100 from structured-data.ts** based on incorrect phase doc claim
@@ -51,6 +89,7 @@ remove /100 divisions from price display code.**
 ---
 
 ### Remaining Production-Ready Scope
+
 - **Booking module:** `phases/PHASE-BOOKING-PRODUCTION-READY.md` still pending execution
 - **CRM module:** Has pre-existing TS errors (~50 in CRM files) not yet addressed
 - **AI Website Designer:** Has pre-existing TS errors not yet addressed
@@ -60,13 +99,14 @@ remove /100 divisions from price display code.**
 ### Previous Focus: Production-Ready Phase Documents for E-Commerce & Booking Modules
 
 ### Phase Documents Created (Latest Work)
+
 Two comprehensive AI phase documents created for fresh-session AI to make both modules production-ready:
 
 1. **`phases/PHASE-ECOM-PRODUCTION-READY.md`** — 22-section comprehensive document covering:
    - Full platform context, tech stack, rendering pipeline
    - Complete DB schema (all 49 tables, every column name/type)
    - Full file inventory (every file with purpose)
-   - 6 critical bugs (customer_name column missing, analytics _cents columns wrong, country dropdown, cart badge, mobile checkout disconnected, Radix portal branding)
+   - 6 critical bugs (customer_name column missing, analytics \_cents columns wrong, country dropdown, cart badge, mobile checkout disconnected, Radix portal branding)
    - Branding system, checkout flow, order lifecycle, payment integration, email system, analytics, storefront widget, quotation system, PDF generation, navigation, SEO, testing checklist
 
 2. **`phases/PHASE-BOOKING-PRODUCTION-READY.md`** — 18-section comprehensive document covering:
@@ -85,6 +125,7 @@ Two comprehensive AI phase documents created for fresh-session AI to make both m
 ### Previous Status: ALL CHANGES VERIFIED & DEPLOYED ✅ (Commit `2e2bbce0`)
 
 ### Recent Fixes (newest first):
+
 - E-Commerce Critical Fixes — Logo upload RLS, payment flow, cart sync, quotation mode (commit `2e2bbce0`) ✅
 - Hardcoded Brand Color Elimination — Comprehensive audit + fix of ALL customer-facing hardcoded blue/purple colors across 21 files. Published sites now fully respect site branding via CSS variable system. Neutral #0f172a fallback replaces #3b82f6 everywhere. (commit `3ac8bec6`) ✅
 - E-Commerce Product Images + World-Class Component Upgrade — CRITICAL image bug fixed (images never showed), all ecom components upgraded with next/image, product navigation, professional gallery (commit `53fe93c4`) ✅
@@ -100,26 +141,28 @@ Two comprehensive AI phase documents created for fresh-session AI to make both m
 
 **CRITICAL FIXES:**
 
-| Issue | Root Cause | Fix |
-|-------|------------|-----|
-| **Logo upload RLS error** (`StorageApiError: new row violates row-level security policy`) | `uploadSiteLogoAction` and `removeSiteLogoAction` in `sites.ts` used `createClient()` (anon key, RLS-bound) for storage operations | Switched both to `createAdminClient()` (service role key, bypasses RLS) |
-| **Payment never collected** — checkout showed "Order Placed Successfully!" without opening any payment UI | `handlePlaceOrder` in `CheckoutPageBlock.tsx` ignored `payment` and `payment_url` from API response | Now routes to correct payment flow: Paddle overlay, Flutterwave modal, Pesapal/DPO redirect, manual instructions |
-| **Cart cleared before payment** | `useCheckout.placeOrder()` cleared cart immediately on success, even for client-side payment providers | Only clears cart for manual/redirect payments; Paddle/Flutterwave clear after payment callback |
+| Issue                                                                                                     | Root Cause                                                                                                                         | Fix                                                                                                              |
+| --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **Logo upload RLS error** (`StorageApiError: new row violates row-level security policy`)                 | `uploadSiteLogoAction` and `removeSiteLogoAction` in `sites.ts` used `createClient()` (anon key, RLS-bound) for storage operations | Switched both to `createAdminClient()` (service role key, bypasses RLS)                                          |
+| **Payment never collected** — checkout showed "Order Placed Successfully!" without opening any payment UI | `handlePlaceOrder` in `CheckoutPageBlock.tsx` ignored `payment` and `payment_url` from API response                                | Now routes to correct payment flow: Paddle overlay, Flutterwave modal, Pesapal/DPO redirect, manual instructions |
+| **Cart cleared before payment**                                                                           | `useCheckout.placeOrder()` cleared cart immediately on success, even for client-side payment providers                             | Only clears cart for manual/redirect payments; Paddle/Flutterwave clear after payment callback                   |
 
 **MEDIUM FIXES:**
 
-| Issue | Root Cause | Fix |
-|-------|------------|-----|
-| **CartDrawer ignores quotation mode** | Hardcoded `checkoutHref = '/checkout'` and "Checkout" label | Reads `quotationModeEnabled` from storefront context; adapts button text/link/title |
-| **MiniCart ignores quotation mode** | Same hardcoded checkout link | Same quotation mode awareness |
-| **No add-to-cart feedback** | `addItem()` returned boolean but no toast shown | Added sonner toast notifications for success/failure |
-| **Cart badges don't sync** | Each `useStorefrontCart` instance is independent | Added `cart-updated` custom event bus — all instances listen and refresh |
-| **Quotation redirect uses full reload** | `window.location.href` in product-card-block | Switched to Next.js `useRouter().push()` |
+| Issue                                   | Root Cause                                                  | Fix                                                                                 |
+| --------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| **CartDrawer ignores quotation mode**   | Hardcoded `checkoutHref = '/checkout'` and "Checkout" label | Reads `quotationModeEnabled` from storefront context; adapts button text/link/title |
+| **MiniCart ignores quotation mode**     | Same hardcoded checkout link                                | Same quotation mode awareness                                                       |
+| **No add-to-cart feedback**             | `addItem()` returned boolean but no toast shown             | Added sonner toast notifications for success/failure                                |
+| **Cart badges don't sync**              | Each `useStorefrontCart` instance is independent            | Added `cart-updated` custom event bus — all instances listen and refresh            |
+| **Quotation redirect uses full reload** | `window.location.href` in product-card-block                | Switched to Next.js `useRouter().push()`                                            |
 
 **CASCADE FIX:**
+
 - Email branding now works: logo upload fix unblocks site logo storage → `applySiteBranding()` pipeline can now read actual `site.logo_url` instead of null
 
 **Files Modified (7 files):**
+
 - `src/lib/actions/sites.ts` — createAdminClient for upload/remove
 - `src/modules/ecommerce/hooks/useCheckout.ts` — conditional cart clearing
 - `src/modules/ecommerce/hooks/useStorefrontCart.ts` — cart-updated event bus
@@ -133,6 +176,7 @@ Two comprehensive AI phase documents created for fresh-session AI to make both m
 ### E-Commerce Product Images + World-Class Component Upgrade (commit `53fe93c4`) ✅
 
 **Problems found (deep audit of 43+ ecommerce component files):**
+
 1. **CRITICAL IMAGE BUG** — `product-grid-block.tsx` line 98: `p.images?.[0]?.url` on a `string[]` always returned `undefined`. Product images NEVER displayed on the shop page.
 2. **Two duplicate ProductGridBlock files** — `product-grid-block.tsx` (simple, 280 lines, buggy) registered as `EcommerceProductGrid` and `ProductGridBlock.tsx` (enhanced, 696 lines, working) registered as `EcommerceProductCatalog`. Shop page template used the buggy simple one.
 3. **ProductImageGallery type mismatch** — Expected `{url: string, alt?: string}[]` but `Product.images` is `string[]`. Gallery broke when passed real product data.
@@ -142,15 +186,16 @@ Two comprehensive AI phase documents created for fresh-session AI to make both m
 
 **Solution (5 files, 240 insertions, 138 deletions):**
 
-| File | Changes |
-|------|---------|
-| `product-grid-block.tsx` | **Complete rewrite** — Now delegates to `ProductCardBlock` for professional cards with hover effects, wishlist, add-to-cart, sale badges. Added product click → `/products/[slug]` navigation. Added empty state UI. |
-| `product-card-block.tsx` | Added `next/image` for Supabase-hosted images with `fill` + `sizes` for responsive optimization. Auto product navigation: clicking card goes to `/products/[slug]`. Lazy loading with `loading="lazy"` and `decoding="async"` fallback. |
-| `ProductImageGallery.tsx` | Now accepts `(ProductImage | string)[]` — normalizes `string[]` to `ProductImage[]` internally. Works with both formats. |
-| `ProductDetailBlock.tsx` | Gallery upgraded to `next/image` with `fill` + `sizes`. Larger thumbnails (w-20 h-20), `rounded-xl` corners, image counter badge, smooth hover transitions on gallery arrows. |
-| `page-templates.ts` | Shop page now has Featured Products carousel section before the main grid, better spacing (48px padding), professional layout structure. |
+| File                      | Changes                                                                                                                                                                                                                                 |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `product-grid-block.tsx`  | **Complete rewrite** — Now delegates to `ProductCardBlock` for professional cards with hover effects, wishlist, add-to-cart, sale badges. Added product click → `/products/[slug]` navigation. Added empty state UI.                    |
+| `product-card-block.tsx`  | Added `next/image` for Supabase-hosted images with `fill` + `sizes` for responsive optimization. Auto product navigation: clicking card goes to `/products/[slug]`. Lazy loading with `loading="lazy"` and `decoding="async"` fallback. |
+| `ProductImageGallery.tsx` | Now accepts `(ProductImage                                                                                                                                                                                                              | string)[]`— normalizes`string[]`to`ProductImage[]` internally. Works with both formats. |
+| `ProductDetailBlock.tsx`  | Gallery upgraded to `next/image` with `fill` + `sizes`. Larger thumbnails (w-20 h-20), `rounded-xl` corners, image counter badge, smooth hover transitions on gallery arrows.                                                           |
+| `page-templates.ts`       | Shop page now has Featured Products carousel section before the main grid, better spacing (48px padding), professional layout structure.                                                                                                |
 
 **Key Architecture Discovery:**
+
 - Two grid components exist: `EcommerceProductGrid` (simple) and `EcommerceProductCatalog` (enhanced with filters/sort/pagination)
 - Both are registered in `studio/index.ts` — the enhanced one aliases `ProductGridBlock` from `ProductGridBlock.tsx` (capital P)
 - Shop page template uses `EcommerceProductGrid` — the simple one. Now fixed to delegate to `ProductCardBlock` for quality.
@@ -162,6 +207,7 @@ Two comprehensive AI phase documents created for fresh-session AI to make both m
 ### Site Logo System + Booking End-to-End Fixes (commit `f965699c`) ✅
 
 **Three problems addressed:**
+
 1. **No site logo system** — `SiteBrandingData` only had colors+fonts, no logo upload capability. Email templates fall back to "Dramac" text because `logo_url` is always null.
 2. **Booking staff not filtered by service** — Widget showed ALL staff regardless of selected service.
 3. **Booking constraints not enforced** — `min_booking_notice_hours`, `max_booking_advance_days`, buffer times, and weekday awareness were all unimplemented.
@@ -169,52 +215,63 @@ Two comprehensive AI phase documents created for fresh-session AI to make both m
 **Solution (4 files, +490 lines):**
 
 #### Site Logo & Favicon:
-| File | Fix |
-|------|-----|
-| `sites.ts` | Added `logo_url`, `favicon_url` to `SiteBrandingData`; read/write in get/update branding actions |
-| `sites.ts` | NEW `uploadSiteLogoAction()` — uploads to Supabase Storage `branding/sites/{siteId}/`, updates settings |
-| `sites.ts` | NEW `removeSiteLogoAction()` — clears logo/favicon URL from settings |
-| `site-branding-settings.tsx` | Added Logo & Favicon upload section with preview, replace, and remove buttons |
+
+| File                         | Fix                                                                                                     |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `sites.ts`                   | Added `logo_url`, `favicon_url` to `SiteBrandingData`; read/write in get/update branding actions        |
+| `sites.ts`                   | NEW `uploadSiteLogoAction()` — uploads to Supabase Storage `branding/sites/{siteId}/`, updates settings |
+| `sites.ts`                   | NEW `removeSiteLogoAction()` — clears logo/favicon URL from settings                                    |
+| `site-branding-settings.tsx` | Added Logo & Favicon upload section with preview, replace, and remove buttons                           |
 
 **Logo propagation:** Once a logo is uploaded, `applySiteBranding()` in `email-branding.ts` already reads `site.logo_url` and applies it to emails. The `getSiteBrandingAction` now returns `logo_url` which feeds into this pipeline. Logo appears in email headers (via `baseEmailTemplate`), navigation, and any component reading site settings.
 
 #### Booking — Staff Filtering:
-| File | Fix |
-|------|-----|
+
+| File                     | Fix                                                                                               |
+| ------------------------ | ------------------------------------------------------------------------------------------------- |
 | `BookingWidgetBlock.tsx` | `dataStaff` memo now filters `realStaff` by `selectedService.id` using staff's `services[]` array |
-| `BookingWidgetBlock.tsx` | Changing service resets `selectedStaff` to null |
+| `BookingWidgetBlock.tsx` | Changing service resets `selectedStaff` to null                                                   |
 
 #### Booking — Date/Time Constraints:
-| File | Fix |
-|------|-----|
-| `BookingWidgetBlock.tsx` | Added `useBookingSettings` hook, `earliestBookableDate`, `latestBookableDate` memos |
+
+| File                     | Fix                                                                                          |
+| ------------------------ | -------------------------------------------------------------------------------------------- |
+| `BookingWidgetBlock.tsx` | Added `useBookingSettings` hook, `earliestBookableDate`, `latestBookableDate` memos          |
 | `BookingWidgetBlock.tsx` | `isBeforeMinNotice()`, `isBeyondMaxAdvance()`, `isDateDisabled()` functions control calendar |
-| `BookingWidgetBlock.tsx` | Calendar buttons use `isDateDisabled()` instead of just `isPast()` |
+| `BookingWidgetBlock.tsx` | Calendar buttons use `isDateDisabled()` instead of just `isPast()`                           |
 
 #### Booking — Server-Side Validations:
-| File | Fix |
-|------|-----|
-| `public-booking-actions.ts` | `getPublicAvailableSlots`: Past dates return [], min notice hours filter, max advance days check |
-| `public-booking-actions.ts` | Weekday-aware fallback: Mon-Fri 9-5 default when no rules (NOT 7-day anymore), weekends empty |
-| `public-booking-actions.ts` | Buffer times enforced in conflict checking (blockedStart/blockedEnd include bufferBefore/After) |
+
+| File                        | Fix                                                                                               |
+| --------------------------- | ------------------------------------------------------------------------------------------------- |
+| `public-booking-actions.ts` | `getPublicAvailableSlots`: Past dates return [], min notice hours filter, max advance days check  |
+| `public-booking-actions.ts` | Weekday-aware fallback: Mon-Fri 9-5 default when no rules (NOT 7-day anymore), weekends empty     |
+| `public-booking-actions.ts` | Buffer times enforced in conflict checking (blockedStart/blockedEnd include bufferBefore/After)   |
 | `public-booking-actions.ts` | `createPublicAppointment`: Server validates past dates, min notice, max advance, buffer conflicts |
 
 **Key Pattern — isDateDisabled (widget):**
+
 ```typescript
-const isDateDisabled = (d: Date) => isPast(d) || isBeforeMinNotice(d) || isBeyondMaxAdvance(d)
+const isDateDisabled = (d: Date) =>
+  isPast(d) || isBeforeMinNotice(d) || isBeyondMaxAdvance(d);
 ```
 
 **Key Pattern — Weekday-aware fallback (server):**
+
 ```typescript
-const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5
-const rules = (availabilityRules?.length > 0) ? availabilityRules
-  : isWeekday ? [{ start_time: '09:00', end_time: '17:00', staff_id: null }]
-  : [] // No default slots for weekends
+const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
+const rules =
+  availabilityRules?.length > 0
+    ? availabilityRules
+    : isWeekday
+      ? [{ start_time: "09:00", end_time: "17:00", staff_id: null }]
+      : []; // No default slots for weekends
 ```
 
 ---
 
 ### Remaining Email Branding Note:
+
 The **legacy email system** (`templates.ts`) still has 23+ hardcoded "Dramac" references used by platform-level emails (auth, team invitations, billing). These are intentionally platform-level emails — customers don't see them. All **customer-facing emails** (booking confirmations, order receipts, etc.) use the branded pipeline (`sendBrandedEmail` → `applySiteBranding`) which now properly uses the site logo when uploaded.
 
 ---
@@ -224,6 +281,7 @@ The **legacy email system** (`templates.ts`) still has 23+ hardcoded "Dramac" re
 **Comprehensive end-to-end audit to ensure ALL parts of the platform use site's central branding.**
 
 #### Problem: Branding was fragmented across emails, live chat, fonts, and embeds
+
 1. **Email**: Order resend emails (`sendOrderEmail`) called `sendBrandedEmail` WITHOUT `siteId` — customers got agency default branding instead of site branding
 2. **Live Chat**: Widget was completely isolated from site branding — read only from `mod_chat_widget_settings`, never from `sites` table. Hardcoded `#2563eb` blue and `system-ui` fonts
 3. **Fonts**: Three gaps caused inconsistent fonts across published sites:
@@ -264,32 +322,35 @@ The **legacy email system** (`templates.ts`) still has 23+ hardcoded "Dramac" re
 | `module-embed-renderer.tsx` | Accepts `siteFontFamily` prop, passes to iframe HTML generation |
 
 #### Key Architecture: BRAND_FONT_MAP
+
 ```typescript
 const BRAND_FONT_MAP: Record<string, "heading" | "body"> = {
-  fontFamily: "body",        // Text, Heading, Button components
-  titleFont: "heading",      // Section title fonts
+  fontFamily: "body", // Text, Heading, Button components
+  titleFont: "heading", // Section title fonts
   featureTitleFont: "heading", // Feature card titles
-  nameFont: "heading",       // Person names (team, testimonials)
-  valueFont: "heading",      // Statistic values
+  nameFont: "heading", // Person names (team, testimonials)
+  valueFont: "heading", // Statistic values
 };
 ```
 
 #### Key Architecture: Dual Email System
+
 - **Legacy** (`send-email.ts` + `templates.ts`): Platform emails — shows "Dramac". NOT a bug.
 - **Branded** (`send-branded-email.ts` + `branded-templates.ts`): Customer emails — must ALWAYS pass `siteId` for site-specific branding.
 
 #### Audit Findings Summary
-| Area | Status | Detail |
-|------|--------|--------|
-| Email branded pipeline | ✅ Fixed | 5 missing `siteId` in order-actions.ts |
-| Email legacy pipeline | ⚠️ Intentional | Platform-level emails show "Dramac" — correct |
-| Live chat colors | ✅ Fixed | Falls back to site primary color |
-| Live chat fonts | ✅ Fixed | Reads site fonts, passes to widget |
-| Font CSS cascade | ✅ Fixed | Text default emptied, StorefrontWidget inherits |
-| Font prop injection | ✅ Fixed | New `injectBrandFonts()` fills titleFont, nameFont, etc. |
-| Module embeds | ✅ Fixed | Fetches site fonts, loads Google Fonts |
-| Booking embeds | ✅ Fixed | Same |
-| 8 admin UI fonts | ✅ No change needed | Dashboard UI — not customer-facing |
+
+| Area                   | Status              | Detail                                                   |
+| ---------------------- | ------------------- | -------------------------------------------------------- |
+| Email branded pipeline | ✅ Fixed            | 5 missing `siteId` in order-actions.ts                   |
+| Email legacy pipeline  | ⚠️ Intentional      | Platform-level emails show "Dramac" — correct            |
+| Live chat colors       | ✅ Fixed            | Falls back to site primary color                         |
+| Live chat fonts        | ✅ Fixed            | Reads site fonts, passes to widget                       |
+| Font CSS cascade       | ✅ Fixed            | Text default emptied, StorefrontWidget inherits          |
+| Font prop injection    | ✅ Fixed            | New `injectBrandFonts()` fills titleFont, nameFont, etc. |
+| Module embeds          | ✅ Fixed            | Fetches site fonts, loads Google Fonts                   |
+| Booking embeds         | ✅ Fixed            | Same                                                     |
+| 8 admin UI fonts       | ✅ No change needed | Dashboard UI — not customer-facing                       |
 
 **Solution:**
 | File | Changes |
@@ -300,16 +361,19 @@ const BRAND_FONT_MAP: Record<string, "heading" | "body"> = {
 | **Database** | Updated Jesto's existing `/book` page content to use `BookingWidget` (SQL UPDATE) |
 
 #### CRITICAL PATTERN — Booking Component Distinction:
+
 - **`BookingWidget`** (BookingWidgetBlock.tsx, 1181 lines): Full 5-step wizard with real data hooks (`useBookingServices`, `useBookingStaff`, `useBookingSlots`, `useCreateBooking`). Has `handleConfirm` that calls `createBooking()`. Use this for `/book` pages.
 - **`BookingServiceSelector`** (ServiceSelectorBlock.tsx, 758 lines): Browse-only service catalog. Clicking Select just sets `selectedServiceId` state and fires `onServiceSelect` callback. Use this for embedding service lists within other pages (e.g., homepage "Our Services" section).
 
 #### CRITICAL PATTERN — Color Fallback in Booking Components:
+
 ```typescript
 // Resolved colors — fall back to CSS variables from the branding system
-const pc = primaryColor || 'var(--brand-primary, #8B5CF6)'
-const btnTxt = buttonTextColor || 'var(--brand-button-text, #ffffff)'
+const pc = primaryColor || "var(--brand-primary, #8B5CF6)";
+const btnTxt = buttonTextColor || "var(--brand-button-text, #ffffff)";
 // Then use pc, btnTxt, etc. in all JSX instead of raw primaryColor/buttonTextColor
 ```
+
 This ensures: (1) explicit prop values win, (2) CSS variables from brand system are next, (3) hardcoded fallback is last resort.
 
 ---
@@ -356,16 +420,18 @@ StudioRenderer (renderer.tsx)
 
 #### Key Files Changed:
 
-| File | Changes |
-|------|---------|
-| `src/lib/studio/engine/brand-colors.ts` | Added `hexToHsl()`, `hexToHslString()`, `generateBrandCSSVars()` — converts brand palette to comprehensive CSS custom properties |
-| `src/lib/studio/engine/renderer.tsx` | Imports `generateBrandCSSVars`, computes `brandCSSVars` from palette + font settings, spreads on wrapper div. Added Google Fonts dynamic loader via useEffect |
-| `src/app/globals.css` | Added `.studio-renderer` CSS isolation block — forces light color-scheme, heading/body font inheritance, border-color reset |
-| 11 ecommerce studio components | Removed ALL `dark:` Tailwind classes from storefront-facing files |
-| 4 booking studio components | Emptied hardcoded `#8B5CF6` purple from `defaultProps` — new instances inherit brand colors |
+| File                                    | Changes                                                                                                                                                       |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/lib/studio/engine/brand-colors.ts` | Added `hexToHsl()`, `hexToHslString()`, `generateBrandCSSVars()` — converts brand palette to comprehensive CSS custom properties                              |
+| `src/lib/studio/engine/renderer.tsx`    | Imports `generateBrandCSSVars`, computes `brandCSSVars` from palette + font settings, spreads on wrapper div. Added Google Fonts dynamic loader via useEffect |
+| `src/app/globals.css`                   | Added `.studio-renderer` CSS isolation block — forces light color-scheme, heading/body font inheritance, border-color reset                                   |
+| 11 ecommerce studio components          | Removed ALL `dark:` Tailwind classes from storefront-facing files                                                                                             |
+| 4 booking studio components             | Emptied hardcoded `#8B5CF6` purple from `defaultProps` — new instances inherit brand colors                                                                   |
 
 #### CRITICAL PATTERN — NEVER hardcode colors in storefront components:
+
 **RULE FOR ALL FUTURE WORK**: Storefront-facing components (those rendered on published sites via StudioRenderer) MUST:
+
 1. Use Tailwind semantic classes (`bg-card`, `text-foreground`, `bg-primary`, `text-muted-foreground`) — these read from the brand CSS variables
 2. OR accept color props that are filled by `injectBrandColors()` from the brand palette
 3. NEVER use `dark:` Tailwind variants — published sites are ALWAYS light mode
@@ -373,6 +439,7 @@ StudioRenderer (renderer.tsx)
 5. Hardcoded hex values in defaultProps should be empty strings (`''`) — brand injection fills them
 
 #### Database: Jesto Brand Colors Persisted
+
 ```sql
 -- Jesto site (07f6a9dd-6aa9-4254-8c0a-430b1796e483) now has:
 primary_color: '#0a7c6e'     -- Teal green (from Navbar CTA)
@@ -385,7 +452,9 @@ font_body: 'Inter'           -- Professional body font
 ```
 
 #### Why This Fixes Dark Mode:
+
 The `.studio-renderer` div now has CSS custom properties like:
+
 - `--color-card: 0 0% 100%` (white, from brand palette)
 - `--color-foreground: 222 47% 11%` (dark text, from brand palette)
 - `--color-background: 0 0% 100%` (white, from brand palette)
@@ -397,6 +466,7 @@ When shadcn's `bg-card` utility resolves, it reads `hsl(var(--color-card))` — 
 ### Module Page Branding System (commit `e81e7b41`) ✅
 
 **Problem:** Multiple issues with module pages:
+
 1. Cart icon in navbar showed raw `{{cartCount}}` template string instead of actual count
 2. Module pages (shop, cart, checkout, order-confirmation) had NO Navbar/Footer — looked unbranded
 3. No /book page existed — "Book Now" link was a 404
@@ -405,6 +475,7 @@ When shadcn's `bg-card` utility resolves, it reads `hsl(var(--color-card))` — 
 **Solution:** Comprehensive fix across 7 files:
 
 #### Fix 1: Cart Badge Template Stripping
+
 - `buildUtilityItems()` in `smart-navigation.ts` now strips badges matching `{{...}}` pattern
 - Removed `badge: "{{cartCount}}"` from `ECOMMERCE_UTILITY_ITEMS` constant
 - Removed `badge: "{{cartCount}}"` from `auto-setup-actions.ts` nav items
@@ -412,6 +483,7 @@ When shadcn's `bg-card` utility resolves, it reads `hsl(var(--color-card))` — 
 - **Industry standard**: Navbar cart icon is just a link, floating cart button shows live count
 
 #### Fix 2: Shared Navbar/Footer Auto-Injection
+
 - In `page.tsx` `processData()`: detects if page content has a Navbar component
 - If missing, extracts `shared-navbar` and `shared-footer` from the site's homepage
 - Injects them into the page content (prepend navbar, append footer)
@@ -419,6 +491,7 @@ When shadcn's `bg-card` utility resolves, it reads `hsl(var(--color-card))` — 
 - Module-created pages automatically get consistent site branding
 
 #### Fix 3: /book Page Auto-Creation
+
 - Created `/book` page for Jesto site in DB with proper content:
   - Hero section with branded heading + description
   - `BookingServiceSelector` component for service browsing
@@ -429,21 +502,25 @@ When shadcn's `bg-card` utility resolves, it reads `hsl(var(--color-card))` — 
 - Future booking installations auto-create the /book page
 
 #### Fix 4: Floating Cart URL
+
 - `ecommerce-cart-injector.tsx`: Changed `cartUrl` from `/shop/cart` to `/cart`
 
 #### Files Changed:
-| File | Changes |
-|------|---------|
-| `src/lib/studio/engine/smart-navigation.ts` | Stripped `{{cartCount}}` badge from constant, added regex filter in `buildUtilityItems()` |
-| `src/app/site/[domain]/[[...slug]]/page.tsx` | Added shared Navbar/Footer injection (~60 lines) in `processData()` |
-| `src/components/renderer/ecommerce-cart-injector.tsx` | Fixed cart URL from `/shop/cart` to `/cart` |
-| `src/modules/ecommerce/actions/auto-setup-actions.ts` | Removed `badge: "{{cartCount}}"` from nav items |
-| `src/modules/booking/actions/auto-setup-actions.ts` | **NEW** — Booking page auto-creation action |
-| `src/modules/booking/hooks/installation-hook.ts` | **NEW** — Booking module installation hook |
-| `src/lib/modules/hooks/init-hooks.ts` | Registered `bookingInstallationHook` |
+
+| File                                                  | Changes                                                                                   |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `src/lib/studio/engine/smart-navigation.ts`           | Stripped `{{cartCount}}` badge from constant, added regex filter in `buildUtilityItems()` |
+| `src/app/site/[domain]/[[...slug]]/page.tsx`          | Added shared Navbar/Footer injection (~60 lines) in `processData()`                       |
+| `src/components/renderer/ecommerce-cart-injector.tsx` | Fixed cart URL from `/shop/cart` to `/cart`                                               |
+| `src/modules/ecommerce/actions/auto-setup-actions.ts` | Removed `badge: "{{cartCount}}"` from nav items                                           |
+| `src/modules/booking/actions/auto-setup-actions.ts`   | **NEW** — Booking page auto-creation action                                               |
+| `src/modules/booking/hooks/installation-hook.ts`      | **NEW** — Booking module installation hook                                                |
+| `src/lib/modules/hooks/init-hooks.ts`                 | Registered `bookingInstallationHook`                                                      |
 
 #### Key Architecture Decision: Runtime Navbar/Footer Injection
+
 Instead of duplicating Navbar/Footer content into every module page at creation time, we inject them at render time from the homepage. Benefits:
+
 - Always uses the LATEST version of Navbar/Footer (user updates propagate instantly)
 - No complex page creation logic needed — module hooks just create module-specific content
 - Works retroactively for all existing module pages
@@ -454,16 +531,18 @@ Instead of duplicating Navbar/Footer content into every module page at creation 
 **Problem 3:** AI received a generic "BOOKING MODULE IS ACTIVE" message but no actual service names, prices, durations, or staff names from the booking module's database tables. AI had to invent placeholder content instead of using real business data.
 
 #### Files Modified:
-| File | Changes |
-|------|---------|
-| `src/modules/booking/studio/components/ServiceSelectorBlock.tsx` | `type: 'ServiceSelector'` → `type: 'BookingServiceSelector'` (CRITICAL rendering fix) |
-| `src/modules/booking/studio/components/StaffGridBlock.tsx` | `type: 'StaffGrid'` → `type: 'BookingStaffGrid'` (CRITICAL rendering fix) |
-| `src/lib/ai/website-designer/component-reference.ts` | Added `"buttons"` and `"3d"` to `AI_RELEVANT_CATEGORIES` |
-| `src/lib/ai/website-designer/data-context/types.ts` | Added `BookingServiceData`, `BookingStaffData` interfaces; added `bookingServices?` and `bookingStaff?` to `BusinessDataContext` |
-| `src/lib/ai/website-designer/data-context/builder.ts` | Added `createAdminClient` import; `fetchBookingServices()` queries `mod_bookmod01_services`; `fetchBookingStaff()` queries `mod_bookmod01_staff` + `mod_bookmod01_staff_services`; wired into main `buildDataContext()` after module detection |
-| `src/lib/ai/website-designer/data-context/formatter.ts` | `formatModulesSection()` now accepts booking data; outputs actual service names/prices/durations and staff names/titles/specialties in the AI context markdown |
+
+| File                                                             | Changes                                                                                                                                                                                                                                        |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/modules/booking/studio/components/ServiceSelectorBlock.tsx` | `type: 'ServiceSelector'` → `type: 'BookingServiceSelector'` (CRITICAL rendering fix)                                                                                                                                                          |
+| `src/modules/booking/studio/components/StaffGridBlock.tsx`       | `type: 'StaffGrid'` → `type: 'BookingStaffGrid'` (CRITICAL rendering fix)                                                                                                                                                                      |
+| `src/lib/ai/website-designer/component-reference.ts`             | Added `"buttons"` and `"3d"` to `AI_RELEVANT_CATEGORIES`                                                                                                                                                                                       |
+| `src/lib/ai/website-designer/data-context/types.ts`              | Added `BookingServiceData`, `BookingStaffData` interfaces; added `bookingServices?` and `bookingStaff?` to `BusinessDataContext`                                                                                                               |
+| `src/lib/ai/website-designer/data-context/builder.ts`            | Added `createAdminClient` import; `fetchBookingServices()` queries `mod_bookmod01_services`; `fetchBookingStaff()` queries `mod_bookmod01_staff` + `mod_bookmod01_staff_services`; wired into main `buildDataContext()` after module detection |
+| `src/lib/ai/website-designer/data-context/formatter.ts`          | `formatModulesSection()` now accepts booking data; outputs actual service names/prices/durations and staff names/titles/specialties in the AI context markdown                                                                                 |
 
 #### How AI Component System Works End-to-End:
+
 ```
 1. Registry: componentRegistry Map, keyed by definition.type field
 2. AI prompts: hardcoded VALID COMPONENT TYPES list + MODULE COMPONENTS
@@ -474,6 +553,7 @@ Instead of duplicating Navbar/Footer content into every module page at creation 
 ```
 
 #### Type Name Chain (now consistent):
+
 ```
 AI Prompt → "BookingServiceSelector"
 AI Output → "BookingServiceSelector"
@@ -489,6 +569,7 @@ Renderer → getComponent("BookingServiceSelector") → FOUND ✅
 **Solution:** Centralized brand color palette derived from site branding settings, injected into every component at render time.
 
 #### Architecture:
+
 ```
 site.settings.primary_color ──┐
 site.settings.theme.*  ───────┤
@@ -500,22 +581,25 @@ site.settings.theme.*  ───────┤
 ```
 
 #### Files Created:
-| File | Purpose |
-|------|---------|
+
+| File                                                 | Purpose                                                                                                                                                                                                                                                |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `src/lib/studio/engine/brand-colors.ts` (~400 lines) | Core utility: BrandColorPalette type, BRAND_COLOR_MAP (~65 mappings), resolveBrandColors(), injectBrandColors(), extractBrandSource(), color manipulation utils (hexToRgb, rgbToHex, luminance, isLight, lighten, darken, contrastingForeground, tint) |
 
 #### Files Modified:
-| File | Changes |
-|------|---------|
-| `src/lib/studio/engine/renderer.tsx` | Added siteSettings prop, brandPalette resolution via useMemo, injection into every ComponentRenderer, brand-based page wrapper colors |
-| `src/app/site/[domain]/[[...slug]]/craft-renderer.tsx` | Added siteSettings pass-through, fixed moduleSlug→slug / moduleType→category (InstalledModuleInfo) |
-| `src/app/site/[domain]/[[...slug]]/page.tsx` | Passes data.site.settings to CraftRenderer |
-| `src/lib/ai/website-designer/prompts.ts` | 3 mandatory rules for brand color compliance in AI architect prompt |
-| `src/lib/ai/website-designer/data-context/formatter.ts` | Branding section marked "MANDATORY" with explicit mapping instructions |
-| `src/app/(dashboard)/dashboard/sites/[siteId]/ai-designer/page.tsx` | handleSaveAndApply persists designTokens to site.settings.theme via new server action |
-| `src/lib/actions/sites.ts` | New persistDesignTokensAction: merges designTokens into site.settings.theme + flat branding fields |
+
+| File                                                                | Changes                                                                                                                               |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/lib/studio/engine/renderer.tsx`                                | Added siteSettings prop, brandPalette resolution via useMemo, injection into every ComponentRenderer, brand-based page wrapper colors |
+| `src/app/site/[domain]/[[...slug]]/craft-renderer.tsx`              | Added siteSettings pass-through, fixed moduleSlug→slug / moduleType→category (InstalledModuleInfo)                                    |
+| `src/app/site/[domain]/[[...slug]]/page.tsx`                        | Passes data.site.settings to CraftRenderer                                                                                            |
+| `src/lib/ai/website-designer/prompts.ts`                            | 3 mandatory rules for brand color compliance in AI architect prompt                                                                   |
+| `src/lib/ai/website-designer/data-context/formatter.ts`             | Branding section marked "MANDATORY" with explicit mapping instructions                                                                |
+| `src/app/(dashboard)/dashboard/sites/[siteId]/ai-designer/page.tsx` | handleSaveAndApply persists designTokens to site.settings.theme via new server action                                                 |
+| `src/lib/actions/sites.ts`                                          | New persistDesignTokensAction: merges designTokens into site.settings.theme + flat branding fields                                    |
 
 #### Key Design Decisions:
+
 1. **Keep all 146 color fields** for studio power-user overrides — but they all default to brand palette
 2. **Inject at render time** (not at AI generation time) — catches anything the AI missed
 3. **Two layers of enforcement**: (a) AI prompts mandate brand colors, (b) renderer fills gaps with brand palette
@@ -525,42 +609,47 @@ site.settings.theme.*  ───────┤
 **Task:** Deep line-by-line audit of entire booking module (13 core files + 6 studio components), fix all bugs, ensure end-to-end functionality, seed Jesto site with test data.
 
 #### Core Action Fixes (booking-actions.ts):
-| # | Issue | Fix |
-|---|-------|-----|
-| 1 | cancelAppointment used `.duration` instead of `.duration_minutes` | Changed to `.duration_minutes` matching DB schema |
-| 2 | createAppointment had non-null assertion on service lookup | Added proper validation with descriptive error throw |
-| 3 | createService `price=0` became null due to `\|\|` operator | Changed to `??` (nullish coalescing) throughout |
-| 4 | initializeBookingForSite missing currency field | Added `currency: DEFAULT_CURRENCY` to insert |
-| 5 | No updateAvailability function existed | Added full implementation + export in barrel |
-| 6 | createService had no slug generation fallback | Added slugify from name when no slug provided |
+
+| #   | Issue                                                             | Fix                                                  |
+| --- | ----------------------------------------------------------------- | ---------------------------------------------------- |
+| 1   | cancelAppointment used `.duration` instead of `.duration_minutes` | Changed to `.duration_minutes` matching DB schema    |
+| 2   | createAppointment had non-null assertion on service lookup        | Added proper validation with descriptive error throw |
+| 3   | createService `price=0` became null due to `\|\|` operator        | Changed to `??` (nullish coalescing) throughout      |
+| 4   | initializeBookingForSite missing currency field                   | Added `currency: DEFAULT_CURRENCY` to insert         |
+| 5   | No updateAvailability function existed                            | Added full implementation + export in barrel         |
+| 6   | createService had no slug generation fallback                     | Added slugify from name when no slug provided        |
 
 #### Context & Hook Fixes:
-| # | Issue | Fix |
-|---|-------|-----|
-| 7 | booking-storefront-context used authenticated `getSettings` | Switched to `getPublicSettings` (admin client, bypasses RLS) |
-| 8 | useBookingSlots infinite re-render from `date?.toISOString()` in deps | Used stable `dateString` variable + Date reconstruction |
-| 9 | useBookingSlots/useCreateBooking Date serialization across server actions | Reconstruct Date from string, normalize slot dates |
-| 10 | useCreateBooking missing validation + incomplete Appointment object | Added service_id/start_time validation, full Appointment fields |
+
+| #   | Issue                                                                     | Fix                                                             |
+| --- | ------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| 7   | booking-storefront-context used authenticated `getSettings`               | Switched to `getPublicSettings` (admin client, bypasses RLS)    |
+| 8   | useBookingSlots infinite re-render from `date?.toISOString()` in deps     | Used stable `dateString` variable + Date reconstruction         |
+| 9   | useBookingSlots/useCreateBooking Date serialization across server actions | Reconstruct Date from string, normalize slot dates              |
+| 10  | useCreateBooking missing validation + incomplete Appointment object       | Added service_id/start_time validation, full Appointment fields |
 
 #### Studio Component Fixes:
-| # | Issue | Fix |
-|---|-------|-----|
-| 11 | BookingFormBlock start_time/end_time from hidden formData (never populated) | Added startTime/endTime/serviceDuration props |
-| 12 | ServiceSelectorBlock unavailable services clickable + no images | Added disabled click, cursor, image rendering, unavailable overlay |
-| 13 | ServiceSelectorBlock `imageAspectRatio` not destructured + duplicate `width` | Added to destructuring, removed duplicate property |
-| 14 | StaffGridBlock hardcoded 5.0 fake rating | Changed to 0, show only when `rating > 0` |
-| 15 | BookingWidgetBlock hardcoded 4.8 staff rating | Changed to 0, explicit `> 0` guard with `.toFixed(1)` |
-| 16 | BookingWidgetBlock confirm step showed raw "09:30" time | Added 12h/24h formatting using timeFormat setting |
-| 17 | BookingWidgetBlock no email validation | Added regex format validation in canGoNext |
-| 18 | Studio field editors (ServiceSelector/StaffSelector) were empty placeholders | Replaced with real data-fetching implementations |
+
+| #   | Issue                                                                        | Fix                                                                |
+| --- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| 11  | BookingFormBlock start_time/end_time from hidden formData (never populated)  | Added startTime/endTime/serviceDuration props                      |
+| 12  | ServiceSelectorBlock unavailable services clickable + no images              | Added disabled click, cursor, image rendering, unavailable overlay |
+| 13  | ServiceSelectorBlock `imageAspectRatio` not destructured + duplicate `width` | Added to destructuring, removed duplicate property                 |
+| 14  | StaffGridBlock hardcoded 5.0 fake rating                                     | Changed to 0, show only when `rating > 0`                          |
+| 15  | BookingWidgetBlock hardcoded 4.8 staff rating                                | Changed to 0, explicit `> 0` guard with `.toFixed(1)`              |
+| 16  | BookingWidgetBlock confirm step showed raw "09:30" time                      | Added 12h/24h formatting using timeFormat setting                  |
+| 17  | BookingWidgetBlock no email validation                                       | Added regex format validation in canGoNext                         |
+| 18  | Studio field editors (ServiceSelector/StaffSelector) were empty placeholders | Replaced with real data-fetching implementations                   |
 
 #### Jesto Test Data Seeded (Dental Clinic):
+
 - **Settings**: Africa/Lusaka timezone, 12h format, ZMW currency, 30-min slots, auto-confirm
 - **8 Services**: Check-up (K150), Cleaning (K250), Whitening (K800), Filling (K350), Root Canal (K1500), Extraction (K400), Implant Consult (K500), Ortho Consult (K300)
 - **4 Staff**: Dr. Mwansa Chisanga (lead), Dr. Natasha Banda (orthodontist), Martha Tembo (hygienist), Dr. Kelvin Mulenga (surgeon)
 - **13 Staff-Service Links**: Each staff member linked to their specialty services
 
 #### Zero Booking TypeScript Errors ✅
+
 All pre-existing errors are in CRM/e-commerce/tailwind (unrelated)
 
 ---
@@ -571,35 +660,39 @@ All pre-existing errors are in CRM/e-commerce/tailwind (unrelated)
 
 #### Findings Summary — All 7 Areas Are REAL Code:
 
-| Area | Status | What It Needs |
-|------|--------|---------------|
-| Social OAuth (SM-01) | ✅ Fully real, 10 platforms | Platform OAuth credentials |
-| Social Publishing (SM-02) | ✅ Real API calls for 9/10 platforms | Platform API keys + OAuth tokens |
-| Social Analytics (SM-03) | ✅ Real sync service (FB/IG/TW) | Platform API access |
-| Payments (Paddle) | ✅ Full lifecycle, 12+ webhook types | `PADDLE_API_KEY`, client token, webhook secret |
-| Domain Registration (ResellerClub) | ✅ 21+ files, 3000+ lines | `RESELLERCLUB_RESELLER_ID`, API key |
-| CRM Email (Resend) | ✅ Real `resend.emails.send()` | `RESEND_API_KEY` |
-| Abandoned Cart Recovery | ✅ Multi-stage (1h/24h/72h) | `CRON_SECRET`, `RESEND_API_KEY` |
+| Area                               | Status                               | What It Needs                                  |
+| ---------------------------------- | ------------------------------------ | ---------------------------------------------- |
+| Social OAuth (SM-01)               | ✅ Fully real, 10 platforms          | Platform OAuth credentials                     |
+| Social Publishing (SM-02)          | ✅ Real API calls for 9/10 platforms | Platform API keys + OAuth tokens               |
+| Social Analytics (SM-03)           | ✅ Real sync service (FB/IG/TW)      | Platform API access                            |
+| Payments (Paddle)                  | ✅ Full lifecycle, 12+ webhook types | `PADDLE_API_KEY`, client token, webhook secret |
+| Domain Registration (ResellerClub) | ✅ 21+ files, 3000+ lines            | `RESELLERCLUB_RESELLER_ID`, API key            |
+| CRM Email (Resend)                 | ✅ Real `resend.emails.send()`       | `RESEND_API_KEY`                               |
+| Abandoned Cart Recovery            | ✅ Multi-stage (1h/24h/72h)          | `CRON_SECRET`, `RESEND_API_KEY`                |
 
 #### 3 Issues Found & Fixed:
 
 **1. DB Schema Mismatch (SM-01) — Migration Applied:**
+
 - `social_accounts` table was missing 11 columns the code expected
 - Applied migration `sm_01_social_accounts_schema_sync`: added `user_id`, `followers_count`, `following_count`, `posts_count`, `engagement_rate`, `connected_at`, `last_error_at`, `settings`, `auto_reply_enabled`, `monitoring_enabled`, `created_by`
 - Renamed `last_sync_at` → `last_synced_at`
 - Verified: 33 columns confirmed in DB
 
 **2. "Post Now" Button Bug (SM-02) — Code Fixed:**
+
 - `PostComposerWrapper.tsx`: Both "Post Now" and "Schedule Post" called same `createPost()` which saved as `draft` when no `scheduledAt`
 - Fix: After `createPost()`, if no `scheduledAt`, now calls `publishPostNow()` which sets status to `'publishing'`, calls real platform APIs via `publishToAccount()`, logs to `social_publish_log`
 - Shows loading toast "Publishing to platforms..." during publish
 
 **3. syncAnalytics Stub (SM-03) — Code Fixed:**
+
 - `analytics-actions.ts`: `syncAnalytics()` was a stub that wrote ALL ZEROS to `social_analytics_daily`
 - Fix: Now delegates to real `syncAccountAnalytics()` from `analytics-sync-service.ts` which makes actual API calls to Facebook Insights, Instagram Business API, Twitter v2
 - The real service was already wired to the cron route but not the UI "Sync Now" button
 
 #### Key Architecture Notes:
+
 - **Unified Cron**: Single daily cron at midnight UTC (`vercel.json`) dispatches to 9 sub-routes including `socialPublish`, `socialSync`, `abandonedCarts`
 - **Abandoned Cart limitation**: Daily cron means 1-hour first email fires at next midnight, not 1 hour after abandonment
 - **YouTube publishing**: Stubbed (returns error) — all other 9 platforms are real
@@ -626,34 +719,38 @@ no title, no structure. Database analysis confirmed the AI was generating full s
 render components were ignoring ALL of it.
 
 **1. RichText was a bare `<div>` with just `content` and `color`:**
-  - AI generates: title, subtitle, pullQuote, layout (two-column), backgroundColor,
-    titleColor, subtitleColor, accentColor, dividerColor, highlightColor, pullQuoteColor,
-    cardBackgroundColor, showDivider
-  - Old component read: content, color, proseSize, maxWidth (4 of 16 props)
-  - Result: naked text floating on the left, no background, no section padding
-  - Fix: Complete rewrite as full section component with all props, proper section
-    wrapping (`<section>` with py-16 padding), title/subtitle rendering,
-    pull quote blockquote, two-column grid layout, divider support
+
+- AI generates: title, subtitle, pullQuote, layout (two-column), backgroundColor,
+  titleColor, subtitleColor, accentColor, dividerColor, highlightColor, pullQuoteColor,
+  cardBackgroundColor, showDivider
+- Old component read: content, color, proseSize, maxWidth (4 of 16 props)
+- Result: naked text floating on the left, no background, no section padding
+- Fix: Complete rewrite as full section component with all props, proper section
+  wrapping (`<section>` with py-16 padding), title/subtitle rendering,
+  pull quote blockquote, two-column grid layout, divider support
 
 **2. Tabs were completely static (no interactivity):**
-  - Buttons rendered but clicking did nothing (no useState, just static defaultTab)
-  - Content rendered as plain text, not HTML (markdown **bold**, ✅, \n all literal)
-  - No section wrapping, no title/subtitle, no AI color props used
-  - Fix: Added useState for active tab, markdownToHtml rendering, full section
-    wrapping, all AI color props (activeTabColor, inactiveTabColor, contentBackgroundColor)
+
+- Buttons rendered but clicking did nothing (no useState, just static defaultTab)
+- Content rendered as plain text, not HTML (markdown **bold**, ✅, \n all literal)
+- No section wrapping, no title/subtitle, no AI color props used
+- Fix: Added useState for active tab, markdownToHtml rendering, full section
+  wrapping, all AI color props (activeTabColor, inactiveTabColor, contentBackgroundColor)
 
 **3. Accordion rendered content as plain text:**
-  - Content with \n newlines collapsed to single line, markdown literal
-  - No section title/subtitle, no section wrapping
-  - Fix: dangerouslySetInnerHTML with markdownToHtml, section wrapper with
-    title/subtitle, auto-opens first item, proper icon colors
+
+- Content with \n newlines collapsed to single line, markdown literal
+- No section title/subtitle, no section wrapping
+- Fix: dangerouslySetInnerHTML with markdownToHtml, section wrapper with
+  title/subtitle, auto-opens first item, proper icon colors
 
 **4. Converter had no RichText/Accordion/Tabs prop mapping:**
-  - RichText converter only mapped `content` — now maps all 16 props
-  - Added explicit Accordion converter (items normalization, title/subtitle)
-  - Added explicit Tabs converter (tabs normalization, title/subtitle)
 
-**Shared utility:** `markdownToHtml()` converts **bold**, *italic*, • bullets,
+- RichText converter only mapped `content` — now maps all 16 props
+- Added explicit Accordion converter (items normalization, title/subtitle)
+- Added explicit Tabs converter (tabs normalization, title/subtitle)
+
+**Shared utility:** `markdownToHtml()` converts **bold**, _italic_, • bullets,
 \n newlines to proper HTML. Used by RichText, Accordion, and Tabs.
 
 **Files changed:** renders.tsx (+285), converter.ts (+47), core-components.ts (+13)
@@ -679,9 +776,9 @@ render components were ignoring ALL of it.
 
 **Fixes (4 files, +237 lines):**
 
-1. **converter.ts**: 
+1. **converter.ts**:
    - Added color utility functions (`hexToRgb`, `luminance`, `isLightColor`, `colorsMatch`)
-   - Hero: maps `buttonColor` → `primaryButtonColor` bidirectionally  
+   - Hero: maps `buttonColor` → `primaryButtonColor` bidirectionally
    - CTA: maps `primaryButtonColor` → `buttonColor` bidirectionally
    - CTA: prioritizes `primaryButtonText` > `ctaText` > `buttonText`
    - CTA: validates text/title colors contrast against backgroundColor
@@ -708,12 +805,14 @@ render components were ignoring ALL of it.
    - Explicitly called healthcare/dental without booking a "FAILURE"
 
 **Problem:** After design quality fix, sites still had 3 critical issues:
+
 - CTA buttons were invisible (white text on white background)
 - Navbar and Footer stayed default — no brand colors applied
 - Booking module installed and enabled but AI never used booking components
 - Some pages rendering empty (About, Services)
 
 **Root Cause Analysis:**
+
 1. **CTA `buttonTextColor` defaults to undefined** — destructures as undefined, falls back to `"#ffffff"` in renderer → white-on-white = invisible
 2. **`injectDesignTokenColors()` explicitly skips Navbar/Footer** — `if (type === "Navbar" || type === "Footer") return comp;`
 3. **NavbarComponentSchema missing color fields** — no `ctaColor`, `ctaTextColor`, `linkHoverColor`, `mobileMenuBackground`, `mobileMenuTextColor`
@@ -725,25 +824,30 @@ render components were ignoring ALL of it.
 **Fixes Implemented (5 files, +113 lines, commit `0b01874`):**
 
 **Fix 1: Schema — Module component types + Navbar/Footer color fields (schemas.ts)** ✅
+
 - Added 6 module component types to VALID_COMPONENT_TYPES: BookingWidget, BookingCalendar, BookingServiceSelector, BookingForm, EcommerceProductGrid, EcommerceFeaturedProducts
 - NavbarComponentSchema: added ctaColor, ctaTextColor, linkHoverColor, mobileMenuBackground, mobileMenuTextColor
 - FooterComponentSchema: added accentColor, newsletterButtonColor, newsletterButtonTextColor
 
 **Fix 2: Converter — CTA button visibility + Navbar color passthrough (converter.ts)** ✅
+
 - CTA buttonTextColor now NEVER defaults to invisible: derives from backgroundColor (if not white) or defaults to "#1f2937"
 - Navbar handler: added passthrough for ctaColor, ctaTextColor, mobileMenuBackground, mobileMenuTextColor
 
 **Fix 3: Engine — Navbar/Footer brand color injection (engine.ts)** ✅
+
 - `injectDesignTokenColors()` no longer skips Navbar/Footer
 - Navbar: injects ctaColor = primaryColor, ctaTextColor = "#ffffff" when AI doesn't set them
 - Footer: injects accentColor = accent, newsletterButtonColor = primaryColor, newsletterButtonTextColor = "#ffffff"
 
 **Fix 4: Formatter — Actionable module instructions (formatter.ts)** ✅
+
 - `formatModulesSection()` expanded from 5 to ~35 lines
 - Booking module: "BOOKING MODULE IS ACTIVE — You MUST include booking functionality. Use BookingWidget on homepage, BookingServiceSelector on services page, make CTAs say 'Book Now'"
 - E-commerce module: similar actionable instructions for product grids and featured products
 
 **Fix 5: Prompts — Module awareness + Navbar/Footer color requirements (prompts.ts)** ✅
+
 - SITE_ARCHITECT_PROMPT: Added module component types to valid list + MODULE AWARENESS section
 - PAGE_GENERATOR_PROMPT: Added module component types to valid list
 - NAVBAR_GENERATOR_PROMPT: Updated COLORS to require ctaColor, ctaTextColor, mobileMenu colors
@@ -756,6 +860,7 @@ render components were ignoring ALL of it.
 ### Previous Fix: Design Quality — Generic Styling & Duplicate Sections ✅
 
 **Problem:** After blank pages fix, generated pages had content but looked generic:
+
 - 3-4 duplicate Testimonials sections ("What Our Patients Say" repeated)
 - All sections used same white background with blue defaults — no visual variety
 - White buttons on white backgrounds (invisible)
@@ -763,6 +868,7 @@ render components were ignoring ALL of it.
 - AI had color freedom but no guidance → defaulted to component defaults
 
 **Root Cause Analysis:**
+
 1. **No section variety rules** — prompts didn't prevent same component type 3+ times
 2. **No color execution guidance** — prompt said "full creative freedom" but AI didn't know WHAT to do
 3. **No visual rhythm instructions** — no guidance about alternating section backgrounds
@@ -773,6 +879,7 @@ render components were ignoring ALL of it.
 **Fixes Implemented (4 files, +342 lines):**
 
 **Fix 1: Prompt — SECTION VARIETY rules (prompts.ts)** ✅
+
 - Added to SITE_ARCHITECT_PROMPT: max 2 of same type per page
 - Adjacent sections must be different types
 - Merge similar content into one richer section
@@ -780,6 +887,7 @@ render components were ignoring ALL of it.
 - Added DESIGN TOKENS section with industry color examples
 
 **Fix 2: Prompt — DESIGN EXECUTION instructions (prompts.ts)** ✅
+
 - Replaced vague "CREATIVE FREEDOM" with specific "DESIGN EXECUTION"
 - Explicit color prop list: backgroundColor, textColor, titleColor, accentColor for every section
 - Button props: buttonColor/buttonTextColor with contrast requirements
@@ -789,18 +897,21 @@ render components were ignoring ALL of it.
 - Section variety: max 2 of same type, different variants/colors if repeated
 
 **Fix 3: Component Reference — ESSENTIAL STYLING PROPS guide (component-reference.ts)** ✅
+
 - Added color props guide at TOP of page reference output
 - Lists universal, button, card, and decoration color props
 - AI sees this before the individual component references
 - Explicit instruction to use design tokens
 
 **Fix 4: Engine — deduplicateSections() (engine.ts)** ✅
+
 - Caps any component type at 2 per page (safety net)
 - Skips Navbar, Footer, Hero (structural)
 - Console logs removed sections for debugging
 - Called in stepFinalize() after applySharedElements()
 
 **Fix 5: Engine — injectDesignTokenColors() (engine.ts)** ✅
+
 - Applies brand colors when AI omits them (safety net)
 - Hero/CTA: branded background with white text
 - Other sections: alternating pattern (white → tinted → dark → repeat)
@@ -816,12 +927,14 @@ render components were ignoring ALL of it.
 ### Previous Critical Fix: Blank AI-Generated Pages ✅
 
 **Problem:** After the AI-First Redesign, generated pages appeared blank or nearly empty:
+
 - Contact page: COMPLETELY blank (only navbar + footer)
 - About page: Hero + two duplicate "Ready to Get Started?" CTAs, nothing else
 - Broken images showing alt text instead of visuals
 - Pages missing 60-80% of their sections
 
 **Root Cause:** The AI generated creative component type names (e.g., "PatientInfoSection", "Services", "LocationMap", "BusinessHours") that:
+
 1. Were NOT in the converter's typeMap → passed through as-is
 2. Were NOT in the component registry → `getComponent()` returned undefined
 3. In production, `return null` silently dropped the component → blank pages
@@ -829,38 +942,45 @@ render components were ignoring ALL of it.
 **9 issues identified, 5 fixes implemented (4 files, +391 lines):**
 
 **Fix 1: Constrained AI type schema (schemas.ts)** ✅
-- Changed `type: z.string()` → `type: z.enum(VALID_COMPONENT_TYPES)` 
+
+- Changed `type: z.string()` → `type: z.enum(VALID_COMPONENT_TYPES)`
 - 30 valid component types that MUST match the registry
 - Also constrained `suggestedComponent` in SectionPlanSchema
 - AI can no longer invent arbitrary type names
 
 **Fix 2: Triple-layer fuzzy matching in converter (converter.ts)** ✅
+
 - Added 100+ new typeMap entries for common AI name variations
 - Added suffix stripping: removes Block/Section/Component/Widget/Grid etc.
 - Added semantic keyword matching: "services"→Features, "appointment"→CTA, "accreditations"→TrustBadges
 - Console warnings for truly unknown types (aids debugging)
 
 **Fix 3: Explicit type reference in prompts (prompts.ts)** ✅
+
 - PAGE_GENERATOR_PROMPT now lists ALL valid types with usage guide
 - Type mapping guide: services→Features, credentials→TrustBadges, booking→CTA
 - SITE_ARCHITECT_PROMPT lists valid suggestedComponent values
 - "Do NOT invent new component type names" instruction
 
 **Fix 4: Production fallback in renderer (renderer.tsx)** ✅
+
 - Unknown components now render title/description in clean section
 - Never silently drop content in production again
 - Development mode shows enhanced debug info
 
 **Fix 5: Broken images in TrustBadges/LogoCloud (converter.ts)** ✅
+
 - TrustBadges: Uses text+icon pills when no real image URLs
 - LogoCloud: Filters empty images; converts to Features if all empty
 - No more `<img src="">` broken image tags
 
 **Also deployed: Architecture model upgrade (ai-provider.ts)** ✅
+
 - Upgraded architecture step from Haiku (fast) → Sonnet 4.6 (premium)
 - Updated stale comments about blueprint-guided planning
 
 **Commits:**
+
 - `8eff0ea` — Architecture model upgrade
 - `260d2f0` — Blank pages critical fix (schemas + converter + prompts + renderer)
 
@@ -869,6 +989,7 @@ render components were ignoring ALL of it.
 ---
 
 #### Phases 1-3 (Prior Session) ✅
+
 - Phase 1: Bug Fixes (About→Features mapping, Pricing monthlyPrice→price, FAQ expandFirst→defaultOpen:0, Tailwind safelist)
 - Phase 2: Liberate the Converter (all 15+ handlers → pass-through with `...props`)
 - Phase 3: Remove Override Systems (engine.ts override block removed, converter color math ~200 lines removed)
@@ -876,20 +997,24 @@ render components were ignoring ALL of it.
 #### Phases 4-6 (Prior Session) ✅
 
 **Phase 4: Rewrite Prompts + Dynamic Component Discovery** ✅
+
 - 4.1: Created `component-reference.ts` — NEW file (~195 lines) with `generateArchitectureReference()` and `generatePageReference()`. Reads live from `componentRegistry.getAll()`.
 - 4.2-4.3: Completely rewrote `prompts.ts` from ~1,198 lines → ~330 lines. Empowering tone, dynamic component catalog.
 - 4.4-4.5: Simplified prompt builders. Removed `INDUSTRY_CONTENT_PROMPTS` and `getIndustryContentPrompt()`.
 
 **Phase 5: Eliminate Dropdowns** ✅
+
 - Removed `STYLE_OPTIONS`, `COLOR_OPTIONS`, dropdowns, dead state from page.tsx
 - AI now makes all design decisions autonomously from the user's prompt
 
 **Phase 6: Wire Personality End-to-End** ✅
+
 - `personalityContext` stored as class property, flows to every page generation call
 
 #### Phase 7: Dead Code Cleanup (This Session) ✅
 
 **7.1: Deleted 6 dead files (~4,100+ lines removed):**
+
 - `design/inspiration-engine.ts` (533 lines) — DesignInspirationEngine, AWARD_WINNING_PATTERNS, getQuickDesignTokens
 - `design/variety-engine.ts` (472 lines) — getDesignPersonality, formatPersonalityForAI, 8 PERSONALITIES presets
 - `design/generator.ts` (389 lines) — DesignSystemGenerator class
@@ -898,10 +1023,12 @@ render components were ignoring ALL of it.
 - `prompts.ts.backup` — backup from Phase 4
 
 **7.2: Cleaned converter.ts (~40 lines removed):**
+
 - Removed local `DesignTokens` interface, `activeDesignTokens` module state, `setDesignTokens()` function
 - Simplified `convertOutputToStudioPages()` — removed `designTokens` parameter
 
 **7.3: Cleaned engine.ts (~200+ lines removed):**
+
 - Removed 3 dead import blocks (industry-blueprints, inspiration-engine, variety-engine)
 - Removed `enableDesignInspiration` and `useQuickDesignTokens` from EngineConfig + DEFAULT_CONFIG
 - Removed `activeBlueprint` class property
@@ -912,12 +1039,14 @@ render components were ignoring ALL of it.
 - Cleaned DEFAULT_CONFIG comment (removed stale `enableDesignInspiration` mention)
 
 **7.4: Cleaned API route schemas (8 files):**
+
 - Removed `enableDesignInspiration` and `useQuickDesignTokens` from all 6 route schemas
   - 4 step routes: architecture, page, shared, finalize
   - 2 legacy routes: route.ts, stream/route.ts
 - Removed `useQuickDesignTokens: true` from page.tsx basePayload
 
 **7.5: Cleaned barrel exports (3 files):**
+
 - `design/index.ts` — removed DesignSystemGenerator (4 exports) and DesignInspirationEngine (3 exports)
 - `config/index.ts` — removed all design-references exports (7 exports)
 - Main `index.ts` — removed DesignSystemGenerator exports (4) + DesignSystem/DesignSystemInput types (2)
@@ -929,6 +1058,7 @@ render components were ignoring ALL of it.
 ### AI-First Redesign — COMPLETE ✅
 
 All 7 phases implemented. The AI Website Designer now operates on a pure AI-First philosophy:
+
 - **"The AI is the designer. We are the translator."**
 - No override systems, no hardcoded blueprints, no design token enforcement
 - Dynamic component catalog from live registry
@@ -942,6 +1072,7 @@ All 7 phases implemented. The AI Website Designer now operates on a pure AI-Firs
 ### Latest Session: 3 Critical Commits Pushed ✅
 
 **Commits:**
+
 - `0cf1e65` — Fix 8 component type mismatches in template-utils.ts
 - `bae98da` — Fix page creation schema mismatch (pages were silently failing)
 - `48cd5cc` — Add Google Rich Results structured data (Schema.org JSON-LD)
@@ -952,16 +1083,16 @@ All 7 phases implemented. The AI Website Designer now operates on a pure AI-Firs
 
 The auto-generated ecommerce page content used short type names that didn't match the Studio registry's `Ecommerce`-prefixed names. 8 of 12 component types were wrong:
 
-| Wrong (template-utils) | Correct (Studio registry) |
-|------------------------|--------------------------|
-| CartPageBlock | EcommerceCartPage |
-| CheckoutPageBlock | EcommerceCheckoutPage |
+| Wrong (template-utils) | Correct (Studio registry)  |
+| ---------------------- | -------------------------- |
+| CartPageBlock          | EcommerceCartPage          |
+| CheckoutPageBlock      | EcommerceCheckoutPage      |
 | OrderConfirmationBlock | EcommerceOrderConfirmation |
-| CategoryNavBlock | EcommerceCategoryNav |
-| BreadcrumbBlock | EcommerceBreadcrumb |
-| SearchBarBlock | EcommerceSearchBar |
-| FilterSidebarBlock | EcommerceFilterSidebar |
-| FeaturedProductsBlock | EcommerceFeaturedProducts |
+| CategoryNavBlock       | EcommerceCategoryNav       |
+| BreadcrumbBlock        | EcommerceBreadcrumb        |
+| SearchBarBlock         | EcommerceSearchBar         |
+| FilterSidebarBlock     | EcommerceFilterSidebar     |
+| FeaturedProductsBlock  | EcommerceFeaturedProducts  |
 
 ### Fix 2: Page Creation Schema Mismatch ✅ (`bae98da`)
 
@@ -970,6 +1101,7 @@ The auto-generated ecommerce page content used short type names that didn't matc
 **Result:** Page creation had been **silently failing for ALL sites**. DB query confirmed 0 ecommerce pages exist for any of the 5 sites with ecommerce installed (Ten and Ten, Besto, Sisto, Mesto, Jesto).
 
 **Fix:** Rewrote as two-step process:
+
 1. INSERT into `pages` with correct columns (`name, slug, seo_title, seo_description, is_homepage`)
 2. INSERT into `page_content` with `page_id, content` (jsonb)
 
@@ -982,16 +1114,19 @@ Also fixed `deletePagesCreatedByModule()` to use known ecommerce slugs instead o
 Implemented comprehensive structured data system for Google Rich Results (product cards in search results):
 
 **New Files:**
+
 - `src/modules/ecommerce/lib/structured-data.ts` (~300 lines) — Schema.org JSON-LD generators
 - `src/modules/ecommerce/components/ecommerce-seo-injector.tsx` (~340 lines) — Server component
 
 **Schema Types Generated:**
+
 - **Product pages** (`/products/[slug]`): Full Product schema with offers, AggregateRating, variants (AggregateOffer for price ranges), breadcrumbs, store Organization
 - **Shop pages** (`/shop`): ItemList (enables Google carousel), Organization, WebSite with SearchAction (Sitelinks Search Box)
 - **Category pages** (`/categories/[slug]`): ItemList + Breadcrumb for category products
 - **Quote mode**: Correctly skips product structured data when `quotation_hide_prices` is true (Google requires accurate prices)
 
 **Modified:**
+
 - `page.tsx` — Added `EcommerceSeoInjector` in render, enhanced `generateMetadata()` for product-specific OG tags + canonical URLs
 
 ---
@@ -1006,18 +1141,23 @@ Implemented comprehensive structured data system for Google Rich Results (produc
 All 4 remaining e-commerce priorities from the deep audit are now complete:
 
 #### 1. Payment Settings Alignment ✅
+
 Complete rewrite of payment-settings.tsx from Stripe/PayPal/Square to actual providers (Paddle, Flutterwave, Pesapal, DPO, Manual).
 
 #### 2. Product Reviews System (Phase ECOM-60) ✅
+
 Full reviews system: DB (reviews table, stats columns, auto-update trigger, RPC), server actions (public + admin CRUD), hook, 2 Studio blocks (ReviewFormBlock, ReviewListBlock), admin moderation view, wired into sidebar/header/dashboard.
 
 #### 3. Abandoned Cart Recovery (Phase ECOM-61) ✅
+
 Automation engine with configurable thresholds (1hr/24hr/72hr email delays), cron endpoint, recovery redirect endpoint, unified cron integration, DB migration for tracking columns.
 
 #### 4. Pre-built Store Templates (Phase ECOM-62) ✅
+
 4 store presets (Fashion, Electronics, Food/Grocery, Digital Products), template application action (creates categories + products + settings), StoreTemplateSelector UI, TemplatesView dashboard view, full sidebar/header/dashboard integration.
 
 #### DB Migrations Applied
+
 - `em_60_product_reviews` — Reviews table, indexes, RLS policies
 - `em_61_product_review_stats_columns` — average_rating/review_count on products, trigger
 - `em_62_increment_review_helpful` — RPC function for atomic helpful count
@@ -1033,9 +1173,11 @@ Automation engine with configurable thresholds (1hr/24hr/72hr email delays), cro
 **Deployed:** Pushed to origin/main for Vercel auto-deploy
 
 #### Problem
+
 Design personality (8 presets × 49 palettes = 392 visual combinations) was generated in `stepArchitecture()` but NEVER passed to `stepSinglePage()`. Each page had zero awareness of the chosen personality — making all generated sites feel generic despite the diversity system existing.
 
 #### Fix
+
 - `engine.ts`: `stepArchitecture()` now returns `designPersonality` + `personalityContext`
 - `engine.ts`: `stepSinglePage()` and `generatePage()` accept and forward personality params
 - `engine.ts`: `getSectionBackgrounds()` (previously dead code) now computes visual rhythm per page
@@ -1045,6 +1187,7 @@ Design personality (8 presets × 49 palettes = 392 visual combinations) was gene
 - `ai-designer/page.tsx`: Client forwards personality from architecture result to each page call
 
 #### Impact
+
 Every page now knows: hero style (8 variants), card style (6 variants), animation preference (5 styles), border radius, shadow style, typography scale, section divider style, background pattern (7 patterns), and pre-computed section background colors. This is the single highest-impact fix for design diversity.
 
 ---
@@ -1057,9 +1200,11 @@ Every page now knows: hero style (8 variants), card style (6 variants), animatio
 **Deployed:** Pushed to origin/main for Vercel auto-deploy
 
 #### Deep Audit Findings
+
 Comprehensive 3-agent audit (prompts, renderers, design system) revealed the renderers already support ~70% more capabilities than the converter was wiring up. The prompts scored **C+** overall with critical gaps in animations (F), design diversity (F), parallax (F), section transitions (F), typography (D), and responsive specifics (D). Strong areas: business-specific content (A), color/theme consistency (A-), industry templates (B+).
 
 #### Prompt Enhancements
+
 1. **Scroll-triggered animations** — Every section after Hero now instructed to use `animateOnScroll` with section-appropriate types (stagger for multi-item, fade for single-content, scale for CTAs)
 2. **Hero parallax** — `backgroundAttachment: "fixed"` for depth effect, scroll indicators with animated chevron/mouse, trust badges above headlines
 3. **Typography scale** — Precise H1-H3 sizes (48-72px/30-42px/20-24px), weights, line-heights, letter-spacing
@@ -1071,24 +1216,27 @@ Comprehensive 3-agent audit (prompts, renderers, design system) revealed the ren
 9. **Footer design** — Scroll-to-top, newsletter, visual separation
 
 #### Converter Enhancements (Wiring Up Existing Renderer Capabilities)
-| Component | New Props Wired | Effect |
-|-----------|----------------|--------|
-| Hero | `backgroundAttachment: "fixed"`, `scrollIndicator`, `enableMouseParallax` | Parallax scrolling, scroll indicator |
-| Navbar | `transparentUntilScroll`, `glassEffect`, `glassBlur` | Premium transparent → glass transition |
-| Features | `animateOnScroll`, `animationType: "stagger"`, `staggerDelay` | Cards reveal as user scrolls |
-| Testimonials | `animateOnScroll`, `autoplay`, `showArrows`, `showDots` | Scroll reveal + carousel controls |
-| Team | `animateOnScroll`, `hoverEffect: "lift"` | Scroll reveal + hover interaction |
-| CTA | `animateOnScroll`, `buttonHoverEffect`, `trustBadges` | Animation + social proof |
-| FAQ | `animateOnScroll`, `showContactCTA` | Scroll reveal + "Still have questions?" section |
-| Stats | `animateOnScroll` | Triggers count-up animation when visible |
-| Gallery | `animateOnScroll`, `staggerDelay` | Staggered image reveal |
-| About | `animateOnScroll` | Fade-in on scroll |
-| Pricing | `animateOnScroll`, `staggerDelay` | Staggered plan card reveal |
+
+| Component    | New Props Wired                                                           | Effect                                          |
+| ------------ | ------------------------------------------------------------------------- | ----------------------------------------------- |
+| Hero         | `backgroundAttachment: "fixed"`, `scrollIndicator`, `enableMouseParallax` | Parallax scrolling, scroll indicator            |
+| Navbar       | `transparentUntilScroll`, `glassEffect`, `glassBlur`                      | Premium transparent → glass transition          |
+| Features     | `animateOnScroll`, `animationType: "stagger"`, `staggerDelay`             | Cards reveal as user scrolls                    |
+| Testimonials | `animateOnScroll`, `autoplay`, `showArrows`, `showDots`                   | Scroll reveal + carousel controls               |
+| Team         | `animateOnScroll`, `hoverEffect: "lift"`                                  | Scroll reveal + hover interaction               |
+| CTA          | `animateOnScroll`, `buttonHoverEffect`, `trustBadges`                     | Animation + social proof                        |
+| FAQ          | `animateOnScroll`, `showContactCTA`                                       | Scroll reveal + "Still have questions?" section |
+| Stats        | `animateOnScroll`                                                         | Triggers count-up animation when visible        |
+| Gallery      | `animateOnScroll`, `staggerDelay`                                         | Staggered image reveal                          |
+| About        | `animateOnScroll`                                                         | Fade-in on scroll                               |
+| Pricing      | `animateOnScroll`, `staggerDelay`                                         | Staggered plan card reveal                      |
 
 #### Key Architecture Insight
+
 **Zero new components were needed.** The PremiumHeroRender already supports mouse parallax, 3D parallax, video backgrounds, scroll indicators, badges, and pattern decorations. PremiumNavbarRender already supports transparent-until-scroll and glass effects. All 50+ render components already support universal animation/hover props via `withUniversalProps` HOC. The converter was simply not mapping these props — a classic "the capability exists but was never wired up" scenario.
 
 #### Remaining Opportunities (Not Implemented — Future Enhancement)
+
 - Design personality not passed to per-page generation (critical gap G3)
 - `getSectionBackgrounds()` is dead code (gap G1)
 - No user-driven style preference in the designer input form
@@ -1107,7 +1255,9 @@ Comprehensive 3-agent audit (prompts, renderers, design system) revealed the ren
 **Deployed:** Pushed to origin/main for Vercel auto-deploy
 
 #### Problem
+
 12-area e-commerce audit revealed notifications were the highest-ROI gap:
+
 - `sendOrderEmail()` was a **stub** that only logged timeline events — never sent real emails
 - `notifyOrderShipped()` emailed the customer but never notified the business owner in-app
 - Payment webhooks (Paddle, Flutterwave, Pesapal, DPO) completed transactions but sent **zero** email notifications
@@ -1122,6 +1272,7 @@ Comprehensive 3-agent audit (prompts, renderers, design system) revealed the ren
 8 professional HTML email templates with agency branding, color-coded info boxes, action buttons
 
 **New/Rewritten Notification Functions** (in `business-notifications.ts`):
+
 - `notifyOrderDelivered()` — in-app to owner + email to customer
 - `notifyOrderCancelled()` — in-app to owner + email to owner + email to customer
 - `notifyPaymentReceived()` — email to customer on successful payment
@@ -1144,12 +1295,14 @@ Comprehensive 3-agent audit (prompts, renderers, design system) revealed the ren
 | `updateAlertLevel()` ok→warning | `notifyLowStock()` | `inventory-actions.ts` |
 
 **Key Design Decisions:**
+
 - All notifications are **fire-and-forget** with `.catch()` — never break payment/order flows
 - Uses existing `sendBrandedEmail()` pipeline (agency branding, opt-out respect, email_logs)
 - In-app notifications created via existing `createNotification()` service
 - DB-stored templates (Settings UI) remain disconnected from actual sending for now — uses hardcoded `BRANDED_TEMPLATES`
 
 #### Also Fixed in Session 5
+
 - **Currency Settings JSONB dual-store** — fixed `currency_settings` JSONB not being populated on 3 sites (commit `046278a`)
 - **Currency dropdown stale closure** — two sequential `updateField()` calls overwrote each other, fixed with single functional `setSettings()` updater (commit `abfa968`)
 - **Image upload timeout** — added 30s `AbortController` timeout to prevent infinite hanging (commit `abfa968`)
@@ -1166,11 +1319,14 @@ Comprehensive 3-agent audit (prompts, renderers, design system) revealed the ren
 **Deployed:** Pushed to origin/main for Vercel auto-deploy
 
 #### Problem
+
 User reported "product popup still shows dollar sign ($), everything feels hardcoded." Deep audit revealed two root causes:
+
 1. **Stale DB rows**: User's site was created before the ZMW fix — `initializeEcommerceForSite` only INSERTs if no row exists, so existing settings still had `currency: 'USD'`
 2. **20+ local shadow functions**: Dashboard components defined their OWN `formatCurrency`/`formatPrice` functions with `DEFAULT_CURRENCY` hardcoded, completely bypassing the `useCurrency()` hook from ecommerce-context
 
 #### Solution: Comprehensive Centralization
+
 - **Enhanced `useCurrency()` hook** in `ecommerce-context.tsx`:
   - `formatPrice(amountInCents)` — divides by 100, formats with store currency
   - `formatAmount(displayAmount)` — formats WITHOUT dividing (for pre-divided analytics data)
@@ -1180,39 +1336,43 @@ User reported "product popup still shows dollar sign ($), everything feels hardc
 - **DB migration** `em-53-fix-stale-usd-currency.sql` created to UPDATE existing 'USD' rows to 'ZMW'
 
 #### Components Fixed (21 total)
-| Component | What Changed |
-|-----------|-------------|
-| `customers-view.tsx` | Removed local formatCurrency, uses useCurrency() |
-| `inventory-view.tsx` | Replaced DEFAULT_CURRENCY import with useCurrency |
-| `order-detail-dialog.tsx` | Uses useCurrency with currency override for order-specific currency |
-| `refund-dialog.tsx` | Uses `const { formatPrice: formatCurrency } = useCurrency()` |
-| `invoice-template.tsx` | Uses useCurrency inside forwardRef with currency override |
-| `customer-table.tsx` | Removed currency prop default, uses useCurrency |
-| `customer-detail-dialog.tsx` | Uses useCurrency |
-| `product-card.tsx` | Removed local formatPrice, added useCurrency in both sub-components |
-| `order-card.tsx` | Removed local formatPrice, added useCurrency in both sub-components |
-| `order-items-table.tsx` | Removed local formatCurrency + currency prop, changed 7 calls |
-| `revenue-chart.tsx` | Removed 2 local functions, inline formatCompactCurrency with currencySymbol |
-| `analytics-view.tsx` | formatPrice for cents, formatAmount for display-ready values |
-| `orders-view.tsx` | Replaced formatCurrency import with useCurrency |
-| `stats-cards.tsx` | Removed local formatCurrency closure, uses hook |
-| `ecommerce-metric-card.tsx` | Fixed AnimatedNumber sub-component to use useCurrency |
-| `home-view.tsx` | Removed DEFAULT_CURRENCY import + prop pass-through |
-| `product-data-table.tsx` | Passes hook currency to createProductColumns |
-| `product-columns.tsx` | Kept DEFAULT_CURRENCY as safety fallback for non-component function |
-| `EcommerceDashboardEnhanced.tsx` | Removed 8 `currency={currency}` pass-throughs |
-| `loyalty-view.tsx` | Replaced DEFAULT_CURRENCY_SYMBOL with currencySymbol from hook |
-| `quote-items-editor.tsx` | Replaced DEFAULT_CURRENCY default with useCurrency |
+
+| Component                        | What Changed                                                                |
+| -------------------------------- | --------------------------------------------------------------------------- |
+| `customers-view.tsx`             | Removed local formatCurrency, uses useCurrency()                            |
+| `inventory-view.tsx`             | Replaced DEFAULT_CURRENCY import with useCurrency                           |
+| `order-detail-dialog.tsx`        | Uses useCurrency with currency override for order-specific currency         |
+| `refund-dialog.tsx`              | Uses `const { formatPrice: formatCurrency } = useCurrency()`                |
+| `invoice-template.tsx`           | Uses useCurrency inside forwardRef with currency override                   |
+| `customer-table.tsx`             | Removed currency prop default, uses useCurrency                             |
+| `customer-detail-dialog.tsx`     | Uses useCurrency                                                            |
+| `product-card.tsx`               | Removed local formatPrice, added useCurrency in both sub-components         |
+| `order-card.tsx`                 | Removed local formatPrice, added useCurrency in both sub-components         |
+| `order-items-table.tsx`          | Removed local formatCurrency + currency prop, changed 7 calls               |
+| `revenue-chart.tsx`              | Removed 2 local functions, inline formatCompactCurrency with currencySymbol |
+| `analytics-view.tsx`             | formatPrice for cents, formatAmount for display-ready values                |
+| `orders-view.tsx`                | Replaced formatCurrency import with useCurrency                             |
+| `stats-cards.tsx`                | Removed local formatCurrency closure, uses hook                             |
+| `ecommerce-metric-card.tsx`      | Fixed AnimatedNumber sub-component to use useCurrency                       |
+| `home-view.tsx`                  | Removed DEFAULT_CURRENCY import + prop pass-through                         |
+| `product-data-table.tsx`         | Passes hook currency to createProductColumns                                |
+| `product-columns.tsx`            | Kept DEFAULT_CURRENCY as safety fallback for non-component function         |
+| `EcommerceDashboardEnhanced.tsx` | Removed 8 `currency={currency}` pass-throughs                               |
+| `loyalty-view.tsx`               | Replaced DEFAULT_CURRENCY_SYMBOL with currencySymbol from hook              |
+| `quote-items-editor.tsx`         | Replaced DEFAULT_CURRENCY default with useCurrency                          |
 
 #### Studio/Mobile Components — NOT Changed (By Design)
+
 12 studio/mobile storefront components (MobileProductCard, ProductSwipeView, etc.) are NOT wrapped in `EcommerceProvider`, so they can't use `useCurrency()`. They use `DEFAULT_CURRENCY` from `locale-config.ts` which is correctly set to 'ZMW'. This is acceptable since the storefront doesn't have access to the ecommerce context.
 
 #### Key Architecture Rule
+
 - **Dashboard components** (inside EcommerceProvider) → use `useCurrency()` hook
 - **Studio/storefront components** (outside EcommerceProvider) → use `DEFAULT_CURRENCY` from locale-config
 - **Non-component functions** (like `createProductColumns`) → accept currency as parameter, fallback to `DEFAULT_CURRENCY`
 
 #### Pending Action for User
+
 ⚠️ User must run `migrations/em-53-fix-stale-usd-currency.sql` in Supabase SQL Editor to fix existing DB rows from 'USD' to 'ZMW'.
 
 ---
@@ -1224,6 +1384,7 @@ User reported "product popup still shows dollar sign ($), everything feels hardc
 **Status:** All critical and medium bugs fixed across 13 categories
 
 #### Summary
+
 User tested e-commerce module in production, reported multiple bugs. Comprehensive audit via 3+ sub-agents found 40+ bugs. All critical and medium issues fixed:
 
 1. **ZMW Currency** — Default currency changed from USD to ZMW (Zambian Kwacha, K, 16% VAT) in locale-config.ts and onboarding
@@ -1241,6 +1402,7 @@ User tested e-commerce module in production, reported multiple bugs. Comprehensi
 13. **Embed Code** — Fixed script filename from nonexistent `dramac-ecommerce.js` to actual `dramac-embed.js`
 
 #### Key Architecture Insights
+
 - Prices stored in CENTS (×100) in DB. Display must ÷100. `formatCurrency` from locale-config does NOT divide.
 - Hooks registered by slug but called with UUID. `resolveModuleSlug()` queries DB to bridge.
 - Studio blocks need `ComponentDefinition` export + `studioComponents` registration to appear in drag-and-drop.
@@ -1255,32 +1417,48 @@ User tested e-commerce module in production, reported multiple bugs. Comprehensi
 **Deployed:** Pushed to origin/main for Vercel auto-deploy
 
 #### Root Cause
+
 The `/steps/shared` endpoint (navbar + footer generation) consistently returned 504 Gateway Timeout even after setting `maxDuration=300`. Evidence strongly suggests **Vercel Fluid Compute is NOT enabled** on this project, meaning the hard function limit is **60 seconds** regardless of maxDuration setting. The shared endpoint was doing:
+
 1. Auth check (~1-2s)
-2. Site access DB query (~1-2s)  
+2. Site access DB query (~1-2s)
 3. `buildDataContext()` — **13 parallel DB queries** (~3-5s)
 4. Two Haiku AI calls in parallel (~10-30s depending on cold start)
-Total: ~15-40s, right at the edge of 60s with cold starts pushing it over.
+   Total: ~15-40s, right at the edge of 60s with cold starts pushing it over.
 
 #### Solution: Three-Layer Defense
+
 1. **ZERO DB calls** — `stepSharedElements` now receives all business data via `SharedElementsContext` from the architecture step (which already gathered it). Eliminates 13 DB queries and ~5s latency.
 2. **45-second AI timeout** — `Promise.race()` wrapper kills AI calls if they exceed 45s (leaving 15s buffer for cold start + auth).
 3. **Deterministic fallbacks** — If AI calls fail OR timeout, `buildFallbackNavbar()` and `buildFallbackFooter()` construct valid navbar/footer from business data. **The endpoint can NEVER fail.**
 
 #### New Type: `SharedElementsContext`
+
 ```typescript
 export interface SharedElementsContext {
-  name: string; domain: string; industry: string; description: string;
-  logoUrl: string; contactEmail: string; contactPhone: string;
+  name: string;
+  domain: string;
+  industry: string;
+  description: string;
+  logoUrl: string;
+  contactEmail: string;
+  contactPhone: string;
   contactAddress: Record<string, string | undefined>;
   social: Array<{ platform: string; url: string }>;
-  hours: Array<{ day: string; openTime: string; closeTime: string; isClosed?: boolean }>;
+  hours: Array<{
+    day: string;
+    openTime: string;
+    closeTime: string;
+    isClosed?: boolean;
+  }>;
   services: string[];
 }
 ```
+
 Populated in `stepArchitecture()`, passed through client → route → engine.
 
 #### Data Flow
+
 ```
 stepArchitecture() → builds full siteContext with contact/social/hours/services
   ↓ (returned to client)
@@ -1295,13 +1473,14 @@ stepSharedElements() → reconstructs this.context from siteContext (NO DB)
 ```
 
 #### Worst-Case Timeline (60s budget)
-| Phase | Time | Budget Used |
-|-------|------|-------------|
-| Cold start | ~5s | 5s |
-| Auth + site access | ~2s | 7s |
-| Context reconstruction | ~0ms | 7s |
-| AI calls (Haiku ×2 parallel) | ~10-15s | 22s |
-| **Total** | **~22s** | **Well under 60s** |
+
+| Phase                        | Time     | Budget Used        |
+| ---------------------------- | -------- | ------------------ |
+| Cold start                   | ~5s      | 5s                 |
+| Auth + site access           | ~2s      | 7s                 |
+| Context reconstruction       | ~0ms     | 7s                 |
+| AI calls (Haiku ×2 parallel) | ~10-15s  | 22s                |
+| **Total**                    | **~22s** | **Well under 60s** |
 
 If AI takes >45s → fallback triggers at 45s mark → still under 60s.
 
@@ -1315,28 +1494,32 @@ If AI takes >45s → fallback triggers at 45s mark → still under 60s.
 **Deployed:** Pushed to origin/main for Vercel auto-deploy
 
 #### Problem Evolution
+
 1. **Architecture step timeout** → Fixed: switched to Haiku (fast tier)
 2. **Finalize step timeout** → Fixed: moved navbar/footer gen to step 2, made finalize local-only
 3. **Business name bug** → Fixed: `getBusinessName()` wasn't checking `client.name`, siteContext pass-through added
 4. **Pages step timeout (FINAL FIX)** → `stepPages()` tried to generate ALL pages + navbar + footer in parallel in one 60s function. With Sonnet 4.6 at ~20-30s per page, 4-5 pages always exceeded 60s.
 
 #### Solution: Per-Page API Calls
+
 Each page gets its own 60s serverless function call. Total budget = `pages.length × 60s`.
 
-| Endpoint | Purpose | Model | Time |
-|----------|---------|-------|------|
-| `/steps/architecture` | Context + architecture | Haiku 4.5 | ~8-10s |
-| `/steps/page` (NEW) | ONE page per call | Sonnet 4.6 | ~20-30s |
-| `/steps/shared` (NEW) | Navbar + footer in parallel | Haiku 4.5 | ~8-10s |
-| `/steps/finalize` | Local assembly + quality audit | None (CPU) | <1s |
-| `/steps/pages` (DEPRECATED) | Old bulk endpoint | — | Returns 410 Gone |
+| Endpoint                    | Purpose                        | Model      | Time             |
+| --------------------------- | ------------------------------ | ---------- | ---------------- |
+| `/steps/architecture`       | Context + architecture         | Haiku 4.5  | ~8-10s           |
+| `/steps/page` (NEW)         | ONE page per call              | Sonnet 4.6 | ~20-30s          |
+| `/steps/shared` (NEW)       | Navbar + footer in parallel    | Haiku 4.5  | ~8-10s           |
+| `/steps/finalize`           | Local assembly + quality audit | None (CPU) | <1s              |
+| `/steps/pages` (DEPRECATED) | Old bulk endpoint              | —          | Returns 410 Gone |
 
 #### Engine Methods
+
 - `stepSinglePage(input, architecture, pagePlan, formattedContext)` — generates ONE page
 - `stepSharedElements(input, architecture, pages)` — generates navbar + footer
 - `generateWebsite(input)` — legacy wrapper, now uses per-page loop internally
 
 #### Client Flow (`handleGenerate()`)
+
 1. Call `/steps/architecture` → get architecture + formattedContext + siteContext
 2. Loop through `architecture.pages` → call `/steps/page` for each page sequentially
 3. Call `/steps/shared` → get navbar + footer
@@ -1344,10 +1527,12 @@ Each page gets its own 60s serverless function call. Total budget = `pages.lengt
 5. Progress bar shows per-page updates (20-65% during page gen)
 
 #### Model Strategy
+
 - **Premium (Sonnet 4.6):** page-content, iteration, content-generation
 - **Fast (Haiku 4.5):** architecture, navbar, footer, module-analysis, responsive, design-inspiration
 
 #### Zod Schema Rule (Still Active)
+
 AI-facing schemas must NOT use `.int()`, `.min()`, `.max()`, literal numeric unions — Claude rejects these JSON schema properties.
 
 ---
@@ -1360,7 +1545,9 @@ AI-facing schemas must NOT use `.int()`, `.min()`, `.max()`, literal numeric uni
 **TypeScript:** Zero new errors (only 2 pre-existing in cloudflare/zones.ts)
 
 #### Problem Analysis (6 Issues Found)
+
 Deep scan of all domain/email pages, components, actions, and types revealed:
+
 1. **Billing Integration page** asks agencies for Paddle Product/Price IDs they don't have (single platform Paddle account)
 2. **Pricing config** defaults to 0% with `apply_platform_markup=false` (no effect)
 3. **TLD pricing table** uses hardcoded fake wholesale prices (`WHOLESALE_PRICES` object)
@@ -1369,12 +1556,14 @@ Deep scan of all domain/email pages, components, actions, and types revealed:
 6. **No role guards** on settings pages — agencies could theoretically access pricing controls
 
 #### Architecture Decision
+
 - **Pricing controls → Super Admin** (`/admin/domains/`): Platform markup toggle, supplier health, revenue analytics
 - **Agency view → Simplified** (`/dashboard/domains/settings/`): Overview stats, client assignment, branding only
 - **Client assignment → Fully implemented**: New server actions + UI for assigning domains to clients
 - **No breaking changes**: Old pricing/billing pages still exist at their routes, just removed from agency navigation
 
 #### New Files Created
+
 1. **`/admin/domains/page.tsx`** — Super admin domain & email platform controls overview
 2. **`/admin/domains/pricing/page.tsx`** + **`pricing-client.tsx`** — Platform markup toggle/config
 3. **`/admin/domains/health/page.tsx`** + **`health-client.tsx`** — Supplier (RC) health monitoring
@@ -1384,6 +1573,7 @@ Deep scan of all domain/email pages, components, actions, and types revealed:
 7. **`/components/clients/client-domains-list.tsx`** — Domains tab for client detail page
 
 #### Existing Files Modified
+
 1. **`/lib/actions/domains.ts`** — Added `assignDomainToClient()`, `getClientDomains()`, `getAgencyClientsForAssignment()`, `getAgencySitesForAssignment()`
 2. **`/components/clients/client-detail-tabs.tsx`** — Added "Domains" tab (6th tab)
 3. **`/config/admin-navigation.ts`** — Added "Domain Controls" entry pointing to `/admin/domains`
@@ -1398,7 +1588,9 @@ Deep scan of all domain/email pages, components, actions, and types revealed:
 **Commits:** `270d6da` (filter), `64f67fd` (pricing math), `6973dce` (cache bypass)
 
 #### Critical Discovery: RC Prices Are Per-Month Rates
+
 ALL ResellerClub pricing APIs (`customer-price.json`, `reseller-cost-price.json`, `reseller-price.json`) return **per-account PER-MONTH** rates, NOT total-for-tenure amounts. The code had been treating them as total-for-tenure, causing:
+
 - Wildly wrong prices for multi-month billing (12mo was 1/12th of correct amount)
 - Absurd savings percentages (93% instead of 22%)
 - Paddle checkout amounts massively undercharged
@@ -1406,6 +1598,7 @@ ALL ResellerClub pricing APIs (`customer-price.json`, `reseller-cost-price.json`
 **Evidence:** RC panel shows "COST PRICE **/mo**" next to values that exactly match the API numbers.
 
 #### Fixes Applied
+
 1. **`getTotalPrice()`** — Was `rate * accounts`, now `rate * accounts * months`
 2. **`getPerMonthRate()`** — Was `rate / months` (double-dividing!), now just `rate` (already per-month)
 3. **`calculateBasePrice()`** (server action) — Was `rate * accounts`, now `rate * accounts * months`
@@ -1413,6 +1606,7 @@ ALL ResellerClub pricing APIs (`customer-price.json`, `reseller-cost-price.json`
 5. **Cache bypass** — Detects stale cache missing Titan Mail and fetches live
 
 #### Pricing Pipeline (Confirmed)
+
 ```
 RC customer-price.json (per-account/month rates)
   → flattenTitanMailPricing() (explode titanmailglobal → synthetic keys)
@@ -1424,12 +1618,14 @@ RC customer-price.json (per-account/month rates)
 ```
 
 #### Pricing Architecture Decision: RC Markup vs Platform Markup
+
 - **RC customer-price.json** already includes the reseller's configured profit margin
 - **Platform markup** (`apply_platform_markup` in `agency_domain_pricing`) is an ADDITIONAL layer on top
 - Default: `apply_platform_markup = false`, so customers pay the RC customer-price
 - Recommendation: Set RC markup to 0%, control ALL markup from the platform for flexibility
 
 #### Region: Global (Not India)
+
 Zambia → Africa → uses `titanmailglobal` (NOT `titanmailindia`). India pricing is for India-based customers only.
 
 ---
@@ -1441,14 +1637,18 @@ Zambia → Africa → uses `titanmailglobal` (NOT `titanmailindia`). India prici
 **Files Changed:** 10 (876 insertions, 21 deletions)
 
 #### Context
+
 User showed screenshots of all 3 plans (Professional, Business, Enterprise) in their RC panel under MY SHOP > TITAN MAIL. Key feedback:
+
 - "Why are you even mentioning ResellerClub?" → Remove supplier name from customer-facing UI
 - "You can live powered by Titan if it is required" → Titan branding is OK
 - "I only see one package" → Professional plan was missing because it only exists in the NEWER Titan Mail REST API
 - "Pull correct data" → Everything must come from the API, not hardcoded
 
 #### Critical Discovery
+
 ResellerClub has **TWO separate email APIs**:
+
 1. **Legacy Business Email API**: `/api/eelite/...` endpoints, product keys `eeliteus`/`enterpriseemailus`, only Business + Enterprise
 2. **NEW Titan Mail REST API** (KB/3483): `/restapi/product/{product_key}/...` endpoints, product key `titanmailglobal`, has ALL 3 plans via `plan-id`:
    - Professional = 1762 (5GB), Business = 1756 (10GB), Enterprise = 1757 (50GB), Free Trial = 1755
@@ -1488,12 +1688,15 @@ ResellerClub has **TWO separate email APIs**:
    - `billing-integration.tsx` (1 place → "the provider")
 
 #### Key Architecture Decision
+
 The pricing pipeline uses a "flattener" pattern: the raw RC API response (which may have nested Titan Mail structures) is flattened into synthetic top-level keys before being passed to the wizard. This means:
+
 - The wizard's dynamic parsing (any key with `email_account_ranges`) continues to work
 - Both flat (legacy) and nested (Titan Mail) pricing structures are supported
 - New plans are auto-discovered without code changes
 
 #### Next Steps — CRITICAL
+
 1. **Deploy and hit `/api/admin/email-plans/discover`** to verify what pricing keys the RC API actually returns for Titan Mail
 2. If `titanmailglobal` appears with nested plan pricing → the flattener handles it automatically
 3. If the API returns separate keys per plan → they'll be auto-discovered
@@ -1501,6 +1704,7 @@ The pricing pipeline uses a "flattener" pattern: the raw RC API response (which 
 5. The webhook handler for Paddle payment completion needs to route to `titanMailApi.createOrder()` for Titan Mail products (instead of legacy `businessEmailApi.createOrder()`)
 
 #### User-Visible Pricing (from RC screenshots)
+
 - **Professional**: 1mo=$1.20 (cost $0.60), 12mo=$11.52 (cost $0.48/mo)
 - **Business**: 1mo=$1.68 (cost $0.84), 12mo=$17.28 (cost $0.72/mo)
 - **Enterprise**: 1mo=$2.90 (cost $1.45), 12mo=$29.04 (cost $1.21/mo)
@@ -1514,6 +1718,7 @@ The pricing pipeline uses a "flattener" pattern: the raw RC API response (which 
 **Files Changed:** 7
 
 #### What Was Built
+
 - Fixed Business Email endpoint: `eelite/add.json` → `eelite/us/add.json`
 - Made pricing cache dynamic (auto-discover all plans from API)
 - Added `getAllCachedEmailPlans()` to pricing cache
@@ -1530,9 +1735,11 @@ The pricing pipeline uses a "flattener" pattern: the raw RC API response (which 
 **Files Changed:** 7
 
 #### Context
+
 User asked: "In ResellerClub we have three packages: Business, Enterprise and Professional. Why don't we have that on our platform?" and "The prices are different for all packages — we need proper pricing."
 
 RC API research confirmed only **two** email products exist:
+
 - **Business Email** — `eeliteus`, endpoint `eelite/add.json`, 10GB/mailbox, requires `product-key` param
 - **Enterprise Email** — `enterpriseemailus`, endpoint `enterpriseemail/us/add.json`, 50GB/mailbox, NO `product-key` param
 - "Professional" does NOT exist in RC API
@@ -1562,6 +1769,7 @@ RC API research confirmed only **two** email products exist:
 7. **`purchase/page.tsx`** — Simplified to just: back arrow + title + wizard (removed features grid Card).
 
 #### UX Design
+
 - Plan cards: 2-column on sm+ breakpoints
 - Only plans where RC pricing data was returned are shown (graceful degradation)
 - Pricing for SELECTED plan updates dynamically as mailboxes/period changes
@@ -1569,7 +1777,9 @@ RC API research confirmed only **two** email products exist:
 - Skeletons shown while pricing loads
 
 #### ⚠️ DB Migrations Still Required
+
 Must run in Supabase (in order):
+
 1. `migrations/dm-11-pricing-cache-schema.sql`
 2. `migrations/dm-11b-email-pricing-cache-slab-support.sql`
 
@@ -1582,6 +1792,7 @@ Must run in Supabase (in order):
 **Files Changed:** 7 (6 modified + 1 new migration)
 
 #### Root Cause — Pricing Cache Was Completely Broken
+
 The `refreshEmailPricing()` in `pricing-cache.ts` used a flat structure (`productPricing[months]?.addnewaccount`) that doesn't match the actual RC API response. RC returns a slab-based nested structure: `eeliteus → email_account_ranges → slab → add/renew → months → price`.
 
 Additionally, the cache was populated by the daily cron but **never read** — the wizard and server action both called the RC API live, ignoring the cache entirely.
@@ -1610,6 +1821,7 @@ Additionally, the cache was populated by the daily cron but **never read** — t
 7. **Provisioning logging** — Added debug log before email order creation showing domain, accounts, months, product, customerId.
 
 #### Key Technical Details:
+
 - RC slabs: `1-5`, `6-25`, `26-49`, `50-200000`
 - RC months: `1, 3, 6, 12` only
 - RC prices: TOTAL per-account for the full tenure (not per-month)
@@ -1617,6 +1829,7 @@ Additionally, the cache was populated by the daily cron but **never read** — t
 - Daily cron at 02:00 UTC refreshes both domain and email pricing caches
 
 #### ⚠️ Action Required:
+
 Run migration `dm-11b-email-pricing-cache-slab-support.sql` in Supabase before the cron next runs or before any email purchase attempts. The old table schema will cause upsert failures.
 
 ---
@@ -1644,6 +1857,7 @@ Run migration `dm-11b-email-pricing-cache-slab-support.sql` in Supabase before t
 7. **order-service.ts using wrong pricing endpoint** — Used `getResellerPricing()` (slab-based intermediate pricing) instead of `getResellerCostPricing()` (actual wholesale cost). Fixed with try/catch fallback.
 
 #### Pricing Note:
+
 The $0.42/year prices are **correct** — they represent the actual RC reseller cost for Business Email. This is the wholesale price RC charges. To charge customers more, the agency needs to configure markup via `apply_platform_markup` in `agency_domain_pricing`. The platform correctly applies markup when configured.
 
 ---
@@ -1655,9 +1869,11 @@ The $0.42/year prices are **correct** — they represent the actual RC reseller 
 **Files Changed:** 1 (`src/lib/resellerclub/email/client.ts`)
 
 #### Root Cause: All 3 Email Pricing Endpoints Used Non-Existent URLs
+
 The email API client used `eelite/customer-pricing.json`, `eelite/reseller-pricing.json`, and `eelite/reseller-cost-pricing.json` — **none of these endpoints exist** in the ResellerClub API. They all return HTTP 404.
 
 Business Email does NOT have product-specific pricing endpoints. It must use the **generic Products API**:
+
 - `products/customer-price.json` (optional `customer-id`)
 - `products/reseller-price.json`
 - `products/reseller-cost-price.json`
@@ -1677,9 +1893,11 @@ These generic endpoints return ALL products (domains, email, hosting). The email
 **Files Changed:** 8
 
 #### CRITICAL: RC Email Pricing Response Structure Completely Wrong
+
 The `EmailPricingResponse` type and all pricing parsers (UI + server) assumed a flat structure: `productKey → months → { addnewaccount, renewaccount }`. But the actual RC API returns a deeply nested structure with account-range slabs:
 
 **Actual RC structure (confirmed from API docs):**
+
 ```
 "eeliteus": { "email_account_ranges": { "1-5": { "add": { "1": 0.86, "12": 10.20 }, "renew": {...} }, "6-25": {...} } }
 ```
@@ -1689,41 +1907,49 @@ This caused `calculateBasePrice()` to always return $0, which was caught by the 
 **Fix:** Rewrote `EmailPricingResponse` type, `calculateBasePrice()`, `calculateWholesalePrice()`, and UI `loadPricing()` to navigate the real structure: productKey → email_account_ranges → find correct slab for account count → add → months → price × accounts.
 
 #### CRITICAL: UI vs Server Pricing Source Mismatch
+
 UI called `getResellerPricing()` (reseller-pricing.json) while server action called `getCustomerPricing()` (customer-pricing.json) — different endpoints returning different prices.
 
 **Fix:** `getBusinessEmailPricing()` now uses `getCustomerPricing()` when a customerId exists, falling back to `getResellerPricing()`. Both UI and server now use the same pricing source.
 
 #### CRITICAL: Missing Required `auto-renew` Parameter
+
 RC `eelite/add.json` requires `auto-renew` (Boolean, Required per API docs). The code omitted it, which could cause order creation failures.
 
 **Fix:** Added `'auto-renew': false` to createOrder request.
 
 #### CRITICAL: Fragile Response Handling for createOrder
+
 RC may return entityid as a number (like domain contacts). Code expected a typed object — could silently fail.
 
 **Fix:** Added defensive response handling (typeof checks for number/string/object + actionstatus error check).
 
 #### HIGH: No Stale Pending Purchase Cleanup for Email
+
 Domain flow had cleanup for orphaned pending_purchases; email flow didn't.
 
 **Fix:** Added identical cleanup block: delete old `pending_payment` records for the same domain with different idempotency keys.
 
 #### HIGH: domainId Never Passed From Form
+
 The form only sent domainName, not domainId from URL params — email orders had NULL domain_id, breaking domain-to-email linkage.
 
 **Fix:** Form now reads `domainId` from URL searchParams and appends it to formData.
 
 #### HIGH: retry_count Never Incremented
+
 Retry handler checked `retry_count >= 5` but never incremented it — users could retry infinitely.
 
 **Fix:** Added `retry_count: retryCount + 1` to the status update.
 
 #### MEDIUM: Domain Regex Too Restrictive
+
 Regex required minimum 3-char second-level domain, rejecting valid domains like `x.io`, `ab.co`.
 
 **Fix:** Changed `{1,61}` to `{0,61}` with optional middle group.
 
 #### MEDIUM: Success Page Missing Email Period
+
 Email purchases have `months` in purchase_data but the success page only displayed `years`.
 
 **Fix:** Added months display section for email purchases.
@@ -1737,23 +1963,29 @@ Email purchases have `months` in purchase_data but the success page only display
 **Files Changed:** 7
 
 #### Problem 1: "Setup Failed" — Invalid reg-contact-id: undefined
+
 After Paddle payment succeeded, the webhook called ResellerClub `domains/register.json` with `reg-contact-id: undefined`, causing all domain registrations to fail with 4 retries and auto-refund.
 
 **Root Cause:** Two bugs in `contacts.ts`:
+
 1. RC `contacts/add.json` returns a **plain number** (e.g. `12345`), but code checked `typeof response === 'string'` only — falling through to `String(response.entityid)` → `"undefined"`
 2. RC `contacts/search.json` returns numbered keys `{"1": {...}, "2": {...}}` — code expected `response.result` array → always returned empty → `createOrUpdate()` always created new contacts
 
 **Fix:** Handle all RC response types (number, string, object) with guards. Parse numbered keys with `Object.entries()` filtering.
 
 #### Problem 2: needs_manual_refund column missing
+
 When auto-refund failed, webhook tried to set `status='refund_failed'` and `needs_manual_refund=true` on `pending_purchases` — both violate the DB schema (CHECK constraint + missing column).
 
 **Fix:**
+
 - Created migration `dm-12b` to add `refund_reason`, `paddle_refund_id`, `refunded_at`, `needs_manual_refund` columns and expand CHECK constraint with `refunded`/`refund_failed` statuses
 - Added defensive fallback in code: if migration not applied, use `status='failed'` + store refund info in `error_details` JSONB
 
 #### Problem 3: Email Flow Issues (6 bugs)
+
 End-to-end review of email module found:
+
 1. **Pre-flight blocks checkout** (Bug 3): Email used hard-block on insufficient balance vs domains' fail-open → Changed to fail-open
 2. **$0 price guard** (Bug 9): `calculateBasePrice()` returns 0 if RC lacks pricing for selected month → Added guard to prevent free Paddle transactions
 3. **Button text** (Bug 4): Success page showed "Go to Domains" for email purchases → Now context-aware
@@ -1770,17 +2002,21 @@ End-to-end review of email module found:
 **Files Changed:** 2
 
 #### Problem
+
 The Paddle checkout overlay showed a quantity selector set to "1" that users could modify. This was confusing because:
+
 - Users interpreted quantity "1" as "1 year" when it actually means "1 line item (domain)"
 - The total price already included multi-year pricing (e.g., $221.96 = $116.98/yr × 2 years)
 - Changing quantity to "2" doubled the already-correct amount to $443.92
 
 #### Research
+
 - Paddle Billing v2 has NO `allowQuantity: false` setting (that was Paddle Classic only, confirmed via GitHub issue #55)
 - Paddle docs: "Set quantity limits against a price... Customers aren't able to change the quantity of this item on the checkout"
 - Solution: Add `quantity: { minimum: 1, maximum: 1 }` to the non-catalog price object
 
 #### Fix
+
 1. **`transactions.ts` — `createDomainPurchase()`**: Added `quantity: { minimum: 1, maximum: 1 }` to the non-catalog price object, locking the Paddle quantity stepper
 2. **`transactions.ts` — `createEmailPurchase()`**: Same fix for email purchases
 3. **`paddle-client.ts` — `openPaddleTransactionCheckout()`**: Set `showAddDiscounts: false` since catalog discounts don't apply to custom non-catalog items
@@ -1794,12 +2030,15 @@ The Paddle checkout overlay showed a quantity selector set to "1" that users cou
 **Files Changed:** 1
 
 #### Problem
+
 After the per-year rate fix (`93337b0`), the Paddle popup still showed the OLD amount ($116.98) instead of the corrected amount ($221.96). The platform Order Summary displayed correctly, but Paddle was out of sync.
 
 #### Root Cause
+
 `generateIdempotencyKey()` only used `agencyId + purchaseType + domainName` — it did NOT include years or amount. When the user retried checkout, the same key matched a stale `pending_purchases` record from before the price fix, returning the OLD Paddle transaction with the OLD amount.
 
 #### Fix
+
 1. **Idempotency key now includes years + amount in cents**: `{agencyId}:domain_register:{domain}-{years}yr:{amountCents}`
 2. **Stale cleanup**: Old pending_purchases for the same domain with a different key are automatically deleted
 3. **Improved Paddle display**: Line item name changed to `"dramac.io (2 Years)"` instead of `"dramac.io - 2yr"` to avoid confusion with Paddle's quantity adjuster
@@ -1814,20 +2053,25 @@ After the per-year rate fix (`93337b0`), the Paddle popup still showed the OLD a
 **Files Changed:** 6
 
 #### Overview
+
 Discovered and fixed the **fundamental root cause** of all domain pricing issues: the ResellerClub API `customer-price.json` returns **per-year prices** keyed by tenure length (e.g. `register[2] = $58.49` means $58.49/year for a 2-year registration), but the entire codebase treated `register[N]` as the **total price for N years**. This caused:
+
 - **Bogus savings percentages**: "2 Years (Save 50%)", "3 Years (Save 67%)", "5 Years (Save 80%)" — comparing per-year rate vs total
 - **Wrong Paddle checkout amount**: sending per-year rate instead of total
 - **Mismatched platform vs Paddle prices**
 
 #### RC API Format (from official docs):
+
 ```
 "productkey": { "action-name": { "tenure-in-years": "per_year_price" } }
 ```
+
 - `register[1] = 58.49` → $58.49/yr for 1yr term (total: $58.49)
 - `register[2] = 58.49` → $58.49/yr for 2yr term (total: $116.98)
 - Savings only exist if `register[N] < register[1]` (lower per-year rate for longer terms)
 
 #### Fixes Applied:
+
 1. **`getRetailForYears()` in 4 files** — Now returns `perYearRate * years` (the total), not `register[N]` directly
 2. **`getWholesaleForYears()`** — Same fix: per-year rate × years
 3. **Savings calculation** — Compares per-year rates (`register[N]` vs `register[1]`), only shows savings when RC genuinely offers lower per-year rate for longer tenure
@@ -1836,6 +2080,7 @@ Discovered and fixed the **fundamental root cause** of all domain pricing issues
 6. **`getFallbackPrice()`** — Populates multi-year keys with same per-year rate (no fake discounts)
 
 #### Files Changed:
+
 - `src/components/domains/domain-cart.tsx` — getRetailForYears + savings calc
 - `src/components/domains/domain-checkout.tsx` — getRetailForYears
 - `src/app/(dashboard)/dashboard/domains/cart/cart-page-client.tsx` — getRetailForYears + getWholesaleForYears
@@ -1844,6 +2089,7 @@ Discovered and fixed the **fundamental root cause** of all domain pricing issues
 - `src/lib/domain-fallback-prices.ts` — all entries now per-year; getFallbackPrice consistent
 
 #### Price Flow (now correct end-to-end):
+
 ```
 RC API → register[N] (per-year rate) → stored in retailPrices/wholesalePrices maps
 → getRetailForYears(): perYearRate * years = TOTAL
@@ -1860,7 +2106,9 @@ RC API → register[N] (per-year rate) → stored in retailPrices/wholesalePrice
 **Files Changed:** 11
 
 #### Overview
+
 Fixed three interrelated production bugs in the domain search and checkout pipeline that caused:
+
 1. Domain names displaying incorrectly (e.g. "1044io.io" instead of "1044.io")
 2. Year switching not working (2-year, 3-year etc. prices missing or wrong)
 3. Paddle checkout amounts not matching displayed prices
@@ -1868,17 +2116,20 @@ Fixed three interrelated production bugs in the domain search and checkout pipel
 #### Root Causes & Fixes:
 
 **Bug 1 — Domain TLD Parsing:**
+
 - `normalizeDomainKeyword()` stripped dots → "1044.io" became "1044io" → search returned "1044io.io"
 - Fix: Preserve dots, new `parseDomainKeyword()` extracts SLD/TLD from full domain input
 - `searchDomains()` uses extracted SLD for API calls, prioritizes detected TLD
 
 **Bug 2 — Year Pricing Missing:**
+
 - RC `parsePricingResponse()` hardcoded years 1, 2, 5 only — missed 3, 4, 6-10
 - `DomainPrice` type used fixed keys `{1: number, 2?: number, 5?: number}` — now `Record<number, number>`
 - Year dropdown filtered out years without explicit pricing — now always shows 1, 2, 3, 5, 10
 - Fallback prices only had 1yr and 2yr — `getFallbackPrice()` now generates all standard years
 
 **Bug 3 — Price Map Key Coercion:**
+
 - `Object.fromEntries(Object.entries())` produces string keys → JSON roundtrip preserves strings
 - `obj[2]` works for string key "2" in JS but inconsistent across browsers/versions
 - Fix: All `mapDomainPrice` calls now explicitly `Number(key)` for consistency
@@ -1886,6 +2137,7 @@ Fixed three interrelated production bugs in the domain search and checkout pipel
 - The exact price shown in UI is now passed through to Paddle transaction
 
 #### Files Changed:
+
 - `src/lib/domain-keyword.ts` — `normalizeDomainKeyword` preserves dots, new `parseDomainKeyword`
 - `src/lib/actions/domains.ts` — Uses `parseDomainKeyword`, numeric keys in all `Object.fromEntries`
 - `src/lib/resellerclub/domains.ts` — `parsePricingResponse` extracts years 1-10
@@ -1915,48 +2167,61 @@ The pre-flight RC balance check was BLOCKING checkout by throwing an error when 
 **Files Changed:** 19 (15 source files + 1 migration + 3 log exports)
 
 #### Overview
+
 Deep scan of entire e-commerce module (~235 files) identified and fixed all critical issues across Studio APIs, checkout flows, payment webhooks, dashboard navigation, cart widgets, and checkout hooks. Zero TypeScript errors in all e-commerce files after fixes.
 
 #### Critical Fixes Applied:
 
 **1. Studio API Routes — Wrong Table Names (2 files)**
+
 - `src/app/api/studio/modules/ecommerce/products/route.ts` — Changed `ecommerce_products` → `mod_ecommod01_products`, fixed column names (`price`→`base_price`, `inventory_quantity`→`quantity`), replaced invalid `ecommerce_categories` join with `mod_ecommod01_product_categories` join table
 - `src/app/api/studio/modules/ecommerce/categories/route.ts` — Changed `ecommerce_categories` → `mod_ecommod01_categories`, product count now uses join table
 
 **2. Products API — Price Unit Confusion (1 file)**
+
 - `src/app/api/modules/ecommerce/products/route.ts` — Removed incorrect `base_price / 100` conversion. Prices stored as DECIMAL(10,2) dollar amounts, not cents.
 
 **3. Checkout API — Pesapal + DPO Real Integration (1 file)**
+
 - `src/app/api/modules/ecommerce/checkout/route.ts` — Pesapal: full 3-step API flow (auth token → register IPN → submit order). DPO: createToken XML API returning real payment URL. Fixed `pesapalConfig.sandbox` → `pesapalConfig.environment === 'demo'` to match PesapalConfig type.
 
 **4. Payment Webhooks — Server-Side Verification (1 file)**
+
 - `src/app/api/modules/ecommerce/webhooks/payment/route.ts` — Added real verification: Flutterwave calls verify endpoint, Pesapal marks as pending (awaiting IPN), DPO calls verifyToken XML endpoint. All have fallback to "pending for manual review".
 
 **5. Auto-Setup Actions — Duplicate Code + Locale (1 file)**
+
 - `src/modules/ecommerce/actions/auto-setup-actions.ts` — Removed ~270 lines of duplicate code (second copy of DEFAULT_STORE_SETTINGS and 4 functions). Updated defaults from USD → ZMW (Zambian Kwacha, 16% VAT, taxIncluded: true).
 
 **6. Dashboard + Orders — handleViewOrder (2 files)**
+
 - `src/modules/ecommerce/components/ecommerce-dashboard.tsx` — `handleViewOrder` now passes orderId via `focusOrderId` state
 - `src/modules/ecommerce/components/views/orders-view.tsx` — Added `useEffect` to auto-open OrderDetailDialog when `focusOrderId` is set
 
 **7. Checkout Hook — Dynamic Methods (1 file)**
+
 - `src/modules/ecommerce/hooks/useCheckout.ts` — Replaced hardcoded USD shipping ($9.99/$19.99/$29.99) and payment (card/PayPal) with dynamic loading from store settings. Checks paddle_config, flutterwave_config, pesapal_config, dpo_config, manual_payment_enabled. Removed duplicate state declarations.
 
 **8. Cart Components — Discount Code Display (2 files)**
+
 - `src/modules/ecommerce/studio/components/CartDrawerBlock.tsx` — Shows actual `cart.discount_code` instead of hardcoded 'APPLIED'
 - `src/modules/ecommerce/studio/components/CartPageBlock.tsx` — Same fix + replaced `window.confirm()` with state-based confirmation
 
 **9. Cart Widgets — Table Names + Session Keys (2 files)**
+
 - `src/modules/ecommerce/components/widgets/CartIconWidget.tsx` — Fixed `ecommerce_carts` → `mod_ecommod01_carts`, `ecommerce_cart_items` → `mod_ecommod01_cart_items`. Fixed guest cart to use `ecom_session_id` from localStorage instead of non-existent `cart_${siteId}` key.
 - `src/modules/ecommerce/components/widgets/FloatingCartButton.tsx` — Same fixes
 
 **10. Header Widgets — Implemented (1 file)**
+
 - `src/modules/ecommerce/components/widgets/EcommerceHeaderWidgets.tsx` — Replaced hidden stub divs with real search toggle (expandable input) and wishlist badge with count from useStorefrontWishlist hook
 
 **11. Database Migration — Customers Table (1 file)**
+
 - `migrations/ecom-phase-fixes-customers-v2.sql` — Adds missing columns: user_id, avatar_url, is_guest, email_verified. Renames last_order_at → last_order_date to match code expectations.
 
 #### Known Remaining Items (Non-Critical):
+
 - `EcommerceDashboardEnhanced.tsx` — Dead code, not imported anywhere. Mock data functions return empty arrays. Not blocking.
 - Wishlist — localStorage-only persistence (no server-side). Works for single browser.
 - Product Reviews — Referenced in types/events but no DB table, no API, no UI for reviews. `ProductRatingDisplay` component exists but has no data source.
@@ -1971,11 +2236,13 @@ Deep scan of entire e-commerce module (~235 files) identified and fixed all crit
 **Files Changed:** 3
 
 #### Overview
+
 CRITICAL GAP IDENTIFIED: When a customer pays via Paddle for a domain/email, the webhook triggers ResellerClub provisioning. If RC provisioning fails (e.g., insufficient RC funds), the customer has already been charged but receives nothing — and there was NO automatic refund mechanism. This is the single most dangerous financial bug in any reseller platform.
 
 Industry research (WHMCS, cPanel Store, Blesta, HostBill) confirmed the standard approach: **Strategy 1 (Prevention) + Strategy 2 (Safety Net)** combined.
 
 #### Fix 1 — Pre-Flight RC Balance Check (Prevention):
+
 - **`checkResellerBalance(wholesaleAmount)`** — new exported function in `transactions.ts`
   - Calls `client.getBalance()` from ResellerClub API
   - Compares balance against wholesale cost BEFORE creating Paddle transaction
@@ -1986,6 +2253,7 @@ Industry research (WHMCS, cPanel Store, Blesta, HostBill) confirmed the standard
 - User sees: "Unable to process this domain order at the moment. Please try again later or contact support."
 
 #### Fix 2 — Auto-Refund on Provisioning Failure (Safety Net):
+
 - **`autoRefundTransaction(paddleTransactionId, reason, pendingPurchaseId)`** — new exported function
   - Uses Paddle Adjustments API: `paddle.adjustments.create({ action: 'refund', type: 'full', transactionId, reason })`
   - Full refund — returns money to customer's payment method
@@ -1996,6 +2264,7 @@ Industry research (WHMCS, cPanel Store, Blesta, HostBill) confirmed the standard
   - CRITICAL: if refund API itself fails, it's logged for manual intervention — never silently lost
 
 #### Fix 3 — Balance Check API Endpoint:
+
 - **`POST /api/purchases/balance-check`** — new API route
   - Frontend can pre-check availability before showing checkout
   - Request: `{ wholesaleAmount, purchaseType, domainName }`
@@ -2004,12 +2273,14 @@ Industry research (WHMCS, cPanel Store, Blesta, HostBill) confirmed the standard
   - Requires authentication
 
 #### Key Architecture Decisions:
+
 - **Fail-open on pre-flight**: If RC API is down, we don't block checkout — the auto-refund catches failures downstream
 - **Full refund only**: No partial refunds on provisioning failure — customer gets all money back
 - **Paddle Adjustments API**: Used `type: 'full'` (no items array needed) for simplicity
 - **Manual intervention path**: If auto-refund fails, purchase is flagged for admin review — nothing is silently lost
 
 #### Files Changed:
+
 - `src/lib/paddle/transactions.ts` — `checkResellerBalance()`, `autoRefundTransaction()`, pre-flight checks in both purchase functions
 - `src/lib/paddle/webhook-handlers.ts` — auto-refund dispatch on provisioning failure
 - `src/app/api/purchases/balance-check/route.ts` — new API endpoint
@@ -2023,17 +2294,20 @@ Industry research (WHMCS, cPanel Store, Blesta, HostBill) confirmed the standard
 **Files Changed:** 11
 
 #### Overview
+
 Production logs confirmed the TRUE root cause of persistent `"Invalid customer-id: undefined"` error: the string `"undefined"` (not null) was stored in `agencies.resellerclub_customer_id` column. JavaScript's truthy check `if (agency?.resellerclub_customer_id)` passes for the string `"undefined"`, so `ensureResellerClubCustomerForProvisioning()` returned `"undefined"` as the customer ID instead of creating a new one. The contact validation guard in contacts.ts correctly caught this downstream.
 
 Additionally, comprehensive industry research (Intercom, Zendesk, LiveChat, Crisp, Tidio, HubSpot) was conducted to bring the live chat rating system up to industry standards. The visitor-facing widget was 100% complete, but the agent/admin side had critical gaps — agents couldn't see individual conversation ratings.
 
 #### Fix 1 — RC Customer ID Validation (4 files):
+
 - **provisioning.ts**: Changed truthy check to reject `'undefined'`, `'null'`, and empty strings. Auto-clears invalid values from DB.
 - **domains.ts**: Same guard in `ensureResellerClubCustomer()`.
 - **transfers.ts**: Same guard before `customerIdToUse` is used.
 - **business-email.ts**: Same guard before email order creation.
 
 #### Fix 2 — Live Chat Rating Enhancements (7 files):
+
 - **ConversationViewWrapper.tsx**: Added **Satisfaction Rating card** to right panel — shows stars, emoji label (😠 Poor → 🤩 Excellent), comment quote, rated timestamp. Shows "Awaiting rating" or "No rating received" contextually.
 - **ConversationsPageWrapper.tsx**: Added **rating indicator** (⭐ X/5) to conversation list rows.
 - **ChatAnalyticsWrapper.tsx**: Added **Satisfaction Trend** line chart (avg rating + count over time).
@@ -2043,17 +2317,19 @@ Additionally, comprehensive industry research (Intercom, Zendesk, LiveChat, Cris
 - **WidgetRating.tsx**: Enhanced labels with emoji indicators (Intercom-style).
 
 #### Key Architecture Decision:
+
 Used the already-built-but-unused `SatisfactionRating` shared component pattern as inspiration, but implemented inline star rendering in ConversationViewWrapper for more control over layout and emoji labeling.
 
 #### Industry Research Summary:
-| Platform | Scale | Timing | Email Follow-up |
-|----------|-------|--------|-----------------|
-| Intercom | 5-emoji | On close | Yes |
-| Zendesk | Binary → customizable | On solved | Yes |
-| LiveChat | Binary thumbs | On end | Webhooks |
-| Crisp | 1-5 stars | Widget + 1hr email | Yes |
-| Tidio | 5-emoji | On close + 24hr email | Yes |
-| HubSpot | CSAT/NPS/CES | On end | Yes |
+
+| Platform | Scale                 | Timing                | Email Follow-up |
+| -------- | --------------------- | --------------------- | --------------- |
+| Intercom | 5-emoji               | On close              | Yes             |
+| Zendesk  | Binary → customizable | On solved             | Yes             |
+| LiveChat | Binary thumbs         | On end                | Webhooks        |
+| Crisp    | 1-5 stars             | Widget + 1hr email    | Yes             |
+| Tidio    | 5-emoji               | On close + 24hr email | Yes             |
+| HubSpot  | CSAT/NPS/CES          | On end                | Yes             |
 
 DRAMAC CMS now matches: ✅ 5-star + emoji labels, ✅ auto-trigger on close, ✅ comment field, ✅ in-app notification, ✅ per-agent analytics, ✅ distribution chart, ✅ trend chart, ✅ individual conversation rating display.
 
@@ -2068,21 +2344,26 @@ Still remaining for future: email follow-up backup, customizable prompt text, Sl
 **Files Changed:** 4 — contacts.ts, provisioning.ts, ChatWidget.tsx, WidgetRating.tsx
 
 #### Overview
+
 After pushing commit `f5762d0` (provisioning auto-create fallback), production logs STILL showed `"Invalid customer-id: undefined"` error. Root cause: **Vercel deployment is stale** — deployment `dpl_2wQtiTdKLQSSRmg9DB1sRoW15u7w` never picked up commits `8c3b2cb`, `f5762d0`, or `1f620d3`. All fix code exists in `origin/main` but is NOT running in production.
 
 Additionally, live chat star ratings appeared to submit but silently failed — the "Thank You" message showed regardless of API success/failure.
 
 #### Fix 1 — RC Contact Validation Guards (contacts.ts):
+
 Added validation guards in 3 methods (`create()`, `listByCustomer()`, `createOrUpdate()`) to catch `undefined`/`null`/`'undefined'`/`'null'` customerId BEFORE hitting the RC API. Throws descriptive error instead of letting RC return cryptic HTTP 500.
 
 #### Fix 2 — Provisioning Diagnostic Logging (provisioning.ts):
+
 Added `console.log` statements to `ensureResellerClubCustomerForProvisioning()` at:
+
 - Entry (agency ID + user ID)
 - When agency already has RC customer
 - When creating new RC customer
-This enables tracing in Vercel logs to confirm the function actually executes after deployment.
+  This enables tracing in Vercel logs to confirm the function actually executes after deployment.
 
 #### Fix 3 — Live Chat Rating Error Handling (ChatWidget.tsx + WidgetRating.tsx):
+
 - `handleRating` now returns `Promise<boolean>` (was `void`)
 - Returns `true` on success, `false` on failure
 - `WidgetRating` checks return value: shows "Thank You" only on success
@@ -2090,7 +2371,9 @@ This enables tracing in Vercel logs to confirm the function actually executes af
 - Changed `console.warn` to `console.error` with response body logging
 
 #### CRITICAL DEPLOYMENT ISSUE:
+
 Vercel auto-deploy appears to NOT be picking up pushes to `origin/main`. All commits since at least `8c3b2cb` are NOT deployed. Manual Vercel redeploy is required. Check:
+
 1. Vercel Dashboard → Deployments → verify latest deployment timestamp
 2. If stale, trigger manual redeploy from Vercel Dashboard
 3. Verify auto-deploy is enabled for `main` branch
@@ -2105,10 +2388,13 @@ Vercel auto-deploy appears to NOT be picking up pushes to `origin/main`. All com
 **Files Changed:** 4 — provisioning.ts, success/page.tsx, retry/route.ts, status/route.ts
 
 #### Overview
+
 After Paddle payment succeeded, provisioning still failed with `"Invalid customer-id: undefined"` because `resellerclub_customer_id` was null in the agencies table. The checkout-time `ensureResellerClubCustomer()` was in code but the deployed build was stale. Even with correct deployment, there was no fallback — provisioning permanently failed.
 
 #### CRITICAL FIX — Auto-Create RC Customer in Provisioning:
+
 All 4 provisioning paths (single domain, multi-domain, email, transfer) now have `ensureResellerClubCustomerForProvisioning()` — a fallback that:
+
 1. Checks `agencies.resellerclub_customer_id`
 2. If null → gets user email from `profiles` table (falls back to `auth.users`)
 3. Creates RC customer via `customerService.createOrGet()` with all required params
@@ -2118,18 +2404,22 @@ All 4 provisioning paths (single domain, multi-domain, email, transfer) now have
 **WHY:** The checkout-time call (`ensureResellerClubCustomer()`) is the primary path. But if it silently fails (returns null but doesn't block checkout), or there's a race condition, or the deployed build doesn't include it yet — provisioning now self-heals instead of permanently failing.
 
 #### NEW — Retry Provisioning Endpoint:
+
 - `POST /api/purchases/retry` — re-triggers provisioning for failed purchases
 - Auth check: only purchase owner can retry, max 5 attempts
 - Resets status to `'paid'` then re-provisions
 
 #### Purchase Status Page Improvements:
+
 - **Retry Setup button** — was only "Contact Support", now has a retry button with spinner
 - **User-friendly error message** — no longer shows raw API errors like "Invalid customer-id: undefined"
 - **Amount display fixed** — DB stores dollars, was incorrectly multiplied by 100 (showed $11098 instead of $110.98)
 - **Polling restarts after retry** — watches `purchase.status` changes
 
 #### Confirmed: Live Chat Rating System is FULLY IMPLEMENTED ✅ (UI Bug Fixed in `1696351`)
+
 Complete audit found the rating system works end-to-end:
+
 - ✅ `ChatRating.tsx` — 5-star UI with comment textarea
 - ✅ `ChatWidget.tsx` — transitions to rating state on resolve/end-chat
 - ✅ `POST /api/modules/live-chat/rating` — writes to DB + notifications
@@ -2147,32 +2437,40 @@ Complete audit found the rating system works end-to-end:
 **Files Changed:** 6 — customers.ts, domains.ts (RC), domains.ts (actions), transfers.ts, provisioning.ts, transactions.ts
 
 #### Overview
+
 After deploying `ensureResellerClubCustomer()` wiring, production testing revealed a chain of latent bugs. Endpoint fix (`acc92b3`) then full audit (`8c3b2cb`) resolved all 16 issues.
 
 #### CRITICAL FIXES (were blocking domain registration):
+
 1. **`lang-pref` REQUIRED by RC signup** — was conditionally sent, caller never passed it. Now always sends `'en'` default.
 2. **`ensureResellerClubCustomer()` passes `languagePreference: 'en'`** — root caller fix.
 3. **Removed spurious `email` param from RC signup** — `username` IS the email, `email` is not a valid RC param.
 
 #### Security Fix:
+
 4. **`generatePassword()` now uses `crypto.getRandomValues()`** — was insecure `Math.random()`.
 
 #### RC API Endpoint Fixes (transfers.ts — ALL 10 endpoints):
+
 5. **Leading `/` removed from all endpoints** — caused double-slash URLs (`baseUrl//domains/...`).
 6. **`auto-renewal` → `recurring`** — wrong endpoint name for auto-renew toggle.
 7. **`renewDomain()` now sends `exp-date`** — was completely missing this REQUIRED parameter.
 
 #### Provisioning Fixes:
+
 8. **Retry count `|| 0 + 1` → `(|| 0) + 1`** — operator precedence bug, counter never incremented.
 9. **Empty email fallback fixed** — contact creation in 3 locations used `''` as email (RC rejects).
 
 #### Domain Registration Fix:
+
 10. **Nameserver params now use repeated `ns` keys** — was `ns1`/`ns2`/`ns3` (wrong RC format).
 
 #### Paddle Fix:
+
 11. **`single()` → `maybeSingle()` for idempotency check** — `single()` throws if no match.
 
 **CRITICAL KNOWLEDGE:**
+
 - RC `customers/signup.json` REQUIRES `lang-pref` — always send `'en'`
 - RC customer lookup: `details.json` (by username/email), `details-by-id.json` (by numeric customer-id)
 - RC endpoints must NOT have leading `/` — client.ts builds `${baseUrl}/${endpoint}`
@@ -2190,6 +2488,7 @@ After deploying `ensureResellerClubCustomer()` wiring, production testing reveal
 **Files Changed:** 7 files — domains.ts, provisioning.ts, webhook-handlers.ts, agent-actions.ts, AgentsPageWrapper.tsx, business-email.ts, transfers.ts
 
 #### Overview
+
 Deep audit of production Vercel logs revealed CRITICAL provisioning failures, pricing mismatches, and missing webhook handlers. Root causes identified and fixed across domain registration, email ordering, transfers, live chat agents, and Paddle webhooks.
 
 #### 1. CRITICAL: `ensureResellerClubCustomer()` Never Called — Provisioning Always Failed
@@ -2197,10 +2496,12 @@ Deep audit of production Vercel logs revealed CRITICAL provisioning failures, pr
 **Problem:** `ensureResellerClubCustomer()` was DEFINED in `domains.ts` but NEVER CALLED anywhere. The `resellerclub_customer_id` column on agencies was never populated. After Paddle payment succeeded, provisioning ALWAYS failed with: `"Agency not configured for ResellerClub"`.
 
 **Production Evidence:** Vercel log showed:
+
 - `[Paddle Webhook] Domain/Email purchase completed: txn_01khkgyx4gb6yc1g68mwnkjbv8`
 - `[Provisioning] Multi-domain provisioning failed: Error: Agency not configured for ResellerClub`
 
 **Fix:** Added `ensureResellerClubCustomer()` calls to:
+
 - `createDomainCartCheckout()` — before creating Paddle transaction
 - `registerDomain()` — before single-domain registration
 - `createBusinessEmailOrder()` — via exported `ensureResellerClubCustomerForAgency()` wrapper
@@ -2213,6 +2514,7 @@ Deep audit of production Vercel logs revealed CRITICAL provisioning failures, pr
 **Problem:** `searchDomains()` fetched LIVE RC prices and applied markup inline. `createDomainCartCheckout()` used `calculateDomainPrice()` from `domain-billing.ts` which fetched from 24-hour CACHED data. Cache staleness caused different prices at search vs checkout.
 
 **Fix:** Rewrote `createDomainCartCheckout()` to use the EXACT SAME live pricing path as `searchDomains()`:
+
 - Fetches live RC customer/selling and cost pricing
 - Uses same `applyMarkup()` function with same agency config
 - Same fallback logic (cost × 1.3 when no RC selling price)
@@ -2237,6 +2539,7 @@ Deep audit of production Vercel logs revealed CRITICAL provisioning failures, pr
 **Problem:** Soft-deleted agents (is_active: false) still had DB records. Re-adding the same user triggered unique constraint violation (23505). Error: "This user is already registered as a chat agent."
 
 **Fix:** Completely rewrote `createAgent()` to:
+
 1. First check if agent exists (including soft-deleted) with `.maybeSingle()`
 2. If exists and active → return "already registered" error
 3. If exists and inactive → REACTIVATE with updated details (display name, email, role, etc.)
@@ -2271,6 +2574,7 @@ Also added `useEffect` sync in `AgentsPageWrapper.tsx` to update `agents`/`depar
 **Commit:** `684a10b` — 9 files changed, 684 insertions, 1550 deletions
 
 #### Overview
+
 Full platform audit across Domain/Email and Live Chat modules. Fixed all TypeScript compilation errors in domain checkout flow, fixed the cascading live chat agent bug, added missing UI for conversation transfer and tag management, and created comprehensive user journeys documentation.
 
 #### 1. CRITICAL: Paddle SDK Property Names (Build-Breaking TS Errors)
@@ -2338,26 +2642,30 @@ Full platform audit across Domain/Email and Live Chat modules. Fixed all TypeScr
 #### 11. User Journeys Documentation (v2.0)
 
 **Created:** `docs/USER-JOURNEYS.md` — Comprehensive v2.0 covering:
+
 - 5 roles: Super Admin, Agency Owner, Agency Member, Business Owner, Site Visitor
 - 10+ journey categories across all modules
 - Verification checklist for domain checkout, live chat, notifications
 - Environment requirements (Paddle, ResellerClub, Supabase, Resend)
 
 #### Files Changed
-| File | Changes |
-|---|---|
-| `transactions.ts` | snake_case → camelCase for Paddle SDK |
-| `purchases/status/route.ts` | `as any` casts for pending_purchases |
-| `domains.ts` | getDomain site JOIN, mapDomainPrice type, purchase_data cast |
-| `renew-form.tsx` | Type safety for domain_name and checkoutUrl |
-| `domain-list-client.tsx` | Paddle checkoutUrl redirect on renew |
-| `agent-actions.ts` | `is_active: true` filter on getAgents |
-| `conversation-actions.ts` | notifyChatAssigned on manual assignment |
-| `ConversationViewWrapper.tsx` | Transfer UI + Tag management UI |
-| `docs/USER-JOURNEYS.md` | Comprehensive v2.0 user journeys |
+
+| File                          | Changes                                                      |
+| ----------------------------- | ------------------------------------------------------------ |
+| `transactions.ts`             | snake_case → camelCase for Paddle SDK                        |
+| `purchases/status/route.ts`   | `as any` casts for pending_purchases                         |
+| `domains.ts`                  | getDomain site JOIN, mapDomainPrice type, purchase_data cast |
+| `renew-form.tsx`              | Type safety for domain_name and checkoutUrl                  |
+| `domain-list-client.tsx`      | Paddle checkoutUrl redirect on renew                         |
+| `agent-actions.ts`            | `is_active: true` filter on getAgents                        |
+| `conversation-actions.ts`     | notifyChatAssigned on manual assignment                      |
+| `ConversationViewWrapper.tsx` | Transfer UI + Tag management UI                              |
+| `docs/USER-JOURNEYS.md`       | Comprehensive v2.0 user journeys                             |
 
 #### DEPLOYMENT NOTE — Paddle "Not Configured" Error
+
 The "Paddle is not configured" error is a **deployment configuration issue**, not a code bug. The following env vars must be set in Vercel production:
+
 - `PADDLE_API_KEY` (server-side API key)
 - `PADDLE_WEBHOOK_SECRET` (webhook verification)
 - `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN` (client-side token)
@@ -2374,6 +2682,7 @@ Also must configure webhook URL `https://app.dramacagency.com/api/webhooks/paddl
 **Commit:** `9c28e40` — 10 files changed, 468 insertions, 52 deletions
 
 #### Overview
+
 Full audit and rework of the live chat module. Found and fixed 9 bugs/missing features across agent management, auto-assignment, notifications, AI auto-response, keyboard shortcuts, and navigation.
 
 #### 1. CRITICAL: Agent Adding Fixed (Owner Inclusion)
@@ -2391,11 +2700,13 @@ Full audit and rework of the live chat module. Found and fixed 9 bugs/missing fe
 #### 3. Keyboard Shortcuts (Industry Standard)
 
 **MessageInput.tsx:**
+
 - `Ctrl+Enter` → Send message
 - `Escape` → Clear input / close panels / toggle
 - `Ctrl+/` → Toggle note mode
 
 **ConversationViewWrapper.tsx (global):**
+
 - `Ctrl+R` → Resolve conversation
 - `Ctrl+Shift+C` → Close conversation
 - `Ctrl+Shift+O` → Reopen conversation
@@ -2441,16 +2752,17 @@ Full audit and rework of the live chat module. Found and fixed 9 bugs/missing fe
 **Fix:** Added `response.headers.set('x-pathname', pathname)` in `proxy.ts` after `updateSession()`.
 
 #### Files Changed
-| File | Changes |
-|---|---|
-| `agent-actions.ts` | Owner inclusion in available members |
-| `AgentsPageWrapper.tsx` | Edit dialog, edit button, type-safe state update |
+
+| File                          | Changes                                             |
+| ----------------------------- | --------------------------------------------------- |
+| `agent-actions.ts`            | Owner inclusion in available members                |
+| `AgentsPageWrapper.tsx`       | Edit dialog, edit button, type-safe state update    |
 | `ConversationViewWrapper.tsx` | Global keyboard shortcuts, shortcuts reference card |
-| `MessageInput.tsx` | Keyboard shortcuts, canned response usage tracking |
-| `conversation-actions.ts` | Auto-assign fetch-and-filter fix |
-| `conversations/route.ts` | Online-only auto-assign, capacity check |
-| `messages/route.ts` | Unread count fix, AI auto-response wiring |
-| `proxy.ts` | x-pathname header for nav active state |
+| `MessageInput.tsx`            | Keyboard shortcuts, canned response usage tracking  |
+| `conversation-actions.ts`     | Auto-assign fetch-and-filter fix                    |
+| `conversations/route.ts`      | Online-only auto-assign, capacity check             |
+| `messages/route.ts`           | Unread count fix, AI auto-response wiring           |
+| `proxy.ts`                    | x-pathname header for nav active state              |
 
 ---
 
@@ -2466,6 +2778,7 @@ Full audit and rework of the live chat module. Found and fixed 9 bugs/missing fe
 `openPaddleCheckout()` in `paddle-client.ts` only supports subscription checkout (requires `priceId`). But cart-page-client and email-purchase-wizard called it with `{transactionId, successUrl}` — a completely different Paddle.js API. Every domain/email purchase would throw "Invalid priceId: Price ID is required" at runtime.
 
 **Fix:**
+
 - Created new `openPaddleTransactionCheckout({transactionId, successUrl})` function in `paddle-client.ts`
 - Uses `paddle.Checkout.open({transactionId, settings: {successUrl, displayMode: 'overlay'}})` — the Paddle.js transaction-based checkout API
 - Updated `cart-page-client.tsx` and `email-purchase-wizard.tsx` to import and use this new function
@@ -2482,17 +2795,20 @@ Full audit and rework of the live chat module. Found and fixed 9 bugs/missing fe
 `createDomainCartCheckout()` in `domains.ts` called `calculateDomainPricing()` at line 547 — but this function was NEVER DEFINED anywhere. Would throw ReferenceError, making cart checkout completely non-functional.
 
 **Fix:**
+
 - Replaced with proper `calculateDomainPrice()` import from `domain-billing.ts`
 - Fixed parameter mapping: extracts TLD from domain name, passes `{tld, years, operation: 'register', includePrivacy, clientId}`
 
 #### 3. Navigation Restructure: Domain Settings
 
 **Problems:**
+
 - `/dashboard/settings/domains/*` pages existed but had NO sidebar link — orphaned, only accessible via in-page links
 - "Domains" in settings sidebar referred to agency custom domains, confusing with domain reselling
 - Domain reselling settings were under `/dashboard/settings/` instead of logically grouped with `/dashboard/domains/`
 
 **Fix:**
+
 - Moved domain reselling settings to `/dashboard/domains/settings/` with sub-pages: overview, pricing, branding, billing
 - Added "Domain Settings" link to main sidebar under "Domains & Email" group
 - Renamed settings sidebar "Domains" to "Custom Domains" for clarity
@@ -2501,6 +2817,7 @@ Full audit and rework of the live chat module. Found and fixed 9 bugs/missing fe
 - Updated admin pricing page link to new path
 
 **New Route Structure:**
+
 ```
 /dashboard/domains/settings/         → Overview (stats, settings cards, quick actions)
 /dashboard/domains/settings/pricing/ → TLD pricing, markup config, tiers, calculator
@@ -2515,11 +2832,13 @@ Full audit and rework of the live chat module. Found and fixed 9 bugs/missing fe
 `provisionDomainRegistration()` in `provisioning.ts` never created entries in `domain_billing_records` — revenue dashboard showed $0 for all domain purchases.
 
 **Fix:**
+
 - Added billing record insert after successful domain registration
 - Records: billing_type, wholesale_amount, retail_amount, profit, payment_status, billing_period
 - Wrapped in try/catch (non-fatal — don't fail provisioning if billing record fails)
 
 #### 5. Minor Fixes
+
 - Fixed `DomainRegistrationParams`: `nameServers` → `nameservers` (lowercase), `protectPrivacy` → `purchasePrivacy`, removed invalid `idnLanguageCode`
 - Updated custom domains page title from "Domains" to "Custom Domains"
 
@@ -2573,6 +2892,7 @@ Domain search STILL showed wrong prices. Previous fix (commit `8d5fd88`) switche
 | `products/reseller-price.json` | **Slab-based intermediate pricing** (~cost + small margin) — ❌ NOT selling prices | No |
 
 **Fix Applied:**
+
 - Made `customer-id` param conditional in `getCustomerPricing()` — only sent when non-empty
 - Switched domain search from `getResellerPricing()` back to `getCustomerPricing(undefined, tlds)`
 - Reverted cache types from `'reseller'` to `'customer'` across billing and refresh routes
@@ -2599,6 +2919,7 @@ Domain search STILL showed wrong prices. Previous fix (commit `8d5fd88`) switche
 **Root Cause:** The rating API route (`/api/modules/live-chat/rating`) successfully wrote the rating to `mod_chat_conversations` but never called `notifyChatRating()` from `chat-notifications.ts`.
 
 **Fix Applied:**
+
 - Added `notifyChatRating()` call after successful DB update
 - Fetches conversation details (site_id, assigned_agent_id), visitor name, and agent profile
 - `notifyChatRating()` creates in-app notification for the agent + alerts site owner for low ratings (1-2 stars)
@@ -2607,11 +2928,13 @@ Domain search STILL showed wrong prices. Previous fix (commit `8d5fd88`) switche
 #### 3. Security Fixes
 
 **XSS in Embed Script** (`/api/modules/live-chat/embed/route.ts`):
+
 - Added UUID regex validation for `siteId` parameter
 - Sanitized host header (strip non-hostname characters)
 - Used `JSON.stringify()` for safe JavaScript interpolation instead of raw string templates
 
 **WhatsApp Webhook Signature Bypass** (`/api/modules/live-chat/webhooks/whatsapp/route.ts`):
+
 - Previously, if `x-hub-signature-256` header was absent, signature verification was entirely skipped
 - Now: when app secret is configured, signature header is REQUIRED (returns 403 if missing)
 - Only skips verification when no app secret is configured (dev/local environments)
@@ -2636,29 +2959,33 @@ Corrected the entire domain pricing architecture after identifying that the prev
 
 **Root Cause:**
 ResellerClub has two pricing tiers:
+
 1. **Cost pricing** (`products/reseller-cost-price.json`) — what the reseller pays RC (e.g., $14.79/.org)
 2. **Customer/selling pricing** (`products/customer-price.json`) — the reseller's configured selling price (e.g., $29.58/.org with 100% profit margin)
 
 The previous fix incorrectly treated DRAMAC's markup as the PRIMARY margin on cost. In reality, RC selling prices ALREADY include the reseller's configured profit margin. DRAMAC's markup should be an ADDITIONAL layer on top.
 
 **Correct Architecture:**
+
 ```
 RC Cost Price → (RC Profit Margin, configured in RC panel) → RC Selling Price → (DRAMAC Additional Markup) → Final Retail Price
 ```
+
 - Default DRAMAC additional markup = 0% (prices match RC selling prices exactly)
 - User can add additional DRAMAC markup via Settings > Domains > Pricing
 - When RC customer pricing unavailable, fallback ensures min 30% margin on cost
 
 **Files Changed (4 files, commit `09bf6de`):**
 
-| File | Changes |
-|------|---------|
-| `src/lib/actions/domains.ts` | Rewrote pricing logic: RC selling = base retail, default markup 30→0, applyMarkup passthrough at 0%, fallback with 30% min margin on cost |
-| `src/lib/actions/domain-billing.ts` | Same architecture: RC selling as base, fixed scoping bug, default 30→0, fallback 30% min |
-| `src/components/domains/settings/domain-pricing-config.tsx` | Updated help text explaining RC selling prices include reseller profit, preview labels updated |
-| `src/app/(dashboard)/dashboard/settings/domains/pricing/pricing-client.tsx` | Default values changed from `\|\| 30` to `?? 0` |
+| File                                                                        | Changes                                                                                                                                   |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/lib/actions/domains.ts`                                                | Rewrote pricing logic: RC selling = base retail, default markup 30→0, applyMarkup passthrough at 0%, fallback with 30% min margin on cost |
+| `src/lib/actions/domain-billing.ts`                                         | Same architecture: RC selling as base, fixed scoping bug, default 30→0, fallback 30% min                                                  |
+| `src/components/domains/settings/domain-pricing-config.tsx`                 | Updated help text explaining RC selling prices include reseller profit, preview labels updated                                            |
+| `src/app/(dashboard)/dashboard/settings/domains/pricing/pricing-client.tsx` | Default values changed from `\|\| 30` to `?? 0`                                                                                           |
 
 **Expected Prices (with 0% additional DRAMAC markup):**
+
 - .org: ~$29.58 (matches RC selling price)
 - .net: ~$29.98
 - .com: ~$26.98
@@ -2676,6 +3003,7 @@ RC Cost Price → (RC Profit Margin, configured in RC panel) → RC Selling Pric
 Conducted a full deep scan of all 12 error categories from the recurring issues list. Verified every single issue against the actual codebase. Found that ~80% of issues were already fixed in previous sessions, and implemented fixes for the remaining ~20%.
 
 **Issues Already Fixed (verified in code):**
+
 - ✅ ResellerClub 403/Fixie/proxy — code supports FIXIE_URL, status endpoint exists
 - ✅ Domain search source indicator (resellerclub vs fallback)
 - ✅ ResellerClub case-insensitive key lookup & HTML/403 detection
@@ -2683,7 +3011,7 @@ Conducted a full deep scan of all 12 error categories from the recurring issues 
 - ✅ Payment webhooks (Paddle/Flutterwave/Pesapal/DPO) use createAdminClient()
 - ✅ Embed booking page uses createAdminClient() with correct table names
 - ✅ Billing pages use /api/billing/paddle/overview (no removed APIs)
-- ✅ Plans aligned to Paddle with NEXT_PUBLIC_PADDLE_PRICE_* env vars
+- ✅ Plans aligned to Paddle with NEXT*PUBLIC_PADDLE_PRICE*\* env vars
 - ✅ Invoice history handles data.data || data.invoices shape
 - ✅ Enterprise "Contact Sales" links to /portal/support/new
 - ✅ Paddle webhook price ID matching with server-side fallback
@@ -2715,24 +3043,25 @@ Conducted a full deep scan of all 12 error categories from the recurring issues 
 
 **Issues Fixed in This Session (16 files):**
 
-| # | Fix | File(s) |
-|---|-----|---------|
-| 1 | Social webhooks: createClient → createAdminClient | `api/social/webhooks/[platform]/route.ts` |
-| 2 | Embed service: createClient → createAdminClient | `lib/modules/embed/embed-service.ts` |
-| 3 | Embed auth: createClient → createAdminClient | `lib/modules/embed/embed-auth.ts` |
-| 4 | Push subscribe: split agent/customer contexts | `api/push/subscribe/route.ts` |
-| 5 | Paddle webhook: wire DunningService for payment failures | `lib/paddle/webhook-handlers.ts` |
-| 6 | Invoice template: null guard on payment_status | `ecommerce/orders/invoice-template.tsx` |
-| 7 | Admin modules: LemonSqueezy → Paddle in UI | `admin/modules/[moduleId]/page.tsx` |
-| 8 | Portal invoices: fix LemonSqueezy comment | `portal/invoices/page.tsx` |
-| 9 | Ecommerce analytics: USD/en-US → locale-config | `ecommerce/lib/analytics-utils.ts` |
-| 10 | Ecommerce quotes: USD/en-US → locale-config | `ecommerce/lib/quote-utils.ts` |
-| 11 | Ecommerce manifest: updated currency description | `ecommerce/manifest.ts` |
-| 12-16 | Social media (5 files): en-US → DEFAULT_LOCALE | SocialListening, ReportsPage, PostsList, CompetitorsPage, ai-assistant-panel |
+| #     | Fix                                                      | File(s)                                                                      |
+| ----- | -------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| 1     | Social webhooks: createClient → createAdminClient        | `api/social/webhooks/[platform]/route.ts`                                    |
+| 2     | Embed service: createClient → createAdminClient          | `lib/modules/embed/embed-service.ts`                                         |
+| 3     | Embed auth: createClient → createAdminClient             | `lib/modules/embed/embed-auth.ts`                                            |
+| 4     | Push subscribe: split agent/customer contexts            | `api/push/subscribe/route.ts`                                                |
+| 5     | Paddle webhook: wire DunningService for payment failures | `lib/paddle/webhook-handlers.ts`                                             |
+| 6     | Invoice template: null guard on payment_status           | `ecommerce/orders/invoice-template.tsx`                                      |
+| 7     | Admin modules: LemonSqueezy → Paddle in UI               | `admin/modules/[moduleId]/page.tsx`                                          |
+| 8     | Portal invoices: fix LemonSqueezy comment                | `portal/invoices/page.tsx`                                                   |
+| 9     | Ecommerce analytics: USD/en-US → locale-config           | `ecommerce/lib/analytics-utils.ts`                                           |
+| 10    | Ecommerce quotes: USD/en-US → locale-config              | `ecommerce/lib/quote-utils.ts`                                               |
+| 11    | Ecommerce manifest: updated currency description         | `ecommerce/manifest.ts`                                                      |
+| 12-16 | Social media (5 files): en-US → DEFAULT_LOCALE           | SocialListening, ReportsPage, PostsList, CompetitorsPage, ai-assistant-panel |
 
 **Commit:** `57bfe0d` — "fix: deep platform audit - auth clients, dunning wiring, invoice null guard, locale hardcodes, LemonSqueezy remnants"
 
 **Remaining Known Items (low priority):**
+
 - `mapRecord()`/`mapRecords()` not used in domain/transfer/email server actions (only live-chat & social use it) — low risk since most of those actions construct their own response objects
 - LemonSqueezy references in type files (`payments.ts`, `database.ts`) — these mirror DB columns, can't remove until DB migration drops them
 - Trial ending email handler not implemented (Paddle doesn't have an explicit trial_ending event — uses subscription.updated)
@@ -2744,6 +3073,7 @@ Conducted a full deep scan of all 12 error categories from the recurring issues 
 **Category:** Billing / Checkout / Reliability / Bug fix
 
 **What was done:**
+
 - Wired **domains cart checkout** and **business email checkout** to Paddle overlay using `transactionId` + app `successUrl`, ensuring payment-first flows.
 - Unified purchase status polling to query DM-12 `pending_purchases` (not legacy tables) and updated the success page to redirect using `provisioned_resource_id`.
 - Hardened ResellerClub client behavior (retry transient 429/5xx, improved logging, health check based on domain availability).
@@ -2751,6 +3081,7 @@ Conducted a full deep scan of all 12 error categories from the recurring issues 
 - Updated subscription pricing cards to prefer the server-backed checkout endpoint for consistent validation.
 
 **Files Created/Modified:**
+
 - MOD `next-platform-dashboard/src/lib/resellerclub/client.ts` — retry & health check improvements
 - MOD `next-platform-dashboard/src/lib/paddle/client.ts` — price ID fallback mapping
 - MOD `next-platform-dashboard/src/app/api/purchases/status/route.ts` — `pending_purchases` status API
@@ -2764,12 +3095,14 @@ Conducted a full deep scan of all 12 error categories from the recurring issues 
 - MOD `next-platform-dashboard/src/lib/resellerclub/provisioning.ts` — multi-domain provisioning support
 
 **Key Fixes:**
+
 1. End-to-end Paddle checkout journeys for domain cart + email purchase wizard (payment-first).
 2. Correct purchase status polling + success redirects to the real provisioned resource.
 3. Reduced ResellerClub flakiness with retryable transient handling.
 4. Eliminated Paddle plan/price ID mismatch between server and client.
 
 **Technical Notes:**
+
 - Success redirects should always use `pending_purchases.provisioned_resource_id` (not domain name).
 - Status polling should query `pending_purchases` by `id` or `paddle_transaction_id`.
 - Deterministic idempotency keys are required to prevent duplicate pending purchases.
@@ -2784,6 +3117,7 @@ Conducted a full deep scan of all 12 error categories from the recurring issues 
 Completely resolved the ResellerClub 403 "IP not whitelisted" issue. The user had followed all steps (installed Fixie, whitelisted IPs in ResellerClub) but domain search still showed "API was not used: API returned HTTP 403". Root cause: Vercel hadn't redeployed after the Fixie integration was added, so `FIXIE_URL` wasn't available to the running app.
 
 **Resolution:**
+
 1. Verified code already supports `FIXIE_URL` (checks `process.env.FIXIE_URL` and uses undici ProxyAgent)
 2. Verified Fixie IPs (54.217.142.99, 54.195.3.54) were whitelisted in ResellerClub
 3. Created documentation explaining the issue and verification steps
@@ -2791,17 +3125,20 @@ Completely resolved the ResellerClub 403 "IP not whitelisted" issue. The user ha
 5. Triggered redeploy with this commit so Vercel picks up `FIXIE_URL`
 
 **Files Created/Modified:**
+
 - NEW `VERCEL-REDEPLOY.md` — explains why redeploy needed, verification steps
 - NEW `next-platform-dashboard/src/app/api/debug/outbound-ip/route.ts` — shows IP external services see
 - MOD `next-platform-dashboard/.env.local` — added FIXIE_URL documentation
 
 **Technical Notes:**
+
 - Vercel integrations add env vars but require redeploy to activate
 - Fixie proxy uses undici ProxyAgent (already implemented)
 - Code path: if `FIXIE_URL` exists → use ProxyAgent → requests go through static IPs → ResellerClub accepts
 - Without `FIXIE_URL` → direct request → dynamic Vercel IP → 403 from ResellerClub
 
 **Verification (after redeploy):**
+
 1. `GET /api/domains/resellerclub-status` → `"reachable": true`
 2. Domain search → "(Live from ResellerClub)"
 3. `GET /api/debug/outbound-ip` → shows Fixie IP
@@ -2813,6 +3150,7 @@ Completely resolved the ResellerClub 403 "IP not whitelisted" issue. The user ha
 **Category:** Bug fix / UX / Diagnostics
 
 **What was done:**
+
 - Domain search was not clearly indicating whether results came from ResellerClub (live) or DNS fallback. After whitelisting, users still saw "Likely available — register to confirm" because the UI did not distinguish. ResellerClub response parsing was also tightened (case-insensitive key lookup, classKey/classkey).
 - Search response now includes `source: 'resellerclub' | 'fallback'` and optional `message`. When fallback is used, the reason is shown (e.g. "ResellerClub is not configured" or "API returned 403").
 - UI shows "(Live from ResellerClub)" when results are from the API, and an amber banner with the exact reason when fallback is used.
@@ -2820,6 +3158,7 @@ Completely resolved the ResellerClub 403 "IP not whitelisted" issue. The user ha
 - Memory bank rule from `.cursor/rules/memory-bank.md` applied: progress.md and activeContext.md updated at end of task; changes committed and pushed.
 
 **Files Created/Modified:**
+
 - NEW `src/app/api/domains/resellerclub-status/route.ts` — ResellerClub connectivity diagnostic
 - NEW `src/lib/domain-keyword.ts` — normalizeDomainKeyword() for consistent paste/type search
 - MOD `src/lib/resellerclub/domains.ts` — robust availability response parsing
@@ -2828,6 +3167,7 @@ Completely resolved the ResellerClub 403 "IP not whitelisted" issue. The user ha
 - MOD `docs/RESELLERCLUB-SETUP-GUIDE.md` — how to test whitelist and domain search
 
 **Technical Notes:**
+
 - ResellerClub availability API returns a hash keyed by full domain name (e.g. "keyword.com"); keys may vary in case, so we build a lowercased lookup.
 - Fallback runs when `isClientAvailable()` is false (missing env) or when `suggestDomains()` throws (e.g. 403). Message is passed through so the user sees the actual error.
 
@@ -2836,77 +3176,83 @@ Completely resolved the ResellerClub 403 "IP not whitelisted" issue. The user ha
 ## Previous Session — ResellerClub Production-Ready Payment Integration (February 14, 2026)
 
 ### Summary
+
 Complete refactor of ResellerClub domains and Titan email integration implementing payment-before-provisioning, correct pricing calculation, database-backed pricing cache, webhook-driven provisioning, and automated reconciliation.
 
 ### Changes in This Session (27 files total)
 
 **Phase 1: Pricing Architecture ✅**
 
-| # | File | What |
-|---|------|------|
-| 1 | MOD `src/lib/resellerclub/domains.ts` | Added `getCustomerPricing()` and `getCostPricing()` methods to fetch correct ResellerClub customer/cost pricing |
-| 2 | MOD `src/lib/resellerclub/email/client.ts` | Added `getCustomerPricing()` and `getCostPricing()` for Titan email packages |
-| 3 | MOD `src/lib/actions/domain-billing.ts` | Updated `getDomainPricing()` to use cached customer pricing with fallback |
-| 4 | NEW `src/lib/resellerclub/pricing-cache.ts` | Database-backed pricing cache with refresh methods, cache hit/miss tracking |
-| 5 | NEW `migrations/dm-11-pricing-cache-schema.sql` | Tables: domain_pricing_cache, email_pricing_cache, pricing_sync_log, pricing_config |
+| #   | File                                            | What                                                                                                            |
+| --- | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| 1   | MOD `src/lib/resellerclub/domains.ts`           | Added `getCustomerPricing()` and `getCostPricing()` methods to fetch correct ResellerClub customer/cost pricing |
+| 2   | MOD `src/lib/resellerclub/email/client.ts`      | Added `getCustomerPricing()` and `getCostPricing()` for Titan email packages                                    |
+| 3   | MOD `src/lib/actions/domain-billing.ts`         | Updated `getDomainPricing()` to use cached customer pricing with fallback                                       |
+| 4   | NEW `src/lib/resellerclub/pricing-cache.ts`     | Database-backed pricing cache with refresh methods, cache hit/miss tracking                                     |
+| 5   | NEW `migrations/dm-11-pricing-cache-schema.sql` | Tables: domain_pricing_cache, email_pricing_cache, pricing_sync_log, pricing_config                             |
 
 **Phase 2: Paddle Transactions Integration ✅**
 
-| # | File | What |
-|---|------|------|
-| 6 | NEW `src/lib/paddle/transactions.ts` | Creates Paddle Transactions for domain/email purchases using custom items, non-catalog checkout |
-| 7 | NEW `migrations/dm-12-paddle-transactions-schema.sql` | Table: paddle_pending_purchases with transaction_id, item metadata, status tracking |
-| 8 | MOD `src/lib/actions/domains.ts` | Refactored `registerDomain()`, `renewDomain()` to create Paddle transaction first, return checkoutUrl |
-| 9 | MOD `src/lib/actions/business-email.ts` | Refactored email ordering to create Paddle transaction, removed direct provisioning |
+| #   | File                                                  | What                                                                                                  |
+| --- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| 6   | NEW `src/lib/paddle/transactions.ts`                  | Creates Paddle Transactions for domain/email purchases using custom items, non-catalog checkout       |
+| 7   | NEW `migrations/dm-12-paddle-transactions-schema.sql` | Table: paddle_pending_purchases with transaction_id, item metadata, status tracking                   |
+| 8   | MOD `src/lib/actions/domains.ts`                      | Refactored `registerDomain()`, `renewDomain()` to create Paddle transaction first, return checkoutUrl |
+| 9   | MOD `src/lib/actions/business-email.ts`               | Refactored email ordering to create Paddle transaction, removed direct provisioning                   |
 
 **Phase 3: Webhook Provisioning ✅**
 
-| # | File | What |
-|---|------|------|
-| 10 | NEW `src/lib/resellerclub/provisioning.ts` | Idempotent provisioning handler with error tracking, retry logic, status updates |
-| 11 | MOD `src/lib/paddle/webhook-handlers.ts` | Extended to detect domain/email purchases, trigger provisioning on `transaction.completed` |
+| #   | File                                       | What                                                                                       |
+| --- | ------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| 10  | NEW `src/lib/resellerclub/provisioning.ts` | Idempotent provisioning handler with error tracking, retry logic, status updates           |
+| 11  | MOD `src/lib/paddle/webhook-handlers.ts`   | Extended to detect domain/email purchases, trigger provisioning on `transaction.completed` |
 
 **Phase 4: Reconciliation & Sync ✅**
 
-| # | File | What |
-|---|------|------|
-| 12 | NEW `src/lib/resellerclub/reconciliation.ts` | Syncs domains/emails from ResellerClub, detects discrepancies, updates local DB |
-| 13 | NEW `src/app/api/cron/resellerclub-sync/route.ts` | Daily cron job (02:00 UTC) for automated reconciliation |
-| 14 | NEW `src/app/api/admin/pricing/refresh/route.ts` | Manual pricing refresh endpoint (domain/email/full sync types) |
+| #   | File                                              | What                                                                            |
+| --- | ------------------------------------------------- | ------------------------------------------------------------------------------- |
+| 12  | NEW `src/lib/resellerclub/reconciliation.ts`      | Syncs domains/emails from ResellerClub, detects discrepancies, updates local DB |
+| 13  | NEW `src/app/api/cron/resellerclub-sync/route.ts` | Daily cron job (02:00 UTC) for automated reconciliation                         |
+| 14  | NEW `src/app/api/admin/pricing/refresh/route.ts`  | Manual pricing refresh endpoint (domain/email/full sync types)                  |
 
 **Phase 5: Documentation ✅**
 
-| # | File | What |
-|---|------|------|
-| 15 | NEW `docs/RESELLERCLUB-IMPLEMENTATION-SUMMARY.md` | Complete guide: architecture, API reference, monitoring queries, troubleshooting |
-| 16 | NEW `docs/RESELLERCLUB-QUICK-REFERENCE.md` | Quick dev reference for common operations and debugging |
-| 17 | NEW `docs/RESELLERCLUB-UI-CHANGES.md` | Frontend integration guide for checkout redirect flow, success pages, error handling |
+| #   | File                                              | What                                                                                 |
+| --- | ------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| 15  | NEW `docs/RESELLERCLUB-IMPLEMENTATION-SUMMARY.md` | Complete guide: architecture, API reference, monitoring queries, troubleshooting     |
+| 16  | NEW `docs/RESELLERCLUB-QUICK-REFERENCE.md`        | Quick dev reference for common operations and debugging                              |
+| 17  | NEW `docs/RESELLERCLUB-UI-CHANGES.md`             | Frontend integration guide for checkout redirect flow, success pages, error handling |
 
 ### Key Technical Decisions
 
 **Pricing Model**
+
 - **Customer Pricing** (RC API `role=customer`) = retail price shown to end users
 - **Cost Pricing** (RC API `role=reseller`) = wholesale cost for margin calculation
 - Old approach incorrectly used reseller pricing as retail, causing double markup
 - Pricing cached in database with 24-hour TTL, daily refresh via cron
 
 **Payment Flow**
+
 ```
-User initiates purchase → Create Paddle transaction → Redirect to Paddle checkout → 
+User initiates purchase → Create Paddle transaction → Redirect to Paddle checkout →
 User completes payment → Paddle webhook fires → Provision at ResellerClub → Update DB status
 ```
 
 **Status Progression**
+
 ```
 pending_payment → paid → provisioning → completed (or failed)
 ```
 
 **Idempotency**
+
 - Webhook handler checks `paddle_pending_purchases.idempotency_key`
 - Safe to replay webhooks without duplicate provisioning
 - All provisioning operations log attempts with timestamps
 
 ### Environment Variables Required
+
 ```bash
 # Existing ResellerClub credentials
 RESELLERCLUB_API_KEY=your_key
@@ -2916,6 +3262,7 @@ RESELLERCLUB_RESELLER_ID=your_id
 ```
 
 ### Deployment Checklist
+
 - [x] Code implemented and tested locally
 - [x] Zero linter errors
 - [ ] Run migration DM-11 in Supabase
@@ -2927,12 +3274,15 @@ RESELLERCLUB_RESELLER_ID=your_id
 - [ ] Test end-to-end with real payment
 
 ### Critical Production Requirement
+
 ⚠️ **Static Egress IP Required**: ResellerClub API requires IP whitelisting. Vercel's dynamic IPs will cause 403 errors in production. Solutions:
+
 1. Use proxy service with static IP (e.g., Axiom, QuotaGuard)
 2. Deploy to infrastructure with static IP
 3. Contact ResellerClub about IP range whitelisting
 
 ### Migration Note
+
 User confirmed migrations DM-11 and DM-12 have already been run in Supabase.
 
 ---
@@ -2940,7 +3290,9 @@ User confirmed migrations DM-11 and DM-12 have already been run in Supabase.
 ## Previous Session — Web Push, LemonSqueezy Removal, Currency Fixes (Commits `b2f40df`, `d5a6724`)
 
 ### Summary
+
 Two commits this session:
+
 1. **`b2f40df`** — Vercel Hobby build fixes (maxDuration 300→60, ignoreBuildErrors for OOM, force-dynamic on admin/test-safety, Bluesky import fix)
 2. **`d5a6724`** — Web push notifications, full LemonSqueezy removal, currency formatting fixes
 
@@ -2948,65 +3300,71 @@ Two commits this session:
 
 **Web Push Notifications (RFC 8291, zero npm deps)**
 
-| # | File | What |
-|---|------|------|
-| 1 | NEW `public/sw.js` | Service worker: handles push, notificationclick, notificationclose events |
-| 2 | NEW `src/app/api/push/subscribe/route.ts` | POST upsert / DELETE remove push subscriptions (agent + customer contexts) |
-| 3 | NEW `src/lib/actions/web-push.ts` | Server-side VAPID JWT + AES-128-GCM encryption. `sendPushToUser()`, `sendPushToConversation()`, `sendPushToSiteAgents()` |
-| 4 | NEW `src/lib/push-client.ts` | Client helper: `isPushSupported()`, `subscribeToPush()`, `unsubscribeFromPush()`, `updatePushConversation()` |
-| 5 | NEW `src/components/settings/push-notification-settings.tsx` | Agent dashboard toggle for enabling/disabling push |
-| 6 | NEW `migrations/web-push-subscriptions.sql` | `push_subscriptions` table, RLS policies, cleanup function |
-| 7 | MOD `src/app/(dashboard)/settings/notifications/page.tsx` | Added PushNotificationSettings card |
-| 8 | MOD `src/modules/live-chat/components/widget/ChatWidget.tsx` | Customer auto-subscribes to push after starting chat |
-| 9 | MOD `src/modules/live-chat/actions/message-actions.ts` | Push-notifies customer when agent sends message |
-| 10 | MOD `src/app/api/modules/live-chat/messages/route.ts` | Push-notifies agent(s) when visitor sends message |
+| #   | File                                                         | What                                                                                                                     |
+| --- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| 1   | NEW `public/sw.js`                                           | Service worker: handles push, notificationclick, notificationclose events                                                |
+| 2   | NEW `src/app/api/push/subscribe/route.ts`                    | POST upsert / DELETE remove push subscriptions (agent + customer contexts)                                               |
+| 3   | NEW `src/lib/actions/web-push.ts`                            | Server-side VAPID JWT + AES-128-GCM encryption. `sendPushToUser()`, `sendPushToConversation()`, `sendPushToSiteAgents()` |
+| 4   | NEW `src/lib/push-client.ts`                                 | Client helper: `isPushSupported()`, `subscribeToPush()`, `unsubscribeFromPush()`, `updatePushConversation()`             |
+| 5   | NEW `src/components/settings/push-notification-settings.tsx` | Agent dashboard toggle for enabling/disabling push                                                                       |
+| 6   | NEW `migrations/web-push-subscriptions.sql`                  | `push_subscriptions` table, RLS policies, cleanup function                                                               |
+| 7   | MOD `src/app/(dashboard)/settings/notifications/page.tsx`    | Added PushNotificationSettings card                                                                                      |
+| 8   | MOD `src/modules/live-chat/components/widget/ChatWidget.tsx` | Customer auto-subscribes to push after starting chat                                                                     |
+| 9   | MOD `src/modules/live-chat/actions/message-actions.ts`       | Push-notifies customer when agent sends message                                                                          |
+| 10  | MOD `src/app/api/modules/live-chat/messages/route.ts`        | Push-notifies agent(s) when visitor sends message                                                                        |
 
 **LemonSqueezy Fully Removed**
 
-| # | File | What |
-|---|------|------|
-| 11 | DEL `src/lib/actions/billing.ts` | Deprecated, no importers |
-| 12 | DEL `src/lib/payments/lemonsqueezy.ts` | Only imported by deleted billing.ts |
-| 13 | DEL `src/lib/payments/module-billing.ts` | Never imported anywhere |
-| 14 | MOD `src/lib/portal/portal-billing-service.ts` | Rewritten: `lemonCustomerId`→`paddleCustomerId`, `lemonsqueezy_*`→`paddle_*`, portal URL→`/settings/billing` |
-| 15 | MOD `package.json` | Removed `@lemonsqueezy/lemonsqueezy.js` dependency |
+| #   | File                                           | What                                                                                                         |
+| --- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| 11  | DEL `src/lib/actions/billing.ts`               | Deprecated, no importers                                                                                     |
+| 12  | DEL `src/lib/payments/lemonsqueezy.ts`         | Only imported by deleted billing.ts                                                                          |
+| 13  | DEL `src/lib/payments/module-billing.ts`       | Never imported anywhere                                                                                      |
+| 14  | MOD `src/lib/portal/portal-billing-service.ts` | Rewritten: `lemonCustomerId`→`paddleCustomerId`, `lemonsqueezy_*`→`paddle_*`, portal URL→`/settings/billing` |
+| 15  | MOD `package.json`                             | Removed `@lemonsqueezy/lemonsqueezy.js` dependency                                                           |
 
 **Currency Display Fixes**
 
-| # | File | What |
-|---|------|------|
-| 16 | MOD `src/components/billing/pricing-card.tsx` | `${price}` → `formatCurrency(price, 'USD')` |
-| 17 | MOD `src/app/pricing/page.tsx` | Overage: `$0.001`→`US$0.001` etc. |
+| #   | File                                          | What                                        |
+| --- | --------------------------------------------- | ------------------------------------------- |
+| 16  | MOD `src/components/billing/pricing-card.tsx` | `${price}` → `formatCurrency(price, 'USD')` |
+| 17  | MOD `src/app/pricing/page.tsx`                | Overage: `$0.001`→`US$0.001` etc.           |
 
 ### Vercel Build Fixes (Commit `b2f40df`)
 
-| # | File | Fix |
-|---|------|-----|
-| 1 | `vercel.json` | `maxDuration: 300` → `60` (Hobby plan limit) |
-| 2 | `next.config.ts` | `typescript.ignoreBuildErrors: true`, `eslint.ignoreDuringBuilds: true` (OOM fix) |
-| 3 | `admin/layout.tsx` | `export const dynamic = 'force-dynamic'` (cookies() static render fix) |
-| 4 | NEW `test-safety/layout.tsx` | `force-dynamic` (location reference fix) |
-| 5 | `account-actions.ts` | Bluesky @atproto/api import made Turbopack-safe |
+| #   | File                         | Fix                                                                               |
+| --- | ---------------------------- | --------------------------------------------------------------------------------- |
+| 1   | `vercel.json`                | `maxDuration: 300` → `60` (Hobby plan limit)                                      |
+| 2   | `next.config.ts`             | `typescript.ignoreBuildErrors: true`, `eslint.ignoreDuringBuilds: true` (OOM fix) |
+| 3   | `admin/layout.tsx`           | `export const dynamic = 'force-dynamic'` (cookies() static render fix)            |
+| 4   | NEW `test-safety/layout.tsx` | `force-dynamic` (location reference fix)                                          |
+| 5   | `account-actions.ts`         | Bluesky @atproto/api import made Turbopack-safe                                   |
 
 ### Build Status
+
 - **`npx next build`**: ✅ Exit code 0, all 174 static pages + all dynamic routes compiled
 - **TSC**: Skipped in build (ignoreBuildErrors), but all modified files show 0 errors in editor
 
 ### Environment Requirements for Web Push
+
 ```
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=<base64url-encoded P-256 public key>
 VAPID_PRIVATE_KEY=<base64url-encoded P-256 private key>
 VAPID_SUBJECT=mailto:support@dramacagency.com
 ```
+
 Generate with: `npx web-push generate-vapid-keys`
 
 ### Migration Required
+
 ⚠️ **`migrations/web-push-subscriptions.sql`** must be run on Supabase for push notifications to work.
 
 ### Supabase Types Note
+
 `push_subscriptions` table is NOT in generated Supabase types. All `.from()` calls use `as any` cast with manual `PushSubscriptionRow` type.
 
 ### Known Remaining Items
+
 1. **Domain registration/renewal** has NO payment integration (registers at registrar without Paddle checkout)
 2. **`deleteDomain()`** is soft-delete only (doesn't cancel at registrar)
 3. **Simulated auth codes** in `transfers.ts` when API unavailable
@@ -3021,58 +3379,61 @@ Generate with: `npx web-push generate-vapid-keys`
 
 **Critical Infrastructure**
 
-| # | Bug | File | Fix |
-|---|-----|------|-----|
-| 1 | SQL migration GET DIAGNOSTICS syntax error | `lc-10-*.sql` | Changed `GET DIAGNOSTICS closed_count = closed_count + ROW_COUNT` to proper `GET DIAGNOSTICS batch_count = ROW_COUNT; closed_count := closed_count + batch_count;` |
-| 2 | Vercel deploy fails — 5 crons on Hobby plan (limit: 1) | `vercel.json` + NEW `api/cron/route.ts` | Consolidated into 1 unified hourly cron dispatcher |
+| #   | Bug                                                    | File                                    | Fix                                                                                                                                                                |
+| --- | ------------------------------------------------------ | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | SQL migration GET DIAGNOSTICS syntax error             | `lc-10-*.sql`                           | Changed `GET DIAGNOSTICS closed_count = closed_count + ROW_COUNT` to proper `GET DIAGNOSTICS batch_count = ROW_COUNT; closed_count := closed_count + batch_count;` |
+| 2   | Vercel deploy fails — 5 crons on Hobby plan (limit: 1) | `vercel.json` + NEW `api/cron/route.ts` | Consolidated into 1 unified hourly cron dispatcher                                                                                                                 |
 
 **Paddle Billing (LemonSqueezy → Paddle migration)**
 
-| # | Bug | File | Fix |
-|---|-----|------|-----|
-| 3 | subscription-details calls non-existent API endpoints | `subscription-details.tsx` | Rewrote to use `/api/billing/paddle/overview` and `/api/billing/paddle/usage` |
-| 4 | current-plan-card uses LemonSqueezy actions | `current-plan-card.tsx` | Replaced with `cancelSubscriptionPaddle`, `pauseSubscriptionPaddle`, `resumeSubscriptionPaddle` from `@/lib/paddle/billing-actions` |
-| 5 | plans.ts entirely LemonSqueezy (wrong IDs, wrong plan names) | `plans.ts` | Rewrote: plan IDs match Paddle (`pro` not `professional`), env vars use `NEXT_PUBLIC_PADDLE_PRICE_*`, limits updated |
-| 6 | Invoice history reads wrong response shape | `paddle-invoice-history.tsx` | Changed `data.invoices` to `data.data \|\| data.invoices` |
-| 7 | Enterprise "Contact Sales" → 404 | `pricing/page.tsx` | Changed from `/contact?subject=enterprise` to `/portal/support/new?subject=Enterprise plan inquiry` |
+| #   | Bug                                                          | File                         | Fix                                                                                                                                 |
+| --- | ------------------------------------------------------------ | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| 3   | subscription-details calls non-existent API endpoints        | `subscription-details.tsx`   | Rewrote to use `/api/billing/paddle/overview` and `/api/billing/paddle/usage`                                                       |
+| 4   | current-plan-card uses LemonSqueezy actions                  | `current-plan-card.tsx`      | Replaced with `cancelSubscriptionPaddle`, `pauseSubscriptionPaddle`, `resumeSubscriptionPaddle` from `@/lib/paddle/billing-actions` |
+| 5   | plans.ts entirely LemonSqueezy (wrong IDs, wrong plan names) | `plans.ts`                   | Rewrote: plan IDs match Paddle (`pro` not `professional`), env vars use `NEXT_PUBLIC_PADDLE_PRICE_*`, limits updated                |
+| 6   | Invoice history reads wrong response shape                   | `paddle-invoice-history.tsx` | Changed `data.invoices` to `data.data \|\| data.invoices`                                                                           |
+| 7   | Enterprise "Contact Sales" → 404                             | `pricing/page.tsx`           | Changed from `/contact?subject=enterprise` to `/portal/support/new?subject=Enterprise plan inquiry`                                 |
 
 **Domain Fixes**
 
-| # | Bug | File | Fix |
-|---|-----|------|-----|
-| 8 | Quick actions (Transfer, Lock, Delete) all dead buttons | `domain-quick-actions.tsx` | Complete rewrite: Transfer→link, Lock/Unlock→server action, Delete→AlertDialog+server action |
-| 9 | Contact form default country US (should be ZM) | `domain-contact-form.tsx` | Default changed to `ZM` |
-| 10 | Only 20 countries in contact form | `domain-contact-form.tsx` | Expanded to 100+ countries across Africa, Americas, Europe, Asia & Pacific |
-| 11 | Fallback pricing only covers 7 TLDs | `domain-billing.ts` | Expanded to 70+ TLDs with generic fallback for unknown TLDs |
+| #   | Bug                                                     | File                       | Fix                                                                                          |
+| --- | ------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |
+| 8   | Quick actions (Transfer, Lock, Delete) all dead buttons | `domain-quick-actions.tsx` | Complete rewrite: Transfer→link, Lock/Unlock→server action, Delete→AlertDialog+server action |
+| 9   | Contact form default country US (should be ZM)          | `domain-contact-form.tsx`  | Default changed to `ZM`                                                                      |
+| 10  | Only 20 countries in contact form                       | `domain-contact-form.tsx`  | Expanded to 100+ countries across Africa, Americas, Europe, Asia & Pacific                   |
+| 11  | Fallback pricing only covers 7 TLDs                     | `domain-billing.ts`        | Expanded to 70+ TLDs with generic fallback for unknown TLDs                                  |
 
 **Email Fixes**
 
-| # | Bug | File | Fix |
-|---|-----|------|-----|
-| 12 | Portal email page queries non-existent `email_accounts.domain_id` | `portal/email/page.tsx` | Rewrote query to join through `email_orders` table |
-| 13 | Portal email renders wrong column names | `portal/email/page.tsx` | Fixed to `account.email`, `first_name/last_name`, `status`, `storage_limit` (bytes) |
-| 14 | Email purchase wizard ignores `?domain=` URL param | `email-purchase-wizard.tsx` | Added `useSearchParams`, reads `?domain=` for pre-fill |
-| 15 | ResellerClub pricing response parser broken | `email-purchase-wizard.tsx` | Fixed to navigate nested `{ productKey: { months: { addnewaccount: price } } }` |
-| 16 | Cancel email shows misleading toast | `email-settings-actions.tsx` | Now redirects to `/portal/support/new?subject=Cancel email order for ${domainName}` |
-| 17 | Upgrade button links to 404 | `email-settings-actions.tsx` | Changed from `/dashboard/support/new` to `/portal/support/new` |
+| #   | Bug                                                               | File                         | Fix                                                                                 |
+| --- | ----------------------------------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------- |
+| 12  | Portal email page queries non-existent `email_accounts.domain_id` | `portal/email/page.tsx`      | Rewrote query to join through `email_orders` table                                  |
+| 13  | Portal email renders wrong column names                           | `portal/email/page.tsx`      | Fixed to `account.email`, `first_name/last_name`, `status`, `storage_limit` (bytes) |
+| 14  | Email purchase wizard ignores `?domain=` URL param                | `email-purchase-wizard.tsx`  | Added `useSearchParams`, reads `?domain=` for pre-fill                              |
+| 15  | ResellerClub pricing response parser broken                       | `email-purchase-wizard.tsx`  | Fixed to navigate nested `{ productKey: { months: { addnewaccount: price } } }`     |
+| 16  | Cancel email shows misleading toast                               | `email-settings-actions.tsx` | Now redirects to `/portal/support/new?subject=Cancel email order for ${domainName}` |
+| 17  | Upgrade button links to 404                                       | `email-settings-actions.tsx` | Changed from `/dashboard/support/new` to `/portal/support/new`                      |
 
 **Live Chat**
 
-| # | Feature | File | Implementation |
-|---|---------|------|----------------|
-| 18 | Auto-close settings UI | `SettingsPageWrapper.tsx` | Toggle, minutes input (5-1440), message input in Behavior tab |
-| 19 | Auto-close type fields | `types/index.ts` | `autoCloseEnabled`, `autoCloseMinutes`, `autoCloseMessage` in ChatWidgetSettings |
+| #   | Feature                | File                      | Implementation                                                                   |
+| --- | ---------------------- | ------------------------- | -------------------------------------------------------------------------------- |
+| 18  | Auto-close settings UI | `SettingsPageWrapper.tsx` | Toggle, minutes input (5-1440), message input in Behavior tab                    |
+| 19  | Auto-close type fields | `types/index.ts`          | `autoCloseEnabled`, `autoCloseMinutes`, `autoCloseMessage` in ChatWidgetSettings |
 
 ### Key Architecture Decisions
+
 - **Unified Cron Dispatcher**: Single `/api/cron` endpoint runs hourly. Dispatches auto-close every invocation; domain-health at midnight UTC; chat maintenance at 2AM; social sync at 6AM; social publish at noon. Uses internal fetch to existing individual cron routes.
 - **Paddle is the billing provider**: All LemonSqueezy imports removed from active UI components. `@/lib/paddle/billing-actions.ts` has full implementation. `@/lib/actions/billing.ts` still exists but is `@deprecated` and no longer imported.
 - **plans.ts realigned**: Plan IDs are `free`, `starter`, `pro`, `enterprise`. Env vars: `NEXT_PUBLIC_PADDLE_PRICE_STARTER_MONTHLY`, etc.
 - **Domain billing generic fallback**: Unknown TLDs now get $14.99/yr pricing instead of error. Ensures checkout never fails for supported TLDs.
 
 ### Important: Migration Must Be Run
+
 ⚠️ **`migrations/lc-10-notification-realtime-autoclose.sql`** syntax error has been fixed — re-run if previous attempt failed.
 
 ### Git State
+
 - **Branch**: `main`
 - **Latest commit**: `7287fd0`
 - **Pushed**: Yes ✅
@@ -3081,6 +3442,7 @@ Generate with: `npx web-push generate-vapid-keys`
 - **Files changed**: 16 (1 new, 15 modified)
 
 ### Known Remaining Items (Not Yet Addressed)
+
 1. Domain registration/renewal has NO payment integration (registers at registrar without charging customer via Paddle)
 2. `deleteDomain()` is soft-delete only (doesn't cancel at registrar)
 3. Simulated auth codes in `transfers.ts` when API unavailable
@@ -3097,36 +3459,37 @@ Generate with: `npx web-push generate-vapid-keys`
 
 **Live Chat Realtime (Root Cause: tables NOT in `supabase_realtime` publication)**
 
-| # | Bug | File | Fix |
-|---|-----|------|-----|
-| 1 | Chat messages not realtime — requires page refresh | NEW `lc-09-enable-realtime.sql` | `REPLICA IDENTITY FULL` + `ALTER PUBLICATION supabase_realtime ADD TABLE` for `mod_chat_messages` and `mod_chat_conversations` |
-| 2 | Anonymous widget can't receive realtime events | `lc-09-enable-realtime.sql` | RLS SELECT policies for anon role on both chat tables |
-| 3 | Customer can't start new conversation after resolved | `ChatWidget.tsx` | On localStorage restore, checks conversation status — if resolved/closed, clears session and shows pre-chat form |
-| 4 | handleEndChat doesn't clear session | `ChatWidget.tsx` | Clears localStorage, resets conversationId/visitorId/messages, returns to pre-chat |
-| 5 | Rating close doesn't clear session | `ChatWidget.tsx` | WidgetRating onClose clears localStorage and resets to pre-chat |
-| 6 | Status check doesn't clear resolved sessions | `ChatWidget.tsx` | Interval now clears session when resolved (not just shows rating) |
+| #   | Bug                                                  | File                            | Fix                                                                                                                            |
+| --- | ---------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Chat messages not realtime — requires page refresh   | NEW `lc-09-enable-realtime.sql` | `REPLICA IDENTITY FULL` + `ALTER PUBLICATION supabase_realtime ADD TABLE` for `mod_chat_messages` and `mod_chat_conversations` |
+| 2   | Anonymous widget can't receive realtime events       | `lc-09-enable-realtime.sql`     | RLS SELECT policies for anon role on both chat tables                                                                          |
+| 3   | Customer can't start new conversation after resolved | `ChatWidget.tsx`                | On localStorage restore, checks conversation status — if resolved/closed, clears session and shows pre-chat form               |
+| 4   | handleEndChat doesn't clear session                  | `ChatWidget.tsx`                | Clears localStorage, resets conversationId/visitorId/messages, returns to pre-chat                                             |
+| 5   | Rating close doesn't clear session                   | `ChatWidget.tsx`                | WidgetRating onClose clears localStorage and resets to pre-chat                                                                |
+| 6   | Status check doesn't clear resolved sessions         | `ChatWidget.tsx`                | Interval now clears session when resolved (not just shows rating)                                                              |
 
 **Agent Notifications (Root Cause: notification functions existed but were NEVER CALLED)**
 
-| # | Bug | File | Fix |
-|---|-----|------|-----|
-| 7 | notifyNewChatMessage() never called | `messages/route.ts` | Imported and called after message insert with siteId, visitorName, agentUserId |
-| 8 | No toast notifications for incoming messages | `ConversationViewWrapper.tsx` | Added `toast.info()` with visitor name and message preview |
-| 9 | No sound notification for messages | `ConversationViewWrapper.tsx` | Added `audioRef` with base64 WAV, plays on visitor message |
-| 10 | No toast/sound for new conversations | `ConversationsPageWrapper.tsx` | Added toast.info with "View" action button + audio notification |
+| #   | Bug                                          | File                           | Fix                                                                            |
+| --- | -------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------ |
+| 7   | notifyNewChatMessage() never called          | `messages/route.ts`            | Imported and called after message insert with siteId, visitorName, agentUserId |
+| 8   | No toast notifications for incoming messages | `ConversationViewWrapper.tsx`  | Added `toast.info()` with visitor name and message preview                     |
+| 9   | No sound notification for messages           | `ConversationViewWrapper.tsx`  | Added `audioRef` with base64 WAV, plays on visitor message                     |
+| 10  | No toast/sound for new conversations         | `ConversationsPageWrapper.tsx` | Added toast.info with "View" action button + audio notification                |
 
 **Domain TLD Expansion (7 → 50+)**
 
-| # | Bug | File | Fix |
-|---|-----|------|-----|
-| 11 | Only 7 TLDs despite ResellerClub supporting 500+ | `config.ts` | Expanded `TLD_CATEGORIES` to 8 categories: popular, business, tech, creative, country, africa, lifestyle, professional |
-| 12 | RDAP fallback only covered 7 TLDs | `domain-availability-fallback.ts` | Expanded from 7 to ~40 RDAP server endpoints |
-| 13 | Domain search UI limited to 7 | `domain-search.tsx` | Category-based expandable panel with "Select all"/"Deselect all" per category |
-| 14 | Server action fallback hardcoded 7 TLDs | `domains.ts` | Uses `TLD_CATEGORIES` from config as fallback |
-| 15 | Domain filters default to 7 TLDs | `domain-filters.tsx` | Derives defaults from `TLD_CATEGORIES` (single source of truth) |
-| 16 | Fallback pricing only for 7 TLDs | `domains.ts` | Added fallback prices for all 50+ TLDs across all categories |
+| #   | Bug                                              | File                              | Fix                                                                                                                    |
+| --- | ------------------------------------------------ | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| 11  | Only 7 TLDs despite ResellerClub supporting 500+ | `config.ts`                       | Expanded `TLD_CATEGORIES` to 8 categories: popular, business, tech, creative, country, africa, lifestyle, professional |
+| 12  | RDAP fallback only covered 7 TLDs                | `domain-availability-fallback.ts` | Expanded from 7 to ~40 RDAP server endpoints                                                                           |
+| 13  | Domain search UI limited to 7                    | `domain-search.tsx`               | Category-based expandable panel with "Select all"/"Deselect all" per category                                          |
+| 14  | Server action fallback hardcoded 7 TLDs          | `domains.ts`                      | Uses `TLD_CATEGORIES` from config as fallback                                                                          |
+| 15  | Domain filters default to 7 TLDs                 | `domain-filters.tsx`              | Derives defaults from `TLD_CATEGORIES` (single source of truth)                                                        |
+| 16  | Fallback pricing only for 7 TLDs                 | `domains.ts`                      | Added fallback prices for all 50+ TLDs across all categories                                                           |
 
 ### Key Architecture Findings
+
 - Supabase Realtime requires THREE things to work: (1) `REPLICA IDENTITY FULL` on table, (2) Table added to `supabase_realtime` publication, (3) RLS SELECT policy for the subscribing role
 - `notifyNewChatMessage()`, `notifyChatAssigned()`, `notifyChatMissed()`, `notifyChatRating()` all existed in `chat-notifications.ts` but were never wired
 - 5 separate TLD lists existed across the codebase, all hardcoded to 7 — now unified via `TLD_CATEGORIES` import from config
@@ -3134,9 +3497,11 @@ Generate with: `npx web-push generate-vapid-keys`
 - Audio notifications use base64 WAV data URI for zero-dependency sound
 
 ### Important: Migration Must Be Run
+
 ⚠️ **`migrations/lc-09-enable-realtime.sql` must be executed on Supabase** for realtime to work. Run in Supabase Dashboard → SQL Editor, or via `supabase db push`.
 
 ### Git State
+
 - **Branch**: `main`
 - **Latest commit**: `ae7080f`
 - **Pushed**: Yes ✅
@@ -3152,41 +3517,43 @@ Generate with: `npx web-push generate-vapid-keys`
 
 **Domain Search (Root Cause: sandbox `test.domaincheck.httpapi.com` does NOT exist in DNS)**
 
-| # | Bug | File | Fix |
-|---|-----|------|-----|
-| 1 | Sandbox domainCheckUrl resolves to nothing | `config.ts` | Changed to `test.httpapi.com/api` (no separate domaincheck subdomain for sandbox) |
-| 2 | Client crashes on HTML/403 responses | `client.ts` | Added HTTP status checking BEFORE body parsing; detects HTML, 403, non-JSON |
-| 3 | No fallback when ResellerClub unreachable | NEW `domain-availability-fallback.ts` | RDAP + DNS fallback (Verisign, nic.google, Cloudflare DoH) |
-| 4 | Fallback not integrated | `domains.ts` action | `searchDomains()` and `checkDomainAvailability()` now use fallback |
-| 5 | UI shows "Already registered" for fallback results | `domain-search.tsx` | Shows "Likely Available" badge + "Results via DNS lookup" header |
+| #   | Bug                                                | File                                  | Fix                                                                               |
+| --- | -------------------------------------------------- | ------------------------------------- | --------------------------------------------------------------------------------- |
+| 1   | Sandbox domainCheckUrl resolves to nothing         | `config.ts`                           | Changed to `test.httpapi.com/api` (no separate domaincheck subdomain for sandbox) |
+| 2   | Client crashes on HTML/403 responses               | `client.ts`                           | Added HTTP status checking BEFORE body parsing; detects HTML, 403, non-JSON       |
+| 3   | No fallback when ResellerClub unreachable          | NEW `domain-availability-fallback.ts` | RDAP + DNS fallback (Verisign, nic.google, Cloudflare DoH)                        |
+| 4   | Fallback not integrated                            | `domains.ts` action                   | `searchDomains()` and `checkDomainAvailability()` now use fallback                |
+| 5   | UI shows "Already registered" for fallback results | `domain-search.tsx`                   | Shows "Likely Available" badge + "Results via DNS lookup" header                  |
 
 **Verified:** "dramac" search now correctly shows dramac.io/app/dev as AVAILABLE, dramac.com/net/org/co as REGISTERED (3/7 available vs 0/7 before).
 
 **Email Fixes**
 
-| # | Bug | File | Fix |
-|---|-----|------|-----|
-| 6 | Raw `$` in email pricing | `email-orders-list.tsx` | `formatCurrency()` with proper import |
-| 7 | Dead Renew button | `email-orders-list.tsx` | Link to `/dashboard/email/${id}/settings` |
-| 8 | Dead Add Account button (server component) | `email/[orderId]/accounts/page.tsx` | Anchor link to `#email-accounts` scroll target |
-| 9 | Dead Reset Password menu | `email-accounts-table.tsx` | `onClick` opens Titan admin panel (`control.titan.email`) |
+| #   | Bug                                        | File                                | Fix                                                       |
+| --- | ------------------------------------------ | ----------------------------------- | --------------------------------------------------------- |
+| 6   | Raw `$` in email pricing                   | `email-orders-list.tsx`             | `formatCurrency()` with proper import                     |
+| 7   | Dead Renew button                          | `email-orders-list.tsx`             | Link to `/dashboard/email/${id}/settings`                 |
+| 8   | Dead Add Account button (server component) | `email/[orderId]/accounts/page.tsx` | Anchor link to `#email-accounts` scroll target            |
+| 9   | Dead Reset Password menu                   | `email-accounts-table.tsx`          | `onClick` opens Titan admin panel (`control.titan.email`) |
 
 **Domain Management Fixes**
 
-| # | Bug | File | Fix |
-|---|-----|------|-----|
-| 10 | Mock MOCK_CLIENTS/MOCK_SITES arrays | `domain-assignment.tsx` | Accept `clients`/`sites` as props (defaults to `[]`) |
-| 11 | Hardcoded DEFAULT_CONTACT | `settings/page.tsx` | Dynamic profile lookup via `getContactFromProfile()` |
-| 12 | Mock "Get Authorization Code" toast | `settings-form-client.tsx` | Calls real `getAuthCode()` action, displays code in dialog |
-| 13 | Empty contacts array in transfer page | `transfer/new/page.tsx` | Queries `domain_contacts` table via Supabase |
+| #   | Bug                                   | File                       | Fix                                                        |
+| --- | ------------------------------------- | -------------------------- | ---------------------------------------------------------- |
+| 10  | Mock MOCK_CLIENTS/MOCK_SITES arrays   | `domain-assignment.tsx`    | Accept `clients`/`sites` as props (defaults to `[]`)       |
+| 11  | Hardcoded DEFAULT_CONTACT             | `settings/page.tsx`        | Dynamic profile lookup via `getContactFromProfile()`       |
+| 12  | Mock "Get Authorization Code" toast   | `settings-form-client.tsx` | Calls real `getAuthCode()` action, displays code in dialog |
+| 13  | Empty contacts array in transfer page | `transfer/new/page.tsx`    | Queries `domain_contacts` table via Supabase               |
 
 ### Key Architecture Findings
+
 - ResellerClub sandbox has NO separate `domaincheck` subdomain (only `test.httpapi.com`)
 - All ResellerClub endpoints return 403 from local dev IPs (Cloudflare WAF blocks) — works from Vercel's IPs
 - RDAP is the most reliable fallback: Verisign for .com/.net, rdap.org for .org, nic.io/.co, nic.google for .app/.dev
 - DNS NS-record lookup via Cloudflare DoH as secondary fallback
 
 ### Git State
+
 - **Branch**: `main`
 - **Latest commit**: `5995f55`
 - **Working tree**: Clean
@@ -3198,26 +3565,28 @@ Generate with: `npx web-push generate-vapid-keys`
 
 ### Issues Fixed
 
-| Fix | File | Impact |
-|-----|------|--------|
-| CSP: Expand `/embed/:path*` script-src to `https:` + `blob:` + `wss:` | `next.config.ts` | Live chat embed script was completely blocked (only `https://unpkg.com` was allowed) |
-| Agent creation: Disable button until team member selected | `AgentsPageWrapper.tsx` | Prevents "User ID and display name are required" error |
-| Domain renew: Dynamic pricing from `calculateDomainPrice()` | `renew-form.tsx` | Was hardcoded `$12.99/year` with raw `$` symbol |
-| Domain renew: `formatCurrency()` for locale-aware display | `renew-form.tsx` | Proper ZMW/en-ZM currency formatting |
-| Domain settings: Transfer lock → `setTransferLock()` API | `settings-form-client.tsx` | Was `setTimeout(500)` mock |
-| Domain settings: WHOIS privacy → `updateDomainPrivacy()` API | `settings-form-client.tsx` | Was `setTimeout(500)` mock |
-| Domain settings: Auto-renew → `updateDomainAutoRenew()` API | `settings-form-client.tsx` | Was `setTimeout(500)` mock |
-| Domain settings: Delete → `deleteDomain()` API | `settings-form-client.tsx` | Was `setTimeout(1500)` mock |
-| Domain settings: Contact save → new PUT API endpoint | `settings-form-client.tsx` + new route | Was `setTimeout(1000)` mock |
-| Email: Wire dead "Renew Order" button | `email/[orderId]/page.tsx` | Button had no onClick or link — now links to settings page renewal |
-| New API: `PUT /api/domains/[domain]/contact` | `api/domains/[domain]/contact/route.ts` | Saves registrant contact info to DB |
+| Fix                                                                   | File                                    | Impact                                                                               |
+| --------------------------------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------ |
+| CSP: Expand `/embed/:path*` script-src to `https:` + `blob:` + `wss:` | `next.config.ts`                        | Live chat embed script was completely blocked (only `https://unpkg.com` was allowed) |
+| Agent creation: Disable button until team member selected             | `AgentsPageWrapper.tsx`                 | Prevents "User ID and display name are required" error                               |
+| Domain renew: Dynamic pricing from `calculateDomainPrice()`           | `renew-form.tsx`                        | Was hardcoded `$12.99/year` with raw `$` symbol                                      |
+| Domain renew: `formatCurrency()` for locale-aware display             | `renew-form.tsx`                        | Proper ZMW/en-ZM currency formatting                                                 |
+| Domain settings: Transfer lock → `setTransferLock()` API              | `settings-form-client.tsx`              | Was `setTimeout(500)` mock                                                           |
+| Domain settings: WHOIS privacy → `updateDomainPrivacy()` API          | `settings-form-client.tsx`              | Was `setTimeout(500)` mock                                                           |
+| Domain settings: Auto-renew → `updateDomainAutoRenew()` API           | `settings-form-client.tsx`              | Was `setTimeout(500)` mock                                                           |
+| Domain settings: Delete → `deleteDomain()` API                        | `settings-form-client.tsx`              | Was `setTimeout(1500)` mock                                                          |
+| Domain settings: Contact save → new PUT API endpoint                  | `settings-form-client.tsx` + new route  | Was `setTimeout(1000)` mock                                                          |
+| Email: Wire dead "Renew Order" button                                 | `email/[orderId]/page.tsx`              | Button had no onClick or link — now links to settings page renewal                   |
+| New API: `PUT /api/domains/[domain]/contact`                          | `api/domains/[domain]/contact/route.ts` | Saves registrant contact info to DB                                                  |
 
 ### Key Architecture Decisions
+
 - CSP for embed routes now uses structured array.join("; ") format matching the Paddle CSP pattern
 - Domain settings form optimistically updates UI, reverts on API failure
 - Contact update is local-only (ResellerClub IRTP compliance needed for registrar-level updates)
 
 ### Git State
+
 - **Branch**: `main`
 - **Latest commit**: `24f00cf`
 - **Working tree**: Clean
@@ -3226,37 +3595,41 @@ Generate with: `npx web-push generate-vapid-keys`
 ---
 
 ## Previous Session — Production-Grade Domains, Email & Live Chat Systems (Commit `f3086e3`)
-| Fix | File | Impact |
-|-----|------|--------|
-| Search fallback returns `available: false` (not `true`) | `domains.ts` | Users no longer misled when API is down |
-| `checkDomainAvailability` fallback returns `false` | `domains.ts` | Consistent with search behavior |
-| `registerDomain` uses real pricing from `calculateDomainPrice()` | `domains.ts` | Orders have real wholesale/retail prices (no more $0) |
-| `renewDomain` uses real pricing from `calculateDomainPrice()` | `domains.ts` | Renewal orders have real prices |
-| `calculateDomainPrice` tries ResellerClub API first | `domain-billing.ts` | Dynamic pricing with graceful fallback |
-| DNS actions use real Cloudflare API calls | `dns-actions-client.tsx` | No more mock setTimeout simulations |
-| DNS UI: TTL selector, priority for MX, proxy toggle | `dns-actions-client.tsx` | Full DNS record management |
+
+| Fix                                                              | File                     | Impact                                                |
+| ---------------------------------------------------------------- | ------------------------ | ----------------------------------------------------- |
+| Search fallback returns `available: false` (not `true`)          | `domains.ts`             | Users no longer misled when API is down               |
+| `checkDomainAvailability` fallback returns `false`               | `domains.ts`             | Consistent with search behavior                       |
+| `registerDomain` uses real pricing from `calculateDomainPrice()` | `domains.ts`             | Orders have real wholesale/retail prices (no more $0) |
+| `renewDomain` uses real pricing from `calculateDomainPrice()`    | `domains.ts`             | Renewal orders have real prices                       |
+| `calculateDomainPrice` tries ResellerClub API first              | `domain-billing.ts`      | Dynamic pricing with graceful fallback                |
+| DNS actions use real Cloudflare API calls                        | `dns-actions-client.tsx` | No more mock setTimeout simulations                   |
+| DNS UI: TTL selector, priority for MX, proxy toggle              | `dns-actions-client.tsx` | Full DNS record management                            |
 
 ### Email System Fixes
-| Fix | File | Impact |
-|-----|------|--------|
-| Purchase wizard uses dynamic API pricing | `email-purchase-wizard.tsx` | No more hardcoded $2.50/month |
-| All currency uses `formatCurrency()` from locale-config | Multiple files | Proper ZMW/en-ZM formatting |
-| Account form shows real domain name | `email-account-form.tsx` | Not `@domain.com` placeholder |
-| Order page: dynamic storage, locale currency | `[orderId]/page.tsx` | No more hardcoded 10 GB or `$` |
-| Settings: Renew button wired to `renewBusinessEmailOrder()` | `email-settings-actions.tsx` (NEW) | Functional renewal with period selector |
-| Settings: Cancel → Support redirect | `email-settings-actions.tsx` | Safe cancellation flow |
-| Settings: Upgrade → Support ticket | `email-settings-actions.tsx` | Clear upgrade path |
-| Portal reads from `email_accounts` table | `portal/email/page.tsx` | Was reading `domain_email_accounts` (empty) |
+
+| Fix                                                         | File                               | Impact                                      |
+| ----------------------------------------------------------- | ---------------------------------- | ------------------------------------------- |
+| Purchase wizard uses dynamic API pricing                    | `email-purchase-wizard.tsx`        | No more hardcoded $2.50/month               |
+| All currency uses `formatCurrency()` from locale-config     | Multiple files                     | Proper ZMW/en-ZM formatting                 |
+| Account form shows real domain name                         | `email-account-form.tsx`           | Not `@domain.com` placeholder               |
+| Order page: dynamic storage, locale currency                | `[orderId]/page.tsx`               | No more hardcoded 10 GB or `$`              |
+| Settings: Renew button wired to `renewBusinessEmailOrder()` | `email-settings-actions.tsx` (NEW) | Functional renewal with period selector     |
+| Settings: Cancel → Support redirect                         | `email-settings-actions.tsx`       | Safe cancellation flow                      |
+| Settings: Upgrade → Support ticket                          | `email-settings-actions.tsx`       | Clear upgrade path                          |
+| Portal reads from `email_accounts` table                    | `portal/email/page.tsx`            | Was reading `domain_email_accounts` (empty) |
 
 ### Live Chat Fixes
-| Fix | File | Impact |
-|-----|------|--------|
+
+| Fix                                            | File             | Impact                                      |
+| ---------------------------------------------- | ---------------- | ------------------------------------------- |
 | Widget uses Supabase Realtime (not 3s polling) | `ChatWidget.tsx` | Instant message delivery, lower server load |
-| Typing indicators show real agent name | `ChatWidget.tsx` | `useChatRealtime` hook fully integrated |
-| Auto-clear typing after 5s timeout | `ChatWidget.tsx` | No stuck typing indicators |
-| Initial messages loaded once, then realtime | `ChatWidget.tsx` | Clean state management |
+| Typing indicators show real agent name         | `ChatWidget.tsx` | `useChatRealtime` hook fully integrated     |
+| Auto-clear typing after 5s timeout             | `ChatWidget.tsx` | No stuck typing indicators                  |
+| Initial messages loaded once, then realtime    | `ChatWidget.tsx` | Clean state management                      |
 
 ### Files Changed (11 files, +622/-260 lines)
+
 1. `dns-actions-client.tsx` — Real Cloudflare API calls
 2. `domain-billing.ts` — Dynamic ResellerClub pricing
 3. `domains.ts` — Fixed fallbacks + real order prices
@@ -3270,6 +3643,7 @@ Generate with: `npx web-push generate-vapid-keys`
 11. `ChatWidget.tsx` — Supabase Realtime integration
 
 ### Git State
+
 - **Branch**: `main`
 - **Latest commit**: `f3086e3`
 - **Working tree**: Clean
@@ -3282,37 +3656,40 @@ Generate with: `npx web-push generate-vapid-keys`
 ---
 
 ### Complete File Inventory (LC-05 to LC-08 new files)
-| File | Phase | Purpose |
-|------|-------|---------|
-| `lib/whatsapp-service.ts` | LC-05 | WhatsApp Cloud API (send, verify, templates) |
-| `lib/whatsapp-media.ts` | LC-05 | Download WA media → Supabase Storage |
-| `lib/crm-integration.ts` | LC-05 | Find/create CRM contacts from visitors |
-| `api/webhooks/whatsapp/route.ts` | LC-05 | Webhook GET/POST handler |
-| `actions/whatsapp-actions.ts` | LC-05 | 7 WhatsApp server actions |
-| `components/shared/WhatsAppWindowIndicator.tsx` | LC-05 | 24h window badge |
-| `components/shared/WhatsAppStatusIndicator.tsx` | LC-05 | Delivery checkmarks |
-| `components/shared/TemplateMessageDialog.tsx` | LC-05 | Template message UI |
-| `components/settings/WhatsAppSetup.tsx` | LC-05 | WA config settings |
-| `lib/ai-responder.ts` | LC-06 | Claude AI auto-responses, suggestions, summaries |
-| `lib/routing-engine.ts` | LC-06 | Smart routing with scoring algorithm |
-| `lib/auto-response-handler.ts` | LC-06 | Orchestration for AI + routing |
-| `actions/ai-actions.ts` | LC-06 | 7 AI server actions |
-| `components/shared/AiSuggestions.tsx` | LC-06 | AI suggested replies panel |
-| `components/shared/ConversationSummary.tsx` | LC-06 | AI conversation summary card |
-| `api/cron/chat/route.ts` | LC-06 | Cron: rebalance, stale close, analytics |
-| `actions/analytics-actions.ts` | LC-07 | 8 analytics query functions + CSV export |
-| `components/wrappers/ChatAnalyticsWrapper.tsx` | LC-07 | Full analytics dashboard |
-| `lib/transcript-service.ts` | LC-07 | Generate/download conversation transcripts |
+
+| File                                            | Phase | Purpose                                          |
+| ----------------------------------------------- | ----- | ------------------------------------------------ |
+| `lib/whatsapp-service.ts`                       | LC-05 | WhatsApp Cloud API (send, verify, templates)     |
+| `lib/whatsapp-media.ts`                         | LC-05 | Download WA media → Supabase Storage             |
+| `lib/crm-integration.ts`                        | LC-05 | Find/create CRM contacts from visitors           |
+| `api/webhooks/whatsapp/route.ts`                | LC-05 | Webhook GET/POST handler                         |
+| `actions/whatsapp-actions.ts`                   | LC-05 | 7 WhatsApp server actions                        |
+| `components/shared/WhatsAppWindowIndicator.tsx` | LC-05 | 24h window badge                                 |
+| `components/shared/WhatsAppStatusIndicator.tsx` | LC-05 | Delivery checkmarks                              |
+| `components/shared/TemplateMessageDialog.tsx`   | LC-05 | Template message UI                              |
+| `components/settings/WhatsAppSetup.tsx`         | LC-05 | WA config settings                               |
+| `lib/ai-responder.ts`                           | LC-06 | Claude AI auto-responses, suggestions, summaries |
+| `lib/routing-engine.ts`                         | LC-06 | Smart routing with scoring algorithm             |
+| `lib/auto-response-handler.ts`                  | LC-06 | Orchestration for AI + routing                   |
+| `actions/ai-actions.ts`                         | LC-06 | 7 AI server actions                              |
+| `components/shared/AiSuggestions.tsx`           | LC-06 | AI suggested replies panel                       |
+| `components/shared/ConversationSummary.tsx`     | LC-06 | AI conversation summary card                     |
+| `api/cron/chat/route.ts`                        | LC-06 | Cron: rebalance, stale close, analytics          |
+| `actions/analytics-actions.ts`                  | LC-07 | 8 analytics query functions + CSV export         |
+| `components/wrappers/ChatAnalyticsWrapper.tsx`  | LC-07 | Full analytics dashboard                         |
+| `lib/transcript-service.ts`                     | LC-07 | Generate/download conversation transcripts       |
 
 ### Architecture Patterns (AI SDK)
+
 ```typescript
-import { generateText } from 'ai'
-import { anthropic } from '@ai-sdk/anthropic'
-const model = anthropic('claude-sonnet-4-20250514')
+import { generateText } from "ai";
+import { anthropic } from "@ai-sdk/anthropic";
+const model = anthropic("claude-sonnet-4-20250514");
 // Note: do NOT use maxTokens — not supported in AI SDK v5
 ```
 
 ### Git State
+
 - **Branch**: `main`
 - **Latest commit**: `e3ca92d`
 - **Working tree**: Clean
@@ -3326,43 +3703,48 @@ const model = anthropic('claude-sonnet-4-20250514')
 **Discovery:** ResellerClub's `test.httpapi.com` (sandbox URL) with LIVE credentials still performs REAL operations and charges REAL money. The test URL is only meant for browser-based GET testing with a separate Demo Reseller Account.
 
 **Solution implemented:** `RESELLERCLUB_ALLOW_PURCHASES` safety flag
+
 - When `false`/missing: Only read-only operations work (search, availability, pricing, details)
 - When `true`: Money-spending operations are enabled (register, renew, transfer, privacy, email orders)
 - Set to `false` in `.env.local` to protect the USD $24.02 balance
 
 ### ResellerClub Credentials (Confirmed Working)
-| Setting | Value | Status |
-|---------|-------|--------|
-| Reseller ID | `1315461` | ✅ Saved |
-| API Key | `5tlLyAAcuU...` | ✅ Saved |
-| Sandbox mode | `true` | ✅ (but does NOT prevent charges — use allow_purchases instead) |
-| Allow Purchases | `false` | ✅ **SAFE — no money can be spent** |
+
+| Setting         | Value           | Status                                                          |
+| --------------- | --------------- | --------------------------------------------------------------- |
+| Reseller ID     | `1315461`       | ✅ Saved                                                        |
+| API Key         | `5tlLyAAcuU...` | ✅ Saved                                                        |
+| Sandbox mode    | `true`          | ✅ (but does NOT prevent charges — use allow_purchases instead) |
+| Allow Purchases | `false`         | ✅ **SAFE — no money can be spent**                             |
 
 ### Files Modified This Session
-| File | Change | Status |
-|------|--------|--------|
-| `src/lib/resellerclub/config.ts` | Added `allowPurchases` flag + `arePurchasesAllowed()` guard | ✅ |
-| `src/lib/resellerclub/errors.ts` | Added `PurchasesDisabledError` class | ✅ |
-| `src/lib/resellerclub/domains.ts` | Guards on `register()`, `renew()`, `transfer()`, `enablePrivacy()` | ✅ |
-| `src/lib/resellerclub/email/client.ts` | Guards on `createOrder()`, `renewOrder()` | ✅ |
-| `src/lib/resellerclub/transfers.ts` | Guards on `initiateTransferIn()`, `renewDomain()` | ✅ |
-| `src/lib/actions/domains.ts` | `getResellerClubStatus()` reports `purchasesEnabled` | ✅ |
-| `.env.local` | Added `RESELLERCLUB_ALLOW_PURCHASES=false` | ✅ |
-| `.env.example` | Updated RC docs with safety warning | ✅ |
+
+| File                                   | Change                                                             | Status |
+| -------------------------------------- | ------------------------------------------------------------------ | ------ |
+| `src/lib/resellerclub/config.ts`       | Added `allowPurchases` flag + `arePurchasesAllowed()` guard        | ✅     |
+| `src/lib/resellerclub/errors.ts`       | Added `PurchasesDisabledError` class                               | ✅     |
+| `src/lib/resellerclub/domains.ts`      | Guards on `register()`, `renew()`, `transfer()`, `enablePrivacy()` | ✅     |
+| `src/lib/resellerclub/email/client.ts` | Guards on `createOrder()`, `renewOrder()`                          | ✅     |
+| `src/lib/resellerclub/transfers.ts`    | Guards on `initiateTransferIn()`, `renewDomain()`                  | ✅     |
+| `src/lib/actions/domains.ts`           | `getResellerClubStatus()` reports `purchasesEnabled`               | ✅     |
+| `.env.local`                           | Added `RESELLERCLUB_ALLOW_PURCHASES=false`                         | ✅     |
+| `.env.example`                         | Updated RC docs with safety warning                                | ✅     |
 
 ### Money-Spending Operations (All Guarded)
-| Operation | Service Method | Guard |
-|-----------|---------------|-------|
-| Domain Registration | `domainService.register()` | ✅ `arePurchasesAllowed()` |
-| Domain Renewal | `domainService.renew()` | ✅ `arePurchasesAllowed()` |
-| Domain Transfer | `domainService.transfer()` | ✅ `arePurchasesAllowed()` |
-| Privacy Purchase | `domainService.enablePrivacy()` | ✅ `arePurchasesAllowed()` |
-| Email Order Create | `businessEmailApi.createOrder()` | ✅ `arePurchasesAllowed()` |
-| Email Order Renew | `businessEmailApi.renewOrder()` | ✅ `arePurchasesAllowed()` |
+
+| Operation             | Service Method                         | Guard                      |
+| --------------------- | -------------------------------------- | -------------------------- |
+| Domain Registration   | `domainService.register()`             | ✅ `arePurchasesAllowed()` |
+| Domain Renewal        | `domainService.renew()`                | ✅ `arePurchasesAllowed()` |
+| Domain Transfer       | `domainService.transfer()`             | ✅ `arePurchasesAllowed()` |
+| Privacy Purchase      | `domainService.enablePrivacy()`        | ✅ `arePurchasesAllowed()` |
+| Email Order Create    | `businessEmailApi.createOrder()`       | ✅ `arePurchasesAllowed()` |
+| Email Order Renew     | `businessEmailApi.renewOrder()`        | ✅ `arePurchasesAllowed()` |
 | Domain Transfer (alt) | `transferService.initiateTransferIn()` | ✅ `arePurchasesAllowed()` |
-| Domain Renewal (alt) | `renewalService.renewDomain()` | ✅ `arePurchasesAllowed()` |
+| Domain Renewal (alt)  | `renewalService.renewDomain()`         | ✅ `arePurchasesAllowed()` |
 
 ### What Works RIGHT NOW (Without Spending Money)
+
 - ✅ Domain search & availability checking (calls real RC API)
 - ✅ Domain pricing (real wholesale prices from RC)
 - ✅ Domain stats from database
@@ -3372,6 +3754,7 @@ const model = anthropic('claude-sonnet-4-20250514')
 - ✅ Balance check
 
 ### What's Blocked (Until `RESELLERCLUB_ALLOW_PURCHASES=true`)
+
 - ❌ Domain registration (returns clear error message)
 - ❌ Domain renewal
 - ❌ Domain transfers
@@ -3379,6 +3762,7 @@ const model = anthropic('claude-sonnet-4-20250514')
 - ❌ Email hosting orders (create/renew)
 
 ### Git State
+
 - **Branch**: `main`
 - **Latest commit**: `e3ca92d`
 - **Working tree**: Clean
@@ -3390,6 +3774,7 @@ const model = anthropic('claude-sonnet-4-20250514')
 ### Critical Bug Fixes Applied ✅
 
 **Commit `d68a645`:** Migration trigger + Turbopack build fixes
+
 - SM-07 migration: `social_update_updated_at()` → `update_updated_at_column()`
 - SM-08 migration: `tenant_users` → `agency_members` RLS pattern, fixed trigger
 - ReportsPageWrapper: Removed inline `'use server'` from `'use client'` component
@@ -3397,27 +3782,30 @@ const model = anthropic('claude-sonnet-4-20250514')
 **Commit `6b67bba`:** UUID + snake_case mapping + auth guard fixes (20 files, +156/-76)
 
 ### Key Pattern: Getting tenantId
+
 ```typescript
 // CORRECT (all pages must use this):
 const { data: site } = await supabase
-  .from('sites')
-  .select('agency_id')
-  .eq('id', siteId)
-  .single()
-const tenantId = site?.agency_id || ''
+  .from("sites")
+  .select("agency_id")
+  .eq("id", siteId)
+  .single();
+const tenantId = site?.agency_id || "";
 ```
 
 ### Key Pattern: DB Record Mapping
+
 ```typescript
 // All server actions that return Supabase data must use:
-import { mapRecord, mapRecords } from '../lib/map-db-record'
-return { items: mapRecords<MyType>(data || []), error: null }
-return { item: data ? mapRecord<MyType>(data) : null, error: null }
+import { mapRecord, mapRecords } from "../lib/map-db-record";
+return { items: mapRecords<MyType>(data || []), error: null };
+return { item: data ? mapRecord<MyType>(data) : null, error: null };
 ```
 
 ---
 
 ## Previous Session (Social Media SM-07/08/09 — Commit `35e4371`)
+
 - `sm-08-content-pillars.sql` — Content pillars table
 
 ---
@@ -3429,40 +3817,44 @@ return { item: data ? mapRecord<MyType>(data) : null, error: null }
 **Commit:** `ebc04f0` — 23 files changed, +5,346 insertions, -73 deletions
 
 #### SM-04: Unified Inbox Engine ✅
-| File | Change | Status |
-|------|--------|--------|
-| `lib/sentiment-analysis.ts` | Keyword-based sentiment scoring + priority detection | ✅ |
-| `lib/inbox-sync-service.ts` | All 10 platform inbox sync with deduplication | ✅ |
-| `lib/inbox-reply-service.ts` | Platform-specific reply dispatch | ✅ |
-| `api/social/webhooks/[platform]/route.ts` | GET verification + POST event processing | ✅ |
-| `actions/inbox-actions.ts` | Real sendPlatformReply + syncInbox action | ✅ |
-| `api/social/sync/route.ts` | Added inbox sync to cron | ✅ |
-| `components/SocialInboxWrapper.tsx` | Sync + reply toast feedback | ✅ |
-| `components/SocialInbox.tsx` | Sentiment dots, priority badges, verified/follower badges | ✅ |
+
+| File                                      | Change                                                    | Status |
+| ----------------------------------------- | --------------------------------------------------------- | ------ |
+| `lib/sentiment-analysis.ts`               | Keyword-based sentiment scoring + priority detection      | ✅     |
+| `lib/inbox-sync-service.ts`               | All 10 platform inbox sync with deduplication             | ✅     |
+| `lib/inbox-reply-service.ts`              | Platform-specific reply dispatch                          | ✅     |
+| `api/social/webhooks/[platform]/route.ts` | GET verification + POST event processing                  | ✅     |
+| `actions/inbox-actions.ts`                | Real sendPlatformReply + syncInbox action                 | ✅     |
+| `api/social/sync/route.ts`                | Added inbox sync to cron                                  | ✅     |
+| `components/SocialInboxWrapper.tsx`       | Sync + reply toast feedback                               | ✅     |
+| `components/SocialInbox.tsx`              | Sentiment dots, priority badges, verified/follower badges | ✅     |
 
 #### SM-05: Media Library & Storage ✅
-| File | Change | Status |
-|------|--------|--------|
-| `migrations/sm-05-media-storage.sql` | Storage bucket + RLS + folders table | ✅ |
-| `lib/media-upload-service.ts` | Upload, validate, delete, getLibrary with platform constraints | ✅ |
-| `actions/media-actions.ts` | Folder CRUD, metadata, bulk ops, search, usage | ✅ |
-| `components/MediaLibrary.tsx` | Grid/list views, folders, search, bulk actions, detail sheet | ✅ |
-| `components/MediaLibraryWrapper.tsx` | Client wrapper with state management | ✅ |
-| `social/media/page.tsx` | Server component for media page | ✅ |
-| `social/layout.tsx` | Added Media nav item | ✅ |
-| `PostComposerEnhanced.tsx` | Real Supabase Storage uploads | ✅ |
+
+| File                                 | Change                                                         | Status |
+| ------------------------------------ | -------------------------------------------------------------- | ------ |
+| `migrations/sm-05-media-storage.sql` | Storage bucket + RLS + folders table                           | ✅     |
+| `lib/media-upload-service.ts`        | Upload, validate, delete, getLibrary with platform constraints | ✅     |
+| `actions/media-actions.ts`           | Folder CRUD, metadata, bulk ops, search, usage                 | ✅     |
+| `components/MediaLibrary.tsx`        | Grid/list views, folders, search, bulk actions, detail sheet   | ✅     |
+| `components/MediaLibraryWrapper.tsx` | Client wrapper with state management                           | ✅     |
+| `social/media/page.tsx`              | Server component for media page                                | ✅     |
+| `social/layout.tsx`                  | Added Media nav item                                           | ✅     |
+| `PostComposerEnhanced.tsx`           | Real Supabase Storage uploads                                  | ✅     |
 
 #### SM-06: AI Content Engine ✅
-| File | Change | Status |
-|------|--------|--------|
-| `lib/ai-content-service.ts` | 8 AI functions using Claude claude-sonnet-4-20250514 via AI SDK | ✅ |
-| `actions/ai-actions.ts` | 8 action wrappers with error handling | ✅ |
-| `components/ui/ai-assistant-panel.tsx` | Slide-over panel with 6 interactive sections | ✅ |
-| `PostComposerEnhanced.tsx` | AI toggle button + panel integration | ✅ |
-| `actions/index.ts` | Added media-actions + ai-actions exports | ✅ |
-| `index.ts` | Updated barrel with all new exports | ✅ |
+
+| File                                   | Change                                                          | Status |
+| -------------------------------------- | --------------------------------------------------------------- | ------ |
+| `lib/ai-content-service.ts`            | 8 AI functions using Claude claude-sonnet-4-20250514 via AI SDK | ✅     |
+| `actions/ai-actions.ts`                | 8 action wrappers with error handling                           | ✅     |
+| `components/ui/ai-assistant-panel.tsx` | Slide-over panel with 6 interactive sections                    | ✅     |
+| `PostComposerEnhanced.tsx`             | AI toggle button + panel integration                            | ✅     |
+| `actions/index.ts`                     | Added media-actions + ai-actions exports                        | ✅     |
+| `index.ts`                             | Updated barrel with all new exports                             | ✅     |
 
 ### Environment Requirements
+
 - `ANTHROPIC_API_KEY` — Required for AI Content Engine (SM-06)
 - Supabase Storage bucket `social-media` — Run `sm-05-media-storage.sql` migration
 - Webhook URLs configured per platform for real-time inbox (SM-04)
@@ -3475,16 +3867,17 @@ return { item: data ? mapRecord<MyType>(data) : null, error: null }
 
 **Files changed:** 6 files, +723 insertions, -132 deletions
 
-| File | Change | Status |
-|------|--------|--------|
-| `src/lib/actions/domains.ts` | All server actions rewritten to call real RC API | ✅ |
-| `src/lib/email/email-types.ts` | Added `domain_expiring` email type | ✅ |
-| `src/lib/email/templates.ts` | Added `domain_expiring` plain template | ✅ |
-| `src/lib/email/templates/branded-templates.ts` | Added `domain_expiring` branded template | ✅ |
-| `src/app/api/cron/domains/route.ts` | NEW — Automated expiry notifications & health checks | ✅ |
-| `.env.example` | Added ResellerClub + Cloudflare env var documentation | ✅ |
+| File                                           | Change                                                | Status |
+| ---------------------------------------------- | ----------------------------------------------------- | ------ |
+| `src/lib/actions/domains.ts`                   | All server actions rewritten to call real RC API      | ✅     |
+| `src/lib/email/email-types.ts`                 | Added `domain_expiring` email type                    | ✅     |
+| `src/lib/email/templates.ts`                   | Added `domain_expiring` plain template                | ✅     |
+| `src/lib/email/templates/branded-templates.ts` | Added `domain_expiring` branded template              | ✅     |
+| `src/app/api/cron/domains/route.ts`            | NEW — Automated expiry notifications & health checks  | ✅     |
+| `.env.example`                                 | Added ResellerClub + Cloudflare env var documentation | ✅     |
 
 ### Key Changes
+
 1. **searchDomains()** — Now calls `domainService.suggestDomains()` + `domainService.getPricing()` with graceful fallback
 2. **checkDomainAvailability()** — Now calls `domainService.checkAvailability()` with fallback
 3. **registerDomain()** — Auto-provisions RC customer via `ensureResellerClubCustomer()`, creates contact, registers domain via real API
@@ -3497,16 +3890,22 @@ return { item: data ? mapRecord<MyType>(data) : null, error: null }
 10. **Email templates** — `domain_expiring` added to both plain and branded template systems
 
 ### Architecture Pattern: Graceful Degradation
+
 All domain actions follow this pattern:
+
 ```typescript
 if (isClientAvailable()) {
-  try { /* call ResellerClub API */ }
-  catch { /* log error, continue with DB-only */ }
+  try {
+    /* call ResellerClub API */
+  } catch {
+    /* log error, continue with DB-only */
+  }
 }
 // Always fall back to local DB operations
 ```
 
 ### ResellerClub Setup (for user)
+
 1. Log into https://www.resellerclub.com/
 2. Go to **Settings → API** in the dashboard
 3. Copy **Reseller ID** (shown at top of dashboard)
@@ -3518,6 +3917,7 @@ if (isClientAvailable()) {
    - `RESELLERCLUB_SANDBOX=true` (use `false` for production)
 
 ### Current State
+
 - **TypeScript:** 0 errors (verified `tsc --noEmit`)
 - **Branch:** `main`, latest commit `3ba184c`
 - **Domain services:** All connected to live API with graceful fallback
@@ -3526,6 +3926,7 @@ if (isClientAvailable()) {
 - **Transfer services:** Already had graceful fallback pattern
 
 ### What Remains for Domains
+
 - User needs to fill in RC API credentials in `.env.local`
 - Test domain search with real API
 - Test domain registration end-to-end
@@ -3538,22 +3939,24 @@ if (isClientAvailable()) {
 ## Previous: ALL 13 LAUNCH PHASES COMPLETE ✅ (February 2026)
 
 ### Phase Documents Created
+
 All 10 phase documents for the social media module have been written and committed to `phases/social-media/`:
 
-| Phase | Name | Scope | Independence |
-|-------|------|-------|--------------|
-| SM-00 | Master Plan | Dependency graph, API keys, global rules | Reference doc |
-| SM-01 | OAuth & Account Integration | OAuth for 10 platforms, token refresh, Bluesky app-password, Mastodon instance | Run FIRST |
-| SM-02 | Publishing Engine | Real API posting, scheduled processor, queue, retry | Requires SM-01 |
-| SM-03 | Analytics Sync Engine | Real analytics sync, cron route, optimal times, mock purge | Requires SM-01 |
-| SM-04 | Unified Inbox Engine | Inbox sync, real replies, sentiment analysis, webhooks | Requires SM-01 |
-| SM-05 | Media Library & Storage | Supabase Storage bucket, upload service, media library page | Fully independent |
-| SM-06 | AI Content Engine | Claude-powered captions, hashtags, threads, alt-text, ideas | Fully independent |
-| SM-07 | Missing Pages & Navigation | Posts list, Listening, Competitors pages, full 13-item nav | Fully independent |
-| SM-08 | Campaigns, Reporting & Calendar | Enhanced campaigns, reports engine, calendar drag-and-drop | Fully independent |
-| SM-09 | Production Hardening | Error boundaries, skeletons, accessibility, mock purge, final QA | Run LAST |
+| Phase | Name                            | Scope                                                                          | Independence      |
+| ----- | ------------------------------- | ------------------------------------------------------------------------------ | ----------------- |
+| SM-00 | Master Plan                     | Dependency graph, API keys, global rules                                       | Reference doc     |
+| SM-01 | OAuth & Account Integration     | OAuth for 10 platforms, token refresh, Bluesky app-password, Mastodon instance | Run FIRST         |
+| SM-02 | Publishing Engine               | Real API posting, scheduled processor, queue, retry                            | Requires SM-01    |
+| SM-03 | Analytics Sync Engine           | Real analytics sync, cron route, optimal times, mock purge                     | Requires SM-01    |
+| SM-04 | Unified Inbox Engine            | Inbox sync, real replies, sentiment analysis, webhooks                         | Requires SM-01    |
+| SM-05 | Media Library & Storage         | Supabase Storage bucket, upload service, media library page                    | Fully independent |
+| SM-06 | AI Content Engine               | Claude-powered captions, hashtags, threads, alt-text, ideas                    | Fully independent |
+| SM-07 | Missing Pages & Navigation      | Posts list, Listening, Competitors pages, full 13-item nav                     | Fully independent |
+| SM-08 | Campaigns, Reporting & Calendar | Enhanced campaigns, reports engine, calendar drag-and-drop                     | Fully independent |
+| SM-09 | Production Hardening            | Error boundaries, skeletons, accessibility, mock purge, final QA               | Run LAST          |
 
 ### Dependency Graph
+
 ```
 SM-01 (OAuth) → SM-02 (Publishing), SM-03 (Analytics), SM-04 (Inbox)
 SM-05 (Media), SM-06 (AI), SM-07 (Pages), SM-08 (Campaigns) → Independent
@@ -3561,12 +3964,14 @@ SM-09 (Hardening) → Run after all others
 ```
 
 ### Current Social Media Module State
+
 - **UI Shell**: ~25% complete (42 components, 9 routes, 13 DB tables)
 - **Backend Integration**: 0% — all server actions are stubs/mocks
 - **Key gaps**: Zero OAuth, zero real publishing, zero analytics sync, zero inbox sync, zero media storage, zero AI content
 - **Total estimated work**: ~120 new/modified files across all 9 implementation phases
 
 ### Next Steps
+
 1. Execute SM-01 first (OAuth is the foundation)
 2. Then SM-02, SM-03, SM-04 in any order (all need accounts from SM-01)
 3. SM-05, SM-06, SM-07, SM-08 can run in parallel (independent)
@@ -3586,6 +3991,7 @@ SM-09 (Hardening) → Run after all others
 ---
 
 #### Problem: Emoji "Cheap Icons" Throughout Platform
+
 - **200+ emoji locations** across the platform rendered as raw text characters (📊🔥🎯💳🛒 etc.)
 - Module cards, notifications, activity feeds, welcome card, marketplace, admin panels all used emoji strings
 - No visual cohesion — emoji render differently per OS/browser
@@ -3593,6 +3999,7 @@ SM-09 (Hardening) → Run after all others
 - Module catalog and DB `icon` fields stored emoji strings
 
 #### Solution: Lucide Line Icons + Stroke-Draw Animation
+
 1. **Created `icon-map.ts`** (`src/lib/utils/icon-map.ts`) — Central emoji→Lucide mapping utility:
    - `EMOJI_TO_LUCIDE` map: 100+ emoji→Lucide PascalCase name mappings
    - `KNOWN_LUCIDE_NAMES` set: ~100 validated icon names for lucide-react v0.562.0
@@ -3618,36 +4025,39 @@ SM-09 (Hardening) → Run after all others
 5. **Updated all high-visibility emoji renders** across 18+ files
 
 #### Files Modified/Created
-| File | Changes |
-|------|---------|
-| `src/lib/utils/icon-map.ts` | **NEW** — emoji→Lucide mapping utility |
-| `src/components/notifications/notification-icon.tsx` | **NEW** — shared notification Lucide icons |
-| `src/app/globals.css` | Added strokeDraw keyframes + icon-stroke-draw class |
-| `src/components/modules/shared/module-icon-container.tsx` | Rewritten: renders Lucide SVG via icons[] |
-| `src/components/notifications/notification-bell.tsx` | Removed 22-entry emoji map → NotificationIcon |
-| `src/components/notifications/notifications-list.tsx` | Removed emoji typeIcons → NotificationIcon |
-| `src/components/notifications/notification-center.tsx` | Removed emoji NOTIFICATION_TYPE_ICONS → NotificationIcon |
-| `src/components/activity/activity-feed.tsx` | Emoji Record → Record<string, LucideIcon> components |
-| `src/lib/services/activity.ts` | Emoji strings → Lucide icon name strings |
-| `src/components/dashboard/welcome-card.tsx` | 🌅☀️🌆🌙 → Sunrise/Sun/Sunset/Moon Lucide icons |
-| `src/lib/modules/module-catalog.ts` | 19 module icons + 12 category icons → Lucide names |
-| `src/components/admin/modules/module-config-form.tsx` | Lucide icon picker grid, semantic pricing tier colors |
-| `src/components/portal/apps/app-launcher.tsx` | 3 text-6xl emoji → Lucide icons |
-| `src/components/portal/apps/app-card.tsx` | Emoji displayIcon → Lucide icon render |
-| `src/components/portal/apps/available-apps-grid.tsx` | text-3xl emoji → Lucide icon |
-| `src/components/modules/marketplace/module-detail-view.tsx` | text-6xl emoji → Lucide icon in rounded container |
-| `src/components/portal/apps/request-app-dialog.tsx` | text-3xl emoji → Lucide icon |
-| `src/app/portal/apps/[slug]/page.tsx` | text-2xl emoji → Lucide icon (server component) |
-| `src/components/modules/admin/admin-module-list.tsx` | text-2xl emoji → Lucide icon |
-| `src/components/portal/apps/module-widgets-grid.tsx` | Inline emoji → Lucide icon |
+
+| File                                                        | Changes                                                  |
+| ----------------------------------------------------------- | -------------------------------------------------------- |
+| `src/lib/utils/icon-map.ts`                                 | **NEW** — emoji→Lucide mapping utility                   |
+| `src/components/notifications/notification-icon.tsx`        | **NEW** — shared notification Lucide icons               |
+| `src/app/globals.css`                                       | Added strokeDraw keyframes + icon-stroke-draw class      |
+| `src/components/modules/shared/module-icon-container.tsx`   | Rewritten: renders Lucide SVG via icons[]                |
+| `src/components/notifications/notification-bell.tsx`        | Removed 22-entry emoji map → NotificationIcon            |
+| `src/components/notifications/notifications-list.tsx`       | Removed emoji typeIcons → NotificationIcon               |
+| `src/components/notifications/notification-center.tsx`      | Removed emoji NOTIFICATION_TYPE_ICONS → NotificationIcon |
+| `src/components/activity/activity-feed.tsx`                 | Emoji Record → Record<string, LucideIcon> components     |
+| `src/lib/services/activity.ts`                              | Emoji strings → Lucide icon name strings                 |
+| `src/components/dashboard/welcome-card.tsx`                 | 🌅☀️🌆🌙 → Sunrise/Sun/Sunset/Moon Lucide icons          |
+| `src/lib/modules/module-catalog.ts`                         | 19 module icons + 12 category icons → Lucide names       |
+| `src/components/admin/modules/module-config-form.tsx`       | Lucide icon picker grid, semantic pricing tier colors    |
+| `src/components/portal/apps/app-launcher.tsx`               | 3 text-6xl emoji → Lucide icons                          |
+| `src/components/portal/apps/app-card.tsx`                   | Emoji displayIcon → Lucide icon render                   |
+| `src/components/portal/apps/available-apps-grid.tsx`        | text-3xl emoji → Lucide icon                             |
+| `src/components/modules/marketplace/module-detail-view.tsx` | text-6xl emoji → Lucide icon in rounded container        |
+| `src/components/portal/apps/request-app-dialog.tsx`         | text-3xl emoji → Lucide icon                             |
+| `src/app/portal/apps/[slug]/page.tsx`                       | text-2xl emoji → Lucide icon (server component)          |
+| `src/components/modules/admin/admin-module-list.tsx`        | text-2xl emoji → Lucide icon                             |
+| `src/components/portal/apps/module-widgets-grid.tsx`        | Inline emoji → Lucide icon                               |
 
 #### Key Technical Decisions
+
 - **lucide-react v0.562.0 icon name renames**: `BarChart3→ChartBar`, `AlertCircle→CircleAlert`, `CheckCircle→CircleCheck`, `XCircle→CircleX`, `Loader2→LoaderCircle`, `Wand2→WandSparkles`, `PieChart→ChartPie`, `LineChart→ChartLine`. Named imports still work (backward compatible re-exports), but `icons[]` dynamic object only has new names.
 - **`resolveIconName()` is the single source of truth** — All components that render dynamic icons should use this function. It handles emoji strings from DB, Lucide name strings from catalog, kebab-case from config, and null/undefined.
 - **Pattern for dynamic Lucide rendering**: `const I = icons[resolveIconName(icon) as keyof typeof icons] || icons.Package; return <I className="..." strokeWidth={1.5} />;`
 - **strokeWidth={1.5}** is the standard for all dynamically rendered Lucide icons (thinner than default 2, more refined "line icon" feel).
 
 #### Remaining Emoji Locations (Lower Priority)
+
 - AI agents system (~10 locations with 🤖 emoji)
 - Automation action-types.ts (~30+ emoji for workflow icons)
 - Template system (~50+ emoji in template data/categories)
@@ -3668,15 +4078,18 @@ SM-09 (Hardening) → Run after all others
 **TypeScript:** Zero errors
 
 #### Root Cause: Subdomain Static Asset 404s
+
 - Published sites on `*.sites.dramacagency.com` had ALL `_next/static` assets returning 404
 - Vercel's CDN cannot serve `_next/static` assets from wildcard subdomain origins
 - `runtime: 'nodejs'` removal broke Vercel build (restored in FIX-11 session)
 
 #### Fixes Applied
+
 1. **`assetPrefix` in next.config.ts** — All `_next/static` asset URLs prefixed with `https://app.dramacagency.com`
 2. **Static asset guard in proxy.ts** — Safety net for `_next/*`, favicon, asset file extensions
 
 ### Key Patterns (FIX-10)
+
 - **Multi-tenant Vercel apps MUST use `assetPrefix`**
 - **`runtime: 'nodejs'` in middleware IS required** — tells Vercel build system to generate nft.json trace file
 - **Defense in depth for proxy**
@@ -3694,6 +4107,7 @@ SM-09 (Hardening) → Run after all others
 ---
 
 #### 1. Portal Branding Flash Fix (ROOT CAUSE)
+
 - **File:** `src/app/portal/layout.tsx`
 - **Problem:** Portal layout was MISSING both `ServerBrandingStyle` SSR injection AND `initialBranding` prop for logged-in users. Colors started as default CSS vars (blue/teal primary from `brand-variables.css`) then flashed to agency branding after client-side fetch completed.
 - **Root Cause Comparison:**
@@ -3703,19 +4117,22 @@ SM-09 (Hardening) → Run after all others
 - **Login page also fixed:** Added `<ServerBrandingStyle>` to the login page branding path (previously had `initialBranding` but no SSR style injection).
 
 #### 2. Platform-Wide Loader Neutralization (24 files)
+
 - **Problem:** `Loader2` spinners used `text-primary` which resolves to branding color AFTER hydration but starts as default CSS var color BEFORE. Also some used hardcoded `text-blue-500/600` or `text-gray-400`.
 - **Fix:** Replaced ALL spinner colors with `text-muted-foreground` — a neutral semantic token that works consistently in both light/dark mode without any color flash:
   - 18 × `text-primary` → `text-muted-foreground`
-  - 4 × `text-blue-500/600` → `text-muted-foreground`  
+  - 4 × `text-blue-500/600` → `text-muted-foreground`
   - 2 × `text-gray-400` → `text-muted-foreground`
   - 1 × `bg-gray-50 dark:bg-gray-900` → `bg-background`
 - **Note:** Automation "running" status BADGES (`bg-blue-100 text-blue-800`) were left as-is — those are semantic status indicators, not loading spinners.
 
 #### 3. Portal Branding Access Audit
+
 - **Confirmed:** Clients CANNOT change branding in the portal. Portal settings page only contains: Profile Information, Change Password, Notification Preferences, Account Security. No branding settings route exists in `/portal/`.
 - **Branding is agency-level only** — set via dashboard at `/settings/branding`.
 
 ### Key Patterns Discovered (FIX-08)
+
 - **Portal vs Dashboard branding gap:** The dashboard had a 3-part no-flash strategy (server fetch → SSR style injection → initialBranding prop). The portal was missing ALL three parts for logged-in users. This is now fixed — same pattern in both.
 - **`text-muted-foreground` is the correct spinner color** — it's neutral in both light (`oklch(0.556 0 0)`) and dark (`oklch(0.708 0 0)`) mode, doesn't flash with branding changes, and looks professional.
 - **`getAgencyBranding(agencyId)` exists** in `src/lib/queries/branding.ts` — uses admin client, has caching. Different from `getAgencyBrandingBySlug()` which takes a slug (used for login page).
@@ -3735,16 +4152,19 @@ SM-09 (Hardening) → Run after all others
 ---
 
 #### 1. StudioRenderer Light-Mode Isolation
+
 - **File:** `src/lib/studio/engine/renderer.tsx`
 - **Problem:** StudioRenderer only set `colorScheme: "normal"` — dashboard dark mode could bleed into website preview/published content. Block renderers (`renders.tsx`, `premium-components.tsx`) have ZERO `dark:` Tailwind variants — they are light-only by design.
 - **Fix:** Added `className="studio-renderer light"` + `colorScheme: "light"` + `backgroundColor: "#ffffff"` + `color: "#111827"` to the main render div. This forces all studio-rendered content into light mode regardless of dashboard theme.
 
 #### 2. Published Site Layout Isolation
+
 - **File:** `src/app/site/[domain]/layout.tsx` (NEW)
 - **Problem:** Published/live websites had NO dedicated layout — inherited root layout's ThemeProvider. If site admin had dark mode enabled, `<html>` got `class="dark"` which affected semantic tokens.
 - **Fix:** Created dedicated layout wrapping children in `<div className="light">` with `colorScheme: "light"`, `minHeight: "100vh"`, `backgroundColor: "#ffffff"`. Does NOT include ThemeProvider or dashboard providers.
 
 #### 3. AI Designer Preview Complete Rewrite
+
 - **File:** `src/app/(dashboard)/dashboard/sites/[siteId]/ai-designer/page.tsx`
 - **Problem:** Preview was rendered as inline `<div>` at fixed pixel sizes with `maxWidth: 100%` — content got clipped/squished, no CSS isolation from dashboard, no device frames.
 - **Fix:** Created `PreviewCanvas` component featuring:
@@ -3758,16 +4178,19 @@ SM-09 (Hardening) → Run after all others
   - Fixed TS error: coerce `currentStudioData` undefined → null with `?? null`
 
 #### 4. Ecommerce Settings Dialog — Mock → Real Save
+
 - **File:** `src/modules/ecommerce/components/dialogs/ecommerce-settings-dialog.tsx`
 - **Problem:** `handleSubmit` showed `toast.success('Settings saved')` but NEVER actually saved — comment said "In a real implementation..."
 - **Fix:** Replaced mock with actual `await updateSettings({ store_name, currency, tax_rate, tax_included_in_price, continue_selling_when_out_of_stock, free_shipping_threshold, send_order_confirmation, order_notification_email })` using the already-available `updateSettings` from `useEcommerce()` context.
 
 #### 5. Edit Discount Dialog — alert() → toast.error()
+
 - **File:** `src/modules/ecommerce/components/dialogs/edit-discount-dialog.tsx`
 - **Problem:** Used `alert()` at 4 locations for validation/error feedback
 - **Fix:** Added `import { toast } from 'sonner'`; replaced all 4 `alert()` calls with `toast.error()`
 
 #### 6. Edit Category Dialog — alert() → toast.error()
+
 - **File:** `src/modules/ecommerce/components/dialogs/edit-category-dialog.tsx`
 - **Problem:** Used `alert()` at 2 locations for validation/error feedback
 - **Fix:** Added `import { toast } from 'sonner'`; replaced both `alert()` calls with `toast.error()`
@@ -3775,6 +4198,7 @@ SM-09 (Hardening) → Run after all others
 ---
 
 ### Key Patterns Discovered (FIX-07)
+
 - **Studio block renderers are light-only by design** — `renders.tsx` (12,203 lines) and `premium-components.tsx` (2,983 lines) have ZERO `dark:` Tailwind variants. Colors come from inline styles and theme CSS variables, not Tailwind dark mode.
 - **StudioRenderer is the single rendering engine** shared by AI Designer preview, published sites, and studio canvas. Forcing light mode here covers all three contexts.
 - **Industry-standard preview** = content rendered at actual device dimensions + CSS transform: scale() to fit container. NOT iframe (though iframe would provide full CSS isolation — future enhancement).
@@ -3795,12 +4219,14 @@ SM-09 (Hardening) → Run after all others
 ### FIX-06 Changes
 
 #### 1. Dark Mode Theme — Deep Navy (3 CSS Sources Synchronized)
+
 - `brand-variables.css` `.dark` block — Updated all HSL `--color-*` vars to deep navy (hue 220-222)
 - `globals.css` HSL `.dark` block — Synchronized to match: `--color-background: 222 50% 7%`, `--color-card: 220 50% 9%`, `--color-muted: 220 40% 15%`, `--color-border: 220 30% 18%`
 - `globals.css` oklch `.dark` block — Synchronized: `--background: oklch(0.12 0.02 250)`, `--card: oklch(0.15 0.02 250)`, `--sidebar: oklch(0.13 0.02 250)`
 - **CRITICAL PATTERN**: 3 competing `.dark` blocks must ALWAYS be kept in sync — HSL brand-variables.css, HSL globals.css, oklch globals.css
 
 #### 2. React Error #310 Mitigation
+
 - `settings-sidebar.tsx` — Added `useMemo` for nav groups and header, `key="settings"` on Sidebar
 - `admin-sidebar.tsx` — Pre-computed `adminNavGroups` as module-level constant, `key="admin"` on Sidebar
 - `dashboard-layout-client.tsx` — Added `key="main"` on main Sidebar
@@ -3808,9 +4234,11 @@ SM-09 (Hardening) → Run after all others
 - All 4 Sidebar instances now have unique `key` props to prevent React fiber reuse between routes
 
 #### 3. Enhanced Module Card Hover Visibility Fix
+
 - `enhanced-module-card.tsx` — Changed "View" button from `ghost` to `outline` variant, added explicit `text-foreground` default so text visible during hover transition
 
 #### 4. Dark Mode `bg-white` Fixes (7 instances across 6 files)
+
 - `QuoteListBlock.tsx` — Added `dark:bg-card` + `dark:hover:bg-muted`
 - `QuoteItemCard.tsx` — Added `dark:bg-card`
 - `QuoteDetailBlock.tsx` — Added `dark:bg-card` (print variant)
@@ -3819,9 +4247,11 @@ SM-09 (Hardening) → Run after all others
 - `seo-settings-panel.tsx` — Added `dark:bg-card` on Google + Social preview containers
 
 #### 5. Broken Link Fix
+
 - `top-posts-widget.tsx` — Replaced `href="#"` with actual URL from `post.publishResults`; hides button if no URL available
 
 ### Key Patterns Discovered (FIX-06)
+
 - **3 CSS dark mode sources**: `brand-variables.css`, `globals.css` HSL block (lines ~186-209), `globals.css` oklch block (lines ~211-241) — ALL MUST MATCH
 - **`@theme inline` block** (globals.css lines ~243-310) maps HSL → Tailwind + oklch → sidebar vars
 - **BrandingProvider does NOT override surface colors** — only brand colors (primary, accent, ring, secondary)
@@ -3845,37 +4275,46 @@ SM-09 (Hardening) → Run after all others
 ### FIX-05 Changes
 
 #### 1. Branding Purple Flash Eliminated (SSR)
+
 - Created `src/components/providers/server-branding-style.tsx` — Server component that injects brand CSS vars into SSR HTML
 - Modified dashboard `layout.tsx` — server-fetches branding + passes `initialBranding` to BrandingProvider + renders `<ServerBrandingStyle>` before provider
 - Changed `brand-variables.css` — ALL purple hue 258 defaults changed to neutral slate hue 215 (both light and dark modes)
 
 #### 2. Branding Save Persistence Fixed
+
 - API `branding/[agencyId]/route.ts` — Changed Cache-Control from `public, max-age=300` to `private, no-cache, no-store, must-revalidate`
 - `branding-provider.tsx` — Added `refetch` method to context, added `branding-updated` custom event listener
 - `branding-settings-form.tsx` — Dispatches `branding-updated` event after successful save
 
 #### 3. CRM Sidebar Navigation Fixed
+
 - `agency-crm-dashboard.tsx` — Fixed site list links: `/crm` → `/crm-module`; Fixed site selector: `/dashboard/${value}/crm` → `/dashboard/sites/${value}/crm-module`
 
 #### 4. Social Analytics Connect Buttons Fixed
+
 - `SocialDashboardEnhanced.tsx` + `SocialDashboard.tsx` — Replaced `alert()` with `toast.info()`
 - `social/accounts/page.tsx` (server component) — Replaced Button+onClick with static Badge "Soon", replaced header Connect Account with Badge
 
 #### 5. Admin DB/Domain Sections Fixed
+
 - `settings-client.tsx` — Replaced grayed-out disabled controls with informational cards linking to Supabase/Vercel dashboards
 
 #### 6. Workflow Test Run Fixed
+
 - `automation-actions.ts` — `triggerWorkflow()` now actually calls `executeWorkflow()` via dynamic import after creating execution record
 
 #### 7. Shipping Calculation Fixed
+
 - `useStorefrontCart.ts` — Only calculates shipping when `shipping_address` exists with non-empty `country` (was passing empty address → always $0)
 
 #### 8. TypeScript Fixes
+
 - `admin/settings/actions.ts` — Fixed Json↔Record<string, unknown> type casting for admin_settings table
 - `useStorefrontCart.ts` — Proper double-cast through `unknown` for accessing `shipping_address` on Cart type
 - Removed unused `Plus` import from social accounts page
 
 ### Key Patterns Discovered
+
 - `Cart` type in `ecommerce-types.ts` does NOT include `shipping_address` — it's a DB column not in the TypeScript interface; must cast through `unknown`
 - `admin_settings` migration file exists at `migrations/20260210_admin_settings.sql` but has NOT been run against Supabase — user must run it manually
 - BrandingProvider client-side + ServerBrandingStyle SSR = no flash strategy
@@ -3890,42 +4329,53 @@ SM-09 (Hardening) → Run after all others
 ### Phase FIX-03 Changes
 
 #### 1. Orphaned /sites/ Tree Removed
+
 - Deleted entire `src/app/(dashboard)/sites/` directory (17 files) — these were superseded by `/dashboard/sites/`
 
 #### 2. Branding Form Extracted
+
 - Created `src/components/settings/branding-settings-form.tsx` (556 lines shared component)
 - Both `/settings/branding` and `/dashboard/settings/branding` pages now use the shared form
 - `/dashboard/settings/branding/page.tsx` is now a redirect to `/settings/branding`
 
 #### 3. Settings Nav — Added Billing
+
 - `settings-navigation.ts`: Added `Billing` nav item with Receipt icon to `/settings/billing`
 
 #### 4. Admin Nav — Added 6 Items
+
 - `admin-navigation.ts`: Added Module Pricing, Module Requests, Module Analytics, Module Studio (Management), Audit Log, Module Testing (System)
 
 #### 5. Error Boundaries (7 + 1 not-found)
+
 - Created error.tsx for: dashboard, sites/[siteId], billing, settings, admin, marketplace, portal
 - Created portal/not-found.tsx
 
 #### 6. Middleware Route Exclusions
+
 - Portal login/verify — accessible without auth
 - `/embed/` routes — fully public
 - `/test-*` and `/debug-*` blocked in production
 
 #### 7. Duplicate Zapier Module Removed
+
 - Removed first Zapier entry (slug: "zapier"), kept second (slug: "zapier-integration", more detailed)
 
 #### 8. Portal Nav — Added Notifications
+
 - `portal-navigation.ts`: Added Notifications item with Bell icon
 
 #### 9. Test Page Guards
+
 - `test-components/page.tsx`: Server-side redirect in production
 - `test-safety/page.tsx`: Client-side redirect in production
 
 #### 10. Analytics Empty States
+
 - Orphaned consumer page was deleted with /sites/ tree
 
 #### 11. Client Module API Wired
+
 - `api/clients/[clientId]/modules/[moduleId]/route.ts`: DELETE wired to `client_module_installations` table, GET checks installation status
 
 ---
@@ -3933,10 +4383,12 @@ SM-09 (Hardening) → Run after all others
 ### Phase FIX-04 Changes
 
 #### 1. database.types.ts Eliminated
+
 - Fixed import in `api/pages/[pageId]/content/route.ts` from `@/types/database.types` → `@/types/database`
 - Deleted `src/types/database.types.ts` (10,153 lines)
 
 #### 2. Dead Directories Deleted
+
 - `components/feedback/` (11 files) — 0 imports
 - `components/publishing/` (6 files) — 0 imports
 - `components/seo/` (6 files) — 0 imports
@@ -3944,6 +4396,7 @@ SM-09 (Hardening) → Run after all others
 - `components/renderer/` (5 files) — kept `module-injector.tsx`
 
 #### 3. Dead Component Files Deleted (50+)
+
 - 12 module components (module-card, module-grid, TemplateBrowser, etc.)
 - 7 billing components + barrel
 - 2 admin tables (users-table, agencies-table)
@@ -3955,6 +4408,7 @@ SM-09 (Hardening) → Run after all others
 - Errors (error-boundary, inline-error)
 
 #### 4. Barrel Files Cleaned
+
 - `admin/index.ts`: Removed UsersTable, AgenciesTable exports
 - `charts/index.ts`: Removed MetricCard, ComparisonCard exports
 - `ui/index.ts`: Removed 15+ dead exports (EmptyState, Stat, Divider, FormSection, etc.)
@@ -3964,72 +4418,89 @@ SM-09 (Hardening) → Run after all others
 - `onboarding/index.ts`: Removed ProductTour export
 
 #### 5. Domain Identity Fixed
+
 - `config/brand/identity.ts`: All `dramac.io` → PLATFORM constants (imported from `@/lib/constants/platform`)
 - 10 files updated: create-site-dialog, command-palette, mobile-command-sheet, help-content, dunning-service, embed-sdk, studio/export, domain-service, embed-code-view, template-generator
 - Social links and twitter handle updated to `dramacagency`
 
 #### 6. NEXT_PUBLIC_BASE_URL → NEXT_PUBLIC_APP_URL
+
 - 7 callsites fixed in ecommerce module (quote-utils, quote-automation, quote-workflow-actions)
 
 #### 7. Hardcoded "DRAMAC" → PLATFORM.name
+
 - `admin/modules/[moduleId]/page.tsx`: Author fallback now uses `PLATFORM.name`
 
 #### 8. Debug Endpoints Secured
+
 - `api/debug/proxy-check/route.ts`: Returns 404 in production
 - `api/debug/site-lookup/route.ts`: Returns 404 in production
 
 #### 9. Proxy Console.logs Wrapped
+
 - All 18 `console.log` statements in `proxy.ts` wrapped in `if (DEBUG)` (where `DEBUG = process.env.NODE_ENV !== 'production'`)
 - Removed redundant `config` export (already in middleware.ts)
 
 #### 10. publishPage/unpublishPage Fixed
+
 - `lib/publishing/publish-service.ts`: publishPage now updates `updated_at`, unpublishPage documented as no-op (pages table lacks `published` column — site-level only)
 
 #### 11. Dead NavItem Removed
+
 - `types/index.ts`: Removed dead `NavItem` interface (never imported)
 
 #### 12. generateId() Consolidated
+
 - Created `lib/utils/generate-id.ts` with shared `generateComponentId()`
 - 7 template files updated to import shared utility instead of inline function
 
 #### 13. Quick Actions Stub Created
+
 - `components/layout/quick-actions.tsx`: Minimal stub (returns null) for dashboard layout compatibility
 
 ---
 
 ## Previous Session (Phase FIX-01 & FIX-02 — Commit 8cdf815)
+
 - `admin/settings/page.tsx` + new `actions.ts` + `settings-client.tsx`: 4/6 sections enabled (General, Email, Notifications, Security), Database & Domains kept disabled with badges
 
 #### Automation Connections Wired to DB (Task 4)
+
 - `connection-setup.tsx`: fetchConnections/save/disconnect/test wired to `automation_connections` table
 - Migration file created
 
 #### Workflow Stubs Implemented (Task 5)
+
 - Duplicate workflow: Full implementation (copies workflow + steps)
 - Test run: Calls `triggerWorkflow()` with `test: true`
 - Manual run: Also implemented
 
 #### PDF Generation (Task 6)
+
 - `quote-pdf-generator.ts`: Full HTML-based PDF generation (print-to-PDF approach)
 - `payout-statement-generator.ts`: Payout statement PDF generation
 - Portal quote download and developer revenue download wired
 
 #### Ecommerce Fixes (Task 7)
+
 - `shipping-calculator.ts`: Zone/method based shipping calculation
 - Analytics charts: Recharts-based revenue/orders/top products charts
 - Integration roadmap: Clean UI for coming-soon integrations
 
 #### CRM Fixes (Task 8)
+
 - `export-csv.ts`: CSV export for contacts, companies, deals
 - Pipeline stage management: Add/remove/rename/reorder
 - Agency CRM dashboard: Real aggregate queries
 
 #### Studio Fixes (Task 9)
+
 - HTML export: Real component-tree-to-HTML serialization
 - Media library: Informative toast replacing alert
 - Symbol editor: Toast notification replacing TODO
 
 #### Remaining Stubs (Tasks 10-14)
+
 - Booking: Payment status dropdown in appointment detail
 - Portal: 2FA proper not-available state, session management tooltip
 - Webhooks: HMAC-SHA256 signature verification
@@ -4041,11 +4512,13 @@ SM-09 (Hardening) → Run after all others
 ## Previous Session
 
 #### 5. StatusBadge `.toLowerCase()` CRASH 💥
+
 **Problem:** `StatusBadge` component called `status.charAt(0).toUpperCase()` without null guard. When `status` prop was undefined, it threw TypeError.
 
 **Fix:** Added early return with fallback rendering when `status` is falsy — shows "Unknown" badge with muted styling.
 
 #### 6. SETTINGS PAGE CRASHES 🔧
+
 **Multiple null-safety fixes:**
 | File | Fix |
 |------|-----|
@@ -4059,6 +4532,7 @@ SM-09 (Hardening) → Run after all others
 ### Key Technical Pattern Discovered
 
 **CSS Variable Naming Convention:**
+
 - `globals.css` defines `--primary`, `--accent` etc. in **OKLCH** format (shadcn defaults) — these are NOT used by Tailwind
 - `brand-variables.css` defines `--color-primary`, `--color-accent` in **HSL** format — these ARE what Tailwind uses
 - `tailwind.config.ts` → `generateColorScale("primary")` → `hsl(var(--color-primary))` — confirms HSL + `--color-` prefix
@@ -4080,6 +4554,7 @@ A comprehensive deep scan using 4 parallel subagents catalogued 52 issues across
 ### Critical Fixes Applied
 
 #### 1. BRANDING SYSTEM — ROOT CAUSE FIX 🎨
+
 **Problem:** Split-brain architecture — users saved branding to `agencies.custom_branding` JSONB column, but `BrandingProvider` read from non-existent `agency_branding` table. CSS vars were also hex while Tailwind expects HSL.
 
 **Files Modified:**
@@ -4092,6 +4567,7 @@ A comprehensive deep scan using 4 parallel subagents catalogued 52 issues across
 | `src/app/(dashboard)/settings/branding/page.tsx` | Redirects to unified branding settings page |
 
 #### 2. BOOKING "Service not available" — ROOT CAUSE FIX 📅
+
 **Problem:** Column name mismatch — code used `duration` but table has `duration_minutes`.
 
 **Files Modified:**
@@ -4101,13 +4577,15 @@ A comprehensive deep scan using 4 parallel subagents catalogued 52 issues across
 | `src/app/embed/booking/[siteId]/page.tsx` | `createClient()` → `createAdminClient()`, correct `mod_bookmod01_*` table names |
 
 #### 3. PORTAL — REAL DATA + LOGIN BRANDING 🏠
-| File | Change |
-|------|--------|
+
+| File                               | Change                                                        |
+| ---------------------------------- | ------------------------------------------------------------- |
 | `src/lib/portal/portal-service.ts` | `getPortalAnalytics()` — replaced 100% mock with real queries |
-| `src/app/portal/settings/page.tsx` | Notification prefs persist to `user_metadata` |
-| `src/app/portal/layout.tsx` | Login page branding via `?agency=slug` URL parameter |
+| `src/app/portal/settings/page.tsx` | Notification prefs persist to `user_metadata`                 |
+| `src/app/portal/layout.tsx`        | Login page branding via `?agency=slug` URL parameter          |
 
 #### 4. QUOTE EMAIL SYSTEM — ALL 6 STUBS WIRED 📧
+
 **Problem:** 6 TODO comments where emails should be sent for quotes. None actually sent.
 
 **Files Modified:**
@@ -4122,29 +4600,32 @@ A comprehensive deep scan using 4 parallel subagents catalogued 52 issues across
 **New Email Types:** `quote_sent_customer`, `quote_reminder_customer`, `quote_accepted_owner`, `quote_rejected_owner`
 
 #### 5. ANALYTICS — ALL MOCK DATA REMOVED 📊
-| File | Change |
-|------|--------|
-| `src/lib/actions/site-analytics.ts` | Removed `seededRandom()`, real queries for pages/forms, zeros for untracked metrics |
-| `src/lib/actions/crm-analytics.ts` | Complete 627→550 line rewrite — all 15+ functions now query real `mod_crmmod01_*` tables |
-| `src/lib/actions/admin.ts` | Replaced 3 hardcoded mock entries with real queries (recent users, sites, agencies) |
+
+| File                                | Change                                                                                   |
+| ----------------------------------- | ---------------------------------------------------------------------------------------- |
+| `src/lib/actions/site-analytics.ts` | Removed `seededRandom()`, real queries for pages/forms, zeros for untracked metrics      |
+| `src/lib/actions/crm-analytics.ts`  | Complete 627→550 line rewrite — all 15+ functions now query real `mod_crmmod01_*` tables |
+| `src/lib/actions/admin.ts`          | Replaced 3 hardcoded mock entries with real queries (recent users, sites, agencies)      |
 
 #### 6. ECOMMERCE — ORDERS USER FIX 🛒
-| File | Change |
-|------|--------|
-| `src/modules/ecommerce/components/views/orders-view.tsx` | Accepts `userId`/`userName` props instead of hardcoded values |
-| `src/modules/ecommerce/components/ecommerce-dashboard.tsx` | Passes user props to `OrdersView` |
+
+| File                                                       | Change                                                        |
+| ---------------------------------------------------------- | ------------------------------------------------------------- |
+| `src/modules/ecommerce/components/views/orders-view.tsx`   | Accepts `userId`/`userName` props instead of hardcoded values |
+| `src/modules/ecommerce/components/ecommerce-dashboard.tsx` | Passes user props to `OrdersView`                             |
 
 ---
 
 ### Issue Audit Summary (52 Total)
 
-| Priority | Found | Fixed This Session | Remaining |
-|----------|-------|--------------------|-----------|
-| P0 (Critical) | 9 | 5 (branding, booking, portal analytics, embed booking, quote emails) | 4 |
-| P1 (Important) | 15 | 6 (site analytics, CRM analytics, admin activity, orders user, portal prefs, portal login branding) | 9 |
-| P2 (Minor) | 28 | 0 | 28 |
+| Priority       | Found | Fixed This Session                                                                                  | Remaining |
+| -------------- | ----- | --------------------------------------------------------------------------------------------------- | --------- |
+| P0 (Critical)  | 9     | 5 (branding, booking, portal analytics, embed booking, quote emails)                                | 4         |
+| P1 (Important) | 15    | 6 (site analytics, CRM analytics, admin activity, orders user, portal prefs, portal login branding) | 9         |
+| P2 (Minor)     | 28    | 0                                                                                                   | 28        |
 
 ### Remaining P0/P1 Issues (Not Fixed This Session)
+
 - Admin settings page shows "Coming Soon" / disabled buttons
 - Automation connections are stubs (Zapier, etc.)
 - Workflow actions show "coming soon" toasts
@@ -4183,6 +4664,7 @@ A comprehensive deep scan using 4 parallel subagents catalogued 52 issues across
 User asked "does this all work from a customer subdomain (e.g. `sisto.sites.dramacagency.com`)?"
 
 Traced 6 flows from subdomain context:
+
 - ✅ **Booking**: Uses `createAdminClient()` → works for anonymous visitors
 - ❌ **Ecommerce Checkout**: Used `createClient()` (cookie-auth) → RLS blocks anonymous subdomain visitors → order never created
 - ❌ **Payment Webhooks**: Used `createClient()` (cookie-auth) → webhooks are server-to-server with NO cookies → all 4 payment providers broken
@@ -4235,16 +4717,16 @@ PUBLIC / SUBDOMAIN / WEBHOOKS (admin client, bypasses RLS):
 **Deep Scan Findings:**
 Comprehensive audit of the entire email + notification system revealed 8 critical issues:
 
-| # | Issue | Severity |
-|---|-------|----------|
-| 1 | **Dual-email bug** — `createNotification()` internally sent email via raw `fetch` to Resend, AND `business-notifications.ts` sent another email via centralized `sendEmail()`. Owners got **2 emails** per booking/order. | 🔴 Critical |
-| 2 | **Form submission emails were a stub** — commented-out Resend code, only console.log, but marked `notified_at` as if sent. | 🔴 Critical |
-| 3 | **`notifyOrderShipped()` never called** — function + template existed but `updateOrderFulfillment()` didn't invoke it. | 🔴 Critical |
-| 4 | **No booking cancellation notifications** — no `notifyBookingCancelled()` function existed. `cancelAppointment()` sent nothing. Templates existed unused. | 🔴 Critical |
-| 5 | **Stripe webhook TODOs** — `payment_failed` and `trial_ending` were bare `// TODO` comments with no implementation. | 🟡 Medium |
-| 6 | **Missing data interfaces** — `BookingCancelledCustomerData` and `BookingCancelledOwnerData` not defined. | 🟡 Medium |
-| 7 | **Duplicate entries in `isValidEmailType()`** — 3 types listed twice. | 🟡 Low |
-| 8 | **Dead code** — `lib/actions/email.ts` (12 functions, 0 imports), `lib/forms/notification-service.ts` (never imported). | ℹ️ Info |
+| #   | Issue                                                                                                                                                                                                                     | Severity    |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| 1   | **Dual-email bug** — `createNotification()` internally sent email via raw `fetch` to Resend, AND `business-notifications.ts` sent another email via centralized `sendEmail()`. Owners got **2 emails** per booking/order. | 🔴 Critical |
+| 2   | **Form submission emails were a stub** — commented-out Resend code, only console.log, but marked `notified_at` as if sent.                                                                                                | 🔴 Critical |
+| 3   | **`notifyOrderShipped()` never called** — function + template existed but `updateOrderFulfillment()` didn't invoke it.                                                                                                    | 🔴 Critical |
+| 4   | **No booking cancellation notifications** — no `notifyBookingCancelled()` function existed. `cancelAppointment()` sent nothing. Templates existed unused.                                                                 | 🔴 Critical |
+| 5   | **Stripe webhook TODOs** — `payment_failed` and `trial_ending` were bare `// TODO` comments with no implementation.                                                                                                       | 🟡 Medium   |
+| 6   | **Missing data interfaces** — `BookingCancelledCustomerData` and `BookingCancelledOwnerData` not defined.                                                                                                                 | 🟡 Medium   |
+| 7   | **Duplicate entries in `isValidEmailType()`** — 3 types listed twice.                                                                                                                                                     | 🟡 Low      |
+| 8   | **Dead code** — `lib/actions/email.ts` (12 functions, 0 imports), `lib/forms/notification-service.ts` (never imported).                                                                                                   | ℹ️ Info     |
 
 **All Fixes Applied:**
 
@@ -4264,17 +4746,17 @@ Comprehensive audit of the entire email + notification system revealed 8 critica
 
 ### COMPLETE EMAIL/NOTIFICATION SCENARIO MAP (Post-Fix)
 
-| Scenario | In-App | Owner Email | Customer Email | Template |
-|----------|--------|-------------|----------------|----------|
-| New Booking | ✅ | ✅ | ✅ | `booking_confirmation_*` |
-| Booking Cancelled | ✅ | ✅ | ✅ | `booking_cancelled_*` |
-| New Order | ✅ | ✅ | ✅ | `order_confirmation_*` |
-| Order Shipped | — | — | ✅ | `order_shipped_customer` |
-| Form Submission | — | ✅ | — | `form_submission_owner` |
-| Payment Failed (Paddle) | ✅ | ✅ | — | `payment_failed` |
-| Payment Failed (Stripe) | ✅ | ✅ | — | `payment_failed` |
-| Trial Ending (Stripe) | ✅ | ✅ | — | `trial_ending` |
-| Payment Recovered (Paddle) | ✅ | ✅ | — | `payment_success` |
+| Scenario                   | In-App | Owner Email | Customer Email | Template                 |
+| -------------------------- | ------ | ----------- | -------------- | ------------------------ |
+| New Booking                | ✅     | ✅          | ✅             | `booking_confirmation_*` |
+| Booking Cancelled          | ✅     | ✅          | ✅             | `booking_cancelled_*`    |
+| New Order                  | ✅     | ✅          | ✅             | `order_confirmation_*`   |
+| Order Shipped              | —      | —           | ✅             | `order_shipped_customer` |
+| Form Submission            | —      | ✅          | —              | `form_submission_owner`  |
+| Payment Failed (Paddle)    | ✅     | ✅          | —              | `payment_failed`         |
+| Payment Failed (Stripe)    | ✅     | ✅          | —              | `payment_failed`         |
+| Trial Ending (Stripe)      | ✅     | ✅          | —              | `trial_ending`           |
+| Payment Recovered (Paddle) | ✅     | ✅          | —              | `payment_success`        |
 
 ### Architecture After Overhaul
 
@@ -4340,6 +4822,7 @@ First localization pass (commit `6b3dc28`) missed ~60 remaining USD/$ instances 
 13. **Paddle Billing** (3 files): USD intentionally kept (platform billing currency) — added clarifying comments
 
 **Architecture — 3 Distinct Currency Systems:**
+
 - **Module Settings** (per-site): Each module stores currency in its DB table, UI reads from `SUPPORTED_CURRENCIES`, defaults to `DEFAULT_CURRENCY` (ZMW)
 - **Module Marketplace Pricing** (catalog): All use `DEFAULT_CURRENCY` from locale-config
 - **Platform Billing** (Paddle): USD is correct — Paddle determines billing currency
@@ -4356,11 +4839,13 @@ First localization pass (commit `6b3dc28`) missed ~60 remaining USD/$ instances 
 ~250 hardcoded instances of `en-US`, `USD`, `$`, `UTC` scattered across ~46 files in all modules. Not appropriate for a Zambia-based business.
 
 **Solution:**
+
 1. Created centralized `src/lib/locale-config.ts` — single source of truth for all locale/currency/timezone defaults
 2. Automated bulk replacement via `scripts/fix-locale.js` — fixed ~250 instances
 3. Manual fixes for edge cases: TypeScript typed params (`currency: string = 'USD'`), `useState('USD')`, `useState('UTC')`, CRM manifest, demo data arrays
 
 **Key Constants:**
+
 - `DEFAULT_LOCALE = 'en-ZM'`, `DEFAULT_CURRENCY = 'ZMW'`, `DEFAULT_CURRENCY_SYMBOL = 'K'`
 - `DEFAULT_TIMEZONE = 'Africa/Lusaka'`, `DEFAULT_COUNTRY = 'ZM'`, `DEFAULT_TAX_RATE = 16`
 
@@ -4372,6 +4857,7 @@ First localization pass (commit `6b3dc28`) missed ~60 remaining USD/$ instances 
 Booking creation and order creation had ZERO notification triggers. Business owner could miss every booking and order. Form submission notification was a console.log stub.
 
 **Solution:**
+
 1. Created `src/lib/services/business-notifications.ts` — orchestrator with `notifyNewBooking()`, `notifyNewOrder()`, `notifyOrderShipped()`
 2. Added 8 new email types + data interfaces to `src/lib/email/email-types.ts`
 3. Added 8 HTML+text email templates to `src/lib/email/templates.ts`
@@ -4381,15 +4867,18 @@ Booking creation and order creation had ZERO notification triggers. Business own
 7. Business-critical notifications (new_booking, booking_cancelled, new_order, payment_failed) ALWAYS send email
 
 **Notification Flow:**
+
 - Booking created → owner in-app notification + owner email + customer email
 - Order created → owner in-app notification + owner email + customer email
 - Form submitted → owner email with all field data
 
 **Manual Action Needed:**
+
 - Configure Resend SMTP in Supabase Dashboard for auth emails (login/signup/reset)
 - See `src/lib/email/resend-smtp-config.ts` for instructions
 
 ### Commit
+
 - `6b3dc28` — "feat: Zambia localization (ZMW/Africa/Lusaka) + booking/order/form notification system"
 
 ---
@@ -4399,16 +4888,19 @@ Booking creation and order creation had ZERO notification triggers. Business own
 ### BOOKING: INSERT FAILURE + CONFIRMATION STATUS + ERROR HANDLING FIXED ✅
 
 **Problems:**
+
 1. Console error: `Booking failed: Error: Failed to create appointment. Please try again.`
 2. "Booking Confirmed!" showing even when service has `require_confirmation` enabled
 3. Success screen appeared even when booking actually failed
 
 **Root Causes:**
+
 1. `createPublicAppointment()` tried to INSERT `source: 'online'` — column doesn't exist on `mod_bookmod01_appointments` table. Also used `notes` instead of actual column `customer_notes`.
 2. `useCreateBooking` hardcoded `status: 'pending' as const` — never read server response
 3. `BookingWidgetBlock` ran `setIsComplete(true)` AFTER the catch block — success screen showed regardless of error
 
 **Fixes Applied:**
+
 - **public-booking-actions.ts**: Removed `source` from INSERT, moved to `metadata: { source: 'online' }` (JSONB). Changed `notes` → `customer_notes`. Return type now includes `status` field.
 - **useCreateBooking.ts**: Reads `result.status` from server instead of hardcoding
 - **BookingWidgetBlock.tsx**: `setIsComplete(true)` only on success; error shown inline; status-aware success screen — "Booking Submitted!" (amber/Clock) when pending vs "Booking Confirmed!" (green/CheckCircle) when confirmed
@@ -4420,6 +4912,7 @@ Booking creation and order creation had ZERO notification triggers. Business own
 All 7 ecommerce storefront hooks used `ecommerce-actions.ts` with `createClient()` (cookie-auth) — fails for anonymous visitors on published sites (same root cause as booking).
 
 **Fixes Applied:**
+
 - **NEW FILE**: `src/modules/ecommerce/actions/public-ecommerce-actions.ts` (~500 lines)
   - Uses `createAdminClient()` (service role key) — works for anonymous visitors
   - 15 public functions: categories, products (5 variants), cart CRUD (6 functions), discounts (2 functions)
@@ -4430,11 +4923,13 @@ All 7 ecommerce storefront hooks used `ecommerce-actions.ts` with `createClient(
 - **product-card-block.tsx**: Demo data fallback `fetchedProduct || DEMO_PRODUCT` → `!effectiveSiteId ? DEMO_PRODUCT : (fetchedProduct || DEMO_PRODUCT)`
 
 ### Key Pattern Established
+
 - **Dashboard/Admin**: Uses module-specific `*-actions.ts` with `createClient()` (cookie-auth)
 - **Public/Visitor**: Uses `public-*-actions.ts` with `createAdminClient()` (service role)
 - **Demo Data**: Only shows when `!siteId` (Studio editor), never on published sites
 
 ### Commits
+
 - `a53c137` — "fix: booking module uses admin client for public pages"
 - `4430a20` — "fix: booking & ecommerce module bugs - public data access & UI correctness"
 
@@ -4445,6 +4940,7 @@ All 7 ecommerce storefront hooks used `ecommerce-actions.ts` with `createClient(
 ### BOOKING MODULE: 500 ERRORS FIXED + DEMO DATA ELIMINATED ON LIVE SITES ✅
 
 **Problem:**
+
 - Module components on published sites were showing mock/demo data instead of real database data
 - Console errors: `[Booking] Error fetching slots: Error: An error occurred in the Server Components render`
 - Booking creation failing with same 500 Server Components render error
@@ -4455,11 +4951,13 @@ All 7 ecommerce storefront hooks used `ecommerce-actions.ts` with `createClient(
 **Solution — Two-Part Fix:**
 
 #### Part 1: New Public Server Actions (bypass RLS for public reads)
+
 - **NEW FILE**: `src/modules/booking/actions/public-booking-actions.ts`
   - Uses `createAdminClient()` (service role key) instead of `createClient()`
   - 5 public functions: `getPublicServices()`, `getPublicStaff()`, `getPublicSettings()`, `getPublicAvailableSlots()`, `createPublicAppointment()`
 
 #### Part 2: Fixed All 5 Hooks + 5 Components
+
 - **5 Hooks Updated**: All now import from `public-booking-actions` instead of `booking-actions`
 - **5 Components Fixed**: Demo data fallback now ONLY triggers when `!siteId` (Studio editor)
 
@@ -4471,6 +4969,7 @@ All 7 ecommerce storefront hooks used `ecommerce-actions.ts` with `createClient(
 
 **Context:**
 Deep scan of the entire AI Website Designer system revealed 6 interconnected quality issues:
+
 1. Module components don't respect branding and fill the whole screen
 2. Footer links barely visible in light/dark mode
 3. Need intelligent color palettes, contrast checking, imperfection detection
@@ -4479,6 +4978,7 @@ Deep scan of the entire AI Website Designer system revealed 6 interconnected qua
 6. Every AI-generated website looks the same — no variety
 
 **Root Causes Found:**
+
 - Module components (BookingWidget, ProductGrid, etc.) had ZERO prop transformation in converter.ts — fell straight through to `return transformed`
 - StudioRenderer rendered components flat with NO containment wrapper in renderer.tsx
 - Converter hardcoded footer to `backgroundColor: "#111827"`, `linkColor: "#9ca3af"` regardless of site theme
@@ -4492,6 +4992,7 @@ Deep scan of the entire AI Website Designer system revealed 6 interconnected qua
 #### NEW FILES CREATED (3 new intelligent systems)
 
 **1. color-intelligence.ts** (1300+ lines)
+
 - 60+ curated, industry-specific color palettes organized by mood
 - 20 mood categories: elegant, bold, minimal, warm, cool, playful, corporate, luxury, natural, tech, creative, energetic, calm, dark, vibrant, earthy, pastel, monochrome, retro, futuristic
 - Industry coverage: 40+ industries with specific palettes
@@ -4502,6 +5003,7 @@ Deep scan of the entire AI Website Designer system revealed 6 interconnected qua
 - `auditPalette()` — validate entire palette for issues
 
 **2. variety-engine.ts** (472 lines)
+
 - 8 unique design personalities: modern-clean, bold-editorial, soft-elegant, minimal-stark, dark-immersive, split-dynamic, playful-rounded, asymmetric-creative
 - Each personality defines: density, heroStyle (8 types), cardStyle (6 types), backgroundPattern (7 types), animationStyle (5 types), borderRadius, shadowStyle, typographyScale, sectionDivider
 - Industry→personality mapping for 25+ industries
@@ -4511,6 +5013,7 @@ Deep scan of the entire AI Website Designer system revealed 6 interconnected qua
 - `getSectionBackgrounds()` — alternating section backgrounds for visual rhythm
 
 **3. design-auditor.ts** (592 lines)
+
 - Post-generation quality auditor that catches and auto-fixes imperfections
 - 10 audit categories: contrast, spacing, typography, containment, branding, footer, module, content, responsive, variety
 - `auditWebsite()` — scans all components, returns issues with auto-fix data
@@ -4520,10 +5023,12 @@ Deep scan of the entire AI Website Designer system revealed 6 interconnected qua
 #### FILES MODIFIED (5 existing files)
 
 **converter.ts** — 2 critical fixes:
+
 - Added MODULE_TYPES handler block for all 10 module types (BookingServiceSelector, BookingWidget, BookingCalendar, BookingForm, BookingEmbed, BookingStaffGrid, ProductGrid, CartItems, CartSummary, CheckoutForm) — injects containment (maxWidth, containerClassName), brand colors (primaryColor, accentColor, textColor, cardBackgroundColor), section padding, and border radius
 - Footer handler now uses `isDarkTheme()` and `palette()` instead of hardcoded dark colors: `linkColor` defaults to `palette().textSecondary` (light) or `"#94a3b8"` (dark), `linkHoverColor` to `themePrimary()` (light) or `"#ffffff"` (dark)
 
 **renders.tsx** — 6 precision fixes:
+
 - FooterRender: Added `linkColor` and `linkHoverColor` as proper props with defaults
 - Footer column links: Changed from `textColor` + `opacity-75 hover:opacity-100` to dedicated `linkColor` with `onMouseEnter/onMouseLeave` hover handlers
 - Footer bottom/legal links: Same linkColor/linkHoverColor treatment
@@ -4532,22 +5037,26 @@ Deep scan of the entire AI Website Designer system revealed 6 interconnected qua
 - NewsletterRender: Complete rewrite — now wrapped in `<section>` with `py-12 md:py-16 px-4`, `max-w-2xl mx-auto`, theme-aware input styling with dark mode detection, both card and inline variants properly contained
 
 **renderer.tsx** — Module component containment:
+
 - Added `MODULE_COMPONENT_TYPES` set (10 types)
 - `ComponentRenderer` now detects module components and wraps them in `<section>` with `max-w-screen-xl mx-auto` and padding
 - Regular components render unchanged
 
 **engine.ts** — Pipeline integration:
+
 - Imports and calls `getDesignPersonality()` + `formatPersonalityForAI()` from variety-engine
 - Personality context injected into `createArchitecture()` prompt
 - Imports and calls `auditWebsite()` from design-auditor after refinement step
 - Quality audit auto-applies fixes (iterates issues where `autoFixed: true`, applies `fixedValue` to component `props[field]`)
 
 **industry-blueprints.ts** — BookingWidget added to 3 blueprints:
+
 - Restaurant: BookingWidget with `variant: "inline"`, `showDate/Time/Guests: true` after hero on homepage
 - Healthcare: BookingWidget with `showServices/Staff/Date: true` after hero on homepage
 - Fitness/Wellness: BookingWidget with `showServices: true` after hero on homepage
 
 ### Commit
+
 - `5a16688` — "feat(ai-designer): comprehensive quality overhaul — fix module containment, footer visibility, newsletter wrapping, add variety engine, quality auditor, color intelligence, and booking widgets"
 
 ---
@@ -4562,12 +5071,16 @@ User reported seeing mock/demo data in site components: "I can see some module c
 **What was done:**
 
 #### 1. Architecture Fix: siteId Injection in StudioRenderer
+
 Modified `renderer.tsx` to inject `siteId` into every component's props automatically:
+
 - `ComponentRenderer` builds `injectedProps = { ...component.props, siteId: component.props?.siteId || siteId }`
 - Threaded through all recursive rendering paths (ComponentRenderer, ZoneRenderer, root, zones)
 
 #### 2. Booking Module — New Data Layer (7 new files)
+
 Created 5 hooks + 1 context following the ecommerce pattern:
+
 - `hooks/useBookingServices.ts` — Fetch real services (is_active + allow_online_booking)
 - `hooks/useBookingStaff.ts` — Fetch real staff (is_active + accept_bookings)
 - `hooks/useBookingSlots.ts` — Fetch real time slots for service/date/staff
@@ -4577,48 +5090,53 @@ Created 5 hooks + 1 context following the ecommerce pattern:
 - `context/booking-storefront-context.tsx` — BookingStorefrontProvider with settings/currency/timezone
 
 #### 3. All 6 Booking Components Wired to Real Data
-| Component | Hooks Used | Behavior |
-|-----------|-----------|----------|
-| ServiceSelectorBlock | useBookingServices | Shows real services; demo fallback in editor |
-| BookingCalendarBlock | useBookingSlots | Shows real available slots; demo fallback |
-| BookingFormBlock | useCreateBooking | Creates real appointments in DB |
-| StaffGridBlock | useBookingStaff | Shows real staff with avatars; demo fallback |
-| BookingWidgetBlock | ALL 4 hooks | Full 5-step wizard with real data + real booking |
-| BookingEmbedBlock | N/A | Already uses siteId for embed URL (no demo data) |
+
+| Component            | Hooks Used         | Behavior                                         |
+| -------------------- | ------------------ | ------------------------------------------------ |
+| ServiceSelectorBlock | useBookingServices | Shows real services; demo fallback in editor     |
+| BookingCalendarBlock | useBookingSlots    | Shows real available slots; demo fallback        |
+| BookingFormBlock     | useCreateBooking   | Creates real appointments in DB                  |
+| StaffGridBlock       | useBookingStaff    | Shows real staff with avatars; demo fallback     |
+| BookingWidgetBlock   | ALL 4 hooks        | Full 5-step wizard with real data + real booking |
+| BookingEmbedBlock    | N/A                | Already uses siteId for embed URL (no demo data) |
 
 #### 4. Ecommerce Module — 2 Fixes
+
 - `product-grid-block.tsx` — Replaced raw `fetch()` with `useStorefrontProducts` hook
 - `SearchBarBlock.tsx` — Trending searches now from real categories (useStorefrontCategories), configurable via Studio props
 
 #### 5. Full Module Audit Results
-| Module | Studio Components | Data Status |
-|--------|:-:|:-:|
-| Booking | 6 | ✅ All wired to real data |
-| Ecommerce | 61 (38 desktop + 23 mobile) | ✅ All wired (hooks + StorefrontProvider) |
-| CRM | 0 (placeholder) | 🔴 No studio components yet |
-| Automation | 0 (placeholder) | 🔴 No studio components yet |
-| Social Media | 0 (placeholder) | 🔴 No studio components yet |
+
+| Module       |      Studio Components      |                Data Status                |
+| ------------ | :-------------------------: | :---------------------------------------: |
+| Booking      |              6              |         ✅ All wired to real data         |
+| Ecommerce    | 61 (38 desktop + 23 mobile) | ✅ All wired (hooks + StorefrontProvider) |
+| CRM          |       0 (placeholder)       |        🔴 No studio components yet        |
+| Automation   |       0 (placeholder)       |        🔴 No studio components yet        |
+| Social Media |       0 (placeholder)       |        🔴 No studio components yet        |
 
 ### Files Modified/Created (17 files, 832 insertions, 127 deletions)
-| File | Changes |
-|------|---------|
-| `renderer.tsx` | siteId injection into all component props |
-| `booking/hooks/useBookingServices.ts` | NEW — service fetching hook |
-| `booking/hooks/useBookingStaff.ts` | NEW — staff fetching hook |
-| `booking/hooks/useBookingSlots.ts` | NEW — slot fetching hook |
-| `booking/hooks/useBookingSettings.ts` | NEW — settings hook |
-| `booking/hooks/useCreateBooking.ts` | NEW — appointment creation hook |
-| `booking/hooks/index.ts` | NEW — re-exports |
-| `booking/context/booking-storefront-context.tsx` | NEW — storefront provider |
-| `ServiceSelectorBlock.tsx` | Wired to useBookingServices |
-| `BookingCalendarBlock.tsx` | Wired to useBookingSlots |
-| `BookingFormBlock.tsx` | Wired to useCreateBooking |
-| `StaffGridBlock.tsx` | Wired to useBookingStaff |
-| `BookingWidgetBlock.tsx` | Wired to all 4 hooks |
-| `product-grid-block.tsx` | useStorefrontProducts hook |
-| `SearchBarBlock.tsx` | useStorefrontCategories + configurable trending |
+
+| File                                             | Changes                                         |
+| ------------------------------------------------ | ----------------------------------------------- |
+| `renderer.tsx`                                   | siteId injection into all component props       |
+| `booking/hooks/useBookingServices.ts`            | NEW — service fetching hook                     |
+| `booking/hooks/useBookingStaff.ts`               | NEW — staff fetching hook                       |
+| `booking/hooks/useBookingSlots.ts`               | NEW — slot fetching hook                        |
+| `booking/hooks/useBookingSettings.ts`            | NEW — settings hook                             |
+| `booking/hooks/useCreateBooking.ts`              | NEW — appointment creation hook                 |
+| `booking/hooks/index.ts`                         | NEW — re-exports                                |
+| `booking/context/booking-storefront-context.tsx` | NEW — storefront provider                       |
+| `ServiceSelectorBlock.tsx`                       | Wired to useBookingServices                     |
+| `BookingCalendarBlock.tsx`                       | Wired to useBookingSlots                        |
+| `BookingFormBlock.tsx`                           | Wired to useCreateBooking                       |
+| `StaffGridBlock.tsx`                             | Wired to useBookingStaff                        |
+| `BookingWidgetBlock.tsx`                         | Wired to all 4 hooks                            |
+| `product-grid-block.tsx`                         | useStorefrontProducts hook                      |
+| `SearchBarBlock.tsx`                             | useStorefrontCategories + configurable trending |
 
 ### Commit
+
 - `7921a4b` — "feat: wire all module components to real data — eliminate demo/mock data"
 
 ---
@@ -4629,6 +5147,7 @@ Created 5 hooks + 1 context following the ecommerce pattern:
 
 **Context:**
 User tested live sites (besto.sites.dramacagency.com, mesto.sites.dramacagency.com) and found:
+
 1. **Booking module components NOT appearing on /book pages** — BookingCalendar, BookingServiceSelector, BookingForm all silently dropped
 2. **45+ hardcoded Tailwind color classes** still overriding theme props across renders.tsx
 3. **Footer showing generic content** — "Tens and Tens - Innovative technology solutions" / "Professional business solutions" / placeholder contact info (555 numbers, hello@company.com)
@@ -4636,7 +5155,9 @@ User tested live sites (besto.sites.dramacagency.com, mesto.sites.dramacagency.c
 **Root Causes Found & Fixed:**
 
 #### ROOT CAUSE #1: Empty /book Pages
+
 The complete failure chain:
+
 1. AI Designer creates /book page with BookingCalendar, BookingServiceSelector, BookingForm components
 2. Public site page queries `site_module_installations` → EMPTY (no booking module installed)
 3. `modules` prop is `[]` → StudioRenderer never loads booking module → `getComponent("BookingCalendar")` returns `undefined` → returns `null` in production
@@ -4644,11 +5165,14 @@ The complete failure chain:
 **The AI Designer NEVER inserted rows into `site_module_installations`!**
 
 **Fix (2 approaches, both implemented):**
+
 - **registry/index.ts**: `initializeRegistry()` now calls `registerBuiltInModuleComponents()` which imports booking + ecommerce studio modules and registers all their components as built-in fallbacks. Components ALWAYS available even without DB rows.
 - **auto-install API**: New `/api/sites/[siteId]/modules/auto-install` endpoint. `handleSaveAndApply()` in ai-designer/page.tsx now scans all studioData component types, detects Booking*/Product* prefixes, and auto-inserts `site_module_installations` rows.
 
 #### ROOT CAUSE #2: 45+ Hardcoded Colors
+
 Full audit found critical hardcoded Tailwind classes across 9+ components:
+
 - ButtonRender: ALL 5 variant classes (`bg-blue-600`, `bg-gray-100`, etc.)
 - HeroRender: 4 secondary button `hover:bg-gray-50`
 - NavbarRender: 4 mobile menu `hover:bg-gray-100`
@@ -4662,14 +5186,18 @@ Full audit found critical hardcoded Tailwind classes across 9+ components:
 **Fix:** All replaced with structural-only Tailwind + inline styles from theme props or opacity-based hovers.
 
 #### ROOT CAUSE #3: Generic Footer Content
+
 AI model sometimes generates generic descriptions like "Professional business solutions" despite prompt instructions. Engine only overrode `companyName` and `copyrightText` but NOT `description`.
 
 **Fix (engine.ts + converter.ts):**
+
 - engine.ts: After footer generation, validate description against 10 generic patterns. Replace with real business description from context. Force real contact info (email, phone, address) from context data.
 - converter.ts: Filter placeholder contact data — strip "555" phone numbers, "hello@company.com" emails, "123 Main Street" addresses.
 
 ### PRO COLOR HARMONY SYSTEM (converter.ts)
+
 Added complete professional color system (~200 lines):
+
 - `hexToRgb()`, `rgbToHex()`, `rgbToHsl()`, `hslToRgb()` — color conversion
 - `getContrastRatio()` — WCAG 2.1 contrast calculation
 - `ensureContrast()` — auto-adjusts text for WCAG AA (4.5:1) compliance
@@ -4679,28 +5207,33 @@ Added complete professional color system (~200 lines):
 - ALL component handlers updated to use `palette()` colors instead of raw hardcoded values
 
 ### Files Modified (7 files, 723 insertions, 77 deletions)
-| File | Changes |
-|------|---------|
-| `renders.tsx` | ~30 hardcoded color fixes across ButtonRender, HeroRender, NavbarRender, FormRender, FormFieldRender, CarouselRender, SocialLinksRender, ModalRender, FAQ |
-| `converter.ts` | Pro color harmony system + palette() usage in all component handlers + placeholder contact filtering |
-| `registry/index.ts` | `registerBuiltInModuleComponents()` — booking + ecommerce always available |
-| `auto-install/route.ts` | NEW — auto-installs modules based on detected component types |
-| `ai-designer/page.tsx` | handleSaveAndApply calls auto-install after saving pages |
-| `engine.ts` | Footer description validation + real contact info enforcement |
+
+| File                    | Changes                                                                                                                                                   |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `renders.tsx`           | ~30 hardcoded color fixes across ButtonRender, HeroRender, NavbarRender, FormRender, FormFieldRender, CarouselRender, SocialLinksRender, ModalRender, FAQ |
+| `converter.ts`          | Pro color harmony system + palette() usage in all component handlers + placeholder contact filtering                                                      |
+| `registry/index.ts`     | `registerBuiltInModuleComponents()` — booking + ecommerce always available                                                                                |
+| `auto-install/route.ts` | NEW — auto-installs modules based on detected component types                                                                                             |
+| `ai-designer/page.tsx`  | handleSaveAndApply calls auto-install after saving pages                                                                                                  |
+| `engine.ts`             | Footer description validation + real contact info enforcement                                                                                             |
 
 ### Commit
+
 - `05dc91c` — "fix: booking modules always render + pro color system + footer validation"
 
 ---
 
 ## Previous Session: Hardcoded Color & Module Integration Fix ✅
+
 - Module pages now include a Hero section header for proper visual structure.
 - Added `getDefaultModuleComponentProps()` with sensible defaults for BookingCalendar, BookingServiceSelector, BookingForm, BookingWidget, ProductGrid.
 
 ### Commits
+
 - `e13c67d` — "fix: comprehensive dark mode theming, invisible buttons, module integration & gradient support"
 
 ### Key Architecture Notes
+
 - **Two-Layer Defense**: Converter sets explicit dark-mode props (e.g., `cardBackgroundColor: "#1e293b"`) AND render components now have removed hardcoded Tailwind → inline styles. The converter "overrides" render defaults.
 - **Luminance Detection in ContactForm**: Uses `parseInt(backgroundColor.replace('#','').substring(0,2), 16) < 100` for quick dark detection within the render component itself.
 - **Module Rendering**: Two paths exist — Path A (StudioRenderer → dynamic import from `@/modules/booking/studio`) works for built-in modules. Path B (ModuleInjector → DB `render_code`) is for custom modules. "No studio modules with render code" log is EXPECTED and harmless.
@@ -4716,6 +5249,7 @@ Added complete professional color system (~200 lines):
 User tested the previous system overhaul by generating a barbershop website ("Besto") and found 5 critical issues: (1) Blue buttons appearing everywhere instead of themed colors, (2) Dark mode not working — text drowning, components ignoring dark themes, (3) Spacing issues on hero sections, (4) Mobile hamburger menu with white background and blue CTA, (5) Module integration not working (no booking module for barbershop).
 
 **Root Causes Found:**
+
 1. **Blue Buttons**: Converter hardcoded `#3b82f6` as fallback for every button/CTA. Engine had design tokens from blueprints but NEVER passed them to converter.
 2. **Dark Mode Broken**: Navbar defaulted white bg/dark text. Mobile menu defaulted white. All components used light-mode defaults. No design token flow to component colors.
 3. **Bad Spacing**: Hero `minHeight` defaulted to `"600px"` instead of `"75vh"`, `paddingTop`/`paddingBottom` defaulted to `""` (empty).
@@ -4725,6 +5259,7 @@ User tested the previous system overhaul by generating a barbershop website ("Be
 **What Was Fixed (7 files, 266 insertions, 43 deletions):**
 
 #### converter.ts — Design Token System
+
 - Added `DesignTokens` interface and `activeDesignTokens` module state
 - Added helper functions: `themePrimary()`, `themeAccent()`, `themeBackground()`, `themeText()`, `isDarkTheme()` (luminance-based)
 - ALL component handlers now use `themePrimary()` instead of `#3b82f6` for buttons/accents
@@ -4736,34 +5271,42 @@ User tested the previous system overhaul by generating a barbershop website ("Be
 - New `setDesignTokens()` export function
 
 #### prompts.ts — Dark Mode AI Guidance
+
 - PAGE_GENERATOR_PROMPT: Added "DARK THEME AWARENESS" section with 12 rules
 - `buildPagePrompt()`: Dynamically detects dark theme and injects explicit dark-mode instructions
 - NAVBAR_GENERATOR_PROMPT: Added "DARK THEME NAVBAR" section with mobile menu guidance
 - FOOTER_GENERATOR_PROMPT: Added "RULE #7: DARK THEME FOOTER" with comprehensive rules
 
 #### engine.ts — Module Integration Enabled
+
 - Changed `enableModuleIntegration` from `false` to `true` in DEFAULT_CONFIG
 
 #### modules/types.ts — Industry Mappings
+
 - Added 7 industry mappings: barbershop, salon, spa, beauty (require booking), dental, veterinary (require booking + CRM), photography (require CRM, recommend social + ecommerce)
 
 #### page.tsx — Front-End Token Flow
+
 - Added `setDesignTokens` + `DesignTokens` imports
 - `useEffect` now calls `setDesignTokens()` with colors from `output.designSystem` before conversion
 - API call body now includes `engineConfig: { enableModuleIntegration: true, useQuickDesignTokens: true }`
 
 #### renderer.tsx — Remove Forced Light Mode
+
 - Changed `colorScheme: "light"` to `colorScheme: "normal"`
 - Removed `data-theme="light"` attribute
 
 #### premium-components.tsx — Theme-Aware Hover Effects
+
 - Fixed 3 hardcoded `hover:bg-gray-100` instances on hamburger button and mobile close buttons
 - Now use `onMouseEnter`/`onMouseLeave` with theme-aware colors
 
 ### Commits
+
 - `d7addd3` — "fix: comprehensive theming, dark mode, spacing, mobile menu & module integration overhaul"
 
 ### Current Architecture: Design Token Flow
+
 ```
 User Prompt → AI Architect → designSystem.colors (primary, secondary, accent, bg, text)
                                     ↓
@@ -4777,6 +5320,7 @@ Studio Components → inline styles with correct theme colors
 ```
 
 ### Key Design Decisions
+
 - **Module-level state** (`activeDesignTokens`) in converter.ts — simpler than threading through every function param
 - **Luminance-based dark detection** — `(0.299*R + 0.587*G + 0.114*B) / 255 < 0.5`
 - **Double defense** — Converter sets theme-aware defaults AND AI prompts tell the AI to use design tokens explicitly
@@ -4791,6 +5335,7 @@ Studio Components → inline styles with correct theme colors
 
 **Context:**
 After three failed attempts to make OpenAI GPT-4o work for website generation:
+
 1. Commit 874d169: Removed `.optional()` from schemas → runtime errors with `z.record()`
 2. Commit d594983: Butchered schemas (key-value arrays, removed constraints) → terrible quality
 3. Commit 227a597: `strictJsonSchema: false` + natural schemas → even worse quality
@@ -4798,6 +5343,7 @@ After three failed attempts to make OpenAI GPT-4o work for website generation:
 **Decision:** OpenAI is fundamentally unsuited for this complex creative structured output task. Switched back to Claude.
 
 **Changes (commit d6b3ce2):**
+
 - `DEFAULT_PROVIDER` set to `"anthropic"` in `ai-provider.ts`
 - Removed `generateObject` wrapper (not needed for Claude)
 - Restored direct `import { generateObject } from "ai"` in all 8 files
@@ -4806,6 +5352,7 @@ After three failed attempts to make OpenAI GPT-4o work for website generation:
 - Zero TypeScript errors
 
 **Current State:**
+
 - All files use `getAIModel(task)` which returns `anthropic("claude-sonnet-4-20250514")`
 - Natural schemas with `z.record()`, `.optional()`, `.min()/.max()`, `z.unknown()` all work with Claude
 - Website generation should be back to original quality level
@@ -4818,6 +5365,7 @@ After three failed attempts to make OpenAI GPT-4o work for website generation:
 
 **Problem:**
 After migrating from Anthropic Claude to OpenAI GPT-4o, the AI Website Designer produced terrible quality websites. This was caused by two rounds of schema butchering to satisfy OpenAI's strict structured output mode:
+
 1. First: Removed all `.optional()` from schemas (commit 874d169)
 2. Second: Replaced `z.record()` with key-value arrays, `z.unknown()` with `z.string()`, removed `.min()/.max()` constraints, added `processAIComponents()` converter (commit d594983)
 
@@ -4825,13 +5373,15 @@ These unnatural schemas confused the AI model and degraded output quality signif
 
 **Root Cause:**
 In AI SDK v6 (`ai@6.0.33`, `@ai-sdk/openai@3.0.26`), the `strictJsonSchema` option defaults to `true` for OpenAI. This enforces strict JSON Schema validation that rejects many valid Zod patterns:
+
 - `z.record()` → generates `propertyNames` keyword (rejected)
-- `z.unknown()` → generates empty schema `{}` (rejected)  
+- `z.unknown()` → generates empty schema `{}` (rejected)
 - `.optional()` → requires `additionalProperties: false` (rejected)
 - `.min()/.max()` on arrays (rejected)
 - `z.union([z.literal()])` → generates `const` keyword (rejected)
 
 **Solution (commit 227a597):**
+
 1. **Restored ALL schemas** to their original natural Zod form from commit 28b33b4
 2. **Removed `processAIComponents()`** converter utility (no longer needed)
 3. **Created `generateObject` wrapper** in `ai-provider.ts` that automatically sets `providerOptions.openai.strictJsonSchema = false`
@@ -4839,12 +5389,14 @@ In AI SDK v6 (`ai@6.0.33`, `@ai-sdk/openai@3.0.26`), the `strictJsonSchema` opti
 5. **Zero TypeScript errors** — wrapper uses `typeof aiGenerateObject` cast to preserve full generic type inference
 
 **Key Technical Details:**
+
 - AI SDK v6 removed `mode` parameter from `generateObject` (was available in v3/v4)
 - AI SDK v6 deprecated `generateObject` in favor of `generateText` with `Output.object()` — but generateObject still works
 - The correct v6 approach: `providerOptions: { openai: { strictJsonSchema: false } }`
 - Wrapper in `ai-provider.ts` centralizes this so all 30 `generateObject` calls automatically get non-strict mode
 
 ### Files Modified:
+
 - `config/ai-provider.ts` — Added `generateObject` wrapper with `strictJsonSchema: false`
 - `schemas.ts` — Restored from commit 28b33b4 (natural Zod schemas)
 - `engine.ts` — Restored from 28b33b4, imports generateObject from ai-provider
@@ -4858,11 +5410,12 @@ In AI SDK v6 (`ai@6.0.33`, `@ai-sdk/openai@3.0.26`), the `strictJsonSchema` opti
 - `responsive/ai-config.ts` — Restored from 874d169, imports from ai-provider
 
 ### Git History for OpenAI Migration:
-| Commit | Description |
-|--------|-------------|
-| 28b33b4 | Initial OpenAI migration with `getAIModel()` — natural schemas |
-| 874d169 | Removed `.optional()` from schemas |
-| d594983 | Butchered schemas (key-value arrays, removed constraints) |
+
+| Commit      | Description                                                     |
+| ----------- | --------------------------------------------------------------- |
+| 28b33b4     | Initial OpenAI migration with `getAIModel()` — natural schemas  |
+| 874d169     | Removed `.optional()` from schemas                              |
+| d594983     | Butchered schemas (key-value arrays, removed constraints)       |
 | **227a597** | **Fixed: Restored natural schemas + `strictJsonSchema: false`** |
 
 ---
@@ -4870,34 +5423,39 @@ In AI SDK v6 (`ai@6.0.33`, `@ai-sdk/openai@3.0.26`), the `strictJsonSchema` opti
 ## Previous Session Context (OpenAI Migration & Design Reference System - February 2026)
 
 ### 1. AI Provider Configuration System
+
 **File:** `src/lib/ai/website-designer/config/ai-provider.ts` (NEW)
 
 Centralized AI model configuration allowing easy switching between providers:
+
 - Default provider: OpenAI (GPT-4o for cost efficiency)
 - Task-specific model tiers (premium, standard, fast)
 - Functions: `getAIModel(task)`, `getModelInfo(task)`, `estimateCost(tasks)`
 
 ```typescript
 const TASK_TIERS = {
-  "architecture": "premium",    // GPT-4o
-  "page-content": "premium",    // GPT-4o  
-  "navbar": "standard",         // GPT-4o
-  "footer": "standard",         // GPT-4o
-  "refinement": "standard",     // GPT-4o
+  architecture: "premium", // GPT-4o
+  "page-content": "premium", // GPT-4o
+  navbar: "standard", // GPT-4o
+  footer: "standard", // GPT-4o
+  refinement: "standard", // GPT-4o
   "design-inspiration": "fast", // GPT-4o-mini
-  "module-analysis": "fast",    // GPT-4o-mini
+  "module-analysis": "fast", // GPT-4o-mini
 };
 ```
 
 ### 2. Design Reference System
+
 **File:** `src/lib/ai/website-designer/config/design-references.ts` (NEW)
 
 Curated design patterns database for AI to follow (Dribbble/Awwwards level):
+
 - 7 industry-specific references with exact specifications
 - Each reference includes: colors (exact hex), typography, page structures
 - Functions: `findDesignReference(industry, style)`, `formatReferenceForAI()`
 
 Industries covered:
+
 - Restaurant (elegant dark, modern light)
 - Professional Corporate
 - Portfolio Bold Creative
@@ -4906,7 +5464,9 @@ Industries covered:
 - Spa Serene Elegant
 
 ### 3. Files Updated to Use OpenAI
+
 Replaced all `anthropic()` calls with `getAIModel(task)`:
+
 - `engine.ts` - Main orchestration engine
 - `preview/iteration-engine.ts` - Preview refinement
 - `modules/analyzer.ts` - Module detection
@@ -4915,9 +5475,11 @@ Replaced all `anthropic()` calls with `getAIModel(task)`:
 - `refinement/multi-pass-engine.ts` - Quality refinement
 
 ### 4. Enhanced Page Prompt for Color Application
+
 **File:** `prompts.ts` - `buildPagePrompt()`
 
 Added explicit color application rules in the prompt:
+
 ```typescript
 ## 🎨 COLOR APPLICATION RULES (MANDATORY) 🎨
 You MUST apply these exact colors from the design tokens to every component:
@@ -4934,21 +5496,29 @@ You MUST apply these exact colors from the design tokens to every component:
 ```
 
 ### 5. Fixed Page URL Slug Matching
-**Files:** 
+
+**Files:**
+
 - `src/app/site/[domain]/[[...slug]]/page.tsx`
 - `src/app/api/site/[domain]/[[...slug]]/route.ts`
 
 Fixed page not found issue by normalizing slug comparisons:
+
 ```typescript
 // Now handles both "/about" and "about" formats
-const normalizedSlug = pageSlug ? (pageSlug.startsWith('/') ? pageSlug : `/${pageSlug}`) : '';
+const normalizedSlug = pageSlug
+  ? pageSlug.startsWith("/")
+    ? pageSlug
+    : `/${pageSlug}`
+  : "";
 const page = pages.find((p) => {
-  const pSlug = p.slug?.startsWith('/') ? p.slug : `/${p.slug}`;
+  const pSlug = p.slug?.startsWith("/") ? p.slug : `/${p.slug}`;
   return pSlug === normalizedSlug || p.slug === pageSlug;
 });
 ```
 
 ### 6. Package Installed
+
 - Added `@ai-sdk/openai` to dependencies
 
 ---
@@ -4958,6 +5528,7 @@ const page = pages.find((p) => {
 ### AI DESIGNER LINK & PUBLISHING FIX ✅
 
 **Issues Reported By User:**
+
 1. Navigation links going to 404 pages
 2. Footer links broken
 3. Internal page links not working
@@ -4981,9 +5552,11 @@ const page = pages.find((p) => {
 ### Fixes Implemented:
 
 ### 1. Smart Link Validation System
+
 **File:** `converter.ts`
 
 Created a context-aware link fixing system:
+
 - Added `setGeneratedPageSlugs(slugs)` function to register actual generated page slugs
 - Enhanced `fixLink()` to validate against actual generated pages + default routes
 - Added `findBestRoute()` function with intelligent context matching
@@ -4992,14 +5565,17 @@ Created a context-aware link fixing system:
 ```typescript
 // Now validates links against actual pages being generated
 export function setGeneratedPageSlugs(slugs: string[]): void {
-  generatedPageSlugs = slugs.map(s => s.startsWith('/') ? s : `/${s}`);
+  generatedPageSlugs = slugs.map((s) => (s.startsWith("/") ? s : `/${s}`));
 }
 
 function findBestRoute(context: string, validRoutes: string[]): string {
   // Priority mappings - check in order
   const mappings = [
     [["contact", "quote"], ["/contact"]],
-    [["book", "reserve"], ["/book", "/reserve", "/contact"]],
+    [
+      ["book", "reserve"],
+      ["/book", "/reserve", "/contact"],
+    ],
     // ... more intelligent mappings
   ];
   // Falls back to /contact or / if no match
@@ -5007,9 +5583,11 @@ function findBestRoute(context: string, validRoutes: string[]): string {
 ```
 
 ### 2. Footer Links Fixed
+
 **File:** `converter.ts` - Footer component transformer
 
 Now calls `fixLink()` on all footer navigation links:
+
 ```typescript
 links: col.links.map((link) => {
   const label = String(link.label || link.text || link.name || "");
@@ -5017,10 +5595,11 @@ links: col.links.map((link) => {
     label,
     href: fixLink(String(link.href || link.url || ""), label), // Fixed!
   };
-})
+});
 ```
 
 ### 3. Pricing CTA Links Fixed
+
 **File:** `converter.ts` - Pricing component transformer
 
 ```typescript
@@ -5028,9 +5607,11 @@ ctaLink: fixLink(String(p.ctaLink || p.buttonLink || ""), ctaText),
 ```
 
 ### 4. Auto-Publish After Save
+
 **File:** `ai-designer/page.tsx` - `handleSaveAndApply()`
 
 After saving all pages, the site is now automatically published:
+
 ```typescript
 if (savedCount > 0) {
   // Auto-publish the site
@@ -5044,16 +5625,18 @@ if (savedCount > 0) {
 ```
 
 ### 5. Page Slug Registration
+
 **File:** `ai-designer/page.tsx`
 
 Added call to register page slugs before conversion:
+
 ```typescript
 useEffect(() => {
   if (output?.pages) {
     // Set valid page slugs BEFORE converting
-    const pageSlugs = output.pages.map(p => p.slug);
+    const pageSlugs = output.pages.map((p) => p.slug);
     setGeneratedPageSlugs(pageSlugs);
-    
+
     // Then convert pages (links validated against actual slugs)
     const map = new Map<string, StudioPageData>();
     for (const page of output.pages) {
@@ -5066,15 +5649,18 @@ useEffect(() => {
 ```
 
 ### 6. Image Selection Guidance
+
 **File:** `prompts.ts` - PAGE_GENERATOR_PROMPT
 
 Added comprehensive image selection guidelines:
+
 - Industry-specific image recommendations
 - Unsplash image format guidance
 - Best practices for hero, team, gallery images
 - DO NOT use list (generic stock, placeholders, low-res)
 
 ### Files Modified:
+
 - `src/lib/ai/website-designer/converter.ts` - Smart link validation system
 - `src/lib/ai/website-designer/index.ts` - Export `setGeneratedPageSlugs`
 - `src/app/(dashboard)/dashboard/sites/[siteId]/ai-designer/page.tsx` - Auto-publish, slug registration
@@ -5085,10 +5671,12 @@ Added comprehensive image selection guidelines:
 ---
 
 ## Previous Session Update (AI Website Designer MAJOR OVERHAUL - February 2026)
-  "--background": "0 0% 100%",
-  "--foreground": "222.2 84% 4.9%",
-  // ... all shadcn/ui CSS variables forced to light mode
+
+"--background": "0 0% 100%",
+"--foreground": "222.2 84% 4.9%",
+// ... all shadcn/ui CSS variables forced to light mode
 }}>
+
 ```
 
 **File:** `renderer.tsx`
@@ -5106,13 +5694,17 @@ Now parses user prompt to extract:
 
 Prompt structure changed to:
 ```
+
 ## ⚠️ CRITICAL: USER'S REQUEST (HIGHEST PRIORITY) ⚠️
+
 The user has SPECIFICALLY requested the following. This OVERRIDES any database context:
 "${userPrompt}"
 
 ### EXTRACTED BUSINESS NAME: "${parsed.businessName}"
+
 YOU MUST USE THIS NAME in all headlines, content, and branding. DO NOT use any other name.
-```
+
+````
 
 ### 4. Link Validation & Fixing
 **File:** `converter.ts` - New link validation system
@@ -5133,12 +5725,14 @@ function fixLink(href: string, context: string): string {
   }
   return href;
 }
-```
+````
 
 ### 5. Industry-Specific Architectures
+
 **File:** `prompts.ts` - Complete rewrite of SITE_ARCHITECT_PROMPT
 
 Now includes detailed blueprints for:
+
 - 🍽️ Restaurant / Café / Bar (with reservation focus)
 - 🛍️ E-commerce / Retail / Shop (with product/trust focus)
 - 💼 Professional Services (law, medical, consulting)
@@ -5149,14 +5743,17 @@ Now includes detailed blueprints for:
 - 📸 Photography / Videography
 
 Each blueprint specifies:
+
 - Required pages
 - Hero requirements (specific CTAs for industry)
 - Page structure with exact sections
 
 ### 6. Animation & Visual Creativity
+
 **File:** `prompts.ts`
 
 Added animation guidance:
+
 ```
 ## 🎨 ANIMATION & VISUAL CREATIVITY
 
@@ -5171,6 +5768,7 @@ Add visual interest with TASTEFUL animations:
 ```
 
 ### Files Modified:
+
 - `src/lib/ai/website-designer/engine.ts` - applySharedElements fix, userPrompt storage
 - `src/lib/ai/website-designer/prompts.ts` - Complete rewrite with industry blueprints
 - `src/lib/ai/website-designer/converter.ts` - Link validation system
@@ -5186,6 +5784,7 @@ Add visual interest with TASTEFUL animations:
 **Issue:** The previously implemented AWD-08 preview system used placeholder components (`ComponentPlaceholder`) instead of the actual `StudioRenderer`, making the preview non-functional.
 
 **Root Cause Identified:**
+
 - `PreviewRenderer.tsx` at line 350+ used fake `ComponentPlaceholder` instead of real `StudioRenderer`
 - Test page didn't call the real API - used mocked data
 - No conversion from AI output format (`GeneratedPage`) to Studio format (`StudioPageData`)
@@ -5212,12 +5811,14 @@ Add visual interest with TASTEFUL animations:
    - Uses `Wand2` icon from Lucide
 
 **Files Added/Modified:**
+
 - ✅ `src/lib/ai/website-designer/converter.ts` - NEW
 - ✅ `src/lib/ai/website-designer/index.ts` - Added converter exports
 - ✅ `src/app/(dashboard)/dashboard/sites/[siteId]/ai-designer/page.tsx` - NEW (replaces test page)
 - ✅ `src/app/(dashboard)/dashboard/sites/[siteId]/page.tsx` - Added AI Designer link
 
 **API Flow (End-to-End):**
+
 ```
 User → AI Designer Page → POST /api/ai/website-designer
                                ↓
@@ -5245,6 +5846,7 @@ User → AI Designer Page → POST /api/ai/website-designer
 **Goal:** Implement Phase AWD-08 (Preview & Iteration System) and Phase AWD-09 (Module Integration Intelligence) for the AI Website Designer.
 
 **AWD-08: Preview & Iteration System ✅**
+
 - **Types** (`src/lib/ai/website-designer/preview/types.ts`) — PreviewState, Iteration, Change, RefinementRequest, VersionSnapshot
 - **Store** (`src/lib/ai/website-designer/preview/store.ts`) — Zustand store with undo/redo, version history, device switching
 - **Iteration Engine** (`src/lib/ai/website-designer/preview/iteration-engine.ts`) — AI-powered refinement processing with Claude claude-sonnet-4-20250514
@@ -5255,6 +5857,7 @@ User → AI Designer Page → POST /api/ai/website-designer
 - **PreviewRenderer** (`src/components/studio/website-designer/PreviewRenderer.tsx`) — Main preview component with all features
 
 **AWD-09: Module Integration Intelligence ✅**
+
 - **Types** (`src/lib/ai/website-designer/modules/types.ts`) — ModuleType, ModuleConfig, industry mappings for 12 industries
 - **Default Configs** (`src/lib/ai/website-designer/modules/default-configs.ts`) — Zambia defaults (ZMW, Africa/Lusaka, 16% VAT)
 - **Analyzer** (`src/lib/ai/website-designer/modules/analyzer.ts`) — AI-powered module requirement detection
@@ -5263,8 +5866,9 @@ User → AI Designer Page → POST /api/ai/website-designer
 - **Orchestrator** (`src/lib/ai/website-designer/modules/orchestrator.ts`) — Coordinates all module operations
 
 **Files Added (18 total):**
+
 - `src/lib/ai/website-designer/preview/` — 5 files
-- `src/lib/ai/website-designer/modules/` — 7 files  
+- `src/lib/ai/website-designer/modules/` — 7 files
 - `src/components/studio/website-designer/` — 5 UI components
 - Updated `src/lib/ai/website-designer/index.ts` — Exports AWD-08 and AWD-09
 
@@ -5294,16 +5898,19 @@ User → AI Designer Page → POST /api/ai/website-designer
 6. **BookingWidgetBlock Data Fetching** — Previously always used hardcoded demo data regardless of siteId. Now fetches real data from `/api/modules/booking/services` and `/api/modules/booking/staff` when siteId is available, falling back to demo data on error.
 
 **Zambia Defaults Verified:**
+
 - Settings view: Africa/Lusaka timezone, DD/MM/YYYY date format, 24h time, 16% VAT ✅
 - Service selector demo data: ZMW currency, K-prefixed prices ✅
 - Booking widget demo data: ZMW currency ✅
 - Embed route: ZMW, Africa/Lusaka, DD/MM/YYYY ✅
 
 **Files Added:**
+
 - `src/app/embed/booking/[siteId]/page.tsx` — Public booking embed route
 - `src/modules/booking/studio/components/BookingEmbedBlock.tsx` — Studio embed block
 
 **Files Fixed:**
+
 - `src/lib/studio/registry/module-loader.ts` — Guard null name in keywords
 - `src/lib/studio/registry/component-registry.ts` — Guard null keyword in search
 - `src/modules/booking/studio/index.ts` — Fix field editor text + register BookingEmbedBlock
@@ -5322,12 +5929,14 @@ User → AI Designer Page → POST /api/ai/website-designer
 **Goal:** Bring Booking module to parity with platform standards and fully implement Studio components and dashboard tooling.
 
 **Key Additions:**
+
 - **Settings View** created with tabs (General, Booking Rules, Notifications, Appearance, Payments)
 - **Embed Code View** created with iframe/script/shortcode generators and live preview
 - **Dashboard Tabs** updated to include Settings + Embed views
 - **BookingView type** updated to include `settings` and `embed`
 
 **Studio Component Fixes:**
+
 - Updated studio definitions to use correct Studio types (`ComponentDefinition`)
 - Fixed invalid field types (`boolean`, `responsive-number`) to valid types (`toggle`, `number` + `responsive`)
 - Adjusted component category to `interactive`
@@ -5337,10 +5946,12 @@ User → AI Designer Page → POST /api/ai/website-designer
 **TypeScript Status:** ✅ `pnpm tsc --noEmit --skipLibCheck` passed
 
 **Files Added:**
+
 - `src/modules/booking/components/views/settings-view.tsx`
 - `src/modules/booking/components/views/embed-code-view.tsx`
 
 **Files Updated:**
+
 - `src/modules/booking/components/views/index.ts`
 - `src/modules/booking/components/booking-dashboard.tsx`
 - `src/modules/booking/types/booking-types.ts`
@@ -5348,6 +5959,7 @@ User → AI Designer Page → POST /api/ai/website-designer
 - `src/modules/booking/studio/components/*.tsx` (Calendar, Service Selector, Form, Staff Grid, Widget)
 
 **Pending:**
+
 - Commit and push booking module enhancements
 
 ---
@@ -5357,37 +5969,44 @@ User → AI Designer Page → POST /api/ai/website-designer
 ### What Was Implemented
 
 **1. Quotation Mode — Types**
+
 - `EcommerceSettings` now has: `quotation_mode_enabled`, `quotation_button_label`, `quotation_redirect_url`, `quotation_hide_prices`, `payment_provider`
 - `StorefrontContextValue` now has: `quotationModeEnabled`, `quotationButtonLabel`, `quotationRedirectUrl`, `quotationHidePrices`
 
 **2. Quotation Mode — Context**
+
 - `storefront-context.tsx`: `StorefrontProvider` now reads from `EcommerceSettings` and exposes all quotation mode values via context
 - Default values: `quotationModeEnabled: false`, `quotationButtonLabel: 'Request a Quote'`, etc.
 
 **3. Quotation Mode — UI Toggle**
+
 - `quote-settings.tsx`: Prominent master toggle card added at the TOP of the Quote Settings form
 - Shows orange active badge + info message when enabled
 - Exposes: button label customization + hide prices toggle
 - Saves immediately to `EcommerceSettings` via `updateEcommerceSettings()` (separate from QuoteSiteSettings)
 
 **4. Quotation Mode — ProductCardBlock**
+
 - `product-card-block.tsx`: Reads `quotationModeEnabled`, `quotationButtonLabel`, `quotationHidePrices` from `useStorefront()`
 - Button becomes orange "Request Quote" with FileText icon when quotation mode is active
 - Click navigates to `/quotes?product=<id>` instead of adding to cart
 - Prices hidden across all 4 layout variants when `quotationHidePrices` is true (uses `effectiveShowPrice`)
 
 **5. Cart Auto-Injection — New File Created**
+
 - `src/components/renderer/ecommerce-cart-injector.tsx` created
 - Follows exact `LiveChatWidgetInjector` pattern
 - Wraps `StorefrontProvider` + `CartIconWidget` as floating bottom-right widget (fixed position, z-999)
 - Only renders when ecommerce module is installed and active
 
 **6. Cart Auto-Injection — Wired into Page Renderer**
+
 - `src/app/site/[domain]/[[...slug]]/page.tsx` updated
 - `hasEcommerce` check added alongside `hasLiveChat`
 - `<EcommerceCartInjector siteId={data.site.id} />` auto-injected for all published sites
 
 **7. Payment Settings — Real Gateway UI**
+
 - `ecommerce-settings-dialog.tsx` payment tab completely rebuilt
 - Provider selector: None / Flutterwave / Pesapal / DPO / Manual
 - Flutterwave: public key, secret key (password), environment (test/live) with live mode badge
@@ -5398,10 +6017,12 @@ User → AI Designer Page → POST /api/ai/website-designer
 - Saves `payment_provider`, `flutterwave_config`, `pesapal_config` to DB
 
 **8. Currency Symbol — Fixed**
+
 - `ecommerce-settings-dialog.tsx` shipping tab: hardcoded `$` replaced with `getCurrencySymbol(currency)` (locale-aware)
 - Works correctly for ZMW (K), USD ($), KES (KSh), ZAR (R), etc.
 
 ### Files Modified
+
 - `src/modules/ecommerce/types/ecommerce-types.ts`
 - `src/modules/ecommerce/context/storefront-context.tsx`
 - `src/modules/ecommerce/components/settings/quote-settings.tsx`
@@ -5413,6 +6034,7 @@ User → AI Designer Page → POST /api/ai/website-designer
 ### MAJOR E-COMMERCE FIXES COMPLETED ✅
 
 User reported critical issues with the e-commerce module:
+
 - Module enable trigger not creating pages
 - Settings tabs showing placeholders
 - Image uploads not working
@@ -5423,12 +6045,15 @@ User reported critical issues with the e-commerce module:
 ### FIXES IMPLEMENTED:
 
 #### 1. Module Enable Trigger Fixed ✅
+
 **File:** `modules/ecommerce/hooks/installation-hook.ts`
+
 - `onEnable` now creates pages, navigation, and applies settings
 - Previously only added navigation items without page creation
 - Pages now auto-created when module is enabled on a site
 
 #### 2. All 6 Settings Forms Created ✅
+
 **New Files Created:**
 | File | Description | Lines |
 |------|-------------|-------|
@@ -5440,36 +6065,46 @@ User reported critical issues with the e-commerce module:
 | `components/settings/legal-settings.tsx` | Terms, privacy, refund policies | ~380 |
 
 **Updated:**
+
 - `components/views/settings-view.tsx` - Imports and uses all 6 new forms
 - `components/settings/index.ts` - Exports all new components
 
 #### 3. Image Upload Component Created ✅
+
 **New File:** `components/shared/image-upload.tsx`
+
 - Drag & drop file upload with Supabase Storage
 - URL fallback option
 - Multi-image gallery support (`ImageGalleryUpload`)
 - Auto-creates storage bucket if needed
 
 **Updated:**
+
 - `components/dialogs/create-product-dialog.tsx` - Uses `ImageGalleryUpload`
 - `components/dialogs/edit-product-dialog.tsx` - Uses `ImageGalleryUpload`
 
 #### 4. Studio Components API Fixed ✅
+
 **File:** `app/api/modules/ecommerce/products/route.ts`
+
 - Added `source` parameter handling (featured, new, sale, category)
 - Added `transformProduct()` to convert DB format to frontend format
 - Price now converted from cents to dollars
 - Properly handles `siteId` for real product fetching
 
 **File:** `actions/ecommerce-actions.ts`
+
 - Added `getFeaturedProducts()` function
 - Added `onSale` filter support for products with compare_at_price
 
 **File:** `types/ecommerce-types.ts`
+
 - Added `onSale` to `ProductFilters` interface
 
 #### 5. Inventory Functionality Completed ✅
+
 **File:** `components/views/inventory-view.tsx`
+
 - Added `handleExport()` function for CSV export
 - Export dropdown with options: All Inventory, Low Stock, History
 - Settings button navigates to inventory settings tab
@@ -5477,7 +6112,9 @@ User reported critical issues with the e-commerce module:
 - Added loading state for export
 
 #### 6. Embed Code Generator Created ✅
+
 **New File:** `components/views/embed-code-view.tsx`
+
 - 6 widget types: Product Grid, Product Card, Buy Button, Cart Widget, Collection, Checkout
 - Customizable: theme, columns, limit, source, category, style
 - JavaScript embed code generation
@@ -5485,23 +6122,25 @@ User reported critical issues with the e-commerce module:
 - Copy to clipboard functionality
 
 **Updated:**
+
 - `components/ecommerce-dashboard.tsx` - Added `EmbedCodeGenerator` view
 - `components/layout/ecommerce-sidebar.tsx` - Added "Embed" nav item
 - `types/ecommerce-types.ts` - Added `'embed'` to `EcommerceView` type
 
 ### FILES MODIFIED THIS SESSION:
 
-| Category | Files Changed |
-|----------|---------------|
-| Settings Forms | 6 new, 2 updated |
-| Image Upload | 1 new, 2 updated |
-| API/Actions | 3 updated |
-| Views | 2 new, 2 updated |
-| Types | 1 updated |
-| Navigation | 2 updated |
-| **Total** | **10 new files, 11 updated** |
+| Category       | Files Changed                |
+| -------------- | ---------------------------- |
+| Settings Forms | 6 new, 2 updated             |
+| Image Upload   | 1 new, 2 updated             |
+| API/Actions    | 3 updated                    |
+| Views          | 2 new, 2 updated             |
+| Types          | 1 updated                    |
+| Navigation     | 2 updated                    |
+| **Total**      | **10 new files, 11 updated** |
 
 ### TypeScript Status: To Be Verified
+
 Run `npx tsc --noEmit --skipLibCheck` to verify compilation
 
 ---
@@ -5512,21 +6151,22 @@ Run `npx tsc --noEmit --skipLibCheck` to verify compilation
 
 **All currency, timezone, and regional settings now default to Zambia:**
 
-| Setting | Previous Default | New Zambian Default |
-|---------|-----------------|---------------------|
-| Currency | USD ($) | ZMW (ZK) - Zambian Kwacha |
-| Timezone | America/New_York | Africa/Lusaka (CAT, UTC+2) |
-| Country | US | ZM (Zambia) |
-| VAT Enabled | No | Yes |
-| VAT Rate | 0% | 16% (Zambia standard) |
-| Prices Include VAT | No | Yes |
-| Phone Required | No | Yes (important for delivery) |
-| Date Format | MM/DD/YYYY | DD/MM/YYYY |
-| Time Format | 12h | 24h |
-| Weight Unit | lb | kg |
-| Dimension Unit | in | cm |
+| Setting            | Previous Default | New Zambian Default          |
+| ------------------ | ---------------- | ---------------------------- |
+| Currency           | USD ($)          | ZMW (ZK) - Zambian Kwacha    |
+| Timezone           | America/New_York | Africa/Lusaka (CAT, UTC+2)   |
+| Country            | US               | ZM (Zambia)                  |
+| VAT Enabled        | No               | Yes                          |
+| VAT Rate           | 0%               | 16% (Zambia standard)        |
+| Prices Include VAT | No               | Yes                          |
+| Phone Required     | No               | Yes (important for delivery) |
+| Date Format        | MM/DD/YYYY       | DD/MM/YYYY                   |
+| Time Format        | 12h              | 24h                          |
+| Weight Unit        | lb               | kg                           |
+| Dimension Unit     | in               | cm                           |
 
 **Files Updated:**
+
 - `lib/settings-utils.ts` - Countries, currencies, timezones (ZM/ZMW first)
 - `types/onboarding-types.ts` - AVAILABLE_CURRENCIES, DEFAULT_ONBOARDING_DATA
 - `actions/settings-actions.ts` - All default settings (general, currency, tax, shipping)
@@ -5539,16 +6179,19 @@ Run `npx tsc --noEmit --skipLibCheck` to verify compilation
 - `actions/dashboard-actions.ts` - Order currency default
 
 **Added African Support:**
+
 - 20+ African countries prioritized (ZM, ZW, BW, MW, MZ, TZ, KE, UG, RW, CD, etc.)
 - 15+ African currencies (ZMW, ZAR, BWP, MWK, KES, TZS, UGX, NGN, etc.)
 - 20 African timezones (Lusaka, Harare, Nairobi, Johannesburg, Lagos, etc.)
 
 ### Git Commit
+
 ```
 eb08a09 feat(ecommerce): Set Zambia as default for all currency, timezone, and regional settings
 ```
 
 ### TypeScript Verification: ✅ PASSED
+
 `npx tsc --noEmit --skipLibCheck` - Zero errors
 
 ---
@@ -5559,11 +6202,13 @@ eb08a09 feat(ecommerce): Set Zambia as default for all currency, timezone, and r
 
 **Root Cause Identified & Fixed:**
 The module installation hooks were not firing because:
+
 1. Hooks are registered by **slug** (e.g., `'ecommerce'`)
 2. API endpoints were passing **UUID** from `site_module_installations.module_id`
 3. Hooks never matched because UUID ≠ slug
 
 **Fix Applied:**
+
 1. API endpoints now look up module slug before executing hooks
 2. Added `getEcommerceModuleUuid()` helper in auto-setup-actions.ts
 3. All DB queries that used `module_id = 'ecommerce'` now properly resolve UUID
@@ -5571,6 +6216,7 @@ The module installation hooks were not firing because:
 ### Wave 6 Onboarding Wizard Integration ✅
 
 **Integrated into Dashboard:**
+
 - OnboardingWizard now shows when `onboardingCompleted` is false
 - Dashboard checks settings.onboardingCompleted on load
 - Wizard dismisses on complete or skip, then refreshes data
@@ -5593,23 +6239,27 @@ The module installation hooks were not firing because:
 | Wave 6 | ECOM-50 to 53 | 15+ | ~4,000 | ✅ Production Ready |
 
 **All Wave 5 Components Verified:**
+
 - ECOM-40: Inventory Management (actions, types, views)
 - ECOM-41: Analytics (actions, types, utils, hooks, views)
 - ECOM-42: Marketing (actions, types, hooks, views, dialogs)
 - ECOM-43: Integrations (actions, types, hooks, views)
 
 **All Wave 6 Components Verified:**
+
 - ECOM-50: Installation hook system (installation-hook.ts)
 - ECOM-51: Auto-page generation (auto-setup-actions.ts, page-templates.ts)
 - ECOM-52: Navigation auto-setup (nav items, widgets)
 - ECOM-53: Onboarding wizard (6 steps, complete flow)
 
 ### Git Commit
+
 ```
 d6e6a11 fix(ecommerce): Fix module installation hooks not firing and integrate onboarding wizard
 ```
 
 ### TypeScript Verification: ✅ PASSED
+
 `pnpm tsc --noEmit` - Zero errors
 
 ---
@@ -5619,6 +6269,7 @@ d6e6a11 fix(ecommerce): Fix module installation hooks not firing and integrate o
 ### Wave 5 FULLY IMPLEMENTED & INDUSTRY READY ✅
 
 **All 4 Wave 5 Phases Complete:**
+
 - ✅ ECOM-40: Inventory Management
 - ✅ ECOM-41: Analytics & Reports (41A Schema + 41B UI)
 - ✅ ECOM-42: Marketing Features (42A Schema + 42B UI)
@@ -5627,6 +6278,7 @@ d6e6a11 fix(ecommerce): Fix module installation hooks not firing and integrate o
 ### Session Work: Full Navigation Integration
 
 **Navigation Integration Completed:**
+
 1. **EcommerceView Type Updated** (`types/ecommerce-types.ts`):
    - Added `'marketing'` and `'developer'` to EcommerceView union type
 
@@ -5650,16 +6302,17 @@ d6e6a11 fix(ecommerce): Fix module installation hooks not firing and integrate o
 
 ### Deep Scan Results - All Verified ✅
 
-| Phase | Components | Lines of Code | Status |
-|-------|------------|---------------|--------|
-| ECOM-40 (Inventory) | 6 | ~1,500 | ✅ Production Ready |
-| ECOM-41 (Analytics) | 12 | ~3,500 | ✅ Production Ready |
-| ECOM-42 (Marketing) | 15 | ~4,500 | ✅ Production Ready |
-| ECOM-43 (Integrations) | 12 | ~3,000 | ✅ Production Ready |
+| Phase                  | Components | Lines of Code | Status              |
+| ---------------------- | ---------- | ------------- | ------------------- |
+| ECOM-40 (Inventory)    | 6          | ~1,500        | ✅ Production Ready |
+| ECOM-41 (Analytics)    | 12         | ~3,500        | ✅ Production Ready |
+| ECOM-42 (Marketing)    | 15         | ~4,500        | ✅ Production Ready |
+| ECOM-43 (Integrations) | 12         | ~3,000        | ✅ Production Ready |
 
 **Total Wave 5**: 45+ components, 12,500+ lines of code
 
 ### Files Modified This Session:
+
 - `src/modules/ecommerce/types/ecommerce-types.ts` - Added marketing + developer to EcommerceView
 - `src/modules/ecommerce/components/layout/ecommerce-sidebar.tsx` - Added nav items + icons
 - `src/modules/ecommerce/components/layout/ecommerce-header.tsx` - Added view labels
@@ -5667,6 +6320,7 @@ d6e6a11 fix(ecommerce): Fix module installation hooks not firing and integrate o
 - `src/modules/ecommerce/components/views/index.ts` - Added missing exports
 
 ### TypeScript Verification: ✅ PASSED
+
 `pnpm tsc --noEmit` - Zero errors
 
 ---
@@ -5674,20 +6328,23 @@ d6e6a11 fix(ecommerce): Fix module installation hooks not firing and integrate o
 ## Previous Session Update (Wave 6 Prompt Created - February 5, 2026)
 
 ### Completed: E-Commerce Wave 5 Marketing Implementation
+
 **Date:** February 2026
 
 #### Wave 5 Marketing Phases Complete:
-| Phase | Title | Status |
-|-------|-------|--------|
-| ECOM-40 | Inventory Management | ✅ Complete (previous session) |
+
+| Phase    | Title                             | Status                         |
+| -------- | --------------------------------- | ------------------------------ |
+| ECOM-40  | Inventory Management              | ✅ Complete (previous session) |
 | ECOM-41A | Analytics Schema & Server Actions | ✅ Complete (previous session) |
-| ECOM-41B | Analytics UI Components | ✅ Complete (previous session) |
-| ECOM-42A | Marketing Schema & Server Actions | ✅ Complete |
-| ECOM-42B | Marketing UI Components | ✅ Complete |
+| ECOM-41B | Analytics UI Components           | ✅ Complete (previous session) |
+| ECOM-42A | Marketing Schema & Server Actions | ✅ Complete                    |
+| ECOM-42B | Marketing UI Components           | ✅ Complete                    |
 
 #### Implementation Summary:
 
 **Migration Created** (`migrations/ecom-42-marketing.sql`):
+
 - `mod_ecommod01_flash_sales` - Time-limited sales with discount configuration
 - `mod_ecommod01_flash_sale_products` - Products in flash sales with max quantity
 - `mod_ecommod01_gift_cards` - Gift card management with balance tracking
@@ -5700,6 +6357,7 @@ d6e6a11 fix(ecommerce): Fix module installation hooks not firing and integrate o
 - RLS policies, indexes, triggers for all tables
 
 **Types Created** (`types/marketing-types.ts`):
+
 - FlashSale, FlashSaleProduct, FlashSaleInput, FlashSaleProductInput
 - GiftCard, GiftCardTransaction, GiftCardInput, GiftCardTransactionInput
 - ProductBundle, BundleItem, ProductBundleInput, BundleItemInput
@@ -5708,6 +6366,7 @@ d6e6a11 fix(ecommerce): Fix module installation hooks not firing and integrate o
 - MarketingStats (aggregate statistics)
 
 **Server Actions** (`actions/marketing-actions.ts` - 800+ lines):
+
 - Flash Sales: getFlashSales, getActiveFlashSales, createFlashSale, updateFlashSale, deleteFlashSale, addFlashSaleProducts, removeFlashSaleProduct
 - Gift Cards: getGiftCards, lookupGiftCard, createGiftCard, deactivateGiftCard, processGiftCardTransaction
 - Bundles: getBundles, createBundle, updateBundle, deleteBundle
@@ -5715,6 +6374,7 @@ d6e6a11 fix(ecommerce): Fix module installation hooks not firing and integrate o
 - Statistics: getMarketingStats (aggregate data for dashboards)
 
 **Hooks Created** (`hooks/use-marketing.ts` - 400+ lines):
+
 - `useFlashSales` - Flash sale CRUD with active filtering
 - `useGiftCards` - Gift card management with lookup
 - `useBundles` - Product bundle management
@@ -5722,9 +6382,11 @@ d6e6a11 fix(ecommerce): Fix module installation hooks not firing and integrate o
 - `useMarketingStats` - Dashboard statistics
 
 **Widget Components** (`components/widgets/countdown-timer.tsx`):
+
 - `CountdownTimer` - Animated countdown with days/hours/minutes/seconds
 
 **View Components** (`components/views/`):
+
 - `FlashSalesView` - Status tabs, stats cards, countdown timers, CRUD
 - `GiftCardsView` - Card lookup, issuance, transaction history
 - `MarketingView` - Main tabbed dashboard for all marketing features
@@ -5732,6 +6394,7 @@ d6e6a11 fix(ecommerce): Fix module installation hooks not firing and integrate o
 - `LoyaltyView` - Loyalty program configuration and member management
 
 **Dialog Components** (`components/dialogs/`):
+
 - `FlashSaleDialog` - Create/edit flash sales with product selection
 - `BundleDialog` - Create/edit bundles with item configuration
 - `CreateGiftCardDialog` - Issue new gift cards
@@ -5746,20 +6409,23 @@ d6e6a11 fix(ecommerce): Fix module installation hooks not firing and integrate o
 ## Previous Session Update (Wave 5 ECOM-41A & ECOM-41B Complete - February 5, 2026)
 
 ### Completed: PHASE-ECOM-13 Quote Templates & Automation
+
 **Date:** February 5, 2026
 
 #### All Wave 2 Quotation System Phases Complete:
-| Phase | Title | Status |
-|-------|-------|--------|
-| ECOM-10 | Quotation Database Schema & Types | ✅ Complete |
-| ECOM-11A | Quote Server Actions | ✅ Complete |
-| ECOM-11B | Quote UI Components | ✅ Complete |
-| ECOM-12 | Quote Workflow & Customer Portal | ✅ Complete |
-| ECOM-13 | Quote Templates & Automation | ✅ Complete |
+
+| Phase    | Title                             | Status      |
+| -------- | --------------------------------- | ----------- |
+| ECOM-10  | Quotation Database Schema & Types | ✅ Complete |
+| ECOM-11A | Quote Server Actions              | ✅ Complete |
+| ECOM-11B | Quote UI Components               | ✅ Complete |
+| ECOM-12  | Quote Workflow & Customer Portal  | ✅ Complete |
+| ECOM-13  | Quote Templates & Automation      | ✅ Complete |
 
 #### PHASE-ECOM-13 Implementation Details:
 
 **Database Migration** (`migrations/ecom-13-quote-templates.sql`):
+
 - `mod_ecommod01_quote_templates` table with JSONB items column
 - `mod_ecommod01_quote_settings` table for site-level configuration
 - RLS policies for agency/site isolation
@@ -5767,6 +6433,7 @@ d6e6a11 fix(ecommerce): Fix module installation hooks not firing and integrate o
 - Added `reminder_count`, `last_reminder_at` columns to quotes table
 
 **Server Actions** (`actions/quote-template-actions.ts`):
+
 - CRUD operations for templates (create, read, update, delete)
 - `getQuoteTemplates()`, `getQuoteTemplate()`, `getDefaultTemplate()`
 - `createQuoteTemplate()`, `updateQuoteTemplate()`, `deleteQuoteTemplate()`
@@ -5776,6 +6443,7 @@ d6e6a11 fix(ecommerce): Fix module installation hooks not firing and integrate o
 - `getNextQuoteNumber()` for auto-numbering
 
 **Automation Utilities** (`lib/quote-automation.ts`):
+
 - `processExpiredQuotes()` - Auto-expire quotes past valid_until date
 - `getQuotesDueForReminder()` - Find quotes needing reminder
 - `processQuoteReminders()` - Send automated reminders
@@ -5783,17 +6451,20 @@ d6e6a11 fix(ecommerce): Fix module installation hooks not firing and integrate o
 - `getQuotesNeedingFollowUp()` - Detect non-responsive quotes
 
 **Analytics Utilities** (`lib/quote-analytics.ts`):
+
 - `getQuoteAnalytics()` - Comprehensive quote metrics (totals, rates, values)
 - `getQuotePerformance()` - Monthly performance reports
 - `getTopTemplates()` - Most used templates
 - `getQuoteValueDistribution()` - Value range analysis
 
 **UI Components**:
+
 - `QuoteTemplateList` - Grid view of all templates with actions
 - `QuoteTemplateDialog` - Create/edit template dialog with tabs
 - `QuoteTemplateSelector` - Dropdown for quote creation
 
 **Types Added**:
+
 - `QuoteSiteSettings` interface
 - `QuoteSiteSettingsUpdate` interface
 - `QuoteAnalytics` interface
@@ -5808,9 +6479,11 @@ d6e6a11 fix(ecommerce): Fix module installation hooks not firing and integrate o
 ## Previous Session Update (ECOM Critical Fixes - February 5, 2026)
 
 ### Fixed: E-Commerce Wave 1 Phase Completion Issues
+
 **Date:** February 5, 2026
 
 #### Problems Found:
+
 1. **Settings Database Schema Mismatch** - The settings actions tried to save to JSON columns (`general_settings`, `currency_settings`, etc.) that didn't exist in the database. Original schema had individual columns (`store_name`, `currency`, etc.).
 
 2. **Customer Management (ECOM-05) Not Integrated** - CustomersView component existed but dashboard showed placeholder text instead of the actual component.
@@ -5829,30 +6502,37 @@ d6e6a11 fix(ecommerce): Fix module installation hooks not firing and integrate o
 #### Fixes Applied:
 
 **1. Database Migration Created** (`migrations/ecom-phase-fixes-settings-customers.sql`):
-   - Added 9 JSON settings columns to `mod_ecommod01_settings` table
-   - Created all customer management tables with proper RLS policies
-   - Created all order management tables (timeline, notes, shipments, refunds)
-   - Added indexes for performance
-   - Added triggers for auto-updating stats (customer order count, notes count, group member count)
+
+- Added 9 JSON settings columns to `mod_ecommod01_settings` table
+- Created all customer management tables with proper RLS policies
+- Created all order management tables (timeline, notes, shipments, refunds)
+- Added indexes for performance
+- Added triggers for auto-updating stats (customer order count, notes count, group member count)
 
 **2. Dashboard Integration Fixed** (`ecommerce-dashboard.tsx`):
-   - Imported `CustomersView` from views
-   - Replaced placeholder with actual `CustomersView` component
-   - Component receives `siteId`, `agencyId`, `userId`, `userName` props
+
+- Imported `CustomersView` from views
+- Replaced placeholder with actual `CustomersView` component
+- Component receives `siteId`, `agencyId`, `userId`, `userName` props
 
 #### Files Created:
+
 - `migrations/ecom-phase-fixes-settings-customers.sql` (~400 lines)
 
 #### Files Modified:
+
 - `src/modules/ecommerce/components/ecommerce-dashboard.tsx` - Integrated CustomersView
 
 #### Action Required:
+
 **The database migration MUST be run in Supabase SQL Editor:**
+
 ```sql
 -- Run contents of: migrations/ecom-phase-fixes-settings-customers.sql
 ```
 
 #### Verification:
+
 - ✅ TypeScript compiles with zero errors
 - ⏳ Database migration needs to be applied
 
@@ -5861,11 +6541,14 @@ d6e6a11 fix(ecommerce): Fix module installation hooks not firing and integrate o
 ## Previous Session Update (Wave 2 Prompt Created - February 4, 2026)
 
 ### Created: ECOMMERCE-WAVE2-PROMPT.md
+
 **Date:** February 4, 2026  
 **File:** `phases/enterprise-modules/ECOMMERCE-WAVE2-PROMPT.md`
 
 #### Wave 1 Completed (ECOM-01 through ECOM-05):
+
 All 5 Wave 1 phases have been successfully implemented:
+
 - ✅ ECOM-01: Dashboard Redesign & Navigation (sidebar, widgets, command palette)
 - ✅ ECOM-02: Product Management Enhancement (TanStack Table, filters, bulk actions, import/export)
 - ✅ ECOM-03: Settings & Configuration Center (9 settings tabs, server actions)
@@ -5873,20 +6556,23 @@ All 5 Wave 1 phases have been successfully implemented:
 - ✅ ECOM-05: Customer Management (customer table, detail dialog, groups, notes)
 
 #### Wave 2 Prompt Created - Quotation System (4 Phases):
-| Phase | Title | Priority | Est. Hours |
-|-------|-------|----------|------------|
-| **ECOM-10** | Quotation Database Schema & Types | 🔴 CRITICAL | 4-5 |
-| **ECOM-11** | Quote Builder & Management | 🔴 CRITICAL | 10-12 |
-| **ECOM-12** | Quote Workflow & Customer Portal | 🟠 HIGH | 8-10 |
-| **ECOM-13** | Quote Templates & Automation | 🟠 HIGH | 6-8 |
+
+| Phase       | Title                             | Priority    | Est. Hours |
+| ----------- | --------------------------------- | ----------- | ---------- |
+| **ECOM-10** | Quotation Database Schema & Types | 🔴 CRITICAL | 4-5        |
+| **ECOM-11** | Quote Builder & Management        | 🔴 CRITICAL | 10-12      |
+| **ECOM-12** | Quote Workflow & Customer Portal  | 🟠 HIGH     | 8-10       |
+| **ECOM-13** | Quote Templates & Automation      | 🟠 HIGH     | 6-8        |
 
 #### Wave 2 Features:
+
 - **ECOM-10**: Database tables (`quotes`, `quote_items`, `quote_activities`, `quote_templates`), TypeScript types
 - **ECOM-11**: Quote builder dialog, quote list view, items editor, product selector, server actions
 - **ECOM-12**: Status workflow, send quote via email, customer portal (public `/quote/[token]`), quote-to-order conversion
 - **ECOM-13**: Quote templates CRUD, create from template, quote settings, automated expiration/reminders
 
 #### Current E-Commerce Module Structure:
+
 ```
 src/modules/ecommerce/
 ├── actions/ (6 files: customer, dashboard, ecommerce, order, import-export, settings)
@@ -5912,6 +6598,7 @@ src/modules/ecommerce/
 ```
 
 #### Next Steps:
+
 1. User gives Wave 2 prompt to AI agent
 2. AI agent generates 4 PHASE documents (ECOM-10, 11, 12, 13)
 3. User implements each phase sequentially
@@ -5922,10 +6609,12 @@ src/modules/ecommerce/
 ## Previous Session Update (Phase ECOM-04 Complete - February 4, 2026)
 
 ### Completed: Order Management Enhancement
+
 **Date:** February 4, 2026  
 **Commit:** 8c53251 - fix(ecommerce): resolve OrderDetailData type conflict with Order.notes
 
 #### Features Implemented:
+
 - **Order Detail Dialog** - Comprehensive view with tabs (Details, Timeline, Invoice)
 - **Order Timeline** - Visual timeline with 13 event types (status_changed, payment_received, note_added, etc.)
 - **Order Items Table** - Product images, variants, SKU, subtotals with all adjustments
@@ -5934,6 +6623,7 @@ src/modules/ecommerce/
 - **Refund Dialog** - Full/partial refund, item selection, quantity adjustment, custom amount
 
 #### Files Created (8 new files):
+
 - `src/modules/ecommerce/actions/order-actions.ts` - 12 server actions for order management (~500 lines)
 - `src/modules/ecommerce/components/orders/order-timeline.tsx` - Visual timeline component (~165 lines)
 - `src/modules/ecommerce/components/orders/order-items-table.tsx` - Order line items table (~175 lines)
@@ -5944,26 +6634,32 @@ src/modules/ecommerce/
 - `src/modules/ecommerce/components/orders/index.ts` - Component exports
 
 #### Types Added (15 new types in ecommerce-types.ts):
+
 - `OrderEventType`, `OrderTimelineEvent`, `OrderNote`, `OrderShipment`, `OrderRefund`
 - `OrderTableFilters`, `OrderBulkAction`, `OrderDetailData`, `InvoiceData`, `PackingSlipData`
 
 #### Server Actions Added (order-actions.ts):
+
 - `getOrderDetail()`, `getOrders()`, `updateOrderStatus()`, `addOrderNote()`, `deleteOrderNote()`
 - `addOrderShipment()`, `updateShipmentStatus()`, `createRefund()`, `processRefund()`
 - `executeOrderBulkAction()`, `generateInvoiceNumber()`, `sendOrderEmail()`
 
 #### Type Fix Applied:
+
 - Renamed `notes` property to `order_notes` in `OrderDetailData` interface
 - This avoids conflict with `Order.notes` (string) vs `OrderDetailData.order_notes` (OrderNote[])
 
 #### Database Tables Required (NOT YET APPLIED):
+
 The following tables need to be created for full functionality:
+
 - `mod_ecommod01_order_timeline` - Order event history
 - `mod_ecommod01_order_notes` - Internal/customer notes
 - `mod_ecommod01_order_shipments` - Shipment tracking
 - `mod_ecommod01_order_refunds` - Refund records
 
 #### Verification:
+
 - ✅ No TypeScript errors in e-commerce module
 - ✅ Dev server starts successfully
 - ✅ Committed and pushed to origin/main
@@ -5973,11 +6669,14 @@ The following tables need to be created for full functionality:
 ## Previous Session Update (Build Error Fix - February 4, 2026)
 
 ### Fixed: Next.js 16 'use server' Directive Build Error
+
 **Date:** Current Session  
 **Commit:** eee5d11 - fix: Move settings helper functions to utils to comply with 'use server' directive
 
 #### Problem:
+
 After deploying Phase ECOM-03, the dev server failed to start with error:
+
 ```
 Server Actions must be async functions.
 ```
@@ -5985,9 +6684,11 @@ Server Actions must be async functions.
 The issue was in `settings-actions.ts` where helper functions `getCountryList()`, `getCurrencyList()`, `getTimezoneList()`, and `validateTaxRate()` were **synchronous functions** in a file with `'use server'` directive.
 
 #### Root Cause:
+
 In Next.js 16 with `'use server'` directive, **ALL exported functions must be async**, even pure utility functions that return static data.
 
 #### Solution:
+
 1. Created new file: `src/modules/ecommerce/lib/settings-utils.ts` for pure utility functions
 2. Moved all 4 helper functions to this new file (made them synchronous again)
 3. Removed these functions from `settings-actions.ts`
@@ -5996,17 +6697,20 @@ In Next.js 16 with `'use server'` directive, **ALL exported functions must be as
    - `currency-settings.tsx` - Now imports from `../../lib/settings-utils`
 
 #### Files Changed:
+
 - **Created**: `src/modules/ecommerce/lib/settings-utils.ts` (126 lines)
 - **Modified**: `src/modules/ecommerce/actions/settings-actions.ts` (removed 120 lines)
 - **Modified**: `src/modules/ecommerce/components/settings/general-settings.tsx` (import statement)
 - **Modified**: `src/modules/ecommerce/components/settings/currency-settings.tsx` (import statement)
 
 #### Pattern Learned:
+
 - **Server Actions file** (`'use server'`) → ALL exports must be `async function`
 - **Utility functions** (pure logic) → Move to separate file WITHOUT `'use server'` directive
 - This separation is cleaner and follows Next.js best practices
 
 #### Verification:
+
 - ✅ `npx tsc --noEmit` passes with zero errors
 - ✅ Dev server starts successfully on port 3001
 - ✅ No build errors
@@ -6016,10 +6720,12 @@ In Next.js 16 with `'use server'` directive, **ALL exported functions must be as
 ## Previous Session Update (Phase ECOM-03 Complete - February 4, 2026)
 
 ### Completed: Settings & Configuration Center
+
 **Date:** February 4, 2026  
 **Commit:** 7fc4f98 - feat(ecommerce): Phase ECOM-03 - Settings & Configuration Center
 
 #### Files Created (6 new files):
+
 - `src/modules/ecommerce/actions/settings-actions.ts` - Server actions for all settings CRUD operations
 - `src/modules/ecommerce/components/settings/general-settings.tsx` - Store info, address, regional settings form
 - `src/modules/ecommerce/components/settings/currency-settings.tsx` - Currency format and multi-currency form
@@ -6028,11 +6734,13 @@ In Next.js 16 with `'use server'` directive, **ALL exported functions must be as
 - `src/modules/ecommerce/components/views/settings-view.tsx` - Main settings container with tab navigation
 
 #### Files Modified (3 files):
+
 - `src/modules/ecommerce/types/ecommerce-types.ts` - Added 19 new settings types
 - `src/modules/ecommerce/components/ecommerce-dashboard.tsx` - Integrated SettingsView, removed dialog approach
 - `src/modules/ecommerce/components/views/index.ts` - Added SettingsView export
 
 #### New Types Added (19 types):
+
 - `SettingsTab` - Union type for 9 settings tabs
 - `GeneralSettings`, `CurrencySettings`, `TaxZone`, `TaxRate`, `TaxSettings`
 - `ShippingZone`, `ShippingMethod`, `ShippingSettings`
@@ -6041,6 +6749,7 @@ In Next.js 16 with `'use server'` directive, **ALL exported functions must be as
 - `EcommerceSettingsComplete`
 
 #### Key Features Implemented:
+
 1. **9-Tab Interface** - General, Currency, Tax, Shipping, Payments, Checkout, Notifications, Inventory, Legal
 2. **Horizontal Scroll** - Mobile-responsive tab navigation
 3. **General Settings** - Store info, address, timezone, date/time format, units
@@ -6057,15 +6766,18 @@ In Next.js 16 with `'use server'` directive, **ALL exported functions must be as
 **Issue Discovered**: User reported that domain/email sidebar links were missing, despite all phases being implemented.
 
 **Root Cause Analysis**:
+
 1. Git investigation revealed commit `068ef0c` (Feb 2) correctly added Domains & Email navigation
 2. Subsequent commit `7ec8fbc` (Studio Wave 1, Feb 2) accidentally **deleted 26 lines** from `navigation.ts`
 3. This was an accidental revert during the Studio implementation
 
 **Fix Applied**:
+
 - **Commit**: `c49bf9f` - fix(nav): restore Domains & Email navigation section
 - **File Modified**: `src/config/navigation.ts`
 
 **Navigation Restored**:
+
 ```
 Domains & Email (new section in sidebar)
 ├── Domains: /dashboard/domains
@@ -6074,6 +6786,7 @@ Domains & Email (new section in sidebar)
 ```
 
 **Impact**:
+
 - All domain/email pages were always there (just not linked in sidebar)
 - ResellerClub integration: ✅ Still working
 - Cloudflare DNS integration: ✅ Still working
@@ -6087,10 +6800,12 @@ Domains & Email (new section in sidebar)
 ## Previous Session Update (Phase ECOM-02 Complete)
 
 ### Completed: Product Management Enhancement
+
 **Date:** Current Session  
 **Commit:** dae29f5 - feat(ecommerce): Phase ECOM-02 - Product Management Enhancement
 
 #### Files Created (10 new files):
+
 - `src/modules/ecommerce/actions/product-import-export.ts` - Server actions for import/export/bulk operations
 - `src/modules/ecommerce/components/filters/product-filters.tsx` - Advanced filtering component
 - `src/modules/ecommerce/components/filters/index.ts` - Filter exports
@@ -6102,10 +6817,12 @@ Domains & Email (new section in sidebar)
 - `src/modules/ecommerce/components/dialogs/import-products-dialog.tsx` - CSV import dialog with drag-drop
 
 #### Files Modified (2 files):
+
 - `src/modules/ecommerce/types/ecommerce-types.ts` - Added 7 new types for filtering, bulk actions, import/export
 - `src/modules/ecommerce/components/views/products-view.tsx` - Complete rewrite with ProductDataTable integration
 
 #### New Types Added:
+
 - `ProductTableFilters` - Filter state for product table
 - `ProductTableColumn` - Column definition type
 - `BulkAction` - Union type for bulk operations
@@ -6115,6 +6832,7 @@ Domains & Email (new section in sidebar)
 - `ProductExportOptions` - Export configuration
 
 #### Key Features Implemented:
+
 1. **TanStack React Table** - @tanstack/react-table 8.21.3 for advanced data table
 2. **Advanced Filtering** - Search, status, stock level, category, price range, date range, featured
 3. **Bulk Actions** - Delete, set status, archive, assign category, adjust prices/stock
@@ -6130,9 +6848,11 @@ Domains & Email (new section in sidebar)
 ## Previous Session: Phase ECOM-01 Complete
 
 ### Completed: E-Commerce Dashboard Redesign
+
 **Commit:** c542a5e - feat(ecommerce): Phase ECOM-01 - Dashboard Redesign with sidebar navigation
 
 #### Files Created (13 new files):
+
 - `src/components/ui/breadcrumb.tsx` - Breadcrumb UI component
 - `src/modules/ecommerce/actions/dashboard-actions.ts` - Server actions for dashboard data
 - `src/modules/ecommerce/components/layout/ecommerce-sidebar.tsx` - Collapsible sidebar navigation
@@ -6147,11 +6867,13 @@ Domains & Email (new section in sidebar)
 - `src/modules/ecommerce/components/views/home-view.tsx` - Dashboard home view
 
 #### Files Modified (3 files):
+
 - `src/modules/ecommerce/types/ecommerce-types.ts` - Added navigation types
 - `src/modules/ecommerce/components/views/index.ts` - Added HomeView export
 - `src/modules/ecommerce/components/ecommerce-dashboard.tsx` - Complete redesign from tabs to sidebar
 
 #### Key Features Implemented:
+
 1. **Sidebar Navigation** - Collapsible with badge indicators for pending orders/low stock
 2. **Command Palette** - Cmd+K for quick navigation, search, and actions
 3. **Dashboard Widgets** - Stats cards, recent orders, low stock alerts, activity feed
@@ -6170,6 +6892,7 @@ Domains & Email (new section in sidebar)
 ## 🎨 ADVANCED STUDIO FEATURES (February 4, 2026 - Session 6)
 
 ### User Requests Addressed
+
 1. **Hero 100vh + Nav Issue**: When hero is 100vh and navbar is present, scroll indicator goes off-screen
 2. **Mouse/Finger Parallax**: Interactive animations that respond to cursor movement
 3. **More Scroll Indicator Icons**: Only had one arrow icon before
@@ -6179,7 +6902,9 @@ Domains & Email (new section in sidebar)
 ### Solutions Implemented
 
 #### 1. Navbar Position Modes (Overlay Hero) ✅
+
 **File**: `src/lib/studio/blocks/premium-components.tsx`
+
 - **NEW**: `position` property replaces `sticky` boolean
 - Options: `relative` | `sticky` | `absolute` | `fixed`
 - `absolute`: Navbar overlays hero (transparent with content beneath)
@@ -6187,14 +6912,18 @@ Domains & Email (new section in sidebar)
 - Combined with `transparentUntilScroll` for professional effect
 
 #### 2. Hero Dynamic Height Options ✅
+
 **File**: `src/lib/studio/blocks/premium-components.tsx`
+
 - **NEW Heights**:
   - `100dvh`: Dynamic viewport height - safe for mobile (accounts for address bar)
   - `fullscreen`: Uses `100svh` - small viewport height for overlay scenarios
 - Existing: `auto`, `50vh`, `75vh`, `100vh`, `screen`
 
 #### 3. Mouse/Touch Parallax Effect ✅
+
 **File**: `src/lib/studio/blocks/premium-components.tsx`
+
 - **Properties**:
   - `enableMouseParallax`: Toggle effect on/off
   - `mouseParallaxIntensity`: 1-100 (how much movement)
@@ -6204,7 +6933,9 @@ Domains & Email (new section in sidebar)
 - Smooth animation transitions
 
 #### 4. Enhanced Scroll Indicator Icons ✅
+
 **File**: `src/lib/studio/blocks/premium-components.tsx`
+
 - **7 Icon Styles**:
   - `arrow`: Down arrow (default)
   - `chevron`: Single chevron down
@@ -6220,7 +6951,9 @@ Domains & Email (new section in sidebar)
   - `scrollIndicatorColor`: Any color
 
 #### 5. Component Registry Updated ✅
+
 **File**: `src/lib/studio/registry/core-components.ts`
+
 - Navbar: `position` field with 4 options (replaced `sticky` toggle)
 - Hero: `minHeight` now has 6 options including `100dvh` and `fullscreen`
 - Hero: New scroll indicator fields (icon, size, animation, label)
@@ -6229,6 +6962,7 @@ Domains & Email (new section in sidebar)
 ### How to Use for Fullscreen Hero with Nav Overlay
 
 **Navbar Settings**:
+
 ```
 position: "absolute"
 backgroundColor: transparent or with low opacity
@@ -6236,6 +6970,7 @@ transparentUntilScroll: true (optional - becomes solid on scroll)
 ```
 
 **Hero Settings**:
+
 ```
 minHeight: "100dvh" or "fullscreen"
 paddingTop: "xl" or "2xl" (to account for navbar space)
@@ -6248,12 +6983,14 @@ This allows the hero to fill the entire viewport while the navbar floats on top,
 ## 🎨 PREMIUM COMPONENTS & WIX STUDIO CANVAS (February 4, 2026 - Session 5)
 
 ### User Request
+
 1. "Canvas needs to highlight active component/section with a border for better UI"
 2. "Look at how Wix Studio layout components work and copy that accurately"
 3. "Navigation hamburger menu broken - links and background not showing"
 4. "REDO ALL THESE" - Complete rewrites of Navigation, Footer, Hero components
 
 ### Research Conducted
+
 - Fetched Wix Studio documentation for Flexbox containers
 - Analyzed canvas selection patterns from Figma, Webflow, Wix Studio
 - 8-point resize handles on corners and edges
@@ -6263,7 +7000,9 @@ This allows the hero to fill the entire viewport while the navbar floats on top,
 ### Solutions Implemented
 
 #### 1. Premium Canvas Selection (Wix Studio Quality) ✅
+
 **File**: `src/styles/studio.css`
+
 - **Hover**: 2px dashed blue border (70% opacity)
 - **Selected**: 2px solid blue border + glow effect (box-shadow)
 - **8 Resize Handles**: Radial gradient CSS creates corner + edge handles
@@ -6271,9 +7010,11 @@ This allows the hero to fill the entire viewport while the navbar floats on top,
 - All interaction states properly handled
 
 #### 2. Premium Components Created ✅
+
 **File**: `src/lib/studio/blocks/premium-components.tsx` (~2,600 lines)
 
 **PremiumNavbarRender** (Now NavbarRender):
+
 - Full mobile menu support (fullscreen/slideRight/slideLeft/dropdown)
 - Dropdown navigation with descriptions
 - Scroll behavior (sticky, hide on scroll, transparent until scroll)
@@ -6283,6 +7024,7 @@ This allows the hero to fill the entire viewport while the navbar floats on top,
 - Complete accessibility (aria labels, skip to content)
 
 **PremiumHeroRender** (Now HeroRender):
+
 - 6 variants: centered, split, splitReverse, fullscreen, video, minimal
 - Video background with play controls
 - Badge/tag above title
@@ -6293,6 +7035,7 @@ This allows the hero to fill the entire viewport while the navbar floats on top,
 - Animation on load
 
 **PremiumFooterRender** (Now FooterRender):
+
 - Multi-column link layout
 - Newsletter signup form
 - Social links with icons
@@ -6303,7 +7046,9 @@ This allows the hero to fill the entire viewport while the navbar floats on top,
 - Multiple variants (standard, centered, simple, extended)
 
 #### 3. Component Registry Updated ✅
+
 **File**: `src/lib/studio/registry/core-components.ts`
+
 - Imports now from `premium-components.tsx` instead of `renders.tsx`
 - Hero: 60+ field definitions (was 11)
 - Navbar: 50+ field definitions (was 12)
@@ -6313,6 +7058,7 @@ This allows the hero to fill the entire viewport while the navbar floats on top,
 ### Technical Details
 
 **Import Change**:
+
 ```tsx
 // Premium components (Wix Studio quality)
 import {
@@ -6323,6 +7069,7 @@ import {
 ```
 
 **New Hero Fields Include**:
+
 - Video background (videoSrc, videoPoster, autoplay, loop, muted)
 - Split layout image (image, imagePosition, imageFit, imageRounded)
 - Badge (badge, badgeColor, badgeTextColor, badgeStyle)
@@ -6332,6 +7079,7 @@ import {
 - All typography controls (size, weight, color for each text element)
 
 **New Navbar Fields Include**:
+
 - Mobile menu configuration (style, colors, animation, overlay)
 - Glass effect
 - Scroll behaviors (sticky, hide on scroll, transparent until scroll)
@@ -6340,6 +7088,7 @@ import {
 - Dual CTA buttons
 
 **New Footer Fields Include**:
+
 - Newsletter signup
 - Social links array with platform icons
 - Contact information
@@ -6352,21 +7101,26 @@ import {
 ## 🖼️ IMAGE FIELD SYSTEM FIX (February 4, 2026 - Session 4)
 
 ### Issue Reported
+
 User reported: "Images not displaying on canvas when added through image field editor"
 
 ### Root Cause Analysis
+
 1. **ImageFieldEditor** was sending wrong API field name (`file` instead of `files`)
 2. **ImageFieldEditor** expected wrong response format (`data.url` instead of `data.uploaded[0].publicUrl`)
 3. **15+ render components** were using raw image props directly instead of `getImageUrl()` helper
 4. Image field returns `ImageValue` objects: `{ url, alt, width?, height? }` - not strings
 
 ### Solution Applied
+
 **Fixed ImageFieldEditor** (`src/lib/studio/fields/image-field-editor.tsx`):
+
 - `formData.append('files', file)` instead of `'file'`
 - Response: `data.uploaded[0].publicUrl` instead of `data.url`
 
 **Fixed 15+ render components** in `renders.tsx`:
 Each component updated with pattern:
+
 ```tsx
 // Interface: Accept both types
 backgroundImage?: string | ImageValue;
@@ -6379,13 +7133,16 @@ style={{ backgroundImage: bgImageUrl ? `url(${bgImageUrl})` : undefined }}
 ```
 
 **Components Fixed**:
+
 - SectionRender, HeroRender, CTARender, ParallaxRender
 - CardFlip3DRender, TiltCardRender, QuoteRender, FooterRender
 - AvatarRender, SocialProofRender, TestimonialsRender, TeamRender
 - GalleryRender, CarouselRender, ProductCardRender, CartSummaryRender
 
 ### Helper Location
+
 `src/lib/studio/utils/image-helpers.ts`:
+
 - `getImageUrl(value)` - Extract URL from string or ImageValue
 - `getImageAlt(value, fallback)` - Extract alt text
 - `hasImage(value)` - Check if valid image exists
@@ -6395,7 +7152,9 @@ style={{ backgroundImage: bgImageUrl ? `url(${bgImageUrl})` : undefined }}
 ## 🔧 CRITICAL BUG FIXES (February 4, 2026 - Session 3)
 
 ### Issues Reported by User
+
 User reported 17+ platform issues including:
+
 1. "I still see the old NAV bar!" (misunderstanding - Navbar is premium responsive)
 2. Site preview doesn't work
 3. Website doesn't save nor publish
@@ -6412,40 +7171,50 @@ User reported 17+ platform issues including:
 ### Fixes Applied This Session
 
 #### 1. PricingRender TypeError Fix ✅
+
 **Problem**: Console error `TypeError: (plan.features || []).map is not a function`
 **Root Cause**: Component registry defines features as `{ type: "array", itemFields: { text } }` creating `[{ text: "Feature" }]` but PricingRender expected `["Feature"]`
 **Solution**: Updated PricingRender to handle both formats:
+
 ```tsx
-const featureText = typeof feature === 'string' ? feature : (feature?.text || feature?.label || '');
+const featureText =
+  typeof feature === "string" ? feature : feature?.text || feature?.label || "";
 ```
 
 #### 2. Container Drop Zones Fix ✅
+
 **Problem**: Can't drag components inside layout containers (Section, Container, etc.)
 **Root Cause**: Containers had `acceptsChildren: true` and `isContainer: true` but no visible droppable zone
-**Solution**: 
+**Solution**:
+
 - Created `ContainerDropZone` component in `src/components/studio/dnd/container-drop-zone.tsx`
 - Updated `editor-canvas.tsx` to wrap container children with `ContainerDropZone`
 - Updated `dnd-provider.tsx` to handle `container-{id}` drop targets
 - Added `layoutDirection` property to ComponentDefinition type
 
 #### 3. Canvas Scrolling Fix ✅
+
 **Problem**: Canvas scrolling breaks and stops working
 **Root Cause**: Content frame had `overflow-hidden` with fixed height, clipping content
 **Solution**: Changed to `overflow-x-hidden overflow-y-auto` with `minHeight` instead of fixed height
 
 #### 4. Bottom Panel AI Content ✅
+
 **Problem**: Bottom panel "AI Assistant" tab showed placeholder text "Phase STUDIO-11 coming soon"
-**Solution**: 
+**Solution**:
+
 - Created `BottomPanelAIContent` component
 - When component selected: Shows "Open AI Chat" button + AIActionsPanel
 - When nothing selected: Shows "Generate Page with AI" + "Browse Components" buttons
 - Integrated AIPageGenerator and AIActionsPanel
 
 #### 5. TypeScript Errors Fixed ✅
+
 - Fixed `feature` parameter type in PricingRender map callback
 - All `npx tsc --noEmit` passes with 0 errors
 
 ### Files Modified This Session
+
 1. `src/lib/studio/blocks/renders.tsx` - PricingRender features array handling
 2. `src/components/studio/dnd/container-drop-zone.tsx` - NEW: Container drop zone component
 3. `src/components/studio/dnd/index.ts` - Export ContainerDropZone
@@ -6459,18 +7228,22 @@ const featureText = typeof feature === 'string' ? feature : (feature?.text || fe
 ## 🔧 COMPONENT REGISTRATION FIX (February 4, 2026)
 
 ### Problem Identified
+
 User reported "old broken Navbar" and missing components. Deep scan revealed:
+
 - 59 render functions exist in `renders.tsx`
 - Only 50 were imported/registered in `core-components.ts`
 - **9 components were invisible in the Studio UI**
 
 ### Missing Components Found
-| Category | Components Missing from Registry |
-|----------|----------------------------------|
-| Interactive | Pricing, Accordion, Tabs, Modal |
+
+| Category    | Components Missing from Registry        |
+| ----------- | --------------------------------------- |
+| Interactive | Pricing, Accordion, Tabs, Modal         |
 | UI Elements | Badge, Avatar, Progress, Alert, Tooltip |
 
 ### Solution Applied (Commit: `9b067b7`)
+
 1. Added imports for all 9 missing render functions
 2. Added `interactiveComponents` definitions for: Pricing, Accordion, Tabs, Modal
 3. Created new `uiComponents` array for: Badge, Avatar, Progress, Alert, Tooltip
@@ -6478,6 +7251,7 @@ User reported "old broken Navbar" and missing components. Deep scan revealed:
 5. Fixed TypeScript errors (`presetOptions.size` → explicit options array)
 
 ### Verification
+
 - ✅ TypeScript: `npx tsc --noEmit` passed with 0 errors
 - ✅ All 59 components now registered and visible
 - ✅ Navbar is premium responsive implementation (not broken)
@@ -6491,6 +7265,7 @@ User reported "old broken Navbar" and missing components. Deep scan revealed:
 **Problem**: Phase 31 created effect libraries and React components, but they were NOT registered in the Component Registry - users couldn't drag/drop them from the Component Library UI.
 
 **Solution Applied**:
+
 1. Added render components to `renders.tsx`:
    - `CardFlip3DRender` - 3D flip card with front/back
    - `TiltCardRender` - Mouse-following 3D tilt effect
@@ -6508,6 +7283,7 @@ User reported "old broken Navbar" and missing components. Deep scan revealed:
 **Commit**: `69350c2` - feat(studio): integrate 3D Effects components into UI - Phase 31 complete
 
 ### Now Users Can:
+
 - ✅ See "3D & Effects" category in Component Library sidebar
 - ✅ Drag & drop CardFlip3D, TiltCard, GlassCard, ParticleBackground, ScrollAnimate
 - ✅ Edit all properties in Properties Panel
@@ -6549,25 +7325,28 @@ User reported "old broken Navbar" and missing components. Deep scan revealed:
 | `index.ts` | Component exports |
 
 **Registry:**
+
 - `advanced-effect-fields.ts` - Complete field definitions for all effects
 
 **Tailwind Config:**
+
 - Added 12 new keyframes: float, swing, wiggle, heartbeat, jello, rubberBand, tada, shake, flip3d, flipX3d, glowPulse
 
 ### Key Features Implemented
 
-| Feature | What It Does |
-|---------|--------------|
-| **F1: 3D Transforms** | Perspective, rotations, 7 presets |
-| **F2: Micro-interactions** | Button press, ripple, shine, shake |
-| **F3: Scroll Animations** | 15 types with Intersection Observer |
-| **F4: Glassmorphism** | Frosted glass with 5 presets |
-| **F5: Parallax** | Scroll + mouse parallax layers |
-| **F6: Mouse Effects** | 3D tilt with glare |
-| **F7: Particles** | Canvas particle backgrounds |
-| **F8: Lottie** | JSON animation support |
+| Feature                    | What It Does                        |
+| -------------------------- | ----------------------------------- |
+| **F1: 3D Transforms**      | Perspective, rotations, 7 presets   |
+| **F2: Micro-interactions** | Button press, ripple, shine, shake  |
+| **F3: Scroll Animations**  | 15 types with Intersection Observer |
+| **F4: Glassmorphism**      | Frosted glass with 5 presets        |
+| **F5: Parallax**           | Scroll + mouse parallax layers      |
+| **F6: Mouse Effects**      | 3D tilt with glare                  |
+| **F7: Particles**          | Canvas particle backgrounds         |
+| **F8: Lottie**             | JSON animation support              |
 
 ### Technical Excellence
+
 - **Accessibility**: All hooks respect `prefers-reduced-motion`
 - **Performance**: Uses `will-change`, `requestAnimationFrame`, passive events
 - **Type Safety**: Full TypeScript with generics `<T extends HTMLElement>`
@@ -6583,6 +7362,7 @@ User reported "old broken Navbar" and missing components. Deep scan revealed:
 **Root Cause**: `StudioRenderer` and `EditorCanvas` components were calling `getComponent()` before the registry was initialized. The component registry (singleton pattern) needs `initializeRegistry()` to be called before any component lookups work.
 
 **Solution Applied**:
+
 1. **StudioRenderer** (`src/lib/studio/engine/renderer.tsx`):
    - Added `useState(isRegistryInitialized())` for tracking
    - Added `useEffect` to call `initializeRegistry()` on mount if needed
@@ -6593,10 +7373,12 @@ User reported "old broken Navbar" and missing components. Deep scan revealed:
    - Added loading state before main canvas render
 
 **Commits**:
+
 - `1f05f1d` - fix: Add registry initialization to StudioRenderer for preview pages
 - `f1059f1` - fix: Add registry initialization to EditorCanvas for consistent component loading
 
 ### Files Modified:
+
 - `src/lib/studio/engine/renderer.tsx` - Auto-initializes registry with loading state
 - `src/components/studio/canvas/editor-canvas.tsx` - Auto-initializes registry with loading state
 
@@ -6605,6 +7387,7 @@ User reported "old broken Navbar" and missing components. Deep scan revealed:
 ## 🛠️ WAVE 8 BUG FIXES (February 3, 2026)
 
 ### Issues Fixed This Session:
+
 1. **Tutorial Breaking on Step 2 (Phase 26)**: Added panel visibility enforcement in `tutorial-provider.tsx` - ensures left/right/bottom panels open when tutorial activates and for specific step targets
 
 2. **Template Insertion (Phase 24)**: Added async scheduling with `useTransition`, `useDeferredValue`, and `requestAnimationFrame` for non-blocking UI + toast notifications for user feedback
@@ -6616,9 +7399,10 @@ User reported "old broken Navbar" and missing components. Deep scan revealed:
 5. **INP Performance**: Used React 19 features (`useTransition`, `useDeferredValue`) to reduce UI blocking during template search and insertion
 
 ### Files Modified:
+
 - `src/types/studio.ts` - Added SymbolDragData type and isSymbolDrag guard
 - `src/components/studio/onboarding/tutorial-provider.tsx` - Panel visibility on tutorial
-- `src/components/studio/panels/symbols-panel.tsx` - Use proper SymbolDragData type  
+- `src/components/studio/panels/symbols-panel.tsx` - Use proper SymbolDragData type
 - `src/components/studio/dnd/dnd-provider.tsx` - Handle symbol source in drop handler
 - `src/components/studio/panels/component-library.tsx` - Add tabs for Components/Symbols
 - `src/components/studio/features/template-browser.tsx` - Performance optimizations
@@ -6640,23 +7424,25 @@ User reported "old broken Navbar" and missing components. Deep scan revealed:
 
 ### Implementation Tasks (from Phase Doc):
 
-| Task | Description | Files |
-|------|-------------|-------|
-| 1 | Create Data Migration Utility | `migrate-puck-data.ts` |
-| 2 | Create StudioRenderer Component | `renderer.tsx` |
-| 3 | Update All Navigation Links | 4+ component files |
-| 4 | Replace Page Renderers | preview/public routes |
-| 5 | Create Legacy URL Redirect | editor page redirect |
-| 6 | Delete Old Editor Files | `/puck/` folder |
-| 7 | Remove Puck Dependencies | package.json |
-| 8 | Final Platform Testing | Comprehensive tests |
+| Task | Description                     | Files                  |
+| ---- | ------------------------------- | ---------------------- |
+| 1    | Create Data Migration Utility   | `migrate-puck-data.ts` |
+| 2    | Create StudioRenderer Component | `renderer.tsx`         |
+| 3    | Update All Navigation Links     | 4+ component files     |
+| 4    | Replace Page Renderers          | preview/public routes  |
+| 5    | Create Legacy URL Redirect      | editor page redirect   |
+| 6    | Delete Old Editor Files         | `/puck/` folder        |
+| 7    | Remove Puck Dependencies        | package.json           |
+| 8    | Final Platform Testing          | Comprehensive tests    |
 
 ### Files to Create:
+
 - `src/lib/studio/utils/migrate-puck-data.ts` - Puck→Studio data converter
-- `src/lib/studio/engine/renderer.tsx` - StudioRenderer component  
+- `src/lib/studio/engine/renderer.tsx` - StudioRenderer component
 - `src/app/(dashboard)/dashboard/sites/[siteId]/editor/page.tsx` - Legacy redirect
 
 ### Files to Change:
+
 - `src/components/sites/site-pages-list.tsx` - Remove legacy editor link
 - `src/components/sites/create-site-dialog.tsx` - Update redirect to Studio
 - `src/components/sites/create-site-form.tsx` - Update redirect to Studio
@@ -6667,10 +7453,12 @@ User reported "old broken Navbar" and missing components. Deep scan revealed:
 - `package.json` - Remove @puckeditor/core
 
 ### Files to Delete:
+
 - `src/components/editor/puck/` - Entire folder
 - `src/components/editor/puck-editor-integrated.tsx`
 
 ### After This Wave:
+
 - ✅ DRAMAC Studio is the ONLY editor
 - ✅ Zero Puck code remains
 - ✅ Bundle size reduced ~200KB
@@ -6683,6 +7471,7 @@ User reported "old broken Navbar" and missing components. Deep scan revealed:
 ### What Was Implemented
 
 **Phase 24 - Section Templates ✅**:
+
 - Template data structure with categories (`studio-templates.ts`)
 - Template store for management (`template-store.ts`)
 - Template utilities for color/text token replacement (`template-utils.ts`)
@@ -6692,6 +7481,7 @@ User reported "old broken Navbar" and missing components. Deep scan revealed:
 - "Add Section" button in toolbar
 
 **Phase 25 - Symbols/Reusable Components ✅**:
+
 - Symbol type definitions (`studio-symbols.ts`)
 - Symbol store for CRUD operations (`symbol-store.ts`)
 - Create symbol dialog for saving components (`create-symbol-dialog.tsx`)
@@ -6700,6 +7490,7 @@ User reported "old broken Navbar" and missing components. Deep scan revealed:
 - Context menu on component wrapper with "Save as Symbol"
 
 **Phase 26 - Onboarding & Help ✅** (NEW):
+
 - Tutorial system with 10-step walkthrough for first-time users
 - TutorialProvider context for managing tutorial state
 - TutorialOverlay with spotlight highlighting and animated tooltips
@@ -6712,6 +7503,7 @@ User reported "old broken Navbar" and missing components. Deep scan revealed:
 ### Next Steps - Wave 9
 
 **Phase 27 - Platform Integration & Puck Removal** (FINAL):
+
 - Update all navigation links to use Studio
 - Replace page renderer in preview/public routes
 - Remove Puck dependencies and imports
@@ -6725,24 +7517,28 @@ User reported "old broken Navbar" and missing components. Deep scan revealed:
 ### What Was Implemented
 
 **Phase 20 - Keyboard Shortcuts**:
+
 - All shortcuts working (save, undo, copy, paste, delete, duplicate)
 - Command palette (Cmd/Ctrl+K) with search
 - Shortcuts help panel
 - Clipboard system for copy/paste
 
 **Phase 21 - Performance Optimization**:
+
 - Virtualized component list (handles 500+ components)
 - Memoized component renders
 - Debounced state updates
 - Code-split panels (lazy loaded)
 
 **Phase 22 - Component States**:
+
 - Hover, active, focus state editing
 - State selector in wrapper
 - Preview states in canvas
 - CSS transitions for state changes
 
 **Phase 23 - Export Optimization**:
+
 - Critical CSS extraction
 - Image srcset generation
 - Lazy loading for published sites
@@ -6755,6 +7551,7 @@ User reported "old broken Navbar" and missing components. Deep scan revealed:
 ### What Was Implemented
 
 **Phase 16 - Layers & Structure Panel**:
+
 - Component tree in bottom panel
 - Click to select, drag to reorder
 - Lock/unlock and hide/show components
@@ -6762,12 +7559,14 @@ User reported "old broken Navbar" and missing components. Deep scan revealed:
 - Search and filter
 
 **Phase 17 - History & Versioning**:
+
 - History timeline with undo/redo
 - Named snapshots (save/restore states)
 - Version comparison UI
 - Stored in IndexedDB + database
 
 **Phase 18 - Responsive Preview**:
+
 - Device presets (iPhone, iPad, Desktop, Custom)
 - Custom width/height input
 - Zoom controls (50-200%, Fit)
@@ -6775,6 +7574,7 @@ User reported "old broken Navbar" and missing components. Deep scan revealed:
 - Ruler on canvas edges
 
 **Phase 19 - Nested Components & Zones**:
+
 - Components define drop zones
 - Zone restrictions enforced
 - Visual zone indicators
@@ -6783,6 +7583,7 @@ User reported "old broken Navbar" and missing components. Deep scan revealed:
 ---
 
 ## ✅ WAVE 6: Advanced Features - COMPLETE (February 3, 2026)
+
 - Virtualized component list (@tanstack/react-virtual)
 - Memoized renders (prevent unnecessary re-renders)
 - Debounced store updates
@@ -6790,6 +7591,7 @@ User reported "old broken Navbar" and missing components. Deep scan revealed:
 - Performance metrics logging
 
 **Phase 22 - Component States (Hover, Active)**:
+
 - State selector (default/hover/active/focus)
 - Edit hover styles separately
 - Edit active/focus styles
@@ -6798,6 +7600,7 @@ User reported "old broken Navbar" and missing components. Deep scan revealed:
 - Transition settings
 
 **Phase 23 - Export & Render Optimization**:
+
 - Optimized HTML generation
 - Critical CSS extraction (inline above-fold)
 - Image optimization with srcset
@@ -6808,6 +7611,7 @@ User reported "old broken Navbar" and missing components. Deep scan revealed:
 ### After Wave 7
 
 When complete:
+
 - Full keyboard workflow possible
 - Editor stays fast with 500+ components
 - Buttons can have hover effects (darker on hover, etc.)
@@ -6817,6 +7621,7 @@ When complete:
 ### Next Steps
 
 Give another AI agent the prompt at [phases/STUDIO-WAVE7-PROMPT.md](phases/STUDIO-WAVE7-PROMPT.md) to generate:
+
 1. `PHASE-STUDIO-20-KEYBOARD-SHORTCUTS.md`
 2. `PHASE-STUDIO-21-PERFORMANCE-OPTIMIZATION.md`
 3. `PHASE-STUDIO-22-COMPONENT-STATES.md`
@@ -6846,6 +7651,7 @@ Then implement those 4 phases and return for Wave 8.
    - ✅ New: Corner square properly styled with visible borders
 
 **EditorCanvas Integration Fixed**:
+
 - ❌ Old: Canvas used legacy `DeviceFrame` with hardcoded `BREAKPOINT_PIXELS`
 - ✅ New: Canvas uses `CanvasFrame` component that reads `viewportWidth`/`viewportHeight` from ui-store
 - ❌ Old: No ruler integration in canvas
@@ -6854,11 +7660,13 @@ Then implement those 4 phases and return for Wave 8.
 - ✅ New: Canvas uses `ResponsiveDeviceFrame` with preset when `showDeviceFrame` is enabled
 
 **DimensionsInput Arrow Keys Fixed**:
+
 - Added bounds (100-3000px) to prevent invalid values
 - Immediate local state update after arrow key press
 - Store and local state now stay in sync
 
 **ModuleSync Supabase Error Fixed**:
+
 - Changed from console.error to console.log for missing realtime
 - Added table existence check before subscribing
 - Graceful fallback when realtime is not configured
@@ -6867,6 +7675,7 @@ Then implement those 4 phases and return for Wave 8.
 ### What Was Implemented
 
 **Phase 18 - Responsive Preview** ✅:
+
 - Device preset selector with 25+ devices (iPhone SE through 4K Desktop)
 - Device categories: Phone, Tablet, Laptop, Desktop, Custom
 - Editable width/height inputs with arrow key support (±1 or ±10 with Shift)
@@ -6879,6 +7688,7 @@ Then implement those 4 phases and return for Wave 8.
 - **CanvasFrame component** integrates rulers and device frames into canvas
 
 **Phase 19 - Nested Components & Zones** ✅:
+
 - ZoneDefinition type with acceptsChildren, allowedComponents, maxChildren, placeholder
 - Zone ID format: `parentId:zoneName` with helper functions (parseZoneId, createZoneId)
 - Zone actions in editor-store (getZoneComponents, canDropInZone, initializeZonesForComponent)
@@ -6902,15 +7712,18 @@ Then implement those 4 phases and return for Wave 8.
 ### Key File Changes
 
 **[editor-canvas.tsx](../next-platform-dashboard/src/components/studio/canvas/editor-canvas.tsx)**:
+
 - Added imports for `RulerContainer` and `DeviceFrame` (as `ResponsiveDeviceFrame`)
 - New `CanvasFrame` component uses `viewportWidth`, `viewportHeight`, `zoom`, `showRuler`, `showDeviceFrame` from ui-store
 - Replaced old `DeviceFrame` usage with `CanvasFrame` in render
 
 **[dimensions-input.tsx](../next-platform-dashboard/src/components/studio/features/dimensions-input.tsx)**:
+
 - Added bounds (100-3000px) in arrow key handler
 - Immediate local state sync after store update
 
 **[use-module-sync.ts](../next-platform-dashboard/src/lib/studio/hooks/use-module-sync.ts)**:
+
 - Added `syncStatus` state
 - Table existence check before subscription
 - Graceful error handling for CHANNEL_ERROR and TIMED_OUT
@@ -6929,6 +7742,7 @@ Then implement those 4 phases and return for Wave 8.
 Module system now fully integrated with DRAMAC Studio:
 
 **Phase 14 - Module Component Loader**:
+
 - Module discovery and dynamic loading
 - Component registry integration
 - Real-time module sync (Supabase subscriptions)
@@ -6936,6 +7750,7 @@ Module system now fully integrated with DRAMAC Studio:
 - Placeholder rendering for uninstalled modules
 
 **Phase 15 - Module-Specific Fields**:
+
 - Custom field type system
 - Module data binding (ProductSelector, CategorySelector)
 - Module API endpoints for data fetching
@@ -6959,6 +7774,7 @@ Module system now fully integrated with DRAMAC Studio:
 Module system now fully integrated with DRAMAC Studio:
 
 **Phase 14 - Module Component Loader**:
+
 - Module discovery and dynamic loading
 - Component registry integration
 - Real-time module sync (Supabase subscriptions)
@@ -6966,6 +7782,7 @@ Module system now fully integrated with DRAMAC Studio:
 - Placeholder rendering for uninstalled modules
 
 **Phase 15 - Module-Specific Fields**:
+
 - Custom field type system
 - Module data binding (ProductSelector, CategorySelector)
 - Module API endpoints for data fetching
@@ -6985,12 +7802,14 @@ Module system now fully integrated with DRAMAC Studio:
 ## 📋 Testing Guide for Phases 18-19
 
 ### Prerequisites
+
 1. Run the development server: `cd next-platform-dashboard && pnpm dev`
 2. Navigate to any site's page editor at `/studio/[siteId]/[pageId]`
 
 ### Testing Phase 18 - Responsive Preview
 
 **Device Selector**:
+
 1. Look at the toolbar - you should see a device dropdown (defaults to "Custom")
 2. Click the dropdown and select different devices:
    - iPhone SE, iPhone 14, iPad Pro, MacBook, Desktop, 4K
@@ -6998,12 +7817,14 @@ Module system now fully integrated with DRAMAC Studio:
 4. Check that width×height inputs update to show current dimensions
 
 **Dimensions Input**:
+
 1. Click on width or height input field
 2. Type a custom dimension (e.g., 1920)
 3. Use arrow keys: ↑/↓ changes value by 1, Shift+↑/↓ changes by 10
 4. Click orientation toggle button to swap width/height
 
 **Zoom Controls**:
+
 1. Click + and - buttons to zoom in/out
 2. Use dropdown to select specific zoom level or "Fit" to fit canvas
 3. Use keyboard: Cmd+= (zoom in), Cmd+- (zoom out), Cmd+0 (reset 100%), Cmd+1 (fit)
@@ -7011,6 +7832,7 @@ Module system now fully integrated with DRAMAC Studio:
 5. Toggle frame button → device bezel appears (if phone/tablet)
 
 **Device Frame**:
+
 1. Select iPhone or iPad device
 2. Enable device frame toggle
 3. Should see phone bezel with notch/Dynamic Island, status bar, home indicator
@@ -7019,6 +7841,7 @@ Module system now fully integrated with DRAMAC Studio:
 ### Testing Phase 19 - Nested Zones
 
 **Zones in Layers Panel**:
+
 1. Add a "Columns" component to the canvas
 2. Open the Layers panel (bottom or side panel)
 3. Expand the Columns component
@@ -7026,6 +7849,7 @@ Module system now fully integrated with DRAMAC Studio:
 5. Zones show Target icon, italic text, and cannot be dragged
 
 **Dropping into Zones**:
+
 1. Drag any component from the library
 2. Hover over a zone (e.g., Column 1)
 3. Zone should highlight with blue border when valid drop
@@ -7033,6 +7857,7 @@ Module system now fully integrated with DRAMAC Studio:
 5. Zone entry in layers panel shows child count
 
 **Zone Restrictions**:
+
 1. Create a component with zone restrictions (if available)
 2. Try dragging an invalid component type
 3. Zone should show red border and error message
@@ -7041,6 +7866,7 @@ Module system now fully integrated with DRAMAC Studio:
 ### Key Files Created/Modified
 
 **Phase 18**:
+
 - [device-presets.ts](next-platform-dashboard/src/lib/studio/data/device-presets.ts) - Device data
 - [device-selector.tsx](next-platform-dashboard/src/components/studio/features/device-selector.tsx)
 - [dimensions-input.tsx](next-platform-dashboard/src/components/studio/features/dimensions-input.tsx)
@@ -7050,6 +7876,7 @@ Module system now fully integrated with DRAMAC Studio:
 - [studio-frame.tsx](next-platform-dashboard/src/components/studio/core/studio-frame.tsx)
 
 **Phase 19**:
+
 - [studio.ts](next-platform-dashboard/src/types/studio.ts) - ZoneDefinition type, zone helpers
 - [droppable-zone.tsx](next-platform-dashboard/src/components/studio/dnd/droppable-zone.tsx)
 - [zone-renderer.tsx](next-platform-dashboard/src/components/studio/core/zone-renderer.tsx)
@@ -7064,11 +7891,13 @@ Module system now fully integrated with DRAMAC Studio:
 ### What Was Implemented
 
 DRAMAC Studio now has full AI integration:
+
 1. **AI Component Chat** (Phase 11) - Per-component AI assistant with preview
 2. **AI Page Generator** (Phase 12) - Generate full pages from text prompts
 3. **Quick Actions** (Phase 13) - One-click improvements (Shorten, Improve, Translate, etc.)
 
 Key capabilities:
+
 - Natural language editing ("Make this heading more exciting")
 - Preview AI changes before applying
 - Generate complete pages from descriptions
@@ -7078,19 +7907,19 @@ Key capabilities:
 
 ### Files Created
 
-| File | Description |
-|------|-------------|
-| `src/components/studio/ai/quick-actions.tsx` | Quick action buttons component |
-| `src/components/studio/ai/ai-suggestions.tsx` | AI suggestions component |
-| `src/components/studio/ai/ai-actions-panel.tsx` | Combined panel wrapper |
+| File                                            | Description                    |
+| ----------------------------------------------- | ------------------------------ |
+| `src/components/studio/ai/quick-actions.tsx`    | Quick action buttons component |
+| `src/components/studio/ai/ai-suggestions.tsx`   | AI suggestions component       |
+| `src/components/studio/ai/ai-actions-panel.tsx` | Combined panel wrapper         |
 
 ### Files Modified
 
-| File | Changes |
-|------|---------|
-| `src/lib/studio/ai/types.ts` | Added QuickAction, AISuggestion types, DEFAULT_QUICK_ACTIONS, COMPONENT_SUGGESTIONS |
-| `src/components/studio/ai/index.ts` | Export new components |
-| `src/components/studio/properties/properties-panel.tsx` | Integrated AIActionsPanel below fields |
+| File                                                    | Changes                                                                             |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `src/lib/studio/ai/types.ts`                            | Added QuickAction, AISuggestion types, DEFAULT_QUICK_ACTIONS, COMPONENT_SUGGESTIONS |
+| `src/components/studio/ai/index.ts`                     | Export new components                                                               |
+| `src/components/studio/properties/properties-panel.tsx` | Integrated AIActionsPanel below fields                                              |
 
 ### Key Features
 
@@ -7109,6 +7938,7 @@ Key capabilities:
 ### What Was Implemented
 
 DRAMAC Studio now has a full AI Page Generator! Users can:
+
 1. Click "Generate Page" button in the toolbar
 2. Describe the page they want in natural language
 3. Select business type, color scheme, and content tone
@@ -7117,22 +7947,22 @@ DRAMAC Studio now has a full AI Page Generator! Users can:
 
 ### Files Created
 
-| File | Description |
-|------|-------------|
-| `src/lib/studio/ai/page-prompts.ts` | Prompt builders for page generation |
-| `src/app/api/studio/ai/generate-page/route.ts` | API endpoint for page generation |
-| `src/components/studio/ai/page-preview.tsx` | Page preview component |
-| `src/components/studio/ai/ai-page-generator.tsx` | Multi-step generator wizard |
+| File                                             | Description                         |
+| ------------------------------------------------ | ----------------------------------- |
+| `src/lib/studio/ai/page-prompts.ts`              | Prompt builders for page generation |
+| `src/app/api/studio/ai/generate-page/route.ts`   | API endpoint for page generation    |
+| `src/components/studio/ai/page-preview.tsx`      | Page preview component              |
+| `src/components/studio/ai/ai-page-generator.tsx` | Multi-step generator wizard         |
 
 ### Files Modified
 
-| File | Changes |
-|------|---------|
-| `src/lib/studio/ai/types.ts` | Added page generation types (BusinessType, ColorScheme, etc.) |
-| `src/lib/studio/ai/index.ts` | Export page-prompts module |
-| `src/components/studio/ai/index.ts` | Export new components |
-| `src/components/studio/layout/studio-toolbar.tsx` | Added "Generate Page" button |
-| `src/components/studio/canvas/editor-canvas.tsx` | Enhanced empty state with AI option |
+| File                                              | Changes                                                       |
+| ------------------------------------------------- | ------------------------------------------------------------- |
+| `src/lib/studio/ai/types.ts`                      | Added page generation types (BusinessType, ColorScheme, etc.) |
+| `src/lib/studio/ai/index.ts`                      | Export page-prompts module                                    |
+| `src/components/studio/ai/index.ts`               | Export new components                                         |
+| `src/components/studio/layout/studio-toolbar.tsx` | Added "Generate Page" button                                  |
+| `src/components/studio/canvas/editor-canvas.tsx`  | Enhanced empty state with AI option                           |
 
 ### Key Features
 
@@ -7162,6 +7992,7 @@ DRAMAC Studio now has a full AI Page Generator! Users can:
 ### What Was Implemented
 
 DRAMAC Studio now has AI-powered component editing! Users can:
+
 1. Select any component on the canvas
 2. Click "Ask AI" button in the Properties Panel (or press Ctrl+/)
 3. Type natural language requests like "make this heading blue" or "add an emoji"
@@ -7170,25 +8001,25 @@ DRAMAC Studio now has AI-powered component editing! Users can:
 
 ### Files Created
 
-| File | Description |
-|------|-------------|
-| `src/lib/studio/store/ai-store.ts` | Zustand store for AI chat state |
-| `src/lib/studio/ai/types.ts` | TypeScript types for AI features |
-| `src/lib/studio/ai/prompts.ts` | Prompt builders for Claude |
-| `src/lib/studio/ai/index.ts` | Module exports |
-| `src/app/api/studio/ai/component/route.ts` | API endpoint (Claude integration) |
-| `src/components/studio/ai/chat-message.tsx` | Chat message component |
-| `src/components/studio/ai/change-preview.tsx` | Change diff preview |
-| `src/components/studio/ai/ai-component-chat.tsx` | Main chat panel |
+| File                                             | Description                       |
+| ------------------------------------------------ | --------------------------------- |
+| `src/lib/studio/store/ai-store.ts`               | Zustand store for AI chat state   |
+| `src/lib/studio/ai/types.ts`                     | TypeScript types for AI features  |
+| `src/lib/studio/ai/prompts.ts`                   | Prompt builders for Claude        |
+| `src/lib/studio/ai/index.ts`                     | Module exports                    |
+| `src/app/api/studio/ai/component/route.ts`       | API endpoint (Claude integration) |
+| `src/components/studio/ai/chat-message.tsx`      | Chat message component            |
+| `src/components/studio/ai/change-preview.tsx`    | Change diff preview               |
+| `src/components/studio/ai/ai-component-chat.tsx` | Main chat panel                   |
 
 ### Files Modified
 
-| File | Changes |
-|------|---------|
-| `src/components/studio/ai/index.ts` | Export new components |
-| `src/lib/studio/store/index.ts` | Export AI store |
-| `src/components/studio/properties/properties-panel.tsx` | Added "Ask AI" button |
-| `src/components/studio/studio-editor.tsx` | Added Ctrl+/ keyboard shortcut |
+| File                                                    | Changes                        |
+| ------------------------------------------------------- | ------------------------------ |
+| `src/components/studio/ai/index.ts`                     | Export new components          |
+| `src/lib/studio/store/index.ts`                         | Export AI store                |
+| `src/components/studio/properties/properties-panel.tsx` | Added "Ask AI" button          |
+| `src/components/studio/studio-editor.tsx`               | Added Ctrl+/ keyboard shortcut |
 
 ### Key Features
 
@@ -7212,8 +8043,8 @@ DRAMAC Studio now has AI-powered component editing! Users can:
 
 ## 📋 WAVE 4 REMAINING PHASES
 
-| Phase | File | Description | Est. Time | Status |
-|-------|------|-------------|-----------|--------|
+| Phase     | File                                                     | Description                 | Est. Time | Status     |
+| --------- | -------------------------------------------------------- | --------------------------- | --------- | ---------- |
 | STUDIO-13 | `phases/PHASE-STUDIO-13-AI-SUGGESTIONS-QUICK-ACTIONS.md` | Quick actions & suggestions | 6-8 hours | ⏳ Waiting |
 
 ---
@@ -7221,16 +8052,24 @@ DRAMAC Studio now has AI-powered component editing! Users can:
 ## 🔧 Recent Bug Fix: Image Rendering (February 2, 2026)
 
 ### Issue
+
 Images added via the Properties Panel (using ImageFieldEditor from Wave 3) were not displaying on the canvas.
 
 ### Root Cause
+
 The Wave 3 `ImageFieldEditor` outputs `ImageValue` objects `{ url: string, alt?: string }`, but all render components were expecting plain string URLs for `src` or `backgroundImage` props.
 
 ### Solution
+
 Added `extractImageUrl()` helper function to all components that render images. This helper handles both string and ImageValue formats:
 
 ```typescript
-type ImageValue = { url: string; alt?: string; width?: number; height?: number };
+type ImageValue = {
+  url: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+};
 
 function extractImageUrl(src: string | ImageValue | undefined): string {
   if (!src) return "";
@@ -7241,6 +8080,7 @@ function extractImageUrl(src: string | ImageValue | undefined): string {
 ```
 
 ### Files Fixed
+
 - `src/components/editor/puck/components/media.tsx` - ImageRender
 - `src/components/editor/puck/components/layout.tsx` - SectionRender
 - `src/components/editor/puck/components/sections.tsx` - HeroRender
@@ -7252,6 +8092,7 @@ function extractImageUrl(src: string | ImageValue | undefined): string {
 - `src/components/editor/settings/hero-settings.tsx` - Value extraction
 
 ### Pattern for Future Components
+
 Any component with image/backgroundImage props must use `extractImageUrl()` to ensure compatibility with both legacy string values and new ImageValue objects from Wave 3 field editors.
 
 ---
@@ -7260,10 +8101,10 @@ Any component with image/backgroundImage props must use `extractImageUrl()` to e
 
 ### What Was Implemented
 
-| Phase | Description | Status |
-|-------|-------------|--------|
+| Phase     | Description                            | Status  |
+| --------- | -------------------------------------- | ------- |
 | STUDIO-09 | Advanced Field Types (7 field editors) | ✅ DONE |
-| STUDIO-10 | Responsive Field System | ✅ DONE |
+| STUDIO-10 | Responsive Field System                | ✅ DONE |
 
 ### STUDIO-10 Deliverables (Responsive Field System)
 
@@ -7297,10 +8138,12 @@ Any component with image/backgroundImage props must use `extractImageUrl()` to e
 - `BREAKPOINT_LABELS`, `BREAKPOINT_ICONS`, `BREAKPOINT_PIXELS` constants
 
 **Files Created:**
+
 - `src/components/studio/layout/breakpoint-selector.tsx`
 - `src/components/studio/fields/responsive-field-wrapper.tsx`
 
 **Files Modified:**
+
 - `src/lib/studio/utils/responsive-utils.ts` - Added new utilities
 - `src/components/studio/fields/field-renderer.tsx` - Added ResponsiveAwareRenderer
 - `src/components/studio/canvas/editor-canvas.tsx` - DeviceFrame, BreakpointInfoBar
@@ -7328,6 +8171,7 @@ Any component with image/backgroundImage props must use `extractImageUrl()` to e
 - ✅ `FieldPresets` - Common field definitions (title, backgroundColor, padding, etc.)
 
 **Files Created:**
+
 - `src/lib/studio/fields/field-utils.ts`
 - `src/lib/studio/fields/color-field-editor.tsx`
 - `src/lib/studio/fields/image-field-editor.tsx`
@@ -7340,6 +8184,7 @@ Any component with image/backgroundImage props must use `extractImageUrl()` to e
 - `src/components/studio/fields/field-renderer.tsx`
 
 **Files Modified:**
+
 - `src/types/studio.ts` - Added advanced field value types
 - `src/lib/studio/registry/field-registry.ts` - Added FIELD_TYPE_REGISTRY
 - `src/components/studio/fields/index.ts` - Export all field editors
@@ -7364,12 +8209,12 @@ Any component with image/backgroundImage props must use `extractImageUrl()` to e
 
 ### What Was Implemented
 
-| Phase | Description | Status |
-|-------|-------------|--------|
-| STUDIO-05 | Drag & Drop System (@dnd-kit/core) | ✅ DONE |
-| STUDIO-06 | Canvas & Rendering (component wrappers) | ✅ DONE |
+| Phase     | Description                                                 | Status  |
+| --------- | ----------------------------------------------------------- | ------- |
+| STUDIO-05 | Drag & Drop System (@dnd-kit/core)                          | ✅ DONE |
+| STUDIO-06 | Canvas & Rendering (component wrappers)                     | ✅ DONE |
 | STUDIO-07 | Component Library Panel (search, categories, recently used) | ✅ DONE |
-| STUDIO-08 | Properties Panel Foundation (field editors) | ✅ DONE |
+| STUDIO-08 | Properties Panel Foundation (field editors)                 | ✅ DONE |
 
 ### STUDIO-07 Deliverables (Component Library Panel)
 
@@ -7407,6 +8252,7 @@ Any component with image/backgroundImage props must use `extractImageUrl()` to e
 ### What's Remaining: COMPLETED! Moving to Wave 3
 
 Wave 2 is now complete with all deliverables:
+
 - ✅ 10 premium components working
 - ✅ Drag & drop functional
 - ✅ Properties panel with basic fields
@@ -7421,6 +8267,7 @@ Wave 2 is now complete with all deliverables:
 ### Decision 1: Fresh Premium Components (NOT Reusing Puck)
 
 **Why:** Existing 116 Puck components are too basic:
+
 - No responsive support (single value, not per-breakpoint)
 - No animation options
 - No AI context
@@ -7428,6 +8275,7 @@ Wave 2 is now complete with all deliverables:
 - Don't rival Webflow/Wix quality
 
 **New Approach:** Build ALL components from scratch with:
+
 - ✅ Mobile-first responsive (`ResponsiveValue<T>` for all visual props)
 - ✅ Animation support (entrance, hover, scroll-triggered)
 - ✅ AI context built-in
@@ -7438,9 +8286,9 @@ Wave 2 is now complete with all deliverables:
 
 ```typescript
 type ResponsiveValue<T> = {
-  mobile: T;      // REQUIRED (0-767px)
-  tablet?: T;     // Optional (768-1023px)
-  desktop?: T;    // Optional (1024px+)
+  mobile: T; // REQUIRED (0-767px)
+  tablet?: T; // Optional (768-1023px)
+  desktop?: T; // Optional (1024px+)
 };
 ```
 
@@ -7452,12 +8300,12 @@ Every component's visual props (padding, font-size, alignment, etc.) MUST use th
 
 ### What's Implemented
 
-| Phase | Description | Status |
-|-------|-------------|--------|
-| STUDIO-01 | Project Setup & Dependencies | ✅ DONE |
+| Phase     | Description                                   | Status  |
+| --------- | --------------------------------------------- | ------- |
+| STUDIO-01 | Project Setup & Dependencies                  | ✅ DONE |
 | STUDIO-02 | Editor State Management (Zustand + undo/redo) | ✅ DONE |
-| STUDIO-03 | Component Registry System (45 components) | ✅ DONE |
-| STUDIO-04 | Studio Layout Shell (panels, toolbar) | ✅ DONE |
+| STUDIO-03 | Component Registry System (45 components)     | ✅ DONE |
+| STUDIO-04 | Studio Layout Shell (panels, toolbar)         | ✅ DONE |
 
 ### Wave 1 Deliverables
 
@@ -7480,12 +8328,12 @@ Every component's visual props (padding, font-size, alignment, etc.) MUST use th
 
 ### What's Implemented
 
-| Phase | Description | Status |
-|-------|-------------|--------|
-| STUDIO-05 | Drag & Drop System (@dnd-kit/core) | ✅ DONE |
+| Phase     | Description                                | Status  |
+| --------- | ------------------------------------------ | ------- |
+| STUDIO-05 | Drag & Drop System (@dnd-kit/core)         | ✅ DONE |
 | STUDIO-06 | Canvas & Rendering + 10 Premium Components | ✅ DONE |
-| STUDIO-07 | Component Library Panel | ✅ DONE |
-| STUDIO-08 | Properties Panel Foundation | ✅ DONE |
+| STUDIO-07 | Component Library Panel                    | ✅ DONE |
+| STUDIO-08 | Properties Panel Foundation                | ✅ DONE |
 
 ### Wave 2 Deliverables
 
@@ -7513,14 +8361,15 @@ Every component's visual props (padding, font-size, alignment, etc.) MUST use th
 
 **Status**: Prompt created → `phases/STUDIO-WAVE3-PROMPT.md` ✅
 
-| Phase | Description | Dependencies |
-|-------|-------------|--------------|
-| STUDIO-05 | Drag & Drop System (@dnd-kit/core) | Wave 1 stores |
-| STUDIO-06 | Canvas & Rendering (component wrappers) | STUDIO-05 |
+| Phase     | Description                                  | Dependencies         |
+| --------- | -------------------------------------------- | -------------------- |
+| STUDIO-05 | Drag & Drop System (@dnd-kit/core)           | Wave 1 stores        |
+| STUDIO-06 | Canvas & Rendering (component wrappers)      | STUDIO-05            |
 | STUDIO-07 | Component Library Panel (search, categories) | STUDIO-05, STUDIO-06 |
-| STUDIO-08 | Properties Panel (basic field editors) | STUDIO-06 |
+| STUDIO-08 | Properties Panel (basic field editors)       | STUDIO-06            |
 
 **After Wave 3, we'll have:**
+
 - ✅ Color picker field (react-colorful popover)
 - ✅ Image field (upload + URL + preview)
 - ✅ Link field (page picker + external URL + email)
@@ -7541,20 +8390,21 @@ Every component's visual props (padding, font-size, alignment, etc.) MUST use th
 
 After deep analysis of the current Puck-based editor, decided to build a **custom editor** called "DRAMAC Studio" for these reasons:
 
-| Issue with Puck | Impact |
-|-----------------|--------|
-| UI not deeply customizable | Editor looks different from dashboard |
-| DropZone limitations | Can't layer components on backgrounds |
-| No native AI integration | AI per component would be a hack |
+| Issue with Puck             | Impact                                   |
+| --------------------------- | ---------------------------------------- |
+| UI not deeply customizable  | Editor looks different from dashboard    |
+| DropZone limitations        | Can't layer components on backgrounds    |
+| No native AI integration    | AI per component would be a hack         |
 | No module component support | Can't dynamically load module components |
-| Limited field types | Can't build advanced controls |
-| External dependency | Locked to Puck's roadmap |
+| Limited field types         | Can't build advanced controls            |
+| External dependency         | Locked to Puck's roadmap                 |
 
 ### PHASE-STUDIO-01 & STUDIO-02: COMPLETE ✅
 
 **Implemented on February 2, 2026:**
 
 **Phase STUDIO-01 - Project Setup:**
+
 - ✅ Installed dependencies: immer, zundo, react-colorful, react-hotkeys-hook, @floating-ui/react, nanoid
 - ✅ Created TypeScript types in `src/types/studio.ts`
 - ✅ Created CSS file in `src/styles/studio.css`
@@ -7563,6 +8413,7 @@ After deep analysis of the current Puck-based editor, decided to build a **custo
 - ✅ Created Studio route at `/studio/[siteId]/[pageId]`
 
 **Phase STUDIO-02 - State Management:**
+
 - ✅ Created Editor Store with Zustand + Immer + Zundo (undo/redo)
 - ✅ Created UI Store (panels, zoom, breakpoint, mode)
 - ✅ Created Selection Store (single/multi-select)
@@ -7589,6 +8440,7 @@ After deep analysis of the current Puck-based editor, decided to build a **custo
 ### DRAMAC Studio Architecture
 
 **Core Libraries:**
+
 - `@dnd-kit/core` - Drag & Drop
 - `zustand` + `zundo` - State + Undo/Redo
 - `react-resizable-panels` - Panel layout
@@ -7598,6 +8450,7 @@ After deep analysis of the current Puck-based editor, decided to build a **custo
 - `@ai-sdk/anthropic` - AI (already using)
 
 **Key Features:**
+
 1. **Full-screen editor** at `/studio/[siteId]/[pageId]`
 2. **AI chat per component** - Click any component, ask AI to modify it
 3. **Module components** - Automatically load components from installed modules
@@ -7606,18 +8459,18 @@ After deep analysis of the current Puck-based editor, decided to build a **custo
 
 ### Implementation Waves (27 Phases Total)
 
-| Wave | Phases | Focus | Status |
-|------|--------|-------|--------|
-| **1** | 01-04 | Foundation (setup, store, registry, layout) | ✅ COMPLETE |
-| **2** | 05-08 | Core Editor (DnD, canvas, 10 premium components) | ✅ COMPLETE |
-| **3** | 09-10 | Field System (7 advanced fields + responsive) | 🟡 READY |
-| **3** | 09-10 | Field System | ⏳ Waiting |
-| **4** | 11-13 | AI Integration | ⏳ Waiting |
-| **5** | 14-15 | Module Integration | ⏳ Waiting |
-| **6** | 16-19 | Advanced Features | ⏳ Waiting |
-| **7** | 20-23 | Polish & Performance | ⏳ Waiting |
-| **8** | 24-26 | Templates & Extras | ⏳ Waiting |
-| **9** | 27 | Platform Integration & Puck Removal | ⏳ Waiting |
+| Wave  | Phases | Focus                                            | Status      |
+| ----- | ------ | ------------------------------------------------ | ----------- |
+| **1** | 01-04  | Foundation (setup, store, registry, layout)      | ✅ COMPLETE |
+| **2** | 05-08  | Core Editor (DnD, canvas, 10 premium components) | ✅ COMPLETE |
+| **3** | 09-10  | Field System (7 advanced fields + responsive)    | 🟡 READY    |
+| **3** | 09-10  | Field System                                     | ⏳ Waiting  |
+| **4** | 11-13  | AI Integration                                   | ⏳ Waiting  |
+| **5** | 14-15  | Module Integration                               | ⏳ Waiting  |
+| **6** | 16-19  | Advanced Features                                | ⏳ Waiting  |
+| **7** | 20-23  | Polish & Performance                             | ⏳ Waiting  |
+| **8** | 24-26  | Templates & Extras                               | ⏳ Waiting  |
+| **9** | 27     | Platform Integration & Puck Removal              | ⏳ Waiting  |
 
 ### Next Steps
 
@@ -7635,25 +8488,26 @@ After deep analysis of the current Puck-based editor, decided to build a **custo
 
 Created comprehensive implementation specifications for Domain & Email Reselling functionality:
 
-| Phase | Name | Time | Priority | Status |
-|-------|------|------|----------|--------|
-| DM-00 | Master Plan | - | - | ✅ Created |
-| DM-01 | ResellerClub Integration | 8h | 🔴 HIGH | ✅ COMPLETE (Feb 1) |
-| DM-02 | Database Schema | 4h | 🔴 HIGH | ✅ COMPLETE (Feb 1) |
-| DM-03 | Cloudflare DNS Integration | 8h | 🔴 HIGH | ✅ COMPLETE (Feb 1) |
-| DM-04 | Domain Search & Registration UI | 10h | 🔴 HIGH | ✅ COMPLETE (Feb 1) |
-| DM-05 | Domain Management Dashboard | 8h | 🔴 HIGH | ✅ COMPLETE (Feb 1) |
-| DM-06 | DNS Management UI | 8h | 🟡 MEDIUM | Ready to implement |
-| DM-07 | Business Email Integration | 10h | 🟡 MEDIUM | ✅ Docs Created (Fixed) |
-| DM-08 | Email Management UI | 8h | 🟡 MEDIUM | ✅ Docs Created |
-| DM-09 | Domain Transfers & Automation | 10h | 🟡 MEDIUM | ✅ Docs Created (Updated) |
-| DM-10 | White-Label & Pricing | 8h | 🟡 MEDIUM | ✅ Docs Created |
+| Phase | Name                            | Time | Priority  | Status                    |
+| ----- | ------------------------------- | ---- | --------- | ------------------------- |
+| DM-00 | Master Plan                     | -    | -         | ✅ Created                |
+| DM-01 | ResellerClub Integration        | 8h   | 🔴 HIGH   | ✅ COMPLETE (Feb 1)       |
+| DM-02 | Database Schema                 | 4h   | 🔴 HIGH   | ✅ COMPLETE (Feb 1)       |
+| DM-03 | Cloudflare DNS Integration      | 8h   | 🔴 HIGH   | ✅ COMPLETE (Feb 1)       |
+| DM-04 | Domain Search & Registration UI | 10h  | 🔴 HIGH   | ✅ COMPLETE (Feb 1)       |
+| DM-05 | Domain Management Dashboard     | 8h   | 🔴 HIGH   | ✅ COMPLETE (Feb 1)       |
+| DM-06 | DNS Management UI               | 8h   | 🟡 MEDIUM | Ready to implement        |
+| DM-07 | Business Email Integration      | 10h  | 🟡 MEDIUM | ✅ Docs Created (Fixed)   |
+| DM-08 | Email Management UI             | 8h   | 🟡 MEDIUM | ✅ Docs Created           |
+| DM-09 | Domain Transfers & Automation   | 10h  | 🟡 MEDIUM | ✅ Docs Created (Updated) |
+| DM-10 | White-Label & Pricing           | 8h   | 🟡 MEDIUM | ✅ Docs Created           |
 
 **Total Estimated Time**: 82 hours
 
 ### DM-04 & DM-05 Implementation Details (February 1, 2026)
 
 **✅ PHASE-DM-04: Domain Search & Registration UI**
+
 - Domain search page with availability checking
 - Domain list with sorting, filtering
 - Domain cart system
@@ -7661,6 +8515,7 @@ Created comprehensive implementation specifications for Domain & Email Reselling
 - Server actions for domain operations
 
 **✅ PHASE-DM-05: Domain Management Dashboard**
+
 - Domain detail page with comprehensive info
 - DNS management page with records table
 - Email accounts page with mailbox management
@@ -7668,6 +8523,7 @@ Created comprehensive implementation specifications for Domain & Email Reselling
 - Loading and error states
 
 **UI Interactivity Fixes Applied**:
+
 1. ✅ Domain list rows now clickable (navigate to detail page)
 2. ✅ Settings navigation added to domain detail header
 3. ✅ Titan webmail URL fixed (app.titan.email)
@@ -7684,32 +8540,32 @@ Created comprehensive implementation specifications for Domain & Email Reselling
 
 #### Domain Events as Automation Triggers
 
-| Event | Description | Example Workflow |
-|-------|-------------|------------------|
-| `domain.domain.registered` | New domain registered | Welcome email → CRM contact → DNS setup |
-| `domain.domain.renewed` | Domain renewed | Confirmation email → Log activity |
-| `domain.domain.expiring_soon` | Expiring in X days | Reminder email → Create task → Slack alert |
-| `domain.domain.expired` | Domain expired | Alert owner → Suspend site → Urgent task |
-| `domain.dns.record_created` | DNS record added | Verify propagation → SSL check |
-| `domain.email.account_created` | Mailbox created | Setup instructions → Log activity |
-| `domain.transfer.completed` | Transfer done | Welcome email → Configure DNS |
-| `domain.order.failed` | Order failed | Alert admin → Create support ticket |
+| Event                          | Description           | Example Workflow                           |
+| ------------------------------ | --------------------- | ------------------------------------------ |
+| `domain.domain.registered`     | New domain registered | Welcome email → CRM contact → DNS setup    |
+| `domain.domain.renewed`        | Domain renewed        | Confirmation email → Log activity          |
+| `domain.domain.expiring_soon`  | Expiring in X days    | Reminder email → Create task → Slack alert |
+| `domain.domain.expired`        | Domain expired        | Alert owner → Suspend site → Urgent task   |
+| `domain.dns.record_created`    | DNS record added      | Verify propagation → SSL check             |
+| `domain.email.account_created` | Mailbox created       | Setup instructions → Log activity          |
+| `domain.transfer.completed`    | Transfer done         | Welcome email → Configure DNS              |
+| `domain.order.failed`          | Order failed          | Alert admin → Create support ticket        |
 
 #### Domain Actions in Automation Workflows
 
-| Action | Description |
-|--------|-------------|
-| `domain.check_availability` | Check if domain is available |
-| `domain.register` | Register a new domain |
-| `domain.renew` | Renew existing domain |
-| `domain.set_auto_renew` | Enable/disable auto-renewal |
-| `domain.add_dns_record` | Add DNS record |
-| `domain.delete_dns_record` | Remove DNS record |
-| `domain.create_email_account` | Create email mailbox |
-| `domain.delete_email_account` | Delete email mailbox |
-| `domain.initiate_transfer` | Start domain transfer |
-| `domain.get_auth_code` | Get transfer auth code |
-| `domain.lookup` | Get domain details |
+| Action                        | Description                  |
+| ----------------------------- | ---------------------------- |
+| `domain.check_availability`   | Check if domain is available |
+| `domain.register`             | Register a new domain        |
+| `domain.renew`                | Renew existing domain        |
+| `domain.set_auto_renew`       | Enable/disable auto-renewal  |
+| `domain.add_dns_record`       | Add DNS record               |
+| `domain.delete_dns_record`    | Remove DNS record            |
+| `domain.create_email_account` | Create email mailbox         |
+| `domain.delete_email_account` | Delete email mailbox         |
+| `domain.initiate_transfer`    | Start domain transfer        |
+| `domain.get_auth_code`        | Get transfer auth code       |
+| `domain.lookup`               | Get domain details           |
 
 ### Key Corrections Made
 
@@ -7744,12 +8600,14 @@ Created comprehensive implementation specifications for Domain & Email Reselling
    - 📁 Location: `migrations/dm-02-domain-schema.sql`, `src/types/domain.ts`
 
 **📝 Git Commit**: `0e9b529` - "feat(domain): implement DM-01 ResellerClub API integration and DM-02 database schema"
+
 - 13 files changed, 4094 insertions(+)
 - Successfully pushed to origin/main
 
 ### Next Steps
 
 **Priority**: DM-03 Cloudflare DNS Integration (8 hours)
+
 - Cloudflare API client setup
 - Zone management operations
 - DNS record sync service
@@ -7959,21 +8817,22 @@ Implemented comprehensive error handling infrastructure including core error uti
 
 ### Files Created/Modified
 
-| File | Action | Lines |
-|------|--------|-------|
-| lib/types/result.ts | Enhanced | +80 |
-| components/error-boundary/async-error-boundary.tsx | Created | ~230 |
-| components/providers/error-provider.tsx | Created | ~160 |
-| components/error-boundary/index.ts | Updated | +1 |
-| app/api/log-error/route.ts | Enhanced | +30 |
-| lib/toast.ts | Created | ~380 |
-| components/ui/sonner.tsx | Enhanced | +10 |
-| components/ui/standalone-form-field.tsx | Created | ~200 |
-| components/ui/form-error-summary.tsx | Created | ~260 |
-| components/ui/inline-error.tsx | Created | ~180 |
-| components/ui/index.ts | Updated | +10 |
+| File                                               | Action   | Lines |
+| -------------------------------------------------- | -------- | ----- |
+| lib/types/result.ts                                | Enhanced | +80   |
+| components/error-boundary/async-error-boundary.tsx | Created  | ~230  |
+| components/providers/error-provider.tsx            | Created  | ~160  |
+| components/error-boundary/index.ts                 | Updated  | +1    |
+| app/api/log-error/route.ts                         | Enhanced | +30   |
+| lib/toast.ts                                       | Created  | ~380  |
+| components/ui/sonner.tsx                           | Enhanced | +10   |
+| components/ui/standalone-form-field.tsx            | Created  | ~200  |
+| components/ui/form-error-summary.tsx               | Created  | ~260  |
+| components/ui/inline-error.tsx                     | Created  | ~180  |
+| components/ui/index.ts                             | Updated  | +10   |
 
 ### Build Status
+
 - **TypeScript**: ✅ Zero errors
 - **Build**: ✅ Compiles successfully
 
@@ -8358,6 +9217,7 @@ Implemented comprehensive enterprise dashboard widget system with composable wid
 **widgets/index.ts** - Barrel exports for all widget components and types
 
 **dashboard/index.ts** - Added exports:
+
 - `export * from "./widgets"` (PHASE-DS-01A)
 - `export * from "./analytics-widgets"` (PHASE-DS-01B)
 
@@ -8415,6 +9275,7 @@ Implemented comprehensive UI polish and performance optimizations for the Puck v
 ### CSS Enhancements (globals.css)
 
 Added ~200 lines of editor polish CSS:
+
 - Component hover states with scale/shadow
 - Drag preview polish (cursor: grabbing, opacity, scale)
 - Drop zone indicators (dashed borders, glow effects)
@@ -8428,6 +9289,7 @@ Added ~200 lines of editor polish CSS:
 ### Integration Updates
 
 **puck-editor-integrated.tsx**:
+
 - Added imports for UI polish components
 - Integrated `useEditorShortcuts` hook
 - Added `showKeyboardShortcuts` state
@@ -8436,6 +9298,7 @@ Added ~200 lines of editor polish CSS:
 - Added `EditorSavingOverlay` component
 
 **puck/index.ts**:
+
 - Added exports for all new components:
   - EditorLoadingSkeleton, EditorLoadingIndicator, EditorSavingOverlay
   - KeyboardShortcutsPanel, KeyCombination, ShortcutHint, useEditorShortcuts
@@ -8451,6 +9314,7 @@ Added ~200 lines of editor polish CSS:
 Implemented comprehensive template system for the Puck visual editor with 20+ categories, starter templates, and 25+ premium professionally-designed templates.
 
 ### PHASE-ED-07A: Template System - Categories
+
 Located in `src/types/` and `src/lib/templates/`:
 
 1. **puck-templates.ts** (types) - Complete TypeScript definitions:
@@ -8482,6 +9346,7 @@ Located in `src/types/` and `src/lib/templates/`:
    - `index.ts` - Barrel exports
 
 ### PHASE-ED-07B: Premium Templates
+
 Located in `src/lib/templates/premium/`:
 
 1. **landing-templates.ts** - 4 Landing Page Templates:
@@ -8529,6 +9394,7 @@ Located in `src/lib/templates/premium/`:
    - `searchPremiumTemplates()` - Search by keyword/tags
 
 ### Files Created (15 total)
+
 - `phases/enterprise-modules/PHASE-ED-07A-TEMPLATE-CATEGORIES.md`
 - `phases/enterprise-modules/PHASE-ED-07B-PREMIUM-TEMPLATES.md`
 - `src/types/puck-templates.ts`
@@ -8547,16 +9413,19 @@ Located in `src/lib/templates/premium/`:
 - `src/components/editor/puck/templates/index.ts`
 
 ### Files Modified
+
 - `src/components/editor/puck/index.ts` - Added template exports
 - `src/components/editor/puck/templates/puck-template-library.tsx` - Import premium templates
 
 ### Template Statistics
+
 - **Total Templates**: 32 (7 starter + 25 premium)
 - **Categories**: 20 industry categories
 - **Section Types**: 29 section types
 - **Components Used**: 50+ unique components across templates
 
 ### Key Features
+
 - **Full Puck Data**: Every template contains complete puckData structure
 - **Category Filtering**: Browse by 20 industry categories
 - **Search**: Find templates by name, description, tags
@@ -8575,6 +9444,7 @@ Located in `src/lib/templates/premium/`:
 Implemented comprehensive AI-powered editing features for the Puck page builder, including inline content editing, full page generation, and content optimization with SEO/accessibility analysis.
 
 ### PHASE-ED-05A: Puck AI Plugin Integration
+
 Located in `src/components/editor/puck/ai/`:
 
 1. **puck-ai-config.ts** - AI actions configuration with 12 action types (improve, simplify, expand, shorten, translate, etc.)
@@ -8584,6 +9454,7 @@ Located in `src/components/editor/puck/ai/`:
 5. **index.ts** - Barrel exports for all AI components
 
 ### PHASE-ED-05B: Custom Generation Features
+
 Located in `src/lib/ai/` and `src/components/editor/puck/ai/`:
 
 1. **puck-generation.ts** - Full page generation service with templates (Landing, Business, Portfolio, E-commerce, Blog)
@@ -8594,6 +9465,7 @@ Located in `src/lib/ai/` and `src/components/editor/puck/ai/`:
    - `/api/editor/ai/suggest-components/route.ts` - Component suggestions
 
 ### PHASE-ED-05C: Content Optimization
+
 Located in `src/lib/ai/`:
 
 1. **content-optimization.ts** - Main optimization service with readability, conversion, engagement analysis
@@ -8603,6 +9475,7 @@ Located in `src/lib/ai/`:
 5. **API Route** - `/api/editor/ai/optimize/route.ts` for optimization analysis
 
 ### Files Created (15 total)
+
 - `phases/enterprise-modules/PHASE-ED-05A-AI-EDITOR-PUCK-AI-PLUGIN.md`
 - `phases/enterprise-modules/PHASE-ED-05B-AI-EDITOR-CUSTOM-GENERATION.md`
 - `phases/enterprise-modules/PHASE-ED-05C-AI-EDITOR-CONTENT-OPTIMIZATION.md`
@@ -8623,13 +9496,16 @@ Located in `src/lib/ai/`:
 - `src/app/api/editor/ai/optimize/route.ts`
 
 ### Files Modified
+
 - `src/lib/rate-limit.ts` - Added new rate limit types: aiEditor, aiPageGeneration, aiComponentGeneration, aiOptimization
 - `src/lib/ai/puck-generation.ts` - Fixed readonly array type for sections
 
 ### Build Status: ✅ Compiled successfully
+
 ### TypeScript: ✅ Zero errors in new AI editor files
 
 ### Key Features
+
 - **12 AI Actions**: improve, simplify, expand, shorten, translate (16 languages), professional, casual, engaging, technical, summarize, cta-improve, seo-optimize
 - **5 Page Templates**: Landing, Business, Portfolio, E-commerce, Blog
 - **4 Style Presets**: Modern, Classic, Minimal, Bold
@@ -8655,6 +9531,7 @@ Added 10 new 3D Puck editor components using React Three Fiber and Spline, bring
 ### Critical Discovery: Preview & Published Sites Still Used Craft.js!
 
 **Problem**: While PHASE-ED-03 connected the editor to Puck, the preview page and published site renderers were STILL using Craft.js. This meant:
+
 - Users couldn't preview pages (content format mismatch)
 - Published sites wouldn't render Puck content
 - Dark mode was still not fully working
@@ -8697,19 +9574,23 @@ Added 10 new 3D Puck editor components using React Three Fiber and Spline, bring
 ### Issues Found and Fixed
 
 **Error 1: "Field type for toggle did not exist"**
+
 - **Root Cause**: Puck doesn't have a native `toggle` field type
 - **Fix**: Replaced all `type: "toggle"` with `type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }]`
 - **Scope**: 50+ toggle fields across the entire puck-config.tsx
 
 **Error 2: Missing placeholder image (404)**
+
 - **Root Cause**: `/placeholder-product.jpg` didn't exist
 - **Fix**: Created `public/placeholder-product.svg` as an SVG placeholder
 
 **Error 3: Dark mode not working in editor**
+
 - **Root Cause**: Puck's default styles don't respect dark mode
 - **Fix**: Added 200+ lines of dark mode CSS overrides in `globals.css`
 
 **Error 4: Missing e-commerce components**
+
 - **Root Cause**: Only ProductGrid and ProductCard existed
 - **Fix**: Added 6 new e-commerce components
 
@@ -8747,8 +9628,9 @@ Added 10 new 3D Puck editor components using React Three Fiber and Spline, bring
 - `placeholder-product.svg` - New placeholder image
 
 ### Total Components Now: 71
+
 - Layout: 16 components
-- Typography: 2 components  
+- Typography: 2 components
 - Content: 15 components
 - Buttons: 1 component
 - Media: 3 components
@@ -8765,7 +9647,8 @@ Added 10 new 3D Puck editor components using React Three Fiber and Spline, bring
 
 **Problem Discovered**: The Puck infrastructure (components, config, wrapper) was built in ED-01A/01B/02A/02B/02C but was NEVER connected to the actual editor route. The editor page was still using the Craft.js `EditorWrapper`.
 
-**Root Cause**: 
+**Root Cause**:
+
 - Editor route: `/dashboard/sites/[siteId]/editor` → `EditorWrapper` → Craft.js
 - Puck wrapper existed at `src/components/editor/puck/puck-editor-wrapper.tsx` but was unused
 
@@ -8788,12 +9671,15 @@ Added 10 new 3D Puck editor components using React Three Fiber and Spline, bring
 ### Technical Details
 
 **Files Created:**
+
 - `src/components/editor/puck-editor-integrated.tsx` (NEW - 380 lines)
 
 **Files Modified:**
+
 - `src/app/(dashboard)/dashboard/sites/[siteId]/editor/page.tsx` (import and component change)
 
 **Integration Points:**
+
 - Uses `puckConfig` from `./puck/puck-config` (63 components)
 - Uses `detectContentFormat`, `migrateCraftToPuck`, `isPuckFormat` from `@/lib/migration/craft-to-puck`
 - Uses `savePageContentAction` from `@/lib/actions/pages`
@@ -8857,6 +9743,7 @@ Added 10 new 3D Puck editor components using React Three Fiber and Spline, bring
 ### Files Created/Modified
 
 **PHASE-ED-02A/B/C Files:**
+
 - `src/components/editor/puck/components/layout-advanced.tsx` (NEW - 640 lines)
 - `src/components/editor/puck/components/content.tsx` (NEW - 1061 lines)
 - `src/components/editor/puck/components/forms-advanced.tsx` (NEW - 1050+ lines)
@@ -8869,11 +9756,11 @@ Added 10 new 3D Puck editor components using React Three Fiber and Spline, bring
 
 ### New Components Summary
 
-| Category | Components Added | Total |
-|----------|-----------------|-------|
-| Advanced Layout | 10 | Grid, Flexbox, TabsContainer, AccordionContainer, ModalTrigger, DrawerTrigger, AspectRatio, Stack, StickyContainer, ScrollArea |
-| Content | 15 | RichText, Quote, CodeBlock, List, Table, Badge, Alert, Progress, TooltipWrapper, Timeline, PricingTable, Counter, Avatar, AvatarGroup, Icon |
-| Advanced Forms | 13 | MultiStepForm, RatingInput, FileUpload, DatePickerInput, RangeSlider, SwitchInput, CheckboxGroup, RadioGroup, SearchInput, PasswordInput, OTPInput, SelectInput, TagInput |
+| Category        | Components Added | Total                                                                                                                                                                     |
+| --------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Advanced Layout | 10               | Grid, Flexbox, TabsContainer, AccordionContainer, ModalTrigger, DrawerTrigger, AspectRatio, Stack, StickyContainer, ScrollArea                                            |
+| Content         | 15               | RichText, Quote, CodeBlock, List, Table, Badge, Alert, Progress, TooltipWrapper, Timeline, PricingTable, Counter, Avatar, AvatarGroup, Icon                               |
+| Advanced Forms  | 13               | MultiStepForm, RatingInput, FileUpload, DatePickerInput, RangeSlider, SwitchInput, CheckboxGroup, RadioGroup, SearchInput, PasswordInput, OTPInput, SelectInput, TagInput |
 
 **Total New Components: 38**
 
@@ -8955,6 +9842,7 @@ Added 10 new 3D Puck editor components using React Three Fiber and Spline, bring
 ### Files Created
 
 **PHASE-ED-01A:**
+
 - `src/types/puck.ts`
 - `src/components/editor/puck/puck-config.tsx`
 - `src/components/editor/puck/components/layout.tsx`
@@ -8973,6 +9861,7 @@ Added 10 new 3D Puck editor components using React Three Fiber and Spline, bring
 - `phases/enterprise-modules/PHASE-ED-01A-PUCK-EDITOR-CORE-INTEGRATION.md`
 
 **PHASE-ED-01B:**
+
 - `src/lib/migration/types.ts`
 - `src/lib/migration/component-mapping.ts`
 - `src/lib/migration/craft-to-puck.ts`
@@ -8980,9 +9869,11 @@ Added 10 new 3D Puck editor components using React Three Fiber and Spline, bring
 - `phases/enterprise-modules/PHASE-ED-01B-CRAFT-TO-PUCK-DATA-MIGRATION.md`
 
 ### Package Installed
+
 - `@puckeditor/core@0.21.1`
 
 ### Key Features
+
 - Zero-downtime migration: Existing Craft.js content auto-migrates on load
 - Format detection: Automatically identifies content format
 - Dual support: Can work with both Craft.js (legacy) and Puck (new) content
@@ -9109,6 +10000,7 @@ Added 10 new 3D Puck editor components using React Three Fiber and Spline, bring
 ### Files Created
 
 **PHASE-UI-13A (Dashboard UI):**
+
 - `src/components/ai-agents/ui/agent-metric-card.tsx`
 - `src/components/ai-agents/ui/agent-performance-chart.tsx`
 - `src/components/ai-agents/ui/execution-log-card.tsx`
@@ -9120,6 +10012,7 @@ Added 10 new 3D Puck editor components using React Three Fiber and Spline, bring
 - `src/components/ai-agents/index.ts`
 
 **PHASE-UI-13B (Builder UI):**
+
 - `src/components/ai-agents/ui/builder-step-card.tsx`
 - `src/components/ai-agents/ui/builder-tool-selector.tsx`
 - `src/components/ai-agents/ui/builder-trigger-config.tsx`
@@ -9129,16 +10022,18 @@ Added 10 new 3D Puck editor components using React Three Fiber and Spline, bring
 - `src/components/ai-agents/AgentBuilderEnhanced.tsx`
 
 **Phase Documentation:**
+
 - `phases/enterprise-modules/PHASE-UI-13A-AI-AGENTS-DASHBOARD-UI.md`
 - `phases/enterprise-modules/PHASE-UI-13B-AI-AGENT-BUILDER-UI.md`
 
 ---
 
 ## Previous Session: PHASE-UI-12A & PHASE-UI-12B Automation UI Enhancement (January 30, 2026)
-   - Interactive legend with tooltips
-   - Summary stats row
-   - Export chart capability
-   - Responsive SVG rendering
+
+- Interactive legend with tooltips
+- Summary stats row
+- Export chart capability
+- Responsive SVG rendering
 
 5. **ExecutionFilterBar** (`src/modules/automation/components/ui/execution-filter-bar.tsx`)
    - Full-text search with debouncing
@@ -9160,6 +10055,7 @@ Added 10 new 3D Puck editor components using React Three Fiber and Spline, bring
    - Responsive layout
 
 ### Files Created - PHASE-UI-12A
+
 - `src/modules/automation/components/ui/workflow-step-card.tsx`
 - `src/modules/automation/components/ui/workflow-mini-map.tsx`
 - `src/modules/automation/components/ui/action-search-palette.tsx`
@@ -9171,6 +10067,7 @@ Added 10 new 3D Puck editor components using React Three Fiber and Spline, bring
 - `phases/enterprise-modules/PHASE-UI-12A-AUTOMATION-WORKFLOW-BUILDER-UI.md`
 
 ### Files Created - PHASE-UI-12B
+
 - `src/modules/automation/components/ui/execution-timeline.tsx`
 - `src/modules/automation/components/ui/execution-log-card.tsx`
 - `src/modules/automation/components/ui/analytics-metric-card.tsx`
@@ -9180,10 +10077,12 @@ Added 10 new 3D Puck editor components using React Three Fiber and Spline, bring
 - `phases/enterprise-modules/PHASE-UI-12B-AUTOMATION-LOGS-ANALYTICS-UI.md`
 
 ### Files Modified
+
 - `src/modules/automation/components/index.ts` - Added new component exports
 - `src/modules/automation/index.ts` - Added PHASE-UI-12A and PHASE-UI-12B exports
 
 ### Type Fixes Applied
+
 - Fixed StepStatus type to include 'cancelled' status
 - Fixed ExecutionStatus type to include 'timed_out' status
 - Used correct field names from StepExecutionLog (error vs error_message)
@@ -9265,6 +10164,7 @@ Added 10 new 3D Puck editor components using React Three Fiber and Spline, bring
 **Files Changed:** 14 e-commerce files (230 insertions, 92 deletions)
 
 #### Context
+
 Deep audit of entire e-commerce system (~310 files) using sub-agents for architecture mapping and bug discovery. Found 26+ bugs across 14 files, 3 critical (checkout completely broken).
 
 #### Critical Fixes
@@ -9283,18 +10183,22 @@ Deep audit of entire e-commerce system (~310 files) using sub-agents for archite
    - Changed to `createAdminClient()` — customers accessing quote portal via token link could never load quotes
 
 #### DB Column Name Consistency Fixes
+
 All code was using wrong column names vs actual migration schema:
+
 - **order_timeline**: code had `user_id`/`user_name` and `performed_by`/`performed_by_name`, DB has `actor_id`/`actor_name` — fixed in types, actions, and UI (order-timeline.tsx)
 - **order_notes**: code had `user_id`/`user_name`, DB has `author_id`/`author_name` — fixed in types and actions
 - **customer_notes**: code had `user_id`/`user_name`, DB has `author_id`/`author_name` — fixed in types, actions, and UI (customer-detail-dialog.tsx)
 
 #### Payment & Webhook Fixes
+
 - **Paddle webhook**: Only handled Classic event types, added Billing API events (`transaction.completed`, `transaction.payment_failed`, `adjustment.created`)
 - **Flutterwave webhook**: `tx_ref` parsing made robust, checks `meta.order_id` first
 - **Checkout API**: `payment_url` was always null, now populated from `paymentData.paymentUrl || paymentData.redirectUrl`
 - **Public order updates**: `payment_transaction_id` and `metadata` silently dropped, added to allowlist
 
 #### Data Integrity Fixes
+
 - Added `customer_name` to order creation in both public and dashboard flows
 - Added `sku` field to all cart product selects
 - Fixed quote email functions using phantom `quote.business_name` → fetches `store_name` from settings
@@ -9306,6 +10210,7 @@ All code was using wrong column names vs actual migration schema:
 - Expanded `CheckoutResult` type to match actual API response shape
 
 #### Files Modified
+
 - `checkout/route.ts` — payment_url population
 - `webhooks/payment/route.ts` — Paddle Billing + Flutterwave robustness
 - `customer-actions.ts` — supabase.sql replacement
@@ -9322,6 +10227,7 @@ All code was using wrong column names vs actual migration schema:
 - `customer-detail-dialog.tsx` — author_name display
 
 #### Remaining Known Issues (Non-Critical)
+
 - Duplicate function names across action files (e.g., `getOrders`, `updateOrderStatus` exported from both `ecommerce-actions.ts` and `order-actions.ts`) — import confusion risk but not crashes
 - `QuoteTemplate` type has both `use_count` and `usage_count` fields — potential redundancy
 - Some delete operations lack `site_id` scoping for multi-tenancy security
@@ -9359,6 +10265,7 @@ All code was using wrong column names vs actual migration schema:
    - Platform preview tabs
 
 ### Files Created - PHASE-UI-11A
+
 - `src/modules/social-media/components/ui/social-metric-card.tsx`
 - `src/modules/social-media/components/ui/social-engagement-chart.tsx`
 - `src/modules/social-media/components/ui/platform-breakdown.tsx`
@@ -9369,6 +10276,7 @@ All code was using wrong column names vs actual migration schema:
 - `phases/enterprise-modules/PHASE-UI-11A-SOCIAL-DASHBOARD-UI.md`
 
 ### Files Created - PHASE-UI-11B
+
 - `src/modules/social-media/components/ui/calendar-day-cell.tsx`
 - `src/modules/social-media/components/ui/calendar-post-card.tsx`
 - `src/modules/social-media/components/ui/calendar-week-view.tsx`
@@ -9380,11 +10288,13 @@ All code was using wrong column names vs actual migration schema:
 - `phases/enterprise-modules/PHASE-UI-11B-SOCIAL-CALENDAR-COMPOSER-UI.md`
 
 ### Files Modified
+
 - `src/modules/social-media/components/SocialDashboardWrapper.tsx`
 - `src/modules/social-media/components/index.ts`
 - `src/modules/social-media/components/ui/index.ts`
 
 ### Type Fixes Applied
+
 - Fixed snake_case to camelCase property names (scheduledAt, accountId, accountName, accountHandle, accountAvatar)
 - Fixed PLATFORM_CONFIGS.icon usage (string emoji, not React component)
 - Fixed motion.div drag event handler type incompatibilities
@@ -9521,6 +10431,7 @@ All code was using wrong column names vs actual migration schema:
     - Form submission status indicator
 
 ### Files Created - PHASE-UI-05A
+
 - `src/components/dashboard/dashboard-grid.tsx`
 - `src/components/dashboard/dashboard-widget.tsx`
 - `src/components/dashboard/dashboard-header.tsx`
@@ -9530,6 +10441,7 @@ All code was using wrong column names vs actual migration schema:
 - `phases/enterprise-modules/PHASE-UI-05A-DASHBOARD-PAGE-OVERHAUL.md`
 
 ### Files Created - PHASE-UI-05B
+
 - `src/components/charts/chart-container.tsx`
 - `src/components/charts/area-chart-widget.tsx`
 - `src/components/charts/line-chart-widget.tsx`
@@ -9541,6 +10453,7 @@ All code was using wrong column names vs actual migration schema:
 - `phases/enterprise-modules/PHASE-UI-05B-DASHBOARD-ANALYTICS-CHARTS.md`
 
 ### Files Created - PHASE-UI-06
+
 - `src/components/feedback/page-loader.tsx`
 - `src/components/feedback/empty-state.tsx`
 - `src/components/feedback/error-state.tsx`
@@ -9550,6 +10463,7 @@ All code was using wrong column names vs actual migration schema:
 - `phases/enterprise-modules/PHASE-UI-06-LOADING-EMPTY-ERROR-STATES.md`
 
 ### Files Modified
+
 - `src/components/dashboard/index.ts`
 - `src/app/(dashboard)/dashboard/page.tsx`
 
@@ -9652,11 +10566,13 @@ All code was using wrong column names vs actual migration schema:
    - DateRangeInput variant
 
 ### Files Created - Dashboard (PHASE-UI-04B)
+
 - `src/components/dashboard/activity-timeline.tsx`
 - `src/components/dashboard/dashboard-section.tsx`
 - `phases/enterprise-modules/PHASE-UI-04B-COMPONENT-POLISH-DASHBOARD.md`
 
 ### Files Created - Forms (PHASE-UI-04C)
+
 - `src/components/ui/input-with-icon.tsx`
 - `src/components/ui/search-input.tsx`
 - `src/components/ui/textarea-with-counter.tsx`
@@ -9667,6 +10583,7 @@ All code was using wrong column names vs actual migration schema:
 - `phases/enterprise-modules/PHASE-UI-04C-COMPONENT-POLISH-FORMS-INPUTS.md`
 
 ### Files Modified
+
 - `src/components/dashboard/dashboard-stats.tsx` - Framer Motion animations, tooltips, trends
 - `src/components/dashboard/welcome-card.tsx` - Time-based greeting, gradient, tips
 - `src/components/dashboard/recent-activity.tsx` - Filtering, load more, animations
@@ -9682,6 +10599,7 @@ All code was using wrong column names vs actual migration schema:
 ## 🚀 PHASE-UI-04A: Component Polish - Core UI (January 30, 2026)
 
 ### What Was Built
+
 Enhanced core UI components with loading states, semantic variants, and polished interactions:
 
 1. **LoadingButton** (`src/components/ui/loading-button.tsx`)
@@ -9738,6 +10656,7 @@ Enhanced core UI components with loading states, semantic variants, and polished
    - Presets: SkeletonText, SkeletonAvatar, SkeletonCard, SkeletonTable, SkeletonStats, SkeletonList
 
 ### Files Created
+
 - `src/components/ui/loading-button.tsx`
 - `src/components/ui/empty-state.tsx`
 - `src/components/ui/stat.tsx`
@@ -9746,6 +10665,7 @@ Enhanced core UI components with loading states, semantic variants, and polished
 - `phases/enterprise-modules/PHASE-UI-04A-COMPONENT-POLISH-CORE-UI.md`
 
 ### Files Modified
+
 - `src/components/ui/alert.tsx` - Added success/warning/info/muted variants, AlertWithIcon
 - `src/components/ui/progress.tsx` - Added sizes, variants, labels, StageProgress
 - `src/components/ui/skeleton.tsx` - Added shape variants and preset components
@@ -9759,6 +10679,7 @@ Enhanced core UI components with loading states, semantic variants, and polished
 ## 🚀 PHASE-UI-03A & PHASE-UI-03B: Navigation Enhancement (January 30, 2026)
 
 ### What Was Built - Desktop (PHASE-UI-03A)
+
 Enhanced desktop navigation with command palette, keyboard shortcuts, and quick actions:
 
 1. **Command Palette** (`src/components/layout/command-palette.tsx`)
@@ -9797,6 +10718,7 @@ Enhanced desktop navigation with command palette, keyboard shortcuts, and quick 
    - `SidebarQuickActions` - Inline version for sidebar
 
 ### What Was Built - Mobile (PHASE-UI-03B)
+
 Touch-optimized mobile navigation components:
 
 1. **Mobile Command Sheet** (`src/components/layout/mobile-command-sheet.tsx`)
@@ -9823,6 +10745,7 @@ Touch-optimized mobile navigation components:
    - 56px diameter with plus icon
 
 ### Files Created
+
 - `src/hooks/use-keyboard-shortcuts.ts` - Global keyboard shortcuts
 - `src/hooks/use-recent-items.ts` - Recent items tracking
 - `src/components/layout/command-palette.tsx` - Desktop command palette
@@ -9836,6 +10759,7 @@ Touch-optimized mobile navigation components:
 - `phases/enterprise-modules/PHASE-UI-03B-NAVIGATION-ENHANCEMENT-MOBILE.md`
 
 ### Files Modified
+
 - `src/hooks/index.ts` - Export new hooks
 - `src/components/layout/index.ts` - Export new components
 - `src/components/layout/dashboard-layout-client.tsx` - Integrate CommandPalette, QuickActions, MobileFAB
@@ -9848,6 +10772,7 @@ Touch-optimized mobile navigation components:
 ## 🚀 PHASE-UI-02B: Layout Mobile Responsiveness (January 30, 2026)
 
 ### What Was Built
+
 Enhanced mobile experience with bottom navigation, swipe gestures, and responsive utilities:
 
 1. **Media Query Hooks** (`src/hooks/use-media-query.ts`)
@@ -9898,6 +10823,7 @@ Enhanced mobile experience with bottom navigation, swipe gestures, and responsiv
    - Clean exports for all custom hooks
 
 ### Files Created
+
 - `src/hooks/use-media-query.ts` - Responsive breakpoint hooks
 - `src/hooks/use-scroll-direction.ts` - Scroll detection hooks
 - `src/hooks/index.ts` - Hooks barrel export
@@ -9906,6 +10832,7 @@ Enhanced mobile experience with bottom navigation, swipe gestures, and responsiv
 - `phases/enterprise-modules/PHASE-UI-02B-LAYOUT-MOBILE-RESPONSIVENESS.md` - Phase doc
 
 ### Files Modified
+
 - `src/components/layout/header-modern.tsx` - Auto-hide, mobile sizing
 - `src/components/layout/dashboard-layout-client.tsx` - Integrate mobile components
 - `src/components/layout/index.ts` - Export new components
@@ -9918,6 +10845,7 @@ Enhanced mobile experience with bottom navigation, swipe gestures, and responsiv
 ## 🚀 PHASE-UI-02A: Layout System Modernization (January 30, 2026)
 
 ### What Was Built
+
 Modernized dashboard layout system with smooth animations and improved UX:
 
 1. **Sidebar Context** (`src/components/layout/sidebar-context.tsx`)
@@ -9964,6 +10892,7 @@ Modernized dashboard layout system with smooth animations and improved UX:
    - Legacy exports for backwards compatibility
 
 ### Files Created
+
 - `src/components/layout/sidebar-context.tsx` - State management
 - `src/components/layout/breadcrumbs.tsx` - Navigation breadcrumbs
 - `src/components/layout/sidebar-modern.tsx` - Animated sidebar
@@ -9974,6 +10903,7 @@ Modernized dashboard layout system with smooth animations and improved UX:
 - `phases/enterprise-modules/PHASE-UI-02A-LAYOUT-SYSTEM-MODERNIZATION.md` - Phase doc
 
 ### Files Modified
+
 - `src/app/(dashboard)/layout.tsx` - Uses new DashboardLayoutClient
 
 **TypeScript**: ✅ Zero errors
@@ -9984,6 +10914,7 @@ Modernized dashboard layout system with smooth animations and improved UX:
 ## 🚀 PHASE-UI-01: Design System Audit & Token Consolidation (January 30, 2026)
 
 ### What Was Built
+
 Consolidated design system with semantic color utilities:
 
 1. **Semantic Color Utilities** (`src/config/brand/semantic-colors.ts`)
@@ -10020,11 +10951,13 @@ Consolidated design system with semantic color utilities:
    - Best practices and guidelines
 
 ### Files Created
+
 - `src/config/brand/semantic-colors.ts` - Semantic color utilities
 - `src/config/brand/README.md` - Design system documentation
 - `phases/enterprise-modules/PHASE-UI-01-DESIGN-SYSTEM-AUDIT.md` - Phase document
 
 ### Files Modified
+
 - `src/config/brand/index.ts` - Added semantic color exports
 - `src/components/ui/badge.tsx` - Added StatusBadge component
 - `src/modules/social-media/components/SocialDashboard.tsx` - Fixed hardcoded colors
@@ -10038,6 +10971,7 @@ Consolidated design system with semantic color utilities:
 ## 🚀 PHASE-EH-01: Core Error Infrastructure (January 30, 2026)
 
 ### What Was Built
+
 Enterprise-grade error handling foundation:
 
 1. **ActionResult Type System** (`src/lib/types/result.ts`)
@@ -10071,6 +11005,7 @@ Enterprise-grade error handling foundation:
    - `logError()` convenience function
 
 ### Files Created
+
 - `src/lib/types/result.ts` - ActionResult type, Errors factory
 - `src/lib/types/index.ts` - Types barrel export
 - `src/components/error-boundary/global-error-boundary.tsx`
@@ -10080,9 +11015,11 @@ Enterprise-grade error handling foundation:
 - `src/lib/error-logger.ts`
 
 ### Files Modified
+
 - `src/components/providers/index.tsx` - Added GlobalErrorBoundary wrapper
 
 ### Phase Document
+
 `/phases/enterprise-modules/PHASE-EH-01-CORE-ERROR-INFRASTRUCTURE.md`
 
 **TypeScript**: ✅ Zero errors (`tsc --noEmit` exit code 0)
@@ -10092,6 +11029,7 @@ Enterprise-grade error handling foundation:
 ## 🚀 Master Build Prompt V2.1 (January 30, 2026)
 
 ### What's New in V2.1
+
 Enhanced with comprehensive **Platform Discovery Analysis** including:
 
 1. **User Personas** - 6 complete persona cards with goals, pain points, access levels
@@ -10105,9 +11043,11 @@ Enhanced with comprehensive **Platform Discovery Analysis** including:
 9. **Business Logic** - Pricing tiers, validation rules, access control
 
 ### Location
+
 `/phases/MASTER-BUILD-PROMPT-V2.md`
 
 ### Key Stats
+
 - **78 phases** across 7 groups
 - **~280 hours** estimated effort
 - **100+ routes** documented
@@ -10119,17 +11059,21 @@ Enhanced with comprehensive **Platform Discovery Analysis** including:
 ## ⚠️ CRITICAL ISSUES RESOLVED
 
 ### Vercel Build Fix (January 29, 2026 - 22:23 UTC)
+
 **Issue**: Build failed with "Server Actions must be async functions" error
+
 - `getRoleDefaults` was exported from `team-actions.ts` (has `'use server'` directive)
 - Next.js requires all exports from Server Action files to be async
 - But `getRoleDefaults` is a pure utility function, doesn't need to be async
 
 **Solution**: Created `lib/team-utils.ts` and moved `getRoleDefaults` there
+
 - Utility functions should NOT be in Server Action files
 - Updated imports in `team-actions.ts` and `SocialSettingsPage.tsx`
 - Build now passes ✅
 
 **Files Changed**:
+
 - NEW: `src/modules/social-media/lib/team-utils.ts` (pure utility)
 - UPDATED: `team-actions.ts` (removed function, added import)
 - UPDATED: `SocialSettingsPage.tsx` (updated import path)
@@ -10139,6 +11083,7 @@ Enhanced with comprehensive **Platform Discovery Analysis** including:
 ## ⚠️ CRITICAL WORKFLOW REMINDER
 
 **Dev Server: Run in EXTERNAL terminal, NOT through Copilot!**
+
 - User runs `pnpm dev` in their own PowerShell/terminal
 - Copilot focuses on code edits, TypeScript checks, git commands
 - See `techContext.md` for full details
@@ -10148,15 +11093,18 @@ Enhanced with comprehensive **Platform Discovery Analysis** including:
 ## Current Work Focus
 
 ### ✅ COMPLETE: Social Media Module Feature Expansion (January 29, 2026)
+
 **Status**: ✅ RESOLVED - All internal features implemented (without external APIs)
 
 #### Deep Scan Results
-Scanned all 4 action files (account, post, analytics, inbox - each 400-700 lines), 
+
+Scanned all 4 action files (account, post, analytics, inbox - each 400-700 lines),
 components (8 files), types (877 lines), and 3 database migrations.
 
 #### Gap Identified & Features Implemented
 
 **NEW Action Files Created:**
+
 1. **campaign-actions.ts** - Full campaign CRUD + analytics
    - `getCampaigns`, `getCampaign`, `createCampaign`, `updateCampaign`
    - `deleteCampaign`, `archiveCampaign`, `pauseCampaign`, `resumeCampaign`
@@ -10175,6 +11123,7 @@ components (8 files), types (877 lines), and 3 database migrations.
    - Separated from Server Actions to avoid build errors
 
 **NEW Pages & Components Created:**
+
 1. **Analytics Page** (`/social/analytics`)
    - SocialAnalyticsPage component with stat cards, platform breakdown
    - Best times to post, top performing posts, engagement heatmap
@@ -10197,6 +11146,7 @@ components (8 files), types (877 lines), and 3 database migrations.
    - General Settings: Default behaviors and danger zone
 
 **Updated Files:**
+
 1. **layout.tsx** - Added 4 new nav items (Analytics, Campaigns, Approvals, Settings)
 2. **components/index.ts** - Exported new components
 3. **actions/index.ts** - Created barrel export for all actions
@@ -10204,6 +11154,7 @@ components (8 files), types (877 lines), and 3 database migrations.
 **TypeScript**: ✅ Zero errors (`tsc --noEmit` exit code 0)
 
 #### What Still Needs External APIs (Future)
+
 - OAuth flows for Facebook, Instagram, Twitter, etc.
 - Actual post publishing to platforms
 - Real-time message sync from platforms
@@ -10212,19 +11163,22 @@ components (8 files), types (877 lines), and 3 database migrations.
 ---
 
 ### Previous: Social Media Navigation & CRM Access Control (January 29, 2026)
+
 **Status**: ✅ RESOLVED - Proper navigation tabs for Social, access control for CRM
 
 #### Issue Found: Modules Visible Without Subscription
+
 **Problem**: Social and CRM tabs were showing on site detail page even without subscription
 **Root Cause**: Tabs/buttons were hardcoded without checking module installation status
 **Expected Behavior**: Module UI should only appear after subscription → enable on site
 
 #### Module Marketplace Flow (CRITICAL UNDERSTANDING)
+
 ```
 1. modules_v2 (Marketplace catalog)
        ↓ Agency subscribes (free or paid)
 2. agency_module_subscriptions (status: 'active')
-       ↓ Agency enables on specific site  
+       ↓ Agency enables on specific site
 3. site_module_installations (is_enabled: true)
        ↓ ONLY THEN
 4. Module UI appears + routes become accessible
@@ -10233,19 +11187,28 @@ components (8 files), types (877 lines), and 3 database migrations.
 #### Solution Implemented
 
 **1. Server Action for Module Access Check** (`src/lib/actions/sites.ts`):
+
 ```typescript
-export async function getSiteEnabledModules(siteId: string): Promise<Set<string>>
-export async function isModuleEnabledForSite(siteId: string, moduleSlug: string): Promise<boolean>
+export async function getSiteEnabledModules(
+  siteId: string,
+): Promise<Set<string>>;
+export async function isModuleEnabledForSite(
+  siteId: string,
+  moduleSlug: string,
+): Promise<boolean>;
 ```
+
 - Checks agency subscription AND site installation
 - Returns set of enabled module slugs
 
 **2. Site Detail Page Updates** (`src/app/(dashboard)/dashboard/sites/[siteId]/page.tsx`):
+
 - Conditionally shows tabs: `{hasSocial && <TabsTrigger value="social">Social</TabsTrigger>}`
 - Conditionally shows buttons: `{hasSocial && <Link href=".../social"><Button>Social</Button></Link>}`
 - Module checks: `hasCRM`, `hasSocial`, `hasAutomation`, `hasAIAgents`
 
 **3. Route Guards on All Social Pages**:
+
 - `/social/page.tsx` - Added `isModuleEnabledForSite(siteId, 'social-media')` check
 - `/social/calendar/page.tsx` - Added access guard
 - `/social/compose/page.tsx` - Added access guard
@@ -10253,10 +11216,12 @@ export async function isModuleEnabledForSite(siteId: string, moduleSlug: string)
 - Redirect to `?tab=modules` if not enabled (prompts to enable)
 
 **4. Module Dashboard Links** (`src/components/sites/site-modules-tab.tsx`):
+
 - Added `social-media` and `ai-agents` to modules with "Open" button
 - Proper URL mapping: `social-media` → `/social`, `ai-agents` → `/ai-agents`
 
 #### Scripts Created for Testing
+
 - `scripts/make-social-media-free.sql` - Makes module free for testing
 - `scripts/test-social-media-module.sql` - Comprehensive testing queries
 
@@ -10265,18 +11230,22 @@ export async function isModuleEnabledForSite(siteId: string, moduleSlug: string)
 ---
 
 ### ✅ COMPLETE: Phase EM-54 Social Media Module - Client Wrapper Fixes (January 29, 2026)
+
 **Status**: ✅ RESOLVED - All TypeScript errors fixed, wrappers properly implemented
 
 #### Architecture Decision: Social Media Module Placement
+
 **Module Level**: Site-level (social accounts belong to sites, not agencies)
 **Marketplace Status**: Needs registration in `modules_v2` table
 **URL Pattern**: `/dashboard/sites/${siteId}/social/*`
 
 #### Client Wrapper Pattern (Server → Client Components)
+
 **Problem**: Server Components cannot pass function handlers to Client Components
 **Solution**: Created client wrapper components that handle navigation/actions internally
 
 **Files Created:**
+
 1. `ContentCalendarWrapper.tsx` - Wraps ContentCalendar with:
    - Props: `siteId`, `posts`, `accounts`, `userId`
    - Handlers: `handleCreatePost`, `handleEditPost`, `handleDeletePost`, `handleDuplicatePost`, `handleApprovePost`, `handleRejectPost`, `handlePublishNow`
@@ -10288,6 +11257,7 @@ export async function isModuleEnabledForSite(siteId: string, moduleSlug: string)
    - Properly calls `createPost(siteId, tenantId, userId, data)` and `updatePost(postId, siteId, updates)`
 
 **Function Signature Fixes:**
+
 - `deletePost(postId, siteId)` - added siteId
 - `approvePost(postId, siteId, userId, notes?)` - added siteId, userId
 - `rejectPost(postId, siteId, userId, reason)` - all 4 params required
@@ -10295,10 +11265,12 @@ export async function isModuleEnabledForSite(siteId: string, moduleSlug: string)
 - `updatePost(postId, siteId, updates)` - siteId as 2nd arg, removed invalid `status` field
 
 **Page Updates:**
+
 - `calendar/page.tsx` - Passes `userId` to ContentCalendarWrapper
 - `compose/page.tsx` - Already passing `siteId`, `tenantId`, `userId`
 
 #### Migration Files Created (Not Yet Applied)
+
 1. `em-54-social-media-flat-tables.sql`:
    - Creates 13 tables with flat naming (`social_*` instead of `mod_social.*`)
    - PostgREST requires flat table names in public schema
@@ -10316,24 +11288,31 @@ export async function isModuleEnabledForSite(siteId: string, moduleSlug: string)
 ---
 
 ### ✅ COMPLETE: Critical Bug Fixes (January 29, 2026)
+
 **Status**: ✅ RESOLVED - All major issues fixed
 
 #### Issue 1: AI Agents "column ai_agents.type does not exist"
+
 **Root Cause**: Code used `type` column but database uses `agent_type`
 **Fix Applied**:
+
 - Changed `query.eq('type', ...)` to `query.eq('agent_type', ...)`
 - Changed insert `.insert({ type: ...})` to `.insert({ agent_type: ...})`
 - Changed `mapAgent` to read `data.agent_type` instead of `data.type`
 
 #### Issue 2: Social Media "Could not find table mod_social.accounts"
+
 **Root Cause**: Code used schema-qualified names (`mod_social.accounts`) but PostgREST doesn't support schemas
 **Fix Applied**:
+
 - Changed all table references from `mod_social.tablename` to `social_tablename` pattern
 - Tables: `social_accounts`, `social_posts`, `social_analytics_daily`, `social_post_analytics`, `social_optimal_times`, `social_inbox_items`, `social_approval_requests`, `social_saved_replies`, `social_publish_log`
 
 #### Issue 3: "Event handlers cannot be passed to Client Component props"
+
 **Root Cause**: Server Component passing function handlers to Client Component
 **Fix Applied**:
+
 - Created `SocialDashboardWrapper.tsx` client component
 - Wrapper handles navigation callbacks internally using `useRouter`
 - Server page now passes only data props (no functions)
@@ -10344,15 +11323,18 @@ export async function isModuleEnabledForSite(siteId: string, moduleSlug: string)
 ---
 
 ### ✅ COMPLETE: Fix 404 Routing Errors (January 29, 2026)
+
 **Issue**: 404 errors on `/dashboard/sites` and other pages due to route conflicts
 **Status**: ✅ RESOLVED
 
 **Root Cause:**
+
 - Routes at `src/app/dashboard/[siteId]/` (outside layout group) were catching ALL `/dashboard/*` paths
 - When accessing `/dashboard/sites`, Next.js matched it as `[siteId]=sites` causing 404
 - Module routes (ai-agents, automation, social, etc.) existed outside the `(dashboard)` layout group
 
 **Fix Applied:**
+
 1. **Moved Module Routes** - Relocated all module routes from `src/app/dashboard/[siteId]/` to `src/app/(dashboard)/dashboard/sites/[siteId]/`
 2. **Updated Path References** - Fixed 50+ files with hardcoded paths:
    - Changed `/dashboard/${siteId}/ai-agents` → `/dashboard/sites/${siteId}/ai-agents`
@@ -10362,6 +11344,7 @@ export async function isModuleEnabledForSite(siteId: string, moduleSlug: string)
 3. **TypeScript Verification** - ✅ Zero errors after cleanup
 
 **Files Modified:**
+
 - Moved: `ai-agents/`, `automation/`, `booking/`, `crm/`, `ecommerce/`, `social/` directories
 - Updated: 15+ component files, 10+ action files, multiple layout/page files
 - Pattern: All `/dashboard/${id}/module` → `/dashboard/sites/${id}/module`
@@ -10369,10 +11352,12 @@ export async function isModuleEnabledForSite(siteId: string, moduleSlug: string)
 ---
 
 ### ✅ COMPLETE: Phase EM-54 Social Media Integration (January 28, 2026)
+
 **Status**: ✅ COMPLETE - Site detail page integration + Comprehensive Testing Guide  
-**TypeScript Compilation**: ✅ Zero errors (`tsc --noEmit` passes)  
+**TypeScript Compilation**: ✅ Zero errors (`tsc --noEmit` passes)
 
 **Testing Guide Created** (`docs/PHASE-EM-54-TESTING-GUIDE.md`):
+
 - **6 Real-World Scenarios**: Step-by-step workflows with actual field data
 - **Scenario 1**: Connect Social Accounts (Facebook, Instagram, Twitter with mock OAuth)
 - **Scenario 2**: Create & Schedule Posts (Multi-platform targeting, media upload, scheduling)
@@ -10382,6 +11367,7 @@ export async function isModuleEnabledForSite(siteId: string, moduleSlug: string)
 - **Scenario 6**: Campaign Management (Goals, budget, hashtags, post linking)
 
 **Testing Features**:
+
 - ✅ Real SQL insert statements with actual test data
 - ✅ Verification queries for data integrity
 - ✅ Common issues & troubleshooting section
@@ -10390,6 +11376,7 @@ export async function isModuleEnabledForSite(siteId: string, moduleSlug: string)
 - ✅ Zero placeholders - all fields have real values
 
 **Integration Added (Latest Session):**
+
 1. **Site Social Tab Component** (`src/components/sites/site-social-tab.tsx`):
    - Overview card with link to Social Dashboard
    - Feature cards: Connected Accounts, Compose & Publish, Content Calendar, Unified Inbox
@@ -10403,14 +11390,16 @@ export async function isModuleEnabledForSite(siteId: string, moduleSlug: string)
    - Added "Social" tab trigger and content
 
 **Now Matches Pattern Of:**
+
 - Automation button → `/dashboard/${site.id}/automation`
 - AI Agents button → `/dashboard/${site.id}/ai-agents`
 - **Social button** → `/dashboard/${site.id}/social` ✅
 
 ### ✅ COMPLETE: Phase EM-54 Social Media Management Module (January 28, 2026)
+
 **Status**: ✅ COMPLETE - Full Hootsuite + Sprout Social style implementation  
 **TypeScript Compilation**: ✅ Zero errors (`tsc --noEmit` passes)  
-**Quality Assurance**: ✅ All files pass TypeScript strict mode  
+**Quality Assurance**: ✅ All files pass TypeScript strict mode
 
 **What Was Built:**
 
@@ -10477,6 +11466,7 @@ export async function isModuleEnabledForSite(siteId: string, moduleSlug: string)
    - Module index with barrel exports
 
 **Features Implemented:**
+
 - Multi-platform publishing (10 platforms)
 - Content calendar with month/week/list views
 - Post scheduling with optimal time suggestions
@@ -10489,24 +11479,28 @@ export async function isModuleEnabledForSite(siteId: string, moduleSlug: string)
 - Platform-specific content customization
 
 ### ✅ VERIFIED: All AI Agent Phases Complete & Production Ready (January 28, 2026)
+
 **Status**: ✅ VERIFIED - Deep platform scan confirms all 3 phases fully implemented  
 **TypeScript Compilation**: ✅ Zero errors (`tsc --noEmit` passes)  
-**Next.js Build**: ✅ Successfully compiles (`pnpm next build` passes)  
+**Next.js Build**: ✅ Successfully compiles (`pnpm next build` passes)
 
 **Verification Summary:**
+
 - Phase EM-58A: 13 database tables, LLM/memory/tools/runtime/security systems ✅
 - Phase EM-58B: 6 marketplace tables, 12 templates, builder UI, analytics, billing ✅
 - Phase EM-58C: 9 app routes, 7 API routes, automation trigger handler ✅
 
 **Build Fix Applied (January 28, 2026):**
+
 - Removed file-level `'use server'` directives from permissions.ts and executor.ts
 - These were causing Turbopack build errors (sync functions can't be server actions)
 - The `'use server'` directive at file top treats ALL exports as server actions
 - Sync utility functions (`assessActionRisk`, `needsApproval`, etc.) don't need it
 
 ### ✅ COMPLETED: Phase EM-58C AI Agents - Real-World Integration (January 28, 2026)
+
 **Status**: ✅ COMPLETE - AI Agents integrated into platform navigation and API  
-**TypeScript Compilation**: ✅ Zero errors - Production ready  
+**TypeScript Compilation**: ✅ Zero errors - Production ready
 
 **What Was Built:**
 
@@ -10558,9 +11552,10 @@ export async function isModuleEnabledForSite(siteId: string, moduleSlug: string)
 ---
 
 ### ✅ COMPLETED: Phase EM-58B AI Agents - Templates, UI & Analytics (January 28, 2026)
+
 **Status**: ✅ COMPLETE - Full AI agent marketplace, analytics, and billing UI ready  
 **TypeScript Compilation**: ✅ Zero errors - Production ready  
-**Quality Assurance**: ✅ All 27 files pass TypeScript strict mode  
+**Quality Assurance**: ✅ All 27 files pass TypeScript strict mode
 
 **What Was Built:**
 
@@ -10643,19 +11638,20 @@ export async function isModuleEnabledForSite(siteId: string, moduleSlug: string)
      - Usage: Billing and limits
 
 **Tier Pricing Structure:**
-| Tier         | Monthly | Tokens/mo | Executions/mo | Agents | Models               |
+| Tier | Monthly | Tokens/mo | Executions/mo | Agents | Models |
 |--------------|---------|-----------|---------------|--------|----------------------|
-| Free         | $0      | 50K       | 100           | 2      | GPT-4o-mini          |
-| Starter      | $29     | 500K      | 1,000         | 5      | GPT-4o-mini, GPT-4o  |
-| Professional | $99     | 2M        | 5,000         | 15     | + Claude 3.5 Sonnet  |
-| Business     | $299    | 10M       | 25,000        | 50     | + Claude Opus        |
-| Enterprise   | Custom  | Unlimited | Unlimited     | ∞      | All + Fine-tuning    |
+| Free | $0 | 50K | 100 | 2 | GPT-4o-mini |
+| Starter | $29 | 500K | 1,000 | 5 | GPT-4o-mini, GPT-4o |
+| Professional | $99 | 2M | 5,000 | 15 | + Claude 3.5 Sonnet |
+| Business | $299 | 10M | 25,000 | 50 | + Claude Opus |
+| Enterprise | Custom | Unlimited | Unlimited | ∞ | All + Fine-tuning |
 
 ---
 
 ### ✅ COMPLETED: Phase EM-58A AI Agents - Core Infrastructure (January 28, 2026)
+
 **Status**: ✅ COMPLETE - Full AI agent infrastructure ready for integration  
-**TypeScript Compilation**: ✅ Zero errors  
+**TypeScript Compilation**: ✅ Zero errors
 
 **What Was Built:**
 
@@ -10755,6 +11751,7 @@ export async function isModuleEnabledForSite(siteId: string, moduleSlug: string)
    - Added to EVENT_CATEGORIES with 🤖 icon
 
 **Architecture Summary:**
+
 ```
 src/lib/ai-agents/
 ├── index.ts              # Main exports
@@ -10790,6 +11787,7 @@ src/lib/ai-agents/
 ```
 
 **Integration Points:**
+
 - Uses `logAutomationEvent()` from EM-57 for event tracking
 - Uses `auth.can_access_site()` RLS helper from phase-59
 - Compatible with existing Supabase patterns
@@ -10798,8 +11796,9 @@ src/lib/ai-agents/
 ---
 
 ### ✅ COMPLETED: Enhanced Dashboard with Real Data (January 28, 2026)
+
 **Status**: ✅ COMPLETE - Dashboard now uses real platform data instead of fake samples  
-**TypeScript Compilation**: ✅ Zero errors  
+**TypeScript Compilation**: ✅ Zero errors
 
 **What Was Done:**
 
@@ -10823,6 +11822,7 @@ src/lib/ai-agents/
      - **NEW**: Agency name and subscription plan
 
 3. **New Dashboard Components Created:**
+
    ```
    src/components/dashboard/
    ├── welcome-card.tsx         # Welcome card with agency name & plan
@@ -10843,6 +11843,7 @@ src/lib/ai-agents/
    - All data pulled from real platform database
 
 **Dashboard Now Shows:**
+
 - Welcome message with user name, agency name, and subscription plan
 - Core stats: Total Clients, Total Sites, Published Sites, Total Pages
 - Enhanced metrics: Active Modules, Media Assets, Form Submissions, Blog Posts, Team Members, Active Workflows
@@ -10855,6 +11856,7 @@ src/lib/ai-agents/
 ---
 
 ### ✅ COMPLETED: Enterprise Brand System (January 28, 2026)
+
 **Status**: ✅ COMPLETE - Centralized branding configuration system  
 **TypeScript Compilation**: ✅ Zero errors  
 **Commit**: `e019605`
@@ -10878,6 +11880,7 @@ src/styles/
 ```
 
 **Key Features:**
+
 1. **Color Scales (50-950)** - Full 11-shade scales for all colors:
    - Brand: `primary` (Violet), `secondary` (Teal), `accent` (Pink)
    - Status: `success`, `warning`, `danger`, `info`
@@ -10907,6 +11910,7 @@ src/styles/
    - All existing components continue to function
 
 **Files Created:**
+
 - `src/config/brand/types.ts` - 380+ lines of type definitions
 - `src/config/brand/colors/utils.ts` - Color conversion/manipulation
 - `src/config/brand/colors/index.ts` - Color scales and config
@@ -10919,6 +11923,7 @@ src/styles/
 - `docs/BRAND-SYSTEM.md` - Comprehensive documentation
 
 **Files Modified:**
+
 - `tailwind.config.ts` - Added full color scale support
 - `src/app/globals.css` - Import brand-variables.css
 - `src/app/layout.tsx` - Use brand config for metadata
@@ -10927,6 +11932,7 @@ src/styles/
 ---
 
 ### ✅ COMPLETED: EM-59B Paddle Billing - Post-Checkout Bug Fixes (January 28, 2026)
+
 **Status**: ✅ COMPLETE - Billing page displays correctly after Paddle checkout  
 **Wave 5 Business**: 2/3 BILLING COMPLETE (66%)  
 **TypeScript Compilation**: ✅ Zero errors
@@ -10950,6 +11956,7 @@ src/styles/
    - Imports added: `Alert, AlertDescription, AlertTitle`, `CheckCircle2, XCircle`
 
 **Files Modified:**
+
 - `src/components/billing/paddle-subscription-card.tsx` - StatusBadge null safety + API response parsing
 - `src/components/billing/paddle-invoice-history.tsx` - StatusBadge null safety
 - `src/app/(dashboard)/dashboard/billing/page.tsx` - Success/cancelled alerts
@@ -10957,6 +11964,7 @@ src/styles/
 ---
 
 ### ✅ COMPLETED: EM-59B Paddle Billing - CSP Fix & Page Consolidation (January 27, 2026)
+
 **Status**: ✅ COMPLETE - Paddle checkout now working  
 **Wave 5 Business**: 2/3 BILLING COMPLETE (66%)  
 **TypeScript Compilation**: ✅ Zero errors
@@ -10990,6 +11998,7 @@ src/styles/
    - Old LemonSqueezy components kept but marked deprecated
 
 **Files Modified:**
+
 - `next.config.ts` - Added Paddle-permissive CSP for billing routes
 - `src/app/(dashboard)/settings/billing/page.tsx` - Use Paddle components
 - `src/app/(dashboard)/dashboard/billing/page.tsx` - Use Paddle components
@@ -10997,6 +12006,7 @@ src/styles/
 ---
 
 ### ✅ COMPLETED: EM-59B Paddle Billing Integration - Final Fixes (January 26, 2026)
+
 **Status**: ✅ COMPLETE - All issues fixed and tested  
 **Wave 5 Business**: 2/3 BILLING COMPLETE (66%)  
 **TypeScript Compilation**: ✅ Zero errors
@@ -11028,21 +12038,24 @@ src/styles/
    - Pricing page now accessible without login
 
 **Files Modified:**
+
 - `src/lib/actions/auth.ts` - Use admin client for signup database operations
 - `src/app/pricing/page.tsx` - Check auth state, pass user data to pricing cards
-- `.env.local` - Added NEXT_PUBLIC_ prefix to price IDs
+- `.env.local` - Added NEXT*PUBLIC* prefix to price IDs
 - `docs/PADDLE-TESTING-GUIDE.md` - Updated env variable names
 - `src/proxy.ts` - Added /pricing to public routes (done earlier)
 
 ---
 
 ### ✅ COMPLETED: EM-59B Paddle Billing Integration - UI, Portal & Operations (January 26, 2026)
+
 **Status**: ✅ COMPLETE - All UI components, services, and API routes implemented  
 **TypeScript Compilation**: ✅ Zero errors
 
 **What was built:**
 
 **UI Components:**
+
 - `src/components/billing/pricing-card.tsx` - Pricing plan display with checkout integration
 - `src/components/billing/billing-cycle-toggle.tsx` - Monthly/yearly toggle with savings badge
 - `src/components/billing/usage-dashboard.tsx` - Usage metrics visualization with projections
@@ -11051,14 +12064,17 @@ src/styles/
 - `src/components/admin/billing-overview.tsx` - Admin billing metrics dashboard
 
 **Pages:**
+
 - `src/app/pricing/page.tsx` - Public pricing page with FAQ
 - `src/app/(dashboard)/admin/billing/page.tsx` - Admin billing dashboard
 
 **Services:**
+
 - `src/lib/paddle/dunning-service.ts` - Payment failure handling, retry emails, account suspension
 - `src/lib/paddle/enterprise-service.ts` - Enterprise quote generation, pricing calculation, acceptance
 
 **API Routes (6 new):**
+
 - `src/app/api/billing/paddle/subscription/cancel/route.ts` - Cancel subscription
 - `src/app/api/billing/paddle/subscription/pause/route.ts` - Pause subscription
 - `src/app/api/billing/paddle/subscription/resume/route.ts` - Resume subscription
@@ -11067,14 +12083,17 @@ src/styles/
 - `src/app/api/admin/billing/overview/route.ts` - Admin billing metrics
 
 **Extended subscription-service.ts with:**
+
 - `reactivateSubscription()` - Reactivate canceled/paused subscriptions
 - `getUpdatePaymentUrl()` - Get Paddle payment update URL
 - `getSubscriptionDetails()` - Get subscription with management URLs
 
 **Test Utilities:**
+
 - `src/lib/paddle/__tests__/test-utils.ts` - Sandbox test cards, webhook simulation, helpers
 
 **Key Features:**
+
 1. **Pricing UI** - Beautiful pricing cards with feature comparison, usage limits, yearly savings
 2. **Subscription Management** - Cancel, pause, resume, upgrade/downgrade
 3. **Usage Dashboard** - Real-time usage tracking, progress bars, overage projections
@@ -11084,6 +12103,7 @@ src/styles/
 7. **Admin Dashboard** - MRR/ARR metrics, churn rate, top agencies by revenue
 
 **Updated index.ts exports:**
+
 - Added DunningService, dunningService singleton
 - Added EnterpriseService, enterpriseService singleton
 - All new types exported
@@ -11091,16 +12111,19 @@ src/styles/
 ---
 
 ### ✅ Previously: EM-59A Paddle Billing Integration (January 26, 2026)
+
 **Status**: ✅ COMPLETE - All services, UI, and API routes implemented  
 **Wave 5 Business**: 1/3 COMPLETE (33%)  
 **TypeScript Compilation**: ✅ Zero errors
 
 **Why Paddle?**
+
 - Paddle supports Zambia payouts via Payoneer/Wise
 - LemonSqueezy does NOT support Zambia
 - Payment flow: Paddle → Payoneer/Wise → Zambia Bank Account
 
 **What was built:**
+
 - Paddle Node.js SDK integration with server-side client
 - Paddle.js frontend integration for checkout flows
 - Subscription lifecycle management (create, update, pause, resume, cancel)
@@ -11112,6 +12135,7 @@ src/styles/
 - Automation event integration (22 new billing events)
 
 **Files Created:**
+
 - `migrations/em-59a-paddle-billing.sql` - Complete database schema for Paddle
 - `src/lib/paddle/client.ts` - Paddle SDK initialization and configuration
 - `src/lib/paddle/paddle-client.ts` - Frontend Paddle.js integration
@@ -11128,11 +12152,13 @@ src/styles/
 - `docs/PADDLE-BILLING-SETUP.md` - Comprehensive setup documentation
 
 **Pricing Model:**
+
 - Starter: $29/month - 1,000 automation runs, 500 AI actions, 10,000 API calls
 - Pro: $99/month - 5,000 automation runs, 2,500 AI actions, 50,000 API calls
 - Overages: $0.01/automation run, $0.02/AI action, $0.001/API call
 
 **Key Features:**
+
 1. **PaddleClient** - Server SDK with environment detection, customer/subscription/price management
 2. **PaddleJsClient** - Frontend checkout, overlay integration, event handling
 3. **SubscriptionService** - Full lifecycle with status updates, plan changes, cancellation
@@ -11142,6 +12168,7 @@ src/styles/
 7. **Automation Events** - 22 billing events integrated into automation engine
 
 **Database Tables Created:**
+
 - `paddle_customers` - Customer sync with Paddle
 - `paddle_subscriptions` - Subscription state and limits
 - `paddle_transactions` - Payment history
@@ -11152,6 +12179,7 @@ src/styles/
 - `usage_billing_period` - Period summary for billing
 
 **Automation Events Added (22 new events):**
+
 - subscription.created, activated, updated, cancelled, paused, resumed
 - subscription.past_due, trial_started, trial_ended, plan_changed
 - payment.completed, failed, refunded, disputed
@@ -11162,17 +12190,20 @@ src/styles/
 ---
 
 ### ✅ Previously: EM-41 Module Versioning & Rollback (January 23, 2026)
+
 **Status**: ✅ COMPLETE - Migration deployed successfully  
 **Wave 4 Enterprise**: 1/4 COMPLETE (25%)  
 **Database Migration**: ✅ Deployed and tested
 
 **Final Status:**
+
 - Migration successfully ran on production database
 - All TypeScript compilation passes (zero errors)
 - Functions integrated with existing phase-59 RLS helpers
 - Compatible with existing module_database_registry from EM-05
 
 **Critical Fixes Applied:**
+
 1. ✅ Fixed `agency_users` → `agency_members` table references (6 SQL functions, 6 TS files)
 2. ✅ Removed `status='active'` checks (column doesn't exist in agency_members)
 3. ✅ Used existing `module_database_registry` schema from EM-05 (table_names array)
@@ -11180,6 +12211,7 @@ src/styles/
 5. ✅ Fixed ON CONFLICT to use existing unique constraints
 
 **What was built:**
+
 - Complete data isolation with Agency → Client → Site hierarchy
 - RLS (Row-Level Security) enforcement at database level
 - Tenant context management for server and client
@@ -11189,6 +12221,7 @@ src/styles/
 - Agency-level admin data access
 
 **Files Created:**
+
 - `migrations/20260125_multi_tenant_foundation.sql` - Database schema with RLS functions
 - `src/lib/multi-tenant/tenant-context.ts` - Server-side tenant context management
 - `src/lib/multi-tenant/middleware.ts` - API middleware for tenant validation
@@ -11201,6 +12234,7 @@ src/styles/
 - Updated `src/lib/modules/database/index.ts` - Added new exports
 
 **Key Features:**
+
 1. **Tenant Context** - `getTenantContext()`, `getFullTenantContext()`, `setDatabaseContext()`
 2. **RLS Functions** - `set_tenant_context()`, `current_agency_id()`, `current_site_id()`, `user_has_site_access()`
 3. **Module Data Access** - CRUD with automatic tenant filtering, pagination, soft delete
@@ -11211,15 +12245,18 @@ src/styles/
 8. **React Hooks** - `useTenant()`, `useRequireSite()`, `useIsAdmin()`, `useTenantQuery()`
 
 **Technical Notes:**
+
 - Uses `AnySupabaseClient` type cast to handle dynamic table names not in Supabase types
 - All module tables use `mod_<prefix>_<tablename>` naming pattern
 - RLS policies auto-created via `create_module_table()` function
 - Cross-module permissions defined in code, extendable via database
 
 ### Previously Completed: EM-33 API-Only Mode ✅ DEPLOYED
+
 **Completed**: January 23, 2026
 
 **What was built:**
+
 - Custom domain mapping to modules
 - DNS verification (CNAME and TXT methods)
 - SSL certificate provisioning (placeholder for Let's Encrypt)
@@ -11228,6 +12265,7 @@ src/styles/
 - Domain analytics and request logging
 
 **Files Created:**
+
 - `migrations/em-32-custom-domains.sql` - Database schema with 4 new tables
 - `src/lib/modules/domains/custom-domain-service.ts` - Domain management service
 - `src/lib/modules/domains/edge-router.ts` - Request routing and white-label injection
@@ -11238,12 +12276,14 @@ src/styles/
 - `scripts/check-schema.ts` - Database schema verification utility
 
 **Schema Fix Applied:**
+
 - Initial migration referenced `site_modules` table (doesn't exist)
 - Verified actual DB has `site_module_installations` table
 - Updated all references: migration SQL, TypeScript services, API routes, edge router, middleware
 - Migration now runs successfully ✅
 
 **Key Features:**
+
 1. **Domain Management** - Add, verify, delete custom domains
 2. **DNS Verification** - CNAME or TXT record verification
 3. **SSL Certificates** - Auto-provision (needs production implementation)
@@ -11252,9 +12292,11 @@ src/styles/
 6. **Analytics** - Request logging and bandwidth tracking
 
 ### Previous: Wave 1 Infrastructure + Wave 3 Distribution
-**Completed**: January 23, 2026  
+
+**Completed**: January 23, 2026
 
 **What was built:**
+
 - Domain allowlist & verification system
 - CDN-hosted embed SDK for external websites
 - OAuth 2.0 service for external API access
@@ -11265,7 +12307,9 @@ src/styles/
 ## Next Steps
 
 ### Current Status Summary
+
 **17 of 34 phases complete (50%)**
+
 - ✅ Wave 1: Foundation (6/6) - 100% COMPLETE
 - ✅ Wave 2: Developer Tools (4/4) - 100% COMPLETE
 - ✅ Wave 3: Distribution (6/6) - 100% COMPLETE
@@ -11274,6 +12318,7 @@ src/styles/
 - ⬜ Wave 6: Industry Verticals (0/6)
 
 ### Immediate Priority: Build Business Modules (Wave 5)
+
 All infrastructure is complete! Time to build revenue-generating modules:
 
 1. 🎯 **EM-50: CRM Module** - RECOMMENDED FIRST (~10 hours)
@@ -11283,12 +12328,14 @@ All infrastructure is complete! Time to build revenue-generating modules:
 ## Recent Work
 
 ### Memory Bank Auto-Update System - February 13, 2026 ✅
+
 **Development Infrastructure:**
 
 **What was built:**
 Implemented an automatic memory bank update system to ensure persistent context across all AI sessions.
 
 **Files Created:**
+
 - `.cursor/rules/memory-bank.md` - Comprehensive rule document
   - Mandatory update triggers for every task type
   - Step-by-step update process with examples
@@ -11302,6 +12349,7 @@ Implemented an automatic memory bank update system to ensure persistent context 
   - Mandatory update reminder
 
 **Key Features:**
+
 1. **Automatic Triggering** - Updates required after ANY code change, feature, bug fix, or configuration
 2. **Standardized Format** - Templates for `progress.md` and `activeContext.md` updates
 3. **Non-Negotiable** - Memory bank update is part of task completion, like tests or commits
@@ -11309,6 +12357,7 @@ Implemented an automatic memory bank update system to ensure persistent context 
 5. **Progress Tracking** - Chronological record of all work with commit references
 
 **Technical Implementation:**
+
 - Placed in `.cursor/rules/` directory for Cursor AI rule system
 - Root `.cursorrules` file provides quick access and visibility
 - Rules mandate minimum updates: `progress.md` + `activeContext.md`
@@ -11316,6 +12365,7 @@ Implemented an automatic memory bank update system to ensure persistent context 
 - Includes date format, title format, and content requirements
 
 **Impact:**
+
 - Eliminates manual memory bank update reminders
 - Ensures no work is lost between sessions
 - Maintains architectural decisions and patterns
@@ -11326,9 +12376,11 @@ Implemented an automatic memory bank update system to ensure persistent context 
 The Memory Bank is the ONLY persistent memory across AI context resets. Without consistent updates, decisions, patterns, and progress are lost. This system makes updates mandatory and standardized.
 
 ### Code Quality Review - February 13, 2026 ✅
+
 **Comprehensive code review of 56 modified files:**
 
 **Files Fixed:**
+
 - E-commerce: 18 files (actions, components, lib, types)
 - Live Chat: 5 files (actions, components, wrappers)
 - Social Media: 6 files (components, lib)
@@ -11339,12 +12391,14 @@ The Memory Bank is the ONLY persistent memory across AI context resets. Without 
 - Embed: 1 file (booking page)
 
 **Critical Issues Fixed:**
+
 1. **Merge Conflict Artifacts** - Removed duplicate function definitions in 6 files
 2. **Database Schema Mismatch** - Fixed table name `quote_activity` → `quote_activities`
 3. **Type Mismatches** - Fixed `quote.total_amount`/`expiry_date` properties
 4. **Authentication Context** - Fixed public client usage in quote rejection workflow
 
 **Code Quality Improvements:**
+
 - Removed 119 lines of dead code from notification service
 - Fixed 5 stale closures/dependencies in React hooks
 - Removed 6 unused imports and variables
@@ -11353,6 +12407,7 @@ The Memory Bank is the ONLY persistent memory across AI context resets. Without 
 - Removed 5 duplicate currency entries across manifests
 
 **Consistency Fixes:**
+
 - Standardized currency handling across all modules
 - Fixed locale option duplicates (en-US vs en-ZM)
 - Corrected misleading comments in config files
@@ -11363,12 +12418,14 @@ The Memory Bank is the ONLY persistent memory across AI context resets. Without 
 ## Recent Decisions
 
 ### Technical Decisions (EM-32)
+
 1. **Service Client Pattern** - Use separate service client to bypass strict Supabase types
 2. **In-memory Cache** - Domain routing uses Map cache with 1-minute TTL
 3. **Mock SSL in Dev** - SSL provisioning returns mock cert in development
 4. **Vercel SSL** - Default to Vercel-managed SSL in production
 
 ### Architecture Decisions
+
 1. **Separate Domain Service** - `src/lib/modules/domains/` for custom domain code
 2. **Edge Router Pattern** - Centralized routing and white-label injection
 3. **Middleware Integration** - Can hook into main middleware for routing
@@ -11377,6 +12434,7 @@ The Memory Bank is the ONLY persistent memory across AI context resets. Without 
 ## Active Patterns & Preferences
 
 ### Code Organization (EM-32)
+
 - Domain services in `src/lib/modules/domains/`
 - API routes in `src/app/api/modules/[moduleId]/domains/`
 - UI components in `src/components/modules/domains/`
@@ -11384,12 +12442,14 @@ The Memory Bank is the ONLY persistent memory across AI context resets. Without 
 - Export services from `index.ts`
 
 ### Security Practices
+
 - Encrypt SSL private keys (AES-256-GCM)
 - Verify domain ownership before issuing SSL
 - RLS policies on all domain tables
 - Admin access required for domain management
 
 ### Database Patterns
+
 - Use UUIDs for all IDs
 - Enable RLS on all tables
 - Add `created_at` and `updated_at` timestamps
@@ -11402,24 +12462,28 @@ The Memory Bank is the ONLY persistent memory across AI context resets. Without 
 ## Important Files & Locations
 
 ### Custom Domains (EM-32)
+
 - **Service**: `src/lib/modules/domains/custom-domain-service.ts`
 - **Router**: `src/lib/modules/domains/edge-router.ts`
 - **Middleware**: `src/lib/modules/domains/middleware.ts`
 - **UI**: `src/components/modules/domains/DomainSettings.tsx`
 
 ### API Routes (EM-32)
+
 - **List/Add**: `/api/modules/[moduleId]/domains`
 - **Get/Delete**: `/api/modules/[moduleId]/domains/[domainId]`
 - **Verify**: `/api/modules/[moduleId]/domains/[domainId]/verify`
 - **Settings**: `/api/modules/[moduleId]/domains/[domainId]/settings`
 
 ### Database (EM-32)
+
 - **Migration**: `migrations/em-32-custom-domains.sql` ✅ Successfully migrated
 - **Tables**: `module_custom_domains`, `domain_dns_records`, `domain_ssl_certificates`, `domain_request_logs`
 - **Functions**: `get_module_by_domain()`, `increment_domain_stats()`, `get_domains_for_ssl_renewal()`
 - **FK Reference**: Uses `site_module_installations` table (verified against production DB)
 
 ### External Integration (EM-31)
+
 - **Domain Service**: `src/lib/modules/external/domain-service.ts`
 - **OAuth Service**: `src/lib/modules/external/oauth-service.ts`
 - **Webhook Service**: `src/lib/modules/external/webhook-service.ts`
@@ -11427,6 +12491,7 @@ The Memory Bank is the ONLY persistent memory across AI context resets. Without 
 - **Embed SDK**: `src/lib/modules/external/embed-sdk.ts`
 
 ### Documentation
+
 - **Phase Doc**: `phases/enterprise-modules/PHASE-EM-32-CUSTOM-DOMAINS.md`
 - **Implementation Order**: `phases/enterprise-modules/IMPLEMENTATION-ORDER.md`
 - **Platform Docs**: `docs/` (architecture, status, implementation summary)
@@ -11439,6 +12504,7 @@ The Memory Bank is the ONLY persistent memory across AI context resets. Without 
 ## Production Readiness Notes
 
 ### For Custom Domains (EM-32)
+
 1. **SSL Provider** - Need actual Let's Encrypt/ACME or Cloudflare integration
 2. **SSL Encryption Key** - Generate and set `SSL_ENCRYPTION_KEY` env var
 3. **Domain Verification** - DNS lookups work but need production DNS server
@@ -11446,6 +12512,7 @@ The Memory Bank is the ONLY persistent memory across AI context resets. Without 
 5. **Middleware Integration** - Hook `handleCustomDomain` into main middleware
 
 ### General
+
 1. **Rate Limiting** - Currently using in-memory cache, should use Redis
 2. **Background Jobs** - Need proper queue system for SSL renewals
 3. **Error Monitoring** - Add Sentry for production error tracking
@@ -11453,6 +12520,7 @@ The Memory Bank is the ONLY persistent memory across AI context resets. Without 
 ## Notes for Future Sessions
 
 ### When Working on Business Modules
+
 - All infrastructure (EM-01 to EM-32) is complete
 - Can leverage domain system for white-label module hosting
 - OAuth and webhooks ready for third-party integrations
