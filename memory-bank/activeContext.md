@@ -1,52 +1,48 @@
 # Active Context
 
-## Current Focus: Booking Production-Ready Phase — COMPLETED ✅
+## Current Focus: Social Media Module Production Audit — COMPLETED ✅
 
-### Status: COMMITTED & PUSHED — `899c8bcb` — 16 files changed, 6 bugs fixed
+### Status: COMMITTED & PUSHED — `58d8732f` — 9 files changed, 64 insertions, 8 deletions
 
-### Latest Work: Booking Module Production-Ready (Priority 3)
+### Latest Work: Social Media Module Comprehensive Audit (Priority 4)
 
-Executed the full booking production-ready phase from `PHASE-BOOKING-PRODUCTION-READY.md`. All 6 critical bugs fixed:
+Full production audit of the Social Media module (~121 files, 10 platforms, 25 DB tables). Found and fixed 30+ security/safety bugs across 9 files.
 
-**Commit: `899c8bcb`** — fix(booking): production-ready - mobile responsive, branding, interactive embed, availability
+**Commit: `58d8732f`** — fix(social): production audit - security, cron auth, API validation, null safety
 
-### Bugs Fixed:
+### Fixes Applied:
 
-1. **BUG 1: Mobile Responsive Widget** — BookingWidgetBlock responsive grid (cols-2→4), 44px touch targets, stacked navigation buttons, step indicator compaction (hidden labels on mobile, shown as "Step X of Y"), responsive padding
-2. **BUG 2: Interactive Embed Page** — Replaced static HTML embed page with full interactive `BookingWidgetBlock` via new `EmbedBookingClient.tsx` client component. PostMessage bridge preserved (DRAMAC_MODULE_READY, DRAMAC_RESIZE, DRAMAC_BOOKING_COMPLETE)
-3. **BUG 3: Script Embed** — Created `public/embed/booking.js` for button-popup widget type (DramacBooking.init(), modal overlay, auto-resize via postMessage). WordPress shortcode marked "Coming Soon"
-4. **BUG 4: Hardcoded Colors** — Removed `#8B5CF6`/`#3B82F6` defaults across 12 files: studio component fallbacks → `#0f172a`, action defaults → `''`, embed page → `var(--primary)` CSS vars
-5. **BUG 5: Admin Weekend Availability** — Added weekday-aware fallback in `getAvailableSlots()` matching public path (Mon-Fri 9-5, weekends empty)
-6. **BUG 6: Settings Tab Overflow** — Added `overflow-x-auto` and `flex-wrap/sm:flex-nowrap` to TabsList
+1. **SECURITY: Multi-tenant site_id scoping** — Added `.eq('site_id', siteId)` to ALL update/delete queries:
+   - `post-actions.ts`: 10 queries (updatePost, deletePost, schedulePost, publishPostNow, addToQueue, approvePost, rejectPost, bulkDeletePosts)
+   - `inbox-actions.ts`: 12 queries (markAsRead, replyToItem, assignItem, updatePriority, archiveItem, markAsSpam, flagItem, addTags, bulkArchive, bulkMarkAsRead)
+   - `account-actions.ts`: disconnectSocialAccount (had siteId param but didn't use it)
+   - `campaign-actions.ts`: 5 queries (updateCampaign, deleteCampaign, archiveCampaign, pauseCampaign, resumeCampaign)
 
-### Files Modified/Created:
-| File | Type | Changes |
-|------|------|---------|
-| `BookingWidgetBlock.tsx` | Modified | 10 responsive + color edits |
-| `EmbedBookingClient.tsx` | **New** | Client component wrapper for embed |
-| `page.tsx` (embed) | Modified | Complete rewrite to use EmbedBookingClient |
-| `booking.js` | **New** | Public script embed for button-popup |
-| `booking-actions.ts` | Modified | Weekend availability + color defaults |
-| `StaffGridBlock.tsx` | Modified | Color fallback fix |
-| `ServiceSelectorBlock.tsx` | Modified | Color fallback fix |
-| `BookingCalendarBlock.tsx` | Modified | Color fallback fix |
-| `BookingEmbedBlock.tsx` | Modified | Color fallback fix |
-| `BookingFormBlock.tsx` | Modified | Color fallback fix |
-| `create-service-dialog.tsx` | Modified | Color defaults removed |
-| `edit-service-dialog.tsx` | Modified | Color defaults removed |
-| `booking-settings-dialog.tsx` | Modified | Color defaults removed |
-| `embed-code-view.tsx` | Modified | WordPress "Coming Soon" badge |
-| `settings-view.tsx` | Modified | TabsList overflow fix |
-| `manifest.ts` | Modified | accent_color default '' |
+2. **SECURITY: Cron auth fail-closed** — Changed `publish/route.ts` and `sync/route.ts` from `if (CRON_SECRET && ...)` to `if (!CRON_SECRET || ...)` so unauthenticated requests are denied when env var is not set
 
-### TypeScript: ZERO source errors (only auto-generated `.next/dev/types/validator.ts` has errors)
+3. **SECURITY: Webhook token verification** — Fixed `META_WEBHOOK_VERIFY_TOKEN` comparison to prevent `undefined === undefined` match; wrapped `JSON.parse` in try-catch for malformed bodies; validated `payload.entry` is array
+
+4. **BUG: Inbox SQL syntax** — Fixed `.not('status', 'in', '("archived","spam")')` to `.not('status', 'in', '(archived,spam)')` (Supabase PostgREST format)
+
+5. **BUG: Token refresh null safety** — Added check for missing `access_token` in refresh response (prevents storing undefined)
+
+6. **BUG: Publish service API validation** — Added `.ok` checks to Facebook photo/feed and Twitter API calls in `publish-service.ts`
+
+### Audit Scope (Verified Clean):
+- All wrapper components correctly import existing Enhanced variants
+- `token-refresh.ts` already has proper null checks for `expiresAt`
+- `campaign-actions.ts` already has `'use server'` directive
+- `getAccountHealth` properly guards `token_expires_at` access
+- `getCampaignAnalytics` properly guards goal access with `if (goals.X)`
 
 ### Previous Commits:
-- `f5454635` — fix(crm): fix runtime bugs in bulk actions, import, email compose, and contact types (Priority 1)
-- `3b980413` — fix: production readiness audit - 10 bug fixes across platform
+- `899c8bcb` — fix(booking): production-ready (Priority 3, 16 files, 6 bugs)
+- `f5454635` — fix(crm): runtime bugs (Priority 1, 7 bugs)
+- `ad4d7d53` — docs: memory bank update
 
 ### Still Remaining from Priority List:
-- **Priority 4:** Social Module production-ready
+
+- ~~**Priority 4:** Social Module production-ready~~ ✅ `58d8732f`
 - **Priority 5:** Automation Module production-ready
 - **Priority 6:** Embed Scripts publishing
 - **Priority 7:** E2E Testing
