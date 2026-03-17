@@ -59,7 +59,7 @@ export function BulkActionBar({
     setProcessing(true)
     try {
       const result = await bulkDeleteContacts(siteId, selectedIds)
-      toast.success(`Deleted ${result.successCount} contact${result.successCount !== 1 ? 's' : ''}`)
+      toast.success(`Deleted ${result.processed} contact${result.processed !== 1 ? 's' : ''}`)
       onClearSelection()
       onActionsComplete()
     } catch (err) {
@@ -74,7 +74,7 @@ export function BulkActionBar({
     setProcessing(true)
     try {
       const result = await bulkUpdateContactStatus(siteId, selectedIds, status)
-      toast.success(`Updated ${result.successCount} contact${result.successCount !== 1 ? 's' : ''}`)
+      toast.success(`Updated ${result.processed} contact${result.processed !== 1 ? 's' : ''}`)
       onActionsComplete()
     } catch (err) {
       toast.error((err as Error).message)
@@ -87,7 +87,7 @@ export function BulkActionBar({
     setProcessing(true)
     try {
       const result = await bulkUpdateLeadStatus(siteId, selectedIds, leadStatus)
-      toast.success(`Updated ${result.successCount} contact${result.successCount !== 1 ? 's' : ''}`)
+      toast.success(`Updated ${result.processed} contact${result.processed !== 1 ? 's' : ''}`)
       onActionsComplete()
     } catch (err) {
       toast.error((err as Error).message)
@@ -100,7 +100,7 @@ export function BulkActionBar({
     setProcessing(true)
     try {
       const result = await bulkAddTags(siteId, selectedIds, [tagName])
-      toast.success(`Tagged ${result.successCount} contact${result.successCount !== 1 ? 's' : ''}`)
+      toast.success(`Tagged ${result.processed} contact${result.processed !== 1 ? 's' : ''}`)
       onActionsComplete()
     } catch (err) {
       toast.error((err as Error).message)

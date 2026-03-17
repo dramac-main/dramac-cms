@@ -169,10 +169,14 @@ export function ImportContactsDialog({ open, onOpenChange, siteId, onImported }:
     setImporting(true)
 
     try {
-      const importResult = await importContacts(siteId, csvData, activeMappings, updateExisting)
+      const fieldMap: Record<string, string> = {}
+      for (const m of activeMappings) {
+        fieldMap[m.csvColumn] = m.crmField
+      }
+      const importResult = await importContacts(siteId, csvData, fieldMap, { updateExisting })
       setResult(importResult)
       setStep('result')
-      if (importResult.created > 0 || importResult.updated > 0) {
+      if (importResult.imported > 0 || importResult.updated > 0) {
         onImported?.()
       }
     } catch (err) {
@@ -313,15 +317,15 @@ export function ImportContactsDialog({ open, onOpenChange, siteId, onImported }:
 
             <div className="grid grid-cols-3 gap-4 text-center">
               <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950">
-                <div className="text-2xl font-bold text-green-600">{result.created}</div>
-                <div className="text-sm text-muted-foreground">Created</div>
+                <div className="text-2xl font-bold text-green-600">{result.imported}</div>
+                <div className="text-sm text-muted-foreground">Imported</div>
               </div>
               <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-950">
                 <div className="text-2xl font-bold text-blue-600">{result.updated}</div>
                 <div className="text-sm text-muted-foreground">Updated</div>
               </div>
               <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950">
-                <div className="text-2xl font-bold text-red-600">{result.failed}</div>
+                <div className="text-2xl font-bold text-red-600">{result.errors.length}</div>
                 <div className="text-sm text-muted-foreground">Failed</div>
               </div>
             </div>
@@ -334,7 +338,7 @@ export function ImportContactsDialog({ open, onOpenChange, siteId, onImported }:
                 </Label>
                 <div className="max-h-[150px] overflow-y-auto rounded border p-2 text-xs font-mono">
                   {result.errors.map((err, i) => (
-                    <div key={i} className="text-destructive">{err}</div>
+                    <div key={i} className="text-destructive">Row {err.row}: {err.message}</div>
                   ))}
                 </div>
               </div>

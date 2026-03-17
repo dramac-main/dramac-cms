@@ -10,7 +10,7 @@
 // TYPE ALIASES (for component use)
 // ============================================================================
 
-export type ContactStatus = 'active' | 'inactive' | 'archived'
+export type ContactStatus = 'active' | 'inactive' | 'archived' | 'lead' | 'customer' | 'churned'
 export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'unqualified' | 'converted'
 export type CompanyStatus = 'active' | 'inactive' | 'archived'
 export type CompanyType = 'prospect' | 'customer' | 'partner' | 'competitor' | 'other'

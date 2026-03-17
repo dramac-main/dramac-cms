@@ -106,10 +106,10 @@ export function EmailComposeDialog({ open, onOpenChange, contact, siteId, onSent
     setSending(true)
     try {
       const result = await sendCrmEmail(siteId, {
-        to,
+        to: [to],
         subject,
-        body,
-        contactId: contact?.id,
+        body_html: body,
+        contact_id: contact?.id,
       })
 
       if (result.success) {
