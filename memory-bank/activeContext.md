@@ -1,49 +1,49 @@
 # Active Context
 
-## Current Focus: Social Media Module Production Audit — COMPLETED ✅
+## Current Focus: Automation Module Production Audit — COMPLETED ✅
 
-### Status: COMMITTED & PUSHED — `58d8732f` — 9 files changed, 64 insertions, 8 deletions
+### Status: COMMITTED & PUSHED — `f13afce3` — 2 files changed, 1557 insertions, 1275 deletions
 
-### Latest Work: Social Media Module Comprehensive Audit (Priority 4)
+### Latest Work: Automation Module Security Audit (Priority 5)
 
-Full production audit of the Social Media module (~121 files, 10 platforms, 25 DB tables). Found and fixed 30+ security/safety bugs across 9 files.
+Full production audit of the Automation module (41 files, 0 API routes). Found and fixed 8 security/safety bugs across 2 files.
 
-**Commit: `58d8732f`** — fix(social): production audit - security, cron auth, API validation, null safety
+**Commit: `f13afce3`** — Priority 5: Automation Module Security Audit & Fixes
 
 ### Fixes Applied:
 
-1. **SECURITY: Multi-tenant site_id scoping** — Added `.eq('site_id', siteId)` to ALL update/delete queries:
-   - `post-actions.ts`: 10 queries (updatePost, deletePost, schedulePost, publishPostNow, addToQueue, approvePost, rejectPost, bulkDeletePosts)
-   - `inbox-actions.ts`: 12 queries (markAsRead, replyToItem, assignItem, updatePriority, archiveItem, markAsSpam, flagItem, addTags, bulkArchive, bulkMarkAsRead)
-   - `account-actions.ts`: disconnectSocialAccount (had siteId param but didn't use it)
-   - `campaign-actions.ts`: 5 queries (updateCampaign, deleteCampaign, archiveCampaign, pauseCampaign, resumeCampaign)
+1. **SECURITY: Defense-in-depth site_id scoping on mutations** — Added `.eq('site_id', ...)` to:
+   - `updateWorkflow`: Uses fetched `currentWorkflow.site_id` to scope UPDATE query
+   - `deleteWorkflow`: Uses fetched `workflow.site_id` to scope DELETE query
+   - `activateWorkflow`: Uses fetched `workflow.site_id` to scope activation UPDATE query
 
-2. **SECURITY: Cron auth fail-closed** — Changed `publish/route.ts` and `sync/route.ts` from `if (CRON_SECRET && ...)` to `if (!CRON_SECRET || ...)` so unauthenticated requests are denied when env var is not set
+2. **SECURITY: Connection management siteId parameter + scoping** — Added `siteId` parameter and `.eq('site_id', siteId)` to prevent cross-tenant credential access:
+   - `updateConnection(siteId, connectionId, data)`: Prevents cross-tenant credential updates
+   - `deleteConnection(siteId, connectionId)`: Prevents cross-tenant credential deletion
+   - `testConnection(siteId, connectionId)`: Scopes credential fetch and status update to site
+   - `deleteWebhookEndpoint(siteId, endpointId)`: Scopes webhook deletion to site
 
-3. **SECURITY: Webhook token verification** — Fixed `META_WEBHOOK_VERIFY_TOKEN` comparison to prevent `undefined === undefined` match; wrapped `JSON.parse` in try-catch for malformed bodies; validated `payload.entry` is array
+3. **BUG: event-processor.ts calculateNextRun** — Replaced placeholder (always returned 1hr regardless of cron) with actual cron pattern parsing for minute/hour fields, matching the implementation in automation-actions.ts
 
-4. **BUG: Inbox SQL syntax** — Fixed `.not('status', 'in', '("archived","spam")')` to `.not('status', 'in', '(archived,spam)')` (Supabase PostgREST format)
+### Audit Results (Verified Clean — No Changes Needed):
 
-5. **BUG: Token refresh null safety** — Added check for missing `access_token` in refresh response (prevents storing undefined)
-
-6. **BUG: Publish service API validation** — Added `.ok` checks to Facebook photo/feed and Twitter API calls in `publish-service.ts`
-
-### Audit Scope (Verified Clean):
-- All wrapper components correctly import existing Enhanced variants
-- `token-refresh.ts` already has proper null checks for `expiresAt`
-- `campaign-actions.ts` already has `'use server'` directive
-- `getAccountHealth` properly guards `token_expires_at` access
-- `getCampaignAnalytics` properly guards goal access with `if (goals.X)`
+- `execution-engine.ts`: Already has proper site_id from execution context ✅
+- `action-executor.ts`: Already uses `.eq('site_id', siteId)` on CRM/notification actions ✅
+- `ai-actions.ts`: All functions properly take siteId parameter ✅
+- `index.ts`: All barrel exports match actual implementations ✅
+- All 17+ UI components: lucide-react `icons` import verified valid at runtime ✅
+- `resumePausedExecutions()`: Global query is correct for background cron context ✅
 
 ### Previous Commits:
+
+- `58d8732f` — fix(social): production audit (Priority 4, 9 files, 35+ fixes)
 - `899c8bcb` — fix(booking): production-ready (Priority 3, 16 files, 6 bugs)
 - `f5454635` — fix(crm): runtime bugs (Priority 1, 7 bugs)
-- `ad4d7d53` — docs: memory bank update
+- `fec9bc19` — docs: memory bank update
 
 ### Still Remaining from Priority List:
 
-- ~~**Priority 4:** Social Module production-ready~~ ✅ `58d8732f`
-- **Priority 5:** Automation Module production-ready
+- ~~**Priority 5:** Automation Module production-ready~~ ✅ `f13afce3`
 - **Priority 6:** Embed Scripts publishing
 - **Priority 7:** E2E Testing
 
