@@ -72,7 +72,7 @@ export function BookingSettingsDialog({ open, onOpenChange }: BookingSettingsDia
   const [autoConfirm, setAutoConfirm] = useState(false)
   const [confirmationEmailEnabled, setConfirmationEmailEnabled] = useState(true)
   const [autoCreateCrmContact, setAutoCreateCrmContact] = useState(true)
-  const [accentColor, setAccentColor] = useState('#3B82F6')
+  const [accentColor, setAccentColor] = useState('')
   const [notificationEmail, setNotificationEmail] = useState('')
   
   // Load settings when dialog opens
@@ -89,7 +89,7 @@ export function BookingSettingsDialog({ open, onOpenChange }: BookingSettingsDia
       setAutoConfirm(settings.auto_confirm || false)
       setConfirmationEmailEnabled(settings.confirmation_email_enabled ?? true)
       setAutoCreateCrmContact(settings.auto_create_crm_contact ?? true)
-      setAccentColor(settings.accent_color || '#3B82F6')
+      setAccentColor(settings.accent_color || '')
       setNotificationEmail(settings.notification_email || '')
     }
   }, [open, settings])

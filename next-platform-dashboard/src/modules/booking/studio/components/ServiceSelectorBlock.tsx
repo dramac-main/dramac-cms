@@ -322,7 +322,7 @@ export function ServiceSelectorBlock({
   }
 
   // Resolved colors — fall back to CSS variables from the branding system
-  const pc = primaryColor || 'var(--brand-primary, #8B5CF6)'
+  const pc = primaryColor || 'var(--brand-primary, #0f172a)'
   const btnTxt = buttonTextColor || 'var(--brand-button-text, #ffffff)'
   const badgeTxt = featuredBadgeTextColor || '#ffffff'
   const ratingClr = ratingColor || '#f59e0b'

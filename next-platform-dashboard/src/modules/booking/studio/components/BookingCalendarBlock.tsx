@@ -369,7 +369,7 @@ export function BookingCalendarBlock({
   const slotCols = resolveResponsive(timeSlotsColumns, layout === 'side-by-side' ? 2 : 4)
 
   // Resolved colors — fall back to CSS variables from the branding system
-  const pc = primaryColor || 'var(--brand-primary, #8B5CF6)'
+  const pc = primaryColor || 'var(--brand-primary, #0f172a)'
 
   const accentColor = selectedDayBgColor || pc
   const slotAccent = slotSelectedBgColor || pc

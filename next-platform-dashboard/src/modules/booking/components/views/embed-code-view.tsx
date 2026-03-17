@@ -448,10 +448,10 @@ export function EmbedCodeView({ className }: EmbedCodeViewProps) {
                 </Card>
                 
                 {/* WordPress Shortcode */}
-                <Card>
+                <Card className="opacity-60">
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">WordPress Shortcode</CardTitle>
+                      <CardTitle className="text-lg">WordPress Shortcode <span className="text-xs font-normal text-muted-foreground ml-2 bg-muted px-2 py-0.5 rounded">Coming Soon</span></CardTitle>
                       <Button
                         variant="ghost"
                         size="sm"

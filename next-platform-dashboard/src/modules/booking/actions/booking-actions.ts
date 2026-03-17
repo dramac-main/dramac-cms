@@ -111,7 +111,7 @@ export async function createService(siteId: string, input: Partial<ServiceInput>
       allow_online_booking: input.allow_online_booking ?? true,
       require_confirmation: input.require_confirmation ?? false,
       require_payment: input.require_payment ?? false,
-      color: input.color || '#3B82F6',
+      color: input.color || '',
       image_url: input.image_url || null,
       sort_order: input.sort_order ?? 0,
       is_active: input.is_active ?? true,
@@ -1058,10 +1058,15 @@ export async function getAvailableSlots(
     const bufferAfter = service.buffer_after_minutes
     const totalMinutes = duration + bufferBefore + bufferAfter
     
-    // If no availability rules, use default business hours
+    // Weekday-aware fallback: Mon-Fri (1-5) get 9-5, weekends (0,6) get nothing
+    const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5
     const rules = (availabilityRules && availabilityRules.length > 0)
       ? availabilityRules
-      : [{ start_time: '09:00', end_time: '17:00', staff_id: null }]
+      : isWeekday
+        ? [{ start_time: '09:00', end_time: '17:00', staff_id: null }]
+        : [] // No default slots for weekends
+    
+    if (rules.length === 0) return []
     
     for (const rule of rules) {
       // Check if rule applies to any of our staff
@@ -1308,7 +1313,7 @@ export async function initializeBookingForSite(siteId: string): Promise<void> {
         reminder_hours: [24, 1],
         auto_confirm: false,
         confirmation_email_enabled: true,
-        accent_color: '#3B82F6',
+        accent_color: '',
         require_payment: false,
         auto_create_crm_contact: true
       })

@@ -286,7 +286,7 @@ export function BookingFormBlock({
   const { createBooking } = useCreateBooking(siteId || '')
 
   // Resolved colors — fall back to CSS variables from the branding system
-  const pc = primaryColor || 'var(--brand-primary, #8B5CF6)'
+  const pc = primaryColor || 'var(--brand-primary, #0f172a)'
   const btnTxt = buttonTextColor || 'var(--brand-button-text, #ffffff)'
 
   const btnBg = buttonBackgroundColor || pc

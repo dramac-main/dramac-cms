@@ -289,7 +289,7 @@ export const BookingModuleManifest: ModuleManifest = {
         type: 'string',
         title: 'Accent Color',
         description: 'Primary color for booking widget',
-        default: '#3B82F6'
+        default: ''
       }
     }
   },

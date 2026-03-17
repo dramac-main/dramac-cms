@@ -178,7 +178,7 @@ export function SettingsView({ className }: SettingsViewProps) {
         
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-6">
+          <TabsList className="mb-6 w-full overflow-x-auto flex-wrap sm:flex-nowrap">
             <TabsTrigger value="general" className="gap-2">
               <Globe className="h-4 w-4" />
               General

@@ -218,7 +218,7 @@ export function BookingEmbedBlock({
   const [copied, setCopied] = useState(false)
 
   // Resolved colors — fall back to CSS variables from the branding system
-  const pc = primaryColor || 'var(--brand-primary, #8B5CF6)'
+  const pc = primaryColor || 'var(--brand-primary, #0f172a)'
   const resolvedBtnText = btnTextColor || 'var(--brand-button-text, #ffffff)'
 
   const resolvedUrl = embedUrl || (siteId ? `https://book.dramac.app/${siteId}` : '')

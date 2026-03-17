@@ -40,7 +40,7 @@ export function EditServiceDialog({ service, open, onOpenChange }: EditServiceDi
   const [category, setCategory] = useState('')
   const [durationMinutes, setDurationMinutes] = useState(60)
   const [price, setPrice] = useState<string>('')
-  const [color, setColor] = useState('#3B82F6')
+  const [color, setColor] = useState('')
   const [allowOnlineBooking, setAllowOnlineBooking] = useState(true)
   const [requireConfirmation, setRequireConfirmation] = useState(false)
   const [maxAttendees, setMaxAttendees] = useState(1)
