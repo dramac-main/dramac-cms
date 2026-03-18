@@ -938,4 +938,114 @@ ${data.dashboardUrl ? `View in dashboard: ${data.dashboardUrl}` : ""}
     text: (data) =>
       `Missed Chat\n\nA visitor tried to chat on ${data.siteName || "your site"} but no agents were available.\n\nVisitor: ${data.visitorName || "Unknown"}\nMessage: ${data.visitorMessage || "No message"}\nTime: ${data.missedAt || "N/A"}\n\n${data.dashboardUrl ? `View: ${data.dashboardUrl}` : ""}`,
   },
+
+  // ============================================
+  // E-COMMERCE — Additional Templates
+  // ============================================
+
+  order_delivered_customer: {
+    subject: (data) => `Your order ${data.orderNumber || ""} has been delivered!`,
+    html: (data) =>
+      wrapHtml(`
+      <h1 style="${STYLES.heading}">📦 Order Delivered</h1>
+      <p style="${STYLES.text}">Hi ${data.customerName || "there"},</p>
+      <p style="${STYLES.text}">Your order <strong>${data.orderNumber || ""}</strong> has been delivered.</p>
+      ${data.dashboardUrl ? `<p style="margin: 24px 0;"><a href="${data.dashboardUrl}" style="${STYLES.button}">View Order</a></p>` : ""}
+    `),
+    text: (data) =>
+      `Order Delivered\n\nHi ${data.customerName || "there"},\n\nYour order ${data.orderNumber || ""} has been delivered.\n\n${data.dashboardUrl ? `View: ${data.dashboardUrl}` : ""}`,
+  },
+
+  order_cancelled_customer: {
+    subject: (data) => `Your order ${data.orderNumber || ""} has been cancelled`,
+    html: (data) =>
+      wrapHtml(`
+      <h1 style="${STYLES.heading}">Order Cancelled</h1>
+      <p style="${STYLES.text}">Hi ${data.customerName || "there"},</p>
+      <p style="${STYLES.text}">Your order <strong>${data.orderNumber || ""}</strong> has been cancelled.</p>
+      ${data.reason ? `<p style="${STYLES.text}"><strong>Reason:</strong> ${data.reason}</p>` : ""}
+      ${data.dashboardUrl ? `<p style="margin: 24px 0;"><a href="${data.dashboardUrl}" style="${STYLES.button}">View Details</a></p>` : ""}
+    `),
+    text: (data) =>
+      `Order Cancelled\n\nHi ${data.customerName || "there"},\n\nYour order ${data.orderNumber || ""} has been cancelled.${data.reason ? ` Reason: ${data.reason}` : ""}\n\n${data.dashboardUrl ? `View: ${data.dashboardUrl}` : ""}`,
+  },
+
+  order_cancelled_owner: {
+    subject: (data) => `Order ${data.orderNumber || ""} was cancelled`,
+    html: (data) =>
+      wrapHtml(`
+      <h1 style="${STYLES.heading}">Order Cancelled</h1>
+      <p style="${STYLES.text}">Order <strong>${data.orderNumber || ""}</strong> from <strong>${data.customerName || "a customer"}</strong> has been cancelled.</p>
+      ${data.reason ? `<p style="${STYLES.text}"><strong>Reason:</strong> ${data.reason}</p>` : ""}
+      ${data.dashboardUrl ? `<p style="margin: 24px 0;"><a href="${data.dashboardUrl}" style="${STYLES.button}">View Order</a></p>` : ""}
+    `),
+    text: (data) =>
+      `Order Cancelled\n\nOrder ${data.orderNumber || ""} from ${data.customerName || "a customer"} has been cancelled.${data.reason ? ` Reason: ${data.reason}` : ""}\n\n${data.dashboardUrl ? `View: ${data.dashboardUrl}` : ""}`,
+  },
+
+  payment_received_customer: {
+    subject: (data) => `Payment received for order ${data.orderNumber || ""}`,
+    html: (data) =>
+      wrapHtml(`
+      <h1 style="${STYLES.heading}">💳 Payment Received</h1>
+      <p style="${STYLES.text}">Hi ${data.customerName || "there"},</p>
+      <p style="${STYLES.text}">We've received your payment of <strong>${data.amount || ""}</strong> for order <strong>${data.orderNumber || ""}</strong>.</p>
+      ${data.dashboardUrl ? `<p style="margin: 24px 0;"><a href="${data.dashboardUrl}" style="${STYLES.button}">View Order</a></p>` : ""}
+    `),
+    text: (data) =>
+      `Payment Received\n\nHi ${data.customerName || "there"},\n\nPayment of ${data.amount || ""} received for order ${data.orderNumber || ""}.\n\n${data.dashboardUrl ? `View: ${data.dashboardUrl}` : ""}`,
+  },
+
+  refund_issued_customer: {
+    subject: (data) => `Refund issued for order ${data.orderNumber || ""}`,
+    html: (data) =>
+      wrapHtml(`
+      <h1 style="${STYLES.heading}">💰 Refund Issued</h1>
+      <p style="${STYLES.text}">Hi ${data.customerName || "there"},</p>
+      <p style="${STYLES.text}">A refund of <strong>${data.amount || ""}</strong> has been issued for order <strong>${data.orderNumber || ""}</strong>.</p>
+      <p style="${STYLES.text}">Please allow 5-10 business days for the refund to appear on your statement.</p>
+      ${data.dashboardUrl ? `<p style="margin: 24px 0;"><a href="${data.dashboardUrl}" style="${STYLES.button}">View Details</a></p>` : ""}
+    `),
+    text: (data) =>
+      `Refund Issued\n\nHi ${data.customerName || "there"},\n\nA refund of ${data.amount || ""} has been issued for order ${data.orderNumber || ""}. Please allow 5-10 business days.\n\n${data.dashboardUrl ? `View: ${data.dashboardUrl}` : ""}`,
+  },
+
+  low_stock_admin: {
+    subject: (data) => `⚠️ Low stock alert: ${data.productName || "a product"}`,
+    html: (data) =>
+      wrapHtml(`
+      <h1 style="${STYLES.heading}">⚠️ Low Stock Alert</h1>
+      <p style="${STYLES.text}"><strong>${data.productName || "A product"}</strong> is running low on stock.</p>
+      <p style="${STYLES.text}"><strong>Current stock:</strong> ${data.currentStock ?? "N/A"}</p>
+      ${data.dashboardUrl ? `<p style="margin: 24px 0;"><a href="${data.dashboardUrl}" style="${STYLES.button}">Manage Inventory</a></p>` : ""}
+    `),
+    text: (data) =>
+      `Low Stock Alert\n\n${data.productName || "A product"} is running low. Current stock: ${data.currentStock ?? "N/A"}.\n\n${data.dashboardUrl ? `Manage: ${data.dashboardUrl}` : ""}`,
+  },
+
+  back_in_stock_customer: {
+    subject: (data) => `${data.productName || "An item"} is back in stock!`,
+    html: (data) =>
+      wrapHtml(`
+      <h1 style="${STYLES.heading}">🎉 Back in Stock!</h1>
+      <p style="${STYLES.text}">Hi ${data.customerName || "there"},</p>
+      <p style="${STYLES.text}"><strong>${data.productName || "An item you were watching"}</strong> is back in stock!</p>
+      ${data.productUrl ? `<p style="margin: 24px 0;"><a href="${data.productUrl}" style="${STYLES.button}">Shop Now</a></p>` : ""}
+    `),
+    text: (data) =>
+      `Back in Stock!\n\nHi ${data.customerName || "there"},\n\n${data.productName || "An item you were watching"} is back in stock!\n\n${data.productUrl ? `Shop: ${data.productUrl}` : ""}`,
+  },
+
+  abandoned_cart_customer: {
+    subject: () => `You left something in your cart!`,
+    html: (data) =>
+      wrapHtml(`
+      <h1 style="${STYLES.heading}">🛒 Don't forget your items!</h1>
+      <p style="${STYLES.text}">Hi ${data.customerName || "there"},</p>
+      <p style="${STYLES.text}">You have items waiting in your cart. Complete your purchase before they sell out!</p>
+      ${data.cartUrl ? `<p style="margin: 24px 0;"><a href="${data.cartUrl}" style="${STYLES.button}">Complete Purchase</a></p>` : ""}
+    `),
+    text: (data) =>
+      `Don't forget your items!\n\nHi ${data.customerName || "there"},\n\nYou have items in your cart. Complete your purchase!\n\n${data.cartUrl ? `Cart: ${data.cartUrl}` : ""}`,
+  },
 };

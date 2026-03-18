@@ -1,33 +1,44 @@
 /**
  * QuoteRequestBlock - Quote request form
- * 
+ *
  * Phase ECOM-25: Quotation Frontend
- * 
+ *
  * Form for customers to submit quote requests.
  */
-'use client'
+"use client";
 
-import * as React from 'react'
-import { useSearchParams } from 'next/navigation'
-import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { 
-  FileText, 
-  Loader2, 
+import * as React from "react";
+import { useSearchParams } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  FileText,
+  Loader2,
   CircleCheck,
   ShoppingBag,
-  AlertCircle
-} from 'lucide-react'
-import { useStorefront } from '../../context/storefront-context'
-import { useQuotations, QuoteBuilderItem, QuoteRequestData } from '../../hooks/useQuotations'
-import { QuoteItemCard } from './QuoteItemCard'
-import { QuotePriceBreakdown } from './QuotePriceBreakdown'
-import Link from 'next/link'
+  AlertCircle,
+} from "lucide-react";
+import { useStorefront } from "../../context/storefront-context";
+import {
+  useQuotations,
+  QuoteBuilderItem,
+  QuoteRequestData,
+} from "../../hooks/useQuotations";
+import { QuoteItemCard } from "./QuoteItemCard";
+import { QuotePriceBreakdown } from "./QuotePriceBreakdown";
+import Link from "next/link";
 
 // ============================================================================
 // TYPES
@@ -35,26 +46,26 @@ import Link from 'next/link'
 
 export interface QuoteRequestBlockProps {
   /** Display variant */
-  variant?: 'default' | 'compact' | 'sidebar'
+  variant?: "default" | "compact" | "sidebar";
   /** Pre-filled customer info */
-  customerName?: string
-  customerEmail?: string
-  customerPhone?: string
-  companyName?: string
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  companyName?: string;
   /** Show item management in form */
-  showItems?: boolean
+  showItems?: boolean;
   /** Show pricing summary */
-  showPricing?: boolean
+  showPricing?: boolean;
   /** Required fields */
-  requirePhone?: boolean
-  requireCompany?: boolean
+  requirePhone?: boolean;
+  requireCompany?: boolean;
   /** Success callback */
-  onSuccess?: (quoteId: string) => void
+  onSuccess?: (quoteId: string) => void;
   /** Custom title */
-  title?: string
+  title?: string;
   /** Custom description */
-  description?: string
-  className?: string
+  description?: string;
+  className?: string;
 }
 
 // ============================================================================
@@ -62,23 +73,24 @@ export interface QuoteRequestBlockProps {
 // ============================================================================
 
 export function QuoteRequestBlock({
-  variant: variantProp = 'default',
-  customerName: initialName = '',
-  customerEmail: initialEmail = '',
-  customerPhone: initialPhone = '',
-  companyName: initialCompany = '',
+  variant: variantProp = "default",
+  customerName: initialName = "",
+  customerEmail: initialEmail = "",
+  customerPhone: initialPhone = "",
+  companyName: initialCompany = "",
   showItems = true,
   showPricing = true,
   requirePhone = false,
   requireCompany = false,
   onSuccess,
-  title = 'Request a Quote',
-  description = 'Fill out the form below and we\'ll send you a customized quote.',
-  className
+  title = "Request a Quote",
+  description = "Fill out the form below and we'll send you a customized quote.",
+  className,
 }: QuoteRequestBlockProps) {
-  const { siteId, formatPrice, settings, quotationModeEnabled, isInitialized } = useStorefront()
-  const agencyId = settings?.agency_id
-  const searchParams = useSearchParams()
+  const { siteId, formatPrice, settings, quotationModeEnabled, isInitialized } =
+    useStorefront();
+  const agencyId = settings?.agency_id;
+  const searchParams = useSearchParams();
 
   // Move hooks before conditional returns to satisfy React rules of hooks
   const {
@@ -89,65 +101,75 @@ export function QuoteRequestBlock({
     builderCount,
     submitQuoteRequest,
     isSubmitting,
-    submitError
-  } = useQuotations(siteId, agencyId)
+    submitError,
+  } = useQuotations(siteId, agencyId);
 
   const [formData, setFormData] = React.useState<QuoteRequestData>({
     customer_name: initialName,
     customer_email: initialEmail,
     customer_phone: initialPhone,
     company_name: initialCompany,
-    notes: ''
-  })
-  
-  const [isSubmitted, setIsSubmitted] = React.useState(false)
-  const [validationErrors, setValidationErrors] = React.useState<Partial<Record<keyof QuoteRequestData, string>>>({})
-  const [isLoadingProduct, setIsLoadingProduct] = React.useState(false)
+    notes: "",
+  });
+
+  const [isSubmitted, setIsSubmitted] = React.useState(false);
+  const [validationErrors, setValidationErrors] = React.useState<
+    Partial<Record<keyof QuoteRequestData, string>>
+  >({});
+  const [isLoadingProduct, setIsLoadingProduct] = React.useState(false);
 
   // Auto-load product from ?product= URL parameter
-  const productIdParam = searchParams?.get('product')
+  const productIdParam = searchParams?.get("product");
   React.useEffect(() => {
-    if (!productIdParam || !siteId || !quotationModeEnabled) return
+    if (!productIdParam || !siteId || !quotationModeEnabled) return;
     // Don't re-add if already in builder
-    if (builderItems.some(item => item.product_id === productIdParam)) return
+    if (builderItems.some((item) => item.product_id === productIdParam)) return;
 
-    let cancelled = false
-    setIsLoadingProduct(true)
-
-    ;(async () => {
+    let cancelled = false;
+    setIsLoadingProduct(true);
+    (async () => {
       try {
-        const { getPublicProduct } = await import('../../actions/public-ecommerce-actions')
-        const product = await getPublicProduct(siteId, productIdParam)
-        if (cancelled || !product) return
+        const { getPublicProduct } =
+          await import("../../actions/public-ecommerce-actions");
+        const product = await getPublicProduct(siteId, productIdParam);
+        if (cancelled || !product) return;
         addToBuilder({
           product_id: product.id,
           product_name: product.name,
           product_image: product.images?.[0] || undefined,
           list_price: product.base_price,
           quantity: 1,
-        })
+        });
       } catch (err) {
-        console.error('[QuoteRequestBlock] Failed to load product from URL:', err)
+        console.error(
+          "[QuoteRequestBlock] Failed to load product from URL:",
+          err,
+        );
       } finally {
-        if (!cancelled) setIsLoadingProduct(false)
+        if (!cancelled) setIsLoadingProduct(false);
       }
-    })()
+    })();
 
-    return () => { cancelled = true }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productIdParam, siteId, quotationModeEnabled])
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productIdParam, siteId, quotationModeEnabled]);
 
   // Guard: If quotation mode is not enabled, don't show the quote form
   if (isInitialized && !quotationModeEnabled) {
     return (
-      <Card className={cn('text-center', className)}>
+      <Card className={cn("text-center", className)}>
         <CardContent className="pt-6">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
             <ShoppingBag className="h-8 w-8 text-gray-400" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-900">Quotations Not Available</h3>
+          <h3 className="text-xl font-semibold text-gray-900">
+            Quotations Not Available
+          </h3>
           <p className="mt-2 text-gray-600">
-            This store does not currently accept quote requests. Please browse our products and purchase directly.
+            This store does not currently accept quote requests. Please browse
+            our products and purchase directly.
           </p>
           <Link href="/shop">
             <Button className="mt-4" variant="default">
@@ -156,75 +178,77 @@ export function QuoteRequestBlock({
           </Link>
         </CardContent>
       </Card>
-    )
+    );
   }
 
-  const variant = variantProp || 'default'
+  const variant = variantProp || "default";
 
   // Update field
   const updateField = (field: keyof QuoteRequestData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData((prev) => ({ ...prev, [field]: value }));
     if (validationErrors[field]) {
-      setValidationErrors(prev => ({ ...prev, [field]: undefined }))
+      setValidationErrors((prev) => ({ ...prev, [field]: undefined }));
     }
-  }
+  };
 
   // Validate form
   const validate = (): boolean => {
-    const errors: Partial<Record<keyof QuoteRequestData, string>> = {}
+    const errors: Partial<Record<keyof QuoteRequestData, string>> = {};
 
     if (!formData.customer_name.trim()) {
-      errors.customer_name = 'Name is required'
+      errors.customer_name = "Name is required";
     }
-    
+
     if (!formData.customer_email.trim()) {
-      errors.customer_email = 'Email is required'
+      errors.customer_email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customer_email)) {
-      errors.customer_email = 'Invalid email address'
+      errors.customer_email = "Invalid email address";
     }
 
     if (requirePhone && !formData.customer_phone?.trim()) {
-      errors.customer_phone = 'Phone number is required'
+      errors.customer_phone = "Phone number is required";
     }
 
     if (requireCompany && !formData.company_name?.trim()) {
-      errors.company_name = 'Company name is required'
+      errors.company_name = "Company name is required";
     }
 
-    setValidationErrors(errors)
-    return Object.keys(errors).length === 0
-  }
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   // Handle submit
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!validate()) return
+    e.preventDefault();
 
-    const result = await submitQuoteRequest(formData)
-    
+    if (!validate()) return;
+
+    const result = await submitQuoteRequest(formData);
+
     if (result) {
-      setIsSubmitted(true)
-      onSuccess?.(result.id)
+      setIsSubmitted(true);
+      onSuccess?.(result.id);
     }
-  }
+  };
 
   // Success state
   if (isSubmitted) {
     return (
-      <Card className={cn('text-center', className)}>
+      <Card className={cn("text-center", className)}>
         <CardContent className="pt-6">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
             <CircleCheck className="h-8 w-8 text-green-600" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-900">Quote Request Submitted!</h3>
+          <h3 className="text-xl font-semibold text-gray-900">
+            Quote Request Submitted!
+          </h3>
           <p className="mt-2 text-gray-600">
-            We&apos;ve received your request and will send your quote to{' '}
+            We&apos;ve received your request and will send your quote to{" "}
             <strong>{formData.customer_email}</strong> shortly.
           </p>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   // Loading product from URL
@@ -234,11 +258,13 @@ export function QuoteRequestBlock({
         <CardContent className="pt-6">
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            <span className="ml-3 text-muted-foreground">Loading product...</span>
+            <span className="ml-3 text-muted-foreground">
+              Loading product...
+            </span>
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   // No items warning
@@ -248,27 +274,29 @@ export function QuoteRequestBlock({
         <CardContent className="pt-6">
           <div className="text-center">
             <ShoppingBag className="mx-auto h-12 w-12 text-gray-300" />
-            <h3 className="mt-4 text-lg font-medium text-gray-900">No Items Selected</h3>
+            <h3 className="mt-4 text-lg font-medium text-gray-900">
+              No Items Selected
+            </h3>
             <p className="mt-2 text-gray-500">
               Add products to your quote request before submitting.
             </p>
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   // Compact variant
-  if (variant === 'compact') {
+  if (variant === "compact") {
     return (
-      <form onSubmit={handleSubmit} className={cn('space-y-4', className)}>
+      <form onSubmit={handleSubmit} className={cn("space-y-4", className)}>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Input
               placeholder="Your Name *"
               value={formData.customer_name}
-              onChange={(e) => updateField('customer_name', e.target.value)}
-              className={validationErrors.customer_name ? 'border-red-500' : ''}
+              onChange={(e) => updateField("customer_name", e.target.value)}
+              className={validationErrors.customer_name ? "border-red-500" : ""}
             />
           </div>
           <div>
@@ -276,16 +304,18 @@ export function QuoteRequestBlock({
               type="email"
               placeholder="Email *"
               value={formData.customer_email}
-              onChange={(e) => updateField('customer_email', e.target.value)}
-              className={validationErrors.customer_email ? 'border-red-500' : ''}
+              onChange={(e) => updateField("customer_email", e.target.value)}
+              className={
+                validationErrors.customer_email ? "border-red-500" : ""
+              }
             />
           </div>
         </div>
-        
+
         <Textarea
           placeholder="Notes (optional)"
           value={formData.notes}
-          onChange={(e) => updateField('notes', e.target.value)}
+          onChange={(e) => updateField("notes", e.target.value)}
           rows={2}
         />
 
@@ -298,23 +328,27 @@ export function QuoteRequestBlock({
 
         <Button type="submit" disabled={isSubmitting} className="w-full">
           {isSubmitting ? (
-            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...</>
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...
+            </>
           ) : (
-            <><FileText className="mr-2 h-4 w-4" /> Submit Quote Request</>
+            <>
+              <FileText className="mr-2 h-4 w-4" /> Submit Quote Request
+            </>
           )}
         </Button>
       </form>
-    )
+    );
   }
 
   // Sidebar variant
-  if (variant === 'sidebar') {
+  if (variant === "sidebar") {
     return (
       <Card className={className}>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">{title}</CardTitle>
         </CardHeader>
-        
+
         <CardContent className="space-y-4">
           {showPricing && (
             <QuotePriceBreakdown
@@ -324,24 +358,30 @@ export function QuoteRequestBlock({
             />
           )}
 
-          <form id="quote-form-sidebar" onSubmit={handleSubmit} className="space-y-3">
+          <form
+            id="quote-form-sidebar"
+            onSubmit={handleSubmit}
+            className="space-y-3"
+          >
             <Input
               placeholder="Your Name *"
               value={formData.customer_name}
-              onChange={(e) => updateField('customer_name', e.target.value)}
-              className={validationErrors.customer_name ? 'border-red-500' : ''}
+              onChange={(e) => updateField("customer_name", e.target.value)}
+              className={validationErrors.customer_name ? "border-red-500" : ""}
             />
             <Input
               type="email"
               placeholder="Email *"
               value={formData.customer_email}
-              onChange={(e) => updateField('customer_email', e.target.value)}
-              className={validationErrors.customer_email ? 'border-red-500' : ''}
+              onChange={(e) => updateField("customer_email", e.target.value)}
+              className={
+                validationErrors.customer_email ? "border-red-500" : ""
+              }
             />
             <Textarea
               placeholder="Notes"
               value={formData.notes}
-              onChange={(e) => updateField('notes', e.target.value)}
+              onChange={(e) => updateField("notes", e.target.value)}
               rows={2}
             />
           </form>
@@ -354,10 +394,10 @@ export function QuoteRequestBlock({
         </CardContent>
 
         <CardFooter>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             form="quote-form-sidebar"
-            disabled={isSubmitting} 
+            disabled={isSubmitting}
             className="w-full"
           >
             {isSubmitting ? (
@@ -369,7 +409,7 @@ export function QuoteRequestBlock({
           </Button>
         </CardFooter>
       </Card>
-    )
+    );
   }
 
   // Default variant
@@ -385,17 +425,27 @@ export function QuoteRequestBlock({
           {/* Items section */}
           {showItems && builderItems.length > 0 && (
             <div className="space-y-3">
-              <h4 className="font-medium text-gray-900">Items ({builderCount})</h4>
+              <h4 className="font-medium text-gray-900">
+                Items ({builderCount})
+              </h4>
               <div className="max-h-64 space-y-2 overflow-y-auto">
                 {builderItems.map((item) => (
                   <QuoteItemCard
-                    key={`${item.product_id}-${item.variant_id || ''}`}
+                    key={`${item.product_id}-${item.variant_id || ""}`}
                     builderItem={item}
                     variant="editable"
                     formatPrice={formatPrice}
-                    onQuantityChange={(qty) => updateBuilderItem(item.product_id, { quantity: qty })}
-                    onNotesChange={(notes) => updateBuilderItem(item.product_id, { notes })}
-                    onRequestedPriceChange={(price) => updateBuilderItem(item.product_id, { requested_price: price })}
+                    onQuantityChange={(qty) =>
+                      updateBuilderItem(item.product_id, { quantity: qty })
+                    }
+                    onNotesChange={(notes) =>
+                      updateBuilderItem(item.product_id, { notes })
+                    }
+                    onRequestedPriceChange={(price) =>
+                      updateBuilderItem(item.product_id, {
+                        requested_price: price,
+                      })
+                    }
                     onRemove={() => removeFromBuilder(item.product_id)}
                   />
                 ))}
@@ -416,19 +466,23 @@ export function QuoteRequestBlock({
           {/* Customer info */}
           <div className="space-y-4">
             <h4 className="font-medium text-gray-900">Your Information</h4>
-            
+
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="customer_name">Name *</Label>
                 <Input
                   id="customer_name"
                   value={formData.customer_name}
-                  onChange={(e) => updateField('customer_name', e.target.value)}
+                  onChange={(e) => updateField("customer_name", e.target.value)}
                   placeholder="Your full name"
-                  className={validationErrors.customer_name ? 'border-red-500' : ''}
+                  className={
+                    validationErrors.customer_name ? "border-red-500" : ""
+                  }
                 />
                 {validationErrors.customer_name && (
-                  <p className="text-sm text-red-500">{validationErrors.customer_name}</p>
+                  <p className="text-sm text-red-500">
+                    {validationErrors.customer_name}
+                  </p>
                 )}
               </div>
 
@@ -438,12 +492,18 @@ export function QuoteRequestBlock({
                   id="customer_email"
                   type="email"
                   value={formData.customer_email}
-                  onChange={(e) => updateField('customer_email', e.target.value)}
+                  onChange={(e) =>
+                    updateField("customer_email", e.target.value)
+                  }
                   placeholder="email@example.com"
-                  className={validationErrors.customer_email ? 'border-red-500' : ''}
+                  className={
+                    validationErrors.customer_email ? "border-red-500" : ""
+                  }
                 />
                 {validationErrors.customer_email && (
-                  <p className="text-sm text-red-500">{validationErrors.customer_email}</p>
+                  <p className="text-sm text-red-500">
+                    {validationErrors.customer_email}
+                  </p>
                 )}
               </div>
             </div>
@@ -451,34 +511,44 @@ export function QuoteRequestBlock({
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="customer_phone">
-                  Phone {requirePhone ? '*' : '(optional)'}
+                  Phone {requirePhone ? "*" : "(optional)"}
                 </Label>
                 <Input
                   id="customer_phone"
                   type="tel"
                   value={formData.customer_phone}
-                  onChange={(e) => updateField('customer_phone', e.target.value)}
+                  onChange={(e) =>
+                    updateField("customer_phone", e.target.value)
+                  }
                   placeholder="+260 97 1234567"
-                  className={validationErrors.customer_phone ? 'border-red-500' : ''}
+                  className={
+                    validationErrors.customer_phone ? "border-red-500" : ""
+                  }
                 />
                 {validationErrors.customer_phone && (
-                  <p className="text-sm text-red-500">{validationErrors.customer_phone}</p>
+                  <p className="text-sm text-red-500">
+                    {validationErrors.customer_phone}
+                  </p>
                 )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="company_name">
-                  Company {requireCompany ? '*' : '(optional)'}
+                  Company {requireCompany ? "*" : "(optional)"}
                 </Label>
                 <Input
                   id="company_name"
                   value={formData.company_name}
-                  onChange={(e) => updateField('company_name', e.target.value)}
+                  onChange={(e) => updateField("company_name", e.target.value)}
                   placeholder="Your company name"
-                  className={validationErrors.company_name ? 'border-red-500' : ''}
+                  className={
+                    validationErrors.company_name ? "border-red-500" : ""
+                  }
                 />
                 {validationErrors.company_name && (
-                  <p className="text-sm text-red-500">{validationErrors.company_name}</p>
+                  <p className="text-sm text-red-500">
+                    {validationErrors.company_name}
+                  </p>
                 )}
               </div>
             </div>
@@ -488,7 +558,7 @@ export function QuoteRequestBlock({
               <Textarea
                 id="notes"
                 value={formData.notes}
-                onChange={(e) => updateField('notes', e.target.value)}
+                onChange={(e) => updateField("notes", e.target.value)}
                 placeholder="Any special requirements or questions..."
                 rows={3}
               />
@@ -507,12 +577,16 @@ export function QuoteRequestBlock({
       <CardFooter className="flex justify-end gap-3">
         <Button type="submit" form="quote-form" disabled={isSubmitting}>
           {isSubmitting ? (
-            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...</>
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...
+            </>
           ) : (
-            <><FileText className="mr-2 h-4 w-4" /> Submit Quote Request</>
+            <>
+              <FileText className="mr-2 h-4 w-4" /> Submit Quote Request
+            </>
           )}
         </Button>
       </CardFooter>
     </Card>
-  )
+  );
 }

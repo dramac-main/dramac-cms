@@ -144,7 +144,7 @@ interface SegmentDialogProps {
 function SegmentDialog({ open, onOpenChange, segment, siteId, onSaved }: SegmentDialogProps) {
   const [name, setName] = useState(segment?.name || '')
   const [description, setDescription] = useState(segment?.description || '')
-  const [type, setType] = useState<'dynamic' | 'static'>(segment?.type || 'dynamic')
+  const [type, setType] = useState<'dynamic' | 'static'>(segment?.segment_type || 'dynamic')
   const [filters, setFilters] = useState<SegmentFilter[]>(segment?.filters || [])
   const [saving, setSaving] = useState(false)
 
@@ -152,7 +152,7 @@ function SegmentDialog({ open, onOpenChange, segment, siteId, onSaved }: Segment
     if (segment) {
       setName(segment.name)
       setDescription(segment.description || '')
-      setType(segment.type)
+      setType(segment.segment_type)
       setFilters(segment.filters || [])
     } else {
       setName('')
@@ -184,10 +184,10 @@ function SegmentDialog({ open, onOpenChange, segment, siteId, onSaved }: Segment
     setSaving(true)
     try {
       if (segment) {
-        await updateSegment(segment.id, { name, description, type, filters })
+        await updateSegment(siteId, segment.id, { name, description, segment_type: type, filters })
         toast.success('Segment updated')
       } else {
-        await createSegment(siteId, { name, description, type, filters })
+        await createSegment(siteId, { name, description, segment_type: type, filters })
         toast.success('Segment created')
       }
       onSaved()
@@ -298,7 +298,7 @@ export function SegmentsView() {
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteSegment(id)
+      await deleteSegment(siteId, id)
       toast.success('Segment deleted')
       loadSegments()
     } catch (err) {
@@ -307,11 +307,11 @@ export function SegmentsView() {
   }
 
   const handleEvaluate = async (segment: Segment) => {
-    if (segment.type !== 'dynamic') return
+    if (segment.segment_type !== 'dynamic') return
     setEvaluatingId(segment.id)
     try {
-      const result = await evaluateSegment(segment.id, siteId)
-      toast.success(`Segment evaluated: ${result.length} contacts matched`)
+      const result = await evaluateSegment(siteId, segment.id)
+      toast.success(`Segment evaluated: ${result.count} contacts matched`)
       loadSegments()
     } catch (err) {
       toast.error((err as Error).message)
@@ -390,9 +390,9 @@ export function SegmentsView() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={segment.type === 'dynamic' ? 'default' : 'secondary'}>
-                      {segment.type === 'dynamic' ? <Zap className="h-3 w-3 mr-1" /> : null}
-                      {segment.type}
+                    <Badge variant={segment.segment_type === 'dynamic' ? 'default' : 'secondary'}>
+                      {segment.segment_type === 'dynamic' ? <Zap className="h-3 w-3 mr-1" /> : null}
+                      {segment.segment_type}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right font-mono">
@@ -417,7 +417,7 @@ export function SegmentsView() {
                         <DropdownMenuItem onClick={() => { setEditingSegment(segment); setDialogOpen(true) }}>
                           <Edit className="h-4 w-4 mr-2" /> Edit
                         </DropdownMenuItem>
-                        {segment.type === 'dynamic' && (
+                        {segment.segment_type === 'dynamic' && (
                           <DropdownMenuItem
                             onClick={() => handleEvaluate(segment)}
                             disabled={evaluatingId === segment.id}

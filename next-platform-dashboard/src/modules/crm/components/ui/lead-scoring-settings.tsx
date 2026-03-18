@@ -33,7 +33,7 @@ import {
   getLeadScoringRules, createLeadScoringRule, updateLeadScoringRule,
   deleteLeadScoringRule, recalculateAllScores, getLeadScoringTemplates,
 } from '../../actions/lead-scoring-actions'
-import type { LeadScoringRule, ScoringCondition, ScoringCategory } from '../../types/crm-types'
+import type { LeadScoringRule, LeadScoringRuleInput, ScoringCondition, ScoringCategory, FilterOperator } from '../../types/crm-types'
 
 // ============================================================================
 // RULE CARD
@@ -92,14 +92,14 @@ interface CreateRuleDialogProps {
   onOpenChange: (open: boolean) => void
   siteId: string
   onCreated: () => void
-  templates: Array<{ name: string; condition: ScoringCondition; points: number; category: ScoringCategory }>
+  templates: Partial<LeadScoringRuleInput>[]
 }
 
 function CreateRuleDialog({ open, onOpenChange, siteId, onCreated, templates }: CreateRuleDialogProps) {
   const [name, setName] = useState('')
   const [field, setField] = useState('email')
-  const [operator, setOperator] = useState('is_not_empty')
-  const [value, setValue] = useState('')
+  const [operator, setOperator] = useState<FilterOperator>('is_not_empty')
+  const [value, setValue] = useState<string | number | boolean | null>('')
   const [points, setPoints] = useState(10)
   const [category, setCategory] = useState<ScoringCategory>('demographic')
   const [saving, setSaving] = useState(false)
@@ -131,12 +131,14 @@ function CreateRuleDialog({ open, onOpenChange, siteId, onCreated, templates }: 
   const applyTemplate = (tplName: string) => {
     const tpl = templates.find(t => t.name === tplName)
     if (!tpl) return
-    setName(tpl.name)
-    setField(tpl.condition.field)
-    setOperator(tpl.condition.operator)
-    setValue(tpl.condition.value || '')
-    setPoints(tpl.points)
-    setCategory(tpl.category)
+    setName(tpl.name || '')
+    if (tpl.condition) {
+      setField(tpl.condition.field)
+      setOperator(tpl.condition.operator)
+      setValue(Array.isArray(tpl.condition.value) ? tpl.condition.value.join(', ') : tpl.condition.value || '')
+    }
+    setPoints(tpl.points || 0)
+    setCategory(tpl.category || 'demographic')
   }
 
   return (
@@ -156,8 +158,8 @@ function CreateRuleDialog({ open, onOpenChange, siteId, onCreated, templates }: 
                 </SelectTrigger>
                 <SelectContent>
                   {templates.map(t => (
-                    <SelectItem key={t.name} value={t.name}>
-                      {t.name} ({t.points > 0 ? '+' : ''}{t.points})
+                    <SelectItem key={t.name || ''} value={t.name || ''}>
+                      {t.name} ({(t.points || 0) > 0 ? '+' : ''}{t.points || 0})
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -192,7 +194,7 @@ function CreateRuleDialog({ open, onOpenChange, siteId, onCreated, templates }: 
             </div>
             <div>
               <Label>Operator</Label>
-              <Select value={operator} onValueChange={setOperator}>
+              <Select value={operator} onValueChange={(v) => setOperator(v as FilterOperator)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -212,7 +214,7 @@ function CreateRuleDialog({ open, onOpenChange, siteId, onCreated, templates }: 
           {operator !== 'is_empty' && operator !== 'is_not_empty' && (
             <div>
               <Label>Value</Label>
-              <Input value={value} onChange={(e) => setValue(e.target.value)} placeholder="Value to match..." />
+              <Input value={String(value || '')} onChange={(e) => setValue(e.target.value)} placeholder="Value to match..." />
             </div>
           )}
 
@@ -264,7 +266,7 @@ export function LeadScoringSettings({ siteId, className }: LeadScoringSettingsPr
   const [loading, setLoading] = useState(true)
   const [recalculating, setRecalculating] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
-  const [templates, setTemplates] = useState<Array<{ name: string; condition: ScoringCondition; points: number; category: ScoringCategory }>>([])
+  const [templates, setTemplates] = useState<Partial<LeadScoringRuleInput>[]>([])
 
   const loadRules = useCallback(async () => {
     setLoading(true)
@@ -286,7 +288,7 @@ export function LeadScoringSettings({ siteId, className }: LeadScoringSettingsPr
 
   const handleToggle = async (id: string, active: boolean) => {
     try {
-      await updateLeadScoringRule(id, { is_active: active })
+      await updateLeadScoringRule(siteId, id, { is_active: active })
       setRules(rules.map(r => r.id === id ? { ...r, is_active: active } : r))
     } catch {
       toast.error('Failed to update rule')
@@ -295,7 +297,7 @@ export function LeadScoringSettings({ siteId, className }: LeadScoringSettingsPr
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteLeadScoringRule(id)
+      await deleteLeadScoringRule(siteId, id)
       toast.success('Rule deleted')
       loadRules()
     } catch {

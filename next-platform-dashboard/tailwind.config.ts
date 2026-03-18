@@ -46,6 +46,7 @@ const config: Config = {
   ],
   // Safelist dynamic grid classes used by AI-generated components
   // These are built at runtime (e.g. `grid-cols-${columns}`) so Tailwind can't detect them
+  // @ts-expect-error safelist is valid Tailwind config but missing from v4 types
   safelist: [
     { pattern: /^grid-cols-[1-6]$/ },
     { pattern: /^sm:grid-cols-[1-6]$/ },

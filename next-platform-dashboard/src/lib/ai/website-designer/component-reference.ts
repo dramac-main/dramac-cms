@@ -13,7 +13,7 @@
  */
 
 import { componentRegistry, initializeRegistry, isRegistryInitialized } from "@/lib/studio/registry";
-import type { ComponentDefinition, FieldDefinition } from "@/types/studio";
+import type { ComponentDefinition, FieldDefinition, FieldOption } from "@/types/studio";
 
 // Categories that AI should know about — covers all usable component types
 const AI_RELEVANT_CATEGORIES = [
@@ -38,7 +38,7 @@ function formatField(key: string, field: FieldDefinition, includeDefaults: boole
   let desc = key;
 
   if (field.type === "select" && field.options && field.options.length > 0) {
-    const values = field.options.map((o: { value: string | number }) => o.value).join(" | ");
+    const values = field.options.map((o: FieldOption) => o.value).join(" | ");
     desc += `: ${values}`;
   } else if (field.type === "color") {
     desc += `: color (hex)`;
@@ -168,7 +168,7 @@ export function generateArchitectureReference(): string {
     const variantField = fields["variant"] as FieldDefinition | undefined;
     let variantLine = "";
     if (variantField?.options && variantField.options.length > 0) {
-      const variants = variantField.options.map((o: { value: string | number }) => o.value).join(", ");
+      const variants = variantField.options.map((o: FieldOption) => o.value).join(", ");
       variantLine = `\nVariants: ${variants}`;
     }
 
@@ -274,7 +274,7 @@ ${fieldLines.join("\n")}`;
       const variantField = (comp.fields || {})["variant"] as FieldDefinition | undefined;
       let variantInfo = "";
       if (variantField?.options && variantField.options.length > 0) {
-        variantInfo = ` — variants: ${variantField.options.map((o: { value: string | number }) => o.value).join(", ")}`;
+        variantInfo = ` — variants: ${variantField.options.map((o: FieldOption) => o.value).join(", ")}`;
       }
       return `- **${comp.type}** (${comp.category}): ${comp.description || comp.label}${variantInfo}`;
     }).join("\n");

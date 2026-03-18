@@ -98,7 +98,7 @@ function TimelineEventItem({ event }: { event: TimelineEvent }) {
             )}
           </div>
           <span className="text-xs text-muted-foreground whitespace-nowrap">
-            {timeAgo(event.timestamp)}
+            {timeAgo(event.created_at)}
           </span>
         </div>
 
@@ -149,7 +149,7 @@ export function ContactTimeline({ contactId, siteId, className, maxHeight = '500
   const loadTimeline = useCallback(async () => {
     setLoading(true)
     try {
-      const data = await getContactTimeline(contactId, siteId)
+      const data = await getContactTimeline(siteId, contactId)
       setEvents(data)
     } catch (err) {
       toast.error('Failed to load timeline')

@@ -78,7 +78,10 @@ export interface NotificationWithUser extends Notification {
   };
 }
 
-export interface ActivityLogEntryWithUser extends Omit<ActivityLogEntry, "user_name" | "user_avatar"> {
+export interface ActivityLogEntryWithUser extends Omit<
+  ActivityLogEntry,
+  "user_name" | "user_avatar"
+> {
   user?: {
     full_name?: string;
     avatar_url?: string;

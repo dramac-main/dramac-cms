@@ -1,83 +1,83 @@
 /**
  * QuoteListBlock - Display list of quotes
- * 
+ *
  * Phase ECOM-25: Quotation Frontend
- * 
+ *
  * Shows customer's quote history with filtering and status.
  */
-'use client'
+"use client";
 
-import * as React from 'react'
-import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
-import Link from 'next/link'
-import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import * as React from "react";
+import { DEFAULT_CURRENCY_SYMBOL } from "@/lib/locale-config";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { 
-  FileText, 
-  Calendar, 
+} from "@/components/ui/select";
+import {
+  FileText,
+  Calendar,
   Clock,
   ChevronRight,
   Filter,
   Package,
-  Loader2
-} from 'lucide-react'
-import { useStorefront } from '../../context/storefront-context'
-import { useQuotations } from '../../hooks/useQuotations'
-import { QuoteStatusBadge, getQuoteStatusLabel } from './QuoteStatusBadge'
-import { QuotePriceBreakdown } from './QuotePriceBreakdown'
-import type { Quote, QuoteStatus } from '../../types/ecommerce-types'
+  Loader2,
+} from "lucide-react";
+import { useStorefront } from "../../context/storefront-context";
+import { useQuotations } from "../../hooks/useQuotations";
+import { QuoteStatusBadge, getQuoteStatusLabel } from "./QuoteStatusBadge";
+import { QuotePriceBreakdown } from "./QuotePriceBreakdown";
+import type { Quote, QuoteStatus } from "../../types/ecommerce-types";
 
-import { DEFAULT_LOCALE } from '@/lib/locale-config'
+import { DEFAULT_LOCALE } from "@/lib/locale-config";
 // ============================================================================
 // TYPES
 // ============================================================================
 
 export interface QuoteListBlockProps {
   /** Customer/User ID to filter quotes */
-  userId?: string
+  userId?: string;
   /** Status filter */
-  statusFilter?: QuoteStatus[]
+  statusFilter?: QuoteStatus[];
   /** Display variant */
-  variant?: 'list' | 'cards' | 'table'
+  variant?: "list" | "cards" | "table";
   /** Quote detail page base URL */
-  detailUrl?: string
+  detailUrl?: string;
   /** Max items to show (for pagination) */
-  maxItems?: number
+  maxItems?: number;
   /** Show status filter dropdown */
-  showStatusFilter?: boolean
+  showStatusFilter?: boolean;
   /** Show empty state */
-  showEmptyState?: boolean
+  showEmptyState?: boolean;
   /** Custom empty state message */
-  emptyMessage?: string
+  emptyMessage?: string;
   /** Title */
-  title?: string
-  className?: string
+  title?: string;
+  className?: string;
 }
 
 // ============================================================================
 // STATUS OPTIONS
 // ============================================================================
 
-const STATUS_OPTIONS: { value: QuoteStatus | 'all'; label: string }[] = [
-  { value: 'all', label: 'All Quotes' },
-  { value: 'draft', label: 'Draft' },
-  { value: 'pending_approval', label: 'Pending Approval' },
-  { value: 'sent', label: 'Sent' },
-  { value: 'viewed', label: 'Viewed' },
-  { value: 'accepted', label: 'Accepted' },
-  { value: 'rejected', label: 'Rejected' },
-  { value: 'expired', label: 'Expired' },
-  { value: 'converted', label: 'Converted' }
-]
+const STATUS_OPTIONS: { value: QuoteStatus | "all"; label: string }[] = [
+  { value: "all", label: "All Quotes" },
+  { value: "draft", label: "Draft" },
+  { value: "pending_approval", label: "Pending Approval" },
+  { value: "sent", label: "Sent" },
+  { value: "viewed", label: "Viewed" },
+  { value: "accepted", label: "Accepted" },
+  { value: "rejected", label: "Rejected" },
+  { value: "expired", label: "Expired" },
+  { value: "converted", label: "Converted" },
+];
 
 // ============================================================================
 // HELPER
@@ -85,10 +85,10 @@ const STATUS_OPTIONS: { value: QuoteStatus | 'all'; label: string }[] = [
 
 function formatDate(date: string | Date): string {
   return new Date(date).toLocaleDateString(DEFAULT_LOCALE, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  })
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 }
 
 // ============================================================================
@@ -96,15 +96,17 @@ function formatDate(date: string | Date): string {
 // ============================================================================
 
 interface QuoteCardProps {
-  quote: Quote
-  formatPrice?: (price: number) => string
-  detailUrl?: string
+  quote: Quote;
+  formatPrice?: (price: number) => string;
+  detailUrl?: string;
 }
 
 function QuoteCard({ quote, formatPrice, detailUrl }: QuoteCardProps) {
-  const itemCount = quote.items?.length || 0
-  const hasLink = !!(detailUrl || quote.access_token)
-  const href = detailUrl ? `${detailUrl}/${quote.id}` : `/quote/${quote.access_token}`
+  const itemCount = quote.items?.length || 0;
+  const hasLink = !!(detailUrl || quote.access_token);
+  const href = detailUrl
+    ? `${detailUrl}/${quote.id}`
+    : `/quote/${quote.access_token}`;
 
   return (
     <Card className="transition-shadow hover:shadow-md">
@@ -117,7 +119,7 @@ function QuoteCard({ quote, formatPrice, detailUrl }: QuoteCardProps) {
               </span>
               <QuoteStatusBadge status={quote.status} size="sm" />
             </div>
-            
+
             <div className="flex items-center gap-3 text-sm text-gray-500">
               <span className="flex items-center gap-1">
                 <Calendar className="h-3.5 w-3.5" />
@@ -125,7 +127,7 @@ function QuoteCard({ quote, formatPrice, detailUrl }: QuoteCardProps) {
               </span>
               <span className="flex items-center gap-1">
                 <Package className="h-3.5 w-3.5" />
-                {itemCount} item{itemCount !== 1 ? 's' : ''}
+                {itemCount} item{itemCount !== 1 ? "s" : ""}
               </span>
             </div>
 
@@ -139,7 +141,8 @@ function QuoteCard({ quote, formatPrice, detailUrl }: QuoteCardProps) {
 
           <div className="text-right">
             <p className="text-lg font-semibold">
-              {formatPrice?.(quote.total) || `${DEFAULT_CURRENCY_SYMBOL}${(quote.total / 100).toFixed(2)}`}
+              {formatPrice?.(quote.total) ||
+                `${DEFAULT_CURRENCY_SYMBOL}${(quote.total / 100).toFixed(2)}`}
             </p>
             {hasLink ? (
               <Link href={href}>
@@ -148,13 +151,15 @@ function QuoteCard({ quote, formatPrice, detailUrl }: QuoteCardProps) {
                 </Button>
               </Link>
             ) : (
-              <span className="mt-1 inline-block text-xs text-muted-foreground">Processing</span>
+              <span className="mt-1 inline-block text-xs text-muted-foreground">
+                Processing
+              </span>
             )}
           </div>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 // ============================================================================
@@ -162,15 +167,17 @@ function QuoteCard({ quote, formatPrice, detailUrl }: QuoteCardProps) {
 // ============================================================================
 
 interface QuoteListItemProps {
-  quote: Quote
-  formatPrice?: (price: number) => string
-  detailUrl?: string
+  quote: Quote;
+  formatPrice?: (price: number) => string;
+  detailUrl?: string;
 }
 
 function QuoteListItem({ quote, formatPrice, detailUrl }: QuoteListItemProps) {
-  const itemCount = quote.items?.length || 0
-  const hasLink = !!(detailUrl || quote.access_token)
-  const href = detailUrl ? `${detailUrl}/${quote.id}` : `/quote/${quote.access_token}`
+  const itemCount = quote.items?.length || 0;
+  const hasLink = !!(detailUrl || quote.access_token);
+  const href = detailUrl
+    ? `${detailUrl}/${quote.id}`
+    : `/quote/${quote.access_token}`;
 
   const content = (
     <div className="flex items-center gap-4 rounded-lg border bg-card p-4 transition-colors hover:bg-muted">
@@ -186,13 +193,15 @@ function QuoteListItem({ quote, formatPrice, detailUrl }: QuoteListItemProps) {
           <QuoteStatusBadge status={quote.status} size="sm" variant="outline" />
         </div>
         <p className="text-sm text-gray-500">
-          {formatDate(quote.created_at)} · {itemCount} item{itemCount !== 1 ? 's' : ''}
+          {formatDate(quote.created_at)} · {itemCount} item
+          {itemCount !== 1 ? "s" : ""}
         </p>
       </div>
 
       <div className="text-right">
         <p className="font-semibold">
-          {formatPrice?.(quote.total) || `${DEFAULT_CURRENCY_SYMBOL}${(quote.total / 100).toFixed(2)}`}
+          {formatPrice?.(quote.total) ||
+            `${DEFAULT_CURRENCY_SYMBOL}${(quote.total / 100).toFixed(2)}`}
         </p>
       </div>
 
@@ -202,12 +211,16 @@ function QuoteListItem({ quote, formatPrice, detailUrl }: QuoteListItemProps) {
         <span className="text-xs text-muted-foreground">Processing</span>
       )}
     </div>
-  )
+  );
 
   if (hasLink) {
-    return <Link href={href} className="block">{content}</Link>
+    return (
+      <Link href={href} className="block">
+        {content}
+      </Link>
+    );
   }
-  return content
+  return content;
 }
 
 // ============================================================================
@@ -217,54 +230,66 @@ function QuoteListItem({ quote, formatPrice, detailUrl }: QuoteListItemProps) {
 export function QuoteListBlock({
   userId,
   statusFilter: initialStatusFilter,
-  variant: variantProp = 'list',
+  variant: variantProp = "list",
   detailUrl,
   maxItems,
   showStatusFilter = true,
   showEmptyState = true,
-  emptyMessage = 'No quotes found',
-  title = 'Your Quotes',
-  className
+  emptyMessage = "No quotes found",
+  title = "Your Quotes",
+  className,
 }: QuoteListBlockProps) {
-  const { siteId, formatPrice, settings } = useStorefront()
-  const [selectedStatus, setSelectedStatus] = React.useState<QuoteStatus | 'all'>('all')
-  
+  const { siteId, formatPrice, settings } = useStorefront();
+  const [selectedStatus, setSelectedStatus] = React.useState<
+    QuoteStatus | "all"
+  >("all");
+
   const statusFilterArray = React.useMemo(() => {
-    if (selectedStatus !== 'all') return [selectedStatus]
-    return initialStatusFilter
-  }, [selectedStatus, initialStatusFilter])
+    if (selectedStatus !== "all") return [selectedStatus];
+    return initialStatusFilter;
+  }, [selectedStatus, initialStatusFilter]);
 
-  const {
-    quotes,
-    isLoading,
-    error,
-    refetch
-  } = useQuotations(siteId, settings?.agency_id, userId, statusFilterArray)
+  const { quotes, isLoading, error, refetch } = useQuotations(
+    siteId,
+    settings?.agency_id,
+    userId,
+    statusFilterArray,
+  );
 
-  const variant = variantProp || 'list'
+  const variant = variantProp || "list";
 
   // Apply maxItems limit
-  const displayedQuotes = maxItems ? quotes.slice(0, maxItems) : quotes
+  const displayedQuotes = maxItems ? quotes.slice(0, maxItems) : quotes;
 
   // Loading state
   if (isLoading) {
     return (
-      <div className={cn('flex items-center justify-center py-12', className)}>
+      <div className={cn("flex items-center justify-center py-12", className)}>
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   // Error state
   if (error) {
     return (
-      <div className={cn('rounded-lg border border-red-200 bg-red-50 p-6 text-center', className)}>
+      <div
+        className={cn(
+          "rounded-lg border border-red-200 bg-red-50 p-6 text-center",
+          className,
+        )}
+      >
         <p className="text-red-600">Failed to load quotes</p>
-        <Button variant="outline" size="sm" onClick={() => refetch()} className="mt-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => refetch()}
+          className="mt-2"
+        >
           Try Again
         </Button>
       </div>
-    )
+    );
   }
 
   // Empty state
@@ -273,11 +298,13 @@ export function QuoteListBlock({
       <Card className={className}>
         <CardContent className="py-12 text-center">
           <FileText className="mx-auto h-12 w-12 text-gray-300" />
-          <h3 className="mt-4 text-lg font-medium text-gray-900">No Quotes Yet</h3>
+          <h3 className="mt-4 text-lg font-medium text-gray-900">
+            No Quotes Yet
+          </h3>
           <p className="mt-2 text-gray-500">{emptyMessage}</p>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -285,11 +312,11 @@ export function QuoteListBlock({
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
-        
+
         {showStatusFilter && (
           <Select
             value={selectedStatus}
-            onValueChange={(v) => setSelectedStatus(v as QuoteStatus | 'all')}
+            onValueChange={(v) => setSelectedStatus(v as QuoteStatus | "all")}
           >
             <SelectTrigger className="w-40">
               <Filter className="mr-2 h-4 w-4" />
@@ -307,7 +334,7 @@ export function QuoteListBlock({
       </div>
 
       {/* Quotes */}
-      {variant === 'cards' ? (
+      {variant === "cards" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {displayedQuotes.map((quote) => (
             <QuoteCard
@@ -318,25 +345,37 @@ export function QuoteListBlock({
             />
           ))}
         </div>
-      ) : variant === 'table' ? (
+      ) : variant === "table" ? (
         <div className="overflow-x-auto rounded-lg border">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Quote #</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Date</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Items</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Status</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">Total</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                  Quote #
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                  Date
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                  Items
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                  Status
+                </th>
+                <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">
+                  Total
+                </th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {displayedQuotes.map((quote) => {
-                const itemCount = quote.items?.length || 0
-                const hasLink = !!(detailUrl || quote.access_token)
-                const href = detailUrl ? `${detailUrl}/${quote.id}` : `/quote/${quote.access_token}`
-                
+                const itemCount = quote.items?.length || 0;
+                const hasLink = !!(detailUrl || quote.access_token);
+                const href = detailUrl
+                  ? `${detailUrl}/${quote.id}`
+                  : `/quote/${quote.access_token}`;
+
                 return (
                   <tr key={quote.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 font-medium">
@@ -345,14 +384,13 @@ export function QuoteListBlock({
                     <td className="px-4 py-3 text-gray-600">
                       {formatDate(quote.created_at)}
                     </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {itemCount}
-                    </td>
+                    <td className="px-4 py-3 text-gray-600">{itemCount}</td>
                     <td className="px-4 py-3">
                       <QuoteStatusBadge status={quote.status} size="sm" />
                     </td>
                     <td className="px-4 py-3 text-right font-medium">
-                      {formatPrice?.(quote.total) || `${DEFAULT_CURRENCY_SYMBOL}${(quote.total / 100).toFixed(2)}`}
+                      {formatPrice?.(quote.total) ||
+                        `${DEFAULT_CURRENCY_SYMBOL}${(quote.total / 100).toFixed(2)}`}
                     </td>
                     <td className="px-4 py-3 text-right">
                       {hasLink ? (
@@ -362,11 +400,13 @@ export function QuoteListBlock({
                           </Button>
                         </Link>
                       ) : (
-                        <span className="text-xs text-muted-foreground">Processing</span>
+                        <span className="text-xs text-muted-foreground">
+                          Processing
+                        </span>
                       )}
                     </td>
                   </tr>
-                )
+                );
               })}
             </tbody>
           </table>
@@ -393,5 +433,5 @@ export function QuoteListBlock({
         </div>
       )}
     </div>
-  )
+  );
 }

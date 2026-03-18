@@ -29,7 +29,7 @@ import {
 } from 'lucide-react'
 import { useCRM } from '../../context/crm-context'
 import { getFormCaptures } from '../../actions/bulk-actions'
-import type { FormCapture, FormCaptureType } from '../../types/crm-types'
+import type { FormCapture } from '../../types/crm-types'
 
 // ============================================================================
 // CAPTURE DETAIL SHEET
@@ -95,7 +95,7 @@ function CaptureDetailSheet({
           </div>
 
           {/* Source Info */}
-          {(capture.page_url || capture.utm_source || capture.referrer) && (
+          {(capture.page_url || capture.utm_source || capture.referrer_url) && (
             <>
               <Separator />
               <div>
@@ -107,10 +107,10 @@ function CaptureDetailSheet({
                       <span className="break-all">{capture.page_url}</span>
                     </div>
                   )}
-                  {capture.referrer && (
+                  {capture.referrer_url && (
                     <div className="flex items-start gap-2">
                       <ExternalLink className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                      <span className="break-all">{capture.referrer}</span>
+                      <span className="break-all">{capture.referrer_url}</span>
                     </div>
                   )}
                   {capture.utm_source && (
@@ -164,7 +164,7 @@ export function FormCapturesView() {
     try {
       const data = await getFormCaptures(
         siteId,
-        typeFilter !== 'all' ? typeFilter as FormCaptureType : undefined,
+        typeFilter !== 'all' ? { formType: typeFilter } : undefined,
       )
       setCaptures(data)
     } catch (err) {
@@ -291,10 +291,10 @@ export function FormCapturesView() {
                     </div>
                   </TableCell>
                   <TableCell className="font-medium">
-                    {capture.form_data?.name || '-'}
+                    {String(capture.form_data?.name || '-')}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {capture.form_data?.email || '-'}
+                    {String(capture.form_data?.email || '-')}
                   </TableCell>
                   <TableCell>
                     <Badge variant={capture.status === 'new' ? 'default' : 'secondary'}>
@@ -302,9 +302,9 @@ export function FormCapturesView() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {capture.utm_source || capture.referrer ? (
+                    {capture.utm_source || capture.referrer_url ? (
                       <span className="truncate max-w-[150px] block">
-                        {capture.utm_source || new URL(capture.referrer || '').hostname}
+                        {capture.utm_source || (() => { try { return new URL(capture.referrer_url || '').hostname } catch { return 'Unknown' } })()}
                       </span>
                     ) : (
                       'Direct'

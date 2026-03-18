@@ -30,7 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Mail, Send, FileText, Loader2, Sparkles } from "lucide-react";
 import { sendCrmEmail, getEmailTemplates } from "../../actions/email-actions";
-import type { Contact } from "../../types/crm-types";
+import type { Contact, EmailTemplate } from "../../types/crm-types";
 
 interface EmailComposeDialogProps {
   open: boolean;
@@ -38,13 +38,6 @@ interface EmailComposeDialogProps {
   contact: Contact | null;
   siteId: string;
   onSent?: () => void;
-}
-
-interface EmailTemplate {
-  id: string;
-  name: string;
-  subject: string;
-  body: string;
 }
 
 export function EmailComposeDialog({
@@ -88,16 +81,17 @@ export function EmailComposeDialog({
 
     // Replace merge tags
     let processedSubject = template.subject;
-    let processedBody = template.body;
+    let processedBody = template.body_html || "";
 
     if (contact) {
+      const companyName = typeof contact.company === 'object' ? (contact.company as { name?: string })?.name || '' : contact.company || '';
       const mergeData: Record<string, string> = {
         "{{first_name}}": contact.first_name || "",
         "{{last_name}}": contact.last_name || "",
         "{{full_name}}":
           `${contact.first_name || ""} ${contact.last_name || ""}`.trim(),
         "{{email}}": contact.email || "",
-        "{{company}}": contact.company || "",
+        "{{company}}": companyName,
         "{{phone}}": contact.phone || "",
       };
 

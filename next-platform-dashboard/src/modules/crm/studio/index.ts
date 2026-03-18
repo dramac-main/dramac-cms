@@ -9,7 +9,11 @@
  * Website Form → API → CRM Contact → Lead Score → Automation Trigger
  */
 
+import type { ComponentType } from "react";
 import type { ModuleStudioExports } from "@/types/studio-module";
+
+// Placeholder render — CRM form components are rendered via module integration
+const CRMFormPlaceholder: ComponentType<Record<string, unknown>> = () => null;
 
 // =============================================================================
 // STUDIO COMPONENTS — CRM-Connected Forms
@@ -40,7 +44,7 @@ export const studioComponents: ModuleStudioExports["studioComponents"] = {
       borderRadius: "xl",
       shadow: "lg",
     },
-    props: {
+    fields: {
       title: { type: "text", label: "Title" },
       subtitle: { type: "text", label: "Subtitle" },
       nameLabel: { type: "text", label: "Name Label" },
@@ -49,9 +53,9 @@ export const studioComponents: ModuleStudioExports["studioComponents"] = {
       messageLabel: { type: "text", label: "Message Label" },
       submitText: { type: "text", label: "Button Text" },
       successMessage: { type: "text", label: "Success Message" },
-      showPhone: { type: "boolean", label: "Show Phone" },
-      showCompany: { type: "boolean", label: "Show Company" },
-      showSubject: { type: "boolean", label: "Show Subject" },
+      showPhone: { type: "toggle", label: "Show Phone" },
+      showCompany: { type: "toggle", label: "Show Company" },
+      showSubject: { type: "toggle", label: "Show Subject" },
       backgroundColor: { type: "color", label: "Background" },
       buttonColor: { type: "color", label: "Button Color" },
       buttonTextColor: { type: "color", label: "Button Text" },
@@ -71,6 +75,7 @@ export const studioComponents: ModuleStudioExports["studioComponents"] = {
         { value: "xl", label: "Extra Large" },
       ]},
     },
+    render: CRMFormPlaceholder,
   },
 
   CRMLeadCaptureForm: {
@@ -91,13 +96,13 @@ export const studioComponents: ModuleStudioExports["studioComponents"] = {
       buttonColor: "",
       buttonTextColor: "",
     },
-    props: {
+    fields: {
       title: { type: "text", label: "Title" },
       subtitle: { type: "text", label: "Subtitle" },
       submitText: { type: "text", label: "Button Text" },
       successMessage: { type: "text", label: "Success Message" },
-      showPhone: { type: "boolean", label: "Show Phone" },
-      showCompany: { type: "boolean", label: "Show Company" },
+      showPhone: { type: "toggle", label: "Show Phone" },
+      showCompany: { type: "toggle", label: "Show Company" },
       layout: { type: "select", label: "Layout", options: [
         { value: "horizontal", label: "Horizontal" },
         { value: "vertical", label: "Vertical" },
@@ -107,6 +112,7 @@ export const studioComponents: ModuleStudioExports["studioComponents"] = {
       buttonColor: { type: "color", label: "Button Color" },
       buttonTextColor: { type: "color", label: "Button Text" },
     },
+    render: CRMFormPlaceholder,
   },
 
   CRMNewsletterForm: {
@@ -125,7 +131,7 @@ export const studioComponents: ModuleStudioExports["studioComponents"] = {
       buttonColor: "",
       buttonTextColor: "",
     },
-    props: {
+    fields: {
       title: { type: "text", label: "Title" },
       subtitle: { type: "text", label: "Subtitle" },
       submitText: { type: "text", label: "Button Text" },
@@ -139,6 +145,7 @@ export const studioComponents: ModuleStudioExports["studioComponents"] = {
       buttonColor: { type: "color", label: "Button Color" },
       buttonTextColor: { type: "color", label: "Button Text" },
     },
+    render: CRMFormPlaceholder,
   },
 };
 

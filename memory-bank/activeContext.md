@@ -1,12 +1,37 @@
 # Active Context
 
-## Current Focus: Booking Module Comprehensive Overhaul — COMPLETED ✅
+## Current Focus: E-Commerce & Quotation System End-to-End Verification — COMPLETED ✅
 
-### Status: COMMITTED & PUSHED — `2ef94882` — 11 files changed, 323 insertions, 57 deletions
+### Status: COMMITTED & PUSHED — `570e664b` — 5 files changed
 
-### Latest Work: Booking Module Industry-Standard Overhaul
+### Latest Work: E-Commerce Quotation System Fixes + Notification Type Safety
 
-Full end-to-end audit and fix of the entire booking module (61 files). Systematic fixes across server actions, UI components, embed system, and analytics.
+Full end-to-end verification of the e-commerce module (270+ files), quotation system, email system, and business notifications. Found and fixed critical issues.
+
+**Commit: `570e664b`** — fix(ecommerce): quotation system fixes + notification type safety
+
+### Changes Made (5 files):
+
+1. **QuoteRequestBlock.tsx** — Handle `?product=` URL param to auto-add products to quote builder; Fix React rules-of-hooks violation (moved `useQuotations` hook before conditional return); Added loading state for product fetch
+2. **QuoteListBlock.tsx** — Fix broken links for quotes without `access_token` (3 locations: QuoteCard, QuoteListItem, table variant); Show "Processing" text instead of broken 404 links
+3. **notifications.ts (types)** — Add missing `order_cancelled`, `refund_issued`, `low_stock` to NotificationType union
+4. **notifications.ts (services)** — Add 3 matching `notificationTypeInfo` entries with appropriate icons/colors
+5. **business-notifications.ts** — Add null guards (`if (!site?.agency_id) return`) in 5 functions to fix TS2345 errors where `string | undefined` was passed to `.eq()` expecting `string`
+
+### Verification Completed:
+
+- ✅ 270+ e-commerce files mapped and audited
+- ✅ 34 email types verified with 100% template coverage
+- ✅ Quotation toggle propagation verified end-to-end (settings → StorefrontContext → all components)
+- ✅ All cart components correctly redirect to /quotes in quotation mode
+- ✅ Product card + product detail verified (hide prices, change CTA, redirect to quotes)
+- ✅ Checkout flow verified (multi-step, dynamic payment/shipping methods)
+- ✅ Quote lifecycle workflow verified (draft → sent → viewed → accepted/rejected → converted)
+- ✅ SEO injector correctly skips product structured data when quotation mode hides prices
+- ✅ Email duplication check — NOT duplicated (sendOrderEmail is manual dashboard action, business-notifications is automatic)
+- ✅ TypeScript: ZERO errors in all modified ecommerce/notification files
+
+### Previous Work: Booking Module Comprehensive Overhaul
 
 **Commit: `2ef94882`** — fix(booking): comprehensive module overhaul - industry standard quality
 

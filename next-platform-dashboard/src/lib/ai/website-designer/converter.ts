@@ -384,12 +384,10 @@ function convertComponentToStudio(genComponent: GeneratedComponent): StudioCompo
     "ContactInfoBlock": "ContactForm",
     "ContactInfo": "ContactForm",
     // Newsletter
-    "NewsletterBlock": "Newsletter",
     "NewsletterSection": "Newsletter",
     "SubscribeBlock": "Newsletter",
     "Subscribe": "Newsletter",
     // Quote
-    "QuoteBlock": "Quote",
     "QuoteSection": "Quote",
     "Blockquote": "Quote",
     // Code
@@ -482,7 +480,6 @@ function convertComponentToStudio(genComponent: GeneratedComponent): StudioCompo
     "BookingEmbed": "BookingEmbed",
     "BookingStaffGrid": "BookingStaffGrid",
     "StaffGrid": "BookingStaffGrid",
-    "ServiceSelector": "BookingServiceSelector",
     "AppointmentCalendar": "BookingCalendar",
     "AppointmentForm": "BookingForm",
     "AppointmentWidget": "BookingWidget",
@@ -589,7 +586,7 @@ function convertComponentToStudio(genComponent: GeneratedComponent): StudioCompo
         "services": "Features", "service": "Features", "whatwedo": "Features",
         "offerings": "Features", "specialties": "Features",
         // Location/map/hours → ContactForm
-        "location": "ContactForm", "locationmap": "ContactForm", "findus": "ContactForm",
+        "location": "ContactForm", "findus": "ContactForm",
         "visitreuneus": "ContactForm", "businesshours": "Features", "officehours": "Features",
         "hours": "Features", "openinghours": "Features",
         // Credentials/accreditations → TrustBadges
@@ -1158,9 +1155,9 @@ function transformPropsForStudio(
       image: logo.image || logo.src || logo.logo || logo.url || "",
       alt: logo.alt || logo.name || `Partner ${i + 1}`,
       link: logo.link || logo.url || logo.href || "",
-    })).filter((logo: { image: string }) => {
+    })).filter((logo) => {
       // Only include logos that have a real image URL
-      return logo.image && (logo.image.startsWith("http") || logo.image.startsWith("/") || logo.image.startsWith("data:"));
+      return typeof logo.image === 'string' && logo.image && (logo.image.startsWith("http") || logo.image.startsWith("/") || logo.image.startsWith("data:"));
     }) : [];
     
     // If no logos have real image URLs, convert this to a text-based component

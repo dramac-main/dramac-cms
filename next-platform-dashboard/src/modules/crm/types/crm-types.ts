@@ -676,6 +676,7 @@ export type ContactNoteUpdate = Partial<ContactNoteInput>;
 export type FormCaptureStatus =
   | "new"
   | "processed"
+  | "contacted"
   | "duplicate"
   | "spam"
   | "error";
@@ -714,7 +715,13 @@ export interface FormCapture {
 
 export type TimelineEventType =
   | "activity"
+  | "activity_call"
+  | "activity_email"
+  | "activity_meeting"
+  | "activity_task"
+  | "activity_note"
   | "note"
+  | "note_added"
   | "email_sent"
   | "email_received"
   | "deal_created"
@@ -722,6 +729,7 @@ export type TimelineEventType =
   | "deal_won"
   | "deal_lost"
   | "form_submission"
+  | "form_submitted"
   | "tag_added"
   | "tag_removed"
   | "status_changed"

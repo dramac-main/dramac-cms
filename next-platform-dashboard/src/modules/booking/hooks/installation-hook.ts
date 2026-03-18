@@ -79,7 +79,7 @@ export const bookingInstallationHook: ModuleInstallationHook = {
       success: true,
       pagesRemoved: [],
       navItemsRemoved: [],
-      settingsCleared: [],
+      settingsCleaned: [],
       errors: [],
     };
 

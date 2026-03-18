@@ -631,7 +631,7 @@ async function fetchModules(supabase: SupabaseClient, siteId: string): Promise<E
       (modulesData || []).map((m: { id: string; name: string; slug: string }) => [m.id, m])
     );
 
-    return installations.map((inst: { id: string; module_id: string; is_enabled: boolean; settings: Record<string, unknown> | null }) => {
+    return installations.map((inst) => {
       const mod = moduleMap.get(inst.module_id) as { id: string; name: string; slug: string } | undefined;
       return {
         id: inst.id,
@@ -639,8 +639,8 @@ async function fetchModules(supabase: SupabaseClient, siteId: string): Promise<E
         module_type: mod?.slug ?? "",
         module_name: mod?.name ?? undefined,
         name: mod?.name ?? undefined,
-        enabled: inst.is_enabled,
-        settings: inst.settings ?? undefined,
+        enabled: inst.is_enabled ?? false,
+        settings: (inst.settings as Record<string, unknown>) ?? undefined,
       };
     });
   } catch {

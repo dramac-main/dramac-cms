@@ -52,7 +52,7 @@ function ContactCard({ contact, isPrimary }: { contact: Contact; isPrimary?: boo
       )}
       {contact.company && (
         <div className="text-xs text-muted-foreground mt-0.5">
-          {contact.company}
+          {typeof contact.company === 'object' ? (contact.company as { name?: string })?.name || '' : contact.company}
         </div>
       )}
     </div>
@@ -60,7 +60,7 @@ function ContactCard({ contact, isPrimary }: { contact: Contact; isPrimary?: boo
 }
 
 export function MergeContactsDialog({ open, onOpenChange, siteId, onMerged }: MergeDialogProps) {
-  const [duplicates, setDuplicates] = useState<MergeCandidate[]>([])
+  const [duplicates, setDuplicates] = useState<MergeCandidate[][]>([])
   const [loading, setLoading] = useState(true)
   const [selectedPairs, setSelectedPairs] = useState<Set<number>>(new Set())
   const [merging, setMerging] = useState(false)
@@ -114,17 +114,14 @@ export function MergeContactsDialog({ open, onOpenChange, siteId, onMerged }: Me
     let merged = 0
 
     for (const index of selectedPairs) {
-      const pair = duplicates[index]
-      if (!pair) continue
+      const group = duplicates[index]
+      if (!group || group.length < 2) continue
 
       try {
-        await mergeContacts(siteId, {
-          primaryContactId: pair.primary.id,
-          secondaryContactIds: pair.duplicates.map(d => d.id),
-        })
+        await mergeContacts(siteId, group[0].contact.id, group.slice(1).map(d => d.contact.id))
         merged++
       } catch (err) {
-        toast.error(`Failed to merge: ${pair.primary.email}`)
+        toast.error(`Failed to merge: ${group[0].contact.email}`)
       }
     }
 
@@ -187,7 +184,7 @@ export function MergeContactsDialog({ open, onOpenChange, siteId, onMerged }: Me
             </div>
 
             <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
-              {duplicates.map((pair, index) => (
+              {duplicates.map((group, index) => (
                 <div
                   key={index}
                   className={`p-4 rounded-lg border cursor-pointer transition-colors ${
@@ -203,16 +200,16 @@ export function MergeContactsDialog({ open, onOpenChange, siteId, onMerged }: Me
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <Badge variant="outline" className="text-xs">
-                          {Math.round(pair.confidence * 100)}% match
+                          {Math.round(group[0].confidence * 100)}% match
                         </Badge>
                         <span className="text-xs text-muted-foreground">
-                          Matched by: {pair.matchField}
+                          Matched by: {group[0].matchType}
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
-                        <ContactCard contact={pair.primary} isPrimary />
-                        {pair.duplicates.map((dup) => (
-                          <ContactCard key={dup.id} contact={dup} />
+                        <ContactCard contact={group[0].contact} isPrimary />
+                        {group.slice(1).map((dup) => (
+                          <ContactCard key={dup.contact.id} contact={dup.contact} />
                         ))}
                       </div>
                     </div>
