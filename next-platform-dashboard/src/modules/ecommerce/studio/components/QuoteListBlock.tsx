@@ -103,7 +103,8 @@ interface QuoteCardProps {
 
 function QuoteCard({ quote, formatPrice, detailUrl }: QuoteCardProps) {
   const itemCount = quote.items?.length || 0
-  const href = detailUrl ? `${detailUrl}/${quote.id}` : `/quote/${quote.access_token || quote.id}`
+  const hasLink = !!(detailUrl || quote.access_token)
+  const href = detailUrl ? `${detailUrl}/${quote.id}` : `/quote/${quote.access_token}`
 
   return (
     <Card className="transition-shadow hover:shadow-md">
@@ -140,11 +141,15 @@ function QuoteCard({ quote, formatPrice, detailUrl }: QuoteCardProps) {
             <p className="text-lg font-semibold">
               {formatPrice?.(quote.total) || `${DEFAULT_CURRENCY_SYMBOL}${(quote.total / 100).toFixed(2)}`}
             </p>
-            <Link href={href}>
-              <Button variant="ghost" size="sm" className="mt-1">
-                View <ChevronRight className="ml-1 h-4 w-4" />
-              </Button>
-            </Link>
+            {hasLink ? (
+              <Link href={href}>
+                <Button variant="ghost" size="sm" className="mt-1">
+                  View <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+              </Link>
+            ) : (
+              <span className="mt-1 inline-block text-xs text-muted-foreground">Processing</span>
+            )}
           </div>
         </div>
       </CardContent>
@@ -164,37 +169,45 @@ interface QuoteListItemProps {
 
 function QuoteListItem({ quote, formatPrice, detailUrl }: QuoteListItemProps) {
   const itemCount = quote.items?.length || 0
-  const href = detailUrl ? `${detailUrl}/${quote.id}` : `/quote/${quote.access_token || quote.id}`
+  const hasLink = !!(detailUrl || quote.access_token)
+  const href = detailUrl ? `${detailUrl}/${quote.id}` : `/quote/${quote.access_token}`
 
-  return (
-    <Link href={href} className="block">
-      <div className="flex items-center gap-4 rounded-lg border bg-card p-4 transition-colors hover:bg-muted">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
-          <FileText className="h-5 w-5 text-gray-600" />
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="font-medium text-gray-900">
-              #{quote.quote_number || quote.id.slice(0, 8)}
-            </span>
-            <QuoteStatusBadge status={quote.status} size="sm" variant="outline" />
-          </div>
-          <p className="text-sm text-gray-500">
-            {formatDate(quote.created_at)} · {itemCount} item{itemCount !== 1 ? 's' : ''}
-          </p>
-        </div>
-
-        <div className="text-right">
-          <p className="font-semibold">
-            {formatPrice?.(quote.total) || `${DEFAULT_CURRENCY_SYMBOL}${(quote.total / 100).toFixed(2)}`}
-          </p>
-        </div>
-
-        <ChevronRight className="h-5 w-5 text-gray-400" />
+  const content = (
+    <div className="flex items-center gap-4 rounded-lg border bg-card p-4 transition-colors hover:bg-muted">
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
+        <FileText className="h-5 w-5 text-gray-600" />
       </div>
-    </Link>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-gray-900">
+            #{quote.quote_number || quote.id.slice(0, 8)}
+          </span>
+          <QuoteStatusBadge status={quote.status} size="sm" variant="outline" />
+        </div>
+        <p className="text-sm text-gray-500">
+          {formatDate(quote.created_at)} · {itemCount} item{itemCount !== 1 ? 's' : ''}
+        </p>
+      </div>
+
+      <div className="text-right">
+        <p className="font-semibold">
+          {formatPrice?.(quote.total) || `${DEFAULT_CURRENCY_SYMBOL}${(quote.total / 100).toFixed(2)}`}
+        </p>
+      </div>
+
+      {hasLink ? (
+        <ChevronRight className="h-5 w-5 text-gray-400" />
+      ) : (
+        <span className="text-xs text-muted-foreground">Processing</span>
+      )}
+    </div>
   )
+
+  if (hasLink) {
+    return <Link href={href} className="block">{content}</Link>
+  }
+  return content
 }
 
 // ============================================================================
@@ -321,7 +334,8 @@ export function QuoteListBlock({
             <tbody className="divide-y">
               {displayedQuotes.map((quote) => {
                 const itemCount = quote.items?.length || 0
-                const href = detailUrl ? `${detailUrl}/${quote.id}` : `/quote/${quote.access_token || quote.id}`
+                const hasLink = !!(detailUrl || quote.access_token)
+                const href = detailUrl ? `${detailUrl}/${quote.id}` : `/quote/${quote.access_token}`
                 
                 return (
                   <tr key={quote.id} className="hover:bg-gray-50">
@@ -341,11 +355,15 @@ export function QuoteListBlock({
                       {formatPrice?.(quote.total) || `${DEFAULT_CURRENCY_SYMBOL}${(quote.total / 100).toFixed(2)}`}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <Link href={href}>
-                        <Button variant="ghost" size="sm">
-                          View
-                        </Button>
-                      </Link>
+                      {hasLink ? (
+                        <Link href={href}>
+                          <Button variant="ghost" size="sm">
+                            View
+                          </Button>
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Processing</span>
+                      )}
                     </td>
                   </tr>
                 )

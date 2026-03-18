@@ -93,6 +93,9 @@ export const notificationTypeInfo: Record<
   new_order: { icon: "ShoppingCart", color: "text-green-500", label: "New Order" },
   order_shipped: { icon: "Package", color: "text-blue-500", label: "Order Shipped" },
   order_delivered: { icon: "PackageCheck", color: "text-green-500", label: "Order Delivered" },
+  order_cancelled: { icon: "CircleX", color: "text-red-500", label: "Order Cancelled" },
+  refund_issued: { icon: "RotateCcw", color: "text-orange-500", label: "Refund Issued" },
+  low_stock: { icon: "AlertTriangle", color: "text-yellow-500", label: "Low Stock" },
   // Form submissions
   form_submission: { icon: "FileText", color: "text-blue-500", label: "Form Submission" },
   // Live Chat

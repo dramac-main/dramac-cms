@@ -458,10 +458,12 @@ export async function notifyOrderShipped(
       .eq('id', siteId)
       .single()
 
+    if (!site?.agency_id) return
+
     const { data: agency } = await supabase
       .from('agencies')
       .select('owner_id')
-      .eq('id', site?.agency_id)
+      .eq('id', site.agency_id)
       .single()
 
     // In-app notification to business owner
@@ -517,10 +519,12 @@ export async function notifyOrderDelivered(
       .eq('id', siteId)
       .single()
 
+    if (!site?.agency_id) return
+
     const { data: agency } = await supabase
       .from('agencies')
       .select('owner_id')
-      .eq('id', site?.agency_id)
+      .eq('id', site.agency_id)
       .single()
 
     // In-app notification to business owner
@@ -578,10 +582,12 @@ export async function notifyOrderCancelled(
       .eq('id', siteId)
       .single()
 
+    if (!site?.agency_id) return
+
     const { data: agency } = await supabase
       .from('agencies')
       .select('owner_id')
-      .eq('id', site?.agency_id)
+      .eq('id', site.agency_id)
       .single()
 
     const { data: ownerProfile } = agency?.owner_id ? await supabase
@@ -709,10 +715,12 @@ export async function notifyRefundIssued(
       .eq('id', siteId)
       .single()
 
+    if (!site?.agency_id) return
+
     const { data: agency } = await supabase
       .from('agencies')
       .select('owner_id')
-      .eq('id', site?.agency_id)
+      .eq('id', site.agency_id)
       .single()
 
     // In-app notification to business owner
@@ -771,10 +779,12 @@ export async function notifyLowStock(
       .eq('id', siteId)
       .single()
 
+    if (!site?.agency_id) return
+
     const { data: agency } = await supabase
       .from('agencies')
       .select('owner_id')
-      .eq('id', site?.agency_id)
+      .eq('id', site.agency_id)
       .single()
 
     const { data: ownerProfile } = agency?.owner_id ? await supabase

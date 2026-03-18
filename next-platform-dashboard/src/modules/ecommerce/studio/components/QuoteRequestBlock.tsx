@@ -8,6 +8,7 @@
 'use client'
 
 import * as React from 'react'
+import { useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -77,6 +78,64 @@ export function QuoteRequestBlock({
 }: QuoteRequestBlockProps) {
   const { siteId, formatPrice, settings, quotationModeEnabled, isInitialized } = useStorefront()
   const agencyId = settings?.agency_id
+  const searchParams = useSearchParams()
+
+  // Move hooks before conditional returns to satisfy React rules of hooks
+  const {
+    builderItems,
+    addToBuilder,
+    updateBuilderItem,
+    removeFromBuilder,
+    builderCount,
+    submitQuoteRequest,
+    isSubmitting,
+    submitError
+  } = useQuotations(siteId, agencyId)
+
+  const [formData, setFormData] = React.useState<QuoteRequestData>({
+    customer_name: initialName,
+    customer_email: initialEmail,
+    customer_phone: initialPhone,
+    company_name: initialCompany,
+    notes: ''
+  })
+  
+  const [isSubmitted, setIsSubmitted] = React.useState(false)
+  const [validationErrors, setValidationErrors] = React.useState<Partial<Record<keyof QuoteRequestData, string>>>({})
+  const [isLoadingProduct, setIsLoadingProduct] = React.useState(false)
+
+  // Auto-load product from ?product= URL parameter
+  const productIdParam = searchParams?.get('product')
+  React.useEffect(() => {
+    if (!productIdParam || !siteId || !quotationModeEnabled) return
+    // Don't re-add if already in builder
+    if (builderItems.some(item => item.product_id === productIdParam)) return
+
+    let cancelled = false
+    setIsLoadingProduct(true)
+
+    ;(async () => {
+      try {
+        const { getPublicProduct } = await import('../../actions/public-ecommerce-actions')
+        const product = await getPublicProduct(siteId, productIdParam)
+        if (cancelled || !product) return
+        addToBuilder({
+          product_id: product.id,
+          product_name: product.name,
+          product_image: product.images?.[0] || undefined,
+          list_price: product.base_price,
+          quantity: 1,
+        })
+      } catch (err) {
+        console.error('[QuoteRequestBlock] Failed to load product from URL:', err)
+      } finally {
+        if (!cancelled) setIsLoadingProduct(false)
+      }
+    })()
+
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productIdParam, siteId, quotationModeEnabled])
 
   // Guard: If quotation mode is not enabled, don't show the quote form
   if (isInitialized && !quotationModeEnabled) {
@@ -99,29 +158,8 @@ export function QuoteRequestBlock({
       </Card>
     )
   }
-  
-  const {
-    builderItems,
-    updateBuilderItem,
-    removeFromBuilder,
-    builderCount,
-    submitQuoteRequest,
-    isSubmitting,
-    submitError
-  } = useQuotations(siteId, agencyId)
 
   const variant = variantProp || 'default'
-
-  const [formData, setFormData] = React.useState<QuoteRequestData>({
-    customer_name: initialName,
-    customer_email: initialEmail,
-    customer_phone: initialPhone,
-    company_name: initialCompany,
-    notes: ''
-  })
-  
-  const [isSubmitted, setIsSubmitted] = React.useState(false)
-  const [validationErrors, setValidationErrors] = React.useState<Partial<Record<keyof QuoteRequestData, string>>>({})
 
   // Update field
   const updateField = (field: keyof QuoteRequestData, value: string) => {
@@ -184,6 +222,20 @@ export function QuoteRequestBlock({
             We&apos;ve received your request and will send your quote to{' '}
             <strong>{formData.customer_email}</strong> shortly.
           </p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // Loading product from URL
+  if (isLoadingProduct) {
+    return (
+      <Card className={className}>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <span className="ml-3 text-muted-foreground">Loading product...</span>
+          </div>
         </CardContent>
       </Card>
     )

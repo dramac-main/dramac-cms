@@ -22,6 +22,9 @@ export type NotificationType =
   | "new_order"
   | "order_shipped"
   | "order_delivered"
+  | "order_cancelled"
+  | "refund_issued"
+  | "low_stock"
   // Form submissions
   | "form_submission"
   // Live Chat
