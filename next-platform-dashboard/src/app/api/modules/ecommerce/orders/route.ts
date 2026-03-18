@@ -1,26 +1,26 @@
 /**
  * E-Commerce Orders API
- * 
+ *
  * Phase EM-52: E-Commerce Module
- * 
+ *
  * API for order management (authenticated endpoints)
  */
 
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 import {
   getOrders,
   getOrder,
-  updateOrder
-} from '@/modules/ecommerce/actions/ecommerce-actions'
+  updateOrder,
+} from "@/modules/ecommerce/actions/ecommerce-actions";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 /**
  * GET /api/modules/ecommerce/orders
- * 
+ *
  * Get orders for a site (requires authentication)
- * 
+ *
  * Query params:
  * - siteId: Required - The site ID
  * - orderId: Optional - Get single order
@@ -34,49 +34,54 @@ export const dynamic = 'force-dynamic'
  */
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url)
-    
-    const siteId = searchParams.get('siteId')
-    const orderId = searchParams.get('orderId')
-    const status = searchParams.get('status') || undefined
-    const paymentStatus = searchParams.get('paymentStatus') || undefined
-    const page = parseInt(searchParams.get('page') || '1', 10)
-    const limit = parseInt(searchParams.get('limit') || '20', 10)
-    const customerId = searchParams.get('customerId') || undefined
-    const startDate = searchParams.get('startDate') || undefined
-    const endDate = searchParams.get('endDate') || undefined
+    const { searchParams } = new URL(request.url);
+
+    const siteId = searchParams.get("siteId");
+    const orderId = searchParams.get("orderId");
+    const status = searchParams.get("status") || undefined;
+    const paymentStatus = searchParams.get("paymentStatus") || undefined;
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "20", 10);
+    const customerId = searchParams.get("customerId") || undefined;
+    const startDate = searchParams.get("startDate") || undefined;
+    const endDate = searchParams.get("endDate") || undefined;
 
     if (!siteId) {
-      return NextResponse.json({ error: 'siteId is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: "siteId is required" },
+        { status: 400 },
+      );
     }
 
     // Verify user has access to this site (defense-in-depth beyond RLS)
     const { data: site, error: siteError } = await supabase
-      .from('sites')
-      .select('id')
-      .eq('id', siteId)
-      .single()
+      .from("sites")
+      .select("id")
+      .eq("id", siteId)
+      .single();
 
     if (siteError || !site) {
-      return NextResponse.json({ error: 'Site not found' }, { status: 404 })
+      return NextResponse.json({ error: "Site not found" }, { status: 404 });
     }
 
     // Single order request
     if (orderId) {
-      const order = await getOrder(siteId, orderId)
-      
+      const order = await getOrder(siteId, orderId);
+
       if (!order) {
-        return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+        return NextResponse.json({ error: "Order not found" }, { status: 404 });
       }
 
-      return NextResponse.json({ order })
+      return NextResponse.json({ order });
     }
 
     // List orders
@@ -89,11 +94,11 @@ export async function GET(request: NextRequest) {
         payment_status: paymentStatus as any,
         customer_id: customerId,
         date_from: startDate,
-        date_to: endDate
+        date_to: endDate,
       },
       page,
-      limit
-    )
+      limit,
+    );
 
     return NextResponse.json({
       orders: result.data,
@@ -101,20 +106,23 @@ export async function GET(request: NextRequest) {
         page: result.page,
         totalPages: result.totalPages,
         total: result.total,
-        limit
-      }
-    })
+        limit,
+      },
+    });
   } catch (error) {
-    console.error('Orders API error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error("Orders API error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
 /**
  * PATCH /api/modules/ecommerce/orders
- * 
+ *
  * Update order status (requires authentication)
- * 
+ *
  * Body:
  * - orderId: Required - Order ID
  * - status: Optional - New order status
@@ -124,74 +132,103 @@ export async function GET(request: NextRequest) {
  */
 export async function PATCH(request: NextRequest) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json()
-    const { siteId, orderId, status, paymentStatus, trackingNumber, notes } = body
+    const body = await request.json();
+    const { siteId, orderId, status, paymentStatus, trackingNumber, notes } =
+      body;
 
     if (!siteId) {
-      return NextResponse.json({ error: 'siteId is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: "siteId is required" },
+        { status: 400 },
+      );
     }
 
     if (!orderId) {
-      return NextResponse.json({ error: 'orderId is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: "orderId is required" },
+        { status: 400 },
+      );
     }
 
     // Verify user has access to this site (defense-in-depth beyond RLS)
     const { data: site, error: siteError } = await supabase
-      .from('sites')
-      .select('id')
-      .eq('id', siteId)
-      .single()
+      .from("sites")
+      .select("id")
+      .eq("id", siteId)
+      .single();
 
     if (siteError || !site) {
-      return NextResponse.json({ error: 'Site not found' }, { status: 404 })
+      return NextResponse.json({ error: "Site not found" }, { status: 404 });
     }
 
     // Build update object
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updates: Record<string, any> = {}
-    
+    const updates: Record<string, any> = {};
+
     if (status) {
-      const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded']
+      const validStatuses = [
+        "pending",
+        "confirmed",
+        "processing",
+        "shipped",
+        "delivered",
+        "cancelled",
+        "refunded",
+      ];
       if (!validStatuses.includes(status)) {
-        return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
+        return NextResponse.json({ error: "Invalid status" }, { status: 400 });
       }
-      updates.status = status
+      updates.status = status;
     }
-    
+
     if (paymentStatus) {
-      const validPaymentStatuses = ['pending', 'paid', 'failed', 'refunded', 'partially_refunded']
+      const validPaymentStatuses = [
+        "pending",
+        "paid",
+        "failed",
+        "refunded",
+        "partially_refunded",
+      ];
       if (!validPaymentStatuses.includes(paymentStatus)) {
-        return NextResponse.json({ error: 'Invalid payment status' }, { status: 400 })
+        return NextResponse.json(
+          { error: "Invalid payment status" },
+          { status: 400 },
+        );
       }
-      updates.payment_status = paymentStatus
+      updates.payment_status = paymentStatus;
     }
-    
+
     if (trackingNumber !== undefined) {
-      updates.tracking_number = trackingNumber
+      updates.tracking_number = trackingNumber;
     }
-    
+
     if (notes !== undefined) {
-      updates.internal_notes = notes
+      updates.internal_notes = notes;
     }
 
     if (Object.keys(updates).length === 0) {
-      return NextResponse.json({ error: 'No updates provided' }, { status: 400 })
+      return NextResponse.json(
+        { error: "No updates provided" },
+        { status: 400 },
+      );
     }
 
-    const order = await updateOrder(siteId, orderId, updates)
-    return NextResponse.json({ order })
+    const order = await updateOrder(siteId, orderId, updates);
+    return NextResponse.json({ order });
   } catch (error) {
-    console.error('Order update error:', error)
+    console.error("Order update error:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Update failed' },
-      { status: 500 }
-    )
+      { error: error instanceof Error ? error.message : "Update failed" },
+      { status: 500 },
+    );
   }
 }

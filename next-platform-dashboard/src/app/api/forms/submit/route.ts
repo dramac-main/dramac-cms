@@ -33,15 +33,18 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!siteId || !formId || !data) {
       return NextResponse.json(
-        { error: "Missing required fields: siteId, formId, and data are required" },
-        { status: 400 }
+        {
+          error:
+            "Missing required fields: siteId, formId, and data are required",
+        },
+        { status: 400 },
       );
     }
 
     if (typeof data !== "object") {
       return NextResponse.json(
         { error: "Invalid data: must be an object" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -52,9 +55,9 @@ export async function POST(request: NextRequest) {
     const userAgent = headersList.get("user-agent") || null;
     const referer = headersList.get("referer") || null;
     const origin = headersList.get("origin") || null;
-    
+
     // Get IP address from various headers
-    const ip = 
+    const ip =
       headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
       headersList.get("x-real-ip") ||
       headersList.get("cf-connecting-ip") ||
@@ -69,10 +72,7 @@ export async function POST(request: NextRequest) {
 
     if (siteError || !site) {
       console.error("[FormSubmit] Invalid site ID:", siteId);
-      return NextResponse.json(
-        { error: "Invalid site" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid site" }, { status: 400 });
     }
 
     // Get form settings
@@ -96,7 +96,12 @@ export async function POST(request: NextRequest) {
 
     // Honeypot check - if honeypot field has value, it's likely a bot
     if (formSettings.enable_honeypot && honeypot) {
-      console.log("[FormSubmit] Honeypot triggered for site:", siteId, "IP:", ip);
+      console.log(
+        "[FormSubmit] Honeypot triggered for site:",
+        siteId,
+        "IP:",
+        ip,
+      );
       // Still return success to not alert bots
       return NextResponse.json({
         success: true,
@@ -113,11 +118,15 @@ export async function POST(request: NextRequest) {
 
       // Fast in-memory check first (catches rapid successive requests to same instance)
       const rateLimit = rateLimitMap.get(rateKey);
-      if (rateLimit && now < rateLimit.resetAt && rateLimit.count >= maxPerHour) {
+      if (
+        rateLimit &&
+        now < rateLimit.resetAt &&
+        rateLimit.count >= maxPerHour
+      ) {
         console.log("[FormSubmit] Rate limit exceeded (memory) for:", rateKey);
         return NextResponse.json(
           { error: "Too many submissions. Please try again later." },
-          { status: 429 }
+          { status: 429 },
         );
       }
 
@@ -134,10 +143,13 @@ export async function POST(request: NextRequest) {
       if ((recentCount ?? 0) >= maxPerHour) {
         console.log("[FormSubmit] Rate limit exceeded (db) for:", rateKey);
         // Update in-memory cache to short-circuit future requests
-        rateLimitMap.set(rateKey, { count: maxPerHour, resetAt: now + hourInMs });
+        rateLimitMap.set(rateKey, {
+          count: maxPerHour,
+          resetAt: now + hourInMs,
+        });
         return NextResponse.json(
           { error: "Too many submissions. Please try again later." },
-          { status: 429 }
+          { status: 429 },
         );
       }
 
@@ -145,7 +157,10 @@ export async function POST(request: NextRequest) {
       if (rateLimit && now < rateLimit.resetAt) {
         rateLimit.count++;
       } else {
-        rateLimitMap.set(rateKey, { count: (recentCount ?? 0) + 1, resetAt: now + hourInMs });
+        rateLimitMap.set(rateKey, {
+          count: (recentCount ?? 0) + 1,
+          resetAt: now + hourInMs,
+        });
       }
     }
 
@@ -179,15 +194,25 @@ export async function POST(request: NextRequest) {
       console.error("[FormSubmit] Error saving submission:", insertError);
       return NextResponse.json(
         { error: "Failed to save submission" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
-    console.log("[FormSubmit] Submission saved:", submission.id, "for site:", siteId);
+    console.log(
+      "[FormSubmit] Submission saved:",
+      submission.id,
+      "for site:",
+      siteId,
+    );
 
     // Send notifications (async, don't wait)
     if (formSettings.notify_on_submission && !isSpam) {
-      sendNotifications(supabase, submission, formSettings, site.agency_id).catch((err) => {
+      sendNotifications(
+        supabase,
+        submission,
+        formSettings,
+        site.agency_id,
+      ).catch((err) => {
         console.error("[FormSubmit] Notification error:", err);
       });
     }
@@ -207,7 +232,7 @@ export async function POST(request: NextRequest) {
     console.error("[FormSubmit] Unexpected error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -238,34 +263,34 @@ function detectSpam(data: Record<string, unknown>): boolean {
   const spamPatterns = [
     // Pharma spam
     /\b(viagra|cialis|xanax|tramadol|hydrocodone|oxycodone|phentermine|ambien|modafinil)\b/i,
-    
+
     // Casino/gambling
     /\b(casino|poker|blackjack|slot\s*machine|gambling|bet365|sportsbetting)\b/i,
-    
+
     // Get rich quick
     /\b(lottery|winner|jackpot|million\s*dollars?|inheritance|nigerian?\s*prince)\b/i,
-    
+
     // Marketing spam
     /\b(click\s*here|act\s*now|limited\s*time|exclusive\s*offer|free\s*money)\b/i,
-    
+
     // SEO spam
     /\b(buy\s*backlinks?|seo\s*service|rank\s*#?1|google\s*ranking)\b/i,
-    
+
     // Suspicious TLDs in URLs
     /https?:\/\/[^\s]+\.(ru|cn|tk|xyz|top|gq|ml|ga|cf|pw|ws)\b/i,
-    
+
     // Crypto spam
     /\b(bitcoin\s*doubler|crypto\s*giveaway|free\s*btc|ethereum\s*airdrop)\b/i,
-    
+
     // Code injection attempts
     /<script\b/i,
     /javascript:/i,
     /on\w+\s*=/i, // onclick=, onmouseover=, etc.
-    
+
     // BBCode spam
     /\[url=/i,
     /\[link=/i,
-    
+
     // Email harvesting protection
     /mailto:/i,
   ];
@@ -307,7 +332,7 @@ async function sendNotifications(
   supabase: SupabaseAdmin,
   submission: Record<string, unknown>,
   settings: Record<string, unknown>,
-  agencyId?: string
+  agencyId?: string,
 ): Promise<void> {
   const emails = settings.notify_emails as string[];
   if (!emails || emails.length === 0) {
@@ -317,26 +342,26 @@ async function sendNotifications(
   // Format submission data for email
   const formData = submission.data as Record<string, unknown>;
   const formattedFields = Object.entries(formData).map(([key, value]) => ({
-    label: key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-    value: String(value ?? ''),
+    label: key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+    value: String(value ?? ""),
   }));
 
-  const formName = (settings.form_name as string) || 'Contact Form';
-  const siteName = (settings.site_name as string) || '';
+  const formName = (settings.form_name as string) || "Contact Form";
+  const siteName = (settings.site_name as string) || "";
 
   // Send branded email to each recipient
   for (const email of emails) {
     await sendBrandedEmail(agencyId || null, {
       to: { email },
-      emailType: 'form_submission_owner',
+      emailType: "form_submission_owner",
       data: {
         formName,
         siteName,
         submittedAt: new Date().toISOString(),
         fields: formattedFields,
-        dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.dramac.app'}/forms`,
+        dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramac.app"}/forms`,
       },
-    })
+    });
   }
 
   // Mark as notified
@@ -353,7 +378,7 @@ async function triggerWebhooks(
   supabase: SupabaseAdmin,
   siteId: string,
   formId: string,
-  submission: Record<string, unknown>
+  submission: Record<string, unknown>,
 ): Promise<void> {
   // Get active webhooks for this site/form
   const { data: webhooks, error } = await supabase
@@ -369,7 +394,7 @@ async function triggerWebhooks(
   // Filter webhooks that match this form (or all forms if form_id is null)
   const matchingWebhooks = webhooks.filter(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (w: any) => w.form_id === null || w.form_id === formId
+    (w: any) => w.form_id === null || w.form_id === formId,
   );
 
   for (const webhook of matchingWebhooks) {
@@ -405,7 +430,7 @@ async function triggerWebhooks(
         "[FormSubmit] Webhook triggered:",
         webhook.url,
         "Status:",
-        response.status
+        response.status,
       );
 
       // Update webhook status
@@ -426,7 +451,7 @@ async function triggerWebhooks(
       }
     } catch (err) {
       console.error("[FormSubmit] Webhook failed:", webhook.url, err);
-      
+
       // Update webhook with error status
       await supabase
         .from("form_webhooks")

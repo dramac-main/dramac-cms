@@ -16,10 +16,12 @@ interface RouteParams {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { moduleId } = await params;
-    const supabase = await createClient() as AnySupabase;
-    
+    const supabase = (await createClient()) as AnySupabase;
+
     // Verify super admin
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -89,10 +91,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
     const { moduleId } = await params;
-    const supabase = await createClient() as AnySupabase;
-    
+    const supabase = (await createClient()) as AnySupabase;
+
     // Verify super admin
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -111,15 +115,38 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     // Whitelist of fields that super admins are allowed to update
     const ALLOWED_FIELDS = [
-      "name", "description", "long_description", "icon", "banner_image",
-      "category", "tags", "install_level", "current_version", "min_platform_version",
-      "pricing_type", "wholesale_price_monthly", "wholesale_price_yearly", "wholesale_price_one_time",
-      "suggested_retail_monthly", "suggested_retail_yearly",
-      "required_permissions", "provided_hooks", "package_url",
-      "manifest", "settings_schema", "default_settings",
-      "screenshots", "features", "requirements", "changelog",
-      "documentation_url", "support_url",
-      "status", "is_featured", "is_premium", "published_at",
+      "name",
+      "description",
+      "long_description",
+      "icon",
+      "banner_image",
+      "category",
+      "tags",
+      "install_level",
+      "current_version",
+      "min_platform_version",
+      "pricing_type",
+      "wholesale_price_monthly",
+      "wholesale_price_yearly",
+      "wholesale_price_one_time",
+      "suggested_retail_monthly",
+      "suggested_retail_yearly",
+      "required_permissions",
+      "provided_hooks",
+      "package_url",
+      "manifest",
+      "settings_schema",
+      "default_settings",
+      "screenshots",
+      "features",
+      "requirements",
+      "changelog",
+      "documentation_url",
+      "support_url",
+      "status",
+      "is_featured",
+      "is_premium",
+      "published_at",
     ] as const;
 
     const updateData: Record<string, unknown> = {};
@@ -130,7 +157,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     if (Object.keys(updateData).length === 0) {
-      return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
+      return NextResponse.json(
+        { error: "No valid fields to update" },
+        { status: 400 },
+      );
     }
 
     const { data: module, error } = await supabase
@@ -145,7 +175,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     if (error) {
       console.error("[API /admin/modules/[id]] Update error:", error);
-      return NextResponse.json({ error: "Failed to update module" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to update module" },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({ module });
@@ -162,10 +195,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { moduleId } = await params;
-    const supabase = await createClient() as AnySupabase;
-    
+    const supabase = (await createClient()) as AnySupabase;
+
     // Verify super admin
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -189,8 +224,11 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     if (subscriptionCount && subscriptionCount > 0) {
       return NextResponse.json(
-        { error: "Cannot delete module with active subscriptions. Please deprecate it instead." },
-        { status: 400 }
+        {
+          error:
+            "Cannot delete module with active subscriptions. Please deprecate it instead.",
+        },
+        { status: 400 },
       );
     }
 
@@ -201,7 +239,10 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     if (error) {
       console.error("[API /admin/modules/[id]] Delete error:", error);
-      return NextResponse.json({ error: "Failed to delete module" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to delete module" },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({ success: true });

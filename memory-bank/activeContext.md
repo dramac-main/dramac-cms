@@ -1,53 +1,43 @@
 # Active Context
 
-## Current Focus: E2E Security Audit — COMPLETED ✅
+## Current Focus: Booking Module Comprehensive Overhaul — COMPLETED ✅
 
-### Status: COMMITTED & PUSHED — `8f039777` — 50 files changed
+### Status: COMMITTED & PUSHED — `2ef94882` — 11 files changed, 323 insertions, 57 deletions
 
-### Latest Work: Real-world E2E Security Audit (Priority 7)
+### Latest Work: Booking Module Industry-Standard Overhaul
 
-Comprehensive code-level E2E audit tracing every module's critical path from UI → action → API → DB. Scanned 227 API routes across the entire platform. Verified 10 CRITICAL claims (6 were false/non-existent, 4 were real). Then did a broader scan of 8 HIGH-risk areas, finding 3 additional bugs.
+Full end-to-end audit and fix of the entire booking module (61 files). Systematic fixes across server actions, UI components, embed system, and analytics.
 
-**Commit: `8f039777`** — Priority 7: E2E Security Audit — 7 bugs fixed across API routes
+**Commit: `2ef94882`** — fix(booking): comprehensive module overhaul - industry standard quality
 
-### Bugs Found & Fixed:
+### Changes Made:
 
-1. **Forms Submit Rate Limiting** (HIGH) — `src/app/api/forms/submit/route.ts` — In-memory rate limiting was ephemeral (resets on serverless cold start). Added database-backed rate limiting using `form_submissions` count as authoritative source, keeping in-memory as fast first check.
+**Server Actions (2 files):**
 
-2. **DNS Verify No Rate Limiting** (HIGH) — `src/app/api/domains/verify/route.ts` — No rate limiting at all. Added per-user rate limiting (10 requests per minute) to prevent DNS resolver abuse.
+1. **booking-actions.ts** — UTC timezone consistency (`getDay` → `getUTCDay`), `parseTime()` rewritten to use `Date.UTC()`, buffer time in slot generation and availability checking, 23505 unique constraint catch for race conditions, start≥end time validation
+2. **public-booking-actions.ts** — Email regex validation, customer name trim validation, start≥end time validation
 
-3. **Admin Modules PATCH Permissive** (MEDIUM) — `src/app/api/admin/modules/[moduleId]/route.ts` — Used blacklist approach (only excluded `id, created_at, created_by`), allowing any other field to be modified. Replaced with explicit whitelist of 28 allowed fields.
+**UI Components (8 files):** 3. **appointment-detail-sheet.tsx** — AlertDialog replaces native `confirm()`, `isDeleting` loading state, edit state reset on sheet close 4. **service-detail-sheet.tsx** — AlertDialog replaces native `confirm()` 5. **staff-detail-sheet.tsx** — AlertDialog replaces native `confirm()` 6. **appointments-view.tsx** — AlertDialog replaces native `confirm()`, `isDeleting` loading state 7. **services-view.tsx** — AlertDialog replaces native `confirm()`, `togglingId` loading state on toggle, `isDeleting` loading state 8. **staff-view.tsx** — AlertDialog replaces native `confirm()`, `togglingId` loading state on toggle, `isDeleting` loading state 9. **calendar-view.tsx** — Mobile responsiveness (`min-w-[800px]` → `min-w-[600px] lg:min-w-0`) 10. **analytics-view.tsx** — `getDateRangeStart()` rewritten for clarity (avoid Date mutation anti-pattern)
 
-4. **GraphQL Query Input Validation** (MEDIUM) — `src/app/api/modules/[moduleId]/graphql/route.ts` — No input limits on regex-based query parser. Added 10KB query size limit, nesting depth check (max 10 levels), and type validation.
+**Embed System (1 file):** 11. **public/embed/booking.js** — Height validation guard (NaN/Infinity/negative) in postMessage handler
 
-5. **E-Commerce Orders Cross-Tenant** (HIGH) — `src/app/api/modules/ecommerce/orders/route.ts` — GET and PATCH accepted `siteId` from user input without verifying ownership. Added RLS-backed site ownership verification on both handlers.
+### Summary:
 
-6. **AI Generate Cross-Tenant** (MEDIUM) — `src/app/api/ai/generate/route.ts` — Accepted `pageId` and `siteId` without verifying ownership before writing. Added explicit ownership verification for both page_content writes and site metadata updates.
+| Category                                 | Files  | Fixes  |
+| ---------------------------------------- | ------ | ------ |
+| Server UTC/timezone bugs                 | 1      | 3      |
+| Buffer time in admin slots               | 1      | 2      |
+| Race condition protection                | 1      | 1      |
+| Input validation                         | 2      | 4      |
+| Native confirm() → AlertDialog           | 6      | 6      |
+| Loading states (double-click prevention) | 3      | 5      |
+| Stale state reset                        | 1      | 1      |
+| Calendar responsiveness                  | 1      | 1      |
+| Analytics clarity                        | 1      | 1      |
+| Embed security                           | 1      | 1      |
+| **Total**                                | **11** | **25** |
 
-7. **Includes all uncommitted production-ready fixes from Priorities 1-6** — 50 files across booking, CRM, social media, automation, embed, and e-commerce modules.
-
-### Audit Results:
-
-| Category | Routes Scanned | Claims | Verified Real | False/Non-existent |
-| -------- | -------------- | ------ | ------------- | ------------------ |
-| CRITICAL | 12             | 10     | 4             | 6                  |
-| HIGH     | 8 areas        | 8      | 3             | 5                  |
-| **Total Fixed** | | | **7** | |
-
-### Routes Verified as SECURE (no bugs found):
-
-- Stripe/LemonSqueezy webhooks — deprecated (410 Gone), billing uses Paddle
-- Revalidate secret — uses strict `!==` comparison (not timing-vulnerable)
-- Forms export — has `canAccessSite()` ownership check
-- OAuth callback — properly consumes state tokens (prevents reuse)
-- E-Commerce cart — has explicit `cart.site_id !== siteId` cross-tenant check
-- Paddle webhooks — signature verification with `paddle.webhooks.unmarshal()`
-- Cron routes — CRON_SECRET header verification (fail-closed)
-- Social publish — CRON_SECRET protected
-- CRM form capture — correctly designed for public use
-- Data API path traversal — entity names validated against whitelist
-
-### All Priorities Complete:
+### TypeScript: ZERO source errors confirmed (all errors from auto-generated `.next/dev/types/validator.ts` only)
 
 - `f5454635` — Priority 1: CRM Runtime Bugs (7 bugs)
 - (Priority 2: AI Designer verified clean)

@@ -41,19 +41,22 @@ export async function POST(request: NextRequest) {
       if (rateEntry.count >= DNS_RATE_LIMIT) {
         return NextResponse.json(
           { error: "Too many verification requests. Please try again later." },
-          { status: 429 }
+          { status: 429 },
         );
       }
       rateEntry.count++;
     } else {
-      dnsRateLimitMap.set(user.id, { count: 1, resetAt: now + DNS_RATE_WINDOW });
+      dnsRateLimitMap.set(user.id, {
+        count: 1,
+        resetAt: now + DNS_RATE_WINDOW,
+      });
     }
 
     const { domain } = await request.json();
     if (!domain || typeof domain !== "string") {
       return NextResponse.json(
         { error: "Domain is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -63,7 +66,7 @@ export async function POST(request: NextRequest) {
     if (!domainRegex.test(domain)) {
       return NextResponse.json(
         { error: "Invalid domain format" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -72,9 +75,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result);
   } catch (error) {
     console.error("DNS verification error:", error);
-    return NextResponse.json(
-      { error: "Verification failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Verification failed" }, { status: 500 });
   }
 }

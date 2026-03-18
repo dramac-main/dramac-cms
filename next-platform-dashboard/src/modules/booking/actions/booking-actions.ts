@@ -611,7 +611,9 @@ export async function createAppointment(
     console.error("[Booking] createAppointment error:", error);
     // Handle unique constraint violation (race condition: double-booking)
     if (error.code === "23505") {
-      throw new Error("This time slot is no longer available. Please select another time.");
+      throw new Error(
+        "This time slot is no longer available. Please select another time.",
+      );
     }
     throw new Error(error.message);
   }
@@ -1109,12 +1111,28 @@ export async function getAvailableSlots(
       .or(`day_of_week.eq.${dayOfWeek},specific_date.eq.${dateString}`);
 
     // 6. Get existing appointments for this date (UTC boundaries)
-    const dayStart = new Date(Date.UTC(
-      date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0
-    ));
-    const dayEnd = new Date(Date.UTC(
-      date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59, 999
-    ));
+    const dayStart = new Date(
+      Date.UTC(
+        date.getUTCFullYear(),
+        date.getUTCMonth(),
+        date.getUTCDate(),
+        0,
+        0,
+        0,
+        0,
+      ),
+    );
+    const dayEnd = new Date(
+      Date.UTC(
+        date.getUTCFullYear(),
+        date.getUTCMonth(),
+        date.getUTCDate(),
+        23,
+        59,
+        59,
+        999,
+      ),
+    );
 
     const { data: existingAppointments } = await supabase
       .from(`${TABLE_PREFIX}_appointments`)
@@ -1157,7 +1175,9 @@ export async function getAvailableSlots(
       while (slotStart.getTime() + totalMinutes * 60000 <= endTime.getTime()) {
         const slotEnd = new Date(slotStart.getTime() + duration * 60000);
         // Include buffer times for conflict checking (matches public booking logic)
-        const blockedStart = new Date(slotStart.getTime() - bufferBefore * 60000);
+        const blockedStart = new Date(
+          slotStart.getTime() - bufferBefore * 60000,
+        );
         const blockedEnd = new Date(slotEnd.getTime() + bufferAfter * 60000);
 
         // Check if slot is blocked
@@ -1244,15 +1264,17 @@ async function checkSlotAvailability(
 function parseTime(timeStr: string, date: Date): Date {
   const [hours, minutes] = timeStr.split(":").map(Number);
   // Use UTC to match public booking and avoid server timezone drift
-  return new Date(Date.UTC(
-    date.getUTCFullYear(),
-    date.getUTCMonth(),
-    date.getUTCDate(),
-    hours,
-    minutes,
-    0,
-    0
-  ));
+  return new Date(
+    Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate(),
+      hours,
+      minutes,
+      0,
+      0,
+    ),
+  );
 }
 
 // =============================================================================

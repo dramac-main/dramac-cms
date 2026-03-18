@@ -11,6 +11,13 @@ out/
 
 # Testing
 coverage/
+test-results*.txt
+test-output.json
+build-check*.txt
+build-error.txt
+build-stderr.txt
+build-stdout.txt
+tsc-*.txt
 
 # Environment
 .env

@@ -7,9 +7,11 @@ import { convertAItocraft, serializeCraftState } from "@/lib/ai/converter";
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
+
     // Check auth
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -29,7 +31,7 @@ export async function POST(request: NextRequest) {
     if (!businessDescription) {
       return NextResponse.json(
         { error: "Business description is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -47,10 +49,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!result.success || !result.website) {
-      return NextResponse.json(
-        { error: result.error },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: result.error }, { status: 500 });
     }
 
     // Convert to Craft.js format
@@ -69,7 +68,7 @@ export async function POST(request: NextRequest) {
       if (!page) {
         return NextResponse.json(
           { error: "Page not found or access denied" },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -123,7 +122,7 @@ export async function POST(request: NextRequest) {
       if (!siteCheck) {
         return NextResponse.json(
           { error: "Site not found or access denied" },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -152,7 +151,7 @@ export async function POST(request: NextRequest) {
     console.error("AI generation error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
