@@ -83,11 +83,11 @@ export async function signup(formData: SignupFormData) {
 
   // Supabase returns a fake user with empty identities when the email already exists
   // (to prevent email enumeration). Detect this and show a user-friendly message.
-  if (
-    !authData.user.identities ||
-    authData.user.identities.length === 0
-  ) {
-    return { error: "An account with this email already exists. Please sign in instead." };
+  if (!authData.user.identities || authData.user.identities.length === 0) {
+    return {
+      error:
+        "An account with this email already exists. Please sign in instead.",
+    };
   }
 
   // 2. Create user profile FIRST (agencies.owner_id has FK to profiles)
