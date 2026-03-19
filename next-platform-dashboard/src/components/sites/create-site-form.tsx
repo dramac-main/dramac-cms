@@ -57,6 +57,7 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [subdomainStatus, setSubdomainStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
+  const [subdomainManuallyEdited, setSubdomainManuallyEdited] = useState(false);
   
   const form = useForm<FormData>({
     resolver: zodResolver(createSiteFormSchema),
@@ -73,9 +74,9 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
   const watchSubdomain = form.watch("subdomain");
   const debouncedSubdomain = useDebounce(watchSubdomain, 500);
 
-  // Auto-generate subdomain from name
+  // Auto-generate subdomain from name (unless user manually edited it)
   useEffect(() => {
-    if (watchName && !form.getValues("subdomain")) {
+    if (watchName && !subdomainManuallyEdited) {
       const generated = watchName
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
@@ -83,7 +84,7 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
         .slice(0, 30);
       form.setValue("subdomain", generated, { shouldValidate: true });
     }
-  }, [watchName, form]);
+  }, [watchName, form, subdomainManuallyEdited]);
 
   // Check subdomain availability
   useEffect(() => {
@@ -220,6 +221,7 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
                           onChange={(e) => {
                             const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
                             field.onChange(value);
+                            setSubdomainManuallyEdited(true);
                           }}
                           className="pr-10"
                         />

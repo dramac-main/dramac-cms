@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createNotification } from "@/lib/services/notifications";
+import { sendWelcomeEmail } from "@/lib/actions/email";
 import type { OnboardingStatus, IndustryId } from "@/lib/constants/onboarding";
 
 export async function checkOnboardingStatus(): Promise<OnboardingStatus> {
@@ -241,7 +243,28 @@ export async function completeOnboardingAction(): Promise<{ error?: string }> {
     .eq("id", user.id);
 
   if (error) return { error: error.message };
-  
+
+  // Send welcome email and in-app notification (fire-and-forget)
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("name, full_name")
+    .eq("id", user.id)
+    .single();
+
+  const userName = profile?.full_name || profile?.name || undefined;
+
+  sendWelcomeEmail(user.email!, userName).catch((err) =>
+    console.error("Failed to send welcome email:", err)
+  );
+
+  createNotification({
+    userId: user.id,
+    type: "welcome",
+    title: "Welcome to DRAMAC!",
+    message: "Your account is all set up. Start by creating a site for your first client.",
+    link: "/dashboard",
+  }).catch((err) => console.error("Failed to create welcome notification:", err));
+
   revalidatePath("/dashboard");
   return {};
 }

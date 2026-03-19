@@ -1,4 +1,5 @@
 export type NotificationType =
+  | "welcome"
   | "site_published"
   | "site_updated"
   | "client_created"

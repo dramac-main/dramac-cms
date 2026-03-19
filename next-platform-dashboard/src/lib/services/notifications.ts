@@ -70,6 +70,11 @@ export const notificationTypeInfo: Record<
   NotificationType,
   { icon: string; color: string; label: string }
 > = {
+  welcome: {
+    icon: "PartyPopper",
+    color: "text-primary",
+    label: "Welcome",
+  },
   site_published: {
     icon: "Rocket",
     color: "text-green-500",
