@@ -79,7 +79,7 @@ export function CreateSiteDialog({
       setMode("select");
 
       if (useAI) {
-        router.push(`/dashboard/sites/${result.data?.site?.id}/builder`);
+        router.push(`/dashboard/sites/${result.data?.site?.id}/ai-designer`);
       } else {
         const siteId = result.data?.site?.id;
         const pageId = result.data?.homepage?.id;

@@ -604,7 +604,7 @@ export default function SeoPage({
                       No published pages yet
                     </p>
                     <Button variant="outline" className="mt-4" asChild>
-                      <Link href={`/dashboard/sites/${siteId}/builder`}>
+                      <Link href={`/dashboard/sites/${siteId}/ai-designer`}>
                         Create Your First Page
                       </Link>
                     </Button>

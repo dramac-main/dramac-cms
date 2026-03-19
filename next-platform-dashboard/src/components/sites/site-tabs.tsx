@@ -25,8 +25,8 @@ const tabs = [
     icon: FileText,
   },
   {
-    label: "Builder",
-    href: (siteId: string) => `/sites/${siteId}/builder`,
+    label: "AI Designer",
+    href: (siteId: string) => `/sites/${siteId}/ai-designer`,
     icon: PenTool,
   },
   {

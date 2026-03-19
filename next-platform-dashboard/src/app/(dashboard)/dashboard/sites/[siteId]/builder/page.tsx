@@ -1,7 +1,5 @@
 import { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { getSite } from "@/lib/actions/sites";
-import { AIBuilderWizard } from "@/components/ai-builder/ai-builder-wizard";
+import { redirect } from "next/navigation";
 import { PLATFORM } from "@/lib/constants/platform";
 
 interface BuilderPageProps {
@@ -15,18 +13,7 @@ export const metadata: Metadata = {
 
 export default async function BuilderPage({ params }: BuilderPageProps) {
   const { siteId } = await params;
-  const site = await getSite(siteId);
 
-  if (!site) {
-    notFound();
-  }
-
-  // If site already has content, redirect to editor
-  // User can regenerate from there if needed
-  
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-      <AIBuilderWizard site={site} />
-    </div>
-  );
+  // Legacy builder page — redirect to the modern AI Designer
+  redirect(`/dashboard/sites/${siteId}/ai-designer`);
 }

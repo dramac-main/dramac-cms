@@ -350,9 +350,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
       siteId,
       prompt,
       preferences: {},
-      engineConfig: {
-        enableModuleIntegration: false,
-      },
+      engineConfig: {},
     };
 
     try {

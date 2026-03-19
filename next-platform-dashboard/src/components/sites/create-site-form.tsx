@@ -6,7 +6,15 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { getSiteUrl, getSiteDomain, getBaseDomain } from "@/lib/utils/site-url";
-import { Loader2, Sparkles, PenTool, CheckCircle2, CircleX, AlertCircle, Upload } from "lucide-react";
+import {
+  Loader2,
+  Sparkles,
+  PenTool,
+  CheckCircle2,
+  CircleX,
+  AlertCircle,
+  Upload,
+} from "lucide-react";
 import { createSiteAction, checkSubdomain } from "@/lib/actions/sites";
 import { toast } from "sonner";
 import {
@@ -27,7 +35,13 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -40,7 +54,10 @@ const createSiteFormSchema = z.object({
     .string()
     .min(3, "Subdomain must be at least 3 characters")
     .max(30, "Subdomain must be at most 30 characters")
-    .regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers, and hyphens allowed"),
+    .regex(
+      /^[a-z0-9-]+$/,
+      "Only lowercase letters, numbers, and hyphens allowed",
+    ),
   client_id: z.string().min(1, "Please select a client"),
   description: z.string().optional(),
   buildMode: z.enum(["ai", "manual"]),
@@ -53,12 +70,17 @@ interface CreateSiteFormProps {
   defaultClientId?: string;
 }
 
-export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps) {
+export function CreateSiteForm({
+  clients,
+  defaultClientId,
+}: CreateSiteFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [subdomainStatus, setSubdomainStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
+  const [subdomainStatus, setSubdomainStatus] = useState<
+    "idle" | "checking" | "available" | "taken"
+  >("idle");
   const [subdomainManuallyEdited, setSubdomainManuallyEdited] = useState(false);
-  
+
   const form = useForm<FormData>({
     resolver: zodResolver(createSiteFormSchema),
     defaultValues: {
@@ -125,10 +147,10 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
         }
 
         toast.success("Site created successfully!");
-        
+
         // Navigate based on build mode
         if (data.buildMode === "ai") {
-          router.push(`/dashboard/sites/${result.data?.site?.id}/builder`);
+          router.push(`/dashboard/sites/${result.data?.site?.id}/ai-designer`);
         } else {
           // Navigate to the editor with the homepage ID
           const siteId = result.data?.site?.id;
@@ -148,7 +170,9 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
   const getSubdomainIcon = () => {
     switch (subdomainStatus) {
       case "checking":
-        return <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />;
+        return (
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        );
       case "available":
         return <CheckCircle2 className="h-4 w-4 text-success" />;
       case "taken":
@@ -164,7 +188,9 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
         <Card>
           <CardHeader>
             <CardTitle>Site Details</CardTitle>
-            <CardDescription>Basic information about your new site</CardDescription>
+            <CardDescription>
+              Basic information about your new site
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <FormField
@@ -173,7 +199,10 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Client</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a client" />
@@ -182,7 +211,8 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
                     <SelectContent>
                       {clients.map((client) => (
                         <SelectItem key={client.id} value={client.id}>
-                          {client.name} {client.company && `(${client.company})`}
+                          {client.name}{" "}
+                          {client.company && `(${client.company})`}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -219,7 +249,9 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
                           placeholder="my-site"
                           {...field}
                           onChange={(e) => {
-                            const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
+                            const value = e.target.value
+                              .toLowerCase()
+                              .replace(/[^a-z0-9-]/g, "");
                             field.onChange(value);
                             setSubdomainManuallyEdited(true);
                           }}
@@ -229,14 +261,20 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
                           {getSubdomainIcon()}
                         </div>
                       </div>
-                      <span className="text-muted-foreground">.{getBaseDomain()}</span>
+                      <span className="text-muted-foreground">
+                        .{getBaseDomain()}
+                      </span>
                     </div>
                   </FormControl>
                   {subdomainStatus === "taken" && (
-                    <p className="text-sm text-danger">This subdomain is already taken</p>
+                    <p className="text-sm text-danger">
+                      This subdomain is already taken
+                    </p>
                   )}
                   {subdomainStatus === "available" && (
-                    <p className="text-sm text-success">This subdomain is available!</p>
+                    <p className="text-sm text-success">
+                      This subdomain is available!
+                    </p>
                   )}
                   <FormMessage />
                 </FormItem>
@@ -250,7 +288,10 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
                 <FormItem>
                   <FormLabel>Description (optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="Brief description of the site" {...field} />
+                    <Input
+                      placeholder="Brief description of the site"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -262,7 +303,9 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
         <Card>
           <CardHeader>
             <CardTitle>How do you want to build?</CardTitle>
-            <CardDescription>Choose your preferred starting method</CardDescription>
+            <CardDescription>
+              Choose your preferred starting method
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <FormField
@@ -347,7 +390,7 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
             Cancel
           </Button>
           {form.watch("client_id") && (
-            <ImportSiteDialog 
+            <ImportSiteDialog
               clientId={form.watch("client_id")}
               trigger={
                 <Button type="button" variant="outline">
@@ -357,7 +400,12 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
               }
             />
           )}
-          <Button type="submit" disabled={isPending || subdomainStatus === "taken" || clients.length === 0}>
+          <Button
+            type="submit"
+            disabled={
+              isPending || subdomainStatus === "taken" || clients.length === 0
+            }
+          >
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Create Site
           </Button>

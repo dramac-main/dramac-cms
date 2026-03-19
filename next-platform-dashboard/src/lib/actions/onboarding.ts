@@ -8,13 +8,15 @@ import type { OnboardingStatus, IndustryId } from "@/lib/constants/onboarding";
 
 export async function checkOnboardingStatus(): Promise<OnboardingStatus> {
   const supabase = await createClient();
-  
-  const { data: { user } } = await supabase.auth.getUser();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
-    return { 
-      needsOnboarding: true, 
-      currentStep: 0, 
-      completedSteps: [], 
+    return {
+      needsOnboarding: true,
+      currentStep: 0,
+      completedSteps: [],
       hasAgency: false,
       hasProfile: false,
     };
@@ -62,10 +64,14 @@ interface ProfileActionData {
   jobTitle?: string;
 }
 
-export async function updateProfileAction(data: ProfileActionData): Promise<{ error?: string }> {
+export async function updateProfileAction(
+  data: ProfileActionData,
+): Promise<{ error?: string }> {
   const supabase = await createClient();
-  
-  const { data: { user } } = await supabase.auth.getUser();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated" };
 
   const { error } = await supabase
@@ -79,7 +85,7 @@ export async function updateProfileAction(data: ProfileActionData): Promise<{ er
     .eq("id", user.id);
 
   if (error) return { error: error.message };
-  
+
   revalidatePath("/onboarding");
   return {};
 }
@@ -93,10 +99,14 @@ interface AgencyActionData {
   goals?: string[];
 }
 
-export async function updateAgencyAction(data: AgencyActionData): Promise<{ error?: string; agencyId?: string }> {
+export async function updateAgencyAction(
+  data: AgencyActionData,
+): Promise<{ error?: string; agencyId?: string }> {
   const supabase = await createClient();
-  
-  const { data: { user } } = await supabase.auth.getUser();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated" };
 
   // Check if user already has an agency via membership
@@ -136,10 +146,13 @@ export async function updateAgencyAction(data: AgencyActionData): Promise<{ erro
   }
 
   // Create new agency
-  const slug = data.agencyName
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "") + "-" + Date.now().toString(36);
+  const slug =
+    data.agencyName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "") +
+    "-" +
+    Date.now().toString(36);
 
   const { data: agency, error: agencyError } = await supabase
     .from("agencies")
@@ -203,11 +216,13 @@ interface FirstClientActionData {
 
 export async function createFirstClientAction(
   agencyId: string,
-  data: FirstClientActionData
+  data: FirstClientActionData,
 ): Promise<{ error?: string; clientId?: string }> {
   const supabase = await createClient();
-  
-  const { data: { user } } = await supabase.auth.getUser();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated" };
 
   const { data: client, error } = await supabase
@@ -223,15 +238,17 @@ export async function createFirstClientAction(
     .single();
 
   if (error) return { error: error.message };
-  
+
   revalidatePath("/onboarding");
   return { clientId: client.id };
 }
 
 export async function completeOnboardingAction(): Promise<{ error?: string }> {
   const supabase = await createClient();
-  
-  const { data: { user } } = await supabase.auth.getUser();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated" };
 
   const { error } = await supabase
@@ -254,16 +271,19 @@ export async function completeOnboardingAction(): Promise<{ error?: string }> {
   const userName = profile?.full_name || profile?.name || undefined;
 
   sendWelcomeEmail(user.email!, userName).catch((err) =>
-    console.error("Failed to send welcome email:", err)
+    console.error("Failed to send welcome email:", err),
   );
 
   createNotification({
     userId: user.id,
     type: "welcome",
     title: "Welcome to DRAMAC!",
-    message: "Your account is all set up. Start by creating a site for your first client.",
+    message:
+      "Your account is all set up. Start by creating a site for your first client.",
     link: "/dashboard",
-  }).catch((err) => console.error("Failed to create welcome notification:", err));
+  }).catch((err) =>
+    console.error("Failed to create welcome notification:", err),
+  );
 
   revalidatePath("/dashboard");
   return {};
