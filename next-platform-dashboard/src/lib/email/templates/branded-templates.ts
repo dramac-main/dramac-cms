@@ -893,8 +893,7 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
   quote_request_owner,
   quote_accepted_owner,
   quote_accepted_customer: {
-    subject: (data) =>
-      `Your Quote ${data.quoteNumber} Has Been Confirmed`,
+    subject: (data) => `Your Quote ${data.quoteNumber} Has Been Confirmed`,
     html: (data, b) =>
       baseEmailTemplate(
         b,

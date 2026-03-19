@@ -866,8 +866,7 @@ ${data.dashboardUrl ? `View in dashboard: ${data.dashboardUrl}` : ""}
   },
 
   quote_accepted_customer: {
-    subject: (data) =>
-      `Your Quote ${data.quoteNumber} Has Been Confirmed`,
+    subject: (data) => `Your Quote ${data.quoteNumber} Has Been Confirmed`,
     html: (data) =>
       wrapHtml(`
       <h1 style="${STYLES.heading}">Quote Confirmed</h1>
