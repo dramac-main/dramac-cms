@@ -1,10 +1,10 @@
 /**
  * CRM Module - Studio Integration
- * 
+ *
  * Registers CRM-connected components for the Studio/Website Builder.
  * These replace the static contact forms with fully functional forms
  * that create CRM contacts and trigger automations.
- * 
+ *
  * Industry-leader pattern (HubSpot, GoHighLevel):
  * Website Form → API → CRM Contact → Lead Score → Automation Trigger
  */
@@ -25,7 +25,8 @@ export const studioComponents: ModuleStudioExports["studioComponents"] = {
     label: "CRM Contact Form",
     category: "forms",
     icon: "UserPlus",
-    description: "Contact form that creates CRM contacts and triggers automations",
+    description:
+      "Contact form that creates CRM contacts and triggers automations",
     defaultProps: {
       title: "Contact Us",
       subtitle: "Fill out the form below and we'll get back to you shortly.",
@@ -60,20 +61,28 @@ export const studioComponents: ModuleStudioExports["studioComponents"] = {
       buttonColor: { type: "color", label: "Button Color" },
       buttonTextColor: { type: "color", label: "Button Text" },
       textColor: { type: "color", label: "Text Color" },
-      borderRadius: { type: "select", label: "Border Radius", options: [
-        { value: "none", label: "None" },
-        { value: "sm", label: "Small" },
-        { value: "md", label: "Medium" },
-        { value: "lg", label: "Large" },
-        { value: "xl", label: "Extra Large" },
-      ]},
-      shadow: { type: "select", label: "Shadow", options: [
-        { value: "none", label: "None" },
-        { value: "sm", label: "Small" },
-        { value: "md", label: "Medium" },
-        { value: "lg", label: "Large" },
-        { value: "xl", label: "Extra Large" },
-      ]},
+      borderRadius: {
+        type: "select",
+        label: "Border Radius",
+        options: [
+          { value: "none", label: "None" },
+          { value: "sm", label: "Small" },
+          { value: "md", label: "Medium" },
+          { value: "lg", label: "Large" },
+          { value: "xl", label: "Extra Large" },
+        ],
+      },
+      shadow: {
+        type: "select",
+        label: "Shadow",
+        options: [
+          { value: "none", label: "None" },
+          { value: "sm", label: "Small" },
+          { value: "md", label: "Medium" },
+          { value: "lg", label: "Large" },
+          { value: "xl", label: "Extra Large" },
+        ],
+      },
     },
     render: CRMFormPlaceholder,
   },
@@ -83,7 +92,8 @@ export const studioComponents: ModuleStudioExports["studioComponents"] = {
     label: "Lead Capture Form",
     category: "forms",
     icon: "Target",
-    description: "Minimal lead capture form for landing pages — creates CRM leads",
+    description:
+      "Minimal lead capture form for landing pages — creates CRM leads",
     defaultProps: {
       title: "Get Started",
       subtitle: "Enter your details to get a free consultation.",
@@ -103,11 +113,15 @@ export const studioComponents: ModuleStudioExports["studioComponents"] = {
       successMessage: { type: "text", label: "Success Message" },
       showPhone: { type: "toggle", label: "Show Phone" },
       showCompany: { type: "toggle", label: "Show Company" },
-      layout: { type: "select", label: "Layout", options: [
-        { value: "horizontal", label: "Horizontal" },
-        { value: "vertical", label: "Vertical" },
-        { value: "card", label: "Card" },
-      ]},
+      layout: {
+        type: "select",
+        label: "Layout",
+        options: [
+          { value: "horizontal", label: "Horizontal" },
+          { value: "vertical", label: "Vertical" },
+          { value: "card", label: "Card" },
+        ],
+      },
       backgroundColor: { type: "color", label: "Background" },
       buttonColor: { type: "color", label: "Button Color" },
       buttonTextColor: { type: "color", label: "Button Text" },
@@ -136,11 +150,15 @@ export const studioComponents: ModuleStudioExports["studioComponents"] = {
       subtitle: { type: "text", label: "Subtitle" },
       submitText: { type: "text", label: "Button Text" },
       successMessage: { type: "text", label: "Success Message" },
-      layout: { type: "select", label: "Layout", options: [
-        { value: "inline", label: "Inline" },
-        { value: "stacked", label: "Stacked" },
-        { value: "card", label: "Card" },
-      ]},
+      layout: {
+        type: "select",
+        label: "Layout",
+        options: [
+          { value: "inline", label: "Inline" },
+          { value: "stacked", label: "Stacked" },
+          { value: "card", label: "Card" },
+        ],
+      },
       backgroundColor: { type: "color", label: "Background" },
       buttonColor: { type: "color", label: "Button Color" },
       buttonTextColor: { type: "color", label: "Button Text" },

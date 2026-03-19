@@ -38,13 +38,13 @@ export class ComponentInjector {
         if (component.placement === "page" && component.page) {
           // Add to specific page
           const pageIndex = pagesWithModules.findIndex(
-            (p) => p.slug === component.page
+            (p) => p.slug === component.page,
           );
 
           if (pageIndex !== -1) {
             pagesWithModules[pageIndex] = this.addComponentToPage(
               pagesWithModules[pageIndex],
-              component
+              component,
             );
           }
         } else if (component.placement === "global") {
@@ -71,7 +71,7 @@ export class ComponentInjector {
    */
   private addComponentToPage(
     page: GeneratedPage,
-    moduleComponent: ModuleComponent
+    moduleComponent: ModuleComponent,
   ): GeneratedPage {
     const newComponent: GeneratedComponent = {
       id: crypto.randomUUID(),
@@ -161,7 +161,9 @@ export class ComponentInjector {
    * Get sensible default props for module component types
    * These ensure module components render properly even without AI-generated content
    */
-  private getDefaultModuleComponentProps(componentType: string): Record<string, unknown> {
+  private getDefaultModuleComponentProps(
+    componentType: string,
+  ): Record<string, unknown> {
     switch (componentType) {
       case "BookingCalendar":
         return {
@@ -186,15 +188,15 @@ export class ComponentInjector {
           title: "Book an Appointment",
           variant: "compact",
         };
-      case "ProductGrid":
+      case "EcommerceProductGrid":
         return {
           title: "Our Products",
           columns: 3,
           variant: "cards",
         };
-      case "CartItems":
+      case "EcommerceCartPage":
         return { title: "Your Cart" };
-      case "CheckoutForm":
+      case "EcommerceCheckoutPage":
         return { title: "Checkout" };
       default:
         return {};
@@ -224,7 +226,7 @@ export class ComponentInjector {
     for (const config of this.moduleConfigs) {
       if (!config.enabled) continue;
       globalComponents.push(
-        ...config.components.filter((c) => c.placement === "global")
+        ...config.components.filter((c) => c.placement === "global"),
       );
     }
 

@@ -3,15 +3,15 @@ import tailwindcssAnimate from "tailwindcss-animate";
 
 /**
  * DRAMAC CMS Tailwind Configuration
- * 
+ *
  * Colors are defined via CSS variables set in globals.css and
  * generated from the brand configuration in src/config/brand.
- * 
+ *
  * Color shades (50-950) are available for all brand colors:
  * - primary, secondary, accent (brand colors)
  * - success, warning, danger, info (status colors)
  * - gray (neutral grays with purple undertone for dark mode)
- * 
+ *
  * @see src/config/brand for the centralized color definitions
  */
 
@@ -71,18 +71,18 @@ const config: Config = {
         ring: "hsl(var(--color-ring))",
         background: "hsl(var(--color-background))",
         foreground: "hsl(var(--color-foreground))",
-        
+
         // Brand colors with full scale (50-950)
         primary: generateColorScale("primary"),
         secondary: generateColorScale("secondary"),
         accent: generateColorScale("accent"),
-        
+
         // Status colors with full scale (50-950)
         success: generateColorScale("success"),
         warning: generateColorScale("warning"),
         danger: generateColorScale("danger"),
         info: generateColorScale("info"),
-        
+
         // Gray scale with purple undertone for dark mode harmony
         gray: {
           50: "#fafafa",
@@ -97,7 +97,7 @@ const config: Config = {
           900: "#18181b",
           950: "#09090b",
         },
-        
+
         // Component colors (card, popover, muted)
         muted: {
           DEFAULT: "hsl(var(--color-muted))",
@@ -111,7 +111,7 @@ const config: Config = {
           DEFAULT: "hsl(var(--color-popover))",
           foreground: "hsl(var(--color-popover-foreground))",
         },
-        
+
         // Semantic surface colors for analytics dashboard
         surface: {
           DEFAULT: "hsl(var(--color-card))",
@@ -136,12 +136,18 @@ const config: Config = {
         "glow-light": "0 0 40px hsl(var(--color-primary) / 0.15)",
       },
       backgroundImage: {
-        "gradient-primary": "linear-gradient(135deg, hsl(var(--color-primary)) 0%, hsl(var(--color-primary-400)) 50%, hsl(var(--color-primary-300)) 100%)",
-        "gradient-premium": "linear-gradient(145deg, hsl(var(--color-primary-950)) 0%, hsl(var(--color-primary-900)) 50%, hsl(var(--color-primary-800)) 100%)",
-        "gradient-stat": "linear-gradient(135deg, hsl(var(--color-primary-700)) 0%, hsl(var(--color-primary)) 100%)",
-        "gradient-sidebar-active": "linear-gradient(90deg, hsl(var(--color-primary) / 0.2) 0%, transparent 100%)",
-        "gradient-chart-purple": "linear-gradient(180deg, hsl(var(--color-primary) / 0.4) 0%, hsl(var(--color-primary) / 0.05) 100%)",
-        "gradient-chart-teal": "linear-gradient(180deg, rgba(20,184,166,0.3) 0%, rgba(20,184,166,0.02) 100%)",
+        "gradient-primary":
+          "linear-gradient(135deg, hsl(var(--color-primary)) 0%, hsl(var(--color-primary-400)) 50%, hsl(var(--color-primary-300)) 100%)",
+        "gradient-premium":
+          "linear-gradient(145deg, hsl(var(--color-primary-950)) 0%, hsl(var(--color-primary-900)) 50%, hsl(var(--color-primary-800)) 100%)",
+        "gradient-stat":
+          "linear-gradient(135deg, hsl(var(--color-primary-700)) 0%, hsl(var(--color-primary)) 100%)",
+        "gradient-sidebar-active":
+          "linear-gradient(90deg, hsl(var(--color-primary) / 0.2) 0%, transparent 100%)",
+        "gradient-chart-purple":
+          "linear-gradient(180deg, hsl(var(--color-primary) / 0.4) 0%, hsl(var(--color-primary) / 0.05) 100%)",
+        "gradient-chart-teal":
+          "linear-gradient(180deg, rgba(20,184,166,0.3) 0%, rgba(20,184,166,0.02) 100%)",
       },
       keyframes: {
         "accordion-down": {
@@ -212,8 +218,14 @@ const config: Config = {
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
         flipIn: {
-          "0%": { opacity: "0", transform: "perspective(400px) rotateX(90deg)" },
-          "100%": { opacity: "1", transform: "perspective(400px) rotateX(0deg)" },
+          "0%": {
+            opacity: "0",
+            transform: "perspective(400px) rotateX(90deg)",
+          },
+          "100%": {
+            opacity: "1",
+            transform: "perspective(400px) rotateX(0deg)",
+          },
         },
         rotateIn: {
           "0%": { opacity: "0", transform: "rotate(-45deg)" },
@@ -318,8 +330,10 @@ const config: Config = {
         slideInDown: "slideInDown 0.4s ease-out forwards",
         slideInLeft: "slideInLeft 0.4s ease-out forwards",
         slideInRight: "slideInRight 0.4s ease-out forwards",
-        bounceIn: "bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards",
-        bounceInUp: "bounceInUp 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards",
+        bounceIn:
+          "bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards",
+        bounceInUp:
+          "bounceInUp 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards",
         flipIn: "flipIn 0.5s ease-out forwards",
         rotateIn: "rotateIn 0.5s ease-out forwards",
         zoomIn: "zoomIn 0.4s ease-out forwards",

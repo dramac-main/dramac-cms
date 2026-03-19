@@ -84,7 +84,10 @@ export function EmailComposeDialog({
     let processedBody = template.body_html || "";
 
     if (contact) {
-      const companyName = typeof contact.company === 'object' ? (contact.company as { name?: string })?.name || '' : contact.company || '';
+      const companyName =
+        typeof contact.company === "object"
+          ? (contact.company as { name?: string })?.name || ""
+          : contact.company || "";
       const mergeData: Record<string, string> = {
         "{{first_name}}": contact.first_name || "",
         "{{last_name}}": contact.last_name || "",

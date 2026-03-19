@@ -1,10 +1,10 @@
 /**
  * PHASE AWD-02: Data Context System
  * Data Context Builder
- * 
+ *
  * Fetches all business data from the database in parallel
  * to provide AI with complete knowledge of the client/site.
- * 
+ *
  * NOTE: This module uses a flexible approach to query tables that may or may not
  * exist in different deployments. Tables are queried via RPC functions or
  * with proper error handling for missing tables.
@@ -55,7 +55,7 @@ const DEFAULT_OPTIONS: DataContextBuilderOptions = {
  */
 export async function buildDataContext(
   siteId: string,
-  options: DataContextBuilderOptions = {}
+  options: DataContextBuilderOptions = {},
 ): Promise<BusinessDataContext> {
   const opts = { ...DEFAULT_OPTIONS, ...options };
   const supabase = await createClient();
@@ -113,7 +113,9 @@ export async function buildDataContext(
     fetchPortfolio(supabase, siteId, opts.maxPortfolioItems),
     fetchTestimonials(supabase, siteId, opts.maxTestimonials),
     fetchFAQ(supabase, siteId),
-    opts.includeBlog ? fetchBlogPosts(supabase, siteId, opts.maxBlogPosts) : Promise.resolve([]),
+    opts.includeBlog
+      ? fetchBlogPosts(supabase, siteId, opts.maxBlogPosts)
+      : Promise.resolve([]),
     opts.includeModules ? fetchModules(supabase, siteId) : Promise.resolve([]),
   ]);
 
@@ -153,12 +155,10 @@ export async function buildDataContext(
   }
 
   // If booking module is active, fetch booking-specific data from module tables
-  const hasBookingModule = context.modules.some(
-    (m) => {
-      const t = (m.module_type || m.module_name || m.name || "").toLowerCase();
-      return t.includes("booking") || t.includes("appointment");
-    }
-  );
+  const hasBookingModule = context.modules.some((m) => {
+    const t = (m.module_type || m.module_name || m.name || "").toLowerCase();
+    return t.includes("booking") || t.includes("appointment");
+  });
   if (hasBookingModule) {
     const [bookingServices, bookingStaff] = await Promise.all([
       fetchBookingServices(siteId),
@@ -185,7 +185,10 @@ function normalizeToClientData(client: Record<string, unknown>): ClientData {
   return {
     id: client.id as string | undefined,
     company: (client.company as string) ?? undefined,
-    company_name: (client.company_name as string) ?? (client.company as string) ?? undefined,
+    company_name:
+      (client.company_name as string) ??
+      (client.company as string) ??
+      undefined,
     name: (client.name as string) ?? undefined,
     email: (client.email as string) ?? undefined,
     phone: (client.phone as string) ?? undefined,
@@ -209,7 +212,9 @@ function normalizeToClientData(client: Record<string, unknown>): ClientData {
 /**
  * Normalize site data
  */
-function normalizeSiteData(site: Record<string, unknown> | null): SiteData | null {
+function normalizeSiteData(
+  site: Record<string, unknown> | null,
+): SiteData | null {
   if (!site) return null;
   return {
     id: site.id as string,
@@ -236,7 +241,10 @@ type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 /**
  * Fetch branding data
  */
-async function fetchBranding(supabase: SupabaseClient, siteId: string): Promise<BrandingData | null> {
+async function fetchBranding(
+  supabase: SupabaseClient,
+  siteId: string,
+): Promise<BrandingData | null> {
   // Read from sites.settings — checks BOTH flat fields AND theme.* (camelCase)
   // Flat fields are canonical (written by branding settings UI + AI designer)
   // theme.* is fallback (written by AI designer only)
@@ -246,20 +254,41 @@ async function fetchBranding(supabase: SupabaseClient, siteId: string): Promise<
       .select("settings")
       .eq("id", siteId)
       .single();
-    
+
     if (data?.settings && typeof data.settings === "object") {
       const settings = data.settings as Record<string, unknown>;
       const theme = (settings.theme as Record<string, unknown>) || {};
       return {
         business_name: (settings.business_name as string) ?? undefined,
-        primary_color: (settings.primary_color as string) || (theme.primaryColor as string) || undefined,
-        secondary_color: (settings.secondary_color as string) || (theme.secondaryColor as string) || undefined,
-        accent_color: (settings.accent_color as string) || (theme.accentColor as string) || undefined,
-        background_color: (settings.background_color as string) || (theme.backgroundColor as string) || undefined,
-        text_color: (settings.text_color as string) || (theme.textColor as string) || undefined,
+        primary_color:
+          (settings.primary_color as string) ||
+          (theme.primaryColor as string) ||
+          undefined,
+        secondary_color:
+          (settings.secondary_color as string) ||
+          (theme.secondaryColor as string) ||
+          undefined,
+        accent_color:
+          (settings.accent_color as string) ||
+          (theme.accentColor as string) ||
+          undefined,
+        background_color:
+          (settings.background_color as string) ||
+          (theme.backgroundColor as string) ||
+          undefined,
+        text_color:
+          (settings.text_color as string) ||
+          (theme.textColor as string) ||
+          undefined,
         logo_url: (settings.logo_url as string) ?? undefined,
-        heading_font: (settings.font_heading as string) || (theme.fontHeading as string) || undefined,
-        body_font: (settings.font_body as string) || (theme.fontBody as string) || undefined,
+        heading_font:
+          (settings.font_heading as string) ||
+          (theme.fontHeading as string) ||
+          undefined,
+        body_font:
+          (settings.font_body as string) ||
+          (theme.fontBody as string) ||
+          undefined,
       };
     }
   } catch {
@@ -271,7 +300,10 @@ async function fetchBranding(supabase: SupabaseClient, siteId: string): Promise<
 /**
  * Fetch social links - tries multiple possible table structures
  */
-async function fetchSocialLinks(supabase: SupabaseClient, siteId: string): Promise<SocialLink[]> {
+async function fetchSocialLinks(
+  supabase: SupabaseClient,
+  siteId: string,
+): Promise<SocialLink[]> {
   // Social links might be stored in site.settings.social or a separate table
   try {
     const { data } = await supabase
@@ -279,10 +311,12 @@ async function fetchSocialLinks(supabase: SupabaseClient, siteId: string): Promi
       .select("settings")
       .eq("id", siteId)
       .single();
-    
+
     if (data?.settings && typeof data.settings === "object") {
       const settings = data.settings as Record<string, unknown>;
-      const social = settings.social_links as Array<Record<string, unknown>> | undefined;
+      const social = settings.social_links as
+        | Array<Record<string, unknown>>
+        | undefined;
       if (Array.isArray(social)) {
         return social.map((s, i) => ({
           id: String(i),
@@ -302,17 +336,22 @@ async function fetchSocialLinks(supabase: SupabaseClient, siteId: string): Promi
 /**
  * Fetch business hours
  */
-async function fetchBusinessHours(supabase: SupabaseClient, siteId: string): Promise<BusinessHours[]> {
+async function fetchBusinessHours(
+  supabase: SupabaseClient,
+  siteId: string,
+): Promise<BusinessHours[]> {
   try {
     const { data } = await supabase
       .from("sites")
       .select("settings")
       .eq("id", siteId)
       .single();
-    
+
     if (data?.settings && typeof data.settings === "object") {
       const settings = data.settings as Record<string, unknown>;
-      const hours = settings.business_hours as Array<Record<string, unknown>> | undefined;
+      const hours = settings.business_hours as
+        | Array<Record<string, unknown>>
+        | undefined;
       if (Array.isArray(hours)) {
         return hours.map((h, i) => ({
           id: String(i),
@@ -334,17 +373,22 @@ async function fetchBusinessHours(supabase: SupabaseClient, siteId: string): Pro
 /**
  * Fetch locations
  */
-async function fetchLocations(supabase: SupabaseClient, siteId: string): Promise<Location[]> {
+async function fetchLocations(
+  supabase: SupabaseClient,
+  siteId: string,
+): Promise<Location[]> {
   try {
     const { data } = await supabase
       .from("sites")
       .select("settings")
       .eq("id", siteId)
       .single();
-    
+
     if (data?.settings && typeof data.settings === "object") {
       const settings = data.settings as Record<string, unknown>;
-      const locations = settings.locations as Array<Record<string, unknown>> | undefined;
+      const locations = settings.locations as
+        | Array<Record<string, unknown>>
+        | undefined;
       if (Array.isArray(locations)) {
         return locations.map((l, i) => ({
           id: String(i),
@@ -372,14 +416,17 @@ async function fetchLocations(supabase: SupabaseClient, siteId: string): Promise
 /**
  * Fetch team members
  */
-async function fetchTeamMembers(supabase: SupabaseClient, siteId: string): Promise<TeamMember[]> {
+async function fetchTeamMembers(
+  supabase: SupabaseClient,
+  siteId: string,
+): Promise<TeamMember[]> {
   try {
     const { data } = await supabase
       .from("sites")
       .select("settings")
       .eq("id", siteId)
       .single();
-    
+
     if (data?.settings && typeof data.settings === "object") {
       const settings = data.settings as Record<string, unknown>;
       const team = settings.team as Array<Record<string, unknown>> | undefined;
@@ -410,17 +457,22 @@ async function fetchTeamMembers(supabase: SupabaseClient, siteId: string): Promi
 /**
  * Fetch services
  */
-async function fetchServices(supabase: SupabaseClient, siteId: string): Promise<Service[]> {
+async function fetchServices(
+  supabase: SupabaseClient,
+  siteId: string,
+): Promise<Service[]> {
   try {
     const { data } = await supabase
       .from("sites")
       .select("settings")
       .eq("id", siteId)
       .single();
-    
+
     if (data?.settings && typeof data.settings === "object") {
       const settings = data.settings as Record<string, unknown>;
-      const services = settings.services as Array<Record<string, unknown>> | undefined;
+      const services = settings.services as
+        | Array<Record<string, unknown>>
+        | undefined;
       if (Array.isArray(services)) {
         return services.map((s, i) => ({
           id: String(i),
@@ -450,7 +502,7 @@ async function fetchServices(supabase: SupabaseClient, siteId: string): Promise<
 async function fetchPortfolio(
   supabase: SupabaseClient,
   siteId: string,
-  limit?: number
+  limit?: number,
 ): Promise<PortfolioItem[]> {
   try {
     const { data } = await supabase
@@ -458,10 +510,12 @@ async function fetchPortfolio(
       .select("settings")
       .eq("id", siteId)
       .single();
-    
+
     if (data?.settings && typeof data.settings === "object") {
       const settings = data.settings as Record<string, unknown>;
-      const portfolio = settings.portfolio as Array<Record<string, unknown>> | undefined;
+      const portfolio = settings.portfolio as
+        | Array<Record<string, unknown>>
+        | undefined;
       if (Array.isArray(portfolio)) {
         const items = portfolio.slice(0, limit || 20);
         return items.map((p, i) => ({
@@ -494,7 +548,7 @@ async function fetchPortfolio(
 async function fetchTestimonials(
   supabase: SupabaseClient,
   siteId: string,
-  limit?: number
+  limit?: number,
 ): Promise<Testimonial[]> {
   try {
     const { data } = await supabase
@@ -502,18 +556,22 @@ async function fetchTestimonials(
       .select("settings")
       .eq("id", siteId)
       .single();
-    
+
     if (data?.settings && typeof data.settings === "object") {
       const settings = data.settings as Record<string, unknown>;
-      const testimonials = settings.testimonials as Array<Record<string, unknown>> | undefined;
+      const testimonials = settings.testimonials as
+        | Array<Record<string, unknown>>
+        | undefined;
       if (Array.isArray(testimonials)) {
         const items = testimonials.slice(0, limit || 20);
         return items.map((t, i) => ({
           id: String(i),
           site_id: siteId,
           name: (t.name as string) ?? (t.author_name as string) ?? "",
-          author_name: (t.author_name as string) ?? (t.name as string) ?? undefined,
-          author_title: (t.author_title as string) ?? (t.role as string) ?? undefined,
+          author_name:
+            (t.author_name as string) ?? (t.name as string) ?? undefined,
+          author_title:
+            (t.author_title as string) ?? (t.role as string) ?? undefined,
           company: (t.company as string) ?? undefined,
           role: (t.role as string) ?? undefined,
           content: (t.content as string) ?? (t.text as string) ?? "",
@@ -532,14 +590,17 @@ async function fetchTestimonials(
 /**
  * Fetch FAQ items
  */
-async function fetchFAQ(supabase: SupabaseClient, siteId: string): Promise<FAQItem[]> {
+async function fetchFAQ(
+  supabase: SupabaseClient,
+  siteId: string,
+): Promise<FAQItem[]> {
   try {
     const { data } = await supabase
       .from("sites")
       .select("settings")
       .eq("id", siteId)
       .single();
-    
+
     if (data?.settings && typeof data.settings === "object") {
       const settings = data.settings as Record<string, unknown>;
       const faq = settings.faq as Array<Record<string, unknown>> | undefined;
@@ -566,7 +627,7 @@ async function fetchFAQ(supabase: SupabaseClient, siteId: string): Promise<FAQIt
 async function fetchBlogPosts(
   supabase: SupabaseClient,
   siteId: string,
-  limit?: number
+  limit?: number,
 ): Promise<BlogPost[]> {
   try {
     const { data } = await supabase
@@ -574,10 +635,12 @@ async function fetchBlogPosts(
       .select("settings")
       .eq("id", siteId)
       .single();
-    
+
     if (data?.settings && typeof data.settings === "object") {
       const settings = data.settings as Record<string, unknown>;
-      const blog = settings.blog_posts as Array<Record<string, unknown>> | undefined;
+      const blog = settings.blog_posts as
+        | Array<Record<string, unknown>>
+        | undefined;
       if (Array.isArray(blog)) {
         const items = blog.slice(0, limit || 10);
         return items.map((b) => ({
@@ -602,12 +665,15 @@ async function fetchBlogPosts(
 
 /**
  * Fetch enabled modules from site_module_installations (the actual source of truth).
- * 
+ *
  * Previously this read from sites.settings.enabled_modules which was never populated
  * by any installation flow. The real module installation data lives in the
  * site_module_installations table, joined with modules_v2 for module details.
  */
-async function fetchModules(supabase: SupabaseClient, siteId: string): Promise<EnabledModule[]> {
+async function fetchModules(
+  supabase: SupabaseClient,
+  siteId: string,
+): Promise<EnabledModule[]> {
   try {
     // Query active module installations for this site
     const { data: installations, error: installError } = await supabase
@@ -621,18 +687,24 @@ async function fetchModules(supabase: SupabaseClient, siteId: string): Promise<E
     }
 
     // Fetch module details (name, slug) from modules_v2
-    const moduleIds = installations.map((i: { module_id: string }) => i.module_id);
+    const moduleIds = installations.map(
+      (i: { module_id: string }) => i.module_id,
+    );
     const { data: modulesData } = await supabase
       .from("modules_v2")
       .select("id, name, slug")
       .in("id", moduleIds);
 
     const moduleMap = new Map(
-      (modulesData || []).map((m: { id: string; name: string; slug: string }) => [m.id, m])
+      (modulesData || []).map(
+        (m: { id: string; name: string; slug: string }) => [m.id, m],
+      ),
     );
 
     return installations.map((inst) => {
-      const mod = moduleMap.get(inst.module_id) as { id: string; name: string; slug: string } | undefined;
+      const mod = moduleMap.get(inst.module_id) as
+        | { id: string; name: string; slug: string }
+        | undefined;
       return {
         id: inst.id,
         site_id: siteId,
@@ -659,12 +731,16 @@ const BOOKING_TABLE_PREFIX = "mod_bookmod01";
  * Fetch booking services from the booking module's dedicated table.
  * Uses the admin client to bypass RLS (same pattern as public-booking-actions.ts).
  */
-async function fetchBookingServices(siteId: string): Promise<BookingServiceData[]> {
+async function fetchBookingServices(
+  siteId: string,
+): Promise<BookingServiceData[]> {
   try {
     const admin = createAdminClient() as any;
     const { data, error } = await admin
       .from(`${BOOKING_TABLE_PREFIX}_services`)
-      .select("id, name, description, price, currency, duration_minutes, category, is_featured")
+      .select(
+        "id, name, description, price, currency, duration_minutes, category, is_featured",
+      )
       .eq("site_id", siteId)
       .eq("is_active", true)
       .order("sort_order", { ascending: true });
@@ -677,7 +753,8 @@ async function fetchBookingServices(siteId: string): Promise<BookingServiceData[
       description: s.description ?? undefined,
       price: s.price != null ? Number(s.price) : undefined,
       currency: s.currency ?? undefined,
-      duration_minutes: s.duration_minutes != null ? Number(s.duration_minutes) : undefined,
+      duration_minutes:
+        s.duration_minutes != null ? Number(s.duration_minutes) : undefined,
       category: s.category ?? undefined,
       is_featured: s.is_featured ?? undefined,
     }));
@@ -744,9 +821,10 @@ async function fetchBookingStaff(siteId: string): Promise<BookingStaffData[]> {
  */
 function buildContactData(
   client: ClientData | null,
-  locations: Location[] | null
+  locations: Location[] | null,
 ): ContactData {
-  const primaryLocation = locations?.find((l) => l.is_primary) || locations?.[0];
+  const primaryLocation =
+    locations?.find((l) => l.is_primary) || locations?.[0];
 
   return {
     email: client?.email || primaryLocation?.email,
@@ -782,7 +860,10 @@ function createEmptySite(): SiteData {
 // CACHED BUILDER (with in-memory cache)
 // =============================================================================
 
-const contextCache = new Map<string, { data: BusinessDataContext; timestamp: number }>();
+const contextCache = new Map<
+  string,
+  { data: BusinessDataContext; timestamp: number }
+>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 /**
@@ -790,7 +871,7 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
  */
 export async function buildDataContextCached(
   siteId: string,
-  options?: DataContextBuilderOptions
+  options?: DataContextBuilderOptions,
 ): Promise<BusinessDataContext> {
   const cacheKey = `${siteId}-${JSON.stringify(options || {})}`;
   const cached = contextCache.get(cacheKey);
@@ -855,7 +936,8 @@ export async function buildBrandingContext(siteId: string): Promise<{
   }
 
   return {
-    site: normalizeSiteData(site as Record<string, unknown>) || createEmptySite(),
+    site:
+      normalizeSiteData(site as Record<string, unknown>) || createEmptySite(),
     branding: branding || {},
     client: clientData,
   };

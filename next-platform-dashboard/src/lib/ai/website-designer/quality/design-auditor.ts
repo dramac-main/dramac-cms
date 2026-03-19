@@ -1,10 +1,10 @@
 /**
  * DESIGN QUALITY AUDITOR
- * 
- * An intelligent system that scans every generated website component for 
- * imperfections BEFORE the AI completes the website. It catches issues 
+ *
+ * An intelligent system that scans every generated website component for
+ * imperfections BEFORE the AI completes the website. It catches issues
  * that humans would notice and fixes them automatically.
- * 
+ *
  * AUDIT CATEGORIES:
  * 1. Color & Contrast — text readability, button visibility, dark/light consistency
  * 2. Spacing & Alignment — consistent padding, proper gaps, no cramped elements
@@ -16,7 +16,7 @@
  * 8. Content Quality — no generic text, proper CTA text per industry
  * 9. Responsive — proper mobile defaults
  * 10. Visual Variety — detect sameness across sections
- * 
+ *
  * This runs as a POST-GENERATION pass that fixes issues before final output.
  */
 
@@ -38,10 +38,17 @@ export interface AuditIssue {
   autoFixed: boolean;
 }
 
-export type AuditCategory = 
-  | "contrast" | "spacing" | "typography" | "containment" 
-  | "branding" | "footer" | "module" | "content" 
-  | "responsive" | "variety";
+export type AuditCategory =
+  | "contrast"
+  | "spacing"
+  | "typography"
+  | "containment"
+  | "branding"
+  | "footer"
+  | "module"
+  | "content"
+  | "responsive"
+  | "variety";
 
 export interface AuditResult {
   totalIssues: number;
@@ -73,7 +80,7 @@ interface DesignTokens {
  */
 export function auditWebsite(
   components: Array<{ id: string; type: string; props: ComponentProps }>,
-  designTokens: DesignTokens
+  designTokens: DesignTokens,
 ): AuditResult {
   const issues: AuditIssue[] = [];
   const siteBg = designTokens.backgroundColor || "#ffffff";
@@ -84,43 +91,46 @@ export function auditWebsite(
   for (const comp of components) {
     // ━━━━ 1. CONTRAST AUDIT ━━━━
     auditContrast(comp, siteBg, siteText, isDark, issues);
-    
+
     // ━━━━ 2. CONTAINMENT AUDIT ━━━━
     auditContainment(comp, issues);
-    
+
     // ━━━━ 3. BRANDING AUDIT ━━━━
     auditBranding(comp, sitePrimary, siteBg, siteText, isDark, issues);
-    
+
     // ━━━━ 4. FOOTER AUDIT ━━━━
     if (comp.type === "Footer") {
       auditFooter(comp, siteBg, isDark, sitePrimary, issues);
     }
-    
+
     // ━━━━ 5. NEWSLETTER AUDIT ━━━━
     if (comp.type === "Newsletter") {
       auditNewsletter(comp, siteBg, isDark, sitePrimary, issues);
     }
-    
+
     // ━━━━ 6. MODULE AUDIT ━━━━
     if (isModuleComponent(comp.type)) {
       auditModuleComponent(comp, siteBg, siteText, sitePrimary, isDark, issues);
     }
-    
+
     // ━━━━ 7. CONTENT QUALITY ━━━━
     auditContent(comp, issues);
-    
+
     // ━━━━ 8. SPACING ━━━━
     auditSpacing(comp, issues);
   }
-  
+
   // ━━━━ 9. VARIETY CHECK ━━━━
   auditVariety(components, issues);
-  
+
   // Calculate score
-  const criticalCount = issues.filter(i => i.severity === "critical").length;
-  const warningCount = issues.filter(i => i.severity === "warning").length;
-  const autoFixed = issues.filter(i => i.autoFixed).length;
-  const score = Math.max(0, 100 - (criticalCount * 15) - (warningCount * 5) + (autoFixed * 3));
+  const criticalCount = issues.filter((i) => i.severity === "critical").length;
+  const warningCount = issues.filter((i) => i.severity === "warning").length;
+  const autoFixed = issues.filter((i) => i.autoFixed).length;
+  const score = Math.max(
+    0,
+    100 - criticalCount * 15 - warningCount * 5 + autoFixed * 3,
+  );
 
   return {
     totalIssues: issues.length,
@@ -140,13 +150,18 @@ function auditContrast(
   siteBg: string,
   siteText: string,
   isDark: boolean,
-  issues: AuditIssue[]
+  issues: AuditIssue[],
 ): void {
   const props = comp.props;
   const bg = getColor(props.backgroundColor, siteBg);
-  
+
   // Check text on background
-  const textFields = ["textColor", "titleColor", "subtitleColor", "descriptionColor"];
+  const textFields = [
+    "textColor",
+    "titleColor",
+    "subtitleColor",
+    "descriptionColor",
+  ];
   for (const field of textFields) {
     const color = getColor(props[field]);
     if (color && isValidHex(color) && isValidHex(bg)) {
@@ -171,13 +186,21 @@ function auditContrast(
 
   // Check button text on button background
   if (props.buttonColor || props.primaryButtonColor) {
-    const btnBg = getColor(props.buttonColor || props.primaryButtonColor, sitePrimary(siteText));
-    const btnText = getColor(props.buttonTextColor || props.primaryButtonTextColor, "#ffffff");
+    const btnBg = getColor(
+      props.buttonColor || props.primaryButtonColor,
+      sitePrimary(siteText),
+    );
+    const btnText = getColor(
+      props.buttonTextColor || props.primaryButtonTextColor,
+      "#ffffff",
+    );
     if (isValidHex(btnBg) && isValidHex(btnText)) {
       const result = checkContrast(btnText, btnBg);
       if (!result.passesAA) {
         const fixed = ensureReadable(btnText, btnBg);
-        const textField = props.buttonTextColor ? "buttonTextColor" : "primaryButtonTextColor";
+        const textField = props.buttonTextColor
+          ? "buttonTextColor"
+          : "primaryButtonTextColor";
         props[textField] = fixed;
         issues.push({
           severity: "critical",
@@ -194,10 +217,13 @@ function auditContrast(
     }
   }
 
-  // Check card text on card background  
+  // Check card text on card background
   if (props.cardBackgroundColor) {
     const cardBg = getColor(props.cardBackgroundColor);
-    const cardText = getColor(props.textColor || props.featureTitleColor, siteText);
+    const cardText = getColor(
+      props.textColor || props.featureTitleColor,
+      siteText,
+    );
     if (cardBg && isValidHex(cardBg) && isValidHex(cardText)) {
       const result = checkContrast(cardText, cardBg);
       if (!result.passesAA) {
@@ -222,12 +248,20 @@ function auditContrast(
 
 function auditContainment(
   comp: { id: string; type: string; props: ComponentProps },
-  issues: AuditIssue[]
+  issues: AuditIssue[],
 ): void {
   const needsContainment = [
-    "Newsletter", "BookingServiceSelector", "BookingWidget", "BookingCalendar",
-    "BookingForm", "BookingEmbed", "BookingStaffGrid", "ProductGrid",
-    "CartItems", "CartSummary", "CheckoutForm",
+    "Newsletter",
+    "BookingServiceSelector",
+    "BookingWidget",
+    "BookingCalendar",
+    "BookingForm",
+    "BookingEmbed",
+    "BookingStaffGrid",
+    "EcommerceProductGrid",
+    "EcommerceCartPage",
+    "CartSummary",
+    "EcommerceCheckoutPage",
   ];
 
   if (needsContainment.includes(comp.type)) {
@@ -261,16 +295,22 @@ function auditBranding(
   siteBg: string,
   siteText: string,
   isDark: boolean,
-  issues: AuditIssue[]
+  issues: AuditIssue[],
 ): void {
   // Check for default blue (#3b82f6) leaking through when site has a different primary
   const defaultBlue = "#3b82f6";
   if (sitePrimaryColor && sitePrimaryColor.toLowerCase() !== defaultBlue) {
     const colorFields = [
-      "buttonColor", "primaryButtonColor", "ctaColor", "accentColor", 
-      "linkColor", "iconColor", "defaultIconColor", "badgeColor",
+      "buttonColor",
+      "primaryButtonColor",
+      "ctaColor",
+      "accentColor",
+      "linkColor",
+      "iconColor",
+      "defaultIconColor",
+      "badgeColor",
     ];
-    
+
     for (const field of colorFields) {
       const val = getColor(props(comp)[field]);
       if (val && val.toLowerCase() === defaultBlue) {
@@ -296,11 +336,11 @@ function auditFooter(
   siteBg: string,
   isDark: boolean,
   sitePrimary: string,
-  issues: AuditIssue[]
+  issues: AuditIssue[],
 ): void {
   const p = comp.props;
   const footerBg = getColor(p.backgroundColor, "#111827");
-  
+
   // Ensure link colors are visible on footer background
   const linkColor = getColor(p.linkColor, "#9ca3af");
   if (isValidHex(linkColor) && isValidHex(footerBg)) {
@@ -359,10 +399,10 @@ function auditNewsletter(
   siteBg: string,
   isDark: boolean,
   sitePrimary: string,
-  issues: AuditIssue[]
+  issues: AuditIssue[],
 ): void {
   const p = comp.props;
-  
+
   // Ensure newsletter has proper containment props (will be wrapped in renderer)
   if (!p.sectionPadding) {
     p.sectionPadding = "lg";
@@ -404,7 +444,7 @@ function auditModuleComponent(
   siteText: string,
   sitePrimary: string,
   isDark: boolean,
-  issues: AuditIssue[]
+  issues: AuditIssue[],
 ): void {
   const p = comp.props;
 
@@ -413,7 +453,7 @@ function auditModuleComponent(
     p.primaryColor = sitePrimary;
     p.accentColor = sitePrimary;
   }
-  
+
   // Inject background awareness
   if (!p.backgroundColor) {
     p.backgroundColor = isDark ? siteBg : "";
@@ -445,7 +485,7 @@ function auditModuleComponent(
 
 function auditContent(
   comp: { id: string; type: string; props: ComponentProps },
-  issues: AuditIssue[]
+  issues: AuditIssue[],
 ): void {
   // Check for generic/placeholder content
   const genericPatterns = [
@@ -489,14 +529,29 @@ function auditContent(
 
 function auditSpacing(
   comp: { id: string; type: string; props: ComponentProps },
-  _issues: AuditIssue[]
+  _issues: AuditIssue[],
 ): void {
   // Ensure sections have proper spacing
-  const sectionTypes = ["Hero", "Features", "CTA", "Testimonials", "Team", "FAQ", "Stats", "Pricing", "Gallery", "ContactForm"];
-  
+  const sectionTypes = [
+    "Hero",
+    "Features",
+    "CTA",
+    "Testimonials",
+    "Team",
+    "FAQ",
+    "Stats",
+    "Pricing",
+    "Gallery",
+    "ContactForm",
+  ];
+
   if (sectionTypes.includes(comp.type)) {
     // Ensure minimum vertical padding
-    if (!comp.props.paddingY && !comp.props.paddingTop && !comp.props.paddingBottom) {
+    if (
+      !comp.props.paddingY &&
+      !comp.props.paddingTop &&
+      !comp.props.paddingBottom
+    ) {
       comp.props.paddingY = "lg";
     }
   }
@@ -504,12 +559,12 @@ function auditSpacing(
 
 function auditVariety(
   components: Array<{ id: string; type: string; props: ComponentProps }>,
-  issues: AuditIssue[]
+  issues: AuditIssue[],
 ): void {
   // Check if all sections use the same background color (boring!)
   const sectionBgs = components
-    .filter(c => !["Navbar", "Footer"].includes(c.type))
-    .map(c => getColor(c.props.backgroundColor, ""))
+    .filter((c) => !["Navbar", "Footer"].includes(c.type))
+    .map((c) => getColor(c.props.backgroundColor, ""))
     .filter(Boolean);
 
   if (sectionBgs.length >= 3) {
@@ -521,7 +576,8 @@ function auditVariety(
         component: "Page",
         componentId: "page",
         field: "backgroundColors",
-        message: "All sections use the same background — consider alternating colors for visual rhythm",
+        message:
+          "All sections use the same background — consider alternating colors for visual rhythm",
         currentValue: sectionBgs[0],
         fixedValue: null,
         autoFixed: false,
@@ -530,9 +586,13 @@ function auditVariety(
   }
 
   // Check if all card-bearing sections use the same variant
-  const cardSections = components.filter(c => ["Features", "Testimonials", "Team", "Pricing"].includes(c.type));
+  const cardSections = components.filter((c) =>
+    ["Features", "Testimonials", "Team", "Pricing"].includes(c.type),
+  );
   if (cardSections.length >= 2) {
-    const variants = cardSections.map(c => String(c.props.variant || "cards"));
+    const variants = cardSections.map((c) =>
+      String(c.props.variant || "cards"),
+    );
     const uniqueVariants = new Set(variants);
     if (uniqueVariants.size === 1) {
       issues.push({
@@ -541,7 +601,8 @@ function auditVariety(
         component: "Cards",
         componentId: "page",
         field: "variants",
-        message: "All card sections use the same variant — consider mixing 'cards', 'minimal', 'centered'",
+        message:
+          "All card sections use the same variant — consider mixing 'cards', 'minimal', 'centered'",
         currentValue: variants[0],
         fixedValue: null,
         autoFixed: false,
@@ -556,9 +617,16 @@ function auditVariety(
 
 function isModuleComponent(type: string): boolean {
   return [
-    "BookingServiceSelector", "BookingWidget", "BookingCalendar",
-    "BookingForm", "BookingEmbed", "BookingStaffGrid",
-    "ProductGrid", "CartItems", "CartSummary", "CheckoutForm",
+    "BookingServiceSelector",
+    "BookingWidget",
+    "BookingCalendar",
+    "BookingForm",
+    "BookingEmbed",
+    "BookingStaffGrid",
+    "EcommerceProductGrid",
+    "EcommerceCartPage",
+    "CartSummary",
+    "EcommerceCheckoutPage",
   ].includes(type);
 }
 

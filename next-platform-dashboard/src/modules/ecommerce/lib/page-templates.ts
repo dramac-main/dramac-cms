@@ -1,20 +1,22 @@
 /**
  * E-Commerce Page Templates
- * 
+ *
  * PHASE-ECOM-51: Auto-Page Generation & Templates
- * 
+ *
  * Pre-configured page templates for automatic creation when
  * the e-commerce module is installed on a site.
  */
 
-import type { StudioPageData } from '@/types/studio';
-import type { PageDefinition } from '../types/setup-types';
+import type { StudioPageData } from "@/types/studio";
+import type { PageDefinition } from "../types/setup-types";
 import {
   createEmptyPage,
   createSection,
   createContainer,
   createHeading,
+  createText,
   addProductGrid,
+  addProductCatalog,
   addCategoryNav,
   addBreadcrumb,
   addCartPage,
@@ -22,10 +24,11 @@ import {
   addOrderConfirmation,
   addSearchBar,
   addFeaturedProducts,
+  addValuePropositions,
   resetIdCounter,
   genId,
   addComponent,
-} from './template-utils';
+} from "./template-utils";
 
 // ============================================================================
 // SHOP PAGE TEMPLATE
@@ -34,73 +37,139 @@ import {
 /**
  * Create the main shop page template
  * URL: /shop
- * 
- * Professional layout:
- * 1. Hero banner with search
- * 2. Featured products carousel (new arrivals / bestsellers)
- * 3. Category navigation
- * 4. Full product catalog with filters, sorting, and pagination
+ *
+ * World-class e-commerce layout:
+ * 1. Full-width hero banner with search and call-to-action
+ * 2. Value propositions strip (free shipping, secure checkout, etc.)
+ * 3. Featured products carousel (bestsellers / new arrivals)
+ * 4. Category navigation with icons
+ * 5. New arrivals section
+ * 6. Full product catalog with filters, sorting, search, and pagination
+ * 7. Newsletter signup CTA
+ *
+ * All colors intentionally left empty — branding system injects via CSS variables.
  */
 export function createShopPageTemplate(): StudioPageData {
   resetIdCounter();
-  const page = createEmptyPage('Shop');
-  
-  // ── Hero Section ─────────────────────────────────────────
+  const page = createEmptyPage("Shop");
+
+  // ── 1. Hero Banner ───────────────────────────────────────
+  // Full-width hero with gradient overlay, large heading, subtitle, and search
   const heroSection = createSection(page, {
-    padding: '48px 24px',
-    backgroundColor: '#f8fafc',
+    padding: "80px 24px 72px",
+    backgroundColor: "", // Brand system handles this
   });
-  
+
   const heroContainer = createContainer(page, heroSection, {
-    alignItems: 'center',
-    gap: '20px',
+    alignItems: "center",
+    gap: "24px",
   });
-  
-  createHeading(page, heroContainer, 'Explore Our Collection', 1);
+
+  createHeading(page, heroContainer, "Explore Our Collection", 1);
+  createText(
+    page,
+    heroContainer,
+    "Discover premium products curated just for you. Quality, style, and value — all in one place.",
+    {
+      fontSize: "18px",
+      textAlign: "center",
+      maxWidth: "600px",
+    },
+  );
   addSearchBar(page, heroContainer, {
-    placeholder: 'Search products, categories, brands...',
+    placeholder: "Search products, categories, brands...",
     showSuggestions: true,
   });
-  
-  // ── Featured Products Section ────────────────────────────
-  const featuredSection = createSection(page, {
-    padding: '48px 24px',
+
+  // ── 2. Value Propositions Strip ──────────────────────────
+  // Trust signals: free shipping, secure payments, easy returns, support
+  const trustSection = createSection(page, {
+    padding: "32px 24px",
   });
-  
+
+  addValuePropositions(page, trustSection);
+
+  // ── 3. Featured Products (Bestsellers) ───────────────────
+  const featuredSection = createSection(page, {
+    padding: "56px 24px",
+  });
+
   addFeaturedProducts(page, featuredSection, {
-    title: 'Featured Products',
+    title: "Bestsellers",
     limit: 8,
   });
-  
-  // ── Category Navigation ──────────────────────────────────
+
+  // ── 4. Category Navigation ───────────────────────────────
   const categorySection = createSection(page, {
-    padding: '32px 24px',
-    backgroundColor: '#f8fafc',
+    padding: "40px 24px",
+    backgroundColor: "", // Brand system handles this
   });
-  
-  addCategoryNav(page, categorySection, {
-    layout: 'horizontal',
+
+  const categoryContainer = createContainer(page, categorySection, {
+    alignItems: "center",
+    gap: "24px",
+  });
+
+  createHeading(page, categoryContainer, "Shop by Category", 2);
+  addCategoryNav(page, categoryContainer, {
+    layout: "horizontal",
     showIcons: true,
     showCount: true,
   });
-  
-  // ── Main Product Grid Section ────────────────────────────
-  const mainSection = createSection(page, {
-    padding: '48px 24px',
+
+  // ── 5. New Arrivals Section ──────────────────────────────
+  const newArrivalsSection = createSection(page, {
+    padding: "56px 24px",
   });
-  
-  const mainContainer = createContainer(page, mainSection, {
-    gap: '24px',
+
+  addFeaturedProducts(page, newArrivalsSection, {
+    title: "New Arrivals",
+    limit: 4,
   });
-  
-  addBreadcrumb(page, mainContainer, { showHome: true });
-  addProductGrid(page, mainContainer, {
-    columns: { mobile: 2, tablet: 3, desktop: 4 },
+
+  // ── 6. Full Product Catalog ──────────────────────────────
+  // Enhanced catalog with search, filters, sort, pagination, view modes
+  const catalogSection = createSection(page, {
+    padding: "56px 24px",
+  });
+
+  const catalogContainer = createContainer(page, catalogSection, {
+    gap: "24px",
+  });
+
+  addBreadcrumb(page, catalogContainer, { showHome: true });
+  createHeading(page, catalogContainer, "All Products", 2);
+  addProductCatalog(page, catalogContainer, {
+    columns: 4,
     showFilters: true,
     showSort: true,
+    showSearch: true,
     productsPerPage: 12,
   });
-  
+
+  // ── 7. Newsletter / CTA Section ──────────────────────────
+  const ctaSection = createSection(page, {
+    padding: "64px 24px",
+    backgroundColor: "", // Brand system handles this
+  });
+
+  const ctaContainer = createContainer(page, ctaSection, {
+    alignItems: "center",
+    gap: "16px",
+  });
+
+  createHeading(page, ctaContainer, "Stay in the Loop", 2);
+  createText(
+    page,
+    ctaContainer,
+    "Be the first to know about new arrivals, exclusive deals, and special offers.",
+    {
+      fontSize: "16px",
+      textAlign: "center",
+      maxWidth: "500px",
+    },
+  );
+
   return page;
 }
 
@@ -108,14 +177,15 @@ export function createShopPageTemplate(): StudioPageData {
  * Shop page definition
  */
 export const shopPageDefinition: PageDefinition = {
-  slug: 'shop',
-  title: 'Shop',
-  metaTitle: 'Shop - Browse Our Products',
-  metaDescription: 'Browse our collection of products. Find the perfect items for you with easy filtering and search.',
-  status: 'published',
+  slug: "shop",
+  title: "Shop",
+  metaTitle: "Shop - Browse Our Products",
+  metaDescription:
+    "Browse our collection of products. Find the perfect items for you with easy filtering and search.",
+  status: "published",
   content: createShopPageTemplate(),
   moduleCreated: true,
-  moduleId: 'ecommerce',
+  moduleId: "ecommerce",
 };
 
 // ============================================================================
@@ -128,24 +198,24 @@ export const shopPageDefinition: PageDefinition = {
  */
 export function createCartPageTemplate(): StudioPageData {
   resetIdCounter();
-  const page = createEmptyPage('Shopping Cart');
-  
+  const page = createEmptyPage("Shopping Cart");
+
   // Main Section
   const mainSection = createSection(page, {
-    padding: '32px 24px',
+    padding: "32px 24px",
   });
-  
+
   const mainContainer = createContainer(page, mainSection, {
-    gap: '24px',
+    gap: "24px",
   });
-  
+
   addBreadcrumb(page, mainContainer, { showHome: true });
-  createHeading(page, mainContainer, 'Your Shopping Cart', 1);
+  createHeading(page, mainContainer, "Your Shopping Cart", 1);
   addCartPage(page, mainContainer, {
     showRecommendations: true,
     showCouponInput: true,
   });
-  
+
   return page;
 }
 
@@ -153,14 +223,15 @@ export function createCartPageTemplate(): StudioPageData {
  * Cart page definition
  */
 export const cartPageDefinition: PageDefinition = {
-  slug: 'cart',
-  title: 'Shopping Cart',
-  metaTitle: 'Your Shopping Cart',
-  metaDescription: 'Review the items in your shopping cart and proceed to checkout.',
-  status: 'published',
+  slug: "cart",
+  title: "Shopping Cart",
+  metaTitle: "Your Shopping Cart",
+  metaDescription:
+    "Review the items in your shopping cart and proceed to checkout.",
+  status: "published",
   content: createCartPageTemplate(),
   moduleCreated: true,
-  moduleId: 'ecommerce',
+  moduleId: "ecommerce",
 };
 
 // ============================================================================
@@ -173,26 +244,25 @@ export const cartPageDefinition: PageDefinition = {
  */
 export function createCheckoutPageTemplate(): StudioPageData {
   resetIdCounter();
-  const page = createEmptyPage('Checkout');
-  
+  const page = createEmptyPage("Checkout");
+
   // Main Section
   const mainSection = createSection(page, {
-    padding: '32px 24px',
-    backgroundColor: '#f9fafb',
+    padding: "32px 24px",
   });
-  
+
   const mainContainer = createContainer(page, mainSection, {
-    gap: '24px',
+    gap: "24px",
   });
-  
+
   addBreadcrumb(page, mainContainer, { showHome: true });
-  createHeading(page, mainContainer, 'Checkout', 1);
+  createHeading(page, mainContainer, "Checkout", 1);
   addCheckoutPage(page, mainContainer, {
-    steps: ['shipping', 'payment', 'review'],
+    steps: ["shipping", "payment", "review"],
     showOrderSummary: true,
     enableGuestCheckout: true,
   });
-  
+
   return page;
 }
 
@@ -200,14 +270,15 @@ export function createCheckoutPageTemplate(): StudioPageData {
  * Checkout page definition
  */
 export const checkoutPageDefinition: PageDefinition = {
-  slug: 'checkout',
-  title: 'Checkout',
-  metaTitle: 'Checkout - Complete Your Order',
-  metaDescription: 'Complete your order securely. Enter your shipping and payment details.',
-  status: 'published',
+  slug: "checkout",
+  title: "Checkout",
+  metaTitle: "Checkout - Complete Your Order",
+  metaDescription:
+    "Complete your order securely. Enter your shipping and payment details.",
+  status: "published",
   content: createCheckoutPageTemplate(),
   moduleCreated: true,
-  moduleId: 'ecommerce',
+  moduleId: "ecommerce",
 };
 
 // ============================================================================
@@ -220,31 +291,30 @@ export const checkoutPageDefinition: PageDefinition = {
  */
 export function createOrderConfirmationTemplate(): StudioPageData {
   resetIdCounter();
-  const page = createEmptyPage('Order Confirmed');
-  
+  const page = createEmptyPage("Order Confirmed");
+
   // Main Section
   const mainSection = createSection(page, {
-    padding: '64px 24px',
-    backgroundColor: '#f0fdf4',
+    padding: "64px 24px",
   });
-  
+
   const mainContainer = createContainer(page, mainSection, {
-    alignItems: 'center',
-    gap: '32px',
+    alignItems: "center",
+    gap: "32px",
   });
-  
+
   addOrderConfirmation(page, mainContainer);
-  
+
   // Recommended Products Section
   const shopSection = createSection(page, {
-    padding: '64px 24px',
+    padding: "64px 24px",
   });
-  
+
   addFeaturedProducts(page, shopSection, {
-    title: 'You Might Also Like',
+    title: "You Might Also Like",
     limit: 4,
   });
-  
+
   return page;
 }
 
@@ -252,14 +322,15 @@ export function createOrderConfirmationTemplate(): StudioPageData {
  * Order confirmation page definition
  */
 export const orderConfirmationPageDefinition: PageDefinition = {
-  slug: 'order-confirmation',
-  title: 'Order Confirmed',
-  metaTitle: 'Order Confirmed - Thank You!',
-  metaDescription: 'Your order has been confirmed. Thank you for your purchase!',
-  status: 'published',
+  slug: "order-confirmation",
+  title: "Order Confirmed",
+  metaTitle: "Order Confirmed - Thank You!",
+  metaDescription:
+    "Your order has been confirmed. Thank you for your purchase!",
+  status: "published",
   content: createOrderConfirmationTemplate(),
   moduleCreated: true,
-  moduleId: 'ecommerce',
+  moduleId: "ecommerce",
 };
 
 // ============================================================================
@@ -269,38 +340,38 @@ export const orderConfirmationPageDefinition: PageDefinition = {
 /**
  * Create the product detail page template
  * URL: /products/[slug]
- * 
+ *
  * Note: This is a template for dynamic pages. The actual product data
  * is loaded at runtime based on the slug parameter.
  */
 export function createProductDetailTemplate(): StudioPageData {
   resetIdCounter();
-  const page = createEmptyPage('Product Detail');
-  
+  const page = createEmptyPage("Product Detail");
+
   // Breadcrumb Section
   const breadcrumbSection = createSection(page, {
-    padding: '16px 24px',
+    padding: "16px 24px",
   });
-  
+
   addBreadcrumb(page, breadcrumbSection, { showHome: true });
-  
+
   // Product Detail Section
   const productSection = createSection(page, {
-    padding: '32px 24px',
+    padding: "32px 24px",
   });
-  
+
   // Product detail component with gallery, info, add to cart
   const productContainer = createContainer(page, productSection, {
-    display: 'grid',
-    gap: '48px',
+    display: "grid",
+    gap: "48px",
   });
-  
+
   // The ProductDetailBlock handles the full product display
   // It reads the product slug from the URL and fetches data
-  const productDetailId = genId('productdetail');
+  const productDetailId = genId("productdetail");
   page.components[productDetailId] = {
     id: productDetailId,
-    type: 'ProductDetailBlock',
+    type: "ProductDetailBlock",
     props: {
       showGallery: true,
       showVariants: true,
@@ -311,24 +382,23 @@ export function createProductDetailTemplate(): StudioPageData {
       showDescription: true,
       showSpecifications: true,
       showReviews: true,
-      galleryPosition: 'left',
+      galleryPosition: "left",
       stickyAddToCart: true,
     },
     parentId: productContainer,
   };
   page.root.children.push(productDetailId);
-  
+
   // Related Products Section
   const relatedSection = createSection(page, {
-    padding: '48px 24px',
-    backgroundColor: '#f9fafb',
+    padding: "48px 24px",
   });
-  
+
   addFeaturedProducts(page, relatedSection, {
-    title: 'Related Products',
+    title: "Related Products",
     limit: 4,
   });
-  
+
   return page;
 }
 
@@ -336,14 +406,14 @@ export function createProductDetailTemplate(): StudioPageData {
  * Product detail page definition (dynamic route metadata)
  */
 export const productDetailPageDefinition: PageDefinition = {
-  slug: 'products/[slug]',
-  title: 'Product Detail',
-  metaTitle: '{{product.name}} - Shop',
-  metaDescription: '{{product.description}}',
-  status: 'published',
+  slug: "products/[slug]",
+  title: "Product Detail",
+  metaTitle: "{{product.name}} - Shop",
+  metaDescription: "{{product.description}}",
+  status: "published",
   content: createProductDetailTemplate(),
   moduleCreated: true,
-  moduleId: 'ecommerce',
+  moduleId: "ecommerce",
 };
 
 // ============================================================================
@@ -356,24 +426,23 @@ export const productDetailPageDefinition: PageDefinition = {
  */
 export function createCategoryPageTemplate(): StudioPageData {
   resetIdCounter();
-  const page = createEmptyPage('Category');
-  
+  const page = createEmptyPage("Category");
+
   // Hero Section with Category Info
   const heroSection = createSection(page, {
-    padding: '32px 24px',
-    backgroundColor: '#f9fafb',
+    padding: "32px 24px",
   });
-  
+
   const heroContainer = createContainer(page, heroSection, {
-    alignItems: 'center',
-    gap: '16px',
+    alignItems: "center",
+    gap: "16px",
   });
-  
+
   // CategoryHeroBlock reads category from URL slug
-  const categoryHeroId = genId('categoryhero');
+  const categoryHeroId = genId("categoryhero");
   page.components[categoryHeroId] = {
     id: categoryHeroId,
-    type: 'CategoryHeroBlock',
+    type: "CategoryHeroBlock",
     props: {
       showImage: true,
       showDescription: true,
@@ -382,27 +451,27 @@ export function createCategoryPageTemplate(): StudioPageData {
     parentId: heroContainer,
   };
   page.root.children.push(categoryHeroId);
-  
+
   // Products Section
   const productsSection = createSection(page, {
-    padding: '32px 24px',
+    padding: "32px 24px",
   });
-  
+
   const productsContainer = createContainer(page, productsSection, {
-    gap: '24px',
+    gap: "24px",
   });
-  
+
   addBreadcrumb(page, productsContainer, { showHome: true });
-  
+
   // ProductGrid with category filter from URL
   addProductGrid(page, productsContainer, {
     columns: { mobile: 2, tablet: 3, desktop: 4 },
     showFilters: true,
     showSort: true,
     productsPerPage: 12,
-    categoryFilter: '{{category.slug}}', // Dynamic from URL
+    categoryFilter: "{{category.slug}}", // Dynamic from URL
   });
-  
+
   return page;
 }
 
@@ -410,14 +479,15 @@ export function createCategoryPageTemplate(): StudioPageData {
  * Category page definition (dynamic route metadata)
  */
 export const categoryPageDefinition: PageDefinition = {
-  slug: 'categories/[slug]',
-  title: 'Category',
-  metaTitle: '{{category.name}} - Shop by Category',
-  metaDescription: 'Browse {{category.name}} products. {{category.description}}',
-  status: 'published',
+  slug: "categories/[slug]",
+  title: "Category",
+  metaTitle: "{{category.name}} - Shop by Category",
+  metaDescription:
+    "Browse {{category.name}} products. {{category.description}}",
+  status: "published",
   content: createCategoryPageTemplate(),
   moduleCreated: true,
-  moduleId: 'ecommerce',
+  moduleId: "ecommerce",
 };
 
 // ============================================================================
@@ -427,46 +497,49 @@ export const categoryPageDefinition: PageDefinition = {
 /**
  * Create the quote request page template
  * URL: /quotes
- * 
+ *
  * This page is created on-demand when quotation mode is enabled
  * in settings, and removed when quotation mode is disabled.
  * The QuoteRequestBlock handles the full quote submission flow.
  */
 export function createQuoteRequestTemplate(): StudioPageData {
   resetIdCounter();
-  const page = createEmptyPage('Request a Quote');
+  const page = createEmptyPage("Request a Quote");
 
   // Header Section
   const headerSection = createSection(page, {
-    padding: '32px 24px',
-    backgroundColor: '#f9fafb',
+    padding: "32px 24px",
   });
 
   const headerContainer = createContainer(page, headerSection, {
-    alignItems: 'center',
-    gap: '16px',
+    alignItems: "center",
+    gap: "16px",
   });
 
-  createHeading(page, headerContainer, 'Request a Quote', 1);
+  createHeading(page, headerContainer, "Request a Quote", 1);
 
   // Quote Form Section
   const formSection = createSection(page, {
-    padding: '32px 24px',
+    padding: "32px 24px",
   });
 
   const formContainer = createContainer(page, formSection, {
-    gap: '24px',
+    gap: "24px",
   });
 
   addBreadcrumb(page, formContainer, { showHome: true });
 
-  addComponent(page, {
-    type: 'EcommerceQuoteRequest',
-    props: {
-      showNotes: true,
-      requirePhone: false,
+  addComponent(
+    page,
+    {
+      type: "EcommerceQuoteRequest",
+      props: {
+        showNotes: true,
+        requirePhone: false,
+      },
     },
-  }, formContainer);
+    formContainer,
+  );
 
   return page;
 }
@@ -475,14 +548,15 @@ export function createQuoteRequestTemplate(): StudioPageData {
  * Quote request page definition
  */
 export const quotePageDefinition: PageDefinition = {
-  slug: 'quotes',
-  title: 'Request a Quote',
-  metaTitle: 'Request a Quote',
-  metaDescription: 'Submit a quote request for our products and services. We will get back to you with competitive pricing.',
-  status: 'published',
+  slug: "quotes",
+  title: "Request a Quote",
+  metaTitle: "Request a Quote",
+  metaDescription:
+    "Submit a quote request for our products and services. We will get back to you with competitive pricing.",
+  status: "published",
   content: createQuoteRequestTemplate(),
   moduleCreated: true,
-  moduleId: 'ecommerce',
+  moduleId: "ecommerce",
 };
 
 // ============================================================================

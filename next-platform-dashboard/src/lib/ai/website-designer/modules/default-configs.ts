@@ -24,7 +24,7 @@ import type {
  */
 export function getDefaultModuleConfig(
   module: ModuleType,
-  features?: string[]
+  features?: string[],
 ): ModuleConfig {
   switch (module) {
     case "ecommerce":
@@ -64,8 +64,18 @@ function getDefaultEcommerceConfig(features?: string[]): EcommerceConfig {
           name: "Domestic (Zambia)",
           countries: ["ZM"],
           methods: [
-            { id: "standard", name: "Standard Delivery", type: "flat", price: 50 },
-            { id: "express", name: "Express Delivery", type: "flat", price: 100 },
+            {
+              id: "standard",
+              name: "Standard Delivery",
+              type: "flat",
+              price: 50,
+            },
+            {
+              id: "express",
+              name: "Express Delivery",
+              type: "flat",
+              price: 100,
+            },
           ],
         },
       ],
@@ -75,7 +85,7 @@ function getDefaultEcommerceConfig(features?: string[]): EcommerceConfig {
     },
     components: [
       {
-        componentType: "ProductGrid",
+        componentType: "EcommerceProductGrid",
         placement: "page",
         page: "/shop",
         props: { columns: 3, showFilters: true },
@@ -98,19 +108,19 @@ function getDefaultEcommerceConfig(features?: string[]): EcommerceConfig {
         name: "Shop",
         slug: "/shop",
         template: "shop",
-        components: ["ProductGrid", "ProductFilters", "Pagination"],
+        components: ["EcommerceProductGrid", "ProductFilters", "Pagination"],
       },
       {
         name: "Cart",
         slug: "/cart",
         template: "cart",
-        components: ["CartItems", "CartSummary", "CartActions"],
+        components: ["EcommerceCartPage", "CartSummary", "CartActions"],
       },
       {
         name: "Checkout",
         slug: "/checkout",
         template: "checkout",
-        components: ["CheckoutForm", "OrderSummary", "PaymentMethods"],
+        components: ["EcommerceCheckoutPage", "OrderSummary", "PaymentMethods"],
       },
     ],
     integrations: [{ type: "stripe", config: {} }],
@@ -157,7 +167,11 @@ function getDefaultBookingConfig(features?: string[]): BookingConfig {
         name: "Book Now",
         slug: "/book",
         template: "booking",
-        components: ["BookingCalendar", "BookingServiceSelector", "BookingForm"],
+        components: [
+          "BookingCalendar",
+          "BookingServiceSelector",
+          "BookingForm",
+        ],
       },
     ],
     integrations: [],
@@ -189,7 +203,10 @@ function getDefaultCRMConfig(features?: string[]): CRMConfig {
         componentType: "ContactForm",
         placement: "page",
         page: "/contact",
-        props: { captureAsLead: true, fields: ["name", "email", "phone", "message"] },
+        props: {
+          captureAsLead: true,
+          fields: ["name", "email", "phone", "message"],
+        },
       },
       {
         componentType: "Newsletter",
@@ -197,7 +214,8 @@ function getDefaultCRMConfig(features?: string[]): CRMConfig {
         position: "footer",
         props: {
           title: "Stay Updated",
-          description: "Subscribe to our newsletter for updates and special offers.",
+          description:
+            "Subscribe to our newsletter for updates and special offers.",
         },
       },
     ],

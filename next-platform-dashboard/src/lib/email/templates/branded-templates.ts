@@ -870,9 +870,44 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
   back_in_stock_customer,
   abandoned_cart_customer,
   quote_sent_customer,
+  quote_request_customer: {
+    subject: (data) =>
+      `Your Quote Request ${data.quoteNumber} Has Been Received`,
+    html: (data, b) =>
+      baseEmailTemplate(
+        b,
+        `<h1 style="${EMAIL_STYLES.heading}">Quote Request Received</h1>
+        <p style="${EMAIL_STYLES.text}">Hi ${data.customerName || "there"},</p>
+        <p style="${EMAIL_STYLES.text}">Thank you for submitting a quote request to ${b.agency_name}. We&rsquo;ve received it and will review it shortly.</p>
+        ${emailInfoBox([
+          { label: "Quote", value: String(data.quoteNumber) },
+          { label: "Items", value: String(data.itemCount) },
+        ])}
+        <p style="${EMAIL_STYLES.muted}">We&rsquo;ll be in touch once your quote is ready.</p>`,
+        `Quote request ${data.quoteNumber} received`,
+      ),
+    text: (data, b) =>
+      `Quote Request Received\n\nThank you for your quote request to ${b.agency_name}.\n\nQuote: ${data.quoteNumber}\nItems: ${data.itemCount}\n\nWe'll review it and get back to you shortly.`,
+  },
   quote_reminder_customer,
   quote_request_owner,
   quote_accepted_owner,
+  quote_accepted_customer: {
+    subject: (data) =>
+      `Your Quote ${data.quoteNumber} Has Been Confirmed`,
+    html: (data, b) =>
+      baseEmailTemplate(
+        b,
+        `<h1 style="${EMAIL_STYLES.heading}">Quote Confirmed</h1>
+        <p style="${EMAIL_STYLES.text}">Hi ${data.customerName || "there"},</p>
+        <p style="${EMAIL_STYLES.text}">Your acceptance of quote <strong>${data.quoteNumber}</strong> has been confirmed by ${b.agency_name}.</p>
+        ${data.total ? emailInfoBox([{ label: "Total", value: String(data.total) }]) : ""}
+        <p style="${EMAIL_STYLES.muted}">Thank you for your business!</p>`,
+        `Quote ${data.quoteNumber} confirmed`,
+      ),
+    text: (data, b) =>
+      `Quote Confirmed\n\nYour acceptance of quote ${data.quoteNumber} has been confirmed by ${b.agency_name}.${data.total ? `\nTotal: ${data.total}` : ""}\n\nThank you for your business!`,
+  },
   quote_rejected_owner,
   form_submission_owner,
   domain_expiring,

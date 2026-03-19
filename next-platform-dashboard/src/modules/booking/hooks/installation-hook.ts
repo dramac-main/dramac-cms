@@ -11,22 +11,25 @@ import type {
   ModuleInstallationHook,
   InstallHookResult,
   UninstallHookResult,
-} from '@/lib/modules/hooks/types';
-import { createBookingPages, deleteBookingPages } from '../actions/auto-setup-actions';
+} from "@/lib/modules/hooks/types";
+import {
+  createBookingPages,
+  deleteBookingPages,
+} from "../actions/auto-setup-actions";
 
 // ============================================================================
 // BOOKING INSTALLATION HOOK
 // ============================================================================
 
 export const bookingInstallationHook: ModuleInstallationHook = {
-  moduleId: 'booking',
+  moduleId: "booking",
 
   /**
    * Handle module installation — create /book page
    */
   async onInstall(
     siteId: string,
-    settings?: Record<string, unknown>
+    settings?: Record<string, unknown>,
   ): Promise<InstallHookResult> {
     console.log(`[BookingHook] Installing booking on site: ${siteId}`);
 
@@ -38,9 +41,11 @@ export const bookingInstallationHook: ModuleInstallationHook = {
       errors: [],
     };
 
-    const hookOptions = settings?.__hookOptions as {
-      skipPageCreation?: boolean;
-    } | undefined;
+    const hookOptions = settings?.__hookOptions as
+      | {
+          skipPageCreation?: boolean;
+        }
+      | undefined;
 
     // Create the /book page
     if (!hookOptions?.skipPageCreation) {
@@ -48,14 +53,18 @@ export const bookingInstallationHook: ModuleInstallationHook = {
         const pagesResult = await createBookingPages(siteId);
         if (pagesResult.success) {
           result.pagesCreated = pagesResult.pages.map((p) => p.slug);
-          console.log(`[BookingHook] Created ${result.pagesCreated.length} pages`);
+          console.log(
+            `[BookingHook] Created ${result.pagesCreated.length} pages`,
+          );
         } else {
-          result.errors?.push(...(pagesResult.errors || ['Failed to create pages']));
+          result.errors?.push(
+            ...(pagesResult.errors || ["Failed to create pages"]),
+          );
         }
       } catch (error) {
-        console.error('[BookingHook] Page creation failed:', error);
+        console.error("[BookingHook] Page creation failed:", error);
         result.errors?.push(
-          error instanceof Error ? error.message : 'Page creation failed'
+          error instanceof Error ? error.message : "Page creation failed",
         );
       }
     }
@@ -63,7 +72,11 @@ export const bookingInstallationHook: ModuleInstallationHook = {
     // Navigation items are injected at runtime by smart-navigation.ts
     // (BOOKING_NAV_ITEMS, BOOKING_UTILITY_ITEMS, BOOKING_FOOTER_ITEMS)
     // No need to write them to settings — runtime detection handles it.
-    result.navItemsAdded = ['Book Now (main)', 'Book Now (utility)', 'Book Appointment (footer)'];
+    result.navItemsAdded = [
+      "Book Now (main)",
+      "Book Now (utility)",
+      "Book Appointment (footer)",
+    ];
 
     result.success = (result.errors?.length || 0) === 0;
     return result;
@@ -86,16 +99,20 @@ export const bookingInstallationHook: ModuleInstallationHook = {
     try {
       const deleted = await deleteBookingPages(siteId);
       if (deleted) {
-        result.pagesRemoved = ['book'];
+        result.pagesRemoved = ["book"];
       }
     } catch (error) {
-      console.error('[BookingHook] Page deletion failed:', error);
+      console.error("[BookingHook] Page deletion failed:", error);
       result.errors?.push(
-        error instanceof Error ? error.message : 'Page deletion failed'
+        error instanceof Error ? error.message : "Page deletion failed",
       );
     }
 
-    result.navItemsRemoved = ['Book Now (main)', 'Book Now (utility)', 'Book Appointment (footer)'];
+    result.navItemsRemoved = [
+      "Book Now (main)",
+      "Book Now (utility)",
+      "Book Appointment (footer)",
+    ];
     result.success = (result.errors?.length || 0) === 0;
     return result;
   },

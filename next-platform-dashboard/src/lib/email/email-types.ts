@@ -39,9 +39,11 @@ export type EmailType =
   | "abandoned_cart_customer"
   // Quotes
   | "quote_sent_customer"
+  | "quote_request_customer"
   | "quote_reminder_customer"
   | "quote_request_owner"
   | "quote_accepted_owner"
+  | "quote_accepted_customer"
   | "quote_rejected_owner"
   // Forms
   | "form_submission_owner"

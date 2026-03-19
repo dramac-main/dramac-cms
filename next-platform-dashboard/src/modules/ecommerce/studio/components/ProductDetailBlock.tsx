@@ -1,52 +1,64 @@
 /**
  * ProductDetailBlock - Full product detail page component
- * 
+ *
  * Phase ECOM-51: Dynamic Route Components
- * 
+ *
  * Renders a complete product detail page with image gallery,
  * pricing, variants, quantity selector, add to cart, and reviews.
  * Reads the product slug from the URL and fetches real data.
  */
-'use client'
+"use client";
 
-import React, { useState, useMemo } from 'react'
-import Image from 'next/image'
-import { cn } from '@/lib/utils'
+import React, { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { cn } from "@/lib/utils";
 import {
-  ShoppingCart, Heart, Share2, Minus, Plus,
-  Star, StarHalf, ChevronLeft, ChevronRight,
-  Loader2, AlertCircle, Package, Truck, Shield,
-  Check
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useStorefrontProduct } from '../../hooks/useStorefrontProduct'
-import { useStorefrontCart } from '../../hooks/useStorefrontCart'
-import { useStorefront } from '../../context/storefront-context'
-import type { ComponentDefinition } from '@/types/studio'
+  ShoppingCart,
+  Heart,
+  Share2,
+  Minus,
+  Plus,
+  Star,
+  StarHalf,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  AlertCircle,
+  Package,
+  Truck,
+  Shield,
+  Check,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useStorefrontProduct } from "../../hooks/useStorefrontProduct";
+import { useStorefrontCart } from "../../hooks/useStorefrontCart";
+import { useStorefront } from "../../context/storefront-context";
+import type { ComponentDefinition } from "@/types/studio";
 
 // =============================================================================
 // TYPES
 // =============================================================================
 
 interface ProductDetailBlockProps {
-  siteId?: string
-  _siteId?: string | null
-  productSlug?: string
-  showGallery?: boolean
-  showVariants?: boolean
-  showQuantity?: boolean
-  showAddToCart?: boolean
-  showWishlist?: boolean
-  showShare?: boolean
-  showDescription?: boolean
-  showSpecifications?: boolean
-  showReviews?: boolean
-  galleryPosition?: 'left' | 'right'
-  stickyAddToCart?: boolean
-  className?: string
+  siteId?: string;
+  _siteId?: string | null;
+  productSlug?: string;
+  showGallery?: boolean;
+  showVariants?: boolean;
+  showQuantity?: boolean;
+  showAddToCart?: boolean;
+  showWishlist?: boolean;
+  showShare?: boolean;
+  showDescription?: boolean;
+  showSpecifications?: boolean;
+  showReviews?: boolean;
+  galleryPosition?: "left" | "right";
+  stickyAddToCart?: boolean;
+  className?: string;
 }
 
 // =============================================================================
@@ -54,29 +66,41 @@ interface ProductDetailBlockProps {
 // =============================================================================
 
 function getSlugFromUrl(): string {
-  if (typeof window === 'undefined') return ''
-  const parts = window.location.pathname.split('/')
+  if (typeof window === "undefined") return "";
+  const parts = window.location.pathname.split("/");
   // URL: /products/[slug] → last segment
-  return parts[parts.length - 1] || ''
+  return parts[parts.length - 1] || "";
 }
 
 function RatingStars({ rating, count }: { rating: number; count: number }) {
-  const fullStars = Math.floor(rating)
-  const hasHalf = rating - fullStars >= 0.5
+  const fullStars = Math.floor(rating);
+  const hasHalf = rating - fullStars >= 0.5;
   return (
     <div className="flex items-center gap-2">
       <div className="flex items-center">
         {Array.from({ length: 5 }).map((_, i) => {
-          if (i < fullStars) return <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-          if (i === fullStars && hasHalf) return <StarHalf key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-          return <Star key={i} className="h-4 w-4 text-gray-300" />
+          if (i < fullStars)
+            return (
+              <Star
+                key={i}
+                className="h-4 w-4 fill-yellow-400 text-yellow-400"
+              />
+            );
+          if (i === fullStars && hasHalf)
+            return (
+              <StarHalf
+                key={i}
+                className="h-4 w-4 fill-yellow-400 text-yellow-400"
+              />
+            );
+          return <Star key={i} className="h-4 w-4 text-gray-300" />;
         })}
       </div>
       <span className="text-sm text-muted-foreground">
-        {rating.toFixed(1)} ({count} {count === 1 ? 'review' : 'reviews'})
+        {rating.toFixed(1)} ({count} {count === 1 ? "review" : "reviews"})
       </span>
     </div>
-  )
+  );
 }
 
 // =============================================================================
@@ -96,88 +120,105 @@ export function ProductDetailBlock({
   showDescription = true,
   showSpecifications = true,
   showReviews = true,
-  galleryPosition = 'left',
+  galleryPosition = "left",
   stickyAddToCart = false,
   className,
 }: ProductDetailBlockProps) {
-  const storefront = useStorefront()
-  const effectiveSiteId = _siteId || siteId || storefront?.siteId || ''
-  const slug = productSlug || getSlugFromUrl()
+  const storefront = useStorefront();
+  const effectiveSiteId = _siteId || siteId || storefront?.siteId || "";
+  const slug = productSlug || getSlugFromUrl();
 
-  const {
-    product,
-    variants,
-    options,
-    relatedProducts,
-    isLoading,
-    error,
-  } = useStorefrontProduct(effectiveSiteId, slug)
+  const { product, variants, options, relatedProducts, isLoading, error } =
+    useStorefrontProduct(effectiveSiteId, slug);
 
-  const { addItem, isUpdating: isAddingToCart } = useStorefrontCart(effectiveSiteId)
+  const { addItem, isUpdating: isAddingToCart } =
+    useStorefrontCart(effectiveSiteId);
 
   // Quote mode
-  const quotationModeEnabled = storefront?.quotationModeEnabled ?? false
-  const quotationButtonLabel = storefront?.quotationButtonLabel || 'Request a Quote'
-  const quotationHidePrices = storefront?.quotationHidePrices ?? false
-  const quotationRedirectUrl = storefront?.quotationRedirectUrl || '/quotes'
+  const quotationModeEnabled = storefront?.quotationModeEnabled ?? false;
+  const quotationButtonLabel =
+    storefront?.quotationButtonLabel || "Request a Quote";
+  const quotationHidePrices = storefront?.quotationHidePrices ?? false;
+  const quotationRedirectUrl = storefront?.quotationRedirectUrl || "/quotes";
 
   // Gallery state
-  const [selectedImage, setSelectedImage] = useState(0)
-  const [quantity, setQuantity] = useState(1)
-  const [selectedVariant, setSelectedVariant] = useState<string | null>(null)
-  const [isWishlisted, setIsWishlisted] = useState(false)
-  const [linkCopied, setLinkCopied] = useState(false)
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [quantity, setQuantity] = useState(1);
+  const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   // Computed values
-  const images = product?.images?.length ? product.images : ['/placeholder-product.png']
-  const hasDiscount = product?.compare_at_price && product.compare_at_price > product.base_price
+  const images = product?.images?.length
+    ? product.images
+    : ["/placeholder-product.png"];
+  const hasDiscount =
+    product?.compare_at_price && product.compare_at_price > product.base_price;
   const discountPercent = hasDiscount
-    ? Math.round(((product!.compare_at_price! - product!.base_price) / product!.compare_at_price!) * 100)
-    : 0
-  const isInStock = product ? (product.track_inventory ? product.quantity > 0 : true) : false
-  const isLowStock = product?.track_inventory && product.quantity > 0 && product.quantity <= (product.low_stock_threshold || 10)
+    ? Math.round(
+        ((product!.compare_at_price! - product!.base_price) /
+          product!.compare_at_price!) *
+          100,
+      )
+    : 0;
+  const isInStock = product
+    ? product.track_inventory
+      ? product.quantity > 0
+      : true
+    : false;
+  const isLowStock =
+    product?.track_inventory &&
+    product.quantity > 0 &&
+    product.quantity <= (product.low_stock_threshold || 10);
+
+  const router = useRouter();
 
   const handleAddToCart = async () => {
-    if (!product) return
+    if (!product) return;
     if (quotationModeEnabled) {
       // Redirect to quote page
-      window.location.href = `${quotationRedirectUrl}?product=${product.id}`
-      return
+      router.push(`${quotationRedirectUrl}?product=${product.id}`);
+      return;
     }
-    await addItem(product.id, selectedVariant || null, quantity)
-  }
+    await addItem(product.id, selectedVariant || null, quantity);
+  };
 
   const handleShare = () => {
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(window.location.href)
-      setLinkCopied(true)
-      setTimeout(() => setLinkCopied(false), 2000)
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.href);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
     }
-  }
+  };
 
   // Loading state
   if (isLoading) {
     return (
-      <div className={cn('py-16', className)}>
+      <div className={cn("py-16", className)}>
         <div className="container max-w-6xl mx-auto px-4">
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
-            <span className="ml-3 text-muted-foreground">Loading product...</span>
+            <span className="ml-3 text-muted-foreground">
+              Loading product...
+            </span>
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // Error / not found
   if (error || !product) {
     return (
-      <div className={cn('py-16', className)}>
+      <div className={cn("py-16", className)}>
         <div className="container max-w-6xl mx-auto px-4">
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
             <h2 className="text-xl font-semibold mb-2">Product Not Found</h2>
-            <p className="text-muted-foreground mb-6">{error || 'This product may have been removed or is no longer available.'}</p>
+            <p className="text-muted-foreground mb-6">
+              {error ||
+                "This product may have been removed or is no longer available."}
+            </p>
             <Button variant="outline" onClick={() => window.history.back()}>
               <ChevronLeft className="h-4 w-4 mr-2" />
               Go Back
@@ -185,11 +226,12 @@ export function ProductDetailBlock({
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // Main render
-  const isSupabaseImage = (url: string) => url?.includes('.supabase.co/') || url?.includes('unsplash.com');
+  const isSupabaseImage = (url: string) =>
+    url?.includes(".supabase.co/") || url?.includes("unsplash.com");
 
   const galleryContent = showGallery && (
     <div className="space-y-4">
@@ -219,21 +261,25 @@ export function ProductDetailBlock({
         )}
         {!isInStock && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <Badge variant="secondary" className="text-lg px-4 py-2">Out of Stock</Badge>
+            <Badge variant="secondary" className="text-lg px-4 py-2">
+              Out of Stock
+            </Badge>
           </div>
         )}
         {/* Gallery nav arrows */}
         {images.length > 1 && (
           <>
             <button
-              onClick={() => setSelectedImage(i => (i - 1 + images.length) % images.length)}
+              onClick={() =>
+                setSelectedImage((i) => (i - 1 + images.length) % images.length)
+              }
               className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-3 min-w-[44px] min-h-[44px] flex items-center justify-center shadow-lg transition-all hover:scale-110"
               aria-label="Previous image"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
             <button
-              onClick={() => setSelectedImage(i => (i + 1) % images.length)}
+              onClick={() => setSelectedImage((i) => (i + 1) % images.length)}
               className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-3 min-w-[44px] min-h-[44px] flex items-center justify-center shadow-lg transition-all hover:scale-110"
               aria-label="Next image"
             >
@@ -256,31 +302,44 @@ export function ProductDetailBlock({
               key={i}
               onClick={() => setSelectedImage(i)}
               className={cn(
-                'relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all',
-                selectedImage === i 
-                  ? 'border-primary ring-2 ring-primary/20' 
-                  : 'border-transparent hover:border-gray-300 opacity-70 hover:opacity-100'
+                "relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all",
+                selectedImage === i
+                  ? "border-primary ring-2 ring-primary/20"
+                  : "border-transparent hover:border-gray-300 opacity-70 hover:opacity-100",
               )}
             >
               {isSupabaseImage(img) ? (
-                <Image src={img} alt="" fill sizes="80px" className="object-cover" />
+                <Image
+                  src={img}
+                  alt=""
+                  fill
+                  sizes="80px"
+                  className="object-cover"
+                />
               ) : (
-                <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
+                <img
+                  src={img}
+                  alt=""
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
               )}
             </button>
           ))}
         </div>
       )}
     </div>
-  )
+  );
 
   const infoContent = (
-    <div className={cn('space-y-6', stickyAddToCart && 'lg:sticky lg:top-24')}>
+    <div className={cn("space-y-6", stickyAddToCart && "lg:sticky lg:top-24")}>
       {/* Product name */}
       <div>
         <h1 className="text-2xl md:text-3xl font-bold">{product.name}</h1>
         {product.sku && (
-          <p className="text-sm text-muted-foreground mt-1">SKU: {product.sku}</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            SKU: {product.sku}
+          </p>
         )}
       </div>
 
@@ -320,13 +379,17 @@ export function ProductDetailBlock({
           <>
             <Check className="h-4 w-4 text-green-600" />
             <span className="text-sm text-green-600 font-medium">
-              {isLowStock ? `Only ${product.quantity} left in stock` : 'In Stock'}
+              {isLowStock
+                ? `Only ${product.quantity} left in stock`
+                : "In Stock"}
             </span>
           </>
         ) : (
           <>
             <AlertCircle className="h-4 w-4 text-red-500" />
-            <span className="text-sm text-red-500 font-medium">Out of Stock</span>
+            <span className="text-sm text-red-500 font-medium">
+              Out of Stock
+            </span>
           </>
         )}
       </div>
@@ -341,13 +404,13 @@ export function ProductDetailBlock({
                 key={v.id}
                 onClick={() => setSelectedVariant(v.id)}
                 className={cn(
-                  'px-4 py-2.5 min-h-[44px] border rounded-md text-sm transition-colors',
+                  "px-4 py-2.5 min-h-[44px] border rounded-md text-sm transition-colors",
                   selectedVariant === v.id
-                    ? 'border-primary bg-primary/5 text-primary'
-                    : 'border-gray-200 hover:border-gray-300'
+                    ? "border-primary bg-primary/5 text-primary"
+                    : "border-gray-200 hover:border-gray-300",
                 )}
               >
-                {Object.values(v.options || {}).join(' / ') || v.sku || v.id}
+                {Object.values(v.options || {}).join(" / ") || v.sku || v.id}
               </button>
             ))}
           </div>
@@ -361,7 +424,7 @@ export function ProductDetailBlock({
         {showQuantity && (
           <div className="flex items-center border rounded-md">
             <button
-              onClick={() => setQuantity(q => Math.max(1, q - 1))}
+              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
               className="px-4 py-3 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-gray-50 transition-colors"
               disabled={quantity <= 1}
               aria-label="Decrease quantity"
@@ -372,7 +435,7 @@ export function ProductDetailBlock({
               {quantity}
             </span>
             <button
-              onClick={() => setQuantity(q => q + 1)}
+              onClick={() => setQuantity((q) => q + 1)}
               className="px-4 py-3 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-gray-50 transition-colors"
               disabled={product.track_inventory && quantity >= product.quantity}
               aria-label="Increase quantity"
@@ -394,7 +457,7 @@ export function ProductDetailBlock({
             ) : (
               <ShoppingCart className="h-5 w-5 mr-2" />
             )}
-            {quotationModeEnabled ? quotationButtonLabel : 'Add to Cart'}
+            {quotationModeEnabled ? quotationButtonLabel : "Add to Cart"}
           </Button>
         )}
 
@@ -404,13 +467,22 @@ export function ProductDetailBlock({
             size="lg"
             onClick={() => setIsWishlisted(!isWishlisted)}
           >
-            <Heart className={cn('h-5 w-5', isWishlisted && 'fill-red-500 text-red-500')} />
+            <Heart
+              className={cn(
+                "h-5 w-5",
+                isWishlisted && "fill-red-500 text-red-500",
+              )}
+            />
           </Button>
         )}
 
         {showShare && (
           <Button variant="outline" size="lg" onClick={handleShare}>
-            {linkCopied ? <Check className="h-5 w-5" /> : <Share2 className="h-5 w-5" />}
+            {linkCopied ? (
+              <Check className="h-5 w-5" />
+            ) : (
+              <Share2 className="h-5 w-5" />
+            )}
           </Button>
         )}
       </div>
@@ -431,16 +503,19 @@ export function ProductDetailBlock({
         </div>
       </div>
     </div>
-  )
+  );
 
   return (
-    <div className={cn('py-8 md:py-12', className)}>
+    <div className={cn("py-8 md:py-12", className)}>
       <div className="container max-w-6xl mx-auto px-4">
         {/* Product Grid — gallery + info */}
-        <div className={cn(
-          'grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12',
-          galleryPosition === 'right' && 'lg:[direction:rtl] [&>*]:lg:[direction:ltr]'
-        )}>
+        <div
+          className={cn(
+            "grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12",
+            galleryPosition === "right" &&
+              "lg:[direction:rtl] [&>*]:lg:[direction:ltr]",
+          )}
+        >
           {galleryContent}
           {infoContent}
         </div>
@@ -450,13 +525,17 @@ export function ProductDetailBlock({
           <div className="mt-12">
             <Tabs defaultValue="description">
               <TabsList>
-                {showDescription && <TabsTrigger value="description">Description</TabsTrigger>}
-                {showSpecifications && <TabsTrigger value="specifications">Details</TabsTrigger>}
+                {showDescription && (
+                  <TabsTrigger value="description">Description</TabsTrigger>
+                )}
+                {showSpecifications && (
+                  <TabsTrigger value="specifications">Details</TabsTrigger>
+                )}
               </TabsList>
               {showDescription && (
                 <TabsContent value="description" className="mt-6">
                   <div className="prose max-w-none">
-                    {product.description || 'No description available.'}
+                    {product.description || "No description available."}
                   </div>
                 </TabsContent>
               )}
@@ -472,12 +551,16 @@ export function ProductDetailBlock({
                     {product.weight && (
                       <div className="flex justify-between py-2 border-b">
                         <span className="text-muted-foreground">Weight</span>
-                        <span className="font-medium">{product.weight} {product.weight_unit}</span>
+                        <span className="font-medium">
+                          {product.weight} {product.weight_unit}
+                        </span>
                       </div>
                     )}
                     <div className="flex justify-between py-2 border-b">
                       <span className="text-muted-foreground">Category</span>
-                      <span className="font-medium">{(product as any).category_name || 'Uncategorized'}</span>
+                      <span className="font-medium">
+                        {(product as any).category_name || "Uncategorized"}
+                      </span>
                     </div>
                   </div>
                 </TabsContent>
@@ -487,19 +570,20 @@ export function ProductDetailBlock({
         )}
       </div>
     </div>
-  )
+  );
 }
 
 // =============================================================================
 // DEFINITION
 // =============================================================================
 
-export const productDetailDefinition: Omit<ComponentDefinition, 'render'> = {
-  type: 'ProductDetailBlock',
-  label: 'Product Detail',
-  description: 'Full product detail page with gallery, pricing, variants, and add to cart',
-  category: 'ecommerce',
-  icon: 'Package',
+export const productDetailDefinition: Omit<ComponentDefinition, "render"> = {
+  type: "ProductDetailBlock",
+  label: "Product Detail",
+  description:
+    "Full product detail page with gallery, pricing, variants, and add to cart",
+  category: "ecommerce",
+  icon: "Package",
   defaultProps: {
     showGallery: true,
     showVariants: true,
@@ -510,27 +594,67 @@ export const productDetailDefinition: Omit<ComponentDefinition, 'render'> = {
     showDescription: true,
     showSpecifications: true,
     showReviews: true,
-    galleryPosition: 'left',
+    galleryPosition: "left",
     stickyAddToCart: true,
   },
   fields: {
-    showGallery: { type: 'toggle', label: 'Show Gallery', description: 'Display product image gallery' },
-    showVariants: { type: 'toggle', label: 'Show Variants', description: 'Display product variant selector' },
-    showQuantity: { type: 'toggle', label: 'Show Quantity', description: 'Display quantity selector' },
-    showAddToCart: { type: 'toggle', label: 'Show Add to Cart', description: 'Display add to cart button' },
-    showWishlist: { type: 'toggle', label: 'Show Wishlist', description: 'Display wishlist button' },
-    showShare: { type: 'toggle', label: 'Show Share', description: 'Display share button' },
-    showDescription: { type: 'toggle', label: 'Show Description', description: 'Display product description tab' },
-    showSpecifications: { type: 'toggle', label: 'Show Details', description: 'Display product details tab' },
-    showReviews: { type: 'toggle', label: 'Show Reviews', description: 'Display product reviews' },
+    showGallery: {
+      type: "toggle",
+      label: "Show Gallery",
+      description: "Display product image gallery",
+    },
+    showVariants: {
+      type: "toggle",
+      label: "Show Variants",
+      description: "Display product variant selector",
+    },
+    showQuantity: {
+      type: "toggle",
+      label: "Show Quantity",
+      description: "Display quantity selector",
+    },
+    showAddToCart: {
+      type: "toggle",
+      label: "Show Add to Cart",
+      description: "Display add to cart button",
+    },
+    showWishlist: {
+      type: "toggle",
+      label: "Show Wishlist",
+      description: "Display wishlist button",
+    },
+    showShare: {
+      type: "toggle",
+      label: "Show Share",
+      description: "Display share button",
+    },
+    showDescription: {
+      type: "toggle",
+      label: "Show Description",
+      description: "Display product description tab",
+    },
+    showSpecifications: {
+      type: "toggle",
+      label: "Show Details",
+      description: "Display product details tab",
+    },
+    showReviews: {
+      type: "toggle",
+      label: "Show Reviews",
+      description: "Display product reviews",
+    },
     galleryPosition: {
-      type: 'select',
-      label: 'Gallery Position',
+      type: "select",
+      label: "Gallery Position",
       options: [
-        { label: 'Left', value: 'left' },
-        { label: 'Right', value: 'right' },
+        { label: "Left", value: "left" },
+        { label: "Right", value: "right" },
       ],
     },
-    stickyAddToCart: { type: 'toggle', label: 'Sticky Info Panel', description: 'Make product info sticky on scroll' },
+    stickyAddToCart: {
+      type: "toggle",
+      label: "Sticky Info Panel",
+      description: "Make product info sticky on scroll",
+    },
   },
-}
+};

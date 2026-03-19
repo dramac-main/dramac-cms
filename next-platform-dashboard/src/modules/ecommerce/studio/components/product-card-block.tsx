@@ -1,6 +1,6 @@
 /**
  * E-Commerce Product Card - Studio Block (Enhanced with Real Data)
- * 
+ *
  * Displays a product from the store catalog with real-time data fetching.
  * Supports card, horizontal, and minimal layout variants.
  * Integrates with cart and wishlist functionality.
@@ -13,7 +13,15 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { ComponentDefinition, ResponsiveValue } from "@/types/studio";
 import type { Product } from "../../types/ecommerce-types";
-import { ShoppingBag, Star, Heart, Eye, Loader2, AlertCircle, FileText } from "lucide-react";
+import {
+  ShoppingBag,
+  Star,
+  Heart,
+  Eye,
+  Loader2,
+  AlertCircle,
+  FileText,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useStorefrontProduct } from "../../hooks/useStorefrontProduct";
@@ -33,7 +41,7 @@ interface ProductCardProps {
   productId: string | null;
   siteId?: string;
   _siteId?: string | null; // Studio canvas passes this
-  
+
   // Display options
   showPrice: boolean;
   showRating: boolean;
@@ -43,18 +51,18 @@ interface ProductCardProps {
   showStockBadge: boolean;
   showSaleBadge: boolean;
   buttonText: string;
-  
+
   // Layout
   variant: "card" | "horizontal" | "minimal" | "compact";
   imageAspect: "square" | "portrait" | "landscape";
-  
+
   // Hover effects
   hoverEffect: "none" | "zoom" | "lift" | "shadow";
-  
+
   // Responsive
   padding: ResponsiveValue<string>;
   borderRadius: ResponsiveValue<string>;
-  
+
   // Events (for quick view modal)
   onQuickView?: (productId: string) => void;
   onProductClick?: (productId: string) => void;
@@ -71,7 +79,7 @@ interface DemoProduct {
   reviewCount?: number;
   quantity: number;
   track_inventory: boolean;
-  status: 'active' | 'draft' | 'archived';
+  status: "active" | "draft" | "archived";
 }
 
 const DEMO_PRODUCT: DemoProduct = {
@@ -117,95 +125,129 @@ export function ProductCardBlock({
   // Use _siteId from Studio canvas, then siteId prop, then context
   const effectiveSiteId = _siteId || siteId || storefront?.siteId;
   // Quotation mode
-  const quotationModeEnabled = storefront?.quotationModeEnabled ?? false
-  const quotationButtonLabel = storefront?.quotationButtonLabel || 'Request a Quote'
-  const quotationHidePrices = storefront?.quotationHidePrices ?? false
+  const quotationModeEnabled = storefront?.quotationModeEnabled ?? false;
+  const quotationButtonLabel =
+    storefront?.quotationButtonLabel || "Request a Quote";
+  const quotationHidePrices = storefront?.quotationHidePrices ?? false;
   // Effective price visibility: hide if prop says so OR if quotation mode hides prices
-  const effectiveShowPrice = showPrice && !quotationHidePrices
-  
+  const effectiveShowPrice = showPrice && !quotationHidePrices;
+
   // Hooks for real data
-  const { product: fetchedProduct, isLoading, error } = useStorefrontProduct(
+  const {
+    product: fetchedProduct,
+    isLoading,
+    error,
+  } = useStorefrontProduct(effectiveSiteId || "", productId || "");
+  const { addItem, isUpdating: cartLoading } = useStorefrontCart(
     effectiveSiteId || "",
-    productId || ""
   );
-  const { addItem, isUpdating: cartLoading } = useStorefrontCart(effectiveSiteId || "");
-  const { isInWishlist, addItem: addToWishlist, removeItem: removeFromWishlist } = useStorefrontWishlist(effectiveSiteId || "");
-  
+  const {
+    isInWishlist,
+    addItem: addToWishlist,
+    removeItem: removeFromWishlist,
+  } = useStorefrontWishlist(effectiveSiteId || "");
+
   // Local state
   const [addingToCart, setAddingToCart] = useState(false);
   const [imageError, setImageError] = useState(false);
-  
+
   // Use fetched product or demo data - only show demo in editor when no site connected
-  const product = !effectiveSiteId ? DEMO_PRODUCT : (fetchedProduct || DEMO_PRODUCT);
+  const product = !effectiveSiteId
+    ? DEMO_PRODUCT
+    : fetchedProduct || DEMO_PRODUCT;
   const isDemo = !effectiveSiteId;
   const inWishlist = productId ? isInWishlist(productId) : false;
-  
+
   // Access product properties with fallbacks
-  const productPrice = (product as DemoProduct).base_price ?? (product as Product).base_price ?? 0;
-  const productCompareAt = (product as DemoProduct).compare_at_price ?? (product as Product).compare_at_price;
-  const productQuantity = (product as DemoProduct).quantity ?? (product as Product).quantity ?? 0;
+  const productPrice =
+    (product as DemoProduct).base_price ?? (product as Product).base_price ?? 0;
+  const productCompareAt =
+    (product as DemoProduct).compare_at_price ??
+    (product as Product).compare_at_price;
+  const productQuantity =
+    (product as DemoProduct).quantity ?? (product as Product).quantity ?? 0;
   const productImages = (product as Product).images || [];
   const productRating = (product as DemoProduct).rating;
   const productReviewCount = (product as DemoProduct).reviewCount;
-  
-  // Calculate sale percentage
-  const salePercentage = productCompareAt && productPrice < productCompareAt
-    ? Math.round(((productCompareAt - productPrice) / productCompareAt) * 100)
-    : 0;
-  
-  // Handle add to cart (or request quote in quotation mode)
-  const handleAddToCart = useCallback(async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!productId || isDemo) return;
 
-    // In quotation mode: navigate to quote request page instead of adding to cart
-    if (quotationModeEnabled) {
-      const quotesUrl = storefront?.quotationRedirectUrl || '/quotes'
-      router.push(`${quotesUrl}?product=${productId}`)
-      return
-    }
-    
-    setAddingToCart(true);
-    try {
-      const success = await addItem(productId, null, 1);
-      if (success) {
-        toast.success('Added to cart', {
-          description: product?.name ? `${product.name} added to your cart` : 'Item added to your cart',
-          duration: 3000,
-        })
-        // Dispatch custom event so other cart components can refresh
-        window.dispatchEvent(new CustomEvent('cart-updated'))
-      } else {
-        toast.error('Failed to add item to cart')
+  // Calculate sale percentage
+  const salePercentage =
+    productCompareAt && productPrice < productCompareAt
+      ? Math.round(((productCompareAt - productPrice) / productCompareAt) * 100)
+      : 0;
+
+  // Handle add to cart (or request quote in quotation mode)
+  const handleAddToCart = useCallback(
+    async (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (!productId || isDemo) return;
+
+      // In quotation mode: navigate to quote request page instead of adding to cart
+      if (quotationModeEnabled) {
+        const quotesUrl = storefront?.quotationRedirectUrl || "/quotes";
+        router.push(`${quotesUrl}?product=${productId}`);
+        return;
       }
-    } catch (err) {
-      console.error("Failed to add to cart:", err);
-      toast.error('Failed to add item to cart')
-    } finally {
-      setAddingToCart(false);
-    }
-  }, [productId, addItem, isDemo, quotationModeEnabled, storefront?.quotationRedirectUrl, router, product?.name]);
-  
+
+      setAddingToCart(true);
+      try {
+        const success = await addItem(productId, null, 1);
+        if (success) {
+          toast.success("Added to cart", {
+            description: product?.name
+              ? `${product.name} added to your cart`
+              : "Item added to your cart",
+            duration: 3000,
+          });
+          // Dispatch custom event so other cart components can refresh
+          window.dispatchEvent(new CustomEvent("cart-updated"));
+        } else {
+          toast.error("Failed to add item to cart");
+        }
+      } catch (err) {
+        console.error("Failed to add to cart:", err);
+        toast.error("Failed to add item to cart");
+      } finally {
+        setAddingToCart(false);
+      }
+    },
+    [
+      productId,
+      addItem,
+      isDemo,
+      quotationModeEnabled,
+      storefront?.quotationRedirectUrl,
+      router,
+      product?.name,
+    ],
+  );
+
   // Handle wishlist toggle
-  const handleWishlistToggle = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!productId || isDemo) return;
-    
-    if (inWishlist) {
-      removeFromWishlist(productId);
-    } else {
-      addToWishlist(productId);
-    }
-  }, [productId, inWishlist, addToWishlist, removeFromWishlist, isDemo]);
-  
+  const handleWishlistToggle = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (!productId || isDemo) return;
+
+      if (inWishlist) {
+        removeFromWishlist(productId);
+      } else {
+        addToWishlist(productId);
+      }
+    },
+    [productId, inWishlist, addToWishlist, removeFromWishlist, isDemo],
+  );
+
   // Handle quick view
-  const handleQuickView = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (productId && onQuickView) {
-      onQuickView(productId);
-    }
-  }, [productId, onQuickView]);
-  
+  const handleQuickView = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (productId && onQuickView) {
+        onQuickView(productId);
+      }
+    },
+    [productId, onQuickView],
+  );
+
   // Handle card click — navigate to product detail page
   const handleCardClick = useCallback(() => {
     if (productId && onProductClick) {
@@ -213,7 +255,7 @@ export function ProductCardBlock({
     } else if (productId && !isDemo && product) {
       // Auto-navigate to product detail page
       const slug = (product as Product).slug || productId;
-      window.location.href = `/products/${slug}`;
+      router.push(`/products/${slug}`);
     }
   }, [productId, onProductClick, product, isDemo]);
 
@@ -222,14 +264,14 @@ export function ProductCardBlock({
     portrait: "aspect-[3/4]",
     landscape: "aspect-[4/3]",
   };
-  
+
   const hoverClasses = {
     none: "",
     zoom: "transition-transform group-hover:scale-105",
     lift: "",
     shadow: "",
   };
-  
+
   const cardHoverClasses = {
     none: "",
     zoom: "",
@@ -239,15 +281,16 @@ export function ProductCardBlock({
 
   // Get responsive values
   const paddingValue = typeof padding === "object" ? padding.mobile : padding;
-  const borderRadiusValue = typeof borderRadius === "object" ? borderRadius.mobile : borderRadius;
-  
+  const borderRadiusValue =
+    typeof borderRadius === "object" ? borderRadius.mobile : borderRadius;
+
   // Primary image
   const primaryImage = productImages[0] || undefined;
 
   // Loading state
   if (isLoading && productId) {
     return (
-      <div 
+      <div
         className="bg-card border rounded-lg overflow-hidden animate-pulse"
         style={{ borderRadius: borderRadiusValue }}
       >
@@ -259,19 +302,26 @@ export function ProductCardBlock({
       </div>
     );
   }
-  
+
   // Error state
   if (error && productId) {
     return (
-      <div 
+      <div
         className="bg-card border rounded-lg overflow-hidden"
         style={{ borderRadius: borderRadiusValue }}
       >
-        <div className={cn("bg-muted flex items-center justify-center", aspectClasses[imageAspect])}>
+        <div
+          className={cn(
+            "bg-muted flex items-center justify-center",
+            aspectClasses[imageAspect],
+          )}
+        >
           <AlertCircle className="h-8 w-8 text-destructive" />
         </div>
         <div className="p-4">
-          <p className="text-sm text-muted-foreground">Failed to load product</p>
+          <p className="text-sm text-muted-foreground">
+            Failed to load product
+          </p>
         </div>
       </div>
     );
@@ -285,7 +335,9 @@ export function ProductCardBlock({
           onClick={handleWishlistToggle}
           className={cn(
             "p-2 rounded-full bg-card/90 backdrop-blur-sm shadow-sm transition-colors",
-            inWishlist ? "text-red-500" : "text-muted-foreground hover:text-red-500"
+            inWishlist
+              ? "text-red-500"
+              : "text-muted-foreground hover:text-red-500",
           )}
           title={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
         >
@@ -303,18 +355,21 @@ export function ProductCardBlock({
       )}
     </div>
   );
-  
+
   // Sale badge
-  const SaleBadge = () => showSaleBadge && salePercentage > 0 ? (
-    <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded z-10">
-      -{salePercentage}%
-    </div>
-  ) : null;
-  
+  const SaleBadge = () =>
+    showSaleBadge && salePercentage > 0 ? (
+      <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded z-10">
+        -{salePercentage}%
+      </div>
+    ) : null;
+
   // Product image — uses next/image for Supabase-hosted images, falls back to <img> for others
-  const isSupabaseImage = primaryImage?.includes('.supabase.co/') || primaryImage?.includes('unsplash.com');
-  
-  const ProductImage = ({ className }: { className?: string }) => (
+  const isSupabaseImage =
+    primaryImage?.includes(".supabase.co/") ||
+    primaryImage?.includes("unsplash.com");
+
+  const ProductImage = ({ className }: { className?: string }) =>
     primaryImage && !imageError ? (
       isSupabaseImage ? (
         <Image
@@ -330,7 +385,11 @@ export function ProductCardBlock({
         <img
           src={primaryImage}
           alt={product.name}
-          className={cn("w-full h-full object-cover", hoverClasses[hoverEffect], className)}
+          className={cn(
+            "w-full h-full object-cover",
+            hoverClasses[hoverEffect],
+            className,
+          )}
           onError={() => setImageError(true)}
           loading="lazy"
           decoding="async"
@@ -340,9 +399,8 @@ export function ProductCardBlock({
       <div className="w-full h-full bg-muted flex items-center justify-center">
         <ShoppingBag className="h-12 w-12 text-muted-foreground/40" />
       </div>
-    )
-  );
-  
+    );
+
   // Add to cart / request quote button
   const AddToCartButton = ({ fullWidth = false }: { fullWidth?: boolean }) => (
     <button
@@ -355,13 +413,13 @@ export function ProductCardBlock({
         quotationModeEnabled
           ? "bg-orange-500 hover:bg-orange-600 text-white"
           : "bg-primary hover:bg-primary/90 text-primary-foreground",
-        fullWidth && "w-full"
+        fullWidth && "w-full",
       )}
     >
       {addingToCart ? (
         <>
           <Loader2 className="h-4 w-4 animate-spin" />
-          {quotationModeEnabled ? 'Requesting...' : 'Adding...'}
+          {quotationModeEnabled ? "Requesting..." : "Adding..."}
         </>
       ) : quotationModeEnabled ? (
         <>
@@ -377,12 +435,17 @@ export function ProductCardBlock({
   // MINIMAL variant
   if (variant === "minimal") {
     return (
-      <div 
+      <div
         className={cn("group cursor-pointer", cardHoverClasses[hoverEffect])}
         style={{ padding: paddingValue, borderRadius: borderRadiusValue }}
         onClick={handleCardClick}
       >
-        <div className={cn("relative overflow-hidden rounded-lg bg-muted", aspectClasses[imageAspect])}>
+        <div
+          className={cn(
+            "relative overflow-hidden rounded-lg bg-muted",
+            aspectClasses[imageAspect],
+          )}
+        >
           <SaleBadge />
           <OverlayButtons />
           <ProductImage />
@@ -400,14 +463,14 @@ export function ProductCardBlock({
       </div>
     );
   }
-  
+
   // COMPACT variant
   if (variant === "compact") {
     return (
-      <div 
+      <div
         className={cn(
           "flex gap-3 p-2 bg-card border rounded-lg group cursor-pointer",
-          cardHoverClasses[hoverEffect]
+          cardHoverClasses[hoverEffect],
         )}
         style={{ borderRadius: borderRadiusValue }}
         onClick={handleCardClick}
@@ -433,10 +496,10 @@ export function ProductCardBlock({
   // HORIZONTAL variant
   if (variant === "horizontal") {
     return (
-      <div 
+      <div
         className={cn(
           "flex gap-4 bg-card border rounded-lg overflow-hidden group",
-          cardHoverClasses[hoverEffect]
+          cardHoverClasses[hoverEffect],
         )}
         style={{ padding: paddingValue, borderRadius: borderRadiusValue }}
         onClick={handleCardClick}
@@ -447,7 +510,7 @@ export function ProductCardBlock({
         </div>
         <div className="flex-1 flex flex-col justify-center min-w-0">
           <h3 className="font-medium truncate">{product.name}</h3>
-          
+
           {showRating && productRating !== undefined && (
             <ProductRatingDisplay
               rating={productRating}
@@ -455,7 +518,7 @@ export function ProductCardBlock({
               className="mt-1"
             />
           )}
-          
+
           {showStockBadge && (
             <ProductStockBadge
               stockQuantity={productQuantity}
@@ -463,7 +526,7 @@ export function ProductCardBlock({
               className="mt-1"
             />
           )}
-          
+
           <div className="flex items-center gap-4 mt-2">
             {effectiveShowPrice && (
               <ProductPriceDisplay
@@ -481,23 +544,28 @@ export function ProductCardBlock({
 
   // Default CARD variant
   return (
-    <div 
+    <div
       className={cn(
         "bg-card border rounded-lg overflow-hidden group cursor-pointer",
-        cardHoverClasses[hoverEffect]
+        cardHoverClasses[hoverEffect],
       )}
       style={{ borderRadius: borderRadiusValue }}
       onClick={handleCardClick}
     >
-      <div className={cn("relative overflow-hidden bg-muted", aspectClasses[imageAspect])}>
+      <div
+        className={cn(
+          "relative overflow-hidden bg-muted",
+          aspectClasses[imageAspect],
+        )}
+      >
         <SaleBadge />
         <OverlayButtons />
         <ProductImage />
       </div>
-      
+
       <div style={{ padding: paddingValue }}>
         <h3 className="font-medium truncate">{product.name}</h3>
-        
+
         {showRating && productRating !== undefined && (
           <ProductRatingDisplay
             rating={productRating}
@@ -506,7 +574,7 @@ export function ProductCardBlock({
             className="mt-1"
           />
         )}
-        
+
         {showStockBadge && (
           <ProductStockBadge
             stockQuantity={productQuantity}
@@ -514,7 +582,7 @@ export function ProductCardBlock({
             className="mt-2"
           />
         )}
-        
+
         <div className="flex items-center justify-between mt-3 gap-2">
           {effectiveShowPrice && (
             <ProductPriceDisplay
@@ -536,10 +604,11 @@ export function ProductCardBlock({
 export const productCardDefinition: Omit<ComponentDefinition, "render"> = {
   type: "EcommerceProductCard",
   label: "Product Card",
-  description: "Display a product with image, title, price, and interactive cart/wishlist features",
+  description:
+    "Display a product with image, title, price, and interactive cart/wishlist features",
   category: "ecommerce",
   icon: "ShoppingBag",
-  
+
   fields: {
     productId: {
       type: "text",
@@ -638,7 +707,7 @@ export const productCardDefinition: Omit<ComponentDefinition, "render"> = {
       responsive: true,
     },
   },
-  
+
   defaultProps: {
     productId: null,
     siteId: undefined,
@@ -656,13 +725,22 @@ export const productCardDefinition: Omit<ComponentDefinition, "render"> = {
     padding: { mobile: "16px" },
     borderRadius: { mobile: "8px" },
   },
-  
+
   ai: {
-    description: "Interactive product card with real-time cart/wishlist integration and customizable display options",
+    description:
+      "Interactive product card with real-time cart/wishlist integration and customizable display options",
     canModify: [
-      "showPrice", "showRating", "showButton", "showWishlistButton", 
-      "showQuickView", "showStockBadge", "showSaleBadge", 
-      "buttonText", "variant", "imageAspect", "hoverEffect"
+      "showPrice",
+      "showRating",
+      "showButton",
+      "showWishlistButton",
+      "showQuickView",
+      "showStockBadge",
+      "showSaleBadge",
+      "buttonText",
+      "variant",
+      "imageAspect",
+      "hoverEffect",
     ],
     suggestions: [
       "Hide the price",
@@ -674,6 +752,15 @@ export const productCardDefinition: Omit<ComponentDefinition, "render"> = {
       "Use lift hover effect",
     ],
   },
-  
-  keywords: ["product", "shop", "buy", "cart", "ecommerce", "store", "item", "wishlist"],
+
+  keywords: [
+    "product",
+    "shop",
+    "buy",
+    "cart",
+    "ecommerce",
+    "store",
+    "item",
+    "wishlist",
+  ],
 };

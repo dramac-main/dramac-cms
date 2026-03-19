@@ -25,6 +25,11 @@ export type NotificationType =
   | "order_cancelled"
   | "refund_issued"
   | "low_stock"
+  | "payment_received"
+  // Quote notifications
+  | "new_quote_request"
+  | "quote_accepted"
+  | "quote_rejected"
   // Form submissions
   | "form_submission"
   // Live Chat

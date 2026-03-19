@@ -24,7 +24,9 @@ import type {
 // =============================================================================
 
 const EcommerceOptionsSchema = z.object({
-  productGridColumns: z.number().describe("Number of product grid columns (2-5)"),
+  productGridColumns: z
+    .number()
+    .describe("Number of product grid columns (2-5)"),
   showFilters: z.boolean(),
   showQuickView: z.boolean(),
   showCompare: z.boolean(),
@@ -76,7 +78,7 @@ export class ModuleConfigurator {
    * Configure E-commerce module
    */
   private async configureEcommerce(
-    requirement: ModuleRequirement
+    requirement: ModuleRequirement,
   ): Promise<EcommerceConfig> {
     const baseConfig = requirement.suggestedConfig as EcommerceConfig;
     const products = this.businessContext.products || [];
@@ -108,7 +110,7 @@ Determine optimal e-commerce configuration for best user experience.
         ...baseConfig,
         components: [
           {
-            componentType: "ProductGrid",
+            componentType: "EcommerceProductGrid",
             placement: "page",
             page: "/shop",
             props: {
@@ -143,7 +145,7 @@ Determine optimal e-commerce configuration for best user experience.
    * Configure Booking module
    */
   private async configureBooking(
-    requirement: ModuleRequirement
+    requirement: ModuleRequirement,
   ): Promise<BookingConfig> {
     const baseConfig = requirement.suggestedConfig as BookingConfig;
     const services = this.businessContext.services || [];
@@ -199,7 +201,9 @@ Determine optimal booking configuration.
   /**
    * Configure CRM module
    */
-  private async configureCRM(requirement: ModuleRequirement): Promise<CRMConfig> {
+  private async configureCRM(
+    requirement: ModuleRequirement,
+  ): Promise<CRMConfig> {
     const baseConfig = requirement.suggestedConfig as CRMConfig;
     const hasServices = (this.businessContext.services?.length ?? 0) > 0;
 
@@ -234,7 +238,7 @@ Determine optimal booking configuration.
    * Configure Automation module
    */
   private async configureAutomation(
-    requirement: ModuleRequirement
+    requirement: ModuleRequirement,
   ): Promise<AutomationConfig> {
     const baseConfig = requirement.suggestedConfig as AutomationConfig;
 
@@ -256,7 +260,7 @@ Determine optimal booking configuration.
    * Configure Social Media module
    */
   private async configureSocialMedia(
-    requirement: ModuleRequirement
+    requirement: ModuleRequirement,
   ): Promise<SocialMediaConfig> {
     const baseConfig = requirement.suggestedConfig as SocialMediaConfig;
     const socialLinks = this.businessContext.social || [];
@@ -279,15 +283,16 @@ Determine optimal booking configuration.
 
     // Update social icons with actual links
     const socialIconsIndex = components.findIndex(
-      (c) => c.componentType === "SocialIcons"
+      (c) => c.componentType === "SocialIcons",
     );
     if (socialIconsIndex !== -1) {
       components[socialIconsIndex] = {
         ...components[socialIconsIndex],
         props: {
-          platforms: platforms.length > 0 ? platforms : ["facebook", "instagram"],
+          platforms:
+            platforms.length > 0 ? platforms : ["facebook", "instagram"],
           links: Object.fromEntries(
-            socialLinks.map((s) => [s.platform.toLowerCase(), s.url])
+            socialLinks.map((s) => [s.platform.toLowerCase(), s.url]),
           ),
         },
       };

@@ -851,6 +851,34 @@ ${data.dashboardUrl ? `View in dashboard: ${data.dashboardUrl}` : ""}
       `Quote Accepted\n\n${data.customerName} has accepted quote ${data.quoteNumber}.\nTotal: ${data.totalAmount}\n\n${data.dashboardUrl ? `View in dashboard: ${data.dashboardUrl}` : ""}`,
   },
 
+  quote_request_customer: {
+    subject: (data) =>
+      `Your Quote Request ${data.quoteNumber} Has Been Received`,
+    html: (data) =>
+      wrapHtml(`
+      <h1 style="${STYLES.heading}">Quote Request Received</h1>
+      <p style="${STYLES.text}">Hi ${data.customerName || "there"},</p>
+      <p style="${STYLES.text}">Thank you for your quote request. We've received it and will get back to you shortly.</p>
+      <p style="${STYLES.text}"><strong>Quote #:</strong> ${data.quoteNumber}<br><strong>Items:</strong> ${data.itemCount}</p>
+    `),
+    text: (data) =>
+      `Quote Request Received\n\nHi ${data.customerName || "there"},\n\nThank you for your quote request.\nQuote #: ${data.quoteNumber}\nItems: ${data.itemCount}`,
+  },
+
+  quote_accepted_customer: {
+    subject: (data) =>
+      `Your Quote ${data.quoteNumber} Has Been Confirmed`,
+    html: (data) =>
+      wrapHtml(`
+      <h1 style="${STYLES.heading}">Quote Confirmed</h1>
+      <p style="${STYLES.text}">Hi ${data.customerName || "there"},</p>
+      <p style="${STYLES.text}">Your acceptance of quote <strong>${data.quoteNumber}</strong> has been confirmed.</p>
+      ${data.total ? `<p style="${STYLES.text}"><strong>Total:</strong> ${data.total}</p>` : ""}
+    `),
+    text: (data) =>
+      `Quote Confirmed\n\nHi ${data.customerName || "there"},\n\nYour acceptance of quote ${data.quoteNumber} has been confirmed.${data.total ? `\nTotal: ${data.total}` : ""}`,
+  },
+
   quote_rejected_owner: {
     subject: (data) =>
       `❌ Quote ${data.quoteNumber} Rejected by ${data.customerName}`,
@@ -944,7 +972,8 @@ ${data.dashboardUrl ? `View in dashboard: ${data.dashboardUrl}` : ""}
   // ============================================
 
   order_delivered_customer: {
-    subject: (data) => `Your order ${data.orderNumber || ""} has been delivered!`,
+    subject: (data) =>
+      `Your order ${data.orderNumber || ""} has been delivered!`,
     html: (data) =>
       wrapHtml(`
       <h1 style="${STYLES.heading}">📦 Order Delivered</h1>
@@ -957,7 +986,8 @@ ${data.dashboardUrl ? `View in dashboard: ${data.dashboardUrl}` : ""}
   },
 
   order_cancelled_customer: {
-    subject: (data) => `Your order ${data.orderNumber || ""} has been cancelled`,
+    subject: (data) =>
+      `Your order ${data.orderNumber || ""} has been cancelled`,
     html: (data) =>
       wrapHtml(`
       <h1 style="${STYLES.heading}">Order Cancelled</h1>

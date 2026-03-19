@@ -180,6 +180,27 @@ export const notificationTypeInfo: Record<
     color: "text-yellow-500",
     label: "Low Stock",
   },
+  payment_received: {
+    icon: "Banknote",
+    color: "text-green-500",
+    label: "Payment Received",
+  },
+  // Quote notifications
+  new_quote_request: {
+    icon: "FileQuestion",
+    color: "text-blue-500",
+    label: "New Quote Request",
+  },
+  quote_accepted: {
+    icon: "FileCheck",
+    color: "text-green-500",
+    label: "Quote Accepted",
+  },
+  quote_rejected: {
+    icon: "FileX",
+    color: "text-red-500",
+    label: "Quote Rejected",
+  },
   // Form submissions
   form_submission: {
     icon: "FileText",

@@ -81,6 +81,21 @@ export async function signup(formData: SignupFormData) {
     return { error: "Failed to create user" };
   }
 
+  // 2. Create user profile FIRST (agencies.owner_id has FK to profiles)
+  const { error: profileError } = await adminClient.from("profiles").insert({
+    id: authData.user.id,
+    email: validated.data.email,
+    name: validated.data.name,
+    role: "admin",
+    onboarding_completed: false,
+  });
+
+  if (profileError) {
+    console.error("Profile creation error:", profileError);
+    await adminClient.auth.admin.deleteUser(authData.user.id);
+    return { error: "Failed to create user profile" };
+  }
+
   // Generate slug from organization name
   const slug =
     validated.data.organizationName
@@ -91,8 +106,7 @@ export async function signup(formData: SignupFormData) {
     "-" +
     Date.now().toString(36);
 
-  // 2. Create organization using admin client (bypasses RLS)
-  // This is necessary because the user session is not yet available after signUp
+  // 3. Create organization using admin client (bypasses RLS)
   const { data: org, error: orgError } = await adminClient
     .from("agencies")
     .insert({
@@ -105,45 +119,28 @@ export async function signup(formData: SignupFormData) {
 
   if (orgError) {
     console.error("Agency creation error:", orgError);
-    // Cleanup: delete the user if org creation fails
+    await adminClient.from("profiles").delete().eq("id", authData.user.id);
     await adminClient.auth.admin.deleteUser(authData.user.id);
     return { error: `Failed to create organization: ${orgError.message}` };
   }
 
-  // 3. Create user profile using admin client
-  // Agency creators get 'admin' role in profiles (which corresponds to agency_owner permissions)
-  // The actual ownership is tracked in agency_members.role = "owner"
-  // Only super_admin can access platform-wide admin features
-  // Super admin role must be granted via scripts/create-super-admin.ts
-  const { error: profileError } = await adminClient.from("profiles").insert({
-    id: authData.user.id,
-    email: validated.data.email,
-    name: validated.data.name,
-    role: "admin", // Agency creators are admins of their agency
-    agency_id: org.id,
-    onboarding_completed: false,
-  });
+  // 4. Update profile with agency_id
+  await adminClient
+    .from("profiles")
+    .update({ agency_id: org.id })
+    .eq("id", authData.user.id);
 
-  if (profileError) {
-    console.error("Profile creation error:", profileError);
-    // Cleanup
-    await adminClient.from("agencies").delete().eq("id", org.id);
-    await adminClient.auth.admin.deleteUser(authData.user.id);
-    return { error: "Failed to create user profile" };
-  }
-
-  // 4. Create organization membership (tracks actual ownership) using admin client
+  // 5. Create organization membership (tracks actual ownership) using admin client
   const { error: memberError } = await adminClient
     .from("agency_members")
     .insert({
       agency_id: org.id,
       user_id: authData.user.id,
-      role: "owner", // Owner in agency_members table
+      role: "owner",
     });
 
   if (memberError) {
     console.error("Member creation error:", memberError);
-    // Cleanup
     await adminClient.from("profiles").delete().eq("id", authData.user.id);
     await adminClient.from("agencies").delete().eq("id", org.id);
     await adminClient.auth.admin.deleteUser(authData.user.id);

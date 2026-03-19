@@ -5,8 +5,10 @@
  * - New bookings → notify business owner + email customer
  * - New orders → notify business owner + email customer
  * - Booking/order status changes → email customer
+ * - Quote requests → notify business owner + email customer
+ * - Quote accepted/rejected → notify both parties
  *
- * This ensures the business owner NEVER misses a booking or order.
+ * This ensures the business owner NEVER misses a booking, order, or quote.
  */
 "use server";
 
@@ -708,7 +710,7 @@ export async function notifyOrderCancelled(
 // =============================================================================
 
 /**
- * Send payment confirmation notification to customer
+ * Send payment confirmation notification to customer + in-app to owner
  */
 export async function notifyPaymentReceived(
   siteId: string,
@@ -726,8 +728,28 @@ export async function notifyPaymentReceived(
       .eq("id", siteId)
       .single();
 
+    if (!site?.agency_id) return;
+
+    const { data: agency } = await supabase
+      .from("agencies")
+      .select("owner_id")
+      .eq("id", site.agency_id)
+      .single();
+
+    // In-app notification to business owner
+    if (agency?.owner_id) {
+      await createNotification({
+        userId: agency.owner_id,
+        type: "payment_received",
+        title: `Payment Received: Order #${orderNumber}`,
+        message: `${customerName} paid ${total} for order #${orderNumber}${paymentMethod ? ` via ${paymentMethod}` : ""}`,
+        link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramac.app"}/sites/${siteId}/ecommerce/orders`,
+        metadata: { orderNumber, siteId },
+      });
+    }
+
     if (customerEmail) {
-      await sendBrandedEmail(site?.agency_id || null, {
+      await sendBrandedEmail(site.agency_id, {
         to: { email: customerEmail, name: customerName },
         emailType: "payment_received_customer",
         siteId,
@@ -894,6 +916,332 @@ export async function notifyLowStock(
   } catch (error) {
     console.error(
       "[BusinessNotify] Error sending low stock notification:",
+      error,
+    );
+  }
+}
+
+// =============================================================================
+// QUOTE NOTIFICATIONS
+// =============================================================================
+
+interface QuoteNotificationData {
+  siteId: string;
+  quoteId: string;
+  quoteNumber: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  companyName?: string;
+  itemCount: number;
+  total?: number;
+  currency?: string;
+}
+
+/**
+ * Send all notifications for a new quote request:
+ * 1. In-app notification to business owner
+ * 2. Email to business owner
+ * 3. Email to customer (confirmation that quote was received)
+ */
+export async function notifyNewQuote(
+  data: QuoteNotificationData,
+): Promise<void> {
+  try {
+    const supabase = createAdminClient();
+
+    const { data: site } = await supabase
+      .from("sites")
+      .select("name, agency_id")
+      .eq("id", data.siteId)
+      .single();
+
+    if (!site) {
+      console.error("[BusinessNotify] Site not found:", data.siteId);
+      return;
+    }
+
+    const { data: agency } = await supabase
+      .from("agencies")
+      .select("owner_id")
+      .eq("id", site.agency_id)
+      .single();
+
+    if (!agency?.owner_id) {
+      console.error(
+        "[BusinessNotify] Agency owner not found for site:",
+        data.siteId,
+      );
+      return;
+    }
+
+    const { data: ownerProfile } = await supabase
+      .from("profiles")
+      .select("email, full_name")
+      .eq("id", agency.owner_id)
+      .single();
+
+    const businessName = site.name || "Our Business";
+    const currency = data.currency || "USD";
+    const totalStr = data.total ? formatCurrency(data.total, currency) : "";
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramac.app"}/sites/${data.siteId}/ecommerce/quotes`;
+
+    // 1. In-app notification to business owner
+    await createNotification({
+      userId: agency.owner_id,
+      type: "new_quote_request",
+      title: `New Quote Request #${data.quoteNumber}`,
+      message: `${data.customerName} requested a quote for ${data.itemCount} item${data.itemCount !== 1 ? "s" : ""}${totalStr ? ` (${totalStr})` : ""}`,
+      link: dashboardUrl,
+      metadata: {
+        quoteId: data.quoteId,
+        quoteNumber: data.quoteNumber,
+        siteId: data.siteId,
+        customerEmail: data.customerEmail,
+      },
+    });
+
+    // 2 & 3. Emails in parallel
+    const emailPromises: Promise<unknown>[] = [];
+
+    // Email to business owner
+    if (ownerProfile?.email) {
+      emailPromises.push(
+        sendBrandedEmail(site.agency_id, {
+          to: {
+            email: ownerProfile.email,
+            name: ownerProfile.full_name || undefined,
+          },
+          emailType: "quote_request_owner",
+          recipientUserId: agency.owner_id,
+          data: {
+            customerName: data.customerName,
+            customerEmail: data.customerEmail,
+            customerPhone: data.customerPhone || "",
+            companyName: data.companyName || "",
+            quoteNumber: data.quoteNumber,
+            itemCount: data.itemCount,
+            total: totalStr,
+            dashboardUrl,
+          },
+        }),
+      );
+    }
+
+    // Email to customer (confirmation that quote request was received)
+    if (data.customerEmail) {
+      emailPromises.push(
+        sendBrandedEmail(site.agency_id, {
+          to: { email: data.customerEmail, name: data.customerName },
+          emailType: "quote_request_customer",
+          siteId: data.siteId,
+          data: {
+            customerName: data.customerName,
+            quoteNumber: data.quoteNumber,
+            itemCount: data.itemCount,
+            businessName,
+          },
+        }),
+      );
+    }
+
+    if (emailPromises.length > 0) {
+      await Promise.all(emailPromises);
+    }
+
+    console.log(
+      `[BusinessNotify] Quote request notifications sent for quote ${data.quoteNumber}`,
+    );
+  } catch (error) {
+    console.error(
+      "[BusinessNotify] Error sending quote request notifications:",
+      error,
+    );
+  }
+}
+
+/**
+ * Send notifications when a quote is accepted by the customer:
+ * 1. In-app notification to business owner
+ * 2. Email to business owner
+ * 3. Email to customer (confirmation of acceptance)
+ */
+export async function notifyQuoteAccepted(
+  siteId: string,
+  quoteNumber: string,
+  customerEmail: string,
+  customerName: string,
+  total?: string,
+): Promise<void> {
+  try {
+    const supabase = createAdminClient();
+    const { data: site } = await supabase
+      .from("sites")
+      .select("name, agency_id")
+      .eq("id", siteId)
+      .single();
+
+    if (!site?.agency_id) return;
+
+    const { data: agency } = await supabase
+      .from("agencies")
+      .select("owner_id")
+      .eq("id", site.agency_id)
+      .single();
+
+    const { data: ownerProfile } = agency?.owner_id
+      ? await supabase
+          .from("profiles")
+          .select("email, full_name")
+          .eq("id", agency.owner_id)
+          .single()
+      : { data: null };
+
+    const businessName = site.name || "Our Business";
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramac.app"}/sites/${siteId}/ecommerce/quotes`;
+
+    // 1. In-app notification to business owner
+    if (agency?.owner_id) {
+      await createNotification({
+        userId: agency.owner_id,
+        type: "quote_accepted",
+        title: `Quote #${quoteNumber} Accepted`,
+        message: `${customerName} accepted quote #${quoteNumber}${total ? ` (${total})` : ""}`,
+        link: dashboardUrl,
+        metadata: { quoteNumber, siteId },
+      });
+    }
+
+    const emailPromises: Promise<unknown>[] = [];
+
+    // 2. Email to business owner
+    if (ownerProfile?.email) {
+      emailPromises.push(
+        sendBrandedEmail(site.agency_id, {
+          to: {
+            email: ownerProfile.email,
+            name: ownerProfile.full_name || undefined,
+          },
+          emailType: "quote_accepted_owner",
+          recipientUserId: agency?.owner_id,
+          data: {
+            customerName,
+            customerEmail,
+            quoteNumber,
+            total: total || "",
+            dashboardUrl,
+          },
+        }),
+      );
+    }
+
+    // 3. Email to customer (confirmation)
+    if (customerEmail) {
+      emailPromises.push(
+        sendBrandedEmail(site.agency_id, {
+          to: { email: customerEmail, name: customerName },
+          emailType: "quote_accepted_customer",
+          siteId,
+          data: {
+            customerName,
+            quoteNumber,
+            total: total || "",
+            businessName,
+          },
+        }),
+      );
+    }
+
+    if (emailPromises.length > 0) {
+      await Promise.all(emailPromises);
+    }
+
+    console.log(
+      `[BusinessNotify] Quote accepted notifications sent for quote ${quoteNumber}`,
+    );
+  } catch (error) {
+    console.error(
+      "[BusinessNotify] Error sending quote accepted notifications:",
+      error,
+    );
+  }
+}
+
+/**
+ * Send notifications when a quote is rejected by the customer:
+ * 1. In-app notification to business owner
+ * 2. Email to business owner
+ */
+export async function notifyQuoteRejected(
+  siteId: string,
+  quoteNumber: string,
+  customerEmail: string,
+  customerName: string,
+  reason?: string,
+): Promise<void> {
+  try {
+    const supabase = createAdminClient();
+    const { data: site } = await supabase
+      .from("sites")
+      .select("name, agency_id")
+      .eq("id", siteId)
+      .single();
+
+    if (!site?.agency_id) return;
+
+    const { data: agency } = await supabase
+      .from("agencies")
+      .select("owner_id")
+      .eq("id", site.agency_id)
+      .single();
+
+    const { data: ownerProfile } = agency?.owner_id
+      ? await supabase
+          .from("profiles")
+          .select("email, full_name")
+          .eq("id", agency.owner_id)
+          .single()
+      : { data: null };
+
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramac.app"}/sites/${siteId}/ecommerce/quotes`;
+
+    // 1. In-app notification to business owner
+    if (agency?.owner_id) {
+      await createNotification({
+        userId: agency.owner_id,
+        type: "quote_rejected",
+        title: `Quote #${quoteNumber} Rejected`,
+        message: `${customerName} rejected quote #${quoteNumber}${reason ? `: ${reason}` : ""}`,
+        link: dashboardUrl,
+        metadata: { quoteNumber, siteId, reason },
+      });
+    }
+
+    // 2. Email to business owner
+    if (ownerProfile?.email) {
+      await sendBrandedEmail(site.agency_id, {
+        to: {
+          email: ownerProfile.email,
+          name: ownerProfile.full_name || undefined,
+        },
+        emailType: "quote_rejected_owner",
+        recipientUserId: agency?.owner_id,
+        data: {
+          customerName,
+          customerEmail,
+          quoteNumber,
+          reason: reason || "",
+          dashboardUrl,
+        },
+      });
+    }
+
+    console.log(
+      `[BusinessNotify] Quote rejected notifications sent for quote ${quoteNumber}`,
+    );
+  } catch (error) {
+    console.error(
+      "[BusinessNotify] Error sending quote rejected notifications:",
       error,
     );
   }

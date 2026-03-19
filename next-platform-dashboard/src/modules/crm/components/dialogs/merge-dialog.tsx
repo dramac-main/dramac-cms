@@ -1,41 +1,65 @@
 /**
  * Merge Contacts Dialog
- * 
+ *
  * CRM Enhancement: Duplicate Detection & Contact Merging
  * Finds and merges duplicate contacts.
  * Industry-leader pattern: HubSpot Merge Tool, Salesforce Merge Contacts
  */
-'use client'
+"use client";
 
-import { useState, useEffect, useCallback } from 'react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Checkbox } from '@/components/ui/checkbox'
+import { useState, useEffect, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from '@/components/ui/dialog'
-import { Separator } from '@/components/ui/separator'
-import { Skeleton } from '@/components/ui/skeleton'
-import { toast } from 'sonner'
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 import {
-  GitMerge, Search, Loader2, AlertTriangle, CheckCircle2,
-  ArrowRight, Users, Mail, Phone,
-} from 'lucide-react'
-import { findDuplicateContacts, mergeContacts } from '../../actions/bulk-actions'
-import type { MergeCandidate, Contact } from '../../types/crm-types'
+  GitMerge,
+  Search,
+  Loader2,
+  AlertTriangle,
+  CheckCircle2,
+  ArrowRight,
+  Users,
+  Mail,
+  Phone,
+} from "lucide-react";
+import {
+  findDuplicateContacts,
+  mergeContacts,
+} from "../../actions/bulk-actions";
+import type { MergeCandidate, Contact } from "../../types/crm-types";
 
 interface MergeDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  siteId: string
-  onMerged?: () => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  siteId: string;
+  onMerged?: () => void;
 }
 
-function ContactCard({ contact, isPrimary }: { contact: Contact; isPrimary?: boolean }) {
+function ContactCard({
+  contact,
+  isPrimary,
+}: {
+  contact: Contact;
+  isPrimary?: boolean;
+}) {
   return (
-    <div className={`p-3 rounded-lg border ${isPrimary ? 'border-primary bg-primary/5' : 'bg-muted/50'}`}>
+    <div
+      className={`p-3 rounded-lg border ${isPrimary ? "border-primary bg-primary/5" : "bg-muted/50"}`}
+    >
       {isPrimary && (
-        <Badge variant="default" className="mb-2 text-xs">Primary (Kept)</Badge>
+        <Badge variant="default" className="mb-2 text-xs">
+          Primary (Kept)
+        </Badge>
       )}
       <div className="font-medium text-sm">
         {contact.first_name} {contact.last_name}
@@ -52,87 +76,98 @@ function ContactCard({ contact, isPrimary }: { contact: Contact; isPrimary?: boo
       )}
       {contact.company && (
         <div className="text-xs text-muted-foreground mt-0.5">
-          {typeof contact.company === 'object' ? (contact.company as { name?: string })?.name || '' : contact.company}
+          {typeof contact.company === "object"
+            ? (contact.company as { name?: string })?.name || ""
+            : contact.company}
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export function MergeContactsDialog({ open, onOpenChange, siteId, onMerged }: MergeDialogProps) {
-  const [duplicates, setDuplicates] = useState<MergeCandidate[][]>([])
-  const [loading, setLoading] = useState(true)
-  const [selectedPairs, setSelectedPairs] = useState<Set<number>>(new Set())
-  const [merging, setMerging] = useState(false)
-  const [mergedCount, setMergedCount] = useState(0)
+export function MergeContactsDialog({
+  open,
+  onOpenChange,
+  siteId,
+  onMerged,
+}: MergeDialogProps) {
+  const [duplicates, setDuplicates] = useState<MergeCandidate[][]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedPairs, setSelectedPairs] = useState<Set<number>>(new Set());
+  const [merging, setMerging] = useState(false);
+  const [mergedCount, setMergedCount] = useState(0);
 
   const loadDuplicates = useCallback(async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const data = await findDuplicateContacts(siteId)
-      setDuplicates(data)
+      const data = await findDuplicateContacts(siteId);
+      setDuplicates(data);
     } catch (err) {
-      toast.error('Failed to find duplicates')
+      toast.error("Failed to find duplicates");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [siteId])
+  }, [siteId]);
 
   useEffect(() => {
     if (open) {
-      loadDuplicates()
-      setSelectedPairs(new Set())
-      setMergedCount(0)
+      loadDuplicates();
+      setSelectedPairs(new Set());
+      setMergedCount(0);
     }
-  }, [open, loadDuplicates])
+  }, [open, loadDuplicates]);
 
   const togglePair = (index: number) => {
-    const newSet = new Set(selectedPairs)
+    const newSet = new Set(selectedPairs);
     if (newSet.has(index)) {
-      newSet.delete(index)
+      newSet.delete(index);
     } else {
-      newSet.add(index)
+      newSet.add(index);
     }
-    setSelectedPairs(newSet)
-  }
+    setSelectedPairs(newSet);
+  };
 
   const selectAll = () => {
     if (selectedPairs.size === duplicates.length) {
-      setSelectedPairs(new Set())
+      setSelectedPairs(new Set());
     } else {
-      setSelectedPairs(new Set(duplicates.map((_, i) => i)))
+      setSelectedPairs(new Set(duplicates.map((_, i) => i)));
     }
-  }
+  };
 
   const handleMerge = async () => {
     if (selectedPairs.size === 0) {
-      toast.error('Select at least one duplicate pair to merge')
-      return
+      toast.error("Select at least one duplicate pair to merge");
+      return;
     }
 
-    setMerging(true)
-    let merged = 0
+    setMerging(true);
+    let merged = 0;
 
     for (const index of selectedPairs) {
-      const group = duplicates[index]
-      if (!group || group.length < 2) continue
+      const group = duplicates[index];
+      if (!group || group.length < 2) continue;
 
       try {
-        await mergeContacts(siteId, group[0].contact.id, group.slice(1).map(d => d.contact.id))
-        merged++
+        await mergeContacts(
+          siteId,
+          group[0].contact.id,
+          group.slice(1).map((d) => d.contact.id),
+        );
+        merged++;
       } catch (err) {
-        toast.error(`Failed to merge: ${group[0].contact.email}`)
+        toast.error(`Failed to merge: ${group[0].contact.email}`);
       }
     }
 
-    setMergedCount(merged)
-    setMerging(false)
-    
+    setMergedCount(merged);
+    setMerging(false);
+
     if (merged > 0) {
-      toast.success(`Merged ${merged} duplicate group${merged > 1 ? 's' : ''}`)
-      onMerged?.()
+      toast.success(`Merged ${merged} duplicate group${merged > 1 ? "s" : ""}`);
+      onMerged?.();
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -148,18 +183,28 @@ export function MergeContactsDialog({ open, onOpenChange, siteId, onMerged }: Me
           <div className="py-8 space-y-4">
             <div className="text-center">
               <Search className="h-8 w-8 animate-pulse mx-auto text-primary mb-2" />
-              <p className="text-sm text-muted-foreground">Scanning for duplicates...</p>
+              <p className="text-sm text-muted-foreground">
+                Scanning for duplicates...
+              </p>
             </div>
-            {[1, 2].map(i => <Skeleton key={i} className="h-24 w-full" />)}
+            {[1, 2].map((i) => (
+              <Skeleton key={i} className="h-24 w-full" />
+            ))}
           </div>
         ) : mergedCount > 0 && !merging ? (
           <div className="py-12 text-center space-y-4">
             <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto" />
             <h3 className="text-lg font-semibold">Merge Complete</h3>
             <p className="text-muted-foreground">
-              {mergedCount} duplicate group{mergedCount > 1 ? 's' : ''} merged successfully
+              {mergedCount} duplicate group{mergedCount > 1 ? "s" : ""} merged
+              successfully
             </p>
-            <Button onClick={() => { setMergedCount(0); loadDuplicates() }}>
+            <Button
+              onClick={() => {
+                setMergedCount(0);
+                loadDuplicates();
+              }}
+            >
               Scan Again
             </Button>
           </div>
@@ -176,10 +221,13 @@ export function MergeContactsDialog({ open, onOpenChange, siteId, onMerged }: Me
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
                 <AlertTriangle className="h-4 w-4 inline mr-1 text-yellow-500" />
-                Found {duplicates.length} potential duplicate group{duplicates.length > 1 ? 's' : ''}
+                Found {duplicates.length} potential duplicate group
+                {duplicates.length > 1 ? "s" : ""}
               </p>
               <Button variant="outline" size="sm" onClick={selectAll}>
-                {selectedPairs.size === duplicates.length ? 'Deselect All' : 'Select All'}
+                {selectedPairs.size === duplicates.length
+                  ? "Deselect All"
+                  : "Select All"}
               </Button>
             </div>
 
@@ -188,7 +236,9 @@ export function MergeContactsDialog({ open, onOpenChange, siteId, onMerged }: Me
                 <div
                   key={index}
                   className={`p-4 rounded-lg border cursor-pointer transition-colors ${
-                    selectedPairs.has(index) ? 'border-primary bg-primary/5' : 'hover:border-muted-foreground/30'
+                    selectedPairs.has(index)
+                      ? "border-primary bg-primary/5"
+                      : "hover:border-muted-foreground/30"
                   }`}
                   onClick={() => togglePair(index)}
                 >
@@ -209,7 +259,10 @@ export function MergeContactsDialog({ open, onOpenChange, siteId, onMerged }: Me
                       <div className="grid grid-cols-2 gap-3">
                         <ContactCard contact={group[0].contact} isPrimary />
                         {group.slice(1).map((dup) => (
-                          <ContactCard key={dup.contact.id} contact={dup.contact} />
+                          <ContactCard
+                            key={dup.contact.id}
+                            contact={dup.contact}
+                          />
                         ))}
                       </div>
                     </div>
@@ -235,7 +288,8 @@ export function MergeContactsDialog({ open, onOpenChange, siteId, onMerged }: Me
                 ) : (
                   <>
                     <GitMerge className="h-4 w-4 mr-2" />
-                    Merge {selectedPairs.size} Group{selectedPairs.size !== 1 ? 's' : ''}
+                    Merge {selectedPairs.size} Group
+                    {selectedPairs.size !== 1 ? "s" : ""}
                   </>
                 )}
               </Button>
@@ -244,5 +298,5 @@ export function MergeContactsDialog({ open, onOpenChange, siteId, onMerged }: Me
         )}
       </DialogContent>
     </Dialog>
-  )
+  );
 }
