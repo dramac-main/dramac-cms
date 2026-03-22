@@ -10,6 +10,7 @@ import {
   RecentClients,
   ModuleSubscriptions,
   WelcomeCard,
+  GettingStartedCard,
   GridItem,
   DashboardWidget,
   DashboardSection,
@@ -137,6 +138,13 @@ export function DashboardClient({ data }: DashboardClientProps) {
         userName={data.user?.name || data.user?.email?.split("@")[0]}
         agencyName={data.agencyName}
         subscriptionPlan={data.subscriptionPlan}
+      />
+
+      {/* Getting Started Checklist for New Users */}
+      <GettingStartedCard
+        totalClients={data.stats.totalClients}
+        totalSites={data.stats.totalSites}
+        publishedSites={data.stats.publishedSites}
       />
 
       {/* Interactive Metrics Grid - REAL DATA */}

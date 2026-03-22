@@ -1,44 +1,58 @@
 # Active Context
 
-## Current Focus: AI Builder Routing + Test User Cleanup — COMPLETED
+## Current Focus: AI Designer Feature Selection + Auth Flow Fixes — COMPLETED
 
-### Status: COMMITTED & PUSHED — `c09d5be7`
+### Status: COMMITTED & PUSHED — `ed816b22`
 
-### Latest Work: Route AI Builder to Modern AI Designer + Delete Test User
+### Latest Work (Session 2): Feature Selection Chips + Auth Flow Fix
 
-Deep audit of the AI builder system revealed two parallel generation pipelines:
-1. **Legacy wizard** (`/builder` → `/api/ai/generate`) — Only 8 basic section types, no modules
-2. **Modern AI Designer** (`/ai-designer` → `/api/ai/website-designer/steps/*`) — Full module support for e-commerce, booking, CRM
+#### 1. Auth Flow Flash Error Fix (`4d3befe7`)
 
-The modern AI Designer already has comprehensive module awareness:
-- Architecture prompt has a "MODULE AWARENESS" section with mandatory rules
-- Page generator prompt has full prop docs for all booking + e-commerce components
-- Schema validates 6 booking + 18 e-commerce component types
-- Converter maps all module component types correctly
-- Auto-install endpoint automatically installs modules on save
+- **Problem:** `login()` and `signup()` called `redirect()` which throws `NEXT_REDIRECT` internally. Client-side `catch` block caught this and briefly showed "An unexpected error occurred" before redirect completed.
+- **Fix:** Changed to return `{ success: true, redirectTo: "..." }` and use `router.push()` client-side.
+- Login page now handles `error` search param for expired auth links.
+- DB notification constraint updated from 14 → 34 types (was blocking `welcome` type).
 
-**Fix:** Route all users to the modern AI Designer instead of the legacy builder.
+#### 2. AI Designer Feature Selection Chips (`ed816b22`)
 
-### Changes Made (7 files):
+**The Core Problem (Chicken-and-Egg):**
 
-1. **`src/components/sites/create-site-form.tsx`** — AI mode redirects to `/ai-designer` instead of `/builder`
-2. **`src/components/sites/create-site-dialog.tsx`** — Same redirect fix
-3. **`src/components/sites/site-tabs.tsx`** — "Builder" tab renamed to "AI Designer", href updated
-4. **`src/app/(dashboard)/dashboard/sites/[siteId]/seo/page.tsx`** — "Create Your First Page" link updated
-5. **`src/app/(dashboard)/dashboard/sites/[siteId]/builder/page.tsx`** — Legacy page now redirects to `/ai-designer`
-6. **`src/app/(dashboard)/dashboard/sites/[siteId]/ai-designer/page.tsx`** — Removed explicit `enableModuleIntegration: false`
-7. **`src/lib/actions/onboarding.ts`** — Welcome email formatting cleanup
+- AI prompts say "If BOOKING module is enabled: YOU MUST include BookingWidget"
+- But `site_module_installations` is empty for new sites — modules aren't installed until AFTER generation
+- So `fetchModules()` returns `[]` → `formatModulesSection()` never fires → AI never gets detailed module instructions
+- AI was relying solely on the user's free-text prompt to infer booking/e-commerce needs
 
-### Database Changes:
-- **Deleted `test@dramacagency.com`** and all affiliated data (auth user, profile, agency, agency member, client, site, pages, page content)
+**The Fix — Feature Selection Chips:**
+Added feature toggle chips to the AI Designer page (Online Store, Booking, Blog, Live Chat). When selected:
+
+1. Chips passed as `selectedFeatures` array to architecture API
+2. Engine injects synthetic `EnabledModule` entries into the data context
+3. `formatModulesSection()` fires with full detailed instructions (BookingWidget on homepage, EcommerceFeaturedProducts, etc.)
+4. Auto-install still handles actual DB module installation after generation
+
+### Files Changed:
+
+1. **`types.ts`** — Added `selectedFeatures?: string[]` to `WebsiteDesignerInput`
+2. **`ai-designer/page.tsx`** — Feature chip UI with ShoppingCart/CalendarCheck/FileText/MessageCircle icons
+3. **`steps/architecture/route.ts`** — Accept `selectedFeatures` in request schema, pass to engine
+4. **`engine.ts`** — Inject synthetic modules from `FEATURE_MODULE_MAP` after `buildDataContext()`
+
+### Test User Status:
+
+- `test@dramacagency.com` completely deleted — 0 rows across all tables
+- Clean slate ready for fresh signup testing
 
 ### Verification:
-- ✅ TypeScript: ZERO errors 
-- ✅ Git pushed to main: `c09d5be7`
+
+- ✅ TypeScript: ZERO errors
+- ✅ Git pushed to main: `ed816b22`
 
 ---
 
+## Previous Focus: AI Builder Routing + Test User Cleanup — COMPLETED (`c09d5be7`)
+
 ## Previous Focus: World-Class E-Commerce Experience
+
 - Now provides: in-app notification + owner email + customer confirmation (was email-only to owner)
 
 #### 5. Quote Accept/Reject — Centralized Notifications

@@ -157,17 +157,37 @@ export async function signup(formData: SignupFormData) {
     return { error: "Failed to create organization membership" };
   }
 
-  // Check if email confirmation is required
-  if (authData.user.identities?.length === 0) {
-    return {
-      success: true,
-      message: "Check your email to confirm your account",
-    };
+  // After signup, always require email confirmation before proceeding.
+  // The user must click the confirmation link which routes through /auth/callback → /onboarding.
+  return {
+    success: true,
+    requiresEmailConfirmation: true,
+    email: validated.data.email,
+  };
+}
+
+export async function resendConfirmationEmail(email: string) {
+  if (!email || typeof email !== "string") {
+    return { error: "Email is required" };
   }
 
-  // Return redirect path instead of calling redirect() to avoid
-  // NEXT_REDIRECT error being caught by client-side try/catch
-  return { success: true, redirectTo: "/onboarding" };
+  const supabase = await createClient();
+  const headersList = await headers();
+  const origin = headersList.get("origin");
+
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email,
+    options: {
+      emailRedirectTo: `${origin}/auth/callback`,
+    },
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return { success: true };
 }
 
 export async function forgotPassword(formData: ForgotPasswordFormData) {

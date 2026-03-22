@@ -608,6 +608,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
     setIsSaving(true);
     let savedCount = 0;
     let errorCount = 0;
+    const failedPages: string[] = [];
 
     try {
       // Save each page
@@ -638,6 +639,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
             errorData,
           );
           errorCount++;
+          failedPages.push(page.name || page.slug);
           continue;
         }
 
@@ -663,6 +665,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
             errorData,
           );
           errorCount++;
+          failedPages.push(page.name || page.slug);
         } else {
           savedCount++;
           console.log(`[AI Designer] Saved page ${page.slug} (${pageId})`);
@@ -685,6 +688,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                 "[AI Designer] Failed to persist design tokens:",
                 tokenResult.error,
               );
+              toast.warning("Design tokens couldn't be saved. You can update them in site settings.");
             } else {
               console.log(
                 "[AI Designer] Design tokens saved to site.settings.theme",
@@ -696,6 +700,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
             "[AI Designer] Design token persistence error (non-fatal):",
             tokenErr,
           );
+          toast.warning("Design tokens couldn't be saved. You can update them in site settings.");
         }
 
         // Auto-install modules based on component types used in the generated pages
@@ -733,6 +738,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
             "[AI Designer] Module auto-install error (non-fatal):",
             moduleErr,
           );
+          toast.warning("Some modules couldn't be auto-installed. Visit Marketplace to install them manually.");
         }
 
         // Auto-publish the site so pages are immediately accessible
@@ -762,7 +768,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
         // Redirect to the studio for the homepage
         router.push(`/dashboard/sites/${siteId}/pages`);
       } else if (errorCount > 0) {
-        toast.error(`Failed to save pages. ${errorCount} errors occurred.`);
+        toast.error(`Failed to save pages: ${failedPages.join(", ")}`);
       } else {
         toast.warning("No pages were saved. Please try generating again.");
       }
