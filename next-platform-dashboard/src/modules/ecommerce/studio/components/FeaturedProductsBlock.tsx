@@ -1,6 +1,6 @@
 /**
  * E-Commerce Featured Products - Studio Block
- * 
+ *
  * Displays a carousel or row of featured/promoted products.
  * Supports multiple display modes: carousel, row, and hero.
  */
@@ -9,9 +9,15 @@
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import type { ComponentDefinition, ResponsiveValue } from "@/types/studio";
-import { 
-  ChevronLeft, ChevronRight, Loader2, AlertCircle, 
-  Sparkles, TrendingUp, Clock, Tag
+import {
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  AlertCircle,
+  Sparkles,
+  TrendingUp,
+  Clock,
+  Tag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStorefrontProducts } from "../../hooks/useStorefrontProducts";
@@ -27,39 +33,45 @@ interface FeaturedProductsProps {
   // Data source
   siteId?: string;
   _siteId?: string | null; // Studio canvas passes this
-  productSource: "featured" | "new" | "bestselling" | "sale" | "category" | "manual";
+  productSource:
+    | "featured"
+    | "new"
+    | "bestselling"
+    | "sale"
+    | "category"
+    | "manual";
   categoryId?: string;
   productIds?: string[];
   limit: number;
-  
+
   // Display options
   title?: string;
   subtitle?: string;
   showTitle: boolean;
   showViewAll: boolean;
   viewAllLink?: string;
-  
+
   // Layout
   displayMode: "carousel" | "row" | "hero";
   columns: ResponsiveValue<number>;
   cardVariant: "card" | "minimal" | "compact";
-  
+
   // Carousel options
   autoPlay: boolean;
   autoPlayInterval: number;
   showNavigation: boolean;
   showDots: boolean;
-  
+
   // Card options
   showPrice: boolean;
   showRating: boolean;
   showAddToCart: boolean;
   showWishlist: boolean;
-  
+
   // Styling
   gap: ResponsiveValue<string>;
   padding: ResponsiveValue<string>;
-  
+
   // Events
   onProductClick?: (productId: string) => void;
   onViewAllClick?: () => void;
@@ -121,21 +133,25 @@ export function FeaturedProductsBlock({
   const storefront = useStorefront();
   // Use _siteId from Studio canvas, then siteId prop, then context
   const effectiveSiteId = _siteId || siteId || storefront?.siteId || "";
-  
+
   // Carousel state
   const [currentSlide, setCurrentSlide] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
   const autoPlayRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Build query options based on source
   const queryOptions = {
     categoryId: productSource === "category" ? categoryId : undefined,
     featured: productSource === "featured" ? true : undefined,
-    sortBy: productSource === "new" ? "newest" as const : 
-            productSource === "bestselling" ? "popularity" as const : undefined,
+    sortBy:
+      productSource === "new"
+        ? ("newest" as const)
+        : productSource === "bestselling"
+          ? ("popularity" as const)
+          : undefined,
     limit,
   };
-  
+
   // Fetch products
   const {
     products: fetchedProducts,
@@ -143,48 +159,49 @@ export function FeaturedProductsBlock({
     error,
     refetch,
   } = useStorefrontProducts(effectiveSiteId, queryOptions);
-  
+
   // If manual, filter to specific product IDs
-  const products = productSource === "manual" && productIds?.length 
-    ? fetchedProducts.filter(p => productIds.includes(p.id))
-    : fetchedProducts;
-  
+  const products =
+    productSource === "manual" && productIds?.length
+      ? fetchedProducts.filter((p) => productIds.includes(p.id))
+      : fetchedProducts;
+
   // Get responsive values
   const gapValue = typeof gap === "object" ? gap.mobile : gap;
   const paddingValue = typeof padding === "object" ? padding.mobile : padding;
   const columnsValue = typeof columns === "object" ? columns.mobile : columns;
-  
+
   // Calculate carousel slides
   const slidesCount = Math.ceil(products.length / columnsValue);
-  
+
   // Auto-play effect
   useEffect(() => {
     if (!autoPlay || displayMode !== "carousel" || slidesCount <= 1) return;
-    
+
     autoPlayRef.current = setInterval(() => {
-      setCurrentSlide(prev => (prev + 1) % slidesCount);
+      setCurrentSlide((prev) => (prev + 1) % slidesCount);
     }, autoPlayInterval);
-    
+
     return () => {
       if (autoPlayRef.current) {
         clearInterval(autoPlayRef.current);
       }
     };
   }, [autoPlay, autoPlayInterval, displayMode, slidesCount]);
-  
+
   // Navigation handlers
   const goToSlide = useCallback((index: number) => {
     setCurrentSlide(index);
   }, []);
-  
+
   const goToPrev = useCallback(() => {
-    setCurrentSlide(prev => (prev - 1 + slidesCount) % slidesCount);
+    setCurrentSlide((prev) => (prev - 1 + slidesCount) % slidesCount);
   }, [slidesCount]);
-  
+
   const goToNext = useCallback(() => {
-    setCurrentSlide(prev => (prev + 1) % slidesCount);
+    setCurrentSlide((prev) => (prev + 1) % slidesCount);
   }, [slidesCount]);
-  
+
   // Display title
   const displayTitle = title || SOURCE_TITLES[productSource];
   const SourceIcon = SOURCE_ICONS[productSource];
@@ -192,28 +209,42 @@ export function FeaturedProductsBlock({
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12" style={{ padding: paddingValue }}>
+      <div
+        className="flex items-center justify-center py-12"
+        style={{ padding: paddingValue }}
+      >
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
-  
+
   // Error state
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center" style={{ padding: paddingValue }}>
+      <div
+        className="flex flex-col items-center justify-center py-12 text-center"
+        style={{ padding: paddingValue }}
+      >
         <AlertCircle className="h-12 w-12 text-destructive mb-4" />
         <h3 className="font-medium mb-2">Failed to load products</h3>
-        <Button onClick={() => refetch()} size="sm">Try Again</Button>
+        <Button onClick={() => refetch()} size="sm">
+          Try Again
+        </Button>
       </div>
     );
   }
-  
+
   // Empty state
   if (products.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center" style={{ padding: paddingValue }}>
-        <p className="text-muted-foreground">No products to display</p>
+      <div
+        className="flex flex-col items-center justify-center py-12 text-center"
+        style={{ padding: paddingValue }}
+      >
+        <p className="text-sm text-muted-foreground max-w-md">
+          No products to display. Add products in the Ecommerce module to
+          populate this section.
+        </p>
       </div>
     );
   }
@@ -221,8 +252,12 @@ export function FeaturedProductsBlock({
   // Grid column class
   const gridColsClass = cn(
     `grid-cols-${columnsValue}`,
-    typeof columns === "object" && columns.tablet && `md:grid-cols-${columns.tablet}`,
-    typeof columns === "object" && columns.desktop && `lg:grid-cols-${columns.desktop}`
+    typeof columns === "object" &&
+      columns.tablet &&
+      `md:grid-cols-${columns.tablet}`,
+    typeof columns === "object" &&
+      columns.desktop &&
+      `lg:grid-cols-${columns.desktop}`,
   );
 
   return (
@@ -245,16 +280,12 @@ export function FeaturedProductsBlock({
               onClick={onViewAllClick}
               asChild={!!viewAllLink}
             >
-              {viewAllLink ? (
-                <a href={viewAllLink}>View All</a>
-              ) : (
-                "View All"
-              )}
+              {viewAllLink ? <a href={viewAllLink}>View All</a> : "View All"}
             </Button>
           )}
         </div>
       )}
-      
+
       {/* CAROUSEL Mode */}
       {displayMode === "carousel" && (
         <div className="relative">
@@ -279,21 +310,24 @@ export function FeaturedProductsBlock({
               </Button>
             </>
           )}
-          
+
           {/* Carousel container */}
           <div ref={carouselRef} className="overflow-hidden">
-            <div 
+            <div
               className="flex transition-transform duration-500 ease-out"
               style={{ transform: `translateX(-${currentSlide * 100}%)` }}
             >
               {Array.from({ length: slidesCount }).map((_, slideIndex) => (
-                <div 
-                  key={slideIndex} 
-                  className="w-full flex-shrink-0"
-                >
-                  <div className={cn("grid", gridColsClass)} style={{ gap: gapValue }}>
+                <div key={slideIndex} className="w-full flex-shrink-0">
+                  <div
+                    className={cn("grid", gridColsClass)}
+                    style={{ gap: gapValue }}
+                  >
                     {products
-                      .slice(slideIndex * columnsValue, (slideIndex + 1) * columnsValue)
+                      .slice(
+                        slideIndex * columnsValue,
+                        (slideIndex + 1) * columnsValue,
+                      )
                       .map((product) => (
                         <ProductCardBlock
                           key={product.id}
@@ -320,7 +354,7 @@ export function FeaturedProductsBlock({
               ))}
             </div>
           </div>
-          
+
           {/* Dots */}
           {showDots && slidesCount > 1 && (
             <div className="flex items-center justify-center gap-2 mt-6">
@@ -330,9 +364,9 @@ export function FeaturedProductsBlock({
                   onClick={() => goToSlide(index)}
                   className={cn(
                     "w-2.5 h-2.5 rounded-full transition-colors",
-                    currentSlide === index 
-                      ? "bg-primary" 
-                      : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                    currentSlide === index
+                      ? "bg-primary"
+                      : "bg-muted-foreground/30 hover:bg-muted-foreground/50",
                   )}
                   aria-label={`Go to slide ${index + 1}`}
                 />
@@ -341,19 +375,18 @@ export function FeaturedProductsBlock({
           )}
         </div>
       )}
-      
+
       {/* ROW Mode */}
       {displayMode === "row" && (
         <div className="overflow-x-auto -mx-4 px-4 pb-4">
-          <div 
-            className="flex"
-            style={{ gap: gapValue }}
-          >
+          <div className="flex" style={{ gap: gapValue }}>
             {products.map((product) => (
-              <div 
+              <div
                 key={product.id}
                 className="flex-shrink-0"
-                style={{ width: `calc((100% - ${parseInt(gapValue) * (columnsValue - 1)}px) / ${columnsValue})` }}
+                style={{
+                  width: `calc((100% - ${parseInt(gapValue) * (columnsValue - 1)}px) / ${columnsValue})`,
+                }}
               >
                 <ProductCardBlock
                   productId={product.id}
@@ -378,7 +411,7 @@ export function FeaturedProductsBlock({
           </div>
         </div>
       )}
-      
+
       {/* HERO Mode - First product large, others in grid */}
       {displayMode === "hero" && products.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -403,7 +436,7 @@ export function FeaturedProductsBlock({
               onProductClick={onProductClick}
             />
           </div>
-          
+
           {/* Secondary products grid */}
           <div className="grid grid-cols-2 gap-4">
             {products.slice(1, 5).map((product) => (
@@ -441,10 +474,11 @@ export function FeaturedProductsBlock({
 export const featuredProductsDefinition: Omit<ComponentDefinition, "render"> = {
   type: "EcommerceFeaturedProducts",
   label: "Featured Products",
-  description: "Display featured, new, or bestselling products in carousel or grid",
+  description:
+    "Display featured, new, or bestselling products in carousel or grid",
   category: "ecommerce",
   icon: "Sparkles",
-  
+
   fields: {
     siteId: {
       type: "text",
@@ -576,7 +610,7 @@ export const featuredProductsDefinition: Omit<ComponentDefinition, "render"> = {
       responsive: true,
     },
   },
-  
+
   defaultProps: {
     siteId: undefined,
     productSource: "featured",
@@ -602,13 +636,24 @@ export const featuredProductsDefinition: Omit<ComponentDefinition, "render"> = {
     gap: { mobile: "16px" },
     padding: { mobile: "16px" },
   },
-  
+
   ai: {
-    description: "Showcase featured, new, or bestselling products in carousel, row, or hero layout",
+    description:
+      "Showcase featured, new, or bestselling products in carousel, row, or hero layout",
     canModify: [
-      "productSource", "limit", "title", "subtitle", "showTitle",
-      "displayMode", "columns", "cardVariant", "autoPlay", "showNavigation",
-      "showPrice", "showRating", "showAddToCart"
+      "productSource",
+      "limit",
+      "title",
+      "subtitle",
+      "showTitle",
+      "displayMode",
+      "columns",
+      "cardVariant",
+      "autoPlay",
+      "showNavigation",
+      "showPrice",
+      "showRating",
+      "showAddToCart",
     ],
     suggestions: [
       "Show new arrivals",
@@ -618,6 +663,14 @@ export const featuredProductsDefinition: Omit<ComponentDefinition, "render"> = {
       "Auto-play carousel",
     ],
   },
-  
-  keywords: ["featured", "products", "carousel", "new arrivals", "bestsellers", "sale", "showcase"],
+
+  keywords: [
+    "featured",
+    "products",
+    "carousel",
+    "new arrivals",
+    "bestsellers",
+    "sale",
+    "showcase",
+  ],
 };

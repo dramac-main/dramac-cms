@@ -341,9 +341,10 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
       setGeneratedPageSlugs(pageSlugs);
 
       // Convert pages — AI's prop values flow through directly (no design token override)
+      const siteName = output.site?.name;
       const map = new Map<string, StudioPageData>();
       for (const page of output.pages) {
-        const studioData = convertPageToStudioFormat(page);
+        const studioData = convertPageToStudioFormat(page, siteName);
         map.set(page.slug, studioData);
       }
       setStudioDataMap(map);

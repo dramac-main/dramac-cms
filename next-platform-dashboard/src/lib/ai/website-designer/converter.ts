@@ -318,8 +318,12 @@ function fixLinksInObject(
 
 /**
  * Convert a single GeneratedPage to StudioPageData format
+ * @param siteName - Optional site name used as fallback for logoText in Navbar/Footer
  */
-export function convertPageToStudioFormat(page: GeneratedPage): StudioPageData {
+export function convertPageToStudioFormat(
+  page: GeneratedPage,
+  siteName?: string,
+): StudioPageData {
   const components: Record<string, StudioComponent> = {};
   const rootChildren: string[] = [];
 
@@ -914,8 +918,8 @@ function transformPropsForStudio(
 
     return {
       ...props,
-      // Logo normalization
-      logoText: props.logoText || props.brandName || "Brand",
+      // Logo normalization — use site name from settings as fallback
+      logoText: props.logoText || props.brandName || siteName || "Brand",
       logo: props.logo || props.logoImage || "",
       logoLink: "/",
       // Links — ensure properly formatted with valid routes
@@ -1136,12 +1140,21 @@ function transformPropsForStudio(
       ...props,
       // Branding
       companyName:
-        props.companyName || props.businessName || props.logoText || "",
+        props.companyName ||
+        props.businessName ||
+        props.logoText ||
+        siteName ||
+        "",
       logo:
         typeof props.logo === "string" && props.logo.includes("/")
           ? props.logo
           : "",
-      logoText: props.logoText || props.companyName || props.businessName || "",
+      logoText:
+        props.logoText ||
+        props.companyName ||
+        props.businessName ||
+        siteName ||
+        "",
       description: (() => {
         // Filter out generic AI-fabricated descriptions
         const desc = String(props.description || props.tagline || "");
@@ -1671,8 +1684,9 @@ export function convertOutputToStudioPages(
     { page: GeneratedPage; studioData: StudioPageData }
   >();
 
+  const siteName = output.site?.name;
   for (const page of output.pages) {
-    const studioData = convertPageToStudioFormat(page);
+    const studioData = convertPageToStudioFormat(page, siteName);
     result.set(page.slug, { page, studioData });
   }
 

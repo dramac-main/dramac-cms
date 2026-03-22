@@ -123,10 +123,11 @@ export function ProductGridBlock({
     return (
       <div className="product-grid-wrapper">
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <ShoppingBag className="h-12 w-12 text-muted-foreground mb-3" />
-          <h3 className="font-medium text-lg mb-1">No products available</h3>
-          <p className="text-sm text-muted-foreground">
-            Check back soon for new products.
+          <ShoppingBag className="h-12 w-12 text-amber-500 mb-3" />
+          <h3 className="font-medium text-lg mb-1">No products yet</h3>
+          <p className="text-sm text-muted-foreground max-w-md">
+            This section will display products once they are added. Go to the
+            Ecommerce module to create and manage your products.
           </p>
         </div>
       </div>

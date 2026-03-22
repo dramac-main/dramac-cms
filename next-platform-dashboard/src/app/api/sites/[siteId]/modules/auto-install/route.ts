@@ -40,13 +40,18 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const { siteId } = await context.params;
     const supabase = await createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
-    const { componentTypes = [], selectedFeatures = [] }: { componentTypes: string[]; selectedFeatures: string[] } = body;
+    const {
+      componentTypes = [],
+      selectedFeatures = [],
+    }: { componentTypes: string[]; selectedFeatures: string[] } = body;
 
     // Determine which module slugs are needed from component types
     const neededSlugs = new Set<string>();
@@ -68,7 +73,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ installed: [] });
     }
 
-    console.log(`[AutoInstall] Site ${siteId}: Detected module needs:`, [...neededSlugs]);
+    console.log(`[AutoInstall] Site ${siteId}: Detected module needs:`, [
+      ...neededSlugs,
+    ]);
 
     // Look up the site's agency
     const { data: site } = await supabase
@@ -80,7 +87,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const agencyId = (site?.client as any)?.agency_id;
     if (!agencyId) {
       console.error("[AutoInstall] Could not resolve agency for site", siteId);
-      return NextResponse.json({ error: "Site agency not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Site agency not found" },
+        { status: 404 },
+      );
     }
 
     // Resolve slugs to module UUIDs
@@ -90,8 +100,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
       .in("slug", [...neededSlugs]);
 
     if (!modules || modules.length === 0) {
-      console.warn("[AutoInstall] No modules found in modules_v2 for slugs:", [...neededSlugs]);
-      return NextResponse.json({ installed: [], warning: "Module definitions not found" });
+      console.warn("[AutoInstall] No modules found in modules_v2 for slugs:", [
+        ...neededSlugs,
+      ]);
+      return NextResponse.json({
+        installed: [],
+        warning: "Module definitions not found",
+      });
     }
 
     const installed: string[] = [];
@@ -113,7 +128,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
             .from("agency_module_subscriptions")
             .update({ status: "active", updated_at: new Date().toISOString() })
             .eq("id", existingSub.id);
-          console.log(`[AutoInstall] Re-activated subscription for ${mod.slug}`);
+          console.log(
+            `[AutoInstall] Re-activated subscription for ${mod.slug}`,
+          );
         }
       } else {
         const { data: newSub, error: subError } = await (supabase as any)
@@ -128,11 +145,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
           .single();
 
         if (subError) {
-          console.error(`[AutoInstall] Failed to create subscription for ${mod.slug}:`, subError.message);
+          console.error(
+            `[AutoInstall] Failed to create subscription for ${mod.slug}:`,
+            subError.message,
+          );
           continue;
         }
         subscriptionId = newSub.id;
-        console.log(`[AutoInstall] Created agency subscription for ${mod.slug}`);
+        console.log(
+          `[AutoInstall] Created agency subscription for ${mod.slug}`,
+        );
       }
 
       // Step 2: Create or update site installation
@@ -153,7 +175,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
               agency_subscription_id: subscriptionId,
             })
             .eq("id", existing.id);
-          console.log(`[AutoInstall] Re-enabled ${mod.slug} for site ${siteId}`);
+          console.log(
+            `[AutoInstall] Re-enabled ${mod.slug} for site ${siteId}`,
+          );
           installed.push(mod.slug);
         } else {
           // Ensure subscription link exists even if already enabled
@@ -163,7 +187,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
               .update({ agency_subscription_id: subscriptionId })
               .eq("id", existing.id);
           }
-          console.log(`[AutoInstall] ${mod.slug} already installed and enabled for site ${siteId}`);
+          console.log(
+            `[AutoInstall] ${mod.slug} already installed and enabled for site ${siteId}`,
+          );
         }
         continue;
       }
@@ -182,7 +208,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
         });
 
       if (error) {
-        console.error(`[AutoInstall] Failed to install ${mod.slug}:`, error.message);
+        console.error(
+          `[AutoInstall] Failed to install ${mod.slug}:`,
+          error.message,
+        );
       } else {
         console.log(`[AutoInstall] Installed ${mod.slug} for site ${siteId}`);
         installed.push(mod.slug);
@@ -194,7 +223,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     console.error("[AutoInstall] Error:", error);
     return NextResponse.json(
       { error: "Failed to auto-install modules" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

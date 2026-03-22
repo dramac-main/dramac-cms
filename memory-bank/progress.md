@@ -5,6 +5,14 @@
 
 ---
 
+## Latest Update: Module Auto-Install Fix — `8380de92`
+
+**Problem**: AI designer selected features (ecommerce, live-chat) but modules never appeared on Modules tab after site generation. Root cause: auto-install only created `site_module_installations` but Modules tab requires `agency_module_subscriptions` to exist.
+
+**Fix**: Auto-install now creates agency subscriptions first, then links site installations to them. Also accepts `selectedFeatures` for feature-only modules (live-chat, booking).
+
+---
+
 ## Latest Update: February 2026 - E-Commerce & Quotation System Verification + Fixes
 
 ### Commit: `570e664b` — 5 files changed

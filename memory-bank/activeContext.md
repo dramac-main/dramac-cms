@@ -1,6 +1,37 @@
 # Active Context
 
-## Current Focus: AI Designer Feature Selection + Auth Flow Fixes — COMPLETED
+## Current Focus: Module Auto-Install Fix — COMPLETED
+
+### Status: COMMITTED & PUSHED — `8380de92`
+
+### Latest Work: Module Auto-Install Creates Agency Subscriptions
+
+#### Root Cause
+Auto-install API only created `site_module_installations` but the Modules tab requires `agency_module_subscriptions` to exist first. Without agency subscriptions, modules were invisible even if site installations existed. Additionally, `selectedFeatures` from the AI designer (e.g., live-chat) were never passed to the auto-install API.
+
+#### Fix Applied (2 files):
+
+1. **`auto-install/route.ts`** — Complete rewrite:
+   - Now creates `agency_module_subscriptions` (status: active, billing_cycle: monthly) before `site_module_installations`
+   - Links site installations to subscriptions via `agency_subscription_id`
+   - Accepts `selectedFeatures` param for feature-only modules (live-chat, booking, etc.)
+   - Added `FEATURE_MODULE_MAP` (ecommerce, booking, live-chat, blog → module slugs)
+   - Added `LiveChat` prefix to `COMPONENT_MODULE_MAP`
+   - Handles re-activation of canceled subscriptions and existing installations
+
+2. **`ai-designer/page.tsx`** — Three changes:
+   - Passes `selectedFeatures: [...selectedFeatures]` to auto-install API
+   - Fires auto-install when `selectedFeatures.size > 0` even if no component types detected
+   - Fixed React Hook dependency arrays for `selectedFeatures`
+
+#### Module System Three-Tier Architecture:
+- `modules_v2` → module definitions (12 active modules)
+- `agency_module_subscriptions` → agency licenses (UNIQUE agency_id + module_id)
+- `site_module_installations` → per-site enable/disable (UNIQUE site_id + module_id, FK to subscription)
+
+---
+
+## Previous Focus: AI Designer Feature Selection + Auth Flow Fixes — COMPLETED
 
 ### Status: COMMITTED & PUSHED — `ed816b22`
 
