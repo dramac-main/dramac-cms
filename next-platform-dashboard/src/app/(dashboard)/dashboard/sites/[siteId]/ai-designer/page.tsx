@@ -31,6 +31,7 @@ import {
   CalendarCheck,
   FileText,
   MessageCircle,
+  Mail,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -370,6 +371,11 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
   // =============================================================================
 
   const handleGenerate = useCallback(async () => {
+    if (selectedFeatures.size === 0) {
+      toast.error("Please select at least one feature for your website");
+      return;
+    }
+
     if (!prompt.trim()) {
       toast.error("Please describe what kind of website you want");
       return;
@@ -864,6 +870,11 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                       },
                       { id: "blog", label: "Blog", icon: FileText },
                       {
+                        id: "contact-forms",
+                        label: "Contact Forms",
+                        icon: Mail,
+                      },
+                      {
                         id: "live-chat",
                         label: "Live Chat",
                         icon: MessageCircle,
@@ -889,7 +900,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                           }}
                           className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors border ${
                             isSelected
-                              ? "bg-primary text-primary-foreground border-primary"
+                              ? "bg-blue-600 text-white border-blue-600"
                               : "bg-muted/50 text-muted-foreground border-border hover:bg-muted hover:text-foreground"
                           } ${isGenerating ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                         >
@@ -901,7 +912,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                     })}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Select any features you need — the AI will build them into
+                    Select at least one feature — the AI will build them into
                     your site automatically.
                   </p>
                 </div>
@@ -999,7 +1010,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                   onClick={handleGenerate}
                   className="w-full gap-2"
                   size="lg"
-                  disabled={isGenerating || !prompt.trim()}
+                  disabled={isGenerating || !prompt.trim() || selectedFeatures.size === 0}
                 >
                   {isGenerating ? (
                     <>
