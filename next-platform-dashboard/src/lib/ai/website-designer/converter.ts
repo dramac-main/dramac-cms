@@ -329,7 +329,7 @@ export function convertPageToStudioFormat(
 
   // Process each component in the page
   for (const genComponent of page.components) {
-    const studioComponent = convertComponentToStudio(genComponent);
+    const studioComponent = convertComponentToStudio(genComponent, siteName);
     components[studioComponent.id] = studioComponent;
     rootChildren.push(studioComponent.id);
   }
@@ -355,6 +355,7 @@ export function convertPageToStudioFormat(
  */
 function convertComponentToStudio(
   genComponent: GeneratedComponent,
+  siteName?: string,
 ): StudioComponent {
   // Map AI component types to Studio component types
   const typeMap: Record<string, string> = {
@@ -815,7 +816,7 @@ function convertComponentToStudio(
   const fixedProps = fixLinksInObject(genComponent.props || {});
 
   // Transform props to match Studio component expectations
-  const studioProps = transformPropsForStudio(resolvedType, fixedProps);
+  const studioProps = transformPropsForStudio(resolvedType, fixedProps, siteName);
 
   // Handle LogoCloud→Features conversion (when no real images available)
   const finalType = studioProps.__convertedToFeatures
@@ -846,6 +847,7 @@ function convertComponentToStudio(
 function transformPropsForStudio(
   type: string,
   props: Record<string, unknown>,
+  siteName?: string,
 ): Record<string, unknown> {
   // ==========================================================================
   // AI-FIRST CONVERTER (Phase AWD-10)

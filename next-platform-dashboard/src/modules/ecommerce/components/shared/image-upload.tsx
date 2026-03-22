@@ -5,8 +5,8 @@
  */
 'use client'
 
-import { useState, useRef, useCallback, useMemo } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
+import { useState, useRef, useCallback } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -52,11 +52,8 @@ export function ImageUpload({
   const [urlInput, setUrlInput] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Memoize Supabase client to prevent re-creation on every render
-  const supabase = useMemo(() => createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  ), [])
+  // Use shared Supabase client (includes noOpLock deadlock workaround)
+  const supabase = createClient()
 
   const uploadFile = useCallback(async (file: File) => {
     // Validate file type
@@ -74,28 +71,25 @@ export function ImageUpload({
     setIsUploading(true)
     console.log('[ImageUpload] Starting upload...', { siteId, folder, fileName: file.name, fileSize: file.size, fileType: file.type })
 
-    // 30-second timeout to prevent infinite hanging
-    const controller = new AbortController()
-    const timeout = setTimeout(() => {
-      controller.abort()
-      console.error('[ImageUpload] Upload timed out after 30s')
-    }, 30000)
-
     try {
       // Generate unique filename
       const ext = file.name.split('.').pop()
       const filename = `${siteId}/${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`
       console.log('[ImageUpload] Uploading to path:', filename)
 
-      // Upload to Supabase Storage
-      const { data, error } = await supabase.storage
+      // Race upload against a 60-second timeout
+      const uploadPromise = supabase.storage
         .from('ecommerce')
         .upload(filename, file, {
           cacheControl: '3600',
           upsert: false
         })
 
-      clearTimeout(timeout)
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Upload timed out after 60s')), 60000)
+      )
+
+      const { data, error } = await Promise.race([uploadPromise, timeoutPromise])
 
       if (error) {
         console.error('[ImageUpload] Supabase error:', error)
@@ -127,15 +121,9 @@ export function ImageUpload({
       onChange(urlData.publicUrl)
       toast.success('Image uploaded successfully')
     } catch (error) {
-      clearTimeout(timeout)
-      if (error instanceof DOMException && error.name === 'AbortError') {
-        console.error('[ImageUpload] Upload aborted (timeout)')
-        toast.error('Upload timed out. Please try again or use a URL instead.')
-      } else {
-        console.error('[ImageUpload] Upload error:', error)
-        const message = error instanceof Error ? error.message : 'Failed to upload image'
-        toast.error(message + '. You can use a URL instead.')
-      }
+      console.error('[ImageUpload] Upload error:', error)
+      const message = error instanceof Error ? error.message : 'Failed to upload image'
+      toast.error(message + '. You can use a URL instead.')
       setShowUrlInput(true)
     } finally {
       setIsUploading(false)
