@@ -21,8 +21,12 @@ import { Input, Button } from "@/components/ui";
 export function SignupForm() {
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
-  const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null);
-  const [resendStatus, setResendStatus] = useState<"idle" | "sending" | "sent">("idle");
+  const [confirmationEmail, setConfirmationEmail] = useState<string | null>(
+    null,
+  );
+  const [resendStatus, setResendStatus] = useState<"idle" | "sending" | "sent">(
+    "idle",
+  );
 
   const form = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
@@ -93,7 +97,8 @@ export function SignupForm() {
         </div>
 
         <p className="text-sm text-muted-foreground">
-          Click the link in the email to activate your account, then you can sign in.
+          Click the link in the email to activate your account, then you can
+          sign in.
         </p>
 
         {error && (
@@ -109,8 +114,12 @@ export function SignupForm() {
             onClick={handleResend}
             disabled={resendStatus === "sending" || resendStatus === "sent"}
           >
-            {resendStatus === "sending" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {resendStatus === "sent" ? "Email sent! Check your inbox" : "Resend confirmation email"}
+            {resendStatus === "sending" && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
+            {resendStatus === "sent"
+              ? "Email sent! Check your inbox"
+              : "Resend confirmation email"}
           </Button>
 
           <Link

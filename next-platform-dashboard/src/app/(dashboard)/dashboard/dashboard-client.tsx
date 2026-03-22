@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { 
+import {
   DashboardStats,
   QuickActions,
   RecentActivity,
@@ -22,24 +22,34 @@ import {
   TimeRangeButtons,
 } from "@/components/dashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Globe, Users, Package, Activity, BarChart3, TrendingUp, PieChart, FileText, Zap } from "lucide-react";
+import {
+  Globe,
+  Users,
+  Package,
+  Activity,
+  BarChart3,
+  TrendingUp,
+  PieChart,
+  FileText,
+  Zap,
+} from "lucide-react";
 import type { DashboardData } from "@/lib/actions/dashboard";
 import type { TimeRange, ChartDataPoint } from "@/types/dashboard-widgets";
 
 /** Format a date string for chart labels based on the time range */
 function formatDateLabel(dateStr: string, range: string): string {
-  const d = new Date(dateStr + 'T00:00:00');
-  if (range === '24h') {
-    return d.toLocaleDateString('en-US', { hour: 'numeric' });
+  const d = new Date(dateStr + "T00:00:00");
+  if (range === "24h") {
+    return d.toLocaleDateString("en-US", { hour: "numeric" });
   }
-  if (range === '7d') {
-    return d.toLocaleDateString('en-US', { weekday: 'short' });
+  if (range === "7d") {
+    return d.toLocaleDateString("en-US", { weekday: "short" });
   }
-  if (range === '90d') {
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  if (range === "90d") {
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   }
   // 30d default
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 interface DashboardClientProps {
@@ -50,19 +60,25 @@ export function DashboardClient({ data }: DashboardClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [timeRange, setTimeRange] = React.useState<TimeRange>(
-    (data.timeRange as TimeRange) || (searchParams.get("range") as TimeRange) || "30d"
+    (data.timeRange as TimeRange) ||
+      (searchParams.get("range") as TimeRange) ||
+      "30d",
   );
 
   // When user changes the time range, update the URL to trigger server-side re-fetch
-  const handleTimeRangeChange = React.useCallback((newRange: TimeRange) => {
-    setTimeRange(newRange);
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("range", newRange);
-    router.push(`/dashboard?${params.toString()}`);
-  }, [router, searchParams]);
+  const handleTimeRangeChange = React.useCallback(
+    (newRange: TimeRange) => {
+      setTimeRange(newRange);
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("range", newRange);
+      router.push(`/dashboard?${params.toString()}`);
+    },
+    [router, searchParams],
+  );
 
   // Range label for display
-  const rangeLabel = timeRange === '24h' ? 'today' : `last ${timeRange.replace('d', ' days')}`;
+  const rangeLabel =
+    timeRange === "24h" ? "today" : `last ${timeRange.replace("d", " days")}`;
 
   // Transform real data into metrics for the grid — show range-filtered counts
   const realMetrics = [
@@ -103,7 +119,10 @@ export function DashboardClient({ data }: DashboardClientProps) {
   // Transform data for pie chart - Site Status Distribution
   const siteStatusData: ChartDataPoint[] = [
     { label: "Published", value: data.stats.publishedSites },
-    { label: "Draft", value: Math.max(0, data.stats.totalSites - data.stats.publishedSites) },
+    {
+      label: "Draft",
+      value: Math.max(0, data.stats.totalSites - data.stats.publishedSites),
+    },
   ];
 
   // Transform data for bar chart - Content Overview
@@ -119,14 +138,14 @@ export function DashboardClient({ data }: DashboardClientProps) {
     { label: "Team Members", value: data.enhancedMetrics.teamMembers || 1 },
     { label: "Workflows", value: data.enhancedMetrics.activeWorkflows || 0 },
     { label: "Modules", value: data.enhancedMetrics.moduleInstallations || 0 },
-  ].filter(item => item.value > 0);
+  ].filter((item) => item.value > 0);
 
   // Real time-series data from server, bucketed by date
-  const siteTrendData: ChartDataPoint[] = (data.timeSeries || []).map(pt => ({
+  const siteTrendData: ChartDataPoint[] = (data.timeSeries || []).map((pt) => ({
     label: formatDateLabel(pt.date, timeRange),
     value: pt.sites,
   }));
-  const pageTrendData: ChartDataPoint[] = (data.timeSeries || []).map(pt => ({
+  const pageTrendData: ChartDataPoint[] = (data.timeSeries || []).map((pt) => ({
     label: formatDateLabel(pt.date, timeRange),
     value: pt.pages,
   }));
@@ -134,7 +153,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
   return (
     <div className="space-y-6">
       {/* Welcome Card with Agency Info */}
-      <WelcomeCard 
+      <WelcomeCard
         userName={data.user?.name || data.user?.email?.split("@")[0]}
         agencyName={data.agencyName}
         subscriptionPlan={data.subscriptionPlan}
@@ -155,7 +174,10 @@ export function DashboardClient({ data }: DashboardClientProps) {
         collapsible
         defaultCollapsed={false}
         actions={
-          <TimeRangeButtons value={timeRange} onChange={handleTimeRangeChange} />
+          <TimeRangeButtons
+            value={timeRange}
+            onChange={handleTimeRangeChange}
+          />
         }
       >
         <MetricsGrid metrics={realMetrics} columns={4} gap="md" />
@@ -172,7 +194,9 @@ export function DashboardClient({ data }: DashboardClientProps) {
               </div>
               <div>
                 <CardTitle className="text-base">Content Overview</CardTitle>
-                <p className="text-xs text-muted-foreground">Real content counts</p>
+                <p className="text-xs text-muted-foreground">
+                  Real content counts
+                </p>
               </div>
             </div>
           </CardHeader>
@@ -198,7 +222,9 @@ export function DashboardClient({ data }: DashboardClientProps) {
               </div>
               <div>
                 <CardTitle className="text-base">Site Status</CardTitle>
-                <p className="text-xs text-muted-foreground">Published vs Draft</p>
+                <p className="text-xs text-muted-foreground">
+                  Published vs Draft
+                </p>
               </div>
             </div>
           </CardHeader>
@@ -226,7 +252,9 @@ export function DashboardClient({ data }: DashboardClientProps) {
               </div>
               <div>
                 <CardTitle className="text-base">Sites Created</CardTitle>
-                <p className="text-xs text-muted-foreground">New sites {rangeLabel}</p>
+                <p className="text-xs text-muted-foreground">
+                  New sites {rangeLabel}
+                </p>
               </div>
             </div>
           </CardHeader>
@@ -253,7 +281,9 @@ export function DashboardClient({ data }: DashboardClientProps) {
               </div>
               <div>
                 <CardTitle className="text-base">Pages Created</CardTitle>
-                <p className="text-xs text-muted-foreground">New pages {rangeLabel}</p>
+                <p className="text-xs text-muted-foreground">
+                  New pages {rangeLabel}
+                </p>
               </div>
             </div>
           </CardHeader>
@@ -283,13 +313,20 @@ export function DashboardClient({ data }: DashboardClientProps) {
             <DonutChart
               data={[
                 { label: "Published", value: data.stats.publishedSites },
-                { label: "Draft", value: Math.max(0, data.stats.totalSites - data.stats.publishedSites) },
+                {
+                  label: "Draft",
+                  value: Math.max(
+                    0,
+                    data.stats.totalSites - data.stats.publishedSites,
+                  ),
+                },
               ]}
               size={60}
               strokeWidth={8}
-              centerValue={data.stats.totalSites > 0 
-                ? `${Math.round((data.stats.publishedSites / data.stats.totalSites) * 100)}%`
-                : "0%"
+              centerValue={
+                data.stats.totalSites > 0
+                  ? `${Math.round((data.stats.publishedSites / data.stats.totalSites) * 100)}%`
+                  : "0%"
               }
               colors={["hsl(142.1 76.2% 36.3%)", "hsl(220 14% 80%)"]}
             />
@@ -306,8 +343,17 @@ export function DashboardClient({ data }: DashboardClientProps) {
           <div className="flex items-center gap-3">
             <DonutChart
               data={[
-                { label: "Active", value: data.enhancedMetrics.teamMembers || 1 },
-                { label: "Capacity", value: Math.max(0, 10 - (data.enhancedMetrics.teamMembers || 1)) },
+                {
+                  label: "Active",
+                  value: data.enhancedMetrics.teamMembers || 1,
+                },
+                {
+                  label: "Capacity",
+                  value: Math.max(
+                    0,
+                    10 - (data.enhancedMetrics.teamMembers || 1),
+                  ),
+                },
               ]}
               size={60}
               strokeWidth={8}
@@ -324,7 +370,9 @@ export function DashboardClient({ data }: DashboardClientProps) {
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium">Form Submissions</span>
           </div>
-          <div className="text-2xl font-bold">{data.enhancedMetrics.formSubmissions}</div>
+          <div className="text-2xl font-bold">
+            {data.enhancedMetrics.formSubmissions}
+          </div>
           <div className="text-xs text-muted-foreground mt-1">
             Total submissions received
           </div>
@@ -336,7 +384,9 @@ export function DashboardClient({ data }: DashboardClientProps) {
           </div>
           <div className="flex items-center gap-2">
             <Zap className="h-5 w-5 text-yellow-500" />
-            <span className="text-2xl font-bold">{data.enhancedMetrics.activeWorkflows}</span>
+            <span className="text-2xl font-bold">
+              {data.enhancedMetrics.activeWorkflows}
+            </span>
           </div>
           <div className="text-xs text-muted-foreground mt-1">
             Automation workflows running

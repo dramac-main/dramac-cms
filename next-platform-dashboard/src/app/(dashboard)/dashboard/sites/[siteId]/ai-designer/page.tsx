@@ -688,7 +688,9 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                 "[AI Designer] Failed to persist design tokens:",
                 tokenResult.error,
               );
-              toast.warning("Design tokens couldn't be saved. You can update them in site settings.");
+              toast.warning(
+                "Design tokens couldn't be saved. You can update them in site settings.",
+              );
             } else {
               console.log(
                 "[AI Designer] Design tokens saved to site.settings.theme",
@@ -700,7 +702,9 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
             "[AI Designer] Design token persistence error (non-fatal):",
             tokenErr,
           );
-          toast.warning("Design tokens couldn't be saved. You can update them in site settings.");
+          toast.warning(
+            "Design tokens couldn't be saved. You can update them in site settings.",
+          );
         }
 
         // Auto-install modules based on component types used in the generated pages
@@ -738,7 +742,9 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
             "[AI Designer] Module auto-install error (non-fatal):",
             moduleErr,
           );
-          toast.warning("Some modules couldn't be auto-installed. Visit Marketplace to install them manually.");
+          toast.warning(
+            "Some modules couldn't be auto-installed. Visit Marketplace to install them manually.",
+          );
         }
 
         // Auto-publish the site so pages are immediately accessible

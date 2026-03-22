@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,11 +39,12 @@ export function GettingStartedCard({
   totalSites,
   publishedSites,
 }: GettingStartedProps) {
-  const [dismissed, setDismissed] = useState(() => {
-    // SSR-safe: default to true (hidden) on server, check localStorage on client
-    if (typeof window === "undefined") return true;
-    return localStorage.getItem(DISMISSED_KEY) === "true";
-  });
+  // Start hidden to match server render, then check localStorage after mount
+  const [dismissed, setDismissed] = useState(true);
+
+  useEffect(() => {
+    setDismissed(localStorage.getItem(DISMISSED_KEY) === "true");
+  }, []);
 
   const steps: Step[] = [
     {
@@ -144,7 +145,7 @@ export function GettingStartedCard({
                       "flex items-center gap-3 rounded-lg border p-3 transition-colors",
                       step.isComplete
                         ? "border-green-200 bg-green-50/50 dark:border-green-900 dark:bg-green-950/30"
-                        : "border-border hover:border-primary/30 hover:bg-accent/50"
+                        : "border-border hover:border-primary/30 hover:bg-accent/50",
                     )}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -160,7 +161,8 @@ export function GettingStartedCard({
                       <p
                         className={cn(
                           "text-sm font-medium",
-                          step.isComplete && "text-green-700 dark:text-green-300"
+                          step.isComplete &&
+                            "text-green-700 dark:text-green-300",
                         )}
                       >
                         {step.title}

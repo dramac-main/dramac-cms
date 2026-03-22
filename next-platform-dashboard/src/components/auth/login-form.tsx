@@ -26,7 +26,9 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [emailNotConfirmed, setEmailNotConfirmed] = useState(false);
-  const [resendStatus, setResendStatus] = useState<"idle" | "sending" | "sent">("idle");
+  const [resendStatus, setResendStatus] = useState<"idle" | "sending" | "sent">(
+    "idle",
+  );
   const router = useRouter();
 
   const form = useForm<LoginFormData>({
@@ -99,18 +101,25 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
                   Please confirm your email
                 </p>
                 <p className="text-sm text-amber-700 dark:text-amber-300">
-                  Check your inbox for a confirmation link. You need to verify your email before signing in.
+                  Check your inbox for a confirmation link. You need to verify
+                  your email before signing in.
                 </p>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={handleResend}
-                  disabled={resendStatus === "sending" || resendStatus === "sent"}
+                  disabled={
+                    resendStatus === "sending" || resendStatus === "sent"
+                  }
                   className="mt-1"
                 >
-                  {resendStatus === "sending" && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
-                  {resendStatus === "sent" ? "Email sent!" : "Resend confirmation email"}
+                  {resendStatus === "sending" && (
+                    <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                  )}
+                  {resendStatus === "sent"
+                    ? "Email sent!"
+                    : "Resend confirmation email"}
                 </Button>
               </div>
             </div>

@@ -33,20 +33,21 @@
 
 You'll see a step-by-step wizard. Fill in each step:
 
-| Step                  | What to Fill In                                                                 |
-| --------------------- | ------------------------------------------------------------------------------- |
-| **1. Your Profile**   | Your full name, job title (e.g. "Owner")                                        |
-| **2. Agency**         | Agency name (e.g. "Test Agency"), description, website (optional)               |
-| **3. Goals**          | Pick what you want to do (select any — this is just preferences)                |
-| **4. Industry**       | Pick your industry (select any)                                                 |
-| **5. First Client**   | Enter a client name (e.g. "Demo Store Client") and their email, then click **"Create Client"** |
-| **6. You're All Set!**| Click **"Go to Dashboard"**                                                     |
+| Step                   | What to Fill In                                                                                |
+| ---------------------- | ---------------------------------------------------------------------------------------------- |
+| **1. Your Profile**    | Your full name, job title (e.g. "Owner")                                                       |
+| **2. Agency**          | Agency name (e.g. "Test Agency"), description, website (optional)                              |
+| **3. Goals**           | Pick what you want to do (select any — this is just preferences)                               |
+| **4. Industry**        | Pick your industry (select any)                                                                |
+| **5. First Client**    | Enter a client name (e.g. "Demo Store Client") and their email, then click **"Create Client"** |
+| **6. You're All Set!** | Click **"Go to Dashboard"**                                                                    |
 
 > **Important:** Do NOT skip Step 5 (First Client). You need at least one client before you can create a site. If you skip this, you'll need to add a client manually before proceeding.
 
 After clicking "Go to Dashboard", you'll land on the **Agency Dashboard** at `/dashboard`.
 
 **What you should see on the dashboard:**
+
 - A **Welcome notification** in-app: "Welcome to DRAMAC! Your account is all set up."
 - **Quick Actions** panel with buttons: "Add Client", "Create Site", "AI Builder", "Upload Media", "Browse Modules", "Settings"
 
@@ -78,6 +79,7 @@ After clicking "Go to Dashboard", you'll land on the **Agency Dashboard** at `/d
 ### Step 4: Generate Your Website with AI
 
 You're now on the **AI Website Designer** page. Here's what you see:
+
 - A heading: **"Build Your Website with AI"**
 - Feature selection chips
 - A prompt text area
@@ -88,10 +90,10 @@ You're now on the **AI Website Designer** page. Here's what you see:
    - Click **"Online Store"** 🛒 — this tells the AI to include a full shop with product grids, cart, and checkout
    - Optionally click **"Booking System"** 📅, **"Blog"** 📄, or **"Live Chat"** 💬 if you want those too
    - A chip turns **blue with a checkmark** when selected
-   > **You MUST select "Online Store" for this walkthrough** — it ensures the AI generates proper e-commerce pages.
+     > **You MUST select "Online Store" for this walkthrough** — it ensures the AI generates proper e-commerce pages.
 
 2. **Write your prompt** in the text area (labeled "What kind of website do you want?"):
-   - Example: *"I need a professional website for my fashion store in Lusaka called 'Demo Shop'. We sell clothing, shoes, and accessories. Include a hero section, featured products, about section, testimonials, and contact form. Use a modern dark theme."*
+   - Example: _"I need a professional website for my fashion store in Lusaka called 'Demo Shop'. We sell clothing, shoes, and accessories. Include a hero section, featured products, about section, testimonials, and contact form. Use a modern dark theme."_
    - Be specific — include your business name, location, and what you offer
 
 3. Click **"Generate Website"** (the big blue button at the bottom)
@@ -113,11 +115,12 @@ You're now on the **AI Website Designer** page. Here's what you see:
 7. Click **"Apply & Edit"** (the green button at the top right) to save everything
 
 **What happens when you click "Apply & Edit":**
+
 - All generated pages are saved to your site
 - Design tokens (colors, fonts) are applied to your site theme
 - **E-Commerce module is automatically installed** (because the AI detected shop/cart/checkout components)
 - **Your site is automatically published** — it's live right away!
-- You'll see a toast notification: *"Website published! X pages live at demo-shop.dramac.app"*
+- You'll see a toast notification: _"Website published! X pages live at demo-shop.dramac.app"_
 - You're redirected to the **Site Detail page** with the **Pages** tab active
 
 > **No marketplace visit needed!** The AI Designer auto-installs all the modules your site uses. You don't need to go to the Marketplace manually.
@@ -166,7 +169,7 @@ After "Apply & Edit", you're on the **Site Detail page**. Here's what you should
    - **Status** — change from "Draft" to **"Active"** (⚠️ important! Draft products won't show on the shop)
    - **Featured Product** — toggle ON for at least one product (it shows in the featured section)
 5. Click **"Create Product"**
-6. You'll see a toast: *"Product created successfully"* and the dialog closes
+6. You'll see a toast: _"Product created successfully"_ and the dialog closes
 7. **Repeat** to add 2-3 more products so the shop looks populated:
    - e.g. "Running Shoes" at K450, status: Active
    - e.g. "Leather Wallet" at K180, status: Active
@@ -434,14 +437,14 @@ After completing all steps, verify these worked:
 | Problem                                    | What to Check                                                                                       |
 | ------------------------------------------ | --------------------------------------------------------------------------------------------------- |
 | E-Commerce tab not showing                 | Refresh the page (F5). The auto-install writes to DB; tab appears on next page load                 |
-| Shop page is blank                         | Make sure E-Commerce module is installed AND enabled (check the Modules tab on site detail)          |
+| Shop page is blank                         | Make sure E-Commerce module is installed AND enabled (check the Modules tab on site detail)         |
 | No products showing                        | Make sure products are set to **"Active"** status (not Draft)                                       |
 | Can't access storefront                    | Check the subdomain URL is correct: `https://YOUR-SUBDOMAIN.dramac.app`                             |
-| "View Live" button not showing             | The site might not be published — click the Publish button on the site detail page                   |
+| "View Live" button not showing             | The site might not be published — click the Publish button on the site detail page                  |
 | No emails arriving                         | Check spam/junk folder. Emails come from `noreply@app.dramacagency.com`                             |
 | "Add to Cart" instead of "Request a Quote" | Refresh the page — quotation mode settings may take a moment to propagate                           |
 | Quote page doesn't load the product        | Make sure you clicked "Request a Quote" on a specific product (not navigated directly to `/quotes`) |
 | Client can't log into portal               | Make sure "Has Portal Access" is enabled in the client's settings                                   |
 | Order not in dashboard                     | Make sure you're in the correct site's E-Commerce dashboard                                         |
 | AI generation failed                       | Try again with a simpler prompt, or check the browser console for errors                            |
-| "Create Site" button is disabled           | You need at least one client first — go to Clients → Add Client                                    |
+| "Create Site" button is disabled           | You need at least one client first — go to Clients → Add Client                                     |

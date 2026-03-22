@@ -1,10 +1,10 @@
 /**
  * E-Commerce Product Grid - Studio Block
- * 
+ *
  * Displays a responsive grid of products from the store catalog.
  * Delegates rendering to ProductCardBlock for professional-grade
  * product cards with hover effects, wishlist, and cart integration.
- * 
+ *
  * Fetches real data in preview/production mode, shows demo cards in editor.
  */
 
@@ -27,21 +27,21 @@ interface ProductGridProps {
   // Grid settings
   columns: ResponsiveValue<number>;
   gap: ResponsiveValue<string>;
-  
+
   // Product source
   source: "category" | "featured" | "new" | "sale" | "custom";
   categoryId: string | null;
   productIds: string[];
   limit: number;
-  
+
   // Display options
   showPrice: boolean;
   showRating: boolean;
   cardVariant: "card" | "minimal";
-  
+
   // Data (injected by renderer)
   siteId?: string;
-  
+
   // Editor context props (passed by canvas)
   _isEditor?: boolean;
   _siteId?: string;
@@ -67,15 +67,16 @@ export function ProductGridBlock({
 }: ProductGridProps) {
   // Context
   const storefront = useStorefront();
-  const resolvedSiteId = _siteId || siteId || storefront?.siteId || '';
+  const resolvedSiteId = _siteId || siteId || storefront?.siteId || "";
 
   // Use the storefront products hook for real data
-  const { products: realProducts, isLoading: hookLoading } = useStorefrontProducts(resolvedSiteId, {
-    categoryId: _categoryId || undefined,
-    featured: source === 'featured' ? true : undefined,
-    limit,
-    sortBy: source === 'new' ? 'newest' : undefined,
-  });
+  const { products: realProducts, isLoading: hookLoading } =
+    useStorefrontProducts(resolvedSiteId, {
+      categoryId: _categoryId || undefined,
+      featured: source === "featured" ? true : undefined,
+      limit,
+      sortBy: source === "new" ? "newest" : undefined,
+    });
 
   const isLoading = resolvedSiteId ? hookLoading : false;
   const products = realProducts || [];
@@ -83,17 +84,25 @@ export function ProductGridBlock({
   const router = useRouter();
 
   // Navigate to product detail page on click (SPA navigation)
-  const handleProductClick = useCallback((productId: string) => {
-    const product = products.find(p => p.id === productId);
-    const slug = product?.slug || productId;
-    router.push(`/products/${slug}`);
-  }, [products, router]);
+  const handleProductClick = useCallback(
+    (productId: string) => {
+      const product = products.find((p) => p.id === productId);
+      const slug = product?.slug || productId;
+      router.push(`/products/${slug}`);
+    },
+    [products, router],
+  );
 
   // Get responsive values
-  const columnsValue = typeof columns === "object" ? columns : { mobile: columns, tablet: columns, desktop: columns };
+  const columnsValue =
+    typeof columns === "object"
+      ? columns
+      : { mobile: columns, tablet: columns, desktop: columns };
   const gapValue = typeof gap === "object" ? gap.mobile : gap;
-  const gapTablet = typeof gap === "object" && gap.tablet ? gap.tablet : gapValue;
-  const gapDesktop = typeof gap === "object" && gap.desktop ? gap.desktop : gapTablet;
+  const gapTablet =
+    typeof gap === "object" && gap.tablet ? gap.tablet : gapValue;
+  const gapDesktop =
+    typeof gap === "object" && gap.desktop ? gap.desktop : gapTablet;
 
   // Loading state
   if (isLoading) {
@@ -101,7 +110,9 @@ export function ProductGridBlock({
       <div className="product-grid-wrapper">
         <div className="flex items-center justify-center py-16">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          <span className="ml-3 text-muted-foreground text-sm">Loading products...</span>
+          <span className="ml-3 text-muted-foreground text-sm">
+            Loading products...
+          </span>
         </div>
       </div>
     );
@@ -156,10 +167,25 @@ export function ProductGridBlock({
         </div>
         <style jsx>{`
           @media (min-width: 768px) {
-            .product-grid { grid-template-columns: repeat(${columnsValue.tablet || columnsValue.mobile || 2}, 1fr) !important; gap: ${gapTablet} !important; }
+            .product-grid {
+              grid-template-columns: repeat(
+                ${columnsValue.tablet || columnsValue.mobile || 2},
+                1fr
+              ) !important;
+              gap: ${gapTablet} !important;
+            }
           }
           @media (min-width: 1024px) {
-            .product-grid { grid-template-columns: repeat(${columnsValue.desktop || columnsValue.tablet || columnsValue.mobile || 2}, 1fr) !important; gap: ${gapDesktop} !important; }
+            .product-grid {
+              grid-template-columns: repeat(
+                ${columnsValue.desktop ||
+                columnsValue.tablet ||
+                columnsValue.mobile ||
+                2},
+                1fr
+              ) !important;
+              gap: ${gapDesktop} !important;
+            }
           }
         `}</style>
       </div>
@@ -169,7 +195,7 @@ export function ProductGridBlock({
   return (
     <div className="product-grid-wrapper">
       {/* Product Grid — delegates to ProductCardBlock for rich cards */}
-      <div 
+      <div
         className={cn("product-grid grid")}
         style={{
           gridTemplateColumns: `repeat(${columnsValue.mobile || 2}, 1fr)`,
@@ -198,18 +224,27 @@ export function ProductGridBlock({
           />
         ))}
       </div>
-      
+
       {/* Responsive CSS */}
       <style jsx>{`
         @media (min-width: 768px) {
           .product-grid {
-            grid-template-columns: repeat(${columnsValue.tablet || columnsValue.mobile || 2}, 1fr) !important;
+            grid-template-columns: repeat(
+              ${columnsValue.tablet || columnsValue.mobile || 2},
+              1fr
+            ) !important;
             gap: ${gapTablet} !important;
           }
         }
         @media (min-width: 1024px) {
           .product-grid {
-            grid-template-columns: repeat(${columnsValue.desktop || columnsValue.tablet || columnsValue.mobile || 2}, 1fr) !important;
+            grid-template-columns: repeat(
+              ${columnsValue.desktop ||
+              columnsValue.tablet ||
+              columnsValue.mobile ||
+              2},
+              1fr
+            ) !important;
             gap: ${gapDesktop} !important;
           }
         }
@@ -228,7 +263,7 @@ export const productGridDefinition: Omit<ComponentDefinition, "render"> = {
   description: "Display a grid of products from your catalog",
   category: "ecommerce",
   icon: "LayoutGrid",
-  
+
   fields: {
     columns: {
       type: "number",
@@ -289,7 +324,7 @@ export const productGridDefinition: Omit<ComponentDefinition, "render"> = {
       defaultValue: "card",
     },
   },
-  
+
   defaultProps: {
     columns: { mobile: 2, tablet: 3, desktop: 4 },
     gap: { mobile: "16px" },
@@ -301,10 +336,18 @@ export const productGridDefinition: Omit<ComponentDefinition, "render"> = {
     showRating: true,
     cardVariant: "card",
   },
-  
+
   ai: {
-    description: "Grid displaying multiple products from the e-commerce catalog",
-    canModify: ["columns", "limit", "showPrice", "showRating", "cardVariant", "source"],
+    description:
+      "Grid displaying multiple products from the e-commerce catalog",
+    canModify: [
+      "columns",
+      "limit",
+      "showPrice",
+      "showRating",
+      "cardVariant",
+      "source",
+    ],
     suggestions: [
       "Show 4 columns",
       "Display 12 products",
@@ -312,6 +355,15 @@ export const productGridDefinition: Omit<ComponentDefinition, "render"> = {
       "Use minimal card style",
     ],
   },
-  
-  keywords: ["products", "grid", "catalog", "shop", "store", "ecommerce", "collection", "gallery"],
+
+  keywords: [
+    "products",
+    "grid",
+    "catalog",
+    "shop",
+    "store",
+    "ecommerce",
+    "collection",
+    "gallery",
+  ],
 };
