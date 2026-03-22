@@ -16,28 +16,50 @@ export const maxDuration = 300;
 const RequestSchema = z.object({
   siteId: z.string().uuid(),
   prompt: z.string().min(10).max(2000),
-  preferences: z.object({
-    style: z.enum(["minimal", "bold", "elegant", "playful", "corporate", "creative"]).optional(),
-    colorPreference: z.enum(["brand", "warm", "cool", "monochrome", "vibrant"]).optional(),
-    layoutDensity: z.enum(["spacious", "balanced", "compact"]).optional(),
-    animationLevel: z.enum(["none", "subtle", "moderate", "dynamic"]).optional(),
-  }).optional(),
-  constraints: z.object({
-    maxPages: z.number().optional(),
-    requiredPages: z.array(z.string()).optional(),
-    excludeComponents: z.array(z.string()).optional(),
-    mustIncludeComponents: z.array(z.string()).optional(),
-  }).optional(),
-  engineConfig: z.object({
-    enableRefinement: z.boolean().optional(),
-    enableModuleIntegration: z.boolean().optional(),
-  }).optional(),
+  preferences: z
+    .object({
+      style: z
+        .enum([
+          "minimal",
+          "bold",
+          "elegant",
+          "playful",
+          "corporate",
+          "creative",
+        ])
+        .optional(),
+      colorPreference: z
+        .enum(["brand", "warm", "cool", "monochrome", "vibrant"])
+        .optional(),
+      layoutDensity: z.enum(["spacious", "balanced", "compact"]).optional(),
+      animationLevel: z
+        .enum(["none", "subtle", "moderate", "dynamic"])
+        .optional(),
+    })
+    .optional(),
+  constraints: z
+    .object({
+      maxPages: z.number().optional(),
+      requiredPages: z.array(z.string()).optional(),
+      excludeComponents: z.array(z.string()).optional(),
+      mustIncludeComponents: z.array(z.string()).optional(),
+    })
+    .optional(),
+  engineConfig: z
+    .object({
+      enableRefinement: z.boolean().optional(),
+      enableModuleIntegration: z.boolean().optional(),
+    })
+    .optional(),
+  selectedFeatures: z.array(z.string()).optional(),
 });
 
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -47,7 +69,10 @@ export async function POST(request: NextRequest) {
     const parseResult = RequestSchema.safeParse(body);
 
     if (!parseResult.success) {
-      return NextResponse.json({ error: "Invalid request", details: parseResult.error.issues }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid request", details: parseResult.error.issues },
+        { status: 400 },
+      );
     }
 
     const input = parseResult.data;
@@ -75,16 +100,24 @@ export async function POST(request: NextRequest) {
     }
 
     // Run Step 1: Architecture
-    const engine = new WebsiteDesignerEngine(input.siteId, undefined, input.engineConfig);
+    const engine = new WebsiteDesignerEngine(
+      input.siteId,
+      undefined,
+      input.engineConfig,
+    );
     const result = await engine.stepArchitecture({
       siteId: input.siteId,
       prompt: input.prompt,
       preferences: input.preferences,
       constraints: input.constraints,
+      selectedFeatures: input.selectedFeatures,
     });
 
     if (!result.success) {
-      return NextResponse.json({ error: result.error || "Architecture generation failed" }, { status: 500 });
+      return NextResponse.json(
+        { error: result.error || "Architecture generation failed" },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({
@@ -97,8 +130,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("[Website Designer Step 1] Error:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Internal server error" },
-      { status: 500 }
+      {
+        error: error instanceof Error ? error.message : "Internal server error",
+      },
+      { status: 500 },
     );
   }
 }

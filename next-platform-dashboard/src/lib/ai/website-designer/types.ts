@@ -71,6 +71,7 @@ export interface WebsiteDesignerInput {
   prompt: string;
   preferences?: WebsiteDesignerPreferences;
   constraints?: WebsiteDesignerConstraints;
+  selectedFeatures?: string[];
 }
 
 // =============================================================================

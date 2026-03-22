@@ -51,9 +51,12 @@ import type {
   PageSEO,
   GenerationProgress,
 } from "./types";
-import type { BusinessDataContext, DataAvailability } from "./data-context/types";
+import type {
+  BusinessDataContext,
+  DataAvailability,
+} from "./data-context/types";
 
-import { DEFAULT_TIMEZONE } from '@/lib/locale-config'
+import { DEFAULT_TIMEZONE } from "@/lib/locale-config";
 
 // =============================================================================
 // SHARED ELEMENTS CONTEXT — Passed from architecture step to shared elements
@@ -70,7 +73,12 @@ export interface SharedElementsContext {
   contactPhone: string;
   contactAddress: Record<string, string | undefined>;
   social: Array<{ platform: string; url: string }>;
-  hours: Array<{ day: string; openTime: string; closeTime: string; isClosed?: boolean }>;
+  hours: Array<{
+    day: string;
+    openTime: string;
+    closeTime: string;
+    isClosed?: boolean;
+  }>;
   services: string[];
 }
 // =============================================================================
@@ -88,15 +96,15 @@ export interface EngineConfig {
 
 /**
  * DEFAULT CONFIG - Optimized for Vercel's 300s timeout
- * 
+ *
  * Heavy features are DISABLED by default to prevent timeouts.
  * For higher quality, enable features in the API call:
  * - enableRefinement: true (for multi-pass quality improvement)
  * - enableModuleIntegration: true (for booking/e-commerce)
  */
 const DEFAULT_CONFIG: EngineConfig = {
-  enableRefinement: false,        // Disabled - adds 4 AI calls!
-  refinementPasses: 2,            // If enabled, use 2 passes max
+  enableRefinement: false, // Disabled - adds 4 AI calls!
+  refinementPasses: 2, // If enabled, use 2 passes max
   enableModuleIntegration: false, // Disabled by default — adds ~10-15s AI call, exceeds 60s Vercel timeout
 };
 
@@ -113,14 +121,14 @@ export class WebsiteDesignerEngine {
   private onProgress?: (progress: GenerationProgress) => void;
   private config: EngineConfig;
   private extractedBusinessName: string | null = null; // Business name extracted from user prompt
-  
+
   // Enhancement Engines
   private moduleOrchestrator: ModuleIntegrationOrchestrator | null = null;
 
   constructor(
-    siteId: string, 
+    siteId: string,
     onProgress?: (progress: GenerationProgress) => void,
-    config: Partial<EngineConfig> = {}
+    config: Partial<EngineConfig> = {},
   ) {
     this.siteId = siteId;
     this.onProgress = onProgress;
@@ -145,20 +153,63 @@ export class WebsiteDesignerEngine {
     const parsed = parseUserPrompt(input.prompt);
     if (parsed.businessName) {
       this.extractedBusinessName = parsed.businessName;
-      console.log(`[WebsiteDesignerEngine] 📛 Extracted business name from prompt: "${this.extractedBusinessName}"`);
+      console.log(
+        `[WebsiteDesignerEngine] 📛 Extracted business name from prompt: "${this.extractedBusinessName}"`,
+      );
     }
 
     try {
       // Build data context
-      this.reportProgress("building-context", "Gathering business information...", 0, 1);
+      this.reportProgress(
+        "building-context",
+        "Gathering business information...",
+        0,
+        1,
+      );
       this.context = await buildDataContext(this.siteId);
+
+      // Inject user-selected features as synthetic module entries
+      // so the AI gets full module-aware instructions (BookingWidget, EcommerceFeaturedProducts, etc.)
+      if (input.selectedFeatures?.length && this.context) {
+        const FEATURE_MODULE_MAP: Record<
+          string,
+          { module_type: string; module_name: string }
+        > = {
+          ecommerce: { module_type: "ecommerce", module_name: "E-Commerce" },
+          booking: { module_type: "booking", module_name: "Booking" },
+        };
+        for (const feature of input.selectedFeatures) {
+          const mapped = FEATURE_MODULE_MAP[feature];
+          if (
+            mapped &&
+            !this.context.modules.some(
+              (m) => m.module_type === mapped.module_type,
+            )
+          ) {
+            this.context.modules.push({
+              id: `selected-${feature}`,
+              site_id: this.siteId,
+              module_type: mapped.module_type,
+              module_name: mapped.module_name,
+              name: mapped.module_name,
+              enabled: true,
+            });
+          }
+        }
+      }
+
       this.availability = checkDataAvailability(this.context);
       const formattedContext = formatContextForAI(this.context);
 
       // AI-First: The AI makes all design decisions based on the user's prompt and business context.
 
       // Generate architecture via AI
-      this.reportProgress("analyzing-prompt", "Analyzing your requirements...", 0, 1);
+      this.reportProgress(
+        "analyzing-prompt",
+        "Analyzing your requirements...",
+        0,
+        1,
+      );
       this.architecture = await this.createArchitecture(
         input.prompt,
         formattedContext,
@@ -172,7 +223,9 @@ export class WebsiteDesignerEngine {
       // Cap pages (no longer strictly needed with multi-step, but keeps output reasonable)
       const MAX_PAGES = 8;
       if (this.architecture.pages.length > MAX_PAGES) {
-        console.log(`[WebsiteDesignerEngine] ⚡ Capping pages from ${this.architecture.pages.length} to ${MAX_PAGES}`);
+        console.log(
+          `[WebsiteDesignerEngine] ⚡ Capping pages from ${this.architecture.pages.length} to ${MAX_PAGES}`,
+        );
         this.architecture.pages = this.architecture.pages.slice(0, MAX_PAGES);
       }
 
@@ -188,10 +241,24 @@ export class WebsiteDesignerEngine {
           logoUrl: this.context?.branding?.logo_url || "",
           contactEmail: this.context?.contact?.email || "",
           contactPhone: this.context?.contact?.phone || "",
-          contactAddress: (this.context?.contact?.address as Record<string, string | undefined>) || {},
-          social: (this.context?.social || []).map(s => ({ platform: s.platform || "", url: s.url || "" })),
-          hours: (this.context?.hours || []).map(h => ({ day: h.day || "", openTime: h.open_time || "", closeTime: h.close_time || "", isClosed: h.is_closed })),
-          services: (this.context?.services || []).slice(0, 8).map(s => s.name || ""),
+          contactAddress:
+            (this.context?.contact?.address as Record<
+              string,
+              string | undefined
+            >) || {},
+          social: (this.context?.social || []).map((s) => ({
+            platform: s.platform || "",
+            url: s.url || "",
+          })),
+          hours: (this.context?.hours || []).map((h) => ({
+            day: h.day || "",
+            openTime: h.open_time || "",
+            closeTime: h.close_time || "",
+            isClosed: h.is_closed,
+          })),
+          services: (this.context?.services || [])
+            .slice(0, 8)
+            .map((s) => s.name || ""),
         },
       };
     } catch (error) {
@@ -200,8 +267,23 @@ export class WebsiteDesignerEngine {
         success: false,
         architecture: this.getDefaultArchitecture(),
         formattedContext: "",
-        siteContext: { name: "", domain: "", industry: "general", description: "", logoUrl: "", contactEmail: "", contactPhone: "", contactAddress: {}, social: [], hours: [], services: [] },
-        error: error instanceof Error ? error.message : "Failed to generate architecture",
+        siteContext: {
+          name: "",
+          domain: "",
+          industry: "general",
+          description: "",
+          logoUrl: "",
+          contactEmail: "",
+          contactPhone: "",
+          contactAddress: {},
+          social: [],
+          hours: [],
+          services: [],
+        },
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to generate architecture",
       };
     }
   }
@@ -216,7 +298,7 @@ export class WebsiteDesignerEngine {
     architecture: SiteArchitecture,
     pagePlan: PagePlan,
     formattedContext: string,
-    industry?: string
+    industry?: string,
   ): Promise<{
     success: boolean;
     page?: GeneratedPage;
@@ -226,15 +308,31 @@ export class WebsiteDesignerEngine {
     this.architecture = architecture;
 
     try {
-      this.reportProgress("generating-pages", `Generating page: ${pagePlan.name}...`, 0, 1);
+      this.reportProgress(
+        "generating-pages",
+        `Generating page: ${pagePlan.name}...`,
+        0,
+        1,
+      );
       const page = await this.generatePage(pagePlan, formattedContext);
-      this.reportProgress("generating-pages", `Page "${pagePlan.name}" generated`, 1, 1);
+      this.reportProgress(
+        "generating-pages",
+        `Page "${pagePlan.name}" generated`,
+        1,
+        1,
+      );
       return { success: true, page };
     } catch (error) {
-      console.error(`[WebsiteDesignerEngine] stepSinglePage error (${pagePlan.name}):`, error);
+      console.error(
+        `[WebsiteDesignerEngine] stepSinglePage error (${pagePlan.name}):`,
+        error,
+      );
       return {
         success: false,
-        error: error instanceof Error ? error.message : `Failed to generate page: ${pagePlan.name}`,
+        error:
+          error instanceof Error
+            ? error.message
+            : `Failed to generate page: ${pagePlan.name}`,
       };
     }
   }
@@ -251,7 +349,7 @@ export class WebsiteDesignerEngine {
     input: WebsiteDesignerInput,
     architecture: SiteArchitecture,
     pages: Array<{ name: string; slug: string; isHomepage?: boolean }>,
-    siteContext?: SharedElementsContext
+    siteContext?: SharedElementsContext,
   ): Promise<{
     success: boolean;
     navbar?: GeneratedComponent;
@@ -271,7 +369,10 @@ export class WebsiteDesignerEngine {
     if (siteContext) {
       this.context = {
         site: { id: "", name: siteContext.name, domain: siteContext.domain },
-        branding: { business_name: siteContext.name, logo_url: siteContext.logoUrl },
+        branding: {
+          business_name: siteContext.name,
+          logo_url: siteContext.logoUrl,
+        },
         client: {
           company: siteContext.name,
           company_name: siteContext.name,
@@ -284,9 +385,25 @@ export class WebsiteDesignerEngine {
           phone: siteContext.contactPhone,
           address: siteContext.contactAddress,
         },
-        social: siteContext.social.map(s => ({ id: "", site_id: "", platform: s.platform, url: s.url })),
-        hours: siteContext.hours.map(h => ({ id: "", site_id: "", day: h.day, open_time: h.openTime, close_time: h.closeTime, is_closed: h.isClosed })),
-        services: siteContext.services.map(name => ({ id: "", site_id: "", name })),
+        social: siteContext.social.map((s) => ({
+          id: "",
+          site_id: "",
+          platform: s.platform,
+          url: s.url,
+        })),
+        hours: siteContext.hours.map((h) => ({
+          id: "",
+          site_id: "",
+          day: h.day,
+          open_time: h.openTime,
+          close_time: h.closeTime,
+          is_closed: h.isClosed,
+        })),
+        services: siteContext.services.map((name) => ({
+          id: "",
+          site_id: "",
+          name,
+        })),
         locations: [],
         testimonials: [],
         team: [],
@@ -301,39 +418,68 @@ export class WebsiteDesignerEngine {
     }
 
     try {
-      this.reportProgress("generating-shared-elements", "Generating navbar & footer...", 0, 2);
+      this.reportProgress(
+        "generating-shared-elements",
+        "Generating navbar & footer...",
+        0,
+        2,
+      );
 
       // Both are Haiku (fast tier) — run in parallel with a 45s safety timeout
       const AI_TIMEOUT = 45_000; // 45 seconds — leaves 15s buffer for cold start + auth
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("AI generation timed out after 45s")), AI_TIMEOUT)
+        setTimeout(
+          () => reject(new Error("AI generation timed out after 45s")),
+          AI_TIMEOUT,
+        ),
       );
 
       let navbar: GeneratedComponent;
       let footer: GeneratedComponent;
 
       try {
-        [navbar, footer] = await Promise.race([
+        [navbar, footer] = (await Promise.race([
           Promise.all([
-            this.generateNavbar(pages.map(p => ({
-              name: p.name, slug: p.slug, title: p.name, description: "",
-              isHomepage: p.isHomepage || false, components: [], seo: {} as PageSEO, order: 0, id: "",
-            })) as GeneratedPage[]),
+            this.generateNavbar(
+              pages.map((p) => ({
+                name: p.name,
+                slug: p.slug,
+                title: p.name,
+                description: "",
+                isHomepage: p.isHomepage || false,
+                components: [],
+                seo: {} as PageSEO,
+                order: 0,
+                id: "",
+              })) as GeneratedPage[],
+            ),
             this.generateFooter(),
           ]),
           timeoutPromise,
-        ]) as [GeneratedComponent, GeneratedComponent];
+        ])) as [GeneratedComponent, GeneratedComponent];
       } catch (aiError) {
-        console.warn("[WebsiteDesignerEngine] AI shared elements failed, using deterministic fallback:", aiError);
+        console.warn(
+          "[WebsiteDesignerEngine] AI shared elements failed, using deterministic fallback:",
+          aiError,
+        );
         // Deterministic fallback — guaranteed to work, no AI needed
         navbar = this.buildFallbackNavbar(siteContext, allNavLinks);
         footer = this.buildFallbackFooter(siteContext, allNavLinks);
       }
 
       // Ensure navbar links match actual generated pages
-      navbar.props = { ...navbar.props, links: allNavLinks, navItems: allNavLinks };
+      navbar.props = {
+        ...navbar.props,
+        links: allNavLinks,
+        navItems: allNavLinks,
+      };
 
-      this.reportProgress("generating-shared-elements", "Navigation generated", 2, 2);
+      this.reportProgress(
+        "generating-shared-elements",
+        "Navigation generated",
+        2,
+        2,
+      );
 
       return { success: true, navbar, footer };
     } catch (error) {
@@ -350,7 +496,7 @@ export class WebsiteDesignerEngine {
    */
   private buildFallbackNavbar(
     ctx?: SharedElementsContext,
-    navLinks?: Array<{ label: string; href: string }>
+    navLinks?: Array<{ label: string; href: string }>,
   ): GeneratedComponent {
     const businessName = ctx?.name || this.getBusinessName();
     return {
@@ -375,16 +521,21 @@ export class WebsiteDesignerEngine {
    */
   private buildFallbackFooter(
     ctx?: SharedElementsContext,
-    navLinks?: Array<{ label: string; href: string }>
+    navLinks?: Array<{ label: string; href: string }>,
   ): GeneratedComponent {
     const businessName = ctx?.name || this.getBusinessName();
     const year = new Date().getFullYear();
     const industry = ctx?.industry || "professional";
-    const description = ctx?.description || `${industry.charAt(0).toUpperCase() + industry.slice(1)} services by ${businessName}`;
+    const description =
+      ctx?.description ||
+      `${industry.charAt(0).toUpperCase() + industry.slice(1)} services by ${businessName}`;
 
     // Build footer columns from available data
-    const columns: Array<{ title: string; links: Array<{ label: string; href: string }> }> = [];
-    
+    const columns: Array<{
+      title: string;
+      links: Array<{ label: string; href: string }>;
+    }> = [];
+
     // Column 1: Pages
     if (navLinks && navLinks.length > 0) {
       columns.push({ title: "Pages", links: navLinks });
@@ -394,14 +545,22 @@ export class WebsiteDesignerEngine {
     if (ctx?.services && ctx.services.length > 0) {
       columns.push({
         title: "Services",
-        links: ctx.services.map(s => ({ label: s, href: "#" })),
+        links: ctx.services.map((s) => ({ label: s, href: "#" })),
       });
     }
 
     // Column 3: Contact
     const contactLinks: Array<{ label: string; href: string }> = [];
-    if (ctx?.contactEmail) contactLinks.push({ label: ctx.contactEmail, href: `mailto:${ctx.contactEmail}` });
-    if (ctx?.contactPhone) contactLinks.push({ label: ctx.contactPhone, href: `tel:${ctx.contactPhone}` });
+    if (ctx?.contactEmail)
+      contactLinks.push({
+        label: ctx.contactEmail,
+        href: `mailto:${ctx.contactEmail}`,
+      });
+    if (ctx?.contactPhone)
+      contactLinks.push({
+        label: ctx.contactPhone,
+        href: `tel:${ctx.contactPhone}`,
+      });
     if (contactLinks.length > 0) {
       columns.push({ title: "Contact", links: contactLinks });
     }
@@ -419,8 +578,12 @@ export class WebsiteDesignerEngine {
         phone: ctx?.contactPhone || "",
         contactPhone: ctx?.contactPhone || "",
         copyrightText: `© ${year} ${businessName}. All rights reserved.`,
-        socialLinks: (ctx?.social || []).map(s => ({ platform: s.platform, url: s.url })),
-        style: this.architecture?.sharedElements?.footer?.style || "comprehensive",
+        socialLinks: (ctx?.social || []).map((s) => ({
+          platform: s.platform,
+          url: s.url,
+        })),
+        style:
+          this.architecture?.sharedElements?.footer?.style || "comprehensive",
       },
     };
   }
@@ -438,7 +601,12 @@ export class WebsiteDesignerEngine {
     startTime: number,
     navbar?: GeneratedComponent,
     footer?: GeneratedComponent,
-    siteContext?: { name: string; domain: string; industry: string; description: string }
+    siteContext?: {
+      name: string;
+      domain: string;
+      industry: string;
+      description: string;
+    },
   ): Promise<WebsiteDesignerOutput> {
     this.userPrompt = input.prompt;
     this.architecture = architecture;
@@ -447,7 +615,12 @@ export class WebsiteDesignerEngine {
     if (siteContext) {
       this.context = {
         site: { id: "", name: siteContext.name, domain: siteContext.domain },
-        client: { name: siteContext.name, company: siteContext.name, industry: siteContext.industry, description: siteContext.description },
+        client: {
+          name: siteContext.name,
+          company: siteContext.name,
+          industry: siteContext.industry,
+          description: siteContext.description,
+        },
         branding: { business_name: siteContext.name },
         contact: {},
         social: [],
@@ -465,9 +638,21 @@ export class WebsiteDesignerEngine {
 
     try {
       // Apply shared elements (navbar/footer from step 2)
-      const defaultNavbar: GeneratedComponent = navbar || { id: "shared-navbar", type: "Navbar", props: { logoText: siteContext?.name || "Site", links: [] } };
-      const defaultFooter: GeneratedComponent = footer || { id: "shared-footer", type: "Footer", props: { companyName: siteContext?.name || "Site" } };
-      let pagesWithNav = this.applySharedElements(pages, defaultNavbar, defaultFooter);
+      const defaultNavbar: GeneratedComponent = navbar || {
+        id: "shared-navbar",
+        type: "Navbar",
+        props: { logoText: siteContext?.name || "Site", links: [] },
+      };
+      const defaultFooter: GeneratedComponent = footer || {
+        id: "shared-footer",
+        type: "Footer",
+        props: { companyName: siteContext?.name || "Site" },
+      };
+      let pagesWithNav = this.applySharedElements(
+        pages,
+        defaultNavbar,
+        defaultFooter,
+      );
 
       // Post-processing: deduplicate excessive same-type sections
       pagesWithNav = this.deduplicateSections(pagesWithNav);
@@ -483,12 +668,19 @@ export class WebsiteDesignerEngine {
           this.architecture,
           `${this.getBusinessName()} - ${this.context?.client.industry || "business"}: ${this.userPrompt}`,
           (progress) => {
-            this.reportProgress("finalizing", `Pass ${progress.pass}: ${progress.passName}...`, progress.pass - 1, 4);
-          }
+            this.reportProgress(
+              "finalizing",
+              `Pass ${progress.pass}: ${progress.passName}...`,
+              progress.pass - 1,
+              4,
+            );
+          },
         );
         const refinementResult = await refinementEngine.refine();
         pagesWithNav = refinementResult.pages;
-        console.log(`[WebsiteDesignerEngine] Refinement complete: ${refinementResult.totalImprovements} improvements, score: ${refinementResult.overallScore}/10`);
+        console.log(
+          `[WebsiteDesignerEngine] Refinement complete: ${refinementResult.totalImprovements} improvements, score: ${refinementResult.overallScore}/10`,
+        );
       }
 
       // Navigation structure
@@ -500,14 +692,19 @@ export class WebsiteDesignerEngine {
       for (const page of pagesWithNav) {
         const auditResult = auditWebsite(page.components, designTokens);
         if (auditResult.autoFixed > 0) {
-          const autoFixedIssues = auditResult.issues.filter(issue => issue.autoFixed);
+          const autoFixedIssues = auditResult.issues.filter(
+            (issue) => issue.autoFixed,
+          );
           for (const fix of autoFixedIssues) {
-            const comp = page.components.find(c => c.id === fix.componentId);
+            const comp = page.components.find((c) => c.id === fix.componentId);
             if (comp && fix.field && fix.fixedValue !== undefined) {
-              (comp.props as Record<string, unknown>)[fix.field] = fix.fixedValue;
+              (comp.props as Record<string, unknown>)[fix.field] =
+                fix.fixedValue;
             }
           }
-          console.log(`[WebsiteDesignerEngine] 🔧 Quality audit fixed ${auditResult.autoFixed} issues on "${page.name}" (score: ${auditResult.score}/100)`);
+          console.log(
+            `[WebsiteDesignerEngine] 🔧 Quality audit fixed ${auditResult.autoFixed} issues on "${page.name}" (score: ${auditResult.score}/100)`,
+          );
         }
       }
 
@@ -538,8 +735,13 @@ export class WebsiteDesignerEngine {
       console.error("[WebsiteDesignerEngine] stepFinalize error:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to finalize website",
-        site: { name: "", settings: this.getDefaultSiteSettings(), seo: this.getDefaultSEO() },
+        error:
+          error instanceof Error ? error.message : "Failed to finalize website",
+        site: {
+          name: "",
+          settings: this.getDefaultSiteSettings(),
+          seo: this.getDefaultSEO(),
+        },
         pages: [],
         navigation: { main: [], footer: [] },
         designSystem: this.getDefaultDesignSystem(),
@@ -552,11 +754,13 @@ export class WebsiteDesignerEngine {
 
   /**
    * Generate a complete website from a user prompt (LEGACY — single-request mode)
-   * 
+   *
    * WARNING: This must complete within a single 60s serverless function.
    * For production use, prefer the multi-step approach (stepArchitecture → stepSinglePage × N → stepSharedElements → stepFinalize).
    */
-  async generateWebsite(input: WebsiteDesignerInput): Promise<WebsiteDesignerOutput> {
+  async generateWebsite(
+    input: WebsiteDesignerInput,
+  ): Promise<WebsiteDesignerOutput> {
     const startTime = Date.now();
     this.userPrompt = input.prompt;
 
@@ -571,9 +775,17 @@ export class WebsiteDesignerEngine {
       // Step 2: Pages (sequential, one at a time)
       const pages: GeneratedPage[] = [];
       for (const pagePlan of archResult.architecture.pages) {
-        const pageResult = await this.stepSinglePage(input, archResult.architecture, pagePlan, archResult.formattedContext, archResult.siteContext?.industry);
+        const pageResult = await this.stepSinglePage(
+          input,
+          archResult.architecture,
+          pagePlan,
+          archResult.formattedContext,
+          archResult.siteContext?.industry,
+        );
         if (!pageResult.success || !pageResult.page) {
-          throw new Error(pageResult.error || `Failed to generate page: ${pagePlan.name}`);
+          throw new Error(
+            pageResult.error || `Failed to generate page: ${pagePlan.name}`,
+          );
         }
         pages.push(pageResult.page);
       }
@@ -582,8 +794,12 @@ export class WebsiteDesignerEngine {
       const sharedResult = await this.stepSharedElements(
         input,
         archResult.architecture,
-        pages.map(p => ({ name: p.name, slug: p.slug, isHomepage: p.isHomepage })),
-        archResult.siteContext
+        pages.map((p) => ({
+          name: p.name,
+          slug: p.slug,
+          isHomepage: p.isHomepage,
+        })),
+        archResult.siteContext,
       );
 
       // Step 3: Finalize
@@ -593,13 +809,14 @@ export class WebsiteDesignerEngine {
         pages,
         startTime,
         sharedResult.navbar,
-        sharedResult.footer
+        sharedResult.footer,
       );
     } catch (error) {
       console.error("[WebsiteDesignerEngine] Error:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to generate website",
+        error:
+          error instanceof Error ? error.message : "Failed to generate website",
         site: {
           name: "",
           settings: this.getDefaultSiteSettings(),
@@ -628,10 +845,7 @@ export class WebsiteDesignerEngine {
     prompt: string,
     context: string,
   ): Promise<SiteArchitecture> {
-    const fullPrompt = buildArchitecturePrompt(
-      prompt,
-      context,
-    );
+    const fullPrompt = buildArchitecturePrompt(prompt, context);
 
     const { object } = await generateObject({
       model: getAIModel("architecture"),
@@ -642,8 +856,10 @@ export class WebsiteDesignerEngine {
 
     // AI-First: Trust the AI's design token choices completely
     const architecture = object as SiteArchitecture;
-    
-    console.log(`[WebsiteDesignerEngine] 🎨 AI chose design tokens: primary=${architecture.designTokens?.primaryColor}, bg=${architecture.designTokens?.backgroundColor}`);
+
+    console.log(
+      `[WebsiteDesignerEngine] 🎨 AI chose design tokens: primary=${architecture.designTokens?.primaryColor}, bg=${architecture.designTokens?.backgroundColor}`,
+    );
 
     return architecture;
   }
@@ -651,24 +867,36 @@ export class WebsiteDesignerEngine {
   /**
    * Apply user constraints to architecture
    */
-  private applyConstraints(constraints: WebsiteDesignerInput["constraints"]): void {
+  private applyConstraints(
+    constraints: WebsiteDesignerInput["constraints"],
+  ): void {
     if (!this.architecture || !constraints) return;
 
     // Limit pages
-    if (constraints.maxPages && this.architecture.pages.length > constraints.maxPages) {
-      this.architecture.pages = this.architecture.pages.slice(0, constraints.maxPages);
+    if (
+      constraints.maxPages &&
+      this.architecture.pages.length > constraints.maxPages
+    ) {
+      this.architecture.pages = this.architecture.pages.slice(
+        0,
+        constraints.maxPages,
+      );
     }
 
     // Ensure required pages exist
     if (constraints.requiredPages) {
       for (const requiredSlug of constraints.requiredPages) {
         const exists = this.architecture.pages.some(
-          (p) => p.slug === requiredSlug || p.name.toLowerCase() === requiredSlug.toLowerCase()
+          (p) =>
+            p.slug === requiredSlug ||
+            p.name.toLowerCase() === requiredSlug.toLowerCase(),
         );
         if (!exists) {
           this.architecture.pages.push({
             name: this.slugToName(requiredSlug),
-            slug: requiredSlug.startsWith("/") ? requiredSlug : `/${requiredSlug}`,
+            slug: requiredSlug.startsWith("/")
+              ? requiredSlug
+              : `/${requiredSlug}`,
             purpose: `Required page: ${requiredSlug}`,
             sections: [],
             priority: this.architecture.pages.length + 1,
@@ -681,7 +909,7 @@ export class WebsiteDesignerEngine {
     if (constraints.excludeComponents) {
       for (const page of this.architecture.pages) {
         page.sections = page.sections.filter(
-          (s) => !constraints.excludeComponents!.includes(s.suggestedComponent)
+          (s) => !constraints.excludeComponents!.includes(s.suggestedComponent),
         );
       }
     }
@@ -695,9 +923,15 @@ export class WebsiteDesignerEngine {
    * Generate a single page with all its components
    * Enhanced with page-type classification for intelligent inner page generation
    */
-  private async generatePage(pagePlan: PagePlan, context: string): Promise<GeneratedPage> {
+  private async generatePage(
+    pagePlan: PagePlan,
+    context: string,
+  ): Promise<GeneratedPage> {
     // Build all-pages list for cross-page context (so AI can link to real pages)
-    const allPages = (this.architecture?.pages || []).map(p => ({ name: p.name, slug: p.slug }));
+    const allPages = (this.architecture?.pages || []).map((p) => ({
+      name: p.name,
+      slug: p.slug,
+    }));
 
     const fullPrompt = buildPagePrompt(
       { ...pagePlan, slug: pagePlan.slug },
@@ -740,7 +974,9 @@ export class WebsiteDesignerEngine {
   /**
    * Generate navbar component
    */
-  private async generateNavbar(pages: GeneratedPage[]): Promise<GeneratedComponent> {
+  private async generateNavbar(
+    pages: GeneratedPage[],
+  ): Promise<GeneratedComponent> {
     const navItems = pages
       .filter((p) => !p.isHomepage)
       .map((p) => ({
@@ -783,13 +1019,15 @@ Configure ALL navbar fields for a modern, responsive navigation.`,
    */
   private async generateFooter(): Promise<GeneratedComponent> {
     // Build context about what pages exist
-    const pageLinks = this.architecture?.pages.map(p => ({
-      label: p.name,
-      href: p.slug,
-    })) || [];
+    const pageLinks =
+      this.architecture?.pages.map((p) => ({
+        label: p.name,
+        href: p.slug,
+      })) || [];
 
     // Get services for footer columns
-    const services = this.context?.services?.slice(0, 6).map(s => s.name) || [];
+    const services =
+      this.context?.services?.slice(0, 6).map((s) => s.name) || [];
 
     const { object } = await generateObject({
       model: getAIModel("footer"),
@@ -824,7 +1062,7 @@ Configure ALL footer props for a complete, professional result.`,
     const businessName = this.getBusinessName();
     const industry = this.context?.client.industry || "";
     let description = object.description || object.tagline || "";
-    
+
     // Detect generic/placeholder descriptions that don't mention the business
     const genericPatterns = [
       /innovative\s+technology\s+solutions/i,
@@ -838,11 +1076,14 @@ Configure ALL footer props for a complete, professional result.`,
       /transforming\s+the\s+way/i,
       /leading\s+provider\s+of/i,
     ];
-    
-    const isGeneric = genericPatterns.some(p => p.test(description)) ||
-      (!description.toLowerCase().includes(businessName.toLowerCase().split(" ")[0]) && 
-       !description.toLowerCase().includes(industry.toLowerCase()));
-    
+
+    const isGeneric =
+      genericPatterns.some((p) => p.test(description)) ||
+      (!description
+        .toLowerCase()
+        .includes(businessName.toLowerCase().split(" ")[0]) &&
+        !description.toLowerCase().includes(industry.toLowerCase()));
+
     if (isGeneric && businessName !== "Your Business") {
       // Build a contextual description from actual business data
       const desc = this.context?.client.description || "";
@@ -859,10 +1100,13 @@ Configure ALL footer props for a complete, professional result.`,
     const contactEmail = object.email || this.context?.contact?.email || "";
     const contactPhone = object.phone || this.context?.contact?.phone || "";
     const contactAddress = (() => {
-      if (object.address && !object.address.includes("123 Main")) return object.address;
+      if (object.address && !object.address.includes("123 Main"))
+        return object.address;
       const addr = this.context?.contact?.address;
       if (addr && typeof addr === "object") {
-        return [addr.street, addr.city, addr.state, addr.country].filter(Boolean).join(", ");
+        return [addr.street, addr.city, addr.state, addr.country]
+          .filter(Boolean)
+          .join(", ");
       }
       return typeof addr === "string" ? addr : "";
     })();
@@ -894,21 +1138,28 @@ Configure ALL footer props for a complete, professional result.`,
   private applySharedElements(
     pages: GeneratedPage[],
     navbar: GeneratedComponent,
-    footer: GeneratedComponent
+    footer: GeneratedComponent,
   ): GeneratedPage[] {
     return pages.map((page) => {
       // Filter out any navbar/footer components that were accidentally generated in page content
       const filteredComponents = page.components.filter(
-        (c) => !["Navbar", "NavbarBlock", "Navigation", "Footer", "FooterBlock"].includes(c.type)
+        (c) =>
+          ![
+            "Navbar",
+            "NavbarBlock",
+            "Navigation",
+            "Footer",
+            "FooterBlock",
+          ].includes(c.type),
       );
 
       // Deduplicate: if the LAST component is a CTA that looks like a page-ending CTA
       // and there's already a CTA earlier in the page, remove the trailing one
       // (AI often generates two — one mid-page and one at the end that duplicates with footer)
       const ctaIndices = filteredComponents
-        .map((c, i) => c.type === "CTA" ? i : -1)
-        .filter(i => i >= 0);
-      
+        .map((c, i) => (c.type === "CTA" ? i : -1))
+        .filter((i) => i >= 0);
+
       let finalComponents = filteredComponents;
       if (ctaIndices.length >= 2) {
         const lastIdx = ctaIndices[ctaIndices.length - 1];
@@ -933,17 +1184,24 @@ Configure ALL footer props for a complete, professional result.`,
    * or 5+ Features sections on a single page.
    */
   private deduplicateSections(pages: GeneratedPage[]): GeneratedPage[] {
-    return pages.map(page => {
+    return pages.map((page) => {
       const typeCounts: Record<string, number> = {};
-      const filteredComponents = page.components.filter(comp => {
+      const filteredComponents = page.components.filter((comp) => {
         // Always keep Navbar, Footer, Hero (structural)
-        if (comp.type === "Navbar" || comp.type === "Footer" || comp.type === "Hero") return true;
+        if (
+          comp.type === "Navbar" ||
+          comp.type === "Footer" ||
+          comp.type === "Hero"
+        )
+          return true;
 
         typeCounts[comp.type] = (typeCounts[comp.type] || 0) + 1;
 
         // Keep at most 2 of each type
         if (typeCounts[comp.type] > 2) {
-          console.log(`[Engine] ✂️ Removing duplicate ${comp.type} section (${typeCounts[comp.type]}th instance) from "${page.name}"`);
+          console.log(
+            `[Engine] ✂️ Removing duplicate ${comp.type} section (${typeCounts[comp.type]}th instance) from "${page.name}"`,
+          );
           return false;
         }
         return true;
@@ -969,7 +1227,7 @@ Configure ALL footer props for a complete, professional result.`,
     const bg = tokens.backgroundColor || "#ffffff";
     const text = tokens.textColor || "#0f172a";
 
-    return pages.map(page => {
+    return pages.map((page) => {
       // Track section index (excluding Navbar/Footer)
       let sectionIdx = 0;
 
@@ -988,8 +1246,10 @@ Configure ALL footer props for a complete, professional result.`,
         if (comp.type === "Footer") {
           const footerProps = { ...comp.props } as Record<string, unknown>;
           if (!footerProps.accentColor) footerProps.accentColor = accent;
-          if (!footerProps.newsletterButtonColor) footerProps.newsletterButtonColor = primary;
-          if (!footerProps.newsletterButtonTextColor) footerProps.newsletterButtonTextColor = "#ffffff";
+          if (!footerProps.newsletterButtonColor)
+            footerProps.newsletterButtonColor = primary;
+          if (!footerProps.newsletterButtonTextColor)
+            footerProps.newsletterButtonTextColor = "#ffffff";
           // Only inject bg/text if not set — Footer has sensible dark defaults
           return { ...comp, props: footerProps };
         }
@@ -999,8 +1259,15 @@ Configure ALL footer props for a complete, professional result.`,
 
         // Module components (booking/ecommerce) have their own color systems —
         // don't inject background colors that would clash with their UI
-        const MODULE_COMPONENT_PREFIXES = ["Booking", "Ecommerce", "ProductDetail", "CategoryHero"];
-        const isModuleComponent = MODULE_COMPONENT_PREFIXES.some(p => comp.type.startsWith(p));
+        const MODULE_COMPONENT_PREFIXES = [
+          "Booking",
+          "Ecommerce",
+          "ProductDetail",
+          "CategoryHero",
+        ];
+        const isModuleComponent = MODULE_COMPONENT_PREFIXES.some((p) =>
+          comp.type.startsWith(p),
+        );
         if (isModuleComponent) {
           // Only inject primaryColor/accentColor if not set — let the module handle the rest
           if (!props.primaryColor) props.primaryColor = primary;
@@ -1009,16 +1276,23 @@ Configure ALL footer props for a complete, professional result.`,
         }
 
         // Check if the AI set ANY color-related prop on this component
-        const hasExplicitColors = Object.keys(props).some(k => {
+        const hasExplicitColors = Object.keys(props).some((k) => {
           const kl = k.toLowerCase();
-          return (kl.includes("color") || kl === "background" || kl.includes("backgroundcolor") || kl.includes("gradient")) 
-                 && props[k] !== undefined && props[k] !== "" && props[k] !== null;
+          return (
+            (kl.includes("color") ||
+              kl === "background" ||
+              kl.includes("backgroundcolor") ||
+              kl.includes("gradient")) &&
+            props[k] !== undefined &&
+            props[k] !== "" &&
+            props[k] !== null
+          );
         });
 
         // If the AI already set colors, still validate for critical contrast issues
         if (hasExplicitColors) {
           if (!props.accentColor) props.accentColor = accent;
-          
+
           // ================================================================
           // CONTRAST SAFETY NET: Even when AI set explicit colors, check for
           // catastrophic contrast failures (e.g., white text on white bg)
@@ -1027,9 +1301,14 @@ Configure ALL footer props for a complete, professional result.`,
           if (compBg) {
             const bgLum = this.colorLuminance(compBg);
             const bgIsLight = bgLum > 0.45;
-            
+
             // Fix text colors that match the background (invisible text)
-            const textKeys = ["textColor", "titleColor", "descriptionColor", "subtitleColor"];
+            const textKeys = [
+              "textColor",
+              "titleColor",
+              "descriptionColor",
+              "subtitleColor",
+            ];
             for (const key of textKeys) {
               const val = props[key];
               if (val && typeof val === "string" && val.startsWith("#")) {
@@ -1040,7 +1319,7 @@ Configure ALL footer props for a complete, professional result.`,
                 }
               }
             }
-            
+
             // For CTA: also fix button colors if not set properly
             if (comp.type === "CTA") {
               // Ensure buttonColor is set (AI might have used primaryButtonColor instead)
@@ -1053,10 +1332,11 @@ Configure ALL footer props for a complete, professional result.`,
               // If buttonColor still missing, inject branded default
               if (!props.buttonColor) {
                 props.buttonColor = bgIsLight ? primary : "#ffffff";
-                props.buttonTextColor = props.buttonTextColor || (bgIsLight ? "#ffffff" : primary);
+                props.buttonTextColor =
+                  props.buttonTextColor || (bgIsLight ? "#ffffff" : primary);
               }
             }
-            
+
             // For Hero: ensure primaryButtonColor is set
             if (comp.type === "Hero") {
               if (!props.primaryButtonColor && props.buttonColor) {
@@ -1067,11 +1347,13 @@ Configure ALL footer props for a complete, professional result.`,
               }
               if (!props.primaryButtonColor) {
                 props.primaryButtonColor = bgIsLight ? primary : "#ffffff";
-                props.primaryButtonTextColor = props.primaryButtonTextColor || (bgIsLight ? "#ffffff" : primary);
+                props.primaryButtonTextColor =
+                  props.primaryButtonTextColor ||
+                  (bgIsLight ? "#ffffff" : primary);
               }
             }
           }
-          
+
           return { ...comp, props };
         }
 
@@ -1135,9 +1417,12 @@ Configure ALL footer props for a complete, professional result.`,
   private lightenColor(hex: string, amount: number): string {
     try {
       // Strip # if present, handle 3-char hex
-      let cleanHex = hex.replace(/^#/, '');
+      let cleanHex = hex.replace(/^#/, "");
       if (cleanHex.length === 3) {
-        cleanHex = cleanHex.split('').map(c => c + c).join('');
+        cleanHex = cleanHex
+          .split("")
+          .map((c) => c + c)
+          .join("");
       }
       if (cleanHex.length !== 6) return "#f8fafc"; // Fallback to light gray
 
@@ -1149,7 +1434,7 @@ Configure ALL footer props for a complete, professional result.`,
       const lg = Math.round(g + (255 - g) * amount);
       const lb = Math.round(b + (255 - b) * amount);
 
-      return `#${lr.toString(16).padStart(2, '0')}${lg.toString(16).padStart(2, '0')}${lb.toString(16).padStart(2, '0')}`;
+      return `#${lr.toString(16).padStart(2, "0")}${lg.toString(16).padStart(2, "0")}${lb.toString(16).padStart(2, "0")}`;
     } catch {
       return "#f8fafc";
     }
@@ -1162,15 +1447,22 @@ Configure ALL footer props for a complete, professional result.`,
   private colorLuminance(hex: string): number {
     try {
       if (!hex || hex === "transparent" || !hex.startsWith("#")) return 0.5;
-      let clean = hex.replace(/^#/, '');
-      if (clean.length === 3) clean = clean.split('').map(c => c + c).join('');
+      let clean = hex.replace(/^#/, "");
+      if (clean.length === 3)
+        clean = clean
+          .split("")
+          .map((c) => c + c)
+          .join("");
       if (clean.length !== 6) return 0.5;
       const r = parseInt(clean.slice(0, 2), 16) / 255;
       const g = parseInt(clean.slice(2, 4), 16) / 255;
       const b = parseInt(clean.slice(4, 6), 16) / 255;
-      const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+      const toLinear = (c: number) =>
+        c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
       return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
-    } catch { return 0.5; }
+    } catch {
+      return 0.5;
+    }
   }
 
   // ===========================================================================
@@ -1205,7 +1497,9 @@ Configure ALL footer props for a complete, professional result.`,
     return {
       theme: "light",
       language: "en",
-      timezone: (this.context?.site?.settings as Record<string, unknown>)?.timezone as string || DEFAULT_TIMEZONE,
+      timezone:
+        ((this.context?.site?.settings as Record<string, unknown>)
+          ?.timezone as string) || DEFAULT_TIMEZONE,
       favicon: this.context?.branding.favicon_url,
       socialImage: this.context?.branding.logo_url,
     };
@@ -1225,7 +1519,9 @@ Configure ALL footer props for a complete, professional result.`,
     return {
       title: businessName,
       description:
-        description.length > 160 ? description.substring(0, 157) + "..." : description,
+        description.length > 160
+          ? description.substring(0, 157) + "..."
+          : description,
       keywords: [businessName, industry].filter(Boolean),
       ogImage: this.context?.branding.logo_url,
       siteName: businessName,
@@ -1347,7 +1643,7 @@ Configure ALL footer props for a complete, professional result.`,
 
   /**
    * Get business name from context
-   * 
+   *
    * Priority chain (most specific → least specific):
    * 1. User prompt extracted name (set by stepArchitecture → parseUserPrompt)
    * 2. Site name (sites.name — the ACTUAL site/brand name)
@@ -1355,7 +1651,7 @@ Configure ALL footer props for a complete, professional result.`,
    * 4. Client company (clients.company — fallback, may be the agency's client name)
    * 5. Client company_name (alias)
    * 6. Fallback
-   * 
+   *
    * NOTE: client.name is intentionally EXCLUDED — it's usually the contact person's
    * personal name (e.g., "John Doe"), not the business name.
    */
@@ -1391,7 +1687,7 @@ Configure ALL footer props for a complete, professional result.`,
     message: string,
     current: number,
     total: number,
-    currentPage?: string
+    currentPage?: string,
   ): void {
     if (this.onProgress) {
       this.onProgress({
@@ -1501,7 +1797,7 @@ Configure ALL footer props for a complete, professional result.`,
 
 /**
  * Generate a website from a prompt (convenience function)
- * 
+ *
  * @param input - The website generation input
  * @param onProgress - Optional progress callback
  * @param config - Optional engine configuration for refinement and modules
@@ -1509,7 +1805,7 @@ Configure ALL footer props for a complete, professional result.`,
 export async function generateWebsiteFromPrompt(
   input: WebsiteDesignerInput,
   onProgress?: (progress: GenerationProgress) => void,
-  config?: Partial<EngineConfig>
+  config?: Partial<EngineConfig>,
 ): Promise<WebsiteDesignerOutput> {
   const engine = new WebsiteDesignerEngine(input.siteId, onProgress, config);
   return engine.generateWebsite(input);

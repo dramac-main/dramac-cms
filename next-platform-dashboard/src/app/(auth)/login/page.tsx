@@ -11,7 +11,11 @@ export const metadata: Metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ message?: string; redirect?: string; error?: string }>;
+  searchParams: Promise<{
+    message?: string;
+    redirect?: string;
+    error?: string;
+  }>;
 }) {
   const params = await searchParams;
 
@@ -21,7 +25,7 @@ export default async function LoginPage({
       ? "Your sign-in link has expired. Please log in with your password or request a new link."
       : "An authentication error occurred. Please try again."
     : null;
-  
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md space-y-8">
@@ -48,7 +52,10 @@ export default async function LoginPage({
 
         <p className="text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="font-medium text-primary hover:underline">
+          <Link
+            href="/signup"
+            className="font-medium text-primary hover:underline"
+          >
             Sign up
           </Link>
         </p>

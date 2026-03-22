@@ -27,6 +27,10 @@ import {
   Smartphone,
   Clock,
   AlertTriangle,
+  ShoppingCart,
+  CalendarCheck,
+  FileText,
+  MessageCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -283,6 +287,9 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
 
   // Form state
   const [prompt, setPrompt] = useState("");
+  const [selectedFeatures, setSelectedFeatures] = useState<Set<string>>(
+    new Set(),
+  );
 
   // Generation state
   const [isGenerating, setIsGenerating] = useState(false);
@@ -389,6 +396,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
       prompt,
       preferences: {},
       engineConfig: {},
+      selectedFeatures: [...selectedFeatures],
     };
 
     try {
@@ -825,6 +833,65 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Feature Selection */}
+                <div className="space-y-3">
+                  <Label>What features does your site need?</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      {
+                        id: "ecommerce",
+                        label: "Online Store",
+                        icon: ShoppingCart,
+                      },
+                      {
+                        id: "booking",
+                        label: "Booking System",
+                        icon: CalendarCheck,
+                      },
+                      { id: "blog", label: "Blog", icon: FileText },
+                      {
+                        id: "live-chat",
+                        label: "Live Chat",
+                        icon: MessageCircle,
+                      },
+                    ].map((feature) => {
+                      const isSelected = selectedFeatures.has(feature.id);
+                      const Icon = feature.icon;
+                      return (
+                        <button
+                          key={feature.id}
+                          type="button"
+                          disabled={isGenerating}
+                          onClick={() => {
+                            setSelectedFeatures((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(feature.id)) {
+                                next.delete(feature.id);
+                              } else {
+                                next.add(feature.id);
+                              }
+                              return next;
+                            });
+                          }}
+                          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors border ${
+                            isSelected
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-muted/50 text-muted-foreground border-border hover:bg-muted hover:text-foreground"
+                          } ${isGenerating ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                        >
+                          <Icon className="h-3.5 w-3.5" />
+                          {feature.label}
+                          {isSelected && <Check className="h-3 w-3" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Select any features you need — the AI will build them into
+                    your site automatically.
+                  </p>
+                </div>
+
                 {/* Prompt */}
                 <div className="space-y-2">
                   <Label htmlFor="prompt">
@@ -840,8 +907,8 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                     disabled={isGenerating}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Be specific! Include your business type, key features, and
-                    sections you want.
+                    Be specific! Include your business name, location, and what
+                    you offer.
                   </p>
                 </div>
 
