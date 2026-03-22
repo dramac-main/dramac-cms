@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { signup } from "@/lib/actions/auth";
 import { signupSchema, type SignupFormData } from "@/lib/validations/auth";
 import {
@@ -21,6 +22,7 @@ export function SignupForm() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+  const router = useRouter();
 
   const form = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
@@ -42,12 +44,15 @@ export function SignupForm() {
       const result = await signup(data);
       if (result?.error) {
         setError(result.error);
+        setIsPending(false);
+      } else if (result?.redirectTo) {
+        router.push(result.redirectTo);
       } else if (result?.success) {
         setSuccess(result.message || "Account created successfully!");
+        setIsPending(false);
       }
     } catch (_err) {
       setError("An unexpected error occurred");
-    } finally {
       setIsPending(false);
     }
   };

@@ -132,7 +132,8 @@ export function CreateSiteDialog({
               <div>
                 <h3 className="font-semibold mb-1">Generate with AI</h3>
                 <p className="text-sm text-muted-foreground">
-                  Describe your business and let AI create a complete website for you
+                  Describe your business and let AI create a complete website
+                  for you
                 </p>
               </div>
             </button>
@@ -171,13 +172,17 @@ export function CreateSiteDialog({
                 <Input
                   id="subdomain"
                   value={subdomain}
-                  onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                  onChange={(e) =>
+                    setSubdomain(
+                      e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""),
+                    )
+                  }
                   placeholder="my-awesome-website"
                   disabled={isLoading}
                   className="rounded-r-none"
                 />
                 <span className="px-3 py-2 bg-muted border border-l-0 rounded-r-md text-sm text-muted-foreground">
-                  .{process.env.NEXT_PUBLIC_BASE_DOMAIN || 'dramacagency.com'}
+                  .{process.env.NEXT_PUBLIC_BASE_DOMAIN || "dramacagency.com"}
                 </span>
               </div>
             </div>

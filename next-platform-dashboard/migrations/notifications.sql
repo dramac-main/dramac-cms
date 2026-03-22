@@ -11,10 +11,23 @@ CREATE TABLE IF NOT EXISTS notifications (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   
   CONSTRAINT valid_type CHECK (type IN (
+    -- Core platform
+    'welcome',
     'site_published', 'site_updated', 'client_created', 'client_updated',
     'team_invite', 'team_joined', 'team_left',
     'payment_success', 'payment_failed', 'subscription_renewed', 'subscription_cancelled',
-    'comment_added', 'mention', 'security_alert', 'system'
+    'comment_added', 'mention', 'security_alert', 'system',
+    -- Booking
+    'new_booking', 'booking_confirmed', 'booking_cancelled',
+    -- E-Commerce
+    'new_order', 'order_shipped', 'order_delivered', 'order_cancelled',
+    'refund_issued', 'low_stock', 'payment_received',
+    -- Quotes
+    'new_quote_request', 'quote_accepted', 'quote_rejected',
+    -- Forms
+    'form_submission',
+    -- Live Chat
+    'chat_message', 'chat_assigned', 'chat_missed', 'chat_rating'
   ))
 );
 

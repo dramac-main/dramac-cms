@@ -14,7 +14,13 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,7 +37,11 @@ import {
   type SiteSeoSettings,
   type PageSeo,
 } from "@/lib/seo/seo-service";
-import { analyzeSeo, getScoreColor, getScoreLabel } from "@/lib/seo/seo-analyzer";
+import {
+  analyzeSeo,
+  getScoreColor,
+  getScoreLabel,
+} from "@/lib/seo/seo-analyzer";
 
 export default function SeoPage({
   params,
@@ -50,12 +60,13 @@ export default function SeoPage({
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [seoSettings, pagesData, editPermission, siteInfo] = await Promise.all([
-        getSiteSeoSettings(siteId),
-        getPagesSeo(siteId),
-        canEditSiteSeo(),
-        getSiteForSeo(siteId),
-      ]);
+      const [seoSettings, pagesData, editPermission, siteInfo] =
+        await Promise.all([
+          getSiteSeoSettings(siteId),
+          getPagesSeo(siteId),
+          canEditSiteSeo(),
+          getSiteForSeo(siteId),
+        ]);
       setSettings(seoSettings);
       setPages(pagesData);
       setCanEdit(editPermission);
@@ -89,20 +100,21 @@ export default function SeoPage({
   };
 
   // Calculate overall score
-  const overallScore = pages.length > 0
-    ? Math.round(
-        pages.reduce((sum, p) => {
-          const result = analyzeSeo({
-            title: p.seoTitle || p.pageName,
-            description: p.seoDescription,
-            slug: p.slug,
-            ogImage: p.ogImageUrl,
-            keywords: p.seoKeywords,
-          });
-          return sum + result.score;
-        }, 0) / pages.length
-      )
-    : 0;
+  const overallScore =
+    pages.length > 0
+      ? Math.round(
+          pages.reduce((sum, p) => {
+            const result = analyzeSeo({
+              title: p.seoTitle || p.pageName,
+              description: p.seoDescription,
+              slug: p.slug,
+              ogImage: p.ogImageUrl,
+              keywords: p.seoKeywords,
+            });
+            return sum + result.score;
+          }, 0) / pages.length,
+        )
+      : 0;
 
   if (loading) {
     return (
@@ -225,7 +237,10 @@ export default function SeoPage({
                 <Input
                   value={settings?.defaultTitleTemplate || ""}
                   onChange={(e) =>
-                    setSettings((s) => s && { ...s, defaultTitleTemplate: e.target.value })
+                    setSettings(
+                      (s) =>
+                        s && { ...s, defaultTitleTemplate: e.target.value },
+                    )
                   }
                   placeholder="{page_title} | {site_name}"
                   disabled={!canEdit}
@@ -240,16 +255,20 @@ export default function SeoPage({
                 <Textarea
                   value={settings?.defaultDescription || ""}
                   onChange={(e) =>
-                    setSettings((s) => s && { ...s, defaultDescription: e.target.value })
+                    setSettings(
+                      (s) => s && { ...s, defaultDescription: e.target.value },
+                    )
                   }
                   placeholder="Your site's default meta description..."
                   rows={3}
                   disabled={!canEdit}
                 />
                 <p className="text-xs text-muted-foreground">
-                  {(settings?.defaultDescription?.length || 0)}/160 characters
+                  {settings?.defaultDescription?.length || 0}/160 characters
                   {(settings?.defaultDescription?.length || 0) > 160 && (
-                    <span className="text-yellow-600 ml-2">May be truncated</span>
+                    <span className="text-yellow-600 ml-2">
+                      May be truncated
+                    </span>
                   )}
                 </p>
               </div>
@@ -259,10 +278,16 @@ export default function SeoPage({
                 <Input
                   value={settings?.defaultKeywords?.join(", ") || ""}
                   onChange={(e) =>
-                    setSettings((s) => s && { 
-                      ...s, 
-                      defaultKeywords: e.target.value.split(",").map(k => k.trim()).filter(Boolean)
-                    })
+                    setSettings(
+                      (s) =>
+                        s && {
+                          ...s,
+                          defaultKeywords: e.target.value
+                            .split(",")
+                            .map((k) => k.trim())
+                            .filter(Boolean),
+                        },
+                    )
                   }
                   placeholder="keyword1, keyword2, keyword3"
                   disabled={!canEdit}
@@ -319,7 +344,9 @@ export default function SeoPage({
                 <Input
                   value={settings?.organizationName || ""}
                   onChange={(e) =>
-                    setSettings((s) => s && { ...s, organizationName: e.target.value })
+                    setSettings(
+                      (s) => s && { ...s, organizationName: e.target.value },
+                    )
                   }
                   placeholder="Your Company Name"
                   disabled={!canEdit}
@@ -331,7 +358,9 @@ export default function SeoPage({
                 <Input
                   value={settings?.organizationLogoUrl || ""}
                   onChange={(e) =>
-                    setSettings((s) => s && { ...s, organizationLogoUrl: e.target.value })
+                    setSettings(
+                      (s) => s && { ...s, organizationLogoUrl: e.target.value },
+                    )
                   }
                   placeholder="https://example.com/logo.png"
                   disabled={!canEdit}
@@ -355,7 +384,9 @@ export default function SeoPage({
                 <Input
                   value={settings?.ogImageUrl || ""}
                   onChange={(e) =>
-                    setSettings((s) => s && { ...s, ogImageUrl: e.target.value || null })
+                    setSettings(
+                      (s) => s && { ...s, ogImageUrl: e.target.value || null },
+                    )
                   }
                   placeholder="https://..."
                   disabled={!canEdit}
@@ -365,12 +396,12 @@ export default function SeoPage({
                 </p>
                 {settings?.ogImageUrl && (
                   <div className="mt-2 border rounded-lg p-2">
-                    <img 
-                      src={settings.ogImageUrl} 
-                      alt="OG Preview" 
+                    <img
+                      src={settings.ogImageUrl}
+                      alt="OG Preview"
                       className="max-h-32 rounded"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
+                        (e.target as HTMLImageElement).style.display = "none";
                       }}
                     />
                   </div>
@@ -382,7 +413,9 @@ export default function SeoPage({
                 <Input
                   value={settings?.twitterHandle || ""}
                   onChange={(e) =>
-                    setSettings((s) => s && { ...s, twitterHandle: e.target.value })
+                    setSettings(
+                      (s) => s && { ...s, twitterHandle: e.target.value },
+                    )
                   }
                   placeholder="@yourbrand"
                   disabled={!canEdit}
@@ -393,17 +426,34 @@ export default function SeoPage({
                 <Label>Twitter Card Type</Label>
                 <div className="flex gap-2">
                   <Button
-                    variant={settings?.twitterCardType === "summary" ? "default" : "outline"}
+                    variant={
+                      settings?.twitterCardType === "summary"
+                        ? "default"
+                        : "outline"
+                    }
                     size="sm"
-                    onClick={() => setSettings(s => s && { ...s, twitterCardType: "summary" })}
+                    onClick={() =>
+                      setSettings(
+                        (s) => s && { ...s, twitterCardType: "summary" },
+                      )
+                    }
                     disabled={!canEdit}
                   >
                     Summary
                   </Button>
                   <Button
-                    variant={settings?.twitterCardType === "summary_large_image" ? "default" : "outline"}
+                    variant={
+                      settings?.twitterCardType === "summary_large_image"
+                        ? "default"
+                        : "outline"
+                    }
                     size="sm"
-                    onClick={() => setSettings(s => s && { ...s, twitterCardType: "summary_large_image" })}
+                    onClick={() =>
+                      setSettings(
+                        (s) =>
+                          s && { ...s, twitterCardType: "summary_large_image" },
+                      )
+                    }
                     disabled={!canEdit}
                   >
                     Large Image
@@ -424,12 +474,12 @@ export default function SeoPage({
             <CardContent>
               <div className="border rounded-lg overflow-hidden max-w-md">
                 {settings?.ogImageUrl && (
-                  <img 
-                    src={settings.ogImageUrl} 
-                    alt="Preview" 
+                  <img
+                    src={settings.ogImageUrl}
+                    alt="Preview"
                     className="w-full h-40 object-cover"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/placeholder.png';
+                      (e.target as HTMLImageElement).src = "/placeholder.png";
                     }}
                   />
                 )}
@@ -438,7 +488,9 @@ export default function SeoPage({
                     example.com
                   </p>
                   <p className="font-medium truncate">
-                    {settings?.defaultTitleTemplate?.replace("{page_title}", "Page Title").replace("{site_name}", siteName) || siteName}
+                    {settings?.defaultTitleTemplate
+                      ?.replace("{page_title}", "Page Title")
+                      .replace("{site_name}", siteName) || siteName}
                   </p>
                   <p className="text-sm text-muted-foreground line-clamp-2">
                     {settings?.defaultDescription || "No description set"}
@@ -454,7 +506,8 @@ export default function SeoPage({
             <CardHeader>
               <CardTitle>Search Engine Verification</CardTitle>
               <CardDescription>
-                Verify ownership with search engines to access their webmaster tools
+                Verify ownership with search engines to access their webmaster
+                tools
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -463,13 +516,17 @@ export default function SeoPage({
                 <Input
                   value={settings?.googleSiteVerification || ""}
                   onChange={(e) =>
-                    setSettings((s) => s && { ...s, googleSiteVerification: e.target.value })
+                    setSettings(
+                      (s) =>
+                        s && { ...s, googleSiteVerification: e.target.value },
+                    )
                   }
                   placeholder="Enter verification code"
                   disabled={!canEdit}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Get this from Google Search Console → Settings → Ownership verification
+                  Get this from Google Search Console → Settings → Ownership
+                  verification
                 </p>
               </div>
 
@@ -478,7 +535,10 @@ export default function SeoPage({
                 <Input
                   value={settings?.bingSiteVerification || ""}
                   onChange={(e) =>
-                    setSettings((s) => s && { ...s, bingSiteVerification: e.target.value })
+                    setSettings(
+                      (s) =>
+                        s && { ...s, bingSiteVerification: e.target.value },
+                    )
                   }
                   placeholder="Enter verification code"
                   disabled={!canEdit}
@@ -505,7 +565,9 @@ export default function SeoPage({
                 <Input
                   value={settings?.googleAnalyticsId || ""}
                   onChange={(e) =>
-                    setSettings((s) => s && { ...s, googleAnalyticsId: e.target.value })
+                    setSettings(
+                      (s) => s && { ...s, googleAnalyticsId: e.target.value },
+                    )
                   }
                   placeholder="G-XXXXXXXXXX or UA-XXXXXXXX-X"
                   disabled={!canEdit}
@@ -520,7 +582,9 @@ export default function SeoPage({
                 <Input
                   value={settings?.facebookPixelId || ""}
                   onChange={(e) =>
-                    setSettings((s) => s && { ...s, facebookPixelId: e.target.value })
+                    setSettings(
+                      (s) => s && { ...s, facebookPixelId: e.target.value },
+                    )
                   }
                   placeholder="Enter pixel ID"
                   disabled={!canEdit}
@@ -533,7 +597,8 @@ export default function SeoPage({
               {!canEdit && (
                 <div className="p-4 bg-muted rounded-lg">
                   <p className="text-sm text-muted-foreground">
-                    Analytics codes are only visible to agency owners and admins.
+                    Analytics codes are only visible to agency owners and
+                    admins.
                   </p>
                 </div>
               )}
@@ -575,20 +640,27 @@ export default function SeoPage({
                         )}
                         <div>
                           <p className="font-medium">{page.pageName}</p>
-                          <p className="text-sm text-muted-foreground">/{page.slug}</p>
+                          <p className="text-sm text-muted-foreground">
+                            /{page.slug}
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="text-right">
-                          <span className={`font-bold ${getScoreColor(result.score)}`}>
+                          <span
+                            className={`font-bold ${getScoreColor(result.score)}`}
+                          >
                             {result.score}/100
                           </span>
                           <p className="text-xs text-muted-foreground">
-                            {result.issues.length} issue{result.issues.length !== 1 ? "s" : ""}
+                            {result.issues.length} issue
+                            {result.issues.length !== 1 ? "s" : ""}
                           </p>
                         </div>
                         <Button variant="outline" size="sm" asChild>
-                          <Link href={`/dashboard/sites/${siteId}/seo/pages?page=${page.pageId}`}>
+                          <Link
+                            href={`/dashboard/sites/${siteId}/seo/pages?page=${page.pageId}`}
+                          >
                             Edit
                           </Link>
                         </Button>

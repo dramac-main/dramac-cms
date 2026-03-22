@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { login } from "@/lib/actions/auth";
 import { loginSchema, type LoginFormData } from "@/lib/validations/auth";
 import {
@@ -24,6 +25,7 @@ interface LoginFormProps {
 export function LoginForm({ redirectTo }: LoginFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+  const router = useRouter();
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -41,10 +43,12 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
       const result = await login(data, redirectTo);
       if (result?.error) {
         setError(result.error);
+        setIsPending(false);
+      } else if (result?.redirectTo) {
+        router.push(result.redirectTo);
       }
     } catch (_err) {
       setError("An unexpected error occurred");
-    } finally {
       setIsPending(false);
     }
   };

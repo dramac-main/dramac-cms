@@ -1,53 +1,44 @@
 # Active Context
 
-## Current Focus: World-Class E-Commerce Experience — IN PROGRESS
+## Current Focus: AI Builder Routing + Test User Cleanup — COMPLETED
 
-### Status: Changes made, NOT YET COMMITTED
+### Status: COMMITTED & PUSHED — `c09d5be7`
 
-### Latest Work: Shop Page Redesign + Quote Notifications + SPA Navigation + AI Designer Fixes
+### Latest Work: Route AI Builder to Modern AI Designer + Delete Test User
 
-Comprehensive e-commerce quality upgrade targeting "world-class, beats Shopify" shop experience. Deep scan of 270+ files completed, then systematic implementation of improvements.
+Deep audit of the AI builder system revealed two parallel generation pipelines:
+1. **Legacy wizard** (`/builder` → `/api/ai/generate`) — Only 8 basic section types, no modules
+2. **Modern AI Designer** (`/ai-designer` → `/api/ai/website-designer/steps/*`) — Full module support for e-commerce, booking, CRM
 
-### Changes Made (10 files):
+The modern AI Designer already has comprehensive module awareness:
+- Architecture prompt has a "MODULE AWARENESS" section with mandatory rules
+- Page generator prompt has full prop docs for all booking + e-commerce components
+- Schema validates 6 booking + 18 e-commerce component types
+- Converter maps all module component types correctly
+- Auto-install endpoint automatically installs modules on save
 
-#### 1. Shop Page Template — World-Class Redesign
+**Fix:** Route all users to the modern AI Designer instead of the legacy builder.
 
-**`src/modules/ecommerce/lib/page-templates.ts`**
+### Changes Made (7 files):
 
-- Completely redesigned `createShopPageTemplate()` with 7 sections:
-  1. Hero banner with search bar + subtitle (80px padding)
-  2. Value propositions strip (trust signals)
-  3. Bestsellers carousel
-  4. Shop by Category with heading
-  5. New Arrivals section
-  6. Full Product CATALOG (EcommerceProductCatalog with filters, sort, search, pagination)
-  7. Newsletter/CTA section
-- Removed hardcoded colors from checkout (`#f9fafb`), order confirmation (`#f0fdf4`), category page (`#f9fafb`), product detail (`#f9fafb`), quote request (`#f9fafb`) — all replaced with empty strings for brand system
+1. **`src/components/sites/create-site-form.tsx`** — AI mode redirects to `/ai-designer` instead of `/builder`
+2. **`src/components/sites/create-site-dialog.tsx`** — Same redirect fix
+3. **`src/components/sites/site-tabs.tsx`** — "Builder" tab renamed to "AI Designer", href updated
+4. **`src/app/(dashboard)/dashboard/sites/[siteId]/seo/page.tsx`** — "Create Your First Page" link updated
+5. **`src/app/(dashboard)/dashboard/sites/[siteId]/builder/page.tsx`** — Legacy page now redirects to `/ai-designer`
+6. **`src/app/(dashboard)/dashboard/sites/[siteId]/ai-designer/page.tsx`** — Removed explicit `enableModuleIntegration: false`
+7. **`src/lib/actions/onboarding.ts`** — Welcome email formatting cleanup
 
-#### 2. Template Utils — New Helpers
+### Database Changes:
+- **Deleted `test@dramacagency.com`** and all affiliated data (auth user, profile, agency, agency member, client, site, pages, page content)
 
-**`src/modules/ecommerce/lib/template-utils.ts`**
+### Verification:
+- ✅ TypeScript: ZERO errors 
+- ✅ Git pushed to main: `c09d5be7`
 
-- Fixed `createHeading()` — removed hardcoded `#111827` color
-- Added `createText()` for paragraph text components
-- Added `addProductCatalog()` using enhanced EcommerceProductCatalog
-- Added `addValuePropositions()` for trust signals strip
+---
 
-#### 3. Quote Notification Functions (NEW)
-
-**`src/lib/services/business-notifications.ts`**
-
-- Added `QuoteNotificationData` interface
-- Added `notifyNewQuote()` — in-app + owner email + customer confirmation email
-- Added `notifyQuoteAccepted()` — in-app + owner email + customer email
-- Added `notifyQuoteRejected()` — in-app + owner email
-- Enhanced `notifyPaymentReceived()` — added missing in-app notification to business owner
-
-#### 4. Quote Creation — Centralized Notification
-
-**`src/modules/ecommerce/actions/quote-actions.ts`**
-
-- Replaced ~30 lines of inline email-only notification in `createQuote()` with single `notifyNewQuote()` call
+## Previous Focus: World-Class E-Commerce Experience
 - Now provides: in-app notification + owner email + customer confirmation (was email-only to owner)
 
 #### 5. Quote Accept/Reject — Centralized Notifications

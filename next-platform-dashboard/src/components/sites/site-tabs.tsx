@@ -75,7 +75,8 @@ export function SiteTabs({ siteId, siteName }: SiteTabsProps) {
         <nav className="flex gap-1 overflow-x-auto">
           {tabs.map((tab) => {
             const href = tab.href(siteId);
-            const isActive = pathname === href || pathname.startsWith(`${href}/`);
+            const isActive =
+              pathname === href || pathname.startsWith(`${href}/`);
             const Icon = tab.icon;
 
             return (
@@ -86,7 +87,7 @@ export function SiteTabs({ siteId, siteName }: SiteTabsProps) {
                   "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
                   isActive
                     ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted"
+                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted",
                 )}
               >
                 <Icon className="h-4 w-4" />

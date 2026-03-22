@@ -33,7 +33,8 @@ export async function login(formData: LoginFormData, redirectTo?: string) {
     return { error: error.message };
   }
 
-  // Check onboarding status to avoid double-redirect through middleware
+  // Return redirect path instead of calling redirect() to avoid
+  // NEXT_REDIRECT error being caught by client-side try/catch
   if (authData.user) {
     const { data: profile } = await supabase
       .from("profiles")
@@ -42,11 +43,11 @@ export async function login(formData: LoginFormData, redirectTo?: string) {
       .single();
 
     if (!profile?.onboarding_completed) {
-      redirect("/onboarding");
+      return { success: true, redirectTo: "/onboarding" };
     }
   }
 
-  redirect(redirectTo || "/dashboard");
+  return { success: true, redirectTo: redirectTo || "/dashboard" };
 }
 
 export async function signup(formData: SignupFormData) {
@@ -164,8 +165,9 @@ export async function signup(formData: SignupFormData) {
     };
   }
 
-  // Redirect to onboarding to complete profile setup
-  redirect("/onboarding");
+  // Return redirect path instead of calling redirect() to avoid
+  // NEXT_REDIRECT error being caught by client-side try/catch
+  return { success: true, redirectTo: "/onboarding" };
 }
 
 export async function forgotPassword(formData: ForgotPasswordFormData) {

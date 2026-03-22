@@ -11,9 +11,16 @@ export const metadata: Metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ message?: string; redirect?: string }>;
+  searchParams: Promise<{ message?: string; redirect?: string; error?: string }>;
 }) {
   const params = await searchParams;
+
+  // Map auth callback error codes to user-friendly messages
+  const errorMessage = params.error
+    ? params.error === "auth_callback_error"
+      ? "Your sign-in link has expired. Please log in with your password or request a new link."
+      : "An authentication error occurred. Please try again."
+    : null;
   
   return (
     <div className="flex min-h-screen flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -24,6 +31,12 @@ export default async function LoginPage({
             Sign in to your account to continue
           </p>
         </div>
+
+        {errorMessage && (
+          <div className="rounded-md bg-danger/10 p-4 text-sm text-danger">
+            {errorMessage}
+          </div>
+        )}
 
         {params.message && (
           <div className="rounded-md bg-success/10 p-4 text-sm text-success">

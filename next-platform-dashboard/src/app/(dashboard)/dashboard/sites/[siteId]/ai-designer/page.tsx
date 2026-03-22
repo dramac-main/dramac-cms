@@ -1,9 +1,9 @@
 /**
  * AI Website Designer - FULLY WORKING Page
- * 
+ *
  * End-to-end AI-powered website generation using the real WebsiteDesignerEngine.
  * Uses Anthropic Claude to generate complete websites from a simple prompt.
- * 
+ *
  * Features:
  * - Real AI generation via /api/ai/website-designer
  * - Live preview using actual Studio components via StudioRenderer
@@ -15,7 +15,19 @@
 "use client";
 
 import { use, useState, useCallback, useEffect, useRef, useMemo } from "react";
-import { Sparkles, ArrowLeft, Loader2, RefreshCw, Check, X, Monitor, Tablet, Smartphone, Clock, AlertTriangle } from "lucide-react";
+import {
+  Sparkles,
+  ArrowLeft,
+  Loader2,
+  RefreshCw,
+  Check,
+  X,
+  Monitor,
+  Tablet,
+  Smartphone,
+  Clock,
+  AlertTriangle,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -23,7 +35,13 @@ import { toast } from "sonner";
 // import { motion, AnimatePresence } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 // import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,7 +53,10 @@ import { Progress } from "@/components/ui/progress";
 
 // Import the real Studio Renderer
 import { StudioRenderer } from "@/lib/studio/engine/renderer";
-import { convertPageToStudioFormat, setGeneratedPageSlugs } from "@/lib/ai/website-designer/converter";
+import {
+  convertPageToStudioFormat,
+  setGeneratedPageSlugs,
+} from "@/lib/ai/website-designer/converter";
 
 import type { WebsiteDesignerOutput } from "@/lib/ai/website-designer/types";
 import type { StudioPageData } from "@/types/studio";
@@ -71,13 +92,13 @@ const DEVICES: Record<DeviceType, DeviceConfig> = {
 
 // Time estimates for each stage (in seconds) - used for reference
 const _STAGE_TIME_ESTIMATES: Record<string, number> = {
-  "initializing": 2,
+  initializing: 2,
   "building-context": 5,
   "analyzing-prompt": 15,
   "creating-architecture": 20,
   "generating-pages": 45, // per page, but we'll multiply
   "generating-shared-elements": 15,
-  "finalizing": 5,
+  finalizing: 5,
 };
 
 // =============================================================================
@@ -87,24 +108,24 @@ const _STAGE_TIME_ESTIMATES: Record<string, number> = {
 /**
  * PreviewCanvas — Renders content at full device width, then scales it down
  * to fit the available container space using CSS transform: scale().
- * 
+ *
  * This matches how Wix, Squarespace, Webflow, and Framer render their previews:
  * - Content is rendered at ACTUAL device dimensions (e.g. 1280px for desktop)
  * - CSS transform: scale() shrinks it to fit the panel
  * - All layouts, media queries, and responsive breakpoints work correctly
  * - No content clipping or squishing
  */
-function PreviewCanvas({ 
-  device, 
-  deviceConfig, 
-  studioData, 
-  siteId, 
-  pageSlug 
-}: { 
+function PreviewCanvas({
+  device,
+  deviceConfig,
+  studioData,
+  siteId,
+  pageSlug,
+}: {
   device: DeviceType;
-  deviceConfig: DeviceConfig; 
-  studioData: StudioPageData | null; 
-  siteId: string; 
+  deviceConfig: DeviceConfig;
+  studioData: StudioPageData | null;
+  siteId: string;
   pageSlug?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -120,10 +141,10 @@ function PreviewCanvas({
       // Leave padding around the preview (32px each side)
       const availableWidth = rect.width - 64;
       const availableHeight = rect.height - 64;
-      
+
       const scaleX = availableWidth / deviceConfig.width;
       const scaleY = availableHeight / deviceConfig.height;
-      
+
       // Use the smaller scale to fit both dimensions, cap at 1 (never upscale)
       setScale(Math.min(scaleX, scaleY, 1));
     };
@@ -141,7 +162,8 @@ function PreviewCanvas({
         borderRadius: "40px",
         padding: "12px",
         border: "4px solid #1f2937",
-        boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25), inset 0 0 0 2px #374151",
+        boxShadow:
+          "0 25px 50px -12px rgba(0,0,0,0.25), inset 0 0 0 2px #374151",
       };
     }
     if (device === "tablet") {
@@ -149,7 +171,8 @@ function PreviewCanvas({
         borderRadius: "24px",
         padding: "16px",
         border: "4px solid #1f2937",
-        boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25), inset 0 0 0 2px #374151",
+        boxShadow:
+          "0 25px 50px -12px rgba(0,0,0,0.25), inset 0 0 0 2px #374151",
       };
     }
     // Desktop — monitor-style frame
@@ -162,7 +185,7 @@ function PreviewCanvas({
   }, [device]);
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className="flex-1 flex items-center justify-center overflow-hidden"
     >
@@ -180,9 +203,12 @@ function PreviewCanvas({
       >
         {/* Desktop title bar */}
         {device === "desktop" && (
-          <div 
+          <div
             className="flex items-center gap-2 px-4 h-8"
-            style={{ backgroundColor: "#1f2937", borderRadius: "12px 12px 0 0" }}
+            style={{
+              backgroundColor: "#1f2937",
+              borderRadius: "12px 12px 0 0",
+            }}
           >
             <div className="flex gap-1.5">
               <div className="w-3 h-3 rounded-full bg-red-500" />
@@ -211,14 +237,20 @@ function PreviewCanvas({
           className="light overflow-y-auto overflow-x-hidden"
           style={{
             width: deviceConfig.width,
-            height: device === "desktop" 
-              ? deviceConfig.height - 32  // subtract title bar
-              : device === "mobile"
-              ? deviceConfig.height - 48  // subtract notch + home bar
-              : deviceConfig.height - 4,
+            height:
+              device === "desktop"
+                ? deviceConfig.height - 32 // subtract title bar
+                : device === "mobile"
+                  ? deviceConfig.height - 48 // subtract notch + home bar
+                  : deviceConfig.height - 4,
             backgroundColor: "#ffffff",
             colorScheme: "light",
-            borderRadius: device === "desktop" ? "0 0 12px 12px" : device === "mobile" ? "28px" : "12px",
+            borderRadius:
+              device === "desktop"
+                ? "0 0 12px 12px"
+                : device === "mobile"
+                  ? "28px"
+                  : "12px",
           }}
         >
           {studioData ? (
@@ -248,10 +280,10 @@ function PreviewCanvas({
 export default function AIDesignerPage({ params }: AIDesignerPageProps) {
   const { siteId } = use(params);
   const router = useRouter();
-  
+
   // Form state
   const [prompt, setPrompt] = useState("");
-  
+
   // Generation state
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -262,13 +294,15 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
   const [generationError, setGenerationError] = useState<string | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(0);
-  
+
   // Results state
   const [output, setOutput] = useState<WebsiteDesignerOutput | null>(null);
   const [selectedPageIndex, setSelectedPageIndex] = useState(0);
   const [device, setDevice] = useState<DeviceType>("desktop");
-  const [studioDataMap, setStudioDataMap] = useState<Map<string, StudioPageData>>(new Map());
-  
+  const [studioDataMap, setStudioDataMap] = useState<
+    Map<string, StudioPageData>
+  >(new Map());
+
   // Saving state
   const [isSaving, setIsSaving] = useState(false);
 
@@ -296,9 +330,9 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
   useEffect(() => {
     if (output?.pages) {
       // First, set the valid page slugs so links can be validated
-      const pageSlugs = output.pages.map(p => p.slug);
+      const pageSlugs = output.pages.map((p) => p.slug);
       setGeneratedPageSlugs(pageSlugs);
-      
+
       // Convert pages — AI's prop values flow through directly (no design token override)
       const map = new Map<string, StudioPageData>();
       for (const page of output.pages) {
@@ -311,7 +345,9 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
 
   // Get current page data
   const currentPage = output?.pages[selectedPageIndex];
-  const currentStudioData = currentPage ? studioDataMap.get(currentPage.slug) : null;
+  const currentStudioData = currentPage
+    ? studioDataMap.get(currentPage.slug)
+    : null;
   const deviceConfig = DEVICES[device];
 
   // Format time helper
@@ -332,7 +368,9 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
     }
 
     if (prompt.length < 10) {
-      toast.error("Please provide a more detailed description (at least 10 characters)");
+      toast.error(
+        "Please provide a more detailed description (at least 10 characters)",
+      );
       return;
     }
 
@@ -356,18 +394,29 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
     try {
       // ===== STEP 1: Architecture (own 60s budget) =====
       setCurrentStage("analyzing-prompt");
-      setProgressMessage("Analyzing your requirements & creating architecture...");
+      setProgressMessage(
+        "Analyzing your requirements & creating architecture...",
+      );
       setProgress(10);
 
-      const archResponse = await fetch("/api/ai/website-designer/steps/architecture", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(basePayload),
-      });
+      const archResponse = await fetch(
+        "/api/ai/website-designer/steps/architecture",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(basePayload),
+        },
+      );
 
       if (!archResponse.ok) {
-        const err = await archResponse.json().catch(() => ({ error: `Server error: ${archResponse.status}` }));
-        throw new Error(err.error || err.message || `Architecture failed: ${archResponse.status}`);
+        const err = await archResponse
+          .json()
+          .catch(() => ({ error: `Server error: ${archResponse.status}` }));
+        throw new Error(
+          err.error ||
+            err.message ||
+            `Architecture failed: ${archResponse.status}`,
+        );
       }
 
       const archResult = await archResponse.json();
@@ -375,43 +424,63 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
         throw new Error(archResult.error || "Architecture generation failed");
       }
 
-      const pageCount = archResult.pageCount || archResult.architecture?.pages?.length || 4;
+      const pageCount =
+        archResult.pageCount || archResult.architecture?.pages?.length || 4;
       setEstimatedTotalTime(40 + pageCount * 25); // ~25s per page (sequential) + overhead
       setProgress(20);
 
       // ===== STEP 2A: Generate pages ONE AT A TIME (each gets own 300s budget) =====
       setCurrentStage("generating-pages");
       const generatedPages: Array<{
-        id: string; name: string; slug: string; title: string;
-        description: string; isHomepage: boolean; components: unknown[];
-        seo: unknown; order: number;
+        id: string;
+        name: string;
+        slug: string;
+        title: string;
+        description: string;
+        isHomepage: boolean;
+        components: unknown[];
+        seo: unknown;
+        order: number;
       }> = [];
 
       for (let i = 0; i < archResult.architecture.pages.length; i++) {
         const pagePlan = archResult.architecture.pages[i];
-        setProgressMessage(`Generating page ${i + 1}/${pageCount}: ${pagePlan.name}...`);
-        setProgress(20 + ((i / pageCount) * 45)); // 20-65%
+        setProgressMessage(
+          `Generating page ${i + 1}/${pageCount}: ${pagePlan.name}...`,
+        );
+        setProgress(20 + (i / pageCount) * 45); // 20-65%
 
-        const pageResponse = await fetch("/api/ai/website-designer/steps/page", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...basePayload,
-            architecture: archResult.architecture,
-            formattedContext: archResult.formattedContext,
-            pagePlan,
-            industry: archResult.siteContext?.industry || "general",
-          }),
-        });
+        const pageResponse = await fetch(
+          "/api/ai/website-designer/steps/page",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ...basePayload,
+              architecture: archResult.architecture,
+              formattedContext: archResult.formattedContext,
+              pagePlan,
+              industry: archResult.siteContext?.industry || "general",
+            }),
+          },
+        );
 
         if (!pageResponse.ok) {
-          const err = await pageResponse.json().catch(() => ({ error: `Server error: ${pageResponse.status}` }));
-          throw new Error(err.error || err.message || `Failed to generate page: ${pagePlan.name}`);
+          const err = await pageResponse
+            .json()
+            .catch(() => ({ error: `Server error: ${pageResponse.status}` }));
+          throw new Error(
+            err.error ||
+              err.message ||
+              `Failed to generate page: ${pagePlan.name}`,
+          );
         }
 
         const pageResult = await pageResponse.json();
         if (!pageResult.success) {
-          throw new Error(pageResult.error || `Failed to generate page: ${pagePlan.name}`);
+          throw new Error(
+            pageResult.error || `Failed to generate page: ${pagePlan.name}`,
+          );
         }
 
         generatedPages.push(pageResult.page);
@@ -424,30 +493,41 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
       setProgressMessage("Generating navigation & footer...");
       setProgress(72);
 
-      const sharedResponse = await fetch("/api/ai/website-designer/steps/shared", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...basePayload,
-          architecture: archResult.architecture,
-          pages: generatedPages.map(p => ({
-            name: p.name,
-            slug: p.slug,
-            isHomepage: p.isHomepage,
-          })),
-          // Pass full business context — avoids redundant DB calls inside engine
-          siteContext: archResult.siteContext,
-        }),
-      });
+      const sharedResponse = await fetch(
+        "/api/ai/website-designer/steps/shared",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...basePayload,
+            architecture: archResult.architecture,
+            pages: generatedPages.map((p) => ({
+              name: p.name,
+              slug: p.slug,
+              isHomepage: p.isHomepage,
+            })),
+            // Pass full business context — avoids redundant DB calls inside engine
+            siteContext: archResult.siteContext,
+          }),
+        },
+      );
 
       if (!sharedResponse.ok) {
-        const err = await sharedResponse.json().catch(() => ({ error: `Server error: ${sharedResponse.status}` }));
-        throw new Error(err.error || err.message || `Shared elements failed: ${sharedResponse.status}`);
+        const err = await sharedResponse
+          .json()
+          .catch(() => ({ error: `Server error: ${sharedResponse.status}` }));
+        throw new Error(
+          err.error ||
+            err.message ||
+            `Shared elements failed: ${sharedResponse.status}`,
+        );
       }
 
       const sharedResult = await sharedResponse.json();
       if (!sharedResult.success) {
-        throw new Error(sharedResult.error || "Shared elements generation failed");
+        throw new Error(
+          sharedResult.error || "Shared elements generation failed",
+        );
       }
 
       setProgress(80);
@@ -457,28 +537,37 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
       setProgressMessage("Finalizing website...");
       setProgress(85);
 
-      const finalResponse = await fetch("/api/ai/website-designer/steps/finalize", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...basePayload,
-          architecture: archResult.architecture,
-          pages: generatedPages,
-          navbar: sharedResult.navbar,
-          footer: sharedResult.footer,
-          siteContext: archResult.siteContext || {
-            name: "Business",
-            domain: "",
-            industry: "general",
-            description: prompt,
-          },
-          startTime,
-        }),
-      });
+      const finalResponse = await fetch(
+        "/api/ai/website-designer/steps/finalize",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...basePayload,
+            architecture: archResult.architecture,
+            pages: generatedPages,
+            navbar: sharedResult.navbar,
+            footer: sharedResult.footer,
+            siteContext: archResult.siteContext || {
+              name: "Business",
+              domain: "",
+              industry: "general",
+              description: prompt,
+            },
+            startTime,
+          }),
+        },
+      );
 
       if (!finalResponse.ok) {
-        const err = await finalResponse.json().catch(() => ({ error: `Server error: ${finalResponse.status}` }));
-        throw new Error(err.error || err.message || `Finalization failed: ${finalResponse.status}`);
+        const err = await finalResponse
+          .json()
+          .catch(() => ({ error: `Server error: ${finalResponse.status}` }));
+        throw new Error(
+          err.error ||
+            err.message ||
+            `Finalization failed: ${finalResponse.status}`,
+        );
       }
 
       const result = await finalResponse.json();
@@ -493,7 +582,8 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
       toast.success(`Generated ${result.pages?.length || 0} pages!`);
     } catch (error) {
       console.error("[AI Designer] Error:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to generate website";
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to generate website";
       setGenerationError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -535,15 +625,20 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
 
         if (!createResponse.ok) {
           const errorData = await createResponse.json().catch(() => ({}));
-          console.error(`[AI Designer] Failed to create page ${page.slug}:`, errorData);
+          console.error(
+            `[AI Designer] Failed to create page ${page.slug}:`,
+            errorData,
+          );
           errorCount++;
           continue;
         }
 
         const { pageId, exists } = await createResponse.json();
-        
+
         if (exists) {
-          console.log(`[AI Designer] Page ${page.slug} already exists, updating content...`);
+          console.log(
+            `[AI Designer] Page ${page.slug} already exists, updating content...`,
+          );
         }
 
         // Save page content
@@ -555,7 +650,10 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
 
         if (!contentResponse.ok) {
           const errorData = await contentResponse.json().catch(() => ({}));
-          console.error(`[AI Designer] Failed to save content for page ${page.slug}:`, errorData);
+          console.error(
+            `[AI Designer] Failed to save content for page ${page.slug}:`,
+            errorData,
+          );
           errorCount++;
         } else {
           savedCount++;
@@ -568,16 +666,28 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
         // This bridges the AI engine → site branding → renderer pipeline
         try {
           if (output.architecture?.designTokens) {
-            const { persistDesignTokensAction } = await import("@/lib/actions/sites");
-            const tokenResult = await persistDesignTokensAction(siteId, output.architecture.designTokens);
+            const { persistDesignTokensAction } =
+              await import("@/lib/actions/sites");
+            const tokenResult = await persistDesignTokensAction(
+              siteId,
+              output.architecture.designTokens,
+            );
             if (tokenResult.error) {
-              console.error("[AI Designer] Failed to persist design tokens:", tokenResult.error);
+              console.error(
+                "[AI Designer] Failed to persist design tokens:",
+                tokenResult.error,
+              );
             } else {
-              console.log("[AI Designer] Design tokens saved to site.settings.theme");
+              console.log(
+                "[AI Designer] Design tokens saved to site.settings.theme",
+              );
             }
           }
         } catch (tokenErr) {
-          console.error("[AI Designer] Design token persistence error (non-fatal):", tokenErr);
+          console.error(
+            "[AI Designer] Design token persistence error (non-fatal):",
+            tokenErr,
+          );
         }
 
         // Auto-install modules based on component types used in the generated pages
@@ -593,11 +703,16 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
             }
           }
           if (allComponentTypes.size > 0) {
-            const autoInstallRes = await fetch(`/api/sites/${siteId}/modules/auto-install`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ componentTypes: [...allComponentTypes] }),
-            });
+            const autoInstallRes = await fetch(
+              `/api/sites/${siteId}/modules/auto-install`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  componentTypes: [...allComponentTypes],
+                }),
+              },
+            );
             if (autoInstallRes.ok) {
               const { installed } = await autoInstallRes.json();
               if (installed?.length > 0) {
@@ -606,7 +721,10 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
             }
           }
         } catch (moduleErr) {
-          console.error("[AI Designer] Module auto-install error (non-fatal):", moduleErr);
+          console.error(
+            "[AI Designer] Module auto-install error (non-fatal):",
+            moduleErr,
+          );
         }
 
         // Auto-publish the site so pages are immediately accessible
@@ -614,19 +732,25 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
           const publishResponse = await fetch(`/api/sites/${siteId}/publish`, {
             method: "POST",
           });
-          
+
           if (publishResponse.ok) {
             const publishResult = await publishResponse.json();
-            toast.success(`Website published! ${savedCount} pages live at ${publishResult.siteUrl || "your subdomain"}`);
+            toast.success(
+              `Website published! ${savedCount} pages live at ${publishResult.siteUrl || "your subdomain"}`,
+            );
           } else {
             // Publishing failed but pages were saved
-            toast.success(`Website saved! ${savedCount} pages created. Note: Publishing may be needed.`);
+            toast.success(
+              `Website saved! ${savedCount} pages created. Note: Publishing may be needed.`,
+            );
           }
         } catch (publishError) {
           console.error("[AI Designer] Publish error:", publishError);
-          toast.success(`Website saved! ${savedCount} pages created. You may need to publish manually.`);
+          toast.success(
+            `Website saved! ${savedCount} pages created. You may need to publish manually.`,
+          );
         }
-        
+
         // Redirect to the studio for the homepage
         router.push(`/dashboard/sites/${siteId}/pages`);
       } else if (errorCount > 0) {
@@ -687,7 +811,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                 Build Your Website with AI
               </h2>
               <p className="text-lg text-muted-foreground max-w-lg mx-auto">
-                Describe what you want, and our AI will create a complete, 
+                Describe what you want, and our AI will create a complete,
                 professional website in seconds.
               </p>
             </div>
@@ -703,7 +827,9 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
               <CardContent className="space-y-6">
                 {/* Prompt */}
                 <div className="space-y-2">
-                  <Label htmlFor="prompt">What kind of website do you want?</Label>
+                  <Label htmlFor="prompt">
+                    What kind of website do you want?
+                  </Label>
                   <Textarea
                     id="prompt"
                     placeholder="Example: I need a professional website for my restaurant in Lusaka called 'Café Zambezi'. We serve traditional Zambian cuisine and want to showcase our menu, accept reservations, and highlight our location. Include a hero section, menu gallery, about section, testimonials, and contact form."
@@ -714,7 +840,8 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                     disabled={isGenerating}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Be specific! Include your business type, key features, and sections you want.
+                    Be specific! Include your business type, key features, and
+                    sections you want.
                   </p>
                 </div>
 
@@ -725,31 +852,42 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Progress</span>
-                        <span className="font-medium">{Math.round(progress)}%</span>
+                        <span className="font-medium">
+                          {Math.round(progress)}%
+                        </span>
                       </div>
                       <Progress value={progress} className="h-3" />
                     </div>
-                    
+
                     {/* Status Message */}
                     <div className="flex items-center justify-center gap-2 py-2">
                       <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                       <span className="font-medium">{progressMessage}</span>
                     </div>
-                    
+
                     {/* Time Info */}
                     <div className="flex justify-between items-center text-sm border-t pt-4">
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Clock className="h-4 w-4" />
-                        <span>Elapsed: <span className="font-mono text-foreground">{formatTime(elapsedTime)}</span></span>
+                        <span>
+                          Elapsed:{" "}
+                          <span className="font-mono text-foreground">
+                            {formatTime(elapsedTime)}
+                          </span>
+                        </span>
                       </div>
                       <div className="text-muted-foreground">
-                        Est. total: <span className="font-mono text-foreground">~{formatTime(estimatedTotalTime)}</span>
+                        Est. total:{" "}
+                        <span className="font-mono text-foreground">
+                          ~{formatTime(estimatedTotalTime)}
+                        </span>
                       </div>
                     </div>
-                    
+
                     {/* AI Working Message */}
                     <p className="text-xs text-center text-muted-foreground">
-                      AI is designing your website. This typically takes 1-2 minutes depending on complexity.
+                      AI is designing your website. This typically takes 1-2
+                      minutes depending on complexity.
                     </p>
                   </div>
                 )}
@@ -760,10 +898,15 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                     <div className="flex items-start gap-3">
                       <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
                       <div className="space-y-1">
-                        <p className="font-medium text-destructive">Generation Failed</p>
-                        <p className="text-sm text-muted-foreground">{generationError}</p>
+                        <p className="font-medium text-destructive">
+                          Generation Failed
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {generationError}
+                        </p>
                         <p className="text-xs text-muted-foreground mt-2">
-                          Try again with a simpler prompt, or contact support if the issue persists.
+                          Try again with a simpler prompt, or contact support if
+                          the issue persists.
                         </p>
                       </div>
                     </div>
@@ -771,9 +914,9 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                 )}
 
                 {/* Generate Button */}
-                <Button 
-                  onClick={handleGenerate} 
-                  className="w-full gap-2" 
+                <Button
+                  onClick={handleGenerate}
+                  className="w-full gap-2"
                   size="lg"
                   disabled={isGenerating || !prompt.trim()}
                 >
@@ -849,30 +992,39 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
 
         {/* Device Selector */}
         <div className="flex items-center gap-1 border rounded-lg p-1 bg-muted/50">
-          {(Object.entries(DEVICES) as [DeviceType, DeviceConfig][]).map(([key, config]) => {
-            const Icon = config.icon;
-            return (
-              <Button
-                key={key}
-                variant={device === key ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setDevice(key)}
-                className="h-8 w-8 p-0"
-                title={config.label}
-              >
-                <Icon className="h-4 w-4" />
-              </Button>
-            );
-          })}
+          {(Object.entries(DEVICES) as [DeviceType, DeviceConfig][]).map(
+            ([key, config]) => {
+              const Icon = config.icon;
+              return (
+                <Button
+                  key={key}
+                  variant={device === key ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setDevice(key)}
+                  className="h-8 w-8 p-0"
+                  title={config.label}
+                >
+                  <Icon className="h-4 w-4" />
+                </Button>
+              );
+            },
+          )}
         </div>
 
         {/* Actions */}
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={handleGenerate} disabled={isGenerating}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isGenerating ? "animate-spin" : ""}`} />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleGenerate}
+            disabled={isGenerating}
+          >
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${isGenerating ? "animate-spin" : ""}`}
+            />
             Regenerate
           </Button>
-          
+
           <Button
             variant="outline"
             size="sm"
@@ -921,23 +1073,33 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                 {currentPage && (
                   <div className="space-y-4">
                     <div>
-                      <Label className="text-xs text-muted-foreground">Page Title</Label>
+                      <Label className="text-xs text-muted-foreground">
+                        Page Title
+                      </Label>
                       <p className="font-medium">{currentPage.title}</p>
                     </div>
                     <div>
-                      <Label className="text-xs text-muted-foreground">URL</Label>
+                      <Label className="text-xs text-muted-foreground">
+                        URL
+                      </Label>
                       <p className="font-mono text-sm">{currentPage.slug}</p>
                     </div>
                     <div>
-                      <Label className="text-xs text-muted-foreground">Description</Label>
-                      <p className="text-sm text-muted-foreground">{currentPage.description}</p>
+                      <Label className="text-xs text-muted-foreground">
+                        Description
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        {currentPage.description}
+                      </p>
                     </div>
                     <Separator />
                     <div>
-                      <Label className="text-xs text-muted-foreground">Components</Label>
+                      <Label className="text-xs text-muted-foreground">
+                        Components
+                      </Label>
                       <div className="mt-2 space-y-2">
                         {currentPage.components.map((comp, i) => (
-                          <div 
+                          <div
                             key={comp.id || i}
                             className="flex items-center gap-2 p-2 rounded bg-muted/50 text-sm"
                           >
@@ -959,7 +1121,9 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
       {/* Status Bar */}
       <div className="h-8 border-t bg-white dark:bg-gray-800 flex items-center justify-between px-4 text-xs text-muted-foreground shrink-0">
         <span>
-          {output.pages.length} pages • {output.pages.reduce((acc, p) => acc + p.components.length, 0)} components
+          {output.pages.length} pages •{" "}
+          {output.pages.reduce((acc, p) => acc + p.components.length, 0)}{" "}
+          components
         </span>
         <span className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-green-500" />
