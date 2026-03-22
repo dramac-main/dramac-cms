@@ -597,7 +597,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
     } finally {
       setIsGenerating(false);
     }
-  }, [siteId, prompt]);
+  }, [siteId, prompt, selectedFeatures]);
 
   const handleSaveAndApply = useCallback(async () => {
     if (!output || studioDataMap.size === 0) {
@@ -719,7 +719,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
               }
             }
           }
-          if (allComponentTypes.size > 0) {
+          if (allComponentTypes.size > 0 || selectedFeatures.size > 0) {
             const autoInstallRes = await fetch(
               `/api/sites/${siteId}/modules/auto-install`,
               {
@@ -727,6 +727,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   componentTypes: [...allComponentTypes],
+                  selectedFeatures: [...selectedFeatures],
                 }),
               },
             );
@@ -784,7 +785,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
     } finally {
       setIsSaving(false);
     }
-  }, [output, studioDataMap, siteId, router]);
+  }, [output, studioDataMap, siteId, router, selectedFeatures]);
 
   const handleDiscard = useCallback(() => {
     setOutput(null);
