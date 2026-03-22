@@ -5,7 +5,21 @@
 
 ---
 
-## Latest Update: Module Auto-Install Fix — `8380de92`
+## Latest Update: AI Designer End-to-End Verification — `27e239e0`
+
+**Changes:**
+- Feature chips now **mandatory** (at least one must be selected)
+- **Contact Forms** chip added (module exists in DB, was missing from UI)
+- Chips turn **blue** when selected (was achromatic `bg-primary`)
+- Engine FEATURE_MODULE_MAP expanded: added live-chat + contact-forms
+- Auto-install FEATURE_MODULE_MAP: removed blog (no module), added contact-forms
+- Full pipeline verified: architecture → page → shared → finalize → save → auto-install → publish
+
+**Previous:** AI designer site name fix + product grid empty states — `32d9c6e5`
+
+---
+
+## Previous Update: Module Auto-Install Fix — `8380de92`
 
 **Problem**: AI designer selected features (ecommerce, live-chat) but modules never appeared on Modules tab after site generation. Root cause: auto-install only created `site_module_installations` but Modules tab requires `agency_module_subscriptions` to exist.
 

@@ -900,7 +900,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                           }}
                           className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors border ${
                             isSelected
-                              ? "bg-blue-600 text-white border-blue-600"
+                              ? "bg-primary/10 text-foreground border-primary"
                               : "bg-muted/50 text-muted-foreground border-border hover:bg-muted hover:text-foreground"
                           } ${isGenerating ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                         >
@@ -1121,7 +1121,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
             variant="outline"
             size="sm"
             onClick={handleDiscard}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
           >
             <X className="h-4 w-4 mr-2" />
             Discard
@@ -1131,7 +1131,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
             size="sm"
             onClick={handleSaveAndApply}
             disabled={isSaving}
-            className="bg-green-600 hover:bg-green-700"
+            className="bg-primary hover:bg-primary/90"
           >
             {isSaving ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -1211,14 +1211,14 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
       </div>
 
       {/* Status Bar */}
-      <div className="h-8 border-t bg-white dark:bg-gray-800 flex items-center justify-between px-4 text-xs text-muted-foreground shrink-0">
+      <div className="h-8 border-t bg-card flex items-center justify-between px-4 text-xs text-muted-foreground shrink-0">
         <span>
           {output.pages.length} pages •{" "}
           {output.pages.reduce((acc, p) => acc + p.components.length, 0)}{" "}
           components
         </span>
         <span className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-green-500" />
+          <span className="w-2 h-2 rounded-full bg-success" />
           Ready to apply
         </span>
       </div>

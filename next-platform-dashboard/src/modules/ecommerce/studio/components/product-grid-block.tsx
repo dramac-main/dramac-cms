@@ -123,7 +123,7 @@ export function ProductGridBlock({
     return (
       <div className="product-grid-wrapper">
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <ShoppingBag className="h-12 w-12 text-amber-500 mb-3" />
+          <ShoppingBag className="h-12 w-12 text-warning mb-3" />
           <h3 className="font-medium text-lg mb-1">No products yet</h3>
           <p className="text-sm text-muted-foreground max-w-md">
             This section will display products once they are added. Go to the

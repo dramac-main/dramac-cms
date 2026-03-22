@@ -1,82 +1,64 @@
 # Active Context
 
-## Current Focus: Module Auto-Install Fix — COMPLETED
+## Current Focus: AI Designer End-to-End Verification — COMPLETED
 
-### Status: COMMITTED & PUSHED — `8380de92`
+### Status: COMMITTED & PUSHED — `27e239e0`
 
-### Latest Work: Module Auto-Install Creates Agency Subscriptions
+### Latest Work: Feature Chips Mandatory + Contact Forms + Module Map Fixes
 
-#### Root Cause
-Auto-install API only created `site_module_installations` but the Modules tab requires `agency_module_subscriptions` to exist first. Without agency subscriptions, modules were invisible even if site installations existed. Additionally, `selectedFeatures` from the AI designer (e.g., live-chat) were never passed to the auto-install API.
+#### Changes Applied (3 files, commit `27e239e0`):
 
-#### Fix Applied (2 files):
+1. **`ai-designer/page.tsx`** — 5 changes:
+   - **Chip turns blue**: Changed selected state from `bg-primary` (achromatic black) to `bg-blue-600 text-white border-blue-600` (previous commit `32d9c6e5`)
+   - **Mandatory selection**: `handleGenerate` now checks `selectedFeatures.size === 0` before anything else
+   - **Button disabled**: Added `selectedFeatures.size === 0` to disabled condition
+   - **Contact Forms chip added**: New chip with `Mail` icon (module exists in DB as `contact-forms`)
+   - **Helper text**: Changed from "Select any features" to "Select at least one feature"
 
-1. **`auto-install/route.ts`** — Complete rewrite:
-   - Now creates `agency_module_subscriptions` (status: active, billing_cycle: monthly) before `site_module_installations`
-   - Links site installations to subscriptions via `agency_subscription_id`
-   - Accepts `selectedFeatures` param for feature-only modules (live-chat, booking, etc.)
-   - Added `FEATURE_MODULE_MAP` (ecommerce, booking, live-chat, blog → module slugs)
-   - Added `LiveChat` prefix to `COMPONENT_MODULE_MAP`
-   - Handles re-activation of canceled subscriptions and existing installations
+2. **`engine.ts`** — FEATURE_MODULE_MAP expanded:
+   - Added `"live-chat": { module_type: "live-chat", module_name: "Live Chat" }`
+   - Added `"contact-forms": { module_type: "contact-forms", module_name: "Contact Forms" }`
+   - Now covers: ecommerce, booking, live-chat, contact-forms (was only ecommerce + booking)
 
-2. **`ai-designer/page.tsx`** — Three changes:
-   - Passes `selectedFeatures: [...selectedFeatures]` to auto-install API
-   - Fires auto-install when `selectedFeatures.size > 0` even if no component types detected
-   - Fixed React Hook dependency arrays for `selectedFeatures`
+3. **`auto-install/route.ts`** — FEATURE_MODULE_MAP corrected:
+   - Removed `blog: "blog"` (no blog module exists in `modules_v2`)
+   - Added `"contact-forms": "contact-forms"`
+   - Now maps: ecommerce, booking, live-chat, contact-forms
 
-#### Module System Three-Tier Architecture:
-- `modules_v2` → module definitions (12 active modules)
-- `agency_module_subscriptions` → agency licenses (UNIQUE agency_id + module_id)
-- `site_module_installations` → per-site enable/disable (UNIQUE site_id + module_id, FK to subscription)
+#### Feature Chips (5 total):
+| Chip ID | Label | Icon | Module Exists | Engine Injects | Auto-Installs |
+|---------|-------|------|---------------|----------------|---------------|
+| ecommerce | Online Store | ShoppingCart | ✅ | ✅ | ✅ |
+| booking | Booking System | CalendarCheck | ✅ | ✅ | ✅ |
+| blog | Blog | FileText | ❌ | ❌ (content-only) | ❌ (no module) |
+| contact-forms | Contact Forms | Mail | ✅ | ✅ | ✅ |
+| live-chat | Live Chat | MessageCircle | ✅ | ✅ | ✅ |
+
+Blog is a content-only feature — the AI generates blog-style pages from the prompt, but there's no blog module to install. All other features have full module support.
+
+#### Theme Color Discovery:
+- `--primary` is `oklch(0.205 0 0)` (light) / `oklch(0.922 0 0)` (dark) — **achromatic, ZERO chroma**
+- This is why `bg-primary` made chips near-black/near-white instead of blue
+- Fix: Use explicit `bg-blue-600` for chip selected state
+
+#### Full Pipeline Verification (Steps 4+):
+- ✅ Architecture step: Auth, validation, selectedFeatures passed to engine
+- ✅ Page step: Receives architecture + context, 60s budget per page
+- ✅ Shared step: Parallel Haiku calls for navbar/footer, bullet-proof fallbacks
+- ✅ Finalize step: Local processing only, quality audit, design token injection
+- ✅ Save flow: Creates pages → persists design tokens → auto-installs → publishes → redirects
+- ✅ Auto-install: Creates agency subscriptions first, then site installations
+- ✅ Publish: Route exists and calls `publishSite` service
+- ✅ Converter: Already fixed with `siteName` param (commit `32d9c6e5`)
+
+#### Database Module Inventory (12 active in `modules_v2`):
+google-analytics, automation, booking, crm, client-portal-pro, live-chat, agency-crm, ecommerce, contact-forms, social-media, seo-optimizer, welcome-banner
 
 ---
 
-## Previous Focus: AI Designer Feature Selection + Auth Flow Fixes — COMPLETED
+## Previous Focus: AI Designer Site Name + Empty States — COMPLETED
 
-### Status: COMMITTED & PUSHED — `ed816b22`
-
-### Latest Work (Session 2): Feature Selection Chips + Auth Flow Fix
-
-#### 1. Auth Flow Flash Error Fix (`4d3befe7`)
-
-- **Problem:** `login()` and `signup()` called `redirect()` which throws `NEXT_REDIRECT` internally. Client-side `catch` block caught this and briefly showed "An unexpected error occurred" before redirect completed.
-- **Fix:** Changed to return `{ success: true, redirectTo: "..." }` and use `router.push()` client-side.
-- Login page now handles `error` search param for expired auth links.
-- DB notification constraint updated from 14 → 34 types (was blocking `welcome` type).
-
-#### 2. AI Designer Feature Selection Chips (`ed816b22`)
-
-**The Core Problem (Chicken-and-Egg):**
-
-- AI prompts say "If BOOKING module is enabled: YOU MUST include BookingWidget"
-- But `site_module_installations` is empty for new sites — modules aren't installed until AFTER generation
-- So `fetchModules()` returns `[]` → `formatModulesSection()` never fires → AI never gets detailed module instructions
-- AI was relying solely on the user's free-text prompt to infer booking/e-commerce needs
-
-**The Fix — Feature Selection Chips:**
-Added feature toggle chips to the AI Designer page (Online Store, Booking, Blog, Live Chat). When selected:
-
-1. Chips passed as `selectedFeatures` array to architecture API
-2. Engine injects synthetic `EnabledModule` entries into the data context
-3. `formatModulesSection()` fires with full detailed instructions (BookingWidget on homepage, EcommerceFeaturedProducts, etc.)
-4. Auto-install still handles actual DB module installation after generation
-
-### Files Changed:
-
-1. **`types.ts`** — Added `selectedFeatures?: string[]` to `WebsiteDesignerInput`
-2. **`ai-designer/page.tsx`** — Feature chip UI with ShoppingCart/CalendarCheck/FileText/MessageCircle icons
-3. **`steps/architecture/route.ts`** — Accept `selectedFeatures` in request schema, pass to engine
-4. **`engine.ts`** — Inject synthetic modules from `FEATURE_MODULE_MAP` after `buildDataContext()`
-
-### Test User Status:
-
-- `test@dramacagency.com` completely deleted — 0 rows across all tables
-- Clean slate ready for fresh signup testing
-
-### Verification:
-
-- ✅ TypeScript: ZERO errors
-- ✅ Git pushed to main: `ed816b22`
+### Status: COMMITTED & PUSHED — `32d9c6e5`
 
 ---
 
