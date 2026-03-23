@@ -207,6 +207,7 @@ export function ProductGridBlock({
           <ProductCardBlock
             key={product.id}
             productId={product.id}
+            productData={product}
             siteId={resolvedSiteId}
             variant={cardVariant === "minimal" ? "minimal" : "card"}
             showPrice={showPrice}

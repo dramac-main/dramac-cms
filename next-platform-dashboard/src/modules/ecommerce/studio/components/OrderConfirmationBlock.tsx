@@ -26,6 +26,9 @@ import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useSearchParams } from 'next/navigation'
+import { useStorefront } from '../../context/storefront-context'
+import { getPublicOrderById } from '../../actions/public-ecommerce-actions'
 
 // ============================================================================
 // TYPES
@@ -87,16 +90,77 @@ interface OrderConfirmationBlockProps {
 // ============================================================================
 
 export function OrderConfirmationBlock({
-  order,
-  orderId,
-  isLoading = false,
-  error,
-  formatPrice,
+  order: orderProp,
+  orderId: orderIdProp,
+  isLoading: isLoadingProp = false,
+  error: errorProp,
+  formatPrice: formatPriceProp,
   shopLink = '/shop',
   trackingLink,
   className
 }: OrderConfirmationBlockProps) {
+  const searchParams = useSearchParams()
+  const storefront = useStorefront()
+  const [fetchedOrder, setFetchedOrder] = React.useState<OrderData | null>(null)
+  const [fetchLoading, setFetchLoading] = React.useState(false)
+  const [fetchError, setFetchError] = React.useState<string | null>(null)
   const [copied, setCopied] = React.useState(false)
+
+  // Resolve orderId from prop or URL query param
+  const resolvedOrderId = orderIdProp || searchParams.get('order') || ''
+  const formatPrice = formatPriceProp || storefront.formatPrice
+
+  // Self-fetch order data when not provided via props
+  React.useEffect(() => {
+    if (orderProp || !resolvedOrderId || !storefront.siteId) return
+    let cancelled = false
+    setFetchLoading(true)
+    getPublicOrderById(storefront.siteId, resolvedOrderId)
+      .then((result) => {
+        if (cancelled) return
+        if (!result) {
+          setFetchError('Order not found')
+          return
+        }
+        const { order: o, items } = result
+        setFetchedOrder({
+          id: o.id,
+          order_number: o.order_number,
+          status: o.status,
+          email: o.customer_email || '',
+          shipping_address: o.shipping_address as unknown as OrderAddress || {} as OrderAddress,
+          billing_address: o.billing_address as unknown as OrderAddress || {} as OrderAddress,
+          shipping_method: (o.metadata as Record<string, unknown>)?.shipping_method_name as string | undefined,
+          payment_method: o.payment_provider || undefined,
+          items: items.map((item: Record<string, unknown>) => ({
+            id: item.id as string,
+            product_name: (item.product_name as string) || 'Product',
+            product_image: item.product_image as string | undefined,
+            variant_name: item.variant_name as string | undefined,
+            quantity: (item.quantity as number) || 1,
+            unit_price: (item.unit_price as number) || 0,
+            line_total: (item.total_price as number) || ((item.unit_price as number) || 0) * ((item.quantity as number) || 1),
+          })),
+          subtotal: o.subtotal || 0,
+          discount: o.discount_amount || 0,
+          shipping_amount: o.shipping_amount || 0,
+          tax_amount: o.tax_amount || 0,
+          total: o.total || 0,
+          created_at: o.created_at,
+        })
+      })
+      .catch(() => {
+        if (!cancelled) setFetchError('Failed to load order details')
+      })
+      .finally(() => {
+        if (!cancelled) setFetchLoading(false)
+      })
+    return () => { cancelled = true }
+  }, [orderProp, resolvedOrderId, storefront.siteId])
+
+  const order = orderProp || fetchedOrder
+  const isLoading = isLoadingProp || fetchLoading
+  const error = errorProp || fetchError
 
   const copyOrderNumber = async () => {
     if (order?.order_number) {

@@ -521,6 +521,7 @@ export function ProductGridBlock({
                   key={product.id}
                   productId={product.id}
                   siteId={effectiveSiteId}
+                  productData={product}
                   variant={viewMode === "list" ? "horizontal" : cardVariant}
                   showPrice={showPrice}
                   showRating={showRating}

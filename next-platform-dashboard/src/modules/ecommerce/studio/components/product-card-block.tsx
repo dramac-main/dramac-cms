@@ -41,6 +41,9 @@ interface ProductCardProps {
   productId: string | null;
   siteId?: string;
   _siteId?: string | null; // Studio canvas passes this
+  // Pre-fetched product data — when provided, skips the individual product fetch
+  // (used by grid components to avoid N+1 queries)
+  productData?: Product | null;
 
   // Display options
   showPrice: boolean;
@@ -103,6 +106,7 @@ export function ProductCardBlock({
   productId,
   siteId,
   _siteId,
+  productData,
   showPrice = true,
   showRating = true,
   showButton = true,
@@ -132,12 +136,13 @@ export function ProductCardBlock({
   // Effective price visibility: hide if prop says so OR if quotation mode hides prices
   const effectiveShowPrice = showPrice && !quotationHidePrices;
 
-  // Hooks for real data
+  // Hooks for real data — skip fetch when productData is already provided (N+1 fix)
+  const needsFetch = !productData && !!effectiveSiteId;
   const {
     product: fetchedProduct,
-    isLoading,
-    error,
-  } = useStorefrontProduct(effectiveSiteId || "", productId || "");
+    isLoading: fetchLoading,
+    error: fetchError,
+  } = useStorefrontProduct(needsFetch ? (effectiveSiteId || "") : "", needsFetch ? (productId || "") : "");
   const { addItem, isUpdating: cartLoading } = useStorefrontCart(
     effectiveSiteId || "",
   );
@@ -147,14 +152,18 @@ export function ProductCardBlock({
     removeItem: removeFromWishlist,
   } = useStorefrontWishlist(effectiveSiteId || "");
 
+  // When productData is provided, use it directly (no loading/error state)
+  const isLoading = productData ? false : fetchLoading;
+  const error = productData ? null : fetchError;
+
   // Local state
   const [addingToCart, setAddingToCart] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  // Use fetched product or demo data - only show demo in editor when no site connected
+  // Use pre-fetched data, then hook data, then demo
   const product = !effectiveSiteId
     ? DEMO_PRODUCT
-    : fetchedProduct || DEMO_PRODUCT;
+    : productData || fetchedProduct || DEMO_PRODUCT;
   const isDemo = !effectiveSiteId;
   const inWishlist = productId ? isInWishlist(productId) : false;
 

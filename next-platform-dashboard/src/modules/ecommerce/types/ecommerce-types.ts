@@ -480,6 +480,8 @@ export interface ProductFilters {
   maxPrice?: number
   inStock?: boolean
   onSale?: boolean
+  sortBy?: string
+  sortOrder?: 'asc' | 'desc'
 }
 
 export interface OrderFilters {

@@ -332,6 +332,7 @@ export function FeaturedProductsBlock({
                         <ProductCardBlock
                           key={product.id}
                           productId={product.id}
+                          productData={product}
                           siteId={effectiveSiteId}
                           variant={cardVariant}
                           showPrice={showPrice}
@@ -390,6 +391,7 @@ export function FeaturedProductsBlock({
               >
                 <ProductCardBlock
                   productId={product.id}
+                  productData={product}
                   siteId={effectiveSiteId}
                   variant={cardVariant}
                   showPrice={showPrice}
@@ -419,6 +421,7 @@ export function FeaturedProductsBlock({
           <div className="lg:row-span-2">
             <ProductCardBlock
               productId={products[0].id}
+              productData={products[0]}
               siteId={effectiveSiteId}
               variant="card"
               showPrice={showPrice}
@@ -443,6 +446,7 @@ export function FeaturedProductsBlock({
               <ProductCardBlock
                 key={product.id}
                 productId={product.id}
+                productData={product}
                 siteId={effectiveSiteId}
                 variant="minimal"
                 showPrice={showPrice}

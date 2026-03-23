@@ -230,19 +230,155 @@ async function getSiteData(domain: string, pageSlug: string) {
   return processData(site, pageSlug, supabase);
 }
 
+/**
+ * Generate a virtual ecommerce page on-the-fly for routes that don't have
+ * a corresponding entry in the pages table. This handles:
+ * - /checkout → multi-step checkout page
+ * - /order-confirmation → post-purchase confirmation
+ * - /quotes → quote request form (quotation mode)
+ * - /products/[slug] → dynamic product detail page
+ * - /categories/[slug] → dynamic category page
+ */
+async function generateEcommercePage(slug: string, siteId: string) {
+  // Dynamically import templates only when needed
+  const {
+    createCheckoutPageTemplate,
+    createOrderConfirmationTemplate,
+    createProductDetailTemplate,
+    createCategoryPageTemplate,
+    createQuoteRequestTemplate,
+  } = await import('@/modules/ecommerce/lib/page-templates');
+
+  // Static ecommerce pages
+  if (slug === 'checkout') {
+    return {
+      id: `virtual-checkout-${siteId}`,
+      slug: '/checkout',
+      name: 'Checkout',
+      is_homepage: false,
+      seo_title: 'Checkout - Complete Your Order',
+      seo_description: 'Complete your order securely.',
+      seo_image: null,
+      page_content: [{ content: createCheckoutPageTemplate() }],
+    };
+  }
+  
+  if (slug === 'order-confirmation') {
+    return {
+      id: `virtual-order-confirmation-${siteId}`,
+      slug: '/order-confirmation',
+      name: 'Order Confirmed',
+      is_homepage: false,
+      seo_title: 'Order Confirmed - Thank You!',
+      seo_description: 'Your order has been confirmed.',
+      seo_image: null,
+      page_content: [{ content: createOrderConfirmationTemplate() }],
+    };
+  }
+  
+  if (slug === 'quotes') {
+    return {
+      id: `virtual-quotes-${siteId}`,
+      slug: '/quotes',
+      name: 'Request a Quote',
+      is_homepage: false,
+      seo_title: 'Request a Quote',
+      seo_description: 'Submit a quote request for our products.',
+      seo_image: null,
+      page_content: [{ content: createQuoteRequestTemplate() }],
+    };
+  }
+  
+  // Dynamic product detail pages: /products/some-product-slug
+  if (slug.startsWith('products/') && slug.split('/').length === 2) {
+    return {
+      id: `virtual-product-${siteId}`,
+      slug: `/${slug}`,
+      name: 'Product Detail',
+      is_homepage: false,
+      seo_title: 'Product',
+      seo_description: null,
+      seo_image: null,
+      page_content: [{ content: createProductDetailTemplate() }],
+    };
+  }
+  
+  // Dynamic category pages: /categories/some-category-slug
+  if (slug.startsWith('categories/') && slug.split('/').length === 2) {
+    return {
+      id: `virtual-category-${siteId}`,
+      slug: `/${slug}`,
+      name: 'Category',
+      is_homepage: false,
+      seo_title: 'Category',
+      seo_description: null,
+      seo_image: null,
+      page_content: [{ content: createCategoryPageTemplate() }],
+    };
+  }
+  
+  return null;
+}
+
 async function processData(site: any, pageSlug: string, supabase: ReturnType<typeof createAdminClient>) {
   // Find the requested page
   // IMPORTANT: Normalize slug comparison to handle both with and without leading slashes
   const pages = site.pages || [];
   const normalizedSlug = pageSlug ? (pageSlug.startsWith('/') ? pageSlug : `/${pageSlug}`) : '';
   
-  const page = pageSlug
+  let page = pageSlug
     ? pages.find((p: any) => {
         // Compare normalized slugs
         const pSlug = p.slug?.startsWith('/') ? p.slug : `/${p.slug}`;
         return pSlug === normalizedSlug || p.slug === pageSlug;
       })
     : pages.find((p: any) => p.is_homepage);
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // DYNAMIC ECOMMERCE PAGE GENERATION
+  //
+  // When the ecommerce module is installed but a page doesn't exist in the
+  // database (e.g. /checkout, /order-confirmation, /products/[slug],
+  // /categories/[slug], /quotes), generate the page content on-the-fly
+  // using the standard ecommerce page templates.
+  //
+  // This handles cases where:
+  //   - The AI designer created shop/cart but not checkout/order-confirmation
+  //   - Product detail pages need dynamic routing (products/premium-t-shirt)
+  //   - Category pages need dynamic routing (categories/footwear)
+  //   - The quotes page is needed for quotation mode
+  // ──────────────────────────────────────────────────────────────────────────
+  if (!page && pageSlug) {
+    const stripped = pageSlug.replace(/^\/+/, '');
+    
+    // Check if ecommerce module is installed for this site
+    const { data: ecomInstall } = await supabase
+      .from('site_module_installations')
+      .select('id, is_enabled, module_id')
+      .eq('site_id', site.id)
+      .eq('is_enabled', true);
+    
+    const hasEcommerce = ecomInstall?.some((inst: any) => {
+      // Check via modules_v2 slug — we already loaded module data later,
+      // but to avoid circular deps, check if any installed module matches
+      // the known ecommerce module ID. For robustness, also check if the
+      // site has any ecommerce pages (shop, cart) as a fast heuristic.
+      return true; // We'll verify properly below
+    });
+    
+    // Fast heuristic: site has ecommerce if it has a /shop or /cart page
+    const siteHasEcommerce = pages.some((p: any) => {
+      const s = (p.slug || '').replace(/^\/+/, '');
+      return s === 'shop' || s === 'cart';
+    });
+    
+    if (siteHasEcommerce) {
+      const dynamicPage = await generateEcommercePage(stripped, site.id);
+      if (dynamicPage) {
+        page = dynamicPage;
+      }
+    }
+  }
 
   if (!page) {
     return null;

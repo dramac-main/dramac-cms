@@ -101,7 +101,9 @@ export async function getPublicProducts(
     }
 
     const from = (page - 1) * limit
-    query = query.range(from, from + limit - 1).order('created_at', { ascending: false })
+    const orderCol = filters.sortBy || 'created_at'
+    const ascending = filters.sortOrder === 'asc'
+    query = query.range(from, from + limit - 1).order(orderCol, { ascending })
 
     const { data, count, error } = await query
 
