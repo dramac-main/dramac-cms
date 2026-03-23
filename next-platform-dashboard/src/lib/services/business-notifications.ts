@@ -793,6 +793,91 @@ export async function notifyPaymentReceived(
 }
 
 // =============================================================================
+// PAYMENT PROOF NOTIFICATIONS
+// =============================================================================
+
+/**
+ * Notify agency owner when a customer uploads payment proof for a manual payment order.
+ */
+export async function notifyPaymentProofUploaded(
+  siteId: string,
+  orderNumber: string,
+  customerEmail: string,
+  customerName: string,
+  total: string,
+  fileName?: string,
+): Promise<void> {
+  try {
+    const supabase = createAdminClient();
+    const { data: site } = await supabase
+      .from("sites")
+      .select("name, agency_id")
+      .eq("id", siteId)
+      .single();
+
+    if (!site?.agency_id) return;
+
+    const { data: agency } = await supabase
+      .from("agencies")
+      .select("owner_id")
+      .eq("id", site.agency_id)
+      .single();
+
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramac.app"}/sites/${siteId}/ecommerce/orders`;
+
+    // In-app notification to business owner
+    if (agency?.owner_id) {
+      await createNotification({
+        userId: agency.owner_id,
+        type: "payment_received",
+        title: `Payment Proof Uploaded: Order #${orderNumber}`,
+        message: `${customerName} has uploaded payment proof for order #${orderNumber} (${total}). Please review and verify.`,
+        link: dashboardUrl,
+        metadata: { orderNumber, siteId },
+      });
+    }
+
+    // Email to business owner
+    if (agency?.owner_id) {
+      const { data: ownerProfile } = await supabase
+        .from("profiles")
+        .select("email, full_name")
+        .eq("id", agency.owner_id)
+        .single();
+
+      if (ownerProfile?.email) {
+        await sendBrandedEmail(site.agency_id, {
+          to: {
+            email: ownerProfile.email,
+            name: ownerProfile.full_name || undefined,
+          },
+          emailType: "payment_proof_uploaded_owner",
+          siteId,
+          data: {
+            orderNumber,
+            customerName,
+            customerEmail,
+            total,
+            fileName: fileName || "Receipt",
+            businessName: site?.name || "Store",
+            dashboardUrl,
+          },
+        });
+      }
+    }
+
+    console.log(
+      `[BusinessNotify] Payment proof uploaded notification sent for order ${orderNumber}`,
+    );
+  } catch (error) {
+    console.error(
+      "[BusinessNotify] Error sending payment proof notification:",
+      error,
+    );
+  }
+}
+
+// =============================================================================
 // REFUND NOTIFICATIONS
 // =============================================================================
 

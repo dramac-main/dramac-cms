@@ -556,6 +556,32 @@ const order_cancelled_owner: BrandedTemplate = {
     `Order Cancelled\n\nOrder #${data.orderNumber}\nCustomer: ${data.customerName} (${data.customerEmail})\nTotal: ${data.total}\n${data.reason ? `Reason: ${data.reason}\n` : ""}\nDashboard: ${data.dashboardUrl}`,
 };
 
+const payment_proof_uploaded_owner: BrandedTemplate = {
+  subject: (data) =>
+    `📎 Payment Proof Uploaded for Order #${data.orderNumber}`,
+  html: (data, b) =>
+    baseEmailTemplate(
+      b,
+      `<h1 style="${EMAIL_STYLES.heading}">Payment Proof Uploaded 📎</h1>
+      <p style="${EMAIL_STYLES.text}">A customer has uploaded payment proof for an order.</p>
+      ${emailInfoBox(
+        [
+          { label: "Order", value: `#${String(data.orderNumber)}` },
+          { label: "Customer", value: `${String(data.customerName)} (${String(data.customerEmail)})` },
+          { label: "Total", value: String(data.total) },
+          { label: "File", value: String(data.fileName || "Receipt") },
+        ],
+        "#eff6ff",
+        "#bfdbfe",
+      )}
+      <p style="${EMAIL_STYLES.text}">Please review the proof and verify the payment in your dashboard.</p>
+      ${emailButton(b, String(data.dashboardUrl), "Review Payment Proof")}`,
+      `Payment proof uploaded for order #${data.orderNumber}`,
+    ),
+  text: (data) =>
+    `Payment Proof Uploaded\n\nOrder: #${data.orderNumber}\nCustomer: ${data.customerName} (${data.customerEmail})\nTotal: ${data.total}\nFile: ${data.fileName || "Receipt"}\n\nReview: ${data.dashboardUrl}`,
+};
+
 const payment_received_customer: BrandedTemplate = {
   subject: (data) => `Payment Confirmed for Order #${data.orderNumber} 💳`,
   html: (data, b) =>
@@ -913,6 +939,7 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
   order_cancelled_customer,
   order_cancelled_owner,
   payment_received_customer,
+  payment_proof_uploaded_owner,
   refund_issued_customer,
   low_stock_admin,
   back_in_stock_customer,

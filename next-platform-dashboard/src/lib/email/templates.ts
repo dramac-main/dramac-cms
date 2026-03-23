@@ -1077,4 +1077,19 @@ ${data.dashboardUrl ? `View in dashboard: ${data.dashboardUrl}` : ""}
     text: (data) =>
       `Don't forget your items!\n\nHi ${data.customerName || "there"},\n\nYou have items in your cart. Complete your purchase!\n\n${data.cartUrl ? `Cart: ${data.cartUrl}` : ""}`,
   },
+
+  payment_proof_uploaded_owner: {
+    subject: () => `Payment proof uploaded`,
+    html: (data) =>
+      wrapHtml(`
+      <h1 style="${STYLES.heading}">💳 Payment Proof Uploaded</h1>
+      <p style="${STYLES.text}">A customer has uploaded payment proof for order ${data.orderNumber || "N/A"}.</p>
+      <p style="${STYLES.text}">Customer: ${data.customerName || data.customerEmail || "Unknown"}</p>
+      <p style="${STYLES.text}">Amount: ${data.currency || ""} ${data.total || "N/A"}</p>
+      <p style="${STYLES.text}">Please review the payment proof and verify the order.</p>
+      ${data.dashboardUrl ? `<p style="margin: 24px 0;"><a href="${data.dashboardUrl}" style="${STYLES.button}">Review Order</a></p>` : ""}
+    `),
+    text: (data) =>
+      `Payment Proof Uploaded\n\nA customer has uploaded payment proof for order ${data.orderNumber || "N/A"}.\nCustomer: ${data.customerName || data.customerEmail || "Unknown"}\nAmount: ${data.currency || ""} ${data.total || "N/A"}\n\nPlease review and verify the order.`,
+  },
 };

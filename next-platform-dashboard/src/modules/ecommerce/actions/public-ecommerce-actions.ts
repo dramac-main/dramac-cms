@@ -14,7 +14,10 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatCurrency } from "@/lib/locale-config";
-import { notifyNewOrder } from "@/lib/services/business-notifications";
+import {
+  notifyNewOrder,
+  notifyPaymentProofUploaded,
+} from "@/lib/services/business-notifications";
 import type {
   Product,
   ProductFilters,
@@ -1031,4 +1034,193 @@ export async function getPublicOrderById(
     order: order as Order,
     items: (items || []) as Array<Record<string, unknown>>,
   };
+}
+
+// ============================================================================
+// PAYMENT PROOF UPLOAD (public — guest customers)
+// ============================================================================
+
+/**
+ * Upload payment proof for a manual-payment order.
+ *
+ * Validates: order exists, belongs to site, order number matches (prevents enumeration),
+ * payment is pending. Stores file in the private `payment-proofs` bucket, updates
+ * order metadata, adds a timeline entry, and notifies the business owner.
+ */
+export async function uploadPaymentProof(input: {
+  siteId: string;
+  orderId: string;
+  orderNumber: string;
+  fileName: string;
+  fileBase64: string;
+  contentType: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = getPublicClient();
+
+    // Validate inputs
+    if (
+      !input.siteId ||
+      !input.orderId ||
+      !input.orderNumber ||
+      !input.fileBase64
+    ) {
+      return { success: false, error: "Missing required fields" };
+    }
+
+    // Validate content type
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/heic",
+      "application/pdf",
+    ];
+    if (!allowedTypes.includes(input.contentType)) {
+      return {
+        success: false,
+        error: "Invalid file type. Allowed: JPEG, PNG, WebP, HEIC, PDF",
+      };
+    }
+
+    // Verify order exists, belongs to site, and order number matches
+    const { data: order, error: orderError } = await supabase
+      .from(`${TABLE_PREFIX}_orders`)
+      .select(
+        "id, order_number, payment_status, customer_email, customer_name, total, currency, metadata",
+      )
+      .eq("id", input.orderId)
+      .eq("site_id", input.siteId)
+      .eq("order_number", input.orderNumber)
+      .single();
+
+    if (orderError || !order) {
+      return { success: false, error: "Order not found" };
+    }
+
+    if (order.payment_status === "paid") {
+      return { success: false, error: "Payment already confirmed" };
+    }
+
+    // Decode base64 to buffer
+    const fileBuffer = Buffer.from(input.fileBase64, "base64");
+
+    // Enforce 10 MB limit
+    if (fileBuffer.length > 10 * 1024 * 1024) {
+      return { success: false, error: "File too large. Maximum 10 MB." };
+    }
+
+    // Determine file extension
+    const extMap: Record<string, string> = {
+      "image/jpeg": "jpg",
+      "image/png": "png",
+      "image/webp": "webp",
+      "image/heic": "heic",
+      "application/pdf": "pdf",
+    };
+    const ext = extMap[input.contentType] || "bin";
+
+    // Upload to payment-proofs bucket
+    const storagePath = `${input.siteId}/${input.orderId}/${Date.now()}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from("payment-proofs")
+      .upload(storagePath, fileBuffer, {
+        contentType: input.contentType,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error("[PaymentProof] Upload error:", uploadError);
+      return { success: false, error: "Failed to upload file" };
+    }
+
+    // Update order metadata with proof info
+    const existingMetadata =
+      (order.metadata as Record<string, unknown>) || {};
+    const updatedMetadata = {
+      ...existingMetadata,
+      payment_proof: {
+        storage_path: storagePath,
+        file_name: input.fileName,
+        content_type: input.contentType,
+        file_size: fileBuffer.length,
+        uploaded_at: new Date().toISOString(),
+        status: "pending_review",
+      },
+    };
+
+    await supabase
+      .from(`${TABLE_PREFIX}_orders`)
+      .update({ metadata: updatedMetadata })
+      .eq("id", order.id);
+
+    // Add timeline entry
+    await supabase.from(`${TABLE_PREFIX}_order_timeline`).insert({
+      order_id: order.id,
+      event_type: "payment_proof_uploaded",
+      title: "Payment proof uploaded",
+      description: `Customer uploaded payment proof: ${input.fileName}`,
+      metadata: {
+        file_name: input.fileName,
+        content_type: input.contentType,
+      },
+    });
+
+    // Notify business owner
+    const totalFormatted = formatCurrency(
+      order.total || 0,
+      order.currency || "ZMW",
+    );
+    await notifyPaymentProofUploaded(
+      input.siteId,
+      order.order_number,
+      order.customer_email || "",
+      order.customer_name || "Customer",
+      totalFormatted,
+      input.fileName,
+    );
+
+    return { success: true };
+  } catch (error) {
+    console.error("[PaymentProof] Unexpected error:", error);
+    return { success: false, error: "An unexpected error occurred" };
+  }
+}
+
+/**
+ * Get payment proof status for an order.
+ * Returns the proof metadata if it exists.
+ */
+export async function getOrderPaymentProofStatus(
+  siteId: string,
+  orderId: string,
+): Promise<{
+  hasProof: boolean;
+  status?: string;
+  uploadedAt?: string;
+  fileName?: string;
+}> {
+  try {
+    const supabase = getPublicClient();
+    const { data: order } = await supabase
+      .from(`${TABLE_PREFIX}_orders`)
+      .select("metadata")
+      .eq("id", orderId)
+      .eq("site_id", siteId)
+      .single();
+
+    const proof = (order?.metadata as Record<string, unknown>)
+      ?.payment_proof as Record<string, unknown> | undefined;
+
+    if (!proof) return { hasProof: false };
+
+    return {
+      hasProof: true,
+      status: proof.status as string,
+      uploadedAt: proof.uploaded_at as string,
+      fileName: proof.file_name as string,
+    };
+  } catch {
+    return { hasProof: false };
+  }
 }

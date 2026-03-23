@@ -13,6 +13,7 @@ import { sendBrandedEmail } from "@/lib/email/send-branded-email";
 import {
   notifyQuoteAccepted,
   notifyQuoteRejected,
+  notifyNewOrder,
 } from "@/lib/services/business-notifications";
 import { formatCurrency, DEFAULT_CURRENCY } from "@/lib/locale-config";
 import { revalidatePath } from "next/cache";
@@ -681,21 +682,19 @@ export async function convertQuoteToOrder(
       };
     }
 
-    // Generate order number
-    const { data: lastOrder } = await supabase
-      .from(`${TABLE_PREFIX}_orders`)
-      .select("order_number")
-      .eq("site_id", input.site_id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
+    // Generate order number using DB function (consistent with checkout flow)
+    const { data: generatedNumber, error: rpcError } = await supabase.rpc(
+      "mod_ecommod01_generate_order_number",
+      { p_site_id: input.site_id },
+    );
 
-    const nextNumber = lastOrder
-      ? parseInt(lastOrder.order_number.replace(/\D/g, "") || "0") + 1
-      : 1001;
-    const orderNumber = `ORD-${nextNumber.toString().padStart(5, "0")}`;
+    if (rpcError || !generatedNumber) {
+      console.error("Order number RPC error:", rpcError);
+      return { success: false, error: "Failed to generate order number" };
+    }
+    const orderNumber = generatedNumber as string;
 
-    // Create order
+    // Create order — quotes default to manual payment
     const orderData = {
       site_id: input.site_id,
       agency_id: quote.agency_id,
@@ -703,6 +702,7 @@ export async function convertQuoteToOrder(
       order_number: orderNumber,
       status: "pending",
       payment_status: "pending",
+      payment_provider: "manual",
       fulfillment_status: "unfulfilled",
       currency: quote.currency,
       subtotal: quote.subtotal,
@@ -797,6 +797,29 @@ export async function convertQuoteToOrder(
       actor_id: input.user_id,
       actor_name: input.user_name,
       metadata: { quote_id: quote.id, quote_number: quote.quote_number },
+    });
+
+    // Notify business owner + customer about the new order
+    const currency = quote.currency || DEFAULT_CURRENCY;
+    await notifyNewOrder({
+      siteId: input.site_id,
+      orderId: newOrder.id,
+      orderNumber: orderNumber,
+      customerEmail: quote.customer_email,
+      customerName: quote.customer_name || "Customer",
+      items:
+        quote.items?.map((item: QuoteItem) => ({
+          name: item.name,
+          quantity: item.quantity,
+          unitPrice: item.unit_price,
+        })) || [],
+      subtotal: quote.subtotal || 0,
+      shipping: quote.shipping_amount || 0,
+      tax: quote.tax_amount || 0,
+      total: quote.total || 0,
+      currency,
+      paymentStatus: "pending",
+      paymentProvider: "manual",
     });
 
     revalidatePath(`/sites/${input.site_id}/ecommerce`);

@@ -34,6 +34,7 @@ export type EmailType =
   | "order_cancelled_owner"
   | "payment_received_customer"
   | "refund_issued_customer"
+  | "payment_proof_uploaded_owner"
   | "low_stock_admin"
   | "back_in_stock_customer"
   | "abandoned_cart_customer"
@@ -95,6 +96,7 @@ export function isValidEmailType(type: string): type is EmailType {
     "order_cancelled_owner",
     "payment_received_customer",
     "refund_issued_customer",
+    "payment_proof_uploaded_owner",
     "low_stock_admin",
     "back_in_stock_customer",
     "abandoned_cart_customer",

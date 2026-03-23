@@ -23,6 +23,10 @@ import {
   Banknote,
   AlertTriangle,
   Info,
+  Upload,
+  MessageSquare,
+  FileText,
+  Camera,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,7 +37,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useStorefront } from "../../context/storefront-context";
-import { getPublicOrderById } from "../../actions/public-ecommerce-actions";
+import {
+  getPublicOrderById,
+  uploadPaymentProof,
+  getOrderPaymentProofStatus,
+} from "../../actions/public-ecommerce-actions";
 
 // ============================================================================
 // TYPES
@@ -114,6 +122,17 @@ export function OrderConfirmationBlock({
   const [fetchLoading, setFetchLoading] = React.useState(false);
   const [fetchError, setFetchError] = React.useState<string | null>(null);
   const [copied, setCopied] = React.useState(false);
+  const [copiedField, setCopiedField] = React.useState<string | null>(null);
+  const [proofFile, setProofFile] = React.useState<File | null>(null);
+  const [proofPreview, setProofPreview] = React.useState<string | null>(null);
+  const [proofUploading, setProofUploading] = React.useState(false);
+  const [proofStatus, setProofStatus] = React.useState<{
+    hasProof: boolean;
+    status?: string;
+    fileName?: string;
+  }>({ hasProof: false });
+  const [proofError, setProofError] = React.useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Resolve orderId from prop or URL query param
   const resolvedOrderId = orderIdProp || searchParams.get("order") || "";
@@ -189,6 +208,99 @@ export function OrderConfirmationBlock({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
+  };
+
+  // Copy any text with a field-specific indicator
+  const copyText = async (text: string, field: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  // Check payment proof status on mount
+  React.useEffect(() => {
+    if (!order || !storefront.siteId) return;
+    getOrderPaymentProofStatus(storefront.siteId, order.id).then(
+      setProofStatus,
+    );
+  }, [order, storefront.siteId]);
+
+  // Handle proof file selection
+  const handleProofFileChange = (file: File | null) => {
+    setProofError(null);
+    if (!file) {
+      setProofFile(null);
+      setProofPreview(null);
+      return;
+    }
+    const allowed = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/heic",
+      "application/pdf",
+    ];
+    if (!allowed.includes(file.type)) {
+      setProofError("Please upload an image (JPEG, PNG, WebP) or PDF.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setProofError("File too large. Maximum 10 MB.");
+      return;
+    }
+    setProofFile(file);
+    if (file.type.startsWith("image/")) {
+      const url = URL.createObjectURL(file);
+      setProofPreview(url);
+    } else {
+      setProofPreview(null);
+    }
+  };
+
+  // Upload proof
+  const handleProofUpload = async () => {
+    if (!proofFile || !order || !storefront.siteId) return;
+    setProofUploading(true);
+    setProofError(null);
+    try {
+      const arrayBuffer = await proofFile.arrayBuffer();
+      const base64 = btoa(
+        new Uint8Array(arrayBuffer).reduce(
+          (data, byte) => data + String.fromCharCode(byte),
+          "",
+        ),
+      );
+      const result = await uploadPaymentProof({
+        siteId: storefront.siteId,
+        orderId: order.id,
+        orderNumber: order.order_number,
+        fileName: proofFile.name,
+        fileBase64: base64,
+        contentType: proofFile.type,
+      });
+      if (!result.success) {
+        setProofError(result.error || "Upload failed");
+      } else {
+        setProofStatus({
+          hasProof: true,
+          status: "pending_review",
+          fileName: proofFile.name,
+        });
+        setProofFile(null);
+        setProofPreview(null);
+      }
+    } catch {
+      setProofError("Upload failed. Please try again.");
+    } finally {
+      setProofUploading(false);
+    }
+  };
+
+  // Generate pre-formatted payment message for chat/WhatsApp
+  const generatePaymentMessage = () => {
+    if (!order) return "";
+    const total = formatPrice(order.total);
+    return `Hi, I've made payment for order ${order.order_number}, total ${total}. Please confirm receipt. Thank you!`;
   };
 
   // Loading state
@@ -329,33 +441,305 @@ export function OrderConfirmationBlock({
           </div>
         </div>
 
-        {/* Manual Payment Instructions — prominent alert for pending payment */}
+        {/* Manual Payment Instructions — enhanced with copy buttons */}
         {isAwaitingPayment && (
-          <Alert className="mb-6 border-amber-200 bg-amber-50">
-            <Banknote className="h-5 w-5 text-amber-600" />
-            <AlertDescription className="ml-2">
-              <p className="font-semibold text-amber-900 mb-2">
+          <Card className="mb-6 border-amber-200 bg-amber-50/50">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2 text-amber-900">
+                <Banknote className="h-5 w-5 text-amber-600" />
                 Payment Instructions
-              </p>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Payment Reference — prominent copyable */}
+              <div className="flex items-center justify-between bg-white rounded-lg border p-3">
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    Payment Reference
+                  </p>
+                  <p className="font-mono font-bold text-lg">
+                    {order.order_number}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => copyText(order.order_number, "ref")}
+                  className="shrink-0"
+                >
+                  {copiedField === "ref" ? (
+                    <>
+                      <Check className="h-3 w-3 mr-1 text-green-600" />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3 w-3 mr-1" />
+                      Copy
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* Amount to pay — copyable */}
+              <div className="flex items-center justify-between bg-white rounded-lg border p-3">
+                <div>
+                  <p className="text-xs text-muted-foreground">Amount to Pay</p>
+                  <p className="font-bold text-lg">
+                    {formatPrice(order.total)}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    copyText(formatPrice(order.total), "amount")
+                  }
+                  className="shrink-0"
+                >
+                  {copiedField === "amount" ? (
+                    <>
+                      <Check className="h-3 w-3 mr-1 text-green-600" />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3 w-3 mr-1" />
+                      Copy
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* Payment instructions text with per-line copy */}
               {manualInstructions ? (
-                <div className="text-sm text-amber-800 whitespace-pre-wrap mb-3">
-                  {manualInstructions}
+                <div className="bg-white rounded-lg border p-4">
+                  <p className="text-xs text-muted-foreground mb-2 font-medium">
+                    Where to Send Payment
+                  </p>
+                  <div className="space-y-1.5">
+                    {manualInstructions
+                      .split("\n")
+                      .filter((line: string) => line.trim())
+                      .map((line: string, i: number) => {
+                        // Detect lines with copyable content (phone numbers, account numbers)
+                        const hasCopyable =
+                          /(\+?\d[\d\s-]{6,}|\d{5,})/.test(line);
+                        const copyValue = line
+                          .match(/(\+?\d[\d\s-]{6,}|\d{5,})/)?.[0]
+                          ?.replace(/\s/g, "");
+                        return (
+                          <div
+                            key={i}
+                            className={cn(
+                              "flex items-center justify-between text-sm py-1",
+                              hasCopyable && "bg-amber-50/50 rounded px-2 -mx-2",
+                            )}
+                          >
+                            <span className="text-amber-900">{line}</span>
+                            {hasCopyable && copyValue && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 shrink-0 ml-2"
+                                onClick={() =>
+                                  copyText(copyValue, `line-${i}`)
+                                }
+                              >
+                                {copiedField === `line-${i}` ? (
+                                  <Check className="h-3 w-3 text-green-600" />
+                                ) : (
+                                  <Copy className="h-3 w-3 text-muted-foreground" />
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                        );
+                      })}
+                  </div>
                 </div>
               ) : (
-                <p className="text-sm text-amber-800 mb-3">
-                  Please contact the store to arrange payment for your order.
-                  Include your order number{" "}
-                  <strong>{order.order_number}</strong> as the payment
-                  reference.
+                <p className="text-sm text-amber-800">
+                  Please contact the store to arrange payment. Use order number{" "}
+                  <strong>{order.order_number}</strong> as the payment reference.
                 </p>
               )}
-              <div className="text-xs text-amber-700 border-t border-amber-200 pt-2 mt-2">
+
+              <div className="text-xs text-amber-700 border-t border-amber-200 pt-3">
                 <strong>Important:</strong> Your order will be processed once
-                payment is confirmed. Please use order number{" "}
+                payment is confirmed. Always use{" "}
                 <strong>{order.order_number}</strong> as your payment reference.
               </div>
-            </AlertDescription>
-          </Alert>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Payment Proof Upload — only for awaiting payment */}
+        {isAwaitingPayment && (
+          <Card className="mb-6">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Upload className="h-4 w-4" />
+                Upload Payment Proof
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {proofStatus.hasProof ? (
+                <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg border border-green-200">
+                  <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-green-900">
+                      Payment proof uploaded
+                    </p>
+                    <p className="text-xs text-green-700">
+                      {proofStatus.fileName} — {proofStatus.status === "pending_review"
+                        ? "Under review"
+                        : proofStatus.status === "verified"
+                          ? "Verified"
+                          : proofStatus.status}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Upload a screenshot or photo of your payment confirmation to
+                    speed up verification.
+                  </p>
+
+                  {/* Drop zone / file input */}
+                  <div
+                    className={cn(
+                      "border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors",
+                      proofFile
+                        ? "border-primary bg-primary/5"
+                        : "border-muted-foreground/25 hover:border-primary/50",
+                    )}
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const file = e.dataTransfer.files[0];
+                      if (file) handleProofFileChange(file);
+                    }}
+                  >
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/heic,application/pdf"
+                      className="hidden"
+                      onChange={(e) =>
+                        handleProofFileChange(e.target.files?.[0] || null)
+                      }
+                    />
+                    {proofFile ? (
+                      <div className="space-y-2">
+                        {proofPreview && (
+                          <Image
+                            src={proofPreview}
+                            alt="Payment proof preview"
+                            width={200}
+                            height={200}
+                            className="mx-auto rounded-md object-contain max-h-40"
+                          />
+                        )}
+                        {!proofPreview && (
+                          <FileText className="h-10 w-10 mx-auto text-primary" />
+                        )}
+                        <p className="text-sm font-medium">{proofFile.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {(proofFile.size / 1024 / 1024).toFixed(1)} MB — Click
+                          to change
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <Camera className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                        <p className="text-sm font-medium">
+                          Drop file here or click to browse
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          JPEG, PNG, WebP, or PDF — Max 10 MB
+                        </p>
+                      </>
+                    )}
+                  </div>
+
+                  {proofError && (
+                    <div className="flex items-center gap-2 text-sm text-red-600">
+                      <AlertTriangle className="h-4 w-4" />
+                      {proofError}
+                    </div>
+                  )}
+
+                  {proofFile && (
+                    <Button
+                      onClick={handleProofUpload}
+                      disabled={proofUploading}
+                      className="w-full"
+                    >
+                      {proofUploading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="h-4 w-4 mr-2" />
+                          Upload Payment Proof
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Quick Actions — copy message for chat/WhatsApp */}
+        {isAwaitingPayment && (
+          <Card className="mb-6">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <MessageSquare className="h-4 w-4" />
+                Quick Actions
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="bg-muted/50 rounded-lg p-3">
+                <p className="text-xs text-muted-foreground mb-2">
+                  Copy this message to send via chat or WhatsApp after paying:
+                </p>
+                <p className="text-sm italic text-foreground/80 mb-2">
+                  &quot;{generatePaymentMessage()}&quot;
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    copyText(generatePaymentMessage(), "message")
+                  }
+                >
+                  {copiedField === "message" ? (
+                    <>
+                      <Check className="h-3 w-3 mr-1 text-green-600" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3 w-3 mr-1" />
+                      Copy Message
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* What Happens Next — step timeline */}
@@ -396,6 +780,33 @@ export function OrderConfirmationBlock({
                     <p className="text-xs text-muted-foreground">
                       Follow the instructions above to send payment. Use your
                       order number as the reference.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <div className="flex flex-col items-center">
+                    <div className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center",
+                      proofStatus.hasProof ? "bg-green-100" : "bg-muted",
+                    )}>
+                      <Upload className={cn(
+                        "h-4 w-4",
+                        proofStatus.hasProof ? "text-green-600" : "text-muted-foreground",
+                      )} />
+                    </div>
+                    <div className="w-0.5 flex-1 bg-muted mt-1" />
+                  </div>
+                  <div className="pb-4">
+                    <p className={cn(
+                      "font-medium text-sm",
+                      !proofStatus.hasProof && "text-muted-foreground",
+                    )}>
+                      Upload Payment Proof
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {proofStatus.hasProof
+                        ? "Proof uploaded — we're reviewing your payment."
+                        : "Upload a screenshot of your payment to speed up verification."}
                     </p>
                   </div>
                 </div>
