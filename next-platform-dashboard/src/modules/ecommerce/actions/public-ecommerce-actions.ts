@@ -1,40 +1,44 @@
 /**
  * PUBLIC E-Commerce Module Server Actions
- * 
+ *
  * These server actions use the ADMIN client (service role) to bypass RLS.
  * They are used by public-facing storefront components on published sites
  * where visitors are NOT authenticated.
- * 
+ *
  * SECURITY: These only perform READ operations + cart/order creation.
  * They are scoped to a specific siteId and only return public-safe data.
- * 
+ *
  * The authenticated actions in ecommerce-actions.ts remain for dashboard use.
  */
-'use server'
+"use server";
 
-import { createAdminClient } from '@/lib/supabase/admin'
-import { formatCurrency } from '@/lib/locale-config'
-import { notifyNewOrder } from '@/lib/services/business-notifications'
+import { createAdminClient } from "@/lib/supabase/admin";
+import { formatCurrency } from "@/lib/locale-config";
+import { notifyNewOrder } from "@/lib/services/business-notifications";
 import type {
-  Product, ProductFilters,
+  Product,
+  ProductFilters,
   Category,
-  ProductVariant, ProductOption,
-  Cart, CartItem,
-  Order, CreateOrderInput,
+  ProductVariant,
+  ProductOption,
+  Cart,
+  CartItem,
+  Order,
+  CreateOrderInput,
   EcommerceSettings,
   PaginatedResponse,
-} from '../types/ecommerce-types'
+} from "../types/ecommerce-types";
 
 // ============================================================================
 // SCHEMA HELPERS
 // ============================================================================
 
-const ECOMMERCE_SHORT_ID = 'ecommod01'
-const TABLE_PREFIX = `mod_${ECOMMERCE_SHORT_ID}`
+const ECOMMERCE_SHORT_ID = "ecommod01";
+const TABLE_PREFIX = `mod_${ECOMMERCE_SHORT_ID}`;
 
 /** Admin client for public-facing reads — bypasses RLS */
 function getPublicClient() {
-  return createAdminClient() as any
+  return createAdminClient() as any;
 }
 
 // ============================================================================
@@ -43,22 +47,22 @@ function getPublicClient() {
 
 export async function getPublicCategories(siteId: string): Promise<Category[]> {
   try {
-    const supabase = getPublicClient()
+    const supabase = getPublicClient();
     const { data, error } = await supabase
       .from(`${TABLE_PREFIX}_categories`)
-      .select('*')
-      .eq('site_id', siteId)
-      .eq('is_active', true)
-      .order('sort_order', { ascending: true })
+      .select("*")
+      .eq("site_id", siteId)
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
 
     if (error) {
-      console.error('[Ecom Public] getPublicCategories error:', error)
-      return []
+      console.error("[Ecom Public] getPublicCategories error:", error);
+      return [];
     }
-    return (data || []) as Category[]
+    return (data || []) as Category[];
   } catch (err) {
-    console.error('[Ecom Public] getPublicCategories unexpected error:', err)
-    return []
+    console.error("[Ecom Public] getPublicCategories unexpected error:", err);
+    return [];
   }
 }
 
@@ -70,46 +74,48 @@ export async function getPublicProducts(
   siteId: string,
   filters: ProductFilters = {},
   page = 1,
-  limit = 20
+  limit = 20,
 ): Promise<PaginatedResponse<Product>> {
   try {
-    const supabase = getPublicClient()
+    const supabase = getPublicClient();
 
     let query = supabase
       .from(`${TABLE_PREFIX}_products`)
-      .select('*', { count: 'exact' })
-      .eq('site_id', siteId)
-      .eq('status', 'active') // Public only sees active products
+      .select("*", { count: "exact" })
+      .eq("site_id", siteId)
+      .eq("status", "active"); // Public only sees active products
 
     if (filters.featured !== undefined) {
-      query = query.eq('is_featured', filters.featured)
+      query = query.eq("is_featured", filters.featured);
     }
     if (filters.search) {
-      query = query.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%,sku.ilike.%${filters.search}%`)
+      query = query.or(
+        `name.ilike.%${filters.search}%,description.ilike.%${filters.search}%,sku.ilike.%${filters.search}%`,
+      );
     }
     if (filters.minPrice !== undefined) {
-      query = query.gte('base_price', filters.minPrice)
+      query = query.gte("base_price", filters.minPrice);
     }
     if (filters.maxPrice !== undefined) {
-      query = query.lte('base_price', filters.maxPrice)
+      query = query.lte("base_price", filters.maxPrice);
     }
     if (filters.inStock) {
-      query = query.or('track_inventory.eq.false,quantity.gt.0')
+      query = query.or("track_inventory.eq.false,quantity.gt.0");
     }
     if (filters.onSale) {
-      query = query.not('compare_at_price', 'is', null)
+      query = query.not("compare_at_price", "is", null);
     }
 
-    const from = (page - 1) * limit
-    const orderCol = filters.sortBy || 'created_at'
-    const ascending = filters.sortOrder === 'asc'
-    query = query.range(from, from + limit - 1).order(orderCol, { ascending })
+    const from = (page - 1) * limit;
+    const orderCol = filters.sortBy || "created_at";
+    const ascending = filters.sortOrder === "asc";
+    query = query.range(from, from + limit - 1).order(orderCol, { ascending });
 
-    const { data, count, error } = await query
+    const { data, count, error } = await query;
 
     if (error) {
-      console.error('[Ecom Public] getPublicProducts error:', error)
-      return { data: [], total: 0, page, totalPages: 0, limit }
+      console.error("[Ecom Public] getPublicProducts error:", error);
+      return { data: [], total: 0, page, totalPages: 0, limit };
     }
 
     return {
@@ -118,10 +124,10 @@ export async function getPublicProducts(
       page,
       totalPages: Math.ceil((count || 0) / limit),
       limit,
-    }
+    };
   } catch (err) {
-    console.error('[Ecom Public] getPublicProducts unexpected error:', err)
-    return { data: [], total: 0, page, totalPages: 0, limit }
+    console.error("[Ecom Public] getPublicProducts unexpected error:", err);
+    return { data: [], total: 0, page, totalPages: 0, limit };
   }
 }
 
@@ -129,35 +135,37 @@ export async function getPublicProductsByCategory(
   siteId: string,
   categoryId: string,
   page = 1,
-  limit = 20
+  limit = 20,
 ): Promise<PaginatedResponse<Product>> {
   try {
-    const supabase = getPublicClient()
+    const supabase = getPublicClient();
 
     // Get product IDs in category
     const { data: productCategories } = await supabase
       .from(`${TABLE_PREFIX}_product_categories`)
-      .select('product_id')
-      .eq('category_id', categoryId)
+      .select("product_id")
+      .eq("category_id", categoryId);
 
-    const productIds = productCategories?.map((pc: { product_id: string }) => pc.product_id) || []
+    const productIds =
+      productCategories?.map((pc: { product_id: string }) => pc.product_id) ||
+      [];
     if (productIds.length === 0) {
-      return { data: [], total: 0, page, totalPages: 0, limit }
+      return { data: [], total: 0, page, totalPages: 0, limit };
     }
 
-    const from = (page - 1) * limit
+    const from = (page - 1) * limit;
     const { data, count, error } = await supabase
       .from(`${TABLE_PREFIX}_products`)
-      .select('*', { count: 'exact' })
-      .eq('site_id', siteId)
-      .eq('status', 'active')
-      .in('id', productIds)
+      .select("*", { count: "exact" })
+      .eq("site_id", siteId)
+      .eq("status", "active")
+      .in("id", productIds)
       .range(from, from + limit - 1)
-      .order('created_at', { ascending: false })
+      .order("created_at", { ascending: false });
 
     if (error) {
-      console.error('[Ecom Public] getPublicProductsByCategory error:', error)
-      return { data: [], total: 0, page, totalPages: 0, limit }
+      console.error("[Ecom Public] getPublicProductsByCategory error:", error);
+      return { data: [], total: 0, page, totalPages: 0, limit };
     }
 
     return {
@@ -166,130 +174,152 @@ export async function getPublicProductsByCategory(
       page,
       totalPages: Math.ceil((count || 0) / limit),
       limit,
-    }
+    };
   } catch (err) {
-    console.error('[Ecom Public] getPublicProductsByCategory unexpected error:', err)
-    return { data: [], total: 0, page, totalPages: 0, limit }
+    console.error(
+      "[Ecom Public] getPublicProductsByCategory unexpected error:",
+      err,
+    );
+    return { data: [], total: 0, page, totalPages: 0, limit };
   }
 }
 
-export async function getPublicProduct(siteId: string, id: string): Promise<Product | null> {
+export async function getPublicProduct(
+  siteId: string,
+  id: string,
+): Promise<Product | null> {
   try {
-    const supabase = getPublicClient()
+    const supabase = getPublicClient();
 
     const { data, error } = await supabase
       .from(`${TABLE_PREFIX}_products`)
-      .select('*')
-      .eq('site_id', siteId)
-      .eq('id', id)
-      .single()
+      .select("*")
+      .eq("site_id", siteId)
+      .eq("id", id)
+      .single();
 
     if (error) {
-      if (error.code === 'PGRST116') return null
-      console.error('[Ecom Public] getPublicProduct error:', error)
-      return null
+      if (error.code === "PGRST116") return null;
+      console.error("[Ecom Public] getPublicProduct error:", error);
+      return null;
     }
 
     // Fetch variants and options
     const [variantsResult, optionsResult] = await Promise.all([
       supabase
         .from(`${TABLE_PREFIX}_product_variants`)
-        .select('*')
-        .eq('product_id', id),
+        .select("*")
+        .eq("product_id", id),
       supabase
         .from(`${TABLE_PREFIX}_product_options`)
-        .select('*')
-        .eq('product_id', id)
-        .order('sort_order', { ascending: true }),
-    ])
+        .select("*")
+        .eq("product_id", id)
+        .order("sort_order", { ascending: true }),
+    ]);
 
-    const product = data as Product
-    product.variants = (variantsResult.data || []) as ProductVariant[]
-    product.options = (optionsResult.data || []) as ProductOption[]
+    const product = data as Product;
+    product.variants = (variantsResult.data || []) as ProductVariant[];
+    product.options = (optionsResult.data || []) as ProductOption[];
 
-    return product
+    return product;
   } catch (err) {
-    console.error('[Ecom Public] getPublicProduct unexpected error:', err)
-    return null
+    console.error("[Ecom Public] getPublicProduct unexpected error:", err);
+    return null;
   }
 }
 
-export async function getPublicProductBySlug(siteId: string, slug: string): Promise<Product | null> {
+export async function getPublicProductBySlug(
+  siteId: string,
+  slug: string,
+): Promise<Product | null> {
   try {
-    const supabase = getPublicClient()
+    const supabase = getPublicClient();
 
     const { data, error } = await supabase
       .from(`${TABLE_PREFIX}_products`)
-      .select('*')
-      .eq('site_id', siteId)
-      .eq('slug', slug)
-      .single()
+      .select("*")
+      .eq("site_id", siteId)
+      .eq("slug", slug)
+      .single();
 
     if (error) {
-      if (error.code === 'PGRST116') return null
-      console.error('[Ecom Public] getPublicProductBySlug error:', error)
-      return null
+      if (error.code === "PGRST116") return null;
+      console.error("[Ecom Public] getPublicProductBySlug error:", error);
+      return null;
     }
 
     const [variantsResult, optionsResult] = await Promise.all([
       supabase
         .from(`${TABLE_PREFIX}_product_variants`)
-        .select('*')
-        .eq('product_id', data.id),
+        .select("*")
+        .eq("product_id", data.id),
       supabase
         .from(`${TABLE_PREFIX}_product_options`)
-        .select('*')
-        .eq('product_id', data.id)
-        .order('sort_order', { ascending: true }),
-    ])
+        .select("*")
+        .eq("product_id", data.id)
+        .order("sort_order", { ascending: true }),
+    ]);
 
-    const product = data as Product
-    product.variants = (variantsResult.data || []) as ProductVariant[]
-    product.options = (optionsResult.data || []) as ProductOption[]
+    const product = data as Product;
+    product.variants = (variantsResult.data || []) as ProductVariant[];
+    product.options = (optionsResult.data || []) as ProductOption[];
 
-    return product
+    return product;
   } catch (err) {
-    console.error('[Ecom Public] getPublicProductBySlug unexpected error:', err)
-    return null
+    console.error(
+      "[Ecom Public] getPublicProductBySlug unexpected error:",
+      err,
+    );
+    return null;
   }
 }
 
-export async function getPublicProductVariants(productId: string): Promise<ProductVariant[]> {
+export async function getPublicProductVariants(
+  productId: string,
+): Promise<ProductVariant[]> {
   try {
-    const supabase = getPublicClient()
+    const supabase = getPublicClient();
     const { data, error } = await supabase
       .from(`${TABLE_PREFIX}_product_variants`)
-      .select('*')
-      .eq('product_id', productId)
+      .select("*")
+      .eq("product_id", productId);
 
     if (error) {
-      console.error('[Ecom Public] getPublicProductVariants error:', error)
-      return []
+      console.error("[Ecom Public] getPublicProductVariants error:", error);
+      return [];
     }
-    return (data || []) as ProductVariant[]
+    return (data || []) as ProductVariant[];
   } catch (err) {
-    console.error('[Ecom Public] getPublicProductVariants unexpected error:', err)
-    return []
+    console.error(
+      "[Ecom Public] getPublicProductVariants unexpected error:",
+      err,
+    );
+    return [];
   }
 }
 
-export async function getPublicProductOptions(productId: string): Promise<ProductOption[]> {
+export async function getPublicProductOptions(
+  productId: string,
+): Promise<ProductOption[]> {
   try {
-    const supabase = getPublicClient()
+    const supabase = getPublicClient();
     const { data, error } = await supabase
       .from(`${TABLE_PREFIX}_product_options`)
-      .select('*')
-      .eq('product_id', productId)
-      .order('sort_order', { ascending: true })
+      .select("*")
+      .eq("product_id", productId)
+      .order("sort_order", { ascending: true });
 
     if (error) {
-      console.error('[Ecom Public] getPublicProductOptions error:', error)
-      return []
+      console.error("[Ecom Public] getPublicProductOptions error:", error);
+      return [];
     }
-    return (data || []) as ProductOption[]
+    return (data || []) as ProductOption[];
   } catch (err) {
-    console.error('[Ecom Public] getPublicProductOptions unexpected error:', err)
-    return []
+    console.error(
+      "[Ecom Public] getPublicProductOptions unexpected error:",
+      err,
+    );
+    return [];
   }
 }
 
@@ -297,49 +327,59 @@ export async function getPublicProductOptions(productId: string): Promise<Produc
 // CART (public — anonymous visitors can have carts via sessionId)
 // ============================================================================
 
-async function findPublicCart(siteId: string, userId?: string, sessionId?: string): Promise<Cart | null> {
+async function findPublicCart(
+  siteId: string,
+  userId?: string,
+  sessionId?: string,
+): Promise<Cart | null> {
   try {
-    const supabase = getPublicClient()
+    const supabase = getPublicClient();
 
     let query = supabase
       .from(`${TABLE_PREFIX}_carts`)
-      .select(`
+      .select(
+        `
         *,
         items:${TABLE_PREFIX}_cart_items(
           *,
           product:${TABLE_PREFIX}_products(id, name, slug, images, status, quantity, base_price, sku),
           variant:${TABLE_PREFIX}_product_variants(id, options, quantity, image_url, price)
         )
-      `)
-      .eq('site_id', siteId)
-      .eq('status', 'active')
+      `,
+      )
+      .eq("site_id", siteId)
+      .eq("status", "active");
 
     if (userId) {
-      query = query.eq('user_id', userId)
+      query = query.eq("user_id", userId);
     } else if (sessionId) {
-      query = query.eq('session_id', sessionId)
+      query = query.eq("session_id", sessionId);
     } else {
-      return null
+      return null;
     }
 
-    const { data, error } = await query.single()
-    if (error && error.code !== 'PGRST116') {
-      console.error('[Ecom Public] findPublicCart error:', error)
-      return null
+    const { data, error } = await query.single();
+    if (error && error.code !== "PGRST116") {
+      console.error("[Ecom Public] findPublicCart error:", error);
+      return null;
     }
-    return (data as Cart) || null
+    return (data as Cart) || null;
   } catch (err) {
-    console.error('[Ecom Public] findPublicCart unexpected error:', err)
-    return null
+    console.error("[Ecom Public] findPublicCart unexpected error:", err);
+    return null;
   }
 }
 
-export async function getPublicOrCreateCart(siteId: string, userId?: string, sessionId?: string): Promise<Cart> {
-  const existing = await findPublicCart(siteId, userId, sessionId)
-  if (existing) return existing
+export async function getPublicOrCreateCart(
+  siteId: string,
+  userId?: string,
+  sessionId?: string,
+): Promise<Cart> {
+  const existing = await findPublicCart(siteId, userId, sessionId);
+  if (existing) return existing;
 
   try {
-    const supabase = getPublicClient()
+    const supabase = getPublicClient();
     const { data, error } = await supabase
       .from(`${TABLE_PREFIX}_carts`)
       .insert({
@@ -348,44 +388,46 @@ export async function getPublicOrCreateCart(siteId: string, userId?: string, ses
         session_id: sessionId || null,
       })
       .select()
-      .single()
+      .single();
 
     if (error) {
-      console.error('[Ecom Public] createCart error:', error)
-      throw new Error('Failed to create cart')
+      console.error("[Ecom Public] createCart error:", error);
+      throw new Error("Failed to create cart");
     }
-    return { ...data, items: [] } as Cart
+    return { ...data, items: [] } as Cart;
   } catch (err) {
-    console.error('[Ecom Public] getPublicOrCreateCart unexpected error:', err)
-    throw err
+    console.error("[Ecom Public] getPublicOrCreateCart unexpected error:", err);
+    throw err;
   }
 }
 
 export async function getPublicCart(cartId: string): Promise<Cart | null> {
   try {
-    const supabase = getPublicClient()
+    const supabase = getPublicClient();
     const { data, error } = await supabase
       .from(`${TABLE_PREFIX}_carts`)
-      .select(`
+      .select(
+        `
         *,
         items:${TABLE_PREFIX}_cart_items(
           *,
           product:${TABLE_PREFIX}_products(id, name, slug, images, status, quantity, base_price, sku),
           variant:${TABLE_PREFIX}_product_variants(id, options, quantity, image_url, price)
         )
-      `)
-      .eq('id', cartId)
-      .single()
+      `,
+      )
+      .eq("id", cartId)
+      .single();
 
     if (error) {
-      if (error.code === 'PGRST116') return null
-      console.error('[Ecom Public] getPublicCart error:', error)
-      return null
+      if (error.code === "PGRST116") return null;
+      console.error("[Ecom Public] getPublicCart error:", error);
+      return null;
     }
-    return data as Cart
+    return data as Cart;
   } catch (err) {
-    console.error('[Ecom Public] getPublicCart unexpected error:', err)
-    return null
+    console.error("[Ecom Public] getPublicCart unexpected error:", err);
+    return null;
   }
 }
 
@@ -393,203 +435,251 @@ export async function addPublicCartItem(
   cartId: string,
   productId: string,
   variantId: string | null,
-  quantity: number
+  quantity: number,
 ): Promise<CartItem> {
-  const supabase = getPublicClient()
+  const supabase = getPublicClient();
 
   // Get product price and validate
   const { data: product, error: prodError } = await supabase
     .from(`${TABLE_PREFIX}_products`)
-    .select('base_price, quantity, status, track_inventory')
-    .eq('id', productId)
-    .single()
+    .select("base_price, quantity, status, track_inventory")
+    .eq("id", productId)
+    .single();
 
-  if (prodError || !product) throw new Error('Product not found')
-  if (product.status !== 'active') throw new Error('Product is not available')
+  if (prodError || !product) throw new Error("Product not found");
+  if (product.status !== "active") throw new Error("Product is not available");
 
-  let unitPrice = product.base_price
+  let unitPrice = product.base_price;
 
   if (variantId) {
     const { data: variant, error: varError } = await supabase
       .from(`${TABLE_PREFIX}_product_variants`)
-      .select('price, quantity, is_active')
-      .eq('id', variantId)
-      .single()
+      .select("price, quantity, is_active")
+      .eq("id", variantId)
+      .single();
 
-    if (varError || !variant) throw new Error('Variant not found')
-    if (!variant.is_active) throw new Error('Variant is not available')
-    if (variant.price) unitPrice = variant.price
-    if (product.track_inventory && variant.quantity < quantity) throw new Error('Insufficient stock for this variant')
+    if (varError || !variant) throw new Error("Variant not found");
+    if (!variant.is_active) throw new Error("Variant is not available");
+    if (variant.price) unitPrice = variant.price;
+    if (product.track_inventory && variant.quantity < quantity)
+      throw new Error("Insufficient stock for this variant");
   } else if (product.track_inventory && product.quantity < quantity) {
-    throw new Error('Insufficient stock')
+    throw new Error("Insufficient stock");
   }
 
   // Check if item already exists — upsert pattern
   const { data: existing } = await supabase
     .from(`${TABLE_PREFIX}_cart_items`)
-    .select('id, quantity')
-    .eq('cart_id', cartId)
-    .eq('product_id', productId)
-    .is('variant_id', variantId)
-    .single()
+    .select("id, quantity")
+    .eq("cart_id", cartId)
+    .eq("product_id", productId)
+    .is("variant_id", variantId)
+    .single();
 
   if (existing) {
     const { data, error } = await supabase
       .from(`${TABLE_PREFIX}_cart_items`)
       .update({ quantity: existing.quantity + quantity, unit_price: unitPrice })
-      .eq('id', existing.id)
+      .eq("id", existing.id)
       .select()
-      .single()
-    if (error) throw new Error(error.message)
-    return data as CartItem
+      .single();
+    if (error) throw new Error(error.message);
+    return data as CartItem;
   } else {
     const { data, error } = await supabase
       .from(`${TABLE_PREFIX}_cart_items`)
-      .insert({ cart_id: cartId, product_id: productId, variant_id: variantId, quantity, unit_price: unitPrice })
+      .insert({
+        cart_id: cartId,
+        product_id: productId,
+        variant_id: variantId,
+        quantity,
+        unit_price: unitPrice,
+      })
       .select()
-      .single()
-    if (error) throw new Error(error.message)
-    return data as CartItem
+      .single();
+    if (error) throw new Error(error.message);
+    return data as CartItem;
   }
 }
 
-export async function updatePublicCartItemQuantity(itemId: string, quantity: number): Promise<CartItem | null> {
-  const supabase = getPublicClient()
+export async function updatePublicCartItemQuantity(
+  itemId: string,
+  quantity: number,
+): Promise<CartItem | null> {
+  const supabase = getPublicClient();
 
   if (quantity <= 0) {
-    await removePublicCartItem(itemId)
-    return null
+    await removePublicCartItem(itemId);
+    return null;
   }
 
   const { data, error } = await supabase
     .from(`${TABLE_PREFIX}_cart_items`)
     .update({ quantity })
-    .eq('id', itemId)
+    .eq("id", itemId)
     .select()
-    .single()
+    .single();
 
-  if (error) throw new Error(error.message)
-  return data as CartItem
+  if (error) throw new Error(error.message);
+  return data as CartItem;
 }
 
 export async function removePublicCartItem(itemId: string): Promise<void> {
-  const supabase = getPublicClient()
+  const supabase = getPublicClient();
   const { error } = await supabase
     .from(`${TABLE_PREFIX}_cart_items`)
     .delete()
-    .eq('id', itemId)
-  if (error) throw new Error(error.message)
+    .eq("id", itemId);
+  if (error) throw new Error(error.message);
 }
 
 export async function clearPublicCart(cartId: string): Promise<void> {
-  const supabase = getPublicClient()
+  const supabase = getPublicClient();
   const { error } = await supabase
     .from(`${TABLE_PREFIX}_cart_items`)
     .delete()
-    .eq('cart_id', cartId)
-  if (error) throw new Error(error.message)
+    .eq("cart_id", cartId);
+  if (error) throw new Error(error.message);
 }
 
 export async function applyPublicDiscountToCart(
   cartId: string,
   code: string,
-  subtotal: number
+  subtotal: number,
 ): Promise<{ success: boolean; discountAmount: number; error?: string }> {
   try {
-    const supabase = getPublicClient()
+    const supabase = getPublicClient();
 
     // Get cart to find site_id
     const { data: cart } = await supabase
       .from(`${TABLE_PREFIX}_carts`)
-      .select('site_id')
-      .eq('id', cartId)
-      .single()
+      .select("site_id")
+      .eq("id", cartId)
+      .single();
 
-    if (!cart) return { success: false, discountAmount: 0, error: 'Cart not found' }
+    if (!cart)
+      return { success: false, discountAmount: 0, error: "Cart not found" };
 
     // Validate discount code
     const { data: discount, error: discErr } = await supabase
       .from(`${TABLE_PREFIX}_discounts`)
-      .select('*')
-      .eq('site_id', cart.site_id)
-      .eq('code', code.toUpperCase())
-      .eq('is_active', true)
-      .single()
+      .select("*")
+      .eq("site_id", cart.site_id)
+      .eq("code", code.toUpperCase())
+      .eq("is_active", true)
+      .single();
 
     if (discErr || !discount) {
-      return { success: false, discountAmount: 0, error: 'Invalid discount code' }
+      return {
+        success: false,
+        discountAmount: 0,
+        error: "Invalid discount code",
+      };
     }
 
     // Check date validity
-    const now = new Date()
+    const now = new Date();
     if (discount.starts_at && new Date(discount.starts_at) > now) {
-      return { success: false, discountAmount: 0, error: 'Discount not yet active' }
+      return {
+        success: false,
+        discountAmount: 0,
+        error: "Discount not yet active",
+      };
     }
     if (discount.ends_at && new Date(discount.ends_at) < now) {
-      return { success: false, discountAmount: 0, error: 'Discount has expired' }
+      return {
+        success: false,
+        discountAmount: 0,
+        error: "Discount has expired",
+      };
     }
 
     // Check usage limit
     if (discount.usage_limit && discount.usage_count >= discount.usage_limit) {
-      return { success: false, discountAmount: 0, error: 'Discount usage limit reached' }
+      return {
+        success: false,
+        discountAmount: 0,
+        error: "Discount usage limit reached",
+      };
     }
 
     // Check minimum order amount
-    if (discount.minimum_order_amount && subtotal < discount.minimum_order_amount) {
-      return { success: false, discountAmount: 0, error: `Minimum order of ${formatCurrency(discount.minimum_order_amount)} required` }
+    if (
+      discount.minimum_order_amount &&
+      subtotal < discount.minimum_order_amount
+    ) {
+      return {
+        success: false,
+        discountAmount: 0,
+        error: `Minimum order of ${formatCurrency(discount.minimum_order_amount)} required`,
+      };
     }
 
     // Calculate discount amount
-    let discountAmount = 0
-    if (discount.type === 'percentage') {
-      discountAmount = (subtotal * discount.value) / 100
-    } else if (discount.type === 'fixed_amount') {
-      discountAmount = Math.min(discount.value, subtotal)
+    let discountAmount = 0;
+    if (discount.type === "percentage") {
+      discountAmount = (subtotal * discount.value) / 100;
+    } else if (discount.type === "fixed_amount") {
+      discountAmount = Math.min(discount.value, subtotal);
     }
 
     // Update cart with discount
     await supabase
       .from(`${TABLE_PREFIX}_carts`)
-      .update({ discount_code: code.toUpperCase(), discount_amount: discountAmount })
-      .eq('id', cartId)
+      .update({
+        discount_code: code.toUpperCase(),
+        discount_amount: discountAmount,
+      })
+      .eq("id", cartId);
 
-    return { success: true, discountAmount }
+    return { success: true, discountAmount };
   } catch (err) {
-    console.error('[Ecom Public] applyPublicDiscountToCart error:', err)
-    return { success: false, discountAmount: 0, error: 'Failed to apply discount' }
+    console.error("[Ecom Public] applyPublicDiscountToCart error:", err);
+    return {
+      success: false,
+      discountAmount: 0,
+      error: "Failed to apply discount",
+    };
   }
 }
 
-export async function removePublicDiscountFromCart(cartId: string): Promise<void> {
-  const supabase = getPublicClient()
+export async function removePublicDiscountFromCart(
+  cartId: string,
+): Promise<void> {
+  const supabase = getPublicClient();
   await supabase
     .from(`${TABLE_PREFIX}_carts`)
     .update({ discount_code: null, discount_amount: 0 })
-    .eq('id', cartId)
+    .eq("id", cartId);
 }
 
 // ============================================================================
 // SETTINGS (public reads — needed by checkout + webhooks)
 // ============================================================================
 
-export async function getPublicEcommerceSettings(siteId: string): Promise<EcommerceSettings | null> {
+export async function getPublicEcommerceSettings(
+  siteId: string,
+): Promise<EcommerceSettings | null> {
   try {
-    const supabase = getPublicClient()
+    const supabase = getPublicClient();
     const { data, error } = await supabase
       .from(`${TABLE_PREFIX}_settings`)
-      .select('*')
-      .eq('site_id', siteId)
-      .single()
+      .select("*")
+      .eq("site_id", siteId)
+      .single();
 
     if (error) {
-      if (error.code === 'PGRST116') return null
-      console.error('[Ecom Public] getPublicEcommerceSettings error:', error)
-      return null
+      if (error.code === "PGRST116") return null;
+      console.error("[Ecom Public] getPublicEcommerceSettings error:", error);
+      return null;
     }
-    return data as EcommerceSettings
+    return data as EcommerceSettings;
   } catch (err) {
-    console.error('[Ecom Public] getPublicEcommerceSettings unexpected error:', err)
-    return null
+    console.error(
+      "[Ecom Public] getPublicEcommerceSettings unexpected error:",
+      err,
+    );
+    return null;
   }
 }
 
@@ -601,20 +691,26 @@ export async function getPublicEcommerceSettings(siteId: string): Promise<Ecomme
  * Create an order from a cart (public / subdomain context).
  * Uses admin client to bypass RLS for anonymous visitors.
  */
-export async function createPublicOrderFromCart(input: CreateOrderInput): Promise<Order> {
-  const supabase = getPublicClient()
+export async function createPublicOrderFromCart(
+  input: CreateOrderInput,
+): Promise<Order> {
+  const supabase = getPublicClient();
 
-  // Generate order number
-  const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`
+  // Generate short, human-friendly order number via DB function (e.g. ORD-1002)
+  const { data: rpcNumber } = await supabase.rpc(
+    "mod_ecommod01_generate_order_number",
+    { p_site_id: input.site_id },
+  );
+  const orderNumber = rpcNumber || `ORD-${Date.now().toString(36).slice(-4).toUpperCase()}`;
 
   // Get the site's agency_id
   const { data: site } = await supabase
-    .from('sites')
-    .select('agency_id')
-    .eq('id', input.site_id)
-    .single()
+    .from("sites")
+    .select("agency_id")
+    .eq("id", input.site_id)
+    .single();
 
-  const agencyId = site?.agency_id
+  const agencyId = site?.agency_id;
 
   // Create the order
   const { data: order, error: orderError } = await supabase
@@ -636,65 +732,69 @@ export async function createPublicOrderFromCart(input: CreateOrderInput): Promis
       tax_amount: input.tax || 0,
       total: input.total,
       currency: input.currency,
-      status: input.status || 'pending',
-      payment_status: input.payment_status || 'pending',
+      status: input.status || "pending",
+      payment_status: input.payment_status || "pending",
       payment_provider: input.payment_provider,
-      fulfillment_status: 'unfulfilled',
+      fulfillment_status: "unfulfilled",
       customer_notes: input.notes || null,
-      metadata: input.metadata || {}
+      metadata: input.metadata || {},
     })
     .select()
-    .single()
+    .single();
 
   if (orderError) {
-    console.error('[Ecom Public] Error creating order:', orderError)
-    throw new Error(orderError.message)
+    console.error("[Ecom Public] Error creating order:", orderError);
+    throw new Error(orderError.message);
   }
 
   // Copy cart items to order_items
   if (input.cart_id) {
-    const cart = await getPublicCart(input.cart_id)
+    const cart = await getPublicCart(input.cart_id);
     if (cart && cart.items.length > 0) {
       const orderItems = cart.items.map((item: CartItem) => ({
         order_id: order.id,
         product_id: item.product_id,
         variant_id: item.variant_id || null,
-        product_name: item.product?.name || 'Unknown Product',
+        product_name: item.product?.name || "Unknown Product",
         product_sku: item.product?.sku || null,
         variant_options: item.variant?.options || {},
         image_url: item.product?.images?.[0] || null,
         quantity: item.quantity,
         unit_price: item.unit_price,
         total_price: item.unit_price * item.quantity,
-        fulfilled_quantity: 0
-      }))
+        fulfilled_quantity: 0,
+      }));
 
       const { error: itemsError } = await supabase
         .from(`${TABLE_PREFIX}_order_items`)
-        .insert(orderItems)
+        .insert(orderItems);
 
       if (itemsError) {
-        console.error('[Ecom Public] Error creating order items:', itemsError)
+        console.error("[Ecom Public] Error creating order items:", itemsError);
       }
 
       // Mark cart as converted
       await supabase
         .from(`${TABLE_PREFIX}_carts`)
-        .update({ status: 'converted' })
-        .eq('id', input.cart_id)
+        .update({ status: "converted" })
+        .eq("id", input.cart_id);
 
       // Send notifications (awaited to ensure completion in serverless)
       const notificationItems = cart.items.map((item: CartItem) => ({
-        name: item.product?.name || 'Unknown Product',
+        name: item.product?.name || "Unknown Product",
         quantity: item.quantity,
         unitPrice: item.unit_price,
-      }))
+      }));
 
       await notifyNewOrder({
         siteId: input.site_id,
         orderId: order.id,
         orderNumber,
-        customerName: input.customer_name || `${input.shipping_address?.first_name || ''} ${input.shipping_address?.last_name || ''}`.trim() || input.customer_email?.split('@')[0] || 'Customer',
+        customerName:
+          input.customer_name ||
+          `${input.shipping_address?.first_name || ""} ${input.shipping_address?.last_name || ""}`.trim() ||
+          input.customer_email?.split("@")[0] ||
+          "Customer",
         customerEmail: input.customer_email,
         customerPhone: input.customer_phone || undefined,
         items: notificationItems,
@@ -703,23 +803,26 @@ export async function createPublicOrderFromCart(input: CreateOrderInput): Promis
         tax: input.tax || 0,
         total: input.total,
         currency: input.currency,
-        paymentStatus: input.payment_status || 'pending',
+        paymentStatus: input.payment_status || "pending",
         paymentProvider: input.payment_provider || undefined,
         shippingAddress: input.shipping_address
-          ? `${input.shipping_address.address_line_1 || ''}${input.shipping_address.address_line_2 ? ', ' + input.shipping_address.address_line_2 : ''}, ${input.shipping_address.city || ''} ${input.shipping_address.state || ''} ${input.shipping_address.postal_code || ''}, ${input.shipping_address.country || ''}`
+          ? `${input.shipping_address.address_line_1 || ""}${input.shipping_address.address_line_2 ? ", " + input.shipping_address.address_line_2 : ""}, ${input.shipping_address.city || ""} ${input.shipping_address.state || ""} ${input.shipping_address.postal_code || ""}, ${input.shipping_address.country || ""}`
           : undefined,
-      }).catch(err => console.error('[Ecom Public] Notification error:', err))
+      }).catch((err) =>
+        console.error("[Ecom Public] Notification error:", err),
+      );
 
       // Add order timeline entry
-      await supabase
-        .from(`${TABLE_PREFIX}_order_timeline`)
-        .insert({
-          order_id: order.id,
-          event_type: 'order_created',
-          title: 'Order Placed',
-          description: `Order placed by ${input.customer_name || input.customer_email} via storefront`,
-          metadata: { source: 'public_checkout', payment_provider: input.payment_provider || 'unknown' },
-        })
+      await supabase.from(`${TABLE_PREFIX}_order_timeline`).insert({
+        order_id: order.id,
+        event_type: "order_created",
+        title: "Order Placed",
+        description: `Order placed by ${input.customer_name || input.customer_email} via storefront`,
+        metadata: {
+          source: "public_checkout",
+          payment_provider: input.payment_provider || "unknown",
+        },
+      });
     }
   } else {
     // No cart — still fire notification
@@ -727,7 +830,11 @@ export async function createPublicOrderFromCart(input: CreateOrderInput): Promis
       siteId: input.site_id,
       orderId: order.id,
       orderNumber,
-      customerName: input.customer_name || `${input.shipping_address?.first_name || ''} ${input.shipping_address?.last_name || ''}`.trim() || input.customer_email?.split('@')[0] || 'Customer',
+      customerName:
+        input.customer_name ||
+        `${input.shipping_address?.first_name || ""} ${input.shipping_address?.last_name || ""}`.trim() ||
+        input.customer_email?.split("@")[0] ||
+        "Customer",
       customerEmail: input.customer_email,
       customerPhone: input.customer_phone || undefined,
       items: [],
@@ -736,23 +843,24 @@ export async function createPublicOrderFromCart(input: CreateOrderInput): Promis
       tax: input.tax || 0,
       total: input.total,
       currency: input.currency,
-      paymentStatus: input.payment_status || 'pending',
+      paymentStatus: input.payment_status || "pending",
       paymentProvider: input.payment_provider || undefined,
-    }).catch(err => console.error('[Ecom Public] Notification error:', err))
+    }).catch((err) => console.error("[Ecom Public] Notification error:", err));
 
     // Add order timeline entry
-    await supabase
-      .from(`${TABLE_PREFIX}_order_timeline`)
-      .insert({
-        order_id: order.id,
-        event_type: 'order_created',
-        title: 'Order Placed',
-        description: `Order placed by ${input.customer_name || input.customer_email} via storefront`,
-        metadata: { source: 'public_checkout', payment_provider: input.payment_provider || 'unknown' },
-      })
+    await supabase.from(`${TABLE_PREFIX}_order_timeline`).insert({
+      order_id: order.id,
+      event_type: "order_created",
+      title: "Order Placed",
+      description: `Order placed by ${input.customer_name || input.customer_email} via storefront`,
+      metadata: {
+        source: "public_checkout",
+        payment_provider: input.payment_provider || "unknown",
+      },
+    });
   }
 
-  return order as Order
+  return order as Order;
 }
 
 /**
@@ -761,20 +869,20 @@ export async function createPublicOrderFromCart(input: CreateOrderInput): Promis
 export async function updatePublicOrderStatus(
   siteId: string,
   orderId: string,
-  status: Order['status']
+  status: Order["status"],
 ): Promise<Order> {
-  const supabase = getPublicClient()
+  const supabase = getPublicClient();
 
   const { data, error } = await supabase
     .from(`${TABLE_PREFIX}_orders`)
     .update({ status })
-    .eq('site_id', siteId)
-    .eq('id', orderId)
+    .eq("site_id", siteId)
+    .eq("id", orderId)
     .select()
-    .single()
+    .single();
 
-  if (error) throw new Error(error.message)
-  return data as Order
+  if (error) throw new Error(error.message);
+  return data as Order;
 }
 
 /**
@@ -783,31 +891,31 @@ export async function updatePublicOrderStatus(
 export async function updatePublicOrderPaymentStatus(
   siteId: string,
   orderId: string,
-  paymentStatus: Order['payment_status'],
-  transactionId?: string
+  paymentStatus: Order["payment_status"],
+  transactionId?: string,
 ): Promise<Order> {
-  const supabase = getPublicClient()
+  const supabase = getPublicClient();
 
-  const updates: Record<string, unknown> = { payment_status: paymentStatus }
-  if (transactionId) updates.payment_transaction_id = transactionId
+  const updates: Record<string, unknown> = { payment_status: paymentStatus };
+  if (transactionId) updates.payment_transaction_id = transactionId;
 
   // Auto-update order status based on payment
-  if (paymentStatus === 'paid') {
-    updates.status = 'confirmed'
-  } else if (paymentStatus === 'failed') {
-    updates.status = 'cancelled'
+  if (paymentStatus === "paid") {
+    updates.status = "confirmed";
+  } else if (paymentStatus === "failed") {
+    updates.status = "cancelled";
   }
 
   const { data, error } = await supabase
     .from(`${TABLE_PREFIX}_orders`)
     .update(updates)
-    .eq('site_id', siteId)
-    .eq('id', orderId)
+    .eq("site_id", siteId)
+    .eq("id", orderId)
     .select()
-    .single()
+    .single();
 
-  if (error) throw new Error(error.message)
-  return data as Order
+  if (error) throw new Error(error.message);
+  return data as Order;
 }
 
 /**
@@ -816,33 +924,42 @@ export async function updatePublicOrderPaymentStatus(
 export async function updatePublicOrder(
   siteId: string,
   orderId: string,
-  updates: Partial<Order>
+  updates: Partial<Order>,
 ): Promise<Order> {
-  const supabase = getPublicClient()
+  const supabase = getPublicClient();
 
   // Only allow certain fields
-  const allowedUpdates: Record<string, unknown> = {}
-  if (updates.status) allowedUpdates.status = updates.status
-  if (updates.payment_status) allowedUpdates.payment_status = updates.payment_status
-  if (updates.fulfillment_status) allowedUpdates.fulfillment_status = updates.fulfillment_status
-  if (updates.payment_transaction_id !== undefined) allowedUpdates.payment_transaction_id = updates.payment_transaction_id
-  if (updates.tracking_number !== undefined) allowedUpdates.tracking_number = updates.tracking_number
-  if (updates.tracking_url !== undefined) allowedUpdates.tracking_url = updates.tracking_url
-  if (updates.internal_notes !== undefined) allowedUpdates.internal_notes = updates.internal_notes
-  if (updates.shipped_at !== undefined) allowedUpdates.shipped_at = updates.shipped_at
-  if (updates.delivered_at !== undefined) allowedUpdates.delivered_at = updates.delivered_at
-  if (updates.metadata !== undefined) allowedUpdates.metadata = updates.metadata
+  const allowedUpdates: Record<string, unknown> = {};
+  if (updates.status) allowedUpdates.status = updates.status;
+  if (updates.payment_status)
+    allowedUpdates.payment_status = updates.payment_status;
+  if (updates.fulfillment_status)
+    allowedUpdates.fulfillment_status = updates.fulfillment_status;
+  if (updates.payment_transaction_id !== undefined)
+    allowedUpdates.payment_transaction_id = updates.payment_transaction_id;
+  if (updates.tracking_number !== undefined)
+    allowedUpdates.tracking_number = updates.tracking_number;
+  if (updates.tracking_url !== undefined)
+    allowedUpdates.tracking_url = updates.tracking_url;
+  if (updates.internal_notes !== undefined)
+    allowedUpdates.internal_notes = updates.internal_notes;
+  if (updates.shipped_at !== undefined)
+    allowedUpdates.shipped_at = updates.shipped_at;
+  if (updates.delivered_at !== undefined)
+    allowedUpdates.delivered_at = updates.delivered_at;
+  if (updates.metadata !== undefined)
+    allowedUpdates.metadata = updates.metadata;
 
   const { data, error } = await supabase
     .from(`${TABLE_PREFIX}_orders`)
     .update(allowedUpdates)
-    .eq('site_id', siteId)
-    .eq('id', orderId)
+    .eq("site_id", siteId)
+    .eq("id", orderId)
     .select()
-    .single()
+    .single();
 
-  if (error) throw new Error(error.message)
-  return data as Order
+  if (error) throw new Error(error.message);
+  return data as Order;
 }
 
 // ============================================================================
@@ -857,32 +974,32 @@ export async function updatePublicOrder(
 export async function lookupPublicOrder(
   siteId: string,
   orderNumber: string,
-  customerEmail: string
+  customerEmail: string,
 ): Promise<{ order: Order; items: Array<Record<string, unknown>> } | null> {
-  const supabase = getPublicClient()
+  const supabase = getPublicClient();
 
   // Find order matching both order number AND email (prevents enumeration)
   const { data: order, error } = await supabase
     .from(`${TABLE_PREFIX}_orders`)
-    .select('*')
-    .eq('site_id', siteId)
-    .eq('order_number', orderNumber.trim())
-    .ilike('customer_email', customerEmail.trim())
-    .single()
+    .select("*")
+    .eq("site_id", siteId)
+    .eq("order_number", orderNumber.trim())
+    .ilike("customer_email", customerEmail.trim())
+    .single();
 
-  if (error || !order) return null
+  if (error || !order) return null;
 
   // Fetch order items
   const { data: items } = await supabase
     .from(`${TABLE_PREFIX}_order_items`)
-    .select('*')
-    .eq('order_id', order.id)
-    .order('created_at', { ascending: true })
+    .select("*")
+    .eq("order_id", order.id)
+    .order("created_at", { ascending: true });
 
   return {
     order: order as Order,
-    items: (items || []) as Array<Record<string, unknown>>
-  }
+    items: (items || []) as Array<Record<string, unknown>>,
+  };
 }
 
 /**
@@ -891,27 +1008,27 @@ export async function lookupPublicOrder(
  */
 export async function getPublicOrderById(
   siteId: string,
-  orderId: string
+  orderId: string,
 ): Promise<{ order: Order; items: Array<Record<string, unknown>> } | null> {
-  const supabase = getPublicClient()
+  const supabase = getPublicClient();
 
   const { data: order, error } = await supabase
     .from(`${TABLE_PREFIX}_orders`)
-    .select('*')
-    .eq('site_id', siteId)
-    .eq('id', orderId)
-    .single()
+    .select("*")
+    .eq("site_id", siteId)
+    .eq("id", orderId)
+    .single();
 
-  if (error || !order) return null
+  if (error || !order) return null;
 
   const { data: items } = await supabase
     .from(`${TABLE_PREFIX}_order_items`)
-    .select('*')
-    .eq('order_id', order.id)
-    .order('created_at', { ascending: true })
+    .select("*")
+    .eq("order_id", order.id)
+    .order("created_at", { ascending: true });
 
   return {
     order: order as Order,
-    items: (items || []) as Array<Record<string, unknown>>
-  }
+    items: (items || []) as Array<Record<string, unknown>>,
+  };
 }

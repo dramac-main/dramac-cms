@@ -317,7 +317,8 @@ const booking_cancelled_owner: BrandedTemplate = {
 
 const order_confirmation_customer: BrandedTemplate = {
   subject: (data) => {
-    const isPending = data.paymentStatus === "pending" || data.paymentProvider === "manual";
+    const isPending =
+      data.paymentStatus === "pending" || data.paymentProvider === "manual";
     return isPending
       ? `Order Received - #${data.orderNumber} — Payment Required`
       : `Order Confirmed - #${data.orderNumber}`;
@@ -405,7 +406,9 @@ const order_confirmation_customer: BrandedTemplate = {
       .join("\n");
     const isManualPayment = data.paymentProvider === "manual";
     const isPending = data.paymentStatus === "pending" || isManualPayment;
-    const header = isPending ? "Order Received — Payment Pending" : "Order Confirmed!";
+    const header = isPending
+      ? "Order Received — Payment Pending"
+      : "Order Confirmed!";
     const paymentInstr =
       isManualPayment && data.manualPaymentInstructions
         ? `\n\nPayment Instructions:\n${data.manualPaymentInstructions}`

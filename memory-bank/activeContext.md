@@ -36,21 +36,24 @@
 5. **`public-ecommerce-actions.ts`** — Added `paymentProvider` to both `notifyNewOrder` call sites
 
 ### Pending Investigation
+
 - **Notification emails**: Code logic is correct. If emails are not being delivered, check that `RESEND_API_KEY` is set in Vercel production environment variables. Without it, `isEmailEnabled()` returns false and all emails are silently skipped.
-   - `getPublicProducts()` now respects `filters.sortBy` and `filters.sortOrder`
-   - Was hardcoded to `.order('created_at', { ascending: false })`
+  - `getPublicProducts()` now respects `filters.sortBy` and `filters.sortOrder`
+  - Was hardcoded to `.order('created_at', { ascending: false })`
 
 8. **`ecommerce-types.ts`** — added `sortBy` and `sortOrder` to `ProductFilters` interface
 
 #### Root Causes Fixed:
-| Issue | Root Cause | Fix |
-|-------|-----------|-----|
-| Products loading slowly | N+1 fetch: each ProductCardBlock re-fetches product individually | Pass productData prop from parent grid |
-| Checkout page 404 | /checkout page missing from DB pages table | Dynamic virtual page generation |
-| Order confirmation blank | OrderConfirmationBlock receives no data | Self-fetch from URL query param |
-| Sort not working | getPublicProducts ignores sortBy/sortOrder | Dynamic sort column in query |
+
+| Issue                    | Root Cause                                                       | Fix                                    |
+| ------------------------ | ---------------------------------------------------------------- | -------------------------------------- |
+| Products loading slowly  | N+1 fetch: each ProductCardBlock re-fetches product individually | Pass productData prop from parent grid |
+| Checkout page 404        | /checkout page missing from DB pages table                       | Dynamic virtual page generation        |
+| Order confirmation blank | OrderConfirmationBlock receives no data                          | Self-fetch from URL query param        |
+| Sort not working         | getPublicProducts ignores sortBy/sortOrder                       | Dynamic sort column in query           |
 
 #### Verified End-to-End Flows:
+
 - ✅ Cart → Checkout → Order → Confirmation (full purchase flow)
 - ✅ Quotation mode: product card → /quotes?product=id → quote form → submit
 - ✅ Product grid sorting (price low/high, newest, name)
@@ -59,6 +62,7 @@
 - ✅ Converter: Already fixed with `siteName` param (commit `32d9c6e5`)
 
 #### Database Module Inventory (12 active in `modules_v2`):
+
 google-analytics, automation, booking, crm, client-portal-pro, live-chat, agency-crm, ecommerce, contact-forms, social-media, seo-optimizer, welcome-banner
 
 ---

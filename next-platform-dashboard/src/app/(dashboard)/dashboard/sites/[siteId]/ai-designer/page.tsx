@@ -1010,7 +1010,11 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                   onClick={handleGenerate}
                   className="w-full gap-2"
                   size="lg"
-                  disabled={isGenerating || !prompt.trim() || selectedFeatures.size === 0}
+                  disabled={
+                    isGenerating ||
+                    !prompt.trim() ||
+                    selectedFeatures.size === 0
+                  }
                 >
                   {isGenerating ? (
                     <>

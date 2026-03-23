@@ -1,189 +1,239 @@
 /**
  * Image Upload Component
- * 
+ *
  * Reusable image upload with drag & drop and Supabase Storage integration
  */
-'use client'
+"use client";
 
-import { useState, useRef, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Upload, X, Loader2, Link as LinkIcon, ImagePlus } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { toast } from 'sonner'
+import { useState, useRef, useCallback } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Upload, X, Loader2, Link as LinkIcon, ImagePlus } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface ImageUploadProps {
-  value: string
-  onChange: (url: string) => void
-  onRemove?: () => void
-  siteId: string
-  folder?: string
-  label?: string
-  className?: string
-  aspectRatio?: 'square' | 'video' | 'wide' | 'portrait'
-  maxSizeMB?: number
-  acceptedTypes?: string[]
+  value: string;
+  onChange: (url: string) => void;
+  onRemove?: () => void;
+  siteId: string;
+  folder?: string;
+  label?: string;
+  className?: string;
+  aspectRatio?: "square" | "video" | "wide" | "portrait";
+  maxSizeMB?: number;
+  acceptedTypes?: string[];
 }
 
 const ASPECT_RATIOS = {
-  square: 'aspect-square',
-  video: 'aspect-video',
-  wide: 'aspect-[2/1]',
-  portrait: 'aspect-[3/4]'
-}
+  square: "aspect-square",
+  video: "aspect-video",
+  wide: "aspect-[2/1]",
+  portrait: "aspect-[3/4]",
+};
 
 export function ImageUpload({
   value,
   onChange,
   onRemove,
   siteId,
-  folder = 'products',
-  label = 'Image',
+  folder = "products",
+  label = "Image",
   className,
-  aspectRatio = 'video',
+  aspectRatio = "video",
   maxSizeMB = 5,
-  acceptedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+  acceptedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"],
 }: ImageUploadProps) {
-  const [isUploading, setIsUploading] = useState(false)
-  const [isDragOver, setIsDragOver] = useState(false)
-  const [showUrlInput, setShowUrlInput] = useState(false)
-  const [urlInput, setUrlInput] = useState('')
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [urlInput, setUrlInput] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Use shared Supabase client (includes noOpLock deadlock workaround)
-  const supabase = createClient()
+  const supabase = createClient();
 
-  const uploadFile = useCallback(async (file: File) => {
-    // Validate file type
-    if (!acceptedTypes.includes(file.type)) {
-      toast.error(`Invalid file type. Accepted: ${acceptedTypes.map(t => t.split('/')[1]).join(', ')}`)
-      return
-    }
-
-    // Validate file size
-    if (file.size > maxSizeMB * 1024 * 1024) {
-      toast.error(`File too large. Maximum size: ${maxSizeMB}MB`)
-      return
-    }
-
-    setIsUploading(true)
-    console.log('[ImageUpload] Starting upload...', { siteId, folder, fileName: file.name, fileSize: file.size, fileType: file.type })
-
-    try {
-      // Generate unique filename
-      const ext = file.name.split('.').pop()
-      const filename = `${siteId}/${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`
-      console.log('[ImageUpload] Uploading to path:', filename)
-
-      // Race upload against a 60-second timeout
-      const uploadPromise = supabase.storage
-        .from('ecommerce')
-        .upload(filename, file, {
-          cacheControl: '3600',
-          upsert: false
-        })
-
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Upload timed out after 60s')), 60000)
-      )
-
-      const { data, error } = await Promise.race([uploadPromise, timeoutPromise])
-
-      if (error) {
-        console.error('[ImageUpload] Supabase error:', error)
-        // Provide helpful error messages for common issues
-        if (error.message.includes('not found') || error.message.includes('Bucket')) {
-          console.error('Supabase storage bucket "ecommerce" not found. Run the migration: migrations/em-52-ecommerce-storage-bucket.sql')
-          throw new Error('Storage not configured. The "ecommerce" storage bucket needs to be created in Supabase. Please contact your administrator.')
-        }
-        if (error.message.includes('Payload too large') || error.message.includes('file size')) {
-          throw new Error(`File is too large. Maximum allowed size is ${maxSizeMB}MB.`)
-        }
-        if (error.message.includes('mime') || error.message.includes('type')) {
-          throw new Error(`File type not allowed. Accepted types: ${acceptedTypes.map(t => t.split('/')[1]).join(', ')}`)
-        }
-        if (error.message.includes('security') || error.message.includes('policy') || error.message.includes('403') || error.message.includes('Forbidden')) {
-          throw new Error('Permission denied. Storage security policy may need to be updated.')
-        }
-        throw error
+  const uploadFile = useCallback(
+    async (file: File) => {
+      // Validate file type
+      if (!acceptedTypes.includes(file.type)) {
+        toast.error(
+          `Invalid file type. Accepted: ${acceptedTypes.map((t) => t.split("/")[1]).join(", ")}`,
+        );
+        return;
       }
 
-      console.log('[ImageUpload] Upload successful:', data.path)
+      // Validate file size
+      if (file.size > maxSizeMB * 1024 * 1024) {
+        toast.error(`File too large. Maximum size: ${maxSizeMB}MB`);
+        return;
+      }
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('ecommerce')
-        .getPublicUrl(data.path)
+      setIsUploading(true);
+      console.log("[ImageUpload] Starting upload...", {
+        siteId,
+        folder,
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+      });
 
-      console.log('[ImageUpload] Public URL:', urlData.publicUrl)
-      onChange(urlData.publicUrl)
-      toast.success('Image uploaded successfully')
-    } catch (error) {
-      console.error('[ImageUpload] Upload error:', error)
-      const message = error instanceof Error ? error.message : 'Failed to upload image'
-      toast.error(message + '. You can use a URL instead.')
-      setShowUrlInput(true)
-    } finally {
-      setIsUploading(false)
-    }
-  }, [siteId, folder, maxSizeMB, acceptedTypes, onChange, supabase.storage])
+      try {
+        // Generate unique filename
+        const ext = file.name.split(".").pop();
+        const filename = `${siteId}/${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+        console.log("[ImageUpload] Uploading to path:", filename);
+
+        // Race upload against a 60-second timeout
+        const uploadPromise = supabase.storage
+          .from("ecommerce")
+          .upload(filename, file, {
+            cacheControl: "3600",
+            upsert: false,
+          });
+
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new Error("Upload timed out after 60s")),
+            60000,
+          ),
+        );
+
+        const { data, error } = await Promise.race([
+          uploadPromise,
+          timeoutPromise,
+        ]);
+
+        if (error) {
+          console.error("[ImageUpload] Supabase error:", error);
+          // Provide helpful error messages for common issues
+          if (
+            error.message.includes("not found") ||
+            error.message.includes("Bucket")
+          ) {
+            console.error(
+              'Supabase storage bucket "ecommerce" not found. Run the migration: migrations/em-52-ecommerce-storage-bucket.sql',
+            );
+            throw new Error(
+              'Storage not configured. The "ecommerce" storage bucket needs to be created in Supabase. Please contact your administrator.',
+            );
+          }
+          if (
+            error.message.includes("Payload too large") ||
+            error.message.includes("file size")
+          ) {
+            throw new Error(
+              `File is too large. Maximum allowed size is ${maxSizeMB}MB.`,
+            );
+          }
+          if (
+            error.message.includes("mime") ||
+            error.message.includes("type")
+          ) {
+            throw new Error(
+              `File type not allowed. Accepted types: ${acceptedTypes.map((t) => t.split("/")[1]).join(", ")}`,
+            );
+          }
+          if (
+            error.message.includes("security") ||
+            error.message.includes("policy") ||
+            error.message.includes("403") ||
+            error.message.includes("Forbidden")
+          ) {
+            throw new Error(
+              "Permission denied. Storage security policy may need to be updated.",
+            );
+          }
+          throw error;
+        }
+
+        console.log("[ImageUpload] Upload successful:", data.path);
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from("ecommerce")
+          .getPublicUrl(data.path);
+
+        console.log("[ImageUpload] Public URL:", urlData.publicUrl);
+        onChange(urlData.publicUrl);
+        toast.success("Image uploaded successfully");
+      } catch (error) {
+        console.error("[ImageUpload] Upload error:", error);
+        const message =
+          error instanceof Error ? error.message : "Failed to upload image";
+        toast.error(message + ". You can use a URL instead.");
+        setShowUrlInput(true);
+      } finally {
+        setIsUploading(false);
+      }
+    },
+    [siteId, folder, maxSizeMB, acceptedTypes, onChange, supabase.storage],
+  );
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file) {
-      uploadFile(file)
+      uploadFile(file);
     }
     // Reset input so same file can be selected again
-    e.target.value = ''
-  }
+    e.target.value = "";
+  };
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragOver(true)
-  }, [])
+    e.preventDefault();
+    setIsDragOver(true);
+  }, []);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragOver(false)
-  }, [])
+    e.preventDefault();
+    setIsDragOver(false);
+  }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragOver(false)
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragOver(false);
 
-    const file = e.dataTransfer.files?.[0]
-    if (file) {
-      uploadFile(file)
-    }
-  }, [uploadFile])
+      const file = e.dataTransfer.files?.[0];
+      if (file) {
+        uploadFile(file);
+      }
+    },
+    [uploadFile],
+  );
 
   const handleUrlSubmit = () => {
     if (urlInput.trim()) {
       // Basic URL validation
       try {
-        new URL(urlInput.trim())
-        onChange(urlInput.trim())
-        setUrlInput('')
-        setShowUrlInput(false)
-        toast.success('Image URL added')
+        new URL(urlInput.trim());
+        onChange(urlInput.trim());
+        setUrlInput("");
+        setShowUrlInput(false);
+        toast.success("Image URL added");
       } catch {
-        toast.error('Please enter a valid URL')
+        toast.error("Please enter a valid URL");
       }
     }
-  }
+  };
 
   const handleRemove = () => {
-    onChange('')
-    onRemove?.()
-  }
+    onChange("");
+    onRemove?.();
+  };
 
   if (value) {
     return (
-      <div className={cn('space-y-2', className)}>
+      <div className={cn("space-y-2", className)}>
         {label && <Label>{label}</Label>}
-        <div className={cn('relative w-full border rounded-lg overflow-hidden bg-muted', ASPECT_RATIOS[aspectRatio])}>
+        <div
+          className={cn(
+            "relative w-full border rounded-lg overflow-hidden bg-muted",
+            ASPECT_RATIOS[aspectRatio],
+          )}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={value}
@@ -191,7 +241,7 @@ export function ImageUpload({
             className="w-full h-full object-cover"
             onError={(e) => {
               // Fallback to placeholder on error
-              e.currentTarget.src = `https://placehold.co/400x300/f0f0f0/999999?text=Image+Error`
+              e.currentTarget.src = `https://placehold.co/400x300/f0f0f0/999999?text=Image+Error`;
             }}
           />
           <Button
@@ -205,18 +255,18 @@ export function ImageUpload({
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn("space-y-2", className)}>
       {label && <Label>{label}</Label>}
       <div
         className={cn(
-          'relative flex flex-col items-center justify-center w-full border-2 border-dashed rounded-lg bg-muted/50 transition-colors cursor-pointer',
+          "relative flex flex-col items-center justify-center w-full border-2 border-dashed rounded-lg bg-muted/50 transition-colors cursor-pointer",
           ASPECT_RATIOS[aspectRatio],
-          isDragOver && 'border-primary bg-primary/5',
-          isUploading && 'pointer-events-none opacity-70'
+          isDragOver && "border-primary bg-primary/5",
+          isUploading && "pointer-events-none opacity-70",
         )}
         onClick={() => !isUploading && fileInputRef.current?.click()}
         onDragOver={handleDragOver}
@@ -226,11 +276,11 @@ export function ImageUpload({
         <input
           ref={fileInputRef}
           type="file"
-          accept={acceptedTypes.join(',')}
+          accept={acceptedTypes.join(",")}
           onChange={handleFileSelect}
           className="hidden"
         />
-        
+
         {isUploading ? (
           <div className="flex flex-col items-center gap-2">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -246,7 +296,10 @@ export function ImageUpload({
               <p className="text-xs text-muted-foreground">or drag and drop</p>
             </div>
             <p className="text-xs text-muted-foreground">
-              {acceptedTypes.map(t => t.split('/')[1].toUpperCase()).join(', ')} up to {maxSizeMB}MB
+              {acceptedTypes
+                .map((t) => t.split("/")[1].toUpperCase())
+                .join(", ")}{" "}
+              up to {maxSizeMB}MB
             </p>
           </div>
         )}
@@ -261,12 +314,12 @@ export function ImageUpload({
             size="sm"
             className="text-xs"
             onClick={(e) => {
-              e.stopPropagation()
-              setShowUrlInput(!showUrlInput)
+              e.stopPropagation();
+              setShowUrlInput(!showUrlInput);
             }}
           >
             <LinkIcon className="h-3 w-3 mr-1" />
-            {showUrlInput ? 'Hide URL input' : 'Use URL instead'}
+            {showUrlInput ? "Hide URL input" : "Use URL instead"}
           </Button>
         </div>
       )}
@@ -279,67 +332,67 @@ export function ImageUpload({
             placeholder="https://example.com/image.jpg"
             value={urlInput}
             onChange={(e) => setUrlInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleUrlSubmit())}
+            onKeyDown={(e) =>
+              e.key === "Enter" && (e.preventDefault(), handleUrlSubmit())
+            }
           />
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleUrlSubmit}
-          >
+          <Button type="button" variant="secondary" onClick={handleUrlSubmit}>
             Add
           </Button>
         </div>
       )}
     </div>
-  )
+  );
 }
 
 // Multi-image gallery upload
 interface ImageGalleryUploadProps {
-  value: string[]
-  onChange: (urls: string[]) => void
-  siteId: string
-  folder?: string
-  label?: string
-  maxImages?: number
-  className?: string
+  value: string[];
+  onChange: (urls: string[]) => void;
+  siteId: string;
+  folder?: string;
+  label?: string;
+  maxImages?: number;
+  className?: string;
 }
 
 export function ImageGalleryUpload({
   value = [],
   onChange,
   siteId,
-  folder = 'products',
-  label = 'Images',
+  folder = "products",
+  label = "Images",
   maxImages = 10,
-  className
+  className,
 }: ImageGalleryUploadProps) {
   const addImage = (url: string) => {
     if (value.length < maxImages) {
-      onChange([...value, url])
+      onChange([...value, url]);
     }
-  }
+  };
 
   const removeImage = (index: number) => {
-    onChange(value.filter((_, i) => i !== index))
-  }
+    onChange(value.filter((_, i) => i !== index));
+  };
 
   const moveImage = (from: number, to: number) => {
-    const newImages = [...value]
-    const [removed] = newImages.splice(from, 1)
-    newImages.splice(to, 0, removed)
-    onChange(newImages)
-  }
+    const newImages = [...value];
+    const [removed] = newImages.splice(from, 1);
+    newImages.splice(to, 0, removed);
+    onChange(newImages);
+  };
 
   return (
-    <div className={cn('space-y-4', className)}>
+    <div className={cn("space-y-4", className)}>
       {label && (
         <div className="flex items-center justify-between">
           <Label>{label}</Label>
-          <span className="text-xs text-muted-foreground">{value.length}/{maxImages} images</span>
+          <span className="text-xs text-muted-foreground">
+            {value.length}/{maxImages} images
+          </span>
         </div>
       )}
-      
+
       {/* Existing Images */}
       {value.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -354,7 +407,7 @@ export function ImageGalleryUpload({
                 alt={`Image ${index + 1}`}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  e.currentTarget.src = `https://placehold.co/200x200/f0f0f0/999999?text=${index + 1}`
+                  e.currentTarget.src = `https://placehold.co/200x200/f0f0f0/999999?text=${index + 1}`;
                 }}
               />
               {index === 0 && (
@@ -402,5 +455,5 @@ export function ImageGalleryUpload({
         />
       )}
     </div>
-  )
+  );
 }

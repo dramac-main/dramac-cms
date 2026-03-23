@@ -142,7 +142,10 @@ export function ProductCardBlock({
     product: fetchedProduct,
     isLoading: fetchLoading,
     error: fetchError,
-  } = useStorefrontProduct(needsFetch ? (effectiveSiteId || "") : "", needsFetch ? (productId || "") : "");
+  } = useStorefrontProduct(
+    needsFetch ? effectiveSiteId || "" : "",
+    needsFetch ? productId || "" : "",
+  );
   const { addItem, isUpdating: cartLoading } = useStorefrontCart(
     effectiveSiteId || "",
   );

@@ -8,6 +8,7 @@
 ## Latest Update: Manual Payment Checkout UX — `7560e50f`
 
 **Changes:**
+
 - **OrderConfirmationBlock**: Payment-aware header (amber pending vs green paid), manual payment instructions alert, "What Happens Next" timeline, payment status badge
 - **CheckoutPageBlock**: Inline success state differentiates manual payment (amber) vs paid (green), prominent payment instructions
 - **Customer email template**: Conditional subject/heading, payment status section, manual payment instructions, next steps guidance
@@ -21,6 +22,7 @@
 ## Previous Update: E-Commerce Storefront Fixes — `b6a88a04`
 
 **Changes:**
+
 - Feature chips now **mandatory** (at least one must be selected)
 - **Contact Forms** chip added (module exists in DB, was missing from UI)
 - Chips turn **blue** when selected (was achromatic `bg-primary`)

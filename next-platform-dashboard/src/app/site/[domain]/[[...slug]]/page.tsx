@@ -9,7 +9,14 @@ import { EcommerceCartInjector } from "@/components/renderer/ecommerce-cart-inje
 import { EcommerceSeoInjector } from "@/modules/ecommerce/components/ecommerce-seo-injector";
 
 // Known module slugs that have Studio components
-const KNOWN_MODULE_SLUGS = ["ecommerce", "booking", "crm", "automation", "social-media", "live-chat"];
+const KNOWN_MODULE_SLUGS = [
+  "ecommerce",
+  "booking",
+  "crm",
+  "automation",
+  "social-media",
+  "live-chat",
+];
 
 interface SitePageProps {
   params: Promise<{
@@ -24,19 +31,21 @@ export const revalidate = 60;
 /**
  * Generate metadata for SEO
  */
-export async function generateMetadata({ params }: SitePageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: SitePageProps): Promise<Metadata> {
   const { domain, slug } = await params;
   const pageSlug = slug?.join("/") || "";
   const data = await getSiteData(domain, pageSlug);
-  
+
   if (!data) return {};
-  
+
   // Build canonical URL from site domain info
   const siteUrl = data.site.customDomain
     ? `https://${data.site.customDomain}`
     : data.site.subdomain
-    ? `https://${data.site.subdomain}.dramac.app`
-    : undefined;
+      ? `https://${data.site.subdomain}.dramac.app`
+      : undefined;
   const canonicalUrl = siteUrl && pageSlug ? `${siteUrl}/${pageSlug}` : siteUrl;
 
   // Base metadata
@@ -47,7 +56,7 @@ export async function generateMetadata({ params }: SitePageProps): Promise<Metad
       title: data.page.seoTitle || data.page.name,
       description: data.page.seoDescription || undefined,
       images: data.page.seoImage ? [data.page.seoImage] : undefined,
-      type: 'website',
+      type: "website",
     },
   };
 
@@ -57,24 +66,32 @@ export async function generateMetadata({ params }: SitePageProps): Promise<Metad
   }
 
   // Enhance metadata for product pages with product-specific OG tags
-  const normalizedSlug = pageSlug.replace(/^\/+/, '');
-  if (normalizedSlug.startsWith('products/') && data.site.id) {
+  const normalizedSlug = pageSlug.replace(/^\/+/, "");
+  if (normalizedSlug.startsWith("products/") && data.site.id) {
     try {
-      const { createAdminClient: createAdmin } = await import('@/lib/supabase/admin');
+      const { createAdminClient: createAdmin } =
+        await import("@/lib/supabase/admin");
       const db = createAdmin() as any; // eslint-disable-line @typescript-eslint/no-explicit-any
-      const productSlug = normalizedSlug.replace('products/', '');
+      const productSlug = normalizedSlug.replace("products/", "");
       const { data: product } = await db
-        .from('mod_ecommod01_products')
-        .select('name, description, short_description, images, base_price, currency, seo_title, seo_description')
-        .eq('site_id', data.site.id)
-        .eq('slug', productSlug)
-        .eq('status', 'active')
+        .from("mod_ecommod01_products")
+        .select(
+          "name, description, short_description, images, base_price, currency, seo_title, seo_description",
+        )
+        .eq("site_id", data.site.id)
+        .eq("slug", productSlug)
+        .eq("status", "active")
         .single();
-      
+
       if (product) {
         const productTitle = product.seo_title || product.name;
-        const productDesc = product.seo_description || product.description || product.short_description || undefined;
-        const productImages = product.images?.length > 0 ? product.images : undefined;
+        const productDesc =
+          product.seo_description ||
+          product.description ||
+          product.short_description ||
+          undefined;
+        const productImages =
+          product.images?.length > 0 ? product.images : undefined;
 
         metadata.title = productTitle;
         metadata.description = productDesc;
@@ -82,11 +99,11 @@ export async function generateMetadata({ params }: SitePageProps): Promise<Metad
           title: productTitle,
           description: productDesc,
           images: productImages,
-          type: 'website', // Note: 'product' is not a standard OG type in Next.js Metadata API
+          type: "website", // Note: 'product' is not a standard OG type in Next.js Metadata API
         };
         // Twitter card for product pages
         metadata.twitter = {
-          card: 'summary_large_image',
+          card: "summary_large_image",
           title: productTitle,
           description: productDesc,
           images: productImages,
@@ -94,8 +111,8 @@ export async function generateMetadata({ params }: SitePageProps): Promise<Metad
         // Add product price as additional meta via other
         if (product.base_price) {
           metadata.other = {
-            'product:price:amount': String(product.base_price),
-            'product:price:currency': product.currency || 'ZMW',
+            "product:price:amount": String(product.base_price),
+            "product:price:currency": product.currency || "ZMW",
           };
         }
       }
@@ -105,31 +122,33 @@ export async function generateMetadata({ params }: SitePageProps): Promise<Metad
   }
 
   // Enhance metadata for category pages
-  if (normalizedSlug.startsWith('categories/') && data.site.id) {
+  if (normalizedSlug.startsWith("categories/") && data.site.id) {
     try {
-      const { createAdminClient: createAdmin } = await import('@/lib/supabase/admin');
+      const { createAdminClient: createAdmin } =
+        await import("@/lib/supabase/admin");
       const db = createAdmin() as any; // eslint-disable-line @typescript-eslint/no-explicit-any
-      const catSlug = normalizedSlug.replace('categories/', '');
+      const catSlug = normalizedSlug.replace("categories/", "");
       const { data: category } = await db
-        .from('mod_ecommod01_categories')
-        .select('name, description, image_url')
-        .eq('site_id', data.site.id)
-        .eq('slug', catSlug)
+        .from("mod_ecommod01_categories")
+        .select("name, description, image_url")
+        .eq("site_id", data.site.id)
+        .eq("slug", catSlug)
         .single();
-      
+
       if (category) {
         const catTitle = `${category.name} — ${data.site.name}`;
-        const catDesc = category.description || `Browse ${category.name} products`;
+        const catDesc =
+          category.description || `Browse ${category.name} products`;
         metadata.title = catTitle;
         metadata.description = catDesc;
         metadata.openGraph = {
           title: catTitle,
           description: catDesc,
           images: category.image_url ? [category.image_url] : undefined,
-          type: 'website',
+          type: "website",
         };
         metadata.twitter = {
-          card: category.image_url ? 'summary_large_image' : 'summary',
+          card: category.image_url ? "summary_large_image" : "summary",
           title: catTitle,
           description: catDesc,
           images: category.image_url ? [category.image_url] : undefined,
@@ -153,18 +172,19 @@ async function getSiteData(domain: string, pageSlug: string) {
   // e.g., "ten-and-ten.sites.dramacagency.com" -> "ten-and-ten"
   let subdomain = domain;
   let customDomain = domain;
-  
+
   // Check if this is a platform subdomain (*.sites.dramacagency.com)
-  if (domain.endsWith('.sites.dramacagency.com')) {
-    subdomain = domain.split('.')[0]; // Extract first part
-  } else if (domain.endsWith('.dramac.app')) {
-    subdomain = domain.split('.')[0]; // Extract first part
+  if (domain.endsWith(".sites.dramacagency.com")) {
+    subdomain = domain.split(".")[0]; // Extract first part
+  } else if (domain.endsWith(".dramac.app")) {
+    subdomain = domain.split(".")[0]; // Extract first part
   }
 
   // Try to find site by custom domain first, then by subdomain
   let siteQuery = supabase
     .from("sites")
-    .select(`
+    .select(
+      `
       id,
       name,
       subdomain,
@@ -184,7 +204,8 @@ async function getSiteData(domain: string, pageSlug: string) {
           content
         )
       )
-    `)
+    `,
+    )
     .eq("published", true);
 
   // First try by subdomain (most common)
@@ -196,7 +217,8 @@ async function getSiteData(domain: string, pageSlug: string) {
     // Try custom domain if subdomain failed
     const { data: siteByCustomDomain } = await supabase
       .from("sites")
-      .select(`
+      .select(
+        `
         id,
         name,
         subdomain,
@@ -215,7 +237,8 @@ async function getSiteData(domain: string, pageSlug: string) {
             content
           )
         )
-      `)
+      `,
+      )
       .eq("custom_domain", customDomain)
       .eq("published", true)
       .single();
@@ -247,89 +270,97 @@ async function generateEcommercePage(slug: string, siteId: string) {
     createProductDetailTemplate,
     createCategoryPageTemplate,
     createQuoteRequestTemplate,
-  } = await import('@/modules/ecommerce/lib/page-templates');
+  } = await import("@/modules/ecommerce/lib/page-templates");
 
   // Static ecommerce pages
-  if (slug === 'checkout') {
+  if (slug === "checkout") {
     return {
       id: `virtual-checkout-${siteId}`,
-      slug: '/checkout',
-      name: 'Checkout',
+      slug: "/checkout",
+      name: "Checkout",
       is_homepage: false,
-      seo_title: 'Checkout - Complete Your Order',
-      seo_description: 'Complete your order securely.',
+      seo_title: "Checkout - Complete Your Order",
+      seo_description: "Complete your order securely.",
       seo_image: null,
       page_content: [{ content: createCheckoutPageTemplate() }],
     };
   }
-  
-  if (slug === 'order-confirmation') {
+
+  if (slug === "order-confirmation") {
     return {
       id: `virtual-order-confirmation-${siteId}`,
-      slug: '/order-confirmation',
-      name: 'Order Confirmed',
+      slug: "/order-confirmation",
+      name: "Order Confirmed",
       is_homepage: false,
-      seo_title: 'Order Confirmed - Thank You!',
-      seo_description: 'Your order has been confirmed.',
+      seo_title: "Order Confirmed - Thank You!",
+      seo_description: "Your order has been confirmed.",
       seo_image: null,
       page_content: [{ content: createOrderConfirmationTemplate() }],
     };
   }
-  
-  if (slug === 'quotes') {
+
+  if (slug === "quotes") {
     return {
       id: `virtual-quotes-${siteId}`,
-      slug: '/quotes',
-      name: 'Request a Quote',
+      slug: "/quotes",
+      name: "Request a Quote",
       is_homepage: false,
-      seo_title: 'Request a Quote',
-      seo_description: 'Submit a quote request for our products.',
+      seo_title: "Request a Quote",
+      seo_description: "Submit a quote request for our products.",
       seo_image: null,
       page_content: [{ content: createQuoteRequestTemplate() }],
     };
   }
-  
+
   // Dynamic product detail pages: /products/some-product-slug
-  if (slug.startsWith('products/') && slug.split('/').length === 2) {
+  if (slug.startsWith("products/") && slug.split("/").length === 2) {
     return {
       id: `virtual-product-${siteId}`,
       slug: `/${slug}`,
-      name: 'Product Detail',
+      name: "Product Detail",
       is_homepage: false,
-      seo_title: 'Product',
+      seo_title: "Product",
       seo_description: null,
       seo_image: null,
       page_content: [{ content: createProductDetailTemplate() }],
     };
   }
-  
+
   // Dynamic category pages: /categories/some-category-slug
-  if (slug.startsWith('categories/') && slug.split('/').length === 2) {
+  if (slug.startsWith("categories/") && slug.split("/").length === 2) {
     return {
       id: `virtual-category-${siteId}`,
       slug: `/${slug}`,
-      name: 'Category',
+      name: "Category",
       is_homepage: false,
-      seo_title: 'Category',
+      seo_title: "Category",
       seo_description: null,
       seo_image: null,
       page_content: [{ content: createCategoryPageTemplate() }],
     };
   }
-  
+
   return null;
 }
 
-async function processData(site: any, pageSlug: string, supabase: ReturnType<typeof createAdminClient>) {
+async function processData(
+  site: any,
+  pageSlug: string,
+  supabase: ReturnType<typeof createAdminClient>,
+) {
   // Find the requested page
   // IMPORTANT: Normalize slug comparison to handle both with and without leading slashes
   const pages = site.pages || [];
-  const normalizedSlug = pageSlug ? (pageSlug.startsWith('/') ? pageSlug : `/${pageSlug}`) : '';
-  
+  const normalizedSlug = pageSlug
+    ? pageSlug.startsWith("/")
+      ? pageSlug
+      : `/${pageSlug}`
+    : "";
+
   let page = pageSlug
     ? pages.find((p: any) => {
         // Compare normalized slugs
-        const pSlug = p.slug?.startsWith('/') ? p.slug : `/${p.slug}`;
+        const pSlug = p.slug?.startsWith("/") ? p.slug : `/${p.slug}`;
         return pSlug === normalizedSlug || p.slug === pageSlug;
       })
     : pages.find((p: any) => p.is_homepage);
@@ -349,15 +380,15 @@ async function processData(site: any, pageSlug: string, supabase: ReturnType<typ
   //   - The quotes page is needed for quotation mode
   // ──────────────────────────────────────────────────────────────────────────
   if (!page && pageSlug) {
-    const stripped = pageSlug.replace(/^\/+/, '');
-    
+    const stripped = pageSlug.replace(/^\/+/, "");
+
     // Check if ecommerce module is installed for this site
     const { data: ecomInstall } = await supabase
-      .from('site_module_installations')
-      .select('id, is_enabled, module_id')
-      .eq('site_id', site.id)
-      .eq('is_enabled', true);
-    
+      .from("site_module_installations")
+      .select("id, is_enabled, module_id")
+      .eq("site_id", site.id)
+      .eq("is_enabled", true);
+
     const hasEcommerce = ecomInstall?.some((inst: any) => {
       // Check via modules_v2 slug — we already loaded module data later,
       // but to avoid circular deps, check if any installed module matches
@@ -365,13 +396,13 @@ async function processData(site: any, pageSlug: string, supabase: ReturnType<typ
       // site has any ecommerce pages (shop, cart) as a fast heuristic.
       return true; // We'll verify properly below
     });
-    
+
     // Fast heuristic: site has ecommerce if it has a /shop or /cart page
     const siteHasEcommerce = pages.some((p: any) => {
-      const s = (p.slug || '').replace(/^\/+/, '');
-      return s === 'shop' || s === 'cart';
+      const s = (p.slug || "").replace(/^\/+/, "");
+      return s === "shop" || s === "cart";
     });
-    
+
     if (siteHasEcommerce) {
       const dynamicPage = await generateEcommercePage(stripped, site.id);
       if (dynamicPage) {
@@ -386,11 +417,14 @@ async function processData(site: any, pageSlug: string, supabase: ReturnType<typ
 
   // Extract content from page_content relation
   let content: Record<string, unknown> | null = null;
-  
+
   if (page.page_content) {
     if (Array.isArray(page.page_content) && page.page_content.length > 0) {
       content = page.page_content[0].content;
-    } else if (typeof page.page_content === 'object' && 'content' in page.page_content) {
+    } else if (
+      typeof page.page_content === "object" &&
+      "content" in page.page_content
+    ) {
       content = page.page_content.content;
     }
   }
@@ -411,13 +445,17 @@ async function processData(site: any, pageSlug: string, supabase: ReturnType<typ
   // Industry standard: Shopify, Wix, Squarespace all use a shared header/
   // footer that wraps every page on the site.
   // ──────────────────────────────────────────────────────────────────────────
-  if (content && typeof content === 'object') {
-    const components = (content as Record<string, unknown>).components as Record<string, { type?: string }> | undefined;
-    const rootObj = (content as Record<string, unknown>).root as { children?: string[] } | undefined;
+  if (content && typeof content === "object") {
+    const components = (content as Record<string, unknown>).components as
+      | Record<string, { type?: string }>
+      | undefined;
+    const rootObj = (content as Record<string, unknown>).root as
+      | { children?: string[] }
+      | undefined;
 
     // Check if this page has ANY Navbar component
     const hasNavbar = components
-      ? Object.values(components).some((c) => c?.type === 'Navbar')
+      ? Object.values(components).some((c) => c?.type === "Navbar")
       : false;
 
     if (!hasNavbar && rootObj?.children) {
@@ -426,23 +464,45 @@ async function processData(site: any, pageSlug: string, supabase: ReturnType<typ
       if (homepage) {
         let homeContent: Record<string, unknown> | null = null;
         if (homepage.page_content) {
-          if (Array.isArray(homepage.page_content) && homepage.page_content.length > 0) {
-            homeContent = homepage.page_content[0].content as Record<string, unknown>;
-          } else if (typeof homepage.page_content === 'object' && 'content' in homepage.page_content) {
-            homeContent = (homepage.page_content as { content: Record<string, unknown> }).content;
+          if (
+            Array.isArray(homepage.page_content) &&
+            homepage.page_content.length > 0
+          ) {
+            homeContent = homepage.page_content[0].content as Record<
+              string,
+              unknown
+            >;
+          } else if (
+            typeof homepage.page_content === "object" &&
+            "content" in homepage.page_content
+          ) {
+            homeContent = (
+              homepage.page_content as { content: Record<string, unknown> }
+            ).content;
           }
         }
 
         if (homeContent) {
-          const homeComponents = homeContent.components as Record<string, { id?: string; type?: string; [k: string]: unknown }> | undefined;
+          const homeComponents = homeContent.components as
+            | Record<
+                string,
+                { id?: string; type?: string; [k: string]: unknown }
+              >
+            | undefined;
           if (homeComponents) {
             // Find Navbar and Footer component entries from the homepage
-            let navbarEntry: [string, { id?: string; type?: string; [k: string]: unknown }] | undefined;
-            let footerEntry: [string, { id?: string; type?: string; [k: string]: unknown }] | undefined;
+            let navbarEntry:
+              | [string, { id?: string; type?: string; [k: string]: unknown }]
+              | undefined;
+            let footerEntry:
+              | [string, { id?: string; type?: string; [k: string]: unknown }]
+              | undefined;
 
             for (const [key, comp] of Object.entries(homeComponents)) {
-              if (comp?.type === 'Navbar' && !navbarEntry) navbarEntry = [key, comp];
-              if (comp?.type === 'Footer' && !footerEntry) footerEntry = [key, comp];
+              if (comp?.type === "Navbar" && !navbarEntry)
+                navbarEntry = [key, comp];
+              if (comp?.type === "Footer" && !footerEntry)
+                footerEntry = [key, comp];
             }
 
             // Deep clone the content so we don't mutate the original
@@ -455,14 +515,20 @@ async function processData(site: any, pageSlug: string, supabase: ReturnType<typ
             if (navbarEntry) {
               const [navKey, navComp] = navbarEntry;
               // Use the same key from the homepage — keeps the ID stable
-              mutableContent.components[navKey] = { ...navComp, parentId: 'root' };
+              mutableContent.components[navKey] = {
+                ...navComp,
+                parentId: "root",
+              };
               mutableContent.root.children.unshift(navKey);
             }
 
             // Inject footer at the bottom
             if (footerEntry) {
               const [footerKey, footerComp] = footerEntry;
-              mutableContent.components[footerKey] = { ...footerComp, parentId: 'root' };
+              mutableContent.components[footerKey] = {
+                ...footerComp,
+                parentId: "root",
+              };
               mutableContent.root.children.push(footerKey);
             }
 
@@ -482,22 +548,25 @@ async function processData(site: any, pageSlug: string, supabase: ReturnType<typ
   try {
     const { data: installations } = await supabase
       .from("site_module_installations")
-      .select(`
+      .select(
+        `
         id,
         module_id,
         is_enabled,
         installed_at,
         settings
-      `)
+      `,
+      )
       .eq("site_id", site.id)
       .eq("is_enabled", true);
 
     if (installations && installations.length > 0) {
-      const moduleIds = installations.map(d => d.module_id);
-      
+      const moduleIds = installations.map((d) => d.module_id);
+
       const { data: modulesData } = await supabase
         .from("modules_v2")
-        .select(`
+        .select(
+          `
           id,
           name,
           slug,
@@ -505,12 +574,13 @@ async function processData(site: any, pageSlug: string, supabase: ReturnType<typ
           category,
           icon,
           status
-        `)
+        `,
+        )
         .in("id", moduleIds);
 
       if (modulesData) {
-        const moduleMap = new Map(modulesData.map(m => [m.id, m]));
-        
+        const moduleMap = new Map(modulesData.map((m) => [m.id, m]));
+
         for (const row of installations) {
           const mod = moduleMap.get(row.module_id);
           if (mod && (mod.status === "published" || mod.status === "active")) {
@@ -575,8 +645,18 @@ export default async function SitePage({ params }: SitePageProps) {
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center max-w-md px-4">
           <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-            <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            <svg
+              className="h-8 w-8 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
             </svg>
           </div>
           <h1 className="text-xl font-semibold mb-2 text-gray-900">
@@ -591,15 +671,19 @@ export default async function SitePage({ params }: SitePageProps) {
   }
 
   // Check if live-chat module is enabled
-  const hasLiveChat = data.modules.some(m => m.slug === 'live-chat' && m.status === 'active');
+  const hasLiveChat = data.modules.some(
+    (m) => m.slug === "live-chat" && m.status === "active",
+  );
   // Check if ecommerce module is enabled — auto-inject floating cart icon
-  const hasEcommerce = data.modules.some(m => m.slug === 'ecommerce' && m.status === 'active');
+  const hasEcommerce = data.modules.some(
+    (m) => m.slug === "ecommerce" && m.status === "active",
+  );
 
   // Pass data to client component for rendering with modules
   return (
     <>
-      <CraftRenderer 
-        content={data.content} 
+      <CraftRenderer
+        content={data.content}
         themeSettings={data.themeSettings}
         siteSettings={data.site.settings}
         siteId={data.site.id}
@@ -611,7 +695,12 @@ export default async function SitePage({ params }: SitePageProps) {
       {hasLiveChat && <LiveChatWidgetInjector siteId={data.site.id} />}
       {/* Auto-inject floating cart icon when ecommerce module is active.
           Passes hasLiveChat so the cart positions above the chat launcher (no overlap). */}
-      {hasEcommerce && <EcommerceCartInjector siteId={data.site.id} hasLiveChat={hasLiveChat} />}
+      {hasEcommerce && (
+        <EcommerceCartInjector
+          siteId={data.site.id}
+          hasLiveChat={hasLiveChat}
+        />
+      )}
       {/* Inject Schema.org JSON-LD structured data for Google Rich Results.
           Server-rendered so Googlebot sees it without JS execution. */}
       {hasEcommerce && (

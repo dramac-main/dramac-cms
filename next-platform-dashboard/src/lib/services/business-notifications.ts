@@ -415,9 +415,9 @@ export async function notifyNewOrder(
         .select("manual_payment_instructions")
         .eq("site_id" as never, data.siteId)
         .single();
-      manualPaymentInstructions =
-        (ecomSettings as Record<string, unknown> | null)
-          ?.manual_payment_instructions as string | undefined;
+      manualPaymentInstructions = (
+        ecomSettings as Record<string, unknown> | null
+      )?.manual_payment_instructions as string | undefined;
     }
 
     const formattedItems = data.items.map((item) => ({

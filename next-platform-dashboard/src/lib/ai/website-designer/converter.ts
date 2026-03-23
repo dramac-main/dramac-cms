@@ -816,7 +816,11 @@ function convertComponentToStudio(
   const fixedProps = fixLinksInObject(genComponent.props || {});
 
   // Transform props to match Studio component expectations
-  const studioProps = transformPropsForStudio(resolvedType, fixedProps, siteName);
+  const studioProps = transformPropsForStudio(
+    resolvedType,
+    fixedProps,
+    siteName,
+  );
 
   // Handle LogoCloud→Features conversion (when no real images available)
   const finalType = studioProps.__convertedToFeatures

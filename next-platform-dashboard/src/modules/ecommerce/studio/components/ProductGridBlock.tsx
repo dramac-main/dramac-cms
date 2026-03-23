@@ -1,6 +1,6 @@
 /**
  * E-Commerce Product Grid - Studio Block
- * 
+ *
  * Displays a grid of products with filtering, sorting, and pagination.
  * Uses real data hooks for live product fetching.
  */
@@ -9,9 +9,16 @@
 
 import React, { useState, useCallback, useMemo } from "react";
 import type { ComponentDefinition, ResponsiveValue } from "@/types/studio";
-import { 
-  Grid3X3, List, SlidersHorizontal, ChevronLeft, ChevronRight, 
-  Loader2, AlertCircle, Search, X
+import {
+  Grid3X3,
+  List,
+  SlidersHorizontal,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  AlertCircle,
+  Search,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/locale-config";
@@ -47,7 +54,7 @@ interface ProductGridProps {
   // Data source
   siteId?: string;
   categoryId?: string;
-  
+
   // Display options
   columns: ResponsiveValue<number>;
   showFilters: boolean;
@@ -56,7 +63,7 @@ interface ProductGridProps {
   showSearch: boolean;
   showResultCount: boolean;
   productsPerPage: number;
-  
+
   // Card options
   cardVariant: "card" | "horizontal" | "minimal" | "compact";
   showPrice: boolean;
@@ -64,11 +71,11 @@ interface ProductGridProps {
   showAddToCart: boolean;
   showWishlist: boolean;
   showQuickView: boolean;
-  
+
   // Layout
   gap: ResponsiveValue<string>;
   padding: ResponsiveValue<string>;
-  
+
   // Events
   onProductClick?: (productId: string) => void;
   onQuickView?: (productId: string) => void;
@@ -111,78 +118,79 @@ export function ProductGridBlock({
   // Context
   const storefront = useStorefront();
   const effectiveSiteId = siteId || storefront?.siteId || "";
-  
+
   // Local filter state
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(categoryId);
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(
+    categoryId,
+  );
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [onSaleOnly, setOnSaleOnly] = useState(false);
-  const [sortBy, setSortBy] = useState<'name' | 'price-asc' | 'price-desc' | 'newest' | 'popularity'>("newest");
+  const [sortBy, setSortBy] = useState<
+    "name" | "price-asc" | "price-desc" | "newest" | "popularity"
+  >("newest");
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  
+
   // Fetch products with filters
-  const {
-    products,
-    pagination,
-    isLoading,
-    error,
-    refetch,
-  } = useStorefrontProducts(effectiveSiteId, {
-    categoryId: selectedCategory,
-    search: searchQuery || undefined,
-    minPrice: priceRange[0] > 0 ? priceRange[0] : undefined,
-    maxPrice: priceRange[1] < 10000 ? priceRange[1] : undefined,
-    inStock: inStockOnly || undefined,
-    sortBy,
-    page: currentPage,
-    limit: productsPerPage,
-  });
-  
+  const { products, pagination, isLoading, error, refetch } =
+    useStorefrontProducts(effectiveSiteId, {
+      categoryId: selectedCategory,
+      search: searchQuery || undefined,
+      minPrice: priceRange[0] > 0 ? priceRange[0] : undefined,
+      maxPrice: priceRange[1] < 10000 ? priceRange[1] : undefined,
+      inStock: inStockOnly || undefined,
+      sortBy,
+      page: currentPage,
+      limit: productsPerPage,
+    });
+
   // Fetch categories for filter
   const { categories } = useStorefrontCategories(effectiveSiteId);
-  
+
   // Get responsive values
   const gapValue = typeof gap === "object" ? gap.mobile : gap;
   const paddingValue = typeof padding === "object" ? padding.mobile : padding;
   const columnsValue = typeof columns === "object" ? columns.mobile : columns;
-  
+
   // Calculate grid columns class
   const gridColsClass = useMemo(() => {
     const cols = typeof columns === "object" ? columns : { mobile: columns };
     return cn(
       `grid-cols-${cols.mobile || 2}`,
       cols.tablet && `md:grid-cols-${cols.tablet}`,
-      cols.desktop && `lg:grid-cols-${cols.desktop}`
+      cols.desktop && `lg:grid-cols-${cols.desktop}`,
     );
   }, [columns]);
-  
+
   // Handle search
   const handleSearch = useCallback((value: string) => {
     setSearchQuery(value);
     setCurrentPage(1);
   }, []);
-  
+
   // Handle category change
   const handleCategoryChange = useCallback((value: string) => {
     setSelectedCategory(value === "all" ? undefined : value);
     setCurrentPage(1);
   }, []);
-  
+
   // Handle sort change
   const handleSortChange = useCallback((value: string) => {
-    setSortBy(value as 'name' | 'price-asc' | 'price-desc' | 'newest' | 'popularity');
+    setSortBy(
+      value as "name" | "price-asc" | "price-desc" | "newest" | "popularity",
+    );
     setCurrentPage(1);
   }, []);
-  
+
   // Handle page change
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
     // Scroll to top of grid
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
-  
+
   // Clear all filters
   const clearFilters = useCallback(() => {
     setSearchQuery("");
@@ -192,15 +200,16 @@ export function ProductGridBlock({
     setOnSaleOnly(false);
     setCurrentPage(1);
   }, [categoryId]);
-  
+
   // Check if any filters are active
-  const hasActiveFilters = searchQuery || 
-    selectedCategory !== categoryId || 
-    priceRange[0] > 0 || 
-    priceRange[1] < 10000 || 
-    inStockOnly || 
+  const hasActiveFilters =
+    searchQuery ||
+    selectedCategory !== categoryId ||
+    priceRange[0] > 0 ||
+    priceRange[1] < 10000 ||
+    inStockOnly ||
     onSaleOnly;
-  
+
   // Filters sidebar content
   const FiltersContent = () => (
     <div className="space-y-6">
@@ -213,7 +222,9 @@ export function ProductGridBlock({
               onClick={() => handleCategoryChange("all")}
               className={cn(
                 "w-full text-left px-3 py-2 rounded-md text-sm transition-colors",
-                !selectedCategory ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                !selectedCategory
+                  ? "bg-primary text-primary-foreground"
+                  : "hover:bg-muted",
               )}
             >
               All Products
@@ -224,7 +235,9 @@ export function ProductGridBlock({
                 onClick={() => handleCategoryChange(cat.id)}
                 className={cn(
                   "w-full text-left px-3 py-2 rounded-md text-sm transition-colors",
-                  selectedCategory === cat.id ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                  selectedCategory === cat.id
+                    ? "bg-primary text-primary-foreground"
+                    : "hover:bg-muted",
                 )}
               >
                 {cat.name}
@@ -233,7 +246,7 @@ export function ProductGridBlock({
           </div>
         </div>
       )}
-      
+
       {/* Price Range */}
       <div>
         <h3 className="font-medium mb-3">Price Range</h3>
@@ -253,7 +266,7 @@ export function ProductGridBlock({
           </div>
         </div>
       </div>
-      
+
       {/* Stock & Sale filters */}
       <div className="space-y-3">
         <div className="flex items-center space-x-2">
@@ -262,7 +275,9 @@ export function ProductGridBlock({
             checked={inStockOnly}
             onCheckedChange={(checked) => setInStockOnly(checked === true)}
           />
-          <Label htmlFor="inStock" className="text-sm">In Stock Only</Label>
+          <Label htmlFor="inStock" className="text-sm">
+            In Stock Only
+          </Label>
         </div>
         <div className="flex items-center space-x-2">
           <Checkbox
@@ -270,17 +285,15 @@ export function ProductGridBlock({
             checked={onSaleOnly}
             onCheckedChange={(checked) => setOnSaleOnly(checked === true)}
           />
-          <Label htmlFor="onSale" className="text-sm">On Sale</Label>
+          <Label htmlFor="onSale" className="text-sm">
+            On Sale
+          </Label>
         </div>
       </div>
-      
+
       {/* Clear filters */}
       {hasActiveFilters && (
-        <Button 
-          variant="outline" 
-          className="w-full" 
-          onClick={clearFilters}
-        >
+        <Button variant="outline" className="w-full" onClick={clearFilters}>
           Clear All Filters
         </Button>
       )}
@@ -290,20 +303,20 @@ export function ProductGridBlock({
   // Pagination component
   const Pagination = () => {
     if (!pagination || pagination.totalPages <= 1) return null;
-    
+
     const pages = [];
     const maxVisible = 5;
     let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
     const end = Math.min(pagination.totalPages, start + maxVisible - 1);
-    
+
     if (end - start + 1 < maxVisible) {
       start = Math.max(1, end - maxVisible + 1);
     }
-    
+
     for (let i = start; i <= end; i++) {
       pages.push(i);
     }
-    
+
     return (
       <div className="flex items-center justify-center gap-2 mt-8">
         <Button
@@ -314,7 +327,7 @@ export function ProductGridBlock({
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        
+
         {start > 1 && (
           <>
             <Button
@@ -327,7 +340,7 @@ export function ProductGridBlock({
             {start > 2 && <span className="px-2">...</span>}
           </>
         )}
-        
+
         {pages.map((page) => (
           <Button
             key={page}
@@ -338,12 +351,16 @@ export function ProductGridBlock({
             {page}
           </Button>
         ))}
-        
+
         {end < pagination.totalPages && (
           <>
-            {end < pagination.totalPages - 1 && <span className="px-2">...</span>}
+            {end < pagination.totalPages - 1 && (
+              <span className="px-2">...</span>
+            )}
             <Button
-              variant={currentPage === pagination.totalPages ? "default" : "outline"}
+              variant={
+                currentPage === pagination.totalPages ? "default" : "outline"
+              }
               size="sm"
               onClick={() => handlePageChange(pagination.totalPages)}
             >
@@ -351,7 +368,7 @@ export function ProductGridBlock({
             </Button>
           </>
         )}
-        
+
         <Button
           variant="outline"
           size="icon"
@@ -388,7 +405,7 @@ export function ProductGridBlock({
             )}
           </div>
         )}
-        
+
         <div className="flex items-center gap-2 ml-auto">
           {/* Filters button (mobile) */}
           {showFilters && (
@@ -414,7 +431,7 @@ export function ProductGridBlock({
               </SheetContent>
             </Sheet>
           )}
-          
+
           {/* Sort */}
           {showSorting && (
             <Select value={sortBy} onValueChange={handleSortChange}>
@@ -430,7 +447,7 @@ export function ProductGridBlock({
               </SelectContent>
             </Select>
           )}
-          
+
           {/* View mode toggle */}
           <div className="flex border rounded-md">
             <Button
@@ -452,14 +469,14 @@ export function ProductGridBlock({
           </div>
         </div>
       </div>
-      
+
       {/* Result count */}
       {showResultCount && pagination && (
         <p className="text-sm text-muted-foreground mb-4">
           Showing {products.length} of {pagination.total} products
         </p>
       )}
-      
+
       {/* Main content area */}
       <div className="flex gap-6">
         {/* Desktop filters sidebar */}
@@ -471,7 +488,7 @@ export function ProductGridBlock({
             </div>
           </aside>
         )}
-        
+
         {/* Products grid */}
         <div className="flex-1">
           {/* Loading state */}
@@ -480,7 +497,7 @@ export function ProductGridBlock({
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           )}
-          
+
           {/* Error state */}
           {error && !isLoading && (
             <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -490,7 +507,7 @@ export function ProductGridBlock({
               <Button onClick={() => refetch()}>Try Again</Button>
             </div>
           )}
-          
+
           {/* Empty state */}
           {!isLoading && !error && products.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -506,13 +523,13 @@ export function ProductGridBlock({
               )}
             </div>
           )}
-          
+
           {/* Products */}
           {!isLoading && !error && products.length > 0 && (
-            <div 
+            <div
               className={cn(
                 viewMode === "grid" ? "grid" : "flex flex-col",
-                viewMode === "grid" && gridColsClass
+                viewMode === "grid" && gridColsClass,
               )}
               style={{ gap: gapValue }}
             >
@@ -541,7 +558,7 @@ export function ProductGridBlock({
               ))}
             </div>
           )}
-          
+
           {/* Pagination */}
           {showPagination && <Pagination />}
         </div>
@@ -557,10 +574,11 @@ export function ProductGridBlock({
 export const productGridDefinition: Omit<ComponentDefinition, "render"> = {
   type: "EcommerceProductGrid",
   label: "Product Grid",
-  description: "Display a grid of products with filters, sorting, and pagination",
+  description:
+    "Display a grid of products with filters, sorting, and pagination",
   category: "ecommerce",
   icon: "Grid3X3",
-  
+
   fields: {
     siteId: {
       type: "text",
@@ -656,7 +674,7 @@ export const productGridDefinition: Omit<ComponentDefinition, "render"> = {
       responsive: true,
     },
   },
-  
+
   defaultProps: {
     siteId: undefined,
     categoryId: undefined,
@@ -676,13 +694,22 @@ export const productGridDefinition: Omit<ComponentDefinition, "render"> = {
     gap: { mobile: "16px" },
     padding: { mobile: "16px" },
   },
-  
+
   ai: {
-    description: "Full product grid with filters, sorting, search, and pagination",
+    description:
+      "Full product grid with filters, sorting, search, and pagination",
     canModify: [
-      "columns", "productsPerPage", "showFilters", "showSorting", 
-      "showPagination", "showSearch", "cardVariant", "showPrice",
-      "showRating", "showAddToCart", "showWishlist"
+      "columns",
+      "productsPerPage",
+      "showFilters",
+      "showSorting",
+      "showPagination",
+      "showSearch",
+      "cardVariant",
+      "showPrice",
+      "showRating",
+      "showAddToCart",
+      "showWishlist",
     ],
     suggestions: [
       "Show 3 columns on mobile",
@@ -691,6 +718,15 @@ export const productGridDefinition: Omit<ComponentDefinition, "render"> = {
       "Show 24 products per page",
     ],
   },
-  
-  keywords: ["products", "grid", "catalog", "shop", "store", "filter", "sort", "browse"],
+
+  keywords: [
+    "products",
+    "grid",
+    "catalog",
+    "shop",
+    "store",
+    "filter",
+    "sort",
+    "browse",
+  ],
 };
