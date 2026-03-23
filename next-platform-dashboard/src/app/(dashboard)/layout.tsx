@@ -135,20 +135,12 @@ export default async function DashboardLayout({
   return (
     <TooltipProvider>
       <OnboardingRedirect>
-        {agencyId ? (
-          <>
-            <ServerBrandingStyle branding={initialBranding} />
-            <BrandingProvider agencyId={agencyId} initialBranding={initialBranding}>
-              <CurrencyProvider initialPreferences={regionalPreferences}>
-                {dashboardContent}
-              </CurrencyProvider>
-            </BrandingProvider>
-          </>
-        ) : (
-          <CurrencyProvider>
+        {agencyId && <ServerBrandingStyle branding={initialBranding} />}
+        <BrandingProvider agencyId={agencyId} initialBranding={initialBranding}>
+          <CurrencyProvider initialPreferences={regionalPreferences}>
             {dashboardContent}
           </CurrencyProvider>
-        )}
+        </BrandingProvider>
       </OnboardingRedirect>
     </TooltipProvider>
   );

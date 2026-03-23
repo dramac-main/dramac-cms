@@ -32,7 +32,7 @@ interface BrandingContextType {
 const BrandingContext = createContext<BrandingContextType | undefined>(undefined);
 
 interface BrandingProviderProps {
-  agencyId: string;
+  agencyId: string | null;
   children: React.ReactNode;
   /** Server-side fetched branding for instant SSR render */
   initialBranding?: AgencyBranding | null;
@@ -44,10 +44,11 @@ export function BrandingProvider({
   initialBranding,
 }: BrandingProviderProps) {
   const [branding, setBranding] = useState<AgencyBranding | null>(initialBranding ?? null);
-  const [isLoading, setIsLoading] = useState(!initialBranding);
+  const [isLoading, setIsLoading] = useState(!!agencyId && !initialBranding);
   const [error, setError] = useState<Error | null>(null);
 
   const fetchBranding = useCallback(async () => {
+    if (!agencyId) return;
     try {
       setIsLoading(true);
       const response = await fetch(`/api/branding/${agencyId}`, {
@@ -65,9 +66,9 @@ export function BrandingProvider({
   }, [agencyId]);
 
   useEffect(() => {
-    if (initialBranding) return;
+    if (!agencyId || initialBranding) return;
     fetchBranding();
-  }, [initialBranding, fetchBranding]);
+  }, [agencyId, initialBranding, fetchBranding]);
 
   // Listen for branding-updated events (fired by branding settings form after save)
   useEffect(() => {
