@@ -19,7 +19,6 @@
 
 import React from 'react'
 import { cn } from '@/lib/utils'
-import { StorefrontProvider } from '@/modules/ecommerce/context/storefront-context'
 import { useEcommerceStatus } from '@/modules/ecommerce/hooks/useModuleStatus'
 import { CartIconWidget } from '@/modules/ecommerce/components/widgets/CartIconWidget'
 
@@ -85,9 +84,7 @@ export interface EcommerceCartInjectorProps {
  * launcher when both modules are active.
  */
 export function EcommerceCartInjector({ siteId, hasLiveChat = false }: EcommerceCartInjectorProps) {
-  return (
-    <StorefrontProvider siteId={siteId}>
-      <CartWidgetInner siteId={siteId} hasLiveChat={hasLiveChat} />
-    </StorefrontProvider>
-  )
+  // StorefrontProvider is already provided by CraftRenderer (always-on).
+  // No duplicate provider needed here.
+  return <CartWidgetInner siteId={siteId} hasLiveChat={hasLiveChat} />
 }

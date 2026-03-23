@@ -11,11 +11,8 @@
  * @phase ECOM-51 - StorefrontProvider Integration
  */
 
-import { useMemo } from "react";
 import { StudioRenderer } from "@/lib/studio/engine/renderer";
 import type { InstalledModuleInfo } from "@/types/studio-module";
-
-// Lazy-load StorefrontProvider to avoid bundling ecommerce for non-ecom sites
 import { StorefrontProvider } from "@/modules/ecommerce/context/storefront-context";
 
 interface CraftRendererProps {
@@ -35,32 +32,21 @@ export function CraftRenderer({
   pageId,
   modules,
 }: CraftRendererProps) {
-  // Check if ecommerce module is installed
-  const hasEcommerce = useMemo(
-    () => modules?.some(m => m.slug === 'ecommerce' || m.category === 'ecommerce') ?? false,
-    [modules]
+  // Always wrap in StorefrontProvider to maintain a consistent component tree.
+  // Conditional wrapping causes React error #310 ("Rendered more hooks than
+  // during the previous render") because StorefrontProvider has hooks inside it.
+  // When ecommerce is not active, StorefrontProvider is a harmless no-op
+  // (skips API call when siteId is empty, returns default context values).
+  return (
+    <StorefrontProvider siteId={siteId || ''}>
+      <StudioRenderer 
+        data={content} 
+        themeSettings={themeSettings}
+        siteSettings={siteSettings}
+        siteId={siteId}
+        pageId={pageId}
+        modules={modules}
+      />
+    </StorefrontProvider>
   );
-
-  const renderer = (
-    <StudioRenderer 
-      data={content} 
-      themeSettings={themeSettings}
-      siteSettings={siteSettings}
-      siteId={siteId}
-      pageId={pageId}
-      modules={modules}
-    />
-  );
-
-  // Wrap in StorefrontProvider when ecommerce is active — this gives all
-  // ecommerce blocks access to site settings, currency, quote mode, etc.
-  if (hasEcommerce && siteId) {
-    return (
-      <StorefrontProvider siteId={siteId}>
-        {renderer}
-      </StorefrontProvider>
-    );
-  }
-
-  return renderer;
 }
