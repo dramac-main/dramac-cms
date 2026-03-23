@@ -18,12 +18,17 @@ import {
   ArrowRight,
   Loader2,
   Copy,
-  Check
+  Check,
+  Clock,
+  Banknote,
+  AlertTriangle,
+  Info
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
@@ -59,6 +64,8 @@ interface OrderData {
   id: string
   order_number: string
   status: string
+  payment_status?: string
+  payment_provider?: string
   email: string
   shipping_address: OrderAddress
   billing_address: OrderAddress
@@ -127,6 +134,8 @@ export function OrderConfirmationBlock({
           id: o.id,
           order_number: o.order_number,
           status: o.status,
+          payment_status: o.payment_status || 'pending',
+          payment_provider: (o.payment_provider as string) || undefined,
           email: o.customer_email || '',
           shipping_address: o.shipping_address as unknown as OrderAddress || {} as OrderAddress,
           billing_address: o.billing_address as unknown as OrderAddress || {} as OrderAddress,
@@ -205,22 +214,72 @@ export function OrderConfirmationBlock({
     )
   }
 
+  const isManualPayment = order.payment_provider === 'manual' || order.payment_method === 'manual'
+  const isPaymentPending = order.payment_status === 'pending' || !order.payment_status
+  const isAwaitingPayment = isManualPayment && isPaymentPending
+
+  // Get manual payment instructions from store settings
+  const manualInstructions = storefront.settings?.manual_payment_instructions
+
+  // Format payment method name for display
+  const paymentMethodLabel = (() => {
+    const method = order.payment_provider || order.payment_method
+    if (!method) return 'Not specified'
+    const labels: Record<string, string> = {
+      manual: 'Bank Transfer / Manual Payment',
+      paddle: 'Card Payment (Paddle)',
+      flutterwave: 'Flutterwave',
+      pesapal: 'Pesapal',
+      dpo: 'DPO Pay',
+    }
+    return labels[method] || method
+  })()
+
+  // Payment status badge
+  const paymentStatusBadge = (() => {
+    const status = order.payment_status || 'pending'
+    if (status === 'paid' || status === 'completed') {
+      return <Badge className="bg-green-100 text-green-800 border-green-200">Paid</Badge>
+    }
+    if (status === 'pending') {
+      return <Badge className="bg-amber-100 text-amber-800 border-amber-200">Awaiting Payment</Badge>
+    }
+    if (status === 'failed') {
+      return <Badge className="bg-red-100 text-red-800 border-red-200">Payment Failed</Badge>
+    }
+    return <Badge variant="secondary">{status}</Badge>
+  })()
+
   return (
     <div className={cn('py-8 md:py-12', className)}>
       <div className="container max-w-4xl mx-auto px-4">
-        {/* Success Header */}
+        {/* Success Header — different for paid vs awaiting payment */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-            <CheckCircle2 className="h-8 w-8 text-green-600" />
-          </div>
-          
-          <h1 className="text-2xl md:text-3xl font-bold mb-2">
-            Thank you for your order!
-          </h1>
-          
-          <p className="text-muted-foreground mb-4">
-            Your order has been placed successfully.
-          </p>
+          {isAwaitingPayment ? (
+            <>
+              <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
+                <Clock className="h-8 w-8 text-amber-600" />
+              </div>
+              <h1 className="text-2xl md:text-3xl font-bold mb-2">
+                Order Received — Payment Pending
+              </h1>
+              <p className="text-muted-foreground mb-4">
+                Your order has been placed and is awaiting payment. Please follow the payment instructions below to complete your purchase.
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 className="h-8 w-8 text-green-600" />
+              </div>
+              <h1 className="text-2xl md:text-3xl font-bold mb-2">
+                Thank you for your order!
+              </h1>
+              <p className="text-muted-foreground mb-4">
+                Your order has been placed successfully.
+              </p>
+            </>
+          )}
 
           {/* Order Number */}
           <div className="inline-flex items-center gap-2 bg-muted px-4 py-2 rounded-lg">
@@ -240,6 +299,91 @@ export function OrderConfirmationBlock({
             </Button>
           </div>
         </div>
+
+        {/* Manual Payment Instructions — prominent alert for pending payment */}
+        {isAwaitingPayment && (
+          <Alert className="mb-6 border-amber-200 bg-amber-50">
+            <Banknote className="h-5 w-5 text-amber-600" />
+            <AlertDescription className="ml-2">
+              <p className="font-semibold text-amber-900 mb-2">Payment Instructions</p>
+              {manualInstructions ? (
+                <div className="text-sm text-amber-800 whitespace-pre-wrap mb-3">
+                  {manualInstructions}
+                </div>
+              ) : (
+                <p className="text-sm text-amber-800 mb-3">
+                  Please contact the store to arrange payment for your order. Include your order number <strong>{order.order_number}</strong> as the payment reference.
+                </p>
+              )}
+              <div className="text-xs text-amber-700 border-t border-amber-200 pt-2 mt-2">
+                <strong>Important:</strong> Your order will be processed once payment is confirmed. Please use order number <strong>{order.order_number}</strong> as your payment reference.
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* What Happens Next — step timeline */}
+        {isAwaitingPayment && (
+          <Card className="mb-6">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Info className="h-4 w-4" />
+                What Happens Next
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex gap-3">
+                  <div className="flex flex-col items-center">
+                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                      <Check className="h-4 w-4 text-green-600" />
+                    </div>
+                    <div className="w-0.5 flex-1 bg-green-200 mt-1" />
+                  </div>
+                  <div className="pb-4">
+                    <p className="font-medium text-sm">Order Placed</p>
+                    <p className="text-xs text-muted-foreground">We&apos;ve received your order and sent you a confirmation email.</p>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <div className="flex flex-col items-center">
+                    <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+                      <Banknote className="h-4 w-4 text-amber-600" />
+                    </div>
+                    <div className="w-0.5 flex-1 bg-muted mt-1" />
+                  </div>
+                  <div className="pb-4">
+                    <p className="font-medium text-sm">Complete Payment</p>
+                    <p className="text-xs text-muted-foreground">Follow the instructions above to send payment. Use your order number as the reference.</p>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <div className="flex flex-col items-center">
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                      <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="w-0.5 flex-1 bg-muted mt-1" />
+                  </div>
+                  <div className="pb-4">
+                    <p className="font-medium text-sm text-muted-foreground">Payment Confirmed</p>
+                    <p className="text-xs text-muted-foreground">Once we verify your payment, you&apos;ll receive a confirmation email and your order will be processed.</p>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <div className="flex flex-col items-center">
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                      <Truck className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm text-muted-foreground">Order Shipped</p>
+                    <p className="text-xs text-muted-foreground">We&apos;ll ship your order and send you tracking information.</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Confirmation Email Notice */}
         <Card className="mb-6 bg-primary/5 border-primary/20">
@@ -306,6 +450,15 @@ export function OrderConfirmationBlock({
               </CardTitle>
             </CardHeader>
             <CardContent>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm text-muted-foreground">Status</span>
+                {paymentStatusBadge}
+              </div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm text-muted-foreground">Method</span>
+                <span className="text-sm font-medium">{paymentMethodLabel}</span>
+              </div>
+              <Separator className="my-3" />
               <p className="text-sm">
                 {order.billing_address.first_name} {order.billing_address.last_name}
               </p>
@@ -316,13 +469,6 @@ export function OrderConfirmationBlock({
                 {order.billing_address.city}, {order.billing_address.state}{' '}
                 {order.billing_address.postal_code}
               </p>
-              
-              {order.payment_method && (
-                <p className="text-sm mt-3 pt-3 border-t">
-                  <span className="text-muted-foreground">Method: </span>
-                  {order.payment_method}
-                </p>
-              )}
             </CardContent>
           </Card>
         </div>

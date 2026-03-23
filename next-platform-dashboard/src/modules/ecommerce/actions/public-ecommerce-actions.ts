@@ -704,6 +704,7 @@ export async function createPublicOrderFromCart(input: CreateOrderInput): Promis
         total: input.total,
         currency: input.currency,
         paymentStatus: input.payment_status || 'pending',
+        paymentProvider: input.payment_provider || undefined,
         shippingAddress: input.shipping_address
           ? `${input.shipping_address.address_line_1 || ''}${input.shipping_address.address_line_2 ? ', ' + input.shipping_address.address_line_2 : ''}, ${input.shipping_address.city || ''} ${input.shipping_address.state || ''} ${input.shipping_address.postal_code || ''}, ${input.shipping_address.country || ''}`
           : undefined,
@@ -725,6 +726,7 @@ export async function createPublicOrderFromCart(input: CreateOrderInput): Promis
       total: input.total,
       currency: input.currency,
       paymentStatus: input.payment_status || 'pending',
+      paymentProvider: input.payment_provider || undefined,
     }).catch(err => console.error('[Ecom Public] Notification error:', err))
   }
 

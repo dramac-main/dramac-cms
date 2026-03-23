@@ -10,7 +10,7 @@
 
 import React from 'react'
 import { cn } from '@/lib/utils'
-import { ArrowLeft, ArrowRight, Loader2, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Loader2, ShieldCheck, Clock, Banknote } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
@@ -607,29 +607,49 @@ export function CheckoutPageBlock({
   
   // Order success - redirect or show confirmation
   if (orderResult) {
+    const isManualPayment = !!orderResult.paymentInstructions
     return (
       <div className={cn('py-12', className)}>
         <div className="container max-w-4xl mx-auto px-4">
           <Card className="text-center py-12">
             <CardContent>
-              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
-                <ShieldCheck className="h-8 w-8 text-green-600" />
-              </div>
-              <h1 className="text-2xl font-bold mb-2">Order Placed Successfully!</h1>
-              <p className="text-muted-foreground mb-4">
-                Your order #{orderResult.orderNumber} has been placed.
-              </p>
-              {orderResult.paymentInstructions ? (
-                <div className="bg-muted rounded-lg p-4 mb-6 text-left max-w-md">
-                  <p className="font-medium text-sm mb-2">Payment Instructions:</p>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                    {orderResult.paymentInstructions}
+              {isManualPayment ? (
+                <>
+                  <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-6">
+                    <Clock className="h-8 w-8 text-amber-600" />
+                  </div>
+                  <h1 className="text-2xl font-bold mb-2">Order Received — Payment Pending</h1>
+                  <p className="text-muted-foreground mb-6">
+                    Your order #{orderResult.orderNumber} has been received. Please complete your payment to confirm.
                   </p>
-                </div>
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-5 mb-6 text-left max-w-lg mx-auto">
+                    <div className="flex items-start gap-3">
+                      <Banknote className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+                      <div>
+                        <p className="font-semibold text-sm text-amber-900 mb-2">Payment Instructions</p>
+                        <p className="text-sm text-amber-800 whitespace-pre-wrap">
+                          {orderResult.paymentInstructions}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-6">
+                    Your order will be processed once payment is confirmed. You will receive a confirmation email with these details.
+                  </p>
+                </>
               ) : (
-                <p className="text-sm text-muted-foreground mb-6">
-                  You will receive a confirmation email shortly.
-                </p>
+                <>
+                  <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
+                    <ShieldCheck className="h-8 w-8 text-green-600" />
+                  </div>
+                  <h1 className="text-2xl font-bold mb-2">Order Placed Successfully!</h1>
+                  <p className="text-muted-foreground mb-4">
+                    Your order #{orderResult.orderNumber} has been placed.
+                  </p>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    You will receive a confirmation email shortly.
+                  </p>
+                </>
               )}
               <Button asChild>
                 <Link href={`${successHref}?order=${orderResult.orderId}`}>

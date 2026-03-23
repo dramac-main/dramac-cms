@@ -67,6 +67,8 @@ interface OrderNotificationData {
   total: number;
   currency: string;
   paymentStatus: string;
+  paymentProvider?: string;
+  manualPaymentInstructions?: string;
   shippingAddress?: string;
 }
 
@@ -405,6 +407,19 @@ export async function notifyNewOrder(
     const taxStr = formatCurrency(data.tax, currency);
     const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramac.app"}/sites/${data.siteId}/ecommerce/orders`;
 
+    // Fetch manual payment instructions if provider is manual
+    let manualPaymentInstructions = data.manualPaymentInstructions;
+    if (data.paymentProvider === "manual" && !manualPaymentInstructions) {
+      const { data: ecomSettings } = await supabase
+        .from("mod_ecommod01_settings" as never)
+        .select("manual_payment_instructions")
+        .eq("site_id" as never, data.siteId)
+        .single();
+      manualPaymentInstructions =
+        (ecomSettings as Record<string, unknown> | null)
+          ?.manual_payment_instructions as string | undefined;
+    }
+
     const formattedItems = data.items.map((item) => ({
       name: item.name,
       quantity: item.quantity,
@@ -462,6 +477,9 @@ export async function notifyNewOrder(
           shipping: shippingStr,
           tax: taxStr,
           total: totalStr,
+          paymentStatus: data.paymentStatus,
+          paymentProvider: data.paymentProvider || undefined,
+          manualPaymentInstructions: manualPaymentInstructions || undefined,
           shippingAddress: data.shippingAddress || "",
           businessName,
         },

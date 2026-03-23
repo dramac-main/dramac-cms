@@ -316,7 +316,12 @@ const booking_cancelled_owner: BrandedTemplate = {
 // ============================================================================
 
 const order_confirmation_customer: BrandedTemplate = {
-  subject: (data) => `Order Confirmed - #${data.orderNumber}`,
+  subject: (data) => {
+    const isPending = data.paymentStatus === "pending" || data.paymentProvider === "manual";
+    return isPending
+      ? `Order Received - #${data.orderNumber} — Payment Required`
+      : `Order Confirmed - #${data.orderNumber}`;
+  },
   html: (data, b) => {
     const items =
       (data.items as Array<{
@@ -331,12 +336,41 @@ const order_confirmation_customer: BrandedTemplate = {
       )
       .join("");
 
+    const isManualPayment = data.paymentProvider === "manual";
+    const isPending = data.paymentStatus === "pending" || isManualPayment;
+
+    const headingText = isPending
+      ? "Order Received — Payment Pending"
+      : "Order Confirmed! 🎉";
+    const introText = isPending
+      ? "Thank you for your order! To complete your purchase, please follow the payment instructions below."
+      : "Thank you for your order! Here's your order summary:";
+
+    const paymentStatusSection = isPending
+      ? `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:16px;margin:20px 0;">
+        <p style="margin:0 0 8px;font-weight:600;color:#92400e;">⏳ Payment Status: Awaiting Payment</p>
+        <p style="margin:0;color:#92400e;font-size:14px;">Your order will be processed once payment is confirmed.</p>
+      </div>`
+      : `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin:20px 0;">
+        <p style="margin:0;font-weight:600;color:#166534;">✅ Payment Status: Paid</p>
+      </div>`;
+
+    const manualPaymentSection =
+      isManualPayment && data.manualPaymentInstructions
+        ? `<div style="background:#fef3c7;border:2px solid #f59e0b;border-radius:8px;padding:20px;margin:20px 0;">
+        <p style="margin:0 0 12px;font-weight:700;color:#92400e;font-size:16px;">💳 Payment Instructions</p>
+        <p style="margin:0;color:#78350f;font-size:14px;white-space:pre-wrap;line-height:1.6;">${data.manualPaymentInstructions}</p>
+      </div>`
+        : "";
+
     return baseEmailTemplate(
       b,
-      `<h1 style="${EMAIL_STYLES.heading}">Order Confirmed! 🎉</h1>
+      `<h1 style="${EMAIL_STYLES.heading}">${headingText}</h1>
       <p style="${EMAIL_STYLES.text}">Hi ${data.customerName || "there"},</p>
-      <p style="${EMAIL_STYLES.text}">Thank you for your order! Here's your order summary:</p>
+      <p style="${EMAIL_STYLES.text}">${introText}</p>
       <p style="${EMAIL_STYLES.text}"><strong>Order #${data.orderNumber}</strong></p>
+      ${paymentStatusSection}
+      ${manualPaymentSection}
       <table style="width:100%;border-collapse:collapse;margin:20px 0;">
         <thead><tr style="background:#f9fafb;">
           <th style="padding:10px;text-align:left;border-bottom:2px solid #e5e7eb;">Item</th>
@@ -354,8 +388,9 @@ const order_confirmation_customer: BrandedTemplate = {
         </table>
       </div>
       ${data.shippingAddress ? `<p style="${EMAIL_STYLES.text}"><strong>Shipping to:</strong> ${data.shippingAddress}</p>` : ""}
+      ${isPending ? `<p style="${EMAIL_STYLES.text}"><strong>What happens next:</strong> Once we receive and confirm your payment, we'll process your order and send you a shipping confirmation.</p>` : ""}
       <p style="${EMAIL_STYLES.muted}">If you have any questions about your order, please contact ${data.businessName || b.agency_name}.</p>`,
-      `Order #${data.orderNumber} confirmed`,
+      `Order #${data.orderNumber} ${isPending ? "received — payment required" : "confirmed"}`,
     );
   },
   text: (data, b) => {
@@ -368,7 +403,17 @@ const order_confirmation_customer: BrandedTemplate = {
     const itemLines = items
       .map((item) => `  ${item.name} x${item.quantity} - ${item.price}`)
       .join("\n");
-    return `Order Confirmed!\n\nOrder #${data.orderNumber}\n\nItems:\n${itemLines}\n\nSubtotal: ${data.subtotal}\nShipping: ${data.shipping}\nTax: ${data.tax}\nTotal: ${data.total}\n\nContact ${data.businessName || b.agency_name} for questions.`;
+    const isManualPayment = data.paymentProvider === "manual";
+    const isPending = data.paymentStatus === "pending" || isManualPayment;
+    const header = isPending ? "Order Received — Payment Pending" : "Order Confirmed!";
+    const paymentInstr =
+      isManualPayment && data.manualPaymentInstructions
+        ? `\n\nPayment Instructions:\n${data.manualPaymentInstructions}`
+        : "";
+    const nextSteps = isPending
+      ? "\n\nWhat happens next: Once we receive and confirm your payment, we'll process your order and send you a shipping confirmation."
+      : "";
+    return `${header}\n\nOrder #${data.orderNumber}\n\nPayment Status: ${isPending ? "Awaiting Payment" : "Paid"}${paymentInstr}\n\nItems:\n${itemLines}\n\nSubtotal: ${data.subtotal}\nShipping: ${data.shipping}\nTax: ${data.tax}\nTotal: ${data.total}${nextSteps}\n\nContact ${data.businessName || b.agency_name} for questions.`;
   },
 };
 
