@@ -1123,8 +1123,8 @@ export async function createOrderFromCart(input: CreateOrderInput): Promise<Orde
         unitPrice: item.unit_price,
       }))
 
-      // Send notifications to business owner + customer (async, non-blocking)
-      notifyNewOrder({
+      // Send notifications to business owner + customer (awaited for serverless)
+      await notifyNewOrder({
         siteId: input.site_id,
         orderId: order.id,
         orderNumber,
@@ -1145,7 +1145,7 @@ export async function createOrderFromCart(input: CreateOrderInput): Promise<Orde
     }
   } else {
     // No cart - still send notification with available data
-    notifyNewOrder({
+    await notifyNewOrder({
       siteId: input.site_id,
       orderId: order.id,
       orderNumber,

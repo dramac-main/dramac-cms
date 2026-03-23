@@ -683,14 +683,14 @@ export async function createPublicOrderFromCart(input: CreateOrderInput): Promis
         .update({ status: 'converted' })
         .eq('id', input.cart_id)
 
-      // Send notifications (async, non-blocking)
+      // Send notifications (awaited to ensure completion in serverless)
       const notificationItems = cart.items.map((item: CartItem) => ({
         name: item.product?.name || 'Unknown Product',
         quantity: item.quantity,
         unitPrice: item.unit_price,
       }))
 
-      notifyNewOrder({
+      await notifyNewOrder({
         siteId: input.site_id,
         orderId: order.id,
         orderNumber,
@@ -709,10 +709,21 @@ export async function createPublicOrderFromCart(input: CreateOrderInput): Promis
           ? `${input.shipping_address.address_line_1 || ''}${input.shipping_address.address_line_2 ? ', ' + input.shipping_address.address_line_2 : ''}, ${input.shipping_address.city || ''} ${input.shipping_address.state || ''} ${input.shipping_address.postal_code || ''}, ${input.shipping_address.country || ''}`
           : undefined,
       }).catch(err => console.error('[Ecom Public] Notification error:', err))
+
+      // Add order timeline entry
+      await supabase
+        .from(`${TABLE_PREFIX}_order_timeline`)
+        .insert({
+          order_id: order.id,
+          event_type: 'order_created',
+          title: 'Order Placed',
+          description: `Order placed by ${input.customer_name || input.customer_email} via storefront`,
+          metadata: { source: 'public_checkout', payment_provider: input.payment_provider || 'unknown' },
+        })
     }
   } else {
     // No cart — still fire notification
-    notifyNewOrder({
+    await notifyNewOrder({
       siteId: input.site_id,
       orderId: order.id,
       orderNumber,
@@ -728,6 +739,17 @@ export async function createPublicOrderFromCart(input: CreateOrderInput): Promis
       paymentStatus: input.payment_status || 'pending',
       paymentProvider: input.payment_provider || undefined,
     }).catch(err => console.error('[Ecom Public] Notification error:', err))
+
+    // Add order timeline entry
+    await supabase
+      .from(`${TABLE_PREFIX}_order_timeline`)
+      .insert({
+        order_id: order.id,
+        event_type: 'order_created',
+        title: 'Order Placed',
+        description: `Order placed by ${input.customer_name || input.customer_email} via storefront`,
+        metadata: { source: 'public_checkout', payment_provider: input.payment_provider || 'unknown' },
+      })
   }
 
   return order as Order

@@ -1,53 +1,60 @@
 # Active Context
 
-## Current Focus: AI Designer End-to-End Verification — COMPLETED
+## Current Focus: Manual Payment Checkout UX — COMPLETED
 
-### Status: COMMITTED & PUSHED — `27e239e0`
+### Status: COMMITTED & PUSHED — `7560e50f`
 
-### Latest Work: Feature Chips Mandatory + Contact Forms + Module Map Fixes
+### Latest Work: Industry-Standard Manual Payment UX + Customer Email Improvements
 
-#### Changes Applied (3 files, commit `27e239e0`):
+#### Changes Applied (5 files):
 
-1. **`ai-designer/page.tsx`** — 5 changes:
-   - **Chip turns blue**: Changed selected state from `bg-primary` (achromatic black) to `bg-blue-600 text-white border-blue-600` (previous commit `32d9c6e5`)
-   - **Mandatory selection**: `handleGenerate` now checks `selectedFeatures.size === 0` before anything else
-   - **Button disabled**: Added `selectedFeatures.size === 0` to disabled condition
-   - **Contact Forms chip added**: New chip with `Mail` icon (module exists in DB as `contact-forms`)
-   - **Helper text**: Changed from "Select any features" to "Select at least one feature"
+1. **`OrderConfirmationBlock.tsx`** — Complete payment-aware redesign:
+   - Added `payment_status` and `payment_provider` to `OrderData` type
+   - Self-fetch now maps payment fields from DB order
+   - Amber clock header for pending payment vs green check for paid orders
+   - Prominent manual payment instructions Alert with Banknote icon
+   - "What Happens Next" 4-step timeline (Placed → Pay → Confirmed → Shipped)
+   - Payment status badge (Paid/Awaiting Payment/Failed)
+   - Payment method label with human-readable display
 
-2. **`engine.ts`** — FEATURE_MODULE_MAP expanded:
-   - Added `"live-chat": { module_type: "live-chat", module_name: "Live Chat" }`
-   - Added `"contact-forms": { module_type: "contact-forms", module_name: "Contact Forms" }`
-   - Now covers: ecommerce, booking, live-chat, contact-forms (was only ecommerce + booking)
+2. **`CheckoutPageBlock.tsx`** — Inline success state redesign:
+   - Manual payment: Amber styling, Clock icon, "Order Received — Payment Pending"
+   - Prominent payment instructions box with Banknote icon
+   - Non-manual: Green success styling, ShieldCheck icon, "Order Placed Successfully!"
 
-3. **`auto-install/route.ts`** — FEATURE_MODULE_MAP corrected:
-   - Removed `blog: "blog"` (no blog module exists in `modules_v2`)
-   - Added `"contact-forms": "contact-forms"`
-   - Now maps: ecommerce, booking, live-chat, contact-forms
+3. **`branded-templates.ts`** — Customer email template:
+   - Conditional subject line: "Payment Required" vs "Confirmed"
+   - Payment status section (amber pending / green paid)
+   - Manual payment instructions block in the email body
+   - "What happens next" guidance for pending orders
 
-#### Feature Chips (5 total):
-| Chip ID | Label | Icon | Module Exists | Engine Injects | Auto-Installs |
-|---------|-------|------|---------------|----------------|---------------|
-| ecommerce | Online Store | ShoppingCart | ✅ | ✅ | ✅ |
-| booking | Booking System | CalendarCheck | ✅ | ✅ | ✅ |
-| blog | Blog | FileText | ❌ | ❌ (content-only) | ❌ (no module) |
-| contact-forms | Contact Forms | Mail | ✅ | ✅ | ✅ |
-| live-chat | Live Chat | MessageCircle | ✅ | ✅ | ✅ |
+4. **`business-notifications.ts`** — Notification data pipeline:
+   - Added `paymentProvider` and `manualPaymentInstructions` to `OrderNotificationData`
+   - `notifyNewOrder` auto-fetches `manual_payment_instructions` from ecommerce settings when provider is manual
+   - Passes paymentStatus, paymentProvider, manualPaymentInstructions in customer email data
 
-Blog is a content-only feature — the AI generates blog-style pages from the prompt, but there's no blog module to install. All other features have full module support.
+5. **`public-ecommerce-actions.ts`** — Added `paymentProvider` to both `notifyNewOrder` call sites
 
-#### Theme Color Discovery:
-- `--primary` is `oklch(0.205 0 0)` (light) / `oklch(0.922 0 0)` (dark) — **achromatic, ZERO chroma**
-- This is why `bg-primary` made chips near-black/near-white instead of blue
-- Fix: Use explicit `bg-blue-600` for chip selected state
+### Pending Investigation
+- **Notification emails**: Code logic is correct. If emails are not being delivered, check that `RESEND_API_KEY` is set in Vercel production environment variables. Without it, `isEmailEnabled()` returns false and all emails are silently skipped.
+   - `getPublicProducts()` now respects `filters.sortBy` and `filters.sortOrder`
+   - Was hardcoded to `.order('created_at', { ascending: false })`
 
-#### Full Pipeline Verification (Steps 4+):
-- ✅ Architecture step: Auth, validation, selectedFeatures passed to engine
-- ✅ Page step: Receives architecture + context, 60s budget per page
-- ✅ Shared step: Parallel Haiku calls for navbar/footer, bullet-proof fallbacks
-- ✅ Finalize step: Local processing only, quality audit, design token injection
-- ✅ Save flow: Creates pages → persists design tokens → auto-installs → publishes → redirects
-- ✅ Auto-install: Creates agency subscriptions first, then site installations
+8. **`ecommerce-types.ts`** — added `sortBy` and `sortOrder` to `ProductFilters` interface
+
+#### Root Causes Fixed:
+| Issue | Root Cause | Fix |
+|-------|-----------|-----|
+| Products loading slowly | N+1 fetch: each ProductCardBlock re-fetches product individually | Pass productData prop from parent grid |
+| Checkout page 404 | /checkout page missing from DB pages table | Dynamic virtual page generation |
+| Order confirmation blank | OrderConfirmationBlock receives no data | Self-fetch from URL query param |
+| Sort not working | getPublicProducts ignores sortBy/sortOrder | Dynamic sort column in query |
+
+#### Verified End-to-End Flows:
+- ✅ Cart → Checkout → Order → Confirmation (full purchase flow)
+- ✅ Quotation mode: product card → /quotes?product=id → quote form → submit
+- ✅ Product grid sorting (price low/high, newest, name)
+- ✅ TypeScript: ZERO errors
 - ✅ Publish: Route exists and calls `publishSite` service
 - ✅ Converter: Already fixed with `siteName` param (commit `32d9c6e5`)
 
