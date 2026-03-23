@@ -267,10 +267,63 @@ async function installCoreModules(
       });
 
       console.log(`[Sites] Core module ${mod.slug} installed for site ${siteId}`);
+
+      // Step 3: For Live Chat — auto-register the site owner as the first agent
+      // so chat conversations have someone to route to immediately.
+      if (mod.slug === "live-chat") {
+        await bootstrapLiveChatAgent(siteId, userId, supabase).catch((err) =>
+          console.error("[Sites] Failed to bootstrap live chat agent:", err),
+        );
+      }
     } catch (err) {
       console.error(`[Sites] Failed to install core module ${mod.slug}:`, err);
     }
   }
+}
+
+/**
+ * Auto-register the site owner as the first live chat agent.
+ * Without this, conversations pile up as "pending" with no agent to assign to.
+ * The agent starts as "offline" — the owner must go online in the Live Chat dashboard.
+ */
+async function bootstrapLiveChatAgent(
+  siteId: string,
+  userId: string,
+  supabase: ReturnType<typeof createAdminClient>,
+): Promise<void> {
+  // Check if an agent already exists for this user on this site
+  const { data: existing } = await (supabase as any)
+    .from("mod_chat_agents")
+    .select("id")
+    .eq("site_id", siteId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (existing) return; // Already an agent — skip
+
+  // Get user's profile info for display name
+  const { data: profile } = await (supabase as any)
+    .from("profiles")
+    .select("name, email, avatar_url")
+    .eq("id", userId)
+    .single();
+
+  const displayName = profile?.name || profile?.email || "Site Owner";
+
+  await (supabase as any).from("mod_chat_agents").insert({
+    site_id: siteId,
+    user_id: userId,
+    display_name: displayName,
+    email: profile?.email || null,
+    avatar_url: profile?.avatar_url || null,
+    role: "owner",
+    status: "offline",
+    is_active: true,
+    max_concurrent_chats: 5,
+    current_chat_count: 0,
+  });
+
+  console.log(`[Sites] Live Chat: owner registered as agent for site ${siteId}`);
 }
 
 // Update site

@@ -218,6 +218,7 @@ export class WebsiteDesignerEngine {
       this.architecture = await this.createArchitecture(
         input.prompt,
         formattedContext,
+        input.selectedFeatures,
       );
 
       // Apply constraints
@@ -849,8 +850,9 @@ export class WebsiteDesignerEngine {
   private async createArchitecture(
     prompt: string,
     context: string,
+    selectedFeatures?: string[],
   ): Promise<SiteArchitecture> {
-    const fullPrompt = buildArchitecturePrompt(prompt, context);
+    const fullPrompt = buildArchitecturePrompt(prompt, context, selectedFeatures);
 
     const { object } = await generateObject({
       model: getAIModel("architecture"),

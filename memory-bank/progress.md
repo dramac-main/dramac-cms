@@ -1,11 +1,26 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION ✅
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX ✅
 
 ---
 
-## Latest Update: Cross-Module Integration System
+## Latest Update: React Error #310 Fix — `75bb16fe`
+
+**Problem:** React minified error #310 ("Rendered more hooks than during the previous render") on live-chat page, caught by root error boundary.
+
+**Root Cause:** Conditional provider wrapping in `(dashboard)/layout.tsx` — `agencyId ? <BrandingProvider>...<CurrencyProvider> : <CurrencyProvider>` created structurally different component trees.
+
+**Fix (3 files):**
+- `(dashboard)/layout.tsx` — Always render `BrandingProvider > CurrencyProvider` consistently
+- `branding-provider.tsx` — Accept nullable `agencyId` (`string | null`), no-op when null
+- `(dashboard)/error.tsx` — NEW dashboard-level error boundary (was missing, errors cascaded to root)
+
+**Previous:** Cross-Module Integration — `3d49d6f8`
+
+---
+
+## Previous Update: Cross-Module Integration System — `3d49d6f8`
 
 **Changes (9 files, 1 new file):**
 

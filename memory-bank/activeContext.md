@@ -1,8 +1,36 @@
 # Active Context
 
-## Current Focus: Cross-Module Integration — Core Module Auto-Enable + Automation Events + AI Context Bridge
+## Current Focus: React Error #310 Fix — Consistent Provider Tree
 
-### Status: IMPLEMENTED — Awaiting commit
+### Status: COMMITTED & PUSHED — `75bb16fe`
+
+### Problem: React Minified Error #310
+- Error: "Rendered more hooks than during the previous render"
+- Caught by ROOT `app/error.tsx` (no `(dashboard)/error.tsx` existed)
+- Occurred on live-chat page navigation
+
+### Root Cause: Conditional Provider Wrapping
+- `(dashboard)/layout.tsx` had conditional tree structure based on `agencyId`:
+  - With agencyId: `BrandingProvider > CurrencyProvider > children`  
+  - Without agencyId: `CurrencyProvider > children` (no BrandingProvider)
+- This created structurally different React component trees
+- During RSC reconciliation/navigation, React could see different hook counts
+
+### Fix Applied (3 files):
+1. **`src/app/(dashboard)/layout.tsx`** — Always render `BrandingProvider > CurrencyProvider` consistently, regardless of `agencyId`
+2. **`src/components/providers/branding-provider.tsx`** — Accept nullable `agencyId` (`string | null`), no-op when null (no fetch, no event listeners, just passes null context)
+3. **`src/app/(dashboard)/error.tsx`** — NEW: Dashboard-level error boundary to catch errors within the dashboard route group instead of cascading to root
+
+### Investigation Summary:
+- Exhaustive 3-session investigation covering 935+ client components
+- Custom automated scanners created (181 potential issues — all false positives)
+- Complete render tree traced from live-chat page through all layouts/providers
+- All hooks verified at component root level — no conditional hooks found
+- The conditional provider wrapping was the structural issue
+
+---
+
+## Previous Focus: Cross-Module Integration — COMMITTED (`3d49d6f8`)
 
 ### Latest Work: 3-Phase Integration System
 

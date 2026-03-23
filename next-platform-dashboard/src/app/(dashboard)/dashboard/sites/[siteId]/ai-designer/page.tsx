@@ -289,7 +289,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
   // Form state
   const [prompt, setPrompt] = useState("");
   const [selectedFeatures, setSelectedFeatures] = useState<Set<string>>(
-    new Set(),
+    new Set(["live-chat"]),
   );
 
   // Generation state
@@ -868,7 +868,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                         label: "Booking System",
                         icon: CalendarCheck,
                       },
-                      { id: "blog", label: "Blog", icon: FileText },
+                      { id: "blog", label: "Blog", icon: FileText, builtIn: true },
                       {
                         id: "contact-forms",
                         label: "Contact Forms",
@@ -878,16 +878,20 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                         id: "live-chat",
                         label: "Live Chat",
                         icon: MessageCircle,
+                        alwaysOn: true,
                       },
                     ].map((feature) => {
                       const isSelected = selectedFeatures.has(feature.id);
+                      const isAlwaysOn = "alwaysOn" in feature && feature.alwaysOn;
+                      const isBuiltIn = "builtIn" in feature && feature.builtIn;
                       const Icon = feature.icon;
                       return (
                         <button
                           key={feature.id}
                           type="button"
-                          disabled={isGenerating}
+                          disabled={isGenerating || isAlwaysOn}
                           onClick={() => {
+                            if (isAlwaysOn) return;
                             setSelectedFeatures((prev) => {
                               const next = new Set(prev);
                               if (next.has(feature.id)) {
@@ -902,10 +906,16 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                             isSelected
                               ? "bg-primary/10 text-foreground border-primary"
                               : "bg-muted/50 text-muted-foreground border-border hover:bg-muted hover:text-foreground"
-                          } ${isGenerating ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                          } ${isGenerating || isAlwaysOn ? "opacity-80 cursor-default" : "cursor-pointer"}`}
                         >
                           <Icon className="h-3.5 w-3.5" />
                           {feature.label}
+                          {isAlwaysOn && (
+                            <span className="text-[10px] text-muted-foreground ml-0.5">(Always&nbsp;On)</span>
+                          )}
+                          {isBuiltIn && !isSelected && (
+                            <span className="text-[10px] text-muted-foreground ml-0.5">(Built&#x2011;in)</span>
+                          )}
                           {isSelected && <Check className="h-3 w-3" />}
                         </button>
                       );
@@ -913,7 +923,8 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Select at least one feature — the AI will build them into
-                    your site automatically.
+                    your site automatically. CRM, Automation &amp; Live Chat are
+                    always included on every site.
                   </p>
                 </div>
 

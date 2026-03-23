@@ -536,8 +536,19 @@ export function parseUserPrompt(userPrompt: string): {
 export function buildArchitecturePrompt(
   userPrompt: string,
   context: string,
+  selectedFeatures?: string[],
 ): string {
   const parsed = parseUserPrompt(userPrompt);
+
+  // Merge chip-selected features into parsed features so the AI knows about them
+  // even when the user doesn't mention them in the text prompt
+  if (selectedFeatures?.length) {
+    for (const feature of selectedFeatures) {
+      if (!parsed.keyFeatures.includes(feature)) {
+        parsed.keyFeatures.push(feature);
+      }
+    }
+  }
 
   // Generate dynamic component reference from the live registry
   const componentReference = generateArchitectureReference();
