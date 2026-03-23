@@ -625,6 +625,78 @@ dramac-cms/
     └── scripts/                  # Utility scripts
 ```
 
+---
+
+## 🔗 Cross-Module Integration Pattern (February 2026)
+
+### 3-Tier Module Architecture
+```
+Tier 1 — ALWAYS ON (auto-installed on every site creation):
+  ├── CRM         (contact management, deal tracking)
+  ├── Automation   (event-driven workflows, email sequences)
+  └── Live Chat    (customer conversations, AI responder)
+
+Tier 2 — FEATURE-SELECTED (installed when AI Designer detects need):
+  ├── E-Commerce   (products, cart, orders, payments)
+  └── Booking      (services, staff, appointments)
+
+Tier 3 — OPTIONAL (user manually enables):
+  └── Social Media (post scheduling, analytics)
+```
+
+**Implementation:** `CORE_MODULE_SLUGS` in `sites.ts` → `installCoreModules()` called after site homepage creation in `createSiteAction()`. Uses `.catch()` so site creation never fails due to module install errors.
+
+### Automation Event Wiring Pattern
+All modules emit events via `logAutomationEvent()` from `src/modules/automation/services/event-processor.ts`.
+
+**Pattern (copied from CRM):**
+```typescript
+import { logAutomationEvent } from '@/modules/automation/services/event-processor'
+
+// After the primary operation succeeds:
+logAutomationEvent(siteId, 'module.entity.action', {
+  entityId: record.id,
+  key: value,
+  // ... relevant payload
+}, {
+  sourceModule: 'module-slug',
+  sourceEntityType: 'entity',
+  sourceEntityId: record.id,
+}).catch(() => {}) // NON-BLOCKING — event failure never breaks the primary action
+```
+
+**Active Event Types (25+):**
+| Module | Event Type | Trigger |
+|--------|-----------|---------|
+| CRM | `crm.contact.created/updated/deleted` | Contact CRUD |
+| CRM | `crm.deal.created/stage_changed/won/lost` | Deal lifecycle |
+| E-Commerce | `ecommerce.order.created` | Customer places order |
+| E-Commerce | `ecommerce.order.status_changed` | Admin/system updates status |
+| E-Commerce | `ecommerce.order.payment_updated` | Payment status change |
+| E-Commerce | `ecommerce.order.shipped` | Shipment added |
+| E-Commerce | `ecommerce.order.refunded` | Refund approved |
+| Booking | `booking.appointment.created` | Customer books appointment |
+| Booking | `booking.appointment.cancelled` | Admin cancels appointment |
+| Live Chat | `live-chat.conversation.started` | New conversation created |
+| Live Chat | `live-chat.conversation.resolved` | Agent resolves conversation |
+| Live Chat | `live-chat.conversation.closed` | Conversation closed |
+
+### Customer Context Bridge (AI Enrichment)
+**File:** `src/modules/live-chat/lib/customer-context-bridge.ts`
+
+The AI responder (`ai-responder.ts`) enriches its system prompt with cross-module customer data:
+```
+Visitor email (from widget/conversation)
+  └── getCustomerContext(siteId, email)
+        ├── CRM: contact record (name, company, lifecycle stage)
+        ├── E-Commerce: last 5 orders (status, total, items)
+        └── Booking: last 5 appointments (service, date, status)
+             └── formatCustomerContext() → text block in system prompt
+```
+Returns `null` if no email or no data found (avoids noise). Non-blocking — AI works fine without context.
+
+---
+
 ## Critical Implementation Protocols
 
 ### Git Workflow (ALWAYS FOLLOW)

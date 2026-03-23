@@ -11,6 +11,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_CURRENCY, DEFAULT_TIMEZONE } from "@/lib/locale-config";
 import { notifyBookingCancelled } from "@/lib/services/business-notifications";
+import { logAutomationEvent } from "@/modules/automation/services/event-processor";
 import type {
   Service,
   ServiceInput,
@@ -699,6 +700,23 @@ export async function cancelAppointment(
     currency: (appointment as any).service?.currency,
   }).catch((err) =>
     console.error("[Booking] Cancellation notification error:", err),
+  );
+
+  // Emit automation event for appointment cancellation
+  logAutomationEvent(siteId, "booking.appointment.cancelled", {
+    appointment_id: appointmentId,
+    service_name: (appointment as any).service?.name,
+    customer_name: appointment.customer_name,
+    customer_email: appointment.customer_email,
+    start_time: appointment.start_time,
+    cancelled_by: cancelledBy,
+    cancellation_reason: reason,
+  }, {
+    sourceModule: "booking",
+    sourceEntityType: "appointment",
+    sourceEntityId: appointmentId,
+  }).catch((err) =>
+    console.error("[Booking] Automation event error:", err),
   );
 
   return appointment;

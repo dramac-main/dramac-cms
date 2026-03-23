@@ -9,6 +9,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { mapRecord, mapRecords } from '../lib/map-db-record'
+import { logAutomationEvent } from '@/modules/automation/services/event-processor'
 import type {
   ChatConversation,
   ConversationListItem,
@@ -261,6 +262,21 @@ export async function createConversation(data: {
       }
     }
 
+    // Emit automation event for new conversation
+    logAutomationEvent(data.siteId, 'live-chat.conversation.started', {
+      conversation_id: conversation.id,
+      visitor_id: data.visitorId,
+      channel: data.channel || 'widget',
+      subject: data.subject,
+      department_id: data.departmentId,
+    }, {
+      sourceModule: 'live-chat',
+      sourceEntityType: 'conversation',
+      sourceEntityId: conversation.id,
+    }).catch((err) =>
+      console.error('[LiveChat] Automation event error:', err),
+    )
+
     revalidatePath(liveChatPath(data.siteId))
     return { conversation, error: null }
   } catch (error) {
@@ -499,6 +515,19 @@ export async function resolveConversation(
       content_type: 'system',
     })
 
+    // Emit automation event for resolved conversation
+    logAutomationEvent(conv.site_id, 'live-chat.conversation.resolved', {
+      conversation_id: conversationId,
+      resolution_time_seconds: resolutionTime,
+      assigned_agent_id: conv.assigned_agent_id,
+    }, {
+      sourceModule: 'live-chat',
+      sourceEntityType: 'conversation',
+      sourceEntityId: conversationId,
+    }).catch((err) =>
+      console.error('[LiveChat] Automation event error:', err),
+    )
+
     revalidatePath(liveChatPath(conv.site_id))
     return { success: true, error: null }
   } catch (error) {
@@ -553,6 +582,18 @@ export async function closeConversation(
           .eq('id', conv.assigned_agent_id)
       }
     }
+
+    // Emit automation event for closed conversation
+    logAutomationEvent(conv.site_id, 'live-chat.conversation.closed', {
+      conversation_id: conversationId,
+      assigned_agent_id: conv.assigned_agent_id,
+    }, {
+      sourceModule: 'live-chat',
+      sourceEntityType: 'conversation',
+      sourceEntityId: conversationId,
+    }).catch((err) =>
+      console.error('[LiveChat] Automation event error:', err),
+    )
 
     revalidatePath(liveChatPath(conv.site_id))
     return { success: true, error: null }

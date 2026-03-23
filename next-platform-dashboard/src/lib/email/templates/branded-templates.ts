@@ -557,8 +557,7 @@ const order_cancelled_owner: BrandedTemplate = {
 };
 
 const payment_proof_uploaded_owner: BrandedTemplate = {
-  subject: (data) =>
-    `📎 Payment Proof Uploaded for Order #${data.orderNumber}`,
+  subject: (data) => `📎 Payment Proof Uploaded for Order #${data.orderNumber}`,
   html: (data, b) =>
     baseEmailTemplate(
       b,
@@ -567,7 +566,10 @@ const payment_proof_uploaded_owner: BrandedTemplate = {
       ${emailInfoBox(
         [
           { label: "Order", value: `#${String(data.orderNumber)}` },
-          { label: "Customer", value: `${String(data.customerName)} (${String(data.customerEmail)})` },
+          {
+            label: "Customer",
+            value: `${String(data.customerName)} (${String(data.customerEmail)})`,
+          },
           { label: "Total", value: String(data.total) },
           { label: "File", value: String(data.fileName || "Receipt") },
         ],

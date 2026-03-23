@@ -22,7 +22,9 @@ export async function POST(request: NextRequest) {
 
     if (!siteId || !orderId || !orderNumber || !file) {
       return NextResponse.json(
-        { error: "Missing required fields: siteId, orderId, orderNumber, file" },
+        {
+          error: "Missing required fields: siteId, orderId, orderNumber, file",
+        },
         { status: 400 },
       );
     }

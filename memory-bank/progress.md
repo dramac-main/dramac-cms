@@ -1,11 +1,47 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE ✅
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION ✅
 
 ---
 
-## Latest Update: Manual Payment Checkout UX — `7560e50f`
+## Latest Update: Cross-Module Integration System
+
+**Changes (9 files, 1 new file):**
+
+- **Core Module Auto-Enable**: CRM + Automation + Live Chat auto-installed on every new site via `installCoreModules()` in `createSiteAction()`
+- **Automation Event Wiring**: 10 events across E-Commerce (5), Booking (2), Live Chat (3) — all modules now emit `logAutomationEvent()` calls
+- **Customer Context Bridge**: NEW `customer-context-bridge.ts` — queries orders, bookings, CRM by visitor email for AI system prompt
+- **AI Responder Enhancement**: System prompt now includes full customer history (orders, bookings, CRM contact data)
+- **FEATURE_MODULE_MAP**: Added `crm` and `automation` entries
+- **TypeScript**: ZERO errors
+
+**Event Types Now Active:**
+- `ecommerce.order.created`, `ecommerce.order.status_changed`, `ecommerce.order.payment_updated`, `ecommerce.order.shipped`, `ecommerce.order.refunded`
+- `booking.appointment.created`, `booking.appointment.cancelled`
+- `live-chat.conversation.started`, `live-chat.conversation.resolved`, `live-chat.conversation.closed`
+- (Plus existing 11 CRM events + 4 AI agent events)
+
+**Previous:** Payment Verification Hub — `3a3f1f98`
+
+---
+
+## Previous Update: Payment Verification Hub — `3a3f1f98`
+
+**Changes (9 files, 971 insertions):**
+
+- **Payment Proof Upload**: Storage bucket + server action + API route + drag-and-drop UI + owner notification
+- **Copy-to-Clipboard UX**: Order ref, payment amount, phone/account numbers all individually copyable
+- **Quick Actions**: Pre-formatted chat/WhatsApp message for customer → support payment completion
+- **Checkout Success**: Extracted `CheckoutSuccessCard` with copyable ref + prominent CTA
+- **Quote-to-Order Fixes**: DB RPC for order numbers, `payment_provider: "manual"`, `notifyNewOrder()` call
+- **TypeScript**: ZERO errors
+
+**Previous:** Manual Payment Checkout UX — `7560e50f`
+
+---
+
+## Previous Update: Manual Payment Checkout UX — `7560e50f`
 
 **Changes:**
 

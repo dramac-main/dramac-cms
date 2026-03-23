@@ -8,6 +8,7 @@
 import { generateText } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getCustomerContext, formatCustomerContext } from './customer-context-bridge'
 
 // =============================================================================
 // CONFIG
@@ -88,6 +89,12 @@ export async function generateAutoResponse(
     const previousMessages = (messagesRes.data || []).reverse()
     const visitorInfo = visitorRes.data?.mod_chat_visitors
 
+    // Fetch cross-module customer context (orders, bookings, CRM)
+    const customerCtx = await getCustomerContext(
+      siteId,
+      visitorInfo?.email,
+    ).catch(() => null)
+
     // Format knowledge base
     const kbText =
       kbArticles.length > 0
@@ -117,6 +124,7 @@ RULES:
 - Never make up information
 - If the visitor asks to speak to a human, immediately offer to connect them
 - Use the knowledge base articles below to answer questions when relevant
+- If the visitor has order or booking history, use it to provide personalized support
 - Respond in the same language as the visitor
 
 KNOWLEDGE BASE:
@@ -128,7 +136,7 @@ ${historyText}
 VISITOR INFO:
 Name: ${visitorInfo?.name || 'Unknown'}
 Email: ${visitorInfo?.email || 'Not provided'}
-Previous conversations: ${visitorInfo?.total_conversations || 0}`
+Previous conversations: ${visitorInfo?.total_conversations || 0}${customerCtx ? `\n\nCUSTOMER HISTORY:\n${formatCustomerContext(customerCtx)}` : ''}`
 
     const result = await generateText({
       model: getModel(),

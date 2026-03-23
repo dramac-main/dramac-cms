@@ -1,73 +1,98 @@
 # Active Context
 
-## Current Focus: Manual Payment Checkout UX — COMPLETED
+## Current Focus: Cross-Module Integration — Core Module Auto-Enable + Automation Events + AI Context Bridge
 
-### Status: COMMITTED & PUSHED — `7560e50f`
+### Status: IMPLEMENTED — Awaiting commit
 
-### Latest Work: Industry-Standard Manual Payment UX + Customer Email Improvements
+### Latest Work: 3-Phase Integration System
 
-#### Changes Applied (5 files):
+#### Phase A-1: Core Module Auto-Enable on Site Creation
+- Modified `createSiteAction()` in `src/lib/actions/sites.ts` to auto-install CRM + Automation + Live Chat on every new site
+- Added `installCoreModules()` helper using admin client (follows auto-install route pattern exactly)
+- Updated `FEATURE_MODULE_MAP` in `auto-install/route.ts` to include `crm` and `automation`
+- 3-tier module architecture: Tier 1 ALWAYS ON (CRM, Automation, Live Chat), Tier 2 feature-selected (E-Commerce, Booking), Tier 3 optional (Social Media)
 
-1. **`OrderConfirmationBlock.tsx`** — Complete payment-aware redesign:
-   - Added `payment_status` and `payment_provider` to `OrderData` type
-   - Self-fetch now maps payment fields from DB order
-   - Amber clock header for pending payment vs green check for paid orders
-   - Prominent manual payment instructions Alert with Banknote icon
-   - "What Happens Next" 4-step timeline (Placed → Pay → Confirmed → Shipped)
-   - Payment status badge (Paid/Awaiting Payment/Failed)
-   - Payment method label with human-readable display
+#### Phase A-2: Automation Event Wiring (10 events across 5 files)
+- **E-Commerce** (`public-ecommerce-actions.ts` + `order-actions.ts`):
+  - `ecommerce.order.created` — after createPublicOrderFromCart
+  - `ecommerce.order.status_changed` — after updatePublicOrderStatus + updateOrderStatus
+  - `ecommerce.order.payment_updated` — after updatePublicOrderPaymentStatus
+  - `ecommerce.order.shipped` — after addOrderShipment
+  - `ecommerce.order.refunded` — after processRefund (approved only)
+- **Booking** (`public-booking-actions.ts` + `booking-actions.ts`):
+  - `booking.appointment.created` — after createPublicAppointment
+  - `booking.appointment.cancelled` — after cancelAppointment
+- **Live Chat** (`conversation-actions.ts`):
+  - `live-chat.conversation.started` — after createConversation
+  - `live-chat.conversation.resolved` — after resolveConversation
+  - `live-chat.conversation.closed` — after closeConversation
 
-2. **`CheckoutPageBlock.tsx`** — Inline success state redesign:
-   - Manual payment: Amber styling, Clock icon, "Order Received — Payment Pending"
-   - Prominent payment instructions box with Banknote icon
-   - Non-manual: Green success styling, ShieldCheck icon, "Order Placed Successfully!"
+#### Phase A-3: Customer Context Bridge for AI
+- Created `src/modules/live-chat/lib/customer-context-bridge.ts`
+  - `getCustomerContext(siteId, email)` — queries CRM contacts, orders, bookings by email
+  - `formatCustomerContext()` — formats into AI-readable text block
+- Modified `src/modules/live-chat/lib/ai-responder.ts` — system prompt now includes customer order/booking/CRM history when email is available
 
-3. **`branded-templates.ts`** — Customer email template:
-   - Conditional subject line: "Payment Required" vs "Confirmed"
-   - Payment status section (amber pending / green paid)
-   - Manual payment instructions block in the email body
-   - "What happens next" guidance for pending orders
+#### Files Modified (9 files):
+1. `src/lib/actions/sites.ts` — Added CORE_MODULE_SLUGS + installCoreModules() + call in createSiteAction
+2. `src/app/api/sites/[siteId]/modules/auto-install/route.ts` — Added crm + automation to FEATURE_MODULE_MAP
+3. `src/modules/ecommerce/actions/public-ecommerce-actions.ts` — 3 automation events
+4. `src/modules/ecommerce/actions/order-actions.ts` — 3 automation events
+5. `src/modules/booking/actions/public-booking-actions.ts` — 1 automation event
+6. `src/modules/booking/actions/booking-actions.ts` — 1 automation event
+7. `src/modules/live-chat/actions/conversation-actions.ts` — 3 automation events
+8. `src/modules/live-chat/lib/ai-responder.ts` — Customer context in system prompt
+9. `src/modules/live-chat/lib/customer-context-bridge.ts` — NEW: cross-module context bridge
 
-4. **`business-notifications.ts`** — Notification data pipeline:
-   - Added `paymentProvider` and `manualPaymentInstructions` to `OrderNotificationData`
-   - `notifyNewOrder` auto-fetches `manual_payment_instructions` from ecommerce settings when provider is manual
-   - Passes paymentStatus, paymentProvider, manualPaymentInstructions in customer email data
-
-5. **`public-ecommerce-actions.ts`** — Added `paymentProvider` to both `notifyNewOrder` call sites
-
-### Pending Investigation
-
-- **Notification emails**: Code logic is correct. If emails are not being delivered, check that `RESEND_API_KEY` is set in Vercel production environment variables. Without it, `isEmailEnabled()` returns false and all emails are silently skipped.
-  - `getPublicProducts()` now respects `filters.sortBy` and `filters.sortOrder`
-  - Was hardcoded to `.order('created_at', { ascending: false })`
-
-8. **`ecommerce-types.ts`** — added `sortBy` and `sortOrder` to `ProductFilters` interface
-
-#### Root Causes Fixed:
-
-| Issue                    | Root Cause                                                       | Fix                                    |
-| ------------------------ | ---------------------------------------------------------------- | -------------------------------------- |
-| Products loading slowly  | N+1 fetch: each ProductCardBlock re-fetches product individually | Pass productData prop from parent grid |
-| Checkout page 404        | /checkout page missing from DB pages table                       | Dynamic virtual page generation        |
-| Order confirmation blank | OrderConfirmationBlock receives no data                          | Self-fetch from URL query param        |
-| Sort not working         | getPublicProducts ignores sortBy/sortOrder                       | Dynamic sort column in query           |
-
-#### Verified End-to-End Flows:
-
-- ✅ Cart → Checkout → Order → Confirmation (full purchase flow)
-- ✅ Quotation mode: product card → /quotes?product=id → quote form → submit
-- ✅ Product grid sorting (price low/high, newest, name)
-- ✅ TypeScript: ZERO errors
-- ✅ Publish: Route exists and calls `publishSite` service
-- ✅ Converter: Already fixed with `siteName` param (commit `32d9c6e5`)
-
-#### Database Module Inventory (12 active in `modules_v2`):
-
-google-analytics, automation, booking, crm, client-portal-pro, live-chat, agency-crm, ecommerce, contact-forms, social-media, seo-optimizer, welcome-banner
+#### TypeScript: ZERO errors in all modified files
 
 ---
 
-## Previous Focus: AI Designer Site Name + Empty States — COMPLETED
+## Previous Focus: Payment Verification Hub — COMPLETED
+
+### Status: COMMITTED & PUSHED — `3a3f1f98`
+
+### Latest Work: Payment Proof Upload System + Copy-to-Clipboard UX + Quote-to-Order Bug Fixes
+
+#### Changes Applied (9 files, 971 insertions):
+
+1. **`payment-proof/route.ts`** — NEW: API endpoint for embedded storefront proof uploads (FormData → base64 → server action)
+
+2. **`email-types.ts`** — Added `payment_proof_uploaded_owner` email type
+
+3. **`templates.ts`** — Added `payment_proof_uploaded_owner` base email template
+
+4. **`branded-templates.ts`** — Added `payment_proof_uploaded_owner` branded template (info box, blue theme, "Review Payment Proof" CTA)
+
+5. **`business-notifications.ts`** — Added `notifyPaymentProofUploaded()` function: in-app notification + branded email to store owner when customer uploads proof
+
+6. **`public-ecommerce-actions.ts`** — Added `uploadPaymentProof()` server action (validates order, decodes base64, uploads to storage, updates order metadata JSONB, adds timeline entry, sends notification) + `getOrderPaymentProofStatus()` for status polling
+
+7. **`OrderConfirmationBlock.tsx`** — Major enhancement:
+   - Copyable Payment Reference, Amount, phone/account numbers (per-line copy)
+   - Drag-and-drop payment proof upload with image preview + status tracking
+   - Quick Actions card with pre-formatted chat/WhatsApp payment message
+   - Dynamic "What Happens Next" timeline with proof upload step
+
+8. **`CheckoutPageBlock.tsx`** — Enhancement:
+   - Extracted `CheckoutSuccessCard` component
+   - Copyable order reference with inline copy button
+   - Prominent "View Full Order Details" CTA
+
+9. **`quote-workflow-actions.ts`** — 3 critical bug fixes:
+   - Order number: now uses DB RPC `mod_ecommod01_generate_order_number` (was inline)
+   - Added `payment_provider: "manual"` to converted orders
+   - Added `notifyNewOrder()` call after quote-to-order conversion
+
+#### Infrastructure:
+
+- Supabase storage bucket `payment-proofs` (private, 10MB, images+PDF) — created in prior session
+- Payment proof stored in order `metadata` JSONB field (no migration needed)
+- TypeScript: ZERO errors
+
+---
+
+## Previous Focus: Manual Payment Checkout UX — COMPLETED (`7560e50f`)
 
 ### Status: COMMITTED & PUSHED — `32d9c6e5`
 

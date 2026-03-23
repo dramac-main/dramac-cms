@@ -33,6 +33,8 @@ const FEATURE_MODULE_MAP: Record<string, string> = {
   booking: "booking",
   "live-chat": "live-chat",
   "contact-forms": "contact-forms",
+  crm: "crm",
+  automation: "automation",
 };
 
 export async function POST(request: NextRequest, context: RouteContext) {

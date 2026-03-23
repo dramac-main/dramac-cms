@@ -18,6 +18,7 @@ import {
   notifyNewOrder,
   notifyPaymentProofUploaded,
 } from "@/lib/services/business-notifications";
+import { logAutomationEvent } from "@/modules/automation/services/event-processor";
 import type {
   Product,
   ProductFilters,
@@ -704,7 +705,8 @@ export async function createPublicOrderFromCart(
     "mod_ecommod01_generate_order_number",
     { p_site_id: input.site_id },
   );
-  const orderNumber = rpcNumber || `ORD-${Date.now().toString(36).slice(-4).toUpperCase()}`;
+  const orderNumber =
+    rpcNumber || `ORD-${Date.now().toString(36).slice(-4).toUpperCase()}`;
 
   // Get the site's agency_id
   const { data: site } = await supabase
@@ -863,6 +865,26 @@ export async function createPublicOrderFromCart(
     });
   }
 
+  // Emit automation event for order creation
+  logAutomationEvent(input.site_id, "ecommerce.order.created", {
+    order_id: order.id,
+    order_number: orderNumber,
+    customer_email: input.customer_email,
+    customer_name: input.customer_name,
+    total: input.total,
+    subtotal: input.subtotal,
+    currency: input.currency,
+    payment_provider: input.payment_provider,
+    payment_status: input.payment_status || "pending",
+    status: input.status || "pending",
+  }, {
+    sourceModule: "ecommerce",
+    sourceEntityType: "order",
+    sourceEntityId: order.id,
+  }).catch((err) =>
+    console.error("[Ecom Public] Automation event error:", err),
+  );
+
   return order as Order;
 }
 
@@ -885,6 +907,21 @@ export async function updatePublicOrderStatus(
     .single();
 
   if (error) throw new Error(error.message);
+
+  // Emit automation event for status change
+  logAutomationEvent(siteId, "ecommerce.order.status_changed", {
+    order_id: orderId,
+    new_status: status,
+    order_number: (data as Order).order_number,
+    customer_email: (data as Order).customer_email,
+  }, {
+    sourceModule: "ecommerce",
+    sourceEntityType: "order",
+    sourceEntityId: orderId,
+  }).catch((err) =>
+    console.error("[Ecom Public] Automation event error:", err),
+  );
+
   return data as Order;
 }
 
@@ -918,6 +955,24 @@ export async function updatePublicOrderPaymentStatus(
     .single();
 
   if (error) throw new Error(error.message);
+
+  // Emit automation event for payment status change
+  logAutomationEvent(siteId, "ecommerce.order.payment_updated", {
+    order_id: orderId,
+    payment_status: paymentStatus,
+    transaction_id: transactionId,
+    order_number: (data as Order).order_number,
+    customer_email: (data as Order).customer_email,
+    total: (data as Order).total,
+    currency: (data as Order).currency,
+  }, {
+    sourceModule: "ecommerce",
+    sourceEntityType: "order",
+    sourceEntityId: orderId,
+  }).catch((err) =>
+    console.error("[Ecom Public] Automation event error:", err),
+  );
+
   return data as Order;
 }
 
@@ -1135,8 +1190,7 @@ export async function uploadPaymentProof(input: {
     }
 
     // Update order metadata with proof info
-    const existingMetadata =
-      (order.metadata as Record<string, unknown>) || {};
+    const existingMetadata = (order.metadata as Record<string, unknown>) || {};
     const updatedMetadata = {
       ...existingMetadata,
       payment_proof: {

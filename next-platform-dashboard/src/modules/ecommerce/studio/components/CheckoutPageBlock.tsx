@@ -839,7 +839,11 @@ function CheckoutSuccessCard({
   successHref,
   className,
 }: {
-  orderResult: { orderId: string; orderNumber: string; paymentInstructions?: string };
+  orderResult: {
+    orderId: string;
+    orderNumber: string;
+    paymentInstructions?: string;
+  };
   isManualPayment: boolean;
   successHref: string;
   className?: string;

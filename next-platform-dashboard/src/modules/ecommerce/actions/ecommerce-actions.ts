@@ -1172,7 +1172,8 @@ export async function createOrderFromCart(
     "mod_ecommod01_generate_order_number",
     { p_site_id: input.site_id },
   );
-  const orderNumber = rpcNumber || `ORD-${Date.now().toString(36).slice(-4).toUpperCase()}`;
+  const orderNumber =
+    rpcNumber || `ORD-${Date.now().toString(36).slice(-4).toUpperCase()}`;
 
   // Get the site's agency_id from the site
   const { data: site } = await supabase

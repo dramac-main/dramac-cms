@@ -492,9 +492,7 @@ export function OrderConfirmationBlock({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() =>
-                    copyText(formatPrice(order.total), "amount")
-                  }
+                  onClick={() => copyText(formatPrice(order.total), "amount")}
                   className="shrink-0"
                 >
                   {copiedField === "amount" ? (
@@ -523,8 +521,9 @@ export function OrderConfirmationBlock({
                       .filter((line: string) => line.trim())
                       .map((line: string, i: number) => {
                         // Detect lines with copyable content (phone numbers, account numbers)
-                        const hasCopyable =
-                          /(\+?\d[\d\s-]{6,}|\d{5,})/.test(line);
+                        const hasCopyable = /(\+?\d[\d\s-]{6,}|\d{5,})/.test(
+                          line,
+                        );
                         const copyValue = line
                           .match(/(\+?\d[\d\s-]{6,}|\d{5,})/)?.[0]
                           ?.replace(/\s/g, "");
@@ -533,7 +532,8 @@ export function OrderConfirmationBlock({
                             key={i}
                             className={cn(
                               "flex items-center justify-between text-sm py-1",
-                              hasCopyable && "bg-amber-50/50 rounded px-2 -mx-2",
+                              hasCopyable &&
+                                "bg-amber-50/50 rounded px-2 -mx-2",
                             )}
                           >
                             <span className="text-amber-900">{line}</span>
@@ -542,9 +542,7 @@ export function OrderConfirmationBlock({
                                 variant="ghost"
                                 size="icon"
                                 className="h-6 w-6 shrink-0 ml-2"
-                                onClick={() =>
-                                  copyText(copyValue, `line-${i}`)
-                                }
+                                onClick={() => copyText(copyValue, `line-${i}`)}
                               >
                                 {copiedField === `line-${i}` ? (
                                   <Check className="h-3 w-3 text-green-600" />
@@ -561,7 +559,8 @@ export function OrderConfirmationBlock({
               ) : (
                 <p className="text-sm text-amber-800">
                   Please contact the store to arrange payment. Use order number{" "}
-                  <strong>{order.order_number}</strong> as the payment reference.
+                  <strong>{order.order_number}</strong> as the payment
+                  reference.
                 </p>
               )}
 
@@ -592,7 +591,8 @@ export function OrderConfirmationBlock({
                       Payment proof uploaded
                     </p>
                     <p className="text-xs text-green-700">
-                      {proofStatus.fileName} — {proofStatus.status === "pending_review"
+                      {proofStatus.fileName} —{" "}
+                      {proofStatus.status === "pending_review"
                         ? "Under review"
                         : proofStatus.status === "verified"
                           ? "Verified"
@@ -721,9 +721,7 @@ export function OrderConfirmationBlock({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() =>
-                    copyText(generatePaymentMessage(), "message")
-                  }
+                  onClick={() => copyText(generatePaymentMessage(), "message")}
                 >
                   {copiedField === "message" ? (
                     <>
@@ -785,22 +783,30 @@ export function OrderConfirmationBlock({
                 </div>
                 <div className="flex gap-3">
                   <div className="flex flex-col items-center">
-                    <div className={cn(
-                      "w-8 h-8 rounded-full flex items-center justify-center",
-                      proofStatus.hasProof ? "bg-green-100" : "bg-muted",
-                    )}>
-                      <Upload className={cn(
-                        "h-4 w-4",
-                        proofStatus.hasProof ? "text-green-600" : "text-muted-foreground",
-                      )} />
+                    <div
+                      className={cn(
+                        "w-8 h-8 rounded-full flex items-center justify-center",
+                        proofStatus.hasProof ? "bg-green-100" : "bg-muted",
+                      )}
+                    >
+                      <Upload
+                        className={cn(
+                          "h-4 w-4",
+                          proofStatus.hasProof
+                            ? "text-green-600"
+                            : "text-muted-foreground",
+                        )}
+                      />
                     </div>
                     <div className="w-0.5 flex-1 bg-muted mt-1" />
                   </div>
                   <div className="pb-4">
-                    <p className={cn(
-                      "font-medium text-sm",
-                      !proofStatus.hasProof && "text-muted-foreground",
-                    )}>
+                    <p
+                      className={cn(
+                        "font-medium text-sm",
+                        !proofStatus.hasProof && "text-muted-foreground",
+                      )}
+                    >
                       Upload Payment Proof
                     </p>
                     <p className="text-xs text-muted-foreground">

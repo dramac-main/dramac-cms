@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/server'
 import { formatCurrency } from '@/lib/locale-config'
 import { sendBrandedEmail } from '@/lib/email/send-branded-email'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { logAutomationEvent } from '@/modules/automation/services/event-processor'
 import type { 
   Order,
   OrderStatus,
@@ -185,6 +186,19 @@ export async function updateOrderStatus(
     actor_name: userName
   })
 
+  // Emit automation event
+  logAutomationEvent(siteId, 'ecommerce.order.status_changed', {
+    order_id: orderId,
+    new_status: status,
+    changed_by: userName,
+  }, {
+    sourceModule: 'ecommerce',
+    sourceEntityType: 'order',
+    sourceEntityId: orderId,
+  }).catch((err) =>
+    console.error('[OrderActions] Automation event error:', err),
+  )
+
   return { success: true }
 }
 
@@ -324,6 +338,21 @@ export async function addOrderShipment(
     actor_name: userName,
     metadata: { shipment_id: data.id }
   })
+
+  // Emit automation event for shipment
+  logAutomationEvent(siteId, 'ecommerce.order.shipped', {
+    order_id: orderId,
+    shipment_id: data.id,
+    carrier: shipment.carrier,
+    tracking_number: shipment.tracking_number,
+    tracking_url: shipment.tracking_url,
+  }, {
+    sourceModule: 'ecommerce',
+    sourceEntityType: 'order',
+    sourceEntityId: orderId,
+  }).catch((err) =>
+    console.error('[OrderActions] Automation event error:', err),
+  )
 
   return data
 }
@@ -471,6 +500,22 @@ export async function processRefund(
         refundData.reason || undefined,
       ).catch(err => console.error('[OrderActions] Refund notification error:', err))
     }
+
+    // Emit automation event for refund
+    logAutomationEvent(order?.site_id || '', 'ecommerce.order.refunded', {
+      order_id: orderId,
+      refund_id: refundId,
+      refund_amount: refundData?.amount,
+      reason: refundData?.reason,
+      customer_email: order?.customer_email,
+      order_number: order?.order_number,
+    }, {
+      sourceModule: 'ecommerce',
+      sourceEntityType: 'order',
+      sourceEntityId: orderId,
+    }).catch((err) =>
+      console.error('[OrderActions] Automation event error:', err),
+    )
   }
 
   return true

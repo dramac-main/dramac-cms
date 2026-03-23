@@ -7,6 +7,11 @@ import { createSiteSchema, updateSiteSchema } from "@/lib/validations/site";
 import type { SiteFilters } from "@/types/site";
 import type { Json } from "@/types/database";
 
+// Core modules that are auto-enabled on every new site.
+// These form the foundation: CRM for contacts, Automation for workflows,
+// Live Chat for real-time communication.
+const CORE_MODULE_SLUGS = ["crm", "automation", "live-chat"] as const;
+
 // Get all sites for the current organization
 export async function getSites(filters?: SiteFilters) {
   const supabase = await createClient();
@@ -154,9 +159,118 @@ export async function createSiteAction(formData: unknown) {
     return { error: "Failed to create homepage" };
   }
 
+  // Auto-enable core modules (CRM, Automation, Live Chat) on every new site
+  await installCoreModules(site.id, profile.agency_id, user.id).catch((err) =>
+    console.error("[Sites] Failed to auto-install core modules:", err),
+  );
+
   revalidatePath("/dashboard/sites");
   revalidatePath(`/dashboard/clients/${validated.data.client_id}`);
   return { success: true, data: { site, homepage } };
+}
+
+// ============================================================================
+// CORE MODULE AUTO-INSTALL
+// ============================================================================
+
+/**
+ * Auto-install core modules for a new site.
+ * Creates agency_module_subscriptions (if missing) + site_module_installations.
+ * Uses admin client so it works regardless of RLS.
+ */
+async function installCoreModules(
+  siteId: string,
+  agencyId: string,
+  userId: string,
+): Promise<void> {
+  const supabase = createAdminClient();
+
+  // Resolve module slugs to UUIDs
+  const { data: modules, error: modError } = await (supabase as any)
+    .from("modules_v2")
+    .select("id, slug, name")
+    .in("slug", [...CORE_MODULE_SLUGS]);
+
+  if (modError || !modules?.length) {
+    console.warn(
+      "[Sites] Core module definitions not found in modules_v2:",
+      modError?.message,
+    );
+    return;
+  }
+
+  for (const mod of modules) {
+    try {
+      // Step 1: Ensure agency subscription exists
+      let subscriptionId: string | null = null;
+
+      const { data: existingSub } = await (supabase as any)
+        .from("agency_module_subscriptions")
+        .select("id, status")
+        .eq("agency_id", agencyId)
+        .eq("module_id", mod.id)
+        .single();
+
+      if (existingSub) {
+        subscriptionId = existingSub.id;
+        if (existingSub.status !== "active") {
+          await (supabase as any)
+            .from("agency_module_subscriptions")
+            .update({ status: "active", updated_at: new Date().toISOString() })
+            .eq("id", existingSub.id);
+        }
+      } else {
+        const { data: newSub } = await (supabase as any)
+          .from("agency_module_subscriptions")
+          .insert({
+            agency_id: agencyId,
+            module_id: mod.id,
+            status: "active",
+            billing_cycle: "monthly",
+          })
+          .select("id")
+          .single();
+        subscriptionId = newSub?.id || null;
+      }
+
+      // Step 2: Create site installation (skip if already exists)
+      const { data: existing } = await supabase
+        .from("site_module_installations")
+        .select("id, is_enabled")
+        .eq("site_id", siteId)
+        .eq("module_id", mod.id)
+        .single();
+
+      if (existing) {
+        if (!existing.is_enabled) {
+          await supabase
+            .from("site_module_installations")
+            .update({
+              is_enabled: true,
+              enabled_at: new Date().toISOString(),
+              agency_subscription_id: subscriptionId,
+            })
+            .eq("id", existing.id);
+        }
+        continue;
+      }
+
+      await supabase.from("site_module_installations").insert({
+        site_id: siteId,
+        module_id: mod.id,
+        is_enabled: true,
+        installed_at: new Date().toISOString(),
+        installed_by: userId,
+        enabled_at: new Date().toISOString(),
+        agency_subscription_id: subscriptionId,
+        settings: {},
+      });
+
+      console.log(`[Sites] Core module ${mod.slug} installed for site ${siteId}`);
+    } catch (err) {
+      console.error(`[Sites] Failed to install core module ${mod.slug}:`, err);
+    }
+  }
 }
 
 // Update site
