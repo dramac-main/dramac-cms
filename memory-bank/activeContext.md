@@ -1,32 +1,68 @@
 # Active Context
 
-## Current Focus: React Error #310 Fix — Consistent Provider Tree
+## Current Focus: React Error #310 Fix — Storefront (Published Sites)
 
-### Status: COMMITTED & PUSHED — `75bb16fe`
+### Status: COMMITTED, PUSHED & DEPLOYED — `33c91bf8`
 
-### Problem: React Minified Error #310
-- Error: "Rendered more hooks than during the previous render"
-- Caught by ROOT `app/error.tsx` (no `(dashboard)/error.tsx` existed)
-- Occurred on live-chat page navigation
+### Root Cause
+`CraftRenderer` (client component for published site pages) conditionally wrapped `StudioRenderer` with `StorefrontProvider` based on `hasEcommerce` flag. When ecommerce modules toggled, React saw different hook counts (StorefrontProvider has 5 hooks: useState ×2, useEffect ×1, useCallback ×1, useMemo ×1) → React error #310: "Rendered more hooks than during previous render".
 
-### Root Cause: Conditional Provider Wrapping
-- `(dashboard)/layout.tsx` had conditional tree structure based on `agencyId`:
-  - With agencyId: `BrandingProvider > CurrencyProvider > children`  
-  - Without agencyId: `CurrencyProvider > children` (no BrandingProvider)
-- This created structurally different React component trees
-- During RSC reconciliation/navigation, React could see different hook counts
+Secondary issue: `EcommerceCartInjector` had a duplicate `StorefrontProvider` wrapper (unnecessary since `CartIconWidget` uses `useEcommerceStatus` not `useStorefront`).
 
-### Fix Applied (3 files):
-1. **`src/app/(dashboard)/layout.tsx`** — Always render `BrandingProvider > CurrencyProvider` consistently, regardless of `agencyId`
-2. **`src/components/providers/branding-provider.tsx`** — Accept nullable `agencyId` (`string | null`), no-op when null (no fetch, no event listeners, just passes null context)
-3. **`src/app/(dashboard)/error.tsx`** — NEW: Dashboard-level error boundary to catch errors within the dashboard route group instead of cascading to root
+### Fix (2 files)
+- **`craft-renderer.tsx`**: Always wrap with `<StorefrontProvider siteId={siteId || ''}>` — empty string siteId is harmless no-op (useEffect guard: `if (!siteId) return`)
+- **`ecommerce-cart-injector.tsx`**: Removed duplicate `StorefrontProvider` wrapper
 
-### Investigation Summary:
-- Exhaustive 3-session investigation covering 935+ client components
-- Custom automated scanners created (181 potential issues — all false positives)
-- Complete render tree traced from live-chat page through all layouts/providers
-- All hooks verified at component root level — no conditional hooks found
-- The conditional provider wrapping was the structural issue
+### Pattern Recognition
+This is the SAME class of bug as the dashboard fix (`75bb16fe`) — conditional provider wrapping causes unstable component trees. Now fixed in TWO locations:
+1. Dashboard layout: BrandingProvider/CurrencyProvider (commit `75bb16fe`)
+2. Storefront renderer: StorefrontProvider (commit `33c91bf8`)
+
+---
+
+## Previous Focus: Platform Sync Audit — AI Builder + Module Pipeline
+
+### Status: COMMITTED, PUSHED & DEPLOYED — `963fdd7b`
+
+### Comprehensive Audit Results
+Deep audit of the entire AI Website Builder → Module Installation → Published Site pipeline.
+Traced all 5 feature chips (ecommerce, booking, blog, contact-forms, live-chat) through 3 module mapping layers.
+
+### Issues Found & Fixed:
+
+#### Fix 1 (CRITICAL): Live Chat Agent Bootstrap
+- **Problem**: Live Chat module installed on every site (core module), widget visible on published site, customer submits chat → conversation created as "pending" but NO agents exist to handle it
+- **Solution**: Added `bootstrapLiveChatAgent()` in `installCoreModules()` — auto-creates site owner as first chat agent (role: "owner", status: "offline", max 5 concurrent chats)
+- **File**: `src/lib/actions/sites.ts`
+
+#### Fix 2 (MEDIUM): AI Designer Chip UX
+- **Problem**: Live Chat chip shown as optional/selectable but it's always installed via `CORE_MODULE_SLUGS`; Blog chip gives no indication it's built-in (not a module)
+- **Solution**: Pre-select live-chat chip, make it non-deselectable with "(Always On)" label; Add "(Built-in)" label to blog chip; Updated helper text: "CRM, Automation & Live Chat are always included on every site"
+- **File**: `src/app/(dashboard)/dashboard/sites/[siteId]/ai-designer/page.tsx`
+
+#### Fix 3 (MEDIUM): Feature Chips Not Passed to AI Prompt
+- **Problem**: `buildArchitecturePrompt()` only used `parseUserPrompt()` text detection for features. If user selects "Blog" chip but doesn't type "blog" in prompt, AI doesn't know about it. `selectedFeatures` was only used for module injection, not prompt generation.
+- **Solution**: Pass `selectedFeatures` through `createArchitecture()` → `buildArchitecturePrompt()`, merge chip selections into `parsed.keyFeatures` so AI knows about all selected features
+- **Files**: `src/lib/ai/website-designer/engine.ts`, `src/lib/ai/website-designer/prompts.ts`
+
+### Module Mapping Architecture (Verified)
+Three mapping layers, all now in sync:
+1. **Engine FEATURE_MODULE_MAP** (engine.ts) — Injects synthetic module entries into AI context: ecommerce, booking, live-chat, contact-forms
+2. **Auto-install FEATURE_MODULE_MAP** (auto-install/route.ts) — Creates DB records (agency_module_subscriptions + site_module_installations): ecommerce, booking, live-chat, contact-forms, crm, automation
+3. **Auto-install COMPONENT_MODULE_MAP** (auto-install/route.ts) — Maps component types to modules for detection
+
+### Key Architecture Insight: Blog
+- Blog is BUILT-IN (blog_posts, blog_categories tables, dashboard pages at /blog/*)
+- NOT a module — no entry in modules_v2, no installation needed
+- Page classification in prompts.ts recognizes "blog" type
+- Blog chip selection now flows through to AI prompt via selectedFeatures merge
+
+---
+
+## Previous Focus: React Error #310 Fix — COMMITTED (`75bb16fe`)
+
+### Root Cause: Conditional provider wrapping in `(dashboard)/layout.tsx`
+### Fix: Always render BrandingProvider > CurrencyProvider consistently
 
 ---
 

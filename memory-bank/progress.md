@@ -1,22 +1,43 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX ✅
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT ✅
 
 ---
 
-## Latest Update: React Error #310 Fix — `75bb16fe`
+## Latest Update: React Error #310 — Storefront Fix — `33c91bf8`
 
-**Problem:** React minified error #310 ("Rendered more hooks than during the previous render") on live-chat page, caught by root error boundary.
+**Same class of bug as dashboard fix (`75bb16fe`) — conditional provider wrapping.**
 
-**Root Cause:** Conditional provider wrapping in `(dashboard)/layout.tsx` — `agencyId ? <BrandingProvider>...<CurrencyProvider> : <CurrencyProvider>` created structurally different component trees.
+**Root Cause:** `CraftRenderer` conditionally wrapped `StudioRenderer` with `StorefrontProvider` based on `hasEcommerce` flag → different hook counts between renders → React error #310.
 
-**Fix (3 files):**
-- `(dashboard)/layout.tsx` — Always render `BrandingProvider > CurrencyProvider` consistently
-- `branding-provider.tsx` — Accept nullable `agencyId` (`string | null`), no-op when null
-- `(dashboard)/error.tsx` — NEW dashboard-level error boundary (was missing, errors cascaded to root)
+**Fixes (2 files):**
+- `craft-renderer.tsx` — Always wrap with StorefrontProvider (siteId || '', harmless no-op when empty)
+- `ecommerce-cart-injector.tsx` — Removed duplicate StorefrontProvider (CartIconWidget uses useEcommerceStatus, not useStorefront)
 
-**Previous:** Cross-Module Integration — `3d49d6f8`
+**Pattern:** Conditional provider wrapping is now fixed in 2 locations: dashboard layout (`75bb16fe`) and storefront renderer (`33c91bf8`).
+
+**Previous:** Platform Sync Audit — `963fdd7b`
+
+---
+
+## Previous Update: Platform Sync Audit — `963fdd7b`
+
+**Comprehensive audit of AI Website Builder → Module Installation → Published Site pipeline.**
+
+**Fixes (4 files):**
+- `sites.ts` — Auto-create site owner as first live chat agent on module install (prevents dead-end conversations)
+- `ai-designer/page.tsx` — Live Chat chip always-on/non-deselectable, Blog chip "(Built-in)" label, updated helper text
+- `engine.ts` — Pass `selectedFeatures` through `createArchitecture()` to prompt builder
+- `prompts.ts` — Merge chip-selected features into `keyFeatures` so AI gets all feature selections, not just text-detected ones
+
+**Key Finding:** Blog is BUILT-IN (not a module). Three module mapping layers verified in sync.
+
+**Previous:** React Error #310 Fix — `75bb16fe`
+
+---
+
+## Previous Update: React Error #310 Fix — `75bb16fe`
 
 ---
 
