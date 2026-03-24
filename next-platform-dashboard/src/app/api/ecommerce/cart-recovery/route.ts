@@ -68,8 +68,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Construct redirect URL to the site's checkout page
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.dramac.app'
-    const domain = site.custom_domain || `${site.subdomain}.dramac.app`
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.dramacagency.com'
+    const domain = site.custom_domain || `${site.subdomain}.sites.dramacagency.com`
     const checkoutUrl = `https://${domain}/checkout?cart=${cart.id}&recovered=true`
 
     // Track that the recovery link was clicked

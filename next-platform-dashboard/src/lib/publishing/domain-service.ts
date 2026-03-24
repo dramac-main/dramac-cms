@@ -28,7 +28,7 @@ export interface DnsRecord {
 
 // Platform IP address for A records (would be your load balancer/CDN)
 const PLATFORM_IP = process.env.PLATFORM_IP || "76.76.21.21";
-const VERIFICATION_DOMAIN = process.env.NEXT_PUBLIC_BASE_DOMAIN || "dramac.app";
+const VERIFICATION_DOMAIN = process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
 
 export async function setCustomDomain(siteId: string, domain: string): Promise<{ success: boolean; error?: string }> {
   try {
@@ -244,7 +244,7 @@ export interface DomainConfig {
 
 export async function generateDomainConfig(siteId: string): Promise<DomainConfig> {
   const verificationCode = `dramac-verify=${siteId}`;
-  const cnameTarget = process.env.NEXT_PUBLIC_CNAME_TARGET || "cname.dramac.app";
+  const cnameTarget = process.env.NEXT_PUBLIC_CNAME_TARGET || "cname.vercel-dns.com";
 
   return {
     domain: "",

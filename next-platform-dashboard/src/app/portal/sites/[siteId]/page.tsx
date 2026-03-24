@@ -194,7 +194,7 @@ export default async function PortalSiteDetailPage({ params }: PortalSiteDetailP
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Domain</p>
                   <p className="mt-1">
-                    {site.customDomain || `${site.subdomain}.dramac.app`}
+                    {site.customDomain || `${site.subdomain}.sites.dramacagency.com`}
                   </p>
                 </div>
                 <div>

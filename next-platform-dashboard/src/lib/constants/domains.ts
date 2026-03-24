@@ -8,8 +8,8 @@
  */
 
 export const DOMAINS = {
-  /** Platform base domain (for agency subdomains like agency-slug.dramac.app) */
-  PLATFORM_BASE: process.env.NEXT_PUBLIC_PLATFORM_DOMAIN ?? "dramac.app",
+  /** Platform base domain (for agency subdomains like agency-slug.dramacagency.com) */
+  PLATFORM_BASE: process.env.NEXT_PUBLIC_PLATFORM_DOMAIN ?? "dramacagency.com",
 
   /** Sites base domain (for site subdomains like my-site.sites.dramacagency.com) */
   SITES_BASE:

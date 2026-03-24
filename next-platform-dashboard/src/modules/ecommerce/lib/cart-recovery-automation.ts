@@ -187,7 +187,7 @@ export async function processAbandonedCarts(siteId: string): Promise<CartRecover
         }
 
         // Build checkout/recovery URL
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.dramac.app'
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.dramacagency.com'
         const checkoutUrl = `${appUrl}/api/ecommerce/cart-recovery?token=${recoveryToken}&site=${siteId}`
 
         // Get site info for branded email

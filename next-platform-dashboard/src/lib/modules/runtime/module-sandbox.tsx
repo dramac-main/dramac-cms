@@ -394,8 +394,8 @@ function isValidModuleOrigin(origin: string, packageUrl: string): boolean {
   // Check against allowed module CDN origins
   const allowedOrigins = [
     process.env.NEXT_PUBLIC_MODULE_CDN_URL,
-    "https://modules.dramac.app",
-    "https://cdn.dramac.app",
+    "https://modules.dramacagency.com",
+    "https://cdn.dramacagency.com",
   ].filter(Boolean);
 
   // Check if origin matches any allowed origin

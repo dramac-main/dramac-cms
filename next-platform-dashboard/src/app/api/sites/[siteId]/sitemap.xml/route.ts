@@ -32,7 +32,7 @@ export async function GET(
     }
 
     // Determine base URL
-    const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "dramac.app";
+    const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
     const baseUrl = site.custom_domain
       ? `https://${site.custom_domain}`
       : `https://${site.subdomain}.${baseDomain}`;

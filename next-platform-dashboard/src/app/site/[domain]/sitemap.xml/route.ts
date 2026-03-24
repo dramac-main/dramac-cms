@@ -18,10 +18,10 @@ export async function GET(
   let site = null;
   
   // Check if it's a custom domain or subdomain
-  const isSubdomain = domain.endsWith('.dramac.app') || !domain.includes('.');
+  const isSubdomain = domain.endsWith('.sites.dramacagency.com') || domain.endsWith('.dramac.app') || !domain.includes('.');
   
   if (isSubdomain) {
-    const subdomain = domain.replace('.dramac.app', '');
+    const subdomain = domain.replace('.sites.dramacagency.com', '').replace('.dramac.app', '');
     const { data } = await supabase
       .from("sites")
       .select("id, subdomain, custom_domain, sitemap_enabled, published")
@@ -59,7 +59,7 @@ export async function GET(
   // Determine base URL
   const baseUrl = site.custom_domain
     ? `https://${site.custom_domain}`
-    : `https://${site.subdomain}.dramac.app`;
+    : `https://${site.subdomain}.sites.dramacagency.com`;
 
   try {
     // Generate sitemap

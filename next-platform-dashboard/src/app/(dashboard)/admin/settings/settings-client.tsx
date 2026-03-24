@@ -72,12 +72,12 @@ export function AdminSettingsClient({
   const initGeneral = (initialSettings.general ?? {}) as Partial<GeneralSettings>;
   const [general, setGeneral] = useState<GeneralSettings>({
     platformName: initGeneral.platformName ?? PLATFORM.name ?? "DRAMAC",
-    supportEmail: initGeneral.supportEmail ?? "support@dramac.app",
+    supportEmail: initGeneral.supportEmail ?? "support@dramacagency.com",
     platformUrl:
       initGeneral.platformUrl ??
       (typeof window !== "undefined"
-        ? process.env.NEXT_PUBLIC_APP_URL || "https://dramac.app"
-        : "https://dramac.app"),
+        ? process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"
+        : "https://app.dramacagency.com"),
   });
 
   // --- Email ---

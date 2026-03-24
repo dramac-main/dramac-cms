@@ -368,7 +368,7 @@ export function buildSiteUrl(
     return `https://${customDomain}`;
   }
   if (subdomain) {
-    return `https://${subdomain}.dramac.app`;
+    return `https://${subdomain}.sites.dramacagency.com`;
   }
   return '';
 }

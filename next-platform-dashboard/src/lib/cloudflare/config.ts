@@ -18,9 +18,9 @@ export const CLOUDFLARE_CONFIG = {
   
   // Platform Configuration
   platformIp: process.env.PLATFORM_IP || '76.76.21.21', // Vercel IP
-  platformCname: process.env.DEFAULT_CNAME_TARGET || 'cname.dramac.app',
+  platformCname: process.env.DEFAULT_CNAME_TARGET || 'cname.vercel-dns.com',
   platformNameservers: (
-    process.env.PLATFORM_NAMESERVERS || 'ns1.dramac.app,ns2.dramac.app'
+    process.env.PLATFORM_NAMESERVERS || 'ns1.vercel-dns.com,ns2.vercel-dns.com'
   ).split(','),
   
   // Default Settings

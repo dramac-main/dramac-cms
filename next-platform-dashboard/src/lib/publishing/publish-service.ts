@@ -20,7 +20,7 @@ export interface SitePublishStatus {
   siteUrl: string;
 }
 
-const BASE_DOMAIN = process.env.NEXT_PUBLIC_BASE_DOMAIN || "dramac.app";
+const BASE_DOMAIN = process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
 
 export async function publishSite(siteId: string): Promise<PublishResult> {
   try {

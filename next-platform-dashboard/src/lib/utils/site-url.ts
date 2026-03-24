@@ -3,7 +3,7 @@
  * Centralized handling of site URLs using environment variables
  */
 
-const BASE_DOMAIN = process.env.NEXT_PUBLIC_BASE_DOMAIN || "dramac.app";
+const BASE_DOMAIN = process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
 
 /**
  * Get the full URL for a site

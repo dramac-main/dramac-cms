@@ -231,7 +231,7 @@ export function BookingEmbedBlock({
   const resolvedBtnText = btnTextColor || "var(--brand-button-text, #ffffff)";
 
   const resolvedUrl =
-    embedUrl || (siteId ? `https://book.dramac.app/${siteId}` : "");
+    embedUrl || (siteId ? `https://app.dramacagency.com/book/${siteId}` : "");
   const btnBg = buttonBackgroundColor || pc;
   const activeTabColor = tabActiveColor || pc;
   const activeTabBg = tabActiveBgColor || `${pc}10`;

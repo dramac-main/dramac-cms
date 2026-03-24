@@ -98,7 +98,7 @@ export async function GET(
 
     // Generate SDK
     const moduleName = moduleData?.name || 'Module';
-    const baseUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://api.dramac.app'}/api/modules/${moduleId}`;
+    const baseUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.dramacagency.com'}/api/modules/${moduleId}`;
     
     const sdkGenerator = new SDKGenerator(
       moduleName,

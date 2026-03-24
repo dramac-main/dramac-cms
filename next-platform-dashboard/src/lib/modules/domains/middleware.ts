@@ -15,8 +15,9 @@ export async function handleCustomDomain(request: NextRequest): Promise<NextResp
   
   // Skip if it's the main domain
   const mainDomains = [
-    'dramac.app',
-    'www.dramac.app',
+    'dramacagency.com',
+    'app.dramacagency.com',
+    'www.dramacagency.com',
     'localhost',
     '127.0.0.1'
   ];
@@ -25,7 +26,7 @@ export async function handleCustomDomain(request: NextRequest): Promise<NextResp
   const isMainDomain = mainDomains.some(domain => 
     hostname === domain || 
     hostname.startsWith(`${domain}:`) ||
-    hostname.endsWith(`.dramac.app`)
+    hostname.endsWith(`.dramacagency.com`)
   );
 
   if (isMainDomain) {

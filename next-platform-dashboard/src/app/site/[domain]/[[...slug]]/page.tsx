@@ -44,7 +44,7 @@ export async function generateMetadata({
   const siteUrl = data.site.customDomain
     ? `https://${data.site.customDomain}`
     : data.site.subdomain
-      ? `https://${data.site.subdomain}.dramac.app`
+      ? `https://${data.site.subdomain}.sites.dramacagency.com`
       : undefined;
   const canonicalUrl = siteUrl && pageSlug ? `${siteUrl}/${pageSlug}` : siteUrl;
 
@@ -176,7 +176,7 @@ async function getSiteData(domain: string, pageSlug: string) {
   // Check if this is a platform subdomain (*.sites.dramacagency.com)
   if (domain.endsWith(".sites.dramacagency.com")) {
     subdomain = domain.split(".")[0]; // Extract first part
-  } else if (domain.endsWith(".dramac.app")) {
+  } else if (domain.endsWith(".dramac.app") || domain.endsWith(".sites.dramacagency.com")) {
     subdomain = domain.split(".")[0]; // Extract first part
   }
 

@@ -282,7 +282,7 @@ export function validateSitemapUrls(urls: SitemapUrl[]): {
 export function getDefaultRobotsTxt(subdomain: string, customDomain?: string | null): string {
   const baseUrl = customDomain 
     ? `https://${customDomain}` 
-    : `https://${subdomain}.dramac.app`;
+    : `https://${subdomain}.sites.dramacagency.com`;
 
   return `# Robots.txt for ${subdomain}
 User-agent: *

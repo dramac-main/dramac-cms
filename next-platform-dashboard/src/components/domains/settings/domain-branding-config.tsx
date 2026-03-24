@@ -146,7 +146,7 @@ export function DomainBrandingConfig({ config }: DomainBrandingConfigProps) {
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Support:</span>
                 <span className="font-medium">
-                  {supportEmail || 'support@dramac.app (default)'}
+                  {supportEmail || 'support@dramacagency.com (default)'}
                 </span>
               </div>
               

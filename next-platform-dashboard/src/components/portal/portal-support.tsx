@@ -138,10 +138,10 @@ export function PortalSupport({ clientEmail: _clientEmail }: PortalSupportProps)
                 <div>
                   <p className="text-sm text-muted-foreground">Email</p>
                   <a 
-                    href="mailto:support@dramac.app" 
+                    href="mailto:support@dramacagency.com" 
                     className="font-medium hover:underline"
                   >
-                    support@dramac.app
+                    support@dramacagency.com
                   </a>
                 </div>
               </div>

@@ -26,8 +26,8 @@ const DEFAULT_NAMESERVERS = [
 ];
 
 const PLATFORM_NAMESERVERS = [
-  'ns1.dramac.app',
-  'ns2.dramac.app',
+  'ns1.vercel-dns.com',
+  'ns2.vercel-dns.com',
 ];
 
 export function DomainNameservers({ 

@@ -91,7 +91,7 @@ export default function RobotsPage({
     if (!site) return "#";
     const baseUrl = site.domain 
       ? `https://${site.domain}` 
-      : `https://${site.subdomain}.dramac.app`;
+      : `https://${site.subdomain}.sites.dramacagency.com`;
     return `${baseUrl}/robots.txt`;
   };
 

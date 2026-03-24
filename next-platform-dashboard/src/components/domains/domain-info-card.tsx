@@ -137,7 +137,7 @@ export function DomainInfoCard({ domain }: DomainInfoCardProps) {
                     <div>
                       <p className="text-sm font-medium">{domain.site.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {domain.site.subdomain}.dramac.app
+                        {domain.site.subdomain}.sites.dramacagency.com
                       </p>
                     </div>
                   </div>

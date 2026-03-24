@@ -185,7 +185,7 @@ export default function PortalSeoPage() {
                     <div>
                       <p className="font-medium">{site.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        {site.domain || `${site.subdomain}.dramac.app`}
+                        {site.domain || `${site.subdomain}.sites.dramacagency.com`}
                       </p>
                     </div>
                   </div>

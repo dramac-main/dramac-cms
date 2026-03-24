@@ -96,7 +96,7 @@ export default function SitemapPage({
     if (!site) return "#";
     const baseUrl = site.domain 
       ? `https://${site.domain}` 
-      : `https://${site.subdomain}.dramac.app`;
+      : `https://${site.subdomain}.sites.dramacagency.com`;
     return `${baseUrl}/sitemap.xml`;
   };
 

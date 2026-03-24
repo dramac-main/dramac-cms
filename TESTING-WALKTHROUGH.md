@@ -69,8 +69,8 @@ After clicking "Go to Dashboard", you'll land on the **Agency Dashboard** at `/d
    - **Leave "Generate with AI" selected** — this is the recommended path
 5. Click **"Create Site"**
 
-> **Write down your subdomain!** Your live site URL will be: **https://YOUR-SUBDOMAIN.dramac.app**
-> (e.g. `https://demo-shop.dramac.app`)
+> **Write down your subdomain!** Your live site URL will be: **https://YOUR-SUBDOMAIN.sites.dramacagency.com**
+> (e.g. `https://demo-shop.sites.dramacagency.com`)
 
 **What happens next:** The site is created and you're automatically redirected to the **AI Website Designer** page.
 
@@ -120,7 +120,7 @@ You're now on the **AI Website Designer** page. Here's what you see:
 - Design tokens (colors, fonts) are applied to your site theme
 - **E-Commerce module is automatically installed** (because the AI detected shop/cart/checkout components)
 - **Your site is automatically published** — it's live right away!
-- You'll see a toast notification: _"Website published! X pages live at demo-shop.dramac.app"_
+- You'll see a toast notification: _"Website published! X pages live at demo-shop.sites.dramacagency.com"_
 - You're redirected to the **Site Detail page** with the **Pages** tab active
 
 > **No marketplace visit needed!** The AI Designer auto-installs all the modules your site uses. You don't need to go to the Marketplace manually.
@@ -133,7 +133,7 @@ After "Apply & Edit", you're on the **Site Detail page**. Here's what you should
 
 1. **Header area:**
    - Your site name (e.g. "Demo Shop")
-   - Your site URL shown below the name (e.g. `demo-shop.dramac.app`)
+   - Your site URL shown below the name (e.g. `demo-shop.sites.dramacagency.com`)
    - Buttons: **"Edit Pages"**, **"AI Designer"**, **"View Live"** (this appears because your site is now published)
 
 2. **Tabs across the page:**
@@ -191,8 +191,8 @@ After "Apply & Edit", you're on the **Site Detail page**. Here's what you should
 Your site was auto-published when you clicked "Apply & Edit" in Step 4. Time to see it!
 
 1. Open a **new browser tab** (or incognito window)
-2. Go to: **https://YOUR-SUBDOMAIN.dramac.app**
-   - e.g. `https://demo-shop.dramac.app`
+2. Go to: **https://YOUR-SUBDOMAIN.sites.dramacagency.com**
+   - e.g. `https://demo-shop.sites.dramacagency.com`
    - Or from the Site Detail page, click the **"View Live"** button in the header
 3. You should see your AI-generated website with:
    - [ ] A styled hero section
@@ -213,7 +213,7 @@ Your site was auto-published when you clicked "Apply & Edit" in Step 4. Time to 
 
 ### Step 9: Browse the Shop
 
-1. Go to **https://YOUR-SUBDOMAIN.dramac.app/shop**
+1. Go to **https://YOUR-SUBDOMAIN.sites.dramacagency.com/shop**
 2. Verify you can see:
    - [ ] All your active products with images and prices
    - [ ] Product cards are clickable
@@ -272,7 +272,7 @@ Your site was auto-published when you clicked "Apply & Edit" in Step 4. Time to 
 ### Step 13: Test the Customer's Quote Experience
 
 1. Go back to your **customer browser** (incognito/private window)
-2. **Refresh** the shop page: **https://YOUR-SUBDOMAIN.dramac.app/shop**
+2. **Refresh** the shop page: **https://YOUR-SUBDOMAIN.sites.dramacagency.com/shop**
 3. Verify the changes:
    - [ ] "Add to Cart" buttons now say **"Request a Quote"** (or your custom label)
    - [ ] If you turned on "Hide Prices" — prices should be hidden
@@ -398,7 +398,7 @@ After completing all steps, verify these worked:
 
 ### Live Storefront
 
-- [ ] Site accessible at `https://YOUR-SUBDOMAIN.dramac.app`
+- [ ] Site accessible at `https://YOUR-SUBDOMAIN.sites.dramacagency.com`
 - [ ] AI-generated design looks good (hero, layout, colors)
 - [ ] Shop page loads with all active products
 - [ ] Product cards are clickable → product detail pages work
@@ -439,7 +439,7 @@ After completing all steps, verify these worked:
 | E-Commerce tab not showing                 | Refresh the page (F5). The auto-install writes to DB; tab appears on next page load                 |
 | Shop page is blank                         | Make sure E-Commerce module is installed AND enabled (check the Modules tab on site detail)         |
 | No products showing                        | Make sure products are set to **"Active"** status (not Draft)                                       |
-| Can't access storefront                    | Check the subdomain URL is correct: `https://YOUR-SUBDOMAIN.dramac.app`                             |
+| Can't access storefront                    | Check the subdomain URL is correct: `https://YOUR-SUBDOMAIN.sites.dramacagency.com`                             |
 | "View Live" button not showing             | The site might not be published — click the Publish button on the site detail page                  |
 | No emails arriving                         | Check spam/junk folder. Emails come from `noreply@app.dramacagency.com`                             |
 | "Add to Cart" instead of "Request a Quote" | Refresh the page — quotation mode settings may take a moment to propagate                           |

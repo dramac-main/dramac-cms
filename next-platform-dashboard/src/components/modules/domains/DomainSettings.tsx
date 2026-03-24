@@ -554,13 +554,13 @@ function DNSInstructions({ domain, onCopy }: DNSInstructionsProps) {
         <span className="text-muted-foreground">Value:</span>
         <div className="flex items-center gap-2">
           <span className="truncate max-w-[200px]">
-            {isTXT ? domain.verification_value : 'modules.dramac.app'}
+            {isTXT ? domain.verification_value : 'cname.vercel-dns.com'}
           </span>
           <Button 
             size="sm" 
             variant="ghost"
             className="h-6 w-6 p-0"
-            onClick={() => onCopy(isTXT ? domain.verification_value : 'modules.dramac.app')}
+            onClick={() => onCopy(isTXT ? domain.verification_value : 'cname.vercel-dns.com')}
           >
             <Copy className="h-3 w-3" />
           </Button>

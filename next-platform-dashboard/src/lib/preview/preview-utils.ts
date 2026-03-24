@@ -48,7 +48,7 @@ export function getPublicUrl(subdomain: string, customDomain?: string | null): s
   if (customDomain) {
     return `https://${customDomain}`;
   }
-  const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "dramac.app";
+  const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
   return `https://${subdomain}.${baseDomain}`;
 }
 

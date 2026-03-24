@@ -99,7 +99,7 @@ export async function GET(
     // Generate documentation
     const moduleName = moduleData?.name || 'Module';
     const moduleVersion = moduleData?.version || '1.0.0';
-    const baseUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://api.dramac.app'}/api/modules/${moduleId}`;
+    const baseUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.dramacagency.com'}/api/modules/${moduleId}`;
     
     const docsGenerator = new APIDocsGenerator(
       moduleName,

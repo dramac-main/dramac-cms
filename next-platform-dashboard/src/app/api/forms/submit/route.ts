@@ -359,7 +359,7 @@ async function sendNotifications(
         siteName,
         submittedAt: new Date().toISOString(),
         fields: formattedFields,
-        dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramac.app"}/forms`,
+        dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/forms`,
       },
     });
   }

@@ -27,7 +27,7 @@ Get insights into how users interact with your site and optimize for better perf
     tags: ["analytics", "google", "tracking", "reporting"],
     author: {
       name: "DRAMAC",
-      website: "https://dramac.app",
+      website: "https://dramacagency.com",
       verified: true,
     },
     pricing: {
@@ -743,7 +743,7 @@ Trigger Zapier automations from form submissions, page views, and custom events.
     tags: ["zapier", "automation", "webhook", "integration"],
     author: {
       name: "DRAMAC",
-      website: "https://dramac.app",
+      website: "https://dramacagency.com",
       verified: true,
     },
     pricing: {
@@ -793,7 +793,7 @@ Track contacts, companies, deals through pipelines, log activities, and generate
     tags: ["crm", "contacts", "deals", "pipeline", "sales", "customers"],
     author: {
       name: "DRAMAC",
-      website: "https://dramac.app",
+      website: "https://dramacagency.com",
       verified: true,
     },
     pricing: {
@@ -846,7 +846,7 @@ Schedule posts, manage inboxes, track analytics, and generate AI-powered content
     tags: ["social", "media", "scheduling", "analytics", "content", "ai"],
     author: {
       name: "DRAMAC",
-      website: "https://dramac.app",
+      website: "https://dramacagency.com",
       verified: true,
     },
     pricing: {
@@ -901,7 +901,7 @@ Connect triggers to actions with conditional logic to streamline your operations
     tags: ["automation", "workflows", "triggers", "actions", "no-code"],
     author: {
       name: "DRAMAC",
-      website: "https://dramac.app",
+      website: "https://dramacagency.com",
       verified: true,
     },
     pricing: {
@@ -953,7 +953,7 @@ Each agent has persistent memory, configurable tools, and definable goals.
     tags: ["ai", "agents", "automation", "intelligence", "claude"],
     author: {
       name: "DRAMAC",
-      website: "https://dramac.app",
+      website: "https://dramacagency.com",
       verified: true,
     },
     pricing: {
@@ -1014,7 +1014,7 @@ Perfect for salons, spas, consultants, medical offices, and any business that ta
     tags: ["booking", "appointments", "calendar", "scheduling", "reservations", "services"],
     author: {
       name: "DRAMAC",
-      website: "https://dramac.app",
+      website: "https://dramacagency.com",
       verified: true,
     },
     pricing: {
@@ -1083,7 +1083,7 @@ Supports both physical and digital products with variant management, inventory t
     tags: ["ecommerce", "store", "products", "shopping", "cart", "checkout", "payments", "orders"],
     author: {
       name: "DRAMAC",
-      website: "https://dramac.app",
+      website: "https://dramacagency.com",
       verified: true,
     },
     pricing: {

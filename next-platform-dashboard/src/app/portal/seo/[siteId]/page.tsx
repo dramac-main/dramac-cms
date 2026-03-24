@@ -122,7 +122,7 @@ export default function PortalSiteSeoPage({
             {site?.name || "Site"} SEO
           </h1>
           <p className="text-muted-foreground mt-1">
-            {site?.domain || `${site?.subdomain}.dramac.app`}
+            {site?.domain || `${site?.subdomain}.sites.dramacagency.com`}
           </p>
         </div>
       </div>

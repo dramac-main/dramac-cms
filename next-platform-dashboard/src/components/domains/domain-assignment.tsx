@@ -150,7 +150,7 @@ export function DomainAssignment({
             <div>
               <p className="text-sm font-medium">{selectedSite.name}</p>
               <p className="text-xs text-muted-foreground">
-                {selectedSite.subdomain}.dramac.app
+                {selectedSite.subdomain}.sites.dramacagency.com
               </p>
             </div>
             <Button 
@@ -174,7 +174,7 @@ export function DomainAssignment({
                   <div className="flex flex-col">
                     <span>{site.name}</span>
                     <span className="text-xs text-muted-foreground">
-                      {site.subdomain}.dramac.app
+                      {site.subdomain}.sites.dramacagency.com
                     </span>
                   </div>
                 </SelectItem>

@@ -133,7 +133,7 @@ export async function notifyNewBooking(
       data.serviceDuration >= 60
         ? `${Math.floor(data.serviceDuration / 60)}h ${data.serviceDuration % 60 > 0 ? `${data.serviceDuration % 60}m` : ""}`
         : `${data.serviceDuration}m`;
-    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramac.app"}/sites/${data.siteId}/booking`;
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${data.siteId}/booking`;
 
     // 1. In-app notification to business owner
     await createNotification({
@@ -279,7 +279,7 @@ export async function notifyBookingCancelled(
       data.serviceDuration >= 60
         ? `${Math.floor(data.serviceDuration / 60)}h ${data.serviceDuration % 60 > 0 ? `${data.serviceDuration % 60}m` : ""}`
         : `${data.serviceDuration}m`;
-    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramac.app"}/sites/${data.siteId}/booking`;
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${data.siteId}/booking`;
 
     // 1. In-app notification to business owner
     await createNotification({
@@ -405,7 +405,7 @@ export async function notifyNewOrder(
     const subtotalStr = formatCurrency(data.subtotal, currency);
     const shippingStr = formatCurrency(data.shipping, currency);
     const taxStr = formatCurrency(data.tax, currency);
-    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramac.app"}/sites/${data.siteId}/ecommerce/orders`;
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${data.siteId}/ecommerce/orders`;
 
     // Fetch manual payment instructions if provider is manual
     let manualPaymentInstructions = data.manualPaymentInstructions;
@@ -528,7 +528,7 @@ export async function notifyOrderShipped(
         type: "order_shipped",
         title: `Order #${orderNumber} Shipped`,
         message: `Order for ${customerName} has been marked as shipped${trackingNumber ? ` (Tracking: ${trackingNumber})` : ""}`,
-        link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramac.app"}/sites/${siteId}/ecommerce/orders`,
+        link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${siteId}/ecommerce/orders`,
         metadata: { orderNumber, siteId },
       });
     }
@@ -594,7 +594,7 @@ export async function notifyOrderDelivered(
         type: "order_delivered",
         title: `Order #${orderNumber} Delivered`,
         message: `Order for ${customerName} has been marked as delivered`,
-        link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramac.app"}/sites/${siteId}/ecommerce/orders`,
+        link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${siteId}/ecommerce/orders`,
         metadata: { orderNumber, siteId },
       });
     }
@@ -663,7 +663,7 @@ export async function notifyOrderCancelled(
           .single()
       : { data: null };
 
-    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramac.app"}/sites/${siteId}/ecommerce/orders`;
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${siteId}/ecommerce/orders`;
 
     // In-app notification to business owner
     if (agency?.owner_id) {
@@ -761,7 +761,7 @@ export async function notifyPaymentReceived(
         type: "payment_received",
         title: `Payment Received: Order #${orderNumber}`,
         message: `${customerName} paid ${total} for order #${orderNumber}${paymentMethod ? ` via ${paymentMethod}` : ""}`,
-        link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramac.app"}/sites/${siteId}/ecommerce/orders`,
+        link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${siteId}/ecommerce/orders`,
         metadata: { orderNumber, siteId },
       });
     }
@@ -823,7 +823,7 @@ export async function notifyPaymentProofUploaded(
       .eq("id", site.agency_id)
       .single();
 
-    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramac.app"}/sites/${siteId}/ecommerce/orders`;
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${siteId}/ecommerce/orders`;
 
     // In-app notification to business owner
     if (agency?.owner_id) {
@@ -915,7 +915,7 @@ export async function notifyRefundIssued(
         type: "refund_issued",
         title: `Refund Issued: Order #${orderNumber}`,
         message: `Refund of ${refundAmount} issued to ${customerName}${reason ? ` — ${reason}` : ""}`,
-        link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramac.app"}/sites/${siteId}/ecommerce/orders`,
+        link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${siteId}/ecommerce/orders`,
         metadata: { orderNumber, siteId },
       });
     }
@@ -982,7 +982,7 @@ export async function notifyLowStock(
           .single()
       : { data: null };
 
-    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramac.app"}/sites/${siteId}/ecommerce/products`;
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${siteId}/ecommerce/products`;
 
     // In-app notification to business owner
     if (agency?.owner_id) {
@@ -1087,7 +1087,7 @@ export async function notifyNewQuote(
     const businessName = site.name || "Our Business";
     const currency = data.currency || "USD";
     const totalStr = data.total ? formatCurrency(data.total, currency) : "";
-    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramac.app"}/sites/${data.siteId}/ecommerce/quotes`;
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${data.siteId}/ecommerce/quotes`;
 
     // 1. In-app notification to business owner
     await createNotification({
@@ -1201,7 +1201,7 @@ export async function notifyQuoteAccepted(
       : { data: null };
 
     const businessName = site.name || "Our Business";
-    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramac.app"}/sites/${siteId}/ecommerce/quotes`;
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${siteId}/ecommerce/quotes`;
 
     // 1. In-app notification to business owner
     if (agency?.owner_id) {
@@ -1306,7 +1306,7 @@ export async function notifyQuoteRejected(
           .single()
       : { data: null };
 
-    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramac.app"}/sites/${siteId}/ecommerce/quotes`;
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${siteId}/ecommerce/quotes`;
 
     // 1. In-app notification to business owner
     if (agency?.owner_id) {

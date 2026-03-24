@@ -631,7 +631,7 @@ export class CustomDomainService {
     token: string
   ): string {
     if (method === 'cname') {
-      return 'modules.dramac.app';
+      return 'cname.vercel-dns.com';
     }
     return `dramac-verify=${token}`;
   }
@@ -654,7 +654,7 @@ export class CustomDomainService {
       domain_id: domainId,
       record_type: 'CNAME',
       host: '@',
-      value: 'modules.dramac.app'
+      value: 'cname.vercel-dns.com'
     });
 
     // Verification record based on method
