@@ -225,6 +225,14 @@ export async function POST(request: NextRequest) {
           total_messages: 1,
         })
         .eq('id', visitorId)
+
+      // Trigger AI auto-response if no agent was assigned
+      if (!convInsert.assigned_agent_id) {
+        import('@/modules/live-chat/lib/auto-response-handler').then(({ handleNewVisitorMessage }) => {
+          handleNewVisitorMessage(siteId, conversationId, initialMessage, visitorId)
+            .catch((err: unknown) => console.error('[LiveChat] Auto-response error on initial message:', err))
+        }).catch(() => {})
+      }
     }
 
     return NextResponse.json(

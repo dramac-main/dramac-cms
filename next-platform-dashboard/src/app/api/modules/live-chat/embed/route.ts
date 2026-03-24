@@ -225,6 +225,15 @@ export async function GET(request: NextRequest) {
 
       if (msg.type === 'dramac-chat-close') {
         if (isOpen) toggleChat();
+      } else if (msg.type === 'dramac-chat-open') {
+        // External script (e.g. OrderConfirmation) or auto-open wants to open chat
+        if (!isOpen) toggleChat();
+        // Forward order context to the iframe widget if present
+        if (msg.orderContext) {
+          try {
+            iframe.contentWindow.postMessage({ type: 'dramac-chat-order-context', orderContext: msg.orderContext }, '*');
+          } catch(e) {}
+        }
       } else if (msg.type === 'dramac-chat-unread') {
         var count = msg.count || 0;
         if (count > 0 && !isOpen) {

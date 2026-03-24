@@ -105,6 +105,22 @@ export async function generateAutoResponse(
       visitorInfo?.email,
     ).catch(() => null);
 
+    // Check if customer has a pending manual payment order — triggers payment guidance mode
+    const pendingManualOrder = customerCtx?.recentOrders?.find(
+      (o) => o.paymentStatus === "pending" && o.status !== "cancelled",
+    );
+
+    // Fetch store payment instructions when relevant
+    let paymentInstructions: string | null = null;
+    if (pendingManualOrder) {
+      const { data: ecomSettings } = await supabase
+        .from("mod_ecommod01_settings")
+        .select("manual_payment_instructions, store_name, currency")
+        .eq("site_id", siteId)
+        .single();
+      paymentInstructions = ecomSettings?.manual_payment_instructions || null;
+    }
+
     // Format knowledge base
     const kbText =
       kbArticles.length > 0
@@ -136,7 +152,32 @@ RULES:
 - Use the knowledge base articles below to answer questions when relevant
 - If the visitor has order or booking history, use it to provide personalized support
 - Respond in the same language as the visitor
+${
+  pendingManualOrder
+    ? `
+PAYMENT GUIDANCE MODE — ACTIVE:
+The customer has a pending order that needs payment. Your primary job right now is to help them complete payment.
 
+ORDER DETAILS:
+- Order number: ${pendingManualOrder.orderNumber}
+- Total amount: ${pendingManualOrder.currency} ${(pendingManualOrder.total / 100).toFixed(2)}
+- Payment status: Pending
+- Placed: ${new Date(pendingManualOrder.createdAt).toLocaleDateString()}
+
+${paymentInstructions ? `STORE PAYMENT INSTRUCTIONS:\n${paymentInstructions}` : "No specific payment instructions configured. Ask the customer to contact the store for payment details."}
+
+HOW TO GUIDE THE CUSTOMER:
+1. Greet them warmly and confirm their order number and total
+2. Share the payment instructions above in simple, clear language — break it into numbered steps
+3. Tell them to use their order number (${pendingManualOrder.orderNumber}) as the payment reference
+4. After they confirm payment, let them know they can upload proof of payment on their order page
+5. Reassure them that once the store owner verifies payment, their order will be processed and shipped
+6. Be conversational and friendly — like a helpful friend, not a robot
+7. If they have questions about the payment process, answer patiently and clearly
+8. Keep each message short and easy to follow — avoid walls of text
+`
+    : ""
+}
 KNOWLEDGE BASE:
 ${kbText}
 
@@ -158,6 +199,11 @@ Previous conversations: ${visitorInfo?.total_conversations || 0}${customerCtx ? 
     const responseText = result.text;
     let confidence = 0.6; // Base confidence
     let matchedArticleId: string | undefined;
+
+    // Payment guidance mode — high confidence since we have all the context
+    if (pendingManualOrder) {
+      confidence = 0.95;
+    }
 
     for (const article of kbArticles) {
       const titleLower = (

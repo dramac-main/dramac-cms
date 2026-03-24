@@ -133,6 +133,20 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const retryCountRef = useRef(0);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const orderContextRef = useRef<{
+    orderNumber: string;
+    total: number;
+    email: string;
+    paymentProvider?: string;
+    isManualPayment?: boolean;
+  } | null>(null);
+  const [orderContext, setOrderContext] = useState<{
+    orderNumber: string;
+    total: number;
+    email: string;
+    paymentProvider?: string;
+    isManualPayment?: boolean;
+  } | null>(null);
 
   // Load settings on mount
   useEffect(() => {
@@ -305,6 +319,18 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
       return;
     }
 
+    // If order context is pending (from OrderConfirmation), skip pre-chat and auto-start
+    const pendingCtx = orderContextRef.current;
+    if (pendingCtx) {
+      orderContextRef.current = null;
+      setOrderContext(null);
+      handleStartChat({
+        email: pendingCtx.email,
+        message: `Hi, I just placed order ${pendingCtx.orderNumber} and need help with payment.`,
+      });
+      return;
+    }
+
     // Otherwise show pre-chat form (or skip if disabled)
     if (settings.preChatEnabled) {
       setWidgetState("pre-chat");
@@ -325,6 +351,19 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
         if (settings) {
           handleOpen();
         }
+      } else if (msg.type === "dramac-chat-order-context" && msg.orderContext) {
+        // Order context forwarded from embed script (originated from OrderConfirmation)
+        const ctx = {
+          orderNumber: String(msg.orderContext.orderNumber || ""),
+          total: Number(msg.orderContext.total || 0),
+          email: String(msg.orderContext.email || ""),
+          paymentProvider: msg.orderContext.paymentProvider
+            ? String(msg.orderContext.paymentProvider)
+            : undefined,
+          isManualPayment: Boolean(msg.orderContext.isManualPayment),
+        };
+        orderContextRef.current = ctx;
+        setOrderContext(ctx);
       }
     }
     window.addEventListener("message", handleMessage);
@@ -389,6 +428,19 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
     },
     [siteId, settings],
   );
+
+  // Auto-start chat when order context arrives and widget is in pre-chat state
+  // Covers the timing case where order context arrives after handleOpen has already run
+  useEffect(() => {
+    if (!orderContext || !settings || widgetState !== "pre-chat") return;
+    const ctx = orderContext;
+    orderContextRef.current = null;
+    setOrderContext(null);
+    handleStartChat({
+      email: ctx.email,
+      message: `Hi, I just placed order ${ctx.orderNumber} and need help with payment.`,
+    });
+  }, [orderContext, widgetState, settings, handleStartChat]);
 
   // Handle sending message
   const handleSendMessage = useCallback(

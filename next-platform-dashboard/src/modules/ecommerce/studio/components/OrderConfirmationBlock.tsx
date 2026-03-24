@@ -321,20 +321,23 @@ export function OrderConfirmationBlock({
   // Open the live chat widget with order context via postMessage
   const openChatWithOrderContext = React.useCallback(() => {
     if (!order) return;
-    // Find the chat widget iframe
-    const chatIframe = document.querySelector<HTMLIFrameElement>(
-      'iframe[src*="/api/modules/live-chat/widget"]',
+    const isManual =
+      order.payment_provider === "manual" || order.payment_method === "manual";
+    // Send to parent window — the embed script's message listener picks this up,
+    // opens the chat container, and forwards order context to the iframe widget
+    window.postMessage(
+      {
+        type: "dramac-chat-open",
+        orderContext: {
+          orderNumber: order.order_number,
+          total: order.total,
+          email: order.email,
+          paymentProvider: order.payment_provider || order.payment_method,
+          isManualPayment: isManual,
+        },
+      },
+      "*",
     );
-    if (chatIframe?.contentWindow) {
-      // Open the chat widget
-      chatIframe.contentWindow.postMessage({ type: "dramac-chat-open" }, "*");
-    } else {
-      // Fallback: try the injector's toggle button
-      const toggleBtn = document.querySelector<HTMLButtonElement>(
-        "[data-dramac-chat-toggle]",
-      );
-      if (toggleBtn) toggleBtn.click();
-    }
   }, [order]);
 
   // Auto-open chat widget after order loads (with a brief delay for UX)

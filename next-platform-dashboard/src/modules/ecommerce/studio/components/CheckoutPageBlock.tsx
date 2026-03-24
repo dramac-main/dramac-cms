@@ -377,6 +377,7 @@ export function CheckoutPageBlock({
     quotationModeEnabled,
     quotationRedirectUrl,
     quotationButtonLabel,
+    siteId: storefrontSiteId,
   } = useStorefront();
   const checkout = useCheckout();
   const isMobile = useMobile();
@@ -419,9 +420,9 @@ export function CheckoutPageBlock({
   // Persist order reference so customers can find their order later
   const saveOrderToStorage = (orderId: string, orderNumber: string) => {
     try {
-      if (storefront.siteId) {
+      if (storefrontSiteId) {
         localStorage.setItem(
-          `ecom_last_order_${storefront.siteId}`,
+          `ecom_last_order_${storefrontSiteId}`,
           JSON.stringify({ orderId, orderNumber, timestamp: Date.now() }),
         );
       }
