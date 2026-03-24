@@ -435,7 +435,7 @@ export async function createRefund(
   await addTimelineEvent(orderId, {
     event_type: "refund_requested",
     title: "Refund requested",
-    description: `Amount: ${formatCurrency(refund.amount)} - ${refund.reason}`,
+    description: `Amount: ${formatCurrency(refund.amount / 100)} - ${refund.reason}`,
     actor_id: userId,
     actor_name: userName,
     metadata: { refund_id: data.id },
@@ -503,7 +503,7 @@ export async function processRefund(
         order.order_number,
         order.customer_email,
         order.customer_name || "Customer",
-        formatCurrency(refundData.amount, order.currency || "USD"),
+        formatCurrency(refundData.amount / 100, order.currency || "USD"),
         refundData.reason || undefined,
       ).catch((err) =>
         console.error("[OrderActions] Refund notification error:", err),
@@ -699,7 +699,7 @@ export async function sendOrderEmail(
       }) => ({
         name: item.product_name,
         quantity: item.quantity,
-        price: formatCurrency(item.total_price, currency),
+        price: formatCurrency(item.total_price / 100, currency),
       }),
     );
 
@@ -718,10 +718,10 @@ export async function sendOrderEmail(
               customerName: order.customer_name || "Customer",
               orderNumber: order.order_number,
               items: formattedItems,
-              subtotal: formatCurrency(order.subtotal || 0, currency),
-              shipping: formatCurrency(order.shipping_amount || 0, currency),
-              tax: formatCurrency(order.tax_amount || 0, currency),
-              total: formatCurrency(order.total, currency),
+              subtotal: formatCurrency((order.subtotal || 0) / 100, currency),
+              shipping: formatCurrency((order.shipping_amount || 0) / 100, currency),
+              tax: formatCurrency((order.tax_amount || 0) / 100, currency),
+              total: formatCurrency(order.total / 100, currency),
               shippingAddress: order.shipping_address
                 ? `${order.shipping_address.address_line_1 || ""}${order.shipping_address.city ? `, ${order.shipping_address.city}` : ""}${order.shipping_address.country ? `, ${order.shipping_address.country}` : ""}`
                 : "",
@@ -799,7 +799,7 @@ export async function sendOrderEmail(
             data: {
               customerName: order.customer_name || "Customer",
               orderNumber: order.order_number,
-              refundAmount: formatCurrency(order.total, currency),
+              refundAmount: formatCurrency(order.total / 100, currency),
               businessName,
             },
           });

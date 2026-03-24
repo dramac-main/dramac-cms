@@ -1,22 +1,50 @@
 # Active Context
 
-## Current Focus: Post-Purchase Experience Overhaul
+## Current Focus: Automated AI Chat Payment Guidance
 
-### Status: IMPLEMENTED, BUILD VERIFIED — Pending commit & deploy
+### Status: COMMITTED & PUSHED — `229eb0c5`
 
 ### What Was Done
 
-Comprehensive post-purchase experience fix — 7 critical gaps resolved across 8 files (1 new file).
+Automated AI chat payment guidance system — AI walks customers through payment after checkout like a human would. Site owner only needs to confirm payment receipt.
 
-### Root Cause: Post-Purchase Dead End
+### Previous: Post-Purchase Experience Overhaul — COMPLETE (`83121720`)
 
-After checkout, customers had:
+### Implementation (6 files modified)
 
-1. No way to find their order if they navigated away
-2. No email link back to order page
-3. No chat integration in post-purchase flow
-4. Order tracking page didn't exist
-5. "Track Order" button never shown (prop never passed)
+**AI Responder Enhancement** (`ai-responder.ts`)
+- Detects pending manual payment orders from customer context
+- Fetches store's `manual_payment_instructions` from `mod_ecommod01_settings`
+- Enters "Payment Guidance Mode" with specialized system prompt
+- Provides order number, total, payment instructions in simple, step-by-step format
+- High confidence (0.95) in payment guidance mode — no unnecessary handoffs
+- AI acts like a friendly human guide, not a robot
+
+**Order Context Flow** (`OrderConfirmationBlock.tsx` → `embed/route.ts` → `ChatWidget.tsx`)
+- OrderConfirmation sends `window.postMessage({ type: 'dramac-chat-open', orderContext })` 
+- Embed script handles `dramac-chat-open` from parent page, opens chat container, forwards `dramac-chat-order-context` to iframe
+- ChatWidget receives order context, stores in ref + state
+- Auto-starts conversation (skips pre-chat form) with customer email and order message
+- Handles both timing cases: order context before/after widget ready
+
+**AI Auto-Response on Initial Messages** (`conversations/route.ts`)
+- Conversations API now triggers `handleNewVisitorMessage()` for initial messages when no agent assigned
+- Previously only the messages API triggered AI — initial message was a dead end
+
+**Fix: CheckoutPageBlock** (`CheckoutPageBlock.tsx`)
+- Fixed pre-existing bug: `storefront.siteId` → `storefrontSiteId` (destructured from useStorefront)
+
+### End-to-End Flow
+
+1. Customer checks out with manual payment → order confirmation page
+2. Chat auto-opens 3 seconds later via `openChatWithOrderContext()`  
+3. `window.postMessage` → embed script → iframe → ChatWidget
+4. ChatWidget auto-starts conversation: email from order, message "Hi, I just placed order #XXX and need help with payment."
+5. Conversations API creates visitor + conversation + initial message → triggers AI
+6. AI responder sees pending manual order → fetches payment instructions → enters payment guidance mode
+7. AI responds with warm greeting, order confirmation, step-by-step payment instructions
+8. Customer follows instructions, makes payment, uploads proof
+9. Site owner confirms payment — only manual step
 
 ### Fixes Applied (8 files, 1 new)
 

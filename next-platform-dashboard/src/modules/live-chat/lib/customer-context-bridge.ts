@@ -166,7 +166,7 @@ export function formatCustomerContext(ctx: CustomerContext): string {
   if (ctx.recentOrders.length > 0) {
     const orderLines = ctx.recentOrders.map(
       (o) =>
-        `- ${o.orderNumber}: ${o.status} (${o.paymentStatus}), ${o.currency} ${o.total}, ${o.itemCount} item(s), ${new Date(o.createdAt).toLocaleDateString()}`,
+        `- ${o.orderNumber}: ${o.status} (${o.paymentStatus}), ${o.currency} ${(o.total / 100).toFixed(2)}, ${o.itemCount} item(s), ${new Date(o.createdAt).toLocaleDateString()}`,
     );
     parts.push(`RECENT ORDERS:\n${orderLines.join("\n")}`);
   }

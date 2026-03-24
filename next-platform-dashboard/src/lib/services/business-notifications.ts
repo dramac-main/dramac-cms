@@ -401,10 +401,11 @@ export async function notifyNewOrder(
 
     const businessName = site.name || "Our Store";
     const currency = data.currency || "USD";
-    const totalStr = formatCurrency(data.total, currency);
-    const subtotalStr = formatCurrency(data.subtotal, currency);
-    const shippingStr = formatCurrency(data.shipping, currency);
-    const taxStr = formatCurrency(data.tax, currency);
+    // Ecommerce prices are stored in cents — divide by 100 for display
+    const totalStr = formatCurrency(data.total / 100, currency);
+    const subtotalStr = formatCurrency(data.subtotal / 100, currency);
+    const shippingStr = formatCurrency(data.shipping / 100, currency);
+    const taxStr = formatCurrency(data.tax / 100, currency);
     const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${data.siteId}/ecommerce/orders`;
 
     // Build the storefront URL for order confirmation link in customer email
@@ -434,7 +435,7 @@ export async function notifyNewOrder(
     const formattedItems = data.items.map((item) => ({
       name: item.name,
       quantity: item.quantity,
-      price: formatCurrency(item.unitPrice * item.quantity, currency),
+      price: formatCurrency((item.unitPrice * item.quantity) / 100, currency),
     }));
 
     // 1. In-app notification to business owner
@@ -1099,7 +1100,7 @@ export async function notifyNewQuote(
 
     const businessName = site.name || "Our Business";
     const currency = data.currency || "USD";
-    const totalStr = data.total ? formatCurrency(data.total, currency) : "";
+    const totalStr = data.total ? formatCurrency(data.total / 100, currency) : "";
     const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${data.siteId}/ecommerce/quotes`;
 
     // 1. In-app notification to business owner

@@ -1,11 +1,26 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL ✅
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE ✅
 
 ---
 
-## Latest Update: Post-Purchase Experience Overhaul — Build Verified, Pending Commit
+## Latest Update: Automated AI Chat Payment Guidance — Committed & Pushed (`229eb0c5`)
+
+**AI walks customers through payment after checkout — only manual step is site owner confirming payment receipt.**
+
+### Changes (6 files)
+
+- **`ai-responder.ts`** — Payment guidance mode: detects pending manual orders, fetches payment instructions, specialized system prompt with step-by-step guidance
+- **`OrderConfirmationBlock.tsx`** — Fixed `openChatWithOrderContext()` to use `window.postMessage` with order context (was broken: wrong iframe selector)
+- **`embed/route.ts`** — Handles `dramac-chat-open` from parent page scripts, forwards order context to iframe
+- **`ChatWidget.tsx`** — Receives order context, auto-starts conversation (skips pre-chat), handles both timing cases
+- **`conversations/route.ts`** — Triggers AI auto-response on initial messages (was missing)
+- **`CheckoutPageBlock.tsx`** — Fixed pre-existing `storefront.siteId` bug
+
+---
+
+## Previous Update: Post-Purchase Experience Overhaul — `83121720`
 
 **7 critical gaps resolved across 8+ files (1 new component):**
 

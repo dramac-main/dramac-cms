@@ -1493,7 +1493,7 @@ export async function updateOrderStatus(
       order.order_number,
       order.customer_email,
       order.customer_name || "Customer",
-      formatCurrency(order.total, order.currency || DEFAULT_CURRENCY),
+      formatCurrency(order.total / 100, order.currency || DEFAULT_CURRENCY),
     ).catch((err) =>
       console.error("[Ecommerce] Cancellation notification error:", err),
     );

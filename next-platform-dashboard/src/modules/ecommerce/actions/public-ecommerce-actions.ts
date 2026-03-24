@@ -1297,7 +1297,7 @@ export async function uploadPaymentProof(input: {
 
     // Notify business owner
     const totalFormatted = formatCurrency(
-      order.total || 0,
+      (order.total || 0) / 100,
       order.currency || "ZMW",
     );
     await notifyPaymentProofUploaded(
