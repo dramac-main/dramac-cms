@@ -98,3 +98,55 @@ export async function getSiteOwnerUserId(
 
   return agency?.owner_id ?? null
 }
+
+/**
+ * Self-healing: ensure an admin agent exists for the site.
+ * If the admin agent was soft-deleted, reactivate it.
+ * If no admin agent exists at all, bootstrap one.
+ *
+ * Called on live-chat page loads to guarantee the site owner is always an agent.
+ */
+export async function ensureAdminAgent(siteId: string): Promise<void> {
+  const supabase = createAdminClient()
+
+  // Check for an active admin agent
+  const { data: activeAdmin } = await (supabase as any)
+    .from('mod_chat_agents')
+    .select('id')
+    .eq('site_id', siteId)
+    .eq('role', 'admin')
+    .eq('is_active', true)
+    .limit(1)
+    .maybeSingle()
+
+  if (activeAdmin) return // Admin agent exists and is active
+
+  // Check for a soft-deleted admin agent
+  const { data: deletedAdmin } = await (supabase as any)
+    .from('mod_chat_agents')
+    .select('id')
+    .eq('site_id', siteId)
+    .eq('role', 'admin')
+    .eq('is_active', false)
+    .limit(1)
+    .maybeSingle()
+
+  if (deletedAdmin) {
+    // Reactivate the soft-deleted admin agent
+    await (supabase as any)
+      .from('mod_chat_agents')
+      .update({ is_active: true, status: 'online' })
+      .eq('id', deletedAdmin.id)
+
+    console.log(
+      `[LiveChat] Self-heal: reactivated admin agent for site ${siteId}`,
+    )
+    return
+  }
+
+  // No admin agent exists at all — bootstrap one from site owner
+  const ownerId = await getSiteOwnerUserId(siteId)
+  if (!ownerId) return
+
+  await bootstrapLiveChatAgent(siteId, ownerId)
+}

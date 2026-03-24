@@ -40,6 +40,7 @@ import {
   Pencil,
   Trash2,
   UserPlus,
+  ExternalLink,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { AgentStatusDot } from '../shared/AgentStatusDot'
@@ -394,9 +395,21 @@ export function AgentsPageWrapper({
                     Loading members...
                   </div>
                 ) : agencyMembers.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-2">
-                    No available members. All team members are already agents.
-                  </p>
+                  <div className="space-y-2 py-2">
+                    <p className="text-sm text-muted-foreground">
+                      No available members. All team members are already agents.
+                    </p>
+                    <a
+                      href="/settings/team"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                    >
+                      <UserPlus className="h-3.5 w-3.5" />
+                      Manage Team Members
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
                 ) : (
                   <Select
                     value={agentForm.userId || 'none'}
@@ -670,7 +683,7 @@ export function AgentsPageWrapper({
                           </p>
                         </div>
                       </div>
-                      <Badge variant="outline" className="text-xs capitalize">
+                      <Badge variant={agent.role === 'admin' ? 'default' : 'outline'} className="text-xs capitalize">
                         {agent.role}
                       </Badge>
                     </div>
@@ -719,16 +732,29 @@ export function AgentsPageWrapper({
                         <Pencil className="h-3.5 w-3.5 mr-1" />
                         Edit
                       </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => handleDeleteAgent(agent.id)}
-                        disabled={isPending}
-                      >
-                        <Trash2 className="h-3.5 w-3.5 mr-1" />
-                        Remove
-                      </Button>
+                      {agent.role !== 'admin' ? (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => handleDeleteAgent(agent.id)}
+                          disabled={isPending}
+                        >
+                          <Trash2 className="h-3.5 w-3.5 mr-1" />
+                          Remove
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 opacity-50 cursor-not-allowed"
+                          disabled
+                          title="The admin agent cannot be removed"
+                        >
+                          <Trash2 className="h-3.5 w-3.5 mr-1" />
+                          Protected
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

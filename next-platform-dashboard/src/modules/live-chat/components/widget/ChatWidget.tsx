@@ -549,6 +549,13 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
     siteId,
   ]);
 
+  // Auto-clear error after 5 seconds
+  useEffect(() => {
+    if (!error) return;
+    const timer = setTimeout(() => setError(null), 5000);
+    return () => clearTimeout(timer);
+  }, [error]);
+
   if (loadError) {
     return (
       <div
@@ -620,13 +627,6 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
     attachmentName: m.fileName || undefined,
     isRead: m.status === "read",
   }));
-
-  // Auto-clear error after 5 seconds
-  useEffect(() => {
-    if (!error) return;
-    const timer = setTimeout(() => setError(null), 5000);
-    return () => clearTimeout(timer);
-  }, [error]);
 
   return (
     <div

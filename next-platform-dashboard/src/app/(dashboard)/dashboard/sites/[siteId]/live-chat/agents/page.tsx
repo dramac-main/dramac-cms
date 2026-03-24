@@ -8,6 +8,7 @@ import { Suspense } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { getAgents, getAgentPerformance } from '@/modules/live-chat/actions/agent-actions'
 import { getDepartments } from '@/modules/live-chat/actions/department-actions'
+import { ensureAdminAgent } from '@/modules/live-chat/lib/bootstrap-agent'
 import { AgentsPageWrapper } from '@/modules/live-chat/components/wrappers/AgentsPageWrapper'
 
 interface PageProps {
@@ -15,6 +16,9 @@ interface PageProps {
 }
 
 async function AgentsContent({ siteId }: { siteId: string }) {
+  // Self-heal: ensure admin agent exists before fetching
+  await ensureAdminAgent(siteId)
+
   const [agentsResult, departmentsResult, performanceResult] =
     await Promise.all([
       getAgents(siteId),

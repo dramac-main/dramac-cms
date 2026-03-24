@@ -395,11 +395,27 @@ export async function deleteAgent(
 
     const { data: agent } = await supabase
       .from('mod_chat_agents')
-      .select('site_id')
+      .select('site_id, role, user_id')
       .eq('id', agentId)
       .single()
 
     if (!agent) return { success: false, error: 'Agent not found' }
+
+    // Prevent deleting the admin agent (site owner)
+    if (agent.role === 'admin') {
+      return { success: false, error: 'Cannot remove the admin agent. The site owner must always be a chat agent.' }
+    }
+
+    // Prevent deleting the last active agent
+    const { count } = await supabase
+      .from('mod_chat_agents')
+      .select('*', { count: 'exact', head: true })
+      .eq('site_id', agent.site_id)
+      .eq('is_active', true)
+
+    if ((count || 0) <= 1) {
+      return { success: false, error: 'Cannot remove the last agent. At least one agent must remain active.' }
+    }
 
     // Soft delete
     const { error } = await supabase
