@@ -1,5 +1,5 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 function findFiles(dir) {
   let results = [];
@@ -7,7 +7,12 @@ function findFiles(dir) {
     const items = fs.readdirSync(dir, { withFileTypes: true });
     for (const item of items) {
       const fullPath = path.join(dir, item.name);
-      if (item.isDirectory() && !item.name.startsWith('.') && item.name !== 'node_modules' && item.name !== '.next') {
+      if (
+        item.isDirectory() &&
+        !item.name.startsWith(".") &&
+        item.name !== "node_modules" &&
+        item.name !== ".next"
+      ) {
         results = results.concat(findFiles(fullPath));
       } else if (item.isFile() && /\.(tsx?|jsx?)$/.test(item.name)) {
         results.push(fullPath);
@@ -18,27 +23,47 @@ function findFiles(dir) {
 }
 
 const hookNames = [
-  'useState', 'useEffect', 'useMemo', 'useCallback', 'useRef',
-  'useContext', 'useReducer', 'useId', 'useLayoutEffect',
-  'useInsertionEffect', 'useImperativeHandle', 'useSyncExternalStore',
-  'useTransition', 'useDeferredValue', 'useOptimistic', 'useActionState',
-  'useFormStatus', 'useRouter', 'usePathname', 'useSearchParams',
-  'useParams', 'useSelectedLayoutSegment', 'useSelectedLayoutSegments'
+  "useState",
+  "useEffect",
+  "useMemo",
+  "useCallback",
+  "useRef",
+  "useContext",
+  "useReducer",
+  "useId",
+  "useLayoutEffect",
+  "useInsertionEffect",
+  "useImperativeHandle",
+  "useSyncExternalStore",
+  "useTransition",
+  "useDeferredValue",
+  "useOptimistic",
+  "useActionState",
+  "useFormStatus",
+  "useRouter",
+  "usePathname",
+  "useSearchParams",
+  "useParams",
+  "useSelectedLayoutSegment",
+  "useSelectedLayoutSegments",
 ];
 
-const hookPattern = new RegExp(`\\b(${hookNames.join('|')})\\s*\\(`, 'g');
+const hookPattern = new RegExp(`\\b(${hookNames.join("|")})\\s*\\(`, "g");
 
-const allFiles = findFiles(path.join(__dirname, '..', 'src'));
+const allFiles = findFiles(path.join(__dirname, "..", "src"));
 const issues = [];
 
 for (const file of allFiles) {
-  const content = fs.readFileSync(file, 'utf8');
+  const content = fs.readFileSync(file, "utf8");
 
   // Only check client components
-  if (!content.includes('"use client"') && !content.includes("'use client'")) continue;
+  if (!content.includes('"use client"') && !content.includes("'use client'"))
+    continue;
 
-  const lines = content.split('\n');
-  const relPath = path.relative(path.join(__dirname, '..'), file).replace(/\\/g, '/');
+  const lines = content.split("\n");
+  const relPath = path
+    .relative(path.join(__dirname, ".."), file)
+    .replace(/\\/g, "/");
 
   // Strategy 1: Find hooks inside if blocks
   // Look for patterns where an if block contains hook calls
@@ -48,7 +73,7 @@ for (const file of allFiles) {
     // Detect if blocks at various indent levels
     if (/^\s*if\s*\(/.test(lines[i])) {
       // Gather the contents of the if block
-      let ifContent = '';
+      let ifContent = "";
       let j = i;
       let braceCount = 0;
       let started = false;
@@ -56,10 +81,13 @@ for (const file of allFiles) {
       while (j < Math.min(i + 30, lines.length)) {
         const l = lines[j];
         for (const ch of l) {
-          if (ch === '{') { braceCount++; started = true; }
-          if (ch === '}') braceCount--;
+          if (ch === "{") {
+            braceCount++;
+            started = true;
+          }
+          if (ch === "}") braceCount--;
         }
-        ifContent += l + '\n';
+        ifContent += l + "\n";
         if (started && braceCount <= 0) break;
         j++;
       }
@@ -69,16 +97,16 @@ for (const file of allFiles) {
       for (const match of hookMatches) {
         // Exclude hooks in event handlers, inner functions, etc.
         // Find the line number of the hook within the if block
-        const hookLines = ifContent.split('\n');
+        const hookLines = ifContent.split("\n");
         for (let k = 0; k < hookLines.length; k++) {
-          if (hookLines[k].includes(match[1] + '(')) {
+          if (hookLines[k].includes(match[1] + "(")) {
             issues.push({
               file: relPath,
               line: i + 1 + k,
-              type: 'HOOK_IN_IF',
+              type: "HOOK_IN_IF",
               hook: match[1],
               ifCondition: trimmed.substring(0, 100),
-              hookLine: hookLines[k].trim().substring(0, 100)
+              hookLine: hookLines[k].trim().substring(0, 100),
             });
           }
         }
@@ -88,9 +116,10 @@ for (const file of allFiles) {
 
   // Strategy 2: Find components with hooks after early returns
   // Parse component functions and track returns vs hooks
-  const componentPattern = /(?:export\s+(?:default\s+)?)?(?:function|const)\s+([A-Z]\w*)\s*[=(]/;
+  const componentPattern =
+    /(?:export\s+(?:default\s+)?)?(?:function|const)\s+([A-Z]\w*)\s*[=(]/;
   let inComponent = false;
-  let componentName = '';
+  let componentName = "";
   let braceDepth = 0;
   let foundReturn = false;
   let returnLine = -1;
@@ -111,8 +140,8 @@ for (const file of allFiles) {
     if (!inComponent) continue;
 
     for (const ch of line) {
-      if (ch === '{') braceDepth++;
-      if (ch === '}') braceDepth--;
+      if (ch === "{") braceDepth++;
+      if (ch === "}") braceDepth--;
     }
 
     // Check for early returns (not the final JSX return)
@@ -136,11 +165,11 @@ for (const file of allFiles) {
         issues.push({
           file: relPath,
           line: i + 1,
-          type: 'HOOK_AFTER_EARLY_RETURN',
+          type: "HOOK_AFTER_EARLY_RETURN",
           hook: hookMatch[1],
           component: componentName,
           returnAtLine: returnLine,
-          hookLine: trimmed.substring(0, 100)
+          hookLine: trimmed.substring(0, 100),
         });
       }
     }
@@ -159,12 +188,17 @@ for (const file of allFiles) {
       // Check if it's React's use() (not useState, useEffect, etc.)
       const trimmed = line.trim();
       // Make sure it's standalone "use(" not "useState(" etc
-      if (/\buse\s*\(/.test(trimmed) && !/(useState|useEffect|useMemo|useCallback|useRef|useContext|useReducer|useId|useLayoutEffect|useRouter|usePathname|useSearchParams|useParams|useTransition|useDeferredValue|useOptimistic|useActionState|useFormStatus|useSelectedLayout|useInsertionEffect|useImperativeHandle|useSyncExternalStore|useBreakpoint|useChatRealtime|useConversationsRealtime|useAgentPresence|useSidebar|useIsMobile|useModuleCheck|useTheme|useBranding|useCurrency|useToast|useForm|useFieldArray|useFormContext|useWatch|useDebounce|useDebouncedCallback|useLocalStorage|useHotkeys|useSortable|useDraggable|useDroppable|useDndMonitor|useSensors|useSensor|useMediaQuery|useCommandPalette|useQuickActions)\s*\(/.test(trimmed)) {
+      if (
+        /\buse\s*\(/.test(trimmed) &&
+        !/(useState|useEffect|useMemo|useCallback|useRef|useContext|useReducer|useId|useLayoutEffect|useRouter|usePathname|useSearchParams|useParams|useTransition|useDeferredValue|useOptimistic|useActionState|useFormStatus|useSelectedLayout|useInsertionEffect|useImperativeHandle|useSyncExternalStore|useBreakpoint|useChatRealtime|useConversationsRealtime|useAgentPresence|useSidebar|useIsMobile|useModuleCheck|useTheme|useBranding|useCurrency|useToast|useForm|useFieldArray|useFormContext|useWatch|useDebounce|useDebouncedCallback|useLocalStorage|useHotkeys|useSortable|useDraggable|useDroppable|useDndMonitor|useSensors|useSensor|useMediaQuery|useCommandPalette|useQuickActions)\s*\(/.test(
+          trimmed,
+        )
+      ) {
         issues.push({
           file: relPath,
           line: i + 1,
-          type: 'REACT19_USE',
-          hookLine: trimmed.substring(0, 100)
+          type: "REACT19_USE",
+          hookLine: trimmed.substring(0, 100),
         });
       }
     }
@@ -174,7 +208,7 @@ for (const file of allFiles) {
 
 // Deduplicate
 const seen = new Set();
-const unique = issues.filter(i => {
+const unique = issues.filter((i) => {
   const key = `${i.file}:${i.line}:${i.hook || i.type}`;
   if (seen.has(key)) return false;
   seen.add(key);
@@ -182,7 +216,7 @@ const unique = issues.filter(i => {
 });
 
 console.log(`\nFound ${unique.length} potential issues:\n`);
-unique.forEach(i => {
+unique.forEach((i) => {
   console.log(`[${i.type}] ${i.file}:${i.line}`);
   if (i.hook) console.log(`  Hook: ${i.hook}`);
   if (i.ifCondition) console.log(`  If: ${i.ifCondition}`);

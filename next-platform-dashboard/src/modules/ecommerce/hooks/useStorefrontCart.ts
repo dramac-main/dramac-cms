@@ -1,14 +1,14 @@
 /**
  * useStorefrontCart - Cart management hook
- * 
+ *
  * Phase ECOM-20: Core Data Hooks
- * 
+ *
  * Provides cart state and operations for storefront components.
  */
-'use client'
+"use client";
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
-import { formatCurrency } from '@/lib/locale-config'
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { formatCurrency } from "@/lib/locale-config";
 import {
   getPublicOrCreateCart,
   getPublicCart,
@@ -18,39 +18,47 @@ import {
   clearPublicCart as clearCartAction,
   applyPublicDiscountToCart,
   removePublicDiscountFromCart,
-} from '../actions/public-ecommerce-actions'
-import type { 
-  Cart, 
+} from "../actions/public-ecommerce-actions";
+import type {
+  Cart,
   CartTotals,
   StorefrontCartResult,
   EcommerceSettings,
-} from '../types/ecommerce-types'
-import { calculateShipping } from '../lib/shipping-calculator'
+} from "../types/ecommerce-types";
+import { calculateShipping } from "../lib/shipping-calculator";
 
 // Session ID for guest carts
 function getOrCreateSessionId(): string {
-  if (typeof window === 'undefined') return ''
-  
-  let sessionId = localStorage.getItem('ecom_session_id')
+  if (typeof window === "undefined") return "";
+
+  let sessionId = localStorage.getItem("ecom_session_id");
   if (!sessionId) {
-    sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    localStorage.setItem('ecom_session_id', sessionId)
+    sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    localStorage.setItem("ecom_session_id", sessionId);
   }
-  return sessionId
+  return sessionId;
 }
 
 // Local totals calculation (synchronous)
-function calculateLocalTotals(cart: Cart, taxRate: number, settings?: EcommerceSettings | null): CartTotals {
-  const subtotal = cart.items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0)
-  const discount = cart.discount_amount || 0
-  const taxableAmount = subtotal - discount
-  const tax = (taxableAmount * taxRate) / 100
+function calculateLocalTotals(
+  cart: Cart,
+  taxRate: number,
+  settings?: EcommerceSettings | null,
+): CartTotals {
+  const subtotal = cart.items.reduce(
+    (sum, item) => sum + item.unit_price * item.quantity,
+    0,
+  );
+  const discount = cart.discount_amount || 0;
+  const taxableAmount = subtotal - discount;
+  const tax = (taxableAmount * taxRate) / 100;
 
   // Calculate shipping from settings if available
   // Note: Shipping is only calculated when a real shipping address exists (at checkout)
   // In the cart summary, we show $0 / "Calculated at checkout"
-  let shipping = 0
-  const shippingAddr = (cart as unknown as Record<string, unknown>).shipping_address as Record<string, string> | undefined
+  let shipping = 0;
+  const shippingAddr = (cart as unknown as Record<string, unknown>)
+    .shipping_address as Record<string, string> | undefined;
   if (settings && shippingAddr) {
     // Only calculate if a real country is provided (not empty placeholder)
     if (shippingAddr.country) {
@@ -58,305 +66,341 @@ function calculateLocalTotals(cart: Cart, taxRate: number, settings?: EcommerceS
         const result = calculateShipping({
           items: cart.items,
           shippingAddress: {
-            first_name: shippingAddr.first_name || '',
-            last_name: shippingAddr.last_name || '',
-            address_line_1: shippingAddr.address_line_1 || '',
-            city: shippingAddr.city || '',
-            state: shippingAddr.state || '',
-            postal_code: shippingAddr.postal_code || '',
+            first_name: shippingAddr.first_name || "",
+            last_name: shippingAddr.last_name || "",
+            address_line_1: shippingAddr.address_line_1 || "",
+            city: shippingAddr.city || "",
+            state: shippingAddr.state || "",
+            postal_code: shippingAddr.postal_code || "",
             country: shippingAddr.country,
           },
           settings,
           subtotal: taxableAmount,
-        })
-        shipping = result.cost
+        });
+        shipping = result.cost;
       } catch {
         // Fallback to free shipping on error
-        shipping = 0
+        shipping = 0;
       }
     }
   }
 
-  const total = taxableAmount + tax + shipping
-  const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0)
-  
+  const total = taxableAmount + tax + shipping;
+  const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+
   return {
     subtotal,
     discount,
     tax,
     shipping,
     total,
-    itemCount
-  }
+    itemCount,
+  };
 }
 
 export function useStorefrontCart(
   siteId: string,
   userId?: string,
-  taxRate = 0
+  taxRate = 0,
 ): StorefrontCartResult {
-  const [cart, setCart] = useState<Cart | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isUpdating, setIsUpdating] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [cart, setCart] = useState<Cart | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Initialize cart
   const initCart = useCallback(async () => {
     if (!siteId) {
-      setIsLoading(false)
-      return
+      setIsLoading(false);
+      return;
     }
 
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
-      const sessionId = userId ? undefined : getOrCreateSessionId()
-      const cartData = await getPublicOrCreateCart(siteId, userId, sessionId)
-      setCart(cartData)
+      const sessionId = userId ? undefined : getOrCreateSessionId();
+      const cartData = await getPublicOrCreateCart(siteId, userId, sessionId);
+      setCart(cartData);
     } catch (err) {
-      console.error('Error initializing cart:', err)
-      setError(err instanceof Error ? err.message : 'Failed to load cart')
+      console.error("Error initializing cart:", err);
+      setError(err instanceof Error ? err.message : "Failed to load cart");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [siteId, userId])
+  }, [siteId, userId]);
 
   useEffect(() => {
-    initCart()
-  }, [initCart])
+    initCart();
+  }, [initCart]);
 
   // Listen for cart-updated events from other components
   useEffect(() => {
     const handleCartUpdate = (e: Event) => {
-      const detail = (e as CustomEvent)?.detail
+      const detail = (e as CustomEvent)?.detail;
       // If event includes full cart data, use it directly (no re-fetch)
       if (detail?.cart) {
-        setCart(detail.cart)
-        return
+        setCart(detail.cart);
+        return;
       }
       // If event includes itemCount only (from NavCartBadge etc), skip
-      if (detail?.itemCount !== undefined) return
+      if (detail?.itemCount !== undefined) return;
       // Fallback: re-fetch only if no data was provided
       if (cart?.id) {
-        getPublicCart(cart.id).then((refreshedCart) => {
-          if (refreshedCart) {
-            setCart(refreshedCart)
-          }
-        }).catch(console.error)
+        getPublicCart(cart.id)
+          .then((refreshedCart) => {
+            if (refreshedCart) {
+              setCart(refreshedCart);
+            }
+          })
+          .catch(console.error);
       }
-    }
+    };
 
-    window.addEventListener('cart-updated', handleCartUpdate)
-    return () => window.removeEventListener('cart-updated', handleCartUpdate)
-  }, [cart?.id])
+    window.addEventListener("cart-updated", handleCartUpdate);
+    return () => window.removeEventListener("cart-updated", handleCartUpdate);
+  }, [cart?.id]);
 
   // Refresh cart
   const refresh = useCallback(async () => {
-    if (!cart?.id) return
-    
+    if (!cart?.id) return;
+
     try {
-      const refreshedCart = await getPublicCart(cart.id)
+      const refreshedCart = await getPublicCart(cart.id);
       if (refreshedCart) {
-        setCart(refreshedCart)
+        setCart(refreshedCart);
       }
     } catch (err) {
-      console.error('Error refreshing cart:', err)
+      console.error("Error refreshing cart:", err);
     }
-  }, [cart?.id])
+  }, [cart?.id]);
 
   // Calculate totals locally (synchronous)
   const totals = useMemo((): CartTotals | null => {
-    if (!cart) return null
-    return calculateLocalTotals(cart, taxRate)
-  }, [cart, taxRate])
+    if (!cart) return null;
+    return calculateLocalTotals(cart, taxRate);
+  }, [cart, taxRate]);
 
   // Item count
   const itemCount = useMemo(() => {
-    if (!cart?.items) return 0
-    return cart.items.reduce((sum, item) => sum + item.quantity, 0)
-  }, [cart?.items])
+    if (!cart?.items) return 0;
+    return cart.items.reduce((sum, item) => sum + item.quantity, 0);
+  }, [cart?.items]);
 
   // Add item to cart
-  const addItem = useCallback(async (
-    productId: string,
-    variantId: string | null,
-    quantity: number
-  ): Promise<boolean> => {
-    if (!cart?.id) {
-      setError('Cart not initialized')
-      return false
-    }
-
-    setIsUpdating(true)
-    setError(null)
-
-    try {
-      // addPublicCartItem now returns the full updated cart — single round-trip
-      const updatedCart = await addPublicCartItem(cart.id, productId, variantId, quantity)
-      setCart(updatedCart)
-      // Notify other cart instances with full cart data (no re-fetch needed)
-      if (typeof window !== 'undefined') {
-        const newItemCount = updatedCart.items?.reduce((sum, item) => sum + item.quantity, 0) || 0
-        window.dispatchEvent(new CustomEvent('cart-updated', {
-          detail: { cart: updatedCart, itemCount: newItemCount }
-        }))
+  const addItem = useCallback(
+    async (
+      productId: string,
+      variantId: string | null,
+      quantity: number,
+    ): Promise<boolean> => {
+      if (!cart?.id) {
+        setError("Cart not initialized");
+        return false;
       }
-      return true
-    } catch (err) {
-      console.error('Error adding to cart:', err)
-      setError(err instanceof Error ? err.message : 'Failed to add item')
-      return false
-    } finally {
-      setIsUpdating(false)
-    }
-  }, [cart?.id])
+
+      setIsUpdating(true);
+      setError(null);
+
+      try {
+        // addPublicCartItem now returns the full updated cart — single round-trip
+        const updatedCart = await addPublicCartItem(
+          cart.id,
+          productId,
+          variantId,
+          quantity,
+        );
+        setCart(updatedCart);
+        // Notify other cart instances with full cart data (no re-fetch needed)
+        if (typeof window !== "undefined") {
+          const newItemCount =
+            updatedCart.items?.reduce((sum, item) => sum + item.quantity, 0) ||
+            0;
+          window.dispatchEvent(
+            new CustomEvent("cart-updated", {
+              detail: { cart: updatedCart, itemCount: newItemCount },
+            }),
+          );
+        }
+        return true;
+      } catch (err) {
+        console.error("Error adding to cart:", err);
+        setError(err instanceof Error ? err.message : "Failed to add item");
+        return false;
+      } finally {
+        setIsUpdating(false);
+      }
+    },
+    [cart?.id],
+  );
 
   // Update item quantity
-  const updateItemQuantity = useCallback(async (
-    itemId: string,
-    quantity: number
-  ): Promise<boolean> => {
-    if (!cart?.id) {
-      setError('Cart not initialized')
-      return false
-    }
-
-    setIsUpdating(true)
-    setError(null)
-
-    try {
-      await updateCartItemQty(itemId, quantity)
-      await refresh()
-      // Notify other cart instances with updated data
-      if (typeof window !== 'undefined' && cart) {
-        const refreshedCart = cart
-        const newItemCount = refreshedCart.items?.reduce((sum, item) => sum + item.quantity, 0) || 0
-        window.dispatchEvent(new CustomEvent('cart-updated', {
-          detail: { itemCount: newItemCount }
-        }))
+  const updateItemQuantity = useCallback(
+    async (itemId: string, quantity: number): Promise<boolean> => {
+      if (!cart?.id) {
+        setError("Cart not initialized");
+        return false;
       }
-      return true
-    } catch (err) {
-      console.error('Error updating quantity:', err)
-      setError(err instanceof Error ? err.message : 'Failed to update quantity')
-      return false
-    } finally {
-      setIsUpdating(false)
-    }
-  }, [cart?.id, cart, refresh])
+
+      setIsUpdating(true);
+      setError(null);
+
+      try {
+        await updateCartItemQty(itemId, quantity);
+        await refresh();
+        // Notify other cart instances with updated data
+        if (typeof window !== "undefined" && cart) {
+          const refreshedCart = cart;
+          const newItemCount =
+            refreshedCart.items?.reduce(
+              (sum, item) => sum + item.quantity,
+              0,
+            ) || 0;
+          window.dispatchEvent(
+            new CustomEvent("cart-updated", {
+              detail: { itemCount: newItemCount },
+            }),
+          );
+        }
+        return true;
+      } catch (err) {
+        console.error("Error updating quantity:", err);
+        setError(
+          err instanceof Error ? err.message : "Failed to update quantity",
+        );
+        return false;
+      } finally {
+        setIsUpdating(false);
+      }
+    },
+    [cart?.id, cart, refresh],
+  );
 
   // Remove item
-  const removeItem = useCallback(async (itemId: string): Promise<boolean> => {
-    if (!cart?.id) {
-      setError('Cart not initialized')
-      return false
-    }
-
-    setIsUpdating(true)
-    setError(null)
-
-    try {
-      await removeCartItemAction(itemId)
-      await refresh()
-      // Notify other cart instances
-      if (typeof window !== 'undefined') {
-        const newItemCount = cart.items
-          ?.filter(item => item.id !== itemId)
-          .reduce((sum, item) => sum + item.quantity, 0) || 0
-        window.dispatchEvent(new CustomEvent('cart-updated', {
-          detail: { itemCount: newItemCount }
-        }))
+  const removeItem = useCallback(
+    async (itemId: string): Promise<boolean> => {
+      if (!cart?.id) {
+        setError("Cart not initialized");
+        return false;
       }
-      return true
-    } catch (err) {
-      console.error('Error removing item:', err)
-      setError(err instanceof Error ? err.message : 'Failed to remove item')
-      return false
-    } finally {
-      setIsUpdating(false)
-    }
-  }, [cart?.id, cart?.items, refresh])
+
+      setIsUpdating(true);
+      setError(null);
+
+      try {
+        await removeCartItemAction(itemId);
+        await refresh();
+        // Notify other cart instances
+        if (typeof window !== "undefined") {
+          const newItemCount =
+            cart.items
+              ?.filter((item) => item.id !== itemId)
+              .reduce((sum, item) => sum + item.quantity, 0) || 0;
+          window.dispatchEvent(
+            new CustomEvent("cart-updated", {
+              detail: { itemCount: newItemCount },
+            }),
+          );
+        }
+        return true;
+      } catch (err) {
+        console.error("Error removing item:", err);
+        setError(err instanceof Error ? err.message : "Failed to remove item");
+        return false;
+      } finally {
+        setIsUpdating(false);
+      }
+    },
+    [cart?.id, cart?.items, refresh],
+  );
 
   // Clear cart
   const clearCartFn = useCallback(async (): Promise<boolean> => {
     if (!cart?.id) {
-      setError('Cart not initialized')
-      return false
+      setError("Cart not initialized");
+      return false;
     }
 
-    setIsUpdating(true)
-    setError(null)
+    setIsUpdating(true);
+    setError(null);
 
     try {
-      await clearCartAction(cart.id)
+      await clearCartAction(cart.id);
       // Reinitialize empty cart
-      await initCart()
-      return true
+      await initCart();
+      return true;
     } catch (err) {
-      console.error('Error clearing cart:', err)
-      setError(err instanceof Error ? err.message : 'Failed to clear cart')
-      return false
+      console.error("Error clearing cart:", err);
+      setError(err instanceof Error ? err.message : "Failed to clear cart");
+      return false;
     } finally {
-      setIsUpdating(false)
+      setIsUpdating(false);
     }
-  }, [cart?.id, initCart])
+  }, [cart?.id, initCart]);
 
   // Apply discount
-  const applyDiscount = useCallback(async (
-    code: string
-  ): Promise<{ success: boolean; message: string }> => {
-    if (!cart?.id) {
-      return { success: false, message: 'Cart not initialized' }
-    }
-
-    setIsUpdating(true)
-    setError(null)
-
-    try {
-      // Calculate subtotal
-      const subtotal = cart.items?.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0) || 0
-      const result = await applyPublicDiscountToCart(cart.id, code, subtotal)
-      if (result.success) {
-        await refresh()
+  const applyDiscount = useCallback(
+    async (code: string): Promise<{ success: boolean; message: string }> => {
+      if (!cart?.id) {
+        return { success: false, message: "Cart not initialized" };
       }
-      return { 
-        success: result.success, 
-        message: result.success 
-          ? `Discount applied: -${formatCurrency(result.discountAmount / 100)}`
-          : result.error || 'Invalid discount code'
+
+      setIsUpdating(true);
+      setError(null);
+
+      try {
+        // Calculate subtotal
+        const subtotal =
+          cart.items?.reduce(
+            (sum, item) => sum + item.unit_price * item.quantity,
+            0,
+          ) || 0;
+        const result = await applyPublicDiscountToCart(cart.id, code, subtotal);
+        if (result.success) {
+          await refresh();
+        }
+        return {
+          success: result.success,
+          message: result.success
+            ? `Discount applied: -${formatCurrency(result.discountAmount / 100)}`
+            : result.error || "Invalid discount code",
+        };
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to apply discount";
+        setError(message);
+        return { success: false, message };
+      } finally {
+        setIsUpdating(false);
       }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to apply discount'
-      setError(message)
-      return { success: false, message }
-    } finally {
-      setIsUpdating(false)
-    }
-  }, [cart?.id, cart?.items, refresh])
+    },
+    [cart?.id, cart?.items, refresh],
+  );
 
   // Remove discount
   const removeDiscount = useCallback(async (): Promise<boolean> => {
     if (!cart?.id) {
-      setError('Cart not initialized')
-      return false
+      setError("Cart not initialized");
+      return false;
     }
 
-    setIsUpdating(true)
-    setError(null)
+    setIsUpdating(true);
+    setError(null);
 
     try {
-      await removePublicDiscountFromCart(cart.id)
-      await refresh()
-      return true
+      await removePublicDiscountFromCart(cart.id);
+      await refresh();
+      return true;
     } catch (err) {
-      console.error('Error removing discount:', err)
-      setError(err instanceof Error ? err.message : 'Failed to remove discount')
-      return false
+      console.error("Error removing discount:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to remove discount",
+      );
+      return false;
     } finally {
-      setIsUpdating(false)
+      setIsUpdating(false);
     }
-  }, [cart?.id, refresh])
+  }, [cart?.id, refresh]);
 
   return {
     cart,
@@ -372,6 +416,6 @@ export function useStorefrontCart(
     clearCart: clearCartFn,
     applyDiscount,
     removeDiscount,
-    refresh
-  }
+    refresh,
+  };
 }

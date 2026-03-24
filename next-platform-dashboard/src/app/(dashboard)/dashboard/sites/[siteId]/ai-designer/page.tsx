@@ -868,7 +868,12 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                         label: "Booking System",
                         icon: CalendarCheck,
                       },
-                      { id: "blog", label: "Blog", icon: FileText, builtIn: true },
+                      {
+                        id: "blog",
+                        label: "Blog",
+                        icon: FileText,
+                        builtIn: true,
+                      },
                       {
                         id: "contact-forms",
                         label: "Contact Forms",
@@ -882,7 +887,8 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                       },
                     ].map((feature) => {
                       const isSelected = selectedFeatures.has(feature.id);
-                      const isAlwaysOn = "alwaysOn" in feature && feature.alwaysOn;
+                      const isAlwaysOn =
+                        "alwaysOn" in feature && feature.alwaysOn;
                       const isBuiltIn = "builtIn" in feature && feature.builtIn;
                       const Icon = feature.icon;
                       return (
@@ -911,10 +917,14 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                           <Icon className="h-3.5 w-3.5" />
                           {feature.label}
                           {isAlwaysOn && (
-                            <span className="text-[10px] text-muted-foreground ml-0.5">(Always&nbsp;On)</span>
+                            <span className="text-[10px] text-muted-foreground ml-0.5">
+                              (Always&nbsp;On)
+                            </span>
                           )}
                           {isBuiltIn && !isSelected && (
-                            <span className="text-[10px] text-muted-foreground ml-0.5">(Built&#x2011;in)</span>
+                            <span className="text-[10px] text-muted-foreground ml-0.5">
+                              (Built&#x2011;in)
+                            </span>
                           )}
                           {isSelected && <Check className="h-3 w-3" />}
                         </button>

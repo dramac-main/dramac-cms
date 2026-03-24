@@ -13,7 +13,13 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
@@ -23,11 +29,11 @@ import {
   canAccessSiteSeo,
   type PageSeo,
 } from "@/lib/seo/seo-service";
-import { 
-  analyzeSeo, 
-  getScoreColor, 
+import {
+  analyzeSeo,
+  getScoreColor,
   getScoreLabel,
-  type SeoAuditResult 
+  type SeoAuditResult,
 } from "@/lib/seo/seo-analyzer";
 
 export default function PortalSiteSeoPage({
@@ -85,18 +91,27 @@ export default function PortalSiteSeoPage({
     }),
   }));
 
-  const overallScore = pages.length > 0
-    ? Math.round(pageAnalyses.reduce((sum, pa) => sum + pa.analysis.score, 0) / pages.length)
-    : 0;
+  const overallScore =
+    pages.length > 0
+      ? Math.round(
+          pageAnalyses.reduce((sum, pa) => sum + pa.analysis.score, 0) /
+            pages.length,
+        )
+      : 0;
 
-  const totalIssues = pageAnalyses.reduce((sum, pa) => sum + pa.analysis.issues.length, 0);
+  const totalIssues = pageAnalyses.reduce(
+    (sum, pa) => sum + pa.analysis.issues.length,
+    0,
+  );
   const errorCount = pageAnalyses.reduce(
-    (sum, pa) => sum + pa.analysis.issues.filter(i => i.type === "error").length,
-    0
+    (sum, pa) =>
+      sum + pa.analysis.issues.filter((i) => i.type === "error").length,
+    0,
   );
   const warningCount = pageAnalyses.reduce(
-    (sum, pa) => sum + pa.analysis.issues.filter(i => i.type === "warning").length,
-    0
+    (sum, pa) =>
+      sum + pa.analysis.issues.filter((i) => i.type === "warning").length,
+    0,
   );
 
   if (loading) {
@@ -132,11 +147,15 @@ export default function PortalSiteSeoPage({
         <Card className="md:col-span-2">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className={`text-5xl font-bold ${getScoreColor(overallScore)}`}>
+              <div
+                className={`text-5xl font-bold ${getScoreColor(overallScore)}`}
+              >
                 {overallScore}
               </div>
               <div className="flex-1">
-                <p className="font-medium text-lg">{getScoreLabel(overallScore)}</p>
+                <p className="font-medium text-lg">
+                  {getScoreLabel(overallScore)}
+                </p>
                 <Progress value={overallScore} className="mt-2" />
               </div>
             </div>
@@ -176,7 +195,9 @@ export default function PortalSiteSeoPage({
               <div className="flex items-center gap-3 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg">
                 <CircleX className="h-6 w-6 text-red-600" />
                 <div>
-                  <p className="text-2xl font-bold text-red-600">{errorCount}</p>
+                  <p className="text-2xl font-bold text-red-600">
+                    {errorCount}
+                  </p>
                   <p className="text-sm text-muted-foreground">Errors</p>
                 </div>
               </div>
@@ -184,7 +205,9 @@ export default function PortalSiteSeoPage({
               <div className="flex items-center gap-3 p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg">
                 <AlertTriangle className="h-6 w-6 text-yellow-600" />
                 <div>
-                  <p className="text-2xl font-bold text-yellow-600">{warningCount}</p>
+                  <p className="text-2xl font-bold text-yellow-600">
+                    {warningCount}
+                  </p>
                   <p className="text-sm text-muted-foreground">Warnings</p>
                 </div>
               </div>
@@ -228,16 +251,21 @@ export default function PortalSiteSeoPage({
                   )}
                   <div>
                     <p className="font-medium">{page.pageName}</p>
-                    <p className="text-sm text-muted-foreground">/{page.slug}</p>
+                    <p className="text-sm text-muted-foreground">
+                      /{page.slug}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <p className={`text-xl font-bold ${getScoreColor(analysis.score)}`}>
+                    <p
+                      className={`text-xl font-bold ${getScoreColor(analysis.score)}`}
+                    >
                       {analysis.score}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {analysis.issues.length} issue{analysis.issues.length !== 1 ? "s" : ""}
+                      {analysis.issues.length} issue
+                      {analysis.issues.length !== 1 ? "s" : ""}
                     </p>
                   </div>
                 </div>
@@ -261,14 +289,15 @@ export default function PortalSiteSeoPage({
         <Card>
           <CardHeader>
             <CardTitle>Common Issues</CardTitle>
-            <CardDescription>
-              Frequently occurring SEO issues
-            </CardDescription>
+            <CardDescription>Frequently occurring SEO issues</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {getCommonIssues(pageAnalyses).map((issue, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                <div
+                  key={i}
+                  className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg"
+                >
                   {issue.type === "error" ? (
                     <CircleX className="h-5 w-5 text-red-600 shrink-0" />
                   ) : issue.type === "warning" ? (
@@ -278,7 +307,9 @@ export default function PortalSiteSeoPage({
                   )}
                   <div>
                     <p className="font-medium">{issue.message}</p>
-                    <p className="text-sm text-muted-foreground">{issue.suggestion}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {issue.suggestion}
+                    </p>
                     <Badge variant="outline" className="mt-2">
                       {issue.count} page{issue.count !== 1 ? "s" : ""}
                     </Badge>
@@ -328,13 +359,18 @@ export default function PortalSiteSeoPage({
 }
 
 // Helper to get common issues
-function getCommonIssues(pageAnalyses: { page: PageSeo; analysis: SeoAuditResult }[]) {
-  const issueMap = new Map<string, {
-    type: "error" | "warning" | "info";
-    message: string;
-    suggestion: string;
-    count: number;
-  }>();
+function getCommonIssues(
+  pageAnalyses: { page: PageSeo; analysis: SeoAuditResult }[],
+) {
+  const issueMap = new Map<
+    string,
+    {
+      type: "error" | "warning" | "info";
+      message: string;
+      suggestion: string;
+      count: number;
+    }
+  >();
 
   for (const { analysis } of pageAnalyses) {
     for (const issue of analysis.issues) {

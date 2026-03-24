@@ -1,8 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, MessageSquare, Mail, Phone, FileText, Send } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Loader2,
+  MessageSquare,
+  Mail,
+  Phone,
+  FileText,
+  Send,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,7 +33,9 @@ interface PortalSupportProps {
   clientEmail: string | null;
 }
 
-export function PortalSupport({ clientEmail: _clientEmail }: PortalSupportProps) {
+export function PortalSupport({
+  clientEmail: _clientEmail,
+}: PortalSupportProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     subject: "",
@@ -30,17 +45,17 @@ export function PortalSupport({ clientEmail: _clientEmail }: PortalSupportProps)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.subject || !formData.category || !formData.message) {
       toast.error("Please fill in all fields");
       return;
     }
 
     setIsSubmitting(true);
-    
+
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    
+
     toast.success("Support request submitted! We'll get back to you soon.");
     setFormData({ subject: "", category: "", message: "" });
     setIsSubmitting(false);
@@ -64,7 +79,8 @@ export function PortalSupport({ clientEmail: _clientEmail }: PortalSupportProps)
               Submit a Request
             </CardTitle>
             <CardDescription>
-              Tell us what you need help with and we&apos;ll get back to you as soon as possible.
+              Tell us what you need help with and we&apos;ll get back to you as
+              soon as possible.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -76,15 +92,19 @@ export function PortalSupport({ clientEmail: _clientEmail }: PortalSupportProps)
                     id="subject"
                     placeholder="Brief description of your request"
                     value={formData.subject}
-                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, subject: e.target.value })
+                    }
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
-                  <Select 
-                    value={formData.category} 
-                    onValueChange={(value) => setFormData({ ...formData, category: value })}
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, category: value })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a category" />
@@ -107,7 +127,9 @@ export function PortalSupport({ clientEmail: _clientEmail }: PortalSupportProps)
                   placeholder="Describe your request in detail..."
                   rows={6}
                   value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, message: e.target.value })
+                  }
                 />
               </div>
 
@@ -137,8 +159,8 @@ export function PortalSupport({ clientEmail: _clientEmail }: PortalSupportProps)
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Email</p>
-                  <a 
-                    href="mailto:support@dramacagency.com" 
+                  <a
+                    href="mailto:support@dramacagency.com"
                     className="font-medium hover:underline"
                   >
                     support@dramacagency.com
@@ -173,15 +195,20 @@ export function PortalSupport({ clientEmail: _clientEmail }: PortalSupportProps)
                 </p>
               </div>
               <div>
-                <p className="font-medium text-sm">Can I edit my site myself?</p>
+                <p className="font-medium text-sm">
+                  Can I edit my site myself?
+                </p>
                 <p className="text-sm text-muted-foreground">
                   Contact your agency to discuss self-editing options.
                 </p>
               </div>
               <div>
-                <p className="font-medium text-sm">How do I update my domain?</p>
+                <p className="font-medium text-sm">
+                  How do I update my domain?
+                </p>
                 <p className="text-sm text-muted-foreground">
-                  Domain changes require agency assistance. Submit a request above.
+                  Domain changes require agency assistance. Submit a request
+                  above.
                 </p>
               </div>
             </CardContent>

@@ -55,94 +55,95 @@ export async function getUserSeoContext(): Promise<SeoUserContext> {
   const supabase = await createClient();
   const userId = await getCurrentUserId();
   const cookieStore = await cookies();
-  
+
   // Check for portal user
-  const portalClientId = cookieStore.get("impersonating_client_id")?.value || null;
-  
+  const portalClientId =
+    cookieStore.get("impersonating_client_id")?.value || null;
+
   if (portalClientId) {
     const { data: client } = await supabase
       .from("clients")
       .select("id, has_portal_access")
       .eq("id", portalClientId)
       .single();
-    
+
     if (!client?.has_portal_access) {
-      return { 
-        userId: null, 
-        role: null, 
-        agencyRole: null, 
-        accessibleSiteIds: [], 
-        isPortalUser: true, 
-        portalClientId 
+      return {
+        userId: null,
+        role: null,
+        agencyRole: null,
+        accessibleSiteIds: [],
+        isPortalUser: true,
+        portalClientId,
       };
     }
-    
+
     const { data: sites } = await supabase
       .from("sites")
       .select("id")
       .eq("client_id", portalClientId);
-    
+
     return {
       userId: null,
       role: "client",
       agencyRole: null,
-      accessibleSiteIds: sites?.map(s => s.id) || [],
+      accessibleSiteIds: sites?.map((s) => s.id) || [],
       isPortalUser: true,
-      portalClientId
+      portalClientId,
     };
   }
-  
+
   if (!userId) {
-    return { 
-      userId: null, 
-      role: null, 
-      agencyRole: null, 
-      accessibleSiteIds: [], 
-      isPortalUser: false, 
-      portalClientId: null 
+    return {
+      userId: null,
+      role: null,
+      agencyRole: null,
+      accessibleSiteIds: [],
+      isPortalUser: false,
+      portalClientId: null,
     };
   }
-  
+
   if (await isSuperAdmin()) {
-    return { 
-      userId, 
-      role: "super_admin", 
-      agencyRole: null, 
-      accessibleSiteIds: null, 
-      isPortalUser: false, 
-      portalClientId: null 
+    return {
+      userId,
+      role: "super_admin",
+      agencyRole: null,
+      accessibleSiteIds: null,
+      isPortalUser: false,
+      portalClientId: null,
     };
   }
-  
+
   const { data: membership } = await supabase
     .from("agency_members")
     .select("agency_id, role")
     .eq("user_id", userId)
     .single();
-  
+
   if (!membership) {
-    return { 
-      userId, 
-      role: null, 
-      agencyRole: null, 
-      accessibleSiteIds: [], 
-      isPortalUser: false, 
-      portalClientId: null 
+    return {
+      userId,
+      role: null,
+      agencyRole: null,
+      accessibleSiteIds: [],
+      isPortalUser: false,
+      portalClientId: null,
     };
   }
-  
+
   const { data: sites } = await supabase
     .from("sites")
     .select("id, clients!inner(agency_id)")
     .eq("clients.agency_id", membership.agency_id);
-  
+
   return {
     userId,
     role: null,
     agencyRole: membership.role,
-    accessibleSiteIds: sites?.map(s => s.id) || [],
+    accessibleSiteIds: sites?.map((s) => s.id) || [],
     isPortalUser: false,
-    portalClientId: null
+    portalClientId: null,
   };
 }
 
@@ -164,7 +165,8 @@ export async function canEditSiteSeo(): Promise<boolean> {
   if (context.isPortalUser) return false;
   if (context.agencyRole === "member") return false;
   if (context.role === "super_admin") return true;
-  if (context.agencyRole === "owner" || context.agencyRole === "admin") return true;
+  if (context.agencyRole === "owner" || context.agencyRole === "admin")
+    return true;
   return false;
 }
 
@@ -191,21 +193,35 @@ export async function canViewAnalyticsCodes(): Promise<boolean> {
 /**
  * Map database row to SiteSeoSettings
  */
-function mapToSettings(data: Record<string, unknown>, hideSensitive = false): SiteSeoSettings {
+function mapToSettings(
+  data: Record<string, unknown>,
+  hideSensitive = false,
+): SiteSeoSettings {
   return {
     id: data.id as string,
     siteId: data.site_id as string,
-    defaultTitleTemplate: (data.default_title_template as string) || "{page_title} | {site_name}",
+    defaultTitleTemplate:
+      (data.default_title_template as string) || "{page_title} | {site_name}",
     defaultDescription: data.default_description as string | null,
     defaultKeywords: (data.default_keywords as string[]) || [],
     ogImageUrl: data.og_image_url as string | null,
-    twitterCardType: (data.twitter_card_type as "summary" | "summary_large_image") || "summary_large_image",
+    twitterCardType:
+      (data.twitter_card_type as "summary" | "summary_large_image") ||
+      "summary_large_image",
     twitterHandle: data.twitter_handle as string | null,
     // Hide sensitive codes from unauthorized users
-    googleSiteVerification: hideSensitive ? null : (data.google_site_verification as string | null),
-    bingSiteVerification: hideSensitive ? null : (data.bing_site_verification as string | null),
-    googleAnalyticsId: hideSensitive ? null : (data.google_analytics_id as string | null),
-    facebookPixelId: hideSensitive ? null : (data.facebook_pixel_id as string | null),
+    googleSiteVerification: hideSensitive
+      ? null
+      : (data.google_site_verification as string | null),
+    bingSiteVerification: hideSensitive
+      ? null
+      : (data.bing_site_verification as string | null),
+    googleAnalyticsId: hideSensitive
+      ? null
+      : (data.google_analytics_id as string | null),
+    facebookPixelId: hideSensitive
+      ? null
+      : (data.facebook_pixel_id as string | null),
     robotsIndex: (data.robots_index as boolean) ?? true,
     robotsFollow: (data.robots_follow as boolean) ?? true,
     organizationName: data.organization_name as string | null,
@@ -216,7 +232,9 @@ function mapToSettings(data: Record<string, unknown>, hideSensitive = false): Si
 /**
  * Get SEO settings for a site
  */
-export async function getSiteSeoSettings(siteId: string): Promise<SiteSeoSettings | null> {
+export async function getSiteSeoSettings(
+  siteId: string,
+): Promise<SiteSeoSettings | null> {
   // Permission check
   if (!(await canAccessSiteSeo(siteId))) {
     console.error("[SEO] Access denied for site:", siteId);
@@ -285,16 +303,17 @@ export async function getSiteSeoSettings(siteId: string): Promise<SiteSeoSetting
  */
 export async function updateSiteSeoSettings(
   siteId: string,
-  updates: Partial<Omit<SiteSeoSettings, "id" | "siteId">>
+  updates: Partial<Omit<SiteSeoSettings, "id" | "siteId">>,
 ): Promise<{ success: boolean; error?: string }> {
   // Permission check - only owner/admin can update site SEO
   if (!(await canEditSiteSeo())) {
-    return { 
-      success: false, 
-      error: "Permission denied: Only agency owners/admins can edit site SEO settings" 
+    return {
+      success: false,
+      error:
+        "Permission denied: Only agency owners/admins can edit site SEO settings",
     };
   }
-  
+
   if (!(await canAccessSiteSeo(siteId))) {
     return { success: false, error: "Access denied" };
   }
@@ -312,20 +331,34 @@ export async function updateSiteSeoSettings(
     updated_at: new Date().toISOString(),
   };
 
-  if (updates.defaultTitleTemplate !== undefined) dbUpdates.default_title_template = updates.defaultTitleTemplate;
-  if (updates.defaultDescription !== undefined) dbUpdates.default_description = updates.defaultDescription;
-  if (updates.defaultKeywords !== undefined) dbUpdates.default_keywords = updates.defaultKeywords;
-  if (updates.ogImageUrl !== undefined) dbUpdates.og_image_url = updates.ogImageUrl;
-  if (updates.twitterCardType !== undefined) dbUpdates.twitter_card_type = updates.twitterCardType;
-  if (updates.twitterHandle !== undefined) dbUpdates.twitter_handle = updates.twitterHandle;
-  if (updates.googleSiteVerification !== undefined) dbUpdates.google_site_verification = updates.googleSiteVerification;
-  if (updates.bingSiteVerification !== undefined) dbUpdates.bing_site_verification = updates.bingSiteVerification;
-  if (updates.googleAnalyticsId !== undefined) dbUpdates.google_analytics_id = updates.googleAnalyticsId;
-  if (updates.facebookPixelId !== undefined) dbUpdates.facebook_pixel_id = updates.facebookPixelId;
-  if (updates.robotsIndex !== undefined) dbUpdates.robots_index = updates.robotsIndex;
-  if (updates.robotsFollow !== undefined) dbUpdates.robots_follow = updates.robotsFollow;
-  if (updates.organizationName !== undefined) dbUpdates.organization_name = updates.organizationName;
-  if (updates.organizationLogoUrl !== undefined) dbUpdates.organization_logo_url = updates.organizationLogoUrl;
+  if (updates.defaultTitleTemplate !== undefined)
+    dbUpdates.default_title_template = updates.defaultTitleTemplate;
+  if (updates.defaultDescription !== undefined)
+    dbUpdates.default_description = updates.defaultDescription;
+  if (updates.defaultKeywords !== undefined)
+    dbUpdates.default_keywords = updates.defaultKeywords;
+  if (updates.ogImageUrl !== undefined)
+    dbUpdates.og_image_url = updates.ogImageUrl;
+  if (updates.twitterCardType !== undefined)
+    dbUpdates.twitter_card_type = updates.twitterCardType;
+  if (updates.twitterHandle !== undefined)
+    dbUpdates.twitter_handle = updates.twitterHandle;
+  if (updates.googleSiteVerification !== undefined)
+    dbUpdates.google_site_verification = updates.googleSiteVerification;
+  if (updates.bingSiteVerification !== undefined)
+    dbUpdates.bing_site_verification = updates.bingSiteVerification;
+  if (updates.googleAnalyticsId !== undefined)
+    dbUpdates.google_analytics_id = updates.googleAnalyticsId;
+  if (updates.facebookPixelId !== undefined)
+    dbUpdates.facebook_pixel_id = updates.facebookPixelId;
+  if (updates.robotsIndex !== undefined)
+    dbUpdates.robots_index = updates.robotsIndex;
+  if (updates.robotsFollow !== undefined)
+    dbUpdates.robots_follow = updates.robotsFollow;
+  if (updates.organizationName !== undefined)
+    dbUpdates.organization_name = updates.organizationName;
+  if (updates.organizationLogoUrl !== undefined)
+    dbUpdates.organization_logo_url = updates.organizationLogoUrl;
 
   if (!existing) {
     // Insert new settings
@@ -366,7 +399,8 @@ export async function getPagesSeo(siteId: string): Promise<PageSeo[]> {
 
   const { data, error } = await supabase
     .from("pages")
-    .select(`
+    .select(
+      `
       id, 
       name, 
       slug, 
@@ -379,7 +413,8 @@ export async function getPagesSeo(siteId: string): Promise<PageSeo[]> {
       robots_index, 
       robots_follow, 
       canonical_url
-    `)
+    `,
+    )
     .eq("site_id", siteId)
     .order("name");
 
@@ -419,22 +454,22 @@ export async function updatePageSeo(
     robotsIndex: boolean;
     robotsFollow: boolean;
     canonicalUrl: string;
-  }>
+  }>,
 ): Promise<{ success: boolean; error?: string }> {
   // Permission check - members can edit page SEO
   if (!(await canEditPageSeo())) {
     return { success: false, error: "Permission denied" };
   }
-  
+
   const supabase = await createClient();
-  
+
   // Verify user has access to the page's site
   const { data: page } = await supabase
     .from("pages")
     .select("site_id")
     .eq("id", pageId)
     .single();
-  
+
   if (!page || !(await canAccessSiteSeo(page.site_id))) {
     return { success: false, error: "Access denied" };
   }
@@ -442,14 +477,21 @@ export async function updatePageSeo(
   const dbUpdates: Record<string, unknown> = {};
 
   if (updates.seoTitle !== undefined) dbUpdates.seo_title = updates.seoTitle;
-  if (updates.seoDescription !== undefined) dbUpdates.seo_description = updates.seoDescription;
-  if (updates.seoKeywords !== undefined) dbUpdates.seo_keywords = updates.seoKeywords;
+  if (updates.seoDescription !== undefined)
+    dbUpdates.seo_description = updates.seoDescription;
+  if (updates.seoKeywords !== undefined)
+    dbUpdates.seo_keywords = updates.seoKeywords;
   if (updates.ogTitle !== undefined) dbUpdates.og_title = updates.ogTitle;
-  if (updates.ogDescription !== undefined) dbUpdates.og_description = updates.ogDescription;
-  if (updates.ogImageUrl !== undefined) dbUpdates.og_image_url = updates.ogImageUrl;
-  if (updates.robotsIndex !== undefined) dbUpdates.robots_index = updates.robotsIndex;
-  if (updates.robotsFollow !== undefined) dbUpdates.robots_follow = updates.robotsFollow;
-  if (updates.canonicalUrl !== undefined) dbUpdates.canonical_url = updates.canonicalUrl;
+  if (updates.ogDescription !== undefined)
+    dbUpdates.og_description = updates.ogDescription;
+  if (updates.ogImageUrl !== undefined)
+    dbUpdates.og_image_url = updates.ogImageUrl;
+  if (updates.robotsIndex !== undefined)
+    dbUpdates.robots_index = updates.robotsIndex;
+  if (updates.robotsFollow !== undefined)
+    dbUpdates.robots_follow = updates.robotsFollow;
+  if (updates.canonicalUrl !== undefined)
+    dbUpdates.canonical_url = updates.canonicalUrl;
 
   const { error } = await supabase
     .from("pages")
@@ -469,10 +511,11 @@ export async function updatePageSeo(
  */
 export async function getPageSeo(pageId: string): Promise<PageSeo | null> {
   const supabase = await createClient();
-  
+
   const { data: page, error } = await supabase
     .from("pages")
-    .select(`
+    .select(
+      `
       id, 
       name, 
       slug, 
@@ -486,7 +529,8 @@ export async function getPageSeo(pageId: string): Promise<PageSeo | null> {
       robots_index, 
       robots_follow, 
       canonical_url
-    `)
+    `,
+    )
     .eq("id", pageId)
     .single();
 
@@ -519,23 +563,30 @@ export async function getPageSeo(pageId: string): Promise<PageSeo | null> {
  * Get accessible sites for portal SEO view
  */
 export async function getPortalSeoSites(): Promise<{
-  sites: Array<{ id: string; name: string; domain: string | null; subdomain: string }>;
+  sites: Array<{
+    id: string;
+    name: string;
+    domain: string | null;
+    subdomain: string;
+  }>;
 }> {
   const context = await getUserSeoContext();
-  
+
   if (!context.isPortalUser || !context.portalClientId) {
     return { sites: [] };
   }
-  
+
   const supabase = await createClient();
-  
+
   const { data: sites } = await supabase
     .from("sites")
     .select("id, name, custom_domain, subdomain")
     .eq("client_id", context.portalClientId)
     .order("name");
-  
-  return { sites: sites?.map(s => ({ ...s, domain: s.custom_domain })) || [] };
+
+  return {
+    sites: sites?.map((s) => ({ ...s, domain: s.custom_domain })) || [],
+  };
 }
 
 /**
@@ -547,7 +598,7 @@ export async function getSiteRobotsTxt(siteId: string): Promise<string | null> {
   }
 
   const supabase = await createClient();
-  
+
   const { data: site } = await supabase
     .from("sites")
     .select("robots_txt, subdomain, custom_domain")
@@ -556,7 +607,10 @@ export async function getSiteRobotsTxt(siteId: string): Promise<string | null> {
 
   if (!site) return null;
 
-  return site.robots_txt || generateDefaultRobotsTxt(site.subdomain, site.custom_domain);
+  return (
+    site.robots_txt ||
+    generateDefaultRobotsTxt(site.subdomain, site.custom_domain)
+  );
 }
 
 /**
@@ -564,7 +618,7 @@ export async function getSiteRobotsTxt(siteId: string): Promise<string | null> {
  */
 export async function updateSiteRobotsTxt(
   siteId: string,
-  robotsTxt: string
+  robotsTxt: string,
 ): Promise<{ success: boolean; error?: string }> {
   if (!(await canEditSiteSeo())) {
     return { success: false, error: "Permission denied" };
@@ -601,7 +655,7 @@ export async function getSiteSitemapSettings(siteId: string): Promise<{
   }
 
   const supabase = await createClient();
-  
+
   const { data: site } = await supabase
     .from("sites")
     .select("sitemap_enabled, sitemap_changefreq, sitemap_include_images")
@@ -626,7 +680,7 @@ export async function updateSiteSitemapSettings(
     enabled?: boolean;
     changefreq?: string;
     includeImages?: boolean;
-  }
+  },
 ): Promise<{ success: boolean; error?: string }> {
   if (!(await canEditSiteSeo())) {
     return { success: false, error: "Permission denied" };
@@ -639,9 +693,12 @@ export async function updateSiteSitemapSettings(
   const supabase = await createClient();
 
   const updates: Record<string, unknown> = {};
-  if (settings.enabled !== undefined) updates.sitemap_enabled = settings.enabled;
-  if (settings.changefreq !== undefined) updates.sitemap_changefreq = settings.changefreq;
-  if (settings.includeImages !== undefined) updates.sitemap_include_images = settings.includeImages;
+  if (settings.enabled !== undefined)
+    updates.sitemap_enabled = settings.enabled;
+  if (settings.changefreq !== undefined)
+    updates.sitemap_changefreq = settings.changefreq;
+  if (settings.includeImages !== undefined)
+    updates.sitemap_include_images = settings.includeImages;
 
   const { error } = await supabase
     .from("sites")
@@ -658,9 +715,12 @@ export async function updateSiteSitemapSettings(
 /**
  * Generate default robots.txt content
  */
-function generateDefaultRobotsTxt(subdomain: string, customDomain?: string | null): string {
-  const baseUrl = customDomain 
-    ? `https://${customDomain}` 
+function generateDefaultRobotsTxt(
+  subdomain: string,
+  customDomain?: string | null,
+): string {
+  const baseUrl = customDomain
+    ? `https://${customDomain}`
     : `https://${subdomain}.sites.dramacagency.com`;
 
   return `# Robots.txt for ${subdomain}
@@ -683,20 +743,23 @@ export async function saveSeoAudit(
   siteId: string,
   pageId: string | null,
   score: number,
-  issues: Array<{ type: string; field: string; message: string; suggestion: string }>,
-  suggestions: string[]
+  issues: Array<{
+    type: string;
+    field: string;
+    message: string;
+    suggestion: string;
+  }>,
+  suggestions: string[],
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
 
-  const { error } = await supabase
-    .from("seo_audits")
-    .insert({
-      site_id: siteId,
-      page_id: pageId,
-      score,
-      issues,
-      suggestions,
-    });
+  const { error } = await supabase.from("seo_audits").insert({
+    site_id: siteId,
+    page_id: pageId,
+    score,
+    issues,
+    suggestions,
+  });
 
   if (error) {
     return { success: false, error: "Failed to save audit" };
@@ -710,15 +773,17 @@ export async function saveSeoAudit(
  */
 export async function getSiteAudits(
   siteId: string,
-  limit = 10
-): Promise<Array<{
-  id: string;
-  pageId: string | null;
-  score: number | null;
-  issues: unknown[];
-  recommendations: unknown[];
-  createdAt: string | null;
-}>> {
+  limit = 10,
+): Promise<
+  Array<{
+    id: string;
+    pageId: string | null;
+    score: number | null;
+    issues: unknown[];
+    recommendations: unknown[];
+    createdAt: string | null;
+  }>
+> {
   if (!(await canAccessSiteSeo(siteId))) {
     return [];
   }

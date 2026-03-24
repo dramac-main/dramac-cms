@@ -1,30 +1,32 @@
-'use client'
+"use client";
 
-import { useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { AlertTriangle, RotateCcw, Home, ArrowLeft } from 'lucide-react'
+import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { AlertTriangle, RotateCcw, Home, ArrowLeft } from "lucide-react";
 
 export default function DashboardGroupError({
   error,
   reset,
 }: {
-  error: Error & { digest?: string }
-  reset: () => void
+  error: Error & { digest?: string };
+  reset: () => void;
 }) {
   useEffect(() => {
-    console.error('[Dashboard Layout Error]', error)
+    console.error("[Dashboard Layout Error]", error);
     // Log to server for monitoring
-    fetch('/api/log-error', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    fetch("/api/log-error", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         message: error.message,
         digest: error.digest,
-        source: 'dashboard-layout-error-boundary',
+        source: "dashboard-layout-error-boundary",
         timestamp: new Date().toISOString(),
       }),
-    }).catch(() => {/* best effort */})
-  }, [error])
+    }).catch(() => {
+      /* best effort */
+    });
+  }, [error]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -37,7 +39,8 @@ export default function DashboardGroupError({
             Something went wrong
           </h2>
           <p className="text-muted-foreground text-sm">
-            An error occurred while loading the dashboard. This has been logged automatically.
+            An error occurred while loading the dashboard. This has been logged
+            automatically.
           </p>
           {error.digest && (
             <p className="text-muted-foreground text-xs font-mono">
@@ -67,5 +70,5 @@ export default function DashboardGroupError({
         </div>
       </div>
     </div>
-  )
+  );
 }

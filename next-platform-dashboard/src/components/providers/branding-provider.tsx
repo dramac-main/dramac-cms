@@ -1,14 +1,20 @@
 /**
  * BrandingProvider
- * 
+ *
  * Phase WL-01: White-Label Branding Foundation
- * 
+ *
  * React context that provides per-agency branding throughout the app.
  * Supports SSR via initialBranding prop (no loading flash).
  */
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { AgencyBranding, DEFAULT_BRANDING } from "@/types/branding";
 
 interface BrandingContextType {
@@ -29,7 +35,9 @@ interface BrandingContextType {
   refetch: () => void;
 }
 
-const BrandingContext = createContext<BrandingContextType | undefined>(undefined);
+const BrandingContext = createContext<BrandingContextType | undefined>(
+  undefined,
+);
 
 interface BrandingProviderProps {
   agencyId: string | null;
@@ -43,7 +51,9 @@ export function BrandingProvider({
   children,
   initialBranding,
 }: BrandingProviderProps) {
-  const [branding, setBranding] = useState<AgencyBranding | null>(initialBranding ?? null);
+  const [branding, setBranding] = useState<AgencyBranding | null>(
+    initialBranding ?? null,
+  );
   const [isLoading, setIsLoading] = useState(!!agencyId && !initialBranding);
   const [error, setError] = useState<Error | null>(null);
 
@@ -81,7 +91,8 @@ export function BrandingProvider({
       }
     };
     window.addEventListener("branding-updated", handleBrandingUpdated);
-    return () => window.removeEventListener("branding-updated", handleBrandingUpdated);
+    return () =>
+      window.removeEventListener("branding-updated", handleBrandingUpdated);
   }, [fetchBranding]);
 
   // Inject CSS custom properties for brand colors
@@ -98,15 +109,22 @@ export function BrandingProvider({
       const max = Math.max(r, g, b);
       const min = Math.min(r, g, b);
       const l = (max + min) / 2;
-      let h = 0, s = 0;
+      let h = 0,
+        s = 0;
 
       if (max !== min) {
         const d = max - min;
         s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
         switch (max) {
-          case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-          case g: h = ((b - r) / d + 2) / 6; break;
-          case b: h = ((r - g) / d + 4) / 6; break;
+          case r:
+            h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+            break;
+          case g:
+            h = ((b - r) / d + 2) / 6;
+            break;
+          case b:
+            h = ((r - g) / d + 4) / 6;
+            break;
         }
       }
 
@@ -124,14 +142,29 @@ export function BrandingProvider({
       const s = parseInt(parts[2]);
       // Map shade number → lightness percentage
       const shades: Record<string, number> = {
-        '50': 97, '100': 94, '200': 86, '300': 77,
-        '400': 66, '500': 55, '600': 47, '700': 39,
-        '800': 32, '900': 24, '950': 14,
+        "50": 97,
+        "100": 94,
+        "200": 86,
+        "300": 77,
+        "400": 66,
+        "500": 55,
+        "600": 47,
+        "700": 39,
+        "800": 32,
+        "900": 24,
+        "950": 14,
       };
       const result: Record<string, string> = {};
       for (const [shade, lightness] of Object.entries(shades)) {
         // Reduce saturation slightly for extreme lightness values
-        const adjS = lightness > 90 ? Math.round(s * 0.3) : lightness > 80 ? Math.round(s * 0.5) : lightness < 20 ? Math.round(s * 0.8) : s;
+        const adjS =
+          lightness > 90
+            ? Math.round(s * 0.3)
+            : lightness > 80
+              ? Math.round(s * 0.5)
+              : lightness < 20
+                ? Math.round(s * 0.8)
+                : s;
         result[shade] = `${h} ${adjS}% ${lightness}%`;
       }
       return result;
@@ -142,8 +175,12 @@ export function BrandingProvider({
 
     const primaryHSL = hexToHSL(branding.primary_color);
     const accentHSL = hexToHSL(branding.accent_color);
-    const primaryFgHSL = branding.primary_foreground ? hexToHSL(branding.primary_foreground) : '0 0% 100%';
-    const accentFgHSL = branding.accent_foreground ? hexToHSL(branding.accent_foreground) : '0 0% 100%';
+    const primaryFgHSL = branding.primary_foreground
+      ? hexToHSL(branding.primary_foreground)
+      : "0 0% 100%";
+    const accentFgHSL = branding.accent_foreground
+      ? hexToHSL(branding.accent_foreground)
+      : "0 0% 100%";
 
     // Generate shade scales
     const primaryScale = generateHSLScale(primaryHSL);
@@ -152,10 +189,10 @@ export function BrandingProvider({
     // Build scale CSS lines
     const primaryScaleCSS = Object.entries(primaryScale)
       .map(([shade, val]) => `--color-primary-${shade}: ${val};`)
-      .join('\n      ');
+      .join("\n      ");
     const accentScaleCSS = Object.entries(accentScale)
       .map(([shade, val]) => `--color-accent-${shade}: ${val};`)
-      .join('\n      ');
+      .join("\n      ");
 
     style.textContent = `:root {
       --brand-primary: ${branding.primary_color};
@@ -202,7 +239,9 @@ export function BrandingProvider({
     // Remove any existing branding style
     document.getElementById("branding-vars")?.remove();
     document.head.appendChild(style);
-    return () => { style.remove(); };
+    return () => {
+      style.remove();
+    };
   }, [branding]);
 
   // Inject custom favicon if set
@@ -228,7 +267,9 @@ export function BrandingProvider({
         ? (branding?.logo_dark_url ?? branding?.logo_url ?? null)
         : (branding?.logo_url ?? null),
     getEmailFromName: () =>
-      branding?.email_from_name ?? branding?.agency_display_name ?? DEFAULT_BRANDING.agency_display_name,
+      branding?.email_from_name ??
+      branding?.agency_display_name ??
+      DEFAULT_BRANDING.agency_display_name,
     getPrimaryColor: () =>
       branding?.primary_color ?? DEFAULT_BRANDING.primary_color,
     getAccentColor: () =>

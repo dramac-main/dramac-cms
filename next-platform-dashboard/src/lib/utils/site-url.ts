@@ -3,12 +3,16 @@
  * Centralized handling of site URLs using environment variables
  */
 
-const BASE_DOMAIN = process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
+const BASE_DOMAIN =
+  process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
 
 /**
  * Get the full URL for a site
  */
-export function getSiteUrl(subdomain: string, customDomain?: string | null): string {
+export function getSiteUrl(
+  subdomain: string,
+  customDomain?: string | null,
+): string {
   if (customDomain) {
     return `https://${customDomain}`;
   }
@@ -18,7 +22,10 @@ export function getSiteUrl(subdomain: string, customDomain?: string | null): str
 /**
  * Get the display domain for a site (without protocol)
  */
-export function getSiteDomain(subdomain: string, customDomain?: string | null): string {
+export function getSiteDomain(
+  subdomain: string,
+  customDomain?: string | null,
+): string {
   if (customDomain) {
     return customDomain;
   }

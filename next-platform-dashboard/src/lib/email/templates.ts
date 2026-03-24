@@ -586,6 +586,14 @@ View in dashboard: ${data.dashboardUrl}
           </table>
         </div>
         ${data.shippingAddress ? `<p style="${STYLES.text}"><strong>Shipping to:</strong> ${data.shippingAddress}</p>` : ""}
+        ${
+          data.orderUrl
+            ? `<p style="margin: 24px 0; text-align: center;">
+          <a href="${data.orderUrl}" style="${STYLES.button}">View Your Order</a>
+        </p>
+        ${data.trackingUrl ? `<p style="${STYLES.muted}; text-align: center;">Or <a href="${data.trackingUrl}" style="color: #2563eb; text-decoration: underline;">track a different order</a></p>` : ""}`
+            : ""
+        }
         <p style="${STYLES.muted}">If you have any questions about your order, please contact ${data.businessName}.</p>
       `);
     },
@@ -617,6 +625,8 @@ Tax: ${data.tax}
 Total: ${data.total}
 
 ${data.shippingAddress ? `Shipping to: ${data.shippingAddress}` : ""}
+${data.orderUrl ? `\nView your order: ${data.orderUrl}` : ""}
+${data.trackingUrl ? `Track a different order: ${data.trackingUrl}` : ""}
 
 If you have any questions, please contact ${data.businessName}.
       `.trim();

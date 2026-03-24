@@ -1,116 +1,130 @@
 /**
  * useStorefrontProduct - Single product hook
- * 
+ *
  * Phase ECOM-20: Core Data Hooks
- * 
+ *
  * Fetches a single product by ID or slug with variants and related products.
  */
-'use client'
+"use client";
 
-import { useState, useEffect, useCallback } from 'react'
-import { 
-  getPublicProduct, 
-  getPublicProductBySlug, 
-  getPublicProductVariants, 
+import { useState, useEffect, useCallback } from "react";
+import {
+  getPublicProduct,
+  getPublicProductBySlug,
+  getPublicProductVariants,
   getPublicProductOptions,
   getPublicProducts,
-  getPublicProductsByCategory 
-} from '../actions/public-ecommerce-actions'
-import type { 
-  Product, 
-  ProductVariant, 
+  getPublicProductsByCategory,
+} from "../actions/public-ecommerce-actions";
+import type {
+  Product,
+  ProductVariant,
   ProductOption,
-  StorefrontProductResult 
-} from '../types/ecommerce-types'
+  StorefrontProductResult,
+} from "../types/ecommerce-types";
 
 export function useStorefrontProduct(
   siteId: string,
-  idOrSlug: string
+  idOrSlug: string,
 ): StorefrontProductResult {
-  const [product, setProduct] = useState<Product | null>(null)
-  const [variants, setVariants] = useState<ProductVariant[]>([])
-  const [options, setOptions] = useState<ProductOption[]>([])
-  const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [product, setProduct] = useState<Product | null>(null);
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [options, setOptions] = useState<ProductOption[]>([]);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchProduct = useCallback(async () => {
     if (!siteId || !idOrSlug) {
-      setIsLoading(false)
-      return
+      setIsLoading(false);
+      return;
     }
 
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
       // Determine if idOrSlug is a UUID or slug
-      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug)
-      
-      let productData: Product | null = null
-      
+      const isUUID =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          idOrSlug,
+        );
+
+      let productData: Product | null = null;
+
       if (isUUID) {
-        productData = await getPublicProduct(siteId, idOrSlug)
+        productData = await getPublicProduct(siteId, idOrSlug);
       } else {
-        productData = await getPublicProductBySlug(siteId, idOrSlug)
+        productData = await getPublicProductBySlug(siteId, idOrSlug);
       }
 
       if (!productData) {
-        setError('Product not found')
-        setProduct(null)
-        return
+        setError("Product not found");
+        setProduct(null);
+        return;
       }
 
       // Only show active products on storefront
-      if (productData.status !== 'active') {
-        setError('Product not available')
-        setProduct(null)
-        return
+      if (productData.status !== "active") {
+        setError("Product not available");
+        setProduct(null);
+        return;
       }
 
-      setProduct(productData)
+      setProduct(productData);
 
       // Fetch variants and options in parallel
       const [variantsData, optionsData] = await Promise.all([
         getPublicProductVariants(productData.id).catch(() => []),
-        getPublicProductOptions(productData.id).catch(() => [])
-      ])
+        getPublicProductOptions(productData.id).catch(() => []),
+      ]);
 
-      setVariants(variantsData.filter(v => v.is_active))
-      setOptions(optionsData)
+      setVariants(variantsData.filter((v) => v.is_active));
+      setOptions(optionsData);
 
       // Fetch related products (same category when available, excluding this product)
       try {
-        let relatedResult
-        const categoryId = (productData as Record<string, unknown>).category_id as string | undefined
+        let relatedResult;
+        const categoryId = (productData as Record<string, unknown>)
+          .category_id as string | undefined;
         if (categoryId) {
-          relatedResult = await getPublicProductsByCategory(siteId, categoryId, 1, 5)
+          relatedResult = await getPublicProductsByCategory(
+            siteId,
+            categoryId,
+            1,
+            5,
+          );
         } else {
-          relatedResult = await getPublicProducts(siteId, { status: 'active' }, 1, 5)
+          relatedResult = await getPublicProducts(
+            siteId,
+            { status: "active" },
+            1,
+            5,
+          );
         }
-        
+
         // Filter out current product and limit to 4
         const related = relatedResult.data
-          .filter(p => p.id !== productData.id && p.status === 'active')
-          .slice(0, 4)
-        
-        setRelatedProducts(related)
+          .filter((p) => p.id !== productData.id && p.status === "active")
+          .slice(0, 4);
+
+        setRelatedProducts(related);
       } catch {
         // Non-critical, don't fail the whole request
-        setRelatedProducts([])
+        setRelatedProducts([]);
       }
     } catch (err) {
-      console.error('Error fetching product:', err)
-      setError(err instanceof Error ? err.message : 'Failed to load product')
-      setProduct(null)
+      console.error("Error fetching product:", err);
+      setError(err instanceof Error ? err.message : "Failed to load product");
+      setProduct(null);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [siteId, idOrSlug])
+  }, [siteId, idOrSlug]);
 
   useEffect(() => {
-    fetchProduct()
-  }, [fetchProduct])
+    fetchProduct();
+  }, [fetchProduct]);
 
   return {
     product,
@@ -119,6 +133,6 @@ export function useStorefrontProduct(
     relatedProducts,
     isLoading,
     error,
-    refetch: fetchProduct
-  }
+    refetch: fetchProduct,
+  };
 }

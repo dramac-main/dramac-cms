@@ -12,12 +12,10 @@ export const DOMAINS = {
   PLATFORM_BASE: process.env.NEXT_PUBLIC_PLATFORM_DOMAIN ?? "dramacagency.com",
 
   /** Sites base domain (for site subdomains like my-site.sites.dramacagency.com) */
-  SITES_BASE:
-    process.env.NEXT_PUBLIC_SITES_DOMAIN ?? "sites.dramacagency.com",
+  SITES_BASE: process.env.NEXT_PUBLIC_SITES_DOMAIN ?? "sites.dramacagency.com",
 
   /** App domain (dashboard, API, auth) — full URL */
-  APP_DOMAIN:
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://app.dramacagency.com",
+  APP_DOMAIN: process.env.NEXT_PUBLIC_APP_URL ?? "https://app.dramacagency.com",
 
   /** Default protocol */
   PROTOCOL: (process.env.NODE_ENV === "production" ? "https" : "http") as
@@ -50,7 +48,7 @@ export function getSiteUrl(site: {
  */
 export function getCanonicalUrl(
   site: { custom_domain?: string | null; subdomain: string },
-  path: string = "/"
+  path: string = "/",
 ): string {
   const base = getSiteUrl(site);
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;

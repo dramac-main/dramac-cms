@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { 
-  executeInstallHook, 
+import {
+  executeInstallHook,
   executeUninstallHook,
   executeEnableHook,
-  executeDisableHook 
+  executeDisableHook,
 } from "@/lib/modules/hooks/module-hooks-registry";
 import {
   bootstrapLiveChatAgent,
@@ -23,8 +23,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { siteId } = await context.params;
     const supabase = await createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -69,12 +71,12 @@ export async function GET(request: NextRequest, context: RouteContext) {
           .single();
 
         return { ...sub, module: sourceModule };
-      })
+      }),
     );
 
     // Filter to site-level modules only
     const siteEligibleModules = agencyModules.filter(
-      (sub: any) => sub.module?.install_level === "site"
+      (sub: any) => sub.module?.install_level === "site",
     );
 
     // Get modules enabled for this site
@@ -85,7 +87,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     // Create a map of ALL module installations (including disabled)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const installMap = new Map(siteModules?.map((sm: any) => [sm.module_id, sm]) || []);
+    const installMap = new Map(
+      siteModules?.map((sm: any) => [sm.module_id, sm]) || [],
+    );
 
     // Combine data - check actual is_enabled field, not just record existence
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -105,7 +109,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     console.error("Site modules error:", error);
     return NextResponse.json(
       { error: "Failed to fetch site modules" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -115,8 +119,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const { siteId } = await context.params;
     const supabase = await createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -127,7 +133,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     if (!moduleId) {
       return NextResponse.json(
         { error: "Module ID required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -139,7 +145,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       .select("slug")
       .eq("id", moduleId)
       .single();
-    
+
     if (moduleData?.slug) {
       moduleSlug = moduleData.slug;
     } else {
@@ -151,7 +157,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         .single();
       moduleSlug = sourceModule?.slug || null;
     }
-    
+
     console.log(`[SiteModules] Module ${moduleId} has slug: ${moduleSlug}`);
 
     // Verify agency has this module subscribed
@@ -176,7 +182,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     if (!subscription) {
       return NextResponse.json(
         { error: "Module not subscribed. Subscribe in the marketplace first." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -202,22 +208,30 @@ export async function POST(request: NextRequest, context: RouteContext) {
         .single();
 
       if (error) throw error;
-      
+
       // Execute enable hook if module was previously disabled
       // Use the slug for hook execution, not UUID
       if (!existing.is_enabled && moduleSlug) {
         try {
-          console.log(`[SiteModules] Executing enable hook for ${moduleSlug} (${moduleId}) on site ${siteId}`);
+          console.log(
+            `[SiteModules] Executing enable hook for ${moduleSlug} (${moduleId}) on site ${siteId}`,
+          );
           const hookResult = await executeEnableHook(moduleSlug, siteId);
           if (!hookResult.success) {
-            console.warn(`[SiteModules] Enable hook warning for ${moduleSlug}:`, hookResult.error);
+            console.warn(
+              `[SiteModules] Enable hook warning for ${moduleSlug}:`,
+              hookResult.error,
+            );
           }
         } catch (hookError) {
-          console.error(`[SiteModules] Enable hook error for ${moduleSlug}:`, hookError);
+          console.error(
+            `[SiteModules] Enable hook error for ${moduleSlug}:`,
+            hookError,
+          );
           // Continue - enable succeeded, hook is optional
         }
       }
-      
+
       return NextResponse.json(data);
     }
 
@@ -242,24 +256,41 @@ export async function POST(request: NextRequest, context: RouteContext) {
     // Use the slug for hook execution, not UUID
     if (moduleSlug) {
       try {
-        console.log(`[SiteModules] Executing install hook for ${moduleSlug} (${moduleId}) on site ${siteId}`);
-        const hookResult = await executeInstallHook(moduleSlug, siteId, settings);
-        
+        console.log(
+          `[SiteModules] Executing install hook for ${moduleSlug} (${moduleId}) on site ${siteId}`,
+        );
+        const hookResult = await executeInstallHook(
+          moduleSlug,
+          siteId,
+          settings,
+        );
+
         if (!hookResult.success) {
-          console.warn(`[SiteModules] Install hook warning for ${moduleSlug}:`, hookResult.errors);
+          console.warn(
+            `[SiteModules] Install hook warning for ${moduleSlug}:`,
+            hookResult.errors,
+          );
           // Don't fail - installation succeeded, hook is optional
         } else {
-          console.log(`[SiteModules] Install hook executed for ${moduleSlug}:`, {
-            pagesCreated: hookResult.pagesCreated?.length ?? 0,
-            navItemsAdded: hookResult.navItemsAdded?.length ?? 0,
-          });
+          console.log(
+            `[SiteModules] Install hook executed for ${moduleSlug}:`,
+            {
+              pagesCreated: hookResult.pagesCreated?.length ?? 0,
+              navItemsAdded: hookResult.navItemsAdded?.length ?? 0,
+            },
+          );
         }
       } catch (hookError) {
-        console.error(`[SiteModules] Install hook error for ${moduleSlug}:`, hookError);
+        console.error(
+          `[SiteModules] Install hook error for ${moduleSlug}:`,
+          hookError,
+        );
         // Continue - installation succeeded, hook is optional
       }
     } else {
-      console.warn(`[SiteModules] No slug found for module ${moduleId}, skipping hooks`);
+      console.warn(
+        `[SiteModules] No slug found for module ${moduleId}, skipping hooks`,
+      );
     }
 
     // For live-chat: auto-register the site owner as the first agent
@@ -267,7 +298,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
       const ownerId = await getSiteOwnerUserId(siteId);
       if (ownerId) {
         await bootstrapLiveChatAgent(siteId, ownerId).catch((err) =>
-          console.error("[SiteModules] Failed to bootstrap live chat agent:", err),
+          console.error(
+            "[SiteModules] Failed to bootstrap live chat agent:",
+            err,
+          ),
         );
       }
     }
@@ -277,7 +311,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     console.error("Enable module error:", error);
     return NextResponse.json(
       { error: "Failed to enable module" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

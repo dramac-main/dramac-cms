@@ -17,7 +17,9 @@ const CORE_MODULE_SLUGS = ["crm", "automation", "live-chat"] as const;
 export async function getSites(filters?: SiteFilters) {
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
   const { data: profile } = await supabase
@@ -30,15 +32,19 @@ export async function getSites(filters?: SiteFilters) {
 
   let query = supabase
     .from("sites")
-    .select(`
+    .select(
+      `
       *,
       client:clients(id, name, company)
-    `)
+    `,
+    )
     .eq("agency_id", profile.agency_id);
 
   // Apply filters
   if (filters?.search) {
-    query = query.or(`name.ilike.%${filters.search}%,subdomain.ilike.%${filters.search}%`);
+    query = query.or(
+      `name.ilike.%${filters.search}%,subdomain.ilike.%${filters.search}%`,
+    );
   }
 
   if (filters?.status && filters.status !== "all") {
@@ -68,16 +74,20 @@ export async function getSites(filters?: SiteFilters) {
 export async function getSite(siteId: string) {
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
   const { data, error } = await supabase
     .from("sites")
-    .select(`
+    .select(
+      `
       *,
       client:clients(id, name, company),
       pages(id, name, slug, is_homepage, created_at)
-    `)
+    `,
+    )
     .eq("id", siteId)
     .single();
 
@@ -109,7 +119,9 @@ export async function createSiteAction(formData: unknown) {
 
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated" };
 
   const { data: profile } = await supabase
@@ -128,7 +140,9 @@ export async function createSiteAction(formData: unknown) {
       subdomain: validated.data.subdomain.toLowerCase(),
       client_id: validated.data.client_id,
       agency_id: profile.agency_id,
-      settings: validated.data.description ? { description: validated.data.description } : {},
+      settings: validated.data.description
+        ? { description: validated.data.description }
+        : {},
       published: false,
     })
     .select()
@@ -136,8 +150,11 @@ export async function createSiteAction(formData: unknown) {
 
   if (siteError) {
     // Check if it's a duplicate subdomain error
-    if (siteError.code === '23505' && siteError.message.includes('subdomain')) {
-      return { error: "This subdomain is already taken. Please choose a different one." };
+    if (siteError.code === "23505" && siteError.message.includes("subdomain")) {
+      return {
+        error:
+          "This subdomain is already taken. Please choose a different one.",
+      };
     }
     return { error: siteError.message };
   }
@@ -267,7 +284,9 @@ async function installCoreModules(
         settings: {},
       });
 
-      console.log(`[Sites] Core module ${mod.slug} installed for site ${siteId}`);
+      console.log(
+        `[Sites] Core module ${mod.slug} installed for site ${siteId}`,
+      );
 
       // Step 3: For Live Chat — auto-register the site owner as the first agent
       // so chat conversations have someone to route to immediately.
@@ -379,7 +398,9 @@ export async function publishSiteAction(siteId: string, publish: boolean) {
  * Get enabled modules for a site
  * Returns a map of module slugs that are enabled for the site
  */
-export async function getSiteEnabledModules(siteId: string): Promise<Set<string>> {
+export async function getSiteEnabledModules(
+  siteId: string,
+): Promise<Set<string>> {
   const supabase = await createClient();
 
   // Get site with client info to check agency
@@ -420,7 +441,7 @@ export async function getSiteEnabledModules(siteId: string): Promise<Set<string>
 
   // Get module slugs for enabled modules
   const enabledModuleIds = new Set(siteModules.map((sm) => sm.module_id));
-  
+
   // Get slugs for these modules from modules_v2
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: modules } = await (supabase as any)
@@ -443,7 +464,7 @@ export async function getSiteEnabledModules(siteId: string): Promise<Set<string>
  */
 export async function isModuleEnabledForSite(
   siteId: string,
-  moduleSlug: string
+  moduleSlug: string,
 ): Promise<boolean> {
   const enabledModules = await getSiteEnabledModules(siteId);
   return enabledModules.has(moduleSlug);
@@ -451,11 +472,11 @@ export async function isModuleEnabledForSite(
 
 /**
  * Persist AI-generated design tokens into site.settings.theme
- * 
+ *
  * Called after the AI designer generates a website. Merges the designTokens
  * into the site's existing settings so that the brand color resolution system
  * can read them at render time (via resolveBrandColors in brand-colors.ts).
- * 
+ *
  * ALWAYS writes the flat branding fields (primary_color, etc.) so that
  * the renderer, AI context builder, and branding settings all stay in sync.
  */
@@ -472,7 +493,7 @@ export async function persistDesignTokensAction(
     borderRadius?: string;
     shadowStyle?: string;
     spacingScale?: string;
-  }
+  },
 ) {
   if (!siteId || !designTokens) {
     return { error: "Missing siteId or designTokens" };
@@ -509,7 +530,7 @@ export async function persistDesignTokensAction(
 
   // Remove undefined values
   const cleanTheme = Object.fromEntries(
-    Object.entries(themeUpdate).filter(([, v]) => v !== undefined)
+    Object.entries(themeUpdate).filter(([, v]) => v !== undefined),
   );
 
   // Merge into settings: preserve existing settings, nest designTokens under .theme,
@@ -523,12 +544,22 @@ export async function persistDesignTokensAction(
     // ALWAYS write flat branding fields — these are the canonical source of truth
     // for the renderer, AI context builder, and branding settings UI.
     // Previous behavior only wrote if absent, causing stale data on re-generation.
-    ...(designTokens.primaryColor ? { primary_color: designTokens.primaryColor } : {}),
-    ...(designTokens.secondaryColor ? { secondary_color: designTokens.secondaryColor } : {}),
-    ...(designTokens.accentColor ? { accent_color: designTokens.accentColor } : {}),
-    ...(designTokens.backgroundColor ? { background_color: designTokens.backgroundColor } : {}),
+    ...(designTokens.primaryColor
+      ? { primary_color: designTokens.primaryColor }
+      : {}),
+    ...(designTokens.secondaryColor
+      ? { secondary_color: designTokens.secondaryColor }
+      : {}),
+    ...(designTokens.accentColor
+      ? { accent_color: designTokens.accentColor }
+      : {}),
+    ...(designTokens.backgroundColor
+      ? { background_color: designTokens.backgroundColor }
+      : {}),
     ...(designTokens.textColor ? { text_color: designTokens.textColor } : {}),
-    ...(designTokens.fontHeading ? { font_heading: designTokens.fontHeading } : {}),
+    ...(designTokens.fontHeading
+      ? { font_heading: designTokens.fontHeading }
+      : {}),
     ...(designTokens.fontBody ? { font_body: designTokens.fontBody } : {}),
   };
 
@@ -584,15 +615,34 @@ export async function getSiteBrandingAction(siteId: string): Promise<{
 
   return {
     data: {
-      primary_color: (settings.primary_color as string) || (theme.primaryColor as string) || '',
-      secondary_color: (settings.secondary_color as string) || (theme.secondaryColor as string) || '',
-      accent_color: (settings.accent_color as string) || (theme.accentColor as string) || '',
-      background_color: (settings.background_color as string) || (theme.backgroundColor as string) || '#ffffff',
-      text_color: (settings.text_color as string) || (theme.textColor as string) || '#0f172a',
-      font_heading: (settings.font_heading as string) || (theme.fontHeading as string) || '',
-      font_body: (settings.font_body as string) || (theme.fontBody as string) || '',
-      logo_url: (settings.logo_url as string) || '',
-      favicon_url: (settings.favicon_url as string) || '',
+      primary_color:
+        (settings.primary_color as string) ||
+        (theme.primaryColor as string) ||
+        "",
+      secondary_color:
+        (settings.secondary_color as string) ||
+        (theme.secondaryColor as string) ||
+        "",
+      accent_color:
+        (settings.accent_color as string) ||
+        (theme.accentColor as string) ||
+        "",
+      background_color:
+        (settings.background_color as string) ||
+        (theme.backgroundColor as string) ||
+        "#ffffff",
+      text_color:
+        (settings.text_color as string) ||
+        (theme.textColor as string) ||
+        "#0f172a",
+      font_heading:
+        (settings.font_heading as string) ||
+        (theme.fontHeading as string) ||
+        "",
+      font_body:
+        (settings.font_body as string) || (theme.fontBody as string) || "",
+      logo_url: (settings.logo_url as string) || "",
+      favicon_url: (settings.favicon_url as string) || "",
     },
   };
 }
@@ -604,7 +654,7 @@ export async function getSiteBrandingAction(siteId: string): Promise<{
  */
 export async function updateSiteBrandingAction(
   siteId: string,
-  branding: SiteBrandingData
+  branding: SiteBrandingData,
 ): Promise<{ success?: boolean; error?: string }> {
   if (!siteId) return { error: "Missing siteId" };
 
@@ -671,7 +721,7 @@ export async function updateSiteBrandingAction(
  * Updates the site settings.logo_url with the public URL.
  */
 export async function uploadSiteLogoAction(
-  formData: FormData
+  formData: FormData,
 ): Promise<{ url?: string; error?: string }> {
   // Use admin client to bypass storage RLS policies
   const supabase = createAdminClient();
@@ -684,9 +734,17 @@ export async function uploadSiteLogoAction(
   }
 
   // Validate file type
-  const validTypes = ["image/png", "image/jpeg", "image/webp", "image/svg+xml", "image/x-icon"];
+  const validTypes = [
+    "image/png",
+    "image/jpeg",
+    "image/webp",
+    "image/svg+xml",
+    "image/x-icon",
+  ];
   if (!validTypes.includes(file.type)) {
-    return { error: "Invalid file type. Please upload PNG, JPEG, WebP, SVG, or ICO." };
+    return {
+      error: "Invalid file type. Please upload PNG, JPEG, WebP, SVG, or ICO.",
+    };
   }
 
   // Validate file size (max 2MB)
@@ -719,7 +777,7 @@ export async function uploadSiteLogoAction(
 
   // Update site settings with the new URL
   const settingsField = type === "favicon" ? "favicon_url" : "logo_url";
-  
+
   const { data: site } = await supabase
     .from("sites")
     .select("settings")
@@ -744,7 +802,10 @@ export async function uploadSiteLogoAction(
     .eq("id", siteId);
 
   if (updateError) {
-    console.error(`[Sites] Error updating settings with ${type} URL:`, updateError);
+    console.error(
+      `[Sites] Error updating settings with ${type} URL:`,
+      updateError,
+    );
     return { error: `Uploaded but failed to save ${type} URL` };
   }
 
@@ -758,7 +819,7 @@ export async function uploadSiteLogoAction(
  */
 export async function removeSiteLogoAction(
   siteId: string,
-  type: "logo" | "favicon" = "logo"
+  type: "logo" | "favicon" = "logo",
 ): Promise<{ success?: boolean; error?: string }> {
   if (!siteId) return { error: "Missing siteId" };
 

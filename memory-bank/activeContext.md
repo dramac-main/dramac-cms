@@ -1,57 +1,102 @@
 # Active Context
 
-## Current Focus: Storefront Performance & UX Overhaul
+## Current Focus: Post-Purchase Experience Overhaul
 
-### Status: COMMITTED, DEPLOYED, LIVE — `f031b48e`
+### Status: IMPLEMENTED, BUILD VERIFIED — Pending commit & deploy
 
 ### What Was Done
-Comprehensive storefront performance audit and fix — 10 issues resolved across 7 files.
 
-### Root Cause: Add-to-Cart Slowness
-**Triple-fetch pattern**: When user clicked "Add to Cart":
-1. `addPublicCartItem()` — 3 DB queries (product, existing check, upsert)
-2. `getPublicCart()` — explicit refresh in addItem()
-3. `getPublicCart()` — triggered by `cart-updated` event listener
-4. NavCartBadge `fetchCount()` — triggered by same event (4th network call)
+Comprehensive post-purchase experience fix — 7 critical gaps resolved across 8 files (1 new file).
 
-Total: 4 sequential server round-trips with NO optimistic UI (user stared at spinner for full duration).
+### Root Cause: Post-Purchase Dead End
 
-### Fixes Applied (commit `f031b48e`)
-1. **addPublicCartItem** now returns full updated cart — eliminates separate getPublicCart call
-2. **useStorefrontCart.addItem()** — single round-trip, passes cart data in `cart-updated` event
-3. **cart-updated events** now include `{ cart, itemCount }` detail — listeners use data directly
-4. **NavCartBadge** already had `detail.itemCount` check — now receives data, zero re-fetch
-5. **product-card-block** — removed duplicate `cart-updated` dispatch (hook already dispatches)
-6. **ProductGridBlock** — fixed Tailwind template literal grid classes (grid layout was broken!)
-7. **ProductGridBlock** — added 300ms search debounce
-8. **useStorefrontProduct** — related products now query by category instead of all products
-9. **useStorefrontWishlist** — batch product fetch via new `getPublicProductsByIds` instead of N+1
-10. **OrderConfirmationBlock** — fixed URL.createObjectURL memory leak, stabilized effect deps
+After checkout, customers had:
 
-### Files Changed (7)
-- `public-ecommerce-actions.ts` — addPublicCartItem returns Cart, new getPublicProductsByIds
-- `useStorefrontCart.ts` — Single round-trip addItem, event data passing, smart event handling
-- `product-card-block.tsx` — Removed duplicate cart-updated dispatch
-- `ProductGridBlock.tsx` — Fixed Tailwind grid classes, added search debounce
-- `useStorefrontProduct.ts` — Related products by category
-- `useStorefrontWishlist.ts` — Batch fetch via getPublicProductsByIds
-- `OrderConfirmationBlock.tsx` — Memory leak fix, effect dependency stabilization
+1. No way to find their order if they navigated away
+2. No email link back to order page
+3. No chat integration in post-purchase flow
+4. Order tracking page didn't exist
+5. "Track Order" button never shown (prop never passed)
+
+### Fixes Applied (8 files, 1 new)
+
+**New server action: `getPublicOrderByLookup`** (`public-ecommerce-actions.ts`)
+
+- Queries orders by email + order number (case-insensitive)
+- Returns order + items for the order tracking page
+
+**New component: `OrderTrackingBlock.tsx`** (NEW FILE)
+
+- Email + order number lookup form
+- On mount, checks `localStorage.ecom_last_order_{siteId}` for recent order quick-link
+- Found orders redirect to `/order-confirmation?order={orderId}`
+
+**New virtual route: `/order-tracking`** (`page.tsx`)
+
+- Added handler in `generateEcommercePage()` for `slug === "order-tracking"`
+- Template created via `createOrderTrackingTemplate()` in `page-templates.ts`
+
+**Component registration** (4 files):
+
+- `studio/index.ts` — import, definition (`EcommerceOrderTracking`), render mapping
+- `renderer.tsx` — added to `MODULE_COMPONENT_TYPES` set
+- `template-utils.ts` — `addOrderTracking()` helper
+- `page-templates.ts` — `createOrderTrackingTemplate()` + `orderTrackingPageDefinition`
+
+**localStorage persistence** (`CheckoutPageBlock.tsx`):
+
+- New `saveOrderToStorage(orderId, orderNumber)` helper
+- Called in ALL 8 checkout success paths (desktop+mobile × Pesapal/DPO redirect, Paddle callback, Flutterwave callback, manual payment)
+- Stores `{ orderId, orderNumber, timestamp }` at `ecom_last_order_{siteId}`
+
+**Email "View Your Order" link** (`business-notifications.ts` + `templates.ts`):
+
+- `notifyNewOrder` now queries `subdomain, custom_domain` from sites table
+- Constructs `orderUrl` (custom domain or subdomain) and `trackingUrl`
+- Passes both to email template
+- Customer email now has "View Your Order" CTA button + "track a different order" link
+- Plain text version also includes URLs
+
+**Chat integration on OrderConfirmationBlock** (`OrderConfirmationBlock.tsx`):
+
+- Auto-opens chat widget 3 seconds after order loads (via `postMessage`)
+- "Chat About Order" button in Quick Actions section (for manual payment)
+- "Need Help? Chat with Us" button in bottom actions (for all orders)
+- "Track Order" link now always shown (default `/order-tracking` instead of optional prop)
+
+### Files Changed (8, 1 new)
+
+- `public-ecommerce-actions.ts` — new `getPublicOrderByLookup` action
+- `OrderTrackingBlock.tsx` — NEW: order lookup page component
+- `OrderConfirmationBlock.tsx` — chat auto-open, chat buttons, default trackingLink
+- `CheckoutPageBlock.tsx` — localStorage persistence in all 8 success paths
+- `business-notifications.ts` — site URL construction, orderUrl/trackingUrl in email data
+- `templates.ts` — "View Your Order" button + tracking link in customer email
+- `studio/index.ts` — OrderTrackingBlock registration
+- `renderer.tsx` — EcommerceOrderTracking in MODULE_COMPONENT_TYPES
+- `template-utils.ts` — addOrderTracking helper
+- `page-templates.ts` — createOrderTrackingTemplate + definition
+- `page.tsx` — /order-tracking virtual route handler
 
 ---
 
-## Previous Focus: Live Chat Complete Overhaul — DEPLOYED & VERIFIED
+## Previous Focus: Storefront Performance & UX Overhaul — COMMITTED, DEPLOYED — `f031b48e`
 
 ### Root Cause
+
 Live chat was completely broken for ALL sites — ZERO agents existed in `mod_chat_agents` table. The `bootstrapLiveChatAgent` function in `sites.ts` had TWO bugs:
+
 1. Used `role: "owner"` which violates DB check constraint `mod_chat_agents_role_check` (valid: agent/supervisor/admin) → INSERT silently failed
 2. Used `status: "offline"` → even if it worked, routing engine (`status='online'` filter) would never assign chats
 3. Only ran during `createSiteAction()` → missed AI Designer auto-install and marketplace install paths
 
 ### Database Fix (Immediate)
+
 - Created agents for all 4 sites with live-chat but no agents via direct SQL
 - Set status 'online' so chat routing works immediately
 
 ### Code Fixes (6 files)
+
 - **NEW `bootstrap-agent.ts`**: Shared utility with corrected role ('admin'), status ('online'), profile lookup (both 'name' and 'full_name')
 - **`sites.ts`**: Import shared bootstrap, replace broken inline function
 - **`auto-install/route.ts`**: Add bootstrap after AI Designer live-chat install
@@ -60,6 +105,7 @@ Live chat was completely broken for ALL sites — ZERO agents existed in `mod_ch
 - **`AgentsPageWrapper.tsx`**: Added "Invite New" tab to Add Agent dialog (email + name + role)
 
 ### End-to-End Verification (ALL PASSING)
+
 1. ✅ Embed API returns widget JS with correct siteId
 2. ✅ Widget settings API returns site branding/config
 3. ✅ Agent routing query finds online agent with capacity (Site Owner, 0/5 chats)
@@ -75,34 +121,41 @@ Live chat was completely broken for ALL sites — ZERO agents existed in `mod_ch
 ### Status: COMMITTED, PUSHED & DEPLOYED — `963fdd7b`
 
 ### Comprehensive Audit Results
+
 Deep audit of the entire AI Website Builder → Module Installation → Published Site pipeline.
 Traced all 5 feature chips (ecommerce, booking, blog, contact-forms, live-chat) through 3 module mapping layers.
 
 ### Issues Found & Fixed:
 
 #### Fix 1 (CRITICAL): Live Chat Agent Bootstrap
+
 - **Problem**: Live Chat module installed on every site (core module), widget visible on published site, customer submits chat → conversation created as "pending" but NO agents exist to handle it
 - **Solution**: Added `bootstrapLiveChatAgent()` in `installCoreModules()` — auto-creates site owner as first chat agent (role: "owner", status: "offline", max 5 concurrent chats)
 - **File**: `src/lib/actions/sites.ts`
 
 #### Fix 2 (MEDIUM): AI Designer Chip UX
+
 - **Problem**: Live Chat chip shown as optional/selectable but it's always installed via `CORE_MODULE_SLUGS`; Blog chip gives no indication it's built-in (not a module)
 - **Solution**: Pre-select live-chat chip, make it non-deselectable with "(Always On)" label; Add "(Built-in)" label to blog chip; Updated helper text: "CRM, Automation & Live Chat are always included on every site"
 - **File**: `src/app/(dashboard)/dashboard/sites/[siteId]/ai-designer/page.tsx`
 
 #### Fix 3 (MEDIUM): Feature Chips Not Passed to AI Prompt
+
 - **Problem**: `buildArchitecturePrompt()` only used `parseUserPrompt()` text detection for features. If user selects "Blog" chip but doesn't type "blog" in prompt, AI doesn't know about it. `selectedFeatures` was only used for module injection, not prompt generation.
 - **Solution**: Pass `selectedFeatures` through `createArchitecture()` → `buildArchitecturePrompt()`, merge chip selections into `parsed.keyFeatures` so AI knows about all selected features
 - **Files**: `src/lib/ai/website-designer/engine.ts`, `src/lib/ai/website-designer/prompts.ts`
 
 ### Module Mapping Architecture (Verified)
+
 Three mapping layers, all now in sync:
+
 1. **Engine FEATURE_MODULE_MAP** (engine.ts) — Injects synthetic module entries into AI context: ecommerce, booking, live-chat, contact-forms
 2. **Auto-install FEATURE_MODULE_MAP** (auto-install/route.ts) — Creates DB records (agency_module_subscriptions + site_module_installations): ecommerce, booking, live-chat, contact-forms, crm, automation
 3. **Auto-install COMPONENT_MODULE_MAP** (auto-install/route.ts) — Maps component types to modules for detection
 
 ### Key Architecture Insight: Blog
-- Blog is BUILT-IN (blog_posts, blog_categories tables, dashboard pages at /blog/*)
+
+- Blog is BUILT-IN (blog_posts, blog_categories tables, dashboard pages at /blog/\*)
 - NOT a module — no entry in modules_v2, no installation needed
 - Page classification in prompts.ts recognizes "blog" type
 - Blog chip selection now flows through to AI prompt via selectedFeatures merge
@@ -112,6 +165,7 @@ Three mapping layers, all now in sync:
 ## Previous Focus: React Error #310 Fix — COMMITTED (`75bb16fe`)
 
 ### Root Cause: Conditional provider wrapping in `(dashboard)/layout.tsx`
+
 ### Fix: Always render BrandingProvider > CurrencyProvider consistently
 
 ---
@@ -121,12 +175,14 @@ Three mapping layers, all now in sync:
 ### Latest Work: 3-Phase Integration System
 
 #### Phase A-1: Core Module Auto-Enable on Site Creation
+
 - Modified `createSiteAction()` in `src/lib/actions/sites.ts` to auto-install CRM + Automation + Live Chat on every new site
 - Added `installCoreModules()` helper using admin client (follows auto-install route pattern exactly)
 - Updated `FEATURE_MODULE_MAP` in `auto-install/route.ts` to include `crm` and `automation`
 - 3-tier module architecture: Tier 1 ALWAYS ON (CRM, Automation, Live Chat), Tier 2 feature-selected (E-Commerce, Booking), Tier 3 optional (Social Media)
 
 #### Phase A-2: Automation Event Wiring (10 events across 5 files)
+
 - **E-Commerce** (`public-ecommerce-actions.ts` + `order-actions.ts`):
   - `ecommerce.order.created` — after createPublicOrderFromCart
   - `ecommerce.order.status_changed` — after updatePublicOrderStatus + updateOrderStatus
@@ -142,12 +198,14 @@ Three mapping layers, all now in sync:
   - `live-chat.conversation.closed` — after closeConversation
 
 #### Phase A-3: Customer Context Bridge for AI
+
 - Created `src/modules/live-chat/lib/customer-context-bridge.ts`
   - `getCustomerContext(siteId, email)` — queries CRM contacts, orders, bookings by email
   - `formatCustomerContext()` — formats into AI-readable text block
 - Modified `src/modules/live-chat/lib/ai-responder.ts` — system prompt now includes customer order/booking/CRM history when email is available
 
 #### Files Modified (9 files):
+
 1. `src/lib/actions/sites.ts` — Added CORE_MODULE_SLUGS + installCoreModules() + call in createSiteAction
 2. `src/app/api/sites/[siteId]/modules/auto-install/route.ts` — Added crm + automation to FEATURE_MODULE_MAP
 3. `src/modules/ecommerce/actions/public-ecommerce-actions.ts` — 3 automation events

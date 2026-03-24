@@ -28,9 +28,13 @@ export interface DnsRecord {
 
 // Platform IP address for A records (would be your load balancer/CDN)
 const PLATFORM_IP = process.env.PLATFORM_IP || "76.76.21.21";
-const VERIFICATION_DOMAIN = process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
+const VERIFICATION_DOMAIN =
+  process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
 
-export async function setCustomDomain(siteId: string, domain: string): Promise<{ success: boolean; error?: string }> {
+export async function setCustomDomain(
+  siteId: string,
+  domain: string,
+): Promise<{ success: boolean; error?: string }> {
   try {
     // Validate domain format
     const domainRegex = /^(?!:\/\/)([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
@@ -52,7 +56,10 @@ export async function setCustomDomain(siteId: string, domain: string): Promise<{
       .single();
 
     if (existing) {
-      return { success: false, error: "Domain is already in use by another site" };
+      return {
+        success: false,
+        error: "Domain is already in use by another site",
+      };
     }
 
     // Generate verification token
@@ -82,7 +89,9 @@ export async function setCustomDomain(siteId: string, domain: string): Promise<{
   }
 }
 
-export async function removeCustomDomain(siteId: string): Promise<{ success: boolean; error?: string }> {
+export async function removeCustomDomain(
+  siteId: string,
+): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = createAdminClient();
 
@@ -107,13 +116,17 @@ export async function removeCustomDomain(siteId: string): Promise<{ success: boo
   }
 }
 
-export async function getDomainStatus(siteId: string): Promise<DomainStatus | null> {
+export async function getDomainStatus(
+  siteId: string,
+): Promise<DomainStatus | null> {
   try {
     const supabase = createAdminClient();
 
     const { data: site, error } = await supabase
       .from("sites")
-      .select("custom_domain, custom_domain_verified, domain_verification_token, domain_last_checked, subdomain")
+      .select(
+        "custom_domain, custom_domain_verified, domain_verification_token, domain_last_checked, subdomain",
+      )
       .eq("id", siteId)
       .single();
 
@@ -161,7 +174,9 @@ export async function getDomainStatus(siteId: string): Promise<DomainStatus | nu
   }
 }
 
-export async function verifyDomain(siteId: string): Promise<{ success: boolean; verified: boolean; error?: string }> {
+export async function verifyDomain(
+  siteId: string,
+): Promise<{ success: boolean; verified: boolean; error?: string }> {
   try {
     const supabase = createAdminClient();
 
@@ -173,13 +188,17 @@ export async function verifyDomain(siteId: string): Promise<{ success: boolean; 
       .single();
 
     if (fetchError || !site?.custom_domain) {
-      return { success: false, verified: false, error: "Domain not configured" };
+      return {
+        success: false,
+        verified: false,
+        error: "Domain not configured",
+      };
     }
 
     // Perform actual DNS verification
     const isVerified = await performDnsVerification(
       site.custom_domain,
-      site.domain_verification_token || ""
+      site.domain_verification_token || "",
     );
 
     // Update verification status
@@ -192,7 +211,11 @@ export async function verifyDomain(siteId: string): Promise<{ success: boolean; 
       .eq("id", siteId);
 
     if (updateError) {
-      return { success: false, verified: false, error: "Failed to update status" };
+      return {
+        success: false,
+        verified: false,
+        error: "Failed to update status",
+      };
     }
 
     revalidatePath(`/sites/${siteId}`);
@@ -200,7 +223,9 @@ export async function verifyDomain(siteId: string): Promise<{ success: boolean; 
     return {
       success: true,
       verified: isVerified,
-      error: isVerified ? undefined : "DNS records not found. Please check your configuration.",
+      error: isVerified
+        ? undefined
+        : "DNS records not found. Please check your configuration.",
     };
   } catch (error) {
     console.error("[DomainService] Verification error:", error);
@@ -208,13 +233,16 @@ export async function verifyDomain(siteId: string): Promise<{ success: boolean; 
   }
 }
 
-async function performDnsVerification(domain: string, token: string): Promise<boolean> {
+async function performDnsVerification(
+  domain: string,
+  token: string,
+): Promise<boolean> {
   try {
     // Check TXT record for verification
     try {
       const txtRecords = await resolveTxt(`_dramac-verification.${domain}`);
       const flatRecords = txtRecords.flat();
-      if (flatRecords.some(record => record.includes(token))) {
+      if (flatRecords.some((record) => record.includes(token))) {
         // Also verify A record points to our server
         try {
           const aRecords = await resolve4(domain);
@@ -242,9 +270,12 @@ export interface DomainConfig {
   cnameTarget: string;
 }
 
-export async function generateDomainConfig(siteId: string): Promise<DomainConfig> {
+export async function generateDomainConfig(
+  siteId: string,
+): Promise<DomainConfig> {
   const verificationCode = `dramac-verify=${siteId}`;
-  const cnameTarget = process.env.NEXT_PUBLIC_CNAME_TARGET || "cname.vercel-dns.com";
+  const cnameTarget =
+    process.env.NEXT_PUBLIC_CNAME_TARGET || "cname.vercel-dns.com";
 
   return {
     domain: "",

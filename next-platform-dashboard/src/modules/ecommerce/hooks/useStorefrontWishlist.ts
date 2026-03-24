@@ -1,132 +1,149 @@
 /**
  * useStorefrontWishlist - Wishlist hook
- * 
+ *
  * Phase ECOM-20: Core Data Hooks
- * 
+ *
  * Manages wishlist state in localStorage with product fetching.
  */
-'use client'
+"use client";
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
-import { getPublicProductsByIds } from '../actions/public-ecommerce-actions'
-import type { 
-  Product, 
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { getPublicProductsByIds } from "../actions/public-ecommerce-actions";
+import type {
+  Product,
   WishlistItem,
-  StorefrontWishlistResult 
-} from '../types/ecommerce-types'
+  StorefrontWishlistResult,
+} from "../types/ecommerce-types";
 
-const WISHLIST_STORAGE_KEY = 'ecom_wishlist'
+const WISHLIST_STORAGE_KEY = "ecom_wishlist";
 
 function getStoredWishlist(siteId: string): WishlistItem[] {
-  if (typeof window === 'undefined') return []
-  
+  if (typeof window === "undefined") return [];
+
   try {
-    const stored = localStorage.getItem(`${WISHLIST_STORAGE_KEY}_${siteId}`)
-    return stored ? JSON.parse(stored) : []
+    const stored = localStorage.getItem(`${WISHLIST_STORAGE_KEY}_${siteId}`);
+    return stored ? JSON.parse(stored) : [];
   } catch {
-    return []
+    return [];
   }
 }
 
 function setStoredWishlist(siteId: string, items: WishlistItem[]): void {
-  if (typeof window === 'undefined') return
-  
+  if (typeof window === "undefined") return;
+
   try {
-    localStorage.setItem(`${WISHLIST_STORAGE_KEY}_${siteId}`, JSON.stringify(items))
+    localStorage.setItem(
+      `${WISHLIST_STORAGE_KEY}_${siteId}`,
+      JSON.stringify(items),
+    );
   } catch (err) {
-    console.error('Error saving wishlist:', err)
+    console.error("Error saving wishlist:", err);
   }
 }
 
-export function useStorefrontWishlist(siteId: string): StorefrontWishlistResult {
-  const [items, setItems] = useState<WishlistItem[]>([])
-  const [products, setProducts] = useState<Product[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+export function useStorefrontWishlist(
+  siteId: string,
+): StorefrontWishlistResult {
+  const [items, setItems] = useState<WishlistItem[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Load wishlist from localStorage
   useEffect(() => {
     if (!siteId) {
-      setIsLoading(false)
-      return
+      setIsLoading(false);
+      return;
     }
 
-    const storedItems = getStoredWishlist(siteId)
-    setItems(storedItems)
-    setIsLoading(false)
-  }, [siteId])
+    const storedItems = getStoredWishlist(siteId);
+    setItems(storedItems);
+    setIsLoading(false);
+  }, [siteId]);
 
   // Fetch product details for wishlist items — single batch query
   useEffect(() => {
     if (items.length === 0) {
-      setProducts([])
-      return
+      setProducts([]);
+      return;
     }
 
-    const productIds = items.map(item => item.productId)
+    const productIds = items.map((item) => item.productId);
     getPublicProductsByIds(siteId, productIds)
-      .then(results => setProducts(results))
-      .catch(() => setProducts([]))
-  }, [siteId, items])
+      .then((results) => setProducts(results))
+      .catch(() => setProducts([]));
+  }, [siteId, items]);
 
   // Save to localStorage whenever items change
   useEffect(() => {
     if (siteId) {
-      setStoredWishlist(siteId, items)
+      setStoredWishlist(siteId, items);
     }
-  }, [siteId, items])
+  }, [siteId, items]);
 
   // Add item
   const addItem = useCallback((productId: string, variantId?: string) => {
-    setItems(prev => {
+    setItems((prev) => {
       // Check if already exists
       const exists = prev.some(
-        item => item.productId === productId && item.variantId === variantId
-      )
-      
-      if (exists) return prev
-      
-      return [...prev, {
-        productId,
-        variantId,
-        addedAt: new Date().toISOString()
-      }]
-    })
-  }, [])
+        (item) => item.productId === productId && item.variantId === variantId,
+      );
+
+      if (exists) return prev;
+
+      return [
+        ...prev,
+        {
+          productId,
+          variantId,
+          addedAt: new Date().toISOString(),
+        },
+      ];
+    });
+  }, []);
 
   // Remove item
   const removeItem = useCallback((productId: string, variantId?: string) => {
-    setItems(prev => prev.filter(
-      item => !(item.productId === productId && item.variantId === variantId)
-    ))
-  }, [])
+    setItems((prev) =>
+      prev.filter(
+        (item) =>
+          !(item.productId === productId && item.variantId === variantId),
+      ),
+    );
+  }, []);
 
   // Toggle item
-  const toggleItem = useCallback((productId: string, variantId?: string) => {
-    const exists = items.some(
-      item => item.productId === productId && item.variantId === variantId
-    )
-    
-    if (exists) {
-      removeItem(productId, variantId)
-    } else {
-      addItem(productId, variantId)
-    }
-  }, [items, addItem, removeItem])
+  const toggleItem = useCallback(
+    (productId: string, variantId?: string) => {
+      const exists = items.some(
+        (item) => item.productId === productId && item.variantId === variantId,
+      );
+
+      if (exists) {
+        removeItem(productId, variantId);
+      } else {
+        addItem(productId, variantId);
+      }
+    },
+    [items, addItem, removeItem],
+  );
 
   // Check if in wishlist
-  const isInWishlist = useCallback((productId: string, variantId?: string): boolean => {
-    return items.some(
-      item => item.productId === productId && item.variantId === variantId
-    )
-  }, [items])
+  const isInWishlist = useCallback(
+    (productId: string, variantId?: string): boolean => {
+      return items.some(
+        (item) => item.productId === productId && item.variantId === variantId,
+      );
+    },
+    [items],
+  );
 
   // Clear wishlist
   const clear = useCallback(() => {
-    setItems([])
-  }, [])
+    setItems([]);
+  }, []);
 
   // Item count
-  const itemCount = useMemo(() => items.length, [items])
+  const itemCount = useMemo(() => items.length, [items]);
 
   return {
     items,
@@ -137,6 +154,6 @@ export function useStorefrontWishlist(siteId: string): StorefrontWishlistResult 
     toggleItem,
     isInWishlist,
     clear,
-    itemCount
-  }
+    itemCount,
+  };
 }

@@ -111,7 +111,7 @@ export function OrderConfirmationBlock({
   error: errorProp,
   formatPrice: formatPriceProp,
   shopLink = "/shop",
-  trackingLink,
+  trackingLink = "/order-tracking",
   className,
 }: OrderConfirmationBlockProps) {
   const searchParams = useSearchParams();
@@ -223,7 +223,7 @@ export function OrderConfirmationBlock({
     getOrderPaymentProofStatus(storefront.siteId, order.id).then(
       setProofStatus,
     );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [order?.id, storefront.siteId]);
 
   // Handle proof file selection
@@ -269,7 +269,7 @@ export function OrderConfirmationBlock({
         URL.revokeObjectURL(proofPreview);
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Upload proof
@@ -317,6 +317,36 @@ export function OrderConfirmationBlock({
     const total = formatPrice(order.total);
     return `Hi, I've made payment for order ${order.order_number}, total ${total}. Please confirm receipt. Thank you!`;
   };
+
+  // Open the live chat widget with order context via postMessage
+  const openChatWithOrderContext = React.useCallback(() => {
+    if (!order) return;
+    // Find the chat widget iframe
+    const chatIframe = document.querySelector<HTMLIFrameElement>(
+      'iframe[src*="/api/modules/live-chat/widget"]',
+    );
+    if (chatIframe?.contentWindow) {
+      // Open the chat widget
+      chatIframe.contentWindow.postMessage({ type: "dramac-chat-open" }, "*");
+    } else {
+      // Fallback: try the injector's toggle button
+      const toggleBtn = document.querySelector<HTMLButtonElement>(
+        "[data-dramac-chat-toggle]",
+      );
+      if (toggleBtn) toggleBtn.click();
+    }
+  }, [order]);
+
+  // Auto-open chat widget after order loads (with a brief delay for UX)
+  const chatAutoOpenedRef = React.useRef(false);
+  React.useEffect(() => {
+    if (!order || chatAutoOpenedRef.current) return;
+    chatAutoOpenedRef.current = true;
+    const timer = setTimeout(() => {
+      openChatWithOrderContext();
+    }, 3000); // 3 second delay so user can see the confirmation first
+    return () => clearTimeout(timer);
+  }, [order, openChatWithOrderContext]);
 
   // Loading state
   if (isLoading) {
@@ -733,23 +763,31 @@ export function OrderConfirmationBlock({
                 <p className="text-sm italic text-foreground/80 mb-2">
                   &quot;{generatePaymentMessage()}&quot;
                 </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => copyText(generatePaymentMessage(), "message")}
-                >
-                  {copiedField === "message" ? (
-                    <>
-                      <Check className="h-3 w-3 mr-1 text-green-600" />
-                      Copied!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-3 w-3 mr-1" />
-                      Copy Message
-                    </>
-                  )}
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      copyText(generatePaymentMessage(), "message")
+                    }
+                  >
+                    {copiedField === "message" ? (
+                      <>
+                        <Check className="h-3 w-3 mr-1 text-green-600" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3 w-3 mr-1" />
+                        Copy Message
+                      </>
+                    )}
+                  </Button>
+                  <Button size="sm" onClick={openChatWithOrderContext}>
+                    <MessageSquare className="h-3 w-3 mr-1" />
+                    Chat About Order
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -1063,14 +1101,17 @@ export function OrderConfirmationBlock({
 
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          {trackingLink && (
-            <Button variant="outline" asChild>
-              <Link href={trackingLink}>
-                <Truck className="h-4 w-4 mr-2" />
-                Track Order
-              </Link>
-            </Button>
-          )}
+          <Button variant="outline" asChild>
+            <Link href={trackingLink}>
+              <Truck className="h-4 w-4 mr-2" />
+              Track Order
+            </Link>
+          </Button>
+
+          <Button variant="outline" onClick={openChatWithOrderContext}>
+            <MessageSquare className="h-4 w-4 mr-2" />
+            Need Help? Chat with Us
+          </Button>
 
           <Button asChild>
             <Link href={shopLink}>

@@ -1,23 +1,27 @@
 /**
  * E-Commerce Structured Data (Schema.org JSON-LD)
- * 
+ *
  * Generates JSON-LD structured data for Google Rich Results.
  * When Google crawls a product page, it uses this data to display
  * rich product cards in search results with images, prices, ratings,
  * and availability — directly in the search page.
- * 
+ *
  * Supported Schema.org types:
  * - Product (individual product pages)
  * - ItemList (product listing / category pages)
  * - BreadcrumbList (navigation breadcrumbs)
  * - WebSite (site-level search action)
  * - Organization (store identity)
- * 
+ *
  * @see https://developers.google.com/search/docs/appearance/structured-data/product
  * @see https://schema.org/Product
  */
 
-import type { Product, ProductVariant, EcommerceSettings } from '../types/ecommerce-types';
+import type {
+  Product,
+  ProductVariant,
+  EcommerceSettings,
+} from "../types/ecommerce-types";
 
 // ============================================================================
 // TYPES
@@ -45,10 +49,10 @@ interface StructuredDataOptions {
 
 /**
  * Generate Schema.org Product JSON-LD for a single product page.
- * 
+ *
  * This produces the rich product cards that appear in Google search results
  * showing the product image, price, rating stars, availability, etc.
- * 
+ *
  * @see https://developers.google.com/search/docs/appearance/structured-data/product
  */
 export function generateProductJsonLd(
@@ -63,12 +67,18 @@ export function generateProductJsonLd(
   const availability = getAvailability(product);
 
   // Build offers — if variants exist with different prices, create multiple offers
-  const offers = buildOffers(product, productUrl, currency, availability, options);
+  const offers = buildOffers(
+    product,
+    productUrl,
+    currency,
+    availability,
+    options,
+  );
 
   // Core product schema
   const schema: Record<string, unknown> = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
+    "@context": "https://schema.org",
+    "@type": "Product",
     name: product.name,
     url: productUrl,
     description: product.description || product.short_description || undefined,
@@ -85,8 +95,13 @@ export function generateProductJsonLd(
   }
   if (product.barcode) {
     // Could be GTIN-8, GTIN-12 (UPC), GTIN-13 (EAN), or GTIN-14
-    const barcodeLen = product.barcode.replace(/[^0-9]/g, '').length;
-    if (barcodeLen === 8 || barcodeLen === 12 || barcodeLen === 13 || barcodeLen === 14) {
+    const barcodeLen = product.barcode.replace(/[^0-9]/g, "").length;
+    if (
+      barcodeLen === 8 ||
+      barcodeLen === 12 ||
+      barcodeLen === 13 ||
+      barcodeLen === 14
+    ) {
       schema.gtin = product.barcode;
     } else {
       schema.mpn = product.barcode;
@@ -97,20 +112,20 @@ export function generateProductJsonLd(
   const brand = (product.metadata?.brand as string) || storeName;
   if (brand) {
     schema.brand = {
-      '@type': 'Brand',
+      "@type": "Brand",
       name: brand,
     };
   }
 
   // Category
   if (product.categories && product.categories.length > 0) {
-    schema.category = product.categories.map(c => c.name).join(' > ');
+    schema.category = product.categories.map((c) => c.name).join(" > ");
   }
 
   // Weight
   if (product.weight && product.weight > 0) {
     schema.weight = {
-      '@type': 'QuantitativeValue',
+      "@type": "QuantitativeValue",
       value: product.weight,
       unitCode: mapWeightUnit(product.weight_unit),
     };
@@ -120,9 +135,13 @@ export function generateProductJsonLd(
   schema.offers = offers;
 
   // Aggregate rating (only include if there are reviews)
-  if (reviewStats && reviewStats.totalReviews > 0 && reviewStats.averageRating > 0) {
+  if (
+    reviewStats &&
+    reviewStats.totalReviews > 0 &&
+    reviewStats.averageRating > 0
+  ) {
     schema.aggregateRating = {
-      '@type': 'AggregateRating',
+      "@type": "AggregateRating",
       ratingValue: Math.min(5, Math.max(1, reviewStats.averageRating)),
       reviewCount: reviewStats.totalReviews,
       bestRating: 5,
@@ -144,25 +163,27 @@ function buildOffers(
   availability: string,
   options: StructuredDataOptions,
 ): Record<string, unknown> {
-  const hasVariantPrices = product.variants?.some(v => v.price !== null && v.price !== product.base_price);
+  const hasVariantPrices = product.variants?.some(
+    (v) => v.price !== null && v.price !== product.base_price,
+  );
 
   if (hasVariantPrices && product.variants && product.variants.length > 0) {
     // Multiple price points — use AggregateOffer
     const prices = [
       product.base_price,
       ...product.variants
-        .filter(v => v.price !== null && v.is_active)
-        .map(v => v.price as number),
+        .filter((v) => v.price !== null && v.is_active)
+        .map((v) => v.price as number),
     ];
     const lowPrice = Math.min(...prices);
     const highPrice = Math.max(...prices);
 
     return {
-      '@type': 'AggregateOffer',
+      "@type": "AggregateOffer",
       lowPrice: (lowPrice / 100).toFixed(2),
       highPrice: (highPrice / 100).toFixed(2),
       priceCurrency: currency,
-      offerCount: product.variants.filter(v => v.is_active).length + 1,
+      offerCount: product.variants.filter((v) => v.is_active).length + 1,
       availability: `https://schema.org/${availability}`,
       url: productUrl,
     };
@@ -171,24 +192,27 @@ function buildOffers(
   // Single price — use Offer
   const { storeName: sellerName } = options;
   const offer: Record<string, unknown> = {
-    '@type': 'Offer',
+    "@type": "Offer",
     price: (Number(product.base_price) / 100).toFixed(2),
     priceCurrency: currency,
     availability: `https://schema.org/${availability}`,
     url: productUrl,
     seller: {
-      '@type': 'Organization',
-      name: (product.metadata?.brand as string) || sellerName || 'Store',
+      "@type": "Organization",
+      name: (product.metadata?.brand as string) || sellerName || "Store",
     },
   };
 
   // Add sale metadata for Google rich results
-  if (product.compare_at_price && product.compare_at_price > product.base_price) {
-    offer.itemCondition = 'https://schema.org/NewCondition';
+  if (
+    product.compare_at_price &&
+    product.compare_at_price > product.base_price
+  ) {
+    offer.itemCondition = "https://schema.org/NewCondition";
     // priceValidUntil is required by Google for Product rich results
     const validUntil = new Date();
     validUntil.setFullYear(validUntil.getFullYear() + 1);
-    offer.priceValidUntil = validUntil.toISOString().split('T')[0];
+    offer.priceValidUntil = validUntil.toISOString().split("T")[0];
   }
 
   return offer;
@@ -209,26 +233,26 @@ export function generateProductListJsonLd(
   const { siteUrl, listName } = options;
 
   return {
-    '@context': 'https://schema.org',
-    '@type': 'ItemList',
-    name: listName || 'Products',
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: listName || "Products",
     numberOfItems: products.length,
     itemListElement: products.map((product, index) => ({
-      '@type': 'ListItem',
+      "@type": "ListItem",
       position: index + 1,
       url: `${siteUrl}/products/${product.slug}`,
       name: product.name,
       image: product.images?.[0] || undefined,
       item: {
-        '@type': 'Product',
+        "@type": "Product",
         name: product.name,
         url: `${siteUrl}/products/${product.slug}`,
         image: product.images?.[0] || undefined,
         offers: {
-          '@type': 'Offer',
+          "@type": "Offer",
           price: (Number(product.base_price) / 100).toFixed(2),
           priceCurrency: options.currency,
-          availability: `https://schema.org/${product.track_inventory && product.quantity <= 0 ? 'OutOfStock' : 'InStock'}`,
+          availability: `https://schema.org/${product.track_inventory && product.quantity <= 0 ? "OutOfStock" : "InStock"}`,
         },
       },
     })),
@@ -247,10 +271,10 @@ export function generateBreadcrumbJsonLd(
   items: BreadcrumbItem[],
 ): Record<string, unknown> {
   return {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
     itemListElement: items.map((item, index) => ({
-      '@type': 'ListItem',
+      "@type": "ListItem",
       position: index + 1,
       name: item.name,
       item: item.url,
@@ -271,9 +295,9 @@ export function generateStoreJsonLd(
   siteUrl: string,
 ): Record<string, unknown> {
   const schema: Record<string, unknown> = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: settings.store_name || 'Store',
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: settings.store_name || "Store",
     url: siteUrl,
   };
 
@@ -285,7 +309,7 @@ export function generateStoreJsonLd(
   }
   if (settings.store_address) {
     schema.address = {
-      '@type': 'PostalAddress',
+      "@type": "PostalAddress",
       streetAddress: settings.store_address.address_line_1,
       addressLocality: settings.store_address.city,
       addressRegion: settings.store_address.state,
@@ -306,17 +330,17 @@ export function generateWebSiteSearchJsonLd(
   siteUrl: string,
 ): Record<string, unknown> {
   return {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
+    "@context": "https://schema.org",
+    "@type": "WebSite",
     name: storeName,
     url: siteUrl,
     potentialAction: {
-      '@type': 'SearchAction',
+      "@type": "SearchAction",
       target: {
-        '@type': 'EntryPoint',
+        "@type": "EntryPoint",
         urlTemplate: `${siteUrl}/shop?search={search_term_string}`,
       },
-      'query-input': 'required name=search_term_string',
+      "query-input": "required name=search_term_string",
     },
   };
 }
@@ -330,16 +354,16 @@ export function generateWebSiteSearchJsonLd(
  */
 function getAvailability(product: Product): string {
   if (!product.track_inventory) {
-    return 'InStock'; // Not tracking = always available
+    return "InStock"; // Not tracking = always available
   }
   if (product.quantity > 0) {
-    return 'InStock';
+    return "InStock";
   }
   // Check if we have active variants with stock
-  if (product.variants?.some(v => v.is_active && v.quantity > 0)) {
-    return 'InStock';
+  if (product.variants?.some((v) => v.is_active && v.quantity > 0)) {
+    return "InStock";
   }
-  return 'OutOfStock';
+  return "OutOfStock";
 }
 
 /**
@@ -347,13 +371,13 @@ function getAvailability(product: Product): string {
  */
 function mapWeightUnit(unit: string): string {
   const unitMap: Record<string, string> = {
-    kg: 'KGM',
-    g: 'GRM',
-    lb: 'LBR',
-    lbs: 'LBR',
-    oz: 'ONZ',
+    kg: "KGM",
+    g: "GRM",
+    lb: "LBR",
+    lbs: "LBR",
+    oz: "ONZ",
   };
-  return unitMap[unit?.toLowerCase()] || 'KGM';
+  return unitMap[unit?.toLowerCase()] || "KGM";
 }
 
 /**
@@ -370,5 +394,5 @@ export function buildSiteUrl(
   if (subdomain) {
     return `https://${subdomain}.sites.dramacagency.com`;
   }
-  return '';
+  return "";
 }

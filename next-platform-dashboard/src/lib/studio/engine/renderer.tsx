@@ -2,10 +2,10 @@
 
 /**
  * StudioRenderer - Main page rendering component
- * 
+ *
  * Renders page content using DRAMAC Studio's component system.
  * Replaces Puck's <Render> component for preview and published pages.
- * 
+ *
  * Features:
  * - Auto-migrates old Puck data to Studio format
  * - Renders all registered Studio components
@@ -13,18 +13,33 @@
  * - SSR-compatible with "use client" directive
  * - Auto-initializes component registry
  * - Loads module components when modules prop provided
- * 
+ *
  * @phase STUDIO-27 - Platform Integration & Puck Removal
  * @phase STUDIO-28 - Fixed registry initialization for preview
  */
 
 import React, { useMemo, useEffect, useState } from "react";
 import { ensureStudioFormat } from "../utils/migrate-puck-data";
-import { getComponent, componentRegistry } from "../registry/component-registry";
+import {
+  getComponent,
+  componentRegistry,
+} from "../registry/component-registry";
 import { initializeRegistry, isRegistryInitialized } from "../registry";
 import { loadModuleComponents } from "../registry/module-loader";
-import { resolveBrandColors, injectBrandColors, injectBrandFonts, extractBrandSource, generateBrandCSSVars } from "./brand-colors";
-import { getModuleNavigation, mergeMainNavLinks, buildUtilityItems, mergeFooterLinks, type SiteNavigation } from "./smart-navigation";
+import {
+  resolveBrandColors,
+  injectBrandColors,
+  injectBrandFonts,
+  extractBrandSource,
+  generateBrandCSSVars,
+} from "./brand-colors";
+import {
+  getModuleNavigation,
+  mergeMainNavLinks,
+  buildUtilityItems,
+  mergeFooterLinks,
+  type SiteNavigation,
+} from "./smart-navigation";
 import type { BrandColorPalette } from "./brand-colors";
 import type { StudioComponent } from "@/types/studio";
 import type { InstalledModuleInfo } from "@/types/studio-module";
@@ -73,22 +88,41 @@ interface ComponentRendererProps {
  * These come from Booking/E-commerce modules and should not stretch full-screen
  */
 const MODULE_COMPONENT_TYPES = new Set([
-  "BookingServiceSelector", "BookingWidget", "BookingCalendar",
-  "BookingForm", "BookingEmbed", "BookingStaffGrid",
-  "EcommerceProductGrid", "EcommerceProductCard", "EcommerceProductCatalog",
-  "EcommerceFeaturedProducts", "EcommerceCartPage", "EcommerceCartDrawer",
-  "EcommerceMiniCart", "EcommerceCheckoutPage", "EcommerceOrderConfirmation",
-  "EcommerceCategoryNav", "EcommerceSearchBar", "EcommerceFilterSidebar",
-  "EcommerceBreadcrumb", "EcommerceProductSort", "EcommerceQuoteRequest",
-  "EcommerceQuoteList", "EcommerceQuoteDetail", "EcommerceReviewForm",
-  "EcommerceReviewList", "ProductDetailBlock", "CategoryHeroBlock",
+  "BookingServiceSelector",
+  "BookingWidget",
+  "BookingCalendar",
+  "BookingForm",
+  "BookingEmbed",
+  "BookingStaffGrid",
+  "EcommerceProductGrid",
+  "EcommerceProductCard",
+  "EcommerceProductCatalog",
+  "EcommerceFeaturedProducts",
+  "EcommerceCartPage",
+  "EcommerceCartDrawer",
+  "EcommerceMiniCart",
+  "EcommerceCheckoutPage",
+  "EcommerceOrderConfirmation",
+  "EcommerceOrderTracking",
+  "EcommerceCategoryNav",
+  "EcommerceSearchBar",
+  "EcommerceFilterSidebar",
+  "EcommerceBreadcrumb",
+  "EcommerceProductSort",
+  "EcommerceQuoteRequest",
+  "EcommerceQuoteList",
+  "EcommerceQuoteDetail",
+  "EcommerceReviewForm",
+  "EcommerceReviewList",
+  "ProductDetailBlock",
+  "CategoryHeroBlock",
 ]);
 
 /**
  * Renders a single component and its children recursively
  */
-function ComponentRenderer({ 
-  component, 
+function ComponentRenderer({
+  component,
   components,
   depth = 0,
   siteId,
@@ -98,7 +132,7 @@ function ComponentRenderer({
 }: ComponentRendererProps): React.ReactElement | null {
   // Get component definition from registry
   const definition = getComponent(component.type);
-  
+
   if (!definition) {
     // Component type not found — try to render a generic fallback
     // instead of silently dropping the section (which causes blank pages)
@@ -106,10 +140,10 @@ function ComponentRenderer({
     const title = String(props.title || props.headline || props.text || "");
     const subtitle = String(props.subtitle || props.description || "");
     const hasContent = title || subtitle;
-    
+
     if (process.env.NODE_ENV === "development") {
       return (
-        <div 
+        <div
           key={component.id}
           className="border-2 border-dashed border-amber-400 bg-amber-50 p-8 rounded text-center"
         >
@@ -125,53 +159,61 @@ function ComponentRenderer({
         </div>
       );
     }
-    
+
     // Production fallback: render the content in a clean section
     // rather than showing nothing (which is worse)
     if (hasContent) {
       return (
         <section key={component.id} className="py-16 px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
-            {title && <h2 className="text-3xl font-bold text-gray-900 mb-4">{title}</h2>}
+            {title && (
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">{title}</h2>
+            )}
             {subtitle && <p className="text-lg text-gray-600">{subtitle}</p>}
           </div>
         </section>
       );
     }
-    
+
     return null;
   }
-  
+
   // Render component
   const RenderComponent = definition.render;
-  
+
   // Only get children if this component accepts them
   // This prevents passing children to void elements like img, input, etc.
   const acceptsChildren = definition.acceptsChildren === true;
-  
-  const children = acceptsChildren && component.children?.length 
-    ? component.children.map((childId) => {
-        const childComponent = components[childId];
-        if (!childComponent) return null;
-        
-        return (
-          <ComponentRenderer
-            key={childId}
-            component={childComponent}
-            components={components}
-            depth={depth + 1}
-            siteId={siteId}
-            brandPalette={brandPalette}
-            siteSettings={siteSettings}
-            modules={modules}
-          />
-        );
-      }).filter(Boolean)
-    : null;
-  
+
+  const children =
+    acceptsChildren && component.children?.length
+      ? component.children
+          .map((childId) => {
+            const childComponent = components[childId];
+            if (!childComponent) return null;
+
+            return (
+              <ComponentRenderer
+                key={childId}
+                component={childComponent}
+                components={components}
+                depth={depth + 1}
+                siteId={siteId}
+                brandPalette={brandPalette}
+                siteSettings={siteSettings}
+                modules={modules}
+              />
+            );
+          })
+          .filter(Boolean)
+      : null;
+
   // Only pass children prop if the component accepts children AND has children
   // Build props with siteId injection — components can use this to fetch real data
-  let injectedProps: Record<string, unknown> = { ...component.props, siteId: component.props?.siteId || siteId };
+  let injectedProps: Record<string, unknown> = {
+    ...component.props,
+    siteId: component.props?.siteId || siteId,
+  };
 
   // BRAND COLOR INJECTION: Fill unset color props with brand-derived values.
   // This is the key architectural change — components no longer need to define
@@ -186,8 +228,15 @@ function ComponentRenderer({
   // titleFont, nameFont, fontFamily etc. inherit from the site's brand fonts
   // unless the user explicitly customized them in Studio.
   if (siteSettings) {
-    const fontHeading = (siteSettings.font_heading as string) || (siteSettings.theme as Record<string, unknown>)?.fontHeading as string || null;
-    const fontBody = (siteSettings.font_body as string) || (siteSettings.theme as Record<string, unknown>)?.fontBody as string || null;
+    const fontHeading =
+      (siteSettings.font_heading as string) ||
+      ((siteSettings.theme as Record<string, unknown>)
+        ?.fontHeading as string) ||
+      null;
+    const fontBody =
+      (siteSettings.font_body as string) ||
+      ((siteSettings.theme as Record<string, unknown>)?.fontBody as string) ||
+      null;
     injectedProps = injectBrandFonts(injectedProps, fontHeading, fontBody);
   }
 
@@ -199,30 +248,34 @@ function ComponentRenderer({
   // ──────────────────────────────────────────────────────────────────────────
   if (component.type === "Navbar" && siteSettings) {
     const moduleNav = getModuleNavigation(siteSettings, modules);
-    const existingLinks = (injectedProps.links as Array<{ label: string; href: string }>) || [];
+    const existingLinks =
+      (injectedProps.links as Array<{ label: string; href: string }>) || [];
     injectedProps.links = mergeMainNavLinks(existingLinks, moduleNav.main);
     injectedProps.utilityItems = buildUtilityItems(moduleNav.utility);
   }
   if (component.type === "Footer" && siteSettings) {
     const moduleNav = getModuleNavigation(siteSettings, modules);
     if (moduleNav.footer.length > 0) {
-      const existingColumns = (injectedProps.columns as Array<{ title: string; links: Array<{ label: string; href: string }> }>) || [];
-      injectedProps.columns = mergeFooterLinks(existingColumns, moduleNav.footer);
+      const existingColumns =
+        (injectedProps.columns as Array<{
+          title: string;
+          links: Array<{ label: string; href: string }>;
+        }>) || [];
+      injectedProps.columns = mergeFooterLinks(
+        existingColumns,
+        moduleNav.footer,
+      );
     }
   }
 
   // Determine if this is a module component that needs containment wrapping
   const isModuleComponent = MODULE_COMPONENT_TYPES.has(component.type);
-  
+
   let rendered: React.ReactElement;
-  
+
   if (acceptsChildren && children && children.length > 0) {
     rendered = (
-      <RenderComponent
-        key={component.id}
-        {...injectedProps}
-        id={component.id}
-      >
+      <RenderComponent key={component.id} {...injectedProps} id={component.id}>
         {children}
       </RenderComponent>
     );
@@ -235,25 +288,25 @@ function ComponentRenderer({
       />
     );
   }
-  
+
   // Wrap module components in a containment section so they don't stretch full-screen
   if (isModuleComponent) {
     const bgColor = (component.props?.backgroundColor as string) || undefined;
-    const paddingY = (component.props?.sectionPaddingY as string) || "py-12 md:py-16";
-    const paddingX = (component.props?.sectionPaddingX as string) || "px-4 sm:px-6 lg:px-8";
+    const paddingY =
+      (component.props?.sectionPaddingY as string) || "py-12 md:py-16";
+    const paddingX =
+      (component.props?.sectionPaddingX as string) || "px-4 sm:px-6 lg:px-8";
     return (
-      <section 
+      <section
         key={`module-wrap-${component.id}`}
         className={`w-full ${paddingY}`}
         style={bgColor ? { backgroundColor: bgColor } : undefined}
       >
-        <div className={`max-w-screen-xl mx-auto ${paddingX}`}>
-          {rendered}
-        </div>
+        <div className={`max-w-screen-xl mx-auto ${paddingX}`}>{rendered}</div>
       </section>
     );
   }
-  
+
   return rendered;
 }
 
@@ -274,9 +327,9 @@ interface ZoneRendererProps {
 /**
  * Renders components within a zone
  */
-function ZoneRenderer({ 
-  zoneId, 
-  componentIds, 
+function ZoneRenderer({
+  zoneId,
+  componentIds,
   components,
   siteId,
   brandPalette,
@@ -288,7 +341,7 @@ function ZoneRenderer({
       {componentIds.map((id) => {
         const component = components[id];
         if (!component) return null;
-        
+
         return (
           <ComponentRenderer
             key={id}
@@ -312,9 +365,11 @@ function ZoneRenderer({
 /**
  * Generate CSS custom properties from theme settings
  */
-function generateThemeCSS(settings: Record<string, unknown>): React.CSSProperties {
+function generateThemeCSS(
+  settings: Record<string, unknown>,
+): React.CSSProperties {
   const cssVars: Record<string, string> = {};
-  
+
   // Map theme settings to CSS variables
   const mappings: Record<string, string> = {
     primaryColor: "--theme-primary",
@@ -326,13 +381,13 @@ function generateThemeCSS(settings: Record<string, unknown>): React.CSSPropertie
     bodyFont: "--theme-font-body",
     borderRadius: "--theme-radius",
   };
-  
+
   Object.entries(mappings).forEach(([key, cssVar]) => {
     if (settings[key] !== undefined && settings[key] !== null) {
       cssVars[cssVar] = String(settings[key]);
     }
   });
-  
+
   return cssVars as React.CSSProperties;
 }
 
@@ -361,7 +416,11 @@ export function StudioRenderer({
     const source = siteSettings
       ? extractBrandSource(siteSettings)
       : themeSettings
-        ? { theme: themeSettings as BrandColorPalette extends never ? never : Record<string, string> }
+        ? {
+            theme: themeSettings as BrandColorPalette extends never
+              ? never
+              : Record<string, string>,
+          }
         : null;
     if (!source) return null;
     return resolveBrandColors(source);
@@ -380,8 +439,14 @@ export function StudioRenderer({
     if (!brandPalette) return {};
     // Read fonts from flat settings first, then theme.* (AI designer saves under theme)
     const themeObj = siteSettings?.theme as Record<string, unknown> | undefined;
-    const fontHeading = (siteSettings?.font_heading as string) || (themeObj?.fontHeading as string) || null;
-    const fontBody = (siteSettings?.font_body as string) || (themeObj?.fontBody as string) || null;
+    const fontHeading =
+      (siteSettings?.font_heading as string) ||
+      (themeObj?.fontHeading as string) ||
+      null;
+    const fontBody =
+      (siteSettings?.font_body as string) ||
+      (themeObj?.fontBody as string) ||
+      null;
     return generateBrandCSSVars(brandPalette, fontHeading, fontBody);
   }, [brandPalette, siteSettings]);
 
@@ -391,8 +456,14 @@ export function StudioRenderer({
   useEffect(() => {
     // Read fonts from flat settings first, then theme.* (AI designer saves under theme)
     const themeObj = siteSettings?.theme as Record<string, unknown> | undefined;
-    const fontHeading = (siteSettings?.font_heading as string) || (themeObj?.fontHeading as string) || null;
-    const fontBody = (siteSettings?.font_body as string) || (themeObj?.fontBody as string) || null;
+    const fontHeading =
+      (siteSettings?.font_heading as string) ||
+      (themeObj?.fontHeading as string) ||
+      null;
+    const fontBody =
+      (siteSettings?.font_body as string) ||
+      (themeObj?.fontBody as string) ||
+      null;
     const fonts = new Set<string>();
     if (fontHeading) fonts.add(fontHeading);
     if (fontBody) fonts.add(fontBody);
@@ -415,7 +486,11 @@ export function StudioRenderer({
 
     return () => {
       // Cleanup on unmount (unlikely for published sites, but safe)
-      try { document.head.removeChild(link); } catch { /* noop */ }
+      try {
+        document.head.removeChild(link);
+      } catch {
+        /* noop */
+      }
     };
   }, [siteSettings]);
 
@@ -424,26 +499,34 @@ export function StudioRenderer({
     if (!isRegistryInitialized()) {
       console.log("[StudioRenderer] Initializing component registry...");
       initializeRegistry();
-      console.log("[StudioRenderer] Registry initialized with", componentRegistry.count, "components");
+      console.log(
+        "[StudioRenderer] Registry initialized with",
+        componentRegistry.count,
+        "components",
+      );
     }
     return true;
   }, []);
-  
-  const [modulesLoaded, setModulesLoaded] = useState(!modules || modules.length === 0);
-  
+
+  const [modulesLoaded, setModulesLoaded] = useState(
+    !modules || modules.length === 0,
+  );
+
   // Load module components if modules are provided
   useEffect(() => {
     if (modules && modules.length > 0) {
       let isCancelled = false;
-      
+
       // Timeout: never let module loading block rendering for more than 3 seconds
       const timeout = setTimeout(() => {
         if (!isCancelled) {
-          console.warn("[StudioRenderer] Module loading timed out after 3s — rendering without modules");
+          console.warn(
+            "[StudioRenderer] Module loading timed out after 3s — rendering without modules",
+          );
           setModulesLoaded(true);
         }
       }, 3000);
-      
+
       loadModuleComponents(modules)
         .then(() => {
           if (!isCancelled) {
@@ -452,29 +535,32 @@ export function StudioRenderer({
         })
         .catch((err) => {
           if (!isCancelled) {
-            console.error("[StudioRenderer] Error loading module components:", err);
+            console.error(
+              "[StudioRenderer] Error loading module components:",
+              err,
+            );
             setModulesLoaded(true); // Continue even if modules fail to load
           }
         })
         .finally(() => clearTimeout(timeout));
-      
+
       return () => {
         isCancelled = true;
         clearTimeout(timeout);
       };
     }
   }, [modules]);
-  
+
   // Migrate data to Studio format (memoized)
   const studioData = useMemo(() => {
     return ensureStudioFormat(data);
   }, [data]);
-  
+
   // Generate theme CSS variables
   const themeStyles = useMemo(() => {
     return themeSettings ? generateThemeCSS(themeSettings) : {};
   }, [themeSettings]);
-  
+
   // Wait for registry and modules to be ready
   // Show nothing during load — content appears seamlessly once ready
   // Industry standard: published sites never show loading spinners or text.
@@ -482,18 +568,18 @@ export function StudioRenderer({
   // We keep this brief (max 3s timeout) and invisible to match that experience.
   if (!registryReady || !modulesLoaded) {
     return (
-      <div 
+      <div
         className={`studio-renderer ${className}`}
         style={{ minHeight: "100vh", backgroundColor: "#ffffff" }}
         aria-hidden="true"
       />
     );
   }
-  
+
   // Empty state
   if (!studioData.root.children || studioData.root.children.length === 0) {
     return (
-      <div 
+      <div
         className={`studio-renderer studio-empty ${className}`}
         style={themeStyles}
         data-site-id={siteId}
@@ -503,10 +589,10 @@ export function StudioRenderer({
       </div>
     );
   }
-  
+
   // Render page content
   return (
-    <div 
+    <div
       className={`studio-renderer light ${className}`}
       style={{
         ...themeStyles,
@@ -531,7 +617,7 @@ export function StudioRenderer({
       {studioData.root.children.map((id) => {
         const component = studioData.components[id];
         if (!component) return null;
-        
+
         return (
           <ComponentRenderer
             key={id}
@@ -544,20 +630,21 @@ export function StudioRenderer({
           />
         );
       })}
-      
+
       {/* Zones (if any) */}
-      {studioData.zones && Object.entries(studioData.zones).map(([zoneId, componentIds]) => (
-        <ZoneRenderer
-          key={zoneId}
-          zoneId={zoneId}
-          componentIds={componentIds}
-          components={studioData.components}
-          siteId={siteId}
-          brandPalette={brandPalette}
-          siteSettings={siteSettings}
-          modules={modules}
-        />
-      ))}
+      {studioData.zones &&
+        Object.entries(studioData.zones).map(([zoneId, componentIds]) => (
+          <ZoneRenderer
+            key={zoneId}
+            zoneId={zoneId}
+            componentIds={componentIds}
+            components={studioData.components}
+            siteId={siteId}
+            brandPalette={brandPalette}
+            siteSettings={siteSettings}
+            modules={modules}
+          />
+        ))}
     </div>
   );
 }

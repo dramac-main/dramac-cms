@@ -78,7 +78,7 @@ export async function getPublicProductsByIds(
   siteId: string,
   productIds: string[],
 ): Promise<Product[]> {
-  if (!productIds.length) return []
+  if (!productIds.length) return [];
   try {
     const supabase = getPublicClient();
     const { data, error } = await supabase
@@ -94,7 +94,10 @@ export async function getPublicProductsByIds(
     }
     return (data || []) as Product[];
   } catch (err) {
-    console.error("[Ecom Public] getPublicProductsByIds unexpected error:", err);
+    console.error(
+      "[Ecom Public] getPublicProductsByIds unexpected error:",
+      err,
+    );
     return [];
   }
 }
@@ -894,24 +897,27 @@ export async function createPublicOrderFromCart(
   }
 
   // Emit automation event for order creation
-  logAutomationEvent(input.site_id, "ecommerce.order.created", {
-    order_id: order.id,
-    order_number: orderNumber,
-    customer_email: input.customer_email,
-    customer_name: input.customer_name,
-    total: input.total,
-    subtotal: input.subtotal,
-    currency: input.currency,
-    payment_provider: input.payment_provider,
-    payment_status: input.payment_status || "pending",
-    status: input.status || "pending",
-  }, {
-    sourceModule: "ecommerce",
-    sourceEntityType: "order",
-    sourceEntityId: order.id,
-  }).catch((err) =>
-    console.error("[Ecom Public] Automation event error:", err),
-  );
+  logAutomationEvent(
+    input.site_id,
+    "ecommerce.order.created",
+    {
+      order_id: order.id,
+      order_number: orderNumber,
+      customer_email: input.customer_email,
+      customer_name: input.customer_name,
+      total: input.total,
+      subtotal: input.subtotal,
+      currency: input.currency,
+      payment_provider: input.payment_provider,
+      payment_status: input.payment_status || "pending",
+      status: input.status || "pending",
+    },
+    {
+      sourceModule: "ecommerce",
+      sourceEntityType: "order",
+      sourceEntityId: order.id,
+    },
+  ).catch((err) => console.error("[Ecom Public] Automation event error:", err));
 
   return order as Order;
 }
@@ -937,18 +943,21 @@ export async function updatePublicOrderStatus(
   if (error) throw new Error(error.message);
 
   // Emit automation event for status change
-  logAutomationEvent(siteId, "ecommerce.order.status_changed", {
-    order_id: orderId,
-    new_status: status,
-    order_number: (data as Order).order_number,
-    customer_email: (data as Order).customer_email,
-  }, {
-    sourceModule: "ecommerce",
-    sourceEntityType: "order",
-    sourceEntityId: orderId,
-  }).catch((err) =>
-    console.error("[Ecom Public] Automation event error:", err),
-  );
+  logAutomationEvent(
+    siteId,
+    "ecommerce.order.status_changed",
+    {
+      order_id: orderId,
+      new_status: status,
+      order_number: (data as Order).order_number,
+      customer_email: (data as Order).customer_email,
+    },
+    {
+      sourceModule: "ecommerce",
+      sourceEntityType: "order",
+      sourceEntityId: orderId,
+    },
+  ).catch((err) => console.error("[Ecom Public] Automation event error:", err));
 
   return data as Order;
 }
@@ -985,21 +994,24 @@ export async function updatePublicOrderPaymentStatus(
   if (error) throw new Error(error.message);
 
   // Emit automation event for payment status change
-  logAutomationEvent(siteId, "ecommerce.order.payment_updated", {
-    order_id: orderId,
-    payment_status: paymentStatus,
-    transaction_id: transactionId,
-    order_number: (data as Order).order_number,
-    customer_email: (data as Order).customer_email,
-    total: (data as Order).total,
-    currency: (data as Order).currency,
-  }, {
-    sourceModule: "ecommerce",
-    sourceEntityType: "order",
-    sourceEntityId: orderId,
-  }).catch((err) =>
-    console.error("[Ecom Public] Automation event error:", err),
-  );
+  logAutomationEvent(
+    siteId,
+    "ecommerce.order.payment_updated",
+    {
+      order_id: orderId,
+      payment_status: paymentStatus,
+      transaction_id: transactionId,
+      order_number: (data as Order).order_number,
+      customer_email: (data as Order).customer_email,
+      total: (data as Order).total,
+      currency: (data as Order).currency,
+    },
+    {
+      sourceModule: "ecommerce",
+      sourceEntityType: "order",
+      sourceEntityId: orderId,
+    },
+  ).catch((err) => console.error("[Ecom Public] Automation event error:", err));
 
   return data as Order;
 }
@@ -1103,6 +1115,41 @@ export async function getPublicOrderById(
     .select("*")
     .eq("site_id", siteId)
     .eq("id", orderId)
+    .single();
+
+  if (error || !order) return null;
+
+  const { data: items } = await supabase
+    .from(`${TABLE_PREFIX}_order_items`)
+    .select("*")
+    .eq("order_id", order.id)
+    .order("created_at", { ascending: true });
+
+  return {
+    order: order as Order,
+    items: (items || []) as Array<Record<string, unknown>>,
+  };
+}
+
+/**
+ * Look up an order by email + order number (for order tracking page).
+ * Requires both fields to match — prevents enumeration attacks.
+ */
+export async function getPublicOrderByLookup(
+  siteId: string,
+  email: string,
+  orderNumber: string,
+): Promise<{ order: Order; items: Array<Record<string, unknown>> } | null> {
+  if (!siteId || !email || !orderNumber) return null;
+
+  const supabase = getPublicClient();
+
+  const { data: order, error } = await supabase
+    .from(`${TABLE_PREFIX}_orders`)
+    .select("*")
+    .eq("site_id", siteId)
+    .eq("customer_email", email.toLowerCase().trim())
+    .eq("order_number", orderNumber.trim().toUpperCase())
     .single();
 
   if (error || !order) return null;

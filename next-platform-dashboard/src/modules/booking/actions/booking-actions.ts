@@ -703,21 +703,24 @@ export async function cancelAppointment(
   );
 
   // Emit automation event for appointment cancellation
-  logAutomationEvent(siteId, "booking.appointment.cancelled", {
-    appointment_id: appointmentId,
-    service_name: (appointment as any).service?.name,
-    customer_name: appointment.customer_name,
-    customer_email: appointment.customer_email,
-    start_time: appointment.start_time,
-    cancelled_by: cancelledBy,
-    cancellation_reason: reason,
-  }, {
-    sourceModule: "booking",
-    sourceEntityType: "appointment",
-    sourceEntityId: appointmentId,
-  }).catch((err) =>
-    console.error("[Booking] Automation event error:", err),
-  );
+  logAutomationEvent(
+    siteId,
+    "booking.appointment.cancelled",
+    {
+      appointment_id: appointmentId,
+      service_name: (appointment as any).service?.name,
+      customer_name: appointment.customer_name,
+      customer_email: appointment.customer_email,
+      start_time: appointment.start_time,
+      cancelled_by: cancelledBy,
+      cancellation_reason: reason,
+    },
+    {
+      sourceModule: "booking",
+      sourceEntityType: "appointment",
+      sourceEntityId: appointmentId,
+    },
+  ).catch((err) => console.error("[Booking] Automation event error:", err));
 
   return appointment;
 }

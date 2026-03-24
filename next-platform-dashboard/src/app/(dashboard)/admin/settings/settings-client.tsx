@@ -26,10 +26,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { PLATFORM } from "@/lib/constants/platform";
-import {
-  saveAdminSetting,
-  type AdminSettingsMap,
-} from "./actions";
+import { saveAdminSetting, type AdminSettingsMap } from "./actions";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -69,7 +66,8 @@ export function AdminSettingsClient({
   initialSettings: AdminSettingsMap;
 }) {
   // --- General ---
-  const initGeneral = (initialSettings.general ?? {}) as Partial<GeneralSettings>;
+  const initGeneral = (initialSettings.general ??
+    {}) as Partial<GeneralSettings>;
   const [general, setGeneral] = useState<GeneralSettings>({
     platformName: initGeneral.platformName ?? PLATFORM.name ?? "DRAMAC",
     supportEmail: initGeneral.supportEmail ?? "support@dramacagency.com",
@@ -89,7 +87,8 @@ export function AdminSettingsClient({
   });
 
   // --- Notifications ---
-  const initNotif = (initialSettings.notifications ?? {}) as Partial<NotificationSettings>;
+  const initNotif = (initialSettings.notifications ??
+    {}) as Partial<NotificationSettings>;
   const [notifications, setNotifications] = useState<NotificationSettings>({
     newAgencySignups: initNotif.newAgencySignups ?? true,
     failedPayments: initNotif.failedPayments ?? true,
@@ -97,7 +96,8 @@ export function AdminSettingsClient({
   });
 
   // --- Security ---
-  const initSecurity = (initialSettings.security ?? {}) as Partial<SecuritySettings>;
+  const initSecurity = (initialSettings.security ??
+    {}) as Partial<SecuritySettings>;
   const [security, setSecurity] = useState<SecuritySettings>({
     twoFactorAuth: initSecurity.twoFactorAuth ?? false,
     sessionTimeout: initSecurity.sessionTimeout ?? true,
@@ -113,7 +113,9 @@ export function AdminSettingsClient({
     startTransition(async () => {
       const result = await saveAdminSetting(section, value);
       if (result.success) {
-        toast.success(`${section.charAt(0).toUpperCase() + section.slice(1)} settings saved`);
+        toast.success(
+          `${section.charAt(0).toUpperCase() + section.slice(1)} settings saved`,
+        );
       } else {
         toast.error(`Failed to save ${section} settings: ${result.error}`);
       }
@@ -169,10 +171,17 @@ export function AdminSettingsClient({
             />
           </div>
           <Button
-            onClick={() => handleSave("general", general as unknown as Record<string, unknown>)}
+            onClick={() =>
+              handleSave(
+                "general",
+                general as unknown as Record<string, unknown>,
+              )
+            }
             disabled={isSaving("general")}
           >
-            {isSaving("general") && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isSaving("general") && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
             Save Changes
           </Button>
         </CardContent>
@@ -236,10 +245,14 @@ export function AdminSettingsClient({
           </div>
           <div className="pt-2">
             <Button
-              onClick={() => handleSave("email", email as unknown as Record<string, unknown>)}
+              onClick={() =>
+                handleSave("email", email as unknown as Record<string, unknown>)
+              }
               disabled={isSaving("email")}
             >
-              {isSaving("email") && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSaving("email") && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Save Email Settings
             </Button>
           </div>
@@ -305,7 +318,10 @@ export function AdminSettingsClient({
           <div className="pt-2">
             <Button
               onClick={() =>
-                handleSave("notifications", notifications as unknown as Record<string, unknown>)
+                handleSave(
+                  "notifications",
+                  notifications as unknown as Record<string, unknown>,
+                )
               }
               disabled={isSaving("notifications")}
             >
@@ -325,9 +341,7 @@ export function AdminSettingsClient({
             <Shield className="w-5 h-5" />
             <CardTitle>Security Settings</CardTitle>
           </div>
-          <CardDescription>
-            Configure platform security options
-          </CardDescription>
+          <CardDescription>Configure platform security options</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
@@ -377,7 +391,10 @@ export function AdminSettingsClient({
           <div className="pt-2">
             <Button
               onClick={() =>
-                handleSave("security", security as unknown as Record<string, unknown>)
+                handleSave(
+                  "security",
+                  security as unknown as Record<string, unknown>,
+                )
               }
               disabled={isSaving("security")}
             >
@@ -408,7 +425,8 @@ export function AdminSettingsClient({
           <div className="flex items-center gap-2 p-3 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300 text-sm">
             <AlertTriangle className="h-4 w-4 shrink-0" />
             <span>
-              Database backups are managed automatically by Supabase. For manual backups, cache management, or maintenance mode, use the{' '}
+              Database backups are managed automatically by Supabase. For manual
+              backups, cache management, or maintenance mode, use the{" "}
               <a
                 href="https://supabase.com/dashboard"
                 target="_blank"
@@ -416,7 +434,8 @@ export function AdminSettingsClient({
                 className="underline font-medium hover:no-underline"
               >
                 Supabase Dashboard
-              </a>.
+              </a>
+              .
             </span>
           </div>
           <div className="flex items-center justify-between p-4 border rounded-lg opacity-60">
@@ -467,7 +486,8 @@ export function AdminSettingsClient({
           <div className="flex items-center gap-2 p-3 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300 text-sm">
             <AlertTriangle className="h-4 w-4 shrink-0" />
             <span>
-              Custom domains are configured per-site in the Sites dashboard. Platform-level domain settings are managed via{' '}
+              Custom domains are configured per-site in the Sites dashboard.
+              Platform-level domain settings are managed via{" "}
               <a
                 href="https://vercel.com/dashboard"
                 target="_blank"
@@ -475,15 +495,13 @@ export function AdminSettingsClient({
                 className="underline font-medium hover:no-underline"
               >
                 Vercel Dashboard
-              </a>.
+              </a>
+              .
             </span>
           </div>
           <div className="space-y-2 opacity-60">
             <Label>Default Domain</Label>
-            <Input
-              defaultValue={PLATFORM.domain}
-              disabled
-            />
+            <Input defaultValue={PLATFORM.domain} disabled />
             <p className="text-sm text-muted-foreground">
               Sites are accessible at [slug].{PLATFORM.domain} by default
             </p>

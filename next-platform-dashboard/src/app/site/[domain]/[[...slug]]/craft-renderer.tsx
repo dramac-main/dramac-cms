@@ -2,11 +2,11 @@
 
 /**
  * Site Renderer using DRAMAC Studio
- * 
+ *
  * Receives pre-fetched data from server component and renders using StudioRenderer.
  * Supports module components when modules are installed for the site.
  * Wraps with StorefrontProvider when ecommerce module is installed.
- * 
+ *
  * @phase STUDIO-27 - Platform Integration & Puck Removal
  * @phase ECOM-51 - StorefrontProvider Integration
  */
@@ -24,8 +24,8 @@ interface CraftRendererProps {
   modules?: InstalledModuleInfo[];
 }
 
-export function CraftRenderer({ 
-  content, 
+export function CraftRenderer({
+  content,
   themeSettings,
   siteSettings,
   siteId,
@@ -38,9 +38,9 @@ export function CraftRenderer({
   // When ecommerce is not active, StorefrontProvider is a harmless no-op
   // (skips API call when siteId is empty, returns default context values).
   return (
-    <StorefrontProvider siteId={siteId || ''}>
-      <StudioRenderer 
-        data={content} 
+    <StorefrontProvider siteId={siteId || ""}>
+      <StudioRenderer
+        data={content}
         themeSettings={themeSettings}
         siteSettings={siteSettings}
         siteId={siteId}

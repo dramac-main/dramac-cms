@@ -4,30 +4,33 @@
  * PHASE LC-03: Agent Dashboard — Main entry point
  */
 
-import { Suspense } from 'react'
-import { Skeleton } from '@/components/ui/skeleton'
-import { getConversationStats, getConversations } from '@/modules/live-chat/actions/conversation-actions'
-import { getAgents } from '@/modules/live-chat/actions/agent-actions'
-import { ensureAdminAgent } from '@/modules/live-chat/lib/bootstrap-agent'
-import { LiveChatOverviewWrapper } from '@/modules/live-chat/components/wrappers/LiveChatOverviewWrapper'
+import { Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  getConversationStats,
+  getConversations,
+} from "@/modules/live-chat/actions/conversation-actions";
+import { getAgents } from "@/modules/live-chat/actions/agent-actions";
+import { ensureAdminAgent } from "@/modules/live-chat/lib/bootstrap-agent";
+import { LiveChatOverviewWrapper } from "@/modules/live-chat/components/wrappers/LiveChatOverviewWrapper";
 
 interface PageProps {
-  params: Promise<{ siteId: string }>
+  params: Promise<{ siteId: string }>;
 }
 
 async function OverviewContent({ siteId }: { siteId: string }) {
   // Self-heal: ensure admin agent exists before fetching
-  await ensureAdminAgent(siteId)
+  await ensureAdminAgent(siteId);
 
   const [statsResult, conversationsResult, agentsResult] = await Promise.all([
     getConversationStats(siteId),
-    getConversations(siteId, { status: 'active' }, 1, 5),
+    getConversations(siteId, { status: "active" }, 1, 5),
     getAgents(siteId),
-  ])
+  ]);
 
-  const stats = statsResult.stats
-  const conversations = conversationsResult.conversations
-  const agents = agentsResult.agents
+  const stats = statsResult.stats;
+  const conversations = conversationsResult.conversations;
+  const agents = agentsResult.agents;
 
   return (
     <LiveChatOverviewWrapper
@@ -36,7 +39,7 @@ async function OverviewContent({ siteId }: { siteId: string }) {
       agents={agents}
       siteId={siteId}
     />
-  )
+  );
 }
 
 function OverviewSkeleton() {
@@ -67,11 +70,11 @@ function OverviewSkeleton() {
         <Skeleton className="h-72 rounded-lg" />
       </div>
     </div>
-  )
+  );
 }
 
 export default async function LiveChatOverviewPage({ params }: PageProps) {
-  const { siteId } = await params
+  const { siteId } = await params;
 
   // Layout handles auth and module access check
 
@@ -81,5 +84,5 @@ export default async function LiveChatOverviewPage({ params }: PageProps) {
         <OverviewContent siteId={siteId} />
       </Suspense>
     </div>
-  )
+  );
 }

@@ -74,7 +74,9 @@ function ModuleSandboxComponent({
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
-  const [iframeHeight, setIframeHeight] = useState<number>(height === "auto" ? 200 : height);
+  const [iframeHeight, setIframeHeight] = useState<number>(
+    height === "auto" ? 200 : height,
+  );
 
   // Send message to the sandboxed module
   const sendToModule = useCallback(
@@ -97,7 +99,7 @@ function ModuleSandboxComponent({
         iframeRef.current.contentWindow.postMessage(message, "*");
       }
     },
-    [module.id, module.packageUrl]
+    [module.id, module.packageUrl],
   );
 
   // Handle API requests from the module
@@ -110,7 +112,7 @@ function ModuleSandboxComponent({
         data?: unknown;
         permission: ModulePermission;
       },
-      moduleId: string
+      moduleId: string,
     ) => {
       try {
         // Proxy the request through our API
@@ -135,7 +137,7 @@ function ModuleSandboxComponent({
             data: result.data,
             error: result.error,
           },
-          payload.requestId
+          payload.requestId,
         );
       } catch (error) {
         sendToModule(
@@ -145,16 +147,19 @@ function ModuleSandboxComponent({
             success: false,
             error: error instanceof Error ? error.message : "Request failed",
           },
-          payload.requestId
+          payload.requestId,
         );
       }
     },
-    [sendToModule]
+    [sendToModule],
   );
 
   // Handle settings update from the module
   const handleSettingsUpdate = useCallback(
-    async (payload: { settings: Record<string, unknown>; requestId?: string }) => {
+    async (payload: {
+      settings: Record<string, unknown>;
+      requestId?: string;
+    }) => {
       try {
         const response = await fetch(`/api/modules/${module.id}/settings`, {
           method: "PUT",
@@ -174,11 +179,12 @@ function ModuleSandboxComponent({
       } catch (error) {
         sendToModule("SETTINGS_SAVED", {
           success: false,
-          error: error instanceof Error ? error.message : "Failed to save settings",
+          error:
+            error instanceof Error ? error.message : "Failed to save settings",
         });
       }
     },
-    [module.id, context, sendToModule]
+    [module.id, context, sendToModule],
   );
 
   // Handle messages from the sandboxed module
@@ -203,7 +209,8 @@ function ModuleSandboxComponent({
 
         case "MODULE_ERROR":
           setHasError(true);
-          const errorMsg = (data.payload as { message?: string })?.message || "Module error";
+          const errorMsg =
+            (data.payload as { message?: string })?.message || "Module error";
           setErrorMessage(errorMsg);
           onError?.(new Error(errorMsg));
           break;
@@ -230,13 +237,17 @@ function ModuleSandboxComponent({
         }
 
         case "SETTINGS_UPDATE":
-          handleSettingsUpdate(data.payload as { settings: Record<string, unknown> });
+          handleSettingsUpdate(
+            data.payload as { settings: Record<string, unknown> },
+          );
           break;
 
         case "RESIZE": {
           const resizePayload = data.payload as { height?: number };
           if (height === "auto" && resizePayload.height) {
-            setIframeHeight(Math.max(100, Math.min(2000, resizePayload.height)));
+            setIframeHeight(
+              Math.max(100, Math.min(2000, resizePayload.height)),
+            );
           }
           break;
         }
@@ -278,7 +289,7 @@ function ModuleSandboxComponent({
       handleApiRequest,
       handleSettingsUpdate,
       sendToModule,
-    ]
+    ],
   );
 
   // Set up message listener
@@ -313,7 +324,7 @@ function ModuleSandboxComponent({
     setHasError(false);
     setErrorMessage("");
     setIsLoaded(false);
-    
+
     // Force iframe reload
     if (iframeRef.current) {
       const src = iframeRef.current.src;
@@ -329,10 +340,16 @@ function ModuleSandboxComponent({
   // Error state
   if (hasError) {
     return (
-      <div className={`module-sandbox-error p-4 bg-destructive/10 border border-destructive rounded-lg ${className}`}>
+      <div
+        className={`module-sandbox-error p-4 bg-destructive/10 border border-destructive rounded-lg ${className}`}
+      >
         <p className="text-sm text-destructive">
           Module &quot;{module.slug}&quot; failed to load.
-          {errorMessage && <span className="block mt-1 text-xs opacity-80">{errorMessage}</span>}
+          {errorMessage && (
+            <span className="block mt-1 text-xs opacity-80">
+              {errorMessage}
+            </span>
+          )}
         </p>
         <button
           onClick={handleRetry}
@@ -345,13 +362,18 @@ function ModuleSandboxComponent({
   }
 
   return (
-    <div className={`module-sandbox relative ${className}`} data-module-id={module.id}>
+    <div
+      className={`module-sandbox relative ${className}`}
+      data-module-id={module.id}
+    >
       {/* Loading overlay */}
       {!isLoaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-muted/50 rounded-lg z-10">
           <div className="flex flex-col items-center gap-2">
             <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
-            <span className="text-xs text-muted-foreground">Loading {module.name}...</span>
+            <span className="text-xs text-muted-foreground">
+              Loading {module.name}...
+            </span>
           </div>
         </div>
       )}
@@ -428,11 +450,11 @@ export const ModuleSandbox = memo(ModuleSandboxComponent);
 export interface ModuleSDK {
   // Initialization
   onReady: (callback: () => void) => void;
-  
+
   // Settings
   getSettings: () => Record<string, unknown>;
   updateSettings: (settings: Record<string, unknown>) => Promise<void>;
-  
+
   // API requests
   apiRequest: <T = unknown>(
     endpoint: string,
@@ -440,18 +462,18 @@ export interface ModuleSDK {
       method?: string;
       data?: unknown;
       permission?: ModulePermission;
-    }
+    },
   ) => Promise<T>;
-  
+
   // Context
   getContext: () => ModuleSandboxContext;
-  
+
   // UI
   resize: (height: number) => void;
-  
+
   // Analytics
   trackEvent: (eventName: string, metadata?: Record<string, unknown>) => void;
-  
+
   // Error reporting
   reportError: (error: Error) => void;
 }

@@ -1,15 +1,52 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL ✅
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL ✅
 
 ---
 
-## Latest Update: Storefront Performance & UX Overhaul — `f031b48e`
+## Latest Update: Post-Purchase Experience Overhaul — Build Verified, Pending Commit
+
+**7 critical gaps resolved across 8+ files (1 new component):**
+
+### New Features
+
+- **Order Tracking Page** (`/order-tracking`) — Email + order number lookup form with localStorage quick-link for recent orders
+- **localStorage Persistence** — Order ID saved in ALL 8 checkout success paths (desktop+mobile × 4 payment providers)
+- **Customer Email "View Your Order"** — CTA button + tracking link added to order confirmation email
+- **Chat Auto-Open** — Live chat widget opens automatically 3 seconds after order confirmation page loads
+- **Chat Buttons** — "Chat About Order" in Quick Actions + "Need Help? Chat with Us" in bottom actions
+- **Track Order Link** — Always visible on order confirmation (was conditional/never passed)
+
+### Files Changed
+
+- `public-ecommerce-actions.ts` — new `getPublicOrderByLookup(siteId, email, orderNumber)` action
+- `OrderTrackingBlock.tsx` — NEW component: order lookup form + localStorage quick access
+- `OrderConfirmationBlock.tsx` — chat auto-open, chat buttons, default trackingLink="/order-tracking"
+- `CheckoutPageBlock.tsx` — `saveOrderToStorage()` in all 8 success paths
+- `business-notifications.ts` — queries subdomain/custom_domain for site URL, passes orderUrl+trackingUrl
+- `templates.ts` — "View Your Order" button + tracking link in customer email HTML + plain text
+- `studio/index.ts` — EcommerceOrderTracking registration
+- `renderer.tsx` — MODULE_COMPONENT_TYPES set addition
+- `template-utils.ts` — addOrderTracking() helper
+- `page-templates.ts` — createOrderTrackingTemplate() + orderTrackingPageDefinition
+- `page.tsx` — /order-tracking virtual route handler
+
+### Key Technical Details
+
+- `ecom_last_order_{siteId}` localStorage key: `{ orderId, orderNumber, timestamp }`
+- Chat opens via `postMessage({ type: 'dramac-chat-open' })` to chat widget iframe
+- Email URL: `https://{custom_domain || subdomain.sites.dramacagency.com}/order-confirmation?order={orderId}`
+- Order lookup: case-insensitive email + uppercase order number match
+
+---
+
+## Previous Update: Storefront Performance & UX Overhaul — `f031b48e`
 
 **Root Cause of slow add-to-cart**: Triple/quadruple fetch pattern — addPublicCartItem + getPublicCart + cart-updated event triggers another getPublicCart + NavCartBadge fetchCount. All sequential, no optimistic UI.
 
 **Fixes (7 files, 10 issues):**
+
 - `public-ecommerce-actions.ts` — addPublicCartItem now returns full Cart (1 round-trip), new getPublicProductsByIds batch action
 - `useStorefrontCart.ts` — Single round-trip addItem, passes cart data in events, smart event listener (uses data from event detail instead of re-fetching)
 - `product-card-block.tsx` — Removed duplicate cart-updated event dispatch
@@ -19,6 +56,7 @@
 - `OrderConfirmationBlock.tsx` — Fixed URL.createObjectURL memory leak, stabilized proof status effect deps
 
 **Performance Impact:**
+
 - Add-to-cart: 4 sequential network calls → 1 server action (3-4x faster)
 - NavCartBadge: re-fetch on every event → uses event detail data (instant)
 - Product grid: renders with correct column layout (was broken)
@@ -29,6 +67,7 @@
 ---
 
 ## Previous Update: Live Chat Error #310 Fix + Agent Management Hardening — `2646df2e`
+
 - `app.dramacagency.com` (dashboard), `*.sites.dramacagency.com` (storefronts), `dramacagency.com` (platform)
 - CNAME: `cname.vercel-dns.com`, Nameservers: `vercel-dns.com`, Email: `support@dramacagency.com`
 - TypeScript: ZERO errors
@@ -41,10 +80,12 @@
 **ROOT CAUSE: Zero agents existed for any site. Bootstrap function had role constraint violation + wrong status.**
 
 **Database Fix (Immediate):**
+
 - SQL INSERT created 4 agents for sites missing them (Demo Shop, Test Jack, Sisto, Jesto)
 - All set to status 'online', role 'admin', max 5 concurrent chats
 
 **Code Fixes (6 files, 406 insertions, 45 deletions):**
+
 - NEW `bootstrap-agent.ts` — shared utility with fixed role ('admin'), status ('online'), profile lookup (both 'name'/'full_name')
 - `sites.ts` — import shared bootstrap, remove broken inline function
 - `auto-install/route.ts` — add bootstrap after AI Designer live-chat install
@@ -56,6 +97,7 @@
 **Agent Routing:** `status='online' AND is_active=true`, ordered by `current_chat_count ASC`
 
 **End-to-End Verification (ALL PASSING):**
+
 - ✅ Embed API, widget settings API, agent routing, conversation creation, message API, realtime subscription
 - ✅ TypeScript: ZERO errors
 - ✅ Vercel deployment: READY (production)
@@ -69,6 +111,7 @@
 **Comprehensive audit of AI Website Builder → Module Installation → Published Site pipeline.**
 
 **Fixes (4 files):**
+
 - `sites.ts` — Auto-create site owner as first live chat agent on module install (prevents dead-end conversations)
 - `ai-designer/page.tsx` — Live Chat chip always-on/non-deselectable, Blog chip "(Built-in)" label, updated helper text
 - `engine.ts` — Pass `selectedFeatures` through `createArchitecture()` to prompt builder
@@ -96,6 +139,7 @@
 - **TypeScript**: ZERO errors
 
 **Event Types Now Active:**
+
 - `ecommerce.order.created`, `ecommerce.order.status_changed`, `ecommerce.order.payment_updated`, `ecommerce.order.shipped`, `ecommerce.order.refunded`
 - `booking.appointment.created`, `booking.appointment.cancelled`
 - `live-chat.conversation.started`, `live-chat.conversation.resolved`, `live-chat.conversation.closed`

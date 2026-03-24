@@ -7,7 +7,13 @@
 
 "use client";
 
-import React, { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+} from "react";
 import type { ComponentDefinition, ResponsiveValue } from "@/types/studio";
 import {
   Grid3X3,
@@ -159,32 +165,32 @@ export function ProductGridBlock({
   // Calculate grid columns class — use explicit mappings for Tailwind purge safety
   const gridColsClass = useMemo(() => {
     const gridColsMap: Record<number, string> = {
-      1: 'grid-cols-1',
-      2: 'grid-cols-2',
-      3: 'grid-cols-3',
-      4: 'grid-cols-4',
-      5: 'grid-cols-5',
-      6: 'grid-cols-6',
-    }
+      1: "grid-cols-1",
+      2: "grid-cols-2",
+      3: "grid-cols-3",
+      4: "grid-cols-4",
+      5: "grid-cols-5",
+      6: "grid-cols-6",
+    };
     const mdGridColsMap: Record<number, string> = {
-      1: 'md:grid-cols-1',
-      2: 'md:grid-cols-2',
-      3: 'md:grid-cols-3',
-      4: 'md:grid-cols-4',
-      5: 'md:grid-cols-5',
-      6: 'md:grid-cols-6',
-    }
+      1: "md:grid-cols-1",
+      2: "md:grid-cols-2",
+      3: "md:grid-cols-3",
+      4: "md:grid-cols-4",
+      5: "md:grid-cols-5",
+      6: "md:grid-cols-6",
+    };
     const lgGridColsMap: Record<number, string> = {
-      1: 'lg:grid-cols-1',
-      2: 'lg:grid-cols-2',
-      3: 'lg:grid-cols-3',
-      4: 'lg:grid-cols-4',
-      5: 'lg:grid-cols-5',
-      6: 'lg:grid-cols-6',
-    }
+      1: "lg:grid-cols-1",
+      2: "lg:grid-cols-2",
+      3: "lg:grid-cols-3",
+      4: "lg:grid-cols-4",
+      5: "lg:grid-cols-5",
+      6: "lg:grid-cols-6",
+    };
     const cols = typeof columns === "object" ? columns : { mobile: columns };
     return cn(
-      gridColsMap[cols.mobile || 2] || 'grid-cols-2',
+      gridColsMap[cols.mobile || 2] || "grid-cols-2",
       cols.tablet && (mdGridColsMap[cols.tablet] || undefined),
       cols.desktop && (lgGridColsMap[cols.desktop] || undefined),
     );

@@ -1,23 +1,33 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { 
-  Globe, 
-  ExternalLink, 
-  Calendar, 
-  FileText, 
+import {
+  Globe,
+  ExternalLink,
+  Calendar,
+  FileText,
   ArrowLeft,
   BarChart3,
   Eye,
   Clock,
-  TrendingUp
+  TrendingUp,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requirePortalAuth } from "@/lib/portal/portal-auth";
-import { getClientSite, getPortalAnalytics, getSitePermissions } from "@/lib/portal/portal-service";
+import {
+  getClientSite,
+  getPortalAnalytics,
+  getSitePermissions,
+} from "@/lib/portal/portal-service";
 import { getSiteUrl, getSiteDomain } from "@/lib/utils/site-url";
 import { formatDistanceToNow, format } from "date-fns";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -26,10 +36,12 @@ interface PortalSiteDetailPageProps {
   params: Promise<{ siteId: string }>;
 }
 
-export async function generateMetadata({ params }: PortalSiteDetailPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PortalSiteDetailPageProps): Promise<Metadata> {
   const { siteId } = await params;
   const supabase = await createClient();
-  
+
   const { data: site } = await supabase
     .from("sites")
     .select("name")
@@ -41,13 +53,15 @@ export async function generateMetadata({ params }: PortalSiteDetailPageProps): P
   };
 }
 
-export default async function PortalSiteDetailPage({ params }: PortalSiteDetailPageProps) {
+export default async function PortalSiteDetailPage({
+  params,
+}: PortalSiteDetailPageProps) {
   const { siteId } = await params;
   const user = await requirePortalAuth();
-  
+
   // Get site details
   const site = await getClientSite(user.clientId, siteId);
-  
+
   if (!site) {
     notFound();
   }
@@ -58,7 +72,7 @@ export default async function PortalSiteDetailPage({ params }: PortalSiteDetailP
     user.canViewAnalytics ? getPortalAnalytics(user.clientId, siteId) : null,
   ]);
 
-  const url = site.subdomain 
+  const url = site.subdomain
     ? getSiteUrl(site.subdomain, site.customDomain)
     : null;
   const domain = site.subdomain
@@ -90,11 +104,14 @@ export default async function PortalSiteDetailPage({ params }: PortalSiteDetailP
                 {site.isPublished ? "Live" : "Draft"}
               </Badge>
             </div>
-            {domain && (
-              <p className="text-muted-foreground mt-1">{domain}</p>
-            )}
+            {domain && <p className="text-muted-foreground mt-1">{domain}</p>}
             <p className="text-sm text-muted-foreground mt-2">
-              {site.pageCount} pages • Last updated {site.lastUpdatedAt ? formatDistanceToNow(new Date(site.lastUpdatedAt), { addSuffix: true }) : "recently"}
+              {site.pageCount} pages • Last updated{" "}
+              {site.lastUpdatedAt
+                ? formatDistanceToNow(new Date(site.lastUpdatedAt), {
+                    addSuffix: true,
+                  })
+                : "recently"}
             </p>
           </div>
         </div>
@@ -144,8 +161,12 @@ export default async function PortalSiteDetailPage({ params }: PortalSiteDetailP
                         <Eye className="h-5 w-5 text-green-600" />
                       </div>
                       <div>
-                        <p className="text-2xl font-bold">{analytics.totalVisits.toLocaleString()}</p>
-                        <p className="text-sm text-muted-foreground">Total Visits</p>
+                        <p className="text-2xl font-bold">
+                          {analytics.totalVisits.toLocaleString()}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Total Visits
+                        </p>
                       </div>
                     </div>
                   </CardContent>
@@ -158,8 +179,12 @@ export default async function PortalSiteDetailPage({ params }: PortalSiteDetailP
                         <TrendingUp className="h-5 w-5 text-blue-600" />
                       </div>
                       <div>
-                        <p className="text-2xl font-bold">{analytics.pageViews.toLocaleString()}</p>
-                        <p className="text-sm text-muted-foreground">Page Views</p>
+                        <p className="text-2xl font-bold">
+                          {analytics.pageViews.toLocaleString()}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Page Views
+                        </p>
                       </div>
                     </div>
                   </CardContent>
@@ -173,9 +198,15 @@ export default async function PortalSiteDetailPage({ params }: PortalSiteDetailP
                       </div>
                       <div>
                         <p className="text-2xl font-bold">
-                          {Math.floor(analytics.avgSessionDuration / 60)}:{String(analytics.avgSessionDuration % 60).padStart(2, '0')}
+                          {Math.floor(analytics.avgSessionDuration / 60)}:
+                          {String(analytics.avgSessionDuration % 60).padStart(
+                            2,
+                            "0",
+                          )}
                         </p>
-                        <p className="text-sm text-muted-foreground">Avg. Session</p>
+                        <p className="text-sm text-muted-foreground">
+                          Avg. Session
+                        </p>
                       </div>
                     </div>
                   </CardContent>
@@ -192,30 +223,49 @@ export default async function PortalSiteDetailPage({ params }: PortalSiteDetailP
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Domain</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Domain
+                  </p>
                   <p className="mt-1">
-                    {site.customDomain || `${site.subdomain}.sites.dramacagency.com`}
+                    {site.customDomain ||
+                      `${site.subdomain}.sites.dramacagency.com`}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Status</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Status
+                  </p>
                   <p className="mt-1">
-                    {site.isPublished ? "Published and live" : "Draft (not published)"}
+                    {site.isPublished
+                      ? "Published and live"
+                      : "Draft (not published)"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Last Updated</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Last Updated
+                  </p>
                   <p className="mt-1">
-                    {site.lastUpdatedAt ? format(new Date(site.lastUpdatedAt), "PPP 'at' p") : "N/A"}
+                    {site.lastUpdatedAt
+                      ? format(new Date(site.lastUpdatedAt), "PPP 'at' p")
+                      : "N/A"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Your Permissions</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Your Permissions
+                  </p>
                   <div className="mt-1 flex flex-wrap gap-2">
                     <Badge variant="outline">View</Badge>
-                    {permissions?.canViewAnalytics && <Badge variant="outline">Analytics</Badge>}
-                    {permissions?.canEditContent && <Badge variant="outline">Edit</Badge>}
-                    {permissions?.canPublish && <Badge variant="outline">Publish</Badge>}
+                    {permissions?.canViewAnalytics && (
+                      <Badge variant="outline">Analytics</Badge>
+                    )}
+                    {permissions?.canEditContent && (
+                      <Badge variant="outline">Edit</Badge>
+                    )}
+                    {permissions?.canPublish && (
+                      <Badge variant="outline">Publish</Badge>
+                    )}
                   </div>
                 </div>
               </div>
@@ -228,9 +278,7 @@ export default async function PortalSiteDetailPage({ params }: PortalSiteDetailP
           <Card>
             <CardHeader>
               <CardTitle>Site Pages</CardTitle>
-              <CardDescription>
-                All pages on this website
-              </CardDescription>
+              <CardDescription>All pages on this website</CardDescription>
             </CardHeader>
             <CardContent>
               {site.pages.length > 0 ? (
@@ -246,7 +294,9 @@ export default async function PortalSiteDetailPage({ params }: PortalSiteDetailP
                           <p className="font-medium">
                             {page.title}
                             {page.isHomepage && (
-                              <Badge variant="secondary" className="ml-2">Homepage</Badge>
+                              <Badge variant="secondary" className="ml-2">
+                                Homepage
+                              </Badge>
                             )}
                           </p>
                           <p className="text-sm text-muted-foreground">
@@ -256,9 +306,9 @@ export default async function PortalSiteDetailPage({ params }: PortalSiteDetailP
                       </div>
                       {url && site.isPublished && (
                         <Button variant="ghost" size="sm" asChild>
-                          <a 
-                            href={`${url}${page.isHomepage ? '' : `/${page.slug}`}`}
-                            target="_blank" 
+                          <a
+                            href={`${url}${page.isHomepage ? "" : `/${page.slug}`}`}
+                            target="_blank"
                             rel="noopener noreferrer"
                           >
                             <ExternalLink className="h-4 w-4" />
@@ -291,17 +341,22 @@ export default async function PortalSiteDetailPage({ params }: PortalSiteDetailP
               <CardContent>
                 <div className="h-64 flex items-end gap-2">
                   {analytics.visitsByDay.map((day, i) => {
-                    const maxVisits = Math.max(...analytics.visitsByDay.map(d => d.visits));
+                    const maxVisits = Math.max(
+                      ...analytics.visitsByDay.map((d) => d.visits),
+                    );
                     const height = (day.visits / maxVisits) * 100;
                     return (
-                      <div key={day.date} className="flex-1 flex flex-col items-center gap-2">
-                        <div 
+                      <div
+                        key={day.date}
+                        className="flex-1 flex flex-col items-center gap-2"
+                      >
+                        <div
                           className="w-full bg-primary/80 rounded-t transition-all hover:bg-primary"
-                          style={{ height: `${height}%`, minHeight: '4px' }}
+                          style={{ height: `${height}%`, minHeight: "4px" }}
                           title={`${day.visits} visits`}
                         />
                         <span className="text-xs text-muted-foreground">
-                          {format(new Date(day.date), 'EEE')}
+                          {format(new Date(day.date), "EEE")}
                         </span>
                       </div>
                     );
@@ -321,16 +376,20 @@ export default async function PortalSiteDetailPage({ params }: PortalSiteDetailP
               <CardContent>
                 <div className="space-y-4">
                   {analytics.topPages.map((page, i) => {
-                    const maxViews = Math.max(...analytics.topPages.map(p => p.views));
+                    const maxViews = Math.max(
+                      ...analytics.topPages.map((p) => p.views),
+                    );
                     const percentage = (page.views / maxViews) * 100;
                     return (
                       <div key={page.page} className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
                           <span className="font-medium">{page.page}</span>
-                          <span className="text-muted-foreground">{page.views.toLocaleString()} views</span>
+                          <span className="text-muted-foreground">
+                            {page.views.toLocaleString()} views
+                          </span>
                         </div>
                         <div className="h-2 bg-muted rounded-full overflow-hidden">
-                          <div 
+                          <div
                             className="h-full bg-primary rounded-full transition-all"
                             style={{ width: `${percentage}%` }}
                           />
@@ -346,14 +405,20 @@ export default async function PortalSiteDetailPage({ params }: PortalSiteDetailP
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card>
                 <CardContent className="pt-6 text-center">
-                  <p className="text-3xl font-bold">{analytics.uniqueVisitors.toLocaleString()}</p>
-                  <p className="text-sm text-muted-foreground mt-1">Unique Visitors</p>
+                  <p className="text-3xl font-bold">
+                    {analytics.uniqueVisitors.toLocaleString()}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Unique Visitors
+                  </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="pt-6 text-center">
                   <p className="text-3xl font-bold">{analytics.bounceRate}%</p>
-                  <p className="text-sm text-muted-foreground mt-1">Bounce Rate</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Bounce Rate
+                  </p>
                 </CardContent>
               </Card>
               <Card>
@@ -361,7 +426,9 @@ export default async function PortalSiteDetailPage({ params }: PortalSiteDetailP
                   <p className="text-3xl font-bold">
                     {(analytics.pageViews / analytics.totalVisits).toFixed(1)}
                   </p>
-                  <p className="text-sm text-muted-foreground mt-1">Pages per Visit</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Pages per Visit
+                  </p>
                 </CardContent>
               </Card>
             </div>

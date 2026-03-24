@@ -416,6 +416,20 @@ export function CheckoutPageBlock({
     paymentInstructions?: string;
   } | null>(null);
 
+  // Persist order reference so customers can find their order later
+  const saveOrderToStorage = (orderId: string, orderNumber: string) => {
+    try {
+      if (storefront.siteId) {
+        localStorage.setItem(
+          `ecom_last_order_${storefront.siteId}`,
+          JSON.stringify({ orderId, orderNumber, timestamp: Date.now() }),
+        );
+      }
+    } catch {
+      // localStorage may be unavailable
+    }
+  };
+
   // Handle place order — routes to correct payment flow based on provider
   const handlePlaceOrder = async () => {
     const result = await checkout.placeOrder();
@@ -427,6 +441,8 @@ export function CheckoutPageBlock({
 
       // Handle redirect-based payment providers (Pesapal, DPO)
       if (paymentUrl && (provider === "pesapal" || provider === "dpo")) {
+        // Save order before redirect so customer can find it later
+        saveOrderToStorage(result.order_id, result.order_number);
         // Redirect to external payment page
         window.location.href = paymentUrl;
         return;
@@ -453,6 +469,7 @@ export function CheckoutPageBlock({
             email: (checkoutData.customer as Record<string, string>)?.email,
             passthrough: JSON.stringify({ orderId: result.order_id }),
             successCallback: () => {
+              saveOrderToStorage(result.order_id!, result.order_number!);
               setOrderResult({
                 orderId: result.order_id!,
                 orderNumber: result.order_number!,
@@ -488,6 +505,7 @@ export function CheckoutPageBlock({
             customizations: payment.customizations as Record<string, unknown>,
             redirect_url: payment.redirectUrl as string,
             callback: () => {
+              saveOrderToStorage(result.order_id!, result.order_number!);
               setOrderResult({
                 orderId: result.order_id!,
                 orderNumber: result.order_number!,
@@ -512,6 +530,7 @@ export function CheckoutPageBlock({
             "Please contact us for payment instructions."
           : undefined;
 
+      saveOrderToStorage(result.order_id, result.order_number);
       setOrderResult({
         orderId: result.order_id,
         orderNumber: result.order_number,
@@ -563,6 +582,7 @@ export function CheckoutPageBlock({
 
       // Redirect-based payments (Pesapal, DPO)
       if (paymentUrl && (provider === "pesapal" || provider === "dpo")) {
+        saveOrderToStorage(result.order_id, result.order_number);
         window.location.href = paymentUrl;
         return;
       }
@@ -583,6 +603,7 @@ export function CheckoutPageBlock({
             email: data.contact.email,
             passthrough: JSON.stringify({ orderId: result.order_id }),
             successCallback: () => {
+              saveOrderToStorage(result.order_id!, result.order_number!);
               setOrderResult({
                 orderId: result.order_id!,
                 orderNumber: result.order_number!,
@@ -614,6 +635,7 @@ export function CheckoutPageBlock({
             customizations: payment.customizations as Record<string, unknown>,
             redirect_url: payment.redirectUrl as string,
             callback: () => {
+              saveOrderToStorage(result.order_id!, result.order_number!);
               setOrderResult({
                 orderId: result.order_id!,
                 orderNumber: result.order_number!,
@@ -641,6 +663,7 @@ export function CheckoutPageBlock({
             "Please contact us for payment instructions."
           : undefined;
 
+      saveOrderToStorage(result.order_id, result.order_number);
       setOrderResult({
         orderId: result.order_id,
         orderNumber: result.order_number,

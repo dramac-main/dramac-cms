@@ -1,30 +1,30 @@
-'use client'
+"use client";
 
 /**
  * AgentsPageWrapper — Agent management with CRUD, status, and performance
  */
 
-import { useState, useCallback, useTransition, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
+import { useState, useCallback, useTransition, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -32,7 +32,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from "@/components/ui/table";
 import {
   Plus,
   Users,
@@ -41,46 +41,51 @@ import {
   Trash2,
   UserPlus,
   ExternalLink,
-} from 'lucide-react'
-import { toast } from 'sonner'
-import { AgentStatusDot } from '../shared/AgentStatusDot'
-import { LiveChatEmptyState } from '../shared/LiveChatEmptyState'
+} from "lucide-react";
+import { toast } from "sonner";
+import { AgentStatusDot } from "../shared/AgentStatusDot";
+import { LiveChatEmptyState } from "../shared/LiveChatEmptyState";
 import {
   createAgent,
   updateAgent,
   deleteAgent,
   getAgencyMembersForSite,
   inviteAndCreateAgent,
-} from '@/modules/live-chat/actions/agent-actions'
-import type { AgencyMember } from '@/modules/live-chat/actions/agent-actions'
+} from "@/modules/live-chat/actions/agent-actions";
+import type { AgencyMember } from "@/modules/live-chat/actions/agent-actions";
 import {
   createDepartment,
   updateDepartment,
   deleteDepartment,
   setDefaultDepartment,
-} from '@/modules/live-chat/actions/department-actions'
+} from "@/modules/live-chat/actions/department-actions";
 import type {
   ChatAgent,
   ChatDepartment,
   AgentPerformanceData,
   AgentRole,
-} from '@/modules/live-chat/types'
+} from "@/modules/live-chat/types";
 
 interface AgentsPageWrapperProps {
-  agents: ChatAgent[]
-  departments: (ChatDepartment & { agentCount: number })[]
-  performance: AgentPerformanceData[]
-  siteId: string
+  agents: ChatAgent[];
+  departments: (ChatDepartment & { agentCount: number })[];
+  performance: AgentPerformanceData[];
+  siteId: string;
 }
 
 function getInitials(name: string): string {
-  return name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 }
 
 function formatDuration(seconds: number): string {
-  if (seconds < 60) return `${Math.round(seconds)}s`
-  if (seconds < 3600) return `${Math.round(seconds / 60)}m`
-  return `${(seconds / 3600).toFixed(1)}h`
+  if (seconds < 60) return `${Math.round(seconds)}s`;
+  if (seconds < 3600) return `${Math.round(seconds / 60)}m`;
+  return `${(seconds / 3600).toFixed(1)}h`;
 }
 
 export function AgentsPageWrapper({
@@ -89,77 +94,77 @@ export function AgentsPageWrapper({
   performance,
   siteId,
 }: AgentsPageWrapperProps) {
-  const [isPending, startTransition] = useTransition()
-  const [agents, setAgents] = useState(initialAgents)
-  const [departments, setDepartments] = useState(initialDepartments)
-  const [showAddAgent, setShowAddAgent] = useState(false)
-  const [showAddDept, setShowAddDept] = useState(false)
-  const [agencyMembers, setAgencyMembers] = useState<AgencyMember[]>([])
-  const [membersLoading, setMembersLoading] = useState(false)
-  const [addMode, setAddMode] = useState<'team' | 'invite'>('team')
+  const [isPending, startTransition] = useTransition();
+  const [agents, setAgents] = useState(initialAgents);
+  const [departments, setDepartments] = useState(initialDepartments);
+  const [showAddAgent, setShowAddAgent] = useState(false);
+  const [showAddDept, setShowAddDept] = useState(false);
+  const [agencyMembers, setAgencyMembers] = useState<AgencyMember[]>([]);
+  const [membersLoading, setMembersLoading] = useState(false);
+  const [addMode, setAddMode] = useState<"team" | "invite">("team");
 
   // Sync state with server data when props change (e.g., after revalidation)
   useEffect(() => {
-    setAgents(initialAgents)
-  }, [initialAgents])
+    setAgents(initialAgents);
+  }, [initialAgents]);
 
   useEffect(() => {
-    setDepartments(initialDepartments)
-  }, [initialDepartments])
+    setDepartments(initialDepartments);
+  }, [initialDepartments]);
 
   // Fetch agency members when Add Agent dialog opens
   const loadAgencyMembers = useCallback(() => {
-    setMembersLoading(true)
+    setMembersLoading(true);
     getAgencyMembersForSite(siteId)
       .then(({ members }) => {
         // Filter out users already added as agents
-        const existingUserIds = new Set(agents.map(a => a.userId))
-        setAgencyMembers(members.filter(m => !existingUserIds.has(m.userId)))
+        const existingUserIds = new Set(agents.map((a) => a.userId));
+        setAgencyMembers(members.filter((m) => !existingUserIds.has(m.userId)));
       })
-      .finally(() => setMembersLoading(false))
-  }, [siteId, agents])
+      .finally(() => setMembersLoading(false));
+  }, [siteId, agents]);
 
   // Add agent form state
   const [agentForm, setAgentForm] = useState({
-    userId: '',
-    displayName: '',
-    email: '',
-    role: 'agent' as AgentRole,
-    departmentId: '',
+    userId: "",
+    displayName: "",
+    email: "",
+    role: "agent" as AgentRole,
+    departmentId: "",
     maxConcurrentChats: 5,
-  })
+  });
 
   // Invite new agent form state
   const [inviteForm, setInviteForm] = useState({
-    displayName: '',
-    email: '',
-    role: 'agent' as AgentRole,
-    departmentId: '',
+    displayName: "",
+    email: "",
+    role: "agent" as AgentRole,
+    departmentId: "",
     maxConcurrentChats: 5,
-  })
+  });
 
   // Edit agent state
-  const [editingAgent, setEditingAgent] = useState<ChatAgent | null>(null)
-  const [showEditAgent, setShowEditAgent] = useState(false)
+  const [editingAgent, setEditingAgent] = useState<ChatAgent | null>(null);
+  const [showEditAgent, setShowEditAgent] = useState(false);
   const [editForm, setEditForm] = useState({
-    displayName: '',
-    email: '',
-    role: 'agent' as AgentRole,
-    departmentId: '',
+    displayName: "",
+    email: "",
+    role: "agent" as AgentRole,
+    departmentId: "",
     maxConcurrentChats: 5,
-  })
+  });
 
   // Add department form state
   const [deptForm, setDeptForm] = useState({
-    name: '',
-    description: '',
+    name: "",
+    description: "",
     autoAssign: true,
-  })
+  });
 
   const handleAddAgent = useCallback(() => {
     if (!agentForm.userId || !agentForm.displayName) {
-      toast.error('User ID and display name are required')
-      return
+      toast.error("User ID and display name are required");
+      return;
     }
     startTransition(async () => {
       const result = await createAgent({
@@ -170,29 +175,29 @@ export function AgentsPageWrapper({
         role: agentForm.role,
         departmentId: agentForm.departmentId || undefined,
         maxConcurrentChats: agentForm.maxConcurrentChats,
-      })
+      });
       if (result.error) {
-        toast.error(result.error)
+        toast.error(result.error);
       } else if (result.agent) {
-        setAgents((prev) => [...prev, result.agent!])
-        setShowAddAgent(false)
+        setAgents((prev) => [...prev, result.agent!]);
+        setShowAddAgent(false);
         setAgentForm({
-          userId: '',
-          displayName: '',
-          email: '',
-          role: 'agent',
-          departmentId: '',
+          userId: "",
+          displayName: "",
+          email: "",
+          role: "agent",
+          departmentId: "",
           maxConcurrentChats: 5,
-        })
-        toast.success('Agent added')
+        });
+        toast.success("Agent added");
       }
-    })
-  }, [agentForm, siteId])
+    });
+  }, [agentForm, siteId]);
 
   const handleInviteAgent = useCallback(() => {
     if (!inviteForm.email || !inviteForm.displayName) {
-      toast.error('Name and email are required')
-      return
+      toast.error("Name and email are required");
+      return;
     }
     startTransition(async () => {
       const result = await inviteAndCreateAgent({
@@ -202,58 +207,54 @@ export function AgentsPageWrapper({
         role: inviteForm.role,
         departmentId: inviteForm.departmentId || undefined,
         maxConcurrentChats: inviteForm.maxConcurrentChats,
-      })
+      });
       if (result.error) {
-        toast.error(result.error)
+        toast.error(result.error);
       } else if (result.agent) {
-        setAgents((prev) => [...prev, result.agent!])
-        setShowAddAgent(false)
+        setAgents((prev) => [...prev, result.agent!]);
+        setShowAddAgent(false);
         setInviteForm({
-          displayName: '',
-          email: '',
-          role: 'agent',
-          departmentId: '',
+          displayName: "",
+          email: "",
+          role: "agent",
+          departmentId: "",
           maxConcurrentChats: 5,
-        })
-        toast.success('Agent invited & added — they will receive a sign-in email')
+        });
+        toast.success(
+          "Agent invited & added — they will receive a sign-in email",
+        );
       }
-    })
-  }, [inviteForm, siteId])
+    });
+  }, [inviteForm, siteId]);
 
-  const handleDeleteAgent = useCallback(
-    (agentId: string) => {
-      startTransition(async () => {
-        const result = await deleteAgent(agentId)
-        if (result.error) {
-          toast.error(result.error)
-        } else {
-          setAgents((prev) => prev.filter((a) => a.id !== agentId))
-          toast.success('Agent removed')
-        }
-      })
-    },
-    []
-  )
+  const handleDeleteAgent = useCallback((agentId: string) => {
+    startTransition(async () => {
+      const result = await deleteAgent(agentId);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        setAgents((prev) => prev.filter((a) => a.id !== agentId));
+        toast.success("Agent removed");
+      }
+    });
+  }, []);
 
-  const handleEditAgent = useCallback(
-    (agent: ChatAgent) => {
-      setEditingAgent(agent)
-      setEditForm({
-        displayName: agent.displayName,
-        email: agent.email || '',
-        role: (agent.role as AgentRole) || 'agent',
-        departmentId: agent.departmentId || '',
-        maxConcurrentChats: agent.maxConcurrentChats || 5,
-      })
-      setShowEditAgent(true)
-    },
-    []
-  )
+  const handleEditAgent = useCallback((agent: ChatAgent) => {
+    setEditingAgent(agent);
+    setEditForm({
+      displayName: agent.displayName,
+      email: agent.email || "",
+      role: (agent.role as AgentRole) || "agent",
+      departmentId: agent.departmentId || "",
+      maxConcurrentChats: agent.maxConcurrentChats || 5,
+    });
+    setShowEditAgent(true);
+  }, []);
 
   const handleSaveEdit = useCallback(() => {
     if (!editingAgent || !editForm.displayName) {
-      toast.error('Display name is required')
-      return
+      toast.error("Display name is required");
+      return;
     }
     startTransition(async () => {
       const result = await updateAgent(editingAgent.id, {
@@ -262,9 +263,9 @@ export function AgentsPageWrapper({
         role: editForm.role,
         departmentId: editForm.departmentId || null,
         maxConcurrentChats: editForm.maxConcurrentChats,
-      })
+      });
       if (result.error) {
-        toast.error(result.error)
+        toast.error(result.error);
       } else {
         setAgents((prev) =>
           prev.map((a) =>
@@ -277,20 +278,20 @@ export function AgentsPageWrapper({
                   departmentId: editForm.departmentId || undefined,
                   maxConcurrentChats: editForm.maxConcurrentChats,
                 } as ChatAgent)
-              : a
-          )
-        )
-        setShowEditAgent(false)
-        setEditingAgent(null)
-        toast.success('Agent updated')
+              : a,
+          ),
+        );
+        setShowEditAgent(false);
+        setEditingAgent(null);
+        toast.success("Agent updated");
       }
-    })
-  }, [editingAgent, editForm])
+    });
+  }, [editingAgent, editForm]);
 
   const handleAddDepartment = useCallback(() => {
     if (!deptForm.name) {
-      toast.error('Department name is required')
-      return
+      toast.error("Department name is required");
+      return;
     }
     startTransition(async () => {
       const result = await createDepartment({
@@ -298,49 +299,49 @@ export function AgentsPageWrapper({
         name: deptForm.name,
         description: deptForm.description || undefined,
         autoAssign: deptForm.autoAssign,
-      })
+      });
       if (result.error) {
-        toast.error(result.error)
+        toast.error(result.error);
       } else if (result.department) {
-        setDepartments((prev) => [...prev, { ...result.department!, agentCount: 0 } as typeof prev[0]])
-        setShowAddDept(false)
-        setDeptForm({ name: '', description: '', autoAssign: true })
-        toast.success('Department created')
+        setDepartments((prev) => [
+          ...prev,
+          { ...result.department!, agentCount: 0 } as (typeof prev)[0],
+        ]);
+        setShowAddDept(false);
+        setDeptForm({ name: "", description: "", autoAssign: true });
+        toast.success("Department created");
       }
-    })
-  }, [deptForm, siteId])
+    });
+  }, [deptForm, siteId]);
 
-  const handleDeleteDepartment = useCallback(
-    (deptId: string) => {
-      startTransition(async () => {
-        const result = await deleteDepartment(deptId)
-        if (result.error) {
-          toast.error(result.error)
-        } else {
-          setDepartments((prev) => prev.filter((d) => d.id !== deptId))
-          toast.success('Department deleted')
-        }
-      })
-    },
-    []
-  )
+  const handleDeleteDepartment = useCallback((deptId: string) => {
+    startTransition(async () => {
+      const result = await deleteDepartment(deptId);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        setDepartments((prev) => prev.filter((d) => d.id !== deptId));
+        toast.success("Department deleted");
+      }
+    });
+  }, []);
 
   const handleSetDefaultDept = useCallback(
     (deptId: string) => {
       startTransition(async () => {
-        const result = await setDefaultDepartment(siteId, deptId)
+        const result = await setDefaultDepartment(siteId, deptId);
         if (result.error) {
-          toast.error(result.error)
+          toast.error(result.error);
         } else {
           setDepartments((prev) =>
-            prev.map((d) => ({ ...d, isDefault: d.id === deptId }))
-          )
-          toast.success('Default department updated')
+            prev.map((d) => ({ ...d, isDefault: d.id === deptId })),
+          );
+          toast.success("Default department updated");
         }
-      })
+      });
     },
-    [siteId]
-  )
+    [siteId],
+  );
 
   return (
     <div className="space-y-6">
@@ -352,11 +353,14 @@ export function AgentsPageWrapper({
             Manage chat agents and departments
           </p>
         </div>
-        <Dialog open={showAddAgent} onOpenChange={(open) => {
-          setShowAddAgent(open)
-          if (open) loadAgencyMembers()
-          if (!open) setAddMode('team')
-        }}>
+        <Dialog
+          open={showAddAgent}
+          onOpenChange={(open) => {
+            setShowAddAgent(open);
+            if (open) loadAgencyMembers();
+            if (!open) setAddMode("team");
+          }}
+        >
           <DialogTrigger asChild>
             <Button size="sm">
               <Plus className="h-4 w-4 mr-2" />
@@ -371,265 +375,286 @@ export function AgentsPageWrapper({
             <div className="flex gap-1 p-1 rounded-lg bg-muted">
               <button
                 type="button"
-                className={`flex-1 text-sm px-3 py-1.5 rounded-md transition-colors ${addMode === 'team' ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground hover:text-foreground'}`}
-                onClick={() => setAddMode('team')}
+                className={`flex-1 text-sm px-3 py-1.5 rounded-md transition-colors ${addMode === "team" ? "bg-background shadow-sm font-medium" : "text-muted-foreground hover:text-foreground"}`}
+                onClick={() => setAddMode("team")}
               >
                 Team Member
               </button>
               <button
                 type="button"
-                className={`flex-1 text-sm px-3 py-1.5 rounded-md transition-colors ${addMode === 'invite' ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground hover:text-foreground'}`}
-                onClick={() => setAddMode('invite')}
+                className={`flex-1 text-sm px-3 py-1.5 rounded-md transition-colors ${addMode === "invite" ? "bg-background shadow-sm font-medium" : "text-muted-foreground hover:text-foreground"}`}
+                onClick={() => setAddMode("invite")}
               >
                 <UserPlus className="h-3.5 w-3.5 inline mr-1" />
                 Invite New
               </button>
             </div>
-            {addMode === 'team' ? (
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Team Member</Label>
-                {membersLoading ? (
-                  <div className="flex items-center gap-2 py-2 text-sm text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Loading members...
-                  </div>
-                ) : agencyMembers.length === 0 ? (
-                  <div className="space-y-2 py-2">
-                    <p className="text-sm text-muted-foreground">
-                      No available members. All team members are already agents.
-                    </p>
-                    <a
-                      href="/settings/team"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+            {addMode === "team" ? (
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>Team Member</Label>
+                  {membersLoading ? (
+                    <div className="flex items-center gap-2 py-2 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading members...
+                    </div>
+                  ) : agencyMembers.length === 0 ? (
+                    <div className="space-y-2 py-2">
+                      <p className="text-sm text-muted-foreground">
+                        No available members. All team members are already
+                        agents.
+                      </p>
+                      <a
+                        href="/settings/team"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                      >
+                        <UserPlus className="h-3.5 w-3.5" />
+                        Manage Team Members
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                  ) : (
+                    <Select
+                      value={agentForm.userId || "none"}
+                      onValueChange={(val) => {
+                        if (val === "none") {
+                          setAgentForm({
+                            ...agentForm,
+                            userId: "",
+                            displayName: "",
+                            email: "",
+                          });
+                          return;
+                        }
+                        const member = agencyMembers.find(
+                          (m) => m.userId === val,
+                        );
+                        if (member) {
+                          setAgentForm({
+                            ...agentForm,
+                            userId: member.userId,
+                            displayName:
+                              member.name || member.email.split("@")[0],
+                            email: member.email,
+                          });
+                        }
+                      }}
                     >
-                      <UserPlus className="h-3.5 w-3.5" />
-                      Manage Team Members
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  </div>
-                ) : (
-                  <Select
-                    value={agentForm.userId || 'none'}
-                    onValueChange={(val) => {
-                      if (val === 'none') {
-                        setAgentForm({ ...agentForm, userId: '', displayName: '', email: '' })
-                        return
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a team member" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">
+                          Select a team member
+                        </SelectItem>
+                        {agencyMembers.map((member) => (
+                          <SelectItem key={member.userId} value={member.userId}>
+                            {member.name || member.email} ({member.role})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label>Display Name</Label>
+                  <Input
+                    value={agentForm.displayName}
+                    onChange={(e) =>
+                      setAgentForm({
+                        ...agentForm,
+                        displayName: e.target.value,
+                      })
+                    }
+                    placeholder="Agent name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Email</Label>
+                  <Input
+                    value={agentForm.email}
+                    onChange={(e) =>
+                      setAgentForm({ ...agentForm, email: e.target.value })
+                    }
+                    placeholder="agent@example.com"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Role</Label>
+                    <Select
+                      value={agentForm.role}
+                      onValueChange={(val) =>
+                        setAgentForm({ ...agentForm, role: val as AgentRole })
                       }
-                      const member = agencyMembers.find(m => m.userId === val)
-                      if (member) {
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="agent">Agent</SelectItem>
+                        <SelectItem value="supervisor">Supervisor</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Max Concurrent Chats</Label>
+                    <Input
+                      type="number"
+                      value={agentForm.maxConcurrentChats}
+                      onChange={(e) =>
                         setAgentForm({
                           ...agentForm,
-                          userId: member.userId,
-                          displayName: member.name || member.email.split('@')[0],
-                          email: member.email,
+                          maxConcurrentChats: parseInt(e.target.value) || 5,
                         })
                       }
-                    }}
+                      min={1}
+                      max={20}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Department</Label>
+                  <Select
+                    value={agentForm.departmentId || "none"}
+                    onValueChange={(val) =>
+                      setAgentForm({
+                        ...agentForm,
+                        departmentId: val === "none" ? "" : val,
+                      })
+                    }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a team member" />
+                      <SelectValue placeholder="Select department" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">Select a team member</SelectItem>
-                      {agencyMembers.map((member) => (
-                        <SelectItem key={member.userId} value={member.userId}>
-                          {member.name || member.email} ({member.role})
+                      <SelectItem value="none">No Department</SelectItem>
+                      {departments.map((dept) => (
+                        <SelectItem key={dept.id} value={dept.id}>
+                          {dept.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label>Display Name</Label>
-                <Input
-                  value={agentForm.displayName}
-                  onChange={(e) =>
-                    setAgentForm({ ...agentForm, displayName: e.target.value })
-                  }
-                  placeholder="Agent name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input
-                  value={agentForm.email}
-                  onChange={(e) =>
-                    setAgentForm({ ...agentForm, email: e.target.value })
-                  }
-                  placeholder="agent@example.com"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Role</Label>
-                  <Select
-                    value={agentForm.role}
-                    onValueChange={(val) =>
-                      setAgentForm({ ...agentForm, role: val as AgentRole })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="agent">Agent</SelectItem>
-                      <SelectItem value="supervisor">Supervisor</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label>Max Concurrent Chats</Label>
-                  <Input
-                    type="number"
-                    value={agentForm.maxConcurrentChats}
-                    onChange={(e) =>
-                      setAgentForm({
-                        ...agentForm,
-                        maxConcurrentChats: parseInt(e.target.value) || 5,
-                      })
-                    }
-                    min={1}
-                    max={20}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Department</Label>
-                <Select
-                  value={agentForm.departmentId || 'none'}
-                  onValueChange={(val) =>
-                    setAgentForm({
-                      ...agentForm,
-                      departmentId: val === 'none' ? '' : val,
-                    })
+                <Button
+                  onClick={handleAddAgent}
+                  disabled={
+                    isPending || !agentForm.userId || !agentForm.displayName
                   }
+                  className="w-full"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select department" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">No Department</SelectItem>
-                    {departments.map((dept) => (
-                      <SelectItem key={dept.id} value={dept.id}>
-                        {dept.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  {isPending && (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  )}
+                  Add Agent
+                </Button>
               </div>
-              <Button
-                onClick={handleAddAgent}
-                disabled={isPending || !agentForm.userId || !agentForm.displayName}
-                className="w-full"
-              >
-                {isPending && (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                )}
-                Add Agent
-              </Button>
-            </div>
             ) : (
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Full Name</Label>
-                <Input
-                  value={inviteForm.displayName}
-                  onChange={(e) =>
-                    setInviteForm({ ...inviteForm, displayName: e.target.value })
-                  }
-                  placeholder="e.g. Jane Smith"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Email Address</Label>
-                <Input
-                  type="email"
-                  value={inviteForm.email}
-                  onChange={(e) =>
-                    setInviteForm({ ...inviteForm, email: e.target.value })
-                  }
-                  placeholder="agent@example.com"
-                />
-                <p className="text-xs text-muted-foreground">
-                  They will receive an email to set up their account
-                </p>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label>Role</Label>
-                  <Select
-                    value={inviteForm.role}
-                    onValueChange={(val) =>
-                      setInviteForm({ ...inviteForm, role: val as AgentRole })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="agent">Agent</SelectItem>
-                      <SelectItem value="supervisor">Supervisor</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Max Concurrent Chats</Label>
+                  <Label>Full Name</Label>
                   <Input
-                    type="number"
-                    value={inviteForm.maxConcurrentChats}
+                    value={inviteForm.displayName}
                     onChange={(e) =>
                       setInviteForm({
                         ...inviteForm,
-                        maxConcurrentChats: parseInt(e.target.value) || 5,
+                        displayName: e.target.value,
                       })
                     }
-                    min={1}
-                    max={20}
+                    placeholder="e.g. Jane Smith"
                   />
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Department</Label>
-                <Select
-                  value={inviteForm.departmentId || 'none'}
-                  onValueChange={(val) =>
-                    setInviteForm({
-                      ...inviteForm,
-                      departmentId: val === 'none' ? '' : val,
-                    })
+                <div className="space-y-2">
+                  <Label>Email Address</Label>
+                  <Input
+                    type="email"
+                    value={inviteForm.email}
+                    onChange={(e) =>
+                      setInviteForm({ ...inviteForm, email: e.target.value })
+                    }
+                    placeholder="agent@example.com"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    They will receive an email to set up their account
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Role</Label>
+                    <Select
+                      value={inviteForm.role}
+                      onValueChange={(val) =>
+                        setInviteForm({ ...inviteForm, role: val as AgentRole })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="agent">Agent</SelectItem>
+                        <SelectItem value="supervisor">Supervisor</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Max Concurrent Chats</Label>
+                    <Input
+                      type="number"
+                      value={inviteForm.maxConcurrentChats}
+                      onChange={(e) =>
+                        setInviteForm({
+                          ...inviteForm,
+                          maxConcurrentChats: parseInt(e.target.value) || 5,
+                        })
+                      }
+                      min={1}
+                      max={20}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Department</Label>
+                  <Select
+                    value={inviteForm.departmentId || "none"}
+                    onValueChange={(val) =>
+                      setInviteForm({
+                        ...inviteForm,
+                        departmentId: val === "none" ? "" : val,
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No Department</SelectItem>
+                      {departments.map((dept) => (
+                        <SelectItem key={dept.id} value={dept.id}>
+                          {dept.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  onClick={handleInviteAgent}
+                  disabled={
+                    isPending || !inviteForm.email || !inviteForm.displayName
                   }
+                  className="w-full"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select department" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">No Department</SelectItem>
-                    {departments.map((dept) => (
-                      <SelectItem key={dept.id} value={dept.id}>
-                        {dept.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  {isPending && (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  )}
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Invite & Add Agent
+                </Button>
               </div>
-              <Button
-                onClick={handleInviteAgent}
-                disabled={isPending || !inviteForm.email || !inviteForm.displayName}
-                className="w-full"
-              >
-                {isPending && (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                )}
-                <UserPlus className="h-4 w-4 mr-2" />
-                Invite & Add Agent
-              </Button>
-            </div>
             )}
           </DialogContent>
         </Dialog>
@@ -644,7 +669,7 @@ export function AgentsPageWrapper({
               title="No agents configured"
               description="Add agents to your live chat to start handling customer conversations"
               action={{
-                label: 'Add First Agent',
+                label: "Add First Agent",
                 onClick: () => setShowAddAgent(true),
               }}
             />
@@ -654,11 +679,11 @@ export function AgentsPageWrapper({
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {agents
             .sort((a, b) => {
-              const order = { online: 0, away: 1, busy: 2, offline: 3 }
-              return order[a.status] - order[b.status]
+              const order = { online: 0, away: 1, busy: 2, offline: 3 };
+              return order[a.status] - order[b.status];
             })
             .map((agent) => {
-              const perf = performance.find((p) => p.agentId === agent.id)
+              const perf = performance.find((p) => p.agentId === agent.id);
               return (
                 <Card key={agent.id}>
                   <CardContent className="pt-6">
@@ -679,11 +704,14 @@ export function AgentsPageWrapper({
                             {agent.displayName}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {agent.email || 'No email'}
+                            {agent.email || "No email"}
                           </p>
                         </div>
                       </div>
-                      <Badge variant={agent.role === 'admin' ? 'default' : 'outline'} className="text-xs capitalize">
+                      <Badge
+                        variant={agent.role === "admin" ? "default" : "outline"}
+                        className="text-xs capitalize"
+                      >
                         {agent.role}
                       </Badge>
                     </div>
@@ -708,7 +736,7 @@ export function AgentsPageWrapper({
                         <p className="font-medium">
                           {perf?.avgResponseTime
                             ? formatDuration(perf.avgResponseTime)
-                            : 'N/A'}
+                            : "N/A"}
                         </p>
                       </div>
                       <div>
@@ -716,7 +744,7 @@ export function AgentsPageWrapper({
                         <p className="font-medium">
                           {perf?.avgRating
                             ? `${perf.avgRating.toFixed(1)}/5`
-                            : 'N/A'}
+                            : "N/A"}
                         </p>
                       </div>
                     </div>
@@ -732,7 +760,7 @@ export function AgentsPageWrapper({
                         <Pencil className="h-3.5 w-3.5 mr-1" />
                         Edit
                       </Button>
-                      {agent.role !== 'admin' ? (
+                      {agent.role !== "admin" ? (
                         <Button
                           variant="destructive"
                           size="sm"
@@ -758,7 +786,7 @@ export function AgentsPageWrapper({
                     </div>
                   </CardContent>
                 </Card>
-              )
+              );
             })}
         </div>
       )}
@@ -828,11 +856,11 @@ export function AgentsPageWrapper({
             <div className="space-y-2">
               <Label>Department</Label>
               <Select
-                value={editForm.departmentId || 'none'}
+                value={editForm.departmentId || "none"}
                 onValueChange={(val) =>
                   setEditForm({
                     ...editForm,
-                    departmentId: val === 'none' ? '' : val,
+                    departmentId: val === "none" ? "" : val,
                   })
                 }
               >
@@ -854,9 +882,7 @@ export function AgentsPageWrapper({
               disabled={isPending || !editForm.displayName}
               className="w-full"
             >
-              {isPending && (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              )}
+              {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Save Changes
             </Button>
           </div>
@@ -939,18 +965,16 @@ export function AgentsPageWrapper({
                 <TableBody>
                   {departments.map((dept) => (
                     <TableRow key={dept.id}>
-                      <TableCell className="font-medium">
-                        {dept.name}
-                      </TableCell>
+                      <TableCell className="font-medium">{dept.name}</TableCell>
                       <TableCell className="text-muted-foreground">
-                        {dept.description || '—'}
+                        {dept.description || "—"}
                       </TableCell>
                       <TableCell>
                         <Badge
-                          variant={dept.autoAssign ? 'default' : 'secondary'}
+                          variant={dept.autoAssign ? "default" : "secondary"}
                           className="text-xs"
                         >
-                          {dept.autoAssign ? 'Yes' : 'No'}
+                          {dept.autoAssign ? "Yes" : "No"}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -990,5 +1014,5 @@ export function AgentsPageWrapper({
         )}
       </div>
     </div>
-  )
+  );
 }

@@ -20,7 +20,8 @@ export interface SitePublishStatus {
   siteUrl: string;
 }
 
-const BASE_DOMAIN = process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
+const BASE_DOMAIN =
+  process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
 
 export async function publishSite(siteId: string): Promise<PublishResult> {
   try {
@@ -47,7 +48,10 @@ export async function publishSite(siteId: string): Promise<PublishResult> {
     const { count } = await supabase
       .from("page_content")
       .select("*", { count: "exact", head: true })
-      .in("page_id", site.pages.map((p: { id: string }) => p.id));
+      .in(
+        "page_id",
+        site.pages.map((p: { id: string }) => p.id),
+      );
 
     if (!count || count === 0) {
       return { success: false, error: "Site has no content to publish" };
@@ -73,8 +77,8 @@ export async function publishSite(siteId: string): Promise<PublishResult> {
     const siteUrl = `https://${site.subdomain}.${BASE_DOMAIN}`;
 
     // Capture screenshot in background (don't wait for it)
-    captureAndStoreSiteScreenshot(siteId, siteUrl).catch(err => {
-      console.error('[PublishService] Screenshot capture failed:', err);
+    captureAndStoreSiteScreenshot(siteId, siteUrl).catch((err) => {
+      console.error("[PublishService] Screenshot capture failed:", err);
     });
 
     revalidatePath(`/sites/${siteId}`);
@@ -116,13 +120,17 @@ export async function unpublishSite(siteId: string): Promise<PublishResult> {
   }
 }
 
-export async function getSitePublishStatus(siteId: string): Promise<SitePublishStatus | null> {
+export async function getSitePublishStatus(
+  siteId: string,
+): Promise<SitePublishStatus | null> {
   try {
     const supabase = createAdminClient();
 
     const { data: site, error } = await supabase
       .from("sites")
-      .select("published, published_at, subdomain, custom_domain, custom_domain_verified")
+      .select(
+        "published, published_at, subdomain, custom_domain, custom_domain_verified",
+      )
       .eq("id", siteId)
       .single();
 
@@ -130,9 +138,10 @@ export async function getSitePublishStatus(siteId: string): Promise<SitePublishS
       return null;
     }
 
-    const siteUrl = site.custom_domain && site.custom_domain_verified
-      ? `https://${site.custom_domain}`
-      : `https://${site.subdomain}.${BASE_DOMAIN}`;
+    const siteUrl =
+      site.custom_domain && site.custom_domain_verified
+        ? `https://${site.custom_domain}`
+        : `https://${site.subdomain}.${BASE_DOMAIN}`;
 
     return {
       isPublished: site.published || false,
@@ -148,7 +157,10 @@ export async function getSitePublishStatus(siteId: string): Promise<SitePublishS
   }
 }
 
-export async function checkSubdomainAvailability(subdomain: string, excludeSiteId?: string): Promise<boolean> {
+export async function checkSubdomainAvailability(
+  subdomain: string,
+  excludeSiteId?: string,
+): Promise<boolean> {
   try {
     const supabase = createAdminClient();
 
@@ -168,7 +180,10 @@ export async function checkSubdomainAvailability(subdomain: string, excludeSiteI
   }
 }
 
-export async function updateSubdomain(siteId: string, subdomain: string): Promise<{ success: boolean; error?: string }> {
+export async function updateSubdomain(
+  siteId: string,
+  subdomain: string,
+): Promise<{ success: boolean; error?: string }> {
   try {
     // Validate subdomain format
     const subdomainRegex = /^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/;

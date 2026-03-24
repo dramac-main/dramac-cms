@@ -852,7 +852,11 @@ export class WebsiteDesignerEngine {
     context: string,
     selectedFeatures?: string[],
   ): Promise<SiteArchitecture> {
-    const fullPrompt = buildArchitecturePrompt(prompt, context, selectedFeatures);
+    const fullPrompt = buildArchitecturePrompt(
+      prompt,
+      context,
+      selectedFeatures,
+    );
 
     const { object } = await generateObject({
       model: getAIModel("architecture"),

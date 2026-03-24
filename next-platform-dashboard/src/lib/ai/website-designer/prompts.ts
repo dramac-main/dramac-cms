@@ -1,9 +1,9 @@
 /**
  * PHASE AWD-10: AI-First Redesign — Prompts
- * 
+ *
  * Philosophy: The AI is the designer. We give it context and tools, then get out of the way.
  * Prompts inform and empower — they don't constrain or micromanage.
- * 
+ *
  * Key changes from the old system:
  * - No rigid "VIOLATION = FAILURE" rules
  * - No hardcoded color rules or 8px grid mandates
@@ -12,7 +12,10 @@
  * - AI has full creative control over every visual decision
  */
 
-import { generateArchitectureReference, generatePageReference } from "./component-reference";
+import {
+  generateArchitectureReference,
+  generatePageReference,
+} from "./component-reference";
 
 // =============================================================================
 // SITE ARCHITECT PROMPT — Concise, empowering, trusts the AI
@@ -481,13 +484,27 @@ export function parseUserPrompt(userPrompt: string): {
   ];
 
   let businessName: string | null = null;
-  const falsePositives = ["a", "the", "my", "our", "this", "website", "site", "page", "me", "us"];
+  const falsePositives = [
+    "a",
+    "the",
+    "my",
+    "our",
+    "this",
+    "website",
+    "site",
+    "page",
+    "me",
+    "us",
+  ];
 
   for (const pattern of patterns) {
     const match = userPrompt.match(pattern);
     if (match) {
       const candidate = match[1].trim();
-      if (!falsePositives.includes(candidate.toLowerCase()) && candidate.length > 1) {
+      if (
+        !falsePositives.includes(candidate.toLowerCase()) &&
+        candidate.length > 1
+      ) {
         businessName = candidate;
         break;
       }
@@ -495,30 +512,98 @@ export function parseUserPrompt(userPrompt: string): {
   }
 
   // Try to extract business type (restaurant, cafe, shop, etc.)
-  const businessTypes = ["restaurant", "cafe", "cafe", "bakery", "coffee shop", "bar", "hotel", "spa",
-    "gym", "fitness", "salon", "barbershop", "barber shop", "hair salon", "beauty salon", "nail salon",
-    "clinic", "dental", "medical", "law firm", "legal",
-    "accounting", "consulting", "agency", "studio", "gallery", "boutique", "shop", "store",
-    "ecommerce", "startup", "tech", "software", "real estate", "construction", "plumbing",
-    "electrician", "photography", "wedding", "event", "catering", "landscaping", "cleaning",
-    "veterinarian", "vet clinic", "pet store", "florist", "tattoo", "music school", "daycare",
-    "car wash", "auto repair", "brewery", "winery", "car dealership", "insurance"];
-  const businessType = businessTypes.find(type => userPrompt.toLowerCase().includes(type));
+  const businessTypes = [
+    "restaurant",
+    "cafe",
+    "cafe",
+    "bakery",
+    "coffee shop",
+    "bar",
+    "hotel",
+    "spa",
+    "gym",
+    "fitness",
+    "salon",
+    "barbershop",
+    "barber shop",
+    "hair salon",
+    "beauty salon",
+    "nail salon",
+    "clinic",
+    "dental",
+    "medical",
+    "law firm",
+    "legal",
+    "accounting",
+    "consulting",
+    "agency",
+    "studio",
+    "gallery",
+    "boutique",
+    "shop",
+    "store",
+    "ecommerce",
+    "startup",
+    "tech",
+    "software",
+    "real estate",
+    "construction",
+    "plumbing",
+    "electrician",
+    "photography",
+    "wedding",
+    "event",
+    "catering",
+    "landscaping",
+    "cleaning",
+    "veterinarian",
+    "vet clinic",
+    "pet store",
+    "florist",
+    "tattoo",
+    "music school",
+    "daycare",
+    "car wash",
+    "auto repair",
+    "brewery",
+    "winery",
+    "car dealership",
+    "insurance",
+  ];
+  const businessType = businessTypes.find((type) =>
+    userPrompt.toLowerCase().includes(type),
+  );
 
   // Try to extract location
-  const locationMatch = userPrompt.match(/(?:in|at|located in|based in)\s+([A-Za-z\s,]+?)(?:\.|,|$|\s+(?:that|which|with))/i);
+  const locationMatch = userPrompt.match(
+    /(?:in|at|located in|based in)\s+([A-Za-z\s,]+?)(?:\.|,|$|\s+(?:that|which|with))/i,
+  );
 
   // Extract key features mentioned
   const features: string[] = [];
-  if (userPrompt.toLowerCase().includes("book")) features.push("booking system");
-  if (userPrompt.toLowerCase().includes("reserv")) features.push("reservations");
+  if (userPrompt.toLowerCase().includes("book"))
+    features.push("booking system");
+  if (userPrompt.toLowerCase().includes("reserv"))
+    features.push("reservations");
   if (userPrompt.toLowerCase().includes("menu")) features.push("menu display");
-  if (userPrompt.toLowerCase().includes("portfolio")) features.push("portfolio gallery");
-  if (userPrompt.toLowerCase().includes("shop") || userPrompt.toLowerCase().includes("store") || userPrompt.toLowerCase().includes("ecommerce")) features.push("e-commerce");
-  if (userPrompt.toLowerCase().includes("contact")) features.push("contact form");
-  if (userPrompt.toLowerCase().includes("testimonial")) features.push("testimonials");
+  if (userPrompt.toLowerCase().includes("portfolio"))
+    features.push("portfolio gallery");
+  if (
+    userPrompt.toLowerCase().includes("shop") ||
+    userPrompt.toLowerCase().includes("store") ||
+    userPrompt.toLowerCase().includes("ecommerce")
+  )
+    features.push("e-commerce");
+  if (userPrompt.toLowerCase().includes("contact"))
+    features.push("contact form");
+  if (userPrompt.toLowerCase().includes("testimonial"))
+    features.push("testimonials");
   if (userPrompt.toLowerCase().includes("gallery")) features.push("gallery");
-  if (userPrompt.toLowerCase().includes("pricing") || userPrompt.toLowerCase().includes("price")) features.push("pricing");
+  if (
+    userPrompt.toLowerCase().includes("pricing") ||
+    userPrompt.toLowerCase().includes("price")
+  )
+    features.push("pricing");
   if (userPrompt.toLowerCase().includes("blog")) features.push("blog");
 
   return {
@@ -556,14 +641,30 @@ export function buildArchitecturePrompt(
   return `## USER'S REQUEST (HIGHEST PRIORITY)
 "${userPrompt}"
 
-${parsed.businessName ? `### Business Name: "${parsed.businessName}"
-Use this name in all headlines, content, and branding.` : ""}
-${parsed.businessType ? `### Business Type: ${parsed.businessType}
-Design specifically for this type of business.` : ""}
-${parsed.location ? `### Location: ${parsed.location}
-Include in footer and location-relevant sections.` : ""}
-${parsed.keyFeatures.length > 0 ? `### Requested Features: ${parsed.keyFeatures.join(", ")}
-Include appropriate sections for each.` : ""}
+${
+  parsed.businessName
+    ? `### Business Name: "${parsed.businessName}"
+Use this name in all headlines, content, and branding.`
+    : ""
+}
+${
+  parsed.businessType
+    ? `### Business Type: ${parsed.businessType}
+Design specifically for this type of business.`
+    : ""
+}
+${
+  parsed.location
+    ? `### Location: ${parsed.location}
+Include in footer and location-relevant sections.`
+    : ""
+}
+${
+  parsed.keyFeatures.length > 0
+    ? `### Requested Features: ${parsed.keyFeatures.join(", ")}
+Include appropriate sections for each.`
+    : ""
+}
 
 ## Business Context (from database — use to supplement, not override user's request)
 ${context}
@@ -587,41 +688,132 @@ Remember: The user's prompt is the primary source of truth. The database context
 /**
  * Classify a page by its slug/name to determine its type
  */
-function classifyPageType(pageName: string, pageSlug?: string): { type: string; minSections: number; guidance: string } {
+function classifyPageType(
+  pageName: string,
+  pageSlug?: string,
+): { type: string; minSections: number; guidance: string } {
   const name = pageName.toLowerCase();
   const slug = (pageSlug || "").toLowerCase();
 
   if (slug === "/" || slug === "" || name === "home" || name === "homepage") {
-    return { type: "homepage", minSections: 6, guidance: "This is the HOMEPAGE — the most important page. Make it stunning with 6-8 sections." };
+    return {
+      type: "homepage",
+      minSections: 6,
+      guidance:
+        "This is the HOMEPAGE — the most important page. Make it stunning with 6-8 sections.",
+    };
   }
-  if (name.includes("about") || slug.includes("about") || name.includes("our story") || slug.includes("story")) {
-    return { type: "about", minSections: 4, guidance: "ABOUT page — visitors here are evaluating trust. Generate 4-6 rich sections with brand story, team, values, stats." };
+  if (
+    name.includes("about") ||
+    slug.includes("about") ||
+    name.includes("our story") ||
+    slug.includes("story")
+  ) {
+    return {
+      type: "about",
+      minSections: 4,
+      guidance:
+        "ABOUT page — visitors here are evaluating trust. Generate 4-6 rich sections with brand story, team, values, stats.",
+    };
   }
-  if (name.includes("service") || slug.includes("service") || name.includes("what we do") || slug.includes("offerings")) {
-    return { type: "services", minSections: 4, guidance: "SERVICES page — visitors want detail. Generate 4-6 sections with detailed service descriptions, process, FAQ." };
+  if (
+    name.includes("service") ||
+    slug.includes("service") ||
+    name.includes("what we do") ||
+    slug.includes("offerings")
+  ) {
+    return {
+      type: "services",
+      minSections: 4,
+      guidance:
+        "SERVICES page — visitors want detail. Generate 4-6 sections with detailed service descriptions, process, FAQ.",
+    };
   }
-  if (name.includes("contact") || slug.includes("contact") || name.includes("get in touch") || slug.includes("reach")) {
-    return { type: "contact", minSections: 3, guidance: "CONTACT page — make the form prominent. Include contact methods, hours, FAQ." };
+  if (
+    name.includes("contact") ||
+    slug.includes("contact") ||
+    name.includes("get in touch") ||
+    slug.includes("reach")
+  ) {
+    return {
+      type: "contact",
+      minSections: 3,
+      guidance:
+        "CONTACT page — make the form prominent. Include contact methods, hours, FAQ.",
+    };
   }
-  if (name.includes("pricing") || slug.includes("pricing") || name.includes("plans") || slug.includes("plans")) {
-    return { type: "pricing", minSections: 3, guidance: "PRICING page — help visitors choose. 3 tiers, feature comparison, FAQ, CTA." };
+  if (
+    name.includes("pricing") ||
+    slug.includes("pricing") ||
+    name.includes("plans") ||
+    slug.includes("plans")
+  ) {
+    return {
+      type: "pricing",
+      minSections: 3,
+      guidance:
+        "PRICING page — help visitors choose. 3 tiers, feature comparison, FAQ, CTA.",
+    };
   }
-  if (name.includes("portfolio") || slug.includes("portfolio") || name.includes("work") || slug.includes("work") || name.includes("projects") || slug.includes("gallery")) {
-    return { type: "portfolio", minSections: 3, guidance: "PORTFOLIO/GALLERY page — let the work speak. Gallery grid, testimonials, CTA." };
+  if (
+    name.includes("portfolio") ||
+    slug.includes("portfolio") ||
+    name.includes("work") ||
+    slug.includes("work") ||
+    name.includes("projects") ||
+    slug.includes("gallery")
+  ) {
+    return {
+      type: "portfolio",
+      minSections: 3,
+      guidance:
+        "PORTFOLIO/GALLERY page — let the work speak. Gallery grid, testimonials, CTA.",
+    };
   }
-  if (name.includes("team") || slug.includes("team") || name.includes("staff") || slug.includes("staff")) {
-    return { type: "team", minSections: 3, guidance: "TEAM page — detailed bios, credentials, photos." };
+  if (
+    name.includes("team") ||
+    slug.includes("team") ||
+    name.includes("staff") ||
+    slug.includes("staff")
+  ) {
+    return {
+      type: "team",
+      minSections: 3,
+      guidance: "TEAM page — detailed bios, credentials, photos.",
+    };
   }
   if (name.includes("faq") || slug.includes("faq")) {
-    return { type: "faq", minSections: 3, guidance: "FAQ page — 8-12 questions with comprehensive answers." };
+    return {
+      type: "faq",
+      minSections: 3,
+      guidance: "FAQ page — 8-12 questions with comprehensive answers.",
+    };
   }
-  if (name.includes("blog") || slug.includes("blog") || name.includes("news") || slug.includes("news")) {
-    return { type: "blog", minSections: 3, guidance: "BLOG/NEWS page — article previews, newsletter signup, CTA." };
+  if (
+    name.includes("blog") ||
+    slug.includes("blog") ||
+    name.includes("news") ||
+    slug.includes("news")
+  ) {
+    return {
+      type: "blog",
+      minSections: 3,
+      guidance: "BLOG/NEWS page — article previews, newsletter signup, CTA.",
+    };
   }
   if (name.includes("menu") || slug.includes("menu")) {
-    return { type: "menu", minSections: 3, guidance: "MENU page — categorized items with prices, reservation CTA." };
+    return {
+      type: "menu",
+      minSections: 3,
+      guidance: "MENU page — categorized items with prices, reservation CTA.",
+    };
   }
-  return { type: "inner-page", minSections: 4, guidance: "Inner page — at minimum 4 sections: Hero + 2 content sections + CTA." };
+  return {
+    type: "inner-page",
+    minSections: 4,
+    guidance:
+      "Inner page — at minimum 4 sections: Hero + 2 content sections + CTA.",
+  };
 }
 
 /**
@@ -629,7 +821,12 @@ function classifyPageType(pageName: string, pageSlug?: string): { type: string; 
  * AI-First: Context + dynamic component reference cards
  */
 export function buildPagePrompt(
-  pagePlan: { name: string; slug?: string; purpose: string; sections: unknown[] },
+  pagePlan: {
+    name: string;
+    slug?: string;
+    purpose: string;
+    sections: unknown[];
+  },
   context: string,
   designTokens: Record<string, unknown>,
   userPrompt?: string,
@@ -639,8 +836,10 @@ export function buildPagePrompt(
   const isHomepage = pageClassification.type === "homepage";
 
   // Extract component types from the section plan for full-detail reference cards
-  const suggestedTypes = (pagePlan.sections as Array<{ suggestedComponent?: string }>)
-    .map(s => s.suggestedComponent)
+  const suggestedTypes = (
+    pagePlan.sections as Array<{ suggestedComponent?: string }>
+  )
+    .map((s) => s.suggestedComponent)
     .filter(Boolean) as string[];
 
   // Generate dynamic component reference cards
@@ -655,12 +854,20 @@ ${pageClassification.guidance}
 Minimum sections: ${pageClassification.minSections}
 ${!isHomepage ? `This is NOT the homepage — go deeper on topics that may have been previewed on the home page.` : ""}
 
-${allPages && allPages.length > 0 ? `## Site Structure (for internal linking)
-${allPages.map(p => `- ${p.name}: ${p.slug}`).join("\n")}
-Use these exact slugs for ALL internal links and CTAs.` : ""}
+${
+  allPages && allPages.length > 0
+    ? `## Site Structure (for internal linking)
+${allPages.map((p) => `- ${p.name}: ${p.slug}`).join("\n")}
+Use these exact slugs for ALL internal links and CTAs.`
+    : ""
+}
 
-${userPrompt ? `## User's Original Request
-"${userPrompt}"` : ""}
+${
+  userPrompt
+    ? `## User's Original Request
+"${userPrompt}"`
+    : ""
+}
 
 ## Business Context
 ${context}

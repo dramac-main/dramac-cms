@@ -176,7 +176,10 @@ async function getSiteData(domain: string, pageSlug: string) {
   // Check if this is a platform subdomain (*.sites.dramacagency.com)
   if (domain.endsWith(".sites.dramacagency.com")) {
     subdomain = domain.split(".")[0]; // Extract first part
-  } else if (domain.endsWith(".dramac.app") || domain.endsWith(".sites.dramacagency.com")) {
+  } else if (
+    domain.endsWith(".dramac.app") ||
+    domain.endsWith(".sites.dramacagency.com")
+  ) {
     subdomain = domain.split(".")[0]; // Extract first part
   }
 
@@ -267,6 +270,7 @@ async function generateEcommercePage(slug: string, siteId: string) {
   const {
     createCheckoutPageTemplate,
     createOrderConfirmationTemplate,
+    createOrderTrackingTemplate,
     createProductDetailTemplate,
     createCategoryPageTemplate,
     createQuoteRequestTemplate,
@@ -296,6 +300,19 @@ async function generateEcommercePage(slug: string, siteId: string) {
       seo_description: "Your order has been confirmed.",
       seo_image: null,
       page_content: [{ content: createOrderConfirmationTemplate() }],
+    };
+  }
+
+  if (slug === "order-tracking") {
+    return {
+      id: `virtual-order-tracking-${siteId}`,
+      slug: "/order-tracking",
+      name: "Track Your Order",
+      is_homepage: false,
+      seo_title: "Track Your Order",
+      seo_description: "Look up your order status.",
+      seo_image: null,
+      page_content: [{ content: createOrderTrackingTemplate() }],
     };
   }
 

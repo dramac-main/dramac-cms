@@ -3,7 +3,7 @@
 
 /**
  * Cloudflare Configuration
- * 
+ *
  * Environment variables required:
  * - CLOUDFLARE_API_TOKEN: API token with Zone and DNS permissions
  * - CLOUDFLARE_ACCOUNT_ID: (optional) Cloudflare account ID for zone creation
@@ -13,21 +13,21 @@
  */
 export const CLOUDFLARE_CONFIG = {
   // API Configuration
-  apiToken: process.env.CLOUDFLARE_API_TOKEN || '',
+  apiToken: process.env.CLOUDFLARE_API_TOKEN || "",
   accountId: process.env.CLOUDFLARE_ACCOUNT_ID,
-  
+
   // Platform Configuration
-  platformIp: process.env.PLATFORM_IP || '76.76.21.21', // Vercel IP
-  platformCname: process.env.DEFAULT_CNAME_TARGET || 'cname.vercel-dns.com',
+  platformIp: process.env.PLATFORM_IP || "76.76.21.21", // Vercel IP
+  platformCname: process.env.DEFAULT_CNAME_TARGET || "cname.vercel-dns.com",
   platformNameservers: (
-    process.env.PLATFORM_NAMESERVERS || 'ns1.vercel-dns.com,ns2.vercel-dns.com'
-  ).split(','),
-  
+    process.env.PLATFORM_NAMESERVERS || "ns1.vercel-dns.com,ns2.vercel-dns.com"
+  ).split(","),
+
   // Default Settings
   defaultTtl: 3600, // 1 hour
   defaultProxied: true, // Enable Cloudflare proxy by default
-  defaultSslMode: 'full' as const,
-  
+  defaultSslMode: "full" as const,
+
   // Rate Limiting
   maxRequestsPerMinute: 1200,
   requestTimeout: 30000, // 30 seconds
@@ -42,7 +42,7 @@ export function isCloudflareConfigured(): boolean {
 
 /**
  * DNS Record Templates for different scenarios
- * 
+ *
  * These templates define the standard DNS configurations
  * for various use cases within the DRAMAC platform.
  */
@@ -53,69 +53,115 @@ export const DNS_TEMPLATES = {
    */
   site: {
     records: [
-      { type: 'A', name: '@', proxied: true },
-      { type: 'CNAME', name: 'www', content: '@', proxied: true },
+      { type: "A", name: "@", proxied: true },
+      { type: "CNAME", name: "www", content: "@", proxied: true },
     ],
   },
-  
+
   /**
    * Titan Mail email configuration
    * MX records, SPF, DKIM setup for professional email
    */
   titanEmail: {
     records: [
-      { type: 'MX', name: '@', content: 'mx1.titan.email', priority: 10 },
-      { type: 'MX', name: '@', content: 'mx2.titan.email', priority: 20 },
-      { type: 'TXT', name: '@', content: 'v=spf1 include:spf.titan.email ~all' },
+      { type: "MX", name: "@", content: "mx1.titan.email", priority: 10 },
+      { type: "MX", name: "@", content: "mx2.titan.email", priority: 20 },
+      {
+        type: "TXT",
+        name: "@",
+        content: "v=spf1 include:spf.titan.email ~all",
+      },
       // DKIM is added per-domain with specific values
     ],
-    dkimSelector: 'titan._domainkey',
+    dkimSelector: "titan._domainkey",
     // dmarcRecord is generated dynamically in applyTitanEmailTemplate
     // to include the agency's actual reporting email (not a hardcoded platform address)
-    dmarcBaseRecord: 'v=DMARC1; p=none; sp=none; adkim=r; aspf=r',
+    dmarcBaseRecord: "v=DMARC1; p=none; sp=none; adkim=r; aspf=r",
   },
-  
+
   /**
    * Google Workspace email configuration
    * Full MX record setup for Google Workspace
    */
   googleWorkspace: {
     records: [
-      { type: 'MX', name: '@', content: 'ASPMX.L.GOOGLE.COM', priority: 1 },
-      { type: 'MX', name: '@', content: 'ALT1.ASPMX.L.GOOGLE.COM', priority: 5 },
-      { type: 'MX', name: '@', content: 'ALT2.ASPMX.L.GOOGLE.COM', priority: 5 },
-      { type: 'MX', name: '@', content: 'ALT3.ASPMX.L.GOOGLE.COM', priority: 10 },
-      { type: 'MX', name: '@', content: 'ALT4.ASPMX.L.GOOGLE.COM', priority: 10 },
-      { type: 'TXT', name: '@', content: 'v=spf1 include:_spf.google.com ~all' },
+      { type: "MX", name: "@", content: "ASPMX.L.GOOGLE.COM", priority: 1 },
+      {
+        type: "MX",
+        name: "@",
+        content: "ALT1.ASPMX.L.GOOGLE.COM",
+        priority: 5,
+      },
+      {
+        type: "MX",
+        name: "@",
+        content: "ALT2.ASPMX.L.GOOGLE.COM",
+        priority: 5,
+      },
+      {
+        type: "MX",
+        name: "@",
+        content: "ALT3.ASPMX.L.GOOGLE.COM",
+        priority: 10,
+      },
+      {
+        type: "MX",
+        name: "@",
+        content: "ALT4.ASPMX.L.GOOGLE.COM",
+        priority: 10,
+      },
+      {
+        type: "TXT",
+        name: "@",
+        content: "v=spf1 include:_spf.google.com ~all",
+      },
     ],
   },
-  
+
   /**
    * Microsoft 365 email configuration
    */
   microsoft365: {
     records: [
-      { type: 'MX', name: '@', content: '{domain}.mail.protection.outlook.com', priority: 0 },
-      { type: 'TXT', name: '@', content: 'v=spf1 include:spf.protection.outlook.com ~all' },
-      { type: 'CNAME', name: 'autodiscover', content: 'autodiscover.outlook.com' },
+      {
+        type: "MX",
+        name: "@",
+        content: "{domain}.mail.protection.outlook.com",
+        priority: 0,
+      },
+      {
+        type: "TXT",
+        name: "@",
+        content: "v=spf1 include:spf.protection.outlook.com ~all",
+      },
+      {
+        type: "CNAME",
+        name: "autodiscover",
+        content: "autodiscover.outlook.com",
+      },
     ],
   },
-  
+
   /**
    * DRAMAC verification record
    * Used to verify domain ownership
    */
   verification: {
-    prefix: '_dramac-verify',
+    prefix: "_dramac-verify",
   },
-  
+
   /**
    * Vercel deployment configuration
    */
   vercel: {
     records: [
-      { type: 'A', name: '@', content: '76.76.21.21', proxied: true },
-      { type: 'CNAME', name: 'www', content: 'cname.vercel-dns.com', proxied: true },
+      { type: "A", name: "@", content: "76.76.21.21", proxied: true },
+      {
+        type: "CNAME",
+        name: "www",
+        content: "cname.vercel-dns.com",
+        proxied: true,
+      },
     ],
   },
 } as const;
@@ -125,24 +171,24 @@ export const DNS_TEMPLATES = {
  */
 export const SSL_MODE_INFO = {
   off: {
-    name: 'Off',
-    description: 'No encryption. Not recommended.',
-    icon: 'x',
+    name: "Off",
+    description: "No encryption. Not recommended.",
+    icon: "x",
   },
   flexible: {
-    name: 'Flexible',
-    description: 'Encrypts traffic between browser and Cloudflare only.',
-    icon: 'alert',
+    name: "Flexible",
+    description: "Encrypts traffic between browser and Cloudflare only.",
+    icon: "alert",
   },
   full: {
-    name: 'Full',
-    description: 'Encrypts end-to-end but allows self-signed certificates.',
-    icon: 'check',
+    name: "Full",
+    description: "Encrypts end-to-end but allows self-signed certificates.",
+    icon: "check",
   },
   strict: {
-    name: 'Full (Strict)',
-    description: 'Encrypts end-to-end with valid certificates only.',
-    icon: 'shield',
+    name: "Full (Strict)",
+    description: "Encrypts end-to-end with valid certificates only.",
+    icon: "shield",
   },
 } as const;
 
@@ -151,57 +197,57 @@ export const SSL_MODE_INFO = {
  */
 export const DNS_RECORD_INFO = {
   A: {
-    name: 'A Record',
-    description: 'Points domain to IPv4 address',
-    example: '192.168.1.1',
+    name: "A Record",
+    description: "Points domain to IPv4 address",
+    example: "192.168.1.1",
     canProxy: true,
   },
   AAAA: {
-    name: 'AAAA Record',
-    description: 'Points domain to IPv6 address',
-    example: '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+    name: "AAAA Record",
+    description: "Points domain to IPv6 address",
+    example: "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
     canProxy: true,
   },
   CNAME: {
-    name: 'CNAME Record',
-    description: 'Alias for another domain',
-    example: 'www.example.com',
+    name: "CNAME Record",
+    description: "Alias for another domain",
+    example: "www.example.com",
     canProxy: true,
   },
   MX: {
-    name: 'MX Record',
-    description: 'Mail server for email delivery',
-    example: 'mail.example.com',
+    name: "MX Record",
+    description: "Mail server for email delivery",
+    example: "mail.example.com",
     canProxy: false,
   },
   TXT: {
-    name: 'TXT Record',
-    description: 'Text record for verification/SPF/DKIM',
-    example: 'v=spf1 include:_spf.google.com ~all',
+    name: "TXT Record",
+    description: "Text record for verification/SPF/DKIM",
+    example: "v=spf1 include:_spf.google.com ~all",
     canProxy: false,
   },
   NS: {
-    name: 'NS Record',
-    description: 'Nameserver delegation',
-    example: 'ns1.example.com',
+    name: "NS Record",
+    description: "Nameserver delegation",
+    example: "ns1.example.com",
     canProxy: false,
   },
   SRV: {
-    name: 'SRV Record',
-    description: 'Service location record',
-    example: '_sip._tcp.example.com',
+    name: "SRV Record",
+    description: "Service location record",
+    example: "_sip._tcp.example.com",
     canProxy: false,
   },
   CAA: {
-    name: 'CAA Record',
-    description: 'Certificate authority authorization',
+    name: "CAA Record",
+    description: "Certificate authority authorization",
     example: '0 issue "letsencrypt.org"',
     canProxy: false,
   },
   PTR: {
-    name: 'PTR Record',
-    description: 'Reverse DNS lookup',
-    example: '1.168.192.in-addr.arpa',
+    name: "PTR Record",
+    description: "Reverse DNS lookup",
+    example: "1.168.192.in-addr.arpa",
     canProxy: false,
   },
 } as const;

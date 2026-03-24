@@ -11,7 +11,13 @@ import {
   Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -62,7 +68,7 @@ export default function SitemapPage({
         canEditSiteSeo(),
         getSiteForSeo(siteId),
       ]);
-      
+
       if (sitemapSettings) {
         setSettings(sitemapSettings);
       }
@@ -94,8 +100,8 @@ export default function SitemapPage({
 
   const getSitemapUrl = () => {
     if (!site) return "#";
-    const baseUrl = site.domain 
-      ? `https://${site.domain}` 
+    const baseUrl = site.domain
+      ? `https://${site.domain}`
       : `https://${site.subdomain}.sites.dramacagency.com`;
     return `${baseUrl}/sitemap.xml`;
   };
@@ -151,7 +157,11 @@ export default function SitemapPage({
                 {getSitemapUrl()}
               </code>
               <Button variant="outline" size="icon" asChild>
-                <a href={getSitemapUrl()} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={getSitemapUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <ExternalLink className="h-4 w-4" />
                 </a>
               </Button>
@@ -180,7 +190,9 @@ export default function SitemapPage({
               </div>
               <Switch
                 checked={settings.enabled}
-                onCheckedChange={(checked) => setSettings(s => ({ ...s, enabled: checked }))}
+                onCheckedChange={(checked) =>
+                  setSettings((s) => ({ ...s, enabled: checked }))
+                }
                 disabled={!canEdit}
               />
             </div>
@@ -189,7 +201,9 @@ export default function SitemapPage({
               <Label>Change Frequency</Label>
               <Select
                 value={settings.changefreq}
-                onValueChange={(value) => setSettings(s => ({ ...s, changefreq: value }))}
+                onValueChange={(value) =>
+                  setSettings((s) => ({ ...s, changefreq: value }))
+                }
                 disabled={!canEdit}
               >
                 <SelectTrigger className="w-full md:w-[200px]">
@@ -219,7 +233,9 @@ export default function SitemapPage({
               </div>
               <Switch
                 checked={settings.includeImages}
-                onCheckedChange={(checked) => setSettings(s => ({ ...s, includeImages: checked }))}
+                onCheckedChange={(checked) =>
+                  setSettings((s) => ({ ...s, includeImages: checked }))
+                }
                 disabled={!canEdit}
               />
             </div>
@@ -233,8 +249,9 @@ export default function SitemapPage({
           </CardHeader>
           <CardContent className="prose prose-sm dark:prose-invert">
             <p>
-              An XML sitemap helps search engines discover and crawl your site&apos;s pages efficiently.
-              It includes information about each URL like when it was last modified and how important it is.
+              An XML sitemap helps search engines discover and crawl your
+              site&apos;s pages efficiently. It includes information about each
+              URL like when it was last modified and how important it is.
             </p>
             <h4>What&apos;s included in your sitemap:</h4>
             <ul>

@@ -7,7 +7,14 @@ import { createClient } from "@supabase/supabase-js";
 export interface SitemapUrl {
   loc: string;
   lastmod?: string;
-  changefreq?: "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
+  changefreq?:
+    | "always"
+    | "hourly"
+    | "daily"
+    | "weekly"
+    | "monthly"
+    | "yearly"
+    | "never";
   priority?: number;
   images?: { loc: string; title?: string; caption?: string }[];
 }
@@ -26,11 +33,11 @@ export interface SitemapOptions {
  */
 export async function generateSitemap(
   siteId: string,
-  baseUrl: string
+  baseUrl: string,
 ): Promise<string> {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
   const urls: SitemapUrl[] = [];
@@ -42,7 +49,8 @@ export async function generateSitemap(
     .eq("id", siteId)
     .single();
 
-  const changefreq = (site?.sitemap_changefreq || "weekly") as SitemapUrl["changefreq"];
+  const changefreq = (site?.sitemap_changefreq ||
+    "weekly") as SitemapUrl["changefreq"];
   const includeImages = site?.sitemap_include_images ?? true;
 
   // Get published pages (all pages are shown in sitemap when site is published)
@@ -101,10 +109,12 @@ export async function generateSitemap(
       };
 
       if (includeImages && post.featured_image_url) {
-        url.images = [{ 
-          loc: post.featured_image_url,
-          title: post.title 
-        }];
+        url.images = [
+          {
+            loc: post.featured_image_url,
+            title: post.title,
+          },
+        ];
       }
 
       urls.push(url);
@@ -120,7 +130,7 @@ export async function generateSitemap(
  */
 function extractImagesFromContent(
   content: unknown,
-  seoImage?: string | null
+  seoImage?: string | null,
 ): { loc: string; title?: string }[] {
   const images: { loc: string; title?: string }[] = [];
 
@@ -132,12 +142,12 @@ function extractImagesFromContent(
   if (!content) return images;
 
   try {
-    const contentStr = typeof content === "string" 
-      ? content 
-      : JSON.stringify(content);
+    const contentStr =
+      typeof content === "string" ? content : JSON.stringify(content);
 
     // Match image URLs
-    const imageRegex = /https?:\/\/[^\s"'<>]+\.(jpg|jpeg|png|gif|webp)(\?[^\s"'<>]*)?/gi;
+    const imageRegex =
+      /https?:\/\/[^\s"'<>]+\.(jpg|jpeg|png|gif|webp)(\?[^\s"'<>]*)?/gi;
     const matches = contentStr.match(imageRegex) || [];
 
     for (const match of matches) {
@@ -228,7 +238,7 @@ function escapeXml(str: string): string {
  * Generate a sitemap index for multiple sitemaps
  */
 export function generateSitemapIndex(
-  sitemaps: { loc: string; lastmod?: string }[]
+  sitemaps: { loc: string; lastmod?: string }[],
 ): string {
   const sitemapsXml = sitemaps
     .map((sitemap) => {
@@ -279,9 +289,12 @@ export function validateSitemapUrls(urls: SitemapUrl[]): {
 /**
  * Get default robots.txt content
  */
-export function getDefaultRobotsTxt(subdomain: string, customDomain?: string | null): string {
-  const baseUrl = customDomain 
-    ? `https://${customDomain}` 
+export function getDefaultRobotsTxt(
+  subdomain: string,
+  customDomain?: string | null,
+): string {
+  const baseUrl = customDomain
+    ? `https://${customDomain}`
     : `https://${subdomain}.sites.dramacagency.com`;
 
   return `# Robots.txt for ${subdomain}

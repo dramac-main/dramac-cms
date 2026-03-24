@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
 /**
  * Phase EM-32: Domain Settings UI Component
  * Manages custom domains for modules with verification, SSL, and white-label settings
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -29,14 +29,14 @@ import {
   DialogTrigger,
   DialogFooter,
   Separator,
-  Skeleton
-} from '@/components/ui';
-import { 
-  Globe, 
-  Shield, 
-  Palette, 
-  Plus, 
-  CircleCheck, 
+  Skeleton,
+} from "@/components/ui";
+import {
+  Globe,
+  Shield,
+  Palette,
+  Plus,
+  CircleCheck,
   AlertTriangle,
   Loader2,
   Copy,
@@ -45,9 +45,9 @@ import {
   ExternalLink,
   Settings,
   Clock,
-  Activity
-} from 'lucide-react';
-import { toast } from 'sonner';
+  Activity,
+} from "lucide-react";
+import { toast } from "sonner";
 
 // ================================================================
 // Types
@@ -106,9 +106,9 @@ interface DomainSettingsProps {
 // ================================================================
 
 function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
+  if (bytes === 0) return "0 B";
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const sizes = ["B", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 }
@@ -127,7 +127,7 @@ export function DomainSettings({ siteModuleId }: DomainSettingsProps) {
   const [domains, setDomains] = useState<Domain[]>([]);
   const [loading, setLoading] = useState(true);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [newDomain, setNewDomain] = useState('');
+  const [newDomain, setNewDomain] = useState("");
   const [adding, setAdding] = useState(false);
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
   const [verifying, setVerifying] = useState<string | null>(null);
@@ -135,12 +135,12 @@ export function DomainSettings({ siteModuleId }: DomainSettingsProps) {
   const loadDomains = useCallback(async () => {
     try {
       const response = await fetch(`/api/modules/${siteModuleId}/domains`);
-      if (!response.ok) throw new Error('Failed to load domains');
+      if (!response.ok) throw new Error("Failed to load domains");
       const data = await response.json();
       setDomains(data.domains || []);
     } catch (error) {
-      console.error('Failed to load domains:', error);
-      toast.error('Failed to load domains');
+      console.error("Failed to load domains:", error);
+      toast.error("Failed to load domains");
     } finally {
       setLoading(false);
     }
@@ -152,28 +152,29 @@ export function DomainSettings({ siteModuleId }: DomainSettingsProps) {
 
   async function addDomain() {
     if (!newDomain.trim()) return;
-    
+
     setAdding(true);
-    
+
     try {
       const response = await fetch(`/api/modules/${siteModuleId}/domains`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ domain: newDomain.trim() })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ domain: newDomain.trim() }),
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok || data.error) {
-        throw new Error(data.error || 'Failed to add domain');
+        throw new Error(data.error || "Failed to add domain");
       }
-      
-      setDomains(prev => [data.domain, ...prev]);
+
+      setDomains((prev) => [data.domain, ...prev]);
       setAddDialogOpen(false);
-      setNewDomain('');
-      toast.success('Domain added successfully');
+      setNewDomain("");
+      toast.success("Domain added successfully");
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to add domain';
+      const message =
+        error instanceof Error ? error.message : "Failed to add domain";
       toast.error(message);
     } finally {
       setAdding(false);
@@ -182,23 +183,28 @@ export function DomainSettings({ siteModuleId }: DomainSettingsProps) {
 
   async function verifyDomain(domainId: string) {
     setVerifying(domainId);
-    
+
     try {
-      const response = await fetch(`/api/modules/${siteModuleId}/domains/${domainId}/verify`, {
-        method: 'POST'
-      });
-      
+      const response = await fetch(
+        `/api/modules/${siteModuleId}/domains/${domainId}/verify`,
+        {
+          method: "POST",
+        },
+      );
+
       const data = await response.json();
-      
+
       if (data.verified) {
-        toast.success('Domain verified! SSL provisioning started.');
+        toast.success("Domain verified! SSL provisioning started.");
         await loadDomains();
       } else {
-        toast.error('Verification failed. Please check your DNS settings and try again.');
+        toast.error(
+          "Verification failed. Please check your DNS settings and try again.",
+        );
       }
     } catch (error) {
-      console.error('Verification failed:', error);
-      toast.error('Verification failed');
+      console.error("Verification failed:", error);
+      toast.error("Verification failed");
     } finally {
       setVerifying(null);
     }
@@ -206,43 +212,53 @@ export function DomainSettings({ siteModuleId }: DomainSettingsProps) {
 
   async function deleteDomain(domainId: string) {
     try {
-      const response = await fetch(`/api/modules/${siteModuleId}/domains/${domainId}`, {
-        method: 'DELETE'
-      });
-      
-      if (!response.ok) throw new Error('Failed to delete domain');
-      
-      setDomains(prev => prev.filter(d => d.id !== domainId));
-      toast.success('Domain removed');
+      const response = await fetch(
+        `/api/modules/${siteModuleId}/domains/${domainId}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (!response.ok) throw new Error("Failed to delete domain");
+
+      setDomains((prev) => prev.filter((d) => d.id !== domainId));
+      toast.success("Domain removed");
     } catch (error) {
-      console.error('Failed to delete domain:', error);
-      toast.error('Failed to remove domain');
+      console.error("Failed to delete domain:", error);
+      toast.error("Failed to remove domain");
     }
   }
 
   function copyToClipboard(text: string) {
     navigator.clipboard.writeText(text);
-    toast.success('Copied to clipboard');
+    toast.success("Copied to clipboard");
   }
 
   function getStatusBadge(status: string) {
-    const configs: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: typeof CircleCheck; spin?: boolean }> = {
-      pending: { variant: 'secondary', icon: AlertTriangle },
-      verifying: { variant: 'secondary', icon: Loader2, spin: true },
-      verified: { variant: 'outline', icon: CircleCheck },
-      provisioning: { variant: 'secondary', icon: Loader2, spin: true },
-      active: { variant: 'default', icon: CircleCheck },
-      failed: { variant: 'destructive', icon: AlertTriangle },
-      expired: { variant: 'destructive', icon: Clock },
-      disabled: { variant: 'secondary', icon: AlertTriangle }
+    const configs: Record<
+      string,
+      {
+        variant: "default" | "secondary" | "destructive" | "outline";
+        icon: typeof CircleCheck;
+        spin?: boolean;
+      }
+    > = {
+      pending: { variant: "secondary", icon: AlertTriangle },
+      verifying: { variant: "secondary", icon: Loader2, spin: true },
+      verified: { variant: "outline", icon: CircleCheck },
+      provisioning: { variant: "secondary", icon: Loader2, spin: true },
+      active: { variant: "default", icon: CircleCheck },
+      failed: { variant: "destructive", icon: AlertTriangle },
+      expired: { variant: "destructive", icon: Clock },
+      disabled: { variant: "secondary", icon: AlertTriangle },
     };
-    
+
     const config = configs[status] || configs.pending;
     const Icon = config.icon;
-    
+
     return (
       <Badge variant={config.variant} className="flex items-center gap-1">
-        <Icon className={`h-3 w-3 ${config.spin ? 'animate-spin' : ''}`} />
+        <Icon className={`h-3 w-3 ${config.spin ? "animate-spin" : ""}`} />
         {status}
       </Badge>
     );
@@ -273,7 +289,7 @@ export function DomainSettings({ siteModuleId }: DomainSettingsProps) {
             Connect your own domain to run this module as a standalone app
           </p>
         </div>
-        
+
         <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -293,7 +309,7 @@ export function DomainSettings({ siteModuleId }: DomainSettingsProps) {
                   placeholder="app.example.com"
                   value={newDomain}
                   onChange={(e) => setNewDomain(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && addDomain()}
+                  onKeyDown={(e) => e.key === "Enter" && addDomain()}
                 />
                 <p className="text-sm text-muted-foreground">
                   Enter your domain or subdomain (e.g., app.yourcompany.com)
@@ -304,7 +320,10 @@ export function DomainSettings({ siteModuleId }: DomainSettingsProps) {
               <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={addDomain} disabled={adding || !newDomain.trim()}>
+              <Button
+                onClick={addDomain}
+                disabled={adding || !newDomain.trim()}
+              >
                 {adding ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
@@ -383,7 +402,7 @@ function DomainCard({
   onDelete,
   onSettings,
   onCopy,
-  getStatusBadge
+  getStatusBadge,
 }: DomainCardProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -394,18 +413,25 @@ function DomainCard({
           <div className="flex items-center gap-3 flex-wrap">
             <CardTitle className="text-lg font-mono">{domain.domain}</CardTitle>
             {getStatusBadge(domain.status)}
-            {domain.ssl_status === 'active' && (
-              <Badge variant="outline" className="text-green-600 border-green-600">
+            {domain.ssl_status === "active" && (
+              <Badge
+                variant="outline"
+                className="text-green-600 border-green-600"
+              >
                 <Shield className="h-3 w-3 mr-1" />
                 SSL
               </Badge>
             )}
           </div>
-          
+
           <div className="flex gap-2">
-            {domain.status === 'active' && (
+            {domain.status === "active" && (
               <Button size="sm" variant="outline" asChild>
-                <a href={`https://${domain.domain}`} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={`https://${domain.domain}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <ExternalLink className="h-4 w-4" />
                 </a>
               </Button>
@@ -418,12 +444,20 @@ function DomainCard({
                 <Button size="sm" variant="destructive" onClick={onDelete}>
                   Confirm
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => setShowDeleteConfirm(false)}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowDeleteConfirm(false)}
+                >
                   Cancel
                 </Button>
               </>
             ) : (
-              <Button size="sm" variant="ghost" onClick={() => setShowDeleteConfirm(true)}>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowDeleteConfirm(true)}
+              >
                 <Trash2 className="h-4 w-4" />
               </Button>
             )}
@@ -432,7 +466,7 @@ function DomainCard({
       </CardHeader>
 
       {/* Pending Verification */}
-      {domain.status === 'pending' && (
+      {domain.status === "pending" && (
         <CardContent className="pt-0">
           <Alert>
             <AlertTriangle className="h-4 w-4" />
@@ -441,14 +475,11 @@ function DomainCard({
               <p className="text-sm mb-3">
                 Add the following DNS record to verify ownership:
               </p>
-              
-              <DNSInstructions 
-                domain={domain} 
-                onCopy={onCopy} 
-              />
 
-              <Button 
-                className="mt-4 w-full" 
+              <DNSInstructions domain={domain} onCopy={onCopy} />
+
+              <Button
+                className="mt-4 w-full"
                 onClick={onVerify}
                 disabled={verifying}
               >
@@ -465,7 +496,7 @@ function DomainCard({
       )}
 
       {/* SSL Provisioning */}
-      {(domain.status === 'verified' || domain.status === 'provisioning') && (
+      {(domain.status === "verified" || domain.status === "provisioning") && (
         <CardContent className="pt-0">
           <Alert>
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -480,26 +511,28 @@ function DomainCard({
       )}
 
       {/* Active Domain Stats */}
-      {domain.status === 'active' && (
+      {domain.status === "active" && (
         <CardContent className="pt-0">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div>
-              <span className="text-muted-foreground">Verified:</span>{' '}
-              {domain.verified_at ? new Date(domain.verified_at).toLocaleDateString() : 'N/A'}
+              <span className="text-muted-foreground">Verified:</span>{" "}
+              {domain.verified_at
+                ? new Date(domain.verified_at).toLocaleDateString()
+                : "N/A"}
             </div>
             {domain.ssl_expires_at && (
               <div>
-                <span className="text-muted-foreground">SSL Expires:</span>{' '}
+                <span className="text-muted-foreground">SSL Expires:</span>{" "}
                 {new Date(domain.ssl_expires_at).toLocaleDateString()}
               </div>
             )}
             <div className="flex items-center gap-1">
               <Activity className="h-3 w-3 text-muted-foreground" />
-              <span className="text-muted-foreground">Requests:</span>{' '}
+              <span className="text-muted-foreground">Requests:</span>{" "}
               {formatNumber(domain.total_requests)}
             </div>
             <div>
-              <span className="text-muted-foreground">Bandwidth:</span>{' '}
+              <span className="text-muted-foreground">Bandwidth:</span>{" "}
               {formatBytes(domain.bandwidth_bytes)}
             </div>
           </div>
@@ -507,14 +540,15 @@ function DomainCard({
       )}
 
       {/* Failed Status */}
-      {domain.status === 'failed' && (
+      {domain.status === "failed" && (
         <CardContent className="pt-0">
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
               <p className="font-medium">Setup Failed</p>
               <p className="text-sm">
-                SSL certificate provisioning failed. Please try again or contact support.
+                SSL certificate provisioning failed. Please try again or contact
+                support.
               </p>
               <Button variant="outline" className="mt-2" onClick={onVerify}>
                 <RefreshCw className="h-4 w-4 mr-2" />
@@ -538,29 +572,31 @@ interface DNSInstructionsProps {
 }
 
 function DNSInstructions({ domain, onCopy }: DNSInstructionsProps) {
-  const isTXT = domain.verification_method === 'txt';
+  const isTXT = domain.verification_method === "txt";
 
   return (
     <div className="bg-muted p-3 rounded-md space-y-2 text-sm font-mono">
       <div className="flex justify-between">
         <span className="text-muted-foreground">Type:</span>
-        <span>{isTXT ? 'TXT' : 'CNAME'}</span>
+        <span>{isTXT ? "TXT" : "CNAME"}</span>
       </div>
       <div className="flex justify-between">
         <span className="text-muted-foreground">Host:</span>
-        <span>{isTXT ? '_dramac-verify' : '@'}</span>
+        <span>{isTXT ? "_dramac-verify" : "@"}</span>
       </div>
       <div className="flex justify-between items-center gap-2">
         <span className="text-muted-foreground">Value:</span>
         <div className="flex items-center gap-2">
           <span className="truncate max-w-[200px]">
-            {isTXT ? domain.verification_value : 'cname.vercel-dns.com'}
+            {isTXT ? domain.verification_value : "cname.vercel-dns.com"}
           </span>
-          <Button 
-            size="sm" 
+          <Button
+            size="sm"
             variant="ghost"
             className="h-6 w-6 p-0"
-            onClick={() => onCopy(isTXT ? domain.verification_value : 'cname.vercel-dns.com')}
+            onClick={() =>
+              onCopy(isTXT ? domain.verification_value : "cname.vercel-dns.com")
+            }
           >
             <Copy className="h-3 w-3" />
           </Button>
@@ -585,30 +621,35 @@ function DomainSettingsDialog({
   domain,
   onClose,
   onSave,
-  siteModuleId
+  siteModuleId,
 }: DomainSettingsDialogProps) {
   const [saving, setSaving] = useState(false);
-  const [whiteLabel, setWhiteLabel] = useState<WhiteLabelConfig>(domain.white_label || {});
+  const [whiteLabel, setWhiteLabel] = useState<WhiteLabelConfig>(
+    domain.white_label || {},
+  );
   const [config, setConfig] = useState<DomainConfig>(domain.config || {});
 
   async function save() {
     setSaving(true);
-    
+
     try {
-      const response = await fetch(`/api/modules/${siteModuleId}/domains/${domain.id}/settings`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ white_label: whiteLabel, config })
-      });
-      
-      if (!response.ok) throw new Error('Failed to save settings');
-      
-      toast.success('Settings saved');
+      const response = await fetch(
+        `/api/modules/${siteModuleId}/domains/${domain.id}/settings`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ white_label: whiteLabel, config }),
+        },
+      );
+
+      if (!response.ok) throw new Error("Failed to save settings");
+
+      toast.success("Settings saved");
       onSave();
       onClose();
     } catch (error) {
-      console.error('Failed to save:', error);
-      toast.error('Failed to save settings');
+      console.error("Failed to save:", error);
+      toast.error("Failed to save settings");
     } finally {
       setSaving(false);
     }
@@ -620,7 +661,7 @@ function DomainSettingsDialog({
         <DialogHeader>
           <DialogTitle className="font-mono">{domain.domain}</DialogTitle>
         </DialogHeader>
-        
+
         <Tabs defaultValue="branding">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="branding" className="flex items-center gap-2">
@@ -638,8 +679,10 @@ function DomainSettingsDialog({
               <Label htmlFor="brand_name">Brand Name</Label>
               <Input
                 id="brand_name"
-                value={whiteLabel.brand_name || ''}
-                onChange={(e) => setWhiteLabel({ ...whiteLabel, brand_name: e.target.value })}
+                value={whiteLabel.brand_name || ""}
+                onChange={(e) =>
+                  setWhiteLabel({ ...whiteLabel, brand_name: e.target.value })
+                }
                 placeholder="Your Company Name"
               />
               <p className="text-xs text-muted-foreground">
@@ -651,8 +694,10 @@ function DomainSettingsDialog({
               <Label htmlFor="logo_url">Logo URL</Label>
               <Input
                 id="logo_url"
-                value={whiteLabel.logo_url || ''}
-                onChange={(e) => setWhiteLabel({ ...whiteLabel, logo_url: e.target.value })}
+                value={whiteLabel.logo_url || ""}
+                onChange={(e) =>
+                  setWhiteLabel({ ...whiteLabel, logo_url: e.target.value })
+                }
                 placeholder="https://example.com/logo.png"
               />
             </div>
@@ -661,8 +706,10 @@ function DomainSettingsDialog({
               <Label htmlFor="favicon_url">Favicon URL</Label>
               <Input
                 id="favicon_url"
-                value={whiteLabel.favicon_url || ''}
-                onChange={(e) => setWhiteLabel({ ...whiteLabel, favicon_url: e.target.value })}
+                value={whiteLabel.favicon_url || ""}
+                onChange={(e) =>
+                  setWhiteLabel({ ...whiteLabel, favicon_url: e.target.value })
+                }
                 placeholder="https://example.com/favicon.ico"
               />
             </div>
@@ -675,18 +722,28 @@ function DomainSettingsDialog({
                     id="primary_color"
                     type="color"
                     className="w-12 h-10 p-1"
-                    value={whiteLabel.brand_colors?.primary || '#3b82f6'}
-                    onChange={(e) => setWhiteLabel({
-                      ...whiteLabel,
-                      brand_colors: { ...whiteLabel.brand_colors, primary: e.target.value }
-                    })}
+                    value={whiteLabel.brand_colors?.primary || "#3b82f6"}
+                    onChange={(e) =>
+                      setWhiteLabel({
+                        ...whiteLabel,
+                        brand_colors: {
+                          ...whiteLabel.brand_colors,
+                          primary: e.target.value,
+                        },
+                      })
+                    }
                   />
                   <Input
-                    value={whiteLabel.brand_colors?.primary || '#3b82f6'}
-                    onChange={(e) => setWhiteLabel({
-                      ...whiteLabel,
-                      brand_colors: { ...whiteLabel.brand_colors, primary: e.target.value }
-                    })}
+                    value={whiteLabel.brand_colors?.primary || "#3b82f6"}
+                    onChange={(e) =>
+                      setWhiteLabel({
+                        ...whiteLabel,
+                        brand_colors: {
+                          ...whiteLabel.brand_colors,
+                          primary: e.target.value,
+                        },
+                      })
+                    }
                     placeholder="#3b82f6"
                     className="flex-1"
                   />
@@ -699,18 +756,28 @@ function DomainSettingsDialog({
                     id="secondary_color"
                     type="color"
                     className="w-12 h-10 p-1"
-                    value={whiteLabel.brand_colors?.secondary || '#6366f1'}
-                    onChange={(e) => setWhiteLabel({
-                      ...whiteLabel,
-                      brand_colors: { ...whiteLabel.brand_colors, secondary: e.target.value }
-                    })}
+                    value={whiteLabel.brand_colors?.secondary || "#6366f1"}
+                    onChange={(e) =>
+                      setWhiteLabel({
+                        ...whiteLabel,
+                        brand_colors: {
+                          ...whiteLabel.brand_colors,
+                          secondary: e.target.value,
+                        },
+                      })
+                    }
                   />
                   <Input
-                    value={whiteLabel.brand_colors?.secondary || '#6366f1'}
-                    onChange={(e) => setWhiteLabel({
-                      ...whiteLabel,
-                      brand_colors: { ...whiteLabel.brand_colors, secondary: e.target.value }
-                    })}
+                    value={whiteLabel.brand_colors?.secondary || "#6366f1"}
+                    onChange={(e) =>
+                      setWhiteLabel({
+                        ...whiteLabel,
+                        brand_colors: {
+                          ...whiteLabel.brand_colors,
+                          secondary: e.target.value,
+                        },
+                      })
+                    }
                     placeholder="#6366f1"
                     className="flex-1"
                   />
@@ -729,7 +796,9 @@ function DomainSettingsDialog({
               </div>
               <Switch
                 checked={whiteLabel.hide_powered_by || false}
-                onCheckedChange={(checked) => setWhiteLabel({ ...whiteLabel, hide_powered_by: checked })}
+                onCheckedChange={(checked) =>
+                  setWhiteLabel({ ...whiteLabel, hide_powered_by: checked })
+                }
               />
             </div>
 
@@ -740,8 +809,10 @@ function DomainSettingsDialog({
               <textarea
                 id="custom_css"
                 className="w-full h-32 p-3 border rounded-md font-mono text-sm bg-muted"
-                value={whiteLabel.custom_css || ''}
-                onChange={(e) => setWhiteLabel({ ...whiteLabel, custom_css: e.target.value })}
+                value={whiteLabel.custom_css || ""}
+                onChange={(e) =>
+                  setWhiteLabel({ ...whiteLabel, custom_css: e.target.value })
+                }
                 placeholder=".my-class { color: red; }"
               />
               <p className="text-xs text-muted-foreground">
@@ -760,7 +831,9 @@ function DomainSettingsDialog({
               </div>
               <Switch
                 checked={config.redirect_to_https !== false}
-                onCheckedChange={(checked) => setConfig({ ...config, redirect_to_https: checked })}
+                onCheckedChange={(checked) =>
+                  setConfig({ ...config, redirect_to_https: checked })
+                }
               />
             </div>
 
@@ -775,7 +848,9 @@ function DomainSettingsDialog({
               </div>
               <Switch
                 checked={config.enable_cdn !== false}
-                onCheckedChange={(checked) => setConfig({ ...config, enable_cdn: checked })}
+                onCheckedChange={(checked) =>
+                  setConfig({ ...config, enable_cdn: checked })
+                }
               />
             </div>
 
@@ -789,7 +864,12 @@ function DomainSettingsDialog({
                 min="0"
                 max="86400"
                 value={config.cache_ttl || 3600}
-                onChange={(e) => setConfig({ ...config, cache_ttl: parseInt(e.target.value) || 0 })}
+                onChange={(e) =>
+                  setConfig({
+                    ...config,
+                    cache_ttl: parseInt(e.target.value) || 0,
+                  })
+                }
               />
               <p className="text-xs text-muted-foreground">
                 How long to cache responses (0 = no cache, 3600 = 1 hour)
@@ -808,21 +888,23 @@ function DomainSettingsDialog({
               <div className="flex gap-2">
                 <Button
                   size="sm"
-                  variant={config.force_www === true ? 'default' : 'outline'}
+                  variant={config.force_www === true ? "default" : "outline"}
                   onClick={() => setConfig({ ...config, force_www: true })}
                 >
                   www
                 </Button>
                 <Button
                   size="sm"
-                  variant={config.force_www === false ? 'default' : 'outline'}
+                  variant={config.force_www === false ? "default" : "outline"}
                   onClick={() => setConfig({ ...config, force_www: false })}
                 >
                   non-www
                 </Button>
                 <Button
                   size="sm"
-                  variant={config.force_www === undefined ? 'default' : 'outline'}
+                  variant={
+                    config.force_www === undefined ? "default" : "outline"
+                  }
                   onClick={() => setConfig({ ...config, force_www: undefined })}
                 >
                   Either
@@ -833,7 +915,9 @@ function DomainSettingsDialog({
         </Tabs>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
           <Button onClick={save} disabled={saving}>
             {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Save Changes

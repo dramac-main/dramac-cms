@@ -227,7 +227,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
           const ownerId = await getSiteOwnerUserId(siteId);
           if (ownerId) {
             await bootstrapLiveChatAgent(siteId, ownerId).catch((err) =>
-              console.error("[AutoInstall] Failed to bootstrap live chat agent:", err),
+              console.error(
+                "[AutoInstall] Failed to bootstrap live chat agent:",
+                err,
+              ),
             );
           }
         }

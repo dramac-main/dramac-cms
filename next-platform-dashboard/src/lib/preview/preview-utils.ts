@@ -35,20 +35,25 @@ export function getDeviceConfig(device: DeviceType): DeviceConfig {
  * Get the preview URL for a specific page
  */
 export function getPreviewUrl(siteId: string, pageId: string): string {
-  const baseUrl = typeof window !== "undefined" 
-    ? window.location.origin 
-    : process.env.NEXT_PUBLIC_APP_URL || "";
+  const baseUrl =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : process.env.NEXT_PUBLIC_APP_URL || "";
   return `${baseUrl}/preview/${siteId}/${pageId}`;
 }
 
 /**
  * Get the public URL for a site
  */
-export function getPublicUrl(subdomain: string, customDomain?: string | null): string {
+export function getPublicUrl(
+  subdomain: string,
+  customDomain?: string | null,
+): string {
   if (customDomain) {
     return `https://${customDomain}`;
   }
-  const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
+  const baseDomain =
+    process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
   return `https://${subdomain}.${baseDomain}`;
 }
 
@@ -59,7 +64,7 @@ export async function copyToClipboard(text: string): Promise<void> {
   if (navigator.clipboard && window.isSecureContext) {
     return navigator.clipboard.writeText(text);
   }
-  
+
   // Fallback for older browsers
   const textArea = document.createElement("textarea");
   textArea.value = text;
@@ -69,7 +74,7 @@ export async function copyToClipboard(text: string): Promise<void> {
   document.body.appendChild(textArea);
   textArea.focus();
   textArea.select();
-  
+
   try {
     document.execCommand("copy");
   } finally {
@@ -85,16 +90,16 @@ export function calculateScale(
   deviceHeight: number,
   containerWidth: number,
   containerHeight: number,
-  padding: number = 40
+  padding: number = 40,
 ): number {
   if (deviceWidth === 0 || deviceHeight === 0) return 1;
-  
+
   const availableWidth = containerWidth - padding * 2;
   const availableHeight = containerHeight - padding * 2;
-  
+
   const scaleX = availableWidth / deviceWidth;
   const scaleY = availableHeight / deviceHeight;
-  
+
   return Math.min(scaleX, scaleY, 1); // Never scale up, only down
 }
 
@@ -104,7 +109,7 @@ export function calculateScale(
 export function getPreviewUrlWithTimestamp(
   siteId: string,
   pageId: string,
-  timestamp?: number
+  timestamp?: number,
 ): string {
   const baseUrl = getPreviewUrl(siteId, pageId);
   const t = timestamp || Date.now();

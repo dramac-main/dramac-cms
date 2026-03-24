@@ -423,6 +423,25 @@ export function addOrderConfirmation(
 }
 
 /**
+ * Add an OrderTracking component
+ */
+export function addOrderTracking(
+  page: StudioPageData,
+  parentId: string,
+): string {
+  return addComponent(
+    page,
+    {
+      type: "EcommerceOrderTracking",
+      props: {
+        showRecentOrder: true,
+      },
+    },
+    parentId,
+  );
+}
+
+/**
  * Add a SearchBar component
  */
 export function addSearchBar(

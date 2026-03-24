@@ -5,12 +5,12 @@ import { generateSitemap } from "@/lib/seo/sitemap-generator";
 // Use service role for public access to sitemap
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ siteId: string }> }
+  { params }: { params: Promise<{ siteId: string }> },
 ) {
   try {
     const { siteId } = await params;
@@ -32,7 +32,8 @@ export async function GET(
     }
 
     // Determine base URL
-    const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
+    const baseDomain =
+      process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
     const baseUrl = site.custom_domain
       ? `https://${site.custom_domain}`
       : `https://${site.subdomain}.${baseDomain}`;
@@ -42,7 +43,8 @@ export async function GET(
     return new NextResponse(sitemapXml, {
       headers: {
         "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
+        "Cache-Control":
+          "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
         "X-Robots-Tag": "noindex",
       },
     });

@@ -2,8 +2,20 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, Loader2, Globe, TrendingUp, AlertTriangle } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Search,
+  Loader2,
+  Globe,
+  TrendingUp,
+  AlertTriangle,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -13,7 +25,11 @@ import {
   getPagesSeo,
   type PageSeo,
 } from "@/lib/seo/seo-service";
-import { analyzeSeo, getScoreColor, getScoreLabel } from "@/lib/seo/seo-analyzer";
+import {
+  analyzeSeo,
+  getScoreColor,
+  getScoreLabel,
+} from "@/lib/seo/seo-analyzer";
 
 interface SiteWithScore {
   id: string;
@@ -37,7 +53,7 @@ export default function PortalSeoPage() {
     setLoading(true);
     try {
       const { sites: sitesList } = await getPortalSeoSites();
-      
+
       // Fetch SEO scores for each site
       const sitesWithScores = await Promise.all(
         sitesList.map(async (site) => {
@@ -53,20 +69,21 @@ export default function PortalSeoPage() {
             return sum + result.issues.length;
           }, 0);
 
-          const avgScore = pages.length > 0
-            ? Math.round(
-                pages.reduce((sum, p) => {
-                  const result = analyzeSeo({
-                    title: p.seoTitle || p.pageName,
-                    description: p.seoDescription,
-                    slug: p.slug,
-                    ogImage: p.ogImageUrl,
-                    keywords: p.seoKeywords,
-                  });
-                  return sum + result.score;
-                }, 0) / pages.length
-              )
-            : 0;
+          const avgScore =
+            pages.length > 0
+              ? Math.round(
+                  pages.reduce((sum, p) => {
+                    const result = analyzeSeo({
+                      title: p.seoTitle || p.pageName,
+                      description: p.seoDescription,
+                      slug: p.slug,
+                      ogImage: p.ogImageUrl,
+                      keywords: p.seoKeywords,
+                    });
+                    return sum + result.score;
+                  }, 0) / pages.length,
+                )
+              : 0;
 
           return {
             ...site,
@@ -74,7 +91,7 @@ export default function PortalSeoPage() {
             pageCount: pages.length,
             issues: totalIssues,
           };
-        })
+        }),
       );
 
       setSites(sitesWithScores);
@@ -86,9 +103,10 @@ export default function PortalSeoPage() {
   };
 
   // Calculate overall stats
-  const overallScore = sites.length > 0
-    ? Math.round(sites.reduce((sum, s) => sum + s.score, 0) / sites.length)
-    : 0;
+  const overallScore =
+    sites.length > 0
+      ? Math.round(sites.reduce((sum, s) => sum + s.score, 0) / sites.length)
+      : 0;
   const totalPages = sites.reduce((sum, s) => sum + s.pageCount, 0);
   const totalIssues = sites.reduce((sum, s) => sum + s.issues, 0);
 
@@ -118,7 +136,9 @@ export default function PortalSeoPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className={`text-4xl font-bold ${getScoreColor(overallScore)}`}>
+              <div
+                className={`text-4xl font-bold ${getScoreColor(overallScore)}`}
+              >
                 {overallScore}
               </div>
               <div>
@@ -138,9 +158,7 @@ export default function PortalSeoPage() {
               <Globe className="h-8 w-8 text-primary" />
               <div>
                 <p className="text-2xl font-bold">{totalPages}</p>
-                <p className="text-sm text-muted-foreground">
-                  Published Pages
-                </p>
+                <p className="text-sm text-muted-foreground">Published Pages</p>
               </div>
             </div>
           </CardContent>
@@ -149,12 +167,12 @@ export default function PortalSeoPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <AlertTriangle className={`h-8 w-8 ${totalIssues > 0 ? "text-yellow-600" : "text-green-600"}`} />
+              <AlertTriangle
+                className={`h-8 w-8 ${totalIssues > 0 ? "text-yellow-600" : "text-green-600"}`}
+              />
               <div>
                 <p className="text-2xl font-bold">{totalIssues}</p>
-                <p className="text-sm text-muted-foreground">
-                  Total Issues
-                </p>
+                <p className="text-sm text-muted-foreground">Total Issues</p>
               </div>
             </div>
           </CardContent>
@@ -165,9 +183,7 @@ export default function PortalSeoPage() {
       <Card>
         <CardHeader>
           <CardTitle>Your Sites</CardTitle>
-          <CardDescription>
-            SEO scores by site
-          </CardDescription>
+          <CardDescription>SEO scores by site</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -179,13 +195,16 @@ export default function PortalSeoPage() {
               >
                 <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
                   <div className="flex items-center gap-4">
-                    <div className={`text-2xl font-bold w-12 text-center ${getScoreColor(site.score)}`}>
+                    <div
+                      className={`text-2xl font-bold w-12 text-center ${getScoreColor(site.score)}`}
+                    >
                       {site.score}
                     </div>
                     <div>
                       <p className="font-medium">{site.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        {site.domain || `${site.subdomain}.sites.dramacagency.com`}
+                        {site.domain ||
+                          `${site.subdomain}.sites.dramacagency.com`}
                       </p>
                     </div>
                   </div>
@@ -196,7 +215,15 @@ export default function PortalSeoPage() {
                         {site.issues} issue{site.issues !== 1 ? "s" : ""}
                       </p>
                     </div>
-                    <Badge variant={site.score >= 80 ? "default" : site.score >= 50 ? "secondary" : "destructive"}>
+                    <Badge
+                      variant={
+                        site.score >= 80
+                          ? "default"
+                          : site.score >= 50
+                            ? "secondary"
+                            : "destructive"
+                      }
+                    >
                       {getScoreLabel(site.score)}
                     </Badge>
                   </div>
@@ -207,9 +234,7 @@ export default function PortalSeoPage() {
             {sites.length === 0 && (
               <div className="text-center py-12">
                 <Globe className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">
-                  No sites found
-                </p>
+                <p className="text-muted-foreground">No sites found</p>
               </div>
             )}
           </div>
@@ -225,16 +250,30 @@ export default function PortalSeoPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="prose prose-sm dark:prose-invert">
-          <p>
-            Improve your SEO scores by following these best practices:
-          </p>
+          <p>Improve your SEO scores by following these best practices:</p>
           <ul>
-            <li><strong>Page Titles:</strong> Keep them 50-60 characters and include your main keyword</li>
-            <li><strong>Meta Descriptions:</strong> Write compelling descriptions (150-160 characters) that encourage clicks</li>
-            <li><strong>Images:</strong> Add descriptive alt text to all images</li>
-            <li><strong>Content:</strong> Aim for at least 500 words on main pages</li>
-            <li><strong>Headings:</strong> Use one H1 and structured H2/H3 headings</li>
-            <li><strong>URLs:</strong> Keep them short, use hyphens, and include keywords</li>
+            <li>
+              <strong>Page Titles:</strong> Keep them 50-60 characters and
+              include your main keyword
+            </li>
+            <li>
+              <strong>Meta Descriptions:</strong> Write compelling descriptions
+              (150-160 characters) that encourage clicks
+            </li>
+            <li>
+              <strong>Images:</strong> Add descriptive alt text to all images
+            </li>
+            <li>
+              <strong>Content:</strong> Aim for at least 500 words on main pages
+            </li>
+            <li>
+              <strong>Headings:</strong> Use one H1 and structured H2/H3
+              headings
+            </li>
+            <li>
+              <strong>URLs:</strong> Keep them short, use hyphens, and include
+              keywords
+            </li>
           </ul>
           <p>
             Your agency team can help optimize your site&apos;s SEO settings.

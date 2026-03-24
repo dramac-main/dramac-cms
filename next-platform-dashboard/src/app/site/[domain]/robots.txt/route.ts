@@ -7,7 +7,7 @@ export const revalidate = 3600; // Cache for 1 hour
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ domain: string }> }
+  { params }: { params: Promise<{ domain: string }> },
 ) {
   const { domain } = await params;
 
@@ -16,12 +16,17 @@ export async function GET(
 
   // Try to find site by custom domain first, then by subdomain
   let site = null;
-  
+
   // Check if it's a custom domain or subdomain
-  const isSubdomain = domain.endsWith('.sites.dramacagency.com') || domain.endsWith('.dramac.app') || !domain.includes('.');
-  
+  const isSubdomain =
+    domain.endsWith(".sites.dramacagency.com") ||
+    domain.endsWith(".dramac.app") ||
+    !domain.includes(".");
+
   if (isSubdomain) {
-    const subdomain = domain.replace('.sites.dramacagency.com', '').replace('.dramac.app', '');
+    const subdomain = domain
+      .replace(".sites.dramacagency.com", "")
+      .replace(".dramac.app", "");
     const { data } = await supabase
       .from("sites")
       .select("id, subdomain, custom_domain, robots_txt, published")
@@ -42,19 +47,21 @@ export async function GET(
   }
 
   if (!site) {
-    return new NextResponse("Site not found", { 
+    return new NextResponse("Site not found", {
       status: 404,
-      headers: { "Content-Type": "text/plain" }
+      headers: { "Content-Type": "text/plain" },
     });
   }
 
   // Use custom robots.txt or generate default
-  const robotsTxt = site.robots_txt || getDefaultRobotsTxt(site.subdomain, site.custom_domain);
+  const robotsTxt =
+    site.robots_txt || getDefaultRobotsTxt(site.subdomain, site.custom_domain);
 
   return new NextResponse(robotsTxt, {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=43200",
+      "Cache-Control":
+        "public, max-age=3600, s-maxage=86400, stale-while-revalidate=43200",
     },
   });
 }

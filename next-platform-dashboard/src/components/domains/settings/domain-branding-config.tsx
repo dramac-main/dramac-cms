@@ -4,11 +4,24 @@
 // White-label Branding Configuration for Domain Services
 
 import { useState } from "react";
-import { Save, Palette, Mail, FileText, Loader2, ExternalLink } from "lucide-react";
+import {
+  Save,
+  Palette,
+  Mail,
+  FileText,
+  Loader2,
+  ExternalLink,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { toast } from "sonner";
 import { updateAgencyPricingConfig } from "@/lib/actions/domain-billing";
 import type { AgencyDomainPricing } from "@/types/domain-pricing";
@@ -19,42 +32,44 @@ interface DomainBrandingConfigProps {
 
 export function DomainBrandingConfig({ config }: DomainBrandingConfigProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [termsUrl, setTermsUrl] = useState(config.custom_terms_url || '');
-  const [supportEmail, setSupportEmail] = useState(config.custom_support_email || '');
-  
+  const [termsUrl, setTermsUrl] = useState(config.custom_terms_url || "");
+  const [supportEmail, setSupportEmail] = useState(
+    config.custom_support_email || "",
+  );
+
   const handleSave = async () => {
     setIsLoading(true);
-    
+
     try {
       // Validate email if provided
-      if (supportEmail && !supportEmail.includes('@')) {
-        toast.error('Please enter a valid email address');
+      if (supportEmail && !supportEmail.includes("@")) {
+        toast.error("Please enter a valid email address");
         return;
       }
-      
+
       // Validate URL if provided
-      if (termsUrl && !termsUrl.startsWith('http')) {
-        toast.error('Terms URL must start with http:// or https://');
+      if (termsUrl && !termsUrl.startsWith("http")) {
+        toast.error("Terms URL must start with http:// or https://");
         return;
       }
-      
+
       const result = await updateAgencyPricingConfig({
         custom_terms_url: termsUrl || null,
         custom_support_email: supportEmail || null,
       });
-      
+
       if (result.success) {
-        toast.success('Branding settings saved');
+        toast.success("Branding settings saved");
       } else {
-        toast.error(result.error || 'Failed to save settings');
+        toast.error(result.error || "Failed to save settings");
       }
     } catch {
-      toast.error('An error occurred');
+      toast.error("An error occurred");
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   return (
     <div className="space-y-6">
       {/* Support Contact */}
@@ -65,7 +80,8 @@ export function DomainBrandingConfig({ config }: DomainBrandingConfigProps) {
             Support Contact
           </CardTitle>
           <CardDescription>
-            Customize the support email shown to clients for domain-related inquiries
+            Customize the support email shown to clients for domain-related
+            inquiries
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -79,12 +95,13 @@ export function DomainBrandingConfig({ config }: DomainBrandingConfigProps) {
               placeholder="support@youragency.com"
             />
             <p className="text-sm text-muted-foreground">
-              This email will be shown to clients when they need help with domains
+              This email will be shown to clients when they need help with
+              domains
             </p>
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Terms & Policies */}
       <Card>
         <CardHeader>
@@ -110,7 +127,7 @@ export function DomainBrandingConfig({ config }: DomainBrandingConfigProps) {
               Clients will see this link during domain registration checkout
             </p>
           </div>
-          
+
           {termsUrl && (
             <Button variant="outline" size="sm" asChild>
               <a href={termsUrl} target="_blank" rel="noopener noreferrer">
@@ -121,7 +138,7 @@ export function DomainBrandingConfig({ config }: DomainBrandingConfigProps) {
           )}
         </CardContent>
       </Card>
-      
+
       {/* Branding Preview */}
       <Card>
         <CardHeader>
@@ -141,21 +158,21 @@ export function DomainBrandingConfig({ config }: DomainBrandingConfigProps) {
                 Register your perfect domain name
               </p>
             </div>
-            
+
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Support:</span>
                 <span className="font-medium">
-                  {supportEmail || 'support@dramacagency.com (default)'}
+                  {supportEmail || "support@dramacagency.com (default)"}
                 </span>
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Terms:</span>
                 {termsUrl ? (
-                  <a 
-                    href={termsUrl} 
-                    target="_blank" 
+                  <a
+                    href={termsUrl}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary hover:underline"
                   >
@@ -171,7 +188,7 @@ export function DomainBrandingConfig({ config }: DomainBrandingConfigProps) {
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Save Button */}
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={isLoading}>
@@ -180,7 +197,7 @@ export function DomainBrandingConfig({ config }: DomainBrandingConfigProps) {
           ) : (
             <Save className="h-4 w-4 mr-2" />
           )}
-          {isLoading ? 'Saving...' : 'Save Branding Settings'}
+          {isLoading ? "Saving..." : "Save Branding Settings"}
         </Button>
       </div>
     </div>

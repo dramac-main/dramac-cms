@@ -4,27 +4,30 @@
  * PHASE LC-03: Agent CRUD, department management, performance metrics
  */
 
-import { Suspense } from 'react'
-import { Skeleton } from '@/components/ui/skeleton'
-import { getAgents, getAgentPerformance } from '@/modules/live-chat/actions/agent-actions'
-import { getDepartments } from '@/modules/live-chat/actions/department-actions'
-import { ensureAdminAgent } from '@/modules/live-chat/lib/bootstrap-agent'
-import { AgentsPageWrapper } from '@/modules/live-chat/components/wrappers/AgentsPageWrapper'
+import { Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  getAgents,
+  getAgentPerformance,
+} from "@/modules/live-chat/actions/agent-actions";
+import { getDepartments } from "@/modules/live-chat/actions/department-actions";
+import { ensureAdminAgent } from "@/modules/live-chat/lib/bootstrap-agent";
+import { AgentsPageWrapper } from "@/modules/live-chat/components/wrappers/AgentsPageWrapper";
 
 interface PageProps {
-  params: Promise<{ siteId: string }>
+  params: Promise<{ siteId: string }>;
 }
 
 async function AgentsContent({ siteId }: { siteId: string }) {
   // Self-heal: ensure admin agent exists before fetching
-  await ensureAdminAgent(siteId)
+  await ensureAdminAgent(siteId);
 
   const [agentsResult, departmentsResult, performanceResult] =
     await Promise.all([
       getAgents(siteId),
       getDepartments(siteId),
       getAgentPerformance(siteId),
-    ])
+    ]);
 
   return (
     <AgentsPageWrapper
@@ -33,7 +36,7 @@ async function AgentsContent({ siteId }: { siteId: string }) {
       performance={performanceResult.performance}
       siteId={siteId}
     />
-  )
+  );
 }
 
 function AgentsSkeleton() {
@@ -54,11 +57,11 @@ function AgentsSkeleton() {
       <Skeleton className="h-8 w-40" />
       <Skeleton className="h-40 rounded-lg" />
     </div>
-  )
+  );
 }
 
 export default async function AgentsPage({ params }: PageProps) {
-  const { siteId } = await params
+  const { siteId } = await params;
 
   return (
     <div className="container py-6">
@@ -66,5 +69,5 @@ export default async function AgentsPage({ params }: PageProps) {
         <AgentsContent siteId={siteId} />
       </Suspense>
     </div>
-  )
+  );
 }

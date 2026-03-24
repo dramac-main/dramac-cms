@@ -373,7 +373,7 @@ export async function notifyNewOrder(
     // Get site info and owner
     const { data: site } = await supabase
       .from("sites")
-      .select("name, agency_id")
+      .select("name, agency_id, subdomain, custom_domain")
       .eq("id", data.siteId)
       .single();
 
@@ -406,6 +406,17 @@ export async function notifyNewOrder(
     const shippingStr = formatCurrency(data.shipping, currency);
     const taxStr = formatCurrency(data.tax, currency);
     const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${data.siteId}/ecommerce/orders`;
+
+    // Build the storefront URL for order confirmation link in customer email
+    const siteUrl = site.custom_domain
+      ? `https://${site.custom_domain}`
+      : site.subdomain
+        ? `https://${site.subdomain}.sites.dramacagency.com`
+        : null;
+    const orderUrl = siteUrl
+      ? `${siteUrl}/order-confirmation?order=${data.orderId}`
+      : undefined;
+    const trackingUrl = siteUrl ? `${siteUrl}/order-tracking` : undefined;
 
     // Fetch manual payment instructions if provider is manual
     let manualPaymentInstructions = data.manualPaymentInstructions;
@@ -482,6 +493,8 @@ export async function notifyNewOrder(
           manualPaymentInstructions: manualPaymentInstructions || undefined,
           shippingAddress: data.shippingAddress || "",
           businessName,
+          orderUrl: orderUrl || undefined,
+          trackingUrl: trackingUrl || undefined,
         },
       });
     }

@@ -1,12 +1,12 @@
 /**
  * E-Commerce Module - Studio Integration
- * 
+ *
  * Exports Studio components and custom fields for the visual editor.
  * These components appear in the Studio component library when
  * the E-Commerce module is installed on a site.
- * 
+ *
  * Phase ECOM-21: Product Display Components
- * Phase ECOM-22: Cart Components  
+ * Phase ECOM-22: Cart Components
  * Phase ECOM-23: Checkout Components
  * Phase ECOM-24: Navigation & Discovery Components
  * Phase ECOM-25: Quotation Frontend Components
@@ -14,24 +14,33 @@
 
 import type { ModuleStudioExports } from "@/types/studio-module";
 import type { ComponentDefinition } from "@/types/studio";
-import { ProductCardBlock, productCardDefinition } from "./components/product-card-block";
-import { ProductGridBlock, productGridDefinition } from "./components/product-grid-block";
-import { 
-  ProductGridBlock as EnhancedProductGridBlock, 
-  productGridDefinition as enhancedProductGridDefinition 
+import {
+  ProductCardBlock,
+  productCardDefinition,
+} from "./components/product-card-block";
+import {
+  ProductGridBlock,
+  productGridDefinition,
+} from "./components/product-grid-block";
+import {
+  ProductGridBlock as EnhancedProductGridBlock,
+  productGridDefinition as enhancedProductGridDefinition,
 } from "./components/ProductGridBlock";
-import { 
-  FeaturedProductsBlock, 
-  featuredProductsDefinition 
+import {
+  FeaturedProductsBlock,
+  featuredProductsDefinition,
 } from "./components/FeaturedProductsBlock";
-import { ProductQuickView, useProductQuickView } from "./components/ProductQuickView";
-import { 
-  ProductSelectorField, 
-  productSelectorFieldDefinition 
+import {
+  ProductQuickView,
+  useProductQuickView,
+} from "./components/ProductQuickView";
+import {
+  ProductSelectorField,
+  productSelectorFieldDefinition,
 } from "./fields/product-selector-field";
-import { 
-  CategorySelectorField, 
-  categorySelectorFieldDefinition 
+import {
+  CategorySelectorField,
+  categorySelectorFieldDefinition,
 } from "./fields/category-selector-field";
 
 // Cart components (ECOM-22)
@@ -42,6 +51,7 @@ import { MiniCartBlock } from "./components/MiniCartBlock";
 // Checkout components (ECOM-23)
 import { CheckoutPageBlock } from "./components/CheckoutPageBlock";
 import { OrderConfirmationBlock } from "./components/OrderConfirmationBlock";
+import { OrderTrackingBlock } from "./components/OrderTrackingBlock";
 
 // Navigation & Discovery components (ECOM-24)
 import { CategoryNavBlock } from "./components/CategoryNavBlock";
@@ -56,12 +66,24 @@ import { QuoteListBlock } from "./components/QuoteListBlock";
 import { QuoteDetailBlock } from "./components/QuoteDetailBlock";
 
 // Review components (ECOM-60)
-import { ReviewFormBlock, reviewFormDefinition } from "./components/ReviewFormBlock";
-import { ReviewListBlock, reviewListDefinition } from "./components/ReviewListBlock";
+import {
+  ReviewFormBlock,
+  reviewFormDefinition,
+} from "./components/ReviewFormBlock";
+import {
+  ReviewListBlock,
+  reviewListDefinition,
+} from "./components/ReviewListBlock";
 
 // Dynamic route components (ECOM-51)
-import { ProductDetailBlock, productDetailDefinition } from "./components/ProductDetailBlock";
-import { CategoryHeroBlock, categoryHeroDefinition } from "./components/CategoryHeroBlock";
+import {
+  ProductDetailBlock,
+  productDetailDefinition,
+} from "./components/ProductDetailBlock";
+import {
+  CategoryHeroBlock,
+  categoryHeroDefinition,
+} from "./components/CategoryHeroBlock";
 
 // Re-export utility components for external use (ECOM-21)
 export { ProductPriceDisplay } from "./components/ProductPriceDisplay";
@@ -80,7 +102,11 @@ export { CartDrawerBlock, CartPageBlock, MiniCartBlock };
 
 // Re-export Checkout components (ECOM-23)
 export { CheckoutStepIndicator } from "./components/CheckoutStepIndicator";
-export { AddressForm, ShippingAddressForm, BillingAddressForm } from "./components/AddressForm";
+export {
+  AddressForm,
+  ShippingAddressForm,
+  BillingAddressForm,
+} from "./components/AddressForm";
 export { ShippingMethodSelector } from "./components/ShippingMethodSelector";
 export { PaymentMethodSelector } from "./components/PaymentMethodSelector";
 export { OrderSummaryCard } from "./components/OrderSummaryCard";
@@ -88,13 +114,28 @@ export { CheckoutPageBlock, OrderConfirmationBlock };
 
 // Re-export Navigation & Discovery components (ECOM-24)
 export { CategoryCard } from "./components/CategoryCard";
-export { CategoryNavBlock, SearchBarBlock, FilterSidebarBlock, BreadcrumbBlock, ProductSortBlock };
+export {
+  CategoryNavBlock,
+  SearchBarBlock,
+  FilterSidebarBlock,
+  BreadcrumbBlock,
+  ProductSortBlock,
+};
 export { ActiveFilters } from "./components/ActiveFilters";
 
 // Re-export Quotation components (ECOM-25)
-export { QuoteStatusBadge, getQuoteStatusLabel, getQuoteStatusColor, isQuoteActionable, isQuoteFinal } from "./components/QuoteStatusBadge";
+export {
+  QuoteStatusBadge,
+  getQuoteStatusLabel,
+  getQuoteStatusColor,
+  isQuoteActionable,
+  isQuoteFinal,
+} from "./components/QuoteStatusBadge";
 export { QuoteItemCard } from "./components/QuoteItemCard";
-export { QuotePriceBreakdown, QuoteSavingsDisplay } from "./components/QuotePriceBreakdown";
+export {
+  QuotePriceBreakdown,
+  QuoteSavingsDisplay,
+} from "./components/QuotePriceBreakdown";
 export { QuoteActionButtons } from "./components/QuoteActionButtons";
 export { QuoteRequestBlock, QuoteListBlock, QuoteDetailBlock };
 
@@ -111,15 +152,32 @@ export { ProductDetailBlock, CategoryHeroBlock };
 const cartPageDefinition: Omit<ComponentDefinition, "render"> = {
   type: "EcommerceCartPage",
   label: "Shopping Cart",
-  description: "Full shopping cart page with items, quantities, and order summary",
+  description:
+    "Full shopping cart page with items, quantities, and order summary",
   category: "ecommerce",
   icon: "ShoppingCart",
   fields: {
-    showContinueShopping: { type: "toggle", label: "Show Continue Shopping", defaultValue: true },
-    showDiscountInput: { type: "toggle", label: "Show Discount Code Input", defaultValue: true },
-    checkoutUrl: { type: "text", label: "Checkout URL", defaultValue: "/checkout" },
+    showContinueShopping: {
+      type: "toggle",
+      label: "Show Continue Shopping",
+      defaultValue: true,
+    },
+    showDiscountInput: {
+      type: "toggle",
+      label: "Show Discount Code Input",
+      defaultValue: true,
+    },
+    checkoutUrl: {
+      type: "text",
+      label: "Checkout URL",
+      defaultValue: "/checkout",
+    },
   },
-  defaultProps: { showContinueShopping: true, showDiscountInput: true, checkoutUrl: "/checkout" },
+  defaultProps: {
+    showContinueShopping: true,
+    showDiscountInput: true,
+    checkoutUrl: "/checkout",
+  },
 };
 
 const cartDrawerDefinition: Omit<ComponentDefinition, "render"> = {
@@ -129,7 +187,15 @@ const cartDrawerDefinition: Omit<ComponentDefinition, "render"> = {
   category: "ecommerce",
   icon: "ShoppingCart",
   fields: {
-    position: { type: "select", label: "Position", options: [{ label: "Right", value: "right" }, { label: "Left", value: "left" }], defaultValue: "right" },
+    position: {
+      type: "select",
+      label: "Position",
+      options: [
+        { label: "Right", value: "right" },
+        { label: "Left", value: "left" },
+      ],
+      defaultValue: "right",
+    },
   },
   defaultProps: { position: "right" },
 };
@@ -141,8 +207,20 @@ const miniCartDefinition: Omit<ComponentDefinition, "render"> = {
   category: "ecommerce",
   icon: "ShoppingBag",
   fields: {
-    position: { type: "select", label: "Position", options: [{ label: "Top Right", value: "top-right" }, { label: "Bottom Right", value: "bottom-right" }], defaultValue: "top-right" },
-    showItemCount: { type: "toggle", label: "Show Item Count", defaultValue: true },
+    position: {
+      type: "select",
+      label: "Position",
+      options: [
+        { label: "Top Right", value: "top-right" },
+        { label: "Bottom Right", value: "bottom-right" },
+      ],
+      defaultValue: "top-right",
+    },
+    showItemCount: {
+      type: "toggle",
+      label: "Show Item Count",
+      defaultValue: true,
+    },
   },
   defaultProps: { position: "top-right", showItemCount: true },
 };
@@ -154,8 +232,16 @@ const checkoutPageDefinition: Omit<ComponentDefinition, "render"> = {
   category: "ecommerce",
   icon: "CreditCard",
   fields: {
-    enableGuestCheckout: { type: "toggle", label: "Enable Guest Checkout", defaultValue: true },
-    showOrderSummary: { type: "toggle", label: "Show Order Summary", defaultValue: true },
+    enableGuestCheckout: {
+      type: "toggle",
+      label: "Enable Guest Checkout",
+      defaultValue: true,
+    },
+    showOrderSummary: {
+      type: "toggle",
+      label: "Show Order Summary",
+      defaultValue: true,
+    },
   },
   defaultProps: { enableGuestCheckout: true, showOrderSummary: true },
 };
@@ -167,9 +253,29 @@ const orderConfirmationDefinition: Omit<ComponentDefinition, "render"> = {
   category: "ecommerce",
   icon: "CheckCircle",
   fields: {
-    showContinueShopping: { type: "toggle", label: "Show Continue Shopping", defaultValue: true },
+    showContinueShopping: {
+      type: "toggle",
+      label: "Show Continue Shopping",
+      defaultValue: true,
+    },
   },
   defaultProps: { showContinueShopping: true },
+};
+
+const orderTrackingDefinition: Omit<ComponentDefinition, "render"> = {
+  type: "EcommerceOrderTracking",
+  label: "Order Tracking",
+  description: "Order lookup page — find order by email + order number",
+  category: "ecommerce",
+  icon: "Search",
+  fields: {
+    showRecentOrder: {
+      type: "toggle",
+      label: "Show Recent Order Link",
+      defaultValue: true,
+    },
+  },
+  defaultProps: { showRecentOrder: true },
 };
 
 const categoryNavDefinition: Omit<ComponentDefinition, "render"> = {
@@ -179,14 +285,39 @@ const categoryNavDefinition: Omit<ComponentDefinition, "render"> = {
   category: "ecommerce",
   icon: "FolderTree",
   fields: {
-    variant: { type: "select", label: "Display Style", options: [{ label: "Tree Menu", value: "tree" }, { label: "Grid Cards", value: "grid" }, { label: "List", value: "list" }, { label: "Chips/Tags", value: "cards" }], defaultValue: "tree" },
-    showProductCount: { type: "toggle", label: "Show Product Count", defaultValue: true },
+    variant: {
+      type: "select",
+      label: "Display Style",
+      options: [
+        { label: "Tree Menu", value: "tree" },
+        { label: "Grid Cards", value: "grid" },
+        { label: "List", value: "list" },
+        { label: "Chips/Tags", value: "cards" },
+      ],
+      defaultValue: "tree",
+    },
+    showProductCount: {
+      type: "toggle",
+      label: "Show Product Count",
+      defaultValue: true,
+    },
     showImages: { type: "toggle", label: "Show Images", defaultValue: true },
-    showSubcategories: { type: "toggle", label: "Show Subcategories", defaultValue: true },
+    showSubcategories: {
+      type: "toggle",
+      label: "Show Subcategories",
+      defaultValue: true,
+    },
     title: { type: "text", label: "Title", defaultValue: "Categories" },
     showTitle: { type: "toggle", label: "Show Title", defaultValue: true },
   },
-  defaultProps: { variant: "tree", showProductCount: true, showImages: true, showSubcategories: true, title: "Categories", showTitle: true },
+  defaultProps: {
+    variant: "tree",
+    showProductCount: true,
+    showImages: true,
+    showSubcategories: true,
+    title: "Categories",
+    showTitle: true,
+  },
 };
 
 const searchBarDefinition: Omit<ComponentDefinition, "render"> = {
@@ -196,11 +327,27 @@ const searchBarDefinition: Omit<ComponentDefinition, "render"> = {
   category: "ecommerce",
   icon: "Search",
   fields: {
-    placeholder: { type: "text", label: "Placeholder Text", defaultValue: "Search products..." },
-    showSuggestions: { type: "toggle", label: "Show Suggestions", defaultValue: true },
-    maxSuggestions: { type: "number", label: "Max Suggestions", defaultValue: 5 },
+    placeholder: {
+      type: "text",
+      label: "Placeholder Text",
+      defaultValue: "Search products...",
+    },
+    showSuggestions: {
+      type: "toggle",
+      label: "Show Suggestions",
+      defaultValue: true,
+    },
+    maxSuggestions: {
+      type: "number",
+      label: "Max Suggestions",
+      defaultValue: 5,
+    },
   },
-  defaultProps: { placeholder: "Search products...", showSuggestions: true, maxSuggestions: 5 },
+  defaultProps: {
+    placeholder: "Search products...",
+    showSuggestions: true,
+    maxSuggestions: 5,
+  },
 };
 
 const filterSidebarDefinition: Omit<ComponentDefinition, "render"> = {
@@ -210,12 +357,33 @@ const filterSidebarDefinition: Omit<ComponentDefinition, "render"> = {
   category: "ecommerce",
   icon: "SlidersHorizontal",
   fields: {
-    showPriceFilter: { type: "toggle", label: "Show Price Filter", defaultValue: true },
-    showCategoryFilter: { type: "toggle", label: "Show Category Filter", defaultValue: true },
-    showStockFilter: { type: "toggle", label: "Show Stock Filter", defaultValue: true },
-    collapsible: { type: "toggle", label: "Collapsible Sections", defaultValue: true },
+    showPriceFilter: {
+      type: "toggle",
+      label: "Show Price Filter",
+      defaultValue: true,
+    },
+    showCategoryFilter: {
+      type: "toggle",
+      label: "Show Category Filter",
+      defaultValue: true,
+    },
+    showStockFilter: {
+      type: "toggle",
+      label: "Show Stock Filter",
+      defaultValue: true,
+    },
+    collapsible: {
+      type: "toggle",
+      label: "Collapsible Sections",
+      defaultValue: true,
+    },
   },
-  defaultProps: { showPriceFilter: true, showCategoryFilter: true, showStockFilter: true, collapsible: true },
+  defaultProps: {
+    showPriceFilter: true,
+    showCategoryFilter: true,
+    showStockFilter: true,
+    collapsible: true,
+  },
 };
 
 const breadcrumbDefinition: Omit<ComponentDefinition, "render"> = {
@@ -226,7 +394,16 @@ const breadcrumbDefinition: Omit<ComponentDefinition, "render"> = {
   icon: "ChevronRight",
   fields: {
     showHome: { type: "toggle", label: "Show Home Link", defaultValue: true },
-    separator: { type: "select", label: "Separator", options: [{ label: "Chevron", value: "chevron" }, { label: "Slash", value: "slash" }, { label: "Arrow", value: "arrow" }], defaultValue: "chevron" },
+    separator: {
+      type: "select",
+      label: "Separator",
+      options: [
+        { label: "Chevron", value: "chevron" },
+        { label: "Slash", value: "slash" },
+        { label: "Arrow", value: "arrow" },
+      ],
+      defaultValue: "chevron",
+    },
   },
   defaultProps: { showHome: true, separator: "chevron" },
 };
@@ -238,7 +415,17 @@ const productSortDefinition: Omit<ComponentDefinition, "render"> = {
   category: "ecommerce",
   icon: "ArrowUpDown",
   fields: {
-    defaultSort: { type: "select", label: "Default Sort", options: [{ label: "Newest", value: "newest" }, { label: "Price: Low to High", value: "price-asc" }, { label: "Price: High to Low", value: "price-desc" }, { label: "Name A-Z", value: "name-asc" }], defaultValue: "newest" },
+    defaultSort: {
+      type: "select",
+      label: "Default Sort",
+      options: [
+        { label: "Newest", value: "newest" },
+        { label: "Price: Low to High", value: "price-asc" },
+        { label: "Price: High to Low", value: "price-desc" },
+        { label: "Name A-Z", value: "name-asc" },
+      ],
+      defaultValue: "newest",
+    },
   },
   defaultProps: { defaultSort: "newest" },
 };
@@ -250,8 +437,16 @@ const quoteRequestDefinition: Omit<ComponentDefinition, "render"> = {
   category: "ecommerce",
   icon: "FileText",
   fields: {
-    showNotes: { type: "toggle", label: "Show Notes Field", defaultValue: true },
-    requirePhone: { type: "toggle", label: "Require Phone Number", defaultValue: false },
+    showNotes: {
+      type: "toggle",
+      label: "Show Notes Field",
+      defaultValue: true,
+    },
+    requirePhone: {
+      type: "toggle",
+      label: "Require Phone Number",
+      defaultValue: false,
+    },
   },
   defaultProps: { showNotes: true, requirePhone: false },
 };
@@ -263,7 +458,16 @@ const quoteListDefinition: Omit<ComponentDefinition, "render"> = {
   category: "ecommerce",
   icon: "List",
   fields: {
-    variant: { type: "select", label: "Layout", options: [{ label: "Cards", value: "card" }, { label: "List", value: "list" }, { label: "Table", value: "table" }], defaultValue: "card" },
+    variant: {
+      type: "select",
+      label: "Layout",
+      options: [
+        { label: "Cards", value: "card" },
+        { label: "List", value: "list" },
+        { label: "Table", value: "table" },
+      ],
+      defaultValue: "card",
+    },
   },
   defaultProps: { variant: "card" },
 };
@@ -316,7 +520,8 @@ export const studioComponents: ModuleStudioExports["studioComponents"] = {
     ...enhancedProductGridDefinition,
     type: "EcommerceProductCatalog",
     label: "Product Catalog",
-    description: "Full-featured product catalog with filters, sorting, and pagination",
+    description:
+      "Full-featured product catalog with filters, sorting, and pagination",
     render: EnhancedProductGridBlock,
     fields: {
       ...enhancedProductGridDefinition.fields,
@@ -365,6 +570,10 @@ export const studioComponents: ModuleStudioExports["studioComponents"] = {
   EcommerceOrderConfirmation: {
     ...orderConfirmationDefinition,
     render: OrderConfirmationBlock,
+  },
+  EcommerceOrderTracking: {
+    ...orderTrackingDefinition,
+    render: OrderTrackingBlock,
   },
 
   // Navigation & Discovery Components (ECOM-24)

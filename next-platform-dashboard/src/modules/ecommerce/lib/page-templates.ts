@@ -22,6 +22,7 @@ import {
   addCartPage,
   addCheckoutPage,
   addOrderConfirmation,
+  addOrderTracking,
   addSearchBar,
   addFeaturedProducts,
   addValuePropositions,
@@ -329,6 +330,48 @@ export const orderConfirmationPageDefinition: PageDefinition = {
     "Your order has been confirmed. Thank you for your purchase!",
   status: "published",
   content: createOrderConfirmationTemplate(),
+  moduleCreated: true,
+  moduleId: "ecommerce",
+};
+
+// ============================================================================
+// ORDER TRACKING PAGE TEMPLATE
+// ============================================================================
+
+/**
+ * Create the order tracking page template
+ * URL: /order-tracking
+ */
+export function createOrderTrackingTemplate(): StudioPageData {
+  resetIdCounter();
+  const page = createEmptyPage("Track Your Order");
+
+  // Main Section
+  const mainSection = createSection(page, {
+    padding: "64px 24px",
+  });
+
+  const mainContainer = createContainer(page, mainSection, {
+    alignItems: "center",
+    gap: "32px",
+  });
+
+  addOrderTracking(page, mainContainer);
+
+  return page;
+}
+
+/**
+ * Order tracking page definition
+ */
+export const orderTrackingPageDefinition: PageDefinition = {
+  slug: "order-tracking",
+  title: "Track Your Order",
+  metaTitle: "Track Your Order",
+  metaDescription:
+    "Look up your order status by entering your email and order number.",
+  status: "published",
+  content: createOrderTrackingTemplate(),
   moduleCreated: true,
   moduleId: "ecommerce",
 };
