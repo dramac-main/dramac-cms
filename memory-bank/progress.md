@@ -1,27 +1,39 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT ✅
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL ✅
 
 ---
 
-## Latest Update: React Error #310 — Storefront Fix — `33c91bf8`
+## Latest Update: Live Chat Complete Overhaul — `c45386f4`
 
-**Same class of bug as dashboard fix (`75bb16fe`) — conditional provider wrapping.**
+**ROOT CAUSE: Zero agents existed for any site. Bootstrap function had role constraint violation + wrong status.**
 
-**Root Cause:** `CraftRenderer` conditionally wrapped `StudioRenderer` with `StorefrontProvider` based on `hasEcommerce` flag → different hook counts between renders → React error #310.
+**Database Fix (Immediate):**
+- SQL INSERT created 4 agents for sites missing them (Demo Shop, Test Jack, Sisto, Jesto)
+- All set to status 'online', role 'admin', max 5 concurrent chats
 
-**Fixes (2 files):**
-- `craft-renderer.tsx` — Always wrap with StorefrontProvider (siteId || '', harmless no-op when empty)
-- `ecommerce-cart-injector.tsx` — Removed duplicate StorefrontProvider (CartIconWidget uses useEcommerceStatus, not useStorefront)
+**Code Fixes (6 files, 406 insertions, 45 deletions):**
+- NEW `bootstrap-agent.ts` — shared utility with fixed role ('admin'), status ('online'), profile lookup (both 'name'/'full_name')
+- `sites.ts` — import shared bootstrap, remove broken inline function
+- `auto-install/route.ts` — add bootstrap after AI Designer live-chat install
+- `modules/route.ts` — add bootstrap after marketplace module install
+- `agent-actions.ts` — new `inviteAndCreateAgent` server action (creates auth user + profile + agency member + agent)
+- `AgentsPageWrapper.tsx` — "Invite New" tab to Add Agent dialog (email + name + role)
 
-**Pattern:** Conditional provider wrapping is now fixed in 2 locations: dashboard layout (`75bb16fe`) and storefront renderer (`33c91bf8`).
+**Key DB Constraint:** `mod_chat_agents_role_check` — valid roles: 'agent', 'supervisor', 'admin' (NOT 'owner')
+**Agent Routing:** `status='online' AND is_active=true`, ordered by `current_chat_count ASC`
 
-**Previous:** Platform Sync Audit — `963fdd7b`
+**End-to-End Verification (ALL PASSING):**
+- ✅ Embed API, widget settings API, agent routing, conversation creation, message API, realtime subscription
+- ✅ TypeScript: ZERO errors
+- ✅ Vercel deployment: READY (production)
+
+**Previous:** React Error #310 Storefront Fix — `33c91bf8`
 
 ---
 
-## Previous Update: Platform Sync Audit — `963fdd7b`
+## Previous Update: React Error #310 — Storefront Fix — `33c91bf8`
 
 **Comprehensive audit of AI Website Builder → Module Installation → Published Site pipeline.**
 

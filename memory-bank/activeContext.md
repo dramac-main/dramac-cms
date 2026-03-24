@@ -1,22 +1,35 @@
 # Active Context
 
-## Current Focus: React Error #310 Fix — Storefront (Published Sites)
+## Current Focus: Live Chat Complete Overhaul — DEPLOYED & VERIFIED
 
-### Status: COMMITTED, PUSHED & DEPLOYED — `33c91bf8`
+### Status: COMMITTED, PUSHED & DEPLOYED — `c45386f4`
 
 ### Root Cause
-`CraftRenderer` (client component for published site pages) conditionally wrapped `StudioRenderer` with `StorefrontProvider` based on `hasEcommerce` flag. When ecommerce modules toggled, React saw different hook counts (StorefrontProvider has 5 hooks: useState ×2, useEffect ×1, useCallback ×1, useMemo ×1) → React error #310: "Rendered more hooks than during previous render".
+Live chat was completely broken for ALL sites — ZERO agents existed in `mod_chat_agents` table. The `bootstrapLiveChatAgent` function in `sites.ts` had TWO bugs:
+1. Used `role: "owner"` which violates DB check constraint `mod_chat_agents_role_check` (valid: agent/supervisor/admin) → INSERT silently failed
+2. Used `status: "offline"` → even if it worked, routing engine (`status='online'` filter) would never assign chats
+3. Only ran during `createSiteAction()` → missed AI Designer auto-install and marketplace install paths
 
-Secondary issue: `EcommerceCartInjector` had a duplicate `StorefrontProvider` wrapper (unnecessary since `CartIconWidget` uses `useEcommerceStatus` not `useStorefront`).
+### Database Fix (Immediate)
+- Created agents for all 4 sites with live-chat but no agents via direct SQL
+- Set status 'online' so chat routing works immediately
 
-### Fix (2 files)
-- **`craft-renderer.tsx`**: Always wrap with `<StorefrontProvider siteId={siteId || ''}>` — empty string siteId is harmless no-op (useEffect guard: `if (!siteId) return`)
-- **`ecommerce-cart-injector.tsx`**: Removed duplicate `StorefrontProvider` wrapper
+### Code Fixes (6 files)
+- **NEW `bootstrap-agent.ts`**: Shared utility with corrected role ('admin'), status ('online'), profile lookup (both 'name' and 'full_name')
+- **`sites.ts`**: Import shared bootstrap, replace broken inline function
+- **`auto-install/route.ts`**: Add bootstrap after AI Designer live-chat install
+- **`modules/route.ts`**: Add bootstrap after marketplace module install
+- **`agent-actions.ts`**: New `inviteAndCreateAgent` server action (creates auth user + profile + agency member + agent)
+- **`AgentsPageWrapper.tsx`**: Added "Invite New" tab to Add Agent dialog (email + name + role)
 
-### Pattern Recognition
-This is the SAME class of bug as the dashboard fix (`75bb16fe`) — conditional provider wrapping causes unstable component trees. Now fixed in TWO locations:
-1. Dashboard layout: BrandingProvider/CurrencyProvider (commit `75bb16fe`)
-2. Storefront renderer: StorefrontProvider (commit `33c91bf8`)
+### End-to-End Verification (ALL PASSING)
+1. ✅ Embed API returns widget JS with correct siteId
+2. ✅ Widget settings API returns site branding/config
+3. ✅ Agent routing query finds online agent with capacity (Site Owner, 0/5 chats)
+4. ✅ Conversation API creates conversation + assigns agent + saves initial message
+5. ✅ Messages API validates visitor ownership, inserts messages correctly
+6. ✅ Realtime subscription filters by conversation_id
+7. ✅ DB has agents for all 5 sites (4 online, 1 pre-existing offline)
 
 ---
 
