@@ -6,6 +6,10 @@ import {
   executeEnableHook,
   executeDisableHook 
 } from "@/lib/modules/hooks/module-hooks-registry";
+import {
+  bootstrapLiveChatAgent,
+  getSiteOwnerUserId,
+} from "@/modules/live-chat/lib/bootstrap-agent";
 
 // Ensure hooks are initialized
 import "@/lib/modules/hooks/init-hooks";
@@ -256,6 +260,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
       }
     } else {
       console.warn(`[SiteModules] No slug found for module ${moduleId}, skipping hooks`);
+    }
+
+    // For live-chat: auto-register the site owner as the first agent
+    if (moduleSlug === "live-chat") {
+      const ownerId = await getSiteOwnerUserId(siteId);
+      if (ownerId) {
+        await bootstrapLiveChatAgent(siteId, ownerId).catch((err) =>
+          console.error("[SiteModules] Failed to bootstrap live chat agent:", err),
+        );
+      }
     }
 
     return NextResponse.json(data, { status: 201 });

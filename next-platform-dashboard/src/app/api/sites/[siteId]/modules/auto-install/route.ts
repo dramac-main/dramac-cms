@@ -12,6 +12,10 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import {
+  bootstrapLiveChatAgent,
+  getSiteOwnerUserId,
+} from "@/modules/live-chat/lib/bootstrap-agent";
 
 type RouteContext = { params: Promise<{ siteId: string }> };
 
@@ -217,6 +221,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
       } else {
         console.log(`[AutoInstall] Installed ${mod.slug} for site ${siteId}`);
         installed.push(mod.slug);
+
+        // For live-chat: auto-register the site owner as the first agent
+        if (mod.slug === "live-chat") {
+          const ownerId = await getSiteOwnerUserId(siteId);
+          if (ownerId) {
+            await bootstrapLiveChatAgent(siteId, ownerId).catch((err) =>
+              console.error("[AutoInstall] Failed to bootstrap live chat agent:", err),
+            );
+          }
+        }
       }
     }
 

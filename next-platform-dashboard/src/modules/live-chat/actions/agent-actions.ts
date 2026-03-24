@@ -7,6 +7,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { mapRecord, mapRecords } from '../lib/map-db-record'
 import type { ChatAgent, AgentStatus, AgentPerformanceData } from '../types'
@@ -485,5 +486,118 @@ export async function getAgentPerformance(
   } catch (error) {
     console.error('[LiveChat] Error getting agent performance:', error)
     return { performance: [], error: (error as Error).message }
+  }
+}
+
+// ─── Invite & Create Agent ──────────────────────────────────────────────────
+
+/**
+ * Invite a new user by email, create their profile + agency membership,
+ * and register them as a live chat agent — all in one step.
+ *
+ * Flow:
+ * 1. Creates a Supabase Auth user via admin API (sends invite email)
+ * 2. Creates a profile record for the new user
+ * 3. Adds them as an agency member
+ * 4. Creates their chat agent record
+ */
+export async function inviteAndCreateAgent(data: {
+  siteId: string
+  displayName: string
+  email: string
+  role?: string
+  departmentId?: string
+  maxConcurrentChats?: number
+}): Promise<{ agent: ChatAgent | null; error: string | null }> {
+  try {
+    if (!data.email || !data.displayName) {
+      return { agent: null, error: 'Name and email are required.' }
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(data.email)) {
+      return { agent: null, error: 'Invalid email address.' }
+    }
+
+    const supabase = await getModuleClient()
+    const adminClient = createAdminClient()
+
+    // Resolve the agency for this site
+    const { data: siteData, error: siteError } = await supabase
+      .from('sites')
+      .select('agency_id')
+      .eq('id', data.siteId)
+      .single()
+
+    if (siteError || !siteData?.agency_id) {
+      return { agent: null, error: 'Could not find agency for this site.' }
+    }
+
+    // Check if a user with this email already exists
+    const { data: existingProfile } = await (adminClient as any)
+      .from('profiles')
+      .select('id, name, email')
+      .eq('email', data.email)
+      .maybeSingle()
+
+    let userId: string
+
+    if (existingProfile) {
+      // User exists — use their ID directly
+      userId = existingProfile.id
+    } else {
+      // Create new auth user via admin API (sends invite email)
+      const { data: authUser, error: authError } =
+        await adminClient.auth.admin.inviteUserByEmail(data.email, {
+          data: { full_name: data.displayName },
+        })
+
+      if (authError) {
+        console.error('[LiveChat] Auth invite error:', authError)
+        return { agent: null, error: `Failed to invite user: ${authError.message}` }
+      }
+
+      userId = authUser.user.id
+
+      // Create profile for the new user
+      await (adminClient as any).from('profiles').upsert({
+        id: userId,
+        name: data.displayName,
+        email: data.email,
+      })
+    }
+
+    // Ensure agency membership exists
+    const { data: existingMember } = await (adminClient as any)
+      .from('agency_members')
+      .select('id')
+      .eq('agency_id', siteData.agency_id)
+      .eq('user_id', userId)
+      .maybeSingle()
+
+    if (!existingMember) {
+      await (adminClient as any).from('agency_members').insert({
+        agency_id: siteData.agency_id,
+        user_id: userId,
+        role: 'member',
+      })
+    }
+
+    // Create the agent record (reuse the existing createAgent logic)
+    const result = await createAgent({
+      siteId: data.siteId,
+      userId,
+      displayName: data.displayName,
+      email: data.email,
+      role: data.role || 'agent',
+      departmentId: data.departmentId,
+      maxConcurrentChats: data.maxConcurrentChats,
+    })
+
+    return result
+  } catch (error) {
+    console.error('[LiveChat] Error inviting & creating agent:', error)
+    return { agent: null, error: (error as Error).message }
   }
 }

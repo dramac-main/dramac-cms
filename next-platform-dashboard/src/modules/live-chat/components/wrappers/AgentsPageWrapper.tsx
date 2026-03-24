@@ -39,6 +39,7 @@ import {
   Loader2,
   Pencil,
   Trash2,
+  UserPlus,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { AgentStatusDot } from '../shared/AgentStatusDot'
@@ -48,6 +49,7 @@ import {
   updateAgent,
   deleteAgent,
   getAgencyMembersForSite,
+  inviteAndCreateAgent,
 } from '@/modules/live-chat/actions/agent-actions'
 import type { AgencyMember } from '@/modules/live-chat/actions/agent-actions'
 import {
@@ -93,6 +95,7 @@ export function AgentsPageWrapper({
   const [showAddDept, setShowAddDept] = useState(false)
   const [agencyMembers, setAgencyMembers] = useState<AgencyMember[]>([])
   const [membersLoading, setMembersLoading] = useState(false)
+  const [addMode, setAddMode] = useState<'team' | 'invite'>('team')
 
   // Sync state with server data when props change (e.g., after revalidation)
   useEffect(() => {
@@ -118,6 +121,15 @@ export function AgentsPageWrapper({
   // Add agent form state
   const [agentForm, setAgentForm] = useState({
     userId: '',
+    displayName: '',
+    email: '',
+    role: 'agent' as AgentRole,
+    departmentId: '',
+    maxConcurrentChats: 5,
+  })
+
+  // Invite new agent form state
+  const [inviteForm, setInviteForm] = useState({
     displayName: '',
     email: '',
     role: 'agent' as AgentRole,
@@ -175,6 +187,37 @@ export function AgentsPageWrapper({
       }
     })
   }, [agentForm, siteId])
+
+  const handleInviteAgent = useCallback(() => {
+    if (!inviteForm.email || !inviteForm.displayName) {
+      toast.error('Name and email are required')
+      return
+    }
+    startTransition(async () => {
+      const result = await inviteAndCreateAgent({
+        siteId,
+        displayName: inviteForm.displayName,
+        email: inviteForm.email,
+        role: inviteForm.role,
+        departmentId: inviteForm.departmentId || undefined,
+        maxConcurrentChats: inviteForm.maxConcurrentChats,
+      })
+      if (result.error) {
+        toast.error(result.error)
+      } else if (result.agent) {
+        setAgents((prev) => [...prev, result.agent!])
+        setShowAddAgent(false)
+        setInviteForm({
+          displayName: '',
+          email: '',
+          role: 'agent',
+          departmentId: '',
+          maxConcurrentChats: 5,
+        })
+        toast.success('Agent invited & added — they will receive a sign-in email')
+      }
+    })
+  }, [inviteForm, siteId])
 
   const handleDeleteAgent = useCallback(
     (agentId: string) => {
@@ -311,6 +354,7 @@ export function AgentsPageWrapper({
         <Dialog open={showAddAgent} onOpenChange={(open) => {
           setShowAddAgent(open)
           if (open) loadAgencyMembers()
+          if (!open) setAddMode('team')
         }}>
           <DialogTrigger asChild>
             <Button size="sm">
@@ -322,6 +366,25 @@ export function AgentsPageWrapper({
             <DialogHeader>
               <DialogTitle>Add Chat Agent</DialogTitle>
             </DialogHeader>
+            {/* Tab toggle: team member vs invite */}
+            <div className="flex gap-1 p-1 rounded-lg bg-muted">
+              <button
+                type="button"
+                className={`flex-1 text-sm px-3 py-1.5 rounded-md transition-colors ${addMode === 'team' ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground hover:text-foreground'}`}
+                onClick={() => setAddMode('team')}
+              >
+                Team Member
+              </button>
+              <button
+                type="button"
+                className={`flex-1 text-sm px-3 py-1.5 rounded-md transition-colors ${addMode === 'invite' ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground hover:text-foreground'}`}
+                onClick={() => setAddMode('invite')}
+              >
+                <UserPlus className="h-3.5 w-3.5 inline mr-1" />
+                Invite New
+              </button>
+            </div>
+            {addMode === 'team' ? (
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label>Team Member</Label>
@@ -457,6 +520,104 @@ export function AgentsPageWrapper({
                 Add Agent
               </Button>
             </div>
+            ) : (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Full Name</Label>
+                <Input
+                  value={inviteForm.displayName}
+                  onChange={(e) =>
+                    setInviteForm({ ...inviteForm, displayName: e.target.value })
+                  }
+                  placeholder="e.g. Jane Smith"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Email Address</Label>
+                <Input
+                  type="email"
+                  value={inviteForm.email}
+                  onChange={(e) =>
+                    setInviteForm({ ...inviteForm, email: e.target.value })
+                  }
+                  placeholder="agent@example.com"
+                />
+                <p className="text-xs text-muted-foreground">
+                  They will receive an email to set up their account
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Role</Label>
+                  <Select
+                    value={inviteForm.role}
+                    onValueChange={(val) =>
+                      setInviteForm({ ...inviteForm, role: val as AgentRole })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="agent">Agent</SelectItem>
+                      <SelectItem value="supervisor">Supervisor</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Max Concurrent Chats</Label>
+                  <Input
+                    type="number"
+                    value={inviteForm.maxConcurrentChats}
+                    onChange={(e) =>
+                      setInviteForm({
+                        ...inviteForm,
+                        maxConcurrentChats: parseInt(e.target.value) || 5,
+                      })
+                    }
+                    min={1}
+                    max={20}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Department</Label>
+                <Select
+                  value={inviteForm.departmentId || 'none'}
+                  onValueChange={(val) =>
+                    setInviteForm({
+                      ...inviteForm,
+                      departmentId: val === 'none' ? '' : val,
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No Department</SelectItem>
+                    {departments.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                onClick={handleInviteAgent}
+                disabled={isPending || !inviteForm.email || !inviteForm.displayName}
+                className="w-full"
+              >
+                {isPending && (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                )}
+                <UserPlus className="h-4 w-4 mr-2" />
+                Invite & Add Agent
+              </Button>
+            </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>
