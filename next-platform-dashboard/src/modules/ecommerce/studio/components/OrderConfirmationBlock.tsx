@@ -450,8 +450,9 @@ export function OrderConfirmationBlock({
                 Order Received — Payment Pending
               </h1>
               <p className="text-muted-foreground mb-4">
-                Your order has been placed and is awaiting payment. Please
-                follow the payment instructions below to complete your purchase.
+                Your order has been placed and is awaiting payment. Our chat
+                assistant will guide you through the payment process — check the
+                chat in the bottom corner.
               </p>
             </>
           ) : (
@@ -617,6 +618,10 @@ export function OrderConfirmationBlock({
                 payment is confirmed. Always use{" "}
                 <strong>{order.order_number}</strong> as your payment reference.
               </div>
+              <div className="text-xs text-amber-700 flex items-center gap-1.5 mt-2">
+                <MessageSquare className="h-3 w-3" />
+                Your chat assistant is also walking you through these payment steps.
+              </div>
             </CardContent>
           </Card>
         )}
@@ -749,54 +754,7 @@ export function OrderConfirmationBlock({
           </Card>
         )}
 
-        {/* Quick Actions — copy message for chat/WhatsApp */}
-        {isAwaitingPayment && (
-          <Card className="mb-6">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <MessageSquare className="h-4 w-4" />
-                Quick Actions
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="bg-muted/50 rounded-lg p-3">
-                <p className="text-xs text-muted-foreground mb-2">
-                  Copy this message to send via chat or WhatsApp after paying:
-                </p>
-                <p className="text-sm italic text-foreground/80 mb-2">
-                  &quot;{generatePaymentMessage()}&quot;
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      copyText(generatePaymentMessage(), "message")
-                    }
-                  >
-                    {copiedField === "message" ? (
-                      <>
-                        <Check className="h-3 w-3 mr-1 text-green-600" />
-                        Copied!
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="h-3 w-3 mr-1" />
-                        Copy Message
-                      </>
-                    )}
-                  </Button>
-                  <Button size="sm" onClick={openChatWithOrderContext}>
-                    <MessageSquare className="h-3 w-3 mr-1" />
-                    Chat About Order
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* What Happens Next — step timeline */}
+        {/* What Happens Next — compact summary */}
         {isAwaitingPayment && (
           <Card className="mb-6">
             <CardHeader className="pb-3">
@@ -806,104 +764,33 @@ export function OrderConfirmationBlock({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex gap-3">
-                  <div className="flex flex-col items-center">
-                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                      <Check className="h-4 w-4 text-green-600" />
-                    </div>
-                    <div className="w-0.5 flex-1 bg-green-200 mt-1" />
-                  </div>
-                  <div className="pb-4">
-                    <p className="font-medium text-sm">Order Placed</p>
-                    <p className="text-xs text-muted-foreground">
-                      We&apos;ve received your order and sent you a confirmation
-                      email.
-                    </p>
-                  </div>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-100 text-green-800">
+                  <Check className="h-3.5 w-3.5" />
+                  <span>Order Placed</span>
                 </div>
-                <div className="flex gap-3">
-                  <div className="flex flex-col items-center">
-                    <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
-                      <Banknote className="h-4 w-4 text-amber-600" />
-                    </div>
-                    <div className="w-0.5 flex-1 bg-muted mt-1" />
-                  </div>
-                  <div className="pb-4">
-                    <p className="font-medium text-sm">Complete Payment</p>
-                    <p className="text-xs text-muted-foreground">
-                      Follow the instructions above to send payment. Use your
-                      order number as the reference.
-                    </p>
-                  </div>
+                <span className="text-muted-foreground self-center">→</span>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-100 text-amber-800 font-medium">
+                  <Banknote className="h-3.5 w-3.5" />
+                  <span>Send Payment</span>
                 </div>
-                <div className="flex gap-3">
-                  <div className="flex flex-col items-center">
-                    <div
-                      className={cn(
-                        "w-8 h-8 rounded-full flex items-center justify-center",
-                        proofStatus.hasProof ? "bg-green-100" : "bg-muted",
-                      )}
-                    >
-                      <Upload
-                        className={cn(
-                          "h-4 w-4",
-                          proofStatus.hasProof
-                            ? "text-green-600"
-                            : "text-muted-foreground",
-                        )}
-                      />
-                    </div>
-                    <div className="w-0.5 flex-1 bg-muted mt-1" />
-                  </div>
-                  <div className="pb-4">
-                    <p
-                      className={cn(
-                        "font-medium text-sm",
-                        !proofStatus.hasProof && "text-muted-foreground",
-                      )}
-                    >
-                      Upload Payment Proof
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {proofStatus.hasProof
-                        ? "Proof uploaded — we're reviewing your payment."
-                        : "Upload a screenshot of your payment to speed up verification."}
-                    </p>
-                  </div>
+                <span className="text-muted-foreground self-center">→</span>
+                <div className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full",
+                  proofStatus.hasProof ? "bg-green-100 text-green-800" : "bg-muted text-muted-foreground"
+                )}>
+                  <Upload className="h-3.5 w-3.5" />
+                  <span>Upload Proof</span>
                 </div>
-                <div className="flex gap-3">
-                  <div className="flex flex-col items-center">
-                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                      <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div className="w-0.5 flex-1 bg-muted mt-1" />
-                  </div>
-                  <div className="pb-4">
-                    <p className="font-medium text-sm text-muted-foreground">
-                      Payment Confirmed
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Once we verify your payment, you&apos;ll receive a
-                      confirmation email and your order will be processed.
-                    </p>
-                  </div>
+                <span className="text-muted-foreground self-center">→</span>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-muted-foreground">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <span>Confirmed</span>
                 </div>
-                <div className="flex gap-3">
-                  <div className="flex flex-col items-center">
-                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                      <Truck className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm text-muted-foreground">
-                      Order Shipped
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      We&apos;ll ship your order and send you tracking
-                      information.
-                    </p>
-                  </div>
+                <span className="text-muted-foreground self-center">→</span>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-muted-foreground">
+                  <Truck className="h-3.5 w-3.5" />
+                  <span>Shipped</span>
                 </div>
               </div>
             </CardContent>

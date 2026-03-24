@@ -43,6 +43,7 @@ import {
   Copy,
   Eye,
   AlertCircle,
+  Bot,
 } from 'lucide-react'
 import { updateWidgetSettings } from '@/modules/live-chat/actions'
 import type { ChatWidgetSettings, ChatDepartment, BusinessHoursConfig } from '@/modules/live-chat/types'
@@ -199,7 +200,7 @@ export function SettingsPageWrapper({
       )}
 
       <Tabs defaultValue="appearance" className="space-y-6">
-        <TabsList className="grid grid-cols-4 lg:grid-cols-8 gap-1 h-auto p-1">
+        <TabsList className="grid grid-cols-4 lg:grid-cols-9 gap-1 h-auto p-1">
           <TabsTrigger value="appearance" className="text-xs gap-1">
             <Palette className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Appearance</span>
@@ -219,6 +220,10 @@ export function SettingsPageWrapper({
           <TabsTrigger value="behavior" className="text-xs gap-1">
             <Settings2 className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Behavior</span>
+          </TabsTrigger>
+          <TabsTrigger value="ai" className="text-xs gap-1">
+            <Bot className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">AI</span>
           </TabsTrigger>
           <TabsTrigger value="embed" className="text-xs gap-1">
             <Code2 className="h-3.5 w-3.5" />
@@ -1102,6 +1107,110 @@ export function SettingsPageWrapper({
                   <><Check className="h-4 w-4 mr-2" /> Saved</>
                 ) : (
                   <><Save className="h-4 w-4 mr-2" /> Save WhatsApp</>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ──────────── AI SETTINGS ──────────── */}
+        <TabsContent value="ai">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bot className="h-5 w-5" />
+                AI Auto-Response
+              </CardTitle>
+              <CardDescription>
+                Control how the AI assistant helps your customers. AI provides instant responses
+                when agents are unavailable and guides customers through payment after checkout.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+                <div className="space-y-1">
+                  <Label className="text-base font-medium">AI Auto-Response</Label>
+                  <p className="text-sm text-muted-foreground">
+                    When enabled, AI responds to visitor messages when no agents are available.
+                    Uses your knowledge base to answer questions.
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.aiAutoResponseEnabled !== false}
+                  onCheckedChange={(v) => update('aiAutoResponseEnabled', v)}
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+                <div className="space-y-1">
+                  <Label className="text-base font-medium">Payment Guidance</Label>
+                  <p className="text-sm text-muted-foreground">
+                    After checkout, AI automatically opens a chat and guides customers through
+                    the payment process with your bank details and instructions — even when agents
+                    are online. Works alongside your agents as a co-pilot.
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.aiPaymentGuidanceEnabled !== false}
+                  onCheckedChange={(v) => update('aiPaymentGuidanceEnabled', v)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Custom Payment Greeting (optional)</Label>
+                <Textarea
+                  value={settings.aiPaymentGreeting || ''}
+                  onChange={(e) => update('aiPaymentGreeting', e.target.value || null)}
+                  placeholder="Leave empty for default AI greeting. Example: Welcome! I see you just placed an order. Let me help you with payment..."
+                  rows={3}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Customize how the AI greets customers after checkout. Leave empty for the default.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Confidence Threshold</Label>
+                <div className="flex items-center gap-4">
+                  <Input
+                    type="number"
+                    value={settings.aiConfidenceThreshold ?? 0.7}
+                    onChange={(e) =>
+                      update('aiConfidenceThreshold', Math.min(1, Math.max(0, parseFloat(e.target.value) || 0.7)))
+                    }
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    className="w-24"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    AI hands off to a human agent when confidence is below this threshold (0 – 1).
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 text-sm text-blue-700 dark:text-blue-300">
+                <strong>How it works:</strong> After checkout, the chat widget automatically opens and
+                sends a message on behalf of the customer. The AI reads their order details, checks your
+                store&apos;s payment instructions, and walks them through the payment process step by step.
+                Your agents can monitor and take over at any time.
+              </div>
+
+              <Button
+                onClick={() =>
+                  saveSettings('ai', {
+                    aiAutoResponseEnabled: settings.aiAutoResponseEnabled !== false,
+                    aiPaymentGuidanceEnabled: settings.aiPaymentGuidanceEnabled !== false,
+                    aiPaymentGreeting: settings.aiPaymentGreeting || null,
+                    aiConfidenceThreshold: settings.aiConfidenceThreshold ?? 0.7,
+                  })
+                }
+                disabled={isPending}
+              >
+                {savedTab === 'ai' ? (
+                  <><Check className="h-4 w-4 mr-2" /> Saved</>
+                ) : (
+                  <><Save className="h-4 w-4 mr-2" /> Save AI Settings</>
                 )}
               </Button>
             </CardContent>

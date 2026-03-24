@@ -112,6 +112,11 @@ export interface ChatWidgetSettings {
   autoCloseEnabled: boolean
   autoCloseMinutes: number
   autoCloseMessage: string
+  // AI
+  aiAutoResponseEnabled: boolean
+  aiPaymentGuidanceEnabled: boolean
+  aiPaymentGreeting: string | null
+  aiConfidenceThreshold: number
   // Language
   language: string
   customTranslations: Record<string, string>

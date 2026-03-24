@@ -237,8 +237,16 @@ export async function POST(request: NextRequest) {
         })
         .eq("id", visitorId);
 
-      // Trigger AI auto-response if no agent was assigned
-      if (!convInsert.assigned_agent_id) {
+      // Trigger AI auto-response
+      // Payment/order messages ALWAYS trigger AI (co-pilot mode alongside agent)
+      // Other messages only trigger AI when no agent is assigned
+      const isPaymentMsg =
+        initialMessage &&
+        /\border(?:er)?\s*(?:#|num|number)?\s*(?:ORD[-\s]?\d+|\d{3,})/i.test(initialMessage) ||
+        /need\s+help\s+with\s+payment/i.test(initialMessage || '') ||
+        /just\s+placed\s+(?:an?\s+)?order/i.test(initialMessage || '');
+
+      if (isPaymentMsg || !convInsert.assigned_agent_id) {
         import("@/modules/live-chat/lib/auto-response-handler")
           .then(({ handleNewVisitorMessage }) => {
             handleNewVisitorMessage(
@@ -246,6 +254,7 @@ export async function POST(request: NextRequest) {
               conversationId,
               initialMessage,
               visitorId,
+              { forcePaymentGuidance: !!isPaymentMsg },
             ).catch((err: unknown) =>
               console.error(
                 "[LiveChat] Auto-response error on initial message:",
@@ -253,7 +262,9 @@ export async function POST(request: NextRequest) {
               ),
             );
           })
-          .catch(() => {});
+          .catch((err) =>
+            console.error("[LiveChat] Failed to load auto-response handler:", err),
+          );
       }
     }
 

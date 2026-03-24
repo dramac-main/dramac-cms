@@ -1,18 +1,46 @@
 # Active Context
 
-## Current Focus: Automated AI Chat Payment Guidance
+## Current Focus: Checkout → Order Confirmation Auto-Redirect Fix
 
-### Status: COMMITTED & PUSHED — `229eb0c5`
+### Status: COMMITTED & PUSHED — `d9cc11e6`
 
 ### What Was Done
 
-Automated AI chat payment guidance system — AI walks customers through payment after checkout like a human would. Site owner only needs to confirm payment receipt.
+Fixed critical UX gap: after checkout success, users were stuck on a bare-bones `CheckoutSuccessCard` inside `CheckoutPageBlock` that only showed order number + payment instructions + "View Full Order Details" button. The full-featured `OrderConfirmationBlock` at `/order-confirmation` (with chat auto-open, payment proof upload, chat buttons, and What Happens Next timeline) was only reachable if users manually clicked that button — most didn't.
 
-### Previous: Post-Purchase Experience Overhaul — COMPLETE (`83121720`)
+**Root Cause:** `CheckoutPageBlock` had its own inline success state (`CheckoutSuccessCard`) that rendered instead of navigating to the order confirmation page. All the post-purchase experience enhancements (commits `83121720`, `229eb0c5`) were built into `OrderConfirmationBlock` which users never reached.
+
+**Fix:** Added `React.useEffect` in CheckoutPageBlock that watches `orderResult` state and auto-redirects to `${successHref}?order=${orderId}` (defaults to `/order-confirmation?order=...`) via `window.location.href`. Shows a loading spinner during redirect.
+
+### Files Changed (1 file + 2 formatter-only)
+
+1. **`src/modules/ecommerce/studio/components/CheckoutPageBlock.tsx`** — Added useEffect for auto-redirect, replaced CheckoutSuccessCard render with loading spinner
+2. **`src/app/api/modules/live-chat/embed/route.ts`** — Formatter only (quotes/semicolons)
+3. **`src/app/api/modules/live-chat/conversations/route.ts`** — Formatter only (quotes/semicolons)
+
+### End-to-End Flow (Now Working)
+
+1. Customer completes checkout → `handlePlaceOrder` or `handleMobileSubmit` succeeds
+2. `setOrderResult({orderId, orderNumber, ...})` is called
+3. Loading spinner shown ("Loading your order details...")
+4. `useEffect` fires → `window.location.href = '/order-confirmation?order={orderId}'`
+5. Full page load of OrderConfirmationBlock
+6. Embed script loads → chat launcher + container + iframe created
+7. OrderConfirmationBlock fetches order data
+8. 3 seconds after order loads → `window.postMessage({type: 'dramac-chat-open', orderContext: {...}})`
+9. Embed script receives message → opens chat container → forwards order context to iframe
+10. ChatWidget receives order context → skips pre-chat form → auto-starts conversation
+11. Conversations API creates visitor + conversation + initial message → triggers AI auto-response
+12. AI enters Payment Guidance Mode → provides step-by-step payment instructions
+
+### Previous: Ecommerce Price Display Bug Fix — COMMITTED `e2f8f2c0`
+
+### Previous: Automated AI Chat Payment Guidance — COMMITTED `229eb0c5`
 
 ### Implementation (6 files modified)
 
 **AI Responder Enhancement** (`ai-responder.ts`)
+
 - Detects pending manual payment orders from customer context
 - Fetches store's `manual_payment_instructions` from `mod_ecommod01_settings`
 - Enters "Payment Guidance Mode" with specialized system prompt
@@ -21,23 +49,26 @@ Automated AI chat payment guidance system — AI walks customers through payment
 - AI acts like a friendly human guide, not a robot
 
 **Order Context Flow** (`OrderConfirmationBlock.tsx` → `embed/route.ts` → `ChatWidget.tsx`)
-- OrderConfirmation sends `window.postMessage({ type: 'dramac-chat-open', orderContext })` 
+
+- OrderConfirmation sends `window.postMessage({ type: 'dramac-chat-open', orderContext })`
 - Embed script handles `dramac-chat-open` from parent page, opens chat container, forwards `dramac-chat-order-context` to iframe
 - ChatWidget receives order context, stores in ref + state
 - Auto-starts conversation (skips pre-chat form) with customer email and order message
 - Handles both timing cases: order context before/after widget ready
 
 **AI Auto-Response on Initial Messages** (`conversations/route.ts`)
+
 - Conversations API now triggers `handleNewVisitorMessage()` for initial messages when no agent assigned
 - Previously only the messages API triggered AI — initial message was a dead end
 
 **Fix: CheckoutPageBlock** (`CheckoutPageBlock.tsx`)
+
 - Fixed pre-existing bug: `storefront.siteId` → `storefrontSiteId` (destructured from useStorefront)
 
 ### End-to-End Flow
 
 1. Customer checks out with manual payment → order confirmation page
-2. Chat auto-opens 3 seconds later via `openChatWithOrderContext()`  
+2. Chat auto-opens 3 seconds later via `openChatWithOrderContext()`
 3. `window.postMessage` → embed script → iframe → ChatWidget
 4. ChatWidget auto-starts conversation: email from order, message "Hi, I just placed order #XXX and need help with payment."
 5. Conversations API creates visitor + conversation + initial message → triggers AI

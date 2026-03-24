@@ -1,22 +1,24 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE ✅
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX ✅
 
 ---
 
-## Latest Update: Automated AI Chat Payment Guidance — Committed & Pushed (`229eb0c5`)
+## Latest Update: Ecommerce Price Display Fix — Committed & Pushed (`e2f8f2c0`)
 
-**AI walks customers through payment after checkout — only manual step is site owner confirming payment receipt.**
+**Fixed all ecommerce email/notification prices showing 100× too large (cents not converted to display units).**
 
-### Changes (6 files)
+### Changes (5 files)
+- **`business-notifications.ts`** — `notifyNewOrder`: divide total/subtotal/shipping/tax/item prices by 100; quote notification total
+- **`order-actions.ts`** — `sendOrderEmail` all price fields, refund request/process amounts
+- **`ecommerce-actions.ts`** — order cancellation notification total
+- **`public-ecommerce-actions.ts`** — payment proof upload notification total
+- **`customer-context-bridge.ts`** — AI customer history order total display
 
-- **`ai-responder.ts`** — Payment guidance mode: detects pending manual orders, fetches payment instructions, specialized system prompt with step-by-step guidance
-- **`OrderConfirmationBlock.tsx`** — Fixed `openChatWithOrderContext()` to use `window.postMessage` with order context (was broken: wrong iframe selector)
-- **`embed/route.ts`** — Handles `dramac-chat-open` from parent page scripts, forwards order context to iframe
-- **`ChatWidget.tsx`** — Receives order context, auto-starts conversation (skips pre-chat), handles both timing cases
-- **`conversations/route.ts`** — Triggers AI auto-response on initial messages (was missing)
-- **`CheckoutPageBlock.tsx`** — Fixed pre-existing `storefront.siteId` bug
+### KEY RULE: Ecommerce prices = CENTS in DB → always `/100` before `formatCurrency()`. Booking prices = display units → no conversion.
+
+### Previous: AI Chat Payment Guidance (`229eb0c5`)
 
 ---
 

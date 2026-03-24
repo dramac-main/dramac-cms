@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     // Validate visitor owns this conversation
     const { data: convData } = await (supabase as any)
       .from('mod_chat_conversations')
-      .select('visitor_id, site_id, assigned_agent_id')
+      .select('visitor_id, site_id, assigned_agent_id, metadata')
       .eq('id', conversationId)
       .single()
 
@@ -143,16 +143,22 @@ export async function POST(request: NextRequest) {
       }
     }).catch(() => {})
 
-    // Trigger AI auto-response if no agent is assigned
-    if (!convForNotify.assigned_agent_id) {
+    // Trigger AI auto-response:
+    // - For payment guidance conversations, ALWAYS trigger AI (co-pilot mode)
+    // - For other conversations, only when no agent is assigned
+    const convMeta = (convData as { metadata?: Record<string, unknown> }).metadata
+    const isPaymentConvo = convMeta?.payment_guidance_active === true
+
+    if (isPaymentConvo || !convForNotify.assigned_agent_id) {
       import('@/modules/live-chat/lib/auto-response-handler').then(({ handleNewVisitorMessage }) => {
         handleNewVisitorMessage(
           convForNotify.site_id,
           conversationId,
           content,
-          visitorId
+          visitorId,
+          { forcePaymentGuidance: isPaymentConvo }
         ).catch((err) => console.error('[LiveChat] Auto-response error:', err))
-      }).catch(() => {})
+      }).catch((err) => console.error('[LiveChat] Failed to load auto-response handler:', err))
     }
 
     return NextResponse.json(

@@ -719,7 +719,10 @@ export async function sendOrderEmail(
               orderNumber: order.order_number,
               items: formattedItems,
               subtotal: formatCurrency((order.subtotal || 0) / 100, currency),
-              shipping: formatCurrency((order.shipping_amount || 0) / 100, currency),
+              shipping: formatCurrency(
+                (order.shipping_amount || 0) / 100,
+                currency,
+              ),
               tax: formatCurrency((order.tax_amount || 0) / 100, currency),
               total: formatCurrency(order.total / 100, currency),
               shippingAddress: order.shipping_address

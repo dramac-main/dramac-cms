@@ -18,6 +18,13 @@ import {
 // =============================================================================
 
 const AI_ENABLED = !!process.env.ANTHROPIC_API_KEY;
+
+if (!AI_ENABLED) {
+  console.warn(
+    "[AI Responder] ANTHROPIC_API_KEY is not set — AI auto-responses are DISABLED. " +
+      "Set this environment variable on your hosting platform (e.g. Vercel) to enable AI features.",
+  );
+}
 const MAX_CONTEXT_MESSAGES = 10;
 const HANDOFF_KEYWORDS = [
   "human",
