@@ -219,15 +219,20 @@ export function OrderConfirmationBlock({
 
   // Check payment proof status on mount
   React.useEffect(() => {
-    if (!order || !storefront.siteId) return;
+    if (!order?.id || !storefront.siteId) return;
     getOrderPaymentProofStatus(storefront.siteId, order.id).then(
       setProofStatus,
     );
-  }, [order, storefront.siteId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [order?.id, storefront.siteId]);
 
   // Handle proof file selection
   const handleProofFileChange = (file: File | null) => {
     setProofError(null);
+    // Revoke any previous object URL to prevent memory leak
+    if (proofPreview) {
+      URL.revokeObjectURL(proofPreview);
+    }
     if (!file) {
       setProofFile(null);
       setProofPreview(null);
@@ -256,6 +261,16 @@ export function OrderConfirmationBlock({
       setProofPreview(null);
     }
   };
+
+  // Cleanup object URLs on unmount
+  React.useEffect(() => {
+    return () => {
+      if (proofPreview) {
+        URL.revokeObjectURL(proofPreview);
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Upload proof
   const handleProofUpload = async () => {

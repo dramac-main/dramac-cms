@@ -8,7 +8,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { getPublicProduct } from '../actions/public-ecommerce-actions'
+import { getPublicProductsByIds } from '../actions/public-ecommerce-actions'
 import type { 
   Product, 
   WishlistItem,
@@ -55,24 +55,17 @@ export function useStorefrontWishlist(siteId: string): StorefrontWishlistResult 
     setIsLoading(false)
   }, [siteId])
 
-  // Fetch product details for wishlist items
+  // Fetch product details for wishlist items — single batch query
   useEffect(() => {
     if (items.length === 0) {
       setProducts([])
       return
     }
 
-    async function fetchProducts() {
-      const productPromises = items.map(item => 
-        getPublicProduct(siteId, item.productId).catch(() => null)
-      )
-      
-      const results = await Promise.all(productPromises)
-      const validProducts = results.filter((p): p is Product => p !== null && p.status === 'active')
-      setProducts(validProducts)
-    }
-
-    fetchProducts()
+    const productIds = items.map(item => item.productId)
+    getPublicProductsByIds(siteId, productIds)
+      .then(results => setProducts(results))
+      .catch(() => setProducts([]))
   }, [siteId, items])
 
   // Save to localStorage whenever items change

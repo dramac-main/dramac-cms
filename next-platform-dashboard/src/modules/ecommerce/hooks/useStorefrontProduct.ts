@@ -13,7 +13,8 @@ import {
   getPublicProductBySlug, 
   getPublicProductVariants, 
   getPublicProductOptions,
-  getPublicProducts 
+  getPublicProducts,
+  getPublicProductsByCategory 
 } from '../actions/public-ecommerce-actions'
 import type { 
   Product, 
@@ -78,11 +79,15 @@ export function useStorefrontProduct(
       setVariants(variantsData.filter(v => v.is_active))
       setOptions(optionsData)
 
-      // Fetch related products (same category, excluding this product)
+      // Fetch related products (same category when available, excluding this product)
       try {
-        const relatedResult = await getPublicProducts(siteId, {
-          status: 'active'
-        }, 1, 8)
+        let relatedResult
+        const categoryId = (productData as Record<string, unknown>).category_id as string | undefined
+        if (categoryId) {
+          relatedResult = await getPublicProductsByCategory(siteId, categoryId, 1, 5)
+        } else {
+          relatedResult = await getPublicProducts(siteId, { status: 'active' }, 1, 5)
+        }
         
         // Filter out current product and limit to 4
         const related = relatedResult.data

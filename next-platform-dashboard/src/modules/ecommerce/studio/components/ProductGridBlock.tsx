@@ -7,7 +7,7 @@
 
 "use client";
 
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import type { ComponentDefinition, ResponsiveValue } from "@/types/studio";
 import {
   Grid3X3,
@@ -121,6 +121,8 @@ export function ProductGridBlock({
 
   // Local filter state
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(
     categoryId,
   );
@@ -133,11 +135,11 @@ export function ProductGridBlock({
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  // Fetch products with filters
+  // Fetch products with filters (uses debounced search)
   const { products, pagination, isLoading, error, refetch } =
     useStorefrontProducts(effectiveSiteId, {
       categoryId: selectedCategory,
-      search: searchQuery || undefined,
+      search: debouncedSearch || undefined,
       minPrice: priceRange[0] > 0 ? priceRange[0] : undefined,
       maxPrice: priceRange[1] < 10000 ? priceRange[1] : undefined,
       inStock: inStockOnly || undefined,
@@ -154,20 +156,55 @@ export function ProductGridBlock({
   const paddingValue = typeof padding === "object" ? padding.mobile : padding;
   const columnsValue = typeof columns === "object" ? columns.mobile : columns;
 
-  // Calculate grid columns class
+  // Calculate grid columns class — use explicit mappings for Tailwind purge safety
   const gridColsClass = useMemo(() => {
+    const gridColsMap: Record<number, string> = {
+      1: 'grid-cols-1',
+      2: 'grid-cols-2',
+      3: 'grid-cols-3',
+      4: 'grid-cols-4',
+      5: 'grid-cols-5',
+      6: 'grid-cols-6',
+    }
+    const mdGridColsMap: Record<number, string> = {
+      1: 'md:grid-cols-1',
+      2: 'md:grid-cols-2',
+      3: 'md:grid-cols-3',
+      4: 'md:grid-cols-4',
+      5: 'md:grid-cols-5',
+      6: 'md:grid-cols-6',
+    }
+    const lgGridColsMap: Record<number, string> = {
+      1: 'lg:grid-cols-1',
+      2: 'lg:grid-cols-2',
+      3: 'lg:grid-cols-3',
+      4: 'lg:grid-cols-4',
+      5: 'lg:grid-cols-5',
+      6: 'lg:grid-cols-6',
+    }
     const cols = typeof columns === "object" ? columns : { mobile: columns };
     return cn(
-      `grid-cols-${cols.mobile || 2}`,
-      cols.tablet && `md:grid-cols-${cols.tablet}`,
-      cols.desktop && `lg:grid-cols-${cols.desktop}`,
+      gridColsMap[cols.mobile || 2] || 'grid-cols-2',
+      cols.tablet && (mdGridColsMap[cols.tablet] || undefined),
+      cols.desktop && (lgGridColsMap[cols.desktop] || undefined),
     );
   }, [columns]);
 
-  // Handle search
+  // Handle search with debounce (300ms)
   const handleSearch = useCallback((value: string) => {
     setSearchQuery(value);
-    setCurrentPage(1);
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      setDebouncedSearch(value);
+      setCurrentPage(1);
+    }, 300);
+  }, []);
+
+  // Cleanup debounce timer
+  useEffect(() => {
+    return () => {
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    };
   }, []);
 
   // Handle category change

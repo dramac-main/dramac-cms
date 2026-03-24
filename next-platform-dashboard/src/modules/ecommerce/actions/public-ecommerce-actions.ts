@@ -74,6 +74,31 @@ export async function getPublicCategories(siteId: string): Promise<Category[]> {
 // PRODUCTS (public reads)
 // ============================================================================
 
+export async function getPublicProductsByIds(
+  siteId: string,
+  productIds: string[],
+): Promise<Product[]> {
+  if (!productIds.length) return []
+  try {
+    const supabase = getPublicClient();
+    const { data, error } = await supabase
+      .from(`${TABLE_PREFIX}_products`)
+      .select("*")
+      .eq("site_id", siteId)
+      .eq("status", "active")
+      .in("id", productIds);
+
+    if (error) {
+      console.error("[Ecom Public] getPublicProductsByIds error:", error);
+      return [];
+    }
+    return (data || []) as Product[];
+  } catch (err) {
+    console.error("[Ecom Public] getPublicProductsByIds unexpected error:", err);
+    return [];
+  }
+}
+
 export async function getPublicProducts(
   siteId: string,
   filters: ProductFilters = {},
@@ -440,7 +465,7 @@ export async function addPublicCartItem(
   productId: string,
   variantId: string | null,
   quantity: number,
-): Promise<CartItem> {
+): Promise<Cart> {
   const supabase = getPublicClient();
 
   // Get product price and validate
@@ -481,16 +506,15 @@ export async function addPublicCartItem(
     .single();
 
   if (existing) {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from(`${TABLE_PREFIX}_cart_items`)
       .update({ quantity: existing.quantity + quantity, unit_price: unitPrice })
       .eq("id", existing.id)
       .select()
       .single();
     if (error) throw new Error(error.message);
-    return data as CartItem;
   } else {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from(`${TABLE_PREFIX}_cart_items`)
       .insert({
         cart_id: cartId,
@@ -502,8 +526,12 @@ export async function addPublicCartItem(
       .select()
       .single();
     if (error) throw new Error(error.message);
-    return data as CartItem;
   }
+
+  // Return the full updated cart with all items (eliminates separate getPublicCart call)
+  const updatedCart = await getPublicCart(cartId);
+  if (!updatedCart) throw new Error("Failed to retrieve updated cart");
+  return updatedCart;
 }
 
 export async function updatePublicCartItemQuantity(

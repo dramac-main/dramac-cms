@@ -128,8 +128,16 @@ export function useStorefrontCart(
 
   // Listen for cart-updated events from other components
   useEffect(() => {
-    const handleCartUpdate = () => {
-      // Re-fetch cart data when another component updates the cart
+    const handleCartUpdate = (e: Event) => {
+      const detail = (e as CustomEvent)?.detail
+      // If event includes full cart data, use it directly (no re-fetch)
+      if (detail?.cart) {
+        setCart(detail.cart)
+        return
+      }
+      // If event includes itemCount only (from NavCartBadge etc), skip
+      if (detail?.itemCount !== undefined) return
+      // Fallback: re-fetch only if no data was provided
       if (cart?.id) {
         getPublicCart(cart.id).then((refreshedCart) => {
           if (refreshedCart) {
@@ -184,16 +192,15 @@ export function useStorefrontCart(
     setError(null)
 
     try {
-      // addCartItem returns CartItem, not Cart - so we need to refresh
-      await addPublicCartItem(cart.id, productId, variantId, quantity)
-      // Refresh to get the full updated cart with all items
-      const refreshedCart = await getPublicCart(cart.id)
-      if (refreshedCart) {
-        setCart(refreshedCart)
-      }
-      // Notify other cart instances
+      // addPublicCartItem now returns the full updated cart — single round-trip
+      const updatedCart = await addPublicCartItem(cart.id, productId, variantId, quantity)
+      setCart(updatedCart)
+      // Notify other cart instances with full cart data (no re-fetch needed)
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('cart-updated'))
+        const newItemCount = updatedCart.items?.reduce((sum, item) => sum + item.quantity, 0) || 0
+        window.dispatchEvent(new CustomEvent('cart-updated', {
+          detail: { cart: updatedCart, itemCount: newItemCount }
+        }))
       }
       return true
     } catch (err) {
@@ -221,6 +228,14 @@ export function useStorefrontCart(
     try {
       await updateCartItemQty(itemId, quantity)
       await refresh()
+      // Notify other cart instances with updated data
+      if (typeof window !== 'undefined' && cart) {
+        const refreshedCart = cart
+        const newItemCount = refreshedCart.items?.reduce((sum, item) => sum + item.quantity, 0) || 0
+        window.dispatchEvent(new CustomEvent('cart-updated', {
+          detail: { itemCount: newItemCount }
+        }))
+      }
       return true
     } catch (err) {
       console.error('Error updating quantity:', err)
@@ -229,7 +244,7 @@ export function useStorefrontCart(
     } finally {
       setIsUpdating(false)
     }
-  }, [cart?.id, refresh])
+  }, [cart?.id, cart, refresh])
 
   // Remove item
   const removeItem = useCallback(async (itemId: string): Promise<boolean> => {
@@ -244,6 +259,15 @@ export function useStorefrontCart(
     try {
       await removeCartItemAction(itemId)
       await refresh()
+      // Notify other cart instances
+      if (typeof window !== 'undefined') {
+        const newItemCount = cart.items
+          ?.filter(item => item.id !== itemId)
+          .reduce((sum, item) => sum + item.quantity, 0) || 0
+        window.dispatchEvent(new CustomEvent('cart-updated', {
+          detail: { itemCount: newItemCount }
+        }))
+      }
       return true
     } catch (err) {
       console.error('Error removing item:', err)
@@ -252,7 +276,7 @@ export function useStorefrontCart(
     } finally {
       setIsUpdating(false)
     }
-  }, [cart?.id, refresh])
+  }, [cart?.id, cart?.items, refresh])
 
   // Clear cart
   const clearCartFn = useCallback(async (): Promise<boolean> => {

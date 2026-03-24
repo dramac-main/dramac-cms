@@ -211,8 +211,7 @@ export function ProductCardBlock({
               : "Item added to your cart",
             duration: 3000,
           });
-          // Dispatch custom event so other cart components can refresh
-          window.dispatchEvent(new CustomEvent("cart-updated"));
+          // Note: cart-updated event is already dispatched by useStorefrontCart.addItem()
         } else {
           toast.error("Failed to add item to cart");
         }
