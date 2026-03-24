@@ -1,8 +1,36 @@
 # Active Context
 
-## Current Focus: Live Chat Complete Overhaul — DEPLOYED & VERIFIED
+## Current Focus: Live Chat Error #310 Fix + Agent Management Hardening
 
-### Status: COMMITTED, PUSHED & DEPLOYED — `c45386f4`
+### Status: COMMITTED, PUSHED, DEPLOYING — `2646df2e`
+
+### What Was Done
+Fixed React Error #310 on live chat pages, hardened agent management to be bulletproof, and added self-healing admin agent bootstrap.
+
+### Root Cause: React Error #310
+- **Error**: "Rendered more hooks than during the previous render"
+- **Location**: `ChatWidget.tsx` — a `useEffect` was placed AFTER two conditional early returns
+- **Mechanism**: First render (loading state) → early return → useEffect never reached (N hooks). Second render (loaded) → early return skipped → useEffect reached (N+1 hooks) → Error #310
+- **Widget architecture**: LiveChatWidgetInjector → Script → /api/modules/live-chat/embed → iframe → /embed/chat-widget → ChatWidget
+- **Fix**: Moved the useEffect before all early returns
+
+### Agent Management Hardening
+1. **Admin agent protected from deletion** — Server-side check in `deleteAgent()` blocks deletion of admin role or last remaining agent
+2. **Self-healing bootstrap** — New `ensureAdminAgent(siteId)` function checks for active admin agent on every page load, auto-reactivates soft-deleted admins or creates new ones
+3. **UI protection** — Admin agents show "Protected" badge instead of "Remove" button in AgentsPageWrapper
+4. **Team member integration** — "Manage Team Members" link added to Add Agent dialog (opens `/settings/team`)
+
+### Files Changed (6)
+- `ChatWidget.tsx` — Moved useEffect before early returns
+- `agent-actions.ts` — Admin/last-agent deletion protection
+- `bootstrap-agent.ts` — New `ensureAdminAgent()` self-healing function
+- `agents/page.tsx` — Calls ensureAdminAgent on load
+- `live-chat/page.tsx` — Calls ensureAdminAgent on load
+- `AgentsPageWrapper.tsx` — Admin badge, protected Remove, team member link
+
+---
+
+## Previous Focus: Live Chat Complete Overhaul — DEPLOYED & VERIFIED
 
 ### Root Cause
 Live chat was completely broken for ALL sites — ZERO agents existed in `mod_chat_agents` table. The `bootstrapLiveChatAgent` function in `sites.ts` had TWO bugs:

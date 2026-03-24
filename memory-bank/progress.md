@@ -1,11 +1,41 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL ✅
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING ✅
 
 ---
 
-## Latest Update: Live Chat Complete Overhaul — `c45386f4`
+## Latest Update: Live Chat Error #310 Fix + Agent Management Hardening — `2646df2e`
+
+**Root Cause: React Error #310** — "Rendered more hooks than during the previous render" in `ChatWidget.tsx`. A `useEffect` was placed after two conditional early returns; on first render (loading) the early return meant N hooks ran, on second render (loaded) N+1 hooks ran → Error #310.
+
+**Fixes (6 files, 124 insertions, 22 deletions):**
+- `ChatWidget.tsx` — Moved useEffect before all early returns (hooks violation fix)
+- `agent-actions.ts` — Admin agent + last-agent deletion protection in `deleteAgent()`
+- `bootstrap-agent.ts` — New `ensureAdminAgent()` self-healing function (checks/reactivates/creates admin agent)
+- `agents/page.tsx` — Calls `ensureAdminAgent(siteId)` on page load
+- `live-chat/page.tsx` — Calls `ensureAdminAgent(siteId)` on page load
+- `AgentsPageWrapper.tsx` — Admin badge, protected Remove button, team member management link
+
+**Key Patterns:**
+- Admin agent is now undeletable (server-side validation + UI protection)
+- Self-healing: every page load ensures admin agent exists, auto-reactivates soft-deleted ones
+- Team member link: Add Agent dialog links to `/settings/team` when no available members
+- TypeScript: ZERO errors
+
+---
+
+## Previous Update: Domain Fix — All `dramac.app` → `dramacagency.com` — `771278e5`
+
+**38 files fixed**, replacing ALL hardcoded `dramac.app` domain references with correct production domains:
+- `app.dramacagency.com` (dashboard), `*.sites.dramacagency.com` (storefronts), `dramacagency.com` (platform)
+- CNAME: `cname.vercel-dns.com`, Nameservers: `vercel-dns.com`, Email: `support@dramacagency.com`
+- TypeScript: ZERO errors
+- Backward-compatible `.dramac.app` detection kept in site routing for legacy
+
+---
+
+## Previous Update: Live Chat Complete Overhaul — `c45386f4`
 
 **ROOT CAUSE: Zero agents existed for any site. Bootstrap function had role constraint violation + wrong status.**
 
