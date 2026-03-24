@@ -696,6 +696,14 @@ export function CheckoutPageBlock({
     }
   };
 
+  // Auto-redirect to full order confirmation page on success
+  // OrderConfirmationBlock has chat auto-open, payment proof upload, chat buttons, timeline
+  React.useEffect(() => {
+    if (orderResult) {
+      window.location.href = `${successHref}?order=${orderResult.orderId}`;
+    }
+  }, [orderResult, successHref]);
+
   // Empty cart state
   if (checkout.items.length === 0 && !orderResult) {
     return (
@@ -715,16 +723,17 @@ export function CheckoutPageBlock({
     );
   }
 
-  // Order success - redirect or show confirmation
+  // Order success - show loading while redirecting to order confirmation
   if (orderResult) {
-    const isManualPayment = !!orderResult.paymentInstructions;
     return (
-      <CheckoutSuccessCard
-        orderResult={orderResult}
-        isManualPayment={isManualPayment}
-        successHref={successHref}
-        className={className}
-      />
+      <div className={cn("py-12", className)}>
+        <div className="container max-w-4xl mx-auto px-4">
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="h-10 w-10 animate-spin text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">Loading your order details...</p>
+          </div>
+        </div>
+      </div>
     );
   }
 

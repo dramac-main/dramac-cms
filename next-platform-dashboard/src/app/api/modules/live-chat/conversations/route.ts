@@ -7,21 +7,29 @@
  * GET  — Fetch conversation details + messages for widget display
  */
 
-import { NextRequest, NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
-import { mapRecord, mapRecords, toDbRecord } from '@/modules/live-chat/lib/map-db-record'
-import type { ChatConversation, ChatMessage, ChatVisitor } from '@/modules/live-chat/types'
+import { NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  mapRecord,
+  mapRecords,
+  toDbRecord,
+} from "@/modules/live-chat/lib/map-db-record";
+import type {
+  ChatConversation,
+  ChatMessage,
+  ChatVisitor,
+} from "@/modules/live-chat/types";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-}
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
 
 export async function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: corsHeaders })
+  return new NextResponse(null, { status: 204, headers: corsHeaders });
 }
 
 /**
@@ -30,57 +38,60 @@ export async function OPTIONS() {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { siteId, visitorData, departmentId, initialMessage } = body
+    const body = await request.json();
+    const { siteId, visitorData, departmentId, initialMessage } = body;
 
     if (!siteId) {
       return NextResponse.json(
-        { error: 'siteId is required' },
-        { status: 400, headers: corsHeaders }
-      )
+        { error: "siteId is required" },
+        { status: 400, headers: corsHeaders },
+      );
     }
 
-    const supabase = createAdminClient()
+    const supabase = createAdminClient();
 
     // 1. Create or find existing visitor
-    let visitorId: string
+    let visitorId: string;
 
     // Check if visitor with this email already exists
     if (visitorData?.email) {
       const { data: existingVisitor } = await (supabase as any)
-        .from('mod_chat_visitors')
-        .select('id')
-        .eq('site_id', siteId)
-        .eq('email', visitorData.email)
-        .eq('channel', 'widget')
-        .maybeSingle()
+        .from("mod_chat_visitors")
+        .select("id")
+        .eq("site_id", siteId)
+        .eq("email", visitorData.email)
+        .eq("channel", "widget")
+        .maybeSingle();
 
       if (existingVisitor) {
-        visitorId = existingVisitor.id
+        visitorId = existingVisitor.id;
 
         // Update tracking data
         const updates: Record<string, unknown> = {
           last_seen_at: new Date().toISOString(),
           total_visits: (supabase as any).rpc ? undefined : 1, // increment handled below
-        }
-        if (visitorData.name) updates.name = visitorData.name
-        if (visitorData.phone) updates.phone = visitorData.phone
-        if (visitorData.browser) updates.browser = visitorData.browser
-        if (visitorData.os) updates.os = visitorData.os
-        if (visitorData.device) updates.device = visitorData.device
-        if (visitorData.currentPageUrl) updates.current_page_url = visitorData.currentPageUrl
-        if (visitorData.currentPageTitle) updates.current_page_title = visitorData.currentPageTitle
-        if (visitorData.referrerUrl) updates.referrer_url = visitorData.referrerUrl
+        };
+        if (visitorData.name) updates.name = visitorData.name;
+        if (visitorData.phone) updates.phone = visitorData.phone;
+        if (visitorData.browser) updates.browser = visitorData.browser;
+        if (visitorData.os) updates.os = visitorData.os;
+        if (visitorData.device) updates.device = visitorData.device;
+        if (visitorData.currentPageUrl)
+          updates.current_page_url = visitorData.currentPageUrl;
+        if (visitorData.currentPageTitle)
+          updates.current_page_title = visitorData.currentPageTitle;
+        if (visitorData.referrerUrl)
+          updates.referrer_url = visitorData.referrerUrl;
 
         await (supabase as any)
-          .from('mod_chat_visitors')
+          .from("mod_chat_visitors")
           .update(updates)
-          .eq('id', visitorId)
+          .eq("id", visitorId);
       } else {
         // Create new visitor
         const visitorInsert: Record<string, unknown> = {
           site_id: siteId,
-          channel: 'widget',
+          channel: "widget",
           name: visitorData?.name || null,
           email: visitorData?.email || null,
           phone: visitorData?.phone || null,
@@ -98,23 +109,25 @@ export async function POST(request: NextRequest) {
           total_messages: 0,
           tags: [],
           custom_data: {},
-        }
+        };
 
-        const { data: newVisitor, error: visitorError } = await (supabase as any)
-          .from('mod_chat_visitors')
+        const { data: newVisitor, error: visitorError } = await (
+          supabase as any
+        )
+          .from("mod_chat_visitors")
           .insert(visitorInsert)
-          .select('id')
-          .single()
+          .select("id")
+          .single();
 
-        if (visitorError) throw visitorError
-        visitorId = newVisitor.id
+        if (visitorError) throw visitorError;
+        visitorId = newVisitor.id;
       }
     } else {
       // Create anonymous visitor
       const visitorInsert: Record<string, unknown> = {
         site_id: siteId,
-        channel: 'widget',
-        name: visitorData?.name || 'Visitor',
+        channel: "widget",
+        name: visitorData?.name || "Visitor",
         browser: visitorData?.browser || null,
         os: visitorData?.os || null,
         device: visitorData?.device || null,
@@ -129,122 +142,131 @@ export async function POST(request: NextRequest) {
         total_messages: 0,
         tags: [],
         custom_data: {},
-      }
+      };
 
       const { data: newVisitor, error: visitorError } = await (supabase as any)
-        .from('mod_chat_visitors')
+        .from("mod_chat_visitors")
         .insert(visitorInsert)
-        .select('id')
-        .single()
+        .select("id")
+        .single();
 
-      if (visitorError) throw visitorError
-      visitorId = newVisitor.id
+      if (visitorError) throw visitorError;
+      visitorId = newVisitor.id;
     }
 
     // 2. Create conversation
     const convInsert: Record<string, unknown> = {
       site_id: siteId,
       visitor_id: visitorId,
-      status: 'pending',
-      channel: 'widget',
-      priority: 'normal',
+      status: "pending",
+      channel: "widget",
+      priority: "normal",
       message_count: 0,
       unread_agent_count: 0,
       unread_visitor_count: 0,
       tags: [],
       metadata: {},
-    }
+    };
 
-    if (departmentId) convInsert.department_id = departmentId
+    if (departmentId) convInsert.department_id = departmentId;
 
     // Auto-assign to available online agent (not 'away' — away agents shouldn't get new chats)
     const { data: availableAgents } = await (supabase as any)
-      .from('mod_chat_agents')
-      .select('id, current_chat_count, max_concurrent_chats')
-      .eq('site_id', siteId)
-      .eq('is_active', true)
-      .eq('status', 'online')
-      .order('current_chat_count', { ascending: true })
+      .from("mod_chat_agents")
+      .select("id, current_chat_count, max_concurrent_chats")
+      .eq("site_id", siteId)
+      .eq("is_active", true)
+      .eq("status", "online")
+      .order("current_chat_count", { ascending: true });
 
     // Filter to agents with capacity (can't do column-to-column comparison in Supabase client)
     const availableAgent = (availableAgents || []).find(
       (a: { current_chat_count: number; max_concurrent_chats: number }) =>
-        (a.current_chat_count || 0) < (a.max_concurrent_chats || 5)
-    )
+        (a.current_chat_count || 0) < (a.max_concurrent_chats || 5),
+    );
 
     if (availableAgent) {
-      convInsert.assigned_agent_id = availableAgent.id
-      convInsert.status = 'active'
+      convInsert.assigned_agent_id = availableAgent.id;
+      convInsert.status = "active";
     }
 
     const { data: convData, error: convError } = await (supabase as any)
-      .from('mod_chat_conversations')
+      .from("mod_chat_conversations")
       .insert(convInsert)
       .select()
-      .single()
+      .single();
 
-    if (convError) throw convError
+    if (convError) throw convError;
 
-    const conversationId = convData.id
+    const conversationId = convData.id;
 
     // 3. Send initial message if provided
     if (initialMessage) {
       const msgInsert: Record<string, unknown> = {
         conversation_id: conversationId,
         site_id: siteId,
-        sender_type: 'visitor',
+        sender_type: "visitor",
         sender_id: visitorId,
-        sender_name: visitorData?.name || 'Visitor',
+        sender_name: visitorData?.name || "Visitor",
         content: initialMessage,
-        content_type: 'text',
-        status: 'sent',
+        content_type: "text",
+        status: "sent",
         is_internal_note: false,
-      }
+      };
 
-      await (supabase as any)
-        .from('mod_chat_messages')
-        .insert(msgInsert)
+      await (supabase as any).from("mod_chat_messages").insert(msgInsert);
 
       // Update conversation last message
       await (supabase as any)
-        .from('mod_chat_conversations')
+        .from("mod_chat_conversations")
         .update({
           last_message_text: initialMessage.substring(0, 255),
           last_message_at: new Date().toISOString(),
-          last_message_by: 'visitor',
+          last_message_by: "visitor",
           message_count: 1,
           unread_agent_count: 1,
         })
-        .eq('id', conversationId)
+        .eq("id", conversationId);
 
       // Update visitor stats
       await (supabase as any)
-        .from('mod_chat_visitors')
+        .from("mod_chat_visitors")
         .update({
           total_conversations: 1,
           total_messages: 1,
         })
-        .eq('id', visitorId)
+        .eq("id", visitorId);
 
       // Trigger AI auto-response if no agent was assigned
       if (!convInsert.assigned_agent_id) {
-        import('@/modules/live-chat/lib/auto-response-handler').then(({ handleNewVisitorMessage }) => {
-          handleNewVisitorMessage(siteId, conversationId, initialMessage, visitorId)
-            .catch((err: unknown) => console.error('[LiveChat] Auto-response error on initial message:', err))
-        }).catch(() => {})
+        import("@/modules/live-chat/lib/auto-response-handler")
+          .then(({ handleNewVisitorMessage }) => {
+            handleNewVisitorMessage(
+              siteId,
+              conversationId,
+              initialMessage,
+              visitorId,
+            ).catch((err: unknown) =>
+              console.error(
+                "[LiveChat] Auto-response error on initial message:",
+                err,
+              ),
+            );
+          })
+          .catch(() => {});
       }
     }
 
     return NextResponse.json(
       { conversationId, visitorId },
-      { status: 201, headers: corsHeaders }
-    )
+      { status: 201, headers: corsHeaders },
+    );
   } catch (error) {
-    console.error('[LiveChat Conversations API] POST error:', error)
+    console.error("[LiveChat Conversations API] POST error:", error);
     return NextResponse.json(
-      { error: 'Failed to create conversation' },
-      { status: 500, headers: corsHeaders }
-    )
+      { error: "Failed to create conversation" },
+      { status: 500, headers: corsHeaders },
+    );
   }
 }
 
@@ -254,68 +276,68 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const conversationId = searchParams.get('conversationId')
-    const visitorId = searchParams.get('visitorId')
+    const { searchParams } = new URL(request.url);
+    const conversationId = searchParams.get("conversationId");
+    const visitorId = searchParams.get("visitorId");
 
     if (!conversationId || !visitorId) {
       return NextResponse.json(
-        { error: 'conversationId and visitorId are required' },
-        { status: 400, headers: corsHeaders }
-      )
+        { error: "conversationId and visitorId are required" },
+        { status: 400, headers: corsHeaders },
+      );
     }
 
-    const supabase = createAdminClient()
+    const supabase = createAdminClient();
 
     // Fetch conversation and validate visitorId
     const { data: convData, error: convError } = await (supabase as any)
-      .from('mod_chat_conversations')
-      .select('*')
-      .eq('id', conversationId)
-      .single()
+      .from("mod_chat_conversations")
+      .select("*")
+      .eq("id", conversationId)
+      .single();
 
     if (convError || !convData) {
       return NextResponse.json(
-        { error: 'Conversation not found' },
-        { status: 404, headers: corsHeaders }
-      )
+        { error: "Conversation not found" },
+        { status: 404, headers: corsHeaders },
+      );
     }
 
     // Security: validate visitor owns this conversation
     if (convData.visitor_id !== visitorId) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 403, headers: corsHeaders }
-      )
+        { error: "Unauthorized" },
+        { status: 403, headers: corsHeaders },
+      );
     }
 
-    const conversation = mapRecord<ChatConversation>(convData)
+    const conversation = mapRecord<ChatConversation>(convData);
 
     // Fetch messages
     const { data: msgData, count } = await (supabase as any)
-      .from('mod_chat_messages')
-      .select('*', { count: 'exact' })
-      .eq('conversation_id', conversationId)
-      .eq('is_internal_note', false) // Don't show internal notes to visitors
-      .order('created_at', { ascending: true })
+      .from("mod_chat_messages")
+      .select("*", { count: "exact" })
+      .eq("conversation_id", conversationId)
+      .eq("is_internal_note", false) // Don't show internal notes to visitors
+      .order("created_at", { ascending: true });
 
-    const messages = mapRecords<ChatMessage>(msgData || [])
+    const messages = mapRecords<ChatMessage>(msgData || []);
 
     // Mark visitor messages as read
     await (supabase as any)
-      .from('mod_chat_conversations')
+      .from("mod_chat_conversations")
       .update({ unread_visitor_count: 0 })
-      .eq('id', conversationId)
+      .eq("id", conversationId);
 
     return NextResponse.json(
       { conversation, messages, total: count || 0 },
-      { headers: corsHeaders }
-    )
+      { headers: corsHeaders },
+    );
   } catch (error) {
-    console.error('[LiveChat Conversations API] GET error:', error)
+    console.error("[LiveChat Conversations API] GET error:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch conversation' },
-      { status: 500, headers: corsHeaders }
-    )
+      { error: "Failed to fetch conversation" },
+      { status: 500, headers: corsHeaders },
+    );
   }
 }

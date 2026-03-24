@@ -8,41 +8,42 @@
  * The returned script creates an iframe + launcher button on the customer's site.
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from "next/server";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url)
-  const siteId = searchParams.get('siteId')
+  const { searchParams } = new URL(request.url);
+  const siteId = searchParams.get("siteId");
 
   if (!siteId) {
-    return new NextResponse('// Error: siteId is required', {
+    return new NextResponse("// Error: siteId is required", {
       status: 400,
-      headers: { 'Content-Type': 'application/javascript' },
-    })
+      headers: { "Content-Type": "application/javascript" },
+    });
   }
 
   // Validate siteId is a valid UUID to prevent XSS injection
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!uuidRegex.test(siteId)) {
-    return new NextResponse('// Error: invalid siteId format', {
+    return new NextResponse("// Error: invalid siteId format", {
       status: 400,
-      headers: { 'Content-Type': 'application/javascript' },
-    })
+      headers: { "Content-Type": "application/javascript" },
+    });
   }
 
   // Determine the base URL for the widget
   // Validate host to prevent XSS injection via Host header
-  const protocol = request.headers.get('x-forwarded-proto') || 'https'
-  const rawHost = request.headers.get('host') || 'app.dramacagency.com'
+  const protocol = request.headers.get("x-forwarded-proto") || "https";
+  const rawHost = request.headers.get("host") || "app.dramacagency.com";
   // Strip anything that's not a valid hostname character
-  const host = rawHost.replace(/[^a-zA-Z0-9.\-:]/g, '')
-  const baseUrl = `${protocol}://${host}`
+  const host = rawHost.replace(/[^a-zA-Z0-9.\-:]/g, "");
+  const baseUrl = `${protocol}://${host}`;
 
   // Use JSON.stringify for safe interpolation into JavaScript
-  const safeSiteId = JSON.stringify(siteId)
-  const safeBaseUrl = JSON.stringify(baseUrl)
+  const safeSiteId = JSON.stringify(siteId);
+  const safeBaseUrl = JSON.stringify(baseUrl);
 
   const script = `
 (function() {
@@ -274,14 +275,14 @@ export async function GET(request: NextRequest) {
     });
   }
 })();
-`
+`;
 
   return new NextResponse(script.trim(), {
     status: 200,
     headers: {
-      'Content-Type': 'application/javascript',
-      'Cache-Control': 'public, max-age=300',
-      'Access-Control-Allow-Origin': '*',
+      "Content-Type": "application/javascript",
+      "Cache-Control": "public, max-age=300",
+      "Access-Control-Allow-Origin": "*",
     },
-  })
+  });
 }
