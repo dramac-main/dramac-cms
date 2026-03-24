@@ -1,32 +1,41 @@
 # Active Context
 
-## Current Focus: Live Chat Error #310 Fix + Agent Management Hardening
+## Current Focus: Storefront Performance & UX Overhaul
 
-### Status: COMMITTED, PUSHED, DEPLOYING — `2646df2e`
+### Status: COMMITTED, DEPLOYED, LIVE — `f031b48e`
 
 ### What Was Done
-Fixed React Error #310 on live chat pages, hardened agent management to be bulletproof, and added self-healing admin agent bootstrap.
+Comprehensive storefront performance audit and fix — 10 issues resolved across 7 files.
 
-### Root Cause: React Error #310
-- **Error**: "Rendered more hooks than during the previous render"
-- **Location**: `ChatWidget.tsx` — a `useEffect` was placed AFTER two conditional early returns
-- **Mechanism**: First render (loading state) → early return → useEffect never reached (N hooks). Second render (loaded) → early return skipped → useEffect reached (N+1 hooks) → Error #310
-- **Widget architecture**: LiveChatWidgetInjector → Script → /api/modules/live-chat/embed → iframe → /embed/chat-widget → ChatWidget
-- **Fix**: Moved the useEffect before all early returns
+### Root Cause: Add-to-Cart Slowness
+**Triple-fetch pattern**: When user clicked "Add to Cart":
+1. `addPublicCartItem()` — 3 DB queries (product, existing check, upsert)
+2. `getPublicCart()` — explicit refresh in addItem()
+3. `getPublicCart()` — triggered by `cart-updated` event listener
+4. NavCartBadge `fetchCount()` — triggered by same event (4th network call)
 
-### Agent Management Hardening
-1. **Admin agent protected from deletion** — Server-side check in `deleteAgent()` blocks deletion of admin role or last remaining agent
-2. **Self-healing bootstrap** — New `ensureAdminAgent(siteId)` function checks for active admin agent on every page load, auto-reactivates soft-deleted admins or creates new ones
-3. **UI protection** — Admin agents show "Protected" badge instead of "Remove" button in AgentsPageWrapper
-4. **Team member integration** — "Manage Team Members" link added to Add Agent dialog (opens `/settings/team`)
+Total: 4 sequential server round-trips with NO optimistic UI (user stared at spinner for full duration).
 
-### Files Changed (6)
-- `ChatWidget.tsx` — Moved useEffect before early returns
-- `agent-actions.ts` — Admin/last-agent deletion protection
-- `bootstrap-agent.ts` — New `ensureAdminAgent()` self-healing function
-- `agents/page.tsx` — Calls ensureAdminAgent on load
-- `live-chat/page.tsx` — Calls ensureAdminAgent on load
-- `AgentsPageWrapper.tsx` — Admin badge, protected Remove, team member link
+### Fixes Applied (commit `f031b48e`)
+1. **addPublicCartItem** now returns full updated cart — eliminates separate getPublicCart call
+2. **useStorefrontCart.addItem()** — single round-trip, passes cart data in `cart-updated` event
+3. **cart-updated events** now include `{ cart, itemCount }` detail — listeners use data directly
+4. **NavCartBadge** already had `detail.itemCount` check — now receives data, zero re-fetch
+5. **product-card-block** — removed duplicate `cart-updated` dispatch (hook already dispatches)
+6. **ProductGridBlock** — fixed Tailwind template literal grid classes (grid layout was broken!)
+7. **ProductGridBlock** — added 300ms search debounce
+8. **useStorefrontProduct** — related products now query by category instead of all products
+9. **useStorefrontWishlist** — batch product fetch via new `getPublicProductsByIds` instead of N+1
+10. **OrderConfirmationBlock** — fixed URL.createObjectURL memory leak, stabilized effect deps
+
+### Files Changed (7)
+- `public-ecommerce-actions.ts` — addPublicCartItem returns Cart, new getPublicProductsByIds
+- `useStorefrontCart.ts` — Single round-trip addItem, event data passing, smart event handling
+- `product-card-block.tsx` — Removed duplicate cart-updated dispatch
+- `ProductGridBlock.tsx` — Fixed Tailwind grid classes, added search debounce
+- `useStorefrontProduct.ts` — Related products by category
+- `useStorefrontWishlist.ts` — Batch fetch via getPublicProductsByIds
+- `OrderConfirmationBlock.tsx` — Memory leak fix, effect dependency stabilization
 
 ---
 
