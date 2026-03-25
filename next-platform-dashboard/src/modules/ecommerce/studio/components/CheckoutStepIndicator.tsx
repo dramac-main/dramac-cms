@@ -1,31 +1,31 @@
 /**
  * CheckoutStepIndicator - Step progress indicator
- * 
+ *
  * Phase ECOM-23: Checkout Components
- * 
+ *
  * Visual indicator showing the current step in the checkout process.
  */
-'use client'
+"use client";
 
-import React from 'react'
-import { cn } from '@/lib/utils'
-import { Check } from 'lucide-react'
-import type { CheckoutStep } from '../../hooks/useCheckout'
+import React from "react";
+import { cn } from "@/lib/utils";
+import { Check } from "lucide-react";
+import type { CheckoutStep } from "../../hooks/useCheckout";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 interface CheckoutStepIndicatorProps {
-  steps: CheckoutStep[]
-  currentStep: CheckoutStep
-  onStepClick?: (step: CheckoutStep) => void
-  className?: string
+  steps: CheckoutStep[];
+  currentStep: CheckoutStep;
+  onStepClick?: (step: CheckoutStep) => void;
+  className?: string;
 }
 
 interface StepConfig {
-  label: string
-  description?: string
+  label: string;
+  description?: string;
 }
 
 // ============================================================================
@@ -34,22 +34,22 @@ interface StepConfig {
 
 const STEP_CONFIG: Record<CheckoutStep, StepConfig> = {
   information: {
-    label: 'Information',
-    description: 'Contact & shipping'
+    label: "Information",
+    description: "Contact, address & shipping",
   },
   shipping: {
-    label: 'Shipping',
-    description: 'Delivery method'
+    label: "Shipping",
+    description: "Delivery method",
   },
   payment: {
-    label: 'Payment',
-    description: 'Payment method'
+    label: "Pay & Review",
+    description: "Payment & confirm",
   },
   review: {
-    label: 'Review',
-    description: 'Confirm order'
-  }
-}
+    label: "Review",
+    description: "Confirm order",
+  },
+};
 
 // ============================================================================
 // COMPONENT
@@ -59,20 +59,20 @@ export function CheckoutStepIndicator({
   steps,
   currentStep,
   onStepClick,
-  className
+  className,
 }: CheckoutStepIndicatorProps) {
-  const currentIndex = steps.indexOf(currentStep)
+  const currentIndex = steps.indexOf(currentStep);
 
   return (
-    <nav className={cn('', className)}>
+    <nav className={cn("", className)}>
       {/* Desktop View */}
       <ol className="hidden sm:flex items-center">
         {steps.map((step, index) => {
-          const config = STEP_CONFIG[step]
-          const isActive = step === currentStep
-          const isCompleted = index < currentIndex
-          const isClickable = onStepClick && (isCompleted || isActive)
-          
+          const config = STEP_CONFIG[step];
+          const isActive = step === currentStep;
+          const isCompleted = index < currentIndex;
+          const isClickable = onStepClick && (isCompleted || isActive);
+
           return (
             <li key={step} className="flex items-center">
               {/* Step indicator */}
@@ -81,19 +81,22 @@ export function CheckoutStepIndicator({
                 onClick={() => isClickable && onStepClick(step)}
                 disabled={!isClickable}
                 className={cn(
-                  'flex items-center gap-3 group',
-                  isClickable && 'cursor-pointer',
-                  !isClickable && 'cursor-default'
+                  "flex items-center gap-3 group",
+                  isClickable && "cursor-pointer",
+                  !isClickable && "cursor-default",
                 )}
               >
                 {/* Circle */}
                 <div
                   className={cn(
-                    'w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-colors',
-                    isCompleted && 'bg-primary text-primary-foreground',
-                    isActive && 'bg-primary text-primary-foreground ring-4 ring-primary/20',
-                    !isCompleted && !isActive && 'bg-muted text-muted-foreground',
-                    isClickable && !isActive && 'group-hover:bg-primary/80'
+                    "w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-colors",
+                    isCompleted && "bg-primary text-primary-foreground",
+                    isActive &&
+                      "bg-primary text-primary-foreground ring-4 ring-primary/20",
+                    !isCompleted &&
+                      !isActive &&
+                      "bg-muted text-muted-foreground",
+                    isClickable && !isActive && "group-hover:bg-primary/80",
                   )}
                 >
                   {isCompleted ? (
@@ -107,8 +110,10 @@ export function CheckoutStepIndicator({
                 <div className="hidden md:block text-left">
                   <p
                     className={cn(
-                      'font-medium text-sm',
-                      (isActive || isCompleted) ? 'text-foreground' : 'text-muted-foreground'
+                      "font-medium text-sm",
+                      isActive || isCompleted
+                        ? "text-foreground"
+                        : "text-muted-foreground",
                     )}
                   >
                     {config.label}
@@ -125,13 +130,13 @@ export function CheckoutStepIndicator({
               {index < steps.length - 1 && (
                 <div
                   className={cn(
-                    'w-12 lg:w-20 h-0.5 mx-2',
-                    isCompleted ? 'bg-primary' : 'bg-muted'
+                    "w-12 lg:w-20 h-0.5 mx-2",
+                    isCompleted ? "bg-primary" : "bg-muted",
                   )}
                 />
               )}
             </li>
-          )
+          );
         })}
       </ol>
 
@@ -145,7 +150,7 @@ export function CheckoutStepIndicator({
             {STEP_CONFIG[currentStep].label}
           </span>
         </div>
-        
+
         {/* Progress bar */}
         <div className="h-2 bg-muted rounded-full overflow-hidden">
           <div
@@ -153,24 +158,26 @@ export function CheckoutStepIndicator({
             style={{ width: `${((currentIndex + 1) / steps.length) * 100}%` }}
           />
         </div>
-        
+
         {/* Step dots */}
         <div className="flex justify-between mt-2">
           {steps.map((step, index) => {
-            const isActive = step === currentStep
-            const isCompleted = index < currentIndex
-            
+            const isActive = step === currentStep;
+            const isCompleted = index < currentIndex;
+
             return (
               <button
                 key={step}
                 type="button"
-                onClick={() => onStepClick && (isCompleted || isActive) && onStepClick(step)}
+                onClick={() =>
+                  onStepClick && (isCompleted || isActive) && onStepClick(step)
+                }
                 disabled={!onStepClick || (!isCompleted && !isActive)}
                 className={cn(
-                  'w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors',
-                  isCompleted && 'bg-primary text-primary-foreground',
-                  isActive && 'bg-primary text-primary-foreground',
-                  !isCompleted && !isActive && 'bg-muted text-muted-foreground'
+                  "w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors",
+                  isCompleted && "bg-primary text-primary-foreground",
+                  isActive && "bg-primary text-primary-foreground",
+                  !isCompleted && !isActive && "bg-muted text-muted-foreground",
                 )}
               >
                 {isCompleted ? (
@@ -179,10 +186,10 @@ export function CheckoutStepIndicator({
                   <span>{index + 1}</span>
                 )}
               </button>
-            )
+            );
           })}
         </div>
       </div>
     </nav>
-  )
+  );
 }

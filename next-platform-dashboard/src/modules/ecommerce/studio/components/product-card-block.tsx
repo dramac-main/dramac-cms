@@ -8,8 +8,9 @@
 
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ComponentDefinition, ResponsiveValue } from "@/types/studio";
 import type { Product } from "../../types/ecommerce-types";
@@ -21,6 +22,7 @@ import {
   Loader2,
   AlertCircle,
   FileText,
+  ShoppingCart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -146,9 +148,11 @@ export function ProductCardBlock({
     needsFetch ? effectiveSiteId || "" : "",
     needsFetch ? productId || "" : "",
   );
-  const { addItem, isUpdating: cartLoading } = useStorefrontCart(
-    effectiveSiteId || "",
-  );
+  const {
+    addItem,
+    isUpdating: cartLoading,
+    cart,
+  } = useStorefrontCart(effectiveSiteId || "");
   const {
     isInWishlist,
     addItem: addToWishlist,
@@ -162,6 +166,12 @@ export function ProductCardBlock({
   // Local state
   const [addingToCart, setAddingToCart] = useState(false);
   const [imageError, setImageError] = useState(false);
+
+  // Check if product is already in cart
+  const isProductInCart = useMemo(() => {
+    if (!productId || !cart?.items?.length) return false;
+    return cart.items.some((item) => item.product_id === productId);
+  }, [productId, cart?.items]);
 
   // Use pre-fetched data, then hook data, then demo
   const product = !effectiveSiteId
@@ -340,7 +350,7 @@ export function ProductCardBlock({
 
   // Overlay buttons (wishlist, quick view)
   const OverlayButtons = () => (
-    <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+    <div className="absolute top-2 right-2 flex flex-col gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
       {showWishlistButton && (
         <button
           onClick={handleWishlistToggle}
@@ -413,35 +423,56 @@ export function ProductCardBlock({
     );
 
   // Add to cart / request quote button
-  const AddToCartButton = ({ fullWidth = false }: { fullWidth?: boolean }) => (
-    <button
-      onClick={handleAddToCart}
-      disabled={addingToCart || cartLoading || isDemo}
-      className={cn(
-        "px-4 py-2 rounded-md text-sm font-medium",
-        "transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
-        "flex items-center justify-center gap-2",
-        quotationModeEnabled
-          ? "bg-orange-500 hover:bg-orange-600 text-white"
-          : "bg-primary hover:bg-primary/90 text-primary-foreground",
-        fullWidth && "w-full",
-      )}
-    >
-      {addingToCart ? (
-        <>
-          <Loader2 className="h-4 w-4 animate-spin" />
-          {quotationModeEnabled ? "Requesting..." : "Adding..."}
-        </>
-      ) : quotationModeEnabled ? (
-        <>
-          <FileText className="h-4 w-4" />
-          {quotationButtonLabel}
-        </>
-      ) : (
-        buttonText
-      )}
-    </button>
-  );
+  const AddToCartButton = ({ fullWidth = false }: { fullWidth?: boolean }) => {
+    // If product is already in cart, show "View Cart" button
+    if (isProductInCart && !quotationModeEnabled) {
+      return (
+        <Link
+          href="/cart"
+          onClick={(e) => e.stopPropagation()}
+          className={cn(
+            "px-4 py-2 rounded-md text-sm font-medium",
+            "transition-colors flex items-center justify-center gap-2",
+            "bg-secondary hover:bg-secondary/80 text-secondary-foreground",
+            fullWidth && "w-full",
+          )}
+        >
+          <ShoppingCart className="h-4 w-4" />
+          View Cart
+        </Link>
+      );
+    }
+
+    return (
+      <button
+        onClick={handleAddToCart}
+        disabled={addingToCart || cartLoading || isDemo}
+        className={cn(
+          "px-4 py-2 rounded-md text-sm font-medium",
+          "transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
+          "flex items-center justify-center gap-2",
+          quotationModeEnabled
+            ? "bg-orange-500 hover:bg-orange-600 text-white"
+            : "bg-primary hover:bg-primary/90 text-primary-foreground",
+          fullWidth && "w-full",
+        )}
+      >
+        {addingToCart ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            {quotationModeEnabled ? "Requesting..." : "Adding..."}
+          </>
+        ) : quotationModeEnabled ? (
+          <>
+            <FileText className="h-4 w-4" />
+            {quotationButtonLabel}
+          </>
+        ) : (
+          buttonText
+        )}
+      </button>
+    );
+  };
 
   // MINIMAL variant
   if (variant === "minimal") {

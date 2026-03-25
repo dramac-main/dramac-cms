@@ -427,10 +427,10 @@ export function ProductGridBlock({
   return (
     <div style={{ padding: paddingValue }}>
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        {/* Search */}
+      <div className="flex flex-col gap-3 mb-6">
+        {/* Search row */}
         {showSearch && (
-          <div className="relative flex-1 max-w-md">
+          <div className="relative w-full sm:max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search products..."
@@ -449,12 +449,17 @@ export function ProductGridBlock({
           </div>
         )}
 
-        <div className="flex items-center gap-2 ml-auto">
+        {/* Controls row */}
+        <div className="flex items-center gap-2 flex-wrap">
           {/* Filters button (mobile) */}
           {showFilters && (
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="outline" size="sm" className="lg:hidden">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="lg:hidden min-h-[40px]"
+                >
                   <SlidersHorizontal className="h-4 w-4 mr-2" />
                   Filters
                   {hasActiveFilters && (
@@ -475,10 +480,13 @@ export function ProductGridBlock({
             </Sheet>
           )}
 
+          {/* Spacer to push sort & view toggle right */}
+          <div className="flex-1" />
+
           {/* Sort */}
           {showSorting && (
             <Select value={sortBy} onValueChange={handleSortChange}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[140px] sm:w-[180px] min-h-[40px]">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
@@ -496,7 +504,7 @@ export function ProductGridBlock({
             <Button
               variant={viewMode === "grid" ? "secondary" : "ghost"}
               size="icon"
-              className="rounded-r-none"
+              className="rounded-r-none min-w-[40px] min-h-[40px]"
               onClick={() => setViewMode("grid")}
             >
               <Grid3X3 className="h-4 w-4" />
@@ -504,7 +512,7 @@ export function ProductGridBlock({
             <Button
               variant={viewMode === "list" ? "secondary" : "ghost"}
               size="icon"
-              className="rounded-l-none"
+              className="rounded-l-none min-w-[40px] min-h-[40px]"
               onClick={() => setViewMode("list")}
             >
               <List className="h-4 w-4" />
@@ -571,10 +579,10 @@ export function ProductGridBlock({
           {!isLoading && !error && products.length > 0 && (
             <div
               className={cn(
-                viewMode === "grid" ? "grid" : "flex flex-col",
+                viewMode === "grid" ? "grid" : "flex flex-col gap-3",
                 viewMode === "grid" && gridColsClass,
               )}
-              style={{ gap: gapValue }}
+              style={viewMode === "grid" ? { gap: gapValue } : undefined}
             >
               {products.map((product) => (
                 <ProductCardBlock

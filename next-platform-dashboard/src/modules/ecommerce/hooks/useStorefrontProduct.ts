@@ -85,7 +85,7 @@ export function useStorefrontProduct(
       // Fetch related products (same category when available, excluding this product)
       try {
         let relatedResult;
-        const categoryId = (productData as Record<string, unknown>)
+        const categoryId = (productData as unknown as Record<string, unknown>)
           .category_id as string | undefined;
         if (categoryId) {
           relatedResult = await getPublicProductsByCategory(

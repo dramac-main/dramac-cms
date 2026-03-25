@@ -1,33 +1,33 @@
 /**
  * CartItemCard - Individual cart item display
- * 
+ *
  * Phase ECOM-22: Cart Components
- * 
+ *
  * Displays a single cart item with image, name, price, quantity controls.
  */
-'use client'
+"use client";
 
-import React from 'react'
-import { cn } from '@/lib/utils'
-import { X, Package } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { CartQuantitySelector } from './CartQuantitySelector'
-import type { CartItem } from '../../types/ecommerce-types'
-import Image from 'next/image'
+import React from "react";
+import { cn } from "@/lib/utils";
+import { X, Package } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { CartQuantitySelector } from "./CartQuantitySelector";
+import type { CartItem } from "../../types/ecommerce-types";
+import Image from "next/image";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 interface CartItemCardProps {
-  item: CartItem
-  onQuantityChange: (itemId: string, quantity: number) => void
-  onRemove: (itemId: string) => void
-  formatPrice: (price: number) => string
-  variant?: 'default' | 'compact' | 'drawer'
-  disabled?: boolean
-  className?: string
+  item: CartItem;
+  onQuantityChange: (itemId: string, quantity: number) => void;
+  onRemove: (itemId: string) => void;
+  formatPrice: (price: number) => string;
+  variant?: "default" | "compact" | "drawer";
+  disabled?: boolean;
+  className?: string;
 }
 
 // ============================================================================
@@ -37,33 +37,33 @@ interface CartItemCardProps {
 function getItemImage(item: CartItem): string | null {
   // Try to get image from product relation
   if (item.product?.images && item.product.images.length > 0) {
-    return item.product.images[0]
+    return item.product.images[0];
   }
-  return null
+  return null;
 }
 
 function getItemName(item: CartItem): string {
   // Try to get name from product relation
   if (item.product?.name) {
-    return item.product.name
+    return item.product.name;
   }
-  return 'Product'
+  return "Product";
 }
 
 function getVariantName(item: CartItem): string | null {
   // Try to get variant display name from options
   if (item.variant?.options) {
-    const options = item.variant.options as Record<string, string>
-    const values = Object.values(options)
+    const options = item.variant.options as Record<string, string>;
+    const values = Object.values(options);
     if (values.length > 0) {
-      return values.join(' / ')
+      return values.join(" / ");
     }
   }
-  return null
+  return null;
 }
 
 function getLineTotal(item: CartItem): number {
-  return item.unit_price * item.quantity
+  return item.unit_price * item.quantity;
 }
 
 // ============================================================================
@@ -75,21 +75,21 @@ export function CartItemCard({
   onQuantityChange,
   onRemove,
   formatPrice,
-  variant = 'default',
+  variant = "default",
   disabled = false,
-  className
+  className,
 }: CartItemCardProps) {
-  const imageUrl = getItemImage(item)
-  const itemName = getItemName(item)
-  const variantName = getVariantName(item)
-  const lineTotal = getLineTotal(item)
+  const imageUrl = getItemImage(item);
+  const itemName = getItemName(item);
+  const variantName = getVariantName(item);
+  const lineTotal = getLineTotal(item);
 
   // Custom options display
-  const customOptions = item.custom_options as Record<string, string> | null
+  const customOptions = item.custom_options as Record<string, string> | null;
 
-  if (variant === 'compact') {
+  if (variant === "compact") {
     return (
-      <div className={cn('flex items-center gap-3 py-3', className)}>
+      <div className={cn("flex items-center gap-3 py-3", className)}>
         {/* Image */}
         <div className="w-12 h-12 rounded bg-muted flex-shrink-0 overflow-hidden">
           {imageUrl ? (
@@ -116,16 +116,14 @@ export function CartItemCard({
         </div>
 
         {/* Total */}
-        <div className="text-sm font-semibold">
-          {formatPrice(lineTotal)}
-        </div>
+        <div className="text-sm font-semibold">{formatPrice(lineTotal)}</div>
       </div>
-    )
+    );
   }
 
-  if (variant === 'drawer') {
+  if (variant === "drawer") {
     return (
-      <div className={cn('flex gap-3 py-4 border-b last:border-0', className)}>
+      <div className={cn("flex gap-3 py-4 border-b last:border-0", className)}>
         {/* Image */}
         <div className="w-16 h-16 rounded-md bg-muted flex-shrink-0 overflow-hidden">
           {imageUrl ? (
@@ -172,21 +170,19 @@ export function CartItemCard({
               showRemove={false}
               disabled={disabled}
             />
-            <p className="text-sm font-semibold">
-              {formatPrice(lineTotal)}
-            </p>
+            <p className="text-sm font-semibold">{formatPrice(lineTotal)}</p>
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // Default variant - full card
   return (
-    <Card className={cn('p-4', className)}>
-      <div className="flex gap-4">
+    <Card className={cn("p-4", className)}>
+      <div className="flex gap-3 sm:gap-4">
         {/* Image */}
-        <div className="w-24 h-24 rounded-md bg-muted flex-shrink-0 overflow-hidden">
+        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-md bg-muted flex-shrink-0 overflow-hidden">
           {imageUrl ? (
             <Image
               src={imageUrl}
@@ -217,7 +213,7 @@ export function CartItemCard({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-9 w-9 min-w-[36px] min-h-[36px]"
               onClick={() => onRemove(item.id)}
               disabled={disabled}
             >
@@ -237,19 +233,19 @@ export function CartItemCard({
           )}
 
           {/* Quantity & Total */}
-          <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center justify-between mt-3 sm:mt-4">
             <CartQuantitySelector
               quantity={item.quantity}
               onQuantityChange={(qty) => onQuantityChange(item.id, qty)}
               onRemove={() => onRemove(item.id)}
               disabled={disabled}
             />
-            <p className="text-lg font-semibold">
+            <p className="text-base sm:text-lg font-semibold">
               {formatPrice(lineTotal)}
             </p>
           </div>
         </div>
       </div>
     </Card>
-  )
+  );
 }

@@ -65,7 +65,7 @@ interface StepProps {
   formatPrice: (price: number) => string;
 }
 
-// Information Step - Contact & Shipping Address
+// Information Step - Contact, Shipping Address & Shipping Method (combined)
 function InformationStep({ checkout, formatPrice }: StepProps) {
   return (
     <div className="space-y-6">
@@ -80,21 +80,16 @@ function InformationStep({ checkout, formatPrice }: StepProps) {
         errors={checkout.validation.errors.shipping}
         disabled={checkout.isPlacingOrder}
       />
-    </div>
-  );
-}
 
-// Shipping Step - Shipping Method Selection
-function ShippingStep({ checkout, formatPrice }: StepProps) {
-  return (
-    <div className="space-y-6">
-      <ShippingMethodSelector
-        methods={checkout.availableShippingMethods}
-        selected={checkout.state.shippingMethod}
-        onSelect={checkout.setShippingMethod}
-        formatPrice={formatPrice}
-        disabled={checkout.isPlacingOrder}
-      />
+      <div className="border-t pt-6">
+        <ShippingMethodSelector
+          methods={checkout.availableShippingMethods}
+          selected={checkout.state.shippingMethod}
+          onSelect={checkout.setShippingMethod}
+          formatPrice={formatPrice}
+          disabled={checkout.isPlacingOrder}
+        />
+      </div>
     </div>
   );
 }
@@ -119,156 +114,38 @@ function PaymentStep({ checkout, formatPrice }: StepProps) {
         errors={checkout.validation.errors.billing}
         disabled={checkout.isPlacingOrder}
       />
-    </div>
-  );
-}
 
-// Review Step - Order Review & Notes
-function ReviewStep({ checkout, formatPrice }: StepProps) {
-  const shippingAddress = checkout.state.shippingAddress;
-  const billingAddress = checkout.state.useSameAsBilling
-    ? checkout.state.shippingAddress
-    : checkout.state.billingAddress;
+      {/* Compact Review Summary */}
+      <div className="border-t pt-6 space-y-4">
+        <h3 className="text-base font-semibold">Review</h3>
 
-  return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-semibold">Review Your Order</h3>
-
-      {/* Contact */}
-      <Card>
-        <CardContent className="pt-4">
-          <div className="flex justify-between items-start">
-            <div>
-              <h4 className="font-medium text-sm text-muted-foreground mb-1">
-                Contact
-              </h4>
-              <p className="text-sm">{checkout.state.email}</p>
-              {checkout.state.phone && (
-                <p className="text-sm text-muted-foreground">
-                  {checkout.state.phone}
-                </p>
-              )}
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => checkout.goToStep("information")}
-            >
-              Edit
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Addresses */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <h4 className="font-medium text-sm text-muted-foreground mb-1">
-                  Ship to
-                </h4>
-                <p className="text-sm">
-                  {shippingAddress.first_name} {shippingAddress.last_name}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {shippingAddress.address_line_1}
-                  {shippingAddress.address_line_2 &&
-                    `, ${shippingAddress.address_line_2}`}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {shippingAddress.city}, {shippingAddress.state}{" "}
-                  {shippingAddress.postal_code}
-                </p>
-              </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+          <div className="flex justify-between sm:flex-col p-3 bg-muted/50 rounded-lg">
+            <span className="text-muted-foreground">Ship to</span>
+            <span className="text-right sm:text-left">
+              {checkout.state.shippingAddress.first_name}{" "}
+              {checkout.state.shippingAddress.last_name},{" "}
+              {checkout.state.shippingAddress.city}
               <Button
-                variant="ghost"
+                variant="link"
                 size="sm"
+                className="h-auto p-0 ml-2 text-xs"
                 onClick={() => checkout.goToStep("information")}
               >
                 Edit
               </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <h4 className="font-medium text-sm text-muted-foreground mb-1">
-                  Bill to
-                </h4>
-                <p className="text-sm">
-                  {billingAddress.first_name} {billingAddress.last_name}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {billingAddress.address_line_1}
-                  {billingAddress.address_line_2 &&
-                    `, ${billingAddress.address_line_2}`}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {billingAddress.city}, {billingAddress.state}{" "}
-                  {billingAddress.postal_code}
-                </p>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => checkout.goToStep("payment")}
-              >
-                Edit
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Shipping & Payment */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <h4 className="font-medium text-sm text-muted-foreground mb-1">
-                  Shipping Method
-                </h4>
-                <p className="text-sm">{checkout.state.shippingMethod?.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  {checkout.state.shippingMethod?.estimated_days}
-                </p>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => checkout.goToStep("shipping")}
-              >
-                Edit
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <h4 className="font-medium text-sm text-muted-foreground mb-1">
-                  Payment Method
-                </h4>
-                <p className="text-sm">{checkout.state.paymentMethod?.name}</p>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => checkout.goToStep("payment")}
-              >
-                Edit
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </span>
+          </div>
+          <div className="flex justify-between sm:flex-col p-3 bg-muted/50 rounded-lg">
+            <span className="text-muted-foreground">Shipping</span>
+            <span className="text-right sm:text-left">
+              {checkout.state.shippingMethod?.name}
+              {checkout.state.shippingMethod?.price
+                ? ` — ${formatPrice(checkout.state.shippingMethod.price)}`
+                : " — Free"}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Order Notes */}
@@ -279,7 +156,7 @@ function ReviewStep({ checkout, formatPrice }: StepProps) {
           value={checkout.state.customerNotes}
           onChange={(e) => checkout.setCustomerNotes(e.target.value)}
           placeholder="Any special instructions for your order..."
-          rows={3}
+          rows={2}
           disabled={checkout.isPlacingOrder}
         />
       </div>
@@ -685,12 +562,8 @@ export function CheckoutPageBlock({
         return (
           <InformationStep checkout={checkout} formatPrice={formatPrice} />
         );
-      case "shipping":
-        return <ShippingStep checkout={checkout} formatPrice={formatPrice} />;
       case "payment":
         return <PaymentStep checkout={checkout} formatPrice={formatPrice} />;
-      case "review":
-        return <ReviewStep checkout={checkout} formatPrice={formatPrice} />;
       default:
         return null;
     }
@@ -814,11 +687,13 @@ export function CheckoutPageBlock({
                     Back
                   </Button>
 
-                  {checkout.currentStep === "review" ? (
+                  {checkout.currentStep === "payment" ? (
                     <Button
                       size="lg"
                       onClick={handlePlaceOrder}
-                      disabled={checkout.isPlacingOrder}
+                      disabled={
+                        !checkout.state.paymentMethod || checkout.isPlacingOrder
+                      }
                     >
                       {checkout.isPlacingOrder ? (
                         <>
@@ -837,7 +712,7 @@ export function CheckoutPageBlock({
                       onClick={checkout.nextStep}
                       disabled={!checkout.canGoNext || checkout.isPlacingOrder}
                     >
-                      Continue
+                      Continue to Payment
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </Button>
                   )}

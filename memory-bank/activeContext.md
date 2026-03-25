@@ -1,44 +1,53 @@
 # Active Context
 
-## Current Focus: AI Payment Guidance — Bug Fixes & Enhanced UI — DEPLOYED
+## Current Focus: End-to-End AI Automation — DEPLOYED & TESTED
 
-### Status: COMMITTED & DEPLOYED — `f1f26f7b`
+### Status: COMMITTED, DEPLOYED & PRODUCTION-TESTED — `ba4ce129`
 
 ### What Was Done (This Session)
 
-Found and fixed 4 critical bugs that prevented the AI payment guidance system from ever working. The AI was generating responses via Claude correctly, but the database inserts to save those responses were silently failing due to schema mismatches. Also enhanced the AI Settings UI with 3 new customization options.
+Built complete end-to-end AI automation so the AI assistant knows about payment proof uploads, order status changes, quotation lifecycle, and proactively notifies customers in chat when external events happen.
 
-### 4 Critical Bugs Fixed
+### New File: `chat-event-bridge.ts` (233 lines)
+Proactive AI messaging utility for external events:
+- `findActiveConversation(siteId, email)` — finds open/active/waiting conversation by visitor email
+- `sendProactiveMessage()` — inserts AI message into conversation
+- `notifyChatPaymentProofUploaded()` — message when proof uploaded
+- `notifyChatPaymentConfirmed()` — message when payment confirmed (admin action)
+- `notifyChatOrderStatusChanged()` — messages for all order status transitions
+- `notifyChatQuoteConverted()` — message when quote converted to order
 
-1. **BUG #1 — `metadata` column doesn't exist**: `auto-response-handler.ts` inserted AI messages with `metadata: { ai_generated: true, confidence: ..., payment_guidance: true }` but `mod_chat_messages` has NO `metadata` column — it has `is_ai_generated` (boolean) and `ai_confidence` (numeric) instead. The entire Supabase insert silently failed.  
-   **Fix:** Use `is_ai_generated: true, ai_confidence: aiResult.confidence` instead.
+### Enhanced: `customer-context-bridge.ts`
+- Added `paymentProof` object to orders (hasProof, status, fileName, uploadedAt)
+- Added `recentQuotes` array (quoteNumber, status, total, expiresAt, convertedOrderNumber, itemCount)
+- Added `mod_ecommod01_quotes` query to Promise.all
+- Updated `formatCustomerContext()` to include proof status + quotes section
 
-2. **BUG #2 — Missing `site_id`**: AI message insert omitted `site_id` which is `NOT NULL` on `mod_chat_messages` — insert would fail even if metadata bug were fixed.  
-   **Fix:** Add `site_id: siteId` to both insert locations.
+### Enhanced: `ai-responder.ts`
+- Added `proofUploaded`, `proofStatus`, `activeQuotes`, `acceptedQuotes` computed vars
+- PAYMENT GUIDANCE MODE now includes PAYMENT PROOF STATUS section
+- Conditional guidance: if proof uploaded, don't ask customer to upload again
+- Added ACTIVE QUOTATIONS and ACCEPTED QUOTATIONS sections to system prompt
 
-3. **BUG #3 — Can't detect manual payment**: `customer-context-bridge.ts` didn't select `payment_provider`/`payment_method` from orders — AI couldn't distinguish manual payment orders from Paddle/Flutterwave pending orders.  
-   **Fix:** Added these fields to query, interface, and detection logic.
+### Enhanced: `auto-response-handler.ts`
+Added 5 new regex patterns: proof upload, quotation reference, quote acceptance, quote status
 
-4. **BUG #4 — Wrong sender_type**: AI messages used `sender_type: "system"` which renders as a tiny centered gray pill. Changed to `sender_type: "ai"` which renders as a proper left-aligned bubble with purple "AI" badge.
+### Proactive Notifications Wired In:
+- `public-ecommerce-actions.ts` → `notifyChatPaymentProofUploaded()` after proof upload
+- `order-actions.ts` → `notifyChatOrderStatusChanged()` after status change
+- `ecommerce-actions.ts` → `notifyChatPaymentConfirmed()` when payment marked as paid
+- `quote-workflow-actions.ts` → `notifyChatQuoteConverted()` after quote-to-order conversion
 
-### AI Settings UI Enhancements
+### Production Testing (3 API tests, ALL PASSING)
+Test conversation: `3c2020fc-4acc-4369-b1ab-beec60cc9c1f` for `drakemacchiko@gmail.com`
 
-- **Response Tone selector** — friendly/professional/casual/formal (new DB column `ai_response_tone`)
-- **Custom Instructions textarea** — appended to AI system prompt (new DB column `ai_custom_instructions`)
-- **AI Assistant Name** — customizable name on AI messages (new DB column `ai_assistant_name`)
-- DB migration applied: 3 new columns on `mod_chat_widget_settings`
+1. **"I uploaded proof for ORD-1007"** → AI correctly identified Screenshot (19).png, ZMW 1,531.20, said "under review", did NOT ask to re-upload
+2. **"What about ORD-1006?"** → AI listed all 4 pending orders with correct amounts
+3. **"Any quotations?"** → AI correctly said no quotations on file, reiterated 24hr review
 
-### Files Modified
-
-- `auto-response-handler.ts` — Fixed both AI message insert locations (payment guidance path + standard path)
-- `ai-responder.ts` — Added tone instruction, custom instructions, assistant name; updated pendingManualOrder detection
-- `customer-context-bridge.ts` — Added payment_provider/payment_method to order query + interface + mapping
-- `types/index.ts` — Added 3 new fields to ChatWidgetSettings interface
-- `SettingsPageWrapper.tsx` — Enhanced AI tab with 3 new controls
-
-### Commits This Session
-
-- `f1f26f7b` — Fix: AI response pipeline - fix DB schema mismatches, enhance AI settings UI
+### Commits
+- `ba4ce129` — feat: end-to-end AI automation (12 files, 547 insertions, 66 deletions)
+- Previous: `8ef49e64` — fix: use after() to keep Lambda alive for AI response generation
 
 ### Previous Commits
 

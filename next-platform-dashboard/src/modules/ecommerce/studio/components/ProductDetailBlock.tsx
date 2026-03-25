@@ -11,6 +11,7 @@
 
 import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import {
@@ -131,8 +132,17 @@ export function ProductDetailBlock({
   const { product, variants, options, relatedProducts, isLoading, error } =
     useStorefrontProduct(effectiveSiteId, slug);
 
-  const { addItem, isUpdating: isAddingToCart } =
-    useStorefrontCart(effectiveSiteId);
+  const {
+    addItem,
+    isUpdating: isAddingToCart,
+    cart,
+  } = useStorefrontCart(effectiveSiteId);
+
+  // Check if product is already in cart
+  const isProductInCart = useMemo(() => {
+    if (!product?.id || !cart?.items?.length) return false;
+    return cart.items.some((item) => item.product_id === product.id);
+  }, [product?.id, cart?.items]);
 
   // Quote mode
   const quotationModeEnabled = storefront?.quotationModeEnabled ?? false;
@@ -445,21 +455,29 @@ export function ProductDetailBlock({
           </div>
         )}
 
-        {showAddToCart && (
-          <Button
-            size="lg"
-            className="flex-1"
-            onClick={handleAddToCart}
-            disabled={!isInStock || isAddingToCart}
-          >
-            {isAddingToCart ? (
-              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-            ) : (
-              <ShoppingCart className="h-5 w-5 mr-2" />
-            )}
-            {quotationModeEnabled ? quotationButtonLabel : "Add to Cart"}
-          </Button>
-        )}
+        {showAddToCart &&
+          (isProductInCart && !quotationModeEnabled ? (
+            <Button size="lg" variant="secondary" className="flex-1" asChild>
+              <Link href="/cart">
+                <ShoppingCart className="h-5 w-5 mr-2" />
+                View Cart
+              </Link>
+            </Button>
+          ) : (
+            <Button
+              size="lg"
+              className="flex-1"
+              onClick={handleAddToCart}
+              disabled={!isInStock || isAddingToCart}
+            >
+              {isAddingToCart ? (
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+              ) : (
+                <ShoppingCart className="h-5 w-5 mr-2" />
+              )}
+              {quotationModeEnabled ? quotationButtonLabel : "Add to Cart"}
+            </Button>
+          ))}
 
         {showWishlist && (
           <Button
@@ -569,6 +587,48 @@ export function ProductDetailBlock({
           </div>
         )}
       </div>
+
+      {/* Sticky mobile bottom CTA bar */}
+      {showAddToCart && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-sm border-t p-3 safe-area-pb lg:hidden">
+          <div className="flex items-center gap-3 max-w-6xl mx-auto">
+            {!quotationHidePrices && (
+              <div className="flex-shrink-0">
+                <span className="text-lg font-bold">
+                  {storefront.formatPrice(product.base_price)}
+                </span>
+              </div>
+            )}
+            {isProductInCart && !quotationModeEnabled ? (
+              <Button
+                size="lg"
+                variant="secondary"
+                className="flex-1 h-12"
+                asChild
+              >
+                <Link href="/cart">
+                  <ShoppingCart className="h-5 w-5 mr-2" />
+                  View Cart
+                </Link>
+              </Button>
+            ) : (
+              <Button
+                size="lg"
+                className="flex-1 h-12"
+                onClick={handleAddToCart}
+                disabled={!isInStock || isAddingToCart}
+              >
+                {isAddingToCart ? (
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                ) : (
+                  <ShoppingCart className="h-5 w-5 mr-2" />
+                )}
+                {quotationModeEnabled ? quotationButtonLabel : "Add to Cart"}
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
