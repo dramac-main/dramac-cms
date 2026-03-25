@@ -9,13 +9,13 @@
  * Works alongside the human agent as a "co-pilot".
  */
 
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient } from "@/lib/supabase/admin";
 import {
   generateAutoResponse,
   shouldAutoRespond,
   analyzeSentiment,
-} from './ai-responder'
-import { routeConversation } from './routing-engine'
+} from "./ai-responder";
+import { routeConversation } from "./routing-engine";
 
 // =============================================================================
 // PAYMENT / ORDER MESSAGE DETECTION
@@ -32,11 +32,11 @@ const PAYMENT_ORDER_PATTERNS = [
   /\bproof\s+of\s+payment\b/i,
   /\bmanual\s+payment\b/i,
   /\bcomplete\s+(?:my\s+)?payment\b/i,
-]
+];
 
 /** Returns true if the message is about orders/payment and should trigger AI payment guidance */
 export function isPaymentRelatedMessage(message: string): boolean {
-  return PAYMENT_ORDER_PATTERNS.some((pattern) => pattern.test(message))
+  return PAYMENT_ORDER_PATTERNS.some((pattern) => pattern.test(message));
 }
 
 // =============================================================================
@@ -45,7 +45,7 @@ export function isPaymentRelatedMessage(message: string): boolean {
 
 export interface HandleMessageOptions {
   /** Force AI payment guidance — bypasses agent routing & shouldAutoRespond checks */
-  forcePaymentGuidance?: boolean
+  forcePaymentGuidance?: boolean;
 }
 
 export async function handleNewVisitorMessage(
@@ -53,75 +53,80 @@ export async function handleNewVisitorMessage(
   conversationId: string,
   visitorMessage: string,
   visitorId: string,
-  options?: HandleMessageOptions
+  options?: HandleMessageOptions,
 ): Promise<{
-  handled: boolean
-  aiResponded: boolean
-  routedToAgent: boolean
-  agentId?: string
+  handled: boolean;
+  aiResponded: boolean;
+  routedToAgent: boolean;
+  agentId?: string;
 }> {
-  const supabase = createAdminClient() as any
+  const supabase = createAdminClient() as any;
 
   // Detect payment guidance mode: forced by caller OR detected from message content
   const paymentGuidance =
-    options?.forcePaymentGuidance || isPaymentRelatedMessage(visitorMessage)
+    options?.forcePaymentGuidance || isPaymentRelatedMessage(visitorMessage);
 
   // ── Check site AI settings ────────────────────────────────────────────────
   const { data: aiSettings } = await supabase
-    .from('mod_chat_widget_settings')
-    .select('ai_auto_response_enabled, ai_payment_guidance_enabled')
-    .eq('site_id', siteId)
-    .single()
+    .from("mod_chat_widget_settings")
+    .select("ai_auto_response_enabled, ai_payment_guidance_enabled")
+    .eq("site_id", siteId)
+    .single();
 
-  const aiAutoEnabled = aiSettings?.ai_auto_response_enabled !== false // default true
-  const aiPaymentEnabled = aiSettings?.ai_payment_guidance_enabled !== false // default true
+  const aiAutoEnabled = aiSettings?.ai_auto_response_enabled !== false; // default true
+  const aiPaymentEnabled = aiSettings?.ai_payment_guidance_enabled !== false; // default true
 
   // If site owner disabled ALL AI, exit early
   if (!aiAutoEnabled && !paymentGuidance) {
-    return { handled: false, aiResponded: false, routedToAgent: false }
+    return { handled: false, aiResponded: false, routedToAgent: false };
   }
 
   // If payment guidance specifically disabled by site owner
   if (paymentGuidance && !aiPaymentEnabled) {
-    console.log('[AutoResponse] Payment guidance disabled by site owner for site:', siteId)
+    console.log(
+      "[AutoResponse] Payment guidance disabled by site owner for site:",
+      siteId,
+    );
     // Fall through to standard path below
   } else if (paymentGuidance && aiPaymentEnabled) {
-    console.log('[AutoResponse] Payment guidance mode — forcing AI response for conversation:', conversationId)
+    console.log(
+      "[AutoResponse] Payment guidance mode — forcing AI response for conversation:",
+      conversationId,
+    );
 
     const aiResult = await generateAutoResponse(
       conversationId,
       visitorMessage,
-      siteId
-    )
+      siteId,
+    );
 
     if (aiResult) {
-      // Save AI response
-      await supabase.from('mod_chat_messages').insert({
+      // Save AI response — use actual DB columns (no metadata column on this table)
+      await supabase.from("mod_chat_messages").insert({
         conversation_id: conversationId,
-        sender_type: 'system',
-        sender_name: 'AI Assistant',
+        site_id: siteId,
+        sender_type: "ai",
+        sender_name: aiResult.assistantName || "AI Assistant",
         content: aiResult.response,
-        content_type: 'text',
-        metadata: {
-          ai_generated: true,
-          confidence: aiResult.confidence,
-          matched_article_id: aiResult.matchedArticleId,
-          payment_guidance: true,
-        },
-      })
+        content_type: "text",
+        status: "sent",
+        is_ai_generated: true,
+        ai_confidence: aiResult.confidence,
+        is_internal_note: false,
+      });
 
       // Analyze sentiment
-      const sentiment = analyzeSentiment(visitorMessage)
+      const sentiment = analyzeSentiment(visitorMessage);
 
       // Update conversation metadata — mark as payment-guidance active
       const { data: existingConv } = await supabase
-        .from('mod_chat_conversations')
-        .select('metadata')
-        .eq('id', conversationId)
-        .single()
+        .from("mod_chat_conversations")
+        .select("metadata")
+        .eq("id", conversationId)
+        .single();
 
       await supabase
-        .from('mod_chat_conversations')
+        .from("mod_chat_conversations")
         .update({
           metadata: {
             ...(existingConv?.metadata || {}),
@@ -132,17 +137,19 @@ export async function handleNewVisitorMessage(
           },
           updated_at: new Date().toISOString(),
         })
-        .eq('id', conversationId)
+        .eq("id", conversationId);
 
       return {
         handled: true,
         aiResponded: true,
         routedToAgent: false,
-      }
+      };
     }
 
     // AI failed (no API key, error, etc.) — fall through to normal routing
-    console.warn('[AutoResponse] Payment guidance AI failed — falling back to normal routing')
+    console.warn(
+      "[AutoResponse] Payment guidance AI failed — falling back to normal routing",
+    );
   }
 
   // ── Standard Path ─────────────────────────────────────────────────────────
@@ -150,8 +157,8 @@ export async function handleNewVisitorMessage(
   const routingResult = await routeConversation(
     siteId,
     conversationId,
-    visitorMessage
-  )
+    visitorMessage,
+  );
 
   if (routingResult.agentId) {
     return {
@@ -159,56 +166,56 @@ export async function handleNewVisitorMessage(
       aiResponded: false,
       routedToAgent: true,
       agentId: routingResult.agentId,
-    }
+    };
   }
 
   // 2. No agent available — check if AI auto-response is enabled by site owner
   if (!aiAutoEnabled) {
-    return { handled: false, aiResponded: false, routedToAgent: false }
+    return { handled: false, aiResponded: false, routedToAgent: false };
   }
 
   // 3. Check if we should auto-respond (API key set, no agent assigned, etc.)
-  const canAutoRespond = await shouldAutoRespond(siteId, conversationId)
+  const canAutoRespond = await shouldAutoRespond(siteId, conversationId);
 
   if (!canAutoRespond) {
     return {
       handled: false,
       aiResponded: false,
       routedToAgent: false,
-    }
+    };
   }
 
   // 3. Generate AI response
   const aiResult = await generateAutoResponse(
     conversationId,
     visitorMessage,
-    siteId
-  )
+    siteId,
+  );
 
   if (!aiResult) {
-    return { handled: false, aiResponded: false, routedToAgent: false }
+    return { handled: false, aiResponded: false, routedToAgent: false };
   }
 
-  // 4. Save AI response as a message
-  await supabase.from('mod_chat_messages').insert({
+  // 4. Save AI response as a message — use actual DB columns
+  await supabase.from("mod_chat_messages").insert({
     conversation_id: conversationId,
-    sender_type: 'system',
-    sender_name: 'AI Assistant',
+    site_id: siteId,
+    sender_type: "ai",
+    sender_name: aiResult.assistantName || "AI Assistant",
     content: aiResult.response,
-    content_type: 'text',
-    metadata: {
-      ai_generated: true,
-      confidence: aiResult.confidence,
-      matched_article_id: aiResult.matchedArticleId,
-    },
-  })
+    content_type: "text",
+    status: "sent",
+    is_ai_generated: true,
+    ai_confidence: aiResult.confidence,
+    is_internal_note: false,
+  });
 
   // 5. Analyze sentiment
-  const sentiment = analyzeSentiment(visitorMessage)
+  const sentiment = analyzeSentiment(visitorMessage);
 
   // 6. Update conversation metadata
   await supabase
-    .from('mod_chat_conversations')
+    .from("mod_chat_conversations")
     .update({
       metadata: {
         ai_responded: true,
@@ -218,19 +225,19 @@ export async function handleNewVisitorMessage(
       },
       updated_at: new Date().toISOString(),
     })
-    .eq('id', conversationId)
+    .eq("id", conversationId);
 
   // 7. If AI confidence is low or handoff requested, queue for agent
   if (aiResult.shouldHandoff) {
     await supabase
-      .from('mod_chat_conversations')
-      .update({ status: 'waiting' })
-      .eq('id', conversationId)
+      .from("mod_chat_conversations")
+      .update({ status: "waiting" })
+      .eq("id", conversationId);
   }
 
   return {
     handled: true,
     aiResponded: true,
     routedToAgent: false,
-  }
+  };
 }

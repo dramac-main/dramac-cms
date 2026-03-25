@@ -58,6 +58,7 @@ export async function generateAutoResponse(
   confidence: number;
   shouldHandoff: boolean;
   matchedArticleId?: string;
+  assistantName?: string;
 } | null> {
   if (!AI_ENABLED) return null;
 
@@ -79,7 +80,7 @@ export async function generateAutoResponse(
     const [settingsRes, kbRes, messagesRes, visitorRes] = await Promise.all([
       supabase
         .from("mod_chat_widget_settings")
-        .select("company_name, welcome_message")
+        .select("company_name, welcome_message, ai_response_tone, ai_custom_instructions, ai_assistant_name, ai_payment_greeting")
         .eq("site_id", siteId)
         .single(),
       supabase
@@ -102,6 +103,10 @@ export async function generateAutoResponse(
     ]);
 
     const companyName = settingsRes.data?.company_name || "our company";
+    const aiTone = settingsRes.data?.ai_response_tone || "friendly";
+    const customInstructions = settingsRes.data?.ai_custom_instructions || "";
+    const aiAssistantName = settingsRes.data?.ai_assistant_name || "AI Assistant";
+    const paymentGreeting = settingsRes.data?.ai_payment_greeting || "";
     const kbArticles = kbRes.data || [];
     const previousMessages = (messagesRes.data || []).reverse();
     const visitorInfo = visitorRes.data?.mod_chat_visitors;
@@ -113,8 +118,14 @@ export async function generateAutoResponse(
     ).catch(() => null);
 
     // Check if customer has a pending manual payment order — triggers payment guidance mode
+    // Only trigger for manual/bank_transfer payments, not Paddle/Flutterwave pending orders
     const pendingManualOrder = customerCtx?.recentOrders?.find(
-      (o) => o.paymentStatus === "pending" && o.status !== "cancelled",
+      (o) =>
+        o.paymentStatus === "pending" &&
+        o.status !== "cancelled" &&
+        (!o.paymentProvider ||
+          o.paymentProvider === "manual" ||
+          o.paymentProvider === "bank_transfer"),
     );
 
     // Fetch store payment instructions when relevant
@@ -147,8 +158,18 @@ export async function generateAutoResponse(
       )
       .join("\n");
 
+    const toneMap: Record<string, string> = {
+      friendly: "Be warm, approachable, and use a conversational tone.",
+      professional: "Maintain a polished, business-like tone. Be courteous but efficient.",
+      casual: "Be relaxed and informal, like chatting with a friend. Use simple language.",
+      formal: "Use formal language. Be respectful and measured in your responses.",
+    };
+    const toneInstruction = toneMap[aiTone] || toneMap.friendly;
+
     const systemPrompt = `You are a customer support AI assistant for ${companyName}.
 You help website visitors with their questions.
+
+TONE: ${toneInstruction}
 
 RULES:
 - Be helpful, friendly, and professional
@@ -159,6 +180,7 @@ RULES:
 - Use the knowledge base articles below to answer questions when relevant
 - If the visitor has order or booking history, use it to provide personalized support
 - Respond in the same language as the visitor
+${customInstructions ? `\nCUSTOM INSTRUCTIONS FROM STORE OWNER:\n${customInstructions}\n` : ""}
 ${
   pendingManualOrder
     ? `
@@ -244,6 +266,7 @@ Previous conversations: ${visitorInfo?.total_conversations || 0}${customerCtx ? 
       confidence,
       shouldHandoff: confidence < CONFIDENCE_THRESHOLD,
       matchedArticleId,
+      assistantName: aiAssistantName,
     };
   } catch (err) {
     console.error("[AI Responder] Error:", err);

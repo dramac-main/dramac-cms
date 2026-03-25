@@ -241,10 +241,12 @@ export async function POST(request: NextRequest) {
       // Payment/order messages ALWAYS trigger AI (co-pilot mode alongside agent)
       // Other messages only trigger AI when no agent is assigned
       const isPaymentMsg =
-        initialMessage &&
-        /\border(?:er)?\s*(?:#|num|number)?\s*(?:ORD[-\s]?\d+|\d{3,})/i.test(initialMessage) ||
-        /need\s+help\s+with\s+payment/i.test(initialMessage || '') ||
-        /just\s+placed\s+(?:an?\s+)?order/i.test(initialMessage || '');
+        (initialMessage &&
+          /\border(?:er)?\s*(?:#|num|number)?\s*(?:ORD[-\s]?\d+|\d{3,})/i.test(
+            initialMessage,
+          )) ||
+        /need\s+help\s+with\s+payment/i.test(initialMessage || "") ||
+        /just\s+placed\s+(?:an?\s+)?order/i.test(initialMessage || "");
 
       if (isPaymentMsg || !convInsert.assigned_agent_id) {
         import("@/modules/live-chat/lib/auto-response-handler")
@@ -263,7 +265,10 @@ export async function POST(request: NextRequest) {
             );
           })
           .catch((err) =>
-            console.error("[LiveChat] Failed to load auto-response handler:", err),
+            console.error(
+              "[LiveChat] Failed to load auto-response handler:",
+              err,
+            ),
           );
       }
     }

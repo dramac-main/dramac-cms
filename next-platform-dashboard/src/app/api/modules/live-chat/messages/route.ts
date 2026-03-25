@@ -7,22 +7,22 @@
  * GET  — Fetch messages for a conversation (paginated)
  */
 
-import { NextRequest, NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
-import { mapRecord, mapRecords } from '@/modules/live-chat/lib/map-db-record'
-import { notifyNewChatMessage } from '@/modules/live-chat/lib/chat-notifications'
-import type { ChatMessage } from '@/modules/live-chat/types'
+import { NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { mapRecord, mapRecords } from "@/modules/live-chat/lib/map-db-record";
+import { notifyNewChatMessage } from "@/modules/live-chat/lib/chat-notifications";
+import type { ChatMessage } from "@/modules/live-chat/types";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-}
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
 
 export async function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: corsHeaders })
+  return new NextResponse(null, { status: 204, headers: corsHeaders });
 }
 
 /**
@@ -31,146 +31,175 @@ export async function OPTIONS() {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { conversationId, visitorId, content, contentType, fileUrl, fileName, fileSize, fileMimeType } = body
+    const body = await request.json();
+    const {
+      conversationId,
+      visitorId,
+      content,
+      contentType,
+      fileUrl,
+      fileName,
+      fileSize,
+      fileMimeType,
+    } = body;
 
     if (!conversationId || !visitorId || !content) {
       return NextResponse.json(
-        { error: 'conversationId, visitorId, and content are required' },
-        { status: 400, headers: corsHeaders }
-      )
+        { error: "conversationId, visitorId, and content are required" },
+        { status: 400, headers: corsHeaders },
+      );
     }
 
-    const supabase = createAdminClient()
+    const supabase = createAdminClient();
 
     // Validate visitor owns this conversation
     const { data: convData } = await (supabase as any)
-      .from('mod_chat_conversations')
-      .select('visitor_id, site_id, assigned_agent_id, metadata')
-      .eq('id', conversationId)
-      .single()
+      .from("mod_chat_conversations")
+      .select("visitor_id, site_id, assigned_agent_id, metadata")
+      .eq("id", conversationId)
+      .single();
 
     if (!convData || convData.visitor_id !== visitorId) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 403, headers: corsHeaders }
-      )
+        { error: "Unauthorized" },
+        { status: 403, headers: corsHeaders },
+      );
     }
 
     // Get visitor name for message
     const { data: visitorData } = await (supabase as any)
-      .from('mod_chat_visitors')
-      .select('name')
-      .eq('id', visitorId)
-      .single()
+      .from("mod_chat_visitors")
+      .select("name")
+      .eq("id", visitorId)
+      .single();
 
     // Insert message
     const msgInsert: Record<string, unknown> = {
       conversation_id: conversationId,
       site_id: convData.site_id,
-      sender_type: 'visitor',
+      sender_type: "visitor",
       sender_id: visitorId,
-      sender_name: visitorData?.name || 'Visitor',
+      sender_name: visitorData?.name || "Visitor",
       content,
-      content_type: contentType || 'text',
-      status: 'sent',
+      content_type: contentType || "text",
+      status: "sent",
       is_internal_note: false,
-    }
+    };
 
-    if (fileUrl) msgInsert.file_url = fileUrl
-    if (fileName) msgInsert.file_name = fileName
-    if (fileSize) msgInsert.file_size = fileSize
-    if (fileMimeType) msgInsert.file_mime_type = fileMimeType
+    if (fileUrl) msgInsert.file_url = fileUrl;
+    if (fileName) msgInsert.file_name = fileName;
+    if (fileSize) msgInsert.file_size = fileSize;
+    if (fileMimeType) msgInsert.file_mime_type = fileMimeType;
 
     const { data: msgData, error: msgError } = await (supabase as any)
-      .from('mod_chat_messages')
+      .from("mod_chat_messages")
       .insert(msgInsert)
       .select()
-      .single()
+      .single();
 
-    if (msgError) throw msgError
+    if (msgError) throw msgError;
 
-    const message = mapRecord<ChatMessage>(msgData)
+    const message = mapRecord<ChatMessage>(msgData);
 
     // Update conversation with last message info
     // First fetch current unread count, then increment
     const { data: currentConv } = await (supabase as any)
-      .from('mod_chat_conversations')
-      .select('unread_agent_count, message_count')
-      .eq('id', conversationId)
-      .single()
+      .from("mod_chat_conversations")
+      .select("unread_agent_count, message_count")
+      .eq("id", conversationId)
+      .single();
 
-    const currentUnread = (currentConv?.unread_agent_count || 0) + 1
-    const currentMsgCount = (currentConv?.message_count || 0) + 1
+    const currentUnread = (currentConv?.unread_agent_count || 0) + 1;
+    const currentMsgCount = (currentConv?.message_count || 0) + 1;
 
     await (supabase as any)
-      .from('mod_chat_conversations')
+      .from("mod_chat_conversations")
       .update({
         last_message_text: content.substring(0, 255),
         last_message_at: new Date().toISOString(),
-        last_message_by: 'visitor',
+        last_message_by: "visitor",
         unread_agent_count: currentUnread,
         message_count: currentMsgCount,
       })
-      .eq('id', conversationId)
+      .eq("id", conversationId);
 
     // Send in-app notification to assigned agent (or site owner)
     // This runs async — don't block the response
-    const convForNotify = convData as { visitor_id: string; site_id: string; assigned_agent_id?: string }
+    const convForNotify = convData as {
+      visitor_id: string;
+      site_id: string;
+      assigned_agent_id?: string;
+    };
     notifyNewChatMessage({
       siteId: convForNotify.site_id,
       conversationId,
-      visitorName: visitorData?.name || 'Visitor',
+      visitorName: visitorData?.name || "Visitor",
       messageText: content,
       agentUserId: convForNotify.assigned_agent_id || undefined,
-    }).catch((err) => console.error('[LiveChat] Notification error:', err))
+    }).catch((err) => console.error("[LiveChat] Notification error:", err));
 
     // Send web push to assigned agent (or all site agents)
-    import('@/lib/actions/web-push').then(({ sendPushToUser, sendPushToSiteAgents }) => {
-      const pushPayload = {
-        title: `Chat from ${visitorData?.name || 'Visitor'}`,
-        body: content.length > 100 ? content.slice(0, 100) + '…' : content,
-        tag: `chat-${conversationId}`,
-        type: 'chat' as const,
-        conversationId,
-        url: `/dashboard/sites/${convForNotify.site_id}/live-chat/conversations/${conversationId}`,
-        renotify: true,
-      }
-      if (convForNotify.assigned_agent_id) {
-        sendPushToUser(convForNotify.assigned_agent_id, pushPayload).catch(() => {})
-      } else {
-        sendPushToSiteAgents(convForNotify.site_id, pushPayload).catch(() => {})
-      }
-    }).catch(() => {})
+    import("@/lib/actions/web-push")
+      .then(({ sendPushToUser, sendPushToSiteAgents }) => {
+        const pushPayload = {
+          title: `Chat from ${visitorData?.name || "Visitor"}`,
+          body: content.length > 100 ? content.slice(0, 100) + "…" : content,
+          tag: `chat-${conversationId}`,
+          type: "chat" as const,
+          conversationId,
+          url: `/dashboard/sites/${convForNotify.site_id}/live-chat/conversations/${conversationId}`,
+          renotify: true,
+        };
+        if (convForNotify.assigned_agent_id) {
+          sendPushToUser(convForNotify.assigned_agent_id, pushPayload).catch(
+            () => {},
+          );
+        } else {
+          sendPushToSiteAgents(convForNotify.site_id, pushPayload).catch(
+            () => {},
+          );
+        }
+      })
+      .catch(() => {});
 
     // Trigger AI auto-response:
     // - For payment guidance conversations, ALWAYS trigger AI (co-pilot mode)
     // - For other conversations, only when no agent is assigned
-    const convMeta = (convData as { metadata?: Record<string, unknown> }).metadata
-    const isPaymentConvo = convMeta?.payment_guidance_active === true
+    const convMeta = (convData as { metadata?: Record<string, unknown> })
+      .metadata;
+    const isPaymentConvo = convMeta?.payment_guidance_active === true;
 
     if (isPaymentConvo || !convForNotify.assigned_agent_id) {
-      import('@/modules/live-chat/lib/auto-response-handler').then(({ handleNewVisitorMessage }) => {
-        handleNewVisitorMessage(
-          convForNotify.site_id,
-          conversationId,
-          content,
-          visitorId,
-          { forcePaymentGuidance: isPaymentConvo }
-        ).catch((err) => console.error('[LiveChat] Auto-response error:', err))
-      }).catch((err) => console.error('[LiveChat] Failed to load auto-response handler:', err))
+      import("@/modules/live-chat/lib/auto-response-handler")
+        .then(({ handleNewVisitorMessage }) => {
+          handleNewVisitorMessage(
+            convForNotify.site_id,
+            conversationId,
+            content,
+            visitorId,
+            { forcePaymentGuidance: isPaymentConvo },
+          ).catch((err) =>
+            console.error("[LiveChat] Auto-response error:", err),
+          );
+        })
+        .catch((err) =>
+          console.error(
+            "[LiveChat] Failed to load auto-response handler:",
+            err,
+          ),
+        );
     }
 
     return NextResponse.json(
       { message },
-      { status: 201, headers: corsHeaders }
-    )
+      { status: 201, headers: corsHeaders },
+    );
   } catch (error) {
-    console.error('[LiveChat Messages API] POST error:', error)
+    console.error("[LiveChat Messages API] POST error:", error);
     return NextResponse.json(
-      { error: 'Failed to send message' },
-      { status: 500, headers: corsHeaders }
-    )
+      { error: "Failed to send message" },
+      { status: 500, headers: corsHeaders },
+    );
   }
 }
 
@@ -180,58 +209,62 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const conversationId = searchParams.get('conversationId')
-    const visitorId = searchParams.get('visitorId')
-    const page = parseInt(searchParams.get('page') || '1', 10)
-    const pageSize = 50
+    const { searchParams } = new URL(request.url);
+    const conversationId = searchParams.get("conversationId");
+    const visitorId = searchParams.get("visitorId");
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const pageSize = 50;
 
     if (!conversationId || !visitorId) {
       return NextResponse.json(
-        { error: 'conversationId and visitorId are required' },
-        { status: 400, headers: corsHeaders }
-      )
+        { error: "conversationId and visitorId are required" },
+        { status: 400, headers: corsHeaders },
+      );
     }
 
-    const supabase = createAdminClient()
+    const supabase = createAdminClient();
 
     // Validate visitor owns this conversation
     const { data: convData } = await (supabase as any)
-      .from('mod_chat_conversations')
-      .select('visitor_id')
-      .eq('id', conversationId)
-      .single()
+      .from("mod_chat_conversations")
+      .select("visitor_id")
+      .eq("id", conversationId)
+      .single();
 
     if (!convData || convData.visitor_id !== visitorId) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 403, headers: corsHeaders }
-      )
+        { error: "Unauthorized" },
+        { status: 403, headers: corsHeaders },
+      );
     }
 
-    const offset = (page - 1) * pageSize
+    const offset = (page - 1) * pageSize;
 
-    const { data: msgData, count, error } = await (supabase as any)
-      .from('mod_chat_messages')
-      .select('*', { count: 'exact' })
-      .eq('conversation_id', conversationId)
-      .eq('is_internal_note', false)
-      .order('created_at', { ascending: true })
-      .range(offset, offset + pageSize - 1)
+    const {
+      data: msgData,
+      count,
+      error,
+    } = await (supabase as any)
+      .from("mod_chat_messages")
+      .select("*", { count: "exact" })
+      .eq("conversation_id", conversationId)
+      .eq("is_internal_note", false)
+      .order("created_at", { ascending: true })
+      .range(offset, offset + pageSize - 1);
 
-    if (error) throw error
+    if (error) throw error;
 
-    const messages = mapRecords<ChatMessage>(msgData || [])
+    const messages = mapRecords<ChatMessage>(msgData || []);
 
     return NextResponse.json(
       { messages, total: count || 0 },
-      { headers: corsHeaders }
-    )
+      { headers: corsHeaders },
+    );
   } catch (error) {
-    console.error('[LiveChat Messages API] GET error:', error)
+    console.error("[LiveChat Messages API] GET error:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch messages' },
-      { status: 500, headers: corsHeaders }
-    )
+      { error: "Failed to fetch messages" },
+      { status: 500, headers: corsHeaders },
+    );
   }
 }

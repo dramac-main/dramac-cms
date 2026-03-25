@@ -620,7 +620,8 @@ export function OrderConfirmationBlock({
               </div>
               <div className="text-xs text-amber-700 flex items-center gap-1.5 mt-2">
                 <MessageSquare className="h-3 w-3" />
-                Your chat assistant is also walking you through these payment steps.
+                Your chat assistant is also walking you through these payment
+                steps.
               </div>
             </CardContent>
           </Card>
@@ -775,10 +776,14 @@ export function OrderConfirmationBlock({
                   <span>Send Payment</span>
                 </div>
                 <span className="text-muted-foreground self-center">→</span>
-                <div className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full",
-                  proofStatus.hasProof ? "bg-green-100 text-green-800" : "bg-muted text-muted-foreground"
-                )}>
+                <div
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full",
+                    proofStatus.hasProof
+                      ? "bg-green-100 text-green-800"
+                      : "bg-muted text-muted-foreground",
+                  )}
+                >
                   <Upload className="h-3.5 w-3.5" />
                   <span>Upload Proof</span>
                 </div>

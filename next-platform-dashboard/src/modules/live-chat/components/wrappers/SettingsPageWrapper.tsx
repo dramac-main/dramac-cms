@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * SettingsPageWrapper — Full widget settings with 8-tab interface
@@ -7,28 +7,28 @@
  * Behavior, Embed Code, WhatsApp, Advanced
  */
 
-import { useState, useCallback, useTransition } from 'react'
+import { useState, useCallback, useTransition } from "react";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Badge } from '@/components/ui/badge'
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import {
   Palette,
   Building2,
@@ -44,89 +44,103 @@ import {
   Eye,
   AlertCircle,
   Bot,
-} from 'lucide-react'
-import { updateWidgetSettings } from '@/modules/live-chat/actions'
-import type { ChatWidgetSettings, ChatDepartment, BusinessHoursConfig } from '@/modules/live-chat/types'
+} from "lucide-react";
+import { updateWidgetSettings } from "@/modules/live-chat/actions";
+import type {
+  ChatWidgetSettings,
+  ChatDepartment,
+  BusinessHoursConfig,
+} from "@/modules/live-chat/types";
 
 interface SettingsPageWrapperProps {
-  siteId: string
-  initialSettings: ChatWidgetSettings
-  departments: (ChatDepartment & { agentCount: number })[]
+  siteId: string;
+  initialSettings: ChatWidgetSettings;
+  departments: (ChatDepartment & { agentCount: number })[];
 }
 
-type FormData = Record<string, unknown>
+type FormData = Record<string, unknown>;
 
 const DAYS_OF_WEEK = [
-  { key: 'monday', label: 'Monday' },
-  { key: 'tuesday', label: 'Tuesday' },
-  { key: 'wednesday', label: 'Wednesday' },
-  { key: 'thursday', label: 'Thursday' },
-  { key: 'friday', label: 'Friday' },
-  { key: 'saturday', label: 'Saturday' },
-  { key: 'sunday', label: 'Sunday' },
-] as const
+  { key: "monday", label: "Monday" },
+  { key: "tuesday", label: "Tuesday" },
+  { key: "wednesday", label: "Wednesday" },
+  { key: "thursday", label: "Thursday" },
+  { key: "friday", label: "Friday" },
+  { key: "saturday", label: "Saturday" },
+  { key: "sunday", label: "Sunday" },
+] as const;
 
 const POSITION_OPTIONS = [
-  { value: 'bottom-right', label: 'Bottom Right' },
-  { value: 'bottom-left', label: 'Bottom Left' },
-]
+  { value: "bottom-right", label: "Bottom Right" },
+  { value: "bottom-left", label: "Bottom Left" },
+];
 
 const ICON_OPTIONS = [
-  { value: 'message-circle', label: '💬 Message Circle' },
-  { value: 'chat', label: '💬 Chat Bubble' },
-  { value: 'support', label: '🎧 Headset' },
-  { value: 'wave', label: '👋 Wave' },
-  { value: 'help', label: '❓ Help' },
-]
+  { value: "message-circle", label: "💬 Message Circle" },
+  { value: "chat", label: "💬 Chat Bubble" },
+  { value: "support", label: "🎧 Headset" },
+  { value: "wave", label: "👋 Wave" },
+  { value: "help", label: "❓ Help" },
+];
 
 export function SettingsPageWrapper({
   siteId,
   initialSettings,
   departments,
 }: SettingsPageWrapperProps) {
-  const [settings, setSettings] = useState<ChatWidgetSettings>(initialSettings)
-  const [isPending, startTransition] = useTransition()
-  const [savedTab, setSavedTab] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
+  const [settings, setSettings] = useState<ChatWidgetSettings>(initialSettings);
+  const [isPending, startTransition] = useTransition();
+  const [savedTab, setSavedTab] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const update = useCallback(
     (key: keyof ChatWidgetSettings, value: unknown) => {
-      setSettings((prev) => ({ ...prev, [key]: value }))
+      setSettings((prev) => ({ ...prev, [key]: value }));
     },
-    []
-  )
+    [],
+  );
 
   const updateBusinessHours = useCallback(
     (day: string, field: string, value: unknown) => {
       setSettings((prev) => {
-        const hours = { ...(prev.businessHours || {}) } as Record<string, { enabled: boolean; start: string; end: string }>
-        const currentDay = hours[day] || { enabled: false, start: '09:00', end: '17:00' }
-        hours[day] = { ...currentDay, [field]: value }
-        return { ...prev, businessHours: hours as unknown as BusinessHoursConfig }
-      })
+        const hours = { ...(prev.businessHours || {}) } as Record<
+          string,
+          { enabled: boolean; start: string; end: string }
+        >;
+        const currentDay = hours[day] || {
+          enabled: false,
+          start: "09:00",
+          end: "17:00",
+        };
+        hours[day] = { ...currentDay, [field]: value };
+        return {
+          ...prev,
+          businessHours: hours as unknown as BusinessHoursConfig,
+        };
+      });
     },
-    []
-  )
+    [],
+  );
 
   const saveSettings = useCallback(
     (tabName: string, fields: FormData) => {
-      setError(null)
+      setError(null);
       startTransition(async () => {
-        const result = await updateWidgetSettings(siteId, fields)
+        const result = await updateWidgetSettings(siteId, fields);
         if (result.error) {
-          setError(result.error)
+          setError(result.error);
         } else {
-          setSavedTab(tabName)
-          setTimeout(() => setSavedTab(null), 2000)
+          setSavedTab(tabName);
+          setTimeout(() => setSavedTab(null), 2000);
         }
-      })
+      });
     },
-    [siteId]
-  )
+    [siteId],
+  );
 
   const saveBehaviorSettings = useCallback(() => {
-    setError(null)
+    setError(null);
     startTransition(async () => {
       // Save core behavior fields first
       const coreFields: FormData = {
@@ -138,34 +152,45 @@ export function SettingsPageWrapper({
         enableEmoji: settings.enableEmoji,
         enableSoundNotifications: settings.enableSoundNotifications,
         enableSatisfactionRating: settings.enableSatisfactionRating,
-      }
+      };
 
-      const coreResult = await updateWidgetSettings(siteId, coreFields)
+      const coreResult = await updateWidgetSettings(siteId, coreFields);
       if (coreResult.error) {
-        setError(coreResult.error)
-        return
+        setError(coreResult.error);
+        return;
       }
 
       // Try auto-close fields separately (may fail if migration lc-10 not run)
       const autoCloseFields: FormData = {
         autoCloseEnabled: settings.autoCloseEnabled ?? true,
         autoCloseMinutes: settings.autoCloseMinutes ?? 30,
-        autoCloseMessage: settings.autoCloseMessage ?? 'This conversation was automatically closed due to inactivity. Feel free to start a new chat anytime!',
-      }
+        autoCloseMessage:
+          settings.autoCloseMessage ??
+          "This conversation was automatically closed due to inactivity. Feel free to start a new chat anytime!",
+      };
 
-      const autoCloseResult = await updateWidgetSettings(siteId, autoCloseFields)
+      const autoCloseResult = await updateWidgetSettings(
+        siteId,
+        autoCloseFields,
+      );
       if (autoCloseResult.error) {
         // Auto-close columns may not exist yet — warn but don't block
-        console.warn('[Settings] Auto-close save failed (migration may be pending):', autoCloseResult.error)
+        console.warn(
+          "[Settings] Auto-close save failed (migration may be pending):",
+          autoCloseResult.error,
+        );
       }
 
-      setSavedTab('behavior')
-      setTimeout(() => setSavedTab(null), 2000)
-    })
-  }, [siteId, settings])
+      setSavedTab("behavior");
+      setTimeout(() => setSavedTab(null), 2000);
+    });
+  }, [siteId, settings]);
 
   const getEmbedCode = () => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://your-domain.com'
+    const origin =
+      typeof window !== "undefined"
+        ? window.location.origin
+        : "https://your-domain.com";
     return `<!-- DRAMAC Live Chat Widget -->
 <script>
 (function(d,r,a,m){
@@ -174,14 +199,14 @@ export function SettingsPageWrapper({
   m.async=true;
   d.head.appendChild(m);
 })(document);
-</script>`
-  }
+</script>`;
+  };
 
   const copyEmbedCode = () => {
-    navigator.clipboard.writeText(getEmbedCode())
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+    navigator.clipboard.writeText(getEmbedCode());
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div className="container py-6 max-w-5xl">
@@ -260,12 +285,12 @@ export function SettingsPageWrapper({
                     <input
                       type="color"
                       value={settings.primaryColor}
-                      onChange={(e) => update('primaryColor', e.target.value)}
+                      onChange={(e) => update("primaryColor", e.target.value)}
                       className="w-10 h-10 rounded border cursor-pointer"
                     />
                     <Input
                       value={settings.primaryColor}
-                      onChange={(e) => update('primaryColor', e.target.value)}
+                      onChange={(e) => update("primaryColor", e.target.value)}
                       placeholder="#6366f1"
                     />
                   </div>
@@ -278,12 +303,12 @@ export function SettingsPageWrapper({
                     <input
                       type="color"
                       value={settings.textColor}
-                      onChange={(e) => update('textColor', e.target.value)}
+                      onChange={(e) => update("textColor", e.target.value)}
                       className="w-10 h-10 rounded border cursor-pointer"
                     />
                     <Input
                       value={settings.textColor}
-                      onChange={(e) => update('textColor', e.target.value)}
+                      onChange={(e) => update("textColor", e.target.value)}
                       placeholder="#ffffff"
                     />
                   </div>
@@ -294,7 +319,7 @@ export function SettingsPageWrapper({
                   <Label>Position</Label>
                   <Select
                     value={settings.position}
-                    onValueChange={(v) => update('position', v)}
+                    onValueChange={(v) => update("position", v)}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -314,7 +339,7 @@ export function SettingsPageWrapper({
                   <Label>Launcher Icon</Label>
                   <Select
                     value={settings.launcherIcon}
-                    onValueChange={(v) => update('launcherIcon', v)}
+                    onValueChange={(v) => update("launcherIcon", v)}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -335,7 +360,9 @@ export function SettingsPageWrapper({
                   <Input
                     type="number"
                     value={settings.launcherSize}
-                    onChange={(e) => update('launcherSize', parseInt(e.target.value) || 56)}
+                    onChange={(e) =>
+                      update("launcherSize", parseInt(e.target.value) || 56)
+                    }
                     min={40}
                     max={80}
                   />
@@ -347,7 +374,9 @@ export function SettingsPageWrapper({
                   <Input
                     type="number"
                     value={settings.borderRadius}
-                    onChange={(e) => update('borderRadius', parseInt(e.target.value) || 16)}
+                    onChange={(e) =>
+                      update("borderRadius", parseInt(e.target.value) || 16)
+                    }
                     min={0}
                     max={24}
                   />
@@ -359,7 +388,9 @@ export function SettingsPageWrapper({
                   <Input
                     type="number"
                     value={settings.zIndex}
-                    onChange={(e) => update('zIndex', parseInt(e.target.value) || 99999)}
+                    onChange={(e) =>
+                      update("zIndex", parseInt(e.target.value) || 99999)
+                    }
                     min={1000}
                     max={999999}
                   />
@@ -372,15 +403,21 @@ export function SettingsPageWrapper({
                   <Eye className="h-3.5 w-3.5 inline mr-1" />
                   Preview
                 </Label>
-                <div className="relative h-16 flex items-end" style={{
-                  justifyContent: settings.position === 'bottom-right' ? 'flex-end' : 'flex-start'
-                }}>
+                <div
+                  className="relative h-16 flex items-end"
+                  style={{
+                    justifyContent:
+                      settings.position === "bottom-right"
+                        ? "flex-end"
+                        : "flex-start",
+                  }}
+                >
                   <div
                     className="flex items-center justify-center shadow-lg transition-all"
                     style={{
                       width: settings.launcherSize,
                       height: settings.launcherSize,
-                      borderRadius: '50%',
+                      borderRadius: "50%",
                       backgroundColor: settings.primaryColor,
                       color: settings.textColor,
                     }}
@@ -392,7 +429,7 @@ export function SettingsPageWrapper({
 
               <Button
                 onClick={() =>
-                  saveSettings('appearance', {
+                  saveSettings("appearance", {
                     primaryColor: settings.primaryColor,
                     textColor: settings.textColor,
                     position: settings.position,
@@ -404,10 +441,14 @@ export function SettingsPageWrapper({
                 }
                 disabled={isPending}
               >
-                {savedTab === 'appearance' ? (
-                  <><Check className="h-4 w-4 mr-2" /> Saved</>
+                {savedTab === "appearance" ? (
+                  <>
+                    <Check className="h-4 w-4 mr-2" /> Saved
+                  </>
                 ) : (
-                  <><Save className="h-4 w-4 mr-2" /> Save Appearance</>
+                  <>
+                    <Save className="h-4 w-4 mr-2" /> Save Appearance
+                  </>
                 )}
               </Button>
             </CardContent>
@@ -430,8 +471,10 @@ export function SettingsPageWrapper({
               <div className="space-y-2">
                 <Label>Company Name</Label>
                 <Input
-                  value={settings.companyName || ''}
-                  onChange={(e) => update('companyName', e.target.value || null)}
+                  value={settings.companyName || ""}
+                  onChange={(e) =>
+                    update("companyName", e.target.value || null)
+                  }
                   placeholder="DRAMAC Support"
                 />
               </div>
@@ -439,8 +482,8 @@ export function SettingsPageWrapper({
               <div className="space-y-2">
                 <Label>Logo URL</Label>
                 <Input
-                  value={settings.logoUrl || ''}
-                  onChange={(e) => update('logoUrl', e.target.value || null)}
+                  value={settings.logoUrl || ""}
+                  onChange={(e) => update("logoUrl", e.target.value || null)}
                   placeholder="https://example.com/logo.png"
                 />
                 {settings.logoUrl && (
@@ -449,9 +492,13 @@ export function SettingsPageWrapper({
                       src={settings.logoUrl}
                       alt="Logo preview"
                       className="h-10 w-10 rounded-full object-cover border"
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = "none";
+                      }}
                     />
-                    <span className="text-xs text-muted-foreground">Logo preview</span>
+                    <span className="text-xs text-muted-foreground">
+                      Logo preview
+                    </span>
                   </div>
                 )}
               </div>
@@ -460,7 +507,7 @@ export function SettingsPageWrapper({
                 <Label>Welcome Message</Label>
                 <Textarea
                   value={settings.welcomeMessage}
-                  onChange={(e) => update('welcomeMessage', e.target.value)}
+                  onChange={(e) => update("welcomeMessage", e.target.value)}
                   placeholder="Hi there! How can we help you today?"
                   rows={2}
                 />
@@ -473,7 +520,7 @@ export function SettingsPageWrapper({
                 <Label>Away Message</Label>
                 <Textarea
                   value={settings.awayMessage}
-                  onChange={(e) => update('awayMessage', e.target.value)}
+                  onChange={(e) => update("awayMessage", e.target.value)}
                   placeholder="We're currently busy. We'll respond shortly."
                   rows={2}
                 />
@@ -486,7 +533,7 @@ export function SettingsPageWrapper({
                 <Label>Offline Message</Label>
                 <Textarea
                   value={settings.offlineMessage}
-                  onChange={(e) => update('offlineMessage', e.target.value)}
+                  onChange={(e) => update("offlineMessage", e.target.value)}
                   placeholder="We're currently offline. Leave us a message and we'll get back to you."
                   rows={2}
                 />
@@ -499,7 +546,7 @@ export function SettingsPageWrapper({
                 <Label>Language</Label>
                 <Select
                   value={settings.language}
-                  onValueChange={(v) => update('language', v)}
+                  onValueChange={(v) => update("language", v)}
                 >
                   <SelectTrigger className="w-48">
                     <SelectValue />
@@ -517,7 +564,7 @@ export function SettingsPageWrapper({
 
               <Button
                 onClick={() =>
-                  saveSettings('branding', {
+                  saveSettings("branding", {
                     companyName: settings.companyName,
                     logoUrl: settings.logoUrl,
                     welcomeMessage: settings.welcomeMessage,
@@ -528,10 +575,14 @@ export function SettingsPageWrapper({
                 }
                 disabled={isPending}
               >
-                {savedTab === 'branding' ? (
-                  <><Check className="h-4 w-4 mr-2" /> Saved</>
+                {savedTab === "branding" ? (
+                  <>
+                    <Check className="h-4 w-4 mr-2" /> Saved
+                  </>
                 ) : (
-                  <><Save className="h-4 w-4 mr-2" /> Save Branding</>
+                  <>
+                    <Save className="h-4 w-4 mr-2" /> Save Branding
+                  </>
                 )}
               </Button>
             </CardContent>
@@ -560,7 +611,7 @@ export function SettingsPageWrapper({
                 </div>
                 <Switch
                   checked={settings.preChatEnabled}
-                  onCheckedChange={(v) => update('preChatEnabled', v)}
+                  onCheckedChange={(v) => update("preChatEnabled", v)}
                 />
               </div>
 
@@ -575,7 +626,7 @@ export function SettingsPageWrapper({
                     </div>
                     <Switch
                       checked={settings.preChatNameRequired}
-                      onCheckedChange={(v) => update('preChatNameRequired', v)}
+                      onCheckedChange={(v) => update("preChatNameRequired", v)}
                     />
                   </div>
 
@@ -588,7 +639,7 @@ export function SettingsPageWrapper({
                     </div>
                     <Switch
                       checked={settings.preChatEmailRequired}
-                      onCheckedChange={(v) => update('preChatEmailRequired', v)}
+                      onCheckedChange={(v) => update("preChatEmailRequired", v)}
                     />
                   </div>
 
@@ -601,7 +652,7 @@ export function SettingsPageWrapper({
                     </div>
                     <Switch
                       checked={settings.preChatPhoneEnabled}
-                      onCheckedChange={(v) => update('preChatPhoneEnabled', v)}
+                      onCheckedChange={(v) => update("preChatPhoneEnabled", v)}
                     />
                   </div>
 
@@ -615,7 +666,9 @@ export function SettingsPageWrapper({
                       </div>
                       <Switch
                         checked={settings.preChatPhoneRequired}
-                        onCheckedChange={(v) => update('preChatPhoneRequired', v)}
+                        onCheckedChange={(v) =>
+                          update("preChatPhoneRequired", v)
+                        }
                       />
                     </div>
                   )}
@@ -629,7 +682,9 @@ export function SettingsPageWrapper({
                     </div>
                     <Switch
                       checked={settings.preChatMessageRequired}
-                      onCheckedChange={(v) => update('preChatMessageRequired', v)}
+                      onCheckedChange={(v) =>
+                        update("preChatMessageRequired", v)
+                      }
                     />
                   </div>
 
@@ -639,13 +694,19 @@ export function SettingsPageWrapper({
                       <p className="text-xs text-muted-foreground">
                         Let visitors choose a department
                         {departments.length > 0 && (
-                          <> ({departments.length} department{departments.length > 1 ? 's' : ''} available)</>
+                          <>
+                            {" "}
+                            ({departments.length} department
+                            {departments.length > 1 ? "s" : ""} available)
+                          </>
                         )}
                       </p>
                     </div>
                     <Switch
                       checked={settings.preChatDepartmentSelector}
-                      onCheckedChange={(v) => update('preChatDepartmentSelector', v)}
+                      onCheckedChange={(v) =>
+                        update("preChatDepartmentSelector", v)
+                      }
                     />
                   </div>
                 </div>
@@ -653,22 +714,27 @@ export function SettingsPageWrapper({
 
               <Button
                 onClick={() =>
-                  saveSettings('pre-chat', {
+                  saveSettings("pre-chat", {
                     preChatEnabled: settings.preChatEnabled,
                     preChatNameRequired: settings.preChatNameRequired,
                     preChatEmailRequired: settings.preChatEmailRequired,
                     preChatPhoneEnabled: settings.preChatPhoneEnabled,
                     preChatPhoneRequired: settings.preChatPhoneRequired,
                     preChatMessageRequired: settings.preChatMessageRequired,
-                    preChatDepartmentSelector: settings.preChatDepartmentSelector,
+                    preChatDepartmentSelector:
+                      settings.preChatDepartmentSelector,
                   })
                 }
                 disabled={isPending}
               >
-                {savedTab === 'pre-chat' ? (
-                  <><Check className="h-4 w-4 mr-2" /> Saved</>
+                {savedTab === "pre-chat" ? (
+                  <>
+                    <Check className="h-4 w-4 mr-2" /> Saved
+                  </>
                 ) : (
-                  <><Save className="h-4 w-4 mr-2" /> Save Pre-Chat</>
+                  <>
+                    <Save className="h-4 w-4 mr-2" /> Save Pre-Chat
+                  </>
                 )}
               </Button>
             </CardContent>
@@ -684,7 +750,8 @@ export function SettingsPageWrapper({
                 Business Hours
               </CardTitle>
               <CardDescription>
-                Set your availability schedule. Outside these hours, visitors see the offline form.
+                Set your availability schedule. Outside these hours, visitors
+                see the offline form.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -697,7 +764,7 @@ export function SettingsPageWrapper({
                 </div>
                 <Switch
                   checked={settings.businessHoursEnabled}
-                  onCheckedChange={(v) => update('businessHoursEnabled', v)}
+                  onCheckedChange={(v) => update("businessHoursEnabled", v)}
                 />
               </div>
 
@@ -707,20 +774,24 @@ export function SettingsPageWrapper({
                     <Label>Timezone</Label>
                     <Input
                       value={settings.timezone}
-                      onChange={(e) => update('timezone', e.target.value)}
+                      onChange={(e) => update("timezone", e.target.value)}
                       placeholder="Africa/Lusaka"
                     />
                     <p className="text-xs text-muted-foreground">
-                      IANA timezone identifier (e.g., Africa/Lusaka, Europe/London)
+                      IANA timezone identifier (e.g., Africa/Lusaka,
+                      Europe/London)
                     </p>
                   </div>
 
                   <div className="space-y-3">
                     {DAYS_OF_WEEK.map(({ key, label }) => {
-                      const dayConfig = settings.businessHours?.[key as keyof BusinessHoursConfig]
-                      const isEnabled = dayConfig?.enabled ?? false
-                      const start = dayConfig?.start ?? '09:00'
-                      const end = dayConfig?.end ?? '17:00'
+                      const dayConfig =
+                        settings.businessHours?.[
+                          key as keyof BusinessHoursConfig
+                        ];
+                      const isEnabled = dayConfig?.enabled ?? false;
+                      const start = dayConfig?.start ?? "09:00";
+                      const end = dayConfig?.end ?? "17:00";
 
                       return (
                         <div
@@ -732,10 +803,12 @@ export function SettingsPageWrapper({
                               <Switch
                                 checked={isEnabled}
                                 onCheckedChange={(v) =>
-                                  updateBusinessHours(key, 'enabled', v)
+                                  updateBusinessHours(key, "enabled", v)
                                 }
                               />
-                              <span className="text-sm font-medium">{label}</span>
+                              <span className="text-sm font-medium">
+                                {label}
+                              </span>
                             </div>
                           </div>
 
@@ -745,7 +818,11 @@ export function SettingsPageWrapper({
                                 type="time"
                                 value={start}
                                 onChange={(e) =>
-                                  updateBusinessHours(key, 'start', e.target.value)
+                                  updateBusinessHours(
+                                    key,
+                                    "start",
+                                    e.target.value,
+                                  )
                                 }
                                 className="w-32"
                               />
@@ -754,7 +831,11 @@ export function SettingsPageWrapper({
                                 type="time"
                                 value={end}
                                 onChange={(e) =>
-                                  updateBusinessHours(key, 'end', e.target.value)
+                                  updateBusinessHours(
+                                    key,
+                                    "end",
+                                    e.target.value,
+                                  )
                                 }
                                 className="w-32"
                               />
@@ -765,7 +846,7 @@ export function SettingsPageWrapper({
                             </span>
                           )}
                         </div>
-                      )
+                      );
                     })}
                   </div>
                 </>
@@ -773,7 +854,7 @@ export function SettingsPageWrapper({
 
               <Button
                 onClick={() =>
-                  saveSettings('hours', {
+                  saveSettings("hours", {
                     businessHoursEnabled: settings.businessHoursEnabled,
                     businessHours: settings.businessHours,
                     timezone: settings.timezone,
@@ -781,10 +862,14 @@ export function SettingsPageWrapper({
                 }
                 disabled={isPending}
               >
-                {savedTab === 'hours' ? (
-                  <><Check className="h-4 w-4 mr-2" /> Saved</>
+                {savedTab === "hours" ? (
+                  <>
+                    <Check className="h-4 w-4 mr-2" /> Saved
+                  </>
                 ) : (
-                  <><Save className="h-4 w-4 mr-2" /> Save Hours</>
+                  <>
+                    <Save className="h-4 w-4 mr-2" /> Save Hours
+                  </>
                 )}
               </Button>
             </CardContent>
@@ -810,7 +895,10 @@ export function SettingsPageWrapper({
                   type="number"
                   value={settings.autoOpenDelaySeconds}
                   onChange={(e) =>
-                    update('autoOpenDelaySeconds', parseInt(e.target.value) || 0)
+                    update(
+                      "autoOpenDelaySeconds",
+                      parseInt(e.target.value) || 0,
+                    )
                   }
                   min={0}
                   max={300}
@@ -823,39 +911,39 @@ export function SettingsPageWrapper({
               <div className="space-y-4">
                 {[
                   {
-                    key: 'showAgentAvatar' as const,
-                    label: 'Show Agent Avatar',
-                    desc: 'Display agent profile photos in chat',
+                    key: "showAgentAvatar" as const,
+                    label: "Show Agent Avatar",
+                    desc: "Display agent profile photos in chat",
                   },
                   {
-                    key: 'showAgentName' as const,
-                    label: 'Show Agent Name',
-                    desc: 'Display agent names in messages',
+                    key: "showAgentName" as const,
+                    label: "Show Agent Name",
+                    desc: "Display agent names in messages",
                   },
                   {
-                    key: 'showTypingIndicator' as const,
-                    label: 'Typing Indicator',
-                    desc: 'Show when an agent is typing',
+                    key: "showTypingIndicator" as const,
+                    label: "Typing Indicator",
+                    desc: "Show when an agent is typing",
                   },
                   {
-                    key: 'enableFileUploads' as const,
-                    label: 'File Uploads',
-                    desc: 'Allow visitors to upload files',
+                    key: "enableFileUploads" as const,
+                    label: "File Uploads",
+                    desc: "Allow visitors to upload files",
                   },
                   {
-                    key: 'enableEmoji' as const,
-                    label: 'Emoji',
-                    desc: 'Enable emoji picker in chat',
+                    key: "enableEmoji" as const,
+                    label: "Emoji",
+                    desc: "Enable emoji picker in chat",
                   },
                   {
-                    key: 'enableSoundNotifications' as const,
-                    label: 'Sound Notifications',
-                    desc: 'Play sound for new messages',
+                    key: "enableSoundNotifications" as const,
+                    label: "Sound Notifications",
+                    desc: "Play sound for new messages",
                   },
                   {
-                    key: 'enableSatisfactionRating' as const,
-                    label: 'Satisfaction Rating',
-                    desc: 'Show rating form after chat ends',
+                    key: "enableSatisfactionRating" as const,
+                    label: "Satisfaction Rating",
+                    desc: "Show rating form after chat ends",
                   },
                 ].map((item) => (
                   <div
@@ -864,7 +952,9 @@ export function SettingsPageWrapper({
                   >
                     <div>
                       <Label>{item.label}</Label>
-                      <p className="text-xs text-muted-foreground">{item.desc}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {item.desc}
+                      </p>
                     </div>
                     <Switch
                       checked={settings[item.key] as boolean}
@@ -876,7 +966,9 @@ export function SettingsPageWrapper({
 
               {/* ── Auto-Close Inactive Conversations ── */}
               <div className="border-t pt-6 mt-6">
-                <h4 className="font-medium mb-4">Auto-Close Inactive Conversations</h4>
+                <h4 className="font-medium mb-4">
+                  Auto-Close Inactive Conversations
+                </h4>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -887,7 +979,7 @@ export function SettingsPageWrapper({
                     </div>
                     <Switch
                       checked={settings.autoCloseEnabled ?? true}
-                      onCheckedChange={(v) => update('autoCloseEnabled', v)}
+                      onCheckedChange={(v) => update("autoCloseEnabled", v)}
                     />
                   </div>
 
@@ -899,25 +991,35 @@ export function SettingsPageWrapper({
                           type="number"
                           value={settings.autoCloseMinutes ?? 30}
                           onChange={(e) =>
-                            update('autoCloseMinutes', parseInt(e.target.value) || 30)
+                            update(
+                              "autoCloseMinutes",
+                              parseInt(e.target.value) || 30,
+                            )
                           }
                           min={5}
                           max={1440}
                         />
                         <p className="text-xs text-muted-foreground">
-                          Close conversations after this many minutes of no messages (5–1440)
+                          Close conversations after this many minutes of no
+                          messages (5–1440)
                         </p>
                       </div>
 
                       <div className="space-y-2">
                         <Label>Auto-Close Message</Label>
                         <Input
-                          value={settings.autoCloseMessage ?? 'This conversation was automatically closed due to inactivity. Feel free to start a new chat anytime!'}
-                          onChange={(e) => update('autoCloseMessage', e.target.value)}
+                          value={
+                            settings.autoCloseMessage ??
+                            "This conversation was automatically closed due to inactivity. Feel free to start a new chat anytime!"
+                          }
+                          onChange={(e) =>
+                            update("autoCloseMessage", e.target.value)
+                          }
                           placeholder="Message shown when conversation is auto-closed"
                         />
                         <p className="text-xs text-muted-foreground">
-                          System message sent when a conversation is automatically closed
+                          System message sent when a conversation is
+                          automatically closed
                         </p>
                       </div>
                     </>
@@ -925,14 +1027,15 @@ export function SettingsPageWrapper({
                 </div>
               </div>
 
-              <Button
-                onClick={saveBehaviorSettings}
-                disabled={isPending}
-              >
-                {savedTab === 'behavior' ? (
-                  <><Check className="h-4 w-4 mr-2" /> Saved</>
+              <Button onClick={saveBehaviorSettings} disabled={isPending}>
+                {savedTab === "behavior" ? (
+                  <>
+                    <Check className="h-4 w-4 mr-2" /> Saved
+                  </>
                 ) : (
-                  <><Save className="h-4 w-4 mr-2" /> Save Behavior</>
+                  <>
+                    <Save className="h-4 w-4 mr-2" /> Save Behavior
+                  </>
                 )}
               </Button>
             </CardContent>
@@ -948,7 +1051,8 @@ export function SettingsPageWrapper({
                 Embed Code
               </CardTitle>
               <CardDescription>
-                Copy and paste this code into your website to add the chat widget
+                Copy and paste this code into your website to add the chat
+                widget
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -965,26 +1069,34 @@ export function SettingsPageWrapper({
                     onClick={copyEmbedCode}
                   >
                     {copied ? (
-                      <><Check className="h-3.5 w-3.5 mr-1" /> Copied</>
+                      <>
+                        <Check className="h-3.5 w-3.5 mr-1" /> Copied
+                      </>
                     ) : (
-                      <><Copy className="h-3.5 w-3.5 mr-1" /> Copy</>
+                      <>
+                        <Copy className="h-3.5 w-3.5 mr-1" /> Copy
+                      </>
                     )}
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Add this snippet before the closing <code>&lt;/body&gt;</code> tag on your website.
-                  The widget will load asynchronously and won&apos;t affect page load speed.
+                  Add this snippet before the closing <code>&lt;/body&gt;</code>{" "}
+                  tag on your website. The widget will load asynchronously and
+                  won&apos;t affect page load speed.
                 </p>
               </div>
 
               <div className="border rounded-lg p-4 bg-muted/30">
-                <h4 className="text-sm font-medium mb-2">Alternative: Direct iframe</h4>
+                <h4 className="text-sm font-medium mb-2">
+                  Alternative: Direct iframe
+                </h4>
                 <p className="text-xs text-muted-foreground mb-2">
-                  If you prefer manual control, you can embed the widget via iframe:
+                  If you prefer manual control, you can embed the widget via
+                  iframe:
                 </p>
                 <pre className="bg-muted p-3 rounded text-xs overflow-x-auto">
                   <code>{`<iframe
-  src="${typeof window !== 'undefined' ? window.location.origin : 'https://your-domain.com'}/embed/chat-widget?siteId=${siteId}"
+  src="${typeof window !== "undefined" ? window.location.origin : "https://your-domain.com"}/embed/chat-widget?siteId=${siteId}"
   style="position:fixed;bottom:0;right:0;width:400px;height:600px;border:none;z-index:99999"
   allow="clipboard-write"
 ></iframe>`}</code>
@@ -992,12 +1104,27 @@ export function SettingsPageWrapper({
               </div>
 
               <div className="border rounded-lg p-4">
-                <h4 className="text-sm font-medium mb-2">Platform-Specific Guides</h4>
+                <h4 className="text-sm font-medium mb-2">
+                  Platform-Specific Guides
+                </h4>
                 <div className="space-y-2 text-sm text-muted-foreground">
-                  <p><strong>WordPress:</strong> Add the snippet to your theme&apos;s footer.php or use a &quot;Header/Footer Scripts&quot; plugin.</p>
-                  <p><strong>Shopify:</strong> Go to Online Store → Themes → Edit Code → theme.liquid, paste before &lt;/body&gt;.</p>
-                  <p><strong>Webflow:</strong> Project Settings → Custom Code → Footer Code.</p>
-                  <p><strong>Squarespace:</strong> Settings → Advanced → Code Injection → Footer.</p>
+                  <p>
+                    <strong>WordPress:</strong> Add the snippet to your
+                    theme&apos;s footer.php or use a &quot;Header/Footer
+                    Scripts&quot; plugin.
+                  </p>
+                  <p>
+                    <strong>Shopify:</strong> Go to Online Store → Themes → Edit
+                    Code → theme.liquid, paste before &lt;/body&gt;.
+                  </p>
+                  <p>
+                    <strong>Webflow:</strong> Project Settings → Custom Code →
+                    Footer Code.
+                  </p>
+                  <p>
+                    <strong>Squarespace:</strong> Settings → Advanced → Code
+                    Injection → Footer.
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -1011,10 +1138,13 @@ export function SettingsPageWrapper({
               <CardTitle className="flex items-center gap-2">
                 <Smartphone className="h-5 w-5" />
                 WhatsApp Integration
-                <Badge variant="secondary" className="text-[10px]">Phase LC-05</Badge>
+                <Badge variant="secondary" className="text-[10px]">
+                  Phase LC-05
+                </Badge>
               </CardTitle>
               <CardDescription>
-                Connect WhatsApp Business to receive and send messages through DRAMAC
+                Connect WhatsApp Business to receive and send messages through
+                DRAMAC
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -1027,7 +1157,7 @@ export function SettingsPageWrapper({
                 </div>
                 <Switch
                   checked={settings.whatsappEnabled}
-                  onCheckedChange={(v) => update('whatsappEnabled', v)}
+                  onCheckedChange={(v) => update("whatsappEnabled", v)}
                 />
               </div>
 
@@ -1036,9 +1166,9 @@ export function SettingsPageWrapper({
                   <div className="space-y-2">
                     <Label>WhatsApp Phone Number</Label>
                     <Input
-                      value={settings.whatsappPhoneNumber || ''}
+                      value={settings.whatsappPhoneNumber || ""}
                       onChange={(e) =>
-                        update('whatsappPhoneNumber', e.target.value || null)
+                        update("whatsappPhoneNumber", e.target.value || null)
                       }
                       placeholder="+260 97X XXX XXX"
                     />
@@ -1050,9 +1180,9 @@ export function SettingsPageWrapper({
                   <div className="space-y-2">
                     <Label>Phone Number ID</Label>
                     <Input
-                      value={settings.whatsappPhoneNumberId || ''}
+                      value={settings.whatsappPhoneNumberId || ""}
                       onChange={(e) =>
-                        update('whatsappPhoneNumberId', e.target.value || null)
+                        update("whatsappPhoneNumberId", e.target.value || null)
                       }
                       placeholder="Meta Cloud API Phone Number ID"
                     />
@@ -1061,11 +1191,11 @@ export function SettingsPageWrapper({
                   <div className="space-y-2">
                     <Label>Business Account ID</Label>
                     <Input
-                      value={settings.whatsappBusinessAccountId || ''}
+                      value={settings.whatsappBusinessAccountId || ""}
                       onChange={(e) =>
                         update(
-                          'whatsappBusinessAccountId',
-                          e.target.value || null
+                          "whatsappBusinessAccountId",
+                          e.target.value || null,
                         )
                       }
                       placeholder="Meta Business Account ID"
@@ -1075,11 +1205,11 @@ export function SettingsPageWrapper({
                   <div className="space-y-2">
                     <Label>Welcome Template</Label>
                     <Input
-                      value={settings.whatsappWelcomeTemplate || ''}
+                      value={settings.whatsappWelcomeTemplate || ""}
                       onChange={(e) =>
                         update(
-                          'whatsappWelcomeTemplate',
-                          e.target.value || null
+                          "whatsappWelcomeTemplate",
+                          e.target.value || null,
                         )
                       }
                       placeholder="hello_world"
@@ -1093,20 +1223,25 @@ export function SettingsPageWrapper({
 
               <Button
                 onClick={() =>
-                  saveSettings('whatsapp', {
+                  saveSettings("whatsapp", {
                     whatsappEnabled: settings.whatsappEnabled,
                     whatsappPhoneNumber: settings.whatsappPhoneNumber,
                     whatsappPhoneNumberId: settings.whatsappPhoneNumberId,
-                    whatsappBusinessAccountId: settings.whatsappBusinessAccountId,
+                    whatsappBusinessAccountId:
+                      settings.whatsappBusinessAccountId,
                     whatsappWelcomeTemplate: settings.whatsappWelcomeTemplate,
                   })
                 }
                 disabled={isPending}
               >
-                {savedTab === 'whatsapp' ? (
-                  <><Check className="h-4 w-4 mr-2" /> Saved</>
+                {savedTab === "whatsapp" ? (
+                  <>
+                    <Check className="h-4 w-4 mr-2" /> Saved
+                  </>
                 ) : (
-                  <><Save className="h-4 w-4 mr-2" /> Save WhatsApp</>
+                  <>
+                    <Save className="h-4 w-4 mr-2" /> Save WhatsApp
+                  </>
                 )}
               </Button>
             </CardContent>
@@ -1122,53 +1257,117 @@ export function SettingsPageWrapper({
                 AI Auto-Response
               </CardTitle>
               <CardDescription>
-                Control how the AI assistant helps your customers. AI provides instant responses
-                when agents are unavailable and guides customers through payment after checkout.
+                Control how the AI assistant helps your customers. AI provides
+                instant responses when agents are unavailable and guides
+                customers through payment after checkout.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* ── Toggle: AI Auto-Response ─────────────────────── */}
               <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
                 <div className="space-y-1">
-                  <Label className="text-base font-medium">AI Auto-Response</Label>
+                  <Label className="text-base font-medium">
+                    AI Auto-Response
+                  </Label>
                   <p className="text-sm text-muted-foreground">
-                    When enabled, AI responds to visitor messages when no agents are available.
-                    Uses your knowledge base to answer questions.
+                    When enabled, AI responds to visitor messages when no agents
+                    are available. Uses your knowledge base to answer questions.
                   </p>
                 </div>
                 <Switch
                   checked={settings.aiAutoResponseEnabled !== false}
-                  onCheckedChange={(v) => update('aiAutoResponseEnabled', v)}
+                  onCheckedChange={(v) => update("aiAutoResponseEnabled", v)}
                 />
               </div>
 
+              {/* ── Toggle: Payment Guidance ─────────────────────── */}
               <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
                 <div className="space-y-1">
-                  <Label className="text-base font-medium">Payment Guidance</Label>
+                  <Label className="text-base font-medium">
+                    Payment Guidance
+                  </Label>
                   <p className="text-sm text-muted-foreground">
-                    After checkout, AI automatically opens a chat and guides customers through
-                    the payment process with your bank details and instructions — even when agents
-                    are online. Works alongside your agents as a co-pilot.
+                    After checkout, AI automatically opens a chat and guides
+                    customers through the payment process with your bank details
+                    and instructions — even when agents are online. Works
+                    alongside your agents as a co-pilot.
                   </p>
                 </div>
                 <Switch
                   checked={settings.aiPaymentGuidanceEnabled !== false}
-                  onCheckedChange={(v) => update('aiPaymentGuidanceEnabled', v)}
+                  onCheckedChange={(v) => update("aiPaymentGuidanceEnabled", v)}
                 />
               </div>
 
+              {/* ── Assistant Name ───────────────────────────────── */}
+              <div className="space-y-2">
+                <Label>Assistant Name</Label>
+                <Input
+                  value={settings.aiAssistantName || "AI Assistant"}
+                  onChange={(e) =>
+                    update("aiAssistantName", e.target.value || "AI Assistant")
+                  }
+                  placeholder="AI Assistant"
+                  maxLength={50}
+                />
+                <p className="text-xs text-muted-foreground">
+                  The name shown on AI-generated messages in chat.
+                </p>
+              </div>
+
+              {/* ── Response Tone ────────────────────────────────── */}
+              <div className="space-y-2">
+                <Label>Response Tone</Label>
+                <select
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  value={settings.aiResponseTone || "friendly"}
+                  onChange={(e) => update("aiResponseTone", e.target.value)}
+                >
+                  <option value="friendly">Friendly — Warm, approachable, conversational</option>
+                  <option value="professional">Professional — Polished, business-like, courteous</option>
+                  <option value="casual">Casual — Relaxed, informal, simple language</option>
+                  <option value="formal">Formal — Respectful, measured, proper language</option>
+                </select>
+                <p className="text-xs text-muted-foreground">
+                  Controls the overall tone of AI responses.
+                </p>
+              </div>
+
+              {/* ── Custom Payment Greeting ──────────────────────── */}
               <div className="space-y-2">
                 <Label>Custom Payment Greeting (optional)</Label>
                 <Textarea
-                  value={settings.aiPaymentGreeting || ''}
-                  onChange={(e) => update('aiPaymentGreeting', e.target.value || null)}
+                  value={settings.aiPaymentGreeting || ""}
+                  onChange={(e) =>
+                    update("aiPaymentGreeting", e.target.value || null)
+                  }
                   placeholder="Leave empty for default AI greeting. Example: Welcome! I see you just placed an order. Let me help you with payment..."
                   rows={3}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Customize how the AI greets customers after checkout. Leave empty for the default.
+                  Customize how the AI greets customers after checkout. Leave
+                  empty for the default.
                 </p>
               </div>
 
+              {/* ── Custom Instructions ──────────────────────────── */}
+              <div className="space-y-2">
+                <Label>Custom Instructions (optional)</Label>
+                <Textarea
+                  value={settings.aiCustomInstructions || ""}
+                  onChange={(e) =>
+                    update("aiCustomInstructions", e.target.value || null)
+                  }
+                  placeholder="Add custom rules or context for the AI. Example: Always mention our 30-day return policy. Our store is closed on Sundays. We offer free shipping over $50..."
+                  rows={4}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Extra instructions appended to the AI&apos;s system prompt. Use this to
+                  add business-specific rules, policies, or context the AI should know.
+                </p>
+              </div>
+
+              {/* ── Confidence Threshold ─────────────────────────── */}
               <div className="space-y-2">
                 <Label>Confidence Threshold</Label>
                 <div className="flex items-center gap-4">
@@ -1176,7 +1375,13 @@ export function SettingsPageWrapper({
                     type="number"
                     value={settings.aiConfidenceThreshold ?? 0.7}
                     onChange={(e) =>
-                      update('aiConfidenceThreshold', Math.min(1, Math.max(0, parseFloat(e.target.value) || 0.7)))
+                      update(
+                        "aiConfidenceThreshold",
+                        Math.min(
+                          1,
+                          Math.max(0, parseFloat(e.target.value) || 0.7),
+                        ),
+                      )
                     }
                     min={0}
                     max={1}
@@ -1184,33 +1389,46 @@ export function SettingsPageWrapper({
                     className="w-24"
                   />
                   <p className="text-sm text-muted-foreground">
-                    AI hands off to a human agent when confidence is below this threshold (0 – 1).
+                    AI hands off to a human agent when confidence is below this
+                    threshold (0 – 1).
                   </p>
                 </div>
               </div>
 
               <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 text-sm text-blue-700 dark:text-blue-300">
-                <strong>How it works:</strong> After checkout, the chat widget automatically opens and
-                sends a message on behalf of the customer. The AI reads their order details, checks your
-                store&apos;s payment instructions, and walks them through the payment process step by step.
-                Your agents can monitor and take over at any time.
+                <strong>How it works:</strong> After checkout, the chat widget
+                automatically opens and sends a message on behalf of the
+                customer. The AI reads their order details, checks your
+                store&apos;s payment instructions, and walks them through the
+                payment process step by step. Your agents can monitor and take
+                over at any time.
               </div>
 
               <Button
                 onClick={() =>
-                  saveSettings('ai', {
-                    aiAutoResponseEnabled: settings.aiAutoResponseEnabled !== false,
-                    aiPaymentGuidanceEnabled: settings.aiPaymentGuidanceEnabled !== false,
+                  saveSettings("ai", {
+                    aiAutoResponseEnabled:
+                      settings.aiAutoResponseEnabled !== false,
+                    aiPaymentGuidanceEnabled:
+                      settings.aiPaymentGuidanceEnabled !== false,
                     aiPaymentGreeting: settings.aiPaymentGreeting || null,
-                    aiConfidenceThreshold: settings.aiConfidenceThreshold ?? 0.7,
+                    aiConfidenceThreshold:
+                      settings.aiConfidenceThreshold ?? 0.7,
+                    aiResponseTone: settings.aiResponseTone || "friendly",
+                    aiCustomInstructions: settings.aiCustomInstructions || null,
+                    aiAssistantName: settings.aiAssistantName || "AI Assistant",
                   })
                 }
                 disabled={isPending}
               >
-                {savedTab === 'ai' ? (
-                  <><Check className="h-4 w-4 mr-2" /> Saved</>
+                {savedTab === "ai" ? (
+                  <>
+                    <Check className="h-4 w-4 mr-2" /> Saved
+                  </>
                 ) : (
-                  <><Save className="h-4 w-4 mr-2" /> Save AI Settings</>
+                  <>
+                    <Save className="h-4 w-4 mr-2" /> Save AI Settings
+                  </>
                 )}
               </Button>
             </CardContent>
@@ -1233,14 +1451,14 @@ export function SettingsPageWrapper({
               <div className="space-y-2">
                 <Label>Allowed Domains</Label>
                 <Textarea
-                  value={(settings.allowedDomains || []).join('\n')}
+                  value={(settings.allowedDomains || []).join("\n")}
                   onChange={(e) =>
                     update(
-                      'allowedDomains',
+                      "allowedDomains",
                       e.target.value
-                        .split('\n')
+                        .split("\n")
                         .map((d) => d.trim())
-                        .filter(Boolean)
+                        .filter(Boolean),
                     )
                   }
                   placeholder="example.com&#10;app.example.com"
@@ -1254,21 +1472,22 @@ export function SettingsPageWrapper({
               <div className="space-y-2">
                 <Label>Blocked IP Addresses</Label>
                 <Textarea
-                  value={(settings.blockedIps || []).join('\n')}
+                  value={(settings.blockedIps || []).join("\n")}
                   onChange={(e) =>
                     update(
-                      'blockedIps',
+                      "blockedIps",
                       e.target.value
-                        .split('\n')
+                        .split("\n")
                         .map((ip) => ip.trim())
-                        .filter(Boolean)
+                        .filter(Boolean),
                     )
                   }
                   placeholder="192.168.1.1&#10;10.0.0.0/8"
                   rows={3}
                 />
                 <p className="text-xs text-muted-foreground">
-                  One IP or CIDR per line. These IPs will be blocked from using the widget.
+                  One IP or CIDR per line. These IPs will be blocked from using
+                  the widget.
                 </p>
               </div>
 
@@ -1279,7 +1498,7 @@ export function SettingsPageWrapper({
                     type="number"
                     value={settings.maxFileSizeMb}
                     onChange={(e) =>
-                      update('maxFileSizeMb', parseInt(e.target.value) || 5)
+                      update("maxFileSizeMb", parseInt(e.target.value) || 5)
                     }
                     min={1}
                     max={50}
@@ -1289,14 +1508,14 @@ export function SettingsPageWrapper({
                 <div className="space-y-2">
                   <Label>Allowed File Types</Label>
                   <Input
-                    value={(settings.allowedFileTypes || []).join(', ')}
+                    value={(settings.allowedFileTypes || []).join(", ")}
                     onChange={(e) =>
                       update(
-                        'allowedFileTypes',
+                        "allowedFileTypes",
                         e.target.value
-                          .split(',')
+                          .split(",")
                           .map((t) => t.trim())
-                          .filter(Boolean)
+                          .filter(Boolean),
                       )
                     }
                     placeholder="image/*, .pdf, .doc, .docx"
@@ -1309,7 +1528,7 @@ export function SettingsPageWrapper({
 
               <Button
                 onClick={() =>
-                  saveSettings('advanced', {
+                  saveSettings("advanced", {
                     allowedDomains: settings.allowedDomains,
                     blockedIps: settings.blockedIps,
                     maxFileSizeMb: settings.maxFileSizeMb,
@@ -1318,10 +1537,14 @@ export function SettingsPageWrapper({
                 }
                 disabled={isPending}
               >
-                {savedTab === 'advanced' ? (
-                  <><Check className="h-4 w-4 mr-2" /> Saved</>
+                {savedTab === "advanced" ? (
+                  <>
+                    <Check className="h-4 w-4 mr-2" /> Saved
+                  </>
                 ) : (
-                  <><Save className="h-4 w-4 mr-2" /> Save Advanced</>
+                  <>
+                    <Save className="h-4 w-4 mr-2" /> Save Advanced
+                  </>
                 )}
               </Button>
             </CardContent>
@@ -1329,5 +1552,5 @@ export function SettingsPageWrapper({
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

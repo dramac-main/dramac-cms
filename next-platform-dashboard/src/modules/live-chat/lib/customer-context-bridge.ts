@@ -22,6 +22,7 @@ export interface CustomerContext {
     orderNumber: string;
     status: string;
     paymentStatus: string;
+    paymentProvider: string | null;
     total: number;
     currency: string;
     createdAt: string;
@@ -65,7 +66,7 @@ export async function getCustomerContext(
     supabase
       .from("mod_ecommod01_orders")
       .select(
-        "id, order_number, status, payment_status, total, currency, created_at",
+        "id, order_number, status, payment_status, payment_provider, payment_method, total, currency, created_at",
       )
       .eq("site_id", siteId)
       .eq("customer_email", email)
@@ -128,6 +129,7 @@ export async function getCustomerContext(
       orderNumber: o.order_number,
       status: o.status,
       paymentStatus: o.payment_status,
+      paymentProvider: o.payment_provider || o.payment_method || null,
       total: o.total,
       currency: o.currency || "USD",
       createdAt: o.created_at,

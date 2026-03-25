@@ -1,22 +1,41 @@
 # Active Context
 
-## Current Focus: Checkout → Order Confirmation Auto-Redirect Fix
+## Current Focus: AI Payment Guidance System — DEPLOYED
 
-### Status: COMMITTED & PUSHED — `d9cc11e6`
+### Status: COMMITTED & DEPLOYED — `b4a4c01c`
 
-### What Was Done
+### What Was Done (This Session)
 
-Fixed critical UX gap: after checkout success, users were stuck on a bare-bones `CheckoutSuccessCard` inside `CheckoutPageBlock` that only showed order number + payment instructions + "View Full Order Details" button. The full-featured `OrderConfirmationBlock` at `/order-confirmation` (with chat auto-open, payment proof upload, chat buttons, and What Happens Next timeline) was only reachable if users manually clicked that button — most didn't.
+Fixed the complete AI payment guidance pipeline and added dashboard controls. Previously, AI never responded to checkout messages because of a triple-layer agent blocking system. Now, payment-related messages bypass all blocking and get instant AI guidance.
 
-**Root Cause:** `CheckoutPageBlock` had its own inline success state (`CheckoutSuccessCard`) that rendered instead of navigating to the order confirmation page. All the post-purchase experience enhancements (commits `83121720`, `229eb0c5`) were built into `OrderConfirmationBlock` which users never reached.
+### Changes Deployed
 
-**Fix:** Added `React.useEffect` in CheckoutPageBlock that watches `orderResult` state and auto-redirects to `${successHref}?order=${orderId}` (defaults to `/order-confirmation?order=...`) via `window.location.href`. Shows a loading spinner during redirect.
+1. **AI Pipeline Fix** — Payment Guidance Mode bypasses triple-layer agent blocking:
+   - `auto-response-handler.ts`: Added `isPaymentRelatedMessage()` detection (10 regex patterns), `forcePaymentGuidance` flag, fetches site AI settings from DB
+   - `conversations/route.ts`: Payment messages always trigger AI regardless of agent assignment
+   - `messages/route.ts`: Subsequent messages in payment conversations continue getting AI responses
+   - `ai-responder.ts`: Added ANTHROPIC_API_KEY startup warning
 
-### Files Changed (1 file + 2 formatter-only)
+2. **Dashboard AI Controls** — New AI Settings tab in SettingsPageWrapper.tsx:
+   - 4 controls: auto-response toggle, payment guidance toggle, custom greeting, confidence threshold
+   - DB migration `lc-11-ai-settings` applied: 4 new columns on `mod_chat_widget_settings`
 
-1. **`src/modules/ecommerce/studio/components/CheckoutPageBlock.tsx`** — Added useEffect for auto-redirect, replaced CheckoutSuccessCard render with loading spinner
-2. **`src/app/api/modules/live-chat/embed/route.ts`** — Formatter only (quotes/semicolons)
-3. **`src/app/api/modules/live-chat/conversations/route.ts`** — Formatter only (quotes/semicolons)
+3. **Streamlined Order Confirmation** — OrderConfirmationBlock.tsx:
+   - Removed redundant Quick Actions card (chat auto-opens now)
+   - Replaced verbose 5-step timeline with compact horizontal pill flow
+   - Added chat assistant note to payment instructions
+   - Updated header to mention chat assistant guidance
+
+4. **TypeScript types** updated for new AI settings fields
+
+### CRITICAL: ANTHROPIC_API_KEY on Vercel
+
+The AI system requires `ANTHROPIC_API_KEY` as a Vercel environment variable. It exists in `.env.local` but MUST be verified on Vercel Dashboard → Settings → Environment Variables. Without it, AI will gracefully return null and fall back to agent routing (no crash, but no AI either).
+
+### Previous Commits This Session
+
+- `d9cc11e6` — Checkout auto-redirect to order confirmation (chat auto-opens)
+- `b4a4c01c` — AI payment guidance system (pipeline fix, dashboard controls, streamlined UI)
 
 ### End-to-End Flow (Now Working)
 

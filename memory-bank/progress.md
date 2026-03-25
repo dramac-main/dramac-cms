@@ -1,24 +1,48 @@
 # Progress: What Works & What's Left
 
-**Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX ✅
+**Last Updated**: March 2026  
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX ✅
 
 ---
 
-## Latest Update: Ecommerce Price Display Fix — Committed & Pushed (`e2f8f2c0`)
+## Latest Update: AI Payment Guidance System — Committed & Deployed (`b4a4c01c`)
 
-**Fixed all ecommerce email/notification prices showing 100× too large (cents not converted to display units).**
+**Fixed AI auto-response completely non-functional during checkout. Triple-layer agent blocking prevented AI from ever responding to payment messages. Added dashboard controls and streamlined order confirmation.**
 
-### Changes (5 files)
-- **`business-notifications.ts`** — `notifyNewOrder`: divide total/subtotal/shipping/tax/item prices by 100; quote notification total
-- **`order-actions.ts`** — `sendOrderEmail` all price fields, refund request/process amounts
-- **`ecommerce-actions.ts`** — order cancellation notification total
-- **`public-ecommerce-actions.ts`** — payment proof upload notification total
-- **`customer-context-bridge.ts`** — AI customer history order total display
+### Root Cause: Triple-Layer Agent Blocking
 
-### KEY RULE: Ecommerce prices = CENTS in DB → always `/100` before `formatCurrency()`. Booking prices = display units → no conversion.
+1. `conversations/route.ts`: Only triggered AI if no agent assigned — online agents always got assigned
+2. `auto-response-handler.ts`: `routeConversation()` found agent → returned early with `routedToAgent: true`
+3. `ai-responder.ts`: `shouldAutoRespond()` returned false when agent assigned or online
 
-### Previous: AI Chat Payment Guidance (`229eb0c5`)
+### Fix: Payment Guidance Mode
+
+- `isPaymentRelatedMessage()` detects 10 order/payment regex patterns
+- `forcePaymentGuidance: true` flag bypasses all 3 blocking layers
+- AI responds IMMEDIATELY alongside human agent as "co-pilot"
+- Conversation metadata marks `payment_guidance_active: true` for continuation
+
+### Changes (9 files)
+
+- **`auto-response-handler.ts`** — MAJOR: Payment Guidance Mode, DB settings check, `HandleMessageOptions` interface
+- **`conversations/route.ts`** — Payment message detection, always triggers AI for payment messages
+- **`messages/route.ts`** — Payment conversation continuation via metadata check
+- **`ai-responder.ts`** — ANTHROPIC_API_KEY startup warning
+- **`SettingsPageWrapper.tsx`** — New AI Settings tab (9th tab): 4 controls
+- **`types/index.ts`** — 4 AI fields added to ChatWidgetSettings
+- **`OrderConfirmationBlock.tsx`** — Removed Quick Actions, compact timeline, chat assistant note
+- **`lc-11-ai-settings.sql`** — Migration: 4 columns on mod_chat_widget_settings (applied to Supabase)
+
+### CRITICAL: Verify ANTHROPIC_API_KEY on Vercel
+
+The AI requires `ANTHROPIC_API_KEY` in Vercel environment variables. Without it, AI returns null and falls back to agent routing (no crash, no AI guidance).
+
+### Previous: Checkout Auto-Redirect Fix (`d9cc11e6`)
+
+- Users redirected from CheckoutPageBlock to OrderConfirmationBlock automatically
+- Chat auto-opens with order context
+
+### Previous: Email Price Fix (`e2f8f2c0`)
 
 ---
 
