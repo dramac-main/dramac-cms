@@ -824,10 +824,7 @@ export async function convertQuoteToOrder(
 
     // Notify active chat conversation about quote → order conversion (async)
     if (quote.customer_email) {
-      const totalFormatted = formatCurrency(
-        (quote.total || 0) / 100,
-        currency,
-      );
+      const totalFormatted = formatCurrency((quote.total || 0) / 100, currency);
       import("@/modules/live-chat/lib/chat-event-bridge")
         .then(({ notifyChatQuoteConverted }) =>
           notifyChatQuoteConverted(

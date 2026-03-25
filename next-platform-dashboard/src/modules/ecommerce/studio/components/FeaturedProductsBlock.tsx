@@ -7,7 +7,13 @@
 
 "use client";
 
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, {
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  useMemo,
+} from "react";
 import type { ComponentDefinition, ResponsiveValue } from "@/types/studio";
 import {
   ChevronLeft,
@@ -22,6 +28,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useStorefrontProducts } from "../../hooks/useStorefrontProducts";
 import { useStorefront } from "../../context/storefront-context";
+import { useMobile } from "../../hooks/useMobile";
 import { ProductCardBlock } from "./product-card-block";
 import { Button } from "@/components/ui/button";
 
@@ -169,7 +176,19 @@ export function FeaturedProductsBlock({
   // Get responsive values
   const gapValue = typeof gap === "object" ? gap.mobile : gap;
   const paddingValue = typeof padding === "object" ? padding.mobile : padding;
-  const columnsValue = typeof columns === "object" ? columns.mobile : columns;
+
+  // Responsive column count — cap mobile to 2 columns for readability
+  const isMobile = useMobile();
+  const isTablet = useMobile(1024) && !isMobile;
+  const cols =
+    typeof columns === "object"
+      ? columns
+      : { mobile: Math.min(columns || 2, 2), tablet: Math.min(columns || 3, 3), desktop: columns || 4 };
+  const columnsValue = isMobile
+    ? (cols.mobile || 2)
+    : isTablet
+      ? (cols.tablet || 3)
+      : (cols.desktop || 4);
 
   // Calculate carousel slides
   const slidesCount = Math.ceil(products.length / columnsValue);
@@ -249,29 +268,61 @@ export function FeaturedProductsBlock({
     );
   }
 
-  // Grid column class
-  const gridColsClass = cn(
-    `grid-cols-${columnsValue}`,
-    typeof columns === "object" &&
-      columns.tablet &&
-      `md:grid-cols-${columns.tablet}`,
-    typeof columns === "object" &&
-      columns.desktop &&
-      `lg:grid-cols-${columns.desktop}`,
-  );
+  // Grid column class — use explicit mappings for Tailwind purge safety
+  const gridColsClass = useMemo(() => {
+    const gridColsMap: Record<number, string> = {
+      1: "grid-cols-1",
+      2: "grid-cols-2",
+      3: "grid-cols-3",
+      4: "grid-cols-4",
+      5: "grid-cols-5",
+      6: "grid-cols-6",
+    };
+    const mdGridColsMap: Record<number, string> = {
+      1: "md:grid-cols-1",
+      2: "md:grid-cols-2",
+      3: "md:grid-cols-3",
+      4: "md:grid-cols-4",
+      5: "md:grid-cols-5",
+      6: "md:grid-cols-6",
+    };
+    const lgGridColsMap: Record<number, string> = {
+      1: "lg:grid-cols-1",
+      2: "lg:grid-cols-2",
+      3: "lg:grid-cols-3",
+      4: "lg:grid-cols-4",
+      5: "lg:grid-cols-5",
+      6: "lg:grid-cols-6",
+    };
+    const cols =
+      typeof columns === "object"
+        ? columns
+        : {
+            mobile: 2,
+            tablet: Math.min(columns as number, 3),
+            desktop: columns as number,
+          };
+    return cn(
+      gridColsMap[cols.mobile || 2] || "grid-cols-2",
+      mdGridColsMap[cols.tablet || 3] || "md:grid-cols-3",
+      lgGridColsMap[cols.desktop || 4] || "lg:grid-cols-4",
+    );
+  }, [columns]);
 
   return (
     <div style={{ padding: paddingValue }}>
       {/* Header */}
       {showTitle && (
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-              {SourceIcon && <SourceIcon className="h-6 w-6" />}
-              {displayTitle}
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <div className="min-w-0">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold flex items-center gap-2">
+              {SourceIcon && (
+                <SourceIcon className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0" />
+              )}
+              <span className="truncate">{displayTitle}</span>
             </h2>
             {subtitle && (
-              <p className="text-muted-foreground mt-1">{subtitle}</p>
+              <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
             )}
           </div>
           {showViewAll && (

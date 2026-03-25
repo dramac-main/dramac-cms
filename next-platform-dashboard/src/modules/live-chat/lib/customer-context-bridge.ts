@@ -119,7 +119,12 @@ export async function getCustomerContext(
   const quotes = quotesRes.data || [];
 
   // If no data found at all, return null to avoid adding empty context
-  if (!crm && orders.length === 0 && bookings.length === 0 && quotes.length === 0) {
+  if (
+    !crm &&
+    orders.length === 0 &&
+    bookings.length === 0 &&
+    quotes.length === 0
+  ) {
     return null;
   }
 

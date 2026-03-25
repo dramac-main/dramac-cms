@@ -5,7 +5,30 @@
 
 ---
 
-## Latest Update: End-to-End AI Automation — Committed, Deployed & Production-Tested (`ba4ce129`)
+## Latest Update: Notification URL 404 Fix + Customer Email CTAs — Committed & Deployed (`9cba84f7`)
+
+**Fixed all 13 broken notification URLs (404 errors), 4 customer email templates with missing/wrong CTA buttons, and field name mismatches across the entire purchase cycle.**
+
+### 13 Notification URLs Fixed
+- All URLs missing `/dashboard/` prefix — route group `(dashboard)` invisible in URLs
+- Used path segments `/ecommerce/orders` but actual page uses query params `?view=orders`
+- Fixed: booking (2), ecommerce orders (7), products (1), quotes (3)
+
+### 4 Notification Functions Enhanced with Storefront URLs
+- `notifyOrderDelivered`, `notifyOrderCancelled`, `notifyPaymentReceived`, `notifyRefundIssued`
+- Now query `subdomain, custom_domain` and build storefront URL for customer email CTA
+
+### 4 Email Templates Fixed
+- Customer emails used `data.dashboardUrl` (admin URL) → now use `data.orderUrl` (storefront)
+- `payment_received_customer`: `data.amount` → `data.total`
+- `refund_issued_customer`: `data.amount` → `data.refundAmount`
+
+### sendOrderEmail Fixed
+- Re-sent emails now include storefront URLs for all 4 types (confirmation, delivered, cancelled, refunded)
+
+---
+
+## Previous Update: End-to-End AI Automation — Committed, Deployed & Production-Tested (`ba4ce129`)
 
 **Complete end-to-end AI automation: payment proof awareness, order status notifications, quotation context, and proactive chat messages.**
 

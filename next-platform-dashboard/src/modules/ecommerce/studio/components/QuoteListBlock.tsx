@@ -310,15 +310,15 @@ export function QuoteListBlock({
   return (
     <div className={className}>
       {/* Header */}
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+      <div className="mb-4 flex items-center justify-between gap-2">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-900 min-w-0 truncate">{title}</h2>
 
         {showStatusFilter && (
           <Select
             value={selectedStatus}
             onValueChange={(v) => setSelectedStatus(v as QuoteStatus | "all")}
           >
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-auto min-w-[120px] sm:w-40">
               <Filter className="mr-2 h-4 w-4" />
               <SelectValue placeholder="Filter" />
             </SelectTrigger>

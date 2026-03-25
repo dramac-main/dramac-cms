@@ -606,7 +606,9 @@ export function ProductCardBlock({
       </div>
 
       <div className="p-2.5 sm:p-3 md:p-4" style={{ padding: undefined }}>
-        <h3 className="font-medium text-sm sm:text-base line-clamp-2 leading-tight">{product.name}</h3>
+        <h3 className="font-medium text-sm sm:text-base line-clamp-2 leading-tight">
+          {product.name}
+        </h3>
 
         {showRating && productRating !== undefined && (
           <ProductRatingDisplay

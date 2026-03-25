@@ -1,52 +1,47 @@
 # Active Context
 
-## Current Focus: End-to-End AI Automation — DEPLOYED & TESTED
+## Current Focus: Notification URL 404 Fix + Customer Email CTA Fixes — DEPLOYED
 
-### Status: COMMITTED, DEPLOYED & PRODUCTION-TESTED — `ba4ce129`
+### Status: COMMITTED, DEPLOYED — `9cba84f7`
 
 ### What Was Done (This Session)
 
-Built complete end-to-end AI automation so the AI assistant knows about payment proof uploads, order status changes, quotation lifecycle, and proactively notifies customers in chat when external events happen.
+Fixed 404 error when clicking notification links + fixed customer email CTA buttons + fixed field name mismatches across the entire purchase notification cycle.
 
-### New File: `chat-event-bridge.ts` (233 lines)
+### Root Cause
 
-Proactive AI messaging utility for external events:
+All notification URLs in `business-notifications.ts` used `/sites/{siteId}/ecommerce/orders` but the actual dashboard route is `/dashboard/sites/{siteId}/ecommerce?view=orders`. Two problems:
+1. Missing `/dashboard/` prefix (route group invisible in URLs)
+2. Using path segments (`/orders`) instead of query params (`?view=orders`)
 
-- `findActiveConversation(siteId, email)` — finds open/active/waiting conversation by visitor email
-- `sendProactiveMessage()` — inserts AI message into conversation
-- `notifyChatPaymentProofUploaded()` — message when proof uploaded
-- `notifyChatPaymentConfirmed()` — message when payment confirmed (admin action)
-- `notifyChatOrderStatusChanged()` — messages for all order status transitions
-- `notifyChatQuoteConverted()` — message when quote converted to order
+### Fixes Applied (3 files, 73 insertions, 19 deletions)
 
-### Enhanced: `customer-context-bridge.ts`
+#### `business-notifications.ts` — 13 broken URLs fixed:
+- 2 booking URLs: `/sites/${siteId}/booking` → `/dashboard/sites/${siteId}/booking`
+- 7 ecommerce order URLs → `/dashboard/sites/${siteId}/ecommerce?view=orders`
+- 1 products URL → `/dashboard/sites/${siteId}/ecommerce?view=products`
+- 3 quotes URLs → `/dashboard/sites/${siteId}/ecommerce?view=quotes`
 
-- Added `paymentProof` object to orders (hasProof, status, fileName, uploadedAt)
-- Added `recentQuotes` array (quoteNumber, status, total, expiresAt, convertedOrderNumber, itemCount)
-- Added `mod_ecommod01_quotes` query to Promise.all
-- Updated `formatCustomerContext()` to include proof status + quotes section
+#### `business-notifications.ts` — 4 functions enhanced with storefront URLs:
+- `notifyOrderDelivered`, `notifyOrderCancelled`, `notifyPaymentReceived`, `notifyRefundIssued`
+- Added `subdomain, custom_domain` to site query
+- Build storefront URL → pass `orderUrl` to customer email data
 
-### Enhanced: `ai-responder.ts`
+#### `templates.ts` — 4 customer email templates fixed:
+- `order_delivered_customer`: `dashboardUrl` → `orderUrl`
+- `order_cancelled_customer`: `dashboardUrl` → `orderUrl`
+- `payment_received_customer`: `data.amount` → `data.total`, `dashboardUrl` → `orderUrl`
+- `refund_issued_customer`: `data.amount` → `data.refundAmount`, `dashboardUrl` → `orderUrl`
 
-- Added `proofUploaded`, `proofStatus`, `activeQuotes`, `acceptedQuotes` computed vars
-- PAYMENT GUIDANCE MODE now includes PAYMENT PROOF STATUS section
-- Conditional guidance: if proof uploaded, don't ask customer to upload again
-- Added ACTIVE QUOTATIONS and ACCEPTED QUOTATIONS sections to system prompt
+#### `order-actions.ts` — sendOrderEmail fixed:
+- Added `subdomain, custom_domain` to site query
+- Build storefront `orderUrl` and `trackingUrlStorefront`
+- Pass URLs to all 4 customer email types (confirmation, delivered, cancelled, refunded)
 
-### Enhanced: `auto-response-handler.ts`
+### Commits
 
-Added 5 new regex patterns: proof upload, quotation reference, quote acceptance, quote status
-
-### Proactive Notifications Wired In:
-
-- `public-ecommerce-actions.ts` → `notifyChatPaymentProofUploaded()` after proof upload
-- `order-actions.ts` → `notifyChatOrderStatusChanged()` after status change
-- `ecommerce-actions.ts` → `notifyChatPaymentConfirmed()` when payment marked as paid
-- `quote-workflow-actions.ts` → `notifyChatQuoteConverted()` after quote-to-order conversion
-
-### Production Testing (3 API tests, ALL PASSING)
-
-Test conversation: `3c2020fc-4acc-4369-b1ab-beec60cc9c1f` for `drakemacchiko@gmail.com`
+- `9cba84f7` — fix: notification URLs 404 + customer email CTAs + field mismatches
+- Previous: `ba4ce129` — feat: end-to-end AI automation
 
 1. **"I uploaded proof for ORD-1007"** → AI correctly identified Screenshot (19).png, ZMW 1,531.20, said "under review", did NOT ask to re-upload
 2. **"What about ORD-1006?"** → AI listed all 4 pending orders with correct amounts

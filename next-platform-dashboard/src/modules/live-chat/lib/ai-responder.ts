@@ -136,12 +136,12 @@ export async function generateAutoResponse(
     const proofStatus = pendingManualOrder?.paymentProof?.status || null;
 
     // Check for active quotations
-    const activeQuotes = customerCtx?.recentQuotes?.filter(
-      (q) => ["sent", "viewed", "pending_approval"].includes(q.status),
-    ) || [];
-    const acceptedQuotes = customerCtx?.recentQuotes?.filter(
-      (q) => q.status === "accepted",
-    ) || [];
+    const activeQuotes =
+      customerCtx?.recentQuotes?.filter((q) =>
+        ["sent", "viewed", "pending_approval"].includes(q.status),
+      ) || [];
+    const acceptedQuotes =
+      customerCtx?.recentQuotes?.filter((q) => q.status === "accepted") || [];
 
     // Fetch store payment instructions when relevant
     let paymentInstructions: string | null = null;

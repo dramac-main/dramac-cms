@@ -98,14 +98,14 @@ export function OrderTrackingBlock({
   };
 
   return (
-    <div className={cn("py-8 md:py-12", className)}>
+    <div className={cn("py-6 sm:py-8 md:py-12", className)}>
       <div className="container max-w-lg mx-auto px-4">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-            <Package className="h-8 w-8 text-primary" />
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <Package className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold mb-2">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">
             Track Your Order
           </h1>
           <p className="text-muted-foreground">

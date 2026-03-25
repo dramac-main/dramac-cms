@@ -437,16 +437,16 @@ export function OrderConfirmationBlock({
   })();
 
   return (
-    <div className={cn("py-8 md:py-12", className)}>
+    <div className={cn("py-6 sm:py-8 md:py-12", className)}>
       <div className="container max-w-4xl mx-auto px-4">
         {/* Success Header — different for paid vs awaiting payment */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6 sm:mb-8">
           {isAwaitingPayment ? (
             <>
-              <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
-                <Clock className="h-8 w-8 text-amber-600" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
+                <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-amber-600" />
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold mb-2">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">
                 Order Received — Payment Pending
               </h1>
               <p className="text-muted-foreground mb-4">
@@ -457,10 +457,10 @@ export function OrderConfirmationBlock({
             </>
           ) : (
             <>
-              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 className="h-8 w-8 text-green-600" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold mb-2">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">
                 Thank you for your order!
               </h1>
               <p className="text-muted-foreground mb-4">
@@ -664,7 +664,7 @@ export function OrderConfirmationBlock({
                   {/* Drop zone / file input */}
                   <div
                     className={cn(
-                      "border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors",
+                      "border-2 border-dashed rounded-lg p-3 sm:p-6 text-center cursor-pointer transition-colors",
                       proofFile
                         ? "border-primary bg-primary/5"
                         : "border-muted-foreground/25 hover:border-primary/50",
@@ -909,9 +909,9 @@ export function OrderConfirmationBlock({
           <CardContent>
             <div className="space-y-4">
               {order.items.map((item) => (
-                <div key={item.id} className="flex gap-4">
+                <div key={item.id} className="flex gap-3 sm:gap-4">
                   {/* Image */}
-                  <div className="w-16 h-16 rounded bg-muted flex-shrink-0 overflow-hidden">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded bg-muted flex-shrink-0 overflow-hidden">
                     {item.product_image ? (
                       <Image
                         src={item.product_image}
@@ -922,26 +922,26 @@ export function OrderConfirmationBlock({
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <Package className="h-6 w-6 text-muted-foreground" />
+                        <Package className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
                       </div>
                     )}
                   </div>
 
                   {/* Details */}
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{item.product_name}</p>
+                    <p className="text-sm sm:text-base font-medium truncate">{item.product_name}</p>
                     {item.variant_name && (
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         {item.variant_name}
                       </p>
                     )}
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       {formatPrice(item.unit_price)} × {item.quantity}
                     </p>
                   </div>
 
                   {/* Line Total */}
-                  <div className="font-medium">
+                  <div className="text-sm sm:text-base font-medium">
                     {formatPrice(item.line_total)}
                   </div>
                 </div>

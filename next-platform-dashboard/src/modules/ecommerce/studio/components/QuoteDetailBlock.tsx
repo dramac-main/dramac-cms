@@ -191,7 +191,7 @@ export function QuoteDetailBlock({
   // Print variant
   if (variant === 'print') {
     return (
-      <div className={cn('bg-card p-8', className)}>
+      <div className={cn('bg-card p-4 sm:p-6 md:p-8', className)}>
         {/* Header */}
         <div className="flex items-start justify-between border-b pb-6">
           <div>

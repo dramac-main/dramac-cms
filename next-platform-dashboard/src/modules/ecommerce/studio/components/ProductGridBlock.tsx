@@ -188,9 +188,14 @@ export function ProductGridBlock({
       5: "lg:grid-cols-5",
       6: "lg:grid-cols-6",
     };
-    const cols = typeof columns === "object"
-      ? columns
-      : { mobile: 2, tablet: Math.min(columns as number, 3), desktop: columns as number };
+    const cols =
+      typeof columns === "object"
+        ? columns
+        : {
+            mobile: 2,
+            tablet: Math.min(columns as number, 3),
+            desktop: columns as number,
+          };
     return cn(
       gridColsMap[cols.mobile || 2] || "grid-cols-2",
       mdGridColsMap[cols.tablet || 3] || "md:grid-cols-3",
