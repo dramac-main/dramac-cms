@@ -120,8 +120,42 @@ export async function getAgencyBrandingBySlug(
 }
 
 /**
+ * Fetch branding for the platform's default (first) agency.
+ * Used by auth pages where the user isn't authenticated yet.
+ */
+export async function getDefaultAgencyBranding(): Promise<AgencyBranding | null> {
+  const cacheKey = "__default__";
+  const cached = brandingCache.get(cacheKey);
+  if (cached && cached.expiry > Date.now()) return cached.data;
+
+  try {
+    const supabase = createAdminClient();
+    const { data: agency, error } = await supabase
+      .from("agencies")
+      .select("id, name, custom_branding, white_label_enabled")
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .single();
+
+    if (error || !agency) {
+      brandingCache.set(cacheKey, { data: null, expiry: Date.now() + CACHE_TTL });
+      return null;
+    }
+
+    const branding = mapToBranding(agency as { id: string; name: string; custom_branding: Record<string, unknown> | null; white_label_enabled: boolean | null });
+    brandingCache.set(cacheKey, { data: branding, expiry: Date.now() + CACHE_TTL });
+    brandingCache.set(agency.id, { data: branding, expiry: Date.now() + CACHE_TTL });
+    return branding;
+  } catch (err) {
+    console.error("[Branding] Error fetching default branding:", err);
+    return null;
+  }
+}
+
+/**
  * Clear branding cache for an agency (call after branding settings update).
  */
 export function clearBrandingCache(agencyId: string): void {
   brandingCache.delete(agencyId);
+  brandingCache.delete("__default__");
 }

@@ -1,4 +1,5 @@
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
+import { AuthBrandingHeader } from "@/components/auth/auth-branding-header";
 import { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -23,12 +24,10 @@ export default function ForgotPasswordPage() {
           </Link>
         </div>
 
-        <div className="text-center">
-          <h1 className="text-3xl font-bold tracking-tight">Forgot password?</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Enter your email and we&apos;ll send you a reset link
-          </p>
-        </div>
+        <AuthBrandingHeader
+          title="Forgot password?"
+          subtitle="Enter your email and we'll send you a reset link"
+        />
 
         <ForgotPasswordForm />
       </div>
