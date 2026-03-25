@@ -300,7 +300,7 @@ export function addCategoryNav(
   page: StudioPageData,
   parentId: string,
   props: {
-    layout?: "horizontal" | "vertical";
+    variant?: "tree" | "grid" | "list" | "cards";
     showIcons?: boolean;
     showCount?: boolean;
   } = {},
@@ -310,7 +310,7 @@ export function addCategoryNav(
     {
       type: "EcommerceCategoryNav",
       props: {
-        layout: props.layout || "horizontal",
+        variant: props.variant || "cards",
         showIcons: props.showIcons ?? true,
         showCount: props.showCount ?? true,
         gap: "16px",

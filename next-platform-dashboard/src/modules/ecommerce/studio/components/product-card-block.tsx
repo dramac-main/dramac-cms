@@ -605,8 +605,8 @@ export function ProductCardBlock({
         <ProductImage />
       </div>
 
-      <div style={{ padding: paddingValue }}>
-        <h3 className="font-medium truncate">{product.name}</h3>
+      <div className="p-2.5 sm:p-3 md:p-4" style={{ padding: undefined }}>
+        <h3 className="font-medium text-sm sm:text-base line-clamp-2 leading-tight">{product.name}</h3>
 
         {showRating && productRating !== undefined && (
           <ProductRatingDisplay
@@ -621,19 +621,25 @@ export function ProductCardBlock({
           <ProductStockBadge
             stockQuantity={productQuantity}
             trackInventory={product.track_inventory}
-            className="mt-2"
+            className="mt-1 sm:mt-2"
           />
         )}
 
-        <div className="flex items-center justify-between mt-3 gap-2">
-          {effectiveShowPrice && (
+        {effectiveShowPrice && (
+          <div className="mt-1.5 sm:mt-2">
             <ProductPriceDisplay
               price={productPrice}
               compareAtPrice={productCompareAt}
+              size="sm"
             />
-          )}
-          {showButton && <AddToCartButton />}
-        </div>
+          </div>
+        )}
+
+        {showButton && (
+          <div className="mt-2 sm:mt-3">
+            <AddToCartButton fullWidth />
+          </div>
+        )}
       </div>
     </div>
   );

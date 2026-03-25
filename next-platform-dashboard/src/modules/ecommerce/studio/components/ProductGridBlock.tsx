@@ -188,11 +188,13 @@ export function ProductGridBlock({
       5: "lg:grid-cols-5",
       6: "lg:grid-cols-6",
     };
-    const cols = typeof columns === "object" ? columns : { mobile: columns };
+    const cols = typeof columns === "object"
+      ? columns
+      : { mobile: 2, tablet: Math.min(columns as number, 3), desktop: columns as number };
     return cn(
       gridColsMap[cols.mobile || 2] || "grid-cols-2",
-      cols.tablet && (mdGridColsMap[cols.tablet] || undefined),
-      cols.desktop && (lgGridColsMap[cols.desktop] || undefined),
+      mdGridColsMap[cols.tablet || 3] || "md:grid-cols-3",
+      lgGridColsMap[cols.desktop || 4] || "lg:grid-cols-4",
     );
   }, [columns]);
 

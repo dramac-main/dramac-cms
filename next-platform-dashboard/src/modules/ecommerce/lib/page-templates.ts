@@ -113,7 +113,7 @@ export function createShopPageTemplate(): StudioPageData {
 
   createHeading(page, categoryContainer, "Shop by Category", 2);
   addCategoryNav(page, categoryContainer, {
-    layout: "horizontal",
+    variant: "cards",
     showIcons: true,
     showCount: true,
   });

@@ -226,70 +226,93 @@ export function CategoryNavBlock({
   return (
     <div className={className}>
       {showTitle && title && (
-        <h2 className="text-lg font-semibold mb-4">{title}</h2>
+        <h2 className="text-lg font-semibold mb-3 md:mb-4">{title}</h2>
       )}
 
-      {/* Tree variant */}
-      {variantValue === 'tree' && (
-        <nav className="space-y-1">
+      {/* Mobile: horizontal scrollable chips for ALL variants */}
+      <div className="md:hidden">
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
           {displayCategories.map((category) => (
-            <TreeItem
+            <Link
               key={category.id}
-              category={category}
-              depth={0}
-              maxDepth={maxDepth}
-              showCount={showProductCount}
-              expandable={expandable}
-              defaultExpanded={defaultExpanded}
-            />
-          ))}
-        </nav>
-      )}
-
-      {/* Grid variant */}
-      {variantValue === 'grid' && (
-        <div className={cn('grid gap-4', gridClass)}>
-          {displayCategories.map((category) => (
-            <CategoryCard
-              key={category.id}
-              category={category}
-              variant="card"
-              showImage={showImages}
-              showCount={showProductCount}
-            />
+              href={`/shop/category/${category.slug}`}
+              className="flex-none inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 bg-background hover:bg-accent transition-colors text-sm font-medium whitespace-nowrap"
+            >
+              {category.name}
+              {showProductCount && category.product_count !== undefined && (
+                <span className="text-xs text-muted-foreground">
+                  ({category.product_count})
+                </span>
+              )}
+            </Link>
           ))}
         </div>
-      )}
+      </div>
 
-      {/* List variant */}
-      {variantValue === 'list' && (
-        <div className="space-y-2">
-          {displayCategories.map((category) => (
-            <CategoryCard
-              key={category.id}
-              category={category}
-              variant="row"
-              showImage={showImages}
-              showCount={showProductCount}
-              showArrow
-            />
-          ))}
-        </div>
-      )}
+      {/* Desktop: original variant layouts */}
+      <div className="hidden md:block">
+        {/* Tree variant */}
+        {variantValue === 'tree' && (
+          <nav className="space-y-1">
+            {displayCategories.map((category) => (
+              <TreeItem
+                key={category.id}
+                category={category}
+                depth={0}
+                maxDepth={maxDepth}
+                showCount={showProductCount}
+                expandable={expandable}
+                defaultExpanded={defaultExpanded}
+              />
+            ))}
+          </nav>
+        )}
 
-      {/* Cards (chips) variant */}
-      {variantValue === 'cards' && (
-        <div className="flex flex-wrap gap-2">
-          {displayCategories.map((category) => (
-            <CategoryCard
-              key={category.id}
-              category={category}
-              variant="chip"
-              showCount={showProductCount}
-            />
-          ))}
-        </div>
-      )}
+        {/* Grid variant */}
+        {variantValue === 'grid' && (
+          <div className={cn('grid gap-4', gridClass)}>
+            {displayCategories.map((category) => (
+              <CategoryCard
+                key={category.id}
+                category={category}
+                variant="card"
+                showImage={showImages}
+                showCount={showProductCount}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* List variant */}
+        {variantValue === 'list' && (
+          <div className="space-y-2">
+            {displayCategories.map((category) => (
+              <CategoryCard
+                key={category.id}
+                category={category}
+                variant="row"
+                showImage={showImages}
+                showCount={showProductCount}
+                showArrow
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Cards (chips) variant */}
+        {variantValue === 'cards' && (
+          <div className="flex flex-wrap gap-2">
+            {displayCategories.map((category) => (
+              <CategoryCard
+                key={category.id}
+                category={category}
+                variant="chip"
+                showCount={showProductCount}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

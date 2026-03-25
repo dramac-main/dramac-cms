@@ -133,7 +133,7 @@ export async function notifyNewBooking(
       data.serviceDuration >= 60
         ? `${Math.floor(data.serviceDuration / 60)}h ${data.serviceDuration % 60 > 0 ? `${data.serviceDuration % 60}m` : ""}`
         : `${data.serviceDuration}m`;
-    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${data.siteId}/booking`;
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${data.siteId}/booking`;
 
     // 1. In-app notification to business owner
     await createNotification({
@@ -279,7 +279,7 @@ export async function notifyBookingCancelled(
       data.serviceDuration >= 60
         ? `${Math.floor(data.serviceDuration / 60)}h ${data.serviceDuration % 60 > 0 ? `${data.serviceDuration % 60}m` : ""}`
         : `${data.serviceDuration}m`;
-    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${data.siteId}/booking`;
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${data.siteId}/booking`;
 
     // 1. In-app notification to business owner
     await createNotification({
@@ -406,7 +406,7 @@ export async function notifyNewOrder(
     const subtotalStr = formatCurrency(data.subtotal / 100, currency);
     const shippingStr = formatCurrency(data.shipping / 100, currency);
     const taxStr = formatCurrency(data.tax / 100, currency);
-    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${data.siteId}/ecommerce/orders`;
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${data.siteId}/ecommerce?view=orders`;
 
     // Build the storefront URL for order confirmation link in customer email
     const siteUrl = site.custom_domain
@@ -542,7 +542,7 @@ export async function notifyOrderShipped(
         type: "order_shipped",
         title: `Order #${orderNumber} Shipped`,
         message: `Order for ${customerName} has been marked as shipped${trackingNumber ? ` (Tracking: ${trackingNumber})` : ""}`,
-        link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${siteId}/ecommerce/orders`,
+        link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,
         metadata: { orderNumber, siteId },
       });
     }
@@ -837,7 +837,7 @@ export async function notifyPaymentProofUploaded(
       .eq("id", site.agency_id)
       .single();
 
-    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${siteId}/ecommerce/orders`;
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`;
 
     // In-app notification to business owner
     if (agency?.owner_id) {
@@ -996,7 +996,7 @@ export async function notifyLowStock(
           .single()
       : { data: null };
 
-    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${siteId}/ecommerce/products`;
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=products`;
 
     // In-app notification to business owner
     if (agency?.owner_id) {
@@ -1101,7 +1101,7 @@ export async function notifyNewQuote(
     const businessName = site.name || "Our Business";
     const currency = data.currency || "USD";
     const totalStr = data.total ? formatCurrency(data.total / 100, currency) : "";
-    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${data.siteId}/ecommerce/quotes`;
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${data.siteId}/ecommerce?view=quotes`;
 
     // 1. In-app notification to business owner
     await createNotification({
@@ -1215,7 +1215,7 @@ export async function notifyQuoteAccepted(
       : { data: null };
 
     const businessName = site.name || "Our Business";
-    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${siteId}/ecommerce/quotes`;
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=quotes`;
 
     // 1. In-app notification to business owner
     if (agency?.owner_id) {
@@ -1320,7 +1320,7 @@ export async function notifyQuoteRejected(
           .single()
       : { data: null };
 
-    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${siteId}/ecommerce/quotes`;
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=quotes`;
 
     // 1. In-app notification to business owner
     if (agency?.owner_id) {

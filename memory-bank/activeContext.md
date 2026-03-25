@@ -9,7 +9,9 @@
 Built complete end-to-end AI automation so the AI assistant knows about payment proof uploads, order status changes, quotation lifecycle, and proactively notifies customers in chat when external events happen.
 
 ### New File: `chat-event-bridge.ts` (233 lines)
+
 Proactive AI messaging utility for external events:
+
 - `findActiveConversation(siteId, email)` — finds open/active/waiting conversation by visitor email
 - `sendProactiveMessage()` — inserts AI message into conversation
 - `notifyChatPaymentProofUploaded()` — message when proof uploaded
@@ -18,27 +20,32 @@ Proactive AI messaging utility for external events:
 - `notifyChatQuoteConverted()` — message when quote converted to order
 
 ### Enhanced: `customer-context-bridge.ts`
+
 - Added `paymentProof` object to orders (hasProof, status, fileName, uploadedAt)
 - Added `recentQuotes` array (quoteNumber, status, total, expiresAt, convertedOrderNumber, itemCount)
 - Added `mod_ecommod01_quotes` query to Promise.all
 - Updated `formatCustomerContext()` to include proof status + quotes section
 
 ### Enhanced: `ai-responder.ts`
+
 - Added `proofUploaded`, `proofStatus`, `activeQuotes`, `acceptedQuotes` computed vars
 - PAYMENT GUIDANCE MODE now includes PAYMENT PROOF STATUS section
 - Conditional guidance: if proof uploaded, don't ask customer to upload again
 - Added ACTIVE QUOTATIONS and ACCEPTED QUOTATIONS sections to system prompt
 
 ### Enhanced: `auto-response-handler.ts`
+
 Added 5 new regex patterns: proof upload, quotation reference, quote acceptance, quote status
 
 ### Proactive Notifications Wired In:
+
 - `public-ecommerce-actions.ts` → `notifyChatPaymentProofUploaded()` after proof upload
 - `order-actions.ts` → `notifyChatOrderStatusChanged()` after status change
 - `ecommerce-actions.ts` → `notifyChatPaymentConfirmed()` when payment marked as paid
 - `quote-workflow-actions.ts` → `notifyChatQuoteConverted()` after quote-to-order conversion
 
 ### Production Testing (3 API tests, ALL PASSING)
+
 Test conversation: `3c2020fc-4acc-4369-b1ab-beec60cc9c1f` for `drakemacchiko@gmail.com`
 
 1. **"I uploaded proof for ORD-1007"** → AI correctly identified Screenshot (19).png, ZMW 1,531.20, said "under review", did NOT ask to re-upload
@@ -46,6 +53,7 @@ Test conversation: `3c2020fc-4acc-4369-b1ab-beec60cc9c1f` for `drakemacchiko@gma
 3. **"Any quotations?"** → AI correctly said no quotations on file, reiterated 24hr review
 
 ### Commits
+
 - `ba4ce129` — feat: end-to-end AI automation (12 files, 547 insertions, 66 deletions)
 - Previous: `8ef49e64` — fix: use after() to keep Lambda alive for AI response generation
 
