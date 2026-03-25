@@ -454,13 +454,17 @@ function ProfileTab({
       </div>
 
       <div className="space-y-1">
-        <label className="block text-sm font-medium text-foreground">Email</label>
+        <label className="block text-sm font-medium text-foreground">
+          Email
+        </label>
         <input
           value={customer.email}
           disabled
           className="w-full rounded-md border border-border bg-muted/50 px-3 py-2 text-sm text-muted-foreground cursor-not-allowed"
         />
-        <p className="text-xs text-muted-foreground">Email cannot be changed.</p>
+        <p className="text-xs text-muted-foreground">
+          Email cannot be changed.
+        </p>
       </div>
 
       <div className="space-y-1">

@@ -12,8 +12,8 @@
  */
 "use client";
 
-import React, { useState } from "react";
-import { X, Loader2, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { X, Loader2, Mail, Lock, Eye, EyeOff, ShoppingBag } from "lucide-react";
 import { useStorefrontAuth } from "../../context/storefront-auth-context";
 
 // ============================================================================
@@ -85,6 +85,7 @@ function InputField({
             type="button"
             tabIndex={-1}
             onClick={() => setShowPassword(!showPassword)}
+            aria-label={showPassword ? "Hide password" : "Show password"}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
             {showPassword ? (
@@ -171,6 +172,21 @@ function LoginForm({
         {loading && <Loader2 className="h-4 w-4 animate-spin" />}
         Sign In
       </button>
+
+      <p className="text-center text-xs text-muted-foreground">
+        Forgot your password?{" "}
+        <button
+          type="button"
+          className="text-primary hover:underline font-medium"
+          onClick={() => {
+            window.alert(
+              "Please contact the store for password reset assistance.",
+            );
+          }}
+        >
+          Get help
+        </button>
+      </p>
     </form>
   );
 }
@@ -279,7 +295,7 @@ function RegisterForm({
 
 function SetPasswordForm({
   prefillEmail,
-  guestToken,
+  guestToken: _guestToken,
   onSuccess,
 }: {
   prefillEmail?: string;
@@ -379,6 +395,7 @@ export function StorefrontAuthDialog({
 
   const resolvedMode: DialogMode = propMode || authDialogMode;
   const [activeMode, setActiveMode] = useState<DialogMode>(resolvedMode);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   // Keep active mode in sync when external prop/context changes
   React.useEffect(() => {
@@ -386,8 +403,6 @@ export function StorefrontAuthDialog({
   }, [propMode, authDialogMode]);
 
   const isOpen = propMode !== undefined ? true : authDialogOpen;
-
-  if (!isOpen) return null;
 
   const handleClose = () => {
     if (onClose) onClose();
@@ -399,15 +414,47 @@ export function StorefrontAuthDialog({
     if (onSuccess) onSuccess();
   };
 
+  // --- Focus management (hooks must be before early return) ---
+
+  // Auto-focus first input when dialog opens
+  useEffect(() => {
+    if (!isOpen) return;
+    const timer = setTimeout(() => {
+      const firstInput = dialogRef.current?.querySelector<HTMLInputElement>(
+        'input:not([disabled])',
+      );
+      firstInput?.focus();
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [activeMode, isOpen]);
+
+  // Close on Escape key
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleClose();
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
+  useEffect(() => {
+    if (!isOpen) return;
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown, isOpen]);
+
+  if (!isOpen) return null;
+
   const titles: Record<DialogMode, string> = {
     login: "Sign In",
-    register: "Create Account",
+    register: "Create Store Account",
     "set-password": "Save Your Account",
   };
 
   const subtitles: Record<DialogMode, string> = {
-    login: "Welcome back! Sign in to your account.",
-    register: "Create an account to track your orders.",
+    login: "Welcome back! Sign in to your store account.",
+    register:
+      "Create a customer account to save addresses and track orders.",
     "set-password": "Set a password to access your account anytime.",
   };
 
@@ -422,6 +469,7 @@ export function StorefrontAuthDialog({
 
       {/* Dialog */}
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={titles[activeMode]}
@@ -432,7 +480,7 @@ export function StorefrontAuthDialog({
           type="button"
           onClick={handleClose}
           className="absolute right-4 top-4 rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-muted"
-          aria-label="Close"
+          aria-label="Close dialog"
         >
           <X className="h-5 w-5" />
         </button>
@@ -444,7 +492,7 @@ export function StorefrontAuthDialog({
               <Lock className="h-5 w-5 text-primary" />
             )}
             {activeMode === "register" && (
-              <User className="h-5 w-5 text-primary" />
+              <ShoppingBag className="h-5 w-5 text-primary" />
             )}
             {activeMode === "set-password" && (
               <Mail className="h-5 w-5 text-primary" />
@@ -454,7 +502,9 @@ export function StorefrontAuthDialog({
             <h2 className="text-lg font-semibold text-foreground">
               {titles[activeMode]}
             </h2>
-            <p className="text-sm text-muted-foreground">{subtitles[activeMode]}</p>
+            <p className="text-sm text-muted-foreground">
+              {subtitles[activeMode]}
+            </p>
           </div>
         </div>
 

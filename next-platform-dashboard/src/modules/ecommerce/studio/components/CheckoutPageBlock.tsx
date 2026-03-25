@@ -18,8 +18,7 @@ import {
   Clock,
   Banknote,
   Copy,
-  Check,
-} from "lucide-react";
+  Check,  User,} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -706,8 +705,9 @@ export function CheckoutPageBlock({
 
                 {/* Sign-in prompt — shown on information step for guests */}
                 {checkout.currentStep === "information" && !authCustomer && (
-                  <div className="mb-6 flex items-center justify-between rounded-md bg-muted/60 px-4 py-3 text-sm">
-                    <span className="text-muted-foreground">
+                  <div className="mb-6 flex items-center justify-between rounded-md border border-primary/20 bg-primary/5 px-4 py-3 text-sm">
+                    <span className="text-foreground flex items-center gap-2">
+                      <User className="h-4 w-4 text-primary" />
                       Have an account?
                     </span>
                     <Button
@@ -716,7 +716,7 @@ export function CheckoutPageBlock({
                       className="h-auto p-0"
                       onClick={() => openAuthDialog("login")}
                     >
-                      Sign in to prefill your details
+                      Sign in for faster checkout
                     </Button>
                   </div>
                 )}

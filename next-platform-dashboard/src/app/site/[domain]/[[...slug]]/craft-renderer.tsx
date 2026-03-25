@@ -49,9 +49,10 @@ export function CraftRenderer({
           siteId={siteId}
           pageId={pageId}
           modules={modules}
-        />
-        {/* Renders the auth modal whenever openAuthDialog() is called */}
-        <StorefrontAuthDialogProvider />
+        >
+          {/* Auth dialog MUST be inside StudioRenderer so it inherits brand CSS variables */}
+          <StorefrontAuthDialogProvider />
+        </StudioRenderer>
       </StorefrontAuthProvider>
     </StorefrontProvider>
   );

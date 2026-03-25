@@ -1,29 +1,56 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: March 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION ✅
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX ✅
 
 ---
 
-## Latest Update: Notification URL 404 Fix + Customer Email CTAs — Committed & Deployed (`9cba84f7`)
+## Latest Update: Storefront Auth + Account Branding Fix — Committed & Deployed (`5d9b191c`)
+
+**Fixed all hardcoded Tailwind colors in StorefrontAuthDialog.tsx and MyAccountBlock.tsx. All storefront auth/account components now follow the site's global brand colors via CSS variable semantic tokens.**
+
+### StorefrontAuthDialog.tsx — Fully Themed
+
+- InputField: labels, borders, bg, placeholder, disabled state, password toggle, field errors
+- Error messages: `bg-destructive/10 text-destructive`
+- Set-password info: `bg-primary/10 text-primary`
+- Dialog chrome: `bg-card`, close button, title, subtitle, tabs
+
+### MyAccountBlock.tsx — Fully Themed
+
+- OrdersTab: loading, error, empty state, order cards
+- AddressesTab: loading, error, empty state, add button
+- AddressCard: bg, text, edit/remove buttons
+- ProfileTab: labels, inputs, disabled email, checkbox, error
+- Main: header, sign out, guest state, tabs
+
+### NavAccountBadge.tsx — Already Correct (no changes)
+
+---
+
+## Previous Update: Notification URL 404 Fix + Customer Email CTAs — Committed & Deployed (`9cba84f7`)
 
 **Fixed all 13 broken notification URLs (404 errors), 4 customer email templates with missing/wrong CTA buttons, and field name mismatches across the entire purchase cycle.**
 
 ### 13 Notification URLs Fixed
+
 - All URLs missing `/dashboard/` prefix — route group `(dashboard)` invisible in URLs
 - Used path segments `/ecommerce/orders` but actual page uses query params `?view=orders`
 - Fixed: booking (2), ecommerce orders (7), products (1), quotes (3)
 
 ### 4 Notification Functions Enhanced with Storefront URLs
+
 - `notifyOrderDelivered`, `notifyOrderCancelled`, `notifyPaymentReceived`, `notifyRefundIssued`
 - Now query `subdomain, custom_domain` and build storefront URL for customer email CTA
 
 ### 4 Email Templates Fixed
+
 - Customer emails used `data.dashboardUrl` (admin URL) → now use `data.orderUrl` (storefront)
 - `payment_received_customer`: `data.amount` → `data.total`
 - `refund_issued_customer`: `data.amount` → `data.refundAmount`
 
 ### sendOrderEmail Fixed
+
 - Re-sent emails now include storefront URLs for all 4 types (confirmation, delivered, cancelled, refunded)
 
 ---

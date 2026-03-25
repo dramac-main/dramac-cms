@@ -1,39 +1,73 @@
 # Active Context
 
-## Current Focus: Notification URL 404 Fix + Customer Email CTA Fixes — DEPLOYED
+## Current Focus: Storefront Branding Fix — ALL AUTH + ACCOUNT COMPONENTS — DEPLOYED
 
-### Status: COMMITTED, DEPLOYED — `9cba84f7`
+### Status: COMMITTED, DEPLOYED — `5d9b191c`
 
 ### What Was Done (This Session)
 
-Fixed 404 error when clicking notification links + fixed customer email CTA buttons + fixed field name mismatches across the entire purchase notification cycle.
+Fixed all hardcoded Tailwind colors in storefront auth dialog and account page components. User reported that the Create Account / Login dialog on `test-jack.sites.dramacagency.com/checkout` used white/gray branding instead of following the site's global brand colors.
+
+**Root Cause:** StorefrontAuthDialog.tsx and MyAccountBlock.tsx used hardcoded `gray-*`, `red-*`, `blue-*` Tailwind colors instead of semantic tokens (`text-foreground`, `bg-card`, `border-input`, etc.) that resolve to site brand colors via CSS variables injected by `StudioRenderer`.
+
+### Files Fixed
+
+- **StorefrontAuthDialog.tsx**: InputField (labels, borders, placeholder, disabled state, password toggle, field errors), all 3 error messages, set-password info banner, dialog card bg, close button, title/subtitle, tab container, active/inactive tabs
+- **MyAccountBlock.tsx**: OrdersTab (loading, error, empty state, order cards), AddressCard (bg, text, edit/remove buttons), AddressesTab (loading, error, empty state, add button), ProfileTab (labels, inputs, disabled email, checkbox, error message), main component (header, description, sign out button, loading spinner, guest state, create account button, inactive tabs)
+- **NavAccountBadge.tsx**: Already correct — no changes needed
+
+### Branding Token Mapping Applied
+
+- `text-gray-900/700` → `text-foreground`
+- `text-gray-500/600` → `text-muted-foreground`
+- `text-gray-400/300` → `text-muted-foreground/60` or `text-muted-foreground/40`
+- `bg-white` → `bg-card`
+- `bg-gray-100` → `bg-muted`
+- `bg-gray-50` → `bg-muted/50`
+- `border-gray-300` → `border-input`
+- `border-gray-200` → `border-border`
+- `bg-red-50 text-red-700` → `bg-destructive/10 text-destructive`
+- `bg-blue-50 text-blue-700` → `bg-primary/10 text-primary`
+
+### Exceptions Kept (intentionally hardcoded)
+
+- STATUS_COLORS in MyAccountBlock (order status badges: yellow=pending, green=delivered, red=cancelled) — universally understood e-commerce status indicators
+- Success message `bg-green-50 text-green-700` — universal success color
+- "Default" address badge `bg-green-100 text-green-800` — status indicator
+
+### Previous: Notification URL 404 Fix + Customer Email CTAs — `9cba84f7`
 
 ### Root Cause
 
 All notification URLs in `business-notifications.ts` used `/sites/{siteId}/ecommerce/orders` but the actual dashboard route is `/dashboard/sites/{siteId}/ecommerce?view=orders`. Two problems:
+
 1. Missing `/dashboard/` prefix (route group invisible in URLs)
 2. Using path segments (`/orders`) instead of query params (`?view=orders`)
 
 ### Fixes Applied (3 files, 73 insertions, 19 deletions)
 
 #### `business-notifications.ts` — 13 broken URLs fixed:
+
 - 2 booking URLs: `/sites/${siteId}/booking` → `/dashboard/sites/${siteId}/booking`
 - 7 ecommerce order URLs → `/dashboard/sites/${siteId}/ecommerce?view=orders`
 - 1 products URL → `/dashboard/sites/${siteId}/ecommerce?view=products`
 - 3 quotes URLs → `/dashboard/sites/${siteId}/ecommerce?view=quotes`
 
 #### `business-notifications.ts` — 4 functions enhanced with storefront URLs:
+
 - `notifyOrderDelivered`, `notifyOrderCancelled`, `notifyPaymentReceived`, `notifyRefundIssued`
 - Added `subdomain, custom_domain` to site query
 - Build storefront URL → pass `orderUrl` to customer email data
 
 #### `templates.ts` — 4 customer email templates fixed:
+
 - `order_delivered_customer`: `dashboardUrl` → `orderUrl`
 - `order_cancelled_customer`: `dashboardUrl` → `orderUrl`
 - `payment_received_customer`: `data.amount` → `data.total`, `dashboardUrl` → `orderUrl`
 - `refund_issued_customer`: `data.amount` → `data.refundAmount`, `dashboardUrl` → `orderUrl`
 
 #### `order-actions.ts` — sendOrderEmail fixed:
+
 - Added `subdomain, custom_domain` to site query
 - Build storefront `orderUrl` and `trackingUrlStorefront`
 - Pass URLs to all 4 customer email types (confirmation, delivered, cancelled, refunded)

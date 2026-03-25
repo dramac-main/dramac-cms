@@ -82,7 +82,7 @@ export function NavAccountBadge({
         className={`inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold w-8 h-8 hover:opacity-90 ${className}`}
         style={color ? { background: color } : undefined}
         title={`My Account — ${customer.displayName || customer.email}`}
-        aria-label="My Account"
+        aria-label="Go to my account"
       >
         {initials}
       </a>
@@ -96,8 +96,8 @@ export function NavAccountBadge({
       onClick={() => openAuthDialog("login")}
       className={`inline-flex items-center justify-center hover:opacity-70 transition-opacity ${className}`}
       style={color ? { color } : undefined}
-      title="Sign in"
-      aria-label="Sign in to your account"
+      title="Sign in to your store account"
+      aria-label="Sign in to your store account"
     >
       <UserIcon className="w-6 h-6" />
     </button>

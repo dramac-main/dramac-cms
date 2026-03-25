@@ -63,6 +63,8 @@ export interface StudioRendererProps {
   className?: string;
   /** Installed modules for this site - enables module component rendering */
   modules?: InstalledModuleInfo[];
+  /** Extra content rendered inside the branded .studio-renderer div (e.g. overlays, modals) */
+  children?: React.ReactNode;
 }
 
 interface ComponentRendererProps {
@@ -407,6 +409,7 @@ export function StudioRenderer({
   pageId,
   modules,
   className = "",
+  children,
 }: StudioRendererProps): React.ReactElement {
   // Resolve brand color palette from site settings (memoized)
   // This is the single source of truth for all component colors.
@@ -645,6 +648,9 @@ export function StudioRenderer({
             modules={modules}
           />
         ))}
+
+      {/* Extra children (overlays, modals) inherit brand CSS variables */}
+      {children}
     </div>
   );
 }
