@@ -10,29 +10,29 @@
  *   Rendered by StorefrontAuthProvider automatically when authDialogOpen is true.
  *   Trigger it with: const { openAuthDialog } = useStorefrontAuth()
  */
-'use client'
+"use client";
 
-import React, { useState } from 'react'
-import { X, Loader2, Mail, Lock, User, Eye, EyeOff } from 'lucide-react'
-import { useStorefrontAuth } from '../../context/storefront-auth-context'
+import React, { useState } from "react";
+import { X, Loader2, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { useStorefrontAuth } from "../../context/storefront-auth-context";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-type DialogMode = 'login' | 'register' | 'set-password'
+type DialogMode = "login" | "register" | "set-password";
 
 interface StorefrontAuthDialogProps {
   /** Initial mode; if provided overrides the context authDialogMode */
-  mode?: DialogMode
+  mode?: DialogMode;
   /** Called after successful auth */
-  onSuccess?: () => void
+  onSuccess?: () => void;
   /** Called when dialog closes */
-  onClose?: () => void
+  onClose?: () => void;
   /** Email pre-filled (e.g. from checkout) */
-  prefillEmail?: string
+  prefillEmail?: string;
   /** Token of guest session to upgrade (for set-password flow) */
-  guestToken?: string
+  guestToken?: string;
 }
 
 // ============================================================================
@@ -42,7 +42,7 @@ interface StorefrontAuthDialogProps {
 function InputField({
   id,
   label,
-  type: initialType = 'text',
+  type: initialType = "text",
   value,
   onChange,
   placeholder,
@@ -50,23 +50,23 @@ function InputField({
   disabled,
   error,
 }: {
-  id: string
-  label: string
-  type?: string
-  value: string
-  onChange: (v: string) => void
-  placeholder?: string
-  autoComplete?: string
-  disabled?: boolean
-  error?: string
+  id: string;
+  label: string;
+  type?: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  autoComplete?: string;
+  disabled?: boolean;
+  error?: string;
 }) {
-  const [showPassword, setShowPassword] = useState(false)
-  const isPassword = initialType === 'password'
-  const type = isPassword ? (showPassword ? 'text' : 'password') : initialType
+  const [showPassword, setShowPassword] = useState(false);
+  const isPassword = initialType === "password";
+  const type = isPassword ? (showPassword ? "text" : "password") : initialType;
 
   return (
     <div className="space-y-1">
-      <label htmlFor={id} className="block text-sm font-medium text-gray-700">
+      <label htmlFor={id} className="block text-sm font-medium text-foreground">
         {label}
       </label>
       <div className="relative">
@@ -78,22 +78,26 @@ function InputField({
           placeholder={placeholder}
           autoComplete={autoComplete}
           disabled={disabled}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm placeholder:text-gray-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500 pr-10"
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-muted/50 disabled:text-muted-foreground pr-10"
         />
         {isPassword && (
           <button
             type="button"
             tabIndex={-1}
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {showPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
           </button>
         )}
       </div>
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
-  )
+  );
 }
 
 // ============================================================================
@@ -104,31 +108,31 @@ function LoginForm({
   prefillEmail,
   onSuccess,
 }: {
-  prefillEmail?: string
-  onSuccess: () => void
+  prefillEmail?: string;
+  onSuccess: () => void;
 }) {
-  const { login } = useStorefrontAuth()
-  const [email, setEmail] = useState(prefillEmail || '')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const { login } = useStorefrontAuth();
+  const [email, setEmail] = useState(prefillEmail || "");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!email || !password) {
-      setError('Please enter your email and password.')
-      return
+      setError("Please enter your email and password.");
+      return;
     }
-    setLoading(true)
-    setError('')
-    const result = await login(email, password)
-    setLoading(false)
+    setLoading(true);
+    setError("");
+    const result = await login(email, password);
+    setLoading(false);
     if (result.error) {
-      setError(result.error)
+      setError(result.error);
     } else {
-      onSuccess()
+      onSuccess();
     }
-  }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -154,7 +158,9 @@ function LoginForm({
       />
 
       {error && (
-        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+        <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {error}
+        </p>
       )}
 
       <button
@@ -166,44 +172,49 @@ function LoginForm({
         Sign In
       </button>
     </form>
-  )
+  );
 }
 
 function RegisterForm({
   prefillEmail,
   onSuccess,
 }: {
-  prefillEmail?: string
-  onSuccess: () => void
+  prefillEmail?: string;
+  onSuccess: () => void;
 }) {
-  const { register } = useStorefrontAuth()
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [email, setEmail] = useState(prefillEmail || '')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const { register } = useStorefrontAuth();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState(prefillEmail || "");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!email || !password) {
-      setError('Email and password are required.')
-      return
+      setError("Email and password are required.");
+      return;
     }
     if (password.length < 8) {
-      setError('Password must be at least 8 characters.')
-      return
+      setError("Password must be at least 8 characters.");
+      return;
     }
-    setLoading(true)
-    setError('')
-    const result = await register(email, password, firstName || undefined, lastName || undefined)
-    setLoading(false)
+    setLoading(true);
+    setError("");
+    const result = await register(
+      email,
+      password,
+      firstName || undefined,
+      lastName || undefined,
+    );
+    setLoading(false);
     if (result.error) {
-      setError(result.error)
+      setError(result.error);
     } else {
-      onSuccess()
+      onSuccess();
     }
-  }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -249,7 +260,9 @@ function RegisterForm({
       />
 
       {error && (
-        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+        <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {error}
+        </p>
       )}
 
       <button
@@ -261,7 +274,7 @@ function RegisterForm({
         Create Account
       </button>
     </form>
-  )
+  );
 }
 
 function SetPasswordForm({
@@ -269,45 +282,45 @@ function SetPasswordForm({
   guestToken,
   onSuccess,
 }: {
-  prefillEmail?: string
-  guestToken?: string
-  onSuccess: () => void
+  prefillEmail?: string;
+  guestToken?: string;
+  onSuccess: () => void;
 }) {
-  const { setPassword } = useStorefrontAuth()
-  const [password, setPasswordVal] = useState('')
-  const [confirm, setConfirm] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const { setPassword } = useStorefrontAuth();
+  const [password, setPasswordVal] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!password) {
-      setError('Please enter a password.')
-      return
+      setError("Please enter a password.");
+      return;
     }
     if (password.length < 8) {
-      setError('Password must be at least 8 characters.')
-      return
+      setError("Password must be at least 8 characters.");
+      return;
     }
     if (password !== confirm) {
-      setError('Passwords do not match.')
-      return
+      setError("Passwords do not match.");
+      return;
     }
-    setLoading(true)
-    setError('')
-    const result = await setPassword(password, prefillEmail)
-    setLoading(false)
+    setLoading(true);
+    setError("");
+    const result = await setPassword(password, prefillEmail);
+    setLoading(false);
     if (result.error) {
-      setError(result.error)
+      setError(result.error);
     } else {
-      onSuccess()
+      onSuccess();
     }
-  }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {prefillEmail && (
-        <div className="rounded-md bg-blue-50 px-3 py-2 text-sm text-blue-700">
+        <div className="rounded-md bg-primary/10 px-3 py-2 text-sm text-primary">
           Setting password for <strong>{prefillEmail}</strong>
         </div>
       )}
@@ -333,7 +346,9 @@ function SetPasswordForm({
       />
 
       {error && (
-        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+        <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {error}
+        </p>
       )}
 
       <button
@@ -345,7 +360,7 @@ function SetPasswordForm({
         Set Password &amp; Save Account
       </button>
     </form>
-  )
+  );
 }
 
 // ============================================================================
@@ -359,41 +374,42 @@ export function StorefrontAuthDialog({
   prefillEmail,
   guestToken,
 }: StorefrontAuthDialogProps) {
-  const { authDialogOpen, authDialogMode, closeAuthDialog } = useStorefrontAuth()
+  const { authDialogOpen, authDialogMode, closeAuthDialog } =
+    useStorefrontAuth();
 
-  const resolvedMode: DialogMode = propMode || authDialogMode
-  const [activeMode, setActiveMode] = useState<DialogMode>(resolvedMode)
+  const resolvedMode: DialogMode = propMode || authDialogMode;
+  const [activeMode, setActiveMode] = useState<DialogMode>(resolvedMode);
 
   // Keep active mode in sync when external prop/context changes
   React.useEffect(() => {
-    setActiveMode(propMode || authDialogMode)
-  }, [propMode, authDialogMode])
+    setActiveMode(propMode || authDialogMode);
+  }, [propMode, authDialogMode]);
 
-  const isOpen = propMode !== undefined ? true : authDialogOpen
+  const isOpen = propMode !== undefined ? true : authDialogOpen;
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   const handleClose = () => {
-    if (onClose) onClose()
-    else closeAuthDialog()
-  }
+    if (onClose) onClose();
+    else closeAuthDialog();
+  };
 
   const handleSuccess = () => {
-    handleClose()
-    if (onSuccess) onSuccess()
-  }
+    handleClose();
+    if (onSuccess) onSuccess();
+  };
 
   const titles: Record<DialogMode, string> = {
-    login: 'Sign In',
-    register: 'Create Account',
-    'set-password': 'Save Your Account',
-  }
+    login: "Sign In",
+    register: "Create Account",
+    "set-password": "Save Your Account",
+  };
 
   const subtitles: Record<DialogMode, string> = {
-    login: 'Welcome back! Sign in to your account.',
-    register: 'Create an account to track your orders.',
-    'set-password': 'Set a password to access your account anytime.',
-  }
+    login: "Welcome back! Sign in to your account.",
+    register: "Create an account to track your orders.",
+    "set-password": "Set a password to access your account anytime.",
+  };
 
   return (
     <>
@@ -409,13 +425,13 @@ export function StorefrontAuthDialog({
         role="dialog"
         aria-modal="true"
         aria-label={titles[activeMode]}
-        className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white p-6 shadow-2xl"
+        className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl bg-card p-6 shadow-2xl border border-border"
       >
         {/* Close button */}
         <button
           type="button"
           onClick={handleClose}
-          className="absolute right-4 top-4 rounded-md p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+          className="absolute right-4 top-4 rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-muted"
           aria-label="Close"
         >
           <X className="h-5 w-5" />
@@ -424,37 +440,45 @@ export function StorefrontAuthDialog({
         {/* Header icons */}
         <div className="mb-4 flex items-center gap-3">
           <div className="rounded-full bg-primary/10 p-2">
-            {activeMode === 'login' && <Lock className="h-5 w-5 text-primary" />}
-            {activeMode === 'register' && <User className="h-5 w-5 text-primary" />}
-            {activeMode === 'set-password' && <Mail className="h-5 w-5 text-primary" />}
+            {activeMode === "login" && (
+              <Lock className="h-5 w-5 text-primary" />
+            )}
+            {activeMode === "register" && (
+              <User className="h-5 w-5 text-primary" />
+            )}
+            {activeMode === "set-password" && (
+              <Mail className="h-5 w-5 text-primary" />
+            )}
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">{titles[activeMode]}</h2>
-            <p className="text-sm text-gray-500">{subtitles[activeMode]}</p>
+            <h2 className="text-lg font-semibold text-foreground">
+              {titles[activeMode]}
+            </h2>
+            <p className="text-sm text-muted-foreground">{subtitles[activeMode]}</p>
           </div>
         </div>
 
         {/* Tabs for login / register (not for set-password) */}
-        {activeMode !== 'set-password' && (
-          <div className="mb-5 flex rounded-lg bg-gray-100 p-1">
+        {activeMode !== "set-password" && (
+          <div className="mb-5 flex rounded-lg bg-muted p-1">
             <button
               type="button"
-              onClick={() => setActiveMode('login')}
+              onClick={() => setActiveMode("login")}
               className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                activeMode === 'login'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
+                activeMode === "login"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               Sign In
             </button>
             <button
               type="button"
-              onClick={() => setActiveMode('register')}
+              onClick={() => setActiveMode("register")}
               className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                activeMode === 'register'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
+                activeMode === "register"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               Create Account
@@ -463,13 +487,13 @@ export function StorefrontAuthDialog({
         )}
 
         {/* Form */}
-        {activeMode === 'login' && (
+        {activeMode === "login" && (
           <LoginForm prefillEmail={prefillEmail} onSuccess={handleSuccess} />
         )}
-        {activeMode === 'register' && (
+        {activeMode === "register" && (
           <RegisterForm prefillEmail={prefillEmail} onSuccess={handleSuccess} />
         )}
-        {activeMode === 'set-password' && (
+        {activeMode === "set-password" && (
           <SetPasswordForm
             prefillEmail={prefillEmail}
             guestToken={guestToken}
@@ -478,7 +502,7 @@ export function StorefrontAuthDialog({
         )}
       </div>
     </>
-  )
+  );
 }
 
 // ============================================================================
@@ -491,7 +515,7 @@ export function StorefrontAuthDialog({
  * Mount this once inside StorefrontAuthProvider, near the root.
  */
 export function StorefrontAuthDialogProvider() {
-  const { authDialogOpen } = useStorefrontAuth()
-  if (!authDialogOpen) return null
-  return <StorefrontAuthDialog />
+  const { authDialogOpen } = useStorefrontAuth();
+  if (!authDialogOpen) return null;
+  return <StorefrontAuthDialog />;
 }

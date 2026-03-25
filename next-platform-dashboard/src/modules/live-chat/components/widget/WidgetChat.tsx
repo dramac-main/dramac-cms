@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * WidgetChat — Chat conversation view for the widget
@@ -6,24 +6,31 @@
  * PHASE LC-04: Message list with auto-scroll, input, typing indicator
  */
 
-import { useState, useRef, useEffect, type FormEvent, type KeyboardEvent, type ChangeEvent } from 'react'
-import type { WidgetPublicSettings } from './ChatWidget'
-import { WidgetMessageBubble, type WidgetMessage } from './WidgetMessageBubble'
+import {
+  useState,
+  useRef,
+  useEffect,
+  type FormEvent,
+  type KeyboardEvent,
+  type ChangeEvent,
+} from "react";
+import type { WidgetPublicSettings } from "./ChatWidget";
+import { WidgetMessageBubble, type WidgetMessage } from "./WidgetMessageBubble";
 
 interface WidgetChatProps {
-  settings: WidgetPublicSettings
-  messages: WidgetMessage[]
-  isLoading: boolean
-  typingAgent: string | null
-  visitorName?: string
+  settings: WidgetPublicSettings;
+  messages: WidgetMessage[];
+  isLoading: boolean;
+  typingAgent: string | null;
+  visitorName?: string;
   agentInfo?: {
-    name: string
-    avatar?: string
-  } | null
-  onSendMessage: (text: string) => void
-  onFileUpload?: (file: File) => Promise<void>
-  onEndChat: () => void
-  onClose: () => void
+    name: string;
+    avatar?: string;
+  } | null;
+  onSendMessage: (text: string) => void;
+  onFileUpload?: (file: File) => Promise<void>;
+  onEndChat: () => void;
+  onClose: () => void;
 }
 
 export function WidgetChat({
@@ -38,57 +45,57 @@ export function WidgetChat({
   onEndChat,
   onClose,
 }: WidgetChatProps) {
-  const [inputText, setInputText] = useState('')
-  const [isSending, setIsSending] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLTextAreaElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const messagesContainerRef = useRef<HTMLDivElement>(null)
+  const [inputText, setInputText] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll on new messages
   useEffect(() => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages, typingAgent])
+  }, [messages, typingAgent]);
 
   // Focus input on mount
   useEffect(() => {
-    inputRef.current?.focus()
-  }, [])
+    inputRef.current?.focus();
+  }, []);
 
   const handleSubmit = async (e?: FormEvent) => {
-    e?.preventDefault()
-    const trimmed = inputText.trim()
-    if (!trimmed || isSending) return
+    e?.preventDefault();
+    const trimmed = inputText.trim();
+    if (!trimmed || isSending) return;
 
-    setIsSending(true)
-    setInputText('')
-    await onSendMessage(trimmed)
-    setIsSending(false)
-    inputRef.current?.focus()
-  }
+    setIsSending(true);
+    setInputText("");
+    await onSendMessage(trimmed);
+    setIsSending(false);
+    inputRef.current?.focus();
+  };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSubmit()
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
     }
-  }
+  };
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !onFileUpload) return
+    const file = e.target.files?.[0];
+    if (!file || !onFileUpload) return;
     // Reset file input so the same file can be re-selected
-    e.target.value = ''
-    setIsUploading(true)
+    e.target.value = "";
+    setIsUploading(true);
     try {
-      await onFileUpload(file)
+      await onFileUpload(file);
     } finally {
-      setIsUploading(false)
+      setIsUploading(false);
     }
-  }
+  };
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -108,12 +115,19 @@ export function WidgetChat({
             <div
               className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold"
               style={{
-                backgroundColor: 'rgba(255,255,255,0.2)',
+                backgroundColor: "rgba(255,255,255,0.2)",
                 color: settings.textColor,
               }}
             >
               {agentInfo?.name?.[0]?.toUpperCase() || (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
                 </svg>
@@ -125,13 +139,13 @@ export function WidgetChat({
               className="text-sm font-semibold truncate"
               style={{ color: settings.textColor }}
             >
-              {agentInfo?.name || settings.companyName || 'Support'}
+              {agentInfo?.name || settings.companyName || "Support"}
             </h3>
             <p
               className="text-xs truncate"
               style={{ color: settings.textColor, opacity: 0.8 }}
             >
-              {typingAgent ? 'Typing...' : 'Online'}
+              {typingAgent ? "Typing..." : "Online"}
             </p>
           </div>
         </div>
@@ -186,7 +200,9 @@ export function WidgetChat({
           <div className="flex items-center justify-center py-8">
             <div
               className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin"
-              style={{ borderColor: `${settings.primaryColor} transparent ${settings.primaryColor} ${settings.primaryColor}` }}
+              style={{
+                borderColor: `${settings.primaryColor} transparent ${settings.primaryColor} ${settings.primaryColor}`,
+              }}
             />
           </div>
         )}
@@ -210,8 +226,8 @@ export function WidgetChat({
               </svg>
             </div>
             <p className="text-sm text-gray-500">
-              {visitorName ? `Hi ${visitorName}! ` : ''}
-              {settings.welcomeMessage || 'How can we help you today?'}
+              {visitorName ? `Hi ${visitorName}! ` : ""}
+              {settings.welcomeMessage || "How can we help you today?"}
             </p>
           </div>
         )}
@@ -229,9 +245,18 @@ export function WidgetChat({
         {typingAgent && (
           <div className="flex items-center gap-2 px-1 py-1">
             <div className="bg-gray-100 rounded-2xl px-4 py-2 inline-flex items-center gap-1">
-              <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-              <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-              <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              <span
+                className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
+                style={{ animationDelay: "0ms" }}
+              />
+              <span
+                className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
+                style={{ animationDelay: "150ms" }}
+              />
+              <span
+                className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
+                style={{ animationDelay: "300ms" }}
+              />
             </div>
           </div>
         )}
@@ -254,11 +279,26 @@ export function WidgetChat({
                 title="Attach file"
               >
                 {isUploading ? (
-                  <svg width="18" height="18" viewBox="0 0 24 24" className="animate-spin" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    className="animate-spin"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                   </svg>
                 ) : (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
                   </svg>
                 )}
@@ -281,7 +321,7 @@ export function WidgetChat({
             className="flex-1 resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-1 max-h-20 overflow-y-auto"
             style={{
               // @ts-expect-error -- focus ring color
-              '--tw-ring-color': settings.primaryColor,
+              "--tw-ring-color": settings.primaryColor,
             }}
           />
           <button
@@ -294,7 +334,14 @@ export function WidgetChat({
             }}
             aria-label="Send message"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path d="m22 2-7 20-4-9-9-4z" />
               <path d="m22 2-11 11" />
             </svg>
@@ -303,11 +350,9 @@ export function WidgetChat({
 
         {/* Powered by */}
         <div className="text-center pt-1.5">
-          <span className="text-[10px] text-gray-400">
-            Powered by DRAMAC
-          </span>
+          <span className="text-[10px] text-gray-400">Powered by DRAMAC</span>
         </div>
       </div>
     </div>
-  )
+  );
 }

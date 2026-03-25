@@ -284,7 +284,7 @@ export function CheckoutPageBlock({
         last_name: authCustomer.lastName,
       });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authCustomer?.id]);
 
   // Quote mode guard — redirect away from checkout when in quotation mode
@@ -338,7 +338,9 @@ export function CheckoutPageBlock({
 
   // Handle place order — routes to correct payment flow based on provider
   const handlePlaceOrder = async () => {
-    const result = await checkout.placeOrder({ customerToken: authToken || undefined });
+    const result = await checkout.placeOrder({
+      customerToken: authToken || undefined,
+    });
 
     if (result.success && result.order_id && result.order_number) {
       const payment = result.payment as Record<string, unknown> | undefined;
@@ -705,7 +707,9 @@ export function CheckoutPageBlock({
                 {/* Sign-in prompt — shown on information step for guests */}
                 {checkout.currentStep === "information" && !authCustomer && (
                   <div className="mb-6 flex items-center justify-between rounded-md bg-muted/60 px-4 py-3 text-sm">
-                    <span className="text-muted-foreground">Have an account?</span>
+                    <span className="text-muted-foreground">
+                      Have an account?
+                    </span>
                     <Button
                       variant="link"
                       size="sm"

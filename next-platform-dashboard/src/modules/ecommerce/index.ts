@@ -1,8 +1,8 @@
 /**
  * E-Commerce Module - Main Index
- * 
+ *
  * Phase EM-52: E-Commerce Module
- * 
+ *
  * Full-featured e-commerce module with product catalog,
  * shopping cart, checkout, and order management.
  */
@@ -11,7 +11,7 @@
 // TYPES
 // ============================================================================
 
-export * from './types/ecommerce-types'
+export * from "./types/ecommerce-types";
 
 // ============================================================================
 // SERVER ACTIONS
@@ -25,7 +25,7 @@ export {
   createCategory,
   updateCategory,
   deleteCategory,
-  
+
   // Products
   getProducts,
   getProductsByCategory,
@@ -35,26 +35,26 @@ export {
   updateProduct,
   deleteProduct,
   duplicateProduct,
-  
+
   // Product Variants
   getProductVariants,
   getProductVariant,
   createProductVariant,
   updateProductVariant,
   deleteProductVariant,
-  
+
   // Product Options
   getProductOptions,
   createProductOption,
   updateProductOption,
   deleteProductOption,
-  
+
   // Product Categories (assignment)
   getProductCategories,
   setProductCategories,
   addProductToCategory,
   removeProductFromCategory,
-  
+
   // Cart
   getOrCreateCart,
   findCart,
@@ -67,7 +67,7 @@ export {
   applyDiscountToCart,
   removeDiscountFromCart,
   mergeGuestCartToUser,
-  
+
   // Orders
   getOrders,
   getOrder,
@@ -78,7 +78,7 @@ export {
   updateOrderFulfillment,
   markOrderDelivered,
   addOrderNote,
-  
+
   // Discounts
   getDiscounts,
   getDiscount,
@@ -87,28 +87,28 @@ export {
   deleteDiscount,
   validateDiscountCode,
   incrementDiscountUsage,
-  
+
   // Settings
   getEcommerceSettings,
   updateEcommerceSettings,
-  
+
   // Inventory
   adjustInventory,
   setInventory,
   getLowStockProducts,
   getOutOfStockProducts,
-  
+
   // Analytics
   getSalesAnalytics,
   getTopProducts,
-  
+
   // Checkout helpers
   generateOrderNumber,
   calculateCartTotals,
-  
+
   // Initialization
-  initializeEcommerceForSite
-} from './actions/ecommerce-actions'
+  initializeEcommerceForSite,
+} from "./actions/ecommerce-actions";
 
 // Order Actions (Phase ECOM-04)
 export {
@@ -123,8 +123,8 @@ export {
   processRefund,
   executeOrderBulkAction,
   generateInvoiceNumber,
-  sendOrderEmail
-} from './actions/order-actions'
+  sendOrderEmail,
+} from "./actions/order-actions";
 
 // Customer Actions (Phase ECOM-05)
 export {
@@ -147,24 +147,24 @@ export {
   executeCustomerBulkAction,
   importCustomers,
   exportCustomers,
-  getCustomerStats
-} from './actions/customer-actions'
+  getCustomerStats,
+} from "./actions/customer-actions";
 
 // ============================================================================
 // CONTEXT & HOOKS
 // ============================================================================
 
-export { 
-  EcommerceProvider, 
-  useEcommerce, 
-  useProducts, 
-  useOrders, 
+export {
+  EcommerceProvider,
+  useEcommerce,
+  useProducts,
+  useOrders,
   useCategories,
   useDiscounts,
   useEcommerceSettings,
   useInventory,
-  useEcommerceAnalytics
-} from './context/ecommerce-context'
+  useEcommerceAnalytics,
+} from "./context/ecommerce-context";
 
 // ============================================================================
 // STOREFRONT HOOKS (Phase ECOM-20)
@@ -177,8 +177,8 @@ export {
   useStorefrontCart,
   useStorefrontWishlist,
   useStorefrontSearch,
-  useRecentlyViewed
-} from './hooks'
+  useRecentlyViewed,
+} from "./hooks";
 
 // ============================================================================
 // STOREFRONT CONTEXT (Phase ECOM-20)
@@ -186,14 +186,14 @@ export {
 
 export {
   StorefrontProvider,
-  useStorefront
-} from './context/storefront-context'
+  useStorefront,
+} from "./context/storefront-context";
 
 // ============================================================================
 // MODULE MANIFEST
 // ============================================================================
 
-export { EcommerceModuleManifest } from './manifest'
+export { EcommerceModuleManifest } from "./manifest";
 
 // ============================================================================
 // COMPONENTS (exported separately when implemented)
@@ -216,18 +216,18 @@ export {
   studioComponents,
   studioFields,
   studioFieldDefinitions,
-  studioMetadata
-} from './studio'
+  studioMetadata,
+} from "./studio";
 
 // ============================================================================
 // WIDGETS
 // ============================================================================
 
-export { 
-  StorefrontWidget, 
-  CartProvider, 
-  useCart 
-} from './widgets/StorefrontWidget'
+export {
+  StorefrontWidget,
+  CartProvider,
+  useCart,
+} from "./widgets/StorefrontWidget";
 
 // ============================================================================
 // STOREFRONT AUTH (Phase ECOM-ACCOUNTS)
@@ -238,12 +238,12 @@ export {
   useStorefrontAuth,
   type StorefrontCustomer,
   type AuthContextValue,
-} from './context/storefront-auth-context'
+} from "./context/storefront-auth-context";
 
 export {
   StorefrontAuthDialog,
   StorefrontAuthDialogProvider,
-} from './studio/components/StorefrontAuthDialog'
+} from "./studio/components/StorefrontAuthDialog";
 
-export { MyAccountBlock } from './studio/components/MyAccountBlock'
-export { NavAccountBadge } from './studio/components/NavAccountBadge'
+export { MyAccountBlock } from "./studio/components/MyAccountBlock";
+export { NavAccountBadge } from "./studio/components/NavAccountBadge";

@@ -776,9 +776,7 @@ export async function createPublicOrderFromCart(
     // Parse name into first/last
     const nameParts = (input.customer_name || "").trim().split(/\s+/);
     const firstName =
-      nameParts[0] ||
-      input.customer_email.split("@")[0] ||
-      "Guest";
+      nameParts[0] || input.customer_email.split("@")[0] || "Guest";
     const lastName = nameParts.slice(1).join(" ") || "";
 
     // Try to find existing customer with this email for this site
@@ -796,9 +794,7 @@ export async function createPublicOrderFromCart(
         .from(`${TABLE_PREFIX}_customers`)
         .update({
           last_seen_at: new Date().toISOString(),
-          ...(input.customer_phone
-            ? { phone: input.customer_phone }
-            : {}),
+          ...(input.customer_phone ? { phone: input.customer_phone } : {}),
         })
         .eq("id", existing.id);
     } else {

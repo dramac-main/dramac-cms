@@ -8,17 +8,17 @@
  *
  * Phase ECOM-ACCOUNTS
  */
-'use client'
+"use client";
 
-import { useEffect } from 'react'
-import { useStorefrontAuth } from '../../context/storefront-auth-context'
+import { useEffect } from "react";
+import { useStorefrontAuth } from "../../context/storefront-auth-context";
 
 interface NavAccountBadgeProps {
   /** Href to navigate to when user is logged in (e.g. "/account") */
-  accountHref?: string
+  accountHref?: string;
   /** Icon color */
-  color?: string
-  className?: string
+  color?: string;
+  className?: string;
 }
 
 /**
@@ -34,31 +34,31 @@ function UserIcon({ className }: { className?: string }) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={className || 'w-6 h-6'}
+      className={className || "w-6 h-6"}
       aria-hidden="true"
     >
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
     </svg>
-  )
+  );
 }
 
 export function NavAccountBadge({
-  accountHref = '/account',
+  accountHref = "/account",
   color,
-  className = '',
+  className = "",
 }: NavAccountBadgeProps) {
-  const { customer, isLoading, openAuthDialog } = useStorefrontAuth()
+  const { customer, isLoading, openAuthDialog } = useStorefrontAuth();
 
   // Prefetch the account page on hover for snappy navigation
   useEffect(() => {
-    if (customer && typeof window !== 'undefined') {
-      const link = document.createElement('link')
-      link.rel = 'prefetch'
-      link.href = accountHref
-      document.head.appendChild(link)
+    if (customer && typeof window !== "undefined") {
+      const link = document.createElement("link");
+      link.rel = "prefetch";
+      link.href = accountHref;
+      document.head.appendChild(link);
     }
-  }, [customer, accountHref])
+  }, [customer, accountHref]);
 
   if (isLoading) {
     return (
@@ -68,14 +68,14 @@ export function NavAccountBadge({
       >
         <UserIcon className="w-6 h-6" />
       </span>
-    )
+    );
   }
 
   if (customer) {
     // Logged in — link to account page, show initials
     const initials =
-      (customer.firstName?.[0] || '') + (customer.lastName?.[0] || '') ||
-      customer.email[0].toUpperCase()
+      (customer.firstName?.[0] || "") + (customer.lastName?.[0] || "") ||
+      customer.email[0].toUpperCase();
     return (
       <a
         href={accountHref}
@@ -86,14 +86,14 @@ export function NavAccountBadge({
       >
         {initials}
       </a>
-    )
+    );
   }
 
   // Guest — click to sign in
   return (
     <button
       type="button"
-      onClick={() => openAuthDialog('login')}
+      onClick={() => openAuthDialog("login")}
       className={`inline-flex items-center justify-center hover:opacity-70 transition-opacity ${className}`}
       style={color ? { color } : undefined}
       title="Sign in"
@@ -101,5 +101,5 @@ export function NavAccountBadge({
     >
       <UserIcon className="w-6 h-6" />
     </button>
-  )
+  );
 }

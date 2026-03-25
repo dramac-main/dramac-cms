@@ -7,12 +7,7 @@
 
 "use client";
 
-import React, {
-  useState,
-  useCallback,
-  useRef,
-  useEffect,
-} from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import type { ComponentDefinition, ResponsiveValue } from "@/types/studio";
 import {
   ChevronLeft,

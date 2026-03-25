@@ -97,7 +97,9 @@ export interface UseCheckoutResult {
   availablePaymentMethods: PaymentMethod[];
 
   // Actions
-  placeOrder: (opts?: { customerToken?: string | null }) => Promise<CheckoutResult>;
+  placeOrder: (opts?: {
+    customerToken?: string | null;
+  }) => Promise<CheckoutResult>;
   clearCheckout: () => void;
 
   // Cart access (for mobile checkout flow)
@@ -555,88 +557,94 @@ export function useCheckout(): UseCheckoutResult {
   }, []);
 
   // Place order
-  const placeOrder = useCallback(async (opts?: { customerToken?: string | null }): Promise<CheckoutResult> => {
-    if (!siteId) {
-      return { success: false, error: "Site not configured" };
-    }
-
-    if (items.length === 0) {
-      return { success: false, error: "Cart is empty" };
-    }
-
-    // Validate all required fields
-    if (
-      !validation.isEmailValid ||
-      !validation.isShippingValid ||
-      !validation.isShippingMethodSelected ||
-      !validation.isPaymentMethodSelected
-    ) {
-      return { success: false, error: "Please complete all required fields" };
-    }
-
-    setIsPlacingOrder(true);
-    setError(null);
-
-    try {
-      const billingAddr = state.useSameAsBilling
-        ? (state.shippingAddress as Address)
-        : (state.billingAddress as Address);
-
-      // Build request body matching the checkout API route expectations
-      const response = await fetch(`/api/modules/ecommerce/checkout`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          cartId: cart?.id,
-          shippingAddress: state.shippingAddress,
-          billingAddress: billingAddr,
-          customerEmail: state.email,
-          customerName:
-            `${state.shippingAddress.first_name || ""} ${state.shippingAddress.last_name || ""}`.trim() ||
-            undefined,
-          customerPhone: state.phone || undefined,
-          paymentProvider: state.paymentMethod?.id,
-          shippingMethod: state.shippingMethod?.id,
-          notes: state.customerNotes || undefined,
-          customer_token: opts?.customerToken || undefined,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to place order");
+  const placeOrder = useCallback(
+    async (opts?: {
+      customerToken?: string | null;
+    }): Promise<CheckoutResult> => {
+      if (!siteId) {
+        return { success: false, error: "Site not configured" };
       }
 
-      const result: CheckoutResult = await response.json();
+      if (items.length === 0) {
+        return { success: false, error: "Cart is empty" };
+      }
 
-      if (result.success) {
-        const provider = (result.payment as Record<string, unknown>)
-          ?.provider as string | undefined;
-        const hasRedirectPayment =
-          result.payment_url && (provider === "pesapal" || provider === "dpo");
-        const hasClientPayment =
-          provider === "paddle" || provider === "flutterwave";
+      // Validate all required fields
+      if (
+        !validation.isEmailValid ||
+        !validation.isShippingValid ||
+        !validation.isShippingMethodSelected ||
+        !validation.isPaymentMethodSelected
+      ) {
+        return { success: false, error: "Please complete all required fields" };
+      }
 
-        // For manual payment or unknown providers: clear cart immediately
-        // For redirect-based payment: clear cart (user navigates away)
-        // For client-side payment (Paddle/Flutterwave): DON'T clear yet —
-        //   the checkout component will handle clearing after payment callback
-        if (!hasClientPayment || hasRedirectPayment) {
-          await clearCart();
-          clearCheckout();
+      setIsPlacingOrder(true);
+      setError(null);
+
+      try {
+        const billingAddr = state.useSameAsBilling
+          ? (state.shippingAddress as Address)
+          : (state.billingAddress as Address);
+
+        // Build request body matching the checkout API route expectations
+        const response = await fetch(`/api/modules/ecommerce/checkout`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            cartId: cart?.id,
+            shippingAddress: state.shippingAddress,
+            billingAddress: billingAddr,
+            customerEmail: state.email,
+            customerName:
+              `${state.shippingAddress.first_name || ""} ${state.shippingAddress.last_name || ""}`.trim() ||
+              undefined,
+            customerPhone: state.phone || undefined,
+            paymentProvider: state.paymentMethod?.id,
+            shippingMethod: state.shippingMethod?.id,
+            notes: state.customerNotes || undefined,
+            customer_token: opts?.customerToken || undefined,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || "Failed to place order");
         }
-      }
 
-      return result;
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to place order";
-      setError(message);
-      return { success: false, error: message };
-    } finally {
-      setIsPlacingOrder(false);
-    }
-  }, [siteId, cart, items, validation, state, clearCart, clearCheckout]);
+        const result: CheckoutResult = await response.json();
+
+        if (result.success) {
+          const provider = (result.payment as Record<string, unknown>)
+            ?.provider as string | undefined;
+          const hasRedirectPayment =
+            result.payment_url &&
+            (provider === "pesapal" || provider === "dpo");
+          const hasClientPayment =
+            provider === "paddle" || provider === "flutterwave";
+
+          // For manual payment or unknown providers: clear cart immediately
+          // For redirect-based payment: clear cart (user navigates away)
+          // For client-side payment (Paddle/Flutterwave): DON'T clear yet —
+          //   the checkout component will handle clearing after payment callback
+          if (!hasClientPayment || hasRedirectPayment) {
+            await clearCart();
+            clearCheckout();
+          }
+        }
+
+        return result;
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to place order";
+        setError(message);
+        return { success: false, error: message };
+      } finally {
+        setIsPlacingOrder(false);
+      }
+    },
+    [siteId, cart, items, validation, state, clearCart, clearCheckout],
+  );
 
   return {
     // State

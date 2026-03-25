@@ -489,10 +489,10 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
         formData.append("visitorId", visitorId);
         formData.append("senderType", "visitor");
 
-        const res = await fetch(
-          `${API_BASE}/api/modules/live-chat/upload`,
-          { method: "POST", body: formData },
-        );
+        const res = await fetch(`${API_BASE}/api/modules/live-chat/upload`, {
+          method: "POST",
+          body: formData,
+        });
 
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
@@ -511,7 +511,9 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
       } catch (err) {
         console.error("[DRAMAC Chat] File upload failed:", err);
         setError(
-          err instanceof Error ? err.message : "File upload failed. Please try again.",
+          err instanceof Error
+            ? err.message
+            : "File upload failed. Please try again.",
         );
       }
     },
@@ -788,7 +790,9 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
           isLoading={messages.length === 0 && widgetState === "chat"}
           typingAgent={isAgentTyping ? typingAgentName || "Agent" : null}
           onSendMessage={handleSendMessage}
-          onFileUpload={settings.enableFileUploads ? handleFileUpload : undefined}
+          onFileUpload={
+            settings.enableFileUploads ? handleFileUpload : undefined
+          }
           onEndChat={handleEndChat}
           onClose={handleClose}
         />

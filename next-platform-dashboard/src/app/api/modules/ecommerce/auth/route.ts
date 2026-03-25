@@ -171,7 +171,9 @@ export async function POST(request: NextRequest) {
 
       if (existing && existing.password_set_at) {
         return NextResponse.json(
-          { error: "An account with this email already exists. Please sign in." },
+          {
+            error: "An account with this email already exists. Please sign in.",
+          },
           { status: 409, headers: corsHeaders },
         );
       }
@@ -293,11 +295,10 @@ export async function POST(request: NextRequest) {
       const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
       const { createClient } = await import("@supabase/supabase-js");
       const anonClient = createClient(supabaseUrl, supabaseAnonKey);
-      const { error: signInError } =
-        await anonClient.auth.signInWithPassword({
-          email: emailLower,
-          password,
-        });
+      const { error: signInError } = await anonClient.auth.signInWithPassword({
+        email: emailLower,
+        password,
+      });
 
       if (signInError) {
         return NextResponse.json(
@@ -532,7 +533,10 @@ export async function POST(request: NextRequest) {
       // Always return success to prevent email enumeration
       if (!customer || !customer.auth_user_id) {
         return NextResponse.json(
-          { success: true, message: "If an account exists, a login link has been sent." },
+          {
+            success: true,
+            message: "If an account exists, a login link has been sent.",
+          },
           { status: 200, headers: corsHeaders },
         );
       }
