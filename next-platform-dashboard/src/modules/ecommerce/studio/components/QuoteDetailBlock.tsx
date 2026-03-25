@@ -1,69 +1,76 @@
 /**
  * QuoteDetailBlock - Full quote detail view
- * 
+ *
  * Phase ECOM-25: Quotation Frontend
- * 
+ *
  * Complete quote view with items, pricing, and actions.
  */
-'use client'
+"use client";
 
-import * as React from 'react'
-import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
-import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
-import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
-import { 
-  Calendar, 
-  Clock, 
-  User, 
-  Building2, 
-  Mail, 
+import * as React from "react";
+import { DEFAULT_CURRENCY_SYMBOL } from "@/lib/locale-config";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Calendar,
+  Clock,
+  User,
+  Building2,
+  Mail,
   Phone,
   ArrowLeft,
-  MessageSquare
-} from 'lucide-react'
-import { useStorefront } from '../../context/storefront-context'
-import { useQuotations } from '../../hooks/useQuotations'
-import { QuoteStatusBadge, isQuoteActionable, isQuoteFinal } from './QuoteStatusBadge'
-import { QuoteItemCard } from './QuoteItemCard'
-import { QuotePriceBreakdown, QuoteSavingsDisplay } from './QuotePriceBreakdown'
-import { QuoteActionButtons } from './QuoteActionButtons'
-import type { Quote } from '../../types/ecommerce-types'
+  MessageSquare,
+} from "lucide-react";
+import { useStorefront } from "../../context/storefront-context";
+import { useQuotations } from "../../hooks/useQuotations";
+import {
+  QuoteStatusBadge,
+  isQuoteActionable,
+  isQuoteFinal,
+} from "./QuoteStatusBadge";
+import { QuoteItemCard } from "./QuoteItemCard";
+import {
+  QuotePriceBreakdown,
+  QuoteSavingsDisplay,
+} from "./QuotePriceBreakdown";
+import { QuoteActionButtons } from "./QuoteActionButtons";
+import type { Quote } from "../../types/ecommerce-types";
 
-import { DEFAULT_LOCALE } from '@/lib/locale-config'
+import { DEFAULT_LOCALE } from "@/lib/locale-config";
 // ============================================================================
 // TYPES
 // ============================================================================
 
 export interface QuoteDetailBlockProps {
   /** Quote ID to load */
-  quoteId?: string
+  quoteId?: string;
   /** Access token (for public quote view) */
-  accessToken?: string
+  accessToken?: string;
   /** Pre-loaded quote data */
-  quote?: Quote
+  quote?: Quote;
   /** Display variant */
-  variant?: 'default' | 'compact' | 'print'
+  variant?: "default" | "compact" | "print";
   /** Show back button */
-  showBackButton?: boolean
+  showBackButton?: boolean;
   /** Back button URL */
-  backUrl?: string
+  backUrl?: string;
   /** Show customer info section */
-  showCustomerInfo?: boolean
+  showCustomerInfo?: boolean;
   /** Show activity/history */
-  showActivity?: boolean
+  showActivity?: boolean;
   /** Enable quote actions (accept/reject) */
-  enableActions?: boolean
+  enableActions?: boolean;
   /** Print handler */
-  onPrint?: () => void
+  onPrint?: () => void;
   /** Download handler */
-  onDownload?: () => void
+  onDownload?: () => void;
   /** Share handler */
-  onShare?: () => void
-  className?: string
+  onShare?: () => void;
+  className?: string;
 }
 
 // ============================================================================
@@ -72,20 +79,20 @@ export interface QuoteDetailBlockProps {
 
 function formatDate(date: string | Date): string {
   return new Date(date).toLocaleDateString(DEFAULT_LOCALE, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 }
 
 function formatDateTime(date: string | Date): string {
   return new Date(date).toLocaleString(DEFAULT_LOCALE, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 // ============================================================================
@@ -99,7 +106,7 @@ function QuoteDetailSkeleton() {
         <Skeleton className="h-10 w-32" />
         <Skeleton className="h-6 w-24" />
       </div>
-      
+
       <Card>
         <CardContent className="p-6">
           <div className="space-y-4">
@@ -113,7 +120,7 @@ function QuoteDetailSkeleton() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
 // ============================================================================
@@ -124,41 +131,41 @@ export function QuoteDetailBlock({
   quoteId,
   accessToken,
   quote: preloadedQuote,
-  variant: variantProp = 'default',
+  variant: variantProp = "default",
   showBackButton = true,
-  backUrl = '/quotes',
+  backUrl = "/quotes",
   showCustomerInfo = true,
   showActivity = false,
   enableActions = true,
   onPrint,
   onDownload,
   onShare,
-  className
+  className,
 }: QuoteDetailBlockProps) {
-  const { siteId, formatPrice, settings } = useStorefront()
-  
+  const { siteId, formatPrice, settings } = useStorefront();
+
   const {
     quote: loadedQuote,
     isLoadingQuote,
     loadQuote,
     acceptQuote,
-    rejectQuote
-  } = useQuotations(siteId, settings?.agency_id)
+    rejectQuote,
+  } = useQuotations(siteId, settings?.agency_id);
 
-  const variant = variantProp || 'default'
-  
+  const variant = variantProp || "default";
+
   // Load quote on mount if ID provided
   React.useEffect(() => {
     if (quoteId && !preloadedQuote) {
-      loadQuote(quoteId)
+      loadQuote(quoteId);
     }
-  }, [quoteId, preloadedQuote, loadQuote])
+  }, [quoteId, preloadedQuote, loadQuote]);
 
-  const quote = preloadedQuote || loadedQuote
+  const quote = preloadedQuote || loadedQuote;
 
   // Loading state
   if (isLoadingQuote && !quote) {
-    return <QuoteDetailSkeleton />
+    return <QuoteDetailSkeleton />;
   }
 
   // No quote found
@@ -168,7 +175,8 @@ export function QuoteDetailBlock({
         <CardContent className="py-12 text-center">
           <h3 className="text-lg font-medium text-gray-900">Quote Not Found</h3>
           <p className="mt-2 text-gray-500">
-            The quote you&apos;re looking for doesn&apos;t exist or has been removed.
+            The quote you&apos;re looking for doesn&apos;t exist or has been
+            removed.
           </p>
           {showBackButton && (
             <Button asChild variant="outline" className="mt-4">
@@ -180,25 +188,32 @@ export function QuoteDetailBlock({
           )}
         </CardContent>
       </Card>
-    )
+    );
   }
 
   // Calculate original total for savings display
-  const originalTotal = quote.items?.reduce((sum, item) => {
-    return sum + (item.unit_price * item.quantity)
-  }, 0) || 0
+  const originalTotal =
+    quote.items?.reduce((sum, item) => {
+      return sum + item.unit_price * item.quantity;
+    }, 0) || 0;
 
   // Print variant
-  if (variant === 'print') {
+  if (variant === "print") {
     return (
-      <div className={cn('bg-card p-4 sm:p-6 md:p-8', className)}>
+      <div className={cn("bg-card p-4 sm:p-6 md:p-8", className)}>
         {/* Header */}
         <div className="flex items-start justify-between border-b pb-6">
           <div>
-            <h1 className="text-2xl font-bold">Quote #{quote.quote_number || quote.id.slice(0, 8)}</h1>
-            <p className="mt-1 text-gray-600">Date: {formatDate(quote.created_at)}</p>
+            <h1 className="text-2xl font-bold">
+              Quote #{quote.quote_number || quote.id.slice(0, 8)}
+            </h1>
+            <p className="mt-1 text-gray-600">
+              Date: {formatDate(quote.created_at)}
+            </p>
             {quote.valid_until && (
-              <p className="text-gray-600">Valid Until: {formatDate(quote.valid_until)}</p>
+              <p className="text-gray-600">
+                Valid Until: {formatDate(quote.valid_until)}
+              </p>
             )}
           </div>
           <div className="text-right">
@@ -237,10 +252,12 @@ export function QuoteDetailBlock({
                   <td className="py-3">{item.name}</td>
                   <td className="py-3 text-right">{item.quantity}</td>
                   <td className="py-3 text-right">
-                    {formatPrice?.(item.unit_price) || `${DEFAULT_CURRENCY_SYMBOL}${(item.unit_price / 100).toFixed(2)}`}
+                    {formatPrice?.(item.unit_price) ||
+                      `${DEFAULT_CURRENCY_SYMBOL}${(item.unit_price / 100).toFixed(2)}`}
                   </td>
                   <td className="py-3 text-right">
-                    {formatPrice?.(item.line_total) || `${DEFAULT_CURRENCY_SYMBOL}${(item.line_total / 100).toFixed(2)}`}
+                    {formatPrice?.(item.line_total) ||
+                      `${DEFAULT_CURRENCY_SYMBOL}${(item.line_total / 100).toFixed(2)}`}
                   </td>
                 </tr>
               ))}
@@ -251,7 +268,11 @@ export function QuoteDetailBlock({
         {/* Totals */}
         <div className="mt-6 flex justify-end">
           <div className="w-64">
-            <QuotePriceBreakdown quote={quote} formatPrice={formatPrice} variant="detailed" />
+            <QuotePriceBreakdown
+              quote={quote}
+              formatPrice={formatPrice}
+              variant="detailed"
+            />
           </div>
         </div>
 
@@ -259,15 +280,17 @@ export function QuoteDetailBlock({
         {quote.terms_and_conditions && (
           <div className="mt-8 border-t pt-6">
             <h2 className="font-semibold text-gray-900">Terms & Conditions</h2>
-            <p className="mt-2 text-sm text-gray-600">{quote.terms_and_conditions}</p>
+            <p className="mt-2 text-sm text-gray-600">
+              {quote.terms_and_conditions}
+            </p>
           </div>
         )}
       </div>
-    )
+    );
   }
 
   // Compact variant
-  if (variant === 'compact') {
+  if (variant === "compact") {
     return (
       <Card className={className}>
         <CardHeader className="pb-2">
@@ -278,12 +301,17 @@ export function QuoteDetailBlock({
             <QuoteStatusBadge status={quote.status} size="sm" />
           </div>
         </CardHeader>
-        
+
         <CardContent className="space-y-4">
           {/* Items summary */}
           <div className="space-y-2">
             {quote.items?.slice(0, 3).map((item, index) => (
-              <QuoteItemCard key={index} item={item} variant="compact" formatPrice={formatPrice} />
+              <QuoteItemCard
+                key={index}
+                item={item}
+                variant="compact"
+                formatPrice={formatPrice}
+              />
             ))}
             {(quote.items?.length || 0) > 3 && (
               <p className="text-sm text-gray-500">
@@ -295,13 +323,19 @@ export function QuoteDetailBlock({
           <Separator />
 
           {/* Pricing */}
-          <QuotePriceBreakdown quote={quote} formatPrice={formatPrice} variant="compact" />
+          <QuotePriceBreakdown
+            quote={quote}
+            formatPrice={formatPrice}
+            variant="compact"
+          />
 
           {/* Actions */}
           {enableActions && isQuoteActionable(quote.status) && (
             <QuoteActionButtons
               quote={quote}
-              onAccept={(name, email, sig) => acceptQuote(quote.id, name, email, sig)}
+              onAccept={(name, email, sig) =>
+                acceptQuote(quote.id, name, email, sig)
+              }
               onReject={(reason) => rejectQuote(quote.id, reason)}
               variant="compact"
               showAllActions={false}
@@ -309,12 +343,12 @@ export function QuoteDetailBlock({
           )}
         </CardContent>
       </Card>
-    )
+    );
   }
 
   // Default variant
   return (
-    <div className={cn('space-y-6', className)}>
+    <div className={cn("space-y-6", className)}>
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -458,7 +492,9 @@ export function QuoteDetailBlock({
               <CardContent>
                 <QuoteActionButtons
                   quote={quote}
-                  onAccept={(name, email, sig) => acceptQuote(quote.id, name, email, sig)}
+                  onAccept={(name, email, sig) =>
+                    acceptQuote(quote.id, name, email, sig)
+                  }
                   onReject={(reason) => rejectQuote(quote.id, reason)}
                   onPrint={onPrint || (() => window.print())}
                   onDownload={onDownload}
@@ -484,7 +520,8 @@ export function QuoteDetailBlock({
                       <div>
                         <p className="text-gray-900">{activity.description}</p>
                         <p className="text-gray-500">
-                          {activity.performed_by_name} · {formatDateTime(activity.created_at)}
+                          {activity.performed_by_name} ·{" "}
+                          {formatDateTime(activity.created_at)}
                         </p>
                       </div>
                     </div>
@@ -496,5 +533,5 @@ export function QuoteDetailBlock({
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -33,6 +33,8 @@ import { OrderSummaryCard } from "./OrderSummaryCard";
 import { CartEmptyState } from "./CartEmptyState";
 import { useCheckout, type CheckoutStep } from "../../hooks/useCheckout";
 import { useStorefront } from "../../context/storefront-context";
+import { useStorefrontAuth } from "../../context/storefront-auth-context";
+
 import { useMobile } from "../../hooks/useMobile";
 import { MobileCheckoutPage } from "./mobile/MobileCheckoutPage";
 import type { CheckoutData as MobileCheckoutData } from "./mobile/MobileCheckoutPage";
@@ -259,6 +261,32 @@ export function CheckoutPageBlock({
   const checkout = useCheckout();
   const isMobile = useMobile();
 
+  // Auth context — works with or without StorefrontAuthProvider in the tree
+  // (defaults to guest mode when provider is absent)
+  const auth = useStorefrontAuth();
+  const authCustomer = auth.customer;
+  const authToken = auth.token;
+  const openAuthDialog = auth.openAuthDialog;
+
+  // Pre-fill checkout form from logged-in customer (only once on mount / login)
+  React.useEffect(() => {
+    if (!authCustomer) return;
+    if (!checkout.state.email && authCustomer.email) {
+      checkout.setEmail(authCustomer.email);
+    }
+    if (!checkout.state.phone && authCustomer.phone) {
+      checkout.setPhone(authCustomer.phone);
+    }
+    if (!checkout.state.shippingAddress.first_name && authCustomer.firstName) {
+      checkout.setShippingAddress({
+        ...checkout.state.shippingAddress,
+        first_name: authCustomer.firstName,
+        last_name: authCustomer.lastName,
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authCustomer?.id]);
+
   // Quote mode guard — redirect away from checkout when in quotation mode
   if (quotationModeEnabled) {
     const quoteUrl = quotationRedirectUrl || "/quotes";
@@ -310,7 +338,7 @@ export function CheckoutPageBlock({
 
   // Handle place order — routes to correct payment flow based on provider
   const handlePlaceOrder = async () => {
-    const result = await checkout.placeOrder();
+    const result = await checkout.placeOrder({ customerToken: authToken || undefined });
 
     if (result.success && result.order_id && result.order_number) {
       const payment = result.payment as Record<string, unknown> | undefined;
@@ -443,6 +471,7 @@ export function CheckoutPageBlock({
         customerPhone: data.contact.phone || undefined,
         paymentProvider: data.paymentMethodId,
         shippingMethod: data.shippingMethodId,
+        customer_token: authToken || undefined,
       }),
     });
 
@@ -671,6 +700,21 @@ export function CheckoutPageBlock({
                   <Alert variant="destructive" className="mb-6">
                     <AlertDescription>{checkout.error}</AlertDescription>
                   </Alert>
+                )}
+
+                {/* Sign-in prompt — shown on information step for guests */}
+                {checkout.currentStep === "information" && !authCustomer && (
+                  <div className="mb-6 flex items-center justify-between rounded-md bg-muted/60 px-4 py-3 text-sm">
+                    <span className="text-muted-foreground">Have an account?</span>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0"
+                      onClick={() => openAuthDialog("login")}
+                    >
+                      Sign in to prefill your details
+                    </Button>
+                  </div>
                 )}
 
                 {/* Step Content */}

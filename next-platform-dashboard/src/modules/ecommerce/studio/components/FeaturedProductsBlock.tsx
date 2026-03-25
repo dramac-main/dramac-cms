@@ -183,12 +183,16 @@ export function FeaturedProductsBlock({
   const cols =
     typeof columns === "object"
       ? columns
-      : { mobile: Math.min(columns || 2, 2), tablet: Math.min(columns || 3, 3), desktop: columns || 4 };
+      : {
+          mobile: Math.min(columns || 2, 2),
+          tablet: Math.min(columns || 3, 3),
+          desktop: columns || 4,
+        };
   const columnsValue = isMobile
-    ? (cols.mobile || 2)
+    ? cols.mobile || 2
     : isTablet
-      ? (cols.tablet || 3)
-      : (cols.desktop || 4);
+      ? cols.tablet || 3
+      : cols.desktop || 4;
 
   // Calculate carousel slides
   const slidesCount = Math.ceil(products.length / columnsValue);

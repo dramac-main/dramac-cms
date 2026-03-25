@@ -228,3 +228,22 @@ export {
   CartProvider, 
   useCart 
 } from './widgets/StorefrontWidget'
+
+// ============================================================================
+// STOREFRONT AUTH (Phase ECOM-ACCOUNTS)
+// ============================================================================
+
+export {
+  StorefrontAuthProvider,
+  useStorefrontAuth,
+  type StorefrontCustomer,
+  type AuthContextValue,
+} from './context/storefront-auth-context'
+
+export {
+  StorefrontAuthDialog,
+  StorefrontAuthDialogProvider,
+} from './studio/components/StorefrontAuthDialog'
+
+export { MyAccountBlock } from './studio/components/MyAccountBlock'
+export { NavAccountBadge } from './studio/components/NavAccountBadge'

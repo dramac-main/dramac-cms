@@ -379,6 +379,7 @@ export type DiscountUpdate = Partial<DiscountInput>;
 export interface CreateOrderInput {
   site_id: string;
   user_id?: string | null;
+  customer_token?: string | null; // Storefront session token for logged-in customers
   cart_id?: string;
   status?: OrderStatus;
   payment_status?: PaymentStatus;

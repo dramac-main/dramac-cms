@@ -311,7 +311,9 @@ export function QuoteListBlock({
     <div className={className}>
       {/* Header */}
       <div className="mb-4 flex items-center justify-between gap-2">
-        <h2 className="text-lg sm:text-xl font-semibold text-gray-900 min-w-0 truncate">{title}</h2>
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-900 min-w-0 truncate">
+          {title}
+        </h2>
 
         {showStatusFilter && (
           <Select

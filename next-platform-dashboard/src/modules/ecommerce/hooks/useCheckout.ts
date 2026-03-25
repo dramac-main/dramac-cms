@@ -97,7 +97,7 @@ export interface UseCheckoutResult {
   availablePaymentMethods: PaymentMethod[];
 
   // Actions
-  placeOrder: () => Promise<CheckoutResult>;
+  placeOrder: (opts?: { customerToken?: string | null }) => Promise<CheckoutResult>;
   clearCheckout: () => void;
 
   // Cart access (for mobile checkout flow)
@@ -555,7 +555,7 @@ export function useCheckout(): UseCheckoutResult {
   }, []);
 
   // Place order
-  const placeOrder = useCallback(async (): Promise<CheckoutResult> => {
+  const placeOrder = useCallback(async (opts?: { customerToken?: string | null }): Promise<CheckoutResult> => {
     if (!siteId) {
       return { success: false, error: "Site not configured" };
     }
@@ -598,6 +598,7 @@ export function useCheckout(): UseCheckoutResult {
           paymentProvider: state.paymentMethod?.id,
           shippingMethod: state.shippingMethod?.id,
           notes: state.customerNotes || undefined,
+          customer_token: opts?.customerToken || undefined,
         }),
       });
 

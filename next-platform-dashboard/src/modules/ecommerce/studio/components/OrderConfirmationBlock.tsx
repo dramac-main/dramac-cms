@@ -929,7 +929,9 @@ export function OrderConfirmationBlock({
 
                   {/* Details */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm sm:text-base font-medium truncate">{item.product_name}</p>
+                    <p className="text-sm sm:text-base font-medium truncate">
+                      {item.product_name}
+                    </p>
                     {item.variant_name && (
                       <p className="text-xs sm:text-sm text-muted-foreground">
                         {item.variant_name}

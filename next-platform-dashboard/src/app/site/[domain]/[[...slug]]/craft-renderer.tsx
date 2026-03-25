@@ -14,6 +14,8 @@
 import { StudioRenderer } from "@/lib/studio/engine/renderer";
 import type { InstalledModuleInfo } from "@/types/studio-module";
 import { StorefrontProvider } from "@/modules/ecommerce/context/storefront-context";
+import { StorefrontAuthProvider } from "@/modules/ecommerce/context/storefront-auth-context";
+import { StorefrontAuthDialogProvider } from "@/modules/ecommerce/studio/components/StorefrontAuthDialog";
 
 interface CraftRendererProps {
   content: string;
@@ -39,14 +41,18 @@ export function CraftRenderer({
   // (skips API call when siteId is empty, returns default context values).
   return (
     <StorefrontProvider siteId={siteId || ""}>
-      <StudioRenderer
-        data={content}
-        themeSettings={themeSettings}
-        siteSettings={siteSettings}
-        siteId={siteId}
-        pageId={pageId}
-        modules={modules}
-      />
+      <StorefrontAuthProvider siteId={siteId || ""}>
+        <StudioRenderer
+          data={content}
+          themeSettings={themeSettings}
+          siteSettings={siteSettings}
+          siteId={siteId}
+          pageId={pageId}
+          modules={modules}
+        />
+        {/* Renders the auth modal whenever openAuthDialog() is called */}
+        <StorefrontAuthDialogProvider />
+      </StorefrontAuthProvider>
     </StorefrontProvider>
   );
 }

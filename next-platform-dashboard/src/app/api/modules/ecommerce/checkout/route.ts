@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
       paymentProvider,
       shippingMethod: _shippingMethod,
       notes,
+      customer_token,
     } = body;
 
     // Validation
@@ -181,6 +182,7 @@ export async function POST(request: NextRequest) {
       discount_code: cart.discount_code,
       notes: notes || null,
       metadata: {},
+      customer_token: customer_token || null,
     };
 
     const order = await createPublicOrderFromCart(orderInput);

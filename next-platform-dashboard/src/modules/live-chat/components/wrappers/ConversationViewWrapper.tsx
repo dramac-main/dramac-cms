@@ -224,6 +224,32 @@ export function ConversationViewWrapper({
     [conversation.id, siteId]
   )
 
+  // Upload file and send as message
+  const handleFileUpload = useCallback(
+    async (file: File) => {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('conversationId', conversation.id)
+      formData.append('senderType', 'agent')
+
+      try {
+        const res = await fetch('/api/modules/live-chat/upload', {
+          method: 'POST',
+          body: formData,
+        })
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}))
+          toast.error(data.error || 'Failed to upload file')
+          return
+        }
+        // Realtime will add the file message to the list
+      } catch {
+        toast.error('Failed to upload file. Please try again.')
+      }
+    },
+    [conversation.id]
+  )
+
   // Assign agent
   const handleAssign = useCallback(
     (agentId: string) => {
@@ -585,6 +611,7 @@ export function ConversationViewWrapper({
         {/* Message input */}
         <MessageInput
           onSend={handleSendMessage}
+          onFileUpload={handleFileUpload}
           cannedResponses={cannedResponses}
           agents={agents.map((a) => ({ id: a.id, name: a.displayName || 'Agent' }))}
           disabled={

@@ -45,6 +45,12 @@ function getPublicClient() {
   return createAdminClient() as any;
 }
 
+/** Simple SHA-256 hash for session tokens (server-side only) */
+function hashToken(token: string): string {
+  const crypto = require("crypto");
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
 // ============================================================================
 // CATEGORIES (public reads)
 // ============================================================================
@@ -748,6 +754,77 @@ export async function createPublicOrderFromCart(
 
   const agencyId = site?.agency_id;
 
+  // ── Auto-create or find customer record by email + site_id ──────────────
+  // This ensures every order is linked to a customer record for future
+  // account management (order history, saved addresses, etc.)
+  let resolvedCustomerId: string | null = input.user_id || null;
+
+  // If a customer_token is provided, resolve via session
+  if (!resolvedCustomerId && input.customer_token) {
+    const { data: session } = await supabase
+      .from("mod_ecommod01_customer_sessions")
+      .select("customer_id, expires_at")
+      .eq("token_hash", hashToken(input.customer_token))
+      .gt("expires_at", new Date().toISOString())
+      .single();
+    if (session) {
+      resolvedCustomerId = session.customer_id;
+    }
+  }
+
+  if (!resolvedCustomerId && input.customer_email) {
+    // Parse name into first/last
+    const nameParts = (input.customer_name || "").trim().split(/\s+/);
+    const firstName =
+      nameParts[0] ||
+      input.customer_email.split("@")[0] ||
+      "Guest";
+    const lastName = nameParts.slice(1).join(" ") || "";
+
+    // Try to find existing customer with this email for this site
+    const { data: existing } = await supabase
+      .from(`${TABLE_PREFIX}_customers`)
+      .select("id")
+      .eq("site_id", input.site_id)
+      .eq("email", input.customer_email.toLowerCase())
+      .maybeSingle();
+
+    if (existing) {
+      resolvedCustomerId = existing.id;
+      // Update last-seen and phone if missing
+      await supabase
+        .from(`${TABLE_PREFIX}_customers`)
+        .update({
+          last_seen_at: new Date().toISOString(),
+          ...(input.customer_phone
+            ? { phone: input.customer_phone }
+            : {}),
+        })
+        .eq("id", existing.id);
+    } else {
+      // Create new guest customer record
+      const { data: newCustomer } = await supabase
+        .from(`${TABLE_PREFIX}_customers`)
+        .insert({
+          site_id: input.site_id,
+          agency_id: agencyId,
+          first_name: firstName,
+          last_name: lastName,
+          email: input.customer_email.toLowerCase(),
+          phone: input.customer_phone || null,
+          is_guest: true,
+          status: "active",
+        })
+        .select("id")
+        .single();
+
+      if (newCustomer) {
+        resolvedCustomerId = newCustomer.id;
+      }
+    }
+  }
+  // ── End customer auto-create ─────────────────────────────────────────────
+
   // Create the order
   const { data: order, error: orderError } = await supabase
     .from(`${TABLE_PREFIX}_orders`)
@@ -755,7 +832,7 @@ export async function createPublicOrderFromCart(
       site_id: input.site_id,
       agency_id: agencyId,
       order_number: orderNumber,
-      customer_id: input.user_id || null,
+      customer_id: resolvedCustomerId,
       customer_email: input.customer_email,
       customer_name: input.customer_name || null,
       customer_phone: input.customer_phone || null,
@@ -781,6 +858,26 @@ export async function createPublicOrderFromCart(
   if (orderError) {
     console.error("[Ecom Public] Error creating order:", orderError);
     throw new Error(orderError.message);
+  }
+
+  // Update customer stats after order creation (non-blocking)
+  if (resolvedCustomerId) {
+    supabase
+      .rpc("mod_ecommod01_increment_customer_stats", {
+        p_customer_id: resolvedCustomerId,
+        p_order_total: input.total,
+      })
+      .catch(() => {
+        // Fallback: update last_order_date/last_seen_at at minimum
+        supabase
+          .from(`${TABLE_PREFIX}_customers`)
+          .update({
+            last_order_date: new Date().toISOString(),
+            last_seen_at: new Date().toISOString(),
+          })
+          .eq("id", resolvedCustomerId!)
+          .catch(() => {});
+      });
   }
 
   // Copy cart items to order_items
