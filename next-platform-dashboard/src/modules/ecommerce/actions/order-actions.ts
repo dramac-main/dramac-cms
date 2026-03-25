@@ -700,13 +700,26 @@ export async function sendOrderEmail(
     const adminClient = createAdminClient();
     const { data: site } = await adminClient
       .from("sites")
-      .select("name, agency_id")
+      .select("name, agency_id, subdomain, custom_domain")
       .eq("id", order.site_id)
       .single();
 
     const agencyId = site?.agency_id || null;
     const businessName = site?.name || "Our Store";
     const currency = order.currency || "USD";
+
+    // Build storefront URL for customer email CTA buttons
+    const siteUrl = site?.custom_domain
+      ? `https://${site.custom_domain}`
+      : site?.subdomain
+        ? `https://${site.subdomain}.sites.dramacagency.com`
+        : null;
+    const orderUrl = siteUrl
+      ? `${siteUrl}/order-confirmation?order=${orderId}`
+      : undefined;
+    const trackingUrlStorefront = siteUrl
+      ? `${siteUrl}/order-tracking`
+      : undefined;
 
     // Get order items for confirmation emails
     const { data: orderItems } = await supabase
@@ -752,6 +765,8 @@ export async function sendOrderEmail(
               shippingAddress: order.shipping_address
                 ? `${order.shipping_address.address_line_1 || ""}${order.shipping_address.city ? `, ${order.shipping_address.city}` : ""}${order.shipping_address.country ? `, ${order.shipping_address.country}` : ""}`
                 : "",
+              orderUrl: orderUrl || undefined,
+              trackingUrl: trackingUrlStorefront || undefined,
               businessName,
             },
           });
@@ -790,6 +805,7 @@ export async function sendOrderEmail(
             data: {
               customerName: order.customer_name || "Customer",
               orderNumber: order.order_number,
+              orderUrl: orderUrl || undefined,
               businessName,
             },
           });
@@ -808,6 +824,7 @@ export async function sendOrderEmail(
             data: {
               customerName: order.customer_name || "Customer",
               orderNumber: order.order_number,
+              orderUrl: orderUrl || undefined,
               businessName,
             },
           });
@@ -827,6 +844,7 @@ export async function sendOrderEmail(
               customerName: order.customer_name || "Customer",
               orderNumber: order.order_number,
               refundAmount: formatCurrency(order.total / 100, currency),
+              orderUrl: orderUrl || undefined,
               businessName,
             },
           });

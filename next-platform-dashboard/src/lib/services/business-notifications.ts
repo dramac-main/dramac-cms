@@ -589,7 +589,7 @@ export async function notifyOrderDelivered(
     const supabase = createAdminClient();
     const { data: site } = await supabase
       .from("sites")
-      .select("name, agency_id")
+      .select("name, agency_id, subdomain, custom_domain")
       .eq("id", siteId)
       .single();
 
@@ -601,6 +601,14 @@ export async function notifyOrderDelivered(
       .eq("id", site.agency_id)
       .single();
 
+    // Build storefront URL for customer email
+    const siteUrl = site.custom_domain
+      ? `https://${site.custom_domain}`
+      : site.subdomain
+        ? `https://${site.subdomain}.sites.dramacagency.com`
+        : null;
+    const orderUrl = siteUrl ? `${siteUrl}/order-tracking` : undefined;
+
     // In-app notification to business owner
     if (agency?.owner_id) {
       await createNotification({
@@ -608,7 +616,7 @@ export async function notifyOrderDelivered(
         type: "order_delivered",
         title: `Order #${orderNumber} Delivered`,
         message: `Order for ${customerName} has been marked as delivered`,
-        link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${siteId}/ecommerce/orders`,
+        link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,
         metadata: { orderNumber, siteId },
       });
     }
@@ -622,6 +630,7 @@ export async function notifyOrderDelivered(
         data: {
           customerName,
           orderNumber,
+          orderUrl: orderUrl || undefined,
           businessName: site?.name || "Our Store",
         },
       });
@@ -657,7 +666,7 @@ export async function notifyOrderCancelled(
     const supabase = createAdminClient();
     const { data: site } = await supabase
       .from("sites")
-      .select("name, agency_id")
+      .select("name, agency_id, subdomain, custom_domain")
       .eq("id", siteId)
       .single();
 
@@ -677,7 +686,15 @@ export async function notifyOrderCancelled(
           .single()
       : { data: null };
 
-    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${siteId}/ecommerce/orders`;
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`;
+
+    // Build storefront URL for customer email
+    const siteUrl = site.custom_domain
+      ? `https://${site.custom_domain}`
+      : site.subdomain
+        ? `https://${site.subdomain}.sites.dramacagency.com`
+        : null;
+    const orderUrl = siteUrl ? `${siteUrl}/order-tracking` : undefined;
 
     // In-app notification to business owner
     if (agency?.owner_id) {
@@ -721,6 +738,7 @@ export async function notifyOrderCancelled(
           customerName,
           orderNumber,
           reason: reason || "",
+          orderUrl: orderUrl || undefined,
           businessName: site?.name || "Our Store",
         },
       });
@@ -756,7 +774,7 @@ export async function notifyPaymentReceived(
     const supabase = createAdminClient();
     const { data: site } = await supabase
       .from("sites")
-      .select("name, agency_id")
+      .select("name, agency_id, subdomain, custom_domain")
       .eq("id", siteId)
       .single();
 
@@ -768,6 +786,14 @@ export async function notifyPaymentReceived(
       .eq("id", site.agency_id)
       .single();
 
+    // Build storefront URL for customer email
+    const siteUrl = site.custom_domain
+      ? `https://${site.custom_domain}`
+      : site.subdomain
+        ? `https://${site.subdomain}.sites.dramacagency.com`
+        : null;
+    const orderUrl = siteUrl ? `${siteUrl}/order-tracking` : undefined;
+
     // In-app notification to business owner
     if (agency?.owner_id) {
       await createNotification({
@@ -775,7 +801,7 @@ export async function notifyPaymentReceived(
         type: "payment_received",
         title: `Payment Received: Order #${orderNumber}`,
         message: `${customerName} paid ${total} for order #${orderNumber}${paymentMethod ? ` via ${paymentMethod}` : ""}`,
-        link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${siteId}/ecommerce/orders`,
+        link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,
         metadata: { orderNumber, siteId },
       });
     }
@@ -790,6 +816,7 @@ export async function notifyPaymentReceived(
           orderNumber,
           total,
           paymentMethod: paymentMethod || "",
+          orderUrl: orderUrl || undefined,
           businessName: site?.name || "Our Store",
         },
       });
@@ -910,7 +937,7 @@ export async function notifyRefundIssued(
     const supabase = createAdminClient();
     const { data: site } = await supabase
       .from("sites")
-      .select("name, agency_id")
+      .select("name, agency_id, subdomain, custom_domain")
       .eq("id", siteId)
       .single();
 
@@ -922,6 +949,14 @@ export async function notifyRefundIssued(
       .eq("id", site.agency_id)
       .single();
 
+    // Build storefront URL for customer email
+    const siteUrl = site.custom_domain
+      ? `https://${site.custom_domain}`
+      : site.subdomain
+        ? `https://${site.subdomain}.sites.dramacagency.com`
+        : null;
+    const orderUrl = siteUrl ? `${siteUrl}/order-tracking` : undefined;
+
     // In-app notification to business owner
     if (agency?.owner_id) {
       await createNotification({
@@ -929,7 +964,7 @@ export async function notifyRefundIssued(
         type: "refund_issued",
         title: `Refund Issued: Order #${orderNumber}`,
         message: `Refund of ${refundAmount} issued to ${customerName}${reason ? ` — ${reason}` : ""}`,
-        link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/sites/${siteId}/ecommerce/orders`,
+        link: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`,
         metadata: { orderNumber, siteId },
       });
     }
@@ -945,6 +980,7 @@ export async function notifyRefundIssued(
           orderNumber,
           refundAmount,
           reason: reason || "",
+          orderUrl: orderUrl || undefined,
           businessName: site?.name || "Our Store",
         },
       });

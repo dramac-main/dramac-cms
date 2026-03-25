@@ -988,10 +988,10 @@ ${data.dashboardUrl ? `View in dashboard: ${data.dashboardUrl}` : ""}
       <h1 style="${STYLES.heading}">📦 Order Delivered</h1>
       <p style="${STYLES.text}">Hi ${data.customerName || "there"},</p>
       <p style="${STYLES.text}">Your order <strong>${data.orderNumber || ""}</strong> has been delivered.</p>
-      ${data.dashboardUrl ? `<p style="margin: 24px 0;"><a href="${data.dashboardUrl}" style="${STYLES.button}">View Order</a></p>` : ""}
+      ${data.orderUrl ? `<p style="margin: 24px 0;"><a href="${data.orderUrl}" style="${STYLES.button}">Track Order</a></p>` : ""}
     `),
     text: (data) =>
-      `Order Delivered\n\nHi ${data.customerName || "there"},\n\nYour order ${data.orderNumber || ""} has been delivered.\n\n${data.dashboardUrl ? `View: ${data.dashboardUrl}` : ""}`,
+      `Order Delivered\n\nHi ${data.customerName || "there"},\n\nYour order ${data.orderNumber || ""} has been delivered.\n\n${data.orderUrl ? `View: ${data.orderUrl}` : ""}`,
   },
 
   order_cancelled_customer: {
@@ -1003,10 +1003,10 @@ ${data.dashboardUrl ? `View in dashboard: ${data.dashboardUrl}` : ""}
       <p style="${STYLES.text}">Hi ${data.customerName || "there"},</p>
       <p style="${STYLES.text}">Your order <strong>${data.orderNumber || ""}</strong> has been cancelled.</p>
       ${data.reason ? `<p style="${STYLES.text}"><strong>Reason:</strong> ${data.reason}</p>` : ""}
-      ${data.dashboardUrl ? `<p style="margin: 24px 0;"><a href="${data.dashboardUrl}" style="${STYLES.button}">View Details</a></p>` : ""}
+      ${data.orderUrl ? `<p style="margin: 24px 0;"><a href="${data.orderUrl}" style="${STYLES.button}">View Details</a></p>` : ""}
     `),
     text: (data) =>
-      `Order Cancelled\n\nHi ${data.customerName || "there"},\n\nYour order ${data.orderNumber || ""} has been cancelled.${data.reason ? ` Reason: ${data.reason}` : ""}\n\n${data.dashboardUrl ? `View: ${data.dashboardUrl}` : ""}`,
+      `Order Cancelled\n\nHi ${data.customerName || "there"},\n\nYour order ${data.orderNumber || ""} has been cancelled.${data.reason ? ` Reason: ${data.reason}` : ""}\n\n${data.orderUrl ? `View: ${data.orderUrl}` : ""}`,
   },
 
   order_cancelled_owner: {
@@ -1028,11 +1028,11 @@ ${data.dashboardUrl ? `View in dashboard: ${data.dashboardUrl}` : ""}
       wrapHtml(`
       <h1 style="${STYLES.heading}">💳 Payment Received</h1>
       <p style="${STYLES.text}">Hi ${data.customerName || "there"},</p>
-      <p style="${STYLES.text}">We've received your payment of <strong>${data.amount || ""}</strong> for order <strong>${data.orderNumber || ""}</strong>.</p>
-      ${data.dashboardUrl ? `<p style="margin: 24px 0;"><a href="${data.dashboardUrl}" style="${STYLES.button}">View Order</a></p>` : ""}
+      <p style="${STYLES.text}">We've received your payment of <strong>${data.total || ""}</strong> for order <strong>${data.orderNumber || ""}</strong>.</p>
+      ${data.orderUrl ? `<p style="margin: 24px 0;"><a href="${data.orderUrl}" style="${STYLES.button}">View Order</a></p>` : ""}
     `),
     text: (data) =>
-      `Payment Received\n\nHi ${data.customerName || "there"},\n\nPayment of ${data.amount || ""} received for order ${data.orderNumber || ""}.\n\n${data.dashboardUrl ? `View: ${data.dashboardUrl}` : ""}`,
+      `Payment Received\n\nHi ${data.customerName || "there"},\n\nPayment of ${data.total || ""} received for order ${data.orderNumber || ""}.\n\n${data.orderUrl ? `View: ${data.orderUrl}` : ""}`,
   },
 
   refund_issued_customer: {
@@ -1041,12 +1041,12 @@ ${data.dashboardUrl ? `View in dashboard: ${data.dashboardUrl}` : ""}
       wrapHtml(`
       <h1 style="${STYLES.heading}">💰 Refund Issued</h1>
       <p style="${STYLES.text}">Hi ${data.customerName || "there"},</p>
-      <p style="${STYLES.text}">A refund of <strong>${data.amount || ""}</strong> has been issued for order <strong>${data.orderNumber || ""}</strong>.</p>
+      <p style="${STYLES.text}">A refund of <strong>${data.refundAmount || ""}</strong> has been issued for order <strong>${data.orderNumber || ""}</strong>.</p>
       <p style="${STYLES.text}">Please allow 5-10 business days for the refund to appear on your statement.</p>
-      ${data.dashboardUrl ? `<p style="margin: 24px 0;"><a href="${data.dashboardUrl}" style="${STYLES.button}">View Details</a></p>` : ""}
+      ${data.orderUrl ? `<p style="margin: 24px 0;"><a href="${data.orderUrl}" style="${STYLES.button}">View Details</a></p>` : ""}
     `),
     text: (data) =>
-      `Refund Issued\n\nHi ${data.customerName || "there"},\n\nA refund of ${data.amount || ""} has been issued for order ${data.orderNumber || ""}. Please allow 5-10 business days.\n\n${data.dashboardUrl ? `View: ${data.dashboardUrl}` : ""}`,
+      `Refund Issued\n\nHi ${data.customerName || "there"},\n\nA refund of ${data.refundAmount || ""} has been issued for order ${data.orderNumber || ""}. Please allow 5-10 business days.\n\n${data.orderUrl ? `View: ${data.orderUrl}` : ""}`,
   },
 
   low_stock_admin: {
