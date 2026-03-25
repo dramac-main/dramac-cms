@@ -77,14 +77,16 @@ export function CartSummaryCard({
           Subtotal ({totals.itemCount}{" "}
           {totals.itemCount === 1 ? "item" : "items"})
         </span>
-        <span>{formatPrice(totals.subtotal)}</span>
+        <span className="tabular-nums shrink-0 ml-2">
+          {formatPrice(totals.subtotal)}
+        </span>
       </div>
 
       {/* Discount */}
       {hasDiscount && (
         <div className="flex justify-between text-sm">
           <span className="text-green-600">Discount</span>
-          <span className="text-green-600">
+          <span className="text-green-600 tabular-nums shrink-0 ml-2">
             -{formatPrice(totals.discount)}
           </span>
         </div>
@@ -94,12 +96,16 @@ export function CartSummaryCard({
       {hasShipping ? (
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Shipping</span>
-          <span>{formatPrice(totals.shipping)}</span>
+          <span className="tabular-nums shrink-0 ml-2">
+            {formatPrice(totals.shipping)}
+          </span>
         </div>
       ) : (
-        <div className="flex justify-between text-sm">
+        <div className="flex justify-between text-sm gap-4">
           <span className="text-muted-foreground">Shipping</span>
-          <span className="text-muted-foreground">Calculated at checkout</span>
+          <span className="text-muted-foreground text-right">
+            Calculated at checkout
+          </span>
         </div>
       )}
 
@@ -107,7 +113,9 @@ export function CartSummaryCard({
       {hasTax && (
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Tax</span>
-          <span>{formatPrice(totals.tax)}</span>
+          <span className="tabular-nums shrink-0 ml-2">
+            {formatPrice(totals.tax)}
+          </span>
         </div>
       )}
     </>
@@ -140,7 +148,9 @@ export function CartSummaryCard({
         {/* Total */}
         <div className="flex justify-between items-center">
           <span className="font-semibold">Total</span>
-          <span className="text-lg font-bold">{formatPrice(totals.total)}</span>
+          <span className="text-lg font-bold tabular-nums">
+            {formatPrice(totals.total)}
+          </span>
         </div>
 
         {/* Checkout Button */}
@@ -208,7 +218,7 @@ export function CartSummaryCard({
         {/* Total */}
         <div className="flex justify-between items-center">
           <span className="text-lg font-semibold">Total</span>
-          <span className="text-2xl font-bold">
+          <span className="text-2xl font-bold tabular-nums">
             {formatPrice(totals.total)}
           </span>
         </div>

@@ -431,7 +431,7 @@ export function ProductCardBlock({
           href="/cart"
           onClick={(e) => e.stopPropagation()}
           className={cn(
-            "px-4 py-2 rounded-md text-sm font-medium",
+            "px-4 py-2 min-h-[44px] rounded-md text-sm font-medium",
             "transition-colors flex items-center justify-center gap-2",
             "bg-secondary hover:bg-secondary/80 text-secondary-foreground",
             fullWidth && "w-full",
@@ -448,7 +448,7 @@ export function ProductCardBlock({
         onClick={handleAddToCart}
         disabled={addingToCart || cartLoading || isDemo}
         className={cn(
-          "px-4 py-2 rounded-md text-sm font-medium",
+          "px-4 py-2 min-h-[44px] rounded-md text-sm font-medium",
           "transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
           "flex items-center justify-center gap-2",
           quotationModeEnabled

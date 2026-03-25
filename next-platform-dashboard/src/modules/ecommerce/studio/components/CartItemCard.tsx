@@ -91,7 +91,7 @@ export function CartItemCard({
     return (
       <div className={cn("flex items-center gap-3 py-3", className)}>
         {/* Image */}
-        <div className="w-12 h-12 rounded bg-muted flex-shrink-0 overflow-hidden">
+        <div className="w-12 h-12 rounded bg-muted shrink-0 overflow-hidden">
           {imageUrl ? (
             <Image
               src={imageUrl}
@@ -125,7 +125,7 @@ export function CartItemCard({
     return (
       <div className={cn("flex gap-3 py-4 border-b last:border-0", className)}>
         {/* Image */}
-        <div className="w-16 h-16 rounded-md bg-muted flex-shrink-0 overflow-hidden">
+        <div className="w-16 h-16 rounded-md bg-muted shrink-0 overflow-hidden">
           {imageUrl ? (
             <Image
               src={imageUrl}
@@ -179,21 +179,21 @@ export function CartItemCard({
 
   // Default variant - full card
   return (
-    <Card className={cn("p-4", className)}>
-      <div className="flex gap-3 sm:gap-4">
+    <Card className={cn("p-3 sm:p-4", className)}>
+      <div className="flex gap-3">
         {/* Image */}
-        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-md bg-muted flex-shrink-0 overflow-hidden">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-md bg-muted shrink-0 overflow-hidden">
           {imageUrl ? (
             <Image
               src={imageUrl}
               alt={itemName}
-              width={96}
-              height={96}
+              width={80}
+              height={80}
               className="w-full h-full object-cover"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <Package className="h-8 w-8 text-muted-foreground" />
+              <Package className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground" />
             </div>
           )}
         </div>
@@ -201,29 +201,29 @@ export function CartItemCard({
         {/* Details */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <h4 className="font-medium truncate">{itemName}</h4>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-medium text-sm sm:text-base leading-snug line-clamp-2">{itemName}</h4>
               {variantName && (
-                <p className="text-sm text-muted-foreground">{variantName}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{variantName}</p>
               )}
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 {formatPrice(item.unit_price)} each
               </p>
             </div>
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 min-w-[36px] min-h-[36px]"
+              className="h-8 w-8 min-w-8 min-h-8 shrink-0"
               onClick={() => onRemove(item.id)}
               disabled={disabled}
             >
-              <X className="h-4 w-4" />
+              <X className="h-3.5 w-3.5" />
             </Button>
           </div>
 
           {/* Custom Options */}
           {customOptions && Object.keys(customOptions).length > 0 && (
-            <div className="mt-2 space-y-1">
+            <div className="mt-1.5 space-y-0.5">
               {Object.entries(customOptions).map(([key, value]) => (
                 <p key={key} className="text-xs text-muted-foreground">
                   {key}: {value}
@@ -233,14 +233,15 @@ export function CartItemCard({
           )}
 
           {/* Quantity & Total */}
-          <div className="flex items-center justify-between mt-3 sm:mt-4">
+          <div className="flex items-center justify-between mt-2 sm:mt-3 gap-2">
             <CartQuantitySelector
               quantity={item.quantity}
               onQuantityChange={(qty) => onQuantityChange(item.id, qty)}
               onRemove={() => onRemove(item.id)}
+              size="sm"
               disabled={disabled}
             />
-            <p className="text-base sm:text-lg font-semibold">
+            <p className="text-sm sm:text-base font-semibold tabular-nums shrink-0">
               {formatPrice(lineTotal)}
             </p>
           </div>

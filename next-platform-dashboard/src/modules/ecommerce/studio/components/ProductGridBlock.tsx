@@ -7,13 +7,7 @@
 
 "use client";
 
-import React, {
-  useState,
-  useCallback,
-  useMemo,
-  useEffect,
-  useRef,
-} from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import type { ComponentDefinition, ResponsiveValue } from "@/types/studio";
 import {
   Grid3X3,
@@ -51,6 +45,34 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+
+// =============================================================================
+// GRID COLUMN MAPS — module-level for Tailwind purge safety
+// =============================================================================
+const GRID_COLS_MAP: Record<number, string> = {
+  1: "grid-cols-1",
+  2: "grid-cols-2",
+  3: "grid-cols-3",
+  4: "grid-cols-4",
+  5: "grid-cols-5",
+  6: "grid-cols-6",
+};
+const MD_GRID_COLS_MAP: Record<number, string> = {
+  1: "md:grid-cols-1",
+  2: "md:grid-cols-2",
+  3: "md:grid-cols-3",
+  4: "md:grid-cols-4",
+  5: "md:grid-cols-5",
+  6: "md:grid-cols-6",
+};
+const LG_GRID_COLS_MAP: Record<number, string> = {
+  1: "lg:grid-cols-1",
+  2: "lg:grid-cols-2",
+  3: "lg:grid-cols-3",
+  4: "lg:grid-cols-4",
+  5: "lg:grid-cols-5",
+  6: "lg:grid-cols-6",
+};
 
 // =============================================================================
 // TYPES
@@ -162,32 +184,8 @@ export function ProductGridBlock({
   const paddingValue = typeof padding === "object" ? padding.mobile : padding;
   const columnsValue = typeof columns === "object" ? columns.mobile : columns;
 
-  // Calculate grid columns class — use explicit mappings for Tailwind purge safety
-  const gridColsClass = useMemo(() => {
-    const gridColsMap: Record<number, string> = {
-      1: "grid-cols-1",
-      2: "grid-cols-2",
-      3: "grid-cols-3",
-      4: "grid-cols-4",
-      5: "grid-cols-5",
-      6: "grid-cols-6",
-    };
-    const mdGridColsMap: Record<number, string> = {
-      1: "md:grid-cols-1",
-      2: "md:grid-cols-2",
-      3: "md:grid-cols-3",
-      4: "md:grid-cols-4",
-      5: "md:grid-cols-5",
-      6: "md:grid-cols-6",
-    };
-    const lgGridColsMap: Record<number, string> = {
-      1: "lg:grid-cols-1",
-      2: "lg:grid-cols-2",
-      3: "lg:grid-cols-3",
-      4: "lg:grid-cols-4",
-      5: "lg:grid-cols-5",
-      6: "lg:grid-cols-6",
-    };
+  // Calculate grid columns class — uses module-level maps for Tailwind purge safety
+  const gridColsClass = (() => {
     const cols =
       typeof columns === "object"
         ? columns
@@ -197,11 +195,11 @@ export function ProductGridBlock({
             desktop: columns as number,
           };
     return cn(
-      gridColsMap[cols.mobile || 2] || "grid-cols-2",
-      mdGridColsMap[cols.tablet || 3] || "md:grid-cols-3",
-      lgGridColsMap[cols.desktop || 4] || "lg:grid-cols-4",
+      GRID_COLS_MAP[cols.mobile || 2] || "grid-cols-2",
+      MD_GRID_COLS_MAP[cols.tablet || 3] || "md:grid-cols-3",
+      LG_GRID_COLS_MAP[cols.desktop || 4] || "lg:grid-cols-4",
     );
-  }, [columns]);
+  })();
 
   // Handle search with debounce (300ms)
   const handleSearch = useCallback((value: string) => {
