@@ -1,123 +1,50 @@
 # Active Context
 
-## Current Focus: AI Payment Guidance System — DEPLOYED
+## Current Focus: AI Payment Guidance — Bug Fixes & Enhanced UI — DEPLOYED
 
-### Status: COMMITTED & DEPLOYED — `b4a4c01c`
+### Status: COMMITTED & DEPLOYED — `f1f26f7b`
 
 ### What Was Done (This Session)
 
-Fixed the complete AI payment guidance pipeline and added dashboard controls. Previously, AI never responded to checkout messages because of a triple-layer agent blocking system. Now, payment-related messages bypass all blocking and get instant AI guidance.
+Found and fixed 4 critical bugs that prevented the AI payment guidance system from ever working. The AI was generating responses via Claude correctly, but the database inserts to save those responses were silently failing due to schema mismatches. Also enhanced the AI Settings UI with 3 new customization options.
 
-### Changes Deployed
+### 4 Critical Bugs Fixed
 
-1. **AI Pipeline Fix** — Payment Guidance Mode bypasses triple-layer agent blocking:
-   - `auto-response-handler.ts`: Added `isPaymentRelatedMessage()` detection (10 regex patterns), `forcePaymentGuidance` flag, fetches site AI settings from DB
-   - `conversations/route.ts`: Payment messages always trigger AI regardless of agent assignment
-   - `messages/route.ts`: Subsequent messages in payment conversations continue getting AI responses
-   - `ai-responder.ts`: Added ANTHROPIC_API_KEY startup warning
+1. **BUG #1 — `metadata` column doesn't exist**: `auto-response-handler.ts` inserted AI messages with `metadata: { ai_generated: true, confidence: ..., payment_guidance: true }` but `mod_chat_messages` has NO `metadata` column — it has `is_ai_generated` (boolean) and `ai_confidence` (numeric) instead. The entire Supabase insert silently failed.  
+   **Fix:** Use `is_ai_generated: true, ai_confidence: aiResult.confidence` instead.
 
-2. **Dashboard AI Controls** — New AI Settings tab in SettingsPageWrapper.tsx:
-   - 4 controls: auto-response toggle, payment guidance toggle, custom greeting, confidence threshold
-   - DB migration `lc-11-ai-settings` applied: 4 new columns on `mod_chat_widget_settings`
+2. **BUG #2 — Missing `site_id`**: AI message insert omitted `site_id` which is `NOT NULL` on `mod_chat_messages` — insert would fail even if metadata bug were fixed.  
+   **Fix:** Add `site_id: siteId` to both insert locations.
 
-3. **Streamlined Order Confirmation** — OrderConfirmationBlock.tsx:
-   - Removed redundant Quick Actions card (chat auto-opens now)
-   - Replaced verbose 5-step timeline with compact horizontal pill flow
-   - Added chat assistant note to payment instructions
-   - Updated header to mention chat assistant guidance
+3. **BUG #3 — Can't detect manual payment**: `customer-context-bridge.ts` didn't select `payment_provider`/`payment_method` from orders — AI couldn't distinguish manual payment orders from Paddle/Flutterwave pending orders.  
+   **Fix:** Added these fields to query, interface, and detection logic.
 
-4. **TypeScript types** updated for new AI settings fields
+4. **BUG #4 — Wrong sender_type**: AI messages used `sender_type: "system"` which renders as a tiny centered gray pill. Changed to `sender_type: "ai"` which renders as a proper left-aligned bubble with purple "AI" badge.
 
-### CRITICAL: ANTHROPIC_API_KEY on Vercel
+### AI Settings UI Enhancements
 
-The AI system requires `ANTHROPIC_API_KEY` as a Vercel environment variable. It exists in `.env.local` but MUST be verified on Vercel Dashboard → Settings → Environment Variables. Without it, AI will gracefully return null and fall back to agent routing (no crash, but no AI either).
+- **Response Tone selector** — friendly/professional/casual/formal (new DB column `ai_response_tone`)
+- **Custom Instructions textarea** — appended to AI system prompt (new DB column `ai_custom_instructions`)
+- **AI Assistant Name** — customizable name on AI messages (new DB column `ai_assistant_name`)
+- DB migration applied: 3 new columns on `mod_chat_widget_settings`
 
-### Previous Commits This Session
+### Files Modified
 
-- `d9cc11e6` — Checkout auto-redirect to order confirmation (chat auto-opens)
+- `auto-response-handler.ts` — Fixed both AI message insert locations (payment guidance path + standard path)
+- `ai-responder.ts` — Added tone instruction, custom instructions, assistant name; updated pendingManualOrder detection
+- `customer-context-bridge.ts` — Added payment_provider/payment_method to order query + interface + mapping  
+- `types/index.ts` — Added 3 new fields to ChatWidgetSettings interface
+- `SettingsPageWrapper.tsx` — Enhanced AI tab with 3 new controls
+
+### Commits This Session
+
+- `f1f26f7b` — Fix: AI response pipeline - fix DB schema mismatches, enhance AI settings UI
+
+### Previous Commits
+
 - `b4a4c01c` — AI payment guidance system (pipeline fix, dashboard controls, streamlined UI)
-
-### End-to-End Flow (Now Working)
-
-1. Customer completes checkout → `handlePlaceOrder` or `handleMobileSubmit` succeeds
-2. `setOrderResult({orderId, orderNumber, ...})` is called
-3. Loading spinner shown ("Loading your order details...")
-4. `useEffect` fires → `window.location.href = '/order-confirmation?order={orderId}'`
-5. Full page load of OrderConfirmationBlock
-6. Embed script loads → chat launcher + container + iframe created
-7. OrderConfirmationBlock fetches order data
-8. 3 seconds after order loads → `window.postMessage({type: 'dramac-chat-open', orderContext: {...}})`
-9. Embed script receives message → opens chat container → forwards order context to iframe
-10. ChatWidget receives order context → skips pre-chat form → auto-starts conversation
-11. Conversations API creates visitor + conversation + initial message → triggers AI auto-response
-12. AI enters Payment Guidance Mode → provides step-by-step payment instructions
-
-### Previous: Ecommerce Price Display Bug Fix — COMMITTED `e2f8f2c0`
-
-### Previous: Automated AI Chat Payment Guidance — COMMITTED `229eb0c5`
-
-### Implementation (6 files modified)
-
-**AI Responder Enhancement** (`ai-responder.ts`)
-
-- Detects pending manual payment orders from customer context
-- Fetches store's `manual_payment_instructions` from `mod_ecommod01_settings`
-- Enters "Payment Guidance Mode" with specialized system prompt
-- Provides order number, total, payment instructions in simple, step-by-step format
-- High confidence (0.95) in payment guidance mode — no unnecessary handoffs
-- AI acts like a friendly human guide, not a robot
-
-**Order Context Flow** (`OrderConfirmationBlock.tsx` → `embed/route.ts` → `ChatWidget.tsx`)
-
-- OrderConfirmation sends `window.postMessage({ type: 'dramac-chat-open', orderContext })`
-- Embed script handles `dramac-chat-open` from parent page, opens chat container, forwards `dramac-chat-order-context` to iframe
-- ChatWidget receives order context, stores in ref + state
-- Auto-starts conversation (skips pre-chat form) with customer email and order message
-- Handles both timing cases: order context before/after widget ready
-
-**AI Auto-Response on Initial Messages** (`conversations/route.ts`)
-
-- Conversations API now triggers `handleNewVisitorMessage()` for initial messages when no agent assigned
-- Previously only the messages API triggered AI — initial message was a dead end
-
-**Fix: CheckoutPageBlock** (`CheckoutPageBlock.tsx`)
-
-- Fixed pre-existing bug: `storefront.siteId` → `storefrontSiteId` (destructured from useStorefront)
-
-### End-to-End Flow
-
-1. Customer checks out with manual payment → order confirmation page
-2. Chat auto-opens 3 seconds later via `openChatWithOrderContext()`
-3. `window.postMessage` → embed script → iframe → ChatWidget
-4. ChatWidget auto-starts conversation: email from order, message "Hi, I just placed order #XXX and need help with payment."
-5. Conversations API creates visitor + conversation + initial message → triggers AI
-6. AI responder sees pending manual order → fetches payment instructions → enters payment guidance mode
-7. AI responds with warm greeting, order confirmation, step-by-step payment instructions
-8. Customer follows instructions, makes payment, uploads proof
-9. Site owner confirms payment — only manual step
-
-### Fixes Applied (8 files, 1 new)
-
-**New server action: `getPublicOrderByLookup`** (`public-ecommerce-actions.ts`)
-
-- Queries orders by email + order number (case-insensitive)
-- Returns order + items for the order tracking page
-
-**New component: `OrderTrackingBlock.tsx`** (NEW FILE)
-
-- Email + order number lookup form
-- On mount, checks `localStorage.ecom_last_order_{siteId}` for recent order quick-link
-- Found orders redirect to `/order-confirmation?order={orderId}`
-
-**New virtual route: `/order-tracking`** (`page.tsx`)
-
-- Added handler in `generateEcommercePage()` for `slug === "order-tracking"`
-- Template created via `createOrderTrackingTemplate()` in `page-templates.ts`
-
-**Component registration** (4 files):
-
-- `studio/index.ts` — import, definition (`EcommerceOrderTracking`), render mapping
-- `renderer.tsx` — added to `MODULE_COMPONENT_TYPES` set
+- `d9cc11e6` — Checkout auto-redirect to order confirmation
+- `e2f8f2c0` — Convert ecommerce prices from cents in email notifications
 - `template-utils.ts` — `addOrderTracking()` helper
 - `page-templates.ts` — `createOrderTrackingTemplate()` + `orderTrackingPageDefinition`
 

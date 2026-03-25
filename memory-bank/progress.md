@@ -1,43 +1,43 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: March 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX ✅
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS ✅
 
 ---
 
-## Latest Update: AI Payment Guidance System — Committed & Deployed (`b4a4c01c`)
+## Latest Update: AI Response Pipeline DB Fix & Enhanced Settings — Committed & Deployed (`f1f26f7b`)
 
-**Fixed AI auto-response completely non-functional during checkout. Triple-layer agent blocking prevented AI from ever responding to payment messages. Added dashboard controls and streamlined order confirmation.**
+**Found and fixed 4 critical bugs that prevented AI messages from ever being saved to the database. The Claude AI was generating responses correctly, but Supabase inserts silently failed due to schema mismatches.**
 
-### Root Cause: Triple-Layer Agent Blocking
+### 4 Critical Bugs Fixed
 
-1. `conversations/route.ts`: Only triggered AI if no agent assigned — online agents always got assigned
-2. `auto-response-handler.ts`: `routeConversation()` found agent → returned early with `routedToAgent: true`
-3. `ai-responder.ts`: `shouldAutoRespond()` returned false when agent assigned or online
+1. **`metadata` column doesn't exist** — `auto-response-handler.ts` inserted `metadata: {...}` but `mod_chat_messages` has `is_ai_generated` (boolean) + `ai_confidence` (numeric) instead. Insert silently failed.
+2. **Missing `site_id`** — AI message insert omitted `site_id` which is `NOT NULL`. Second silent failure.
+3. **Can't detect manual payment** — `customer-context-bridge.ts` didn't select `payment_provider`/`payment_method` from orders. AI couldn't tell if order was manual vs gateway payment.
+4. **Wrong `sender_type`** — Used `"system"` (renders as tiny centered pill) instead of `"ai"` (renders as left-aligned bubble with purple "AI" badge).
 
-### Fix: Payment Guidance Mode
+### AI Settings Enhancements
 
-- `isPaymentRelatedMessage()` detects 10 order/payment regex patterns
-- `forcePaymentGuidance: true` flag bypasses all 3 blocking layers
-- AI responds IMMEDIATELY alongside human agent as "co-pilot"
-- Conversation metadata marks `payment_guidance_active: true` for continuation
+- Response Tone selector (friendly/professional/casual/formal) — DB: `ai_response_tone`
+- Custom Instructions textarea — DB: `ai_custom_instructions`
+- AI Assistant Name — DB: `ai_assistant_name`
+- AI responder uses tone, custom instructions, and assistant name in system prompt
 
-### Changes (9 files)
+### Changes (5 files, 1 migration)
 
-- **`auto-response-handler.ts`** — MAJOR: Payment Guidance Mode, DB settings check, `HandleMessageOptions` interface
-- **`conversations/route.ts`** — Payment message detection, always triggers AI for payment messages
-- **`messages/route.ts`** — Payment conversation continuation via metadata check
-- **`ai-responder.ts`** — ANTHROPIC_API_KEY startup warning
-- **`SettingsPageWrapper.tsx`** — New AI Settings tab (9th tab): 4 controls
-- **`types/index.ts`** — 4 AI fields added to ChatWidgetSettings
-- **`OrderConfirmationBlock.tsx`** — Removed Quick Actions, compact timeline, chat assistant note
-- **`lc-11-ai-settings.sql`** — Migration: 4 columns on mod_chat_widget_settings (applied to Supabase)
+- `auto-response-handler.ts` — Fixed both insert locations (payment + standard path)
+- `ai-responder.ts` — Tone instruction, custom instructions, assistant name, manual payment detection
+- `customer-context-bridge.ts` — Added payment_provider/payment_method to order query + interface
+- `types/index.ts` — 3 new fields on ChatWidgetSettings
+- `SettingsPageWrapper.tsx` — 3 new controls in AI tab
 
-### CRITICAL: Verify ANTHROPIC_API_KEY on Vercel
+### Verified: ANTHROPIC_API_KEY on Vercel
 
-The AI requires `ANTHROPIC_API_KEY` in Vercel environment variables. Without it, AI returns null and falls back to agent routing (no crash, no AI guidance).
+Confirmed via `npx vercel env ls` — all 24 env vars present including ANTHROPIC_API_KEY (added 65 days ago, all environments).
 
-### Previous: Checkout Auto-Redirect Fix (`d9cc11e6`)
+---
+
+## Previous: AI Payment Guidance System — `b4a4c01c`
 
 - Users redirected from CheckoutPageBlock to OrderConfirmationBlock automatically
 - Chat auto-opens with order context
