@@ -32,7 +32,7 @@ Found and fixed 4 critical bugs that prevented the AI payment guidance system fr
 
 - `auto-response-handler.ts` — Fixed both AI message insert locations (payment guidance path + standard path)
 - `ai-responder.ts` — Added tone instruction, custom instructions, assistant name; updated pendingManualOrder detection
-- `customer-context-bridge.ts` — Added payment_provider/payment_method to order query + interface + mapping  
+- `customer-context-bridge.ts` — Added payment_provider/payment_method to order query + interface + mapping
 - `types/index.ts` — Added 3 new fields to ChatWidgetSettings interface
 - `SettingsPageWrapper.tsx` — Enhanced AI tab with 3 new controls
 

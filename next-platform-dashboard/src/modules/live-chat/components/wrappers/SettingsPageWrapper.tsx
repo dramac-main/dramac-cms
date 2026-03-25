@@ -1323,10 +1323,18 @@ export function SettingsPageWrapper({
                   value={settings.aiResponseTone || "friendly"}
                   onChange={(e) => update("aiResponseTone", e.target.value)}
                 >
-                  <option value="friendly">Friendly — Warm, approachable, conversational</option>
-                  <option value="professional">Professional — Polished, business-like, courteous</option>
-                  <option value="casual">Casual — Relaxed, informal, simple language</option>
-                  <option value="formal">Formal — Respectful, measured, proper language</option>
+                  <option value="friendly">
+                    Friendly — Warm, approachable, conversational
+                  </option>
+                  <option value="professional">
+                    Professional — Polished, business-like, courteous
+                  </option>
+                  <option value="casual">
+                    Casual — Relaxed, informal, simple language
+                  </option>
+                  <option value="formal">
+                    Formal — Respectful, measured, proper language
+                  </option>
                 </select>
                 <p className="text-xs text-muted-foreground">
                   Controls the overall tone of AI responses.
@@ -1362,8 +1370,9 @@ export function SettingsPageWrapper({
                   rows={4}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Extra instructions appended to the AI&apos;s system prompt. Use this to
-                  add business-specific rules, policies, or context the AI should know.
+                  Extra instructions appended to the AI&apos;s system prompt.
+                  Use this to add business-specific rules, policies, or context
+                  the AI should know.
                 </p>
               </div>
 

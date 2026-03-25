@@ -80,7 +80,9 @@ export async function generateAutoResponse(
     const [settingsRes, kbRes, messagesRes, visitorRes] = await Promise.all([
       supabase
         .from("mod_chat_widget_settings")
-        .select("company_name, welcome_message, ai_response_tone, ai_custom_instructions, ai_assistant_name, ai_payment_greeting")
+        .select(
+          "company_name, welcome_message, ai_response_tone, ai_custom_instructions, ai_assistant_name, ai_payment_greeting",
+        )
         .eq("site_id", siteId)
         .single(),
       supabase
@@ -105,7 +107,8 @@ export async function generateAutoResponse(
     const companyName = settingsRes.data?.company_name || "our company";
     const aiTone = settingsRes.data?.ai_response_tone || "friendly";
     const customInstructions = settingsRes.data?.ai_custom_instructions || "";
-    const aiAssistantName = settingsRes.data?.ai_assistant_name || "AI Assistant";
+    const aiAssistantName =
+      settingsRes.data?.ai_assistant_name || "AI Assistant";
     const paymentGreeting = settingsRes.data?.ai_payment_greeting || "";
     const kbArticles = kbRes.data || [];
     const previousMessages = (messagesRes.data || []).reverse();
@@ -127,6 +130,18 @@ export async function generateAutoResponse(
           o.paymentProvider === "manual" ||
           o.paymentProvider === "bank_transfer"),
     );
+
+    // Check if the pending order has payment proof uploaded
+    const proofUploaded = pendingManualOrder?.paymentProof?.hasProof || false;
+    const proofStatus = pendingManualOrder?.paymentProof?.status || null;
+
+    // Check for active quotations
+    const activeQuotes = customerCtx?.recentQuotes?.filter(
+      (q) => ["sent", "viewed", "pending_approval"].includes(q.status),
+    ) || [];
+    const acceptedQuotes = customerCtx?.recentQuotes?.filter(
+      (q) => q.status === "accepted",
+    ) || [];
 
     // Fetch store payment instructions when relevant
     let paymentInstructions: string | null = null;
@@ -160,9 +175,12 @@ export async function generateAutoResponse(
 
     const toneMap: Record<string, string> = {
       friendly: "Be warm, approachable, and use a conversational tone.",
-      professional: "Maintain a polished, business-like tone. Be courteous but efficient.",
-      casual: "Be relaxed and informal, like chatting with a friend. Use simple language.",
-      formal: "Use formal language. Be respectful and measured in your responses.",
+      professional:
+        "Maintain a polished, business-like tone. Be courteous but efficient.",
+      casual:
+        "Be relaxed and informal, like chatting with a friend. Use simple language.",
+      formal:
+        "Use formal language. Be respectful and measured in your responses.",
     };
     const toneInstruction = toneMap[aiTone] || toneMap.friendly;
 
@@ -192,6 +210,7 @@ ORDER DETAILS:
 - Total amount: ${pendingManualOrder.currency} ${(pendingManualOrder.total / 100).toFixed(2)}
 - Payment status: Pending
 - Placed: ${new Date(pendingManualOrder.createdAt).toLocaleDateString()}
+${proofUploaded ? `\nPAYMENT PROOF STATUS:\n- Proof uploaded: Yes (${pendingManualOrder.paymentProof.fileName})\n- Proof status: ${proofStatus}\n- Uploaded at: ${pendingManualOrder.paymentProof.uploadedAt ? new Date(pendingManualOrder.paymentProof.uploadedAt).toLocaleString() : "unknown"}\n\nThe customer has ALREADY uploaded payment proof. Acknowledge this! Let them know the store owner is reviewing it. Do NOT ask them to upload proof again.` : ""}
 
 ${paymentInstructions ? `STORE PAYMENT INSTRUCTIONS:\n${paymentInstructions}` : "No specific payment instructions configured. Ask the customer to contact the store for payment details."}
 
@@ -199,11 +218,31 @@ HOW TO GUIDE THE CUSTOMER:
 1. Greet them warmly and confirm their order number and total
 2. Share the payment instructions above in simple, clear language — break it into numbered steps
 3. Tell them to use their order number (${pendingManualOrder.orderNumber}) as the payment reference
-4. After they confirm payment, let them know they can upload proof of payment on their order page
-5. Reassure them that once the store owner verifies payment, their order will be processed and shipped
+${proofUploaded ? `4. Their proof is ALREADY uploaded — acknowledge it and reassure them\n5. Let them know the store owner will verify and process their order` : `4. After they confirm payment, let them know they can upload proof of payment on their order page\n5. Reassure them that once the store owner verifies payment, their order will be processed and shipped`}
 6. Be conversational and friendly — like a helpful friend, not a robot
 7. If they have questions about the payment process, answer patiently and clearly
 8. Keep each message short and easy to follow — avoid walls of text
+`
+    : ""
+}
+${
+  activeQuotes.length > 0
+    ? `
+ACTIVE QUOTATIONS:
+The customer has ${activeQuotes.length} active quotation(s):
+${activeQuotes.map((q) => `- ${q.quoteNumber}: ${q.status}, ${q.currency} ${(q.total / 100).toFixed(2)}, ${q.itemCount} item(s)${q.expiresAt ? `, expires ${new Date(q.expiresAt).toLocaleDateString()}` : ""}`).join("\n")}
+
+If the customer asks about their quote, provide the details above. Let them know they can view and accept/reject the quote through the link sent to their email.
+`
+    : ""
+}
+${
+  acceptedQuotes.length > 0
+    ? `
+ACCEPTED QUOTATIONS:
+${acceptedQuotes.map((q) => `- ${q.quoteNumber}: accepted${q.convertedOrderNumber ? ` → converted to order ${q.convertedOrderNumber}` : " (awaiting conversion to order by store staff)"}`).join("\n")}
+
+If a quote has been converted to an order, guide the customer to complete payment for that order.
 `
     : ""
 }

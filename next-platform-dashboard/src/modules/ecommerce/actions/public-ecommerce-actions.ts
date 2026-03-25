@@ -1309,6 +1309,22 @@ export async function uploadPaymentProof(input: {
       input.fileName,
     );
 
+    // Notify active chat conversation (async — don't block the response)
+    if (order.customer_email) {
+      import("@/modules/live-chat/lib/chat-event-bridge")
+        .then(({ notifyChatPaymentProofUploaded }) =>
+          notifyChatPaymentProofUploaded(
+            input.siteId,
+            order.customer_email,
+            order.order_number,
+            input.fileName,
+          ),
+        )
+        .catch((err) =>
+          console.error("[PaymentProof] Chat notification error:", err),
+        );
+    }
+
     return { success: true };
   } catch (error) {
     console.error("[PaymentProof] Unexpected error:", error);

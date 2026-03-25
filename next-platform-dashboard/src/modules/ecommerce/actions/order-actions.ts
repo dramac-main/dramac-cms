@@ -204,6 +204,30 @@ export async function updateOrderStatus(
     console.error("[OrderActions] Automation event error:", err),
   );
 
+  // Notify active chat conversation about the status change (async — don't block)
+  supabase
+    .from(`${TABLE_PREFIX}_orders`)
+    .select("customer_email, order_number")
+    .eq("id", orderId)
+    .single()
+    .then(({ data: orderData }: { data: { customer_email: string; order_number: string } | null }) => {
+      if (orderData?.customer_email) {
+        import("@/modules/live-chat/lib/chat-event-bridge")
+          .then(({ notifyChatOrderStatusChanged }) =>
+            notifyChatOrderStatusChanged(
+              siteId,
+              orderData.customer_email,
+              orderData.order_number,
+              status,
+            ),
+          )
+          .catch((err) =>
+            console.error("[OrderActions] Chat notification error:", err),
+          );
+      }
+    })
+    .catch(() => {});
+
   return { success: true };
 }
 

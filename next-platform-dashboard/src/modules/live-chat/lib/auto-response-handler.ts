@@ -32,6 +32,11 @@ const PAYMENT_ORDER_PATTERNS = [
   /\bproof\s+of\s+payment\b/i,
   /\bmanual\s+payment\b/i,
   /\bcomplete\s+(?:my\s+)?payment\b/i,
+  /\bupload(?:ed)?\s+(?:my\s+)?(?:payment\s+)?proof\b/i,
+  /\bquot(?:e|ation)\s*(?:#|num|number)?\s*(?:QUO[-\s]?\d+|\d{3,})/i,
+  /\bmy\s+quot(?:e|ation)\b/i,
+  /\baccept(?:ed)?\s+(?:the\s+)?quot(?:e|ation)\b/i,
+  /\bquot(?:e|ation)\s+(?:status|update|converted)\b/i,
 ];
 
 /** Returns true if the message is about orders/payment and should trigger AI payment guidance */
@@ -109,21 +114,26 @@ export async function handleNewVisitorMessage(
       );
 
       // Save AI response — use actual DB columns (no metadata column on this table)
-      const { error: insertError } = await supabase.from("mod_chat_messages").insert({
-        conversation_id: conversationId,
-        site_id: siteId,
-        sender_type: "ai",
-        sender_name: aiResult.assistantName || "AI Assistant",
-        content: aiResult.response,
-        content_type: "text",
-        status: "sent",
-        is_ai_generated: true,
-        ai_confidence: aiResult.confidence,
-        is_internal_note: false,
-      });
+      const { error: insertError } = await supabase
+        .from("mod_chat_messages")
+        .insert({
+          conversation_id: conversationId,
+          site_id: siteId,
+          sender_type: "ai",
+          sender_name: aiResult.assistantName || "AI Assistant",
+          content: aiResult.response,
+          content_type: "text",
+          status: "sent",
+          is_ai_generated: true,
+          ai_confidence: aiResult.confidence,
+          is_internal_note: false,
+        });
 
       if (insertError) {
-        console.error("[AutoResponse] FAILED to insert AI message:", insertError);
+        console.error(
+          "[AutoResponse] FAILED to insert AI message:",
+          insertError,
+        );
       } else {
         console.log("[AutoResponse] AI message saved to DB successfully");
       }
@@ -210,21 +220,26 @@ export async function handleNewVisitorMessage(
   }
 
   // 4. Save AI response as a message — use actual DB columns
-  const { error: stdInsertError } = await supabase.from("mod_chat_messages").insert({
-    conversation_id: conversationId,
-    site_id: siteId,
-    sender_type: "ai",
-    sender_name: aiResult.assistantName || "AI Assistant",
-    content: aiResult.response,
-    content_type: "text",
-    status: "sent",
-    is_ai_generated: true,
-    ai_confidence: aiResult.confidence,
-    is_internal_note: false,
-  });
+  const { error: stdInsertError } = await supabase
+    .from("mod_chat_messages")
+    .insert({
+      conversation_id: conversationId,
+      site_id: siteId,
+      sender_type: "ai",
+      sender_name: aiResult.assistantName || "AI Assistant",
+      content: aiResult.response,
+      content_type: "text",
+      status: "sent",
+      is_ai_generated: true,
+      ai_confidence: aiResult.confidence,
+      is_internal_note: false,
+    });
 
   if (stdInsertError) {
-    console.error("[AutoResponse] FAILED to insert AI message (standard path):", stdInsertError);
+    console.error(
+      "[AutoResponse] FAILED to insert AI message (standard path):",
+      stdInsertError,
+    );
   } else {
     console.log("[AutoResponse] AI message saved to DB (standard path)");
   }

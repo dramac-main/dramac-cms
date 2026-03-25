@@ -1543,7 +1543,27 @@ export async function updateOrderPaymentStatus(
     .single();
 
   if (error) throw new Error(error.message);
-  return data as Order;
+
+  const order = data as Order;
+
+  // Notify active chat conversation when payment is confirmed (async — don't block)
+  if (paymentStatus === "paid" && order.customer_email) {
+    const totalFormatted = `${order.currency || "USD"} ${((order.total || 0) / 100).toFixed(2)}`;
+    import("@/modules/live-chat/lib/chat-event-bridge")
+      .then(({ notifyChatPaymentConfirmed }) =>
+        notifyChatPaymentConfirmed(
+          siteId,
+          order.customer_email!,
+          order.order_number,
+          totalFormatted,
+        ),
+      )
+      .catch((err) =>
+        console.error("[Ecommerce] Chat payment notification error:", err),
+      );
+  }
+
+  return order;
 }
 
 export async function updateOrderFulfillment(

@@ -822,6 +822,27 @@ export async function convertQuoteToOrder(
       paymentProvider: "manual",
     });
 
+    // Notify active chat conversation about quote → order conversion (async)
+    if (quote.customer_email) {
+      const totalFormatted = formatCurrency(
+        (quote.total || 0) / 100,
+        currency,
+      );
+      import("@/modules/live-chat/lib/chat-event-bridge")
+        .then(({ notifyChatQuoteConverted }) =>
+          notifyChatQuoteConverted(
+            input.site_id,
+            quote.customer_email,
+            quote.quote_number,
+            orderNumber,
+            totalFormatted,
+          ),
+        )
+        .catch((err) =>
+          console.error("[QuoteWorkflow] Chat notification error:", err),
+        );
+    }
+
     revalidatePath(`/sites/${input.site_id}/ecommerce`);
 
     return { success: true, order: newOrder };

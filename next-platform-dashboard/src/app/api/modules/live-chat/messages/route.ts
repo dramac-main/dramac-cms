@@ -179,9 +179,8 @@ export async function POST(request: NextRequest) {
 
       after(async () => {
         try {
-          const { handleNewVisitorMessage } = await import(
-            "@/modules/live-chat/lib/auto-response-handler"
-          );
+          const { handleNewVisitorMessage } =
+            await import("@/modules/live-chat/lib/auto-response-handler");
           const result = await handleNewVisitorMessage(
             capturedSiteId,
             capturedConvId,
