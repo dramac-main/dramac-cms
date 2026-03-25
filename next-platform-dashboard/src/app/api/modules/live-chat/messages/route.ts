@@ -7,7 +7,7 @@
  * GET  — Fetch messages for a conversation (paginated)
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { mapRecord, mapRecords } from "@/modules/live-chat/lib/map-db-record";
 import { notifyNewChatMessage } from "@/modules/live-chat/lib/chat-notifications";
@@ -170,24 +170,33 @@ export async function POST(request: NextRequest) {
     const isPaymentConvo = convMeta?.payment_guidance_active === true;
 
     if (isPaymentConvo || !convForNotify.assigned_agent_id) {
-      import("@/modules/live-chat/lib/auto-response-handler")
-        .then(({ handleNewVisitorMessage }) => {
-          handleNewVisitorMessage(
-            convForNotify.site_id,
-            conversationId,
-            content,
-            visitorId,
-            { forcePaymentGuidance: isPaymentConvo },
-          ).catch((err) =>
-            console.error("[LiveChat] Auto-response error:", err),
+      // Use after() to keep Vercel Lambda alive until AI work completes
+      const capturedSiteId = convForNotify.site_id;
+      const capturedConvId = conversationId;
+      const capturedContent = content;
+      const capturedVisitorId = visitorId;
+      const capturedIsPayment = !!isPaymentConvo;
+
+      after(async () => {
+        try {
+          const { handleNewVisitorMessage } = await import(
+            "@/modules/live-chat/lib/auto-response-handler"
           );
-        })
-        .catch((err) =>
-          console.error(
-            "[LiveChat] Failed to load auto-response handler:",
-            err,
-          ),
-        );
+          const result = await handleNewVisitorMessage(
+            capturedSiteId,
+            capturedConvId,
+            capturedContent,
+            capturedVisitorId,
+            { forcePaymentGuidance: capturedIsPayment },
+          );
+          console.log(
+            "[LiveChat] AI auto-response result (follow-up):",
+            JSON.stringify(result),
+          );
+        } catch (err) {
+          console.error("[LiveChat] Auto-response error:", err);
+        }
+      });
     }
 
     return NextResponse.json(

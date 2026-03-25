@@ -224,6 +224,13 @@ Previous conversations: ${visitorInfo?.total_conversations || 0}${customerCtx ? 
       prompt: visitorMessage,
     });
 
+    console.log(
+      "[AI Responder] Claude responded, text length:",
+      result.text?.length,
+      "usage:",
+      JSON.stringify(result.usage),
+    );
+
     // Estimate confidence based on knowledge base match
     const responseText = result.text;
     let confidence = 0.6; // Base confidence
@@ -269,7 +276,7 @@ Previous conversations: ${visitorInfo?.total_conversations || 0}${customerCtx ? 
       assistantName: aiAssistantName,
     };
   } catch (err) {
-    console.error("[AI Responder] Error:", err);
+    console.error("[AI Responder] Error generating response:", err);
     return null;
   }
 }

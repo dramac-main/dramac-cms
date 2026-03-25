@@ -101,8 +101,15 @@ export async function handleNewVisitorMessage(
     );
 
     if (aiResult) {
+      console.log(
+        "[AutoResponse] AI generated response, confidence:",
+        aiResult.confidence,
+        "length:",
+        aiResult.response.length,
+      );
+
       // Save AI response — use actual DB columns (no metadata column on this table)
-      await supabase.from("mod_chat_messages").insert({
+      const { error: insertError } = await supabase.from("mod_chat_messages").insert({
         conversation_id: conversationId,
         site_id: siteId,
         sender_type: "ai",
@@ -114,6 +121,12 @@ export async function handleNewVisitorMessage(
         ai_confidence: aiResult.confidence,
         is_internal_note: false,
       });
+
+      if (insertError) {
+        console.error("[AutoResponse] FAILED to insert AI message:", insertError);
+      } else {
+        console.log("[AutoResponse] AI message saved to DB successfully");
+      }
 
       // Analyze sentiment
       const sentiment = analyzeSentiment(visitorMessage);
@@ -197,7 +210,7 @@ export async function handleNewVisitorMessage(
   }
 
   // 4. Save AI response as a message — use actual DB columns
-  await supabase.from("mod_chat_messages").insert({
+  const { error: stdInsertError } = await supabase.from("mod_chat_messages").insert({
     conversation_id: conversationId,
     site_id: siteId,
     sender_type: "ai",
@@ -209,6 +222,12 @@ export async function handleNewVisitorMessage(
     ai_confidence: aiResult.confidence,
     is_internal_note: false,
   });
+
+  if (stdInsertError) {
+    console.error("[AutoResponse] FAILED to insert AI message (standard path):", stdInsertError);
+  } else {
+    console.log("[AutoResponse] AI message saved to DB (standard path)");
+  }
 
   // 5. Analyze sentiment
   const sentiment = analyzeSentiment(visitorMessage);

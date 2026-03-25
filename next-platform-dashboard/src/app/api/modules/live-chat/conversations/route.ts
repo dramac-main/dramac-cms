@@ -7,7 +7,7 @@
  * GET  — Fetch conversation details + messages for widget display
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   mapRecord,
@@ -249,27 +249,38 @@ export async function POST(request: NextRequest) {
         /just\s+placed\s+(?:an?\s+)?order/i.test(initialMessage || "");
 
       if (isPaymentMsg || !convInsert.assigned_agent_id) {
-        import("@/modules/live-chat/lib/auto-response-handler")
-          .then(({ handleNewVisitorMessage }) => {
-            handleNewVisitorMessage(
-              siteId,
-              conversationId,
-              initialMessage,
-              visitorId,
-              { forcePaymentGuidance: !!isPaymentMsg },
-            ).catch((err: unknown) =>
-              console.error(
-                "[LiveChat] Auto-response error on initial message:",
-                err,
-              ),
+        // Use after() to keep Vercel Lambda alive until AI work completes
+        // Without this, the Lambda is killed after returning 201 and the
+        // Claude API call (2-5s) never finishes
+        const capturedSiteId = siteId;
+        const capturedConvId = conversationId;
+        const capturedMsg = initialMessage;
+        const capturedVisitorId = visitorId;
+        const capturedIsPayment = !!isPaymentMsg;
+
+        after(async () => {
+          try {
+            const { handleNewVisitorMessage } = await import(
+              "@/modules/live-chat/lib/auto-response-handler"
             );
-          })
-          .catch((err) =>
+            const result = await handleNewVisitorMessage(
+              capturedSiteId,
+              capturedConvId,
+              capturedMsg,
+              capturedVisitorId,
+              { forcePaymentGuidance: capturedIsPayment },
+            );
+            console.log(
+              "[LiveChat] AI auto-response result:",
+              JSON.stringify(result),
+            );
+          } catch (err) {
             console.error(
-              "[LiveChat] Failed to load auto-response handler:",
+              "[LiveChat] Auto-response error on initial message:",
               err,
-            ),
-          );
+            );
+          }
+        });
       }
     }
 
