@@ -12,7 +12,6 @@ import React, {
   useCallback,
   useRef,
   useEffect,
-  useMemo,
 } from "react";
 import type { ComponentDefinition, ResponsiveValue } from "@/types/studio";
 import {
@@ -83,6 +82,32 @@ interface FeaturedProductsProps {
   onProductClick?: (productId: string) => void;
   onViewAllClick?: () => void;
 }
+
+// Safe Tailwind grid column class maps (module-level — avoids Tailwind purge)
+const GRID_COLS_MAP: Record<number, string> = {
+  1: "grid-cols-1",
+  2: "grid-cols-2",
+  3: "grid-cols-3",
+  4: "grid-cols-4",
+  5: "grid-cols-5",
+  6: "grid-cols-6",
+};
+const MD_GRID_COLS_MAP: Record<number, string> = {
+  1: "md:grid-cols-1",
+  2: "md:grid-cols-2",
+  3: "md:grid-cols-3",
+  4: "md:grid-cols-4",
+  5: "md:grid-cols-5",
+  6: "md:grid-cols-6",
+};
+const LG_GRID_COLS_MAP: Record<number, string> = {
+  1: "lg:grid-cols-1",
+  2: "lg:grid-cols-2",
+  3: "lg:grid-cols-3",
+  4: "lg:grid-cols-4",
+  5: "lg:grid-cols-5",
+  6: "lg:grid-cols-6",
+};
 
 // Icons for different sources
 const SOURCE_ICONS = {
@@ -194,6 +219,13 @@ export function FeaturedProductsBlock({
       ? cols.tablet || 3
       : cols.desktop || 4;
 
+  // Grid column class — plain computation, NOT a hook (must be before early returns)
+  const gridColsClass = cn(
+    GRID_COLS_MAP[cols.mobile || 2] || "grid-cols-2",
+    MD_GRID_COLS_MAP[cols.tablet || 3] || "md:grid-cols-3",
+    LG_GRID_COLS_MAP[cols.desktop || 4] || "lg:grid-cols-4",
+  );
+
   // Calculate carousel slides
   const slidesCount = Math.ceil(products.length / columnsValue);
 
@@ -271,47 +303,6 @@ export function FeaturedProductsBlock({
       </div>
     );
   }
-
-  // Grid column class — use explicit mappings for Tailwind purge safety
-  const gridColsClass = useMemo(() => {
-    const gridColsMap: Record<number, string> = {
-      1: "grid-cols-1",
-      2: "grid-cols-2",
-      3: "grid-cols-3",
-      4: "grid-cols-4",
-      5: "grid-cols-5",
-      6: "grid-cols-6",
-    };
-    const mdGridColsMap: Record<number, string> = {
-      1: "md:grid-cols-1",
-      2: "md:grid-cols-2",
-      3: "md:grid-cols-3",
-      4: "md:grid-cols-4",
-      5: "md:grid-cols-5",
-      6: "md:grid-cols-6",
-    };
-    const lgGridColsMap: Record<number, string> = {
-      1: "lg:grid-cols-1",
-      2: "lg:grid-cols-2",
-      3: "lg:grid-cols-3",
-      4: "lg:grid-cols-4",
-      5: "lg:grid-cols-5",
-      6: "lg:grid-cols-6",
-    };
-    const cols =
-      typeof columns === "object"
-        ? columns
-        : {
-            mobile: 2,
-            tablet: Math.min(columns as number, 3),
-            desktop: columns as number,
-          };
-    return cn(
-      gridColsMap[cols.mobile || 2] || "grid-cols-2",
-      mdGridColsMap[cols.tablet || 3] || "md:grid-cols-3",
-      lgGridColsMap[cols.desktop || 4] || "lg:grid-cols-4",
-    );
-  }, [columns]);
 
   return (
     <div style={{ padding: paddingValue }}>
