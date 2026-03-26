@@ -231,3 +231,209 @@ export async function notifyChatQuoteConverted(
     conv.assistantName,
   );
 }
+
+// =============================================================================
+// BRIDGE CHAT IMAGE → PAYMENT PROOF
+// =============================================================================
+
+/**
+ * Bridge a chat image/PDF upload to the payment proof system.
+ *
+ * When a customer uploads an image or PDF in a chat conversation and has
+ * a pending manual payment order, this function:
+ * 1. Downloads the file from the chat-attachments URL
+ * 2. Re-uploads it to the payment-proofs storage bucket
+ * 3. Updates the order metadata with proof info
+ * 4. Adds an order timeline entry
+ * 5. Sends a proactive chat acknowledgment message
+ * 6. Notifies the business owner (in-app + email)
+ *
+ * Returns true if the image was successfully bridged, false otherwise.
+ */
+export async function bridgeChatImageAsPaymentProof(
+  siteId: string,
+  conversationId: string,
+  visitorId: string,
+  fileUrl: string,
+  fileName: string,
+  fileSize: number,
+  fileMimeType: string,
+): Promise<boolean> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = createAdminClient() as any;
+
+  try {
+    // 1. Get visitor email
+    const { data: visitor } = await supabase
+      .from("mod_chat_visitors")
+      .select("email")
+      .eq("id", visitorId)
+      .single();
+
+    if (!visitor?.email) {
+      console.log(
+        "[ChatPaymentBridge] Visitor has no email — skipping bridge",
+      );
+      return false;
+    }
+
+    // 2. Find pending manual payment order for this customer
+    const { data: pendingOrders } = await supabase
+      .from("mod_ecommod01_orders")
+      .select(
+        "id, order_number, customer_email, customer_name, total, currency, payment_status, payment_provider, metadata",
+      )
+      .eq("site_id", siteId)
+      .eq("customer_email", visitor.email)
+      .eq("payment_status", "pending")
+      .neq("status", "cancelled")
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    // Only match manual/bank_transfer orders — not gateway (Paddle/Flutterwave) pending orders
+    const order = (pendingOrders || []).find(
+      (o: Record<string, unknown>) =>
+        !o.payment_provider ||
+        o.payment_provider === "manual" ||
+        o.payment_provider === "bank_transfer",
+    );
+
+    if (!order) {
+      // No pending manual order — this image isn't payment proof
+      return false;
+    }
+
+    // 3. Check if proof is already confirmed — don't overwrite
+    const existingMeta = (order.metadata || {}) as Record<string, unknown>;
+    const existingProof = existingMeta.payment_proof as
+      | { status?: string }
+      | undefined;
+    if (existingProof?.status === "confirmed") {
+      console.log(
+        "[ChatPaymentBridge] Payment already confirmed for order",
+        order.order_number,
+        "— skipping",
+      );
+      return false;
+    }
+
+    // 4. Download file from chat-attachments public URL
+    const fileResponse = await fetch(fileUrl);
+    if (!fileResponse.ok) {
+      console.error(
+        "[ChatPaymentBridge] Failed to download file from chat-attachments:",
+        fileResponse.status,
+      );
+      return false;
+    }
+    const fileBuffer = Buffer.from(await fileResponse.arrayBuffer());
+
+    // 5. Upload to payment-proofs bucket
+    const extMap: Record<string, string> = {
+      "image/jpeg": "jpg",
+      "image/png": "png",
+      "image/webp": "webp",
+      "image/gif": "gif",
+      "image/heic": "heic",
+      "application/pdf": "pdf",
+    };
+    const ext = extMap[fileMimeType] || "bin";
+    const storagePath = `${siteId}/${order.id}/${Date.now()}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("payment-proofs")
+      .upload(storagePath, fileBuffer, {
+        contentType: fileMimeType,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error(
+        "[ChatPaymentBridge] Failed to upload to payment-proofs:",
+        uploadError,
+      );
+      return false;
+    }
+
+    // 6. Update order metadata with proof info
+    const updatedMetadata = {
+      ...existingMeta,
+      payment_proof: {
+        storage_path: storagePath,
+        file_name: fileName,
+        content_type: fileMimeType,
+        file_size: fileSize,
+        uploaded_at: new Date().toISOString(),
+        status: "pending_review",
+        source: "live_chat",
+      },
+    };
+
+    await supabase
+      .from("mod_ecommod01_orders")
+      .update({ metadata: updatedMetadata })
+      .eq("id", order.id);
+
+    // 7. Add order timeline entry
+    await supabase.from("mod_ecommod01_order_timeline").insert({
+      order_id: order.id,
+      event_type: "payment_proof_uploaded",
+      title: "Payment proof uploaded via live chat",
+      description: `Customer uploaded payment proof in chat: ${fileName}`,
+      metadata: {
+        file_name: fileName,
+        content_type: fileMimeType,
+        source: "live_chat",
+      },
+    });
+
+    // 8. Send proactive chat acknowledgment message
+    const { data: widgetSettings } = await supabase
+      .from("mod_chat_widget_settings")
+      .select("ai_assistant_name")
+      .eq("site_id", siteId)
+      .single();
+    const assistantName = widgetSettings?.ai_assistant_name || "AI Assistant";
+
+    await sendProactiveMessage(
+      siteId,
+      conversationId,
+      `I can see you've uploaded your payment proof (${fileName}) for order ${order.order_number}. ` +
+        `The store owner will now review it and verify your payment. ` +
+        `This usually takes a short while — I'll keep you updated on the progress! 😊`,
+      assistantName,
+    );
+
+    // 9. Notify business owner (in-app notification + email)
+    const totalCents = (order.total as number) || 0;
+    const currency = (order.currency as string) || "ZMW";
+    const totalFormatted = `${currency} ${(totalCents / 100).toFixed(2)}`;
+
+    try {
+      const { notifyPaymentProofUploaded } = await import(
+        "@/lib/services/business-notifications"
+      );
+      await notifyPaymentProofUploaded(
+        siteId,
+        order.order_number as string,
+        (order.customer_email as string) || "",
+        (order.customer_name as string) || "Customer",
+        totalFormatted,
+        fileName,
+      );
+    } catch (notifyErr) {
+      console.error(
+        "[ChatPaymentBridge] Business notification error:",
+        notifyErr,
+      );
+    }
+
+    console.log(
+      `[ChatPaymentBridge] Successfully bridged chat image as payment proof for order ${order.order_number}`,
+    );
+    return true;
+  } catch (err) {
+    console.error("[ChatPaymentBridge] Unexpected error:", err);
+    return false;
+  }
+}

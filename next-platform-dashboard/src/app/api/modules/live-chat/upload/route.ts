@@ -11,7 +11,7 @@
  * - Creates the file message automatically after upload
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { mapRecord } from "@/modules/live-chat/lib/map-db-record";
 import { v4 as uuid } from "uuid";
@@ -243,6 +243,48 @@ export async function POST(request: NextRequest) {
         message_count: (currentConv?.message_count || 0) + 1,
       })
       .eq("id", conversationId);
+
+    // Bridge visitor image/PDF uploads to payment proof system if applicable
+    // When a customer has a pending manual payment order and uploads an image
+    // in chat, it's very likely proof of payment — bridge it automatically
+    if (
+      senderType === "visitor" &&
+      visitorId &&
+      (contentType === "image" || file.type === "application/pdf")
+    ) {
+      const capturedSiteId = conv.site_id;
+      const capturedConvId = conversationId;
+      const capturedVisitorId = visitorId;
+      const capturedFileUrl = publicUrl;
+      const capturedFileName = file.name;
+      const capturedFileSize = file.size;
+      const capturedFileMimeType = file.type;
+
+      after(async () => {
+        try {
+          const { bridgeChatImageAsPaymentProof } = await import(
+            "@/modules/live-chat/lib/chat-event-bridge"
+          );
+          const bridged = await bridgeChatImageAsPaymentProof(
+            capturedSiteId,
+            capturedConvId,
+            capturedVisitorId,
+            capturedFileUrl,
+            capturedFileName,
+            capturedFileSize,
+            capturedFileMimeType,
+          );
+          if (bridged) {
+            console.log(
+              "[LiveChat Upload] Image bridged as payment proof for conversation:",
+              capturedConvId,
+            );
+          }
+        } catch (err) {
+          console.error("[LiveChat Upload] Payment proof bridge error:", err);
+        }
+      });
+    }
 
     return NextResponse.json(
       { message, fileUrl: publicUrl },
