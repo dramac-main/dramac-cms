@@ -276,7 +276,7 @@ const EMPTY_ADDRESS: Address = {
   city: "",
   state: "",
   postal_code: "",
-  country: "",
+  country: "ZM",
 };
 
 const INITIAL_STATE: CheckoutState = {

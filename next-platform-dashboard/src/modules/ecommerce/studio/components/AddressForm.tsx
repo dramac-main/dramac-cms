@@ -35,6 +35,12 @@ interface AddressFormProps {
 
 const COUNTRIES = getCountryList()
 
+// Zambian provinces for dropdown when ZM is selected
+const ZM_PROVINCES = [
+  'Central', 'Copperbelt', 'Eastern', 'Luapula', 'Lusaka',
+  'Muchinga', 'Northern', 'North-Western', 'Southern', 'Western',
+]
+
 // ============================================================================
 // COMPONENT
 // ============================================================================
@@ -51,6 +57,9 @@ export function AddressForm({
   const handleChange = (field: keyof Address, value: string) => {
     onChange({ ...address, [field]: value })
   }
+
+  const isZambia = (address.country || 'ZM') === 'ZM'
+  const stateLabel = isZambia ? 'Province *' : 'State / Province *'
 
   return (
     <div className={cn('space-y-4', className)}>
@@ -131,56 +140,19 @@ export function AddressForm({
         />
       </div>
 
-      {/* City, State, Zip Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="city">City *</Label>
-          <Input
-            id="city"
-            value={address.city || ''}
-            onChange={(e) => handleChange('city', e.target.value)}
-            placeholder="Lusaka"
-            disabled={disabled}
-            autoComplete="address-level2"
-            enterKeyHint="next"
-            className="h-12 text-base"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="state">State / Province *</Label>
-          <Input
-            id="state"
-            value={address.state || ''}
-            onChange={(e) => handleChange('state', e.target.value)}
-            placeholder="Lusaka Province"
-            disabled={disabled}
-            autoComplete="address-level1"
-            enterKeyHint="next"
-            className="h-12 text-base"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="postal_code">Postal code *</Label>
-          <Input
-            id="postal_code"
-            value={address.postal_code || ''}
-            onChange={(e) => handleChange('postal_code', e.target.value)}
-            placeholder="10101"
-            disabled={disabled}
-            autoComplete="postal-code"
-            enterKeyHint="next"
-            className="h-12 text-base"
-          />
-        </div>
-      </div>
-
       {/* Country — Native select for brand consistency + better mobile UX */}
       <div className="space-y-2">
         <Label htmlFor="country">Country *</Label>
         <select
           id="country"
-          value={address.country || ''}
-          onChange={(e) => handleChange('country', e.target.value)}
+          value={address.country || 'ZM'}
+          onChange={(e) => {
+            handleChange('country', e.target.value)
+            // Clear state when country changes
+            if (e.target.value !== address.country) {
+              handleChange('state', '')
+            }
+          }}
           disabled={disabled}
           autoComplete="country"
           className={cn(
@@ -197,6 +169,70 @@ export function AddressForm({
             </option>
           ))}
         </select>
+      </div>
+
+      {/* City, State/Province, Postal code Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="city">City *</Label>
+          <Input
+            id="city"
+            value={address.city || ''}
+            onChange={(e) => handleChange('city', e.target.value)}
+            placeholder="Lusaka"
+            disabled={disabled}
+            autoComplete="address-level2"
+            enterKeyHint="next"
+            className="h-12 text-base"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="state">{stateLabel}</Label>
+          {isZambia ? (
+            <select
+              id="state"
+              value={address.state || ''}
+              onChange={(e) => handleChange('state', e.target.value)}
+              disabled={disabled}
+              autoComplete="address-level1"
+              className={cn(
+                'flex h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-base',
+                'ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                'disabled:cursor-not-allowed disabled:opacity-50',
+                'appearance-none bg-[url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23666%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E")] bg-[length:1.25rem] bg-[right_0.5rem_center] bg-no-repeat pr-10'
+              )}
+            >
+              <option value="" disabled>Select province</option>
+              {ZM_PROVINCES.map((p) => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+          ) : (
+            <Input
+              id="state"
+              value={address.state || ''}
+              onChange={(e) => handleChange('state', e.target.value)}
+              placeholder="State / Province"
+              disabled={disabled}
+              autoComplete="address-level1"
+              enterKeyHint="next"
+              className="h-12 text-base"
+            />
+          )}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="postal_code">Postal code *</Label>
+          <Input
+            id="postal_code"
+            value={address.postal_code || ''}
+            onChange={(e) => handleChange('postal_code', e.target.value)}
+            placeholder="10101"
+            disabled={disabled}
+            autoComplete="postal-code"
+            enterKeyHint="next"
+            className="h-12 text-base"
+          />
+        </div>
       </div>
 
       {/* Phone (optional) */}

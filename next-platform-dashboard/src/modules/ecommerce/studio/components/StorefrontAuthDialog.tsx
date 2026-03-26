@@ -421,7 +421,7 @@ export function StorefrontAuthDialog({
     if (!isOpen) return;
     const timer = setTimeout(() => {
       const firstInput = dialogRef.current?.querySelector<HTMLInputElement>(
-        'input:not([disabled])',
+        "input:not([disabled])",
       );
       firstInput?.focus();
     }, 50);
@@ -453,8 +453,7 @@ export function StorefrontAuthDialog({
 
   const subtitles: Record<DialogMode, string> = {
     login: "Welcome back! Sign in to your store account.",
-    register:
-      "Create a customer account to save addresses and track orders.",
+    register: "Create a customer account to save addresses and track orders.",
     "set-password": "Set a password to access your account anytime.",
   };
 

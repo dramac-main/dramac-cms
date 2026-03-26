@@ -1,14 +1,22 @@
 # Active Context
 
-## Current Focus: Storefront Branding Fix — ALL AUTH + ACCOUNT COMPONENTS — DEPLOYED
+## Current Focus: Auth Dialog Brand Scope + UX Improvements — DEPLOYED
 
-### Status: COMMITTED, DEPLOYED — `5d9b191c`
+### Status: COMMITTED, DEPLOYED — `789441ea`
 
 ### What Was Done (This Session)
 
-Fixed all hardcoded Tailwind colors in storefront auth dialog and account page components. User reported that the Create Account / Login dialog on `test-jack.sites.dramacagency.com/checkout` used white/gray branding instead of following the site's global brand colors.
+1. **CSS Variable Scope Fix**: Auth dialog was rendering as a sibling to `.studio-renderer` div (where brand CSS vars are injected), so `bg-card`, `text-foreground` etc. resolved to undefined. Fixed by adding `children` prop to `StudioRenderer` and rendering `StorefrontAuthDialogProvider` as a child inside the branded scope.
 
-**Root Cause:** StorefrontAuthDialog.tsx and MyAccountBlock.tsx used hardcoded `gray-*`, `red-*`, `blue-*` Tailwind colors instead of semantic tokens (`text-foreground`, `bg-card`, `border-input`, etc.) that resolve to site brand colors via CSS variables injected by `StudioRenderer`.
+2. **React Hooks Order Fix**: `useRef`, `useEffect`, `useCallback` were called after an early `return null` — violating rules of hooks. Moved all hooks before the conditional return with `isOpen` guards.
+
+3. **UX Improvements**: Store-specific copy ("Create Store Account"), ShoppingBag icon, forgot password help link, auto-focus first input, Escape key closes, accessible aria-labels, enhanced checkout sign-in prompt with User icon.
+
+4. **Database Trigger Fix**: `mod_ecommod01_update_customer_stats` function used `last_order_at` but actual column is `last_order_date` — fixed via `CREATE OR REPLACE FUNCTION` in Supabase.
+
+### Previous Session (commit `5d9b191c`)
+
+Fixed all hardcoded Tailwind colors in storefront auth dialog and account page components (`gray-*`, `red-*`, `blue-*` → semantic tokens).
 
 ### Files Fixed
 

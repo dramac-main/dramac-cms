@@ -118,10 +118,10 @@ export function MobileCheckoutPage({
     initialData?.contact || { email: '', phone: '', marketingOptIn: false }
   )
   const [shippingAddress, setShippingAddress] = useState<Partial<Address>>(
-    initialData?.shippingAddress || { country: 'US' }
+    initialData?.shippingAddress || { country: 'ZM' }
   )
   const [billingAddress, setBillingAddress] = useState<Partial<Address>>(
-    initialData?.billingAddress || { country: 'US' }
+    initialData?.billingAddress || { country: 'ZM' }
   )
   const [shippingMethodId, setShippingMethodId] = useState<string | null>(
     initialData?.shippingMethodId || null

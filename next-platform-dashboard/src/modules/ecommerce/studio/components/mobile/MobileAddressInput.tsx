@@ -14,6 +14,7 @@ import React, { useRef, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 import { MobileInput } from './MobileInput'
 import { MobileSelect, MobileSelectOption } from './MobileSelect'
+import { getCountryList } from '../../../lib/settings-utils'
 
 // ============================================================================
 // TYPES
@@ -59,67 +60,24 @@ export interface MobileAddressInputProps {
 // CONSTANTS
 // ============================================================================
 
-const COUNTRIES: MobileSelectOption[] = [
-  { value: 'US', label: 'United States' },
-  { value: 'CA', label: 'Canada' },
-  { value: 'GB', label: 'United Kingdom' },
-  { value: 'AU', label: 'Australia' },
-  { value: 'DE', label: 'Germany' },
-  { value: 'FR', label: 'France' },
-  { value: 'JP', label: 'Japan' },
-]
+// Build country options from centralised list (Zambia first)
+const COUNTRIES: MobileSelectOption[] = getCountryList().map((c) => ({
+  value: c.code,
+  label: c.name,
+}))
 
-const US_STATES: MobileSelectOption[] = [
-  { value: 'AL', label: 'Alabama' },
-  { value: 'AK', label: 'Alaska' },
-  { value: 'AZ', label: 'Arizona' },
-  { value: 'AR', label: 'Arkansas' },
-  { value: 'CA', label: 'California' },
-  { value: 'CO', label: 'Colorado' },
-  { value: 'CT', label: 'Connecticut' },
-  { value: 'DE', label: 'Delaware' },
-  { value: 'FL', label: 'Florida' },
-  { value: 'GA', label: 'Georgia' },
-  { value: 'HI', label: 'Hawaii' },
-  { value: 'ID', label: 'Idaho' },
-  { value: 'IL', label: 'Illinois' },
-  { value: 'IN', label: 'Indiana' },
-  { value: 'IA', label: 'Iowa' },
-  { value: 'KS', label: 'Kansas' },
-  { value: 'KY', label: 'Kentucky' },
-  { value: 'LA', label: 'Louisiana' },
-  { value: 'ME', label: 'Maine' },
-  { value: 'MD', label: 'Maryland' },
-  { value: 'MA', label: 'Massachusetts' },
-  { value: 'MI', label: 'Michigan' },
-  { value: 'MN', label: 'Minnesota' },
-  { value: 'MS', label: 'Mississippi' },
-  { value: 'MO', label: 'Missouri' },
-  { value: 'MT', label: 'Montana' },
-  { value: 'NE', label: 'Nebraska' },
-  { value: 'NV', label: 'Nevada' },
-  { value: 'NH', label: 'New Hampshire' },
-  { value: 'NJ', label: 'New Jersey' },
-  { value: 'NM', label: 'New Mexico' },
-  { value: 'NY', label: 'New York' },
-  { value: 'NC', label: 'North Carolina' },
-  { value: 'ND', label: 'North Dakota' },
-  { value: 'OH', label: 'Ohio' },
-  { value: 'OK', label: 'Oklahoma' },
-  { value: 'OR', label: 'Oregon' },
-  { value: 'PA', label: 'Pennsylvania' },
-  { value: 'RI', label: 'Rhode Island' },
-  { value: 'SC', label: 'South Carolina' },
-  { value: 'SD', label: 'South Dakota' },
-  { value: 'TN', label: 'Tennessee' },
-  { value: 'TX', label: 'Texas' },
-  { value: 'UT', label: 'Utah' },
-  { value: 'VT', label: 'Vermont' },
-  { value: 'VA', label: 'Virginia' },
-  { value: 'WA', label: 'Washington' },
-  { value: 'WV', label: 'West Virginia' },
-  { value: 'WI', label: 'Wisconsin' },
-  { value: 'WY', label: 'Wyoming' },
+// Zambian provinces
+const ZM_PROVINCES: MobileSelectOption[] = [
+  { value: 'Central', label: 'Central' },
+  { value: 'Copperbelt', label: 'Copperbelt' },
+  { value: 'Eastern', label: 'Eastern' },
+  { value: 'Luapula', label: 'Luapula' },
+  { value: 'Lusaka', label: 'Lusaka' },
+  { value: 'Muchinga', label: 'Muchinga' },
+  { value: 'Northern', label: 'Northern' },
+  { value: 'North-Western', label: 'North-Western' },
+  { value: 'Southern', label: 'Southern' },
+  { value: 'Western', label: 'Western' },
 ]
 
 // ============================================================================
@@ -152,15 +110,16 @@ export function MobileAddressInput({
     [address, onChange]
   )
 
-  // Get states based on country
-  const getStates = useCallback(() => {
-    // For now, just return US states
-    // Can be extended to support other countries
-    if (address.country === 'US') {
-      return US_STATES
-    }
-    return US_STATES // Default to US states
+  // Get provinces/states based on selected country
+  const getStates = useCallback((): MobileSelectOption[] => {
+    if (address.country === 'ZM') return ZM_PROVINCES
+    // Other countries: let user type freely (no predefined list)
+    return []
   }, [address.country])
+
+  // Label for the state/province field based on country
+  const stateLabel = address.country === 'ZM' ? 'Province' : 'State / Province'
+  const postalLabel = address.country === 'ZM' ? 'Postal code' : 'Postal / ZIP code'
 
   return (
     <div className={cn('space-y-4', className)}>
@@ -281,32 +240,49 @@ export function MobileAddressInput({
       {/* Country */}
       <MobileSelect
         label="Country"
-        value={address.country || 'US'}
-        onChange={(e) => handleChange('country', e.target.value)}
+        value={address.country || 'ZM'}
+        onChange={(e) => {
+          handleChange('country', e.target.value)
+          // Clear state when country changes (previous value may not apply)
+          if (e.target.value !== address.country) {
+            handleChange('state', '')
+          }
+        }}
         options={COUNTRIES}
         error={errors.country}
         disabled={disabled}
       />
 
-      {/* State & Postal code row */}
+      {/* State/Province & Postal code row */}
       <div className="grid grid-cols-2 gap-3">
-        <MobileSelect
-          label="State"
-          value={address.state || ''}
-          onChange={(e) => handleChange('state', e.target.value)}
-          options={getStates()}
-          error={errors.state}
-          placeholder="Select state"
-          disabled={disabled}
-        />
+        {getStates().length > 0 ? (
+          <MobileSelect
+            label={stateLabel}
+            value={address.state || ''}
+            onChange={(e) => handleChange('state', e.target.value)}
+            options={getStates()}
+            error={errors.state}
+            placeholder={`Select ${stateLabel.toLowerCase()}`}
+            disabled={disabled}
+          />
+        ) : (
+          <MobileInput
+            label={stateLabel}
+            value={address.state || ''}
+            onChange={(e) => handleChange('state', e.target.value)}
+            error={errors.state}
+            autoComplete="address-level1"
+            enterKeyHint="next"
+            disabled={disabled}
+          />
+        )}
         <MobileInput
           ref={postalCodeRef}
-          label="ZIP code"
+          label={postalLabel}
           value={address.postalCode || ''}
           onChange={(e) => handleChange('postalCode', e.target.value)}
           error={errors.postalCode}
           autoComplete="postal-code"
-          inputMode="numeric"
           enterKeyHint={showPhone ? 'next' : 'done'}
           disabled={disabled}
           onKeyDown={(e) => {
@@ -315,7 +291,6 @@ export function MobileAddressInput({
               if (showPhone) {
                 phoneRef.current?.focus()
               } else {
-                // Blur to dismiss keyboard
                 e.currentTarget.blur()
               }
             }
