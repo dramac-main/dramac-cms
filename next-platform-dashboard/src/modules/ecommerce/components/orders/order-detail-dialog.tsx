@@ -138,7 +138,7 @@ const statuses: OrderStatus[] = [
   "cancelled",
 ];
 
-// Zambia-focused carrier list (top couriers first, then international)
+// Zambia-focused courier list (top couriers first, then international)
 const ZAMBIA_CARRIERS = [
   // Top local couriers
   { value: "Yango Deli", label: "Yango Deli" },
@@ -319,7 +319,7 @@ export function OrderDetailDialog({
         ? shippingCarrierCustom.trim()
         : shippingCarrier.trim();
     if (!actualCarrier || !shippingTrackingNumber.trim()) {
-      toast.error("Carrier and tracking number are required");
+      toast.error("Courier and tracking number are required");
       return;
     }
 
@@ -777,7 +777,7 @@ export function OrderDetailDialog({
           </DialogHeader>
           <div className="space-y-4 mt-2">
             <div className="space-y-2">
-              <Label htmlFor="shipping-carrier">Carrier *</Label>
+              <Label htmlFor="shipping-carrier">Courier *</Label>
               <Select
                 value={shippingCarrier}
                 onValueChange={(val) => {
@@ -786,7 +786,7 @@ export function OrderDetailDialog({
                 }}
               >
                 <SelectTrigger id="shipping-carrier">
-                  <SelectValue placeholder="Select a carrier..." />
+                  <SelectValue placeholder="Select a courier..." />
                 </SelectTrigger>
                 <SelectContent>
                   {ZAMBIA_CARRIERS.map((c) => (
