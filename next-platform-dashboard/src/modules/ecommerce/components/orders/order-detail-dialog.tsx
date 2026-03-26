@@ -138,6 +138,25 @@ const statuses: OrderStatus[] = [
   "cancelled",
 ];
 
+// Zambia-focused carrier list (top couriers first, then international)
+const ZAMBIA_CARRIERS = [
+  // Top local couriers
+  { value: "Yango Deli", label: "Yango Deli" },
+  { value: "Platinum Courier", label: "Platinum Courier" },
+  { value: "Afri Delivery", label: "Afri Delivery" },
+  { value: "Speed Couriers Zambia", label: "Speed Couriers Zambia" },
+  { value: "Courier Express Zambia", label: "Courier Express Zambia" },
+  { value: "Zampost", label: "Zampost (Zambia Postal Services)" },
+  // International couriers active in Zambia
+  { value: "DHL", label: "DHL" },
+  { value: "FedEx", label: "FedEx" },
+  { value: "Skynet Worldwide Express", label: "Skynet Worldwide Express" },
+  { value: "G4S Courier", label: "G4S Courier" },
+  { value: "UPS", label: "UPS" },
+  // Custom
+  { value: "other", label: "Other / My Own Delivery" },
+] as const;
+
 // ============================================================================
 // COMPONENT
 // ============================================================================
@@ -173,6 +192,7 @@ export function OrderDetailDialog({
   // Shipping dialog state
   const [showShippingDialog, setShowShippingDialog] = useState(false);
   const [shippingCarrier, setShippingCarrier] = useState("");
+  const [shippingCarrierCustom, setShippingCarrierCustom] = useState("");
   const [shippingTrackingNumber, setShippingTrackingNumber] = useState("");
   const [shippingTrackingUrl, setShippingTrackingUrl] = useState("");
   const [isSubmittingShipment, setIsSubmittingShipment] = useState(false);
@@ -294,7 +314,11 @@ export function OrderDetailDialog({
 
   // Submit shipment handler (called from shipping dialog)
   const handleSubmitShipment = async () => {
-    if (!shippingCarrier.trim() || !shippingTrackingNumber.trim()) {
+    const actualCarrier =
+      shippingCarrier === "other"
+        ? shippingCarrierCustom.trim()
+        : shippingCarrier.trim();
+    if (!actualCarrier || !shippingTrackingNumber.trim()) {
       toast.error("Carrier and tracking number are required");
       return;
     }
@@ -305,7 +329,7 @@ export function OrderDetailDialog({
         siteId,
         orderId,
         {
-          carrier: shippingCarrier.trim(),
+          carrier: actualCarrier,
           tracking_number: shippingTrackingNumber.trim(),
           tracking_url: shippingTrackingUrl.trim() || undefined,
         },
@@ -316,6 +340,10 @@ export function OrderDetailDialog({
       if (result) {
         toast.success("Shipment created and customer notified");
         setShowShippingDialog(false);
+        setShippingCarrier("");
+        setShippingCarrierCustom("");
+        setShippingTrackingNumber("");
+        setShippingTrackingUrl("");
         // Refresh order data
         const data = await getOrderDetail(siteId, orderId);
         setOrderData(data);
@@ -535,7 +563,9 @@ export function OrderDetailDialog({
                         src={proofUrl}
                         alt="Payment proof"
                         contentType={proofData?.content_type as string}
-                        fileName={String(proofData?.file_name || "Payment proof")}
+                        fileName={String(
+                          proofData?.file_name || "Payment proof",
+                        )}
                         thumbnailMaxHeight="max-h-64"
                         className="w-full"
                       />
@@ -748,12 +778,33 @@ export function OrderDetailDialog({
           <div className="space-y-4 mt-2">
             <div className="space-y-2">
               <Label htmlFor="shipping-carrier">Carrier *</Label>
-              <Input
-                id="shipping-carrier"
-                placeholder="e.g. DHL, FedEx, UPS, USPS"
+              <Select
                 value={shippingCarrier}
-                onChange={(e) => setShippingCarrier(e.target.value)}
-              />
+                onValueChange={(val) => {
+                  setShippingCarrier(val);
+                  if (val !== "other") setShippingCarrierCustom("");
+                }}
+              >
+                <SelectTrigger id="shipping-carrier">
+                  <SelectValue placeholder="Select a carrier..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {ZAMBIA_CARRIERS.map((c) => (
+                    <SelectItem key={c.value} value={c.value}>
+                      {c.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {shippingCarrier === "other" && (
+                <Input
+                  placeholder="Enter your carrier name..."
+                  value={shippingCarrierCustom}
+                  onChange={(e) => setShippingCarrierCustom(e.target.value)}
+                  className="mt-2"
+                  autoFocus
+                />
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="shipping-tracking">Tracking Number *</Label>
@@ -785,8 +836,10 @@ export function OrderDetailDialog({
                 onClick={handleSubmitShipment}
                 disabled={
                   isSubmittingShipment ||
-                  !shippingCarrier.trim() ||
-                  !shippingTrackingNumber.trim()
+                  !shippingTrackingNumber.trim() ||
+                  (shippingCarrier === "other"
+                    ? !shippingCarrierCustom.trim()
+                    : !shippingCarrier)
                 }
               >
                 {isSubmittingShipment ? (
