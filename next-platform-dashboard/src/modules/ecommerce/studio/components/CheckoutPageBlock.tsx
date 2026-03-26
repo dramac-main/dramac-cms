@@ -269,6 +269,12 @@ export function CheckoutPageBlock({
   const authToken = auth.token;
   const openAuthDialog = auth.openAuthDialog;
 
+  const [orderResult, setOrderResult] = React.useState<{
+    orderId: string;
+    orderNumber: string;
+    paymentInstructions?: string;
+  } | null>(null);
+
   // Pre-fill checkout form from logged-in customer (only once on mount / login)
   React.useEffect(() => {
     if (!authCustomer) return;
@@ -316,12 +322,6 @@ export function CheckoutPageBlock({
       </div>
     );
   }
-
-  const [orderResult, setOrderResult] = React.useState<{
-    orderId: string;
-    orderNumber: string;
-    paymentInstructions?: string;
-  } | null>(null);
 
   // Persist order reference so customers can find their order later
   const saveOrderToStorage = (orderId: string, orderNumber: string) => {

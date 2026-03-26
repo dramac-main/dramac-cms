@@ -117,6 +117,7 @@ function LoginForm({
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [helpShown, setHelpShown] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -178,15 +179,16 @@ function LoginForm({
         <button
           type="button"
           className="text-primary hover:underline font-medium"
-          onClick={() => {
-            window.alert(
-              "Please contact the store for password reset assistance.",
-            );
-          }}
+          onClick={() => setHelpShown(true)}
         >
           Get help
         </button>
       </p>
+      {helpShown && (
+        <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground text-center">
+          Please contact the store for password reset assistance.
+        </p>
+      )}
     </form>
   );
 }

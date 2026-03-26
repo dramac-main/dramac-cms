@@ -8,7 +8,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react'
-import { getEcommerceSettings } from '../actions/ecommerce-actions'
+import { getPublicEcommerceSettings } from '../actions/public-ecommerce-actions'
 import type { 
   EcommerceSettings,
   StorefrontContextValue 
@@ -69,7 +69,7 @@ export function StorefrontProvider({ children, siteId }: StorefrontProviderProps
 
     async function loadSettings() {
       try {
-        const data = await getEcommerceSettings(siteId)
+        const data = await getPublicEcommerceSettings(siteId)
         setSettings(data)
       } catch (err) {
         console.error('Error loading storefront settings:', err)

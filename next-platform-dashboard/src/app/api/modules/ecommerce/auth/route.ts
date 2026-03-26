@@ -23,18 +23,23 @@ import * as crypto from "crypto";
 
 export const dynamic = "force-dynamic";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
-};
+/** Build CORS headers scoped to the request origin */
+function getCorsHeaders(request?: NextRequest) {
+  const origin = request?.headers.get("origin") || "";
+  // Allow same-site and any subdomain (storefront sites)
+  return {
+    "Access-Control-Allow-Origin": origin || "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  };
+}
 
 const TABLE = "mod_ecommod01_customers";
 const SESSIONS = "mod_ecommod01_customer_sessions";
 const SESSION_TTL_DAYS = 30;
 
-export async function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: corsHeaders });
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, { status: 204, headers: getCorsHeaders(request) });
 }
 
 function hashToken(token: string): string {
@@ -115,6 +120,7 @@ function safeCustomer(c: CustomerRow) {
 }
 
 export async function POST(request: NextRequest) {
+  const corsHeaders = getCorsHeaders(request);
   try {
     const body = await request.json();
     const { action, siteId } = body;

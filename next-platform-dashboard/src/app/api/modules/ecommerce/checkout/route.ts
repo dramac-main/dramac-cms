@@ -376,23 +376,34 @@ export async function POST(request: NextRequest) {
         // Create DPO transaction token via API
         try {
           if (dpoConfig.company_token) {
+            // XML-escape values to prevent injection
+            const xmlEscape = (s: string) =>
+              s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+
+            const safeCompanyToken = xmlEscape(dpoConfig.company_token);
+            const safeOrderId = xmlEscape(order.id);
+            const safeSuccessUrl = xmlEscape(successUrl);
+            const safeCancelUrl = xmlEscape(cancelUrl);
+            const safeServiceType = xmlEscape(dpoConfig.service_type || "5525");
+            const safeOrderNumber = xmlEscape(order.order_number);
+
             const createTokenXml = `<?xml version="1.0" encoding="utf-8"?>
 <API3G>
-  <CompanyToken>${dpoConfig.company_token}</CompanyToken>
+  <CompanyToken>${safeCompanyToken}</CompanyToken>
   <Request>createToken</Request>
   <Transaction>
     <PaymentAmount>${totalInUnits.toFixed(2)}</PaymentAmount>
     <PaymentCurrency>${settings.currency}</PaymentCurrency>
-    <CompanyRef>${order.id}</CompanyRef>
-    <RedirectURL>${successUrl}</RedirectURL>
-    <BackURL>${cancelUrl}</BackURL>
+    <CompanyRef>${safeOrderId}</CompanyRef>
+    <RedirectURL>${safeSuccessUrl}</RedirectURL>
+    <BackURL>${safeCancelUrl}</BackURL>
     <CompanyRefUnique>1</CompanyRefUnique>
     <PTL>24</PTL>
   </Transaction>
   <Services>
     <Service>
-      <ServiceType>${dpoConfig.service_type || "5525"}</ServiceType>
-      <ServiceDescription>Order ${order.order_number}</ServiceDescription>
+      <ServiceType>${safeServiceType}</ServiceType>
+      <ServiceDescription>Order ${safeOrderNumber}</ServiceDescription>
       <ServiceDate>${new Date().toISOString().split("T")[0]} 00:00</ServiceDate>
     </Service>
   </Services>

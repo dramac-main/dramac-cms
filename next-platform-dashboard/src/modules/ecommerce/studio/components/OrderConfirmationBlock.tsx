@@ -187,6 +187,8 @@ export function OrderConfirmationBlock({
           tax_amount: o.tax_amount || 0,
           total: o.total || 0,
           created_at: o.created_at,
+          tracking_number: o.tracking_number || undefined,
+          tracking_url: o.tracking_url || undefined,
         });
       })
       .catch(() => {
@@ -338,7 +340,7 @@ export function OrderConfirmationBlock({
           isManualPayment: isManual,
         },
       },
-      "*",
+      window.location.origin,
     );
   }, [order]);
 
@@ -1022,12 +1024,14 @@ export function OrderConfirmationBlock({
 
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button variant="outline" asChild>
-            <Link href={trackingLink}>
-              <Truck className="h-4 w-4 mr-2" />
-              Track Order
-            </Link>
-          </Button>
+          {order.tracking_url ? (
+            <Button variant="outline" asChild>
+              <a href={order.tracking_url} target="_blank" rel="noopener noreferrer">
+                <Truck className="h-4 w-4 mr-2" />
+                Track Shipment
+              </a>
+            </Button>
+          ) : null}
 
           <Button variant="outline" onClick={openChatWithOrderContext}>
             <MessageSquare className="h-4 w-4 mr-2" />

@@ -407,15 +407,12 @@ async function processData(
       .eq("is_enabled", true);
 
     const hasEcommerce = ecomInstall?.some((inst: any) => {
-      // Check via modules_v2 slug — we already loaded module data later,
-      // but to avoid circular deps, check if any installed module matches
-      // the known ecommerce module ID. For robustness, also check if the
-      // site has any ecommerce pages (shop, cart) as a fast heuristic.
-      return true; // We'll verify properly below
+      return inst.is_enabled;
     });
 
-    // Fast heuristic: site has ecommerce if it has a /shop or /cart page
-    const siteHasEcommerce = pages.some((p: any) => {
+    // Fast heuristic: site has ecommerce if it has a /shop or /cart page,
+    // OR has an enabled ecommerce module installation
+    const siteHasEcommerce = hasEcommerce || pages.some((p: any) => {
       const s = (p.slug || "").replace(/^\/+/, "");
       return s === "shop" || s === "cart";
     });

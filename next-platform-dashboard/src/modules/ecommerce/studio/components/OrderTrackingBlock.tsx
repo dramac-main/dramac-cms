@@ -40,7 +40,9 @@ export function OrderTrackingBlock({
   const [orderNumber, setOrderNumber] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [foundOrderId, setFoundOrderId] = React.useState<string | null>(null);
+  // Separate state: recentOrderId from localStorage vs searchResultId from actual lookup
+  const [recentOrderId, setRecentOrderId] = React.useState<string | null>(null);
+  const [searchResultId, setSearchResultId] = React.useState<string | null>(null);
 
   // Check localStorage for recent order on mount
   React.useEffect(() => {
@@ -52,7 +54,7 @@ export function OrderTrackingBlock({
       if (stored) {
         const data = JSON.parse(stored);
         if (data?.orderId && data?.orderNumber) {
-          setFoundOrderId(data.orderId);
+          setRecentOrderId(data.orderId);
         }
       }
     } catch {
@@ -63,7 +65,7 @@ export function OrderTrackingBlock({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setFoundOrderId(null);
+    setSearchResultId(null);
 
     if (!email.trim() || !orderNumber.trim()) {
       setError("Please enter both your email and order number.");
@@ -84,7 +86,7 @@ export function OrderTrackingBlock({
       );
 
       if (result) {
-        setFoundOrderId(result.order.id);
+        setSearchResultId(result.order.id);
       } else {
         setError(
           "No order found. Please check your email address and order number and try again.",
@@ -115,7 +117,7 @@ export function OrderTrackingBlock({
         </div>
 
         {/* Recent order quick link */}
-        {foundOrderId && !email && !orderNumber && (
+        {recentOrderId && !email && !orderNumber && (
           <Card className="mb-6 border-primary/20 bg-primary/5">
             <CardContent className="py-4">
               <div className="flex items-center justify-between gap-3">
@@ -124,7 +126,7 @@ export function OrderTrackingBlock({
                   <p className="text-sm font-medium">You have a recent order</p>
                 </div>
                 <Button size="sm" asChild>
-                  <Link href={`/order-confirmation?order=${foundOrderId}`}>
+                  <Link href={`/order-confirmation?order=${recentOrderId}`}>
                     View Order
                     <ArrowRight className="h-3 w-3 ml-1" />
                   </Link>
@@ -191,8 +193,8 @@ export function OrderTrackingBlock({
                 </Alert>
               )}
 
-              {/* Found order — show link */}
-              {foundOrderId && (email || orderNumber) && (
+              {/* Found order — show link (only after actual server-side lookup) */}
+              {searchResultId && (
                 <Alert className="border-green-200 bg-green-50">
                   <Package className="h-4 w-4 text-green-600" />
                   <AlertDescription>
@@ -202,7 +204,7 @@ export function OrderTrackingBlock({
                       </span>
                       <Button size="sm" asChild>
                         <Link
-                          href={`/order-confirmation?order=${foundOrderId}`}
+                          href={`/order-confirmation?order=${searchResultId}`}
                         >
                           View Order Details
                           <ArrowRight className="h-3 w-3 ml-1" />

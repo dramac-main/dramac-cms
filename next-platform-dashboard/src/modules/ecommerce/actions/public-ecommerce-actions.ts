@@ -114,6 +114,8 @@ export async function getPublicProducts(
   page = 1,
   limit = 20,
 ): Promise<PaginatedResponse<Product>> {
+  // Cap limit to prevent catalog dumping
+  limit = Math.min(limit, 100);
   try {
     const supabase = getPublicClient();
 
@@ -127,9 +129,13 @@ export async function getPublicProducts(
       query = query.eq("is_featured", filters.featured);
     }
     if (filters.search) {
-      query = query.or(
-        `name.ilike.%${filters.search}%,description.ilike.%${filters.search}%,sku.ilike.%${filters.search}%`,
-      );
+      // Sanitize search to prevent PostgREST filter injection
+      const safeSearch = filters.search.replace(/[%_(),.\\]/g, '');
+      if (safeSearch) {
+        query = query.or(
+          `name.ilike.%${safeSearch}%,description.ilike.%${safeSearch}%,sku.ilike.%${safeSearch}%`,
+        );
+      }
     }
     if (filters.minPrice !== undefined) {
       query = query.gte("base_price", filters.minPrice);
@@ -314,13 +320,26 @@ export async function getPublicProductBySlug(
 
 export async function getPublicProductVariants(
   productId: string,
+  siteId?: string,
 ): Promise<ProductVariant[]> {
   try {
     const supabase = getPublicClient();
-    const { data, error } = await supabase
+    let query = supabase
       .from(`${TABLE_PREFIX}_product_variants`)
       .select("*")
       .eq("product_id", productId);
+    // Site scoping via product join — variants belong to products which belong to sites
+    // If siteId provided, verify product belongs to site first
+    if (siteId) {
+      const { data: product } = await supabase
+        .from(`${TABLE_PREFIX}_products`)
+        .select("id")
+        .eq("id", productId)
+        .eq("site_id", siteId)
+        .single();
+      if (!product) return [];
+    }
+    const { data, error } = await query;
 
     if (error) {
       console.error("[Ecom Public] getPublicProductVariants error:", error);
@@ -338,9 +357,20 @@ export async function getPublicProductVariants(
 
 export async function getPublicProductOptions(
   productId: string,
+  siteId?: string,
 ): Promise<ProductOption[]> {
   try {
     const supabase = getPublicClient();
+    // Site scoping: verify product belongs to site if siteId provided
+    if (siteId) {
+      const { data: product } = await supabase
+        .from(`${TABLE_PREFIX}_products`)
+        .select("id")
+        .eq("id", productId)
+        .eq("site_id", siteId)
+        .single();
+      if (!product) return [];
+    }
     const { data, error } = await supabase
       .from(`${TABLE_PREFIX}_product_options`)
       .select("*")
@@ -439,10 +469,10 @@ export async function getPublicOrCreateCart(
   }
 }
 
-export async function getPublicCart(cartId: string): Promise<Cart | null> {
+export async function getPublicCart(cartId: string, siteId?: string): Promise<Cart | null> {
   try {
     const supabase = getPublicClient();
-    const { data, error } = await supabase
+    let query = supabase
       .from(`${TABLE_PREFIX}_carts`)
       .select(
         `
@@ -453,9 +483,10 @@ export async function getPublicCart(cartId: string): Promise<Cart | null> {
           variant:${TABLE_PREFIX}_product_variants(id, options, quantity, image_url, price)
         )
       `,
-      )
-      .eq("id", cartId)
-      .single();
+      );
+    query = query.eq("id", cartId);
+    if (siteId) query = query.eq("site_id", siteId);
+    const { data, error } = await query.single();
 
     if (error) {
       if (error.code === "PGRST116") return null;
@@ -486,6 +517,10 @@ export async function addPublicCartItem(
 
   if (prodError || !product) throw new Error("Product not found");
   if (product.status !== "active") throw new Error("Product is not available");
+
+  // Cap quantity to prevent abuse
+  if (quantity > 100) throw new Error("Maximum quantity per item is 100");
+  if (quantity < 1) throw new Error("Quantity must be at least 1");
 
   let unitPrice = product.base_price;
 
