@@ -96,7 +96,7 @@ export async function sendMessage(data: {
     if (data.senderType === 'agent' || data.senderType === 'ai') {
       const { data: conv } = await supabase
         .from('mod_chat_conversations')
-        .select('first_response_time_seconds, status, created_at')
+        .select('first_response_time_seconds, status, created_at, assigned_agent_id, metadata')
         .eq('id', data.conversationId)
         .single()
 
@@ -111,6 +111,14 @@ export async function sendMessage(data: {
 
         if (conv.status === 'pending') {
           updates.status = 'active'
+        }
+
+        // Auto-pause AI when a human agent sends their first non-internal message
+        if (data.senderType === 'agent' && !data.isInternalNote) {
+          const meta = (conv.metadata || {}) as Record<string, unknown>
+          if (!meta.ai_paused) {
+            updates.metadata = { ...meta, ai_paused: true }
+          }
         }
 
         if (Object.keys(updates).length > 0) {

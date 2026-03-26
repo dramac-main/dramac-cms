@@ -218,12 +218,12 @@ export async function updateOrderStatus(
 
   if (status === "shipped") {
     updates.shipped_at = new Date().toISOString();
-    updates.fulfillment_status = "shipped";
+    updates.fulfillment_status = "partial";
   } else if (status === "delivered") {
     updates.delivered_at = new Date().toISOString();
-    updates.fulfillment_status = "delivered";
+    updates.fulfillment_status = "fulfilled";
   } else if (status === "cancelled") {
-    updates.fulfillment_status = "cancelled";
+    updates.fulfillment_status = "unfulfilled";
   }
 
   // Update order

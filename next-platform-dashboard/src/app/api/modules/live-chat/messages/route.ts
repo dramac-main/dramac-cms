@@ -197,13 +197,15 @@ export async function POST(request: NextRequest) {
       .catch(() => {});
 
     // Trigger AI auto-response:
+    // - Skip entirely if a human agent has paused AI for this conversation
     // - For payment guidance conversations, ALWAYS trigger AI (co-pilot mode)
     // - For other conversations, only when no agent is assigned
     const convMeta = (convData as { metadata?: Record<string, unknown> })
       .metadata;
     const isPaymentConvo = convMeta?.payment_guidance_active === true;
+    const isAiPaused = convMeta?.ai_paused === true;
 
-    if (isPaymentConvo || !convForNotify.assigned_agent_id) {
+    if (!isAiPaused && (isPaymentConvo || !convForNotify.assigned_agent_id)) {
       // Use after() to keep Vercel Lambda alive until AI work completes
       const capturedSiteId = convForNotify.site_id;
       const capturedConvId = conversationId;

@@ -740,6 +740,71 @@ export async function updateInternalNotes(
   }
 }
 
+/**
+ * Toggle AI auto-response for a specific conversation.
+ * When paused, AI will not respond to visitor messages in this conversation.
+ * When an agent takes over, this should be called to pause AI.
+ */
+export async function setConversationAiPaused(
+  conversationId: string,
+  paused: boolean,
+): Promise<{ success: boolean; error: string | null }> {
+  try {
+    const supabase = await getModuleClient();
+
+    const { data: conv } = await supabase
+      .from("mod_chat_conversations")
+      .select("metadata, site_id")
+      .eq("id", conversationId)
+      .single();
+
+    if (!conv) return { success: false, error: "Conversation not found" };
+
+    const { error: updateError } = await supabase
+      .from("mod_chat_conversations")
+      .update({
+        metadata: {
+          ...(conv.metadata || {}),
+          ai_paused: paused,
+        },
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", conversationId);
+
+    if (updateError) throw updateError;
+
+    revalidatePath(liveChatPath(conv.site_id));
+    return { success: true, error: null };
+  } catch (error) {
+    console.error("[LiveChat] Error toggling AI:", error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+/**
+ * Take over a conversation: assign the current user as agent + pause AI.
+ * Industry-standard "claim" action for human agents.
+ */
+export async function takeOverConversation(
+  conversationId: string,
+  agentId: string,
+): Promise<{ success: boolean; error: string | null }> {
+  try {
+    // Assign the agent
+    const assignResult = await assignConversation(conversationId, agentId);
+    if (!assignResult.success) return assignResult;
+
+    // Pause AI
+    const pauseResult = await setConversationAiPaused(conversationId, true);
+    if (!pauseResult.success) return pauseResult;
+
+    return { success: true, error: null };
+  } catch (error) {
+    console.error("[LiveChat] Error taking over conversation:", error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
 export async function markConversationRead(
   conversationId: string,
   role: "agent" | "visitor",

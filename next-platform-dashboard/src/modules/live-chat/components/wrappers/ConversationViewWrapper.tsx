@@ -49,6 +49,9 @@ import {
   X,
   Star,
   MessageSquare,
+  Bot,
+  BotOff,
+  HandMetal,
 } from "lucide-react";
 import { toast } from "sonner";
 import { MessageBubble } from "../shared/MessageBubble";
@@ -67,6 +70,8 @@ import {
   markConversationRead,
   transferConversation,
   updateConversationTags,
+  setConversationAiPaused,
+  takeOverConversation,
 } from "@/modules/live-chat/actions/conversation-actions";
 import {
   sendMessage,
@@ -140,6 +145,14 @@ export function ConversationViewWrapper({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [showTransfer, setShowTransfer] = useState(false);
   const [tagInput, setTagInput] = useState("");
+
+  // AI pause state — derived from conversation metadata
+  const [aiPaused, setAiPaused] = useState(
+    () => (initialConversation.metadata as Record<string, unknown>)?.ai_paused === true,
+  );
+
+  // Current agent record for take-over
+  const currentAgent = agents.find((a) => a.userId === userId);
 
   // Typing state managed locally
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
@@ -399,6 +412,38 @@ export function ConversationViewWrapper({
     [conversation.id, conversation.tags],
   );
 
+  // Toggle AI auto-response for this conversation
+  const handleToggleAi = useCallback(() => {
+    const newPaused = !aiPaused;
+    startTransition(async () => {
+      const result = await setConversationAiPaused(conversation.id, newPaused);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        setAiPaused(newPaused);
+        toast.success(newPaused ? "AI paused — you're in control" : "AI resumed");
+      }
+    });
+  }, [conversation.id, aiPaused]);
+
+  // Take over conversation: assign self + pause AI
+  const handleTakeOver = useCallback(() => {
+    if (!currentAgent) {
+      toast.error("You are not registered as a chat agent");
+      return;
+    }
+    startTransition(async () => {
+      const result = await takeOverConversation(conversation.id, currentAgent.id);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        setConversation((c) => ({ ...c, assignedAgentId: currentAgent.id }));
+        setAiPaused(true);
+        toast.success("You've taken over this conversation");
+      }
+    });
+  }, [conversation.id, currentAgent]);
+
   // Global keyboard shortcuts for conversation actions
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -533,6 +578,48 @@ export function ConversationViewWrapper({
             </Select>
 
             {/* Quick actions */}
+            {/* Take Over — visible when conversation is not assigned to current agent */}
+            {currentAgent &&
+              conversation.assignedAgentId !== currentAgent.id &&
+              conversation.status !== "closed" &&
+              conversation.status !== "resolved" && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="h-8 text-xs"
+                  onClick={handleTakeOver}
+                  disabled={isPending}
+                >
+                  <HandMetal className="h-3.5 w-3.5 mr-1" />
+                  Take Over
+                </Button>
+              )}
+
+            {/* Pause / Resume AI */}
+            {conversation.status !== "closed" &&
+              conversation.status !== "resolved" && (
+                <Button
+                  variant={aiPaused ? "outline" : "secondary"}
+                  size="sm"
+                  className="h-8 text-xs"
+                  onClick={handleToggleAi}
+                  disabled={isPending}
+                  title={aiPaused ? "Resume AI auto-responses" : "Pause AI auto-responses"}
+                >
+                  {aiPaused ? (
+                    <>
+                      <Bot className="h-3.5 w-3.5 mr-1" />
+                      Resume AI
+                    </>
+                  ) : (
+                    <>
+                      <BotOff className="h-3.5 w-3.5 mr-1" />
+                      Pause AI
+                    </>
+                  )}
+                </Button>
+              )}
+
             {(conversation.status === "active" ||
               conversation.status === "pending" ||
               conversation.status === "waiting") && (
