@@ -151,7 +151,30 @@ export async function getOrders(
 // ============================================================================
 
 /**
- * Update order status with timeline entry
+ * Valid order status transitions
+ */
+const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  pending: ["confirmed", "processing", "cancelled"],
+  confirmed: ["processing", "shipped", "cancelled"],
+  processing: ["shipped", "cancelled"],
+  shipped: ["delivered", "cancelled"],
+  delivered: ["refunded"],
+  cancelled: [],
+  refunded: [],
+};
+
+/**
+ * Map status → email type for automatic customer notification
+ */
+const STATUS_EMAIL_MAP: Record<string, "shipped" | "delivered" | "cancelled" | "refunded"> = {
+  shipped: "shipped",
+  delivered: "delivered",
+  cancelled: "cancelled",
+  refunded: "refunded",
+};
+
+/**
+ * Update order status with timeline entry, timestamps, and email notification
  */
 export async function updateOrderStatus(
   siteId: string,
@@ -163,13 +186,47 @@ export async function updateOrderStatus(
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await getModuleClient();
 
+  // Fetch current status for transition validation
+  const { data: currentOrder } = await supabase
+    .from(`${TABLE_PREFIX}_orders`)
+    .select("status")
+    .eq("id", orderId)
+    .eq("site_id", siteId)
+    .single();
+
+  if (!currentOrder) {
+    return { success: false, error: "Order not found" };
+  }
+
+  // Validate status transition
+  const allowed = VALID_TRANSITIONS[currentOrder.status as OrderStatus];
+  if (allowed && !allowed.includes(status)) {
+    return {
+      success: false,
+      error: `Cannot change status from ${currentOrder.status} to ${status}`,
+    };
+  }
+
+  // Build update payload with status-specific timestamps
+  const updates: Record<string, unknown> = {
+    status,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (status === "shipped") {
+    updates.shipped_at = new Date().toISOString();
+    updates.fulfillment_status = "shipped";
+  } else if (status === "delivered") {
+    updates.delivered_at = new Date().toISOString();
+    updates.fulfillment_status = "delivered";
+  } else if (status === "cancelled") {
+    updates.fulfillment_status = "cancelled";
+  }
+
   // Update order
   const { error: orderError } = await supabase
     .from(`${TABLE_PREFIX}_orders`)
-    .update({
-      status,
-      updated_at: new Date().toISOString(),
-    })
+    .update(updates)
     .eq("id", orderId)
     .eq("site_id", siteId);
 
@@ -182,9 +239,17 @@ export async function updateOrderStatus(
     event_type: "status_changed",
     title: `Status changed to ${status}`,
     description: note,
-    actor_id: userId,
-    actor_name: userName,
+    created_by: userId,
+    metadata: { actor_name: userName, previous_status: currentOrder.status },
   });
+
+  // Send customer notification email for relevant status changes
+  const emailType = STATUS_EMAIL_MAP[status];
+  if (emailType) {
+    sendOrderEmail(orderId, emailType, userId, userName).catch((err) =>
+      console.error("[OrderActions] Email notification error:", err),
+    );
+  }
 
   // Emit automation event
   logAutomationEvent(
@@ -193,6 +258,7 @@ export async function updateOrderStatus(
     {
       order_id: orderId,
       new_status: status,
+      previous_status: currentOrder.status,
       changed_by: userName,
     },
     {
@@ -233,16 +299,28 @@ export async function updateOrderStatus(
 
 /**
  * Add timeline event
+ * 
+ * DB columns: id, order_id, event_type, title, description, metadata, created_by, created_at
  */
 async function addTimelineEvent(
   orderId: string,
-  event: Omit<OrderTimelineEvent, "id" | "order_id" | "created_at">,
+  event: {
+    event_type: string;
+    title: string;
+    description?: string;
+    created_by?: string;
+    metadata?: Record<string, unknown>;
+  },
 ): Promise<void> {
   const supabase = await getModuleClient();
 
   await supabase.from(`${TABLE_PREFIX}_order_timeline`).insert({
     order_id: orderId,
-    ...event,
+    event_type: event.event_type,
+    title: event.title,
+    description: event.description,
+    created_by: event.created_by,
+    metadata: event.metadata,
   });
 }
 
@@ -292,8 +370,8 @@ export async function addOrderNote(
     event_type: "note_added",
     title: isInternal ? "Internal note added" : "Note added",
     description: content.slice(0, 100),
-    actor_id: userId,
-    actor_name: userName,
+    created_by: userId,
+    metadata: { actor_name: userName },
   });
 
   return note;
@@ -327,14 +405,13 @@ export async function addOrderShipment(
     carrier: string;
     tracking_number: string;
     tracking_url?: string;
-    items: Array<{ order_item_id: string; quantity: number }>;
   },
   userId: string,
   userName: string,
 ): Promise<OrderShipment | null> {
   const supabase = await getModuleClient();
 
-  // Create shipment
+  // Create shipment record
   const { data, error } = await supabase
     .from(`${TABLE_PREFIX}_order_shipments`)
     .insert({
@@ -343,15 +420,24 @@ export async function addOrderShipment(
       tracking_number: shipment.tracking_number,
       tracking_url: shipment.tracking_url,
       shipped_at: new Date().toISOString(),
-      status: "pending",
-      items: shipment.items,
+      status: "in_transit",
     })
     .select()
     .single();
 
   if (error) return null;
 
-  // Update order status to shipped
+  // Also store tracking info on the order for easy access by storefront
+  await supabase
+    .from(`${TABLE_PREFIX}_orders`)
+    .update({
+      tracking_number: shipment.tracking_number,
+      tracking_url: shipment.tracking_url,
+    })
+    .eq("id", orderId)
+    .eq("site_id", siteId);
+
+  // Update order status to shipped (this also sends the email + sets shipped_at)
   await updateOrderStatus(siteId, orderId, "shipped", userId, userName);
 
   // Add timeline event
@@ -359,9 +445,8 @@ export async function addOrderShipment(
     event_type: "shipped",
     title: "Order shipped",
     description: `Shipped via ${shipment.carrier} - ${shipment.tracking_number}`,
-    actor_id: userId,
-    actor_name: userName,
-    metadata: { shipment_id: data.id },
+    created_by: userId,
+    metadata: { shipment_id: data.id, actor_name: userName },
   });
 
   // Emit automation event for shipment
@@ -419,6 +504,107 @@ export async function updateShipmentStatus(
 }
 
 // ============================================================================
+// PAYMENT PROOF
+// ============================================================================
+
+/**
+ * Get payment proof signed URL for viewing in dashboard
+ */
+export async function getPaymentProofUrl(
+  orderId: string,
+  siteId: string,
+): Promise<{ url?: string; proof?: Record<string, unknown>; error?: string }> {
+  const supabase = await getModuleClient();
+
+  const { data: order } = await supabase
+    .from(`${TABLE_PREFIX}_orders`)
+    .select("metadata")
+    .eq("id", orderId)
+    .eq("site_id", siteId)
+    .single();
+
+  if (!order?.metadata?.payment_proof) {
+    return { error: "No payment proof uploaded" };
+  }
+
+  const proof = order.metadata.payment_proof as Record<string, unknown>;
+  const storagePath = proof.storage_path as string;
+
+  if (!storagePath) {
+    return { error: "Payment proof path missing" };
+  }
+
+  const { data, error } = await supabase.storage
+    .from("payment-proofs")
+    .createSignedUrl(storagePath, 3600);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return { url: data.signedUrl, proof };
+}
+
+/**
+ * Update payment proof status (approve/reject)
+ */
+export async function updatePaymentProofStatus(
+  siteId: string,
+  orderId: string,
+  status: "approved" | "rejected",
+  userId: string,
+  userName: string,
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await getModuleClient();
+
+  // Get current metadata
+  const { data: order } = await supabase
+    .from(`${TABLE_PREFIX}_orders`)
+    .select("metadata, payment_status")
+    .eq("id", orderId)
+    .eq("site_id", siteId)
+    .single();
+
+  if (!order) {
+    return { success: false, error: "Order not found" };
+  }
+
+  const metadata = order.metadata || {};
+  const proof = (metadata.payment_proof as Record<string, unknown>) || {};
+  proof.status = status;
+  proof.reviewed_at = new Date().toISOString();
+  proof.reviewed_by = userId;
+  metadata.payment_proof = proof;
+
+  const updates: Record<string, unknown> = { metadata };
+
+  // If approved, also update payment_status to paid
+  if (status === "approved") {
+    updates.payment_status = "paid";
+  }
+
+  const { error } = await supabase
+    .from(`${TABLE_PREFIX}_orders`)
+    .update(updates)
+    .eq("id", orderId)
+    .eq("site_id", siteId);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  await addTimelineEvent(orderId, {
+    event_type: "payment_proof_reviewed",
+    title: `Payment proof ${status}`,
+    description: `Payment proof was ${status} by ${userName}`,
+    created_by: userId,
+    metadata: { status, actor_name: userName },
+  });
+
+  return { success: true };
+}
+
+// ============================================================================
 // REFUNDS
 // ============================================================================
 
@@ -460,9 +646,8 @@ export async function createRefund(
     event_type: "refund_requested",
     title: "Refund requested",
     description: `Amount: ${formatCurrency(refund.amount / 100)} - ${refund.reason}`,
-    actor_id: userId,
-    actor_name: userName,
-    metadata: { refund_id: data.id },
+    created_by: userId,
+    metadata: { refund_id: data.id, actor_name: userName },
   });
 
   return data;
@@ -504,9 +689,8 @@ export async function processRefund(
   await addTimelineEvent(orderId, {
     event_type: "refund_processed",
     title: approved ? "Refund processed" : "Refund rejected",
-    actor_id: userId,
-    actor_name: userName,
-    metadata: { refund_id: refundId },
+    created_by: userId,
+    metadata: { refund_id: refundId, actor_name: userName },
   });
 
   // If approved, update order status and send notification
@@ -858,9 +1042,8 @@ export async function sendOrderEmail(
       order_id: orderId,
       event_type: "email_sent",
       title: `Email sent: ${emailType}`,
-      user_id: userId,
-      user_name: userName,
-      metadata: { email_type: emailType },
+      created_by: userId,
+      metadata: { email_type: emailType, actor_name: userName },
     });
 
     console.log(
@@ -875,10 +1058,10 @@ export async function sendOrderEmail(
       order_id: orderId,
       event_type: "email_failed",
       title: `Email failed: ${emailType}`,
-      user_id: userId,
-      user_name: userName,
+      created_by: userId,
       metadata: {
         email_type: emailType,
+        actor_name: userName,
         error: error instanceof Error ? error.message : "Unknown error",
       },
     });

@@ -37,6 +37,9 @@ interface Order {
   currency: string;
   itemCount: number;
   createdAt: string;
+  trackingNumber?: string;
+  trackingUrl?: string;
+  fulfillmentStatus?: string;
 }
 
 interface Address {
@@ -188,6 +191,25 @@ function OrdersTab({
                 {formatDate(order.createdAt)} · {order.itemCount}{" "}
                 {order.itemCount === 1 ? "item" : "items"}
               </p>
+              {order.trackingNumber && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Tracking: {order.trackingNumber}
+                  {order.trackingUrl && (
+                    <>
+                      {" · "}
+                      <a
+                        href={order.trackingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Track →
+                      </a>
+                    </>
+                  )}
+                </p>
+              )}
             </div>
             <div className="flex items-center gap-3">
               <div className="text-right">

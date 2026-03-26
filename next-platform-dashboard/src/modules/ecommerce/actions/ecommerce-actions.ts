@@ -1319,7 +1319,7 @@ export async function getOrders(
 
   let query = supabase
     .from(`${TABLE_PREFIX}_orders`)
-    .select("*", { count: "exact" })
+    .select(`*, items:${TABLE_PREFIX}_order_items(*)`, { count: "exact" })
     .eq("site_id", siteId);
 
   if (filters.status) {

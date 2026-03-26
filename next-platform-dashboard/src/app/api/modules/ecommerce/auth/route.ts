@@ -600,15 +600,51 @@ export async function POST(request: NextRequest) {
       const { data: orders } = await (supabase as any)
         .from(`${TABLE_PREFIX}_orders`)
         .select(
-          "id, order_number, status, payment_status, fulfillment_status, total, currency, created_at, shipping_address",
+          "id, order_number, status, payment_status, fulfillment_status, total, currency, created_at, shipping_address, tracking_number, tracking_url",
         )
         .eq("customer_id", session.customer_id)
         .eq("site_id", siteId)
         .order("created_at", { ascending: false })
         .limit(50);
 
+      // Count items per order
+      const orderIds = (orders || []).map((o: { id: string }) => o.id);
+      const itemCounts: Record<string, number> = {};
+      if (orderIds.length > 0) {
+        const { data: items } = await (supabase as any)
+          .from(`${TABLE_PREFIX}_order_items`)
+          .select("order_id, quantity")
+          .in("order_id", orderIds);
+
+        if (items) {
+          for (const item of items as {
+            order_id: string;
+            quantity: number;
+          }[]) {
+            itemCounts[item.order_id] =
+              (itemCounts[item.order_id] || 0) + item.quantity;
+          }
+        }
+      }
+
+      // Map to camelCase for storefront consumption
+      const mapped = (orders || []).map((o: Record<string, unknown>) => ({
+        id: o.id,
+        orderNumber: o.order_number,
+        status: o.status,
+        paymentStatus: o.payment_status,
+        fulfillmentStatus: o.fulfillment_status,
+        total: o.total,
+        currency: o.currency,
+        createdAt: o.created_at,
+        shippingAddress: o.shipping_address,
+        trackingNumber: o.tracking_number,
+        trackingUrl: o.tracking_url,
+        itemCount: itemCounts[o.id as string] || 0,
+      }));
+
       return NextResponse.json(
-        { orders: orders || [] },
+        { orders: mapped },
         { status: 200, headers: corsHeaders },
       );
     }

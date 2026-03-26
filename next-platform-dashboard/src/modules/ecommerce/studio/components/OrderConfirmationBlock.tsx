@@ -87,6 +87,8 @@ interface OrderData {
   total: number;
   created_at: string;
   estimated_delivery?: string;
+  tracking_number?: string;
+  tracking_url?: string;
 }
 
 interface OrderConfirmationBlockProps {
@@ -855,6 +857,26 @@ export function OrderConfirmationBlock({
                 <p className="text-sm text-green-600">
                   Estimated delivery: {order.estimated_delivery}
                 </p>
+              )}
+
+              {/* Tracking Info */}
+              {order.tracking_number && (
+                <div className="mt-3 pt-3 border-t space-y-1">
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">Tracking: </span>
+                    <span className="font-medium">{order.tracking_number}</span>
+                  </p>
+                  {order.tracking_url && (
+                    <a
+                      href={order.tracking_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
+                    >
+                      Track your shipment →
+                    </a>
+                  )}
+                </div>
               )}
             </CardContent>
           </Card>
