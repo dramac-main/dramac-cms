@@ -19,8 +19,12 @@ import {
   MessageSquare,
   RefreshCw,
   Mail,
+  MailX,
   Clock,
-  AlertCircle
+  AlertCircle,
+  Upload,
+  ShieldCheck,
+  HelpCircle
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { OrderTimelineEvent, OrderEventType } from '../../types/ecommerce-types'
@@ -43,8 +47,13 @@ interface EventConfig {
 // EVENT CONFIG
 // ============================================================================
 
-const eventConfig: Record<OrderEventType, EventConfig> = {
+const eventConfig: Record<string, EventConfig> = {
   created: {
+    icon: Package,
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-100 dark:bg-blue-900/30'
+  },
+  order_created: {
     icon: Package,
     color: 'text-blue-600',
     bgColor: 'bg-blue-100 dark:bg-blue-900/30'
@@ -63,6 +72,16 @@ const eventConfig: Record<OrderEventType, EventConfig> = {
     icon: AlertCircle,
     color: 'text-red-600',
     bgColor: 'bg-red-100 dark:bg-red-900/30'
+  },
+  payment_proof_uploaded: {
+    icon: Upload,
+    color: 'text-indigo-600',
+    bgColor: 'bg-indigo-100 dark:bg-indigo-900/30'
+  },
+  payment_proof_reviewed: {
+    icon: ShieldCheck,
+    color: 'text-emerald-600',
+    bgColor: 'bg-emerald-100 dark:bg-emerald-900/30'
   },
   processing: {
     icon: RefreshCw,
@@ -108,7 +127,18 @@ const eventConfig: Record<OrderEventType, EventConfig> = {
     icon: Mail,
     color: 'text-purple-600',
     bgColor: 'bg-purple-100 dark:bg-purple-900/30'
-  }
+  },
+  email_failed: {
+    icon: MailX,
+    color: 'text-red-600',
+    bgColor: 'bg-red-100 dark:bg-red-900/30'
+  },
+}
+
+const fallbackConfig: EventConfig = {
+  icon: HelpCircle,
+  color: 'text-gray-500',
+  bgColor: 'bg-gray-100 dark:bg-gray-800'
 }
 
 // ============================================================================
@@ -131,7 +161,7 @@ export function OrderTimeline({ events }: OrderTimelineProps) {
         <div className="absolute left-4 top-2 bottom-2 w-0.5 bg-border" />
 
         {events.map((event, index) => {
-          const config = eventConfig[event.event_type]
+          const config = eventConfig[event.event_type] || fallbackConfig
           const Icon = config.icon
 
           return (

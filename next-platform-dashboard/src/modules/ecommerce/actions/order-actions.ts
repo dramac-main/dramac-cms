@@ -1132,3 +1132,32 @@ export async function sendOrderEmail(
     return false;
   }
 }
+
+/**
+ * Fetch agency branding (logo + primary color) for invoice rendering.
+ * Used by the ecommerce dashboard orders view.
+ */
+export async function getStoreBrandingForInvoice(
+  agencyId: string,
+): Promise<{ storeLogo: string; storePrimaryColor: string }> {
+  try {
+    const supabase = createAdminClient();
+    const { data: agency } = await supabase
+      .from("agencies")
+      .select("custom_branding")
+      .eq("id", agencyId)
+      .single();
+
+    if (agency?.custom_branding) {
+      const branding = agency.custom_branding as Record<string, unknown>;
+      return {
+        storeLogo: (branding.logo_url as string) || "",
+        storePrimaryColor: (branding.primary_color as string) || "",
+      };
+    }
+  } catch (err) {
+    console.error("[OrderActions] Error fetching agency branding:", err);
+  }
+
+  return { storeLogo: "", storePrimaryColor: "" };
+}

@@ -8,7 +8,7 @@
  */
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useEcommerce, useCurrency } from '../../context/ecommerce-context'
 import { 
@@ -25,6 +25,7 @@ import {
   Coins
 } from 'lucide-react'
 import { OrderDetailDialog } from '../orders'
+import { getStoreBrandingForInvoice } from '../../actions/order-actions'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -83,12 +84,20 @@ const paymentStatusConfig: Record<PaymentStatus, { label: string; className: str
 
 export function OrdersView({ searchQuery = '', userId = '', userName = 'Store Manager', focusOrderId, onFocusOrderHandled }: OrdersViewProps) {
   const router = useRouter()
-  const { orders, isLoading, changeOrderStatus, siteId, settings } = useEcommerce()
+  const { orders, isLoading, changeOrderStatus, siteId, agencyId, settings } = useEcommerce()
   const { formatPrice } = useCurrency()
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all')
   const [paymentFilter, setPaymentFilter] = useState<PaymentStatus | 'all'>('all')
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
   const [detailDialogOpen, setDetailDialogOpen] = useState(false)
+  const [storeBranding, setStoreBranding] = useState<{ storeLogo: string; storePrimaryColor: string }>({ storeLogo: '', storePrimaryColor: '' })
+
+  // Fetch agency branding for invoice
+  useEffect(() => {
+    if (agencyId) {
+      getStoreBrandingForInvoice(agencyId).then(setStoreBranding).catch(() => {})
+    }
+  }, [agencyId])
 
   // Auto-open order detail when navigated from another view with a specific order
   React.useEffect(() => {
@@ -313,6 +322,9 @@ export function OrdersView({ searchQuery = '', userId = '', userName = 'Store Ma
           storeName={storeName}
           storeAddress={storeAddress}
           storeEmail={storeEmail}
+          storePhone={settings?.store_phone || ''}
+          storeLogo={storeBranding.storeLogo}
+          storePrimaryColor={storeBranding.storePrimaryColor}
           open={detailDialogOpen}
           onOpenChange={handleDialogClose}
         />

@@ -592,6 +592,8 @@ export function ChatOrderPanel({
             storeAddress={storeInfo.storeAddress}
             storeEmail={storeInfo.storeEmail}
             storePhone={storeInfo.storePhone}
+            storeLogo={storeInfo.storeLogo}
+            storePrimaryColor={storeInfo.storePrimaryColor}
             defaultCurrency={order.currency}
           />
         )}

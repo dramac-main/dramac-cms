@@ -1041,9 +1041,12 @@ export interface EcommerceSettingsComplete {
 
 export type OrderEventType =
   | "created"
+  | "order_created"
   | "confirmed"
   | "payment_received"
   | "payment_failed"
+  | "payment_proof_uploaded"
+  | "payment_proof_reviewed"
   | "processing"
   | "shipped"
   | "delivered"
@@ -1052,7 +1055,8 @@ export type OrderEventType =
   | "refund_processed"
   | "note_added"
   | "status_changed"
-  | "email_sent";
+  | "email_sent"
+  | "email_failed";
 
 export interface OrderTimelineEvent {
   id: string;
@@ -1144,6 +1148,7 @@ export interface InvoiceData {
     email: string;
     phone?: string;
     logo?: string;
+    primaryColor?: string;
   };
   invoice_number: string;
   invoice_date: string;

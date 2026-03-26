@@ -150,6 +150,7 @@ export interface ChatStoreInfo {
   storeEmail: string;
   storePhone: string;
   storeLogo: string;
+  storePrimaryColor: string;
   currency: string;
 }
 
@@ -191,15 +192,50 @@ export async function getStoreInfoForChat(
   } | null;
 
   const addressParts = addr
-    ? [addr.street, addr.city, addr.state, addr.postal_code, addr.country].filter(Boolean)
+    ? [
+        addr.street,
+        addr.city,
+        addr.state,
+        addr.postal_code,
+        addr.country,
+      ].filter(Boolean)
     : [];
+
+  // Fetch agency branding (logo + primary color) via sites → agencies
+  let storeLogo = "";
+  let storePrimaryColor = "";
+
+  try {
+    const { data: site } = await db
+      .from("sites")
+      .select("agency_id")
+      .eq("id", siteId)
+      .single();
+
+    if (site?.agency_id) {
+      const { data: agency } = await db
+        .from("agencies")
+        .select("custom_branding")
+        .eq("id", site.agency_id)
+        .single();
+
+      if (agency?.custom_branding) {
+        const branding = agency.custom_branding as Record<string, unknown>;
+        storeLogo = (branding.logo_url as string) || "";
+        storePrimaryColor = (branding.primary_color as string) || "";
+      }
+    }
+  } catch (err) {
+    console.error("[ChatOrderActions] Error fetching agency branding:", err);
+  }
 
   return {
     storeName: settings.store_name || "",
     storeAddress: addressParts.join(", "),
     storeEmail: settings.store_email || "",
     storePhone: settings.store_phone || "",
-    storeLogo: "",
+    storeLogo,
+    storePrimaryColor,
     currency: settings.currency || "ZMW",
   };
 }

@@ -83,6 +83,7 @@ interface OrderDetailDialogProps {
   storeEmail: string;
   storePhone?: string;
   storeLogo?: string;
+  storePrimaryColor?: string;
   /** Fallback currency when rendered outside EcommerceProvider (e.g. live chat) */
   defaultCurrency?: string;
 }
@@ -173,6 +174,7 @@ export function OrderDetailDialog({
   storeEmail,
   storePhone,
   storeLogo,
+  storePrimaryColor,
   defaultCurrency,
 }: OrderDetailDialogProps) {
   const { currency: storeCurrency } = useCurrencySafe(defaultCurrency);
@@ -740,6 +742,7 @@ export function OrderDetailDialog({
                         email: storeEmail,
                         phone: storePhone,
                         logo: storeLogo,
+                        primaryColor: storePrimaryColor,
                       },
                       invoice_number: invoiceNumber,
                       invoice_date: orderData.created_at,
