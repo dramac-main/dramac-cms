@@ -41,7 +41,7 @@ import { toast } from 'sonner'
 import { createRefund } from '../../actions/order-actions'
 import type { Order, OrderItem } from '../../types/ecommerce-types'
 
-import { useCurrency } from '../../context/ecommerce-context'
+import { useCurrencySafe } from '../../context/ecommerce-context'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -78,7 +78,7 @@ export function RefundDialog({
   userName,
   onSuccess
 }: RefundDialogProps) {
-  const { formatPrice: formatCurrency } = useCurrency()
+  const { formatPrice: formatCurrency } = useCurrencySafe()
   const [isProcessing, setIsProcessing] = useState(false)
   const [reason, setReason] = useState('')
   const [refundMethod, setRefundMethod] = useState<'original_payment' | 'store_credit' | 'other'>('original_payment')

@@ -11,7 +11,7 @@ import { forwardRef } from 'react'
 import { format } from 'date-fns'
 import type { InvoiceData } from '../../types/ecommerce-types'
 
-import { useCurrency } from '../../context/ecommerce-context'
+import { useCurrencySafe } from '../../context/ecommerce-context'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -26,7 +26,7 @@ interface InvoiceTemplateProps {
 
 export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
   function InvoiceTemplate({ data }, ref) {
-    const { currency: storeCurrency } = useCurrency()
+    const { currency: storeCurrency } = useCurrencySafe()
     const formatCurrency = (amount: number, currency?: string) => {
       const cur = currency || storeCurrency
       return new Intl.NumberFormat('en-US', { style: 'currency', currency: cur }).format(amount / 100)

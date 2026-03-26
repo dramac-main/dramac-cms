@@ -19,7 +19,7 @@ import {
 import { ImageOff } from 'lucide-react'
 import type { OrderItem } from '../../types/ecommerce-types'
 
-import { useCurrency } from '../../context/ecommerce-context'
+import { useCurrencySafe } from '../../context/ecommerce-context'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -47,7 +47,7 @@ export function OrderItemsTable({
   discount,
   total
 }: OrderItemsTableProps) {
-  const { formatPrice: formatCurrency } = useCurrency()
+  const { formatPrice: formatCurrency } = useCurrencySafe()
   // Calculate subtotal if not provided
   const calculatedSubtotal = subtotal ?? items.reduce((sum, item) => {
     return sum + (item.unit_price * item.quantity)
