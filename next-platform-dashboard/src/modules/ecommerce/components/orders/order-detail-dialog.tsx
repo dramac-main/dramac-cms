@@ -46,7 +46,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, ensureAbsoluteUrl } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { OrderTimeline } from "./order-timeline";
@@ -333,7 +333,7 @@ export function OrderDetailDialog({
         {
           carrier: actualCarrier,
           tracking_number: shippingTrackingNumber.trim(),
-          tracking_url: shippingTrackingUrl.trim() || undefined,
+          tracking_url: shippingTrackingUrl.trim() ? ensureAbsoluteUrl(shippingTrackingUrl) : undefined,
         },
         userId,
         userName,
@@ -681,7 +681,7 @@ export function OrderDetailDialog({
                           </Badge>
                           {s.tracking_url && (
                             <a
-                              href={s.tracking_url}
+                              href={ensureAbsoluteUrl(s.tracking_url)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-blue-600 hover:underline text-xs flex items-center gap-1"
@@ -705,7 +705,7 @@ export function OrderDetailDialog({
                         </span>
                         {orderData.tracking_url && (
                           <a
-                            href={orderData.tracking_url}
+                            href={ensureAbsoluteUrl(orderData.tracking_url)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:underline text-xs flex items-center gap-1"

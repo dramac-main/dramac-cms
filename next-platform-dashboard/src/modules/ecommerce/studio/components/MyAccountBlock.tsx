@@ -7,6 +7,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { ensureAbsoluteUrl } from "@/lib/utils";
 import {
   Package,
   MapPin,
@@ -198,7 +199,7 @@ function OrdersTab({
                     <>
                       {" · "}
                       <a
-                        href={order.trackingUrl}
+                        href={ensureAbsoluteUrl(order.trackingUrl)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:underline"

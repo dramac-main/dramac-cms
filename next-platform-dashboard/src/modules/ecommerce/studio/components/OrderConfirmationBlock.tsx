@@ -8,7 +8,7 @@
 "use client";
 
 import React from "react";
-import { cn } from "@/lib/utils";
+import { cn, ensureAbsoluteUrl } from "@/lib/utils";
 import {
   CheckCircle2,
   Package,
@@ -872,7 +872,7 @@ export function OrderConfirmationBlock({
                   </p>
                   {order.tracking_url && (
                     <a
-                      href={order.tracking_url}
+                      href={ensureAbsoluteUrl(order.tracking_url)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
@@ -1027,7 +1027,7 @@ export function OrderConfirmationBlock({
           {order.tracking_url ? (
             <Button variant="outline" asChild>
               <a
-                href={order.tracking_url}
+                href={ensureAbsoluteUrl(order.tracking_url)}
                 target="_blank"
                 rel="noopener noreferrer"
               >

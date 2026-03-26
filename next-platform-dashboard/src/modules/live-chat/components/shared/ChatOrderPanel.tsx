@@ -10,6 +10,7 @@
  */
 
 import { useState, useEffect, useCallback, useTransition } from "react";
+import { ensureAbsoluteUrl } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -399,7 +400,7 @@ export function ChatOrderPanel({
               </div>
               {order.trackingUrl && (
                 <a
-                  href={order.trackingUrl}
+                  href={ensureAbsoluteUrl(order.trackingUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-primary hover:underline flex items-center gap-1"

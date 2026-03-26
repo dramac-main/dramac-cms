@@ -42,3 +42,16 @@ export function formatDuration(seconds: number): string {
 export function formatDateRange(start: string | Date, end: string | Date): string {
   return localeFormatDateRange(start, end, DEFAULT_LOCALE);
 }
+
+/**
+ * Ensure a URL string has a protocol prefix.
+ * Prevents bare domains (e.g. "example.com") from being treated as relative paths.
+ */
+export function ensureAbsoluteUrl(url: string): string {
+  const trimmed = url.trim();
+  if (!trimmed) return trimmed;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  // Also handle protocol-relative URLs
+  if (trimmed.startsWith("//")) return `https:${trimmed}`;
+  return `https://${trimmed}`;
+}
