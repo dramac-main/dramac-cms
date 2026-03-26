@@ -8,6 +8,7 @@ import { Check, Trash2, ExternalLink, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { normalizeNotificationLink } from "@/lib/utils/normalize-notification-link";
 import {
   markNotificationRead,
   markAllNotificationsRead,
@@ -79,7 +80,7 @@ export function NotificationsList({
       await handleMarkRead(notification.id);
     }
     if (notification.link) {
-      router.push(notification.link);
+      router.push(normalizeNotificationLink(notification.link));
     }
   };
 
@@ -152,7 +153,7 @@ export function NotificationsList({
                       className="h-8 w-8"
                       onClick={(e) => {
                         e.stopPropagation();
-                        router.push(notification.link!);
+                        router.push(normalizeNotificationLink(notification.link!));
                       }}
                     >
                       <ExternalLink className="w-4 h-4" />

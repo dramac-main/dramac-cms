@@ -19,6 +19,7 @@ import {
   deleteNotification,
 } from "@/lib/actions/notifications";
 import { cn } from "@/lib/utils";
+import { normalizeNotificationLink } from "@/lib/utils/normalize-notification-link";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import type { Notification } from "@/types/notifications";
@@ -94,7 +95,7 @@ export function NotificationBell() {
             action: newNotification.link
               ? {
                   label: 'View',
-                  onClick: () => router.push(newNotification.link!),
+                  onClick: () => router.push(normalizeNotificationLink(newNotification.link!)),
                 }
               : undefined,
           });
@@ -175,7 +176,7 @@ export function NotificationBell() {
       await handleMarkRead(notification.id);
     }
     if (notification.link) {
-      router.push(notification.link);
+      router.push(normalizeNotificationLink(notification.link));
       setIsOpen(false);
     }
   };
@@ -273,7 +274,7 @@ export function NotificationBell() {
                               className="h-6 w-6 p-0"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                window.open(notification.link, "_blank");
+                                window.open(normalizeNotificationLink(notification.link!), "_blank");
                               }}
                             >
                               <ExternalLink className="w-3 h-3" />

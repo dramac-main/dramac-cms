@@ -11,7 +11,7 @@
  */
 "use client";
 
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Mail, Phone, User } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -144,6 +144,48 @@ export function MobileCheckoutPage({
   const [contactErrors, setContactErrors] = useState<ContactErrors>({});
   const [shippingErrors, setShippingErrors] = useState<AddressErrors>({});
 
+  // Hydrate form state from sessionStorage on mount
+  const STORAGE_KEY = "dramac_mobile_checkout";
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(STORAGE_KEY);
+      if (!saved) return;
+      const data = JSON.parse(saved);
+      if (data.contact) setContact(data.contact);
+      if (data.shippingAddress) setShippingAddress(data.shippingAddress);
+      if (data.billingAddress) setBillingAddress(data.billingAddress);
+      if (data.shippingMethodId) setShippingMethodId(data.shippingMethodId);
+      if (data.paymentMethodId) setPaymentMethodId(data.paymentMethodId);
+      if (data.billingSameAsShipping !== undefined) setBillingSameAsShipping(data.billingSameAsShipping);
+      if (data.currentStep) setCurrentStep(data.currentStep);
+      if (data.completedSteps) setCompletedSteps(data.completedSteps);
+    } catch {
+      // Ignore parse errors
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Persist form state to sessionStorage on change
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          contact,
+          shippingAddress,
+          billingAddress,
+          shippingMethodId,
+          paymentMethodId,
+          billingSameAsShipping,
+          currentStep,
+          completedSteps,
+        }),
+      );
+    } catch {
+      // Ignore storage errors (e.g. private browsing)
+    }
+  }, [contact, shippingAddress, billingAddress, shippingMethodId, paymentMethodId, billingSameAsShipping, currentStep, completedSteps]);
+
   // Section statuses
   const getSectionStatus = useCallback(
     (step: CheckoutStep): SectionStatus => {
@@ -230,6 +272,8 @@ export function MobileCheckoutPage({
       billingAddressSameAsShipping: billingSameAsShipping,
     };
     await onSubmit(data);
+    // Clear saved form state after successful submission
+    try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
   }, [
     contact,
     shippingAddress,

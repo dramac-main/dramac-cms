@@ -858,22 +858,27 @@ export async function createPublicOrderFromCart(
 
   // Update customer stats after order creation (non-blocking)
   if (resolvedCustomerId) {
-    supabase
-      .rpc("mod_ecommod01_increment_customer_stats", {
-        p_customer_id: resolvedCustomerId,
-        p_order_total: input.total,
-      })
-      .catch(() => {
+    void (async () => {
+      try {
+        await supabase.rpc("mod_ecommod01_increment_customer_stats", {
+          p_customer_id: resolvedCustomerId,
+          p_order_total: input.total,
+        });
+      } catch {
         // Fallback: update last_order_date/last_seen_at at minimum
-        supabase
-          .from(`${TABLE_PREFIX}_customers`)
-          .update({
-            last_order_date: new Date().toISOString(),
-            last_seen_at: new Date().toISOString(),
-          })
-          .eq("id", resolvedCustomerId!)
-          .catch(() => {});
-      });
+        try {
+          await supabase
+            .from(`${TABLE_PREFIX}_customers`)
+            .update({
+              last_order_date: new Date().toISOString(),
+              last_seen_at: new Date().toISOString(),
+            })
+            .eq("id", resolvedCustomerId!);
+        } catch {
+          // Silently ignore fallback errors
+        }
+      }
+    })();
   }
 
   // Copy cart items to order_items

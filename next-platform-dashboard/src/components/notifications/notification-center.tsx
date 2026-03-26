@@ -18,6 +18,7 @@ import {
 } from "@/lib/actions/notifications";
 import type { Notification } from "@/types/notifications";
 import { cn } from "@/lib/utils";
+import { normalizeNotificationLink } from "@/lib/utils/normalize-notification-link";
 import { NotificationIcon } from "./notification-icon";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -114,7 +115,7 @@ export function NotificationCenter({ initialUnreadCount = 0 }: NotificationCente
     }
     if (notification.link) {
       setOpen(false);
-      router.push(notification.link);
+      router.push(normalizeNotificationLink(notification.link));
     }
   };
 
