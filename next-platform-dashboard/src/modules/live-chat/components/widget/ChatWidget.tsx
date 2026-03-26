@@ -312,8 +312,17 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
       }
     }
 
+    // Check for pending order context (from OrderConfirmation auto-open)
+    const pendingCtx = orderContextRef.current;
+
     // If we have an existing conversation (state or localStorage), go straight to chat
+    // BUT if there's a new order context, send the order message first
     if (conversationId && visitorId) {
+      if (pendingCtx) {
+        orderContextRef.current = null;
+        setOrderContext(null);
+        sendOrderMessageToExistingConversation(conversationId, visitorId, pendingCtx);
+      }
       setWidgetState("chat");
       setUnreadCount(0);
       return;
@@ -324,19 +333,24 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
     if (savedConv && savedVis) {
       setConversationId(savedConv);
       setVisitorId(savedVis);
+      if (pendingCtx) {
+        orderContextRef.current = null;
+        setOrderContext(null);
+        sendOrderMessageToExistingConversation(savedConv, savedVis, pendingCtx);
+      }
       setWidgetState("chat");
       setUnreadCount(0);
       return;
     }
 
-    // If order context is pending (from OrderConfirmation), skip pre-chat and auto-start
-    const pendingCtx = orderContextRef.current;
+    // No existing conversation — if order context exists, skip pre-chat and auto-start
     if (pendingCtx) {
       orderContextRef.current = null;
       setOrderContext(null);
       handleStartChat({
         email: pendingCtx.email,
         message: `Hi, I just placed order ${pendingCtx.orderNumber} and need help with payment.`,
+        orderContext: pendingCtx,
       });
       return;
     }
@@ -348,7 +362,7 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
       // Create conversation with minimal data
       handleStartChat({});
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings, conversationId, visitorId, siteId]);
 
   // Listen for messages from the parent window (embed script)
@@ -381,6 +395,38 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
     return () => window.removeEventListener("message", handleMessage);
   }, [settings, handleOpen]);
 
+  // Send order message to an existing conversation (reuse case)
+  // This ensures the new order context is not lost when resuming an old chat
+  const sendOrderMessageToExistingConversation = useCallback(
+    async (
+      convId: string,
+      visId: string,
+      ctx: { orderNumber: string; total: number; email: string },
+    ) => {
+      try {
+        const orderMsg = `Hi, I just placed order ${ctx.orderNumber} and need help with payment.`;
+        await fetch(`${API_BASE}/api/modules/live-chat/messages`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            conversationId: convId,
+            visitorId: visId,
+            content: orderMsg,
+            contentType: "text",
+            orderContext: {
+              orderNumber: ctx.orderNumber,
+              total: ctx.total,
+              email: ctx.email,
+            },
+          }),
+        });
+      } catch (err) {
+        console.error("[DRAMAC Chat] Failed to send order context message:", err);
+      }
+    },
+    [],
+  );
+
   // Handle pre-chat form submission
   const handleStartChat = useCallback(
     async (visitorData: {
@@ -389,6 +435,13 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
       phone?: string;
       departmentId?: string;
       message?: string;
+      orderContext?: {
+        orderNumber: string;
+        total: number;
+        email: string;
+        paymentProvider?: string;
+        isManualPayment?: boolean;
+      };
     }) => {
       if (!settings) return;
 
@@ -410,6 +463,7 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
               },
               departmentId: visitorData.departmentId,
               initialMessage: visitorData.message,
+              orderContext: visitorData.orderContext || undefined,
             }),
           },
         );
@@ -444,25 +498,26 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
   // Covers the timing case where order context arrives after handleOpen has already run
   useEffect(() => {
     if (!orderContext || !settings || widgetState !== "pre-chat") return;
-    // Don't create a new conversation if one is already saved in localStorage
+    const ctx = orderContext;
+    orderContextRef.current = null;
+    setOrderContext(null);
+
+    // If there's an existing conversation, send order message to it instead of silently dropping
     const savedConv = localStorage.getItem(`dramac_chat_conv_${siteId}`);
     const savedVis = localStorage.getItem(`dramac_chat_visitor_${siteId}`);
     if (savedConv && savedVis) {
       setConversationId(savedConv);
       setVisitorId(savedVis);
       setWidgetState("chat");
-      orderContextRef.current = null;
-      setOrderContext(null);
+      sendOrderMessageToExistingConversation(savedConv, savedVis, ctx);
       return;
     }
-    const ctx = orderContext;
-    orderContextRef.current = null;
-    setOrderContext(null);
     handleStartChat({
       email: ctx.email,
       message: `Hi, I just placed order ${ctx.orderNumber} and need help with payment.`,
+      orderContext: ctx,
     });
-  }, [orderContext, widgetState, settings, handleStartChat]);
+  }, [orderContext, widgetState, settings, handleStartChat, sendOrderMessageToExistingConversation, siteId]);
 
   // Handle sending message
   const handleSendMessage = useCallback(

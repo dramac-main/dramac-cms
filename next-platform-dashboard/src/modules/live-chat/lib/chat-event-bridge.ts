@@ -390,7 +390,11 @@ export async function bridgeChatImageAsPaymentProof(
     if (!isLikelyPaymentProof(fileName, recentVisitorTexts)) {
       console.log(
         "[ChatPaymentBridge] File upload shows no payment context — skipping bridge.",
-        { fileName, isPaymentConvoActive, messageCount: recentVisitorTexts.length },
+        {
+          fileName,
+          isPaymentConvoActive,
+          messageCount: recentVisitorTexts.length,
+        },
       );
       return false;
     }

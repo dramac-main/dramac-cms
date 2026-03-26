@@ -77,7 +77,7 @@ export async function generateAutoResponse(
     }
 
     // Load context
-    const [settingsRes, kbRes, messagesRes, visitorRes] = await Promise.all([
+    const [settingsRes, kbRes, messagesRes, visitorRes, convMetaRes] = await Promise.all([
       supabase
         .from("mod_chat_widget_settings")
         .select(
@@ -102,6 +102,11 @@ export async function generateAutoResponse(
         .select("mod_chat_visitors(name, email, total_conversations)")
         .eq("id", conversationId)
         .single(),
+      supabase
+        .from("mod_chat_conversations")
+        .select("metadata")
+        .eq("id", conversationId)
+        .single(),
     ]);
 
     const companyName = settingsRes.data?.company_name || "our company";
@@ -120,16 +125,58 @@ export async function generateAutoResponse(
       visitorInfo?.email,
     ).catch(() => null);
 
+    // ── Determine which specific order this conversation is about ──────────
+    // Priority 1: conversation metadata.order_number (set by widget/API)
+    // Priority 2: parse ORD-XXXX from visitor's latest message
+    // Priority 3: first pending manual order (legacy fallback)
+    const convMeta = (convMetaRes.data?.metadata || {}) as Record<string, unknown>;
+    let targetOrderNumber: string | null = (convMeta.order_number as string) || null;
+
+    if (!targetOrderNumber) {
+      // Parse from the most recent visitor message containing an order number
+      const visitorMessages = previousMessages.filter(
+        (m: Record<string, unknown>) => m.sender_type === "visitor",
+      );
+      for (const msg of visitorMessages.reverse()) {
+        const match = String(msg.content).match(/\bORD[-\s]?(\d+)\b/i);
+        if (match) {
+          targetOrderNumber = `ORD-${match[1]}`;
+          break;
+        }
+      }
+    }
+
     // Check if customer has a pending manual payment order — triggers payment guidance mode
     // Only trigger for manual/bank_transfer payments, not Paddle/Flutterwave pending orders
-    const pendingManualOrder = customerCtx?.recentOrders?.find(
+    let pendingManualOrder = customerCtx?.recentOrders?.find(
       (o) =>
-        o.paymentStatus === "pending" &&
-        o.status !== "cancelled" &&
-        (!o.paymentProvider ||
-          o.paymentProvider === "manual" ||
-          o.paymentProvider === "bank_transfer"),
+        targetOrderNumber
+          ? o.orderNumber === targetOrderNumber  // Match specific order from conversation
+          : (o.paymentStatus === "pending" &&
+             o.status !== "cancelled" &&
+             (!o.paymentProvider ||
+               o.paymentProvider === "manual" ||
+               o.paymentProvider === "bank_transfer")),
     );
+
+    // If specific order was targeted but not found as pending manual, check if it exists at all
+    if (!pendingManualOrder && targetOrderNumber) {
+      pendingManualOrder = customerCtx?.recentOrders?.find(
+        (o) => o.orderNumber === targetOrderNumber,
+      );
+    }
+
+    // Final fallback: first pending manual order (most recent, since array is sorted DESC)
+    if (!pendingManualOrder) {
+      pendingManualOrder = customerCtx?.recentOrders?.find(
+        (o) =>
+          o.paymentStatus === "pending" &&
+          o.status !== "cancelled" &&
+          (!o.paymentProvider ||
+            o.paymentProvider === "manual" ||
+            o.paymentProvider === "bank_transfer"),
+      );
+    }
 
     // Check if the pending order has payment proof uploaded
     const proofUploaded = pendingManualOrder?.paymentProof?.hasProof || false;

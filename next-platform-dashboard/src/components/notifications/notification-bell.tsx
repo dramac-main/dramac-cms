@@ -3,7 +3,14 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
-import { Bell, BellRing, Check, CheckCheck, Trash2, ExternalLink } from "lucide-react";
+import {
+  Bell,
+  BellRing,
+  Check,
+  CheckCheck,
+  Trash2,
+  ExternalLink,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -36,7 +43,9 @@ export function NotificationBell() {
 
   // Initialize notification sound
   useEffect(() => {
-    audioRef.current = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1hZGVnaGhnaWlqa2xtbm9wcXJzdHV2d3h5ent8fX5/gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8A=');
+    audioRef.current = new Audio(
+      "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1hZGVnaGhnaWlqa2xtbm9wcXJzdHV2d3h5ent8fX5/gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8A=",
+    );
     audioRef.current.volume = 0.3;
   }, []);
 
@@ -63,13 +72,13 @@ export function NotificationBell() {
     const supabase = createClient();
 
     const channel = supabase
-      .channel('notification-bell')
+      .channel("notification-bell")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
         },
         (payload) => {
           const newNotification = payload.new as Notification;
@@ -94,24 +103,27 @@ export function NotificationBell() {
             description: newNotification.message,
             action: newNotification.link
               ? {
-                  label: 'View',
-                  onClick: () => router.push(normalizeNotificationLink(newNotification.link!)),
+                  label: "View",
+                  onClick: () =>
+                    router.push(
+                      normalizeNotificationLink(newNotification.link!),
+                    ),
                 }
               : undefined,
           });
-        }
+        },
       )
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'notifications',
+          event: "UPDATE",
+          schema: "public",
+          table: "notifications",
         },
         (payload) => {
           const updated = payload.new as Notification;
           setNotifications((prev) =>
-            prev.map((n) => (n.id === updated.id ? updated : n))
+            prev.map((n) => (n.id === updated.id ? updated : n)),
           );
           // Recalculate unread count
           setNotifications((prev) => {
@@ -119,14 +131,14 @@ export function NotificationBell() {
             setUnreadCount(newUnread);
             return prev;
           });
-        }
+        },
       )
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'notifications',
+          event: "DELETE",
+          schema: "public",
+          table: "notifications",
         },
         (payload) => {
           const deletedId = (payload.old as { id: string }).id;
@@ -135,7 +147,7 @@ export function NotificationBell() {
             setUnreadCount(filtered.filter((n) => !n.read).length);
             return filtered;
           });
-        }
+        },
       )
       .subscribe();
 
@@ -151,7 +163,7 @@ export function NotificationBell() {
   const handleMarkRead = async (id: string) => {
     await markNotificationRead(id);
     setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
     );
     setUnreadCount((prev) => Math.max(0, prev - 1));
   };
@@ -234,7 +246,7 @@ export function NotificationBell() {
                   key={notification.id}
                   className={cn(
                     "p-4 hover:bg-accent transition-colors cursor-pointer",
-                    !notification.read && "bg-primary/5"
+                    !notification.read && "bg-primary/5",
                   )}
                   onClick={() => handleClick(notification)}
                 >
@@ -247,7 +259,7 @@ export function NotificationBell() {
                         <p
                           className={cn(
                             "text-sm",
-                            !notification.read && "font-medium"
+                            !notification.read && "font-medium",
                           )}
                         >
                           {notification.title}
@@ -263,7 +275,7 @@ export function NotificationBell() {
                         <span className="text-xs text-muted-foreground">
                           {formatDistanceToNow(
                             new Date(notification.created_at),
-                            { addSuffix: true }
+                            { addSuffix: true },
                           )}
                         </span>
                         <div className="flex gap-1">
@@ -274,7 +286,10 @@ export function NotificationBell() {
                               className="h-6 w-6 p-0"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                window.open(normalizeNotificationLink(notification.link!), "_blank");
+                                window.open(
+                                  normalizeNotificationLink(notification.link!),
+                                  "_blank",
+                                );
                               }}
                             >
                               <ExternalLink className="w-3 h-3" />

@@ -346,7 +346,7 @@ export function OrderConfirmationBlock({
   // Use localStorage key per order so refresh doesn't re-trigger auto-open
   React.useEffect(() => {
     if (!order) return;
-    const storageKey = `dramac_chat_auto_opened_${order.order_number}`;
+    const storageKey = `dramac_chat_auto_opened_${order.id}`;
     if (sessionStorage.getItem(storageKey)) return;
     sessionStorage.setItem(storageKey, "1");
     const timer = setTimeout(() => {

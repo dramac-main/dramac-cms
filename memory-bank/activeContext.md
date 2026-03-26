@@ -1,12 +1,46 @@
 # Active Context
 
-## Current Focus: Comprehensive Order Lifecycle Fix — DEPLOYED
+## Current Focus: AI Chat Wrong Order Number Fix — READY TO DEPLOY
 
-### Status: COMMITTED, DEPLOYED — `6170925d`
+### Status: ALL FIXES APPLIED, ZERO TS ERRORS, AUDIT CLEAN
 
 ### What Was Done (This Session)
 
-**Fixed 10 bugs across the entire order lifecycle, from dashboard management to storefront tracking.**
+**Fixed critical bug: AI chat assistant showed wrong order number after checkout (ORD-1012 instead of ORD-1013). Root cause: 3 interconnected bugs in the chat→order context pipeline.**
+
+#### Root Causes Identified
+
+1. **ChatWidget reused old conversation** — When a returning customer placed a new order, localStorage found their existing conversation from the previous order and silently dropped the new order context. Customer landed in old conversation; AI kept referencing old order.
+2. **Conversation metadata never stored orderNumber** — Conversations were created with `metadata: {}`. Order context only existed as free text in messages, never structured.
+3. **AI responder used `.find()` blindly** — Used `.find()` on all pending orders without knowing which specific order the conversation was about. If multiple pending orders existed, it could pick the wrong one.
+
+#### Fixes Applied (8 files modified)
+
+1. **ChatWidget.tsx** — New `sendOrderMessageToExistingConversation()` function sends order message to existing conversations via messages API. `handleOpen()` and auto-start effect now check for `orderContextRef.current` BEFORE checking existing conversation, sending order message when reusing old conversation. `handleStartChat()` passes `orderContext` to conversations API.
+
+2. **conversations/route.ts** — Accepts `orderContext` from POST body. For existing conversations: updates `metadata.order_number` and sets `payment_guidance_active: true`. For new conversations: stores `order_number` in initial metadata. Changed `shouldSendMessage` logic to allow messages for existing conversations when order context present.
+
+3. **messages/route.ts** — Accepts `orderContext` from POST body. Extracts order number from message text via regex (`/\bORD[-\s]?(\d+)\b/i`) as fallback. Updates conversation `metadata.order_number` when order reference detected. Sets `payment_guidance_active: true`.
+
+4. **ai-responder.ts** — 3-tier order selection priority: (1) `metadata.order_number` from conversation, (2) Parse `ORD-XXXX` from recent visitor messages via regex, (3) Fallback `.find()` for first pending manual order. When specific order found, uses exact match.
+
+5. **customer-context-bridge.ts** — Added `.order("order_number", { ascending: false })` as secondary sort for deterministic ordering.
+
+6. **public-ecommerce-actions.ts** — Order number fallback changed from `Date.now().toString(36).slice(-4)` to `crypto.randomUUID().substring(0, 8).toUpperCase()` to prevent race condition duplicates.
+
+7. **OrderConfirmationBlock.tsx** — Chat auto-open storage key changed from `order.order_number` to `order.id` (UUID, guaranteed unique).
+
+8. **order-actions.ts** — Payment proof approval: added `notifyChatPaymentConfirmed()` + fixed `sendOrderEmail()` call (was incorrectly using dynamic import to `@/lib/services/business-notifications` with wrong params; now calls local function with correct 4 params). Payment proof rejection: sends proactive chat message about proof rejection.
+
+#### Verification
+
+- TypeScript: ZERO errors across all 8 modified files
+- Comprehensive audit: No additional critical bugs found
+- Payment proof upload flow: validated secure (triple validation)
+- Chat embed script bridge: correctly relays postMessage
+- Auto-response handler: properly handles multiple orders
+
+### Previous Focus: Comprehensive Order Lifecycle Fix — DEPLOYED (`6170925d`)
 
 #### 1. Orders Show "0 Items" — FIXED
 - `getOrders()` in `ecommerce-actions.ts` was `.select("*")` without joining order_items

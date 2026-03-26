@@ -1,11 +1,49 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: March 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX ✅
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX ✅
 
 ---
 
-## Latest Update: Comprehensive Order Lifecycle Fix — Committed & Deployed (`6170925d`)
+## Latest Update: AI Chat Wrong Order Number Fix — READY TO DEPLOY
+
+**Fixed critical bug: AI chat assistant showed wrong order number after checkout. 3 interconnected root causes found and fixed across 8 files.**
+
+### Root Causes Fixed
+
+1. **ChatWidget reused old conversation** — Returning customer's new order context silently dropped when existing conversation found in localStorage
+2. **Conversation metadata empty** — Order number never stored in structured metadata, only as free text
+3. **AI `.find()` picked wrong order** — No way to know which specific order conversation was about
+
+### Solution: 4-Layer Order Context Pipeline
+
+1. **Widget** → Sends order message to existing conversations (not just new ones)
+2. **Conversations API** → Stores `order_number` in conversation metadata
+3. **Messages API** → Extracts `ORD-XXXX` from message text as backup, updates metadata
+4. **AI Responder** → 3-tier priority: metadata.order_number → regex from messages → `.find()` fallback
+
+### Additional Fixes
+
+- Order number fallback: `crypto.randomUUID()` instead of `Date.now()` (race condition prevention)
+- Chat storage key: uses `order.id` (UUID) not `order.order_number` (could collide)
+- Payment proof approval: sends `notifyChatPaymentConfirmed()` + confirmation email
+- Payment proof rejection: sends proactive chat message to customer
+- Fixed broken `sendOrderEmail` import (was incorrectly importing from `business-notifications`, now calls local function)
+
+### Files Changed (8)
+
+- `ChatWidget.tsx` — Send order context to existing conversations
+- `conversations/route.ts` — Store orderContext in metadata
+- `messages/route.ts` — Extract/store order numbers from messages
+- `ai-responder.ts` — 3-tier order selection priority
+- `customer-context-bridge.ts` — Secondary sort for deterministic ordering
+- `public-ecommerce-actions.ts` — UUID fallback for order numbers
+- `OrderConfirmationBlock.tsx` — Unique storage key
+- `order-actions.ts` — Payment proof notifications + fixed sendOrderEmail call
+
+---
+
+## Previous Update: Comprehensive Order Lifecycle Fix — Committed & Deployed (`6170925d`)
 
 **Fixed 10 bugs across the entire order lifecycle: items count, status emails, payment proof, shipping dialog, tracking, timeline columns, status validation.**
 

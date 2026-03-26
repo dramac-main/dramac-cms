@@ -743,7 +743,7 @@ export async function createPublicOrderFromCart(
     { p_site_id: input.site_id },
   );
   const orderNumber =
-    rpcNumber || `ORD-${Date.now().toString(36).slice(-4).toUpperCase()}`;
+    rpcNumber || `ORD-${crypto.randomUUID().substring(0, 8).toUpperCase()}`;
 
   // Get the site's agency_id
   const { data: site } = await supabase

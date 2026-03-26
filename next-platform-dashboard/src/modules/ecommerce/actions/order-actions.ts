@@ -166,7 +166,10 @@ const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
 /**
  * Map status → email type for automatic customer notification
  */
-const STATUS_EMAIL_MAP: Record<string, "shipped" | "delivered" | "cancelled" | "refunded"> = {
+const STATUS_EMAIL_MAP: Record<
+  string,
+  "shipped" | "delivered" | "cancelled" | "refunded"
+> = {
   shipped: "shipped",
   delivered: "delivered",
   cancelled: "cancelled",
@@ -276,22 +279,28 @@ export async function updateOrderStatus(
     .select("customer_email, order_number")
     .eq("id", orderId)
     .single()
-    .then(({ data: orderData }: { data: { customer_email: string; order_number: string } | null }) => {
-      if (orderData?.customer_email) {
-        import("@/modules/live-chat/lib/chat-event-bridge")
-          .then(({ notifyChatOrderStatusChanged }) =>
-            notifyChatOrderStatusChanged(
-              siteId,
-              orderData.customer_email,
-              orderData.order_number,
-              status,
-            ),
-          )
-          .catch((err) =>
-            console.error("[OrderActions] Chat notification error:", err),
-          );
-      }
-    })
+    .then(
+      ({
+        data: orderData,
+      }: {
+        data: { customer_email: string; order_number: string } | null;
+      }) => {
+        if (orderData?.customer_email) {
+          import("@/modules/live-chat/lib/chat-event-bridge")
+            .then(({ notifyChatOrderStatusChanged }) =>
+              notifyChatOrderStatusChanged(
+                siteId,
+                orderData.customer_email,
+                orderData.order_number,
+                status,
+              ),
+            )
+            .catch((err) =>
+              console.error("[OrderActions] Chat notification error:", err),
+            );
+        }
+      },
+    )
     .catch(() => {});
 
   return { success: true };
@@ -299,7 +308,7 @@ export async function updateOrderStatus(
 
 /**
  * Add timeline event
- * 
+ *
  * DB columns: id, order_id, event_type, title, description, metadata, created_by, created_at
  */
 async function addTimelineEvent(
@@ -600,6 +609,52 @@ export async function updatePaymentProofStatus(
     created_by: userId,
     metadata: { status, actor_name: userName },
   });
+
+  // Notify customer via chat when payment proof is approved or rejected
+  if (status === "approved" || status === "rejected") {
+    const { data: orderData } = await supabase
+      .from(`${TABLE_PREFIX}_orders`)
+      .select("order_number, customer_email, customer_name, currency, total")
+      .eq("id", orderId)
+      .eq("site_id", siteId)
+      .single();
+
+    if (orderData?.customer_email) {
+      if (status === "approved") {
+        // Notify chat that payment is confirmed
+        import("@/modules/live-chat/lib/chat-event-bridge").then(
+          ({ notifyChatPaymentConfirmed }) => {
+            const totalStr = `${orderData.currency || ""} ${((orderData.total || 0) / 100).toFixed(2)}`;
+            notifyChatPaymentConfirmed(
+              siteId,
+              orderData.customer_email,
+              orderData.order_number,
+              totalStr,
+            ).catch(() => {});
+          },
+        ).catch(() => {});
+
+        // Send payment confirmed email (sendOrderEmail is local to this file)
+        sendOrderEmail(orderId, "confirmation", userId, userName).catch(() => {});
+      } else {
+        // Send rejection notification via chat
+        import("@/modules/live-chat/lib/chat-event-bridge").then(
+          ({ findActiveConversation, sendProactiveMessage }) => {
+            findActiveConversation(siteId, orderData.customer_email).then((conv) => {
+              if (!conv) return;
+              sendProactiveMessage(
+                siteId,
+                conv.conversationId,
+                `Your payment proof for order ${orderData.order_number} could not be verified. ` +
+                  `Please upload a new proof of payment on your order page, or contact us for help.`,
+                conv.assistantName,
+              ).catch(() => {});
+            }).catch(() => {});
+          },
+        ).catch(() => {});
+      }
+    }
+  }
 
   return { success: true };
 }

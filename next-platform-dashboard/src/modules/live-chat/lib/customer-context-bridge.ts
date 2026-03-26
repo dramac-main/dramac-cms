@@ -80,6 +80,7 @@ export async function getCustomerContext(
       .single(),
 
     // Recent orders (last 5) — include metadata for payment proof info
+    // Sorted by created_at DESC with order_number as tiebreaker for deterministic results
     supabase
       .from("mod_ecommod01_orders")
       .select(
@@ -88,6 +89,7 @@ export async function getCustomerContext(
       .eq("site_id", siteId)
       .eq("customer_email", email)
       .order("created_at", { ascending: false })
+      .order("order_number", { ascending: false })
       .limit(5),
 
     // Recent bookings (last 5)

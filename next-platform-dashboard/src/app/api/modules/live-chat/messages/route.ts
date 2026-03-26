@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
       fileName,
       fileSize,
       fileMimeType,
+      orderContext,
     } = body;
 
     if (!conversationId || !visitorId || !content) {
@@ -64,6 +65,35 @@ export async function POST(request: NextRequest) {
         { error: "Unauthorized" },
         { status: 403, headers: corsHeaders },
       );
+    }
+
+    // If order context is provided OR message contains an order number, update conversation metadata
+    // This ensures the AI always knows which order this conversation is about
+    const existingMeta = (convData as { metadata?: Record<string, unknown> }).metadata || {};
+    let orderNumberFromMsg: string | null = null;
+
+    if (orderContext?.orderNumber) {
+      orderNumberFromMsg = String(orderContext.orderNumber);
+    } else {
+      // Parse order number from message text as fallback
+      const orderMatch = content.match(/\bORD[-\s]?(\d+)\b/i);
+      if (orderMatch) {
+        orderNumberFromMsg = `ORD-${orderMatch[1]}`;
+      }
+    }
+
+    if (orderNumberFromMsg && existingMeta.order_number !== orderNumberFromMsg) {
+      await (supabase as any)
+        .from("mod_chat_conversations")
+        .update({
+          metadata: {
+            ...existingMeta,
+            order_number: orderNumberFromMsg,
+            payment_guidance_active: true,
+          },
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", conversationId);
     }
 
     // Get visitor name for message

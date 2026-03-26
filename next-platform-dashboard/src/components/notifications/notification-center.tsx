@@ -32,13 +32,15 @@ interface NotificationCenterProps {
 
 /**
  * Notification Bell & Dropdown
- * 
+ *
  * Phase UX-02: Notification Center
- * 
+ *
  * Shows a bell icon with unread badge. Opens a popover with recent
  * notifications. Supports mark as read, mark all read, and delete.
  */
-export function NotificationCenter({ initialUnreadCount = 0 }: NotificationCenterProps) {
+export function NotificationCenter({
+  initialUnreadCount = 0,
+}: NotificationCenterProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -83,7 +85,7 @@ export function NotificationCenter({ initialUnreadCount = 0 }: NotificationCente
     startTransition(async () => {
       await markNotificationRead(id);
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+        prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
     });
@@ -163,9 +165,12 @@ export function NotificationCenter({ initialUnreadCount = 0 }: NotificationCente
           ) : notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center px-4">
               <Bell className="h-8 w-8 text-muted-foreground/50 mb-2" />
-              <p className="text-sm text-muted-foreground">No notifications yet</p>
+              <p className="text-sm text-muted-foreground">
+                No notifications yet
+              </p>
               <p className="text-xs text-muted-foreground/70">
-                You&apos;ll see updates about your bookings, orders, and team here.
+                You&apos;ll see updates about your bookings, orders, and team
+                here.
               </p>
             </div>
           ) : (
@@ -228,7 +233,7 @@ function NotificationItem({
     <div
       className={cn(
         "flex items-start gap-3 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer group",
-        !notification.read && "bg-primary/5"
+        !notification.read && "bg-primary/5",
       )}
       onClick={onClick}
       role="button"
@@ -252,7 +257,7 @@ function NotificationItem({
         <p
           className={cn(
             "text-sm leading-snug",
-            !notification.read && "font-medium"
+            !notification.read && "font-medium",
           )}
         >
           {notification.title}

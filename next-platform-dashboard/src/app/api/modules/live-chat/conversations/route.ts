@@ -39,7 +39,7 @@ export async function OPTIONS() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { siteId, visitorData, departmentId, initialMessage } = body;
+    const { siteId, visitorData, departmentId, initialMessage, orderContext } = body;
 
     if (!siteId) {
       return NextResponse.json(
@@ -172,6 +172,27 @@ export async function POST(request: NextRequest) {
       // Reuse existing active conversation instead of creating a duplicate
       conversationId = existingConv.id;
       isExisting = true;
+
+      // If we have new order context, update conversation metadata so AI knows the current order
+      if (orderContext?.orderNumber) {
+        const { data: existingMeta } = await (supabase as any)
+          .from("mod_chat_conversations")
+          .select("metadata")
+          .eq("id", conversationId)
+          .single();
+
+        await (supabase as any)
+          .from("mod_chat_conversations")
+          .update({
+            metadata: {
+              ...(existingMeta?.metadata || {}),
+              order_number: String(orderContext.orderNumber),
+              payment_guidance_active: true,
+            },
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", conversationId);
+      }
     } else {
       // Create new conversation
       const convInsert: Record<string, unknown> = {
@@ -184,7 +205,9 @@ export async function POST(request: NextRequest) {
         unread_agent_count: 0,
         unread_visitor_count: 0,
         tags: [],
-        metadata: {},
+        metadata: orderContext?.orderNumber
+          ? { order_number: String(orderContext.orderNumber) }
+          : {},
       };
 
       if (departmentId) convInsert.department_id = departmentId;
@@ -219,8 +242,11 @@ export async function POST(request: NextRequest) {
       conversationId = convData.id;
     }
 
-    // 3. Send initial message if provided (only for new conversations — skip for resumed ones)
-    if (initialMessage && !isExisting) {
+    // 3. Send initial message if provided
+    // For existing conversations: only send if order context is present (new order message)
+    // For new conversations: always send initial message
+    const shouldSendMessage = initialMessage && (!isExisting || !!orderContext?.orderNumber);
+    if (shouldSendMessage) {
       const msgInsert: Record<string, unknown> = {
         conversation_id: conversationId,
         site_id: siteId,

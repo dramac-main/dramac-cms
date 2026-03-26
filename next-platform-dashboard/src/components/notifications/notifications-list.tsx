@@ -50,7 +50,7 @@ export function NotificationsList({
     const result = await markNotificationRead(id);
     if (result.success) {
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+        prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
       );
     }
   };
@@ -93,7 +93,8 @@ export function NotificationsList({
           <Bell className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-50" />
           <h3 className="text-lg font-medium mb-2">No notifications</h3>
           <p className="text-muted-foreground">
-            You&apos;re all caught up! We&apos;ll notify you when something important happens.
+            You&apos;re all caught up! We&apos;ll notify you when something
+            important happens.
           </p>
         </CardContent>
       </Card>
@@ -116,7 +117,7 @@ export function NotificationsList({
             key={notification.id}
             className={cn(
               "transition-colors cursor-pointer hover:bg-accent/50",
-              !notification.read && "border-primary/50 bg-primary/5"
+              !notification.read && "border-primary/50 bg-primary/5",
             )}
             onClick={() => handleNavigate(notification)}
           >
@@ -132,7 +133,12 @@ export function NotificationsList({
                       <div className="w-2 h-2 rounded-full bg-primary" />
                     )}
                   </div>
-                  <h3 className={cn("font-medium", !notification.read && "text-foreground")}>
+                  <h3
+                    className={cn(
+                      "font-medium",
+                      !notification.read && "text-foreground",
+                    )}
+                  >
                     {notification.title}
                   </h3>
                   <p className="text-sm text-muted-foreground mt-1">
@@ -153,7 +159,9 @@ export function NotificationsList({
                       className="h-8 w-8"
                       onClick={(e) => {
                         e.stopPropagation();
-                        router.push(normalizeNotificationLink(notification.link!));
+                        router.push(
+                          normalizeNotificationLink(notification.link!),
+                        );
                       }}
                     >
                       <ExternalLink className="w-4 h-4" />
