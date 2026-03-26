@@ -321,7 +321,11 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
       if (pendingCtx) {
         orderContextRef.current = null;
         setOrderContext(null);
-        sendOrderMessageToExistingConversation(conversationId, visitorId, pendingCtx);
+        sendOrderMessageToExistingConversation(
+          conversationId,
+          visitorId,
+          pendingCtx,
+        );
       }
       setWidgetState("chat");
       setUnreadCount(0);
@@ -421,7 +425,10 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
           }),
         });
       } catch (err) {
-        console.error("[DRAMAC Chat] Failed to send order context message:", err);
+        console.error(
+          "[DRAMAC Chat] Failed to send order context message:",
+          err,
+        );
       }
     },
     [],
@@ -517,7 +524,14 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
       message: `Hi, I just placed order ${ctx.orderNumber} and need help with payment.`,
       orderContext: ctx,
     });
-  }, [orderContext, widgetState, settings, handleStartChat, sendOrderMessageToExistingConversation, siteId]);
+  }, [
+    orderContext,
+    widgetState,
+    settings,
+    handleStartChat,
+    sendOrderMessageToExistingConversation,
+    siteId,
+  ]);
 
   // Handle sending message
   const handleSendMessage = useCallback(

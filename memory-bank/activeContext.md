@@ -1,46 +1,53 @@
 # Active Context
 
-## Current Focus: AI Chat Wrong Order Number Fix — READY TO DEPLOY
+## Current Focus: In-Chat Order Management Panel — READY TO DEPLOY
 
-### Status: ALL FIXES APPLIED, ZERO TS ERRORS, AUDIT CLEAN
+### Status: ALL CODE COMPLETE, ZERO TS ERRORS, SECURITY AUDIT CLEAN
 
 ### What Was Done (This Session)
 
-**Fixed critical bug: AI chat assistant showed wrong order number after checkout (ORD-1012 instead of ORD-1013). Root cause: 3 interconnected bugs in the chat→order context pipeline.**
+**Built new in-chat order management feature: store owners can now view order details, approve/reject payment proofs, and change order status directly from the live chat conversation sidebar — eliminating context switching between chat and e-commerce modules.**
 
-#### Root Causes Identified
+#### Feature: ChatOrderPanel
 
-1. **ChatWidget reused old conversation** — When a returning customer placed a new order, localStorage found their existing conversation from the previous order and silently dropped the new order context. Customer landed in old conversation; AI kept referencing old order.
-2. **Conversation metadata never stored orderNumber** — Conversations were created with `metadata: {}`. Order context only existed as free text in messages, never structured.
-3. **AI responder used `.find()` blindly** — Used `.find()` on all pending orders without knowing which specific order the conversation was about. If multiple pending orders existed, it could pick the wrong one.
+A sidebar panel rendered in the admin chat view when a conversation has an associated order (`metadata.order_number`).
 
-#### Fixes Applied (8 files modified)
+**Capabilities:**
+- Order summary card (number, status badges, total, date, payment method, items list)
+- Payment proof section with Approve/Reject buttons (AlertDialog confirmations)
+- Status change dropdown showing only valid next statuses (mirrors VALID_TRANSITIONS)
+- "Awaiting payment proof" indicator for manual payments without proof
+- Tracking info display with external link
+- "View Full Order" button opens full e-commerce page in new tab
+- Refresh button for manual re-fetch
+- Loading/error/not-found states
 
-1. **ChatWidget.tsx** — New `sendOrderMessageToExistingConversation()` function sends order message to existing conversations via messages API. `handleOpen()` and auto-start effect now check for `orderContextRef.current` BEFORE checking existing conversation, sending order message when reusing old conversation. `handleStartChat()` passes `orderContext` to conversations API.
+**Security:**
+- `verifyUserSiteAccess()` check added to ensure only site owners/admins can access order data (prevents cross-site data exposure)
+- AlertDialog confirmations for destructive actions (approve/reject payment proof)
 
-2. **conversations/route.ts** — Accepts `orderContext` from POST body. For existing conversations: updates `metadata.order_number` and sets `payment_guidance_active: true`. For new conversations: stores `order_number` in initial metadata. Changed `shouldSendMessage` logic to allow messages for existing conversations when order context present.
+**Edge Case Handling:**
+- Empty/invalid `order_number` in metadata is validated (`typeof === 'string' && trim().length > 0`)
+- Null payment proof, zero total, empty items array all handled gracefully
+- User name falls back to email when `user_metadata.full_name` not set
 
-3. **messages/route.ts** — Accepts `orderContext` from POST body. Extracts order number from message text via regex (`/\bORD[-\s]?(\d+)\b/i`) as fallback. Updates conversation `metadata.order_number` when order reference detected. Sets `payment_guidance_active: true`.
+#### Files Created (2)
 
-4. **ai-responder.ts** — 3-tier order selection priority: (1) `metadata.order_number` from conversation, (2) Parse `ORD-XXXX` from recent visitor messages via regex, (3) Fallback `.find()` for first pending manual order. When specific order found, uses exact match.
+1. **`src/modules/live-chat/actions/chat-order-actions.ts`** — Server action with `getOrderContextForChat(siteId, orderNumber)`. Authenticates user, verifies site access via `verifyUserSiteAccess()`, queries orders table with items join, extracts payment proof from metadata.
 
-5. **customer-context-bridge.ts** — Added `.order("order_number", { ascending: false })` as secondary sort for deterministic ordering.
+2. **`src/modules/live-chat/components/shared/ChatOrderPanel.tsx`** — Full order management panel component. Uses `updateOrderStatus()` and `updatePaymentProofStatus()` from order-actions.ts. All status transitions validated client-side (VALID_TRANSITIONS mirror). Uses formatCurrency with cents→actual conversion.
 
-6. **public-ecommerce-actions.ts** — Order number fallback changed from `Date.now().toString(36).slice(-4)` to `crypto.randomUUID().substring(0, 8).toUpperCase()` to prevent race condition duplicates.
+#### Files Modified (2)
 
-7. **OrderConfirmationBlock.tsx** — Chat auto-open storage key changed from `order.order_number` to `order.id` (UUID, guaranteed unique).
+3. **`src/app/(dashboard)/dashboard/sites/[siteId]/live-chat/conversations/[conversationId]/page.tsx`** — Passes `userId` and `userName` through to ConversationViewWrapper.
 
-8. **order-actions.ts** — Payment proof approval: added `notifyChatPaymentConfirmed()` + fixed `sendOrderEmail()` call (was incorrectly using dynamic import to `@/lib/services/business-notifications` with wrong params; now calls local function with correct 4 params). Payment proof rejection: sends proactive chat message about proof rejection.
+4. **`src/modules/live-chat/components/wrappers/ConversationViewWrapper.tsx`** — Accepts userId/userName props, renders ChatOrderPanel at top of right sidebar when conversation has valid order_number.
 
-#### Verification
+#### Also Fixed (from previous session)
 
-- TypeScript: ZERO errors across all 8 modified files
-- Comprehensive audit: No additional critical bugs found
-- Payment proof upload flow: validated secure (triple validation)
-- Chat embed script bridge: correctly relays postMessage
-- Auto-response handler: properly handles multiple orders
+5. **`src/modules/ecommerce/actions/order-actions.ts`** — Fixed broken `sendOrderEmail` import (was incorrectly using dynamic import to `business-notifications` with wrong params; now calls local function directly).
 
-### Previous Focus: Comprehensive Order Lifecycle Fix — DEPLOYED (`6170925d`)
+### Previous Focus: AI Chat Wrong Order Number Fix — READY TO DEPLOY
 
 #### 1. Orders Show "0 Items" — FIXED
 - `getOrders()` in `ecommerce-actions.ts` was `.select("*")` without joining order_items

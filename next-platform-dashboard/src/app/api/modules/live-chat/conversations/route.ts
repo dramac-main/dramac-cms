@@ -39,7 +39,8 @@ export async function OPTIONS() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { siteId, visitorData, departmentId, initialMessage, orderContext } = body;
+    const { siteId, visitorData, departmentId, initialMessage, orderContext } =
+      body;
 
     if (!siteId) {
       return NextResponse.json(
@@ -245,7 +246,8 @@ export async function POST(request: NextRequest) {
     // 3. Send initial message if provided
     // For existing conversations: only send if order context is present (new order message)
     // For new conversations: always send initial message
-    const shouldSendMessage = initialMessage && (!isExisting || !!orderContext?.orderNumber);
+    const shouldSendMessage =
+      initialMessage && (!isExisting || !!orderContext?.orderNumber);
     if (shouldSendMessage) {
       const msgInsert: Record<string, unknown> = {
         conversation_id: conversationId,

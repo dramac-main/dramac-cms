@@ -81,6 +81,7 @@ import type {
   ChatVisitor,
   ConversationPriority,
 } from "@/modules/live-chat/types";
+import { ChatOrderPanel } from "../shared/ChatOrderPanel";
 
 interface ConversationViewWrapperProps {
   conversation: ChatConversation;
@@ -91,6 +92,8 @@ interface ConversationViewWrapperProps {
   visitor: ChatVisitor | null;
   siteId: string;
   totalMessages: number;
+  userId: string;
+  userName: string;
 }
 
 function getInitials(name: string): string {
@@ -121,6 +124,8 @@ export function ConversationViewWrapper({
   visitor,
   siteId,
   totalMessages,
+  userId,
+  userName,
 }: ConversationViewWrapperProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -666,6 +671,21 @@ export function ConversationViewWrapper({
       {/* ─── RIGHT: Visitor info panel ─────────────────────────────────── */}
       <div className="w-80 shrink-0 overflow-y-auto bg-muted/20 hidden lg:block">
         <div className="p-4 space-y-4">
+          {/* Order Context Panel — shown when conversation has an associated order */}
+          {(() => {
+            const orderNum = (conversation.metadata as Record<string, unknown>)
+              ?.order_number;
+            return typeof orderNum === "string" &&
+              orderNum.trim().length > 0 ? (
+              <ChatOrderPanel
+                siteId={siteId}
+                orderNumber={orderNum}
+                userId={userId}
+                userName={userName}
+              />
+            ) : null;
+          })()}
+
           {/* Visitor details */}
           <Card>
             <CardHeader className="pb-3">

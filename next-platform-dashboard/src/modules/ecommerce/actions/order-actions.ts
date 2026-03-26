@@ -622,8 +622,8 @@ export async function updatePaymentProofStatus(
     if (orderData?.customer_email) {
       if (status === "approved") {
         // Notify chat that payment is confirmed
-        import("@/modules/live-chat/lib/chat-event-bridge").then(
-          ({ notifyChatPaymentConfirmed }) => {
+        import("@/modules/live-chat/lib/chat-event-bridge")
+          .then(({ notifyChatPaymentConfirmed }) => {
             const totalStr = `${orderData.currency || ""} ${((orderData.total || 0) / 100).toFixed(2)}`;
             notifyChatPaymentConfirmed(
               siteId,
@@ -631,27 +631,31 @@ export async function updatePaymentProofStatus(
               orderData.order_number,
               totalStr,
             ).catch(() => {});
-          },
-        ).catch(() => {});
+          })
+          .catch(() => {});
 
         // Send payment confirmed email (sendOrderEmail is local to this file)
-        sendOrderEmail(orderId, "confirmation", userId, userName).catch(() => {});
+        sendOrderEmail(orderId, "confirmation", userId, userName).catch(
+          () => {},
+        );
       } else {
         // Send rejection notification via chat
-        import("@/modules/live-chat/lib/chat-event-bridge").then(
-          ({ findActiveConversation, sendProactiveMessage }) => {
-            findActiveConversation(siteId, orderData.customer_email).then((conv) => {
-              if (!conv) return;
-              sendProactiveMessage(
-                siteId,
-                conv.conversationId,
-                `Your payment proof for order ${orderData.order_number} could not be verified. ` +
-                  `Please upload a new proof of payment on your order page, or contact us for help.`,
-                conv.assistantName,
-              ).catch(() => {});
-            }).catch(() => {});
-          },
-        ).catch(() => {});
+        import("@/modules/live-chat/lib/chat-event-bridge")
+          .then(({ findActiveConversation, sendProactiveMessage }) => {
+            findActiveConversation(siteId, orderData.customer_email)
+              .then((conv) => {
+                if (!conv) return;
+                sendProactiveMessage(
+                  siteId,
+                  conv.conversationId,
+                  `Your payment proof for order ${orderData.order_number} could not be verified. ` +
+                    `Please upload a new proof of payment on your order page, or contact us for help.`,
+                  conv.assistantName,
+                ).catch(() => {});
+              })
+              .catch(() => {});
+          })
+          .catch(() => {});
       }
     }
   }

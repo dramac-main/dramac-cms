@@ -77,37 +77,38 @@ export async function generateAutoResponse(
     }
 
     // Load context
-    const [settingsRes, kbRes, messagesRes, visitorRes, convMetaRes] = await Promise.all([
-      supabase
-        .from("mod_chat_widget_settings")
-        .select(
-          "company_name, welcome_message, ai_response_tone, ai_custom_instructions, ai_assistant_name, ai_payment_greeting",
-        )
-        .eq("site_id", siteId)
-        .single(),
-      supabase
-        .from("mod_chat_knowledge_base")
-        .select("id, title, content, category, tags")
-        .eq("site_id", siteId)
-        .eq("is_active", true)
-        .limit(20),
-      supabase
-        .from("mod_chat_messages")
-        .select("sender_type, sender_name, content, content_type")
-        .eq("conversation_id", conversationId)
-        .order("created_at", { ascending: false })
-        .limit(MAX_CONTEXT_MESSAGES),
-      supabase
-        .from("mod_chat_conversations")
-        .select("mod_chat_visitors(name, email, total_conversations)")
-        .eq("id", conversationId)
-        .single(),
-      supabase
-        .from("mod_chat_conversations")
-        .select("metadata")
-        .eq("id", conversationId)
-        .single(),
-    ]);
+    const [settingsRes, kbRes, messagesRes, visitorRes, convMetaRes] =
+      await Promise.all([
+        supabase
+          .from("mod_chat_widget_settings")
+          .select(
+            "company_name, welcome_message, ai_response_tone, ai_custom_instructions, ai_assistant_name, ai_payment_greeting",
+          )
+          .eq("site_id", siteId)
+          .single(),
+        supabase
+          .from("mod_chat_knowledge_base")
+          .select("id, title, content, category, tags")
+          .eq("site_id", siteId)
+          .eq("is_active", true)
+          .limit(20),
+        supabase
+          .from("mod_chat_messages")
+          .select("sender_type, sender_name, content, content_type")
+          .eq("conversation_id", conversationId)
+          .order("created_at", { ascending: false })
+          .limit(MAX_CONTEXT_MESSAGES),
+        supabase
+          .from("mod_chat_conversations")
+          .select("mod_chat_visitors(name, email, total_conversations)")
+          .eq("id", conversationId)
+          .single(),
+        supabase
+          .from("mod_chat_conversations")
+          .select("metadata")
+          .eq("id", conversationId)
+          .single(),
+      ]);
 
     const companyName = settingsRes.data?.company_name || "our company";
     const aiTone = settingsRes.data?.ai_response_tone || "friendly";
@@ -129,8 +130,12 @@ export async function generateAutoResponse(
     // Priority 1: conversation metadata.order_number (set by widget/API)
     // Priority 2: parse ORD-XXXX from visitor's latest message
     // Priority 3: first pending manual order (legacy fallback)
-    const convMeta = (convMetaRes.data?.metadata || {}) as Record<string, unknown>;
-    let targetOrderNumber: string | null = (convMeta.order_number as string) || null;
+    const convMeta = (convMetaRes.data?.metadata || {}) as Record<
+      string,
+      unknown
+    >;
+    let targetOrderNumber: string | null =
+      (convMeta.order_number as string) || null;
 
     if (!targetOrderNumber) {
       // Parse from the most recent visitor message containing an order number
@@ -148,15 +153,14 @@ export async function generateAutoResponse(
 
     // Check if customer has a pending manual payment order — triggers payment guidance mode
     // Only trigger for manual/bank_transfer payments, not Paddle/Flutterwave pending orders
-    let pendingManualOrder = customerCtx?.recentOrders?.find(
-      (o) =>
-        targetOrderNumber
-          ? o.orderNumber === targetOrderNumber  // Match specific order from conversation
-          : (o.paymentStatus === "pending" &&
-             o.status !== "cancelled" &&
-             (!o.paymentProvider ||
-               o.paymentProvider === "manual" ||
-               o.paymentProvider === "bank_transfer")),
+    let pendingManualOrder = customerCtx?.recentOrders?.find((o) =>
+      targetOrderNumber
+        ? o.orderNumber === targetOrderNumber // Match specific order from conversation
+        : o.paymentStatus === "pending" &&
+          o.status !== "cancelled" &&
+          (!o.paymentProvider ||
+            o.paymentProvider === "manual" ||
+            o.paymentProvider === "bank_transfer"),
     );
 
     // If specific order was targeted but not found as pending manual, check if it exists at all

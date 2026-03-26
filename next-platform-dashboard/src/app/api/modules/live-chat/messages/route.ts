@@ -69,7 +69,8 @@ export async function POST(request: NextRequest) {
 
     // If order context is provided OR message contains an order number, update conversation metadata
     // This ensures the AI always knows which order this conversation is about
-    const existingMeta = (convData as { metadata?: Record<string, unknown> }).metadata || {};
+    const existingMeta =
+      (convData as { metadata?: Record<string, unknown> }).metadata || {};
     let orderNumberFromMsg: string | null = null;
 
     if (orderContext?.orderNumber) {
@@ -82,7 +83,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (orderNumberFromMsg && existingMeta.order_number !== orderNumberFromMsg) {
+    if (
+      orderNumberFromMsg &&
+      existingMeta.order_number !== orderNumberFromMsg
+    ) {
       await (supabase as any)
         .from("mod_chat_conversations")
         .update({
