@@ -156,13 +156,14 @@ export function MobileCheckoutPage({
       if (data.billingAddress) setBillingAddress(data.billingAddress);
       if (data.shippingMethodId) setShippingMethodId(data.shippingMethodId);
       if (data.paymentMethodId) setPaymentMethodId(data.paymentMethodId);
-      if (data.billingSameAsShipping !== undefined) setBillingSameAsShipping(data.billingSameAsShipping);
+      if (data.billingSameAsShipping !== undefined)
+        setBillingSameAsShipping(data.billingSameAsShipping);
       if (data.currentStep) setCurrentStep(data.currentStep);
       if (data.completedSteps) setCompletedSteps(data.completedSteps);
     } catch {
       // Ignore parse errors
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Persist form state to sessionStorage on change
@@ -184,7 +185,16 @@ export function MobileCheckoutPage({
     } catch {
       // Ignore storage errors (e.g. private browsing)
     }
-  }, [contact, shippingAddress, billingAddress, shippingMethodId, paymentMethodId, billingSameAsShipping, currentStep, completedSteps]);
+  }, [
+    contact,
+    shippingAddress,
+    billingAddress,
+    shippingMethodId,
+    paymentMethodId,
+    billingSameAsShipping,
+    currentStep,
+    completedSteps,
+  ]);
 
   // Section statuses
   const getSectionStatus = useCallback(
@@ -273,7 +283,9 @@ export function MobileCheckoutPage({
     };
     await onSubmit(data);
     // Clear saved form state after successful submission
-    try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
+    try {
+      sessionStorage.removeItem(STORAGE_KEY);
+    } catch {}
   }, [
     contact,
     shippingAddress,

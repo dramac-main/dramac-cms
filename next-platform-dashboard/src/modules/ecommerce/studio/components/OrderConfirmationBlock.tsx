@@ -343,10 +343,12 @@ export function OrderConfirmationBlock({
   }, [order]);
 
   // Auto-open chat widget after order loads (with a brief delay for UX)
-  const chatAutoOpenedRef = React.useRef(false);
+  // Use localStorage key per order so refresh doesn't re-trigger auto-open
   React.useEffect(() => {
-    if (!order || chatAutoOpenedRef.current) return;
-    chatAutoOpenedRef.current = true;
+    if (!order) return;
+    const storageKey = `dramac_chat_auto_opened_${order.order_number}`;
+    if (sessionStorage.getItem(storageKey)) return;
+    sessionStorage.setItem(storageKey, "1");
     const timer = setTimeout(() => {
       openChatWithOrderContext();
     }, 3000); // 3 second delay so user can see the confirmation first

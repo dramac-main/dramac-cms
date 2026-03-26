@@ -312,8 +312,18 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
       }
     }
 
-    // If we have an existing conversation, go straight to chat
+    // If we have an existing conversation (state or localStorage), go straight to chat
     if (conversationId && visitorId) {
+      setWidgetState("chat");
+      setUnreadCount(0);
+      return;
+    }
+    // Also check localStorage directly (state may not be set yet after mount)
+    const savedConv = localStorage.getItem(`dramac_chat_conv_${siteId}`);
+    const savedVis = localStorage.getItem(`dramac_chat_visitor_${siteId}`);
+    if (savedConv && savedVis) {
+      setConversationId(savedConv);
+      setVisitorId(savedVis);
       setWidgetState("chat");
       setUnreadCount(0);
       return;
@@ -338,7 +348,8 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
       // Create conversation with minimal data
       handleStartChat({});
     }
-  }, [settings, conversationId, visitorId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings, conversationId, visitorId, siteId]);
 
   // Listen for messages from the parent window (embed script)
   useEffect(() => {
@@ -433,6 +444,17 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
   // Covers the timing case where order context arrives after handleOpen has already run
   useEffect(() => {
     if (!orderContext || !settings || widgetState !== "pre-chat") return;
+    // Don't create a new conversation if one is already saved in localStorage
+    const savedConv = localStorage.getItem(`dramac_chat_conv_${siteId}`);
+    const savedVis = localStorage.getItem(`dramac_chat_visitor_${siteId}`);
+    if (savedConv && savedVis) {
+      setConversationId(savedConv);
+      setVisitorId(savedVis);
+      setWidgetState("chat");
+      orderContextRef.current = null;
+      setOrderContext(null);
+      return;
+    }
     const ctx = orderContext;
     orderContextRef.current = null;
     setOrderContext(null);

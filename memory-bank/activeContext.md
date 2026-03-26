@@ -1,103 +1,71 @@
 # Active Context
 
-## Current Focus: Auth Dialog Brand Scope + UX Improvements — DEPLOYED
+## Current Focus: Comprehensive Order Lifecycle Fix — DEPLOYED
 
-### Status: COMMITTED, DEPLOYED — `789441ea`
+### Status: COMMITTED, DEPLOYED — `6170925d`
 
 ### What Was Done (This Session)
 
-1. **CSS Variable Scope Fix**: Auth dialog was rendering as a sibling to `.studio-renderer` div (where brand CSS vars are injected), so `bg-card`, `text-foreground` etc. resolved to undefined. Fixed by adding `children` prop to `StudioRenderer` and rendering `StorefrontAuthDialogProvider` as a child inside the branded scope.
+**Fixed 10 bugs across the entire order lifecycle, from dashboard management to storefront tracking.**
 
-2. **React Hooks Order Fix**: `useRef`, `useEffect`, `useCallback` were called after an early `return null` — violating rules of hooks. Moved all hooks before the conditional return with `isOpen` guards.
+#### 1. Orders Show "0 Items" — FIXED
+- `getOrders()` in `ecommerce-actions.ts` was `.select("*")` without joining order_items
+- Changed to `.select("*, items:mod_ecommod01_order_items(*)")` — items now correctly populated
 
-3. **UX Improvements**: Store-specific copy ("Create Store Account"), ShoppingBag icon, forgot password help link, auto-focus first input, Escape key closes, accessible aria-labels, enhanced checkout sign-in prompt with User icon.
+#### 2. Status Change Doesn't Notify Customers — FIXED
+- `updateOrderStatus()` now auto-sends customer emails when status changes to shipped/delivered/cancelled/refunded
+- Added `STATUS_EMAIL_MAP` mapping status → email type
+- Added `VALID_TRANSITIONS` map for status transition validation
+- Sets `shipped_at`, `delivered_at`, `fulfillment_status` timestamps automatically
 
-4. **Database Trigger Fix**: `mod_ecommod01_update_customer_stats` function used `last_order_at` but actual column is `last_order_date` — fixed via `CREATE OR REPLACE FUNCTION` in Supabase.
+#### 3. Payment Proof Not Visible in Dashboard — FIXED
+- New `getPaymentProofUrl()` server action: creates signed URL from `payment-proofs` Supabase bucket
+- New `updatePaymentProofStatus()` server action: approve/reject proof, updates metadata + payment_status
+- New payment proof section in order detail dialog: image/PDF preview, file info, approve/reject buttons
 
-### Previous Session (commit `5d9b191c`)
+#### 4. Timeline Events Using Wrong DB Columns — FIXED
+- `addTimelineEvent()` was using `actor_id`/`actor_name` but DB has `created_by`(uuid) + `metadata`(jsonb)
+- Fixed across ALL callers: updateOrderStatus, sendOrderEmail, addOrderNote, requestRefund, processRefund
 
-Fixed all hardcoded Tailwind colors in storefront auth dialog and account page components (`gray-*`, `red-*`, `blue-*` → semantic tokens).
+#### 5. Shipping Dialog for Tracking Info — FIXED
+- Status change to "shipped" now intercepts and shows shipping dialog
+- Collects carrier, tracking number, tracking URL
+- Calls `addOrderShipment()` which creates shipment + copies tracking to orders table + sends email
 
-### Files Fixed
+#### 6. addOrderShipment Inserts Nonexistent Column — FIXED
+- Removed `items` from insert and function signature (column doesn't exist in DB)
+- Changed initial status from "pending" to "in_transit"
 
-- **StorefrontAuthDialog.tsx**: InputField (labels, borders, placeholder, disabled state, password toggle, field errors), all 3 error messages, set-password info banner, dialog card bg, close button, title/subtitle, tab container, active/inactive tabs
-- **MyAccountBlock.tsx**: OrdersTab (loading, error, empty state, order cards), AddressCard (bg, text, edit/remove buttons), AddressesTab (loading, error, empty state, add button), ProfileTab (labels, inputs, disabled email, checkbox, error message), main component (header, description, sign out button, loading spinner, guest state, create account button, inactive tabs)
-- **NavAccountBadge.tsx**: Already correct — no changes needed
+#### 7. Order Confirmation Page Tracking — FIXED
+- Added `tracking_number` and `tracking_url` to `OrderData` interface in `OrderConfirmationBlock.tsx`
+- Added tracking section showing tracking number + clickable "Track your shipment →" link
 
-### Branding Token Mapping Applied
+#### 8. My Account Page Tracking — FIXED
+- Extended `Order` interface in `MyAccountBlock.tsx` with `trackingNumber`, `trackingUrl`, `fulfillmentStatus`
+- Order cards now show tracking number + "Track →" link
 
-- `text-gray-900/700` → `text-foreground`
-- `text-gray-500/600` → `text-muted-foreground`
-- `text-gray-400/300` → `text-muted-foreground/60` or `text-muted-foreground/40`
-- `bg-white` → `bg-card`
-- `bg-gray-100` → `bg-muted`
-- `bg-gray-50` → `bg-muted/50`
-- `border-gray-300` → `border-input`
-- `border-gray-200` → `border-border`
-- `bg-red-50 text-red-700` → `bg-destructive/10 text-destructive`
-- `bg-blue-50 text-blue-700` → `bg-primary/10 text-primary`
+#### 9. Auth API Missing Fields + Snake/Camel Case Mismatch — FIXED
+- `get-orders` now returns `tracking_number`, `tracking_url`
+- Added item count query (joins order_items, sums quantities per order)
+- Added camelCase mapping (order_number→orderNumber, created_at→createdAt, etc.)
 
-### Exceptions Kept (intentionally hardcoded)
+#### 10. TypeScript Errors — FIXED
+- Fixed `unknown → ReactNode` errors: `!!` coercion for `metadata?.payment_proof`, ternary patterns for `proofData` fields
+- All 4 TS errors resolved, clean tsc + build
 
-- STATUS_COLORS in MyAccountBlock (order status badges: yellow=pending, green=delivered, red=cancelled) — universally understood e-commerce status indicators
-- Success message `bg-green-50 text-green-700` — universal success color
-- "Default" address badge `bg-green-100 text-green-800` — status indicator
+### Files Modified (6 files, ~600 lines changed)
+1. `ecommerce-actions.ts` — items join in getOrders
+2. `order-actions.ts` — updateOrderStatus, addTimelineEvent, addOrderShipment, sendOrderEmail, addOrderNote, requestRefund, processRefund, new getPaymentProofUrl, new updatePaymentProofStatus
+3. `order-detail-dialog.tsx` — payment proof UI, shipping dialog, tracking display
+4. `OrderConfirmationBlock.tsx` — tracking display
+5. `MyAccountBlock.tsx` — tracking display
+6. `auth/route.ts` — tracking fields, item counts, camelCase mapping
 
-### Previous: Notification URL 404 Fix + Customer Email CTAs — `9cba84f7`
-
-### Root Cause
-
-All notification URLs in `business-notifications.ts` used `/sites/{siteId}/ecommerce/orders` but the actual dashboard route is `/dashboard/sites/{siteId}/ecommerce?view=orders`. Two problems:
-
-1. Missing `/dashboard/` prefix (route group invisible in URLs)
-2. Using path segments (`/orders`) instead of query params (`?view=orders`)
-
-### Fixes Applied (3 files, 73 insertions, 19 deletions)
-
-#### `business-notifications.ts` — 13 broken URLs fixed:
-
-- 2 booking URLs: `/sites/${siteId}/booking` → `/dashboard/sites/${siteId}/booking`
-- 7 ecommerce order URLs → `/dashboard/sites/${siteId}/ecommerce?view=orders`
-- 1 products URL → `/dashboard/sites/${siteId}/ecommerce?view=products`
-- 3 quotes URLs → `/dashboard/sites/${siteId}/ecommerce?view=quotes`
-
-#### `business-notifications.ts` — 4 functions enhanced with storefront URLs:
-
-- `notifyOrderDelivered`, `notifyOrderCancelled`, `notifyPaymentReceived`, `notifyRefundIssued`
-- Added `subdomain, custom_domain` to site query
-- Build storefront URL → pass `orderUrl` to customer email data
-
-#### `templates.ts` — 4 customer email templates fixed:
-
-- `order_delivered_customer`: `dashboardUrl` → `orderUrl`
-- `order_cancelled_customer`: `dashboardUrl` → `orderUrl`
-- `payment_received_customer`: `data.amount` → `data.total`, `dashboardUrl` → `orderUrl`
-- `refund_issued_customer`: `data.amount` → `data.refundAmount`, `dashboardUrl` → `orderUrl`
-
-#### `order-actions.ts` — sendOrderEmail fixed:
-
-- Added `subdomain, custom_domain` to site query
-- Build storefront `orderUrl` and `trackingUrlStorefront`
-- Pass URLs to all 4 customer email types (confirmation, delivered, cancelled, refunded)
-
-### Commits
-
-- `9cba84f7` — fix: notification URLs 404 + customer email CTAs + field mismatches
-- Previous: `ba4ce129` — feat: end-to-end AI automation
-
-1. **"I uploaded proof for ORD-1007"** → AI correctly identified Screenshot (19).png, ZMW 1,531.20, said "under review", did NOT ask to re-upload
-2. **"What about ORD-1006?"** → AI listed all 4 pending orders with correct amounts
-3. **"Any quotations?"** → AI correctly said no quotations on file, reiterated 24hr review
-
-### Commits
-
-- `ba4ce129` — feat: end-to-end AI automation (12 files, 547 insertions, 66 deletions)
-- Previous: `8ef49e64` — fix: use after() to keep Lambda alive for AI response generation
-
-### Previous Commits
-
-- `b4a4c01c` — AI payment guidance system (pipeline fix, dashboard controls, streamlined UI)
-- `d9cc11e6` — Checkout auto-redirect to order confirmation
+### DB Schema Notes (verified via SQL)
+- `order_timeline`: created_by(uuid), metadata(jsonb) — NO actor_id/actor_name
+- `order_shipments`: NO items column
+- `orders`: has tracking_number, tracking_url, shipped_at, delivered_at, metadata(jsonb)
+- Payment proofs stored in `orders.metadata.payment_proof` as JSONB
 - `e2f8f2c0` — Convert ecommerce prices from cents in email notifications
 - `template-utils.ts` — `addOrderTracking()` helper
 - `page-templates.ts` — `createOrderTrackingTemplate()` + `orderTrackingPageDefinition`

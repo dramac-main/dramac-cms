@@ -154,54 +154,73 @@ export async function POST(request: NextRequest) {
       visitorId = newVisitor.id;
     }
 
-    // 2. Create conversation
-    const convInsert: Record<string, unknown> = {
-      site_id: siteId,
-      visitor_id: visitorId,
-      status: "pending",
-      channel: "widget",
-      priority: "normal",
-      message_count: 0,
-      unread_agent_count: 0,
-      unread_visitor_count: 0,
-      tags: [],
-      metadata: {},
-    };
-
-    if (departmentId) convInsert.department_id = departmentId;
-
-    // Auto-assign to available online agent (not 'away' — away agents shouldn't get new chats)
-    const { data: availableAgents } = await (supabase as any)
-      .from("mod_chat_agents")
-      .select("id, current_chat_count, max_concurrent_chats")
+    // 2. Check for existing active conversation for this visitor (dedup)
+    const { data: existingConv } = await (supabase as any)
+      .from("mod_chat_conversations")
+      .select("id")
       .eq("site_id", siteId)
-      .eq("is_active", true)
-      .eq("status", "online")
-      .order("current_chat_count", { ascending: true });
+      .eq("visitor_id", visitorId)
+      .in("status", ["active", "pending", "open", "waiting"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    // Filter to agents with capacity (can't do column-to-column comparison in Supabase client)
-    const availableAgent = (availableAgents || []).find(
-      (a: { current_chat_count: number; max_concurrent_chats: number }) =>
-        (a.current_chat_count || 0) < (a.max_concurrent_chats || 5),
-    );
+    let conversationId: string;
+    let isExisting = false;
 
-    if (availableAgent) {
-      convInsert.assigned_agent_id = availableAgent.id;
-      convInsert.status = "active";
+    if (existingConv) {
+      // Reuse existing active conversation instead of creating a duplicate
+      conversationId = existingConv.id;
+      isExisting = true;
+    } else {
+      // Create new conversation
+      const convInsert: Record<string, unknown> = {
+        site_id: siteId,
+        visitor_id: visitorId,
+        status: "pending",
+        channel: "widget",
+        priority: "normal",
+        message_count: 0,
+        unread_agent_count: 0,
+        unread_visitor_count: 0,
+        tags: [],
+        metadata: {},
+      };
+
+      if (departmentId) convInsert.department_id = departmentId;
+
+      // Auto-assign to available online agent (not 'away' — away agents shouldn't get new chats)
+      const { data: availableAgents } = await (supabase as any)
+        .from("mod_chat_agents")
+        .select("id, current_chat_count, max_concurrent_chats")
+        .eq("site_id", siteId)
+        .eq("is_active", true)
+        .eq("status", "online")
+        .order("current_chat_count", { ascending: true });
+
+      // Filter to agents with capacity (can't do column-to-column comparison in Supabase client)
+      const availableAgent = (availableAgents || []).find(
+        (a: { current_chat_count: number; max_concurrent_chats: number }) =>
+          (a.current_chat_count || 0) < (a.max_concurrent_chats || 5),
+      );
+
+      if (availableAgent) {
+        convInsert.assigned_agent_id = availableAgent.id;
+        convInsert.status = "active";
+      }
+
+      const { data: convData, error: convError } = await (supabase as any)
+        .from("mod_chat_conversations")
+        .insert(convInsert)
+        .select()
+        .single();
+
+      if (convError) throw convError;
+      conversationId = convData.id;
     }
 
-    const { data: convData, error: convError } = await (supabase as any)
-      .from("mod_chat_conversations")
-      .insert(convInsert)
-      .select()
-      .single();
-
-    if (convError) throw convError;
-
-    const conversationId = convData.id;
-
-    // 3. Send initial message if provided
-    if (initialMessage) {
+    // 3. Send initial message if provided (only for new conversations — skip for resumed ones)
+    if (initialMessage && !isExisting) {
       const msgInsert: Record<string, unknown> = {
         conversation_id: conversationId,
         site_id: siteId,
@@ -284,8 +303,8 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { conversationId, visitorId },
-      { status: 201, headers: corsHeaders },
+      { conversationId, visitorId, isExisting },
+      { status: isExisting ? 200 : 201, headers: corsHeaders },
     );
   } catch (error) {
     console.error("[LiveChat Conversations API] POST error:", error);
