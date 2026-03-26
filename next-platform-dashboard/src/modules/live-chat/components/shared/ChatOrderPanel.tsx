@@ -49,10 +49,14 @@ import { toast } from "sonner";
 import { formatCurrency } from "@/lib/locale-config";
 import {
   getOrderContextForChat,
+  getStoreInfoForChat,
   type ChatOrderContext,
+  type ChatStoreInfo,
 } from "@/modules/live-chat/actions/chat-order-actions";
 import { updateOrderStatus } from "@/modules/ecommerce/actions/order-actions";
 import { updatePaymentProofStatus } from "@/modules/ecommerce/actions/order-actions";
+import { ImageLightbox } from "./ImageLightbox";
+import { OrderDetailDialog } from "@/modules/ecommerce/components/orders/order-detail-dialog";
 
 // Valid status transitions (mirrors order-actions.ts)
 const VALID_TRANSITIONS: Record<string, string[]> = {
@@ -135,6 +139,9 @@ export function ChatOrderPanel({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [showFullOrder, setShowFullOrder] = useState(false);
+  const [storeInfo, setStoreInfo] = useState<ChatStoreInfo | null>(null);
+  const [loadingStoreInfo, setLoadingStoreInfo] = useState(false);
 
   const fetchOrder = useCallback(async () => {
     try {
@@ -228,6 +235,17 @@ export function ChatOrderPanel({
       }
     });
   }, [order, siteId, userId, userName, fetchOrder]);
+
+  // Open full order dialog — lazy-fetch store info on first use
+  const handleViewFullOrder = useCallback(async () => {
+    if (!storeInfo) {
+      setLoadingStoreInfo(true);
+      const info = await getStoreInfoForChat(siteId);
+      setStoreInfo(info);
+      setLoadingStoreInfo(false);
+    }
+    setShowFullOrder(true);
+  }, [siteId, storeInfo]);
 
   // Loading state
   if (loading) {
@@ -420,6 +438,17 @@ export function ChatOrderPanel({
                 </p>
               )}
 
+              {/* Proof image thumbnail with lightbox zoom */}
+              {order.proofUrl && (
+                <ImageLightbox
+                  src={order.proofUrl}
+                  alt="Payment proof"
+                  fileName={order.paymentProof.fileName || "Payment proof"}
+                  thumbnailMaxHeight="max-h-32"
+                  className="w-full"
+                />
+              )}
+
               {/* Approve / Reject buttons — only when proof is pending */}
               {(!order.paymentProof.status ||
                 order.paymentProof.status === "pending" ||
@@ -533,22 +562,39 @@ export function ChatOrderPanel({
           </>
         )}
 
-        {/* View full order link */}
+        {/* View full order — inline dialog */}
         <Separator />
         <Button
           variant="outline"
           size="sm"
           className="w-full h-7 text-xs"
-          onClick={() => {
-            window.open(
-              `/dashboard/sites/${siteId}/ecommerce?tab=orders&order=${order.id}`,
-              "_blank",
-            );
-          }}
+          disabled={loadingStoreInfo}
+          onClick={handleViewFullOrder}
         >
-          <ExternalLink className="h-3 w-3 mr-1" />
+          {loadingStoreInfo ? (
+            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+          ) : (
+            <ExternalLink className="h-3 w-3 mr-1" />
+          )}
           View Full Order
         </Button>
+
+        {/* Inline OrderDetailDialog */}
+        {order && storeInfo && (
+          <OrderDetailDialog
+            open={showFullOrder}
+            onOpenChange={setShowFullOrder}
+            orderId={order.id}
+            siteId={siteId}
+            userId={userId}
+            userName={userName}
+            storeName={storeInfo.storeName}
+            storeAddress={storeInfo.storeAddress}
+            storeEmail={storeInfo.storeEmail}
+            storePhone={storeInfo.storePhone}
+            defaultCurrency={order.currency}
+          />
+        )}
       </CardContent>
     </Card>
   );

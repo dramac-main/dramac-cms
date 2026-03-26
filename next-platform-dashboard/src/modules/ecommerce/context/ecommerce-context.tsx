@@ -217,6 +217,29 @@ export function useCurrency() {
   return { currency, currencySymbol, formatPrice, formatAmount }
 }
 
+/**
+ * Context-safe currency hook — works both inside and outside EcommerceProvider.
+ * Returns a fallback currency when the provider is absent.
+ * Used by components that may render in non-ecommerce contexts (e.g. live chat).
+ */
+export function useCurrencySafe(fallbackCurrency = DEFAULT_CURRENCY) {
+  const context = useContext(EcommerceContext)
+  const currency = context?.settings?.currency || fallbackCurrency
+  const currencySymbol = getCurrencySymbol(currency)
+
+  const formatPrice = useCallback(
+    (amountInCents: number) => formatCurrency(amountInCents / 100, currency),
+    [currency]
+  )
+
+  const formatAmount = useCallback(
+    (amount: number) => formatCurrency(amount, currency),
+    [currency]
+  )
+
+  return { currency, currencySymbol, formatPrice, formatAmount }
+}
+
 export function useInventory() {
   const { lowStockProducts, outOfStockProducts, refreshInventory, isLoading } = useEcommerce()
   return { lowStockProducts, outOfStockProducts, refresh: refreshInventory, isLoading }

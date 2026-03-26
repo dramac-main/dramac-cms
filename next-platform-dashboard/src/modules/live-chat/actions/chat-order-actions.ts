@@ -10,6 +10,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { verifyUserSiteAccess } from "@/lib/multi-tenant/tenant-context";
+import { getPaymentProofUrl } from "@/modules/ecommerce/actions/order-actions";
 
 const ECOM_PREFIX = "mod_ecommod01";
 
@@ -37,6 +38,7 @@ export interface ChatOrderContext {
     fileName: string | null;
     uploadedAt: string | null;
   } | null;
+  proofUrl: string | null;
   trackingNumber: string | null;
   trackingUrl: string | null;
   shippedAt: string | null;
@@ -87,7 +89,7 @@ export async function getOrderContextForChat(
     | { status?: string; file_name?: string; uploaded_at?: string }
     | undefined;
 
-  return {
+  const orderContext: ChatOrderContext = {
     id: order.id,
     orderNumber: order.order_number,
     status: order.status,
@@ -120,9 +122,84 @@ export async function getOrderContextForChat(
           uploadedAt: proof.uploaded_at || null,
         }
       : null,
+    proofUrl: null as string | null,
     trackingNumber: order.tracking_number,
     trackingUrl: order.tracking_url,
     shippedAt: order.shipped_at,
     deliveredAt: order.delivered_at,
+  };
+
+  // Fetch signed proof URL if a proof exists
+  if (proof) {
+    const proofResult = await getPaymentProofUrl(order.id, siteId);
+    if (proofResult.url) {
+      orderContext.proofUrl = proofResult.url;
+    }
+  }
+
+  return orderContext;
+}
+
+// ============================================================================
+// STORE INFO
+// ============================================================================
+
+export interface ChatStoreInfo {
+  storeName: string;
+  storeAddress: string;
+  storeEmail: string;
+  storePhone: string;
+  storeLogo: string;
+  currency: string;
+}
+
+/**
+ * Fetch store settings for rendering the OrderDetailDialog inside live chat.
+ */
+export async function getStoreInfoForChat(
+  siteId: string,
+): Promise<ChatStoreInfo | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const hasAccess = await verifyUserSiteAccess(user.id, siteId);
+  if (!hasAccess) return null;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any;
+
+  const { data: settings } = await db
+    .from(`${ECOM_PREFIX}_settings`)
+    .select(
+      "store_name, store_email, store_phone, store_address, store_url, currency",
+    )
+    .eq("site_id", siteId)
+    .single();
+
+  if (!settings) return null;
+
+  // Format address object to a single string
+  const addr = settings.store_address as {
+    street?: string;
+    city?: string;
+    state?: string;
+    postal_code?: string;
+    country?: string;
+  } | null;
+
+  const addressParts = addr
+    ? [addr.street, addr.city, addr.state, addr.postal_code, addr.country].filter(Boolean)
+    : [];
+
+  return {
+    storeName: settings.store_name || "",
+    storeAddress: addressParts.join(", "),
+    storeEmail: settings.store_email || "",
+    storePhone: settings.store_phone || "",
+    storeLogo: "",
+    currency: settings.currency || "ZMW",
   };
 }
