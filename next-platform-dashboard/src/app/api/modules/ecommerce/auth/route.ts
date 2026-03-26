@@ -162,10 +162,7 @@ export async function POST(request: NextRequest) {
 
     const supabase = createAdminClient();
     const ua = request.headers.get("user-agent") || undefined;
-    const ip =
-      request.headers.get("x-forwarded-for")?.split(",")[0] ||
-      request.headers.get("x-real-ip") ||
-      undefined;
+    // ip already extracted above for rate limiting (via getClientIp)
 
     // ── REGISTER ────────────────────────────────────────────────────────────
     if (action === "register") {

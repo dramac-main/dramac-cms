@@ -1,29 +1,29 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export interface RateLimitConfig {
-  maxRequests: number;  // Maximum requests allowed
-  windowMs: number;     // Time window in milliseconds
+  maxRequests: number; // Maximum requests allowed
+  windowMs: number; // Time window in milliseconds
 }
 
 export interface RateLimitResult {
   allowed: boolean;
   remaining: number;
   resetAt: Date;
-  retryAfter?: number;  // Seconds until reset
+  retryAfter?: number; // Seconds until reset
 }
 
 // Rate limit configurations
 export const RATE_LIMITS = {
-  aiGeneration: { maxRequests: 10, windowMs: 60 * 60 * 1000 },    // 10/hour
-  aiRegeneration: { maxRequests: 50, windowMs: 60 * 60 * 1000 },  // 50/hour
+  aiGeneration: { maxRequests: 10, windowMs: 60 * 60 * 1000 }, // 10/hour
+  aiRegeneration: { maxRequests: 50, windowMs: 60 * 60 * 1000 }, // 50/hour
   siteCreation: { maxRequests: 20, windowMs: 24 * 60 * 60 * 1000 }, // 20/day
   pageCreation: { maxRequests: 100, windowMs: 24 * 60 * 60 * 1000 }, // 100/day
-  export: { maxRequests: 10, windowMs: 60 * 60 * 1000 },          // 10/hour
+  export: { maxRequests: 10, windowMs: 60 * 60 * 1000 }, // 10/hour
   // AI Editor operations (PHASE-ED-05)
-  aiEditor: { maxRequests: 100, windowMs: 60 * 60 * 1000 },       // 100/hour
+  aiEditor: { maxRequests: 100, windowMs: 60 * 60 * 1000 }, // 100/hour
   aiPageGeneration: { maxRequests: 20, windowMs: 60 * 60 * 1000 }, // 20/hour
   aiComponentGeneration: { maxRequests: 50, windowMs: 60 * 60 * 1000 }, // 50/hour
-  aiOptimization: { maxRequests: 30, windowMs: 60 * 60 * 1000 },  // 30/hour
+  aiOptimization: { maxRequests: 30, windowMs: 60 * 60 * 1000 }, // 30/hour
 } as const;
 
 export type RateLimitType = keyof typeof RATE_LIMITS;
@@ -33,25 +33,28 @@ export type RateLimitType = keyof typeof RATE_LIMITS;
  */
 export async function checkRateLimit(
   userId: string,
-  type: RateLimitType
+  type: RateLimitType,
 ): Promise<RateLimitResult> {
   const config = RATE_LIMITS[type];
   const windowStart = new Date(Date.now() - config.windowMs);
 
   try {
     const supabase = createAdminClient();
-    
+
     // Query using admin client with type assertion for untyped table
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any)
-      .from('rate_limits')
-      .select('id, created_at')
-      .eq('user_id', userId)
-      .eq('action_type', type)
-      .gte('created_at', windowStart.toISOString());
+      .from("rate_limits")
+      .select("id, created_at")
+      .eq("user_id", userId)
+      .eq("action_type", type)
+      .gte("created_at", windowStart.toISOString());
 
     if (error) {
-      console.warn('Rate limit check error (table may not exist):', error.message);
+      console.warn(
+        "Rate limit check error (table may not exist):",
+        error.message,
+      );
       // Fail open - allow request if check fails
       return {
         allowed: true,
@@ -66,13 +69,19 @@ export async function checkRateLimit(
 
     if (requestCount >= config.maxRequests) {
       // Calculate retry time from oldest request
-      const sortedData = [...(data || [])].sort((a: { created_at: string }, b: { created_at: string }) => 
-        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      const sortedData = [...(data || [])].sort(
+        (a: { created_at: string }, b: { created_at: string }) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
       );
-      
+
       const oldestRequest = sortedData[0];
       const retryAfter = oldestRequest
-        ? Math.ceil((new Date(oldestRequest.created_at).getTime() + config.windowMs - Date.now()) / 1000)
+        ? Math.ceil(
+            (new Date(oldestRequest.created_at).getTime() +
+              config.windowMs -
+              Date.now()) /
+              1000,
+          )
         : Math.ceil(config.windowMs / 1000);
 
       return {
@@ -85,7 +94,7 @@ export async function checkRateLimit(
 
     return { allowed: true, remaining, resetAt };
   } catch (error) {
-    console.error('Rate limit check failed:', error);
+    console.error("Rate limit check failed:", error);
     // Fail open
     return {
       allowed: true,
@@ -101,26 +110,24 @@ export async function checkRateLimit(
 export async function recordRateLimitedAction(
   userId: string,
   type: RateLimitType,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ): Promise<void> {
   try {
     const supabase = createAdminClient();
-    
+
     // Use type assertion for untyped table
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase as any)
-      .from('rate_limits')
-      .insert({
-        user_id: userId,
-        action_type: type,
-        metadata: metadata || {},
-      });
+    const { error } = await (supabase as any).from("rate_limits").insert({
+      user_id: userId,
+      action_type: type,
+      metadata: metadata || {},
+    });
 
     if (error) {
-      console.warn('Failed to record rate-limited action:', error.message);
+      console.warn("Failed to record rate-limited action:", error.message);
     }
   } catch (error) {
-    console.error('Failed to record rate-limited action:', error);
+    console.error("Failed to record rate-limited action:", error);
   }
 }
 
@@ -132,22 +139,22 @@ export async function cleanupRateLimits(): Promise<number> {
 
   try {
     const supabase = createAdminClient();
-    
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any)
-      .from('rate_limits')
+      .from("rate_limits")
       .delete()
-      .lt('created_at', cutoff.toISOString())
-      .select('id');
+      .lt("created_at", cutoff.toISOString())
+      .select("id");
 
     if (error) {
-      console.error('Rate limit cleanup error:', error.message);
+      console.error("Rate limit cleanup error:", error.message);
       return 0;
     }
 
     return data?.length || 0;
   } catch (error) {
-    console.error('Rate limit cleanup error:', error);
+    console.error("Rate limit cleanup error:", error);
     return 0;
   }
 }
@@ -157,7 +164,7 @@ export async function cleanupRateLimits(): Promise<number> {
  */
 export async function getRateLimitStatus(
   userId: string,
-  type: RateLimitType
+  type: RateLimitType,
 ): Promise<{
   used: number;
   limit: number;
@@ -169,9 +176,10 @@ export async function getRateLimitStatus(
 
   const resetsInMs = result.resetAt.getTime() - Date.now();
   const resetsInMinutes = Math.ceil(resetsInMs / (60 * 1000));
-  const resetsIn = resetsInMinutes > 60
-    ? `${Math.ceil(resetsInMinutes / 60)} hours`
-    : `${resetsInMinutes} minutes`;
+  const resetsIn =
+    resetsInMinutes > 60
+      ? `${Math.ceil(resetsInMinutes / 60)} hours`
+      : `${resetsInMinutes} minutes`;
 
   return {
     used: config.maxRequests - result.remaining,
@@ -184,11 +192,15 @@ export async function getRateLimitStatus(
 /**
  * Format rate limit for API response headers
  */
-export function formatRateLimitHeaders(result: RateLimitResult): Record<string, string> {
+export function formatRateLimitHeaders(
+  result: RateLimitResult,
+): Record<string, string> {
   return {
-    'X-RateLimit-Remaining': result.remaining.toString(),
-    'X-RateLimit-Reset': result.resetAt.toISOString(),
-    ...(result.retryAfter ? { 'Retry-After': result.retryAfter.toString() } : {}),
+    "X-RateLimit-Remaining": result.remaining.toString(),
+    "X-RateLimit-Reset": result.resetAt.toISOString(),
+    ...(result.retryAfter
+      ? { "Retry-After": result.retryAfter.toString() }
+      : {}),
   };
 }
 
@@ -197,15 +209,15 @@ export function formatRateLimitHeaders(result: RateLimitResult): Record<string, 
  */
 export async function checkMultipleRateLimits(
   userId: string,
-  types: RateLimitType[]
+  types: RateLimitType[],
 ): Promise<Map<RateLimitType, RateLimitResult>> {
   const results = new Map<RateLimitType, RateLimitResult>();
-  
+
   for (const type of types) {
     const result = await checkRateLimit(userId, type);
     results.set(type, result);
   }
-  
+
   return results;
 }
 
@@ -216,7 +228,7 @@ export function getRateLimitDescription(type: RateLimitType): string {
   const config = RATE_LIMITS[type];
   const hours = config.windowMs / (60 * 60 * 1000);
   const timeUnit = hours >= 24 ? `${hours / 24} day(s)` : `${hours} hour(s)`;
-  
+
   return `${config.maxRequests} requests per ${timeUnit}`;
 }
 
@@ -239,7 +251,13 @@ export function ipRateLimit(
   namespace: string,
   limit: number,
   windowMs: number,
-): { check: (ip: string) => { allowed: boolean; remaining: number; retryAfterMs: number } } {
+): {
+  check: (ip: string) => {
+    allowed: boolean;
+    remaining: number;
+    retryAfterMs: number;
+  };
+} {
   if (!ipStores.has(namespace)) {
     ipStores.set(namespace, new Map());
   }
@@ -264,7 +282,11 @@ export function ipRateLimit(
 
       entry.count += 1;
       if (entry.count > limit) {
-        return { allowed: false, remaining: 0, retryAfterMs: entry.resetAt - now };
+        return {
+          allowed: false,
+          remaining: 0,
+          retryAfterMs: entry.resetAt - now,
+        };
       }
 
       return { allowed: true, remaining: limit - entry.count, retryAfterMs: 0 };
