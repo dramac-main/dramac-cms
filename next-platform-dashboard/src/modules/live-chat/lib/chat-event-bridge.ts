@@ -331,38 +331,80 @@ export async function bridgeChatImageAsPaymentProof(
   const supabase = createAdminClient() as any;
 
   try {
-    // 1. Get visitor email
-    const { data: visitor } = await supabase
-      .from("mod_chat_visitors")
-      .select("email")
-      .eq("id", visitorId)
-      .single();
+    // 1. Get visitor email and conversation metadata (for order_number)
+    const [{ data: visitor }, { data: conversation }] = await Promise.all([
+      supabase
+        .from("mod_chat_visitors")
+        .select("email")
+        .eq("id", visitorId)
+        .single(),
+      supabase
+        .from("mod_chat_conversations")
+        .select("metadata")
+        .eq("id", conversationId)
+        .single(),
+    ]);
 
     if (!visitor?.email) {
       console.log("[ChatPaymentBridge] Visitor has no email — skipping bridge");
       return false;
     }
 
-    // 2. Find pending manual payment order for this customer
-    const { data: pendingOrders } = await supabase
-      .from("mod_ecommod01_orders")
-      .select(
-        "id, order_number, customer_email, customer_name, total, currency, payment_status, payment_provider, metadata",
-      )
-      .eq("site_id", siteId)
-      .eq("customer_email", visitor.email)
-      .eq("payment_status", "pending")
-      .neq("status", "cancelled")
-      .order("created_at", { ascending: false })
-      .limit(1);
+    // 2. Find the correct pending manual payment order.
+    //    Prefer the specific order linked to the conversation (metadata.order_number)
+    //    then fall back to most recent pending manual order by email.
+    const convMeta = (conversation?.metadata || {}) as Record<string, unknown>;
+    const linkedOrderNumber = convMeta.order_number as string | undefined;
 
-    // Only match manual/bank_transfer orders — not gateway (Paddle/Flutterwave) pending orders
-    const order = (pendingOrders || []).find(
-      (o: Record<string, unknown>) =>
-        !o.payment_provider ||
-        o.payment_provider === "manual" ||
-        o.payment_provider === "bank_transfer",
-    );
+    let order: Record<string, unknown> | null = null;
+
+    if (linkedOrderNumber) {
+      // Precise match: use the conversation's linked order number
+      const { data: linkedOrder } = await supabase
+        .from("mod_ecommod01_orders")
+        .select(
+          "id, order_number, customer_email, customer_name, total, currency, payment_status, payment_provider, metadata",
+        )
+        .eq("site_id", siteId)
+        .eq("order_number", linkedOrderNumber)
+        .neq("status", "cancelled")
+        .single();
+
+      // Accept if it's a manual payment order still awaiting proof
+      if (
+        linkedOrder &&
+        linkedOrder.payment_status === "pending" &&
+        (!linkedOrder.payment_provider ||
+          linkedOrder.payment_provider === "manual" ||
+          linkedOrder.payment_provider === "bank_transfer")
+      ) {
+        order = linkedOrder;
+      }
+    }
+
+    if (!order) {
+      // Fallback: find most recent pending manual order by email
+      const { data: pendingOrders } = await supabase
+        .from("mod_ecommod01_orders")
+        .select(
+          "id, order_number, customer_email, customer_name, total, currency, payment_status, payment_provider, metadata",
+        )
+        .eq("site_id", siteId)
+        .eq("customer_email", visitor.email)
+        .eq("payment_status", "pending")
+        .neq("status", "cancelled")
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      // Only match manual/bank_transfer orders — not gateway (Paddle/Flutterwave) pending orders
+      order =
+        (pendingOrders || []).find(
+          (o: Record<string, unknown>) =>
+            !o.payment_provider ||
+            o.payment_provider === "manual" ||
+            o.payment_provider === "bank_transfer",
+        ) || null;
+    }
 
     if (!order) {
       // No pending manual order — this image isn't payment proof

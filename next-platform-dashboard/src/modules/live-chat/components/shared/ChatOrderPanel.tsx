@@ -422,7 +422,8 @@ export function ChatOrderPanel({
 
               {/* Approve / Reject buttons — only when proof is pending */}
               {(!order.paymentProof.status ||
-                order.paymentProof.status === "pending") && (
+                order.paymentProof.status === "pending" ||
+                order.paymentProof.status === "pending_review") && (
                 <div className="flex gap-1.5">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>

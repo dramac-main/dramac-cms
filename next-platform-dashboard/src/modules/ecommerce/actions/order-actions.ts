@@ -543,7 +543,11 @@ export async function getPaymentProofUrl(
     return { error: "Payment proof path missing" };
   }
 
-  const { data, error } = await supabase.storage
+  // Use admin client for storage — payment-proofs bucket is private with no
+  // RLS SELECT policy for authenticated users. The bridge uploads via admin,
+  // so reads must also use admin to create signed URLs.
+  const adminClient = createAdminClient();
+  const { data, error } = await adminClient.storage
     .from("payment-proofs")
     .createSignedUrl(storagePath, 3600);
 

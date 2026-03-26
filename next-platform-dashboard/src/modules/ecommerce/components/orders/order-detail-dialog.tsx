@@ -178,7 +178,8 @@ export function OrderDetailDialog({
           setInvoiceNumber(invNum)
 
           // Load payment proof if it exists
-          if (data.payment_method === 'manual_transfer' || data.metadata?.payment_proof) {
+          const isManualPayment = data.payment_provider === 'manual' || data.payment_provider === 'bank_transfer'
+          if (isManualPayment || data.metadata?.payment_proof) {
             const result = await getPaymentProofUrl(orderId, siteId)
             if (result.url) {
               setProofUrl(result.url)
@@ -469,8 +470,8 @@ export function OrderDetailDialog({
               {/* Customer Panel */}
               <OrderCustomerPanel order={orderData} />
 
-              {/* Payment Proof Section — only shown for manual transfer orders */}
-              {(orderData.payment_method === 'manual_transfer' || !!orderData.metadata?.payment_proof) && (
+              {/* Payment Proof Section — only shown for manual/bank_transfer orders */}
+              {(orderData.payment_provider === 'manual' || orderData.payment_provider === 'bank_transfer' || !!orderData.metadata?.payment_proof) && (
                 <div className="rounded-lg border p-4 space-y-3">
                   <h3 className="text-sm font-semibold flex items-center gap-2">
                     <ImageIcon className="h-4 w-4" />
@@ -515,7 +516,7 @@ export function OrderDetailDialog({
                             </Badge>
                           ) : null}
                         </div>
-                        {(!proofData?.status || proofData.status === 'pending' || proofData.status === 'uploaded') && (
+                        {(!proofData?.status || proofData.status === 'pending' || proofData.status === 'uploaded' || proofData.status === 'pending_review') && (
                           <div className="flex gap-2">
                             <Button
                               size="sm"
