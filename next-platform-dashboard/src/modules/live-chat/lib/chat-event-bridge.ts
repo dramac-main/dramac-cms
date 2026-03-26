@@ -237,18 +237,85 @@ export async function notifyChatQuoteConverted(
 // =============================================================================
 
 /**
+ * Filename fragments that strongly suggest a payment/receipt document.
+ * Checked case-insensitively against the uploaded file's name.
+ */
+const PAYMENT_FILENAME_PATTERNS = [
+  /receipt/i,
+  /proof/i,
+  /payment/i,
+  /paid/i,
+  /transfer/i,
+  /invoice/i,
+  /bank/i,
+  /momo/i,
+  /mtn/i,
+  /airtel/i,
+  /zamtel/i,
+  /transaction/i,
+  /debit/i,
+  /confirm/i,
+];
+
+/**
+ * Text patterns that suggest the visitor was talking about a payment or
+ * uploading proof. Checked against each recent visitor text message.
+ */
+const PAYMENT_MESSAGE_PATTERNS = [
+  /\bpaid\b/i,
+  /\bpay(?:ment)?\b/i,
+  /\bproof\b/i,
+  /\breceipt\b/i,
+  /\btransfer(?:red)?\b/i,
+  /\bsent\b.*\bmoney\b/i,
+  /\bmoney\b.*\bsent\b/i,
+  /\bi\s+(?:have\s+)?(?:just\s+)?(?:made|done|completed|sent|uploaded|submitted)\b/i,
+  /\bhere\s+(?:is|are)\b/i,
+  /\bbank\s+transfer\b/i,
+  /\bmobile\s+money\b/i,
+  /\bORD[-\s]?\d+/i,
+  /\border\s*(?:number|#)?\s*\d+/i,
+  /\bdeposit(?:ed)?\b/i,
+  /\bremittance\b/i,
+];
+
+/**
+ * Returns true when the filename OR any recent visitor message contains
+ * clear payment-related vocabulary. Used to gate the chat-to-proof bridge
+ * and prevent false positives (e.g. product photos uploaded mid-conversation).
+ */
+function isLikelyPaymentProof(
+  fileName: string,
+  recentVisitorMessages: string[],
+): boolean {
+  // Fast path: filename itself already hints at a receipt/proof
+  if (PAYMENT_FILENAME_PATTERNS.some((re) => re.test(fileName))) return true;
+
+  // Check the last few visitor text messages for payment language
+  return recentVisitorMessages.some((msg) =>
+    PAYMENT_MESSAGE_PATTERNS.some((re) => re.test(msg)),
+  );
+}
+
+/**
  * Bridge a chat image/PDF upload to the payment proof system.
  *
  * When a customer uploads an image or PDF in a chat conversation and has
  * a pending manual payment order, this function:
- * 1. Downloads the file from the chat-attachments URL
- * 2. Re-uploads it to the payment-proofs storage bucket
- * 3. Updates the order metadata with proof info
- * 4. Adds an order timeline entry
- * 5. Sends a proactive chat acknowledgment message
- * 6. Notifies the business owner (in-app + email)
+ * 1. Verifies the upload is genuinely payment-proof-related (intent check)
+ * 2. Downloads the file from the chat-attachments URL
+ * 3. Re-uploads it to the payment-proofs storage bucket
+ * 4. Updates the order metadata with proof info
+ * 5. Adds an order timeline entry
+ * 6. Sends a proactive chat acknowledgment message
+ * 7. Notifies the business owner (in-app + email)
  *
  * Returns true if the image was successfully bridged, false otherwise.
+ *
+ * @param isPaymentConvoActive - true when the AI has already entered payment-
+ *   guidance mode for this conversation (conversation metadata flag set by
+ *   auto-response-handler). Passed through for logging; the primary gate is
+ *   the intent check against filename and conversation history.
  */
 export async function bridgeChatImageAsPaymentProof(
   siteId: string,
@@ -258,6 +325,7 @@ export async function bridgeChatImageAsPaymentProof(
   fileName: string,
   fileSize: number,
   fileMimeType: string,
+  isPaymentConvoActive: boolean,
 ): Promise<boolean> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = createAdminClient() as any;
@@ -271,9 +339,7 @@ export async function bridgeChatImageAsPaymentProof(
       .single();
 
     if (!visitor?.email) {
-      console.log(
-        "[ChatPaymentBridge] Visitor has no email — skipping bridge",
-      );
+      console.log("[ChatPaymentBridge] Visitor has no email — skipping bridge");
       return false;
     }
 
@@ -300,6 +366,32 @@ export async function bridgeChatImageAsPaymentProof(
 
     if (!order) {
       // No pending manual order — this image isn't payment proof
+      return false;
+    }
+
+    // 2b. Intent check: only bridge when the filename or recent visitor messages
+    //     genuinely indicate this is a payment proof. This prevents false
+    //     positives — e.g. a customer in an active payment conversation who
+    //     uploads a product photo or error screenshot should NOT have their
+    //     image bridged as proof.
+    const { data: recentMsgs } = await supabase
+      .from("mod_chat_messages")
+      .select("content")
+      .eq("conversation_id", conversationId)
+      .eq("sender_type", "visitor")
+      .eq("content_type", "text")
+      .order("created_at", { ascending: false })
+      .limit(5);
+
+    const recentVisitorTexts = (recentMsgs || []).map(
+      (m: { content: string }) => m.content || "",
+    );
+
+    if (!isLikelyPaymentProof(fileName, recentVisitorTexts)) {
+      console.log(
+        "[ChatPaymentBridge] File upload shows no payment context — skipping bridge.",
+        { fileName, isPaymentConvoActive, messageCount: recentVisitorTexts.length },
+      );
       return false;
     }
 
@@ -410,9 +502,8 @@ export async function bridgeChatImageAsPaymentProof(
     const totalFormatted = `${currency} ${(totalCents / 100).toFixed(2)}`;
 
     try {
-      const { notifyPaymentProofUploaded } = await import(
-        "@/lib/services/business-notifications"
-      );
+      const { notifyPaymentProofUploaded } =
+        await import("@/lib/services/business-notifications");
       await notifyPaymentProofUploaded(
         siteId,
         order.order_number as string,

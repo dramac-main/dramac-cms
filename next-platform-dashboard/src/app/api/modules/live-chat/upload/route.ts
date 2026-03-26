@@ -73,10 +73,10 @@ export async function POST(request: NextRequest) {
 
     const supabase = createAdminClient();
 
-    // Validate conversation exists and get site_id
+    // Validate conversation exists and get site_id + metadata
     const { data: conv } = await (supabase as any)
       .from("mod_chat_conversations")
-      .select("visitor_id, site_id")
+      .select("visitor_id, site_id, metadata")
       .eq("id", conversationId)
       .single();
 
@@ -244,14 +244,21 @@ export async function POST(request: NextRequest) {
       })
       .eq("id", conversationId);
 
-    // Bridge visitor image/PDF uploads to payment proof system if applicable
-    // When a customer has a pending manual payment order and uploads an image
-    // in chat, it's very likely proof of payment — bridge it automatically
+    // Bridge visitor image/PDF uploads to payment proof system if applicable.
+    // We ONLY attempt this when the file type is plausibly a payment receipt
+    // (image or PDF) and the sender is the visitor. The bridge function itself
+    // applies a second layer of intent verification — it checks the conversation
+    // history and filename before committing anything.
     if (
       senderType === "visitor" &&
       visitorId &&
       (contentType === "image" || file.type === "application/pdf")
     ) {
+      // Read whether the AI has already flagged this conversation as payment-guidance
+      // active. This context is passed into the bridge for its intent check.
+      const convMeta = (conv.metadata || {}) as Record<string, unknown>;
+      const isPaymentConvoActive = convMeta.payment_guidance_active === true;
+
       const capturedSiteId = conv.site_id;
       const capturedConvId = conversationId;
       const capturedVisitorId = visitorId;
@@ -259,12 +266,12 @@ export async function POST(request: NextRequest) {
       const capturedFileName = file.name;
       const capturedFileSize = file.size;
       const capturedFileMimeType = file.type;
+      const capturedIsPaymentConvo = isPaymentConvoActive;
 
       after(async () => {
         try {
-          const { bridgeChatImageAsPaymentProof } = await import(
-            "@/modules/live-chat/lib/chat-event-bridge"
-          );
+          const { bridgeChatImageAsPaymentProof } =
+            await import("@/modules/live-chat/lib/chat-event-bridge");
           const bridged = await bridgeChatImageAsPaymentProof(
             capturedSiteId,
             capturedConvId,
@@ -273,6 +280,7 @@ export async function POST(request: NextRequest) {
             capturedFileName,
             capturedFileSize,
             capturedFileMimeType,
+            capturedIsPaymentConvo,
           );
           if (bridged) {
             console.log(
