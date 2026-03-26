@@ -407,7 +407,7 @@ export function CheckoutPageBlock({
         if (FlutterwaveCheckout) {
           FlutterwaveCheckout({
             public_key: payment.publicKey as string,
-            tx_ref: `order_${result.order_id}_${Date.now()}`,
+            tx_ref: `order_${result.order_id}_${crypto.randomUUID()}`,
             amount: payment.amount as number,
             currency: payment.currency as string,
             customer: payment.customer as Record<string, unknown>,
@@ -538,7 +538,7 @@ export function CheckoutPageBlock({
         if (FlutterwaveCheckout) {
           FlutterwaveCheckout({
             public_key: payment.publicKey as string,
-            tx_ref: `order_${result.order_id}_${Date.now()}`,
+            tx_ref: `order_${result.order_id}_${crypto.randomUUID()}`,
             amount: payment.amount as number,
             currency: payment.currency as string,
             customer: payment.customer as Record<string, unknown>,

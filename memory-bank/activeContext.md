@@ -1,18 +1,49 @@
 # Active Context
 
-## Current Focus: In-Chat Order Management Panel — READY TO DEPLOY
+## Current Focus: Payment Proof Visibility Fix — DEPLOYED (`60c1c2e5`)
 
-### Status: ALL CODE COMPLETE, ZERO TS ERRORS, SECURITY AUDIT CLEAN
+### Status: ALL FIXES DEPLOYED, PIPELINE AUDITED CLEAN
 
 ### What Was Done (This Session)
 
-**Built new in-chat order management feature: store owners can now view order details, approve/reject payment proofs, and change order status directly from the live chat conversation sidebar — eliminating context switching between chat and e-commerce modules.**
+**Fixed critical bug: payment proof uploaded via chat was invisible in e-commerce dashboard. 3 root causes found and fixed. Also improved bridge order matching for accuracy.**
+
+#### Root Causes Found & Fixed
+
+1. **Private storage bucket, zero RLS policies** — `payment-proofs` bucket is PRIVATE with ZERO storage.objects policies. Bridge uploaded via admin client (works), but `getPaymentProofUrl()` used session client for signed URLs (silently failed). **Fix:** Changed to `createAdminClient()` for storage access.
+
+2. **Wrong column check in order detail dialog** — Code checked `payment_method === 'manual_transfer'` but DB stores `payment_provider = 'manual'` and `payment_method = NULL`. **Fix:** Changed to `payment_provider === 'manual' || payment_provider === 'bank_transfer'` (2 locations in dialog).
+
+3. **Wrong status in button conditions** — Bridge sets proof status to `"pending_review"` but approve/reject buttons only checked for `"pending"` or `"uploaded"`. **Fix:** Added `'pending_review'` to conditions in both order-detail-dialog and ChatOrderPanel.
+
+4. **Bridge order matching improvement** — `bridgeChatImageAsPaymentProof()` found orders by email+payment_status only, risking wrong-order attachment when customer has multiple pending orders. **Fix:** Now reads conversation `metadata.order_number` first for precise matching, falls back to email-based search.
+
+#### Files Changed (4)
+
+- `order-actions.ts` — `getPaymentProofUrl()` uses admin client for storage
+- `order-detail-dialog.tsx` — payment_provider check + pending_review status
+- `ChatOrderPanel.tsx` — pending_review status for buttons
+- `chat-event-bridge.ts` — Precise order matching via conversation metadata
+
+#### Pipeline Audit Results
+
+Full audit of payment/quotation pipeline confirmed:
+
+- ✅ `updatePaymentProofStatus` — correct (reads metadata, updates payment_status to "paid" on approval)
+- ✅ Quotation system — correct (conversion sets payment_provider="manual")
+- ✅ Notification pipeline — comprehensive (all 4 event types wired)
+- ✅ Checkout flow — correct (sets payment_provider, not payment_method)
+- ✅ AI responder — excellent (3-tier order priority, proof-aware prompts)
+- ✅ No remaining `manual_transfer` hardcoded checks in active code
+
+### Previous Focus: In-Chat Order Management Panel — DEPLOYED
 
 #### Feature: ChatOrderPanel
 
 A sidebar panel rendered in the admin chat view when a conversation has an associated order (`metadata.order_number`).
 
 **Capabilities:**
+
 - Order summary card (number, status badges, total, date, payment method, items list)
 - Payment proof section with Approve/Reject buttons (AlertDialog confirmations)
 - Status change dropdown showing only valid next statuses (mirrors VALID_TRANSITIONS)
@@ -23,10 +54,12 @@ A sidebar panel rendered in the admin chat view when a conversation has an assoc
 - Loading/error/not-found states
 
 **Security:**
+
 - `verifyUserSiteAccess()` check added to ensure only site owners/admins can access order data (prevents cross-site data exposure)
 - AlertDialog confirmations for destructive actions (approve/reject payment proof)
 
 **Edge Case Handling:**
+
 - Empty/invalid `order_number` in metadata is validated (`typeof === 'string' && trim().length > 0`)
 - Null payment proof, zero total, empty items array all handled gracefully
 - User name falls back to email when `user_metadata.full_name` not set
@@ -50,51 +83,62 @@ A sidebar panel rendered in the admin chat view when a conversation has an assoc
 ### Previous Focus: AI Chat Wrong Order Number Fix — READY TO DEPLOY
 
 #### 1. Orders Show "0 Items" — FIXED
+
 - `getOrders()` in `ecommerce-actions.ts` was `.select("*")` without joining order_items
 - Changed to `.select("*, items:mod_ecommod01_order_items(*)")` — items now correctly populated
 
 #### 2. Status Change Doesn't Notify Customers — FIXED
+
 - `updateOrderStatus()` now auto-sends customer emails when status changes to shipped/delivered/cancelled/refunded
 - Added `STATUS_EMAIL_MAP` mapping status → email type
 - Added `VALID_TRANSITIONS` map for status transition validation
 - Sets `shipped_at`, `delivered_at`, `fulfillment_status` timestamps automatically
 
 #### 3. Payment Proof Not Visible in Dashboard — FIXED
+
 - New `getPaymentProofUrl()` server action: creates signed URL from `payment-proofs` Supabase bucket
 - New `updatePaymentProofStatus()` server action: approve/reject proof, updates metadata + payment_status
 - New payment proof section in order detail dialog: image/PDF preview, file info, approve/reject buttons
 
 #### 4. Timeline Events Using Wrong DB Columns — FIXED
+
 - `addTimelineEvent()` was using `actor_id`/`actor_name` but DB has `created_by`(uuid) + `metadata`(jsonb)
 - Fixed across ALL callers: updateOrderStatus, sendOrderEmail, addOrderNote, requestRefund, processRefund
 
 #### 5. Shipping Dialog for Tracking Info — FIXED
+
 - Status change to "shipped" now intercepts and shows shipping dialog
 - Collects carrier, tracking number, tracking URL
 - Calls `addOrderShipment()` which creates shipment + copies tracking to orders table + sends email
 
 #### 6. addOrderShipment Inserts Nonexistent Column — FIXED
+
 - Removed `items` from insert and function signature (column doesn't exist in DB)
 - Changed initial status from "pending" to "in_transit"
 
 #### 7. Order Confirmation Page Tracking — FIXED
+
 - Added `tracking_number` and `tracking_url` to `OrderData` interface in `OrderConfirmationBlock.tsx`
 - Added tracking section showing tracking number + clickable "Track your shipment →" link
 
 #### 8. My Account Page Tracking — FIXED
+
 - Extended `Order` interface in `MyAccountBlock.tsx` with `trackingNumber`, `trackingUrl`, `fulfillmentStatus`
 - Order cards now show tracking number + "Track →" link
 
 #### 9. Auth API Missing Fields + Snake/Camel Case Mismatch — FIXED
+
 - `get-orders` now returns `tracking_number`, `tracking_url`
 - Added item count query (joins order_items, sums quantities per order)
 - Added camelCase mapping (order_number→orderNumber, created_at→createdAt, etc.)
 
 #### 10. TypeScript Errors — FIXED
+
 - Fixed `unknown → ReactNode` errors: `!!` coercion for `metadata?.payment_proof`, ternary patterns for `proofData` fields
 - All 4 TS errors resolved, clean tsc + build
 
 ### Files Modified (6 files, ~600 lines changed)
+
 1. `ecommerce-actions.ts` — items join in getOrders
 2. `order-actions.ts` — updateOrderStatus, addTimelineEvent, addOrderShipment, sendOrderEmail, addOrderNote, requestRefund, processRefund, new getPaymentProofUrl, new updatePaymentProofStatus
 3. `order-detail-dialog.tsx` — payment proof UI, shipping dialog, tracking display
@@ -103,6 +147,7 @@ A sidebar panel rendered in the admin chat view when a conversation has an assoc
 6. `auth/route.ts` — tracking fields, item counts, camelCase mapping
 
 ### DB Schema Notes (verified via SQL)
+
 - `order_timeline`: created_by(uuid), metadata(jsonb) — NO actor_id/actor_name
 - `order_shipments`: NO items column
 - `orders`: has tracking_number, tracking_url, shipped_at, delivered_at, metadata(jsonb)

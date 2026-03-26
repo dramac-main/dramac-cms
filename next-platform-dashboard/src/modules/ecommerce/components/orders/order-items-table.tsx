@@ -1,11 +1,11 @@
 /**
  * Order Items Table Component
- * 
+ *
  * Phase ECOM-04: Order Management Enhancement
- * 
+ *
  * Table showing order line items with product details
  */
-'use client'
+"use client";
 
 import {
   Table,
@@ -15,23 +15,23 @@ import {
   TableHeader,
   TableRow,
   TableFooter,
-} from '@/components/ui/table'
-import { ImageOff } from 'lucide-react'
-import type { OrderItem } from '../../types/ecommerce-types'
+} from "@/components/ui/table";
+import { ImageOff } from "lucide-react";
+import type { OrderItem } from "../../types/ecommerce-types";
 
-import { useCurrencySafe } from '../../context/ecommerce-context'
+import { useCurrencySafe } from "../../context/ecommerce-context";
 // ============================================================================
 // TYPES
 // ============================================================================
 
 interface OrderItemsTableProps {
-  items: OrderItem[]
-  showSubtotals?: boolean
-  subtotal?: number
-  shipping?: number
-  tax?: number
-  discount?: number
-  total?: number
+  items: OrderItem[];
+  showSubtotals?: boolean;
+  subtotal?: number;
+  shipping?: number;
+  tax?: number;
+  discount?: number;
+  total?: number;
 }
 
 // ============================================================================
@@ -45,13 +45,15 @@ export function OrderItemsTable({
   shipping,
   tax,
   discount,
-  total
+  total,
 }: OrderItemsTableProps) {
-  const { formatPrice: formatCurrency } = useCurrencySafe()
+  const { formatPrice: formatCurrency } = useCurrencySafe();
   // Calculate subtotal if not provided
-  const calculatedSubtotal = subtotal ?? items.reduce((sum, item) => {
-    return sum + (item.unit_price * item.quantity)
-  }, 0)
+  const calculatedSubtotal =
+    subtotal ??
+    items.reduce((sum, item) => {
+      return sum + item.unit_price * item.quantity;
+    }, 0);
 
   return (
     <Table>
@@ -69,10 +71,10 @@ export function OrderItemsTable({
           <TableRow key={item.id}>
             <TableCell>
               <div className="w-12 h-12 rounded-md overflow-hidden bg-muted flex items-center justify-center">
-                {(item.product_image || item.image_url) ? (
+                {item.product_image || item.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={item.product_image || item.image_url || ''}
+                    src={item.product_image || item.image_url || ""}
                     alt={item.product_name}
                     className="w-full h-full object-cover"
                   />
@@ -99,9 +101,7 @@ export function OrderItemsTable({
             <TableCell className="text-right">
               {formatCurrency(item.unit_price)}
             </TableCell>
-            <TableCell className="text-center">
-              {item.quantity}
-            </TableCell>
+            <TableCell className="text-center">{item.quantity}</TableCell>
             <TableCell className="text-right font-medium">
               {formatCurrency(item.unit_price * item.quantity)}
             </TableCell>
@@ -119,8 +119,8 @@ export function OrderItemsTable({
               {formatCurrency(calculatedSubtotal)}
             </TableCell>
           </TableRow>
-          
-          {(shipping !== undefined && shipping > 0) && (
+
+          {shipping !== undefined && shipping > 0 && (
             <TableRow>
               <TableCell colSpan={4} className="text-right">
                 Shipping
@@ -131,7 +131,7 @@ export function OrderItemsTable({
             </TableRow>
           )}
 
-          {(tax !== undefined && tax > 0) && (
+          {tax !== undefined && tax > 0 && (
             <TableRow>
               <TableCell colSpan={4} className="text-right">
                 Tax
@@ -142,7 +142,7 @@ export function OrderItemsTable({
             </TableRow>
           )}
 
-          {(discount !== undefined && discount > 0) && (
+          {discount !== undefined && discount > 0 && (
             <TableRow>
               <TableCell colSpan={4} className="text-right text-green-600">
                 Discount
@@ -153,7 +153,7 @@ export function OrderItemsTable({
             </TableRow>
           )}
 
-          {(total !== undefined) && (
+          {total !== undefined && (
             <TableRow className="bg-muted/50">
               <TableCell colSpan={4} className="text-right font-bold">
                 Total
@@ -166,5 +166,5 @@ export function OrderItemsTable({
         </TableFooter>
       )}
     </Table>
-  )
+  );
 }

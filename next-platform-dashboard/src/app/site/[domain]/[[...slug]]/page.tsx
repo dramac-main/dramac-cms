@@ -412,10 +412,12 @@ async function processData(
 
     // Fast heuristic: site has ecommerce if it has a /shop or /cart page,
     // OR has an enabled ecommerce module installation
-    const siteHasEcommerce = hasEcommerce || pages.some((p: any) => {
-      const s = (p.slug || "").replace(/^\/+/, "");
-      return s === "shop" || s === "cart";
-    });
+    const siteHasEcommerce =
+      hasEcommerce ||
+      pages.some((p: any) => {
+        const s = (p.slug || "").replace(/^\/+/, "");
+        return s === "shop" || s === "cart";
+      });
 
     if (siteHasEcommerce) {
       const dynamicPage = await generateEcommercePage(stripped, site.id);

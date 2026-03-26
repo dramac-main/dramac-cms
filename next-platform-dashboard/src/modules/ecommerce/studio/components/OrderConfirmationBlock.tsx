@@ -253,8 +253,8 @@ export function OrderConfirmationBlock({
       setProofError("Please upload an image (JPEG, PNG, WebP) or PDF.");
       return;
     }
-    if (file.size > 10 * 1024 * 1024) {
-      setProofError("File too large. Maximum 10 MB.");
+    if (file.size > 3 * 1024 * 1024) {
+      setProofError("File too large. Maximum 3 MB.");
       return;
     }
     setProofFile(file);
@@ -723,7 +723,7 @@ export function OrderConfirmationBlock({
                           Drop file here or click to browse
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          JPEG, PNG, WebP, or PDF — Max 10 MB
+                          JPEG, PNG, WebP, or PDF — Max 3 MB
                         </p>
                       </>
                     )}
@@ -1026,7 +1026,11 @@ export function OrderConfirmationBlock({
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           {order.tracking_url ? (
             <Button variant="outline" asChild>
-              <a href={order.tracking_url} target="_blank" rel="noopener noreferrer">
+              <a
+                href={order.tracking_url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <Truck className="h-4 w-4 mr-2" />
                 Track Shipment
               </a>

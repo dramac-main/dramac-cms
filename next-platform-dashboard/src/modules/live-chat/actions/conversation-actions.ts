@@ -425,10 +425,23 @@ export async function transferConversation(
       }
     }
 
-    // Assign to new agent
+    // Assign to new agent + reset AI pause (new agent starts fresh)
+    const { data: convMeta } = await supabase
+      .from("mod_chat_conversations")
+      .select("metadata")
+      .eq("id", conversationId)
+      .single();
+
+    const cleanedMeta = {
+      ...((convMeta?.metadata || {}) as Record<string, unknown>),
+    };
+    delete cleanedMeta.ai_paused;
+    delete cleanedMeta.ai_paused_by;
+    delete cleanedMeta.ai_paused_at;
+
     await supabase
       .from("mod_chat_conversations")
-      .update({ assigned_agent_id: toAgentId })
+      .update({ assigned_agent_id: toAgentId, metadata: cleanedMeta })
       .eq("id", conversationId);
 
     // Increment new agent
@@ -482,7 +495,7 @@ export async function resolveConversation(
 
     const { data: conv } = await supabase
       .from("mod_chat_conversations")
-      .select("site_id, assigned_agent_id, created_at")
+      .select("site_id, assigned_agent_id, created_at, metadata")
       .eq("id", conversationId)
       .single();
 
@@ -493,6 +506,14 @@ export async function resolveConversation(
       (Date.now() - new Date(conv.created_at).getTime()) / 1000,
     );
 
+    // Clear AI pause state — conversation is done
+    const cleanedMeta = {
+      ...((conv.metadata || {}) as Record<string, unknown>),
+    };
+    delete cleanedMeta.ai_paused;
+    delete cleanedMeta.ai_paused_by;
+    delete cleanedMeta.ai_paused_at;
+
     // Update conversation
     const { error: updateError } = await supabase
       .from("mod_chat_conversations")
@@ -500,6 +521,7 @@ export async function resolveConversation(
         status: "resolved",
         resolved_at: now,
         resolution_time_seconds: resolutionTime,
+        metadata: cleanedMeta,
       })
       .eq("id", conversationId);
 
@@ -568,16 +590,26 @@ export async function closeConversation(
 
     const { data: conv } = await supabase
       .from("mod_chat_conversations")
-      .select("site_id, assigned_agent_id, resolved_at")
+      .select("site_id, assigned_agent_id, resolved_at, metadata")
       .eq("id", conversationId)
       .single();
 
     if (!conv) return { success: false, error: "Conversation not found" };
 
     const now = new Date().toISOString();
+
+    // Clear AI pause state — conversation is done
+    const cleanedMeta = {
+      ...((conv.metadata || {}) as Record<string, unknown>),
+    };
+    delete cleanedMeta.ai_paused;
+    delete cleanedMeta.ai_paused_by;
+    delete cleanedMeta.ai_paused_at;
+
     const updates: Record<string, unknown> = {
       status: "closed",
       closed_at: now,
+      metadata: cleanedMeta,
     };
 
     if (!conv.resolved_at) {
@@ -643,11 +675,19 @@ export async function reopenConversation(
 
     const { data: conv } = await supabase
       .from("mod_chat_conversations")
-      .select("site_id")
+      .select("site_id, metadata")
       .eq("id", conversationId)
       .single();
 
     if (!conv) return { success: false, error: "Conversation not found" };
+
+    // Clear AI pause state — reopened conversations should let AI handle new messages
+    const cleanedMeta = {
+      ...((conv.metadata || {}) as Record<string, unknown>),
+    };
+    delete cleanedMeta.ai_paused;
+    delete cleanedMeta.ai_paused_by;
+    delete cleanedMeta.ai_paused_at;
 
     const { error: updateError } = await supabase
       .from("mod_chat_conversations")
@@ -655,6 +695,7 @@ export async function reopenConversation(
         status: "active",
         resolved_at: null,
         closed_at: null,
+        metadata: cleanedMeta,
       })
       .eq("id", conversationId);
 
@@ -743,11 +784,12 @@ export async function updateInternalNotes(
 /**
  * Toggle AI auto-response for a specific conversation.
  * When paused, AI will not respond to visitor messages in this conversation.
- * When an agent takes over, this should be called to pause AI.
+ * Stores who paused/resumed and when for multi-agent visibility.
  */
 export async function setConversationAiPaused(
   conversationId: string,
   paused: boolean,
+  agentName?: string,
 ): Promise<{ success: boolean; error: string | null }> {
   try {
     const supabase = await getModuleClient();
@@ -760,13 +802,25 @@ export async function setConversationAiPaused(
 
     if (!conv) return { success: false, error: "Conversation not found" };
 
+    const existingMeta = (conv.metadata || {}) as Record<string, unknown>;
+    const newMeta: Record<string, unknown> = {
+      ...existingMeta,
+      ai_paused: paused,
+    };
+
+    if (paused) {
+      newMeta.ai_paused_by = agentName || "Agent";
+      newMeta.ai_paused_at = new Date().toISOString();
+    } else {
+      // Clean up attribution on resume
+      delete newMeta.ai_paused_by;
+      delete newMeta.ai_paused_at;
+    }
+
     const { error: updateError } = await supabase
       .from("mod_chat_conversations")
       .update({
-        metadata: {
-          ...(conv.metadata || {}),
-          ai_paused: paused,
-        },
+        metadata: newMeta,
         updated_at: new Date().toISOString(),
       })
       .eq("id", conversationId);
@@ -784,19 +838,70 @@ export async function setConversationAiPaused(
 /**
  * Take over a conversation: assign the current user as agent + pause AI.
  * Industry-standard "claim" action for human agents.
+ *
+ * Multi-agent safe:
+ * - If already assigned to another agent, still allows take-over (reassignment)
+ * - Inserts a system message for audit trail so all agents see what happened
+ * - Stores who paused AI for attribution
  */
 export async function takeOverConversation(
   conversationId: string,
   agentId: string,
+  agentName?: string,
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    // Assign the agent
+    const supabase = await getModuleClient();
+
+    // Check current state to produce an informative system message
+    const { data: conv } = await supabase
+      .from("mod_chat_conversations")
+      .select("site_id, assigned_agent_id, status")
+      .eq("id", conversationId)
+      .single();
+
+    if (!conv) return { success: false, error: "Conversation not found" };
+
+    // Don't allow take-over of closed conversations
+    if (conv.status === "closed") {
+      return {
+        success: false,
+        error: "Cannot take over a closed conversation",
+      };
+    }
+
+    // Already assigned to this agent
+    if (conv.assigned_agent_id === agentId) {
+      // Just ensure AI is paused
+      const pauseResult = await setConversationAiPaused(
+        conversationId,
+        true,
+        agentName,
+      );
+      return pauseResult;
+    }
+
+    // Assign the agent (handles count decrement/increment internally)
     const assignResult = await assignConversation(conversationId, agentId);
     if (!assignResult.success) return assignResult;
 
-    // Pause AI
-    const pauseResult = await setConversationAiPaused(conversationId, true);
+    // Pause AI with attribution
+    const pauseResult = await setConversationAiPaused(
+      conversationId,
+      true,
+      agentName,
+    );
     if (!pauseResult.success) return pauseResult;
+
+    // Insert system message for audit trail
+    const label = agentName || "An agent";
+    await supabase.from("mod_chat_messages").insert({
+      conversation_id: conversationId,
+      site_id: conv.site_id,
+      sender_type: "system",
+      content: `${label} took over this conversation`,
+      content_type: "system",
+      is_internal_note: true,
+    });
 
     return { success: true, error: null };
   } catch (error) {

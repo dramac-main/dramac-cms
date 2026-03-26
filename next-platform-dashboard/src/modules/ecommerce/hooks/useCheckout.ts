@@ -380,11 +380,12 @@ export function useCheckout(): UseCheckoutResult {
     }
   }, [availablePaymentMethods, state.paymentMethod]);
 
-  // Pre-fill contact info from localStorage for returning customers
+  // Pre-fill contact info from sessionStorage for returning customers
+  // Uses sessionStorage (not localStorage) to avoid PII persisting on shared devices
   useEffect(() => {
     if (state.email || !siteId) return;
     try {
-      const saved = localStorage.getItem(`ecom_checkout_${siteId}`);
+      const saved = sessionStorage.getItem(`ecom_checkout_${siteId}`);
       if (saved) {
         const data = JSON.parse(saved) as {
           email?: string;
@@ -401,7 +402,7 @@ export function useCheckout(): UseCheckoutResult {
         }));
       }
     } catch {
-      // localStorage unavailable or corrupt data
+      // sessionStorage unavailable or corrupt data
     }
   }, [siteId, state.email]);
 
@@ -473,10 +474,10 @@ export function useCheckout(): UseCheckoutResult {
 
   const nextStep = useCallback(() => {
     if (canGoNext) {
-      // Save contact info for returning customer pre-fill
+      // Save contact info for returning customer pre-fill (sessionStorage for PII safety)
       if (state.step === "information" && siteId) {
         try {
-          localStorage.setItem(
+          sessionStorage.setItem(
             `ecom_checkout_${siteId}`,
             JSON.stringify({
               email: state.email,
@@ -485,7 +486,7 @@ export function useCheckout(): UseCheckoutResult {
             }),
           );
         } catch {
-          // localStorage unavailable
+          // sessionStorage unavailable
         }
       }
       setState((prev) => ({ ...prev, step: STEPS[stepIndex + 1] }));

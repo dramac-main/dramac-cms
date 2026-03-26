@@ -19,6 +19,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { PUBLIC_RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
 import * as crypto from "crypto";
 
 export const dynamic = "force-dynamic";
@@ -39,7 +40,10 @@ const SESSIONS = "mod_ecommod01_customer_sessions";
 const SESSION_TTL_DAYS = 30;
 
 export async function OPTIONS(request: NextRequest) {
-  return new NextResponse(null, { status: 204, headers: getCorsHeaders(request) });
+  return new NextResponse(null, {
+    status: 204,
+    headers: getCorsHeaders(request),
+  });
 }
 
 function hashToken(token: string): string {
@@ -122,6 +126,22 @@ function safeCustomer(c: CustomerRow) {
 export async function POST(request: NextRequest) {
   const corsHeaders = getCorsHeaders(request);
   try {
+    // Rate limit: 15 requests/minute per IP
+    const ip = getClientIp(request);
+    const rl = PUBLIC_RATE_LIMITS.auth.check(ip);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        {
+          status: 429,
+          headers: {
+            ...corsHeaders,
+            "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)),
+          },
+        },
+      );
+    }
+
     const body = await request.json();
     const { action, siteId } = body;
 

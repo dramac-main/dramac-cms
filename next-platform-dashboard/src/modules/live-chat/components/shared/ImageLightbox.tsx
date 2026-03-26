@@ -11,11 +11,7 @@
  */
 
 import { useState, type ReactNode } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Download, X, ZoomIn } from "lucide-react";
 
@@ -103,7 +99,12 @@ export function ImageLightbox({
                 className="h-8 w-8 text-white/80 hover:text-white hover:bg-white/10"
                 asChild
               >
-                <a href={src} download={fileName} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={src}
+                  download={fileName}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <Download className="h-4 w-4" />
                 </a>
               </Button>
@@ -134,11 +135,7 @@ export function ImageLightbox({
                   {fileName || "PDF Document"}
                 </p>
                 <Button asChild variant="secondary">
-                  <a
-                    href={src}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+                  <a href={src} target="_blank" rel="noopener noreferrer">
                     <Download className="h-4 w-4 mr-2" />
                     Open Document
                   </a>

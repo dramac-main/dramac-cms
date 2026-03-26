@@ -1,13 +1,13 @@
 /**
  * Refund Dialog Component
- * 
+ *
  * Phase ECOM-04: Order Management Enhancement
- * 
+ *
  * Dialog for creating and processing refunds
  */
-'use client'
+"use client";
 
-import { useState } from 'react'
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -15,19 +15,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Checkbox } from '@/components/ui/checkbox'
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -35,34 +35,34 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { Loader2, AlertCircle } from 'lucide-react'
-import { toast } from 'sonner'
-import { createRefund } from '../../actions/order-actions'
-import type { Order, OrderItem } from '../../types/ecommerce-types'
+} from "@/components/ui/table";
+import { Loader2, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
+import { createRefund } from "../../actions/order-actions";
+import type { Order, OrderItem } from "../../types/ecommerce-types";
 
-import { useCurrencySafe } from '../../context/ecommerce-context'
+import { useCurrencySafe } from "../../context/ecommerce-context";
 // ============================================================================
 // TYPES
 // ============================================================================
 
 interface RefundDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  order: Order
-  siteId: string
-  userId: string
-  userName: string
-  onSuccess: () => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  order: Order;
+  siteId: string;
+  userId: string;
+  userName: string;
+  onSuccess: () => void;
 }
 
 interface RefundItemState {
-  order_item_id: string
-  product_name: string
-  quantity: number
-  max_quantity: number
-  unit_price: number
-  selected: boolean
+  order_item_id: string;
+  product_name: string;
+  quantity: number;
+  max_quantity: number;
+  unit_price: number;
+  selected: boolean;
 }
 
 // ============================================================================
@@ -76,107 +76,126 @@ export function RefundDialog({
   siteId,
   userId,
   userName,
-  onSuccess
+  onSuccess,
 }: RefundDialogProps) {
-  const { formatPrice: formatCurrency } = useCurrencySafe()
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [reason, setReason] = useState('')
-  const [refundMethod, setRefundMethod] = useState<'original_payment' | 'store_credit' | 'other'>('original_payment')
-  const [refundType, setRefundType] = useState<'full' | 'partial'>('full')
-  const [customAmount, setCustomAmount] = useState('')
-  
+  const { formatPrice: formatCurrency } = useCurrencySafe();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [reason, setReason] = useState("");
+  const [refundMethod, setRefundMethod] = useState<
+    "original_payment" | "store_credit" | "other"
+  >("original_payment");
+  const [refundType, setRefundType] = useState<"full" | "partial">("full");
+  const [customAmount, setCustomAmount] = useState("");
+
   // Initialize item states
-  const [items, setItems] = useState<RefundItemState[]>(() => 
+  const [items, setItems] = useState<RefundItemState[]>(() =>
     (order.items || []).map((item: OrderItem) => ({
       order_item_id: item.id,
       product_name: item.product_name,
       quantity: item.quantity,
       max_quantity: item.quantity,
       unit_price: item.unit_price,
-      selected: true
-    }))
-  )
+      selected: true,
+    })),
+  );
 
   // Calculate totals
   const selectedAmount = items
-    .filter(item => item.selected)
-    .reduce((sum, item) => sum + (item.unit_price * item.quantity), 0)
+    .filter((item) => item.selected)
+    .reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
 
-  const totalRefundAmount = refundType === 'full' 
-    ? order.total 
-    : (customAmount ? Math.round(parseFloat(customAmount) * 100) : selectedAmount)
+  const totalRefundAmount =
+    refundType === "full"
+      ? order.total
+      : customAmount
+        ? Math.round(parseFloat(customAmount) * 100)
+        : selectedAmount;
 
-  const maxRefundAmount = order.total // In production, subtract already refunded amount
+  const maxRefundAmount = order.total; // In production, subtract already refunded amount
 
   // Toggle item selection
   const toggleItem = (itemId: string) => {
-    setItems(items.map(item => 
-      item.order_item_id === itemId 
-        ? { ...item, selected: !item.selected }
-        : item
-    ))
-  }
+    setItems(
+      items.map((item) =>
+        item.order_item_id === itemId
+          ? { ...item, selected: !item.selected }
+          : item,
+      ),
+    );
+  };
 
   // Update item quantity
   const updateQuantity = (itemId: string, quantity: number) => {
-    setItems(items.map(item => 
-      item.order_item_id === itemId 
-        ? { ...item, quantity: Math.min(Math.max(1, quantity), item.max_quantity) }
-        : item
-    ))
-  }
+    setItems(
+      items.map((item) =>
+        item.order_item_id === itemId
+          ? {
+              ...item,
+              quantity: Math.min(Math.max(1, quantity), item.max_quantity),
+            }
+          : item,
+      ),
+    );
+  };
 
   // Handle refund submission
   const handleSubmit = async () => {
     if (!reason.trim()) {
-      toast.error('Please provide a reason for the refund')
-      return
+      toast.error("Please provide a reason for the refund");
+      return;
     }
 
     if (totalRefundAmount <= 0) {
-      toast.error('Refund amount must be greater than 0')
-      return
+      toast.error("Refund amount must be greater than 0");
+      return;
     }
 
     if (totalRefundAmount > maxRefundAmount) {
-      toast.error('Refund amount cannot exceed order total')
-      return
+      toast.error("Refund amount cannot exceed order total");
+      return;
     }
 
-    setIsProcessing(true)
+    setIsProcessing(true);
 
     try {
       const refundData = {
         amount: totalRefundAmount,
         reason,
         refund_method: refundMethod,
-        items: refundType === 'partial' 
-          ? items
-              .filter(item => item.selected)
-              .map(item => ({
-                order_item_id: item.order_item_id,
-                quantity: item.quantity,
-                amount: item.unit_price * item.quantity
-              }))
-          : undefined
-      }
+        items:
+          refundType === "partial"
+            ? items
+                .filter((item) => item.selected)
+                .map((item) => ({
+                  order_item_id: item.order_item_id,
+                  quantity: item.quantity,
+                  amount: item.unit_price * item.quantity,
+                }))
+            : undefined,
+      };
 
-      const result = await createRefund(siteId, order.id, refundData, userId, userName)
-      
+      const result = await createRefund(
+        siteId,
+        order.id,
+        refundData,
+        userId,
+        userName,
+      );
+
       if (result) {
-        toast.success('Refund request created successfully')
-        onSuccess()
-        onOpenChange(false)
+        toast.success("Refund request created successfully");
+        onSuccess();
+        onOpenChange(false);
       } else {
-        toast.error('Failed to create refund request')
+        toast.error("Failed to create refund request");
       }
     } catch (error) {
-      console.error('Error creating refund:', error)
-      toast.error('Failed to create refund request')
+      console.error("Error creating refund:", error);
+      toast.error("Failed to create refund request");
     } finally {
-      setIsProcessing(false)
+      setIsProcessing(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -194,20 +213,24 @@ export function RefundDialog({
             <Label>Refund Type</Label>
             <Select
               value={refundType}
-              onValueChange={(value) => setRefundType(value as 'full' | 'partial')}
+              onValueChange={(value) =>
+                setRefundType(value as "full" | "partial")
+              }
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="full">Full Refund ({formatCurrency(order.total)})</SelectItem>
+                <SelectItem value="full">
+                  Full Refund ({formatCurrency(order.total)})
+                </SelectItem>
                 <SelectItem value="partial">Partial Refund</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Partial Refund Items */}
-          {refundType === 'partial' && (
+          {refundType === "partial" && (
             <div className="space-y-2">
               <Label>Select Items to Refund</Label>
               <div className="border rounded-lg">
@@ -226,7 +249,9 @@ export function RefundDialog({
                         <TableCell>
                           <Checkbox
                             checked={item.selected}
-                            onCheckedChange={() => toggleItem(item.order_item_id)}
+                            onCheckedChange={() =>
+                              toggleItem(item.order_item_id)
+                            }
                           />
                         </TableCell>
                         <TableCell>{item.product_name}</TableCell>
@@ -236,7 +261,12 @@ export function RefundDialog({
                             min={1}
                             max={item.max_quantity}
                             value={item.quantity}
-                            onChange={(e) => updateQuantity(item.order_item_id, parseInt(e.target.value))}
+                            onChange={(e) =>
+                              updateQuantity(
+                                item.order_item_id,
+                                parseInt(e.target.value),
+                              )
+                            }
                             disabled={!item.selected}
                             className="w-20"
                           />
@@ -271,13 +301,17 @@ export function RefundDialog({
             <Label>Refund Method</Label>
             <Select
               value={refundMethod}
-              onValueChange={(value) => setRefundMethod(value as typeof refundMethod)}
+              onValueChange={(value) =>
+                setRefundMethod(value as typeof refundMethod)
+              }
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="original_payment">Original Payment Method</SelectItem>
+                <SelectItem value="original_payment">
+                  Original Payment Method
+                </SelectItem>
                 <SelectItem value="store_credit">Store Credit</SelectItem>
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
@@ -310,22 +344,22 @@ export function RefundDialog({
             <div className="flex gap-2 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
               <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0" />
               <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                This action will create a refund request. The refund will need to be 
-                processed manually through your payment provider.
+                This action will create a refund request. The refund will need
+                to be processed manually through your payment provider.
               </p>
             </div>
           )}
         </div>
 
         <DialogFooter>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isProcessing}
           >
             Cancel
           </Button>
-          <Button 
+          <Button
             onClick={handleSubmit}
             disabled={isProcessing || totalRefundAmount <= 0}
           >
@@ -341,5 +375,5 @@ export function RefundDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

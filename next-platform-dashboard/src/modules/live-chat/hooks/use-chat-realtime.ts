@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * Live Chat Module — Chat Realtime Hook
@@ -7,120 +7,147 @@
  * Handles new messages, message updates, and typing indicators via broadcast.
  */
 
-import { useEffect, useRef, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import type { RealtimeChannel } from '@supabase/supabase-js'
-import { mapRecord } from '../lib/map-db-record'
-import type { ChatMessage } from '../types'
+import { useEffect, useRef, useCallback } from "react";
+import { createClient } from "@/lib/supabase/client";
+import type { RealtimeChannel } from "@supabase/supabase-js";
+import { mapRecord } from "../lib/map-db-record";
+import type { ChatMessage } from "../types";
 
 interface ChatRealtimeCallbacks {
-  onNewMessage: (message: ChatMessage) => void
-  onMessageUpdate?: (message: ChatMessage) => void
-  onTypingStart?: (senderId: string, senderName: string) => void
-  onTypingStop?: (senderId: string) => void
+  onNewMessage: (message: ChatMessage) => void;
+  onMessageUpdate?: (message: ChatMessage) => void;
+  onTypingStart?: (senderId: string, senderName: string) => void;
+  onTypingStop?: (senderId: string) => void;
+  /** Called when the conversation record itself is updated (status, assignment, metadata, etc.) */
+  onConversationUpdate?: (changes: Record<string, unknown>) => void;
   /** If true, internal notes (isInternalNote) are filtered out before callbacks fire. Default: false */
-  filterInternalNotes?: boolean
+  filterInternalNotes?: boolean;
 }
 
 export function useChatRealtime(
   conversationId: string | null,
-  callbacks: ChatRealtimeCallbacks
+  callbacks: ChatRealtimeCallbacks,
 ) {
-  const channelRef = useRef<RealtimeChannel | null>(null)
-  const callbacksRef = useRef(callbacks)
-  callbacksRef.current = callbacks
+  const channelRef = useRef<RealtimeChannel | null>(null);
+  const callbacksRef = useRef(callbacks);
+  callbacksRef.current = callbacks;
 
   useEffect(() => {
-    if (!conversationId) return
+    if (!conversationId) return;
 
-    const supabase = createClient()
+    const supabase = createClient();
 
     const channel = supabase
       .channel(`chat:${conversationId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'mod_chat_messages',
+          event: "INSERT",
+          schema: "public",
+          table: "mod_chat_messages",
           filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
-          const message = mapRecord<ChatMessage>(payload.new as Record<string, unknown>)
+          const message = mapRecord<ChatMessage>(
+            payload.new as Record<string, unknown>,
+          );
           // Skip internal notes when filtering is enabled (e.g. customer widget)
-          if (callbacksRef.current.filterInternalNotes && (message.isInternalNote || message.contentType === 'note')) {
-            return
+          if (
+            callbacksRef.current.filterInternalNotes &&
+            (message.isInternalNote || message.contentType === "note")
+          ) {
+            return;
           }
-          callbacksRef.current.onNewMessage(message)
-        }
+          callbacksRef.current.onNewMessage(message);
+        },
       )
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'mod_chat_messages',
+          event: "UPDATE",
+          schema: "public",
+          table: "mod_chat_messages",
           filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
           if (callbacksRef.current.onMessageUpdate) {
-            const message = mapRecord<ChatMessage>(payload.new as Record<string, unknown>)
+            const message = mapRecord<ChatMessage>(
+              payload.new as Record<string, unknown>,
+            );
             // Skip internal notes when filtering is enabled (e.g. customer widget)
-            if (callbacksRef.current.filterInternalNotes && (message.isInternalNote || message.contentType === 'note')) {
-              return
+            if (
+              callbacksRef.current.filterInternalNotes &&
+              (message.isInternalNote || message.contentType === "note")
+            ) {
+              return;
             }
-            callbacksRef.current.onMessageUpdate(message)
+            callbacksRef.current.onMessageUpdate(message);
           }
-        }
+        },
       )
-      .on('broadcast', { event: 'typing_start' }, (payload) => {
+      .on("broadcast", { event: "typing_start" }, (payload) => {
         if (callbacksRef.current.onTypingStart) {
           callbacksRef.current.onTypingStart(
             payload.payload?.senderId as string,
-            payload.payload?.senderName as string
-          )
+            payload.payload?.senderName as string,
+          );
         }
       })
-      .on('broadcast', { event: 'typing_stop' }, (payload) => {
+      .on("broadcast", { event: "typing_stop" }, (payload) => {
         if (callbacksRef.current.onTypingStop) {
-          callbacksRef.current.onTypingStop(payload.payload?.senderId as string)
+          callbacksRef.current.onTypingStop(
+            payload.payload?.senderId as string,
+          );
         }
       })
-      .subscribe()
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "mod_chat_conversations",
+          filter: `id=eq.${conversationId}`,
+        },
+        (payload) => {
+          if (callbacksRef.current.onConversationUpdate) {
+            callbacksRef.current.onConversationUpdate(
+              payload.new as Record<string, unknown>,
+            );
+          }
+        },
+      )
+      .subscribe();
 
-    channelRef.current = channel
+    channelRef.current = channel;
 
     return () => {
-      channel.unsubscribe()
-      channelRef.current = null
-    }
-  }, [conversationId])
+      channel.unsubscribe();
+      channelRef.current = null;
+    };
+  }, [conversationId]);
 
   const sendTypingStart = useCallback(
     (senderId: string, senderName: string) => {
       channelRef.current?.send({
-        type: 'broadcast',
-        event: 'typing_start',
+        type: "broadcast",
+        event: "typing_start",
         payload: { senderId, senderName },
-      })
+      });
     },
-    []
-  )
+    [],
+  );
 
-  const sendTypingStop = useCallback(
-    (senderId: string) => {
-      channelRef.current?.send({
-        type: 'broadcast',
-        event: 'typing_stop',
-        payload: { senderId },
-      })
-    },
-    []
-  )
+  const sendTypingStop = useCallback((senderId: string) => {
+    channelRef.current?.send({
+      type: "broadcast",
+      event: "typing_stop",
+      payload: { senderId },
+    });
+  }, []);
 
   return {
     sendTypingStart,
     sendTypingStop,
     channel: channelRef.current,
-  }
+  };
 }

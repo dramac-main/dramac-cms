@@ -148,7 +148,9 @@ export function ConversationViewWrapper({
 
   // AI pause state — derived from conversation metadata
   const [aiPaused, setAiPaused] = useState(
-    () => (initialConversation.metadata as Record<string, unknown>)?.ai_paused === true,
+    () =>
+      (initialConversation.metadata as Record<string, unknown>)?.ai_paused ===
+      true,
   );
 
   // Current agent record for take-over
@@ -167,7 +169,7 @@ export function ConversationViewWrapper({
     }
   }, []);
 
-  // Realtime: new messages + typing
+  // Realtime: new messages + typing + conversation state sync
   const { sendTypingStart, sendTypingStop } = useChatRealtime(conversation.id, {
     onNewMessage: (newMsg: ChatMessage) => {
       setMessages((prev) => {
@@ -192,6 +194,30 @@ export function ConversationViewWrapper({
     },
     onTypingStop: (senderId: string) => {
       setTypingUsers((prev) => prev.filter((id) => id !== senderId));
+    },
+    // Sync conversation-level changes from other agents in realtime
+    onConversationUpdate: (changes: Record<string, unknown>) => {
+      setConversation((prev) => {
+        const updated = { ...prev };
+        if (changes.status !== undefined)
+          updated.status = changes.status as typeof prev.status;
+        if (changes.assigned_agent_id !== undefined)
+          updated.assignedAgentId = changes.assigned_agent_id as string | null;
+        if (changes.priority !== undefined)
+          updated.priority = changes.priority as typeof prev.priority;
+        if (changes.tags !== undefined) updated.tags = changes.tags as string[];
+        if (changes.metadata !== undefined) {
+          updated.metadata = changes.metadata as Record<string, unknown>;
+          // Sync aiPaused state from metadata
+          const meta = updated.metadata;
+          setAiPaused(meta?.ai_paused === true);
+        }
+        if (changes.resolved_at !== undefined)
+          updated.resolvedAt = changes.resolved_at as string | null;
+        if (changes.closed_at !== undefined)
+          updated.closedAt = changes.closed_at as string | null;
+        return updated;
+      });
     },
   });
 
@@ -232,6 +258,8 @@ export function ConversationViewWrapper({
         conversationId: conversation.id,
         siteId,
         senderType: "agent",
+        senderId: userId,
+        senderName: userName,
         content,
         contentType: isNote ? "note" : "text",
         isInternalNote: isNote,
@@ -242,7 +270,7 @@ export function ConversationViewWrapper({
       }
       // Realtime will add the message to the list
     },
-    [conversation.id, siteId],
+    [conversation.id, siteId, userId, userName],
   );
 
   // Upload file and send as message
@@ -365,6 +393,8 @@ export function ConversationViewWrapper({
             ...c,
             assignedAgentId: targetAgentId,
           }));
+          // Transfer resets AI pause — new agent starts fresh
+          setAiPaused(false);
           setShowTransfer(false);
           toast.success("Conversation transferred");
         }
@@ -416,15 +446,21 @@ export function ConversationViewWrapper({
   const handleToggleAi = useCallback(() => {
     const newPaused = !aiPaused;
     startTransition(async () => {
-      const result = await setConversationAiPaused(conversation.id, newPaused);
+      const result = await setConversationAiPaused(
+        conversation.id,
+        newPaused,
+        userName,
+      );
       if (result.error) {
         toast.error(result.error);
       } else {
         setAiPaused(newPaused);
-        toast.success(newPaused ? "AI paused — you're in control" : "AI resumed");
+        toast.success(
+          newPaused ? "AI paused — you're in control" : "AI resumed",
+        );
       }
     });
-  }, [conversation.id, aiPaused]);
+  }, [conversation.id, aiPaused, userName]);
 
   // Take over conversation: assign self + pause AI
   const handleTakeOver = useCallback(() => {
@@ -433,7 +469,11 @@ export function ConversationViewWrapper({
       return;
     }
     startTransition(async () => {
-      const result = await takeOverConversation(conversation.id, currentAgent.id);
+      const result = await takeOverConversation(
+        conversation.id,
+        currentAgent.id,
+        userName,
+      );
       if (result.error) {
         toast.error(result.error);
       } else {
@@ -604,7 +644,11 @@ export function ConversationViewWrapper({
                   className="h-8 text-xs"
                   onClick={handleToggleAi}
                   disabled={isPending}
-                  title={aiPaused ? "Resume AI auto-responses" : "Pause AI auto-responses"}
+                  title={
+                    aiPaused
+                      ? `AI paused${(conversation.metadata as Record<string, unknown>)?.ai_paused_by ? ` by ${(conversation.metadata as Record<string, unknown>).ai_paused_by}` : ""} — click to resume`
+                      : "Pause AI auto-responses"
+                  }
                 >
                   {aiPaused ? (
                     <>

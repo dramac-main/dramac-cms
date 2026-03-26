@@ -21,6 +21,7 @@ import type {
   DpoConfig,
 } from "@/modules/ecommerce/types/ecommerce-types";
 import { calculateShipping } from "@/modules/ecommerce/lib/shipping-calculator";
+import { PUBLIC_RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,19 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: 10 requests/minute per IP
+    const ip = getClientIp(request);
+    const rl = PUBLIC_RATE_LIMITS.checkout.check(ip);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) },
+        },
+      );
+    }
+
     const body = await request.json();
     const {
       cartId,
@@ -378,7 +392,12 @@ export async function POST(request: NextRequest) {
           if (dpoConfig.company_token) {
             // XML-escape values to prevent injection
             const xmlEscape = (s: string) =>
-              s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+              s
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&apos;");
 
             const safeCompanyToken = xmlEscape(dpoConfig.company_token);
             const safeOrderId = xmlEscape(order.id);

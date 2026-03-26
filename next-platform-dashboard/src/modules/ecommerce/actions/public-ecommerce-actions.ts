@@ -130,7 +130,7 @@ export async function getPublicProducts(
     }
     if (filters.search) {
       // Sanitize search to prevent PostgREST filter injection
-      const safeSearch = filters.search.replace(/[%_(),.\\]/g, '');
+      const safeSearch = filters.search.replace(/[%_(),.\\]/g, "");
       if (safeSearch) {
         query = query.or(
           `name.ilike.%${safeSearch}%,description.ilike.%${safeSearch}%,sku.ilike.%${safeSearch}%`,
@@ -469,13 +469,14 @@ export async function getPublicOrCreateCart(
   }
 }
 
-export async function getPublicCart(cartId: string, siteId?: string): Promise<Cart | null> {
+export async function getPublicCart(
+  cartId: string,
+  siteId?: string,
+): Promise<Cart | null> {
   try {
     const supabase = getPublicClient();
-    let query = supabase
-      .from(`${TABLE_PREFIX}_carts`)
-      .select(
-        `
+    let query = supabase.from(`${TABLE_PREFIX}_carts`).select(
+      `
         *,
         items:${TABLE_PREFIX}_cart_items(
           *,
@@ -483,7 +484,7 @@ export async function getPublicCart(cartId: string, siteId?: string): Promise<Ca
           variant:${TABLE_PREFIX}_product_variants(id, options, quantity, image_url, price)
         )
       `,
-      );
+    );
     query = query.eq("id", cartId);
     if (siteId) query = query.eq("site_id", siteId);
     const { data, error } = await query.single();
@@ -1368,9 +1369,9 @@ export async function uploadPaymentProof(input: {
     // Decode base64 to buffer
     const fileBuffer = Buffer.from(input.fileBase64, "base64");
 
-    // Enforce 10 MB limit
-    if (fileBuffer.length > 10 * 1024 * 1024) {
-      return { success: false, error: "File too large. Maximum 10 MB." };
+    // Enforce 3 MB limit (base64 encoding adds ~33% overhead; must stay under Vercel 4.5 MB body limit)
+    if (fileBuffer.length > 3 * 1024 * 1024) {
+      return { success: false, error: "File too large. Maximum 3 MB." };
     }
 
     // Determine file extension

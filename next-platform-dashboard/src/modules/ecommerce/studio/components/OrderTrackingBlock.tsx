@@ -42,7 +42,9 @@ export function OrderTrackingBlock({
   const [error, setError] = React.useState<string | null>(null);
   // Separate state: recentOrderId from localStorage vs searchResultId from actual lookup
   const [recentOrderId, setRecentOrderId] = React.useState<string | null>(null);
-  const [searchResultId, setSearchResultId] = React.useState<string | null>(null);
+  const [searchResultId, setSearchResultId] = React.useState<string | null>(
+    null,
+  );
 
   // Check localStorage for recent order on mount
   React.useEffect(() => {

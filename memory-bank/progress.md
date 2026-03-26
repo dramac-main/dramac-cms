@@ -1,11 +1,37 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: March 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT ✅
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX ✅
 
 ---
 
-## Latest Update: In-Chat Order Management Panel — READY TO DEPLOY
+## Latest Update: Payment Proof Visibility Fix — DEPLOYED (`60c1c2e5`)
+
+**Fixed critical bug: payment proof uploaded via chat was invisible in e-commerce dashboard. 3 root causes + 1 robustness improvement.**
+
+### Root Causes Fixed
+
+1. **Private storage bucket, zero RLS policies** — `getPaymentProofUrl()` used session client → switched to admin client
+2. **Wrong column check** — `payment_method === 'manual_transfer'` → `payment_provider === 'manual' || payment_provider === 'bank_transfer'`
+3. **Wrong status check** — Buttons only checked `pending`/`uploaded`, bridge sets `pending_review` → added to conditions
+4. **Imprecise bridge matching** — Now uses conversation `metadata.order_number` for precise order lookup
+
+### Files Changed (4)
+
+- `order-actions.ts` — Admin client for storage signed URLs
+- `order-detail-dialog.tsx` — payment_provider check + pending_review
+- `ChatOrderPanel.tsx` — pending_review for buttons
+- `chat-event-bridge.ts` — Precise order matching via conversation metadata
+
+### Pipeline Audit: CLEAN
+
+- All payment/quotation flows verified correct
+- No remaining `manual_transfer` hardcoded checks
+- Notifications, checkout, AI responder all working as expected
+
+---
+
+## Previous Update: In-Chat Order Management Panel — DEPLOYED
 
 **New feature: Store owners can manage orders (view details, approve/reject payments, change status) directly from the live chat sidebar when conversation has an associated order.**
 

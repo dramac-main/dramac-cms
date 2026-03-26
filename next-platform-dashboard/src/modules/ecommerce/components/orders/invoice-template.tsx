@@ -131,10 +131,7 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
         {/* Items Table */}
         <table className="w-full mb-8 text-sm">
           <thead>
-            <tr
-              className="border-b-2"
-              style={{ borderColor: brandColor }}
-            >
+            <tr className="border-b-2" style={{ borderColor: brandColor }}>
               <th className="py-2 text-left font-semibold">Description</th>
               <th className="py-2 text-right font-semibold">Qty</th>
               <th className="py-2 text-right font-semibold">Unit Price</th>
