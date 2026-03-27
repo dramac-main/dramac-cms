@@ -1022,8 +1022,6 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                     {/* Animated Narrative */}
                     <GenerationNarrative
                       isGenerating={isGenerating}
-                      stage={_currentStage}
-                      progress={progress}
                       className="py-2"
                     />
 
