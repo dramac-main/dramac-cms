@@ -36,8 +36,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-// Animation imports available for future use
-// import { motion, AnimatePresence } from "framer-motion";
+import { GenerationNarrative } from "@/components/ai-builder/generation-narrative";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -334,6 +333,36 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
     };
   }, [isGenerating]);
 
+  // Restore AI-generated output from sessionStorage (survives accidental navigation)
+  useEffect(() => {
+    try {
+      const key = `ai-designer-output-${siteId}`;
+      const saved = sessionStorage.getItem(key);
+      if (saved) {
+        const parsed = JSON.parse(saved) as WebsiteDesignerOutput;
+        if (parsed?.pages?.length) {
+          setOutput(parsed);
+          setSelectedPageIndex(0);
+          toast.info("Restored your previously generated website preview.");
+        }
+      }
+    } catch {
+      // Corrupted data — ignore
+    }
+  }, [siteId]);
+
+  // Warn before navigating away when there's an unsaved generated site
+  useEffect(() => {
+    if (!output) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [output]);
+
   // Convert generated pages to Studio format when output changes
   useEffect(() => {
     if (output?.pages) {
@@ -594,6 +623,17 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
       setProgressMessage("Website generated successfully!");
       setOutput(result as WebsiteDesignerOutput);
       setSelectedPageIndex(0);
+
+      // Persist to sessionStorage so accidental navigation doesn't lose the output
+      try {
+        sessionStorage.setItem(
+          `ai-designer-output-${siteId}`,
+          JSON.stringify(result),
+        );
+      } catch {
+        // Storage full or unavailable — non-fatal
+      }
+
       toast.success(`Generated ${result.pages?.length || 0} pages!`);
     } catch (error) {
       console.error("[AI Designer] Error:", error);
@@ -781,6 +821,10 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
 
         // Redirect to the studio for the homepage
         router.push(`/dashboard/sites/${siteId}/pages`);
+        // Clear sessionStorage — site has been saved to DB
+        try {
+          sessionStorage.removeItem(`ai-designer-output-${siteId}`);
+        } catch {}
       } else if (errorCount > 0) {
         toast.error(`Failed to save pages: ${failedPages.join(", ")}`);
       } else {
@@ -799,8 +843,11 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
     setStudioDataMap(new Map());
     setSelectedPageIndex(0);
     setProgress(0);
+    try {
+      sessionStorage.removeItem(`ai-designer-output-${siteId}`);
+    } catch {}
     toast.info("Preview discarded");
-  }, []);
+  }, [siteId]);
 
   // =============================================================================
   // RENDER - INPUT FORM
@@ -808,7 +855,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
 
   if (!output) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
+      <div className="min-h-screen bg-linear-to-br from-background to-muted/30">
         {/* Header */}
         <div className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-10">
           <div className="container flex h-16 items-center gap-4">
@@ -972,11 +1019,13 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                       <Progress value={progress} className="h-3" />
                     </div>
 
-                    {/* Status Message */}
-                    <div className="flex items-center justify-center gap-2 py-2">
-                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                      <span className="font-medium">{progressMessage}</span>
-                    </div>
+                    {/* Animated Narrative */}
+                    <GenerationNarrative
+                      isGenerating={isGenerating}
+                      stage={_currentStage}
+                      progress={progress}
+                      className="py-2"
+                    />
 
                     {/* Time Info */}
                     <div className="flex justify-between items-center text-sm border-t pt-4">

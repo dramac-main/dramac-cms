@@ -115,6 +115,11 @@ export default function OnboardingPage() {
 
   // Check onboarding status on mount
   useEffect(() => {
+    // Safety timeout — if checking takes >12s, show the form anyway
+    const safetyTimeout = setTimeout(() => {
+      setIsChecking(false);
+    }, 12000);
+
     const checkStatus = async () => {
       try {
         const supabase = createClient();
@@ -127,7 +132,14 @@ export default function OnboardingPage() {
           return;
         }
 
-        const result = await checkOnboardingStatus();
+        let result: { needsOnboarding?: boolean; hasProfile?: boolean; hasAgency?: boolean };
+        try {
+          result = await checkOnboardingStatus();
+        } catch {
+          // If the server action fails, show the form from the start
+          setIsChecking(false);
+          return;
+        }
 
         if (!result.needsOnboarding) {
           router.push("/dashboard");
@@ -142,65 +154,69 @@ export default function OnboardingPage() {
         }
 
         // Fetch existing profile data
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("name, full_name, job_title, agency_id")
-          .eq("id", user.id)
-          .single();
+        try {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("name, full_name, job_title, agency_id")
+            .eq("id", user.id)
+            .single();
 
-        if (profile) {
-          if (profile.full_name || profile.name) {
-            profileForm.setValue(
-              "fullName",
-              profile.full_name || profile.name || "",
-            );
-          }
-          if (profile.job_title) {
-            profileForm.setValue("jobTitle", profile.job_title);
-          }
+          if (profile) {
+            if (profile.full_name || profile.name) {
+              profileForm.setValue(
+                "fullName",
+                profile.full_name || profile.name || "",
+              );
+            }
+            if (profile.job_title) {
+              profileForm.setValue("jobTitle", profile.job_title);
+            }
 
-          // If user has an agency, fetch and pre-fill agency data
-          if (profile.agency_id) {
-            setAgencyId(profile.agency_id);
-            // Query basic fields that exist - new fields from migration are optional
-            const { data: agency } = await supabase
-              .from("agencies")
-              .select("*")
-              .eq("id", profile.agency_id)
-              .single();
+            // If user has an agency, fetch and pre-fill agency data
+            if (profile.agency_id) {
+              setAgencyId(profile.agency_id);
+              // Query basic fields that exist - new fields from migration are optional
+              const { data: agency } = await supabase
+                .from("agencies")
+                .select("*")
+                .eq("id", profile.agency_id)
+                .single();
 
-            if (agency) {
-              // Type assertion for agency since new columns may not be in types yet
-              const agencyData = agency as {
-                name?: string | null;
-                description?: string | null;
-                website?: string | null;
-                industry?: string | null;
-                team_size?: string | null;
-                goals?: string[] | null;
-              };
+              if (agency) {
+                // Type assertion for agency since new columns may not be in types yet
+                const agencyData = agency as {
+                  name?: string | null;
+                  description?: string | null;
+                  website?: string | null;
+                  industry?: string | null;
+                  team_size?: string | null;
+                  goals?: string[] | null;
+                };
 
-              agencyForm.setValue("agencyName", agencyData.name || "");
-              if (agencyData.description) {
-                agencyForm.setValue(
-                  "agencyDescription",
-                  agencyData.description,
-                );
-              }
-              if (agencyData.website) {
-                agencyForm.setValue("website", agencyData.website);
-              }
-              if (agencyData.industry) {
-                setSelectedIndustry(agencyData.industry as IndustryId);
-              }
-              if (agencyData.team_size) {
-                setTeamSize(agencyData.team_size);
-              }
-              if (agencyData.goals && Array.isArray(agencyData.goals)) {
-                setSelectedGoals(agencyData.goals);
+                agencyForm.setValue("agencyName", agencyData.name || "");
+                if (agencyData.description) {
+                  agencyForm.setValue(
+                    "agencyDescription",
+                    agencyData.description,
+                  );
+                }
+                if (agencyData.website) {
+                  agencyForm.setValue("website", agencyData.website);
+                }
+                if (agencyData.industry) {
+                  setSelectedIndustry(agencyData.industry as IndustryId);
+                }
+                if (agencyData.team_size) {
+                  setTeamSize(agencyData.team_size);
+                }
+                if (agencyData.goals && Array.isArray(agencyData.goals)) {
+                  setSelectedGoals(agencyData.goals);
+                }
               }
             }
           }
+        } catch {
+          // Profile fetch failed — start from step 0, not fatal
         }
 
         // Resume from where they left off
@@ -218,6 +234,8 @@ export default function OnboardingPage() {
     };
 
     checkStatus();
+
+    return () => clearTimeout(safetyTimeout);
   }, [router, profileForm, agencyForm]);
 
   const handleProfileSubmit = async (values: ProfileValues) => {
