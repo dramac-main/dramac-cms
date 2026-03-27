@@ -132,7 +132,11 @@ export default function OnboardingPage() {
           return;
         }
 
-        let result: { needsOnboarding?: boolean; hasProfile?: boolean; hasAgency?: boolean };
+        let result: {
+          needsOnboarding?: boolean;
+          hasProfile?: boolean;
+          hasAgency?: boolean;
+        };
         try {
           result = await checkOnboardingStatus();
         } catch {
