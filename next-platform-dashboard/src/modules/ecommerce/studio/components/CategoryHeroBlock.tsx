@@ -156,7 +156,7 @@ export function CategoryHeroBlock({
     <div
       className={cn(
         "relative w-full overflow-hidden rounded-lg",
-        hasImage ? "text-white" : "bg-gradient-to-r from-gray-100 to-gray-50",
+        hasImage ? "text-white" : "bg-muted",
         className,
       )}
       style={{ minHeight }}

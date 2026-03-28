@@ -122,6 +122,7 @@ E-commerce module (use when ecommerce/shop module is active):
 - EcommerceProductCard — single product card with image, price, rating, add-to-cart
 - EcommerceProductCatalog — full-featured catalog with filters, sorting, pagination, search
 - EcommerceCategoryNav — category navigation (tree/grid/list/cards)
+- EcommerceCategoriesPage — full browsable categories page with grid, search, and subcategories
 - EcommerceSearchBar — product search with suggestions
 - EcommerceFilterSidebar — price/category/stock filter sidebar
 - EcommerceBreadcrumb — breadcrumb navigation for product pages
@@ -154,7 +155,9 @@ Check the Business Context for "Enabled Features & Modules".
   A dental/healthcare/salon/spa site WITHOUT visible booking functionality is a FAILURE.
 - If an E-COMMERCE module is enabled: include EcommerceFeaturedProducts on the homepage,
   EcommerceProductGrid or EcommerceProductCatalog on a /shop or /products page.
-  Add EcommerceCategoryNav for product navigation. CTAs should say "Shop Now" / "Browse Products".
+  Add EcommerceCategoryNav for product navigation.
+  ALWAYS create a /categories page with EcommerceCategoriesPage — this is a core browsing page for any store.
+  CTAs should say "Shop Now" / "Browse Products".
   Include EcommerceReviewList on product pages for social proof.
   Use ProductDetailBlock for individual product pages.
 

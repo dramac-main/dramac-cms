@@ -128,6 +128,19 @@ Determine optimal e-commerce configuration for best user experience.
             },
           },
           {
+            componentType: "EcommerceCategoriesPage",
+            placement: "page",
+            page: "/categories",
+            props: {
+              showSearch: true,
+              showSubcategories: true,
+              showProductCount: true,
+              showImages: true,
+              layout: "grid",
+              columns: object.productGridColumns >= 4 ? 4 : 3,
+            },
+          },
+          {
             componentType: "Cart",
             placement: "global",
             position: "header",

@@ -84,6 +84,10 @@ import {
   CategoryHeroBlock,
   categoryHeroDefinition,
 } from "./components/CategoryHeroBlock";
+import {
+  CategoriesPageBlock,
+  categoriesPageDefinition,
+} from "./components/CategoriesPageBlock";
 
 // Re-export utility components for external use (ECOM-21)
 export { ProductPriceDisplay } from "./components/ProductPriceDisplay";
@@ -143,7 +147,7 @@ export { QuoteRequestBlock, QuoteListBlock, QuoteDetailBlock };
 export { ReviewFormBlock, ReviewListBlock };
 
 // Re-export Dynamic Route components (ECOM-51)
-export { ProductDetailBlock, CategoryHeroBlock };
+export { ProductDetailBlock, CategoryHeroBlock, CategoriesPageBlock };
 
 // =============================================================================
 // BLOCK DEFINITIONS (ECOM-22/23/24/25)
@@ -630,6 +634,10 @@ export const studioComponents: ModuleStudioExports["studioComponents"] = {
   CategoryHeroBlock: {
     ...categoryHeroDefinition,
     render: CategoryHeroBlock,
+  },
+  EcommerceCategoriesPage: {
+    ...categoriesPageDefinition,
+    render: CategoriesPageBlock,
   },
 };
 

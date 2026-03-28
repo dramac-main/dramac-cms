@@ -98,9 +98,10 @@ export const industryTemplates: IndustryTemplate[] = [
     recommendedPages: [
       { name: "Home", slug: "/", priority: 1, required: true },
       { name: "Shop", slug: "/shop", priority: 2, required: true },
-      { name: "Collections", slug: "/collections", priority: 3, required: false },
-      { name: "About", slug: "/about", priority: 4, required: false },
-      { name: "Contact", slug: "/contact", priority: 5, required: true },
+      { name: "Categories", slug: "/categories", priority: 3, required: true },
+      { name: "Collections", slug: "/collections", priority: 4, required: false },
+      { name: "About", slug: "/about", priority: 5, required: false },
+      { name: "Contact", slug: "/contact", priority: 6, required: true },
     ],
     componentPreferences: [
       { section: "hero", preferred: ["Hero"], variant: "full-width", config: { showPromotion: true } },

@@ -700,9 +700,9 @@ export function CheckoutPageBlock({
               <CardContent className="pt-6">
                 {/* Sign-in prompt — shown on information step for guests */}
                 {checkout.currentStep === "information" && !authCustomer && (
-                  <div className="mb-6 flex items-center justify-between rounded-md border border-primary/20 bg-primary/5 px-4 py-3 text-sm">
+                  <div className="mb-6 flex items-center justify-between rounded-md border border-border bg-muted px-4 py-3 text-sm">
                     <span className="text-foreground flex items-center gap-2">
-                      <User className="h-4 w-4 text-primary" />
+                      <User className="h-4 w-4 text-foreground" />
                       Have an account?
                     </span>
                     <Button
