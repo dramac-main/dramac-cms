@@ -1,53 +1,79 @@
 # Active Context
 
-## Current Focus: Live Chat & AI Auto-Response Runtime Bug Fixes
+## Current Focus: Per-Order Conversation Isolation — Live Chat (Hardened)
 
-### Status: FIXES APPLIED — AI auto-response & file uploads restored
+### Status: HARDENED & AUDITED — TypeScript 0 errors, all 10 bugs fixed, ready to deploy
 
-### What Was Done (This Session): Runtime Bug Audit & Fixes
+### What Was Done (This Session): Per-Order Chat — Production Hardening Audit
 
-User reported 3 issues during live testing:
-1. Payment methods appearing on order confirmation page
-2. File attachments not visible in live chat
-3. AI not auto-responding anymore
+**All 4 files from the previous session went through a line-by-line audit.** 10 bugs/gaps were found and fixed.
 
-#### Root Cause Analysis Results
+#### Bugs Fixed (conversations/route.ts)
 
-| Issue | Root Cause | Resolution |
-|-------|-----------|------------|
-| Payment methods on confirmation page | NOT a bug — the AI payment guidance chat widget auto-opens with interactive payment buttons. This is by design. | No fix needed |
-| AI not auto-responding | `convInsert` referenced at line 298 of conversations/route.ts but it's block-scoped inside an `else` block. For existing conversations, accessing it throws ReferenceError, crashing the AI trigger. | **FIXED** |
-| File attachments not visible | `mod_chat_widget_settings` has 0 rows → widget API returns `enableFileUploads: false` default → upload button hidden in widget UI. | **FIXED** |
+1. **Duplicate `const supabase` in GET handler** — same block-scope redeclaration, removed duplicate
+2. **No LIMIT on list query** — added `.limit(50)` to prevent unbounded payloads
+3. **Metadata null-safety** — now validates `c.metadata && typeof c.metadata === "object"` before casting
+4. **TS2454 `conversationId` used before assigned** — changed `let conversationId: string` to `let conversationId = ""`
 
-#### Fix 1: AI Auto-Response — `convInsert` Scope Bug (CRITICAL) ✅
+#### Bugs Fixed (ChatWidget.tsx)
 
-- File: `src/app/api/modules/live-chat/conversations/route.ts`
-- `convInsert` was declared inside `else` block (new conversation path) but referenced outside it at line 298
-- Fix: Added `let assignedAgentId: string | null = null;` before the if/else branches
-- For existing conversations: reads `assigned_agent_id` from the existing conv DB query
-- For new conversations: reads `assigned_agent_id` from `convData` after insert
-- Changed the AI trigger condition from `!convInsert.assigned_agent_id` to `!assignedAgentId`
-- Also updated the existing conv query from `.select("id")` to `.select("id, assigned_agent_id")`
+5. **`handleStartChat` missing from `handleOpen` deps** — was stale closure; added to dependency array
+6. **localStorage map never syncs with server** — added `syncMapFromList()` helper; called after list fetch; purges resolved/closed entries
+7. **Stale map entries never cleaned** — `checkStatus` now removes entries from map when conversation is resolved/closed
+8. **Resolved conversations kicked user out after 10s** — added `openedAsResolvedRef`; `checkStatus` skips auto-navigation when viewing history
+9. **TS2448 `handleStartChat` used before declaration** — moved `handleStartChat` above `handleOpen` (was declared after its caller)
 
-#### Fix 2: File Uploads Default Enabled ✅
+#### Bugs Fixed (WidgetConversationList.tsx)
 
-- File: `src/app/api/modules/live-chat/widget/route.ts`
-- Changed default `enableFileUploads: false` → `enableFileUploads: true`
-- When no `mod_chat_widget_settings` row exists, file upload button now shows
+10. **Keyboard accessibility gap** — added `onFocus`/`onBlur` alongside `onMouseEnter`/`onMouseLeave` for focus-visible states
 
-#### AI Settings Verification
+### What Was Done (Previous Session): Per-Order Chat Conversations
 
-- `auto-response-handler.ts` reads AI settings from `mod_chat_widget_settings`
-- Uses `!== false` comparison: when no row exists (null), defaults to enabled
-- Both `ai_auto_response_enabled` and `ai_payment_guidance_enabled` correctly default to `true`
+**Problem:** When a customer places multiple orders, all orders funneled into a single chat conversation. This caused confusion — order context mixed together, agents couldn't distinguish which order the customer was discussing, and the AI responder treated everything as one thread.
 
-### Type Check Status
+**Root Cause (Triple):**
 
-Down from 3 to 2 pre-existing errors (the convInsert error is now fixed):
+1. localStorage stored ONE conversation ID per site (`dramac_chat_conv_${siteId}`)
+2. API POST handler found ANY active/pending conversation for the visitor and reused it
+3. `metadata.order_number` was overwritten with the latest order, losing previous order context
 
-1. `bank_transfer` type mismatch in order-detail-dialog.tsx:228 and :555
+#### Architecture Changes
 
-### Files Modified This Session (2)
+**New Widget State: `conversation-list`** — Customers now see a list of all their conversations (each order = separate thread) and can switch between them.
+
+**localStorage Redesign:**
+
+- OLD: `dramac_chat_conv_${siteId}` = single conversation ID
+- NEW: `dramac_chat_convmap_${siteId}` = JSON map `{ "ORD-123": "conv-uuid", "__general__": "conv-uuid" }`
+- Backward compatibility via `migrateOldStorage()` that moves old format to new map
+- Visitor key unchanged: `dramac_chat_visitor_${siteId}`
+
+**API Changes (conversations/route.ts):**
+
+- POST: Per-order dedup — searches for conversation matching SPECIFIC order number, creates new if not found
+- GET: Added `?list=true` mode returning all conversations for a visitor with metadata (subject, order number, last message, unread count, agent name)
+
+**Widget Flow:**
+
+1. New visitor → pre-chat form → starts conversation
+2. Returning visitor → conversation list → select existing or start new
+3. Order-specific link (e.g. from confirmation page) → auto-creates/finds conversation for that order
+4. "Back to conversations" button in chat header for easy navigation
+5. Resolved/closed conversations → rating (if enabled) → back to list
+
+#### Files Created (1)
+
+- `src/modules/live-chat/components/widget/WidgetConversationList.tsx` — New component showing conversation history with per-order threads, status indicators, unread badges, agent names
+
+#### Files Modified (3)
+
+- `src/app/api/modules/live-chat/conversations/route.ts` — Per-order dedup in POST, list mode in GET
+- `src/modules/live-chat/components/widget/ChatWidget.tsx` — Multi-conversation state management, localStorage map, conversation routing
+- `src/modules/live-chat/components/widget/WidgetChat.tsx` — Added `onBackToList` prop and back arrow button in header
+
+### Type Check Status: 0 ERRORS ✅
+
+### Previous Session: Payment Security — Details Only Via Chat Widget (commit `8811cedc`)
 
 1. `src/app/api/modules/live-chat/conversations/route.ts` — Fixed convInsert scope bug, added assignedAgentId tracking
 2. `src/app/api/modules/live-chat/widget/route.ts` — Changed default enableFileUploads to true

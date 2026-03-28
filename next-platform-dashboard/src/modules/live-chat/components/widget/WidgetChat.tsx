@@ -30,6 +30,7 @@ interface WidgetChatProps {
   onSendMessage: (text: string) => void;
   onFileUpload?: (file: File) => Promise<void>;
   onEndChat: () => void;
+  onBackToList?: () => void;
   onClose: () => void;
 }
 
@@ -43,6 +44,7 @@ export function WidgetChat({
   onSendMessage,
   onFileUpload,
   onEndChat,
+  onBackToList,
   onClose,
 }: WidgetChatProps) {
   const [inputText, setInputText] = useState("");
@@ -105,6 +107,29 @@ export function WidgetChat({
         style={{ backgroundColor: settings.primaryColor }}
       >
         <div className="flex items-center gap-3 min-w-0">
+          {onBackToList && (
+            <button
+              type="button"
+              onClick={onBackToList}
+              className="p-1 rounded hover:opacity-80 transition-opacity shrink-0"
+              aria-label="Back to conversations"
+              title="Back to conversations"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke={settings.textColor}
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M19 12H5" />
+                <path d="M12 19l-7-7 7-7" />
+              </svg>
+            </button>
+          )}
           {agentInfo?.avatar ? (
             <img
               src={agentInfo.avatar}

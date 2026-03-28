@@ -216,6 +216,16 @@ export function resolveBrandColors(
     source.theme?.backgroundColor || source.backgroundColor || "#ffffff";
   const foreground = source.theme?.textColor || source.textColor || "#0f172a";
 
+  // ── Dark/Light Background Detection ──────────────────────────────────
+  // Surface colors (muted, borders, cards) must be derived differently
+  // depending on whether the site background is dark or light.
+  // Light bg: surfaces are lightened from the foreground color (subtle grays)
+  // Dark bg:  surfaces are lightened from the background color (subtle lifts)
+  const isDarkBg = !isLight(background);
+
+  // Pre-compute a contrast-safe foreground for deriving secondary colors
+  const effectiveForeground = ensureContrast(foreground, background);
+
   // Derive the full palette from core colors
   const primaryFg = contrastingForeground(primary);
   const secondaryFg = contrastingForeground(secondary);
@@ -226,6 +236,35 @@ export function resolveBrandColors(
   const errorColor = "#ef4444";
   const warningColor = "#f59e0b";
   const infoColor = "#3b82f6";
+
+  // ── Surface Color Derivation ─────────────────────────────────────────
+  // On light backgrounds: lighten the (dark) foreground to get subtle grays
+  // On dark backgrounds:  lighten the (dark) background to get subtle lifts
+  const surfaces = isDarkBg
+    ? {
+        muted: lighten(background, 0.08), // Slightly lighter than dark bg
+        mutedForeground: darken(effectiveForeground, 0.3), // Dimmed light text
+        border: lighten(background, 0.15), // Subtle visible border
+        divider: lighten(background, 0.10), // Even subtler
+        cardBorder: lighten(background, 0.12), // Card border
+        inputBorder: lighten(background, 0.20), // Input border (more visible)
+      }
+    : {
+        muted: lighten(foreground, 0.93), // Very light gray
+        mutedForeground: lighten(foreground, 0.4), // Dimmed text
+        border: lighten(foreground, 0.82), // Subtle border
+        divider: lighten(foreground, 0.87), // Even subtler
+        cardBorder: lighten(foreground, 0.85), // Card border
+        inputBorder: lighten(foreground, 0.78), // Slightly darker border for inputs
+      };
+
+  // ── Selection & Button Adaptation ────────────────────────────────────
+  const selectedBgColor = isDarkBg
+    ? lighten(background, 0.12) // Subtle lift on dark bg
+    : tint(primary, 0.88); // Light primary tint on light bg
+  const secondaryBtnText = isDarkBg
+    ? effectiveForeground // Use readable foreground on dark bg
+    : primary; // Use brand primary on light bg
 
   const palette: BrandColorPalette = {
     // Core
@@ -240,15 +279,15 @@ export function resolveBrandColors(
     secondaryForeground: secondaryFg,
     accentForeground: accentFg,
 
-    // Surfaces
-    muted: lighten(foreground, 0.93), // Very light gray
-    mutedForeground: lighten(foreground, 0.4), // Dimmed text
-    border: lighten(foreground, 0.82), // Subtle border
-    divider: lighten(foreground, 0.87), // Even subtler
+    // Surfaces (adapted for dark/light backgrounds)
+    muted: surfaces.muted,
+    mutedForeground: surfaces.mutedForeground,
+    border: surfaces.border,
+    divider: surfaces.divider,
     card: background, // Card bg = page bg
-    cardBorder: lighten(foreground, 0.85), // Card border
+    cardBorder: surfaces.cardBorder,
     input: background, // Input bg
-    inputBorder: lighten(foreground, 0.78), // Slightly darker border for inputs
+    inputBorder: surfaces.inputBorder,
     inputFocus: primary, // Focus ring = primary
 
     // State colors (semantic, don't change with brand)
@@ -266,12 +305,12 @@ export function resolveBrandColors(
     buttonText: primaryFg,
     buttonHover: darken(primary, 0.1),
     secondaryButtonBg: "transparent",
-    secondaryButtonText: primary,
+    secondaryButtonText: secondaryBtnText,
 
     // Selection states
-    selectedBg: tint(primary, 0.88),
+    selectedBg: selectedBgColor,
     selectedBorder: primary,
-    selectedText: isLight(tint(primary, 0.88)) ? foreground : "#ffffff",
+    selectedText: contrastingForeground(selectedBgColor),
     priceBadge: primary,
     ratingColor: "#f59e0b", // Stars are always amber/gold
   };
@@ -297,6 +336,10 @@ export function resolveBrandColors(
     palette.muted,
   );
   palette.buttonText = ensureContrast(palette.buttonText, palette.buttonBg);
+  palette.secondaryButtonText = ensureContrast(
+    palette.secondaryButtonText,
+    palette.background,
+  );
   palette.selectedText = ensureContrast(
     palette.selectedText,
     palette.selectedBg,

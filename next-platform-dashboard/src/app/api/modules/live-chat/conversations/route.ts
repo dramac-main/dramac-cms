@@ -155,49 +155,71 @@ export async function POST(request: NextRequest) {
       visitorId = newVisitor.id;
     }
 
-    // 2. Check for existing active conversation for this visitor (dedup)
-    const { data: existingConv } = await (supabase as any)
-      .from("mod_chat_conversations")
-      .select("id, assigned_agent_id")
-      .eq("site_id", siteId)
-      .eq("visitor_id", visitorId)
-      .in("status", ["active", "pending", "open", "waiting"])
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    let conversationId: string;
+    // 2. Per-order conversation isolation
+    // Each order gets its own conversation. General support (no order) gets its own too.
+    // This prevents multiple orders from mixing in the same chat thread.
+    let conversationId = "";
     let isExisting = false;
     let assignedAgentId: string | null = null;
 
-    if (existingConv) {
-      // Reuse existing active conversation instead of creating a duplicate
-      conversationId = existingConv.id;
-      isExisting = true;
-      assignedAgentId = existingConv.assigned_agent_id || null;
+    const orderNumber = orderContext?.orderNumber
+      ? String(orderContext.orderNumber).trim()
+      : null;
 
-      // If we have new order context, update conversation metadata so AI knows the current order
-      if (orderContext?.orderNumber) {
-        const { data: existingMeta } = await (supabase as any)
-          .from("mod_chat_conversations")
-          .select("metadata")
-          .eq("id", conversationId)
-          .single();
+    if (orderNumber) {
+      // ORDER-SPECIFIC: Find existing conversation for THIS specific order
+      const { data: allActiveConvs } = await (supabase as any)
+        .from("mod_chat_conversations")
+        .select("id, assigned_agent_id, metadata")
+        .eq("site_id", siteId)
+        .eq("visitor_id", visitorId)
+        .in("status", ["active", "pending", "open", "waiting"])
+        .order("created_at", { ascending: false });
 
-        await (supabase as any)
-          .from("mod_chat_conversations")
-          .update({
-            metadata: {
-              ...(existingMeta?.metadata || {}),
-              order_number: String(orderContext.orderNumber),
-              payment_guidance_active: true,
-            },
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", conversationId);
+      const existingOrderConv = (allActiveConvs || []).find(
+        (c: { metadata?: Record<string, unknown> }) =>
+          c.metadata &&
+          typeof c.metadata === "object" &&
+          (c.metadata as Record<string, unknown>).order_number === orderNumber,
+      );
+
+      if (existingOrderConv) {
+        // Reuse the conversation for this specific order
+        conversationId = existingOrderConv.id;
+        isExisting = true;
+        assignedAgentId = existingOrderConv.assigned_agent_id || null;
       }
     } else {
-      // Create new conversation
+      // GENERAL SUPPORT: Find existing conversation that has NO order_number
+      const { data: allActiveConvs } = await (supabase as any)
+        .from("mod_chat_conversations")
+        .select("id, assigned_agent_id, metadata")
+        .eq("site_id", siteId)
+        .eq("visitor_id", visitorId)
+        .in("status", ["active", "pending", "open", "waiting"])
+        .order("created_at", { ascending: false });
+
+      const existingGeneralConv = (allActiveConvs || []).find(
+        (c: { metadata?: Record<string, unknown> }) => {
+          const meta = c.metadata as Record<string, unknown> | null;
+          return (
+            !meta ||
+            !meta.order_number ||
+            (typeof meta.order_number === "string" &&
+              meta.order_number.trim() === "")
+          );
+        },
+      );
+
+      if (existingGeneralConv) {
+        conversationId = existingGeneralConv.id;
+        isExisting = true;
+        assignedAgentId = existingGeneralConv.assigned_agent_id || null;
+      }
+    }
+
+    if (!isExisting) {
+      // Create new conversation — one per order or one for general support
       const convInsert: Record<string, unknown> = {
         site_id: siteId,
         visitor_id: visitorId,
@@ -208,9 +230,13 @@ export async function POST(request: NextRequest) {
         unread_agent_count: 0,
         unread_visitor_count: 0,
         tags: [],
-        metadata: orderContext?.orderNumber
-          ? { order_number: String(orderContext.orderNumber) }
+        metadata: orderNumber
+          ? {
+              order_number: orderNumber,
+              payment_guidance_active: true,
+            }
           : {},
+        subject: orderNumber ? `Order ${orderNumber}` : null,
       };
 
       if (departmentId) convInsert.department_id = departmentId;
@@ -347,23 +373,110 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * GET /api/modules/live-chat/conversations?conversationId=xxx&visitorId=xxx
- * Returns conversation details + messages for widget display
+ * GET /api/modules/live-chat/conversations
+ *
+ * Mode 1 (single): ?conversationId=xxx&visitorId=xxx
+ *   Returns conversation details + messages for widget display
+ *
+ * Mode 2 (list): ?visitorId=xxx&siteId=xxx&list=true
+ *   Returns all conversations for this visitor (for conversation list UI)
  */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const conversationId = searchParams.get("conversationId");
     const visitorId = searchParams.get("visitorId");
+    const siteId = searchParams.get("siteId");
+    const isList = searchParams.get("list") === "true";
 
-    if (!conversationId || !visitorId) {
+    if (!visitorId) {
       return NextResponse.json(
-        { error: "conversationId and visitorId are required" },
+        { error: "visitorId is required" },
         { status: 400, headers: corsHeaders },
       );
     }
 
     const supabase = createAdminClient();
+
+    // --- Mode 2: List all conversations for visitor ---
+    if (isList && siteId) {
+      const { data: convRows, error: listError } = await (supabase as any)
+        .from("mod_chat_conversations")
+        .select(
+          "id, status, subject, last_message_text, last_message_at, unread_visitor_count, message_count, metadata, created_at, updated_at, assigned_agent_id",
+        )
+        .eq("site_id", siteId)
+        .eq("visitor_id", visitorId)
+        .order("last_message_at", { ascending: false, nullsFirst: false })
+        .limit(50);
+
+      if (listError) {
+        console.error("[LiveChat] Conversation list error:", listError);
+        return NextResponse.json(
+          { error: "Failed to fetch conversations" },
+          { status: 500, headers: corsHeaders },
+        );
+      }
+
+      // Fetch agent names for assigned conversations
+      const agentIds = [
+        ...new Set(
+          (convRows || [])
+            .map((c: Record<string, unknown>) => c.assigned_agent_id)
+            .filter(Boolean),
+        ),
+      ];
+      let agentMap: Record<string, string> = {};
+      if (agentIds.length > 0) {
+        const { data: agents } = await (supabase as any)
+          .from("mod_chat_agents")
+          .select("id, display_name")
+          .in("id", agentIds);
+        if (agents) {
+          agentMap = Object.fromEntries(
+            (agents as { id: string; display_name: string }[]).map((a) => [
+              a.id,
+              a.display_name,
+            ]),
+          );
+        }
+      }
+
+      const conversations = (convRows || []).map(
+        (c: Record<string, unknown>) => {
+          const meta =
+            c.metadata && typeof c.metadata === "object"
+              ? (c.metadata as Record<string, unknown>)
+              : null;
+          return {
+            id: c.id,
+            status: c.status,
+            subject: c.subject || null,
+            orderNumber: meta?.order_number
+              ? String(meta.order_number)
+              : null,
+          lastMessageText: c.last_message_text || null,
+          lastMessageAt: c.last_message_at || c.updated_at || c.created_at,
+          unreadCount: c.unread_visitor_count || 0,
+          messageCount: c.message_count || 0,
+          createdAt: c.created_at,
+            agentName: c.assigned_agent_id
+              ? agentMap[c.assigned_agent_id as string] || null
+              : null,
+          };
+        },
+      );
+
+      return NextResponse.json({ conversations }, { headers: corsHeaders });
+    }
+
+    // --- Mode 1: Single conversation with messages ---
+    if (!conversationId) {
+      return NextResponse.json(
+        { error: "conversationId is required" },
+        { status: 400, headers: corsHeaders },
+      );
+    }
 
     // Fetch conversation and validate visitorId
     const { data: convData, error: convError } = await (supabase as any)

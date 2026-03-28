@@ -12,6 +12,10 @@ import { WidgetPreChatForm } from "./WidgetPreChatForm";
 import { WidgetChat } from "./WidgetChat";
 import { WidgetRating } from "./WidgetRating";
 import { WidgetOfflineForm } from "./WidgetOfflineForm";
+import {
+  WidgetConversationList,
+  type ConversationListItem,
+} from "./WidgetConversationList";
 import { useChatRealtime } from "@/modules/live-chat/hooks/use-chat-realtime";
 import {
   isPushSupported,
@@ -69,6 +73,7 @@ export interface WidgetDepartment {
 type WidgetState =
   | "loading"
   | "launcher"
+  | "conversation-list"
   | "pre-chat"
   | "chat"
   | "rating"
@@ -130,9 +135,16 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
   const [typingAgentName, setTypingAgentName] = useState<string | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [conversationList, setConversationList] = useState<
+    ConversationListItem[]
+  >([]);
+  const [isListLoading, setIsListLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const retryCountRef = useRef(0);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Tracks whether the current chat was already resolved/closed when opened
+  // (i.e. user is viewing history — don't auto-navigate away)
+  const openedAsResolvedRef = useRef(false);
   const orderContextRef = useRef<{
     orderNumber: string;
     total: number;
@@ -147,6 +159,107 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
     paymentProvider?: string;
     isManualPayment?: boolean;
   } | null>(null);
+
+  // --- localStorage helpers for per-order conversation map ---
+  const CONV_MAP_KEY = `dramac_chat_convmap_${siteId}`;
+  const VISITOR_KEY = `dramac_chat_visitor_${siteId}`;
+  const LEGACY_CONV_KEY = `dramac_chat_conv_${siteId}`;
+  const GENERAL_KEY = "__general__";
+
+  /** Read the conversation map: { orderNumber → conversationId } */
+  const getConvMap = useCallback((): Record<string, string> => {
+    try {
+      const raw = localStorage.getItem(CONV_MAP_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return {};
+  }, [CONV_MAP_KEY]);
+
+  /** Save a conversation ID for a specific order (or general) */
+  const saveConvToMap = useCallback(
+    (orderNumber: string | null, convId: string) => {
+      const map = getConvMap();
+      map[orderNumber || GENERAL_KEY] = convId;
+      localStorage.setItem(CONV_MAP_KEY, JSON.stringify(map));
+    },
+    [getConvMap, CONV_MAP_KEY, GENERAL_KEY],
+  );
+
+  /** Find conversation ID for a specific order from the local map */
+  const findConvForOrder = useCallback(
+    (orderNumber: string): string | null => {
+      const map = getConvMap();
+      return map[orderNumber] || null;
+    },
+    [getConvMap],
+  );
+
+  /** Migrate old single-conversation localStorage to new map format */
+  const migrateOldStorage = useCallback(() => {
+    const oldConvId = localStorage.getItem(LEGACY_CONV_KEY);
+    if (oldConvId) {
+      const map = getConvMap();
+      if (Object.keys(map).length === 0) {
+        // Migrate: we don't know if it was for an order, so put it as general
+        map[GENERAL_KEY] = oldConvId;
+        localStorage.setItem(CONV_MAP_KEY, JSON.stringify(map));
+      }
+      localStorage.removeItem(LEGACY_CONV_KEY);
+    }
+  }, [LEGACY_CONV_KEY, CONV_MAP_KEY, GENERAL_KEY, getConvMap]);
+
+  /**
+   * Rebuild the localStorage conversation map from the server's conversation list.
+   * Only active/pending/open/waiting conversations are kept — resolved/closed are purged.
+   * This prevents stale local entries from routing to dead conversations.
+   */
+  const syncMapFromList = useCallback(
+    (convs: ConversationListItem[]) => {
+      const freshMap: Record<string, string> = {};
+      for (const conv of convs) {
+        // Only track conversations that are still active
+        if (
+          conv.status === "resolved" ||
+          conv.status === "closed"
+        ) {
+          continue;
+        }
+        const key = conv.orderNumber || GENERAL_KEY;
+        // First match wins (list is sorted by last_message_at desc, so most recent first)
+        if (!freshMap[key]) {
+          freshMap[key] = conv.id;
+        }
+      }
+      localStorage.setItem(CONV_MAP_KEY, JSON.stringify(freshMap));
+    },
+    [GENERAL_KEY, CONV_MAP_KEY],
+  );
+
+  /** Fetch the visitor's conversation list from API and sync the local map */
+  const fetchConversationList = useCallback(
+    async (vid: string) => {
+      setIsListLoading(true);
+      try {
+        const res = await fetch(
+          `${API_BASE}/api/modules/live-chat/conversations?visitorId=${encodeURIComponent(vid)}&siteId=${encodeURIComponent(siteId)}&list=true`,
+        );
+        if (res.ok) {
+          const data = await res.json();
+          const convs: ConversationListItem[] = data.conversations || [];
+          setConversationList(convs);
+          // Keep localStorage map in sync with server state
+          syncMapFromList(convs);
+          return convs;
+        }
+      } catch (err) {
+        console.error("[DRAMAC Chat] Failed to fetch conversation list:", err);
+      } finally {
+        setIsListLoading(false);
+      }
+      return [];
+    },
+    [siteId, syncMapFromList],
+  );
 
   // Load settings on mount
   useEffect(() => {
@@ -169,39 +282,23 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
         setDepartments(data.departments || []);
         retryCountRef.current = 0;
 
-        // Restore session from localStorage
-        const savedConversation = localStorage.getItem(
-          `dramac_chat_conv_${siteId}`,
-        );
-        const savedVisitor = localStorage.getItem(
-          `dramac_chat_visitor_${siteId}`,
-        );
-        if (savedConversation && savedVisitor) {
-          // Check if the saved conversation is still active before restoring
-          try {
-            const statusRes = await fetch(
-              `${API_BASE}/api/modules/live-chat/conversations?conversationId=${savedConversation}&visitorId=${savedVisitor}`,
-            );
-            if (statusRes.ok) {
-              const statusData = await statusRes.json();
-              const convStatus = statusData.conversation?.status;
-              if (convStatus === "resolved" || convStatus === "closed") {
-                // Conversation is finished — clear localStorage and start fresh
-                localStorage.removeItem(`dramac_chat_conv_${siteId}`);
-                localStorage.removeItem(`dramac_chat_visitor_${siteId}`);
-                setWidgetState("pre-chat");
-                return;
-              }
-            }
-          } catch {
-            // If status check fails, still try to restore (better than blocking)
-          }
-          setConversationId(savedConversation);
+        // Migrate old single-conversation localStorage
+        migrateOldStorage();
+
+        // Restore visitor session
+        const savedVisitor = localStorage.getItem(VISITOR_KEY);
+        if (savedVisitor) {
           setVisitorId(savedVisitor);
-          setWidgetState("chat");
+          // Load conversation list to show on open
+          const convs = await fetchConversationList(savedVisitor);
+          if (convs.length > 0) {
+            // Visitor has existing conversations — show the list when opened
+            setWidgetState("conversation-list");
+          } else {
+            setWidgetState("pre-chat");
+          }
         } else {
-          // In iframe mode: skip launcher, go directly to ready state
-          // The parent page handles the launcher FAB
+          // No saved visitor — show pre-chat form
           setWidgetState("pre-chat");
         }
       } catch (err) {
@@ -210,6 +307,7 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
       }
     }
     loadSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [siteId]);
 
   // Set up audio for notifications
@@ -296,144 +394,6 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
     fetchInitialMessages();
   }, [widgetState, conversationId, visitorId]);
 
-  // Handle launcher click
-  const handleOpen = useCallback(() => {
-    if (!settings) return;
-
-    // Check business hours
-    if (settings.businessHoursEnabled) {
-      const isOpen = isWithinBusinessHours(
-        settings.businessHours,
-        settings.timezone,
-      );
-      if (!isOpen) {
-        setWidgetState("offline");
-        return;
-      }
-    }
-
-    // Check for pending order context (from OrderConfirmation auto-open)
-    const pendingCtx = orderContextRef.current;
-
-    // If we have an existing conversation (state or localStorage), go straight to chat
-    // BUT if there's a new order context, send the order message first
-    if (conversationId && visitorId) {
-      if (pendingCtx) {
-        orderContextRef.current = null;
-        setOrderContext(null);
-        sendOrderMessageToExistingConversation(
-          conversationId,
-          visitorId,
-          pendingCtx,
-        );
-      }
-      setWidgetState("chat");
-      setUnreadCount(0);
-      return;
-    }
-    // Also check localStorage directly (state may not be set yet after mount)
-    const savedConv = localStorage.getItem(`dramac_chat_conv_${siteId}`);
-    const savedVis = localStorage.getItem(`dramac_chat_visitor_${siteId}`);
-    if (savedConv && savedVis) {
-      setConversationId(savedConv);
-      setVisitorId(savedVis);
-      if (pendingCtx) {
-        orderContextRef.current = null;
-        setOrderContext(null);
-        sendOrderMessageToExistingConversation(savedConv, savedVis, pendingCtx);
-      }
-      setWidgetState("chat");
-      setUnreadCount(0);
-      return;
-    }
-
-    // No existing conversation — if order context exists, skip pre-chat and auto-start
-    if (pendingCtx) {
-      orderContextRef.current = null;
-      setOrderContext(null);
-      handleStartChat({
-        email: pendingCtx.email,
-        message: `Hi, I just placed order ${pendingCtx.orderNumber} and need help with payment.`,
-        orderContext: pendingCtx,
-      });
-      return;
-    }
-
-    // Otherwise show pre-chat form (or skip if disabled)
-    if (settings.preChatEnabled) {
-      setWidgetState("pre-chat");
-    } else {
-      // Create conversation with minimal data
-      handleStartChat({});
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings, conversationId, visitorId, siteId]);
-
-  // Listen for messages from the parent window (embed script)
-  useEffect(() => {
-    function handleMessage(event: MessageEvent) {
-      const msg = event.data;
-      if (!msg || typeof msg !== "object") return;
-
-      if (msg.type === "dramac-chat-open") {
-        // Parent opened the widget — advance to proper state
-        if (settings) {
-          handleOpen();
-        }
-      } else if (msg.type === "dramac-chat-order-context" && msg.orderContext) {
-        // Order context forwarded from embed script (originated from OrderConfirmation)
-        const ctx = {
-          orderNumber: String(msg.orderContext.orderNumber || ""),
-          total: Number(msg.orderContext.total || 0),
-          email: String(msg.orderContext.email || ""),
-          paymentProvider: msg.orderContext.paymentProvider
-            ? String(msg.orderContext.paymentProvider)
-            : undefined,
-          isManualPayment: Boolean(msg.orderContext.isManualPayment),
-        };
-        orderContextRef.current = ctx;
-        setOrderContext(ctx);
-      }
-    }
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, [settings, handleOpen]);
-
-  // Send order message to an existing conversation (reuse case)
-  // This ensures the new order context is not lost when resuming an old chat
-  const sendOrderMessageToExistingConversation = useCallback(
-    async (
-      convId: string,
-      visId: string,
-      ctx: { orderNumber: string; total: number; email: string },
-    ) => {
-      try {
-        const orderMsg = `Hi, I just placed order ${ctx.orderNumber} and need help with payment.`;
-        await fetch(`${API_BASE}/api/modules/live-chat/messages`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            conversationId: convId,
-            visitorId: visId,
-            content: orderMsg,
-            contentType: "text",
-            orderContext: {
-              orderNumber: ctx.orderNumber,
-              total: ctx.total,
-              email: ctx.email,
-            },
-          }),
-        });
-      } catch (err) {
-        console.error(
-          "[DRAMAC Chat] Failed to send order context message:",
-          err,
-        );
-      }
-    },
-    [],
-  );
-
   // Handle pre-chat form submission
   const handleStartChat = useCallback(
     async (visitorData: {
@@ -480,11 +440,13 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
 
         setConversationId(data.conversationId);
         setVisitorId(data.visitorId);
+        openedAsResolvedRef.current = false; // Always active when created/reopened
         setWidgetState("chat");
 
-        // Save session
-        localStorage.setItem(`dramac_chat_conv_${siteId}`, data.conversationId);
-        localStorage.setItem(`dramac_chat_visitor_${siteId}`, data.visitorId);
+        // Save session — per-order conversation map
+        localStorage.setItem(VISITOR_KEY, data.visitorId);
+        const orderNum = visitorData.orderContext?.orderNumber || null;
+        saveConvToMap(orderNum, data.conversationId);
 
         // Subscribe to push notifications (non-blocking)
         if (isPushSupported() && Notification.permission !== "denied") {
@@ -498,27 +460,147 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
         setError("Unable to start chat. Please try again.");
       }
     },
-    [siteId, settings],
+    [siteId, settings, VISITOR_KEY, saveConvToMap],
   );
 
-  // Auto-start chat when order context arrives and widget is in pre-chat state
+  // Handle launcher click
+  const handleOpen = useCallback(() => {
+    if (!settings) return;
+
+    // Check business hours
+    if (settings.businessHoursEnabled) {
+      const isOpen = isWithinBusinessHours(
+        settings.businessHours,
+        settings.timezone,
+      );
+      if (!isOpen) {
+        setWidgetState("offline");
+        return;
+      }
+    }
+
+    // Check for pending order context (from OrderConfirmation auto-open)
+    const pendingCtx = orderContextRef.current;
+
+    if (pendingCtx) {
+      // ORDER CONTEXT: Route directly to the right conversation for this order
+      orderContextRef.current = null;
+      setOrderContext(null);
+
+      // Check if we already have a conversation for this specific order
+      const existingConvId = findConvForOrder(pendingCtx.orderNumber);
+      const savedVis = localStorage.getItem(VISITOR_KEY);
+
+      if (existingConvId && savedVis) {
+        // Open existing conversation for this order
+        setConversationId(existingConvId);
+        setVisitorId(savedVis);
+        setMessages([]);
+        openedAsResolvedRef.current = false; // Order routing expects active conv
+        setWidgetState("chat");
+        setUnreadCount(0);
+        return;
+      }
+
+      // No existing conversation for this order — create a new one
+      handleStartChat({
+        email: pendingCtx.email,
+        message: `Hi, I just placed order ${pendingCtx.orderNumber} and need help with payment.`,
+        orderContext: pendingCtx,
+      });
+      return;
+    }
+
+    // NO ORDER CONTEXT: Show conversation list if visitor has conversations
+    const savedVis = localStorage.getItem(VISITOR_KEY);
+    if (savedVis) {
+      setVisitorId(savedVis);
+      // Show cached list immediately (avoids blank flash while API loads)
+      if (conversationList.length > 0) {
+        setWidgetState("conversation-list");
+      }
+      // Refresh from API — will update the list and fix state if cache was wrong
+      fetchConversationList(savedVis).then((convs) => {
+        if (convs.length > 0) {
+          setWidgetState("conversation-list");
+        } else if (settings.preChatEnabled) {
+          setWidgetState("pre-chat");
+        } else {
+          handleStartChat({});
+        }
+      });
+      return;
+    }
+
+    // No visitor at all — show pre-chat form
+    if (settings.preChatEnabled) {
+      setWidgetState("pre-chat");
+    } else {
+      handleStartChat({});
+    }
+  }, [
+    settings,
+    VISITOR_KEY,
+    conversationList.length,
+    findConvForOrder,
+    fetchConversationList,
+    handleStartChat,
+  ]);
+
+  // Listen for messages from the parent window (embed script)
+  useEffect(() => {
+    function handleMessage(event: MessageEvent) {
+      const msg = event.data;
+      if (!msg || typeof msg !== "object") return;
+
+      if (msg.type === "dramac-chat-open") {
+        // Parent opened the widget — advance to proper state
+        if (settings) {
+          handleOpen();
+        }
+      } else if (msg.type === "dramac-chat-order-context" && msg.orderContext) {
+        // Order context forwarded from embed script (originated from OrderConfirmation)
+        const ctx = {
+          orderNumber: String(msg.orderContext.orderNumber || ""),
+          total: Number(msg.orderContext.total || 0),
+          email: String(msg.orderContext.email || ""),
+          paymentProvider: msg.orderContext.paymentProvider
+            ? String(msg.orderContext.paymentProvider)
+            : undefined,
+          isManualPayment: Boolean(msg.orderContext.isManualPayment),
+        };
+        orderContextRef.current = ctx;
+        setOrderContext(ctx);
+      }
+    }
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [settings, handleOpen]);
+
+  // Auto-start chat when order context arrives and widget is waiting
   // Covers the timing case where order context arrives after handleOpen has already run
   useEffect(() => {
-    if (!orderContext || !settings || widgetState !== "pre-chat") return;
+    if (!orderContext || !settings) return;
+    // Only auto-start from pre-chat or conversation-list states
+    if (widgetState !== "pre-chat" && widgetState !== "conversation-list")
+      return;
     const ctx = orderContext;
     orderContextRef.current = null;
     setOrderContext(null);
 
-    // If there's an existing conversation, send order message to it instead of silently dropping
-    const savedConv = localStorage.getItem(`dramac_chat_conv_${siteId}`);
-    const savedVis = localStorage.getItem(`dramac_chat_visitor_${siteId}`);
-    if (savedConv && savedVis) {
-      setConversationId(savedConv);
+    // Check if we already have a conversation for this specific order
+    const existingConvId = findConvForOrder(ctx.orderNumber);
+    const savedVis = localStorage.getItem(VISITOR_KEY);
+    if (existingConvId && savedVis) {
+      setConversationId(existingConvId);
       setVisitorId(savedVis);
+      setMessages([]);
+      openedAsResolvedRef.current = false; // Order linking always expects active conv
       setWidgetState("chat");
-      sendOrderMessageToExistingConversation(savedConv, savedVis, ctx);
       return;
     }
+
+    // No existing conversation for this order — create new one
     handleStartChat({
       email: ctx.email,
       message: `Hi, I just placed order ${ctx.orderNumber} and need help with payment.`,
@@ -529,8 +611,8 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
     widgetState,
     settings,
     handleStartChat,
-    sendOrderMessageToExistingConversation,
-    siteId,
+    findConvForOrder,
+    VISITOR_KEY,
   ]);
 
   // Handle sending message
@@ -663,21 +745,64 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
     setWidgetState("launcher");
   }, []);
 
-  // Handle end chat — show rating if enabled, then allow new conversation
+  // Handle end chat — show rating if enabled, then return to conversation list
   const handleEndChat = useCallback(() => {
     if (settings?.enableSatisfactionRating) {
       setWidgetState("rating");
     } else {
-      // Clear session so visitor can start a new conversation
-      localStorage.removeItem(`dramac_chat_conv_${siteId}`);
-      localStorage.removeItem(`dramac_chat_visitor_${siteId}`);
+      // Return to conversation list (not pre-chat) — visitor can pick another convo
       setConversationId(null);
-      setVisitorId(null);
       setMessages([]);
       setUnreadCount(0);
+      const savedVis = localStorage.getItem(VISITOR_KEY);
+      if (savedVis) {
+        fetchConversationList(savedVis);
+        setWidgetState("conversation-list");
+      } else {
+        setWidgetState("pre-chat");
+      }
+    }
+  }, [settings?.enableSatisfactionRating, VISITOR_KEY, fetchConversationList]);
+
+  // Handle selecting a conversation from the list
+  const handleSelectConversation = useCallback(
+    (convId: string) => {
+      // Check if this conversation is already resolved/closed (viewing history)
+      const conv = conversationList.find((c) => c.id === convId);
+      openedAsResolvedRef.current =
+        conv?.status === "resolved" || conv?.status === "closed";
+
+      setConversationId(convId);
+      setMessages([]);
+      setUnreadCount(0);
+      setWidgetState("chat");
+    },
+    [conversationList],
+  );
+
+  // Handle going back to conversation list from chat
+  const handleBackToList = useCallback(() => {
+    setConversationId(null);
+    setMessages([]);
+    setIsAgentTyping(false);
+    setTypingAgentName(null);
+    const savedVis = localStorage.getItem(VISITOR_KEY);
+    if (savedVis) {
+      fetchConversationList(savedVis);
+      setWidgetState("conversation-list");
+    } else {
       setWidgetState("pre-chat");
     }
-  }, [settings?.enableSatisfactionRating, siteId]);
+  }, [VISITOR_KEY, fetchConversationList]);
+
+  // Handle "New Chat" from conversation list
+  const handleNewChat = useCallback(() => {
+    if (settings?.preChatEnabled) {
+      setWidgetState("pre-chat");
+    } else {
+      handleStartChat({});
+    }
+  }, [settings?.preChatEnabled, handleStartChat]);
 
   // Handle offline form submission
   const handleOfflineSubmit = useCallback(
@@ -709,17 +834,36 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
           (data.conversation.status === "resolved" ||
             data.conversation.status === "closed")
         ) {
+          // If the user explicitly opened a resolved conversation from history,
+          // don't auto-navigate away — they're reading old messages
+          if (openedAsResolvedRef.current) return;
+
+          // Purge stale entry from localStorage map so we don't route here again
+          try {
+            const map = getConvMap();
+            const staleKey = Object.keys(map).find(
+              (k) => map[k] === conversationId,
+            );
+            if (staleKey) {
+              delete map[staleKey];
+              localStorage.setItem(CONV_MAP_KEY, JSON.stringify(map));
+            }
+          } catch {}
+
           if (!data.conversation.rating && settings?.enableSatisfactionRating) {
             setWidgetState("rating");
           } else {
-            // Clear session so visitor can start a new chat
-            localStorage.removeItem(`dramac_chat_conv_${siteId}`);
-            localStorage.removeItem(`dramac_chat_visitor_${siteId}`);
+            // Return to conversation list
             setConversationId(null);
-            setVisitorId(null);
             setMessages([]);
             setUnreadCount(0);
-            setWidgetState("pre-chat");
+            const savedVis = localStorage.getItem(VISITOR_KEY);
+            if (savedVis) {
+              fetchConversationList(savedVis);
+              setWidgetState("conversation-list");
+            } else {
+              setWidgetState("pre-chat");
+            }
           }
         }
       } catch {}
@@ -732,7 +876,10 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
     conversationId,
     visitorId,
     settings?.enableSatisfactionRating,
-    siteId,
+    VISITOR_KEY,
+    CONV_MAP_KEY,
+    getConvMap,
+    fetchConversationList,
   ]);
 
   // Auto-clear error after 5 seconds
@@ -768,16 +915,11 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
                 if (!data.settings) throw new Error("No settings");
                 setSettings(data.settings);
                 setDepartments(data.departments || []);
-                const savedConv = localStorage.getItem(
-                  `dramac_chat_conv_${siteId}`,
-                );
-                const savedVis = localStorage.getItem(
-                  `dramac_chat_visitor_${siteId}`,
-                );
-                if (savedConv && savedVis) {
-                  setConversationId(savedConv);
+                const savedVis = localStorage.getItem(VISITOR_KEY);
+                if (savedVis) {
                   setVisitorId(savedVis);
-                  setWidgetState("chat");
+                  fetchConversationList(savedVis);
+                  setWidgetState("conversation-list");
                 } else {
                   setWidgetState("pre-chat");
                 }
@@ -866,6 +1008,17 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
         />
       )}
 
+      {widgetState === "conversation-list" && (
+        <WidgetConversationList
+          settings={settings}
+          conversations={conversationList}
+          isLoading={isListLoading}
+          onSelectConversation={handleSelectConversation}
+          onNewChat={handleNewChat}
+          onClose={handleClose}
+        />
+      )}
+
       {widgetState === "pre-chat" && (
         <WidgetPreChatForm
           settings={settings}
@@ -886,6 +1039,7 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
             settings.enableFileUploads ? handleFileUpload : undefined
           }
           onEndChat={handleEndChat}
+          onBackToList={handleBackToList}
           onClose={handleClose}
         />
       )}
@@ -895,14 +1049,17 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
           settings={settings}
           onSubmit={handleRating}
           onClose={() => {
-            // After rating (or skipping), clear session for new conversation
-            localStorage.removeItem(`dramac_chat_conv_${siteId}`);
-            localStorage.removeItem(`dramac_chat_visitor_${siteId}`);
+            // After rating (or skipping), return to conversation list
             setConversationId(null);
-            setVisitorId(null);
             setMessages([]);
             setUnreadCount(0);
-            setWidgetState("pre-chat");
+            const savedVis = localStorage.getItem(VISITOR_KEY);
+            if (savedVis) {
+              fetchConversationList(savedVis);
+              setWidgetState("conversation-list");
+            } else {
+              setWidgetState("pre-chat");
+            }
           }}
         />
       )}

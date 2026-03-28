@@ -79,6 +79,21 @@ const COLOR_MAP: Record<string, string> = {
   grey: "#6b7280",
 };
 
+/** Check if a hex color is light (luminance > 0.45) for smart contrast */
+function isLightColor(hex: string): boolean {
+  const clean = hex.replace(/^#/, "");
+  const expanded = clean.length === 3
+    ? clean.split("").map(c => c + c).join("")
+    : clean;
+  if (expanded.length !== 6) return false;
+  const r = parseInt(expanded.slice(0, 2), 16) / 255;
+  const g = parseInt(expanded.slice(2, 4), 16) / 255;
+  const b = parseInt(expanded.slice(4, 6), 16) / 255;
+  const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  const lum = 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+  return lum > 0.45;
+}
+
 // ============================================================================
 // HELPERS
 // ============================================================================
@@ -455,7 +470,7 @@ export function MobileQuickView({
                                     <Check
                                       className={cn(
                                         "h-4 w-4",
-                                        colorHex === "#ffffff"
+                                        colorHex && isLightColor(colorHex)
                                           ? "text-black"
                                           : "text-white",
                                       )}
