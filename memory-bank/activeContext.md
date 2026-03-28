@@ -1,10 +1,46 @@
 # Active Context
 
-## Current Focus: E-Commerce Dark/Light Theme Intelligence
+## Current Focus: CategoriesPageBlock + Dark Mode Polish
 
-### Status: COMPLETE — TypeScript 0 errors, ready to deploy
+### Status: COMPLETE — TypeScript 0 errors, committed & pushed
 
-### What Was Done (This Session): Smart Dark/Light Mode for E-Commerce Storefront
+### What Was Done (This Session)
+
+#### 1. New CategoriesPageBlock Component
+
+**Problem:** Every time AI generates an e-commerce site, there was no dedicated categories browsing page. Category infrastructure existed (types, hooks, API, CategoryHeroBlock for individual category pages, CategoryNavBlock for navigation menus) but no full-page grid of ALL categories.
+
+**Solution:** Built `CategoriesPageBlock.tsx` — full-page browsable category grid with:
+
+- Grid and list layout toggle
+- Search/filter categories
+- Responsive columns (1 on mobile → 2 on tablet → 3-4 on desktop)
+- Subcategory chips under each parent category card
+- Category images with fallback icons
+- Product count display
+- Loading/error/empty states
+- All semantic Tailwind classes (bg-card, text-foreground, bg-muted, etc.) — dark mode ready from day one
+
+**Registration:** Added `EcommerceCategoriesPage` to studio component registry in `studio/index.ts`
+
+**AI Generator Updates:**
+
+- `industry-templates.ts`: Added `/categories` as required page (priority 3) for e-commerce sites
+- `prompts.ts`: Added `EcommerceCategoriesPage` to the AI's component list + updated module awareness to ALWAYS create /categories page
+- `configurator.ts`: Auto-configures EcommerceCategoriesPage on /categories route
+
+#### 2. Dark Mode Contrast Fixes
+
+**Problem:** "Sign in for faster checkout" section in CheckoutPageBlock used `bg-primary/5` and `border-primary/20` — raw Tailwind opacity modifiers that bypass the brand-colors.ts derivation system entirely. On dark backgrounds with dark primary colors, these produce invisible elements.
+
+**Fixes Applied:**
+
+- **CheckoutPageBlock.tsx**: Replaced `border-primary/20 bg-primary/5` → `border-border bg-muted` for sign-in prompt. Changed User icon from `text-primary` → `text-foreground` for reliable contrast.
+- **CategoryHeroBlock.tsx**: Replaced `from-gray-100 to-gray-50` gradient → `bg-muted` for no-image fallback (was invisible on dark backgrounds).
+
+**Pattern Note:** Remaining `bg-primary/5` and `bg-primary/10` usages in the codebase are ACCEPTABLE — they serve as subtle selected-state fills paired with full-opacity `border-primary` which provides the actual visual cue. Hover-only `hover:border-primary/50` is also fine as a subtle accent effect.
+
+### What Was Done (Previous Session): Smart Dark/Light Mode for E-Commerce Storefront
 
 **Problem:** Sites with dark backgrounds had invisible text, white buttons with white text, and broken surface colors. The brand color derivation system assumed all backgrounds were light.
 
@@ -42,6 +78,7 @@
 ### Architecture Insight
 
 The brand color pipeline: `site.settings` → `extractBrandSource()` → `resolveBrandColors()` → `BrandColorPalette` → BOTH:
+
 1. `injectBrandColors()` — per-component prop injection (100+ prop mappings)
 2. `generateBrandCSSVars()` — CSS variable override on `.studio-renderer` wrapper
 

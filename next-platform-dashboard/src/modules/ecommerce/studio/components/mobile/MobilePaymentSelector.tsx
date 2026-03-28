@@ -1,17 +1,17 @@
 /**
  * MobilePaymentSelector - Touch-friendly payment method selection
- * 
+ *
  * Phase ECOM-31: Mobile Checkout Flow
- * 
+ *
  * Features:
  * - Large touch targets (56px minimum)
  * - Clear visual selection state
  * - Support for saved cards and new payment methods
  */
-'use client'
+"use client";
 
-import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Banknote,
   Building2,
@@ -21,66 +21,75 @@ import {
   CreditCard,
   Plus,
   Wallet,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { useHapticFeedback } from '../../../hooks/useHapticFeedback'
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useHapticFeedback } from "../../../hooks/useHapticFeedback";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-export type PaymentMethodType = 'card' | 'paypal' | 'apple_pay' | 'google_pay' | 'bank' | 'new'
+export type PaymentMethodType =
+  | "card"
+  | "paypal"
+  | "apple_pay"
+  | "google_pay"
+  | "bank"
+  | "new";
 
 export interface PaymentMethod {
-  id: string
-  type: PaymentMethodType
-  label: string
-  description?: string
-  icon?: React.ReactNode
-  isDefault?: boolean
-  lastFour?: string
-  expiryMonth?: number
-  expiryYear?: number
-  brand?: string
+  id: string;
+  type: PaymentMethodType;
+  label: string;
+  description?: string;
+  icon?: React.ReactNode;
+  isDefault?: boolean;
+  lastFour?: string;
+  expiryMonth?: number;
+  expiryYear?: number;
+  brand?: string;
 }
 
 export interface MobilePaymentSelectorProps {
-  methods: PaymentMethod[]
-  selectedMethodId: string | null
-  onSelect: (methodId: string) => void
-  onAddNew?: () => void
-  showAddNew?: boolean
-  disabled?: boolean
-  className?: string
+  methods: PaymentMethod[];
+  selectedMethodId: string | null;
+  onSelect: (methodId: string) => void;
+  onAddNew?: () => void;
+  showAddNew?: boolean;
+  disabled?: boolean;
+  className?: string;
 }
 
 // ============================================================================
 // HELPERS
 // ============================================================================
 
-function getPaymentIcon(type: PaymentMethodType, brand?: string): React.ReactNode {
+function getPaymentIcon(
+  type: PaymentMethodType,
+  brand?: string,
+): React.ReactNode {
   switch (type) {
-    case 'paypal':
-      return <Wallet className="h-5 w-5" />
-    case 'apple_pay':
+    case "paypal":
+      return <Wallet className="h-5 w-5" />;
+    case "apple_pay":
       return (
         <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
           <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
         </svg>
-      )
-    case 'google_pay':
+      );
+    case "google_pay":
       return (
         <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
         </svg>
-      )
-    case 'bank':
-      return <Building2 className="h-5 w-5" />
-    case 'new':
-      return <Plus className="h-5 w-5" />
-    case 'card':
+      );
+    case "bank":
+      return <Building2 className="h-5 w-5" />;
+    case "new":
+      return <Plus className="h-5 w-5" />;
+    case "card":
     default:
-      return <CreditCard className="h-5 w-5" />
+      return <CreditCard className="h-5 w-5" />;
   }
 }
 
@@ -88,16 +97,16 @@ function getCardBrandLogo(brand?: string): React.ReactNode {
   // Simple text-based brand indicator
   // Could be replaced with SVG logos
   switch (brand?.toLowerCase()) {
-    case 'visa':
-      return <span className="text-xs font-bold text-blue-600">VISA</span>
-    case 'mastercard':
-      return <span className="text-xs font-bold text-red-500">MC</span>
-    case 'amex':
-      return <span className="text-xs font-bold text-blue-400">AMEX</span>
-    case 'discover':
-      return <span className="text-xs font-bold text-orange-500">DISC</span>
+    case "visa":
+      return <span className="text-xs font-bold text-blue-600">VISA</span>;
+    case "mastercard":
+      return <span className="text-xs font-bold text-red-500">MC</span>;
+    case "amex":
+      return <span className="text-xs font-bold text-blue-400">AMEX</span>;
+    case "discover":
+      return <span className="text-xs font-bold text-orange-500">DISC</span>;
     default:
-      return null
+      return null;
   }
 }
 
@@ -114,32 +123,32 @@ export function MobilePaymentSelector({
   disabled = false,
   className,
 }: MobilePaymentSelectorProps) {
-  const { trigger } = useHapticFeedback()
+  const { trigger } = useHapticFeedback();
 
   const handleSelect = (methodId: string) => {
-    if (disabled) return
-    trigger('selection')
-    onSelect(methodId)
-  }
+    if (disabled) return;
+    trigger("selection");
+    onSelect(methodId);
+  };
 
   const handleAddNew = () => {
-    if (disabled || !onAddNew) return
-    trigger('light')
-    onAddNew()
-  }
+    if (disabled || !onAddNew) return;
+    trigger("light");
+    onAddNew();
+  };
 
   // Separate gateway vs manual methods for grouping
-  const gatewayMethods = methods.filter((m) => !m.id.startsWith('manual'))
-  const manualMethods = methods.filter((m) => m.id.startsWith('manual'))
-  const isManualSelected = selectedMethodId?.startsWith('manual') ?? false
-  const [manualExpanded, setManualExpanded] = useState(isManualSelected)
+  const gatewayMethods = methods.filter((m) => !m.id.startsWith("manual"));
+  const manualMethods = methods.filter((m) => m.id.startsWith("manual"));
+  const isManualSelected = selectedMethodId?.startsWith("manual") ?? false;
+  const [manualExpanded, setManualExpanded] = useState(isManualSelected);
 
   useEffect(() => {
-    if (isManualSelected) setManualExpanded(true)
-  }, [isManualSelected])
+    if (isManualSelected) setManualExpanded(true);
+  }, [isManualSelected]);
 
   const renderMethodButton = (method: PaymentMethod) => {
-    const isSelected = method.id === selectedMethodId
+    const isSelected = method.id === selectedMethodId;
 
     return (
       <motion.button
@@ -149,74 +158,75 @@ export function MobilePaymentSelector({
         disabled={disabled}
         whileTap={{ scale: 0.98 }}
         className={cn(
-          'w-full flex items-center gap-4 p-4 rounded-lg',
-          'min-h-[56px]',
-          'border-2 transition-colors duration-200',
-          'text-left',
+          "w-full flex items-center gap-4 p-4 rounded-lg",
+          "min-h-[56px]",
+          "border-2 transition-colors duration-200",
+          "text-left",
           isSelected
-            ? 'border-primary bg-primary/5'
-            : 'border-border hover:border-primary/50 bg-background',
-          disabled && 'opacity-50 cursor-not-allowed'
+            ? "border-primary bg-primary/5"
+            : "border-border hover:border-primary/50 bg-background",
+          disabled && "opacity-50 cursor-not-allowed",
         )}
       >
-            {/* Icon */}
-            <div
-              className={cn(
-                'flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center',
-                isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted'
-              )}
-            >
-              {method.icon || getPaymentIcon(method.type, method.brand)}
-            </div>
+        {/* Icon */}
+        <div
+          className={cn(
+            "flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center",
+            isSelected ? "bg-primary text-primary-foreground" : "bg-muted",
+          )}
+        >
+          {method.icon || getPaymentIcon(method.type, method.brand)}
+        </div>
 
-            {/* Content */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="font-medium text-foreground truncate">
-                  {method.label}
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-foreground truncate">
+              {method.label}
+            </span>
+            {method.brand && getCardBrandLogo(method.brand)}
+            {method.isDefault && (
+              <span className="text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground">
+                Default
+              </span>
+            )}
+          </div>
+          {method.description && (
+            <p className="text-sm text-muted-foreground truncate">
+              {method.description}
+            </p>
+          )}
+          {method.lastFour && (
+            <p className="text-sm text-muted-foreground">
+              •••• {method.lastFour}
+              {method.expiryMonth && method.expiryYear && (
+                <span className="ml-2">
+                  {String(method.expiryMonth).padStart(2, "0")}/
+                  {String(method.expiryYear).slice(-2)}
                 </span>
-                {method.brand && getCardBrandLogo(method.brand)}
-                {method.isDefault && (
-                  <span className="text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground">
-                    Default
-                  </span>
-                )}
-              </div>
-              {method.description && (
-                <p className="text-sm text-muted-foreground truncate">
-                  {method.description}
-                </p>
               )}
-              {method.lastFour && (
-                <p className="text-sm text-muted-foreground">
-                  •••• {method.lastFour}
-                  {method.expiryMonth && method.expiryYear && (
-                    <span className="ml-2">
-                      {String(method.expiryMonth).padStart(2, '0')}/{String(method.expiryYear).slice(-2)}
-                    </span>
-                  )}
-                </p>
-              )}
-            </div>
+            </p>
+          )}
+        </div>
 
-            {/* Selection indicator */}
-            <div
-              className={cn(
-                'flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center',
-                'transition-colors duration-200',
-                isSelected
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-muted-foreground/30'
-              )}
-            >
-              {isSelected && <Check className="h-3.5 w-3.5" />}
-            </div>
-          </motion.button>
-    )
-  }
+        {/* Selection indicator */}
+        <div
+          className={cn(
+            "flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center",
+            "transition-colors duration-200",
+            isSelected
+              ? "border-primary bg-primary text-primary-foreground"
+              : "border-muted-foreground/30",
+          )}
+        >
+          {isSelected && <Check className="h-3.5 w-3.5" />}
+        </div>
+      </motion.button>
+    );
+  };
 
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn("space-y-2", className)}>
       {/* Gateway payment methods */}
       {gatewayMethods.map(renderMethodButton)}
 
@@ -227,35 +237,39 @@ export function MobilePaymentSelector({
       {manualMethods.length > 1 && (
         <div
           className={cn(
-            'rounded-lg border-2 overflow-hidden transition-colors duration-200',
-            isManualSelected ? 'border-primary' : 'border-border',
+            "rounded-lg border-2 overflow-hidden transition-colors duration-200",
+            isManualSelected ? "border-primary" : "border-border",
           )}
         >
           {/* Group header */}
           <motion.button
             type="button"
             onClick={() => {
-              trigger('light')
-              setManualExpanded((prev) => !prev)
+              trigger("light");
+              setManualExpanded((prev) => !prev);
             }}
             whileTap={{ scale: 0.98 }}
             className={cn(
-              'w-full flex items-center gap-4 p-4 min-h-[56px] text-left transition-colors duration-200',
-              isManualSelected && 'bg-primary/5',
-              !isManualSelected && 'hover:bg-muted/50',
-              disabled && 'opacity-50 cursor-not-allowed'
+              "w-full flex items-center gap-4 p-4 min-h-[56px] text-left transition-colors duration-200",
+              isManualSelected && "bg-primary/5",
+              !isManualSelected && "hover:bg-muted/50",
+              disabled && "opacity-50 cursor-not-allowed",
             )}
           >
             <div
               className={cn(
-                'flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center',
-                isManualSelected ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                "flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center",
+                isManualSelected
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted",
               )}
             >
               <Banknote className="h-5 w-5" />
             </div>
             <div className="flex-1 min-w-0">
-              <span className="font-medium text-foreground">Manual Payment</span>
+              <span className="font-medium text-foreground">
+                Manual Payment
+              </span>
               <p className="text-sm text-muted-foreground truncate">
                 {isManualSelected
                   ? manualMethods.find((m) => m.id === selectedMethodId)?.label
@@ -274,14 +288,14 @@ export function MobilePaymentSelector({
             {manualExpanded && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
+                animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden border-t border-border"
               >
                 <div className="divide-y divide-border">
                   {manualMethods.map((method) => {
-                    const isSelected = method.id === selectedMethodId
+                    const isSelected = method.id === selectedMethodId;
                     return (
                       <motion.button
                         key={method.id}
@@ -290,11 +304,11 @@ export function MobilePaymentSelector({
                         disabled={disabled}
                         whileTap={{ scale: 0.98 }}
                         className={cn(
-                          'w-full flex items-center gap-4 p-4 pl-8 min-h-[48px] text-left',
-                          'transition-colors duration-200',
-                          isSelected && 'bg-primary/5',
-                          !isSelected && 'hover:bg-muted/50',
-                          disabled && 'opacity-50 cursor-not-allowed'
+                          "w-full flex items-center gap-4 p-4 pl-8 min-h-[48px] text-left",
+                          "transition-colors duration-200",
+                          isSelected && "bg-primary/5",
+                          !isSelected && "hover:bg-muted/50",
+                          disabled && "opacity-50 cursor-not-allowed",
                         )}
                       >
                         <div className="flex-1 min-w-0">
@@ -309,17 +323,17 @@ export function MobilePaymentSelector({
                         </div>
                         <div
                           className={cn(
-                            'flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center',
-                            'transition-colors duration-200',
+                            "flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center",
+                            "transition-colors duration-200",
                             isSelected
-                              ? 'border-primary bg-primary text-primary-foreground'
-                              : 'border-muted-foreground/30'
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-muted-foreground/30",
                           )}
                         >
                           {isSelected && <Check className="h-3.5 w-3.5" />}
                         </div>
                       </motion.button>
-                    )
+                    );
                   })}
                 </div>
               </motion.div>
@@ -336,12 +350,12 @@ export function MobilePaymentSelector({
           disabled={disabled}
           whileTap={{ scale: 0.98 }}
           className={cn(
-            'w-full flex items-center gap-4 p-4 rounded-lg',
-            'min-h-[56px]',
-            'border-2 border-dashed border-muted-foreground/30',
-            'hover:border-primary/50 transition-colors duration-200',
-            'text-muted-foreground hover:text-foreground',
-            disabled && 'opacity-50 cursor-not-allowed'
+            "w-full flex items-center gap-4 p-4 rounded-lg",
+            "min-h-[56px]",
+            "border-2 border-dashed border-muted-foreground/30",
+            "hover:border-primary/50 transition-colors duration-200",
+            "text-muted-foreground hover:text-foreground",
+            disabled && "opacity-50 cursor-not-allowed",
           )}
         >
           <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
@@ -351,7 +365,7 @@ export function MobilePaymentSelector({
         </motion.button>
       )}
     </div>
-  )
+  );
 }
 
-export default MobilePaymentSelector
+export default MobilePaymentSelector;

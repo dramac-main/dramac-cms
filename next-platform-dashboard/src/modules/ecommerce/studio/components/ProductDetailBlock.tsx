@@ -9,8 +9,8 @@
  */
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useMemo, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -80,9 +80,8 @@ interface ProductDetailBlockProps {
 // HELPERS
 // =============================================================================
 
-function getSlugFromUrl(): string {
-  if (typeof window === "undefined") return "";
-  const parts = window.location.pathname.split("/");
+function getSlugFromPath(pathname: string): string {
+  const parts = pathname.split("/");
   // URL: /products/[slug] → last segment
   return parts[parts.length - 1] || "";
 }
@@ -135,7 +134,8 @@ export function ProductDetailBlock({
 }: ProductDetailBlockProps) {
   const storefront = useStorefront();
   const effectiveSiteId = _siteId || siteId || storefront?.siteId || "";
-  const slug = productSlug || getSlugFromUrl();
+  const pathname = usePathname();
+  const slug = productSlug || getSlugFromPath(pathname);
 
   const { product, variants, options, relatedProducts, isLoading, error } =
     useStorefrontProduct(effectiveSiteId, slug);
@@ -179,6 +179,15 @@ export function ProductDetailBlock({
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+
+  // Reset UI state when navigating between products (slug changes)
+  useEffect(() => {
+    setSelectedImage(0);
+    setQuantity(1);
+    setSelectedVariant(null);
+    setIsWishlisted(false);
+    setLinkCopied(false);
+  }, [slug]);
 
   // Computed values
   const images = product?.images?.length
@@ -224,7 +233,7 @@ export function ProductDetailBlock({
       if (!isProductInCart) {
         await addItem(product.id, selectedVariant || null, quantity);
       }
-      router.push('/checkout');
+      router.push("/checkout");
     } finally {
       setIsBuyingNow(false);
     }

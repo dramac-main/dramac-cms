@@ -623,14 +623,15 @@ export async function applyPublicDiscountToCart(
   cartId: string,
   code: string,
   subtotal: number,
+  customerEmail?: string,
 ): Promise<{ success: boolean; discountAmount: number; error?: string }> {
   try {
     const supabase = getPublicClient();
 
-    // Get cart to find site_id
+    // Get cart to find site_id and item count
     const { data: cart } = await supabase
       .from(`${TABLE_PREFIX}_carts`)
-      .select("site_id")
+      .select("site_id, items:mod_ecommod01_cart_items(quantity)")
       .eq("id", cartId)
       .single();
 
@@ -692,6 +693,37 @@ export async function applyPublicDiscountToCart(
       };
     }
 
+    // Check minimum quantity
+    const itemCount = (cart.items as { quantity: number }[])?.reduce(
+      (sum: number, i: { quantity: number }) => sum + (i.quantity || 0),
+      0,
+    ) || 0;
+    if (discount.minimum_quantity && itemCount < discount.minimum_quantity) {
+      return {
+        success: false,
+        discountAmount: 0,
+        error: `Minimum ${discount.minimum_quantity} items required`,
+      };
+    }
+
+    // Check once per customer
+    if (discount.once_per_customer && customerEmail) {
+      const { count } = await supabase
+        .from(`${TABLE_PREFIX}_orders`)
+        .select("id", { count: "exact" })
+        .eq("site_id", cart.site_id)
+        .eq("customer_email", customerEmail)
+        .eq("discount_code", code.toUpperCase());
+
+      if (count && count > 0) {
+        return {
+          success: false,
+          discountAmount: 0,
+          error: "You have already used this discount code",
+        };
+      }
+    }
+
     // Calculate discount amount
     let discountAmount = 0;
     if (discount.type === "percentage") {
@@ -699,6 +731,7 @@ export async function applyPublicDiscountToCart(
     } else if (discount.type === "fixed_amount") {
       discountAmount = Math.min(discount.value, subtotal);
     }
+    // free_shipping: discount_amount stays 0, shipping is zeroed at checkout
 
     // Update cart with discount
     await supabase
@@ -706,6 +739,7 @@ export async function applyPublicDiscountToCart(
       .update({
         discount_code: code.toUpperCase(),
         discount_amount: discountAmount,
+        discount_type: discount.type,
       })
       .eq("id", cartId);
 
@@ -726,7 +760,7 @@ export async function removePublicDiscountFromCart(
   const supabase = getPublicClient();
   await supabase
     .from(`${TABLE_PREFIX}_carts`)
-    .update({ discount_code: null, discount_amount: 0 })
+    .update({ discount_code: null, discount_amount: 0, discount_type: null })
     .eq("id", cartId);
 }
 

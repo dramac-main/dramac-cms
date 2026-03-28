@@ -85,6 +85,11 @@ function calculateLocalTotals(
     }
   }
 
+  // Free shipping discount: override shipping to 0
+  if (cart.discount_type === "free_shipping" && cart.discount_code) {
+    shipping = 0;
+  }
+
   const total = taxableAmount + tax + shipping;
   const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
 

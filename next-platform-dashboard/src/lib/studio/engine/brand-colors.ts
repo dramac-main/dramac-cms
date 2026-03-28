@@ -245,9 +245,9 @@ export function resolveBrandColors(
         muted: lighten(background, 0.08), // Slightly lighter than dark bg
         mutedForeground: darken(effectiveForeground, 0.3), // Dimmed light text
         border: lighten(background, 0.15), // Subtle visible border
-        divider: lighten(background, 0.10), // Even subtler
+        divider: lighten(background, 0.1), // Even subtler
         cardBorder: lighten(background, 0.12), // Card border
-        inputBorder: lighten(background, 0.20), // Input border (more visible)
+        inputBorder: lighten(background, 0.2), // Input border (more visible)
       }
     : {
         muted: lighten(foreground, 0.93), // Very light gray

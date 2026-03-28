@@ -434,7 +434,11 @@ export function useCheckout(): UseCheckoutResult {
 
   // Calculate totals including shipping
   const totals = useMemo((): CartTotals => {
-    const shippingAmount = state.shippingMethod?.price ?? 0;
+    let shippingAmount = state.shippingMethod?.price ?? 0;
+    // Free shipping discount: override shipping to 0
+    if (cart?.discount_type === "free_shipping" && cart?.discount_code) {
+      shippingAmount = 0;
+    }
     return {
       subtotal: safeCartTotals.subtotal,
       discount: safeCartTotals.discount,
@@ -447,7 +451,7 @@ export function useCheckout(): UseCheckoutResult {
         shippingAmount,
       itemCount: safeCartTotals.itemCount,
     };
-  }, [safeCartTotals, state.shippingMethod]);
+  }, [safeCartTotals, state.shippingMethod, cart?.discount_type, cart?.discount_code]);
 
   // Validation
   const validation = useMemo((): CheckoutValidation => {

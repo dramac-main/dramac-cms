@@ -1117,6 +1117,7 @@ export async function applyDiscountToCart(
   } else if (result.discount.type === "fixed_amount") {
     discountAmount = Math.min(result.discount.value, subtotal);
   }
+  // free_shipping: discount_amount stays 0, shipping is zeroed at checkout
 
   // Update cart with discount
   await supabase
@@ -1124,6 +1125,7 @@ export async function applyDiscountToCart(
     .update({
       discount_code: code.toUpperCase(),
       discount_amount: discountAmount,
+      discount_type: result.discount.type,
     })
     .eq("id", cartId);
 
@@ -1138,6 +1140,7 @@ export async function removeDiscountFromCart(cartId: string): Promise<void> {
     .update({
       discount_code: null,
       discount_amount: 0,
+      discount_type: null,
     })
     .eq("id", cartId);
 }
@@ -1863,6 +1866,7 @@ export async function validateDiscountCode(
   code: string,
   subtotal: number,
   customerId?: string,
+  itemCount?: number,
 ): Promise<{ valid: boolean; discount?: Discount; error?: string }> {
   const supabase = await getModuleClient();
 
@@ -1895,6 +1899,16 @@ export async function validateDiscountCode(
     return {
       valid: false,
       error: `Minimum order of ${formatCurrency(discount.minimum_order_amount / 100)} required`,
+    };
+  }
+  if (
+    discount.minimum_quantity &&
+    itemCount !== undefined &&
+    itemCount < discount.minimum_quantity
+  ) {
+    return {
+      valid: false,
+      error: `Minimum ${discount.minimum_quantity} items required`,
     };
   }
 

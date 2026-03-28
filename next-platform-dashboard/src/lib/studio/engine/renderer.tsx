@@ -170,9 +170,13 @@ function ComponentRenderer({
         <section key={component.id} className="py-16 px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
             {title && (
-              <h2 className="text-3xl font-bold text-foreground mb-4">{title}</h2>
+              <h2 className="text-3xl font-bold text-foreground mb-4">
+                {title}
+              </h2>
             )}
-            {subtitle && <p className="text-lg text-muted-foreground">{subtitle}</p>}
+            {subtitle && (
+              <p className="text-lg text-muted-foreground">{subtitle}</p>
+            )}
           </div>
         </section>
       );

@@ -194,6 +194,7 @@ export interface Cart {
 
   discount_code: string | null;
   discount_amount: number;
+  discount_type: "percentage" | "fixed_amount" | "free_shipping" | null;
   currency: string;
   status: CartStatus;
 

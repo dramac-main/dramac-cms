@@ -19,23 +19,69 @@ export const industryTemplates: IndustryTemplate[] = [
   {
     id: "restaurant",
     name: "Restaurant & Food Service",
-    industries: ["restaurant", "cafe", "bakery", "bar", "food-truck", "catering", "bistro", "pizzeria"],
+    industries: [
+      "restaurant",
+      "cafe",
+      "bakery",
+      "bar",
+      "food-truck",
+      "catering",
+      "bistro",
+      "pizzeria",
+    ],
     recommendedPages: [
       { name: "Home", slug: "/", priority: 1, required: true },
       { name: "Menu", slug: "/menu", priority: 2, required: true },
       { name: "About", slug: "/about", priority: 3, required: false },
-      { name: "Reservations", slug: "/reservations", priority: 4, required: false },
+      {
+        name: "Reservations",
+        slug: "/reservations",
+        priority: 4,
+        required: false,
+      },
       { name: "Contact", slug: "/contact", priority: 5, required: true },
       { name: "Gallery", slug: "/gallery", priority: 6, required: false },
     ],
     componentPreferences: [
-      { section: "hero", preferred: ["Hero"], variant: "image-background", config: { showCta: true, ctaText: "View Menu" } },
-      { section: "menu", preferred: ["Tabs", "Accordion"], config: { allowCategoryFiltering: true } },
-      { section: "gallery", preferred: ["Gallery"], variant: "masonry", config: { enableLightbox: true } },
-      { section: "hours", preferred: ["Stats", "Card"], config: { showBusinessHours: true } },
-      { section: "testimonials", preferred: ["Testimonials"], variant: "carousel", config: { showRating: true } },
-      { section: "cta", preferred: ["CTA"], variant: "split", config: { ctaText: "Make a Reservation" } },
-      { section: "location", preferred: ["Map", "Card"], config: { showDirections: true } },
+      {
+        section: "hero",
+        preferred: ["Hero"],
+        variant: "image-background",
+        config: { showCta: true, ctaText: "View Menu" },
+      },
+      {
+        section: "menu",
+        preferred: ["Tabs", "Accordion"],
+        config: { allowCategoryFiltering: true },
+      },
+      {
+        section: "gallery",
+        preferred: ["Gallery"],
+        variant: "masonry",
+        config: { enableLightbox: true },
+      },
+      {
+        section: "hours",
+        preferred: ["Stats", "Card"],
+        config: { showBusinessHours: true },
+      },
+      {
+        section: "testimonials",
+        preferred: ["Testimonials"],
+        variant: "carousel",
+        config: { showRating: true },
+      },
+      {
+        section: "cta",
+        preferred: ["CTA"],
+        variant: "split",
+        config: { ctaText: "Make a Reservation" },
+      },
+      {
+        section: "location",
+        preferred: ["Map", "Card"],
+        config: { showDirections: true },
+      },
     ],
     designTokens: {
       colorMood: "warm",
@@ -45,8 +91,22 @@ export const industryTemplates: IndustryTemplate[] = [
       imagery: "high-quality-food-photos",
     },
     contentGuidelines: [
-      { section: "hero", tips: ["Use appetizing food imagery", "Highlight signature dish or ambiance", "Include opening hours or 'Open Now' badge"] },
-      { section: "menu", tips: ["Include prices", "Mark popular items", "Note dietary options (V, GF, etc.)"] },
+      {
+        section: "hero",
+        tips: [
+          "Use appetizing food imagery",
+          "Highlight signature dish or ambiance",
+          "Include opening hours or 'Open Now' badge",
+        ],
+      },
+      {
+        section: "menu",
+        tips: [
+          "Include prices",
+          "Mark popular items",
+          "Note dietary options (V, GF, etc.)",
+        ],
+      },
     ],
   },
 
@@ -56,10 +116,22 @@ export const industryTemplates: IndustryTemplate[] = [
   {
     id: "law-firm",
     name: "Law Firm & Legal Services",
-    industries: ["law-firm", "attorney", "legal-services", "paralegal", "lawyer", "litigation"],
+    industries: [
+      "law-firm",
+      "attorney",
+      "legal-services",
+      "paralegal",
+      "lawyer",
+      "litigation",
+    ],
     recommendedPages: [
       { name: "Home", slug: "/", priority: 1, required: true },
-      { name: "Practice Areas", slug: "/practice-areas", priority: 2, required: true },
+      {
+        name: "Practice Areas",
+        slug: "/practice-areas",
+        priority: 2,
+        required: true,
+      },
       { name: "Attorneys", slug: "/attorneys", priority: 3, required: true },
       { name: "About", slug: "/about", priority: 4, required: true },
       { name: "Case Results", slug: "/results", priority: 5, required: false },
@@ -67,13 +139,47 @@ export const industryTemplates: IndustryTemplate[] = [
       { name: "Contact", slug: "/contact", priority: 7, required: true },
     ],
     componentPreferences: [
-      { section: "hero", preferred: ["Hero"], variant: "split", config: { tone: "authoritative", showCredentials: true } },
-      { section: "practice-areas", preferred: ["Features", "Card"], variant: "icon-grid", config: { showLearnMore: true } },
-      { section: "team", preferred: ["Team"], variant: "detailed-grid", config: { showCredentials: true, showEducation: true } },
-      { section: "testimonials", preferred: ["Testimonials"], variant: "minimal", config: { anonymize: true } },
-      { section: "trust", preferred: ["TrustBadges", "LogoCloud"], config: { showBarAssociations: true } },
-      { section: "cta", preferred: ["CTA"], variant: "form", config: { ctaText: "Free Consultation" } },
-      { section: "faq", preferred: ["FAQ"], variant: "accordion", config: { groupByCategory: true } },
+      {
+        section: "hero",
+        preferred: ["Hero"],
+        variant: "split",
+        config: { tone: "authoritative", showCredentials: true },
+      },
+      {
+        section: "practice-areas",
+        preferred: ["Features", "Card"],
+        variant: "icon-grid",
+        config: { showLearnMore: true },
+      },
+      {
+        section: "team",
+        preferred: ["Team"],
+        variant: "detailed-grid",
+        config: { showCredentials: true, showEducation: true },
+      },
+      {
+        section: "testimonials",
+        preferred: ["Testimonials"],
+        variant: "minimal",
+        config: { anonymize: true },
+      },
+      {
+        section: "trust",
+        preferred: ["TrustBadges", "LogoCloud"],
+        config: { showBarAssociations: true },
+      },
+      {
+        section: "cta",
+        preferred: ["CTA"],
+        variant: "form",
+        config: { ctaText: "Free Consultation" },
+      },
+      {
+        section: "faq",
+        preferred: ["FAQ"],
+        variant: "accordion",
+        config: { groupByCategory: true },
+      },
     ],
     designTokens: {
       colorMood: "professional",
@@ -83,8 +189,22 @@ export const industryTemplates: IndustryTemplate[] = [
       imagery: "professional-portraits",
     },
     contentGuidelines: [
-      { section: "hero", tips: ["Emphasize experience and track record", "Include trust indicators", "Clear call to consultation"] },
-      { section: "team", tips: ["Include bar admissions", "Education credentials", "Areas of expertise"] },
+      {
+        section: "hero",
+        tips: [
+          "Emphasize experience and track record",
+          "Include trust indicators",
+          "Clear call to consultation",
+        ],
+      },
+      {
+        section: "team",
+        tips: [
+          "Include bar admissions",
+          "Education credentials",
+          "Areas of expertise",
+        ],
+      },
     ],
   },
 
@@ -94,22 +214,62 @@ export const industryTemplates: IndustryTemplate[] = [
   {
     id: "ecommerce",
     name: "E-commerce & Retail",
-    industries: ["ecommerce", "retail", "online-store", "boutique", "fashion", "shop", "store"],
+    industries: [
+      "ecommerce",
+      "retail",
+      "online-store",
+      "boutique",
+      "fashion",
+      "shop",
+      "store",
+    ],
     recommendedPages: [
       { name: "Home", slug: "/", priority: 1, required: true },
       { name: "Shop", slug: "/shop", priority: 2, required: true },
       { name: "Categories", slug: "/categories", priority: 3, required: true },
-      { name: "Collections", slug: "/collections", priority: 4, required: false },
+      {
+        name: "Collections",
+        slug: "/collections",
+        priority: 4,
+        required: false,
+      },
       { name: "About", slug: "/about", priority: 5, required: false },
       { name: "Contact", slug: "/contact", priority: 6, required: true },
     ],
     componentPreferences: [
-      { section: "hero", preferred: ["Hero"], variant: "full-width", config: { showPromotion: true } },
-      { section: "featured", preferred: ["Gallery", "Carousel"], variant: "product-grid", config: { showPrices: true, showQuickAdd: true } },
-      { section: "categories", preferred: ["Features", "Card"], variant: "image-card", config: { linkToCategory: true } },
-      { section: "trust", preferred: ["TrustBadges", "LogoCloud"], config: { showPaymentMethods: true, showShipping: true } },
-      { section: "testimonials", preferred: ["Testimonials", "SocialProof"], config: { showProductReviews: true } },
-      { section: "newsletter", preferred: ["Newsletter", "CTA"], config: { offerDiscount: true } },
+      {
+        section: "hero",
+        preferred: ["Hero"],
+        variant: "full-width",
+        config: { showPromotion: true },
+      },
+      {
+        section: "featured",
+        preferred: ["Gallery", "Carousel"],
+        variant: "product-grid",
+        config: { showPrices: true, showQuickAdd: true },
+      },
+      {
+        section: "categories",
+        preferred: ["Features", "Card"],
+        variant: "image-card",
+        config: { linkToCategory: true },
+      },
+      {
+        section: "trust",
+        preferred: ["TrustBadges", "LogoCloud"],
+        config: { showPaymentMethods: true, showShipping: true },
+      },
+      {
+        section: "testimonials",
+        preferred: ["Testimonials", "SocialProof"],
+        config: { showProductReviews: true },
+      },
+      {
+        section: "newsletter",
+        preferred: ["Newsletter", "CTA"],
+        config: { offerDiscount: true },
+      },
     ],
     designTokens: {
       colorMood: "vibrant",
@@ -119,8 +279,22 @@ export const industryTemplates: IndustryTemplate[] = [
       imagery: "product-lifestyle",
     },
     contentGuidelines: [
-      { section: "hero", tips: ["Highlight current promotion", "Show best-selling products", "Clear shop CTA"] },
-      { section: "trust", tips: ["Payment methods accepted", "Shipping info", "Return policy highlights"] },
+      {
+        section: "hero",
+        tips: [
+          "Highlight current promotion",
+          "Show best-selling products",
+          "Clear shop CTA",
+        ],
+      },
+      {
+        section: "trust",
+        tips: [
+          "Payment methods accepted",
+          "Shipping info",
+          "Return policy highlights",
+        ],
+      },
     ],
   },
 
@@ -130,7 +304,15 @@ export const industryTemplates: IndustryTemplate[] = [
   {
     id: "saas",
     name: "SaaS & Technology",
-    industries: ["saas", "software", "tech-startup", "app", "platform", "tech", "startup"],
+    industries: [
+      "saas",
+      "software",
+      "tech-startup",
+      "app",
+      "platform",
+      "tech",
+      "startup",
+    ],
     recommendedPages: [
       { name: "Home", slug: "/", priority: 1, required: true },
       { name: "Features", slug: "/features", priority: 2, required: true },
@@ -140,13 +322,41 @@ export const industryTemplates: IndustryTemplate[] = [
       { name: "Contact", slug: "/contact", priority: 6, required: true },
     ],
     componentPreferences: [
-      { section: "hero", preferred: ["Hero"], variant: "centered", config: { showProductDemo: true, showSocialProof: true } },
-      { section: "features", preferred: ["Features"], variant: "alternating", config: { showScreenshots: true } },
-      { section: "pricing", preferred: ["Pricing"], variant: "comparison", config: { highlightRecommended: true } },
-      { section: "testimonials", preferred: ["Testimonials", "LogoCloud"], config: { showCompanyLogos: true } },
+      {
+        section: "hero",
+        preferred: ["Hero"],
+        variant: "centered",
+        config: { showProductDemo: true, showSocialProof: true },
+      },
+      {
+        section: "features",
+        preferred: ["Features"],
+        variant: "alternating",
+        config: { showScreenshots: true },
+      },
+      {
+        section: "pricing",
+        preferred: ["Pricing"],
+        variant: "comparison",
+        config: { highlightRecommended: true },
+      },
+      {
+        section: "testimonials",
+        preferred: ["Testimonials", "LogoCloud"],
+        config: { showCompanyLogos: true },
+      },
       { section: "faq", preferred: ["FAQ"], config: { groupByCategory: true } },
-      { section: "cta", preferred: ["CTA"], variant: "centered", config: { ctaText: "Start Free Trial" } },
-      { section: "comparison", preferred: ["ComparisonTable"], config: { compareWithCompetitors: true } },
+      {
+        section: "cta",
+        preferred: ["CTA"],
+        variant: "centered",
+        config: { ctaText: "Start Free Trial" },
+      },
+      {
+        section: "comparison",
+        preferred: ["ComparisonTable"],
+        config: { compareWithCompetitors: true },
+      },
     ],
     designTokens: {
       colorMood: "professional",
@@ -156,8 +366,22 @@ export const industryTemplates: IndustryTemplate[] = [
       imagery: "product-screenshots",
     },
     contentGuidelines: [
-      { section: "hero", tips: ["Value proposition in 6 words or less", "Show product interface", "Social proof (customer count, logos)"] },
-      { section: "pricing", tips: ["Highlight most popular plan", "Show savings for annual", "Feature comparison matrix"] },
+      {
+        section: "hero",
+        tips: [
+          "Value proposition in 6 words or less",
+          "Show product interface",
+          "Social proof (customer count, logos)",
+        ],
+      },
+      {
+        section: "pricing",
+        tips: [
+          "Highlight most popular plan",
+          "Show savings for annual",
+          "Feature comparison matrix",
+        ],
+      },
     ],
   },
 
@@ -167,7 +391,14 @@ export const industryTemplates: IndustryTemplate[] = [
   {
     id: "real-estate",
     name: "Real Estate",
-    industries: ["real-estate", "realtor", "property-management", "mortgage", "property", "agent"],
+    industries: [
+      "real-estate",
+      "realtor",
+      "property-management",
+      "mortgage",
+      "property",
+      "agent",
+    ],
     recommendedPages: [
       { name: "Home", slug: "/", priority: 1, required: true },
       { name: "Listings", slug: "/listings", priority: 2, required: true },
@@ -176,12 +407,40 @@ export const industryTemplates: IndustryTemplate[] = [
       { name: "Contact", slug: "/contact", priority: 5, required: true },
     ],
     componentPreferences: [
-      { section: "hero", preferred: ["Hero"], variant: "search", config: { showPropertySearch: true } },
-      { section: "featured", preferred: ["Gallery", "Carousel"], variant: "property-cards", config: { showPrice: true, showDetails: true } },
-      { section: "agent", preferred: ["Team", "Card"], variant: "agent-profile", config: { showStats: true, showContact: true } },
-      { section: "testimonials", preferred: ["Testimonials"], config: { showPropertySold: true } },
-      { section: "stats", preferred: ["Stats"], config: { showSalesStats: true } },
-      { section: "cta", preferred: ["CTA"], variant: "form", config: { ctaText: "Get a Free Home Valuation" } },
+      {
+        section: "hero",
+        preferred: ["Hero"],
+        variant: "search",
+        config: { showPropertySearch: true },
+      },
+      {
+        section: "featured",
+        preferred: ["Gallery", "Carousel"],
+        variant: "property-cards",
+        config: { showPrice: true, showDetails: true },
+      },
+      {
+        section: "agent",
+        preferred: ["Team", "Card"],
+        variant: "agent-profile",
+        config: { showStats: true, showContact: true },
+      },
+      {
+        section: "testimonials",
+        preferred: ["Testimonials"],
+        config: { showPropertySold: true },
+      },
+      {
+        section: "stats",
+        preferred: ["Stats"],
+        config: { showSalesStats: true },
+      },
+      {
+        section: "cta",
+        preferred: ["CTA"],
+        variant: "form",
+        config: { ctaText: "Get a Free Home Valuation" },
+      },
     ],
     designTokens: {
       colorMood: "professional",
@@ -191,8 +450,18 @@ export const industryTemplates: IndustryTemplate[] = [
       imagery: "property-photos",
     },
     contentGuidelines: [
-      { section: "hero", tips: ["Property search functionality", "Market area highlight", "Professional agent photo"] },
-      { section: "stats", tips: ["Homes sold", "Years of experience", "Average days on market"] },
+      {
+        section: "hero",
+        tips: [
+          "Property search functionality",
+          "Market area highlight",
+          "Professional agent photo",
+        ],
+      },
+      {
+        section: "stats",
+        tips: ["Homes sold", "Years of experience", "Average days on market"],
+      },
     ],
   },
 
@@ -202,23 +471,66 @@ export const industryTemplates: IndustryTemplate[] = [
   {
     id: "healthcare",
     name: "Healthcare & Medical",
-    industries: ["healthcare", "medical", "dental", "clinic", "hospital", "therapy", "doctor", "dentist"],
+    industries: [
+      "healthcare",
+      "medical",
+      "dental",
+      "clinic",
+      "hospital",
+      "therapy",
+      "doctor",
+      "dentist",
+    ],
     recommendedPages: [
       { name: "Home", slug: "/", priority: 1, required: true },
       { name: "Services", slug: "/services", priority: 2, required: true },
       { name: "About", slug: "/about", priority: 3, required: true },
       { name: "Team", slug: "/team", priority: 4, required: true },
       { name: "Contact", slug: "/contact", priority: 5, required: true },
-      { name: "Patient Resources", slug: "/resources", priority: 6, required: false },
+      {
+        name: "Patient Resources",
+        slug: "/resources",
+        priority: 6,
+        required: false,
+      },
     ],
     componentPreferences: [
-      { section: "hero", preferred: ["Hero"], variant: "image-background", config: { tone: "caring", showBooking: true } },
-      { section: "services", preferred: ["Features", "Card"], variant: "icon-grid", config: { showBookNow: true } },
-      { section: "team", preferred: ["Team"], variant: "detailed-grid", config: { showCredentials: true, showSpecialties: true } },
-      { section: "trust", preferred: ["TrustBadges", "LogoCloud"], config: { showCertifications: true, showInsurance: true } },
-      { section: "testimonials", preferred: ["Testimonials"], variant: "carousel", config: { showPatientStories: true } },
+      {
+        section: "hero",
+        preferred: ["Hero"],
+        variant: "image-background",
+        config: { tone: "caring", showBooking: true },
+      },
+      {
+        section: "services",
+        preferred: ["Features", "Card"],
+        variant: "icon-grid",
+        config: { showBookNow: true },
+      },
+      {
+        section: "team",
+        preferred: ["Team"],
+        variant: "detailed-grid",
+        config: { showCredentials: true, showSpecialties: true },
+      },
+      {
+        section: "trust",
+        preferred: ["TrustBadges", "LogoCloud"],
+        config: { showCertifications: true, showInsurance: true },
+      },
+      {
+        section: "testimonials",
+        preferred: ["Testimonials"],
+        variant: "carousel",
+        config: { showPatientStories: true },
+      },
       { section: "faq", preferred: ["FAQ"], config: { groupByCategory: true } },
-      { section: "cta", preferred: ["CTA"], variant: "split", config: { ctaText: "Book Appointment" } },
+      {
+        section: "cta",
+        preferred: ["CTA"],
+        variant: "split",
+        config: { ctaText: "Book Appointment" },
+      },
     ],
     designTokens: {
       colorMood: "calm",
@@ -228,8 +540,18 @@ export const industryTemplates: IndustryTemplate[] = [
       imagery: "professional-caring",
     },
     contentGuidelines: [
-      { section: "hero", tips: ["Patient-focused messaging", "Easy appointment booking", "Trust indicators"] },
-      { section: "team", tips: ["Medical credentials", "Specializations", "Friendly headshots"] },
+      {
+        section: "hero",
+        tips: [
+          "Patient-focused messaging",
+          "Easy appointment booking",
+          "Trust indicators",
+        ],
+      },
+      {
+        section: "team",
+        tips: ["Medical credentials", "Specializations", "Friendly headshots"],
+      },
     ],
   },
 
@@ -239,7 +561,15 @@ export const industryTemplates: IndustryTemplate[] = [
   {
     id: "portfolio",
     name: "Portfolio & Creative",
-    industries: ["portfolio", "designer", "photographer", "artist", "freelancer", "creative-agency", "creative"],
+    industries: [
+      "portfolio",
+      "designer",
+      "photographer",
+      "artist",
+      "freelancer",
+      "creative-agency",
+      "creative",
+    ],
     recommendedPages: [
       { name: "Home", slug: "/", priority: 1, required: true },
       { name: "Work", slug: "/work", priority: 2, required: true },
@@ -248,12 +578,41 @@ export const industryTemplates: IndustryTemplate[] = [
       { name: "Contact", slug: "/contact", priority: 5, required: true },
     ],
     componentPreferences: [
-      { section: "hero", preferred: ["Hero"], variant: "minimal", config: { emphasizeWork: true } },
-      { section: "work", preferred: ["Gallery"], variant: "masonry", config: { enableLightbox: true, showCaseStudies: true } },
-      { section: "about", preferred: ["Card", "Features"], variant: "image-side", config: { showPersonality: true } },
-      { section: "clients", preferred: ["LogoCloud"], config: { showInfiniteScroll: true } },
-      { section: "testimonials", preferred: ["Testimonials"], variant: "minimal", config: { showClientName: true } },
-      { section: "cta", preferred: ["CTA"], variant: "minimal", config: { ctaText: "Let's Work Together" } },
+      {
+        section: "hero",
+        preferred: ["Hero"],
+        variant: "minimal",
+        config: { emphasizeWork: true },
+      },
+      {
+        section: "work",
+        preferred: ["Gallery"],
+        variant: "masonry",
+        config: { enableLightbox: true, showCaseStudies: true },
+      },
+      {
+        section: "about",
+        preferred: ["Card", "Features"],
+        variant: "image-side",
+        config: { showPersonality: true },
+      },
+      {
+        section: "clients",
+        preferred: ["LogoCloud"],
+        config: { showInfiniteScroll: true },
+      },
+      {
+        section: "testimonials",
+        preferred: ["Testimonials"],
+        variant: "minimal",
+        config: { showClientName: true },
+      },
+      {
+        section: "cta",
+        preferred: ["CTA"],
+        variant: "minimal",
+        config: { ctaText: "Let's Work Together" },
+      },
     ],
     designTokens: {
       colorMood: "minimal",
@@ -263,8 +622,18 @@ export const industryTemplates: IndustryTemplate[] = [
       imagery: "work-samples",
     },
     contentGuidelines: [
-      { section: "hero", tips: ["Let the work speak", "Minimal text", "Strong visual impact"] },
-      { section: "work", tips: ["High-quality project images", "Brief project descriptions", "Client names if possible"] },
+      {
+        section: "hero",
+        tips: ["Let the work speak", "Minimal text", "Strong visual impact"],
+      },
+      {
+        section: "work",
+        tips: [
+          "High-quality project images",
+          "Brief project descriptions",
+          "Client names if possible",
+        ],
+      },
     ],
   },
 
@@ -274,7 +643,16 @@ export const industryTemplates: IndustryTemplate[] = [
   {
     id: "construction",
     name: "Construction & Trades",
-    industries: ["construction", "contractor", "plumber", "electrician", "hvac", "roofing", "landscaping", "handyman"],
+    industries: [
+      "construction",
+      "contractor",
+      "plumber",
+      "electrician",
+      "hvac",
+      "roofing",
+      "landscaping",
+      "handyman",
+    ],
     recommendedPages: [
       { name: "Home", slug: "/", priority: 1, required: true },
       { name: "Services", slug: "/services", priority: 2, required: true },
@@ -283,13 +661,49 @@ export const industryTemplates: IndustryTemplate[] = [
       { name: "Contact", slug: "/contact", priority: 5, required: true },
     ],
     componentPreferences: [
-      { section: "hero", preferred: ["Hero"], variant: "image-background", config: { showPhone: true, showCta: true } },
-      { section: "services", preferred: ["Features", "Card"], variant: "icon-grid", config: { showRequestQuote: true } },
-      { section: "projects", preferred: ["Gallery"], variant: "before-after", config: { showProjectDetails: true } },
-      { section: "trust", preferred: ["TrustBadges", "Stats"], config: { showLicenses: true, showInsurance: true, showYearsInBusiness: true } },
-      { section: "testimonials", preferred: ["Testimonials"], config: { showProjectType: true } },
-      { section: "cta", preferred: ["CTA"], variant: "form", config: { ctaText: "Get a Free Quote" } },
-      { section: "serviceArea", preferred: ["Map"], config: { showServiceArea: true } },
+      {
+        section: "hero",
+        preferred: ["Hero"],
+        variant: "image-background",
+        config: { showPhone: true, showCta: true },
+      },
+      {
+        section: "services",
+        preferred: ["Features", "Card"],
+        variant: "icon-grid",
+        config: { showRequestQuote: true },
+      },
+      {
+        section: "projects",
+        preferred: ["Gallery"],
+        variant: "before-after",
+        config: { showProjectDetails: true },
+      },
+      {
+        section: "trust",
+        preferred: ["TrustBadges", "Stats"],
+        config: {
+          showLicenses: true,
+          showInsurance: true,
+          showYearsInBusiness: true,
+        },
+      },
+      {
+        section: "testimonials",
+        preferred: ["Testimonials"],
+        config: { showProjectType: true },
+      },
+      {
+        section: "cta",
+        preferred: ["CTA"],
+        variant: "form",
+        config: { ctaText: "Get a Free Quote" },
+      },
+      {
+        section: "serviceArea",
+        preferred: ["Map"],
+        config: { showServiceArea: true },
+      },
     ],
     designTokens: {
       colorMood: "bold",
@@ -299,8 +713,18 @@ export const industryTemplates: IndustryTemplate[] = [
       imagery: "project-photos",
     },
     contentGuidelines: [
-      { section: "hero", tips: ["Show completed project", "Prominent phone number", "Get Quote CTA"] },
-      { section: "trust", tips: ["Licensed & insured", "Years in business", "Projects completed"] },
+      {
+        section: "hero",
+        tips: [
+          "Show completed project",
+          "Prominent phone number",
+          "Get Quote CTA",
+        ],
+      },
+      {
+        section: "trust",
+        tips: ["Licensed & insured", "Years in business", "Projects completed"],
+      },
     ],
   },
 
@@ -310,7 +734,15 @@ export const industryTemplates: IndustryTemplate[] = [
   {
     id: "education",
     name: "Education & Training",
-    industries: ["education", "school", "training", "coaching", "tutoring", "academy", "courses"],
+    industries: [
+      "education",
+      "school",
+      "training",
+      "coaching",
+      "tutoring",
+      "academy",
+      "courses",
+    ],
     recommendedPages: [
       { name: "Home", slug: "/", priority: 1, required: true },
       { name: "Programs", slug: "/programs", priority: 2, required: true },
@@ -319,11 +751,34 @@ export const industryTemplates: IndustryTemplate[] = [
       { name: "Contact", slug: "/contact", priority: 5, required: true },
     ],
     componentPreferences: [
-      { section: "hero", preferred: ["Hero"], variant: "centered", config: { showEnrollCta: true } },
-      { section: "programs", preferred: ["Features", "Card"], variant: "detailed-grid", config: { showPricing: true } },
-      { section: "team", preferred: ["Team"], variant: "grid", config: { showCredentials: true } },
-      { section: "testimonials", preferred: ["Testimonials"], config: { showStudentSuccess: true } },
-      { section: "stats", preferred: ["Stats"], config: { showGraduates: true, showSuccessRate: true } },
+      {
+        section: "hero",
+        preferred: ["Hero"],
+        variant: "centered",
+        config: { showEnrollCta: true },
+      },
+      {
+        section: "programs",
+        preferred: ["Features", "Card"],
+        variant: "detailed-grid",
+        config: { showPricing: true },
+      },
+      {
+        section: "team",
+        preferred: ["Team"],
+        variant: "grid",
+        config: { showCredentials: true },
+      },
+      {
+        section: "testimonials",
+        preferred: ["Testimonials"],
+        config: { showStudentSuccess: true },
+      },
+      {
+        section: "stats",
+        preferred: ["Stats"],
+        config: { showGraduates: true, showSuccessRate: true },
+      },
       { section: "cta", preferred: ["CTA"], config: { ctaText: "Enroll Now" } },
     ],
     designTokens: {
@@ -334,8 +789,18 @@ export const industryTemplates: IndustryTemplate[] = [
       imagery: "learning-environment",
     },
     contentGuidelines: [
-      { section: "hero", tips: ["Inspiring headline", "Student success focus", "Clear enrollment path"] },
-      { section: "stats", tips: ["Graduation rate", "Student satisfaction", "Career placement"] },
+      {
+        section: "hero",
+        tips: [
+          "Inspiring headline",
+          "Student success focus",
+          "Clear enrollment path",
+        ],
+      },
+      {
+        section: "stats",
+        tips: ["Graduation rate", "Student satisfaction", "Career placement"],
+      },
     ],
   },
 
@@ -345,20 +810,54 @@ export const industryTemplates: IndustryTemplate[] = [
   {
     id: "nonprofit",
     name: "Nonprofit & Charity",
-    industries: ["nonprofit", "charity", "ngo", "foundation", "cause", "organization"],
+    industries: [
+      "nonprofit",
+      "charity",
+      "ngo",
+      "foundation",
+      "cause",
+      "organization",
+    ],
     recommendedPages: [
       { name: "Home", slug: "/", priority: 1, required: true },
       { name: "Our Work", slug: "/our-work", priority: 2, required: true },
       { name: "About", slug: "/about", priority: 3, required: true },
-      { name: "Get Involved", slug: "/get-involved", priority: 4, required: false },
+      {
+        name: "Get Involved",
+        slug: "/get-involved",
+        priority: 4,
+        required: false,
+      },
       { name: "Contact", slug: "/contact", priority: 5, required: true },
     ],
     componentPreferences: [
-      { section: "hero", preferred: ["Hero"], variant: "image-background", config: { showDonateCta: true } },
-      { section: "impact", preferred: ["Stats"], config: { showImpactNumbers: true } },
-      { section: "mission", preferred: ["Features", "Card"], config: { showValues: true } },
-      { section: "testimonials", preferred: ["Testimonials"], config: { showBeneficiaries: true } },
-      { section: "team", preferred: ["Team"], variant: "grid", config: { showLeadership: true } },
+      {
+        section: "hero",
+        preferred: ["Hero"],
+        variant: "image-background",
+        config: { showDonateCta: true },
+      },
+      {
+        section: "impact",
+        preferred: ["Stats"],
+        config: { showImpactNumbers: true },
+      },
+      {
+        section: "mission",
+        preferred: ["Features", "Card"],
+        config: { showValues: true },
+      },
+      {
+        section: "testimonials",
+        preferred: ["Testimonials"],
+        config: { showBeneficiaries: true },
+      },
+      {
+        section: "team",
+        preferred: ["Team"],
+        variant: "grid",
+        config: { showLeadership: true },
+      },
       { section: "cta", preferred: ["CTA"], config: { ctaText: "Donate Now" } },
     ],
     designTokens: {
@@ -369,8 +868,18 @@ export const industryTemplates: IndustryTemplate[] = [
       imagery: "impact-photos",
     },
     contentGuidelines: [
-      { section: "hero", tips: ["Emotional connection", "Clear mission statement", "Multiple ways to help"] },
-      { section: "impact", tips: ["Lives changed", "Projects completed", "Funds raised"] },
+      {
+        section: "hero",
+        tips: [
+          "Emotional connection",
+          "Clear mission statement",
+          "Multiple ways to help",
+        ],
+      },
+      {
+        section: "impact",
+        tips: ["Lives changed", "Projects completed", "Funds raised"],
+      },
     ],
   },
 ];
@@ -384,15 +893,19 @@ export const industryTemplates: IndustryTemplate[] = [
  */
 export function getIndustryTemplate(industry: string): IndustryTemplate | null {
   // First try exact ID match
-  const exactMatch = industryTemplates.find((t) => t.id === industry.toLowerCase());
+  const exactMatch = industryTemplates.find(
+    (t) => t.id === industry.toLowerCase(),
+  );
   if (exactMatch) return exactMatch;
 
   // Then try industry name match
   return (
     industryTemplates.find((t) =>
       t.industries.some(
-        (i) => i.toLowerCase() === industry.toLowerCase() || industry.toLowerCase().includes(i.toLowerCase())
-      )
+        (i) =>
+          i.toLowerCase() === industry.toLowerCase() ||
+          industry.toLowerCase().includes(i.toLowerCase()),
+      ),
     ) || null
   );
 }
@@ -400,21 +913,118 @@ export function getIndustryTemplate(industry: string): IndustryTemplate | null {
 /**
  * Infer industry from prompt and client data
  */
-export function inferIndustry(prompt: string, clientData?: { industry?: string; notes?: string }): string {
+export function inferIndustry(
+  prompt: string,
+  clientData?: { industry?: string; notes?: string },
+): string {
   const keywords: Record<string, string[]> = {
-    restaurant: ["restaurant", "cafe", "food", "menu", "dining", "chef", "cuisine", "catering", "bistro", "pizzeria", "bakery"],
-    "law-firm": ["law", "attorney", "legal", "lawyer", "litigation", "practice areas", "counsel"],
-    ecommerce: ["shop", "store", "products", "ecommerce", "sell", "buy", "cart", "retail", "fashion", "boutique"],
-    saas: ["software", "app", "platform", "saas", "subscription", "features", "pricing plans", "startup", "tech"],
-    "real-estate": ["real estate", "property", "listings", "homes", "realtor", "agent", "mortgage"],
-    healthcare: ["medical", "health", "doctor", "clinic", "patient", "dental", "therapy", "hospital", "dentist"],
-    portfolio: ["portfolio", "work", "projects", "designer", "photographer", "creative", "artist", "freelancer"],
-    construction: ["construction", "contractor", "building", "renovation", "plumber", "electrician", "roofing", "hvac"],
-    education: ["education", "school", "training", "courses", "academy", "tutoring", "coaching"],
-    nonprofit: ["nonprofit", "charity", "ngo", "foundation", "donate", "cause", "volunteer"],
+    restaurant: [
+      "restaurant",
+      "cafe",
+      "food",
+      "menu",
+      "dining",
+      "chef",
+      "cuisine",
+      "catering",
+      "bistro",
+      "pizzeria",
+      "bakery",
+    ],
+    "law-firm": [
+      "law",
+      "attorney",
+      "legal",
+      "lawyer",
+      "litigation",
+      "practice areas",
+      "counsel",
+    ],
+    ecommerce: [
+      "shop",
+      "store",
+      "products",
+      "ecommerce",
+      "sell",
+      "buy",
+      "cart",
+      "retail",
+      "fashion",
+      "boutique",
+    ],
+    saas: [
+      "software",
+      "app",
+      "platform",
+      "saas",
+      "subscription",
+      "features",
+      "pricing plans",
+      "startup",
+      "tech",
+    ],
+    "real-estate": [
+      "real estate",
+      "property",
+      "listings",
+      "homes",
+      "realtor",
+      "agent",
+      "mortgage",
+    ],
+    healthcare: [
+      "medical",
+      "health",
+      "doctor",
+      "clinic",
+      "patient",
+      "dental",
+      "therapy",
+      "hospital",
+      "dentist",
+    ],
+    portfolio: [
+      "portfolio",
+      "work",
+      "projects",
+      "designer",
+      "photographer",
+      "creative",
+      "artist",
+      "freelancer",
+    ],
+    construction: [
+      "construction",
+      "contractor",
+      "building",
+      "renovation",
+      "plumber",
+      "electrician",
+      "roofing",
+      "hvac",
+    ],
+    education: [
+      "education",
+      "school",
+      "training",
+      "courses",
+      "academy",
+      "tutoring",
+      "coaching",
+    ],
+    nonprofit: [
+      "nonprofit",
+      "charity",
+      "ngo",
+      "foundation",
+      "donate",
+      "cause",
+      "volunteer",
+    ],
   };
 
-  const combinedText = `${prompt} ${clientData?.industry || ""} ${clientData?.notes || ""}`.toLowerCase();
+  const combinedText =
+    `${prompt} ${clientData?.industry || ""} ${clientData?.notes || ""}`.toLowerCase();
 
   for (const [industry, words] of Object.entries(keywords)) {
     if (words.some((word) => combinedText.includes(word))) {

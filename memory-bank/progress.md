@@ -1,11 +1,37 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: March 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅ + **LIVE CHAT RUNTIME FIXES (AI auto-response + file uploads)** ✅ + **PER-ORDER CONVERSATION ISOLATION** ✅ + **PER-ORDER CHAT HARDENING AUDIT (10 bugs fixed, 0 TS errors)** ✅
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅ + **LIVE CHAT RUNTIME FIXES (AI auto-response + file uploads)** ✅ + **PER-ORDER CONVERSATION ISOLATION** ✅ + **PER-ORDER CHAT HARDENING AUDIT (10 bugs fixed, 0 TS errors)** ✅ + **CATEGORIES PAGE + DARK MODE POLISH** ✅
 
 ---
 
-## Latest Update: E-Commerce Core Overhaul — ALL 22 PHASES COMPLETE
+## Latest Update: CategoriesPageBlock + Dark Mode Contrast Fixes
+
+### New: CategoriesPageBlock (EcommerceCategoriesPage)
+
+- Full-page browsable category grid with search, grid/list toggle, subcategory chips
+- Registered in studio as `EcommerceCategoriesPage`
+- AI generator now creates /categories page for all e-commerce sites (required page)
+- Updated prompts.ts, configurator.ts, industry-templates.ts
+
+### Fixed: Dark Mode Contrast
+
+- CheckoutPageBlock sign-in prompt: `bg-primary/5` + `border-primary/20` → `bg-muted` + `border-border`
+- CategoryHeroBlock no-image fallback: `from-gray-100 to-gray-50` → `bg-muted`
+
+### Files Changed (7)
+
+1. NEW: `src/modules/ecommerce/studio/components/CategoriesPageBlock.tsx`
+2. MOD: `src/modules/ecommerce/studio/index.ts` — import + registry + re-export
+3. MOD: `src/modules/ecommerce/studio/components/CheckoutPageBlock.tsx` — sign-in contrast fix
+4. MOD: `src/modules/ecommerce/studio/components/CategoryHeroBlock.tsx` — muted fallback fix
+5. MOD: `src/lib/ai/website-designer/intelligence/industry-templates.ts` — /categories page
+6. MOD: `src/lib/ai/website-designer/prompts.ts` — EcommerceCategoriesPage in component list
+7. MOD: `src/lib/ai/website-designer/modules/configurator.ts` — auto-configure categories
+
+---
+
+## Previous Update: E-Commerce Core Overhaul — ALL 22 PHASES COMPLETE
 
 **Implemented the complete 22-phase ECOMMERCE-CORE-OVERHAUL-SPEC.md specification.** All phases type-checked, 0 new TypeScript errors introduced.
 
