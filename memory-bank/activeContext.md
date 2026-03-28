@@ -1,31 +1,51 @@
 # Active Context
 
-## Current Focus: Per-Order Conversation Isolation — Live Chat (Hardened)
+## Current Focus: E-Commerce Dark/Light Theme Intelligence
 
-### Status: HARDENED & AUDITED — TypeScript 0 errors, all 10 bugs fixed, ready to deploy
+### Status: COMPLETE — TypeScript 0 errors, ready to deploy
 
-### What Was Done (This Session): Per-Order Chat — Production Hardening Audit
+### What Was Done (This Session): Smart Dark/Light Mode for E-Commerce Storefront
 
-**All 4 files from the previous session went through a line-by-line audit.** 10 bugs/gaps were found and fixed.
+**Problem:** Sites with dark backgrounds had invisible text, white buttons with white text, and broken surface colors. The brand color derivation system assumed all backgrounds were light.
 
-#### Bugs Fixed (conversations/route.ts)
+**Root Cause:** `resolveBrandColors()` in `brand-colors.ts` derived surface colors (muted, border, divider, card borders, input borders) by lightening the FOREGROUND color. On dark backgrounds where foreground is light/white, this produced near-white surfaces on dark pages — invisible borders, white muted backgrounds on dark pages, etc.
 
-1. **Duplicate `const supabase` in GET handler** — same block-scope redeclaration, removed duplicate
-2. **No LIMIT on list query** — added `.limit(50)` to prevent unbounded payloads
-3. **Metadata null-safety** — now validates `c.metadata && typeof c.metadata === "object"` before casting
-4. **TS2454 `conversationId` used before assigned** — changed `let conversationId: string` to `let conversationId = ""`
+#### Core Fix: brand-colors.ts — Dark Background Awareness
 
-#### Bugs Fixed (ChatWidget.tsx)
+- Added `isDarkBg = !isLight(background)` detection
+- **Dark backgrounds:** Surface colors derived by lightening the BACKGROUND (subtle lifts)
+  - `muted: lighten(background, 0.08)` — slightly lighter dark for muted areas
+  - `border: lighten(background, 0.15)` — visible but subtle borders
+  - `divider: lighten(background, 0.10)` — subtle divider lines
+  - `cardBorder: lighten(background, 0.12)` — card distinction
+  - `inputBorder: lighten(background, 0.20)` — inputs clearly bordered
+  - `mutedForeground: darken(effectiveForeground, 0.3)` — dimmed light text
+- **Light backgrounds:** Existing logic preserved (lighten foreground)
+- Fixed `secondaryButtonText` to use `effectiveForeground` on dark bg (was `primary`)
+- Fixed `selectedBg` to use `lighten(background, 0.12)` on dark bg (was `tint(primary, 0.88)`)
+- Added ensureContrast check for `secondaryButtonText` against page background
 
-5. **`handleStartChat` missing from `handleOpen` deps** — was stale closure; added to dependency array
-6. **localStorage map never syncs with server** — added `syncMapFromList()` helper; called after list fetch; purges resolved/closed entries
-7. **Stale map entries never cleaned** — `checkStatus` now removes entries from map when conversation is resolved/closed
-8. **Resolved conversations kicked user out after 10s** — added `openedAsResolvedRef`; `checkStatus` skips auto-navigation when viewing history
-9. **TS2448 `handleStartChat` used before declaration** — moved `handleStartChat` above `handleOpen` (was declared after its caller)
+#### Additional Fixes
 
-#### Bugs Fixed (WidgetConversationList.tsx)
+- **renderer.tsx:** Changed production fallback from `text-gray-900`/`text-gray-600` to `text-foreground`/`text-muted-foreground`
+- **MobileVariantSelector.tsx:** Added `isLightColor()` helper — checkmark on color swatches now uses luminance-based contrast instead of hardcoded `=== "#ffffff"` check
+- **MobileQuickView.tsx:** Same `isLightColor()` fix for color swatch contrast
 
-10. **Keyboard accessibility gap** — added `onFocus`/`onBlur` alongside `onMouseEnter`/`onMouseLeave` for focus-visible states
+#### Audit Findings (No Changes Needed)
+
+- **Storefront components (70+ files):** ALL use semantic Tailwind classes (`text-foreground`, `bg-muted`, `border`, etc.) — zero hardcoded grays
+- **renders.tsx (block renderers):** Hardcoded `#ffffff` defaults are last-resort fallbacks overridden by brand injection system — working correctly
+- **generateBrandCSSVars():** Correctly passes palette through to 40+ CSS variables — all semantic
+- **Mobile components (22 files):** All use semantic tokens, proper 44px touch targets, safe-area padding
+- **Dashboard components:** Use proper `dark:` Tailwind variants — separate system from storefront
+
+### Architecture Insight
+
+The brand color pipeline: `site.settings` → `extractBrandSource()` → `resolveBrandColors()` → `BrandColorPalette` → BOTH:
+1. `injectBrandColors()` — per-component prop injection (100+ prop mappings)
+2. `generateBrandCSSVars()` — CSS variable override on `.studio-renderer` wrapper
+
+Fixing `resolveBrandColors()` propagates to ALL components automatically through both paths.
 
 ### What Was Done (Previous Session): Per-Order Chat Conversations
 
