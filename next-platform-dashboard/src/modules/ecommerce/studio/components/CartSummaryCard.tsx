@@ -72,7 +72,7 @@ export function CartSummaryCard({
   const SummaryLines = () => (
     <>
       {/* Subtotal */}
-      <div className="flex justify-between text-sm">
+      <div className="flex justify-between text-sm gap-4">
         <span className="text-muted-foreground">
           Subtotal ({totals.itemCount}{" "}
           {totals.itemCount === 1 ? "item" : "items"})
@@ -84,9 +84,9 @@ export function CartSummaryCard({
 
       {/* Discount */}
       {hasDiscount && (
-        <div className="flex justify-between text-sm">
-          <span className="text-green-600">Discount</span>
-          <span className="text-green-600 tabular-nums shrink-0 ml-2">
+        <div className="flex justify-between text-sm gap-4">
+          <span className="text-success">Discount</span>
+          <span className="text-success tabular-nums shrink-0 ml-2">
             -{formatPrice(totals.discount)}
           </span>
         </div>
@@ -111,7 +111,7 @@ export function CartSummaryCard({
 
       {/* Tax */}
       {hasTax && (
-        <div className="flex justify-between text-sm">
+        <div className="flex justify-between text-sm gap-4">
           <span className="text-muted-foreground">Tax</span>
           <span className="tabular-nums shrink-0 ml-2">
             {formatPrice(totals.tax)}
@@ -148,7 +148,7 @@ export function CartSummaryCard({
         {/* Total */}
         <div className="flex justify-between items-center">
           <span className="font-semibold">Total</span>
-          <span className="text-lg font-bold tabular-nums">
+          <span className="text-base sm:text-lg font-bold tabular-nums">
             {formatPrice(totals.total)}
           </span>
         </div>
@@ -218,7 +218,7 @@ export function CartSummaryCard({
         {/* Total */}
         <div className="flex justify-between items-center">
           <span className="text-lg font-semibold">Total</span>
-          <span className="text-2xl font-bold tabular-nums">
+          <span className="text-xl sm:text-2xl font-bold tabular-nums">
             {formatPrice(totals.total)}
           </span>
         </div>

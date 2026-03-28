@@ -1,35 +1,35 @@
 /**
  * OrderSummaryCard - Checkout order summary component
- * 
+ *
  * Phase ECOM-23: Checkout Components
- * 
+ *
  * Displays a summary of the order during checkout including
  * items, shipping, discount, tax, and total.
  */
-'use client'
+"use client";
 
-import React from 'react'
-import { cn } from '@/lib/utils'
-import { Package } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import type { CartItem, CartTotals } from '../../types/ecommerce-types'
-import type { ShippingMethod } from '../../hooks/useCheckout'
-import Image from 'next/image'
+import React from "react";
+import { cn } from "@/lib/utils";
+import { Package } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import type { CartItem, CartTotals } from "../../types/ecommerce-types";
+import type { ShippingMethod } from "../../hooks/useCheckout";
+import Image from "next/image";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 interface OrderSummaryCardProps {
-  items: CartItem[]
-  totals: CartTotals
-  formatPrice: (price: number) => string
-  shippingMethod?: ShippingMethod | null
-  maxHeight?: string
-  collapsible?: boolean
-  className?: string
+  items: CartItem[];
+  totals: CartTotals;
+  formatPrice: (price: number) => string;
+  shippingMethod?: ShippingMethod | null;
+  maxHeight?: string;
+  collapsible?: boolean;
+  className?: string;
 }
 
 // ============================================================================
@@ -38,28 +38,28 @@ interface OrderSummaryCardProps {
 
 function getItemImage(item: CartItem): string | null {
   if (item.product?.images && item.product.images.length > 0) {
-    return item.product.images[0]
+    return item.product.images[0];
   }
-  return null
+  return null;
 }
 
 function getItemName(item: CartItem): string {
   if (item.product?.name) {
-    return item.product.name
+    return item.product.name;
   }
-  return 'Product'
+  return "Product";
 }
 
 function getVariantName(item: CartItem): string | null {
   // Try to get variant display name from options
   if (item.variant?.options) {
-    const options = item.variant.options as Record<string, string>
-    const values = Object.values(options)
+    const options = item.variant.options as Record<string, string>;
+    const values = Object.values(options);
     if (values.length > 0) {
-      return values.join(' / ')
+      return values.join(" / ");
     }
   }
-  return null
+  return null;
 }
 
 // ============================================================================
@@ -71,18 +71,18 @@ export function OrderSummaryCard({
   totals,
   formatPrice,
   shippingMethod,
-  maxHeight = '300px',
+  maxHeight = "300px",
   collapsible = true,
-  className
+  className,
 }: OrderSummaryCardProps) {
-  const [isExpanded, setIsExpanded] = React.useState(!collapsible)
-  
-  const hasDiscount = totals.discount > 0
-  const hasTax = totals.tax > 0
-  const shippingAmount = shippingMethod?.price ?? totals.shipping
+  const [isExpanded, setIsExpanded] = React.useState(!collapsible);
+
+  const hasDiscount = totals.discount > 0;
+  const hasTax = totals.tax > 0;
+  const shippingAmount = shippingMethod?.price ?? totals.shipping;
 
   return (
-    <Card className={cn('', className)}>
+    <Card className={cn("", className)}>
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center justify-between">
           <span>Order Summary</span>
@@ -92,7 +92,7 @@ export function OrderSummaryCard({
               onClick={() => setIsExpanded(!isExpanded)}
               className="text-sm font-normal text-primary hover:underline"
             >
-              {isExpanded ? 'Hide' : `Show (${totals.itemCount} items)`}
+              {isExpanded ? "Hide" : `Show (${totals.itemCount} items)`}
             </button>
           )}
         </CardTitle>
@@ -104,10 +104,10 @@ export function OrderSummaryCard({
           <ScrollArea style={{ maxHeight }} className="pr-4">
             <div className="space-y-3">
               {items.map((item) => {
-                const imageUrl = getItemImage(item)
-                const itemName = getItemName(item)
-                const variantName = getVariantName(item)
-                const lineTotal = item.unit_price * item.quantity
+                const imageUrl = getItemImage(item);
+                const itemName = getItemName(item);
+                const variantName = getVariantName(item);
+                const lineTotal = item.unit_price * item.quantity;
 
                 return (
                   <div key={item.id} className="flex gap-3">
@@ -135,19 +135,21 @@ export function OrderSummaryCard({
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{itemName}</p>
                       {variantName && (
-                        <p className="text-xs text-muted-foreground">{variantName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {variantName}
+                        </p>
                       )}
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground tabular-nums">
                         {formatPrice(item.unit_price)} × {item.quantity}
                       </p>
                     </div>
 
                     {/* Line Total */}
-                    <div className="text-sm font-medium">
+                    <div className="text-sm font-medium tabular-nums shrink-0 ml-2">
                       {formatPrice(lineTotal)}
                     </div>
                   </div>
-                )
+                );
               })}
             </div>
           </ScrollArea>
@@ -158,39 +160,43 @@ export function OrderSummaryCard({
         {/* Totals */}
         <div className="space-y-2">
           {/* Subtotal */}
-          <div className="flex justify-between text-sm">
+          <div className="flex justify-between text-sm gap-4">
             <span className="text-muted-foreground">Subtotal</span>
-            <span>{formatPrice(totals.subtotal)}</span>
+            <span className="tabular-nums shrink-0">
+              {formatPrice(totals.subtotal)}
+            </span>
           </div>
 
           {/* Discount */}
           {hasDiscount && (
-            <div className="flex justify-between text-sm">
-              <span className="text-green-600 dark:text-green-400">Discount</span>
-              <span className="text-green-600 dark:text-green-400">
+            <div className="flex justify-between text-sm gap-4">
+              <span className="text-success">Discount</span>
+              <span className="text-success tabular-nums shrink-0">
                 -{formatPrice(totals.discount)}
               </span>
             </div>
           )}
 
           {/* Shipping */}
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">
+          <div className="flex justify-between text-sm gap-4">
+            <span className="text-muted-foreground min-w-0 truncate">
               Shipping
               {shippingMethod && (
                 <span className="text-xs ml-1">({shippingMethod.name})</span>
               )}
             </span>
-            <span>
-              {shippingAmount > 0 ? formatPrice(shippingAmount) : 'Free'}
+            <span className="tabular-nums shrink-0">
+              {shippingAmount > 0 ? formatPrice(shippingAmount) : "Free"}
             </span>
           </div>
 
           {/* Tax */}
           {hasTax && (
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-sm gap-4">
               <span className="text-muted-foreground">Tax</span>
-              <span>{formatPrice(totals.tax)}</span>
+              <span className="tabular-nums shrink-0">
+                {formatPrice(totals.tax)}
+              </span>
             </div>
           )}
         </div>
@@ -198,11 +204,13 @@ export function OrderSummaryCard({
         <Separator />
 
         {/* Total */}
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center gap-4">
           <span className="font-semibold">Total</span>
-          <span className="text-xl font-bold">{formatPrice(totals.total)}</span>
+          <span className="text-lg sm:text-xl font-bold tabular-nums shrink-0">
+            {formatPrice(totals.total)}
+          </span>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

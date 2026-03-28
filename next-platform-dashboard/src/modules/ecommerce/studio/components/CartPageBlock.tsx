@@ -185,7 +185,7 @@ export function CartPageBlock({
           </h1>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            <Button variant="ghost" size="sm" className="min-h-[40px]" asChild>
+            <Button variant="ghost" size="sm" className="min-h-11" asChild>
               <Link href={shopLink}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 {shopLinkText}
@@ -199,7 +199,7 @@ export function CartPageBlock({
                 onClick={handleClearCart}
                 disabled={isClearing || isUpdating}
                 className={cn(
-                  "min-h-[40px]",
+                  "min-h-11",
                   !showClearConfirm &&
                     "text-destructive hover:text-destructive",
                 )}

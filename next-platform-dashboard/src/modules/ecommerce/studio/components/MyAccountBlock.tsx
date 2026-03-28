@@ -20,11 +20,15 @@ import {
   Pencil,
   Trash2,
   Check,
+  Heart,
+  ShoppingCart,
 } from "lucide-react";
 import {
   useStorefrontAuth,
   type StorefrontCustomer,
 } from "../../context/storefront-auth-context";
+import { useStorefrontWishlist } from "../../hooks/useStorefrontWishlist";
+import { useStorefrontCart } from "../../hooks/useStorefrontCart";
 
 // ============================================================================
 // TYPES
@@ -58,7 +62,7 @@ interface Address {
   isDefault: boolean;
 }
 
-type AccountTab = "orders" | "addresses" | "profile";
+type AccountTab = "orders" | "addresses" | "wishlist" | "profile";
 
 interface MyAccountBlockProps {
   /** Called when user clicks on an order to view details */
@@ -94,18 +98,18 @@ function formatCents(cents: number, currency = "USD"): string {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  pending: "bg-yellow-100 text-yellow-800",
-  confirmed: "bg-blue-100 text-blue-800",
-  processing: "bg-blue-100 text-blue-800",
-  shipped: "bg-purple-100 text-purple-800",
-  delivered: "bg-green-100 text-green-800",
-  completed: "bg-green-100 text-green-800",
-  cancelled: "bg-red-100 text-red-800",
-  refunded: "bg-gray-100 text-gray-800",
+  pending: "bg-warning/10 text-warning",
+  confirmed: "bg-primary/10 text-primary",
+  processing: "bg-primary/10 text-primary",
+  shipped: "bg-info/10 text-info",
+  delivered: "bg-success/10 text-success",
+  completed: "bg-success/10 text-success",
+  cancelled: "bg-destructive/10 text-destructive",
+  refunded: "bg-muted text-muted-foreground",
 };
 
 function OrderStatusBadge({ status }: { status: string }) {
-  const colors = STATUS_COLORS[status] || "bg-gray-100 text-gray-700";
+  const colors = STATUS_COLORS[status] || "bg-muted text-muted-foreground";
   return (
     <span
       className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colors}`}
@@ -159,7 +163,10 @@ function OrdersTab({
 
   if (error) {
     return (
-      <p className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive">
+      <p
+        role="alert"
+        className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive"
+      >
         {error}
       </p>
     );
@@ -202,7 +209,7 @@ function OrdersTab({
                         href={ensureAbsoluteUrl(order.trackingUrl)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline"
+                        className="text-primary hover:underline"
                         onClick={(e) => e.stopPropagation()}
                       >
                         Track →
@@ -214,7 +221,7 @@ function OrdersTab({
             </div>
             <div className="flex items-center gap-3">
               <div className="text-right">
-                <p className="font-semibold">
+                <p className="font-semibold tabular-nums">
                   {formatCents(order.total, order.currency)}
                 </p>
                 <OrderStatusBadge status={order.status} />
@@ -246,7 +253,7 @@ function AddressCard({
   return (
     <div className="relative rounded-lg border border-border bg-card p-4">
       {address.isDefault && (
-        <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+        <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
           <Check className="h-3 w-3" /> Default
         </span>
       )}
@@ -347,7 +354,10 @@ function AddressesTab({
 
   if (error) {
     return (
-      <p className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive">
+      <p
+        role="alert"
+        className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive"
+      >
         {error}
       </p>
     );
@@ -519,12 +529,18 @@ function ProfileTab({
       </label>
 
       {error && (
-        <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <p
+          role="alert"
+          className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
+        >
           {error}
         </p>
       )}
       {success && (
-        <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">
+        <p
+          role="status"
+          className="rounded-md bg-success/5 px-3 py-2 text-sm text-success"
+        >
           Profile updated successfully.
         </p>
       )}
@@ -532,12 +548,123 @@ function ProfileTab({
       <button
         type="submit"
         disabled={loading}
-        className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60 flex items-center gap-2"
+        className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60 flex items-center gap-2 min-h-11"
       >
         {loading && <Loader2 className="h-4 w-4 animate-spin" />}
         Save Changes
       </button>
     </form>
+  );
+}
+
+// ============================================================================
+// WISHLIST TAB
+// ============================================================================
+
+function WishlistTab({ siteId }: { siteId: string }) {
+  const { products, isLoading, removeItem, itemCount } =
+    useStorefrontWishlist(siteId);
+  const { addItem: addToCart } = useStorefrontCart(siteId);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (itemCount === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <Heart className="mb-3 h-10 w-10 text-muted-foreground/40" />
+        <h3 className="text-base font-medium text-foreground">
+          Your wishlist is empty
+        </h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Items you save will appear here.
+        </p>
+        <a
+          href="/"
+          className="mt-4 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 min-h-11"
+        >
+          <ShoppingBag className="h-4 w-4" />
+          Start Shopping
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-muted-foreground mb-4">
+        My Wishlist ({itemCount} {itemCount === 1 ? "item" : "items"})
+      </p>
+      {products.map((product) => {
+        const inStock = product.track_inventory ? product.quantity > 0 : true;
+
+        return (
+          <div
+            key={product.id}
+            className="flex items-center gap-4 rounded-lg border border-border bg-card p-4"
+          >
+            {/* Product image */}
+            <div className="h-16 w-16 shrink-0 rounded-md bg-muted overflow-hidden">
+              {product.images?.[0] ? (
+                <img
+                  src={product.images[0]}
+                  alt={product.name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center">
+                  <Package className="h-6 w-6 text-muted-foreground/40" />
+                </div>
+              )}
+            </div>
+
+            {/* Product info */}
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-foreground truncate">
+                {product.name}
+              </p>
+              <p className="text-sm font-semibold text-foreground tabular-nums">
+                {formatCents(product.base_price, "ZMW")}
+              </p>
+              <p
+                className={`text-xs ${inStock ? "text-success" : "text-destructive"}`}
+              >
+                {inStock ? "In Stock" : "Out of Stock"}
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-2 shrink-0">
+              {inStock ? (
+                <button
+                  onClick={() => addToCart(product.id, null, 1)}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  <ShoppingCart className="h-3.5 w-3.5" />
+                  Add to Cart
+                </button>
+              ) : (
+                <span className="text-xs text-muted-foreground italic">
+                  Unavailable
+                </span>
+              )}
+              <button
+                onClick={() => removeItem(product.id)}
+                className="inline-flex items-center gap-1 rounded-md border border-destructive/30 px-2.5 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="h-3 w-3" />
+                Remove
+              </button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -588,13 +715,13 @@ export function MyAccountBlock({
         <div className="flex gap-3">
           <button
             onClick={() => openAuthDialog("login")}
-            className="rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+            className="rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 min-h-11"
           >
             Sign In
           </button>
           <button
             onClick={() => openAuthDialog("register")}
-            className="rounded-md border border-border px-5 py-2.5 text-sm font-medium text-foreground hover:bg-muted/50"
+            className="rounded-md border border-border px-5 py-2.5 text-sm font-medium text-foreground hover:bg-muted/50 min-h-11"
           >
             Create Account
           </button>
@@ -610,6 +737,7 @@ export function MyAccountBlock({
       label: "Addresses",
       icon: <MapPin className="h-4 w-4" />,
     },
+    { key: "wishlist", label: "Wishlist", icon: <Heart className="h-4 w-4" /> },
     { key: "profile", label: "Profile", icon: <User className="h-4 w-4" /> },
   ];
 
@@ -670,6 +798,7 @@ export function MyAccountBlock({
       {activeTab === "addresses" && (
         <AddressesTab siteId={siteId} token={token} apiBase={apiBase} />
       )}
+      {activeTab === "wishlist" && <WishlistTab siteId={siteId} />}
       {activeTab === "profile" && (
         <ProfileTab
           customer={customer}

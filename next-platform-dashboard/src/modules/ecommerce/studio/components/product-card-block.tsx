@@ -23,6 +23,7 @@ import {
   AlertCircle,
   FileText,
   ShoppingCart,
+  MessageCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -189,8 +190,10 @@ export function ProductCardBlock({
   const productQuantity =
     (product as DemoProduct).quantity ?? (product as Product).quantity ?? 0;
   const productImages = (product as Product).images || [];
-  const productRating = (product as DemoProduct).rating;
-  const productReviewCount = (product as DemoProduct).reviewCount;
+  const productRating =
+    (product as DemoProduct).rating || (product as any).average_rating || 0;
+  const productReviewCount =
+    (product as DemoProduct).reviewCount || (product as any).review_count || 0;
 
   // Calculate sale percentage
   const salePercentage =
@@ -357,8 +360,8 @@ export function ProductCardBlock({
           className={cn(
             "p-2 rounded-full bg-card/90 backdrop-blur-sm shadow-sm transition-colors",
             inWishlist
-              ? "text-red-500"
-              : "text-muted-foreground hover:text-red-500",
+              ? "text-destructive"
+              : "text-muted-foreground hover:text-destructive",
           )}
           title={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
         >
@@ -374,13 +377,31 @@ export function ProductCardBlock({
           <Eye className="h-4 w-4" />
         </button>
       )}
+      <button
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const slug = (product as Product).slug || productId;
+          const url = `${window.location.origin}/products/${slug}`;
+          const text = encodeURIComponent(`Check out ${product.name}`);
+          window.open(
+            `https://wa.me/?text=${text}%20${encodeURIComponent(url)}`,
+            "_blank",
+            "noopener",
+          );
+        }}
+        className="p-2 rounded-full bg-card/90 backdrop-blur-sm shadow-sm text-muted-foreground hover:text-success transition-colors"
+        title="Share on WhatsApp"
+      >
+        <MessageCircle className="h-4 w-4" />
+      </button>
     </div>
   );
 
   // Sale badge
   const SaleBadge = () =>
     showSaleBadge && salePercentage > 0 ? (
-      <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded z-10">
+      <div className="absolute top-2 left-2 bg-destructive text-destructive-foreground text-xs font-semibold px-2 py-1 rounded z-10">
         -{salePercentage}%
       </div>
     ) : null;
@@ -452,7 +473,7 @@ export function ProductCardBlock({
           "transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
           "flex items-center justify-center gap-2",
           quotationModeEnabled
-            ? "bg-orange-500 hover:bg-orange-600 text-white"
+            ? "bg-warning hover:bg-warning/90 text-warning-foreground"
             : "bg-primary hover:bg-primary/90 text-primary-foreground",
           fullWidth && "w-full",
         )}

@@ -187,7 +187,27 @@ function buildPaymentMethods(
     });
   }
 
-  if (settings.manual_payment_enabled) {
+  // Support multiple manual payment methods stored in payment_settings.manual_methods
+  const paymentSettingsJson = settings.payment_settings as
+    | Record<string, unknown>
+    | undefined;
+  const manualMethods = paymentSettingsJson?.manual_methods as
+    | Array<{ id?: string; name?: string; icon?: string; description?: string }>
+    | undefined;
+
+  if (Array.isArray(manualMethods) && manualMethods.length > 0) {
+    manualMethods.forEach((m, i) => {
+      methods.push({
+        id: `manual-${m.id || i}`,
+        name: m.name || "Manual Payment",
+        icon: m.icon || "Banknote",
+        description: m.description,
+      });
+    });
+  } else if (
+    settings.payment_provider === "manual" ||
+    (paymentSettingsJson?.active_provider as string) === "manual"
+  ) {
     methods.push({
       id: "manual",
       name: "Manual Payment",
@@ -601,7 +621,9 @@ export function useCheckout(): UseCheckoutResult {
               `${state.shippingAddress.first_name || ""} ${state.shippingAddress.last_name || ""}`.trim() ||
               undefined,
             customerPhone: state.phone || undefined,
-            paymentProvider: state.paymentMethod?.id,
+            paymentProvider: state.paymentMethod?.id?.startsWith("manual")
+              ? "manual"
+              : state.paymentMethod?.id,
             shippingMethod: state.shippingMethod?.id,
             notes: state.customerNotes || undefined,
             customer_token: opts?.customerToken || undefined,

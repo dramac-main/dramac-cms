@@ -1,51 +1,45 @@
 /**
  * MobileShippingSelector - Touch-friendly shipping option selection
- * 
+ *
  * Phase ECOM-31: Mobile Checkout Flow
- * 
+ *
  * Features:
  * - Large touch targets
  * - Clear pricing and delivery estimates
  * - Visual selection state
  */
-'use client'
+"use client";
 
-import React from 'react'
-import { motion } from 'framer-motion'
-import {
-  Truck,
-  Zap,
-  Clock,
-  Package,
-  Check,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { useHapticFeedback } from '../../../hooks/useHapticFeedback'
+import React from "react";
+import { motion } from "framer-motion";
+import { Truck, Zap, Clock, Package, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useHapticFeedback } from "../../../hooks/useHapticFeedback";
 
-import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from "@/lib/locale-config";
 // ============================================================================
 // TYPES
 // ============================================================================
 
-export type ShippingSpeed = 'standard' | 'express' | 'overnight' | 'pickup'
+export type ShippingSpeed = "standard" | "express" | "overnight" | "pickup";
 
 export interface ShippingOption {
-  id: string
-  name: string
-  speed: ShippingSpeed
-  price: number
-  estimatedDays: string
-  description?: string
-  isEco?: boolean
+  id: string;
+  name: string;
+  speed: ShippingSpeed;
+  price: number;
+  estimatedDays: string;
+  description?: string;
+  isEco?: boolean;
 }
 
 export interface MobileShippingSelectorProps {
-  options: ShippingOption[]
-  selectedOptionId: string | null
-  onSelect: (optionId: string) => void
-  disabled?: boolean
-  className?: string
-  formatPrice?: (price: number) => string
+  options: ShippingOption[];
+  selectedOptionId: string | null;
+  onSelect: (optionId: string) => void;
+  disabled?: boolean;
+  className?: string;
+  formatPrice?: (price: number) => string;
 }
 
 // ============================================================================
@@ -54,24 +48,24 @@ export interface MobileShippingSelectorProps {
 
 function getShippingIcon(speed: ShippingSpeed): React.ReactNode {
   switch (speed) {
-    case 'express':
-      return <Zap className="h-5 w-5" />
-    case 'overnight':
-      return <Clock className="h-5 w-5" />
-    case 'pickup':
-      return <Package className="h-5 w-5" />
-    case 'standard':
+    case "express":
+      return <Zap className="h-5 w-5" />;
+    case "overnight":
+      return <Clock className="h-5 w-5" />;
+    case "pickup":
+      return <Package className="h-5 w-5" />;
+    case "standard":
     default:
-      return <Truck className="h-5 w-5" />
+      return <Truck className="h-5 w-5" />;
   }
 }
 
 function defaultFormatPrice(price: number): string {
-  if (price === 0) return 'FREE'
+  if (price === 0) return "FREE";
   return new Intl.NumberFormat(DEFAULT_LOCALE, {
-    style: 'currency',
+    style: "currency",
     currency: DEFAULT_CURRENCY,
-  }).format(price / 100)
+  }).format(price / 100);
 }
 
 // ============================================================================
@@ -86,19 +80,19 @@ export function MobileShippingSelector({
   className,
   formatPrice = defaultFormatPrice,
 }: MobileShippingSelectorProps) {
-  const { trigger } = useHapticFeedback()
+  const { trigger } = useHapticFeedback();
 
   const handleSelect = (optionId: string) => {
-    if (disabled) return
-    trigger('selection')
-    onSelect(optionId)
-  }
+    if (disabled) return;
+    trigger("selection");
+    onSelect(optionId);
+  };
 
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn("space-y-2", className)}>
       {options.map((option) => {
-        const isSelected = option.id === selectedOptionId
-        const isFree = option.price === 0
+        const isSelected = option.id === selectedOptionId;
+        const isFree = option.price === 0;
 
         return (
           <motion.button
@@ -108,21 +102,21 @@ export function MobileShippingSelector({
             disabled={disabled}
             whileTap={{ scale: 0.98 }}
             className={cn(
-              'w-full flex items-center gap-4 p-4 rounded-lg',
-              'min-h-[64px]', // Touch target
-              'border-2 transition-colors duration-200',
-              'text-left',
+              "w-full flex items-center gap-4 p-4 rounded-lg",
+              "min-h-[64px]", // Touch target
+              "border-2 transition-colors duration-200",
+              "text-left",
               isSelected
-                ? 'border-primary bg-primary/5'
-                : 'border-border hover:border-primary/50 bg-background',
-              disabled && 'opacity-50 cursor-not-allowed'
+                ? "border-primary bg-primary/5"
+                : "border-border hover:border-primary/50 bg-background",
+              disabled && "opacity-50 cursor-not-allowed",
             )}
           >
             {/* Icon */}
             <div
               className={cn(
-                'flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center',
-                isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                "flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center",
+                isSelected ? "bg-primary text-primary-foreground" : "bg-muted",
               )}
             >
               {getShippingIcon(option.speed)}
@@ -135,7 +129,7 @@ export function MobileShippingSelector({
                   {option.name}
                 </span>
                 {option.isEco && (
-                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                  <span className="text-xs bg-success/10 text-success px-2 py-0.5 rounded-full">
                     🌱 Eco
                   </span>
                 )}
@@ -154,8 +148,8 @@ export function MobileShippingSelector({
             <div className="flex-shrink-0 flex flex-col items-end gap-1">
               <span
                 className={cn(
-                  'font-semibold',
-                  isFree ? 'text-green-600' : 'text-foreground'
+                  "font-semibold",
+                  isFree ? "text-success" : "text-foreground",
                 )}
               >
                 {formatPrice(option.price)}
@@ -163,18 +157,18 @@ export function MobileShippingSelector({
               {/* Selection indicator */}
               <div
                 className={cn(
-                  'w-5 h-5 rounded-full border-2 flex items-center justify-center',
-                  'transition-colors duration-200',
+                  "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                  "transition-colors duration-200",
                   isSelected
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-muted-foreground/30'
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-muted-foreground/30",
                 )}
               >
                 {isSelected && <Check className="h-3 w-3" />}
               </div>
             </div>
           </motion.button>
-        )
+        );
       })}
 
       {options.length === 0 && (
@@ -184,7 +178,7 @@ export function MobileShippingSelector({
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export default MobileShippingSelector
+export default MobileShippingSelector;

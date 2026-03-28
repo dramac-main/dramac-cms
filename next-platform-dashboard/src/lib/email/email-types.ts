@@ -35,9 +35,12 @@ export type EmailType =
   | "payment_received_customer"
   | "refund_issued_customer"
   | "payment_proof_uploaded_owner"
+  | "payment_proof_rejected_customer"
   | "low_stock_admin"
   | "back_in_stock_customer"
   | "abandoned_cart_customer"
+  // Reviews
+  | "review_request_customer"
   // Quotes
   | "quote_sent_customer"
   | "quote_request_customer"
@@ -97,9 +100,11 @@ export function isValidEmailType(type: string): type is EmailType {
     "payment_received_customer",
     "refund_issued_customer",
     "payment_proof_uploaded_owner",
+    "payment_proof_rejected_customer",
     "low_stock_admin",
     "back_in_stock_customer",
     "abandoned_cart_customer",
+    "review_request_customer",
     "quote_sent_customer",
     "quote_reminder_customer",
     "quote_request_owner",

@@ -112,12 +112,13 @@ function LoginForm({
   prefillEmail?: string;
   onSuccess: () => void;
 }) {
-  const { login } = useStorefrontAuth();
+  const { login, requestMagicLink } = useStorefrontAuth();
   const [email, setEmail] = useState(prefillEmail || "");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [helpShown, setHelpShown] = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,6 +136,87 @@ function LoginForm({
       onSuccess();
     }
   };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      setError("Please enter your email address.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    const result = await requestMagicLink(email);
+    setLoading(false);
+    if (result.error) {
+      setError(result.error);
+    } else {
+      setResetSent(true);
+    }
+  };
+
+  if (forgotMode) {
+    return (
+      <form onSubmit={handleForgotPassword} className="space-y-4">
+        {resetSent ? (
+          <div className="rounded-md bg-success/10 border border-success/20 px-4 py-3 text-center">
+            <Mail className="h-8 w-8 text-success mx-auto mb-2" />
+            <p className="text-sm font-medium text-foreground">
+              Check your email
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              If an account exists for <strong>{email}</strong>, we&apos;ve sent
+              a login link. Check your inbox and spam folder.
+            </p>
+          </div>
+        ) : (
+          <>
+            <p className="text-sm text-muted-foreground text-center">
+              Enter your email and we&apos;ll send you a link to sign in.
+            </p>
+            <InputField
+              id="forgot-email"
+              label="Email"
+              type="email"
+              value={email}
+              onChange={setEmail}
+              placeholder="you@example.com"
+              autoComplete="email"
+              disabled={loading}
+            />
+
+            {error && (
+              <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-md bg-primary px-4 py-2.5 min-h-11 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60 flex items-center justify-center gap-2"
+            >
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              Send Login Link
+            </button>
+          </>
+        )}
+
+        <p className="text-center text-xs text-muted-foreground">
+          <button
+            type="button"
+            className="text-primary hover:underline font-medium"
+            onClick={() => {
+              setForgotMode(false);
+              setError("");
+              setResetSent(false);
+            }}
+          >
+            Back to Sign In
+          </button>
+        </p>
+      </form>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -168,7 +250,7 @@ function LoginForm({
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60 flex items-center justify-center gap-2"
+        className="w-full rounded-md bg-primary px-4 py-2.5 min-h-11 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60 flex items-center justify-center gap-2"
       >
         {loading && <Loader2 className="h-4 w-4 animate-spin" />}
         Sign In
@@ -179,16 +261,14 @@ function LoginForm({
         <button
           type="button"
           className="text-primary hover:underline font-medium"
-          onClick={() => setHelpShown(true)}
+          onClick={() => {
+            setForgotMode(true);
+            setError("");
+          }}
         >
-          Get help
+          Get a login link
         </button>
       </p>
-      {helpShown && (
-        <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground text-center">
-          Please contact the store for password reset assistance.
-        </p>
-      )}
     </form>
   );
 }
@@ -286,7 +366,7 @@ function RegisterForm({
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60 flex items-center justify-center gap-2"
+        className="w-full rounded-md bg-primary px-4 py-2.5 min-h-11 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60 flex items-center justify-center gap-2"
       >
         {loading && <Loader2 className="h-4 w-4 animate-spin" />}
         Create Account
@@ -372,7 +452,7 @@ function SetPasswordForm({
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60 flex items-center justify-center gap-2"
+        className="w-full rounded-md bg-primary px-4 py-2.5 min-h-11 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60 flex items-center justify-center gap-2"
       >
         {loading && <Loader2 className="h-4 w-4 animate-spin" />}
         Set Password &amp; Save Account
@@ -463,7 +543,7 @@ export function StorefrontAuthDialog({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
         onClick={handleClose}
         aria-hidden="true"
       />
@@ -480,7 +560,7 @@ export function StorefrontAuthDialog({
         <button
           type="button"
           onClick={handleClose}
-          className="absolute right-4 top-4 rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-muted"
+          className="absolute right-4 top-4 rounded-md p-1 min-h-11 min-w-11 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted"
           aria-label="Close dialog"
         >
           <X className="h-5 w-5" />
@@ -511,13 +591,15 @@ export function StorefrontAuthDialog({
 
         {/* Tabs for login / register (not for set-password) */}
         {activeMode !== "set-password" && (
-          <div className="mb-5 flex rounded-lg bg-muted p-1">
+          <div className="mb-5 flex rounded-lg bg-muted p-1" role="tablist">
             <button
               type="button"
+              role="tab"
+              aria-selected={activeMode === "login"}
               onClick={() => setActiveMode("login")}
-              className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+              className={`flex-1 rounded-md px-3 py-2 min-h-11 text-sm font-medium transition-colors ${
                 activeMode === "login"
-                  ? "bg-card text-foreground shadow-sm"
+                  ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -525,10 +607,12 @@ export function StorefrontAuthDialog({
             </button>
             <button
               type="button"
+              role="tab"
+              aria-selected={activeMode === "register"}
               onClick={() => setActiveMode("register")}
-              className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+              className={`flex-1 rounded-md px-3 py-2 min-h-11 text-sm font-medium transition-colors ${
                 activeMode === "register"
-                  ? "bg-card text-foreground shadow-sm"
+                  ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >

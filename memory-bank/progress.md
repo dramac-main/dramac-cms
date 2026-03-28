@@ -1,33 +1,61 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: March 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX ✅
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅
 
 ---
 
-## Latest Update: Payment Proof Visibility Fix — DEPLOYED (`60c1c2e5`)
+## Latest Update: E-Commerce Core Overhaul — ALL 22 PHASES COMPLETE
 
-**Fixed critical bug: payment proof uploaded via chat was invisible in e-commerce dashboard. 3 root causes + 1 robustness improvement.**
+**Implemented the complete 22-phase ECOMMERCE-CORE-OVERHAUL-SPEC.md specification.** All phases type-checked, 0 new TypeScript errors introduced.
 
-### Root Causes Fixed
+### Phase Summary (All ✅)
 
-1. **Private storage bucket, zero RLS policies** — `getPaymentProofUrl()` used session client → switched to admin client
-2. **Wrong column check** — `payment_method === 'manual_transfer'` → `payment_provider === 'manual' || payment_provider === 'bank_transfer'`
-3. **Wrong status check** — Buttons only checked `pending`/`uploaded`, bridge sets `pending_review` → added to conditions
-4. **Imprecise bridge matching** — Now uses conversation `metadata.order_number` for precise order lookup
+| Phase | Name | Key Deliverables |
+|-------|------|-----------------|
+| 1 | Product Image Gallery | Multi-image gallery, thumbnails, lightbox, zoom |
+| 2 | Cart System Redesign | Slide-over cart, qty controls, stock validation |
+| 3 | Checkout Flow Redesign | Multi-step form, payment gateway integration |
+| 4 | Order Mgmt Redesign | Dashboard with statuses, filters, detail panels |
+| 5 | Payment Proof System | Upload flow, admin review, base64 storage |
+| 6 | Email Notification System | 19 branded templates, status-triggered sends |
+| 7 | Product Variant System | Color/size/material variants, pricing, stock |
+| 8 | Discount/Coupon System | Codes, %, fixed, min-order, date-bounded |
+| 9 | Wishlist System | Add/remove, persistence, move-to-cart |
+| 10 | Product Reviews & Ratings | Star ratings, moderation, average display |
+| 11 | Customer Accounts | Registration, profile, order history |
+| 12 | Search, Filtering, Sorting | Full-text, category/price filters, sort options |
+| 13 | Responsive Design | Mobile-first cart, checkout, product pages |
+| 14 | Analytics & Reporting | Revenue dashboards, product performance, export |
+| 15 | Multi-Currency & Tax | ZMW default, tax calculation, per-product taxable |
+| 16 | Social Sharing & Open Graph | Share buttons, OG meta, product structured data |
+| 17 | Admin Tools & Bulk Ops | Bulk status, export, quick-edit, stock management |
+| 18 | Performance Optimization | Lazy loading, image optimization, caching |
+| 19 | Inventory & Discount Integrity | Auto stock deduction/reversal, discount usage, idempotency |
+| 20 | SEO & Structured Data | Sitemap expansion, noindex transactional, robots.txt |
+| 21 | API Security Hardening | Rate limiting, input validation, XML injection fix |
+| 22 | Future Enhancements | Category filter, sort wiring, architecture readiness |
 
-### Files Changed (4)
+### Phase 21 — Security Fixes (Critical)
 
-- `order-actions.ts` — Admin client for storage signed URLs
-- `order-detail-dialog.tsx` — payment_provider check + pending_review
-- `ChatOrderPanel.tsx` — pending_review for buttons
-- `chat-event-bridge.ts` — Precise order matching via conversation metadata
+- **New file**: `src/lib/api-validation.ts` — shared validators (UUID, email, quantity, pagination, file upload, XML escape)
+- **XML injection fixed**: DPO webhook GET handler escaped TransactionToken
+- **Client subtotal exploit fixed**: applyDiscount computes subtotal server-side
+- **File upload hardened**: 10MB limit, image MIME only, path traversal prevention
+- **Rate limiting**: 5 API routes protected (cart, products, orders, payment-proof, webhooks)
+- **Input validation**: UUID format, email format, quantity bounds, pagination caps, text limits
+- **Reflection removed**: Error messages no longer echo user input
 
-### Pipeline Audit: CLEAN
+### Phase 22 — Defensive Coding
 
-- All payment/quotation flows verified correct
-- No remaining `manual_transfer` hardcoded checks
-- Notifications, checkout, AI responder all working as expected
+- **Category filter wired**: `getProducts()` now queries join table when `filters.category` set
+- **Sort support wired**: `sortBy`/`sortOrder` params now apply to query
+- **Architecture audit**: All 6 future features confirmed implementable without refactoring
+
+### Pre-existing TypeScript Errors (3, not from our changes)
+
+1. `convInsert` in conversations/route.ts:298
+2. `bank_transfer` type mismatch in order-detail-dialog.tsx:228 and :555
 
 ---
 

@@ -1088,6 +1088,22 @@ ${data.dashboardUrl ? `View in dashboard: ${data.dashboardUrl}` : ""}
       `Don't forget your items!\n\nHi ${data.customerName || "there"},\n\nYou have items in your cart. Complete your purchase!\n\n${data.cartUrl ? `Cart: ${data.cartUrl}` : ""}`,
   },
 
+  review_request_customer: {
+    subject: (data) =>
+      `How was your purchase${data.productName ? ` of ${data.productName}` : ""}?`,
+    html: (data) =>
+      wrapHtml(`
+      <h1 style="${STYLES.heading}">⭐ Share Your Experience</h1>
+      <p style="${STYLES.text}">Hi ${data.customerName || "there"},</p>
+      <p style="${STYLES.text}">We hope you're enjoying ${data.productName ? `your <strong>${data.productName}</strong>` : "your recent purchase"}. Your feedback helps other shoppers and helps us improve!</p>
+      <p style="${STYLES.text}">It only takes a minute to leave a review.</p>
+      ${data.reviewUrl ? `<p style="margin: 24px 0;"><a href="${data.reviewUrl}" style="${STYLES.button}">Write a Review</a></p>` : ""}
+      <p style="${STYLES.text}" class="text-muted">Order: #${data.orderNumber || ""}</p>
+    `),
+    text: (data) =>
+      `Share Your Experience\n\nHi ${data.customerName || "there"},\n\nWe hope you're enjoying ${data.productName || "your recent purchase"}. Your feedback helps other shoppers!\n\n${data.reviewUrl ? `Write a review: ${data.reviewUrl}` : ""}\n\nOrder: #${data.orderNumber || ""}`,
+  },
+
   payment_proof_uploaded_owner: {
     subject: () => `Payment proof uploaded`,
     html: (data) =>
@@ -1101,5 +1117,19 @@ ${data.dashboardUrl ? `View in dashboard: ${data.dashboardUrl}` : ""}
     `),
     text: (data) =>
       `Payment Proof Uploaded\n\nA customer has uploaded payment proof for order ${data.orderNumber || "N/A"}.\nCustomer: ${data.customerName || data.customerEmail || "Unknown"}\nAmount: ${data.currency || ""} ${data.total || "N/A"}\n\nPlease review and verify the order.`,
+  },
+
+  payment_proof_rejected_customer: {
+    subject: () => `Payment proof could not be verified`,
+    html: (data) =>
+      wrapHtml(`
+      <h1 style="${STYLES.heading}">Payment Proof Not Verified</h1>
+      <p style="${STYLES.text}">Hi ${data.customerName || "there"},</p>
+      <p style="${STYLES.text}">Your payment proof for order <strong>#${data.orderNumber || "N/A"}</strong> could not be verified.</p>
+      <p style="${STYLES.text}">Please upload a new proof of payment ensuring the amount matches the order total.</p>
+      ${data.orderUrl ? `<p style="margin: 24px 0;"><a href="${data.orderUrl}" style="${STYLES.button}">Upload New Proof</a></p>` : ""}
+    `),
+    text: (data) =>
+      `Payment Proof Not Verified\n\nYour payment proof for order #${data.orderNumber || "N/A"} could not be verified.\nPlease upload a new proof of payment.\n\n${data.orderUrl ? `Upload: ${data.orderUrl}` : ""}`,
   },
 };

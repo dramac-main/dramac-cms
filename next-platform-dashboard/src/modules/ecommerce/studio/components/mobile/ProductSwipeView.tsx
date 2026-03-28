@@ -1,62 +1,79 @@
 /**
  * ProductSwipeView - Tinder-style product discovery
- * 
+ *
  * Phase ECOM-32: Mobile Product Experience
- * 
+ *
  * A swipeable card-based product discovery experience where users
  * can swipe right to wishlist, left to skip, or up to add to cart.
  * Inspired by dating app UX patterns for engaging product exploration.
  */
-'use client'
+"use client";
 
-import React, { useState, useCallback, useMemo } from 'react'
-import { motion, useAnimation, PanInfo, AnimatePresence } from 'framer-motion'
-import Image from 'next/image'
-import { Heart, X, ShoppingCart, ChevronDown, Star, Undo2, Info, PartyPopper } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { useHapticFeedback } from '../../../hooks/useHapticFeedback'
-import type { Product } from '../../../types/ecommerce-types'
+import React, { useState, useCallback, useMemo } from "react";
+import { motion, useAnimation, PanInfo, AnimatePresence } from "framer-motion";
+import Image from "next/image";
+import {
+  Heart,
+  X,
+  ShoppingCart,
+  ChevronDown,
+  Star,
+  Undo2,
+  Info,
+  PartyPopper,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useHapticFeedback } from "../../../hooks/useHapticFeedback";
+import type { Product } from "../../../types/ecommerce-types";
 
-import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from "@/lib/locale-config";
 // ============================================================================
 // TYPES
 // ============================================================================
 
-export type SwipeAction = 'wishlist' | 'skip' | 'cart' | 'details'
+export type SwipeAction = "wishlist" | "skip" | "cart" | "details";
 
 export interface ProductSwipeViewProps {
-  products: Product[]
-  onSwipe: (product: Product, action: SwipeAction) => void
-  onUndo?: () => void
-  onProductClick?: (product: Product) => void
-  canUndo?: boolean
-  showButtons?: boolean
-  className?: string
+  products: Product[];
+  onSwipe: (product: Product, action: SwipeAction) => void;
+  onUndo?: () => void;
+  onProductClick?: (product: Product) => void;
+  canUndo?: boolean;
+  showButtons?: boolean;
+  className?: string;
 }
 
 export interface SwipeableProductCardProps {
-  product: Product
-  isTopCard: boolean
-  onSwipe: (action: SwipeAction) => void
-  onProductClick?: () => void
+  product: Product;
+  isTopCard: boolean;
+  onSwipe: (action: SwipeAction) => void;
+  onProductClick?: () => void;
 }
 
 // ============================================================================
 // CONSTANTS
 // ============================================================================
 
-const SWIPE_THRESHOLD = 100
-const ROTATION_MULTIPLIER = 0.1
-const CARD_STACK_OFFSET = 8
+const SWIPE_THRESHOLD = 100;
+const ROTATION_MULTIPLIER = 0.1;
+const CARD_STACK_OFFSET = 8;
 
 // Action colors
 const ACTION_COLORS = {
-  wishlist: { bg: 'bg-red-500', text: 'text-red-500', border: 'border-red-500' },
-  skip: { bg: 'bg-gray-500', text: 'text-gray-500', border: 'border-gray-500' },
-  cart: { bg: 'bg-green-500', text: 'text-green-500', border: 'border-green-500' },
-}
+  wishlist: {
+    bg: "bg-destructive",
+    text: "text-destructive",
+    border: "border-destructive",
+  },
+  skip: {
+    bg: "bg-muted-foreground",
+    text: "text-muted-foreground",
+    border: "border-muted-foreground",
+  },
+  cart: { bg: "bg-success", text: "text-success", border: "border-success" },
+};
 
 // ============================================================================
 // HELPERS
@@ -64,9 +81,9 @@ const ACTION_COLORS = {
 
 function formatPrice(price: number): string {
   return new Intl.NumberFormat(DEFAULT_LOCALE, {
-    style: 'currency',
+    style: "currency",
     currency: DEFAULT_CURRENCY,
-  }).format(price / 100)
+  }).format(price / 100);
 }
 
 // ============================================================================
@@ -79,140 +96,151 @@ function SwipeableProductCard({
   onSwipe,
   onProductClick,
 }: SwipeableProductCardProps) {
-  const haptic = useHapticFeedback()
-  const controls = useAnimation()
-  
+  const haptic = useHapticFeedback();
+  const controls = useAnimation();
+
   // State for showing action indicators
-  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | 'up' | null>(null)
-  const [swipeProgress, setSwipeProgress] = useState(0)
+  const [swipeDirection, setSwipeDirection] = useState<
+    "left" | "right" | "up" | null
+  >(null);
+  const [swipeProgress, setSwipeProgress] = useState(0);
 
   // Get primary image
-  const primaryImage = product.images?.[0] || ''
-  const hasDiscount = product.compare_at_price && product.compare_at_price > product.base_price
+  const primaryImage = product.images?.[0] || "";
+  const hasDiscount =
+    product.compare_at_price && product.compare_at_price > product.base_price;
 
   // Handle drag
   const handleDrag = useCallback(
     (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-      const { offset } = info
-      const absX = Math.abs(offset.x)
-      const absY = Math.abs(offset.y)
-      
+      const { offset } = info;
+      const absX = Math.abs(offset.x);
+      const absY = Math.abs(offset.y);
+
       // Determine primary direction
       if (offset.y < -50 && absY > absX) {
-        setSwipeDirection('up')
-        setSwipeProgress(Math.min(1, absY / SWIPE_THRESHOLD))
+        setSwipeDirection("up");
+        setSwipeProgress(Math.min(1, absY / SWIPE_THRESHOLD));
       } else if (offset.x > 30 && absX > absY) {
-        setSwipeDirection('right')
-        setSwipeProgress(Math.min(1, absX / SWIPE_THRESHOLD))
+        setSwipeDirection("right");
+        setSwipeProgress(Math.min(1, absX / SWIPE_THRESHOLD));
       } else if (offset.x < -30 && absX > absY) {
-        setSwipeDirection('left')
-        setSwipeProgress(Math.min(1, absX / SWIPE_THRESHOLD))
+        setSwipeDirection("left");
+        setSwipeProgress(Math.min(1, absX / SWIPE_THRESHOLD));
       } else {
-        setSwipeDirection(null)
-        setSwipeProgress(0)
+        setSwipeDirection(null);
+        setSwipeProgress(0);
       }
     },
-    []
-  )
+    [],
+  );
 
   // Handle drag end
   const handleDragEnd = useCallback(
     async (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-      const { offset, velocity } = info
-      const absX = Math.abs(offset.x)
-      const absY = Math.abs(offset.y)
-      
+      const { offset, velocity } = info;
+      const absX = Math.abs(offset.x);
+      const absY = Math.abs(offset.y);
+
       // Determine if swipe threshold met
-      const isSwipeRight = offset.x > SWIPE_THRESHOLD || velocity.x > 500
-      const isSwipeLeft = offset.x < -SWIPE_THRESHOLD || velocity.x < -500
-      const isSwipeUp = offset.y < -SWIPE_THRESHOLD || velocity.y < -500
+      const isSwipeRight = offset.x > SWIPE_THRESHOLD || velocity.x > 500;
+      const isSwipeLeft = offset.x < -SWIPE_THRESHOLD || velocity.x < -500;
+      const isSwipeUp = offset.y < -SWIPE_THRESHOLD || velocity.y < -500;
 
       if (isSwipeUp && absY > absX) {
         // Swipe up - Add to cart
-        haptic.trigger('success')
+        haptic.trigger("success");
         await controls.start({
           y: -window.innerHeight,
           opacity: 0,
           transition: { duration: 0.3 },
-        })
-        onSwipe('cart')
+        });
+        onSwipe("cart");
       } else if (isSwipeRight && absX > absY) {
         // Swipe right - Wishlist
-        haptic.trigger('medium')
+        haptic.trigger("medium");
         await controls.start({
           x: window.innerWidth,
           rotate: 20,
           opacity: 0,
           transition: { duration: 0.3 },
-        })
-        onSwipe('wishlist')
+        });
+        onSwipe("wishlist");
       } else if (isSwipeLeft && absX > absY) {
         // Swipe left - Skip
-        haptic.trigger('light')
+        haptic.trigger("light");
         await controls.start({
           x: -window.innerWidth,
           rotate: -20,
           opacity: 0,
           transition: { duration: 0.3 },
-        })
-        onSwipe('skip')
+        });
+        onSwipe("skip");
       } else {
         // Return to center
         await controls.start({
           x: 0,
           y: 0,
           rotate: 0,
-          transition: { type: 'spring', stiffness: 300, damping: 25 },
-        })
+          transition: { type: "spring", stiffness: 300, damping: 25 },
+        });
       }
 
-      setSwipeDirection(null)
-      setSwipeProgress(0)
+      setSwipeDirection(null);
+      setSwipeProgress(0);
     },
-    [controls, haptic, onSwipe]
-  )
+    [controls, haptic, onSwipe],
+  );
 
   // Handle button clicks
   const handleButtonClick = useCallback(
     async (action: SwipeAction) => {
-      haptic.trigger(action === 'skip' ? 'light' : action === 'wishlist' ? 'medium' : 'success')
-      
+      haptic.trigger(
+        action === "skip"
+          ? "light"
+          : action === "wishlist"
+            ? "medium"
+            : "success",
+      );
+
       switch (action) {
-        case 'wishlist':
+        case "wishlist":
           await controls.start({
             x: window.innerWidth,
             rotate: 20,
             opacity: 0,
             transition: { duration: 0.3 },
-          })
-          break
-        case 'skip':
+          });
+          break;
+        case "skip":
           await controls.start({
             x: -window.innerWidth,
             rotate: -20,
             opacity: 0,
             transition: { duration: 0.3 },
-          })
-          break
-        case 'cart':
+          });
+          break;
+        case "cart":
           await controls.start({
             y: -window.innerHeight,
             opacity: 0,
             transition: { duration: 0.3 },
-          })
-          break
+          });
+          break;
       }
-      
-      onSwipe(action)
+
+      onSwipe(action);
     },
-    [controls, haptic, onSwipe]
-  )
+    [controls, haptic, onSwipe],
+  );
 
   return (
     <motion.div
       className={cn(
-        'absolute inset-x-4 top-0',
-        isTopCard ? 'cursor-grab active:cursor-grabbing' : 'pointer-events-none'
+        "absolute inset-x-4 top-0",
+        isTopCard
+          ? "cursor-grab active:cursor-grabbing"
+          : "pointer-events-none",
       )}
       style={{ originX: 0.5, originY: 0 }}
       animate={controls}
@@ -225,7 +253,7 @@ function SwipeableProductCard({
     >
       <div className="relative bg-background rounded-2xl overflow-hidden shadow-xl border">
         {/* Image */}
-        <div 
+        <div
           className="relative aspect-[3/4] bg-muted"
           onClick={() => onProductClick?.()}
         >
@@ -246,52 +274,58 @@ function SwipeableProductCard({
 
           {/* Swipe indicator overlays */}
           <AnimatePresence>
-            {swipeDirection === 'right' && (
+            {swipeDirection === "right" && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: swipeProgress }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-red-500/20 flex items-center justify-center"
+                className="absolute inset-0 bg-destructive/20 flex items-center justify-center"
               >
-                <div className={cn(
-                  'p-6 rounded-full border-4',
-                  ACTION_COLORS.wishlist.border,
-                  ACTION_COLORS.wishlist.text
-                )}>
+                <div
+                  className={cn(
+                    "p-6 rounded-full border-4",
+                    ACTION_COLORS.wishlist.border,
+                    ACTION_COLORS.wishlist.text,
+                  )}
+                >
                   <Heart className="h-16 w-16" />
                 </div>
               </motion.div>
             )}
-            
-            {swipeDirection === 'left' && (
+
+            {swipeDirection === "left" && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: swipeProgress }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-gray-500/20 flex items-center justify-center"
+                className="absolute inset-0 bg-muted-foreground/20 flex items-center justify-center"
               >
-                <div className={cn(
-                  'p-6 rounded-full border-4',
-                  ACTION_COLORS.skip.border,
-                  ACTION_COLORS.skip.text
-                )}>
+                <div
+                  className={cn(
+                    "p-6 rounded-full border-4",
+                    ACTION_COLORS.skip.border,
+                    ACTION_COLORS.skip.text,
+                  )}
+                >
                   <X className="h-16 w-16" />
                 </div>
               </motion.div>
             )}
-            
-            {swipeDirection === 'up' && (
+
+            {swipeDirection === "up" && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: swipeProgress }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-green-500/20 flex items-center justify-center"
+                className="absolute inset-0 bg-success/20 flex items-center justify-center"
               >
-                <div className={cn(
-                  'p-6 rounded-full border-4',
-                  ACTION_COLORS.cart.border,
-                  ACTION_COLORS.cart.text
-                )}>
+                <div
+                  className={cn(
+                    "p-6 rounded-full border-4",
+                    ACTION_COLORS.cart.border,
+                    ACTION_COLORS.cart.text,
+                  )}
+                >
                   <ShoppingCart className="h-16 w-16" />
                 </div>
               </motion.div>
@@ -300,12 +334,8 @@ function SwipeableProductCard({
 
           {/* Badges */}
           <div className="absolute top-4 left-4 flex flex-col gap-2">
-            {hasDiscount && (
-              <Badge variant="destructive">Sale</Badge>
-            )}
-            {product.is_featured && (
-              <Badge variant="secondary">Featured</Badge>
-            )}
+            {hasDiscount && <Badge variant="destructive">Sale</Badge>}
+            {product.is_featured && <Badge variant="secondary">Featured</Badge>}
           </div>
 
           {/* Gradient overlay */}
@@ -317,7 +347,7 @@ function SwipeableProductCard({
           <h3 className="font-semibold text-xl line-clamp-2 mb-1">
             {product.name}
           </h3>
-          
+
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-lg font-bold">
@@ -329,10 +359,10 @@ function SwipeableProductCard({
                 </span>
               )}
             </div>
-            
+
             {/* Rating placeholder */}
             <div className="flex items-center gap-1">
-              <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+              <Star className="h-4 w-4 fill-warning text-warning" />
               <span className="text-sm">4.5</span>
             </div>
           </div>
@@ -344,34 +374,37 @@ function SwipeableProductCard({
             <Button
               variant="outline"
               size="lg"
-              onClick={() => handleButtonClick('skip')}
+              onClick={() => handleButtonClick("skip")}
+              aria-label="Skip product"
               className="h-14 w-14 rounded-full shadow-lg"
             >
-              <X className="h-6 w-6 text-gray-500" />
+              <X className="h-6 w-6 text-muted-foreground" />
             </Button>
-            
+
             <Button
               variant="outline"
               size="lg"
-              onClick={() => handleButtonClick('cart')}
-              className="h-16 w-16 rounded-full shadow-lg bg-green-500 hover:bg-green-600 border-green-500"
+              onClick={() => handleButtonClick("cart")}
+              aria-label="Add to cart"
+              className="h-16 w-16 rounded-full shadow-lg bg-success hover:bg-success/90 border-success"
             >
-              <ShoppingCart className="h-7 w-7 text-white" />
+              <ShoppingCart className="h-7 w-7 text-success-foreground" />
             </Button>
-            
+
             <Button
               variant="outline"
               size="lg"
-              onClick={() => handleButtonClick('wishlist')}
+              onClick={() => handleButtonClick("wishlist")}
+              aria-label="Add to wishlist"
               className="h-14 w-14 rounded-full shadow-lg"
             >
-              <Heart className="h-6 w-6 text-red-500" />
+              <Heart className="h-6 w-6 text-destructive" />
             </Button>
           </div>
         )}
       </div>
     </motion.div>
-  )
+  );
 }
 
 // ============================================================================
@@ -387,55 +420,62 @@ export function ProductSwipeView({
   showButtons = true,
   className,
 }: ProductSwipeViewProps) {
-  const haptic = useHapticFeedback()
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [history, setHistory] = useState<Array<{ product: Product; action: SwipeAction }>>([])
+  const haptic = useHapticFeedback();
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [history, setHistory] = useState<
+    Array<{ product: Product; action: SwipeAction }>
+  >([]);
 
   // Visible products (current + next few for stack effect)
   const visibleProducts = useMemo(() => {
-    return products.slice(currentIndex, currentIndex + 3)
-  }, [products, currentIndex])
+    return products.slice(currentIndex, currentIndex + 3);
+  }, [products, currentIndex]);
 
   // Handle swipe
   const handleSwipe = useCallback(
     (product: Product, action: SwipeAction) => {
       // Save to history for undo
-      setHistory((prev) => [...prev, { product, action }])
-      
+      setHistory((prev) => [...prev, { product, action }]);
+
       // Move to next product
-      setCurrentIndex((prev) => prev + 1)
-      
+      setCurrentIndex((prev) => prev + 1);
+
       // Notify parent
-      onSwipe(product, action)
+      onSwipe(product, action);
     },
-    [onSwipe]
-  )
+    [onSwipe],
+  );
 
   // Handle undo
   const handleUndo = useCallback(() => {
-    if (history.length === 0 || !canUndo) return
-    
-    haptic.trigger('light')
-    setCurrentIndex((prev) => Math.max(0, prev - 1))
-    setHistory((prev) => prev.slice(0, -1))
-    onUndo?.()
-  }, [history.length, canUndo, haptic, onUndo])
+    if (history.length === 0 || !canUndo) return;
+
+    haptic.trigger("light");
+    setCurrentIndex((prev) => Math.max(0, prev - 1));
+    setHistory((prev) => prev.slice(0, -1));
+    onUndo?.();
+  }, [history.length, canUndo, haptic, onUndo]);
 
   // Handle product click
   const handleProductClick = useCallback(
     (product: Product) => {
-      haptic.trigger('selection')
-      onProductClick?.(product)
+      haptic.trigger("selection");
+      onProductClick?.(product);
     },
-    [haptic, onProductClick]
-  )
+    [haptic, onProductClick],
+  );
 
   // Empty state
   if (currentIndex >= products.length) {
     return (
-      <div className={cn('flex flex-col items-center justify-center h-full', className)}>
+      <div
+        className={cn(
+          "flex flex-col items-center justify-center h-full",
+          className,
+        )}
+      >
         <div className="text-center p-8">
-          <PartyPopper className="h-16 w-16 mb-4 text-green-500" />
+          <PartyPopper className="h-16 w-16 mb-4 text-success" />
           <h3 className="text-xl font-semibold mb-2">You've seen them all!</h3>
           <p className="text-muted-foreground mb-4">
             Check out your wishlist or cart
@@ -448,11 +488,11 @@ export function ProductSwipeView({
           )}
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className={cn('relative h-full', className)}>
+    <div className={cn("relative h-full", className)}>
       {/* Instructions */}
       <div className="absolute top-0 left-0 right-0 z-10 flex justify-center gap-4 py-2 text-xs text-muted-foreground">
         <span className="flex items-center gap-1">
@@ -493,7 +533,7 @@ export function ProductSwipeView({
         <span className="text-sm text-muted-foreground">
           {currentIndex + 1} / {products.length}
         </span>
-        
+
         {canUndo && history.length > 0 && (
           <Button
             variant="ghost"
@@ -507,7 +547,7 @@ export function ProductSwipeView({
         )}
       </div>
     </div>
-  )
+  );
 }
 
-export default ProductSwipeView
+export default ProductSwipeView;

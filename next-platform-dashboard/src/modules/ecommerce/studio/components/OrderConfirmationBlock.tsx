@@ -27,12 +27,23 @@ import {
   MessageSquare,
   FileText,
   Camera,
+  Share2,
+  Printer,
+  MessageCircle,
+  Facebook,
+  Link as LinkIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
@@ -420,21 +431,21 @@ export function OrderConfirmationBlock({
     const status = order.payment_status || "pending";
     if (status === "paid" || status === "completed") {
       return (
-        <Badge className="bg-green-100 text-green-800 border-green-200">
+        <Badge className="bg-success/10 text-success border-success/20">
           Paid
         </Badge>
       );
     }
     if (status === "pending") {
       return (
-        <Badge className="bg-amber-100 text-amber-800 border-amber-200">
+        <Badge className="bg-warning/10 text-warning border-warning/20">
           Awaiting Payment
         </Badge>
       );
     }
     if (status === "failed") {
       return (
-        <Badge className="bg-red-100 text-red-800 border-red-200">
+        <Badge className="bg-destructive/10 text-destructive border-destructive/20">
           Payment Failed
         </Badge>
       );
@@ -449,8 +460,8 @@ export function OrderConfirmationBlock({
         <div className="text-center mb-6 sm:mb-8">
           {isAwaitingPayment ? (
             <>
-              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
-                <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-amber-600" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-warning/10 flex items-center justify-center mx-auto mb-4">
+                <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-warning" />
               </div>
               <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">
                 Order Received — Payment Pending
@@ -463,8 +474,8 @@ export function OrderConfirmationBlock({
             </>
           ) : (
             <>
-              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8 text-success" />
               </div>
               <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">
                 Thank you for your order!
@@ -484,30 +495,92 @@ export function OrderConfirmationBlock({
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6"
+              className="h-8 w-8"
+              aria-label="Copy order number"
               onClick={copyOrderNumber}
             >
               {copied ? (
-                <Check className="h-3 w-3 text-green-600" />
+                <Check className="h-3 w-3 text-success" />
               ) : (
                 <Copy className="h-3 w-3" />
               )}
             </Button>
           </div>
+
+          {/* Share & Print */}
+          <div className="flex items-center gap-2 mt-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.print()}
+              data-print-hidden
+            >
+              <Printer className="h-4 w-4 mr-1.5" />
+              Print
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" data-print-hidden>
+                  <Share2 className="h-4 w-4 mr-1.5" />
+                  Share
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center" className="w-48">
+                <DropdownMenuItem
+                  onClick={() => {
+                    const url = encodeURIComponent(window.location.href);
+                    const text = encodeURIComponent(
+                      `My order #${order.order_number}`,
+                    );
+                    window.open(
+                      `https://wa.me/?text=${text}%20${url}`,
+                      "_blank",
+                      "noopener",
+                    );
+                  }}
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  WhatsApp
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    const subject = encodeURIComponent(
+                      `Order #${order.order_number}`,
+                    );
+                    const body = encodeURIComponent(
+                      `Order #${order.order_number}\n${window.location.href}`,
+                    );
+                    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+                  }}
+                >
+                  <Mail className="h-4 w-4 mr-2" />
+                  Email
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    navigator.clipboard?.writeText(window.location.href);
+                  }}
+                >
+                  <LinkIcon className="h-4 w-4 mr-2" />
+                  Copy Link
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         {/* Manual Payment Instructions — enhanced with copy buttons */}
         {isAwaitingPayment && (
-          <Card className="mb-6 border-amber-200 bg-amber-50/50">
+          <Card className="mb-6 border-warning/20 bg-warning/5">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2 text-amber-900">
-                <Banknote className="h-5 w-5 text-amber-600" />
+              <CardTitle className="text-base flex items-center gap-2 text-foreground">
+                <Banknote className="h-5 w-5 text-warning" />
                 Payment Instructions
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Payment Reference — prominent copyable */}
-              <div className="flex items-center justify-between bg-white rounded-lg border p-3">
+              <div className="flex items-center justify-between bg-card rounded-lg border p-3">
                 <div>
                   <p className="text-xs text-muted-foreground">
                     Payment Reference
@@ -524,7 +597,7 @@ export function OrderConfirmationBlock({
                 >
                   {copiedField === "ref" ? (
                     <>
-                      <Check className="h-3 w-3 mr-1 text-green-600" />
+                      <Check className="h-3 w-3 mr-1 text-success" />
                       Copied
                     </>
                   ) : (
@@ -537,10 +610,10 @@ export function OrderConfirmationBlock({
               </div>
 
               {/* Amount to pay — copyable */}
-              <div className="flex items-center justify-between bg-white rounded-lg border p-3">
+              <div className="flex items-center justify-between bg-card rounded-lg border p-3">
                 <div>
                   <p className="text-xs text-muted-foreground">Amount to Pay</p>
-                  <p className="font-bold text-lg">
+                  <p className="font-bold text-base sm:text-lg tabular-nums">
                     {formatPrice(order.total)}
                   </p>
                 </div>
@@ -552,7 +625,7 @@ export function OrderConfirmationBlock({
                 >
                   {copiedField === "amount" ? (
                     <>
-                      <Check className="h-3 w-3 mr-1 text-green-600" />
+                      <Check className="h-3 w-3 mr-1 text-success" />
                       Copied
                     </>
                   ) : (
@@ -566,7 +639,7 @@ export function OrderConfirmationBlock({
 
               {/* Payment instructions text with per-line copy */}
               {manualInstructions ? (
-                <div className="bg-white rounded-lg border p-4">
+                <div className="bg-card rounded-lg border p-4">
                   <p className="text-xs text-muted-foreground mb-2 font-medium">
                     Where to Send Payment
                   </p>
@@ -587,20 +660,20 @@ export function OrderConfirmationBlock({
                             key={i}
                             className={cn(
                               "flex items-center justify-between text-sm py-1",
-                              hasCopyable &&
-                                "bg-amber-50/50 rounded px-2 -mx-2",
+                              hasCopyable && "bg-warning/5 rounded px-2 -mx-2",
                             )}
                           >
-                            <span className="text-amber-900">{line}</span>
+                            <span className="text-foreground">{line}</span>
                             {hasCopyable && copyValue && (
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-6 w-6 shrink-0 ml-2"
+                                className="h-8 w-8 shrink-0 ml-2"
+                                aria-label="Copy value"
                                 onClick={() => copyText(copyValue, `line-${i}`)}
                               >
                                 {copiedField === `line-${i}` ? (
-                                  <Check className="h-3 w-3 text-green-600" />
+                                  <Check className="h-3 w-3 text-success" />
                                 ) : (
                                   <Copy className="h-3 w-3 text-muted-foreground" />
                                 )}
@@ -612,19 +685,19 @@ export function OrderConfirmationBlock({
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-amber-800">
+                <p className="text-sm text-warning">
                   Please contact the store to arrange payment. Use order number{" "}
                   <strong>{order.order_number}</strong> as the payment
                   reference.
                 </p>
               )}
 
-              <div className="text-xs text-amber-700 border-t border-amber-200 pt-3">
+              <div className="text-xs text-warning border-t border-warning/20 pt-3">
                 <strong>Important:</strong> Your order will be processed once
                 payment is confirmed. Always use{" "}
                 <strong>{order.order_number}</strong> as your payment reference.
               </div>
-              <div className="text-xs text-amber-700 flex items-center gap-1.5 mt-2">
+              <div className="text-xs text-warning flex items-center gap-1.5 mt-2">
                 <MessageSquare className="h-3 w-3" />
                 Your chat assistant is also walking you through these payment
                 steps.
@@ -644,13 +717,13 @@ export function OrderConfirmationBlock({
             </CardHeader>
             <CardContent>
               {proofStatus.hasProof ? (
-                <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg border border-green-200">
-                  <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
+                <div className="flex items-center gap-3 p-4 bg-success/5 rounded-lg border border-success/20">
+                  <CheckCircle2 className="h-5 w-5 text-success shrink-0" />
                   <div>
-                    <p className="text-sm font-medium text-green-900">
+                    <p className="text-sm font-medium text-success">
                       Payment proof uploaded
                     </p>
-                    <p className="text-xs text-green-700">
+                    <p className="text-xs text-success/80">
                       {proofStatus.fileName} —{" "}
                       {proofStatus.status === "pending_review"
                         ? "Under review"
@@ -730,7 +803,10 @@ export function OrderConfirmationBlock({
                   </div>
 
                   {proofError && (
-                    <div className="flex items-center gap-2 text-sm text-red-600">
+                    <div
+                      role="alert"
+                      className="flex items-center gap-2 text-sm text-destructive"
+                    >
                       <AlertTriangle className="h-4 w-4" />
                       {proofError}
                     </div>
@@ -772,12 +848,12 @@ export function OrderConfirmationBlock({
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2 text-sm">
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-100 text-green-800">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-success/10 text-success">
                   <Check className="h-3.5 w-3.5" />
                   <span>Order Placed</span>
                 </div>
                 <span className="text-muted-foreground self-center">→</span>
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-100 text-amber-800 font-medium">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-warning/10 text-warning font-medium">
                   <Banknote className="h-3.5 w-3.5" />
                   <span>Send Payment</span>
                 </div>
@@ -786,7 +862,7 @@ export function OrderConfirmationBlock({
                   className={cn(
                     "flex items-center gap-1.5 px-3 py-1.5 rounded-full",
                     proofStatus.hasProof
-                      ? "bg-green-100 text-green-800"
+                      ? "bg-success/10 text-success"
                       : "bg-muted text-muted-foreground",
                   )}
                 >
@@ -858,7 +934,7 @@ export function OrderConfirmationBlock({
               )}
 
               {order.estimated_delivery && (
-                <p className="text-sm text-green-600">
+                <p className="text-sm text-success">
                   Estimated delivery: {order.estimated_delivery}
                 </p>
               )}
@@ -875,7 +951,7 @@ export function OrderConfirmationBlock({
                       href={ensureAbsoluteUrl(order.tracking_url)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
+                      className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
                     >
                       Track your shipment →
                     </a>
@@ -969,7 +1045,7 @@ export function OrderConfirmationBlock({
                   </div>
 
                   {/* Line Total */}
-                  <div className="text-sm sm:text-base font-medium">
+                  <div className="text-sm sm:text-base font-medium tabular-nums shrink-0 ml-2">
                     {formatPrice(item.line_total)}
                   </div>
                 </div>
@@ -980,23 +1056,25 @@ export function OrderConfirmationBlock({
 
             {/* Totals */}
             <div className="space-y-2">
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm gap-4">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>{formatPrice(order.subtotal)}</span>
+                <span className="tabular-nums shrink-0">
+                  {formatPrice(order.subtotal)}
+                </span>
               </div>
 
               {order.discount > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-green-600">Discount</span>
-                  <span className="text-green-600">
+                <div className="flex justify-between text-sm gap-4">
+                  <span className="text-success">Discount</span>
+                  <span className="text-success tabular-nums shrink-0">
                     -{formatPrice(order.discount)}
                   </span>
                 </div>
               )}
 
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm gap-4">
                 <span className="text-muted-foreground">Shipping</span>
-                <span>
+                <span className="tabular-nums shrink-0">
                   {order.shipping_amount > 0
                     ? formatPrice(order.shipping_amount)
                     : "Free"}
@@ -1004,17 +1082,19 @@ export function OrderConfirmationBlock({
               </div>
 
               {order.tax_amount > 0 && (
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-sm gap-4">
                   <span className="text-muted-foreground">Tax</span>
-                  <span>{formatPrice(order.tax_amount)}</span>
+                  <span className="tabular-nums shrink-0">
+                    {formatPrice(order.tax_amount)}
+                  </span>
                 </div>
               )}
 
               <Separator />
 
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center gap-4">
                 <span className="font-semibold">Total</span>
-                <span className="text-xl font-bold">
+                <span className="text-lg sm:text-xl font-bold tabular-nums shrink-0">
                   {formatPrice(order.total)}
                 </span>
               </div>

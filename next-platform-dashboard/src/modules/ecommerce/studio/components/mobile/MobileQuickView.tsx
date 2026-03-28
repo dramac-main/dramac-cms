@@ -1,50 +1,64 @@
 /**
  * MobileQuickView - Bottom sheet product quick view
- * 
+ *
  * Phase ECOM-32: Mobile Product Experience
- * 
+ *
  * A mobile-optimized quick view that shows product details
  * in a bottom sheet without navigating to the full product page.
  * Includes image gallery, variant selection, and add to cart.
  */
-'use client'
+"use client";
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react'
-import { motion, AnimatePresence, PanInfo } from 'framer-motion'
-import Image from 'next/image'
-import Link from 'next/link'
-import { X, Heart, Share2, ChevronRight, Minus, Plus, ShoppingCart, Loader2, Check } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { useHapticFeedback } from '../../../hooks/useHapticFeedback'
-import { useSwipeGesture } from '../../../hooks/useSwipeGesture'
-import type { Product, ProductVariant } from '../../../types/ecommerce-types'
+import React, { useState, useCallback, useMemo, useEffect } from "react";
+import { motion, AnimatePresence, PanInfo } from "framer-motion";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  X,
+  Heart,
+  Share2,
+  ChevronRight,
+  Minus,
+  Plus,
+  ShoppingCart,
+  Loader2,
+  Check,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useHapticFeedback } from "../../../hooks/useHapticFeedback";
+import { useSwipeGesture } from "../../../hooks/useSwipeGesture";
+import type { Product, ProductVariant } from "../../../types/ecommerce-types";
 
-import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from "@/lib/locale-config";
 // ============================================================================
 // TYPES
 // ============================================================================
 
 export interface VariantOption {
-  name: string
-  values: string[]
-  type?: 'color' | 'size' | 'text'
+  name: string;
+  values: string[];
+  type?: "color" | "size" | "text";
 }
 
 export interface MobileQuickViewProps {
-  product: Product | null
-  variants?: ProductVariant[]
-  options?: VariantOption[]
-  isOpen: boolean
-  onClose: () => void
-  onAddToCart: (product: Product, variant: ProductVariant | null, quantity: number) => void | Promise<void>
-  onWishlistToggle?: (product: Product) => void
-  onShare?: (product: Product) => void
-  onViewFullDetails?: (product: Product) => void
-  isInWishlist?: boolean
-  isAddingToCart?: boolean
-  className?: string
+  product: Product | null;
+  variants?: ProductVariant[];
+  options?: VariantOption[];
+  isOpen: boolean;
+  onClose: () => void;
+  onAddToCart: (
+    product: Product,
+    variant: ProductVariant | null,
+    quantity: number,
+  ) => void | Promise<void>;
+  onWishlistToggle?: (product: Product) => void;
+  onShare?: (product: Product) => void;
+  onViewFullDetails?: (product: Product) => void;
+  isInWishlist?: boolean;
+  isAddingToCart?: boolean;
+  className?: string;
 }
 
 // ============================================================================
@@ -52,18 +66,18 @@ export interface MobileQuickViewProps {
 // ============================================================================
 
 const COLOR_MAP: Record<string, string> = {
-  red: '#ef4444',
-  blue: '#3b82f6',
-  green: '#22c55e',
-  yellow: '#eab308',
-  purple: '#a855f7',
-  pink: '#ec4899',
-  orange: '#f97316',
-  black: '#171717',
-  white: '#ffffff',
-  gray: '#6b7280',
-  grey: '#6b7280',
-}
+  red: "#ef4444",
+  blue: "#3b82f6",
+  green: "#22c55e",
+  yellow: "#eab308",
+  purple: "#a855f7",
+  pink: "#ec4899",
+  orange: "#f97316",
+  black: "#171717",
+  white: "#ffffff",
+  gray: "#6b7280",
+  grey: "#6b7280",
+};
 
 // ============================================================================
 // HELPERS
@@ -71,14 +85,14 @@ const COLOR_MAP: Record<string, string> = {
 
 function formatPrice(price: number): string {
   return new Intl.NumberFormat(DEFAULT_LOCALE, {
-    style: 'currency',
+    style: "currency",
     currency: DEFAULT_CURRENCY,
-  }).format(price / 100)
+  }).format(price / 100);
 }
 
 function getColorHex(colorName: string): string | null {
-  if (!colorName) return null
-  return COLOR_MAP[colorName.toLowerCase()] || null
+  if (!colorName) return null;
+  return COLOR_MAP[colorName.toLowerCase()] || null;
 }
 
 // ============================================================================
@@ -99,122 +113,139 @@ export function MobileQuickView({
   isAddingToCart = false,
   className,
 }: MobileQuickViewProps) {
-  const haptic = useHapticFeedback()
-  
+  const haptic = useHapticFeedback();
+
   // State
-  const [quantity, setQuantity] = useState(1)
-  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({})
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [addedToCart, setAddedToCart] = useState(false)
+  const [quantity, setQuantity] = useState(1);
+  const [selectedOptions, setSelectedOptions] = useState<
+    Record<string, string>
+  >({});
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [addedToCart, setAddedToCart] = useState(false);
 
   // Reset state when product changes
   useEffect(() => {
     if (product) {
-      setQuantity(1)
-      setSelectedOptions({})
-      setCurrentImageIndex(0)
-      setAddedToCart(false)
+      setQuantity(1);
+      setSelectedOptions({});
+      setCurrentImageIndex(0);
+      setAddedToCart(false);
     }
-  }, [product?.id])
+  }, [product?.id]);
 
   // Swipe gesture for closing
   const { handlers: swipeHandlers } = useSwipeGesture({
     onSwipeDown: () => {
-      haptic.trigger('selection')
-      onClose()
+      haptic.trigger("selection");
+      onClose();
     },
     threshold: 100,
-  })
+  });
 
   // Find selected variant
   const selectedVariant = useMemo(() => {
-    if (!variants.length || Object.keys(selectedOptions).length !== options.length) {
-      return null
+    if (
+      !variants.length ||
+      Object.keys(selectedOptions).length !== options.length
+    ) {
+      return null;
     }
-    
-    return variants.find((variant) => {
-      if (!variant.options) return false
-      for (const [key, value] of Object.entries(selectedOptions)) {
-        if (variant.options[key] !== value) return false
-      }
-      return true
-    }) || null
-  }, [variants, selectedOptions, options.length])
+
+    return (
+      variants.find((variant) => {
+        if (!variant.options) return false;
+        for (const [key, value] of Object.entries(selectedOptions)) {
+          if (variant.options[key] !== value) return false;
+        }
+        return true;
+      }) || null
+    );
+  }, [variants, selectedOptions, options.length]);
 
   // Calculate current price
-  const currentPrice = selectedVariant?.price ?? product?.base_price ?? 0
-  const hasDiscount = product?.compare_at_price && product.compare_at_price > (product?.base_price ?? 0)
+  const currentPrice = selectedVariant?.price ?? product?.base_price ?? 0;
+  const hasDiscount =
+    product?.compare_at_price &&
+    product.compare_at_price > (product?.base_price ?? 0);
 
   // Handle option change
-  const handleOptionChange = useCallback((optionName: string, value: string) => {
-    haptic.trigger('selection')
-    setSelectedOptions((prev) => ({ ...prev, [optionName]: value }))
-  }, [haptic])
+  const handleOptionChange = useCallback(
+    (optionName: string, value: string) => {
+      haptic.trigger("selection");
+      setSelectedOptions((prev) => ({ ...prev, [optionName]: value }));
+    },
+    [haptic],
+  );
 
   // Handle quantity change
-  const handleQuantityChange = useCallback((delta: number) => {
-    haptic.trigger('selection')
-    setQuantity((prev) => Math.max(1, Math.min(99, prev + delta)))
-  }, [haptic])
+  const handleQuantityChange = useCallback(
+    (delta: number) => {
+      haptic.trigger("selection");
+      setQuantity((prev) => Math.max(1, Math.min(99, prev + delta)));
+    },
+    [haptic],
+  );
 
   // Handle add to cart
   const handleAddToCart = useCallback(async () => {
-    if (!product || isAddingToCart) return
-    
-    haptic.trigger('success')
-    await onAddToCart(product, selectedVariant, quantity)
-    setAddedToCart(true)
-    
+    if (!product || isAddingToCart) return;
+
+    haptic.trigger("success");
+    await onAddToCart(product, selectedVariant, quantity);
+    setAddedToCart(true);
+
     // Reset after 2 seconds
-    setTimeout(() => setAddedToCart(false), 2000)
-  }, [product, selectedVariant, quantity, isAddingToCart, onAddToCart, haptic])
+    setTimeout(() => setAddedToCart(false), 2000);
+  }, [product, selectedVariant, quantity, isAddingToCart, onAddToCart, haptic]);
 
   // Handle wishlist
   const handleWishlistToggle = useCallback(() => {
-    if (!product) return
-    haptic.trigger('selection')
-    onWishlistToggle?.(product)
-  }, [product, onWishlistToggle, haptic])
+    if (!product) return;
+    haptic.trigger("selection");
+    onWishlistToggle?.(product);
+  }, [product, onWishlistToggle, haptic]);
 
   // Handle share
   const handleShare = useCallback(async () => {
-    if (!product) return
-    haptic.trigger('selection')
-    
+    if (!product) return;
+    haptic.trigger("selection");
+
     if (onShare) {
-      onShare(product)
+      onShare(product);
     } else if (navigator.share) {
       try {
         await navigator.share({
           title: product.name,
-          text: product.description || '',
+          text: product.description || "",
           url: `/store/products/${product.slug}`,
-        })
+        });
       } catch {
         // User cancelled or share failed
       }
     }
-  }, [product, onShare, haptic])
+  }, [product, onShare, haptic]);
 
   // Handle view full details
   const handleViewFullDetails = useCallback(() => {
-    if (!product) return
-    haptic.trigger('selection')
-    onViewFullDetails?.(product)
-    onClose()
-  }, [product, onViewFullDetails, onClose, haptic])
+    if (!product) return;
+    haptic.trigger("selection");
+    onViewFullDetails?.(product);
+    onClose();
+  }, [product, onViewFullDetails, onClose, haptic]);
 
   // Check if can add to cart
-  const canAddToCart = product && !isAddingToCart && (
-    options.length === 0 || Object.keys(selectedOptions).length === options.length
-  )
+  const canAddToCart =
+    product &&
+    !isAddingToCart &&
+    (options.length === 0 ||
+      Object.keys(selectedOptions).length === options.length);
 
   // Is out of stock
-  const isOutOfStock = selectedVariant 
-    ? (selectedVariant.quantity !== null && selectedVariant.quantity <= 0)
-    : (product?.quantity !== null && (product?.quantity ?? 0) <= 0)
+  const isOutOfStock = selectedVariant
+    ? selectedVariant.quantity !== null && selectedVariant.quantity <= 0
+    : product?.quantity !== null && (product?.quantity ?? 0) <= 0;
 
-  if (!product) return null
+  if (!product) return null;
 
   return (
     <AnimatePresence>
@@ -231,25 +262,28 @@ export function MobileQuickView({
 
           {/* Sheet */}
           <motion.div
-            initial={{ y: '100%' }}
+            initial={{ y: "100%" }}
             animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
             drag="y"
             dragConstraints={{ top: 0 }}
             dragElastic={0.2}
-            onDragEnd={(_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+            onDragEnd={(
+              _: MouseEvent | TouchEvent | PointerEvent,
+              info: PanInfo,
+            ) => {
               if (info.offset.y > 100) {
-                onClose()
+                onClose();
               }
             }}
             className={cn(
-              'fixed bottom-0 left-0 right-0 z-50',
-              'bg-background rounded-t-3xl',
-              'max-h-[85vh] overflow-hidden flex flex-col',
-              className
+              "fixed bottom-0 left-0 right-0 z-50",
+              "bg-background rounded-t-3xl",
+              "max-h-[85vh] overflow-hidden flex flex-col",
+              className,
             )}
-            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+            style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
             {...swipeHandlers}
           >
             {/* Handle */}
@@ -280,8 +314,8 @@ export function MobileQuickView({
                   >
                     <Heart
                       className={cn(
-                        'h-5 w-5 transition-all',
-                        isInWishlist && 'fill-red-500 text-red-500'
+                        "h-5 w-5 transition-all",
+                        isInWishlist && "fill-destructive text-destructive",
                       )}
                     />
                   </Button>
@@ -310,7 +344,7 @@ export function MobileQuickView({
                       className="object-cover"
                       sizes="(max-width: 768px) 100vw, 400px"
                     />
-                    
+
                     {/* Image indicators */}
                     {product.images.length > 1 && (
                       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
@@ -322,10 +356,10 @@ export function MobileQuickView({
                           >
                             <span
                               className={cn(
-                                'block w-2 h-2 rounded-full transition-all',
+                                "block w-2 h-2 rounded-full transition-all",
                                 index === currentImageIndex
-                                  ? 'bg-primary w-4'
-                                  : 'bg-primary/40'
+                                  ? "bg-primary w-4"
+                                  : "bg-primary/40",
                               )}
                             />
                           </button>
@@ -341,7 +375,10 @@ export function MobileQuickView({
 
                 {/* Badges */}
                 {hasDiscount && (
-                  <Badge variant="destructive" className="absolute top-3 left-3">
+                  <Badge
+                    variant="destructive"
+                    className="absolute top-3 left-3"
+                  >
                     Sale
                   </Badge>
                 )}
@@ -379,39 +416,53 @@ export function MobileQuickView({
                     {options.map((option) => (
                       <div key={option.name}>
                         <label className="text-sm font-medium mb-2 block">
-                          {option.name}: {selectedOptions[option.name] && (
+                          {option.name}:{" "}
+                          {selectedOptions[option.name] && (
                             <span className="font-normal text-muted-foreground">
                               {selectedOptions[option.name]}
                             </span>
                           )}
                         </label>
-                        
-                        {option.type === 'color' ? (
+
+                        {option.type === "color" ? (
                           // Color swatches
                           <div className="flex flex-wrap gap-2">
                             {option.values.map((value) => {
-                              const colorHex = getColorHex(value)
-                              const isSelected = selectedOptions[option.name] === value
-                              
+                              const colorHex = getColorHex(value);
+                              const isSelected =
+                                selectedOptions[option.name] === value;
+
                               return (
                                 <button
                                   key={value}
-                                  onClick={() => handleOptionChange(option.name, value)}
+                                  onClick={() =>
+                                    handleOptionChange(option.name, value)
+                                  }
                                   className={cn(
-                                    'w-10 h-10 rounded-full border-2 flex items-center justify-center',
-                                    isSelected ? 'border-primary' : 'border-border'
+                                    "w-10 h-10 rounded-full border-2 flex items-center justify-center",
+                                    isSelected
+                                      ? "border-primary"
+                                      : "border-border",
                                   )}
-                                  style={colorHex ? { backgroundColor: colorHex } : undefined}
+                                  style={
+                                    colorHex
+                                      ? { backgroundColor: colorHex }
+                                      : undefined
+                                  }
                                   title={value}
                                 >
                                   {isSelected && (
-                                    <Check className={cn(
-                                      'h-4 w-4',
-                                      colorHex === '#ffffff' ? 'text-black' : 'text-white'
-                                    )} />
+                                    <Check
+                                      className={cn(
+                                        "h-4 w-4",
+                                        colorHex === "#ffffff"
+                                          ? "text-black"
+                                          : "text-white",
+                                      )}
+                                    />
                                   )}
                                 </button>
-                              )
+                              );
                             })}
                           </div>
                         ) : (
@@ -420,13 +471,15 @@ export function MobileQuickView({
                             {option.values.map((value) => (
                               <button
                                 key={value}
-                                onClick={() => handleOptionChange(option.name, value)}
+                                onClick={() =>
+                                  handleOptionChange(option.name, value)
+                                }
                                 className={cn(
-                                  'px-4 h-10 rounded-lg border-2 font-medium text-sm transition-all',
-                                  'min-h-[44px]',
+                                  "px-4 h-10 rounded-lg border-2 font-medium text-sm transition-all",
+                                  "min-h-[44px]",
                                   selectedOptions[option.name] === value
-                                    ? 'border-primary bg-primary text-primary-foreground'
-                                    : 'border-border hover:border-primary/50'
+                                    ? "border-primary bg-primary text-primary-foreground"
+                                    : "border-border hover:border-primary/50",
                                 )}
                               >
                                 {value}
@@ -441,7 +494,9 @@ export function MobileQuickView({
 
                 {/* Quantity */}
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Quantity</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    Quantity
+                  </label>
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1 bg-muted rounded-lg">
                       <Button
@@ -468,11 +523,17 @@ export function MobileQuickView({
                     </div>
 
                     {/* Stock indicator */}
-                    {selectedVariant && selectedVariant.quantity !== null && selectedVariant.quantity > 0 && selectedVariant.quantity <= 5 && (
-                      <Badge variant="outline" className="text-amber-600 border-amber-600">
-                        Only {selectedVariant.quantity} left
-                      </Badge>
-                    )}
+                    {selectedVariant &&
+                      selectedVariant.quantity !== null &&
+                      selectedVariant.quantity > 0 &&
+                      selectedVariant.quantity <= 5 && (
+                        <Badge
+                          variant="outline"
+                          className="text-warning border-warning"
+                        >
+                          Only {selectedVariant.quantity} left
+                        </Badge>
+                      )}
                   </div>
                 </div>
 
@@ -499,14 +560,14 @@ export function MobileQuickView({
                     {formatPrice(currentPrice * quantity)}
                   </div>
                 </div>
-                
+
                 <Button
                   size="lg"
                   onClick={handleAddToCart}
                   disabled={!canAddToCart || isOutOfStock}
                   className={cn(
-                    'min-h-[48px] px-8',
-                    addedToCart && 'bg-green-600 hover:bg-green-700'
+                    "min-h-[48px] px-8",
+                    addedToCart && "bg-success hover:bg-success/90",
                   )}
                 >
                   {isAddingToCart ? (
@@ -515,7 +576,7 @@ export function MobileQuickView({
                       Adding...
                     </>
                   ) : isOutOfStock ? (
-                    'Out of Stock'
+                    "Out of Stock"
                   ) : addedToCart ? (
                     <>
                       <Check className="h-5 w-5 mr-2" />
@@ -534,7 +595,7 @@ export function MobileQuickView({
         </>
       )}
     </AnimatePresence>
-  )
+  );
 }
 
-export default MobileQuickView
+export default MobileQuickView;

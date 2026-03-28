@@ -13,6 +13,13 @@ import {
   getOrder,
   updateOrder,
 } from "@/modules/ecommerce/actions/ecommerce-actions";
+import { PUBLIC_RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
+import {
+  isValidUUID,
+  clampLimit,
+  clampPage,
+  truncateText,
+} from "@/lib/api-validation";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +41,19 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(request: NextRequest) {
   try {
+    // Rate limit: 20 requests/minute per IP
+    const ip = getClientIp(request);
+    const rl = PUBLIC_RATE_LIMITS.orders.check(ip);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) },
+        },
+      );
+    }
+
     const supabase = await createClient();
     const {
       data: { user },
@@ -49,8 +69,12 @@ export async function GET(request: NextRequest) {
     const orderId = searchParams.get("orderId");
     const status = searchParams.get("status") || undefined;
     const paymentStatus = searchParams.get("paymentStatus") || undefined;
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "20", 10);
+    const page = clampPage(parseInt(searchParams.get("page") || "1", 10));
+    const limit = clampLimit(
+      parseInt(searchParams.get("limit") || "20", 10),
+      20,
+      100,
+    );
     const customerId = searchParams.get("customerId") || undefined;
     const startDate = searchParams.get("startDate") || undefined;
     const endDate = searchParams.get("endDate") || undefined;
@@ -58,6 +82,26 @@ export async function GET(request: NextRequest) {
     if (!siteId) {
       return NextResponse.json(
         { error: "siteId is required" },
+        { status: 400 },
+      );
+    }
+
+    // Validate UUID formats
+    if (!isValidUUID(siteId)) {
+      return NextResponse.json(
+        { error: "Invalid siteId format" },
+        { status: 400 },
+      );
+    }
+    if (orderId && !isValidUUID(orderId)) {
+      return NextResponse.json(
+        { error: "Invalid orderId format" },
+        { status: 400 },
+      );
+    }
+    if (customerId && !isValidUUID(customerId)) {
+      return NextResponse.json(
+        { error: "Invalid customerId format" },
         { status: 400 },
       );
     }
@@ -159,6 +203,24 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    // Validate UUID formats
+    if (!isValidUUID(siteId)) {
+      return NextResponse.json(
+        { error: "Invalid siteId format" },
+        { status: 400 },
+      );
+    }
+    if (!isValidUUID(orderId)) {
+      return NextResponse.json(
+        { error: "Invalid orderId format" },
+        { status: 400 },
+      );
+    }
+
+    // Truncate text fields to safe lengths
+    const safeTrackingNumber = truncateText(trackingNumber, 200);
+    const safeNotes = truncateText(notes, 5000);
+
     // Verify user has access to this site (defense-in-depth beyond RLS)
     const { data: site, error: siteError } = await supabase
       .from("sites")
@@ -207,12 +269,12 @@ export async function PATCH(request: NextRequest) {
       updates.payment_status = paymentStatus;
     }
 
-    if (trackingNumber !== undefined) {
-      updates.tracking_number = trackingNumber;
+    if (safeTrackingNumber !== undefined) {
+      updates.tracking_number = safeTrackingNumber;
     }
 
-    if (notes !== undefined) {
-      updates.internal_notes = notes;
+    if (safeNotes !== undefined) {
+      updates.internal_notes = safeNotes;
     }
 
     if (Object.keys(updates).length === 0) {

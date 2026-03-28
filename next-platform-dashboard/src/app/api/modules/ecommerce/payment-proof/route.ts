@@ -8,11 +8,26 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { uploadPaymentProof } from "@/modules/ecommerce/actions/public-ecommerce-actions";
+import { PUBLIC_RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
+import { isValidUUID, validateFileUpload } from "@/lib/api-validation";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: 5 uploads/minute per IP
+    const ip = getClientIp(request);
+    const rl = PUBLIC_RATE_LIMITS.paymentProof.check(ip);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) },
+        },
+      );
+    }
+
     const formData = await request.formData();
 
     const siteId = formData.get("siteId") as string | null;
@@ -27,6 +42,25 @@ export async function POST(request: NextRequest) {
         },
         { status: 400 },
       );
+    }
+
+    // Validate UUID formats
+    if (!isValidUUID(siteId) || !isValidUUID(orderId)) {
+      return NextResponse.json({ error: "Invalid ID format" }, { status: 400 });
+    }
+
+    // Validate orderNumber length
+    if (orderNumber.length > 50) {
+      return NextResponse.json(
+        { error: "Invalid order number" },
+        { status: 400 },
+      );
+    }
+
+    // Validate file upload (size, MIME type, filename)
+    const fileCheck = validateFileUpload(file);
+    if (!fileCheck.valid) {
+      return NextResponse.json({ error: fileCheck.error }, { status: 400 });
     }
 
     // Convert file to base64

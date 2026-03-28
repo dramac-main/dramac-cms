@@ -333,7 +333,9 @@ export function OrderDetailDialog({
         {
           carrier: actualCarrier,
           tracking_number: shippingTrackingNumber.trim(),
-          tracking_url: shippingTrackingUrl.trim() ? ensureAbsoluteUrl(shippingTrackingUrl) : undefined,
+          tracking_url: shippingTrackingUrl.trim()
+            ? ensureAbsoluteUrl(shippingTrackingUrl)
+            : undefined,
         },
         userId,
         userName,

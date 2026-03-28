@@ -532,7 +532,7 @@ export function ChatOrderPanel({
           order.paymentStatus === "pending" && (
             <>
               <Separator />
-              <div className="flex items-center gap-1.5 text-xs text-amber-600">
+              <div className="flex items-center gap-1.5 text-xs text-warning">
                 <AlertTriangle className="h-3 w-3" />
                 <span>Awaiting payment proof upload</span>
               </div>

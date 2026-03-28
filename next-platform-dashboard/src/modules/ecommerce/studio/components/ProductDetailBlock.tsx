@@ -30,14 +30,27 @@ import {
   Truck,
   Shield,
   Check,
+  Link as LinkIcon,
+  Mail,
+  Facebook,
+  MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useStorefrontProduct } from "../../hooks/useStorefrontProduct";
 import { useStorefrontCart } from "../../hooks/useStorefrontCart";
+import { useStorefrontReviews } from "../../hooks/useStorefrontReviews";
 import { useStorefront } from "../../context/storefront-context";
+import { ReviewListBlock } from "./ReviewListBlock";
+import { ReviewFormBlock } from "./ReviewFormBlock";
 import type { ComponentDefinition } from "@/types/studio";
 
 // =============================================================================
@@ -82,19 +95,13 @@ function RatingStars({ rating, count }: { rating: number; count: number }) {
         {Array.from({ length: 5 }).map((_, i) => {
           if (i < fullStars)
             return (
-              <Star
-                key={i}
-                className="h-4 w-4 fill-yellow-400 text-yellow-400"
-              />
+              <Star key={i} className="h-4 w-4 fill-warning text-warning" />
             );
           if (i === fullStars && hasHalf)
             return (
-              <StarHalf
-                key={i}
-                className="h-4 w-4 fill-yellow-400 text-yellow-400"
-              />
+              <StarHalf key={i} className="h-4 w-4 fill-warning text-warning" />
             );
-          return <Star key={i} className="h-4 w-4 text-gray-300" />;
+          return <Star key={i} className="h-4 w-4 text-muted-foreground/40" />;
         })}
       </div>
       <span className="text-sm text-muted-foreground">
@@ -137,6 +144,20 @@ export function ProductDetailBlock({
     isUpdating: isAddingToCart,
     cart,
   } = useStorefrontCart(effectiveSiteId);
+
+  // Reviews
+  const {
+    reviews,
+    stats: reviewStats,
+    totalReviews,
+    isLoading: reviewsLoading,
+    hasMore: hasMoreReviews,
+    sortBy: reviewSortBy,
+    setSortBy: setReviewSortBy,
+    loadMore: loadMoreReviews,
+    submitReview,
+    markHelpful,
+  } = useStorefrontReviews(effectiveSiteId, product?.id || "");
 
   // Check if product is already in cart
   const isProductInCart = useMemo(() => {
@@ -246,7 +267,7 @@ export function ProductDetailBlock({
   const galleryContent = showGallery && (
     <div className="space-y-4">
       {/* Main image */}
-      <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 border">
+      <div className="relative aspect-square rounded-xl overflow-hidden bg-muted border">
         {isSupabaseImage(images[selectedImage]) ? (
           <Image
             src={images[selectedImage]}
@@ -265,7 +286,7 @@ export function ProductDetailBlock({
           />
         )}
         {hasDiscount && (
-          <Badge className="absolute top-3 left-3 bg-red-500 text-white text-sm px-3 py-1">
+          <Badge className="absolute top-3 left-3 bg-destructive text-destructive-foreground text-sm px-3 py-1">
             -{discountPercent}%
           </Badge>
         )}
@@ -283,14 +304,14 @@ export function ProductDetailBlock({
               onClick={() =>
                 setSelectedImage((i) => (i - 1 + images.length) % images.length)
               }
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-3 min-w-[44px] min-h-[44px] flex items-center justify-center shadow-lg transition-all hover:scale-110"
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/90 hover:bg-background rounded-full p-3 min-w-[44px] min-h-[44px] flex items-center justify-center shadow-lg transition-all hover:scale-110"
               aria-label="Previous image"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
             <button
               onClick={() => setSelectedImage((i) => (i + 1) % images.length)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-3 min-w-[44px] min-h-[44px] flex items-center justify-center shadow-lg transition-all hover:scale-110"
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/90 hover:bg-background rounded-full p-3 min-w-[44px] min-h-[44px] flex items-center justify-center shadow-lg transition-all hover:scale-110"
               aria-label="Next image"
             >
               <ChevronRight className="h-5 w-5" />
@@ -315,7 +336,7 @@ export function ProductDetailBlock({
                 "relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all",
                 selectedImage === i
                   ? "border-primary ring-2 ring-primary/20"
-                  : "border-transparent hover:border-gray-300 opacity-70 hover:opacity-100",
+                  : "border-transparent hover:border-border opacity-70 hover:opacity-100",
               )}
             >
               {isSupabaseImage(img) ? (
@@ -354,12 +375,16 @@ export function ProductDetailBlock({
       </div>
 
       {/* Rating */}
-      {showReviews && (product as any).average_rating > 0 && (
-        <RatingStars
-          rating={(product as any).average_rating || 0}
-          count={(product as any).review_count || 0}
-        />
-      )}
+      {showReviews &&
+        ((product as any).average_rating > 0 ||
+          reviewStats.averageRating > 0) && (
+          <RatingStars
+            rating={
+              (product as any).average_rating || reviewStats.averageRating || 0
+            }
+            count={(product as any).review_count || totalReviews || 0}
+          />
+        )}
 
       {/* Price */}
       {!quotationHidePrices && (
@@ -387,8 +412,8 @@ export function ProductDetailBlock({
       <div className="flex items-center gap-2">
         {isInStock ? (
           <>
-            <Check className="h-4 w-4 text-green-600" />
-            <span className="text-sm text-green-600 font-medium">
+            <Check className="h-4 w-4 text-success" />
+            <span className="text-sm text-success font-medium">
               {isLowStock
                 ? `Only ${product.quantity} left in stock`
                 : "In Stock"}
@@ -396,8 +421,8 @@ export function ProductDetailBlock({
           </>
         ) : (
           <>
-            <AlertCircle className="h-4 w-4 text-red-500" />
-            <span className="text-sm text-red-500 font-medium">
+            <AlertCircle className="h-4 w-4 text-destructive" />
+            <span className="text-sm text-destructive font-medium">
               Out of Stock
             </span>
           </>
@@ -417,7 +442,7 @@ export function ProductDetailBlock({
                   "px-4 py-2.5 min-h-[44px] border rounded-md text-sm transition-colors",
                   selectedVariant === v.id
                     ? "border-primary bg-primary/5 text-primary"
-                    : "border-gray-200 hover:border-gray-300",
+                    : "border-border hover:border-border",
                 )}
               >
                 {Object.values(v.options || {}).join(" / ") || v.sku || v.id}
@@ -435,7 +460,7 @@ export function ProductDetailBlock({
           <div className="flex items-center border rounded-md">
             <button
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-              className="px-4 py-3 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-gray-50 transition-colors"
+              className="px-4 py-3 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-muted transition-colors"
               disabled={quantity <= 1}
               aria-label="Decrease quantity"
             >
@@ -446,7 +471,7 @@ export function ProductDetailBlock({
             </span>
             <button
               onClick={() => setQuantity((q) => q + 1)}
-              className="px-4 py-3 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-gray-50 transition-colors"
+              className="px-4 py-3 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-muted transition-colors"
               disabled={product.track_inventory && quantity >= product.quantity}
               aria-label="Increase quantity"
             >
@@ -488,20 +513,73 @@ export function ProductDetailBlock({
             <Heart
               className={cn(
                 "h-5 w-5",
-                isWishlisted && "fill-red-500 text-red-500",
+                isWishlisted && "fill-destructive text-destructive",
               )}
             />
           </Button>
         )}
 
         {showShare && (
-          <Button variant="outline" size="lg" onClick={handleShare}>
-            {linkCopied ? (
-              <Check className="h-5 w-5" />
-            ) : (
-              <Share2 className="h-5 w-5" />
-            )}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="lg">
+                {linkCopied ? (
+                  <Check className="h-5 w-5" />
+                ) : (
+                  <Share2 className="h-5 w-5" />
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem
+                onClick={() => {
+                  const url = encodeURIComponent(window.location.href);
+                  const text = encodeURIComponent(
+                    `Check out ${product?.name || "this product"}`,
+                  );
+                  window.open(
+                    `https://wa.me/?text=${text}%20${url}`,
+                    "_blank",
+                    "noopener",
+                  );
+                }}
+              >
+                <MessageCircle className="h-4 w-4 mr-2" />
+                WhatsApp
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  const url = encodeURIComponent(window.location.href);
+                  window.open(
+                    `https://www.facebook.com/sharer/sharer.php?u=${url}`,
+                    "_blank",
+                    "noopener",
+                  );
+                }}
+              >
+                <Facebook className="h-4 w-4 mr-2" />
+                Facebook
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  const subject = encodeURIComponent(
+                    product?.name || "Check this out",
+                  );
+                  const body = encodeURIComponent(
+                    `${product?.name || "Check this out"}\n${window.location.href}`,
+                  );
+                  window.location.href = `mailto:?subject=${subject}&body=${body}`;
+                }}
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Email
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleShare}>
+                <LinkIcon className="h-4 w-4 mr-2" />
+                {linkCopied ? "Copied!" : "Copy Link"}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </div>
 
@@ -539,7 +617,7 @@ export function ProductDetailBlock({
         </div>
 
         {/* Tabs — Description / Specs / Reviews */}
-        {(showDescription || showSpecifications) && (
+        {(showDescription || showSpecifications || showReviews) && (
           <div className="mt-12">
             <Tabs defaultValue="description">
               <TabsList>
@@ -548,6 +626,11 @@ export function ProductDetailBlock({
                 )}
                 {showSpecifications && (
                   <TabsTrigger value="specifications">Details</TabsTrigger>
+                )}
+                {showReviews && (
+                  <TabsTrigger value="reviews">
+                    Reviews{totalReviews > 0 ? ` (${totalReviews})` : ""}
+                  </TabsTrigger>
                 )}
               </TabsList>
               {showDescription && (
@@ -580,6 +663,29 @@ export function ProductDetailBlock({
                         {(product as any).category_name || "Uncategorized"}
                       </span>
                     </div>
+                  </div>
+                </TabsContent>
+              )}
+              {showReviews && (
+                <TabsContent value="reviews" className="mt-6">
+                  <div className="space-y-8">
+                    <ReviewListBlock
+                      reviews={reviews}
+                      stats={reviewStats}
+                      totalReviews={totalReviews}
+                      isLoading={reviewsLoading}
+                      hasMore={hasMoreReviews}
+                      sortBy={reviewSortBy}
+                      onSortChange={setReviewSortBy}
+                      onLoadMore={loadMoreReviews}
+                      onMarkHelpful={markHelpful}
+                    />
+                    <Separator />
+                    <ReviewFormBlock
+                      siteId={effectiveSiteId}
+                      productId={product.id}
+                      onSubmit={submitReview}
+                    />
                   </div>
                 </TabsContent>
               )}

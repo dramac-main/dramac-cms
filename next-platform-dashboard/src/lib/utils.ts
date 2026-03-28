@@ -1,5 +1,5 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 import {
   DEFAULT_LOCALE,
   DEFAULT_CURRENCY,
@@ -7,17 +7,20 @@ import {
   formatNumber as localeFormatNumber,
   formatDate as localeFormatDate,
   formatDateRange as localeFormatDateRange,
-} from "@/lib/locale-config"
+} from "@/lib/locale-config";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 export function formatDate(date: string | Date): string {
   return localeFormatDate(date, DEFAULT_LOCALE);
 }
 
-export function formatCurrency(amount: number, currency = DEFAULT_CURRENCY): string {
+export function formatCurrency(
+  amount: number,
+  currency = DEFAULT_CURRENCY,
+): string {
   return localeFormatCurrency(amount, currency, DEFAULT_LOCALE);
 }
 
@@ -39,7 +42,10 @@ export function formatDuration(seconds: number): string {
   return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
 }
 
-export function formatDateRange(start: string | Date, end: string | Date): string {
+export function formatDateRange(
+  start: string | Date,
+  end: string | Date,
+): string {
   return localeFormatDateRange(start, end, DEFAULT_LOCALE);
 }
 

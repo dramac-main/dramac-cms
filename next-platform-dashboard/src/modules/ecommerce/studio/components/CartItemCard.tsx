@@ -110,13 +110,15 @@ export function CartItemCard({
         {/* Info */}
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate">{itemName}</p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground tabular-nums">
             {formatPrice(item.unit_price)} × {item.quantity}
           </p>
         </div>
 
         {/* Total */}
-        <div className="text-sm font-semibold">{formatPrice(lineTotal)}</div>
+        <div className="text-sm font-semibold tabular-nums shrink-0">
+          {formatPrice(lineTotal)}
+        </div>
       </div>
     );
   }
@@ -153,9 +155,10 @@ export function CartItemCard({
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 -mt-1"
+              className="h-10 w-10 min-w-10 min-h-10 -mt-1"
               onClick={() => onRemove(item.id)}
               disabled={disabled}
+              aria-label={`Remove ${itemName}`}
             >
               <X className="h-4 w-4" />
             </Button>
@@ -170,7 +173,9 @@ export function CartItemCard({
               showRemove={false}
               disabled={disabled}
             />
-            <p className="text-sm font-semibold">{formatPrice(lineTotal)}</p>
+            <p className="text-sm font-semibold tabular-nums">
+              {formatPrice(lineTotal)}
+            </p>
           </div>
         </div>
       </div>
@@ -202,9 +207,13 @@ export function CartItemCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
-              <h4 className="font-medium text-sm sm:text-base leading-snug line-clamp-2">{itemName}</h4>
+              <h4 className="font-medium text-sm sm:text-base leading-snug line-clamp-2">
+                {itemName}
+              </h4>
               {variantName && (
-                <p className="text-xs text-muted-foreground mt-0.5">{variantName}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {variantName}
+                </p>
               )}
               <p className="text-xs text-muted-foreground mt-0.5">
                 {formatPrice(item.unit_price)} each
@@ -213,11 +222,12 @@ export function CartItemCard({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 min-w-8 min-h-8 shrink-0"
+              className="h-10 w-10 min-w-10 min-h-10 shrink-0"
               onClick={() => onRemove(item.id)}
               disabled={disabled}
+              aria-label={`Remove ${itemName}`}
             >
-              <X className="h-3.5 w-3.5" />
+              <X className="h-4 w-4" />
             </Button>
           </div>
 

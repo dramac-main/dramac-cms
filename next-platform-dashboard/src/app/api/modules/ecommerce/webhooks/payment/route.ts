@@ -1,76 +1,95 @@
 /**
  * E-Commerce Payment Webhooks
- * 
+ *
  * Phase EM-52: E-Commerce Module
- * 
+ *
  * Handles payment provider webhooks (Paddle, Flutterwave, Pesapal, DPO)
  */
 
-import { NextRequest, NextResponse } from 'next/server'
-import crypto from 'crypto'
-import { createAdminClient } from '@/lib/supabase/admin'
-import { 
+import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
+import { createAdminClient } from "@/lib/supabase/admin";
+import {
   updatePublicOrderStatus,
   updatePublicOrderPaymentStatus,
   updatePublicOrder,
-  getPublicEcommerceSettings 
-} from '@/modules/ecommerce/actions/public-ecommerce-actions'
-import { notifyPaymentReceived, notifyRefundIssued } from '@/lib/services/business-notifications'
-import { formatCurrency } from '@/lib/locale-config'
+  getPublicEcommerceSettings,
+} from "@/modules/ecommerce/actions/public-ecommerce-actions";
+import {
+  notifyPaymentReceived,
+  notifyRefundIssued,
+} from "@/lib/services/business-notifications";
+import { formatCurrency } from "@/lib/locale-config";
+import { PUBLIC_RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
+import { xmlEscape } from "@/lib/api-validation";
 import type {
   PaddleConfig,
-  FlutterwaveConfig
-} from '@/modules/ecommerce/types/ecommerce-types'
+  FlutterwaveConfig,
+} from "@/modules/ecommerce/types/ecommerce-types";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 /**
  * POST /api/modules/ecommerce/webhooks/payment
- * 
+ *
  * Handle payment provider webhooks
- * 
+ *
  * Query params:
  * - provider: Required - Payment provider (paddle, flutterwave, pesapal, dpo)
  * - orderId: Optional - Order ID (for some providers)
  */
 export async function POST(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const provider = searchParams.get('provider')
-    
+    // Rate limit: 30 webhook callbacks/minute per gateway IP
+    const ip = getClientIp(request);
+    const rl = PUBLIC_RATE_LIMITS.webhooks.check(ip);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Rate limited" },
+        {
+          status: 429,
+          headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) },
+        },
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const provider = searchParams.get("provider");
+
     if (!provider) {
       return NextResponse.json(
-        { error: 'provider is required' },
-        { status: 400 }
-      )
+        { error: "provider is required" },
+        { status: 400 },
+      );
     }
 
-    const body = await request.text()
-    const signature = request.headers.get('x-signature') || 
-                     request.headers.get('verif-hash') ||
-                     request.headers.get('paddle-signature')
+    const body = await request.text();
+    const signature =
+      request.headers.get("x-signature") ||
+      request.headers.get("verif-hash") ||
+      request.headers.get("paddle-signature");
 
     switch (provider) {
-      case 'paddle':
-        return handlePaddleWebhook(body, signature)
-      case 'flutterwave':
-        return handleFlutterwaveWebhook(body, signature)
-      case 'pesapal':
-        return handlePesapalWebhook(body, searchParams)
-      case 'dpo':
-        return handleDpoWebhook(body, searchParams)
+      case "paddle":
+        return handlePaddleWebhook(body, signature);
+      case "flutterwave":
+        return handleFlutterwaveWebhook(body, signature);
+      case "pesapal":
+        return handlePesapalWebhook(body, searchParams);
+      case "dpo":
+        return handleDpoWebhook(body, searchParams);
       default:
         return NextResponse.json(
-          { error: `Unknown provider: ${provider}` },
-          { status: 400 }
-        )
+          { error: "Unknown payment provider" },
+          { status: 400 },
+        );
     }
   } catch (error) {
-    console.error('Webhook error:', error)
+    console.error("Webhook error:", error);
     return NextResponse.json(
-      { error: 'Webhook processing failed' },
-      { status: 500 }
-    )
+      { error: "Webhook processing failed" },
+      { status: 500 },
+    );
   }
 }
 
@@ -79,190 +98,262 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const provider = searchParams.get('provider')
-    const orderId = searchParams.get('orderId')
-    
+    const { searchParams } = new URL(request.url);
+    const provider = searchParams.get("provider");
+    const orderId = searchParams.get("orderId");
+
     if (!provider || !orderId) {
-      return NextResponse.redirect(new URL('/checkout/error', request.url))
+      return NextResponse.redirect(new URL("/checkout/error", request.url));
     }
 
     // Get order to find site_id (uses admin client — webhooks have no auth cookies)
-    const supabase = createAdminClient() as any
+    const supabase = createAdminClient() as any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: order } = await (supabase as any)
-      .from('mod_ecommod01_orders')
-      .select('site_id')
-      .eq('id', orderId)
-      .single()
+      .from("mod_ecommod01_orders")
+      .select("site_id")
+      .eq("id", orderId)
+      .single();
 
     if (!order) {
-      return NextResponse.redirect(new URL('/checkout/error', request.url))
+      return NextResponse.redirect(new URL("/checkout/error", request.url));
     }
 
-    const siteId = (order as { site_id: string }).site_id
+    const siteId = (order as { site_id: string }).site_id;
 
     // Handle callback redirects
     switch (provider) {
-      case 'flutterwave': {
-        const status = searchParams.get('status')
-        const _txRef = searchParams.get('tx_ref')
-        const transactionId = searchParams.get('transaction_id')
-        
-        if (status === 'successful' && transactionId) {
+      case "flutterwave": {
+        const status = searchParams.get("status");
+        const _txRef = searchParams.get("tx_ref");
+        const transactionId = searchParams.get("transaction_id");
+
+        if (status === "successful" && transactionId) {
           // Verify transaction with Flutterwave API (server-side verification)
-          const settings = await getPublicEcommerceSettings(siteId)
-          const fwConfig = settings?.flutterwave_config as FlutterwaveConfig | null
-          
+          const settings = await getPublicEcommerceSettings(siteId);
+          const fwConfig =
+            settings?.flutterwave_config as FlutterwaveConfig | null;
+
           if (fwConfig?.secret_key) {
             try {
               const verifyResponse = await fetch(
                 `https://api.flutterwave.com/v3/transactions/${transactionId}/verify`,
                 {
                   headers: {
-                    'Authorization': `Bearer ${fwConfig.secret_key}`,
-                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${fwConfig.secret_key}`,
+                    "Content-Type": "application/json",
                   },
-                }
-              )
-              const verifyData = await verifyResponse.json()
-              
-              if (verifyData.status === 'success' && verifyData.data?.status === 'successful') {
-                const fwPaidOrder = await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', transactionId)
+                },
+              );
+              const verifyData = await verifyResponse.json();
+
+              if (
+                verifyData.status === "success" &&
+                verifyData.data?.status === "successful"
+              ) {
+                const fwPaidOrder = await updatePublicOrderPaymentStatus(
+                  siteId,
+                  orderId,
+                  "paid",
+                  transactionId,
+                );
                 // Send payment confirmation notification
                 if (fwPaidOrder?.customer_email) {
                   notifyPaymentReceived(
                     siteId,
                     fwPaidOrder.order_number,
                     fwPaidOrder.customer_email,
-                    fwPaidOrder.customer_name || 'Customer',
-                    formatCurrency(fwPaidOrder.total, fwPaidOrder.currency || 'USD'),
-                    'Flutterwave',
-                  ).catch(err => console.error('[Webhook] FW payment notification error:', err))
+                    fwPaidOrder.customer_name || "Customer",
+                    formatCurrency(
+                      fwPaidOrder.total,
+                      fwPaidOrder.currency || "USD",
+                    ),
+                    "Flutterwave",
+                  ).catch((err) =>
+                    console.error(
+                      "[Webhook] FW payment notification error:",
+                      err,
+                    ),
+                  );
                 }
-                return NextResponse.redirect(new URL(`/checkout/success?orderId=${orderId}`, request.url))
+                return NextResponse.redirect(
+                  new URL(`/checkout/success?orderId=${orderId}`, request.url),
+                );
               } else {
-                console.error('[Flutterwave] Verification failed:', verifyData)
-                await updatePublicOrderPaymentStatus(siteId, orderId, 'failed')
-                return NextResponse.redirect(new URL(`/checkout/error?orderId=${orderId}`, request.url))
+                console.error("[Flutterwave] Verification failed:", verifyData);
+                await updatePublicOrderPaymentStatus(siteId, orderId, "failed");
+                return NextResponse.redirect(
+                  new URL(`/checkout/error?orderId=${orderId}`, request.url),
+                );
               }
             } catch (verifyError) {
-              console.error('[Flutterwave] Verification error:', verifyError)
+              console.error("[Flutterwave] Verification error:", verifyError);
               // Fallback: mark as pending for manual review
               await updatePublicOrder(siteId, orderId, {
                 payment_transaction_id: transactionId,
-                metadata: { flutterwave_needs_manual_review: true }
-              })
-              return NextResponse.redirect(new URL(`/checkout/pending?orderId=${orderId}`, request.url))
+                metadata: { flutterwave_needs_manual_review: true },
+              });
+              return NextResponse.redirect(
+                new URL(`/checkout/pending?orderId=${orderId}`, request.url),
+              );
             }
           } else {
             // No secret key configured — mark as pending for manual review
             await updatePublicOrder(siteId, orderId, {
               payment_transaction_id: transactionId,
-              metadata: { flutterwave_unverified: true, note: 'Secret key not configured for verification' }
-            })
-            return NextResponse.redirect(new URL(`/checkout/pending?orderId=${orderId}`, request.url))
+              metadata: {
+                flutterwave_unverified: true,
+                note: "Secret key not configured for verification",
+              },
+            });
+            return NextResponse.redirect(
+              new URL(`/checkout/pending?orderId=${orderId}`, request.url),
+            );
           }
         } else {
-          await updatePublicOrderPaymentStatus(siteId, orderId, 'failed')
-          return NextResponse.redirect(new URL(`/checkout/error?orderId=${orderId}`, request.url))
+          await updatePublicOrderPaymentStatus(siteId, orderId, "failed");
+          return NextResponse.redirect(
+            new URL(`/checkout/error?orderId=${orderId}`, request.url),
+          );
         }
       }
-      
-      case 'pesapal': {
-        const pesapalTransactionId = searchParams.get('pesapal_transaction_tracking_id')
-        const _merchantReference = searchParams.get('pesapal_merchant_reference')
-        
+
+      case "pesapal": {
+        const pesapalTransactionId = searchParams.get(
+          "pesapal_transaction_tracking_id",
+        );
+        const _merchantReference = searchParams.get(
+          "pesapal_merchant_reference",
+        );
+
         if (pesapalTransactionId) {
           // Pesapal: The GET callback is a redirect, NOT a confirmation.
           // Actual payment status is confirmed via IPN (POST handler above).
           // Mark as pending and store tracking ID — IPN will update to paid.
           await updatePublicOrder(siteId, orderId, {
             payment_transaction_id: pesapalTransactionId,
-            metadata: { 
+            metadata: {
               pesapal_tracking_id: pesapalTransactionId,
-              awaiting_ipn_confirmation: true 
-            }
-          })
-          return NextResponse.redirect(new URL(`/checkout/pending?orderId=${orderId}`, request.url))
+              awaiting_ipn_confirmation: true,
+            },
+          });
+          return NextResponse.redirect(
+            new URL(`/checkout/pending?orderId=${orderId}`, request.url),
+          );
         }
-        return NextResponse.redirect(new URL(`/checkout/error?orderId=${orderId}`, request.url))
+        return NextResponse.redirect(
+          new URL(`/checkout/error?orderId=${orderId}`, request.url),
+        );
       }
-      
-      case 'dpo': {
-        const transToken = searchParams.get('TransactionToken')
-        const ccdApproval = searchParams.get('CCDapproval')
-        
+
+      case "dpo": {
+        const transToken = searchParams.get("TransactionToken");
+        const ccdApproval = searchParams.get("CCDapproval");
+
         if (transToken && ccdApproval) {
           // DPO: Verify the transaction token with DPO's verifyToken API
-          const settings = await getPublicEcommerceSettings(siteId)
-          const dpoConfig = settings?.dpo_config as { company_token?: string } | null
-          
+          const settings = await getPublicEcommerceSettings(siteId);
+          const dpoConfig = settings?.dpo_config as {
+            company_token?: string;
+          } | null;
+
           if (dpoConfig?.company_token) {
             try {
               // Call DPO verifyToken endpoint
               const verifyXml = `<?xml version="1.0" encoding="utf-8"?>
 <API3G>
-  <CompanyToken>${dpoConfig.company_token}</CompanyToken>
+  <CompanyToken>${xmlEscape(dpoConfig.company_token)}</CompanyToken>
   <Request>verifyToken</Request>
-  <TransactionToken>${transToken}</TransactionToken>
-</API3G>`
-              
-              const verifyResponse = await fetch('https://secure.3gdirectpay.com/API/v6/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/xml' },
-                body: verifyXml,
-              })
-              const verifyBody = await verifyResponse.text()
-              const resultCode = extractFromXml(verifyBody, 'Result')
-              
-              if (resultCode === '000') {
+  <TransactionToken>${xmlEscape(transToken)}</TransactionToken>
+</API3G>`;
+
+              const verifyResponse = await fetch(
+                "https://secure.3gdirectpay.com/API/v6/",
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/xml" },
+                  body: verifyXml,
+                },
+              );
+              const verifyBody = await verifyResponse.text();
+              const resultCode = extractFromXml(verifyBody, "Result");
+
+              if (resultCode === "000") {
                 // Transaction verified as paid
-                const dpoPaidOrder = await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', transToken)
+                const dpoPaidOrder = await updatePublicOrderPaymentStatus(
+                  siteId,
+                  orderId,
+                  "paid",
+                  transToken,
+                );
                 // Send payment confirmation notification
                 if (dpoPaidOrder?.customer_email) {
                   notifyPaymentReceived(
                     siteId,
                     dpoPaidOrder.order_number,
                     dpoPaidOrder.customer_email,
-                    dpoPaidOrder.customer_name || 'Customer',
-                    formatCurrency(dpoPaidOrder.total, dpoPaidOrder.currency || 'USD'),
-                    'DPO',
-                  ).catch(err => console.error('[Webhook] DPO payment notification error:', err))
+                    dpoPaidOrder.customer_name || "Customer",
+                    formatCurrency(
+                      dpoPaidOrder.total,
+                      dpoPaidOrder.currency || "USD",
+                    ),
+                    "DPO",
+                  ).catch((err) =>
+                    console.error(
+                      "[Webhook] DPO payment notification error:",
+                      err,
+                    ),
+                  );
                 }
-                return NextResponse.redirect(new URL(`/checkout/success?orderId=${orderId}`, request.url))
+                return NextResponse.redirect(
+                  new URL(`/checkout/success?orderId=${orderId}`, request.url),
+                );
               } else {
-                console.error('[DPO] Verification failed, result code:', resultCode)
-                await updatePublicOrderPaymentStatus(siteId, orderId, 'failed')
-                return NextResponse.redirect(new URL(`/checkout/error?orderId=${orderId}`, request.url))
+                console.error(
+                  "[DPO] Verification failed, result code:",
+                  resultCode,
+                );
+                await updatePublicOrderPaymentStatus(siteId, orderId, "failed");
+                return NextResponse.redirect(
+                  new URL(`/checkout/error?orderId=${orderId}`, request.url),
+                );
               }
             } catch (verifyError) {
-              console.error('[DPO] Verification error:', verifyError)
+              console.error("[DPO] Verification error:", verifyError);
               // Fallback: mark for manual review
               await updatePublicOrder(siteId, orderId, {
                 payment_transaction_id: transToken,
-                metadata: { dpo_needs_manual_review: true }
-              })
-              return NextResponse.redirect(new URL(`/checkout/pending?orderId=${orderId}`, request.url))
+                metadata: { dpo_needs_manual_review: true },
+              });
+              return NextResponse.redirect(
+                new URL(`/checkout/pending?orderId=${orderId}`, request.url),
+              );
             }
           } else {
             // No company token configured for verification
             await updatePublicOrder(siteId, orderId, {
               payment_transaction_id: transToken,
-              metadata: { dpo_unverified: true, note: 'Company token not configured' }
-            })
-            return NextResponse.redirect(new URL(`/checkout/pending?orderId=${orderId}`, request.url))
+              metadata: {
+                dpo_unverified: true,
+                note: "Company token not configured",
+              },
+            });
+            return NextResponse.redirect(
+              new URL(`/checkout/pending?orderId=${orderId}`, request.url),
+            );
           }
         }
-        return NextResponse.redirect(new URL(`/checkout/error?orderId=${orderId}`, request.url))
+        return NextResponse.redirect(
+          new URL(`/checkout/error?orderId=${orderId}`, request.url),
+        );
       }
-      
+
       default:
-        return NextResponse.redirect(new URL('/checkout/error', request.url))
+        return NextResponse.redirect(new URL("/checkout/error", request.url));
     }
   } catch (error) {
-    console.error('Webhook GET error:', error)
-    return NextResponse.redirect(new URL('/checkout/error', request.url))
+    console.error("Webhook GET error:", error);
+    return NextResponse.redirect(new URL("/checkout/error", request.url));
   }
 }
 
@@ -270,111 +361,140 @@ export async function GET(request: NextRequest) {
 // PADDLE WEBHOOK HANDLER
 // ============================================================================
 
-async function handlePaddleWebhook(body: string, signature: string | null): Promise<NextResponse> {
+async function handlePaddleWebhook(
+  body: string,
+  signature: string | null,
+): Promise<NextResponse> {
   try {
-    const data = JSON.parse(body)
-    
+    const data = JSON.parse(body);
+
     // Extract order ID from passthrough or custom data
-    const orderId = data.passthrough?.order_id || data.custom_data?.order_id
-    
+    const orderId = data.passthrough?.order_id || data.custom_data?.order_id;
+
     if (!orderId) {
-      console.error('Paddle webhook: No order ID found')
-      return NextResponse.json({ received: true })
+      console.error("Paddle webhook: No order ID found");
+      return NextResponse.json({ received: true });
     }
 
     // Get order to find site settings for verification
-    const supabase = createAdminClient() as any
+    const supabase = createAdminClient() as any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: order } = await (supabase as any)
-      .from('mod_ecommod01_orders')
-      .select('site_id')
-      .eq('id', orderId)
-      .single()
+      .from("mod_ecommod01_orders")
+      .select("site_id, payment_status")
+      .eq("id", orderId)
+      .single();
 
     if (!order) {
-      console.error('Paddle webhook: Order not found')
-      return NextResponse.json({ received: true })
+      console.error("Paddle webhook: Order not found");
+      return NextResponse.json({ received: true });
     }
 
-    const siteId = (order as { site_id: string }).site_id
+    // Idempotency: skip if already paid
+    if ((order as any).payment_status === "paid") {
+      console.log(`Paddle webhook: Order ${orderId} already paid — skipping`);
+      return NextResponse.json({ received: true });
+    }
+
+    const siteId = (order as { site_id: string }).site_id;
 
     // Get settings for signature verification
-    const settings = await getPublicEcommerceSettings(siteId)
-    const paddleConfig = settings?.paddle_config as PaddleConfig | null
-    
+    const settings = await getPublicEcommerceSettings(siteId);
+    const paddleConfig = settings?.paddle_config as PaddleConfig | null;
+
     // Verify signature if configured
     if (paddleConfig?.webhook_secret && signature) {
       // Paddle signature verification
-      const ts = signature.split(';')[0]?.split('=')[1] || ''
-      const h1 = signature.split(';')[1]?.split('=')[1] || ''
-      
-      const signedPayload = `${ts}:${body}`
+      const ts = signature.split(";")[0]?.split("=")[1] || "";
+      const h1 = signature.split(";")[1]?.split("=")[1] || "";
+
+      const signedPayload = `${ts}:${body}`;
       const expectedSignature = crypto
-        .createHmac('sha256', paddleConfig.webhook_secret)
+        .createHmac("sha256", paddleConfig.webhook_secret)
         .update(signedPayload)
-        .digest('hex')
-      
+        .digest("hex");
+
       if (h1 !== expectedSignature) {
-        console.error('Paddle webhook: Invalid signature')
-        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
+        console.error("Paddle webhook: Invalid signature");
+        return NextResponse.json(
+          { error: "Invalid signature" },
+          { status: 401 },
+        );
       }
     }
 
     // Handle different event types (support both Paddle Classic and Paddle Billing event names)
-    const eventType = data.event_type || data.alert_name
-    const transactionId = data.data?.id || data.subscription_id || data.checkout_id
-    
+    const eventType = data.event_type || data.alert_name;
+    const transactionId =
+      data.data?.id || data.subscription_id || data.checkout_id;
+
     switch (eventType) {
       // Paddle Billing event types
-      case 'transaction.completed':
+      case "transaction.completed":
       // Paddle Classic event types
-      case 'payment_succeeded':
-      case 'subscription_payment_succeeded': {
-        const paidOrder = await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', transactionId)
-        await updatePublicOrderStatus(siteId, orderId, 'confirmed')
+      case "payment_succeeded":
+      case "subscription_payment_succeeded": {
+        const paidOrder = await updatePublicOrderPaymentStatus(
+          siteId,
+          orderId,
+          "paid",
+          transactionId,
+        );
+        await updatePublicOrderStatus(siteId, orderId, "confirmed");
         // Send payment confirmation to customer
         if (paidOrder?.customer_email) {
           notifyPaymentReceived(
             siteId,
             paidOrder.order_number,
             paidOrder.customer_email,
-            paidOrder.customer_name || 'Customer',
-            formatCurrency(paidOrder.total, paidOrder.currency || 'USD'),
-            'Paddle',
-          ).catch(err => console.error('[Webhook] Payment notification error:', err))
+            paidOrder.customer_name || "Customer",
+            formatCurrency(paidOrder.total, paidOrder.currency || "USD"),
+            "Paddle",
+          ).catch((err) =>
+            console.error("[Webhook] Payment notification error:", err),
+          );
         }
-        break
+        break;
       }
-        
-      case 'transaction.payment_failed':
-      case 'payment_failed':
-      case 'subscription_payment_failed':
-        await updatePublicOrderPaymentStatus(siteId, orderId, 'failed')
-        break
-      
-      case 'adjustment.created':
-      case 'payment_refunded':
-      case 'subscription_payment_refunded': {
-        const refundedOrder = await updatePublicOrderPaymentStatus(siteId, orderId, 'refunded')
-        await updatePublicOrderStatus(siteId, orderId, 'refunded')
+
+      case "transaction.payment_failed":
+      case "payment_failed":
+      case "subscription_payment_failed":
+        await updatePublicOrderPaymentStatus(siteId, orderId, "failed");
+        break;
+
+      case "adjustment.created":
+      case "payment_refunded":
+      case "subscription_payment_refunded": {
+        const refundedOrder = await updatePublicOrderPaymentStatus(
+          siteId,
+          orderId,
+          "refunded",
+        );
+        await updatePublicOrderStatus(siteId, orderId, "refunded");
         // Send refund notification to customer
         if (refundedOrder?.customer_email) {
           notifyRefundIssued(
             siteId,
             refundedOrder.order_number,
             refundedOrder.customer_email,
-            refundedOrder.customer_name || 'Customer',
-            formatCurrency(refundedOrder.total, refundedOrder.currency || 'USD'),
-          ).catch(err => console.error('[Webhook] Refund notification error:', err))
+            refundedOrder.customer_name || "Customer",
+            formatCurrency(
+              refundedOrder.total,
+              refundedOrder.currency || "USD",
+            ),
+          ).catch((err) =>
+            console.error("[Webhook] Refund notification error:", err),
+          );
         }
-        break
+        break;
       }
     }
 
-    return NextResponse.json({ received: true })
+    return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('Paddle webhook error:', error)
-    return NextResponse.json({ error: 'Processing failed' }, { status: 500 })
+    console.error("Paddle webhook error:", error);
+    return NextResponse.json({ error: "Processing failed" }, { status: 500 });
   }
 }
 
@@ -382,77 +502,100 @@ async function handlePaddleWebhook(body: string, signature: string | null): Prom
 // FLUTTERWAVE WEBHOOK HANDLER
 // ============================================================================
 
-async function handleFlutterwaveWebhook(body: string, signature: string | null): Promise<NextResponse> {
+async function handleFlutterwaveWebhook(
+  body: string,
+  signature: string | null,
+): Promise<NextResponse> {
   try {
-    const data = JSON.parse(body)
-    
+    const data = JSON.parse(body);
+
     // Extract order ID from tx_ref or custom_data
     // tx_ref format may be: orderId, orderId-timestamp, or a UUID
-    const txRef = data.data?.tx_ref || data.tx_ref
-    const customOrderId = data.data?.meta?.order_id || data.meta?.order_id
+    const txRef = data.data?.tx_ref || data.tx_ref;
+    const customOrderId = data.data?.meta?.order_id || data.meta?.order_id;
     // If tx_ref looks like a UUID (36 chars with dashes), use it directly
     // Otherwise try custom_data.order_id
-    const orderId = customOrderId || (txRef?.length === 36 ? txRef : txRef?.split('-').slice(0, 5).join('-'))
-    
+    const orderId =
+      customOrderId ||
+      (txRef?.length === 36 ? txRef : txRef?.split("-").slice(0, 5).join("-"));
+
     if (!orderId) {
-      console.error('Flutterwave webhook: No order ID found')
-      return NextResponse.json({ received: true })
+      console.error("Flutterwave webhook: No order ID found");
+      return NextResponse.json({ received: true });
     }
 
     // Get order to find site settings for verification
-    const supabase = createAdminClient() as any
+    const supabase = createAdminClient() as any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: order } = await (supabase as any)
-      .from('mod_ecommod01_orders')
-      .select('site_id')
-      .eq('id', orderId)
-      .single()
+      .from("mod_ecommod01_orders")
+      .select("site_id, payment_status")
+      .eq("id", orderId)
+      .single();
 
     if (!order) {
-      console.error('Flutterwave webhook: Order not found')
-      return NextResponse.json({ received: true })
+      console.error("Flutterwave webhook: Order not found");
+      return NextResponse.json({ received: true });
     }
 
-    const siteId = (order as { site_id: string }).site_id
+    // Idempotency: skip if already paid
+    if ((order as any).payment_status === "paid") {
+      console.log(
+        `Flutterwave webhook: Order ${orderId} already paid — skipping`,
+      );
+      return NextResponse.json({ received: true });
+    }
+
+    const siteId = (order as { site_id: string }).site_id;
 
     // Get settings for signature verification
-    const settings = await getPublicEcommerceSettings(siteId)
-    const fwConfig = settings?.flutterwave_config as FlutterwaveConfig | null
+    const settings = await getPublicEcommerceSettings(siteId);
+    const fwConfig = settings?.flutterwave_config as FlutterwaveConfig | null;
 
     // Verify signature
     if (fwConfig?.webhook_secret_hash && signature) {
       if (signature !== fwConfig.webhook_secret_hash) {
-        console.error('Flutterwave webhook: Invalid signature')
-        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
+        console.error("Flutterwave webhook: Invalid signature");
+        return NextResponse.json(
+          { error: "Invalid signature" },
+          { status: 401 },
+        );
       }
     }
 
     // Handle event
-    const status = data.data?.status || data.status
-    const transactionId = data.data?.id || data.id
+    const status = data.data?.status || data.status;
+    const transactionId = data.data?.id || data.id;
 
-    if (status === 'successful') {
-      const fwPaidOrder = await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', String(transactionId))
-      await updatePublicOrderStatus(siteId, orderId, 'confirmed')
+    if (status === "successful") {
+      const fwPaidOrder = await updatePublicOrderPaymentStatus(
+        siteId,
+        orderId,
+        "paid",
+        String(transactionId),
+      );
+      await updatePublicOrderStatus(siteId, orderId, "confirmed");
       // Send payment confirmation notification
       if (fwPaidOrder?.customer_email) {
         notifyPaymentReceived(
           siteId,
           fwPaidOrder.order_number,
           fwPaidOrder.customer_email,
-          fwPaidOrder.customer_name || 'Customer',
-          formatCurrency(fwPaidOrder.total, fwPaidOrder.currency || 'USD'),
-          'Flutterwave',
-        ).catch(err => console.error('[Webhook] FW payment notification error:', err))
+          fwPaidOrder.customer_name || "Customer",
+          formatCurrency(fwPaidOrder.total, fwPaidOrder.currency || "USD"),
+          "Flutterwave",
+        ).catch((err) =>
+          console.error("[Webhook] FW payment notification error:", err),
+        );
       }
-    } else if (status === 'failed') {
-      await updatePublicOrderPaymentStatus(siteId, orderId, 'failed')
+    } else if (status === "failed") {
+      await updatePublicOrderPaymentStatus(siteId, orderId, "failed");
     }
 
-    return NextResponse.json({ received: true })
+    return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('Flutterwave webhook error:', error)
-    return NextResponse.json({ error: 'Processing failed' }, { status: 500 })
+    console.error("Flutterwave webhook error:", error);
+    return NextResponse.json({ error: "Processing failed" }, { status: 500 });
   }
 }
 
@@ -460,62 +603,78 @@ async function handleFlutterwaveWebhook(body: string, signature: string | null):
 // PESAPAL WEBHOOK HANDLER (IPN)
 // ============================================================================
 
-async function handlePesapalWebhook(body: string, params: URLSearchParams): Promise<NextResponse> {
+async function handlePesapalWebhook(
+  body: string,
+  params: URLSearchParams,
+): Promise<NextResponse> {
   try {
     // Pesapal IPN sends data as query parameters or form data
-    const orderTrackingId = params.get('OrderTrackingId')
-    const orderMerchantReference = params.get('OrderMerchantReference')
-    const orderNotificationType = params.get('OrderNotificationType')
-    
+    const orderTrackingId = params.get("OrderTrackingId");
+    const orderMerchantReference = params.get("OrderMerchantReference");
+    const orderNotificationType = params.get("OrderNotificationType");
+
     // The merchant reference is our order ID
-    const orderId = orderMerchantReference
-    
+    const orderId = orderMerchantReference;
+
     if (!orderId) {
-      console.error('Pesapal IPN: No order ID found')
-      return NextResponse.json({ received: true })
+      console.error("Pesapal IPN: No order ID found");
+      return NextResponse.json({ received: true });
     }
 
     // Get order
-    const supabase = createAdminClient() as any
+    const supabase = createAdminClient() as any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: order } = await (supabase as any)
-      .from('mod_ecommod01_orders')
-      .select('site_id')
-      .eq('id', orderId)
-      .single()
+      .from("mod_ecommod01_orders")
+      .select("site_id, payment_status")
+      .eq("id", orderId)
+      .single();
 
     if (!order) {
-      console.error('Pesapal IPN: Order not found')
-      return NextResponse.json({ received: true })
+      console.error("Pesapal IPN: Order not found");
+      return NextResponse.json({ received: true });
     }
 
-    const siteId = (order as { site_id: string }).site_id
+    // Idempotency: skip if already paid
+    if ((order as any).payment_status === "paid") {
+      console.log(`Pesapal IPN: Order ${orderId} already paid — skipping`);
+      return NextResponse.json({ received: true });
+    }
+
+    const siteId = (order as { site_id: string }).site_id;
 
     // In production, query Pesapal API for transaction status
     // For now, update based on notification type
-    if (orderNotificationType === 'COMPLETED') {
-      const pesaPaidOrder = await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', orderTrackingId || undefined)
-      await updatePublicOrderStatus(siteId, orderId, 'confirmed')
+    if (orderNotificationType === "COMPLETED") {
+      const pesaPaidOrder = await updatePublicOrderPaymentStatus(
+        siteId,
+        orderId,
+        "paid",
+        orderTrackingId || undefined,
+      );
+      await updatePublicOrderStatus(siteId, orderId, "confirmed");
       // Send payment confirmation notification
       if (pesaPaidOrder?.customer_email) {
         notifyPaymentReceived(
           siteId,
           pesaPaidOrder.order_number,
           pesaPaidOrder.customer_email,
-          pesaPaidOrder.customer_name || 'Customer',
-          formatCurrency(pesaPaidOrder.total, pesaPaidOrder.currency || 'USD'),
-          'Pesapal',
-        ).catch(err => console.error('[Webhook] Pesapal payment notification error:', err))
+          pesaPaidOrder.customer_name || "Customer",
+          formatCurrency(pesaPaidOrder.total, pesaPaidOrder.currency || "USD"),
+          "Pesapal",
+        ).catch((err) =>
+          console.error("[Webhook] Pesapal payment notification error:", err),
+        );
       }
-    } else if (orderNotificationType === 'FAILED') {
-      await updatePublicOrderPaymentStatus(siteId, orderId, 'failed')
+    } else if (orderNotificationType === "FAILED") {
+      await updatePublicOrderPaymentStatus(siteId, orderId, "failed");
     }
 
     // Pesapal expects specific response
-    return new NextResponse('OK', { status: 200 })
+    return new NextResponse("OK", { status: 200 });
   } catch (error) {
-    console.error('Pesapal IPN error:', error)
-    return NextResponse.json({ error: 'Processing failed' }, { status: 500 })
+    console.error("Pesapal IPN error:", error);
+    return NextResponse.json({ error: "Processing failed" }, { status: 500 });
   }
 }
 
@@ -523,68 +682,89 @@ async function handlePesapalWebhook(body: string, params: URLSearchParams): Prom
 // DPO PAY WEBHOOK HANDLER
 // ============================================================================
 
-async function handleDpoWebhook(body: string, params: URLSearchParams): Promise<NextResponse> {
+async function handleDpoWebhook(
+  body: string,
+  params: URLSearchParams,
+): Promise<NextResponse> {
   try {
     // DPO sends XML or form data
-    const transToken = params.get('TransactionToken') || extractFromXml(body, 'TransactionToken')
-    const companyRef = params.get('CompanyRef') || extractFromXml(body, 'CompanyRef')
-    const transactionApproval = params.get('TransactionApproval') || extractFromXml(body, 'TransactionApproval')
-    
+    const transToken =
+      params.get("TransactionToken") ||
+      extractFromXml(body, "TransactionToken");
+    const companyRef =
+      params.get("CompanyRef") || extractFromXml(body, "CompanyRef");
+    const transactionApproval =
+      params.get("TransactionApproval") ||
+      extractFromXml(body, "TransactionApproval");
+
     // Company ref is our order ID
-    const orderId = companyRef
-    
+    const orderId = companyRef;
+
     if (!orderId) {
-      console.error('DPO webhook: No order ID found')
-      return NextResponse.json({ received: true })
+      console.error("DPO webhook: No order ID found");
+      return NextResponse.json({ received: true });
     }
 
     // Get order
-    const supabase = createAdminClient() as any
+    const supabase = createAdminClient() as any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: order } = await (supabase as any)
-      .from('mod_ecommod01_orders')
-      .select('site_id')
-      .eq('id', orderId)
-      .single()
+      .from("mod_ecommod01_orders")
+      .select("site_id, payment_status")
+      .eq("id", orderId)
+      .single();
 
     if (!order) {
-      console.error('DPO webhook: Order not found')
-      return NextResponse.json({ received: true })
+      console.error("DPO webhook: Order not found");
+      return NextResponse.json({ received: true });
     }
 
-    const siteId = (order as { site_id: string }).site_id
+    // Idempotency: skip if already paid
+    if ((order as any).payment_status === "paid") {
+      console.log(`DPO webhook: Order ${orderId} already paid — skipping`);
+      return NextResponse.json({ received: true });
+    }
+
+    const siteId = (order as { site_id: string }).site_id;
 
     // Check result code
-    const resultCode = params.get('Result') || extractFromXml(body, 'Result')
-    
-    if (resultCode === '000' || transactionApproval) {
-      const dpoPaidOrder = await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', transToken || undefined)
-      await updatePublicOrderStatus(siteId, orderId, 'confirmed')
+    const resultCode = params.get("Result") || extractFromXml(body, "Result");
+
+    if (resultCode === "000" || transactionApproval) {
+      const dpoPaidOrder = await updatePublicOrderPaymentStatus(
+        siteId,
+        orderId,
+        "paid",
+        transToken || undefined,
+      );
+      await updatePublicOrderStatus(siteId, orderId, "confirmed");
       // Send payment confirmation notification
       if (dpoPaidOrder?.customer_email) {
         notifyPaymentReceived(
           siteId,
           dpoPaidOrder.order_number,
           dpoPaidOrder.customer_email,
-          dpoPaidOrder.customer_name || 'Customer',
-          formatCurrency(dpoPaidOrder.total, dpoPaidOrder.currency || 'USD'),
-          'DPO',
-        ).catch(err => console.error('[Webhook] DPO payment notification error:', err))
+          dpoPaidOrder.customer_name || "Customer",
+          formatCurrency(dpoPaidOrder.total, dpoPaidOrder.currency || "USD"),
+          "DPO",
+        ).catch((err) =>
+          console.error("[Webhook] DPO payment notification error:", err),
+        );
       }
     } else {
-      await updatePublicOrderPaymentStatus(siteId, orderId, 'failed')
+      await updatePublicOrderPaymentStatus(siteId, orderId, "failed");
     }
 
-    return NextResponse.json({ received: true })
+    return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('DPO webhook error:', error)
-    return NextResponse.json({ error: 'Processing failed' }, { status: 500 })
+    console.error("DPO webhook error:", error);
+    return NextResponse.json({ error: "Processing failed" }, { status: 500 });
   }
 }
 
 // Helper to extract values from XML
 function extractFromXml(xml: string, tag: string): string | null {
-  const regex = new RegExp(`<${tag}>([^<]*)</${tag}>`, 'i')
-  const match = xml.match(regex)
-  return match ? match[1] : null
+  const regex = new RegExp(`<${tag}>([^<]*)</${tag}>`, "i");
+  const match = xml.match(regex);
+  return match ? match[1] : null;
 }

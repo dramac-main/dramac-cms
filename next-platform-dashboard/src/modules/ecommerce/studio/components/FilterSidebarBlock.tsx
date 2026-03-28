@@ -1,79 +1,88 @@
 /**
  * FilterSidebarBlock - Product filter sidebar
- * 
+ *
  * Phase ECOM-24: Navigation & Discovery
- * 
+ *
  * Faceted filtering for product listings.
  */
-'use client'
+"use client";
 
-import React, { useState } from 'react'
-import { cn } from '@/lib/utils'
-import { ChevronDown, ChevronUp, Star } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Slider } from '@/components/ui/slider'
+import React, { useState } from "react";
+import { cn } from "@/lib/utils";
+import { ChevronDown, ChevronUp, Star } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import {
   Collapsible,
   CollapsibleContent,
-  CollapsibleTrigger
-} from '@/components/ui/collapsible'
-import { Separator } from '@/components/ui/separator'
-import { useStorefrontCategories } from '@/modules/ecommerce/hooks'
-import { useStorefront } from '@/modules/ecommerce/context/storefront-context'
-import { useProductFilters, type FilterResult } from '@/modules/ecommerce/hooks/useProductFilters'
-import { ActiveFilters } from './ActiveFilters'
-import type { Category } from '@/modules/ecommerce/types/ecommerce-types'
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useStorefrontCategories } from "@/modules/ecommerce/hooks";
+import { useStorefront } from "@/modules/ecommerce/context/storefront-context";
+import {
+  useProductFilters,
+  type FilterResult,
+} from "@/modules/ecommerce/hooks/useProductFilters";
+import { ActiveFilters } from "./ActiveFilters";
+import type { Category } from "@/modules/ecommerce/types/ecommerce-types";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-type ResponsiveValue<T> = T | { mobile?: T; tablet?: T; desktop?: T }
+type ResponsiveValue<T> = T | { mobile?: T; tablet?: T; desktop?: T };
 
 export interface FilterSidebarBlockProps {
   // Display
-  variant?: ResponsiveValue<'sidebar' | 'drawer' | 'horizontal'>
-  collapsible?: boolean
-  defaultExpanded?: boolean
-  
+  variant?: ResponsiveValue<"sidebar" | "drawer" | "horizontal">;
+  collapsible?: boolean;
+  defaultExpanded?: boolean;
+
   // Filters to show
-  showCategories?: boolean
-  showBrands?: boolean
-  showPriceRange?: boolean
-  showAvailability?: boolean
-  showRating?: boolean
-  showOnSale?: boolean
-  
+  showCategories?: boolean;
+  showBrands?: boolean;
+  showPriceRange?: boolean;
+  showAvailability?: boolean;
+  showRating?: boolean;
+  showOnSale?: boolean;
+
   // Price
-  minPrice?: number
-  maxPrice?: number
-  priceStep?: number
-  
+  minPrice?: number;
+  maxPrice?: number;
+  priceStep?: number;
+
   // Brands (if not loading dynamically)
-  brands?: string[]
-  
+  brands?: string[];
+
   // Callbacks
-  onFilterChange?: (filters: FilterResult['filters']) => void
-  
-  className?: string
+  onFilterChange?: (filters: FilterResult["filters"]) => void;
+
+  className?: string;
 }
 
 // ============================================================================
 // HELPERS
 // ============================================================================
 
-function getResponsiveValue<T>(value: ResponsiveValue<T> | undefined, defaultValue: T): T {
-  if (!value) return defaultValue
-  if (typeof value === 'object' && 'desktop' in value) {
-    return (value as { mobile?: T; tablet?: T; desktop?: T }).desktop ?? 
-           (value as { mobile?: T; tablet?: T; desktop?: T }).tablet ?? 
-           (value as { mobile?: T; tablet?: T; desktop?: T }).mobile ?? 
-           defaultValue
+function getResponsiveValue<T>(
+  value: ResponsiveValue<T> | undefined,
+  defaultValue: T,
+): T {
+  if (!value) return defaultValue;
+  if (typeof value === "object" && "desktop" in value) {
+    return (
+      (value as { mobile?: T; tablet?: T; desktop?: T }).desktop ??
+      (value as { mobile?: T; tablet?: T; desktop?: T }).tablet ??
+      (value as { mobile?: T; tablet?: T; desktop?: T }).mobile ??
+      defaultValue
+    );
   }
-  return value as T
+  return value as T;
 }
 
 // ============================================================================
@@ -81,14 +90,19 @@ function getResponsiveValue<T>(value: ResponsiveValue<T> | undefined, defaultVal
 // ============================================================================
 
 interface FilterSectionProps {
-  title: string
-  collapsible?: boolean
-  defaultOpen?: boolean
-  children: React.ReactNode
+  title: string;
+  collapsible?: boolean;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
 }
 
-function FilterSection({ title, collapsible = true, defaultOpen = true, children }: FilterSectionProps) {
-  const [isOpen, setIsOpen] = useState(defaultOpen)
+function FilterSection({
+  title,
+  collapsible = true,
+  defaultOpen = true,
+  children,
+}: FilterSectionProps) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
 
   if (!collapsible) {
     return (
@@ -96,7 +110,7 @@ function FilterSection({ title, collapsible = true, defaultOpen = true, children
         <h3 className="font-medium mb-3">{title}</h3>
         {children}
       </div>
-    )
+    );
   }
 
   return (
@@ -111,7 +125,123 @@ function FilterSection({ title, collapsible = true, defaultOpen = true, children
       </CollapsibleTrigger>
       <CollapsibleContent className="pb-4">{children}</CollapsibleContent>
     </Collapsible>
-  )
+  );
+}
+
+// ============================================================================
+// CATEGORY FILTER LIST (with "Show all" expandable)
+// ============================================================================
+
+const FILTER_INITIAL_COUNT = 6;
+
+interface CategoryFilterListProps {
+  categories: Category[];
+  selectedIds: string[];
+  onToggle: (id: string, checked: boolean) => void;
+}
+
+function CategoryFilterList({
+  categories,
+  selectedIds,
+  onToggle,
+}: CategoryFilterListProps) {
+  const [showAll, setShowAll] = useState(false);
+  const hasMore = categories.length > FILTER_INITIAL_COUNT;
+  const visible = showAll
+    ? categories
+    : categories.slice(0, FILTER_INITIAL_COUNT);
+
+  return (
+    <div>
+      <div
+        className={cn(
+          "space-y-2",
+          showAll && hasMore && "max-h-64 overflow-y-auto",
+        )}
+      >
+        {visible.map((category) => (
+          <div key={category.id} className="flex items-center gap-2">
+            <Checkbox
+              id={`cat-${category.id}`}
+              checked={selectedIds.includes(category.id)}
+              onCheckedChange={(checked) => onToggle(category.id, !!checked)}
+            />
+            <Label
+              htmlFor={`cat-${category.id}`}
+              className="flex-1 cursor-pointer text-sm"
+            >
+              {category.name}
+            </Label>
+          </div>
+        ))}
+      </div>
+      {hasMore && (
+        <button
+          type="button"
+          className="text-sm text-primary hover:underline mt-2"
+          onClick={() => setShowAll(!showAll)}
+        >
+          {showAll ? "Show less" : `Show all (${categories.length})`}
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// BRAND FILTER LIST (with "Show all" expandable)
+// ============================================================================
+
+interface BrandFilterListProps {
+  brands: string[];
+  selectedBrands: string[];
+  onToggle: (brand: string, checked: boolean) => void;
+}
+
+function BrandFilterList({
+  brands,
+  selectedBrands,
+  onToggle,
+}: BrandFilterListProps) {
+  const [showAll, setShowAll] = useState(false);
+  const hasMore = brands.length > FILTER_INITIAL_COUNT;
+  const visible = showAll ? brands : brands.slice(0, FILTER_INITIAL_COUNT);
+
+  return (
+    <div>
+      <div
+        className={cn(
+          "space-y-2",
+          showAll && hasMore && "max-h-64 overflow-y-auto",
+        )}
+      >
+        {visible.map((brand) => (
+          <div key={brand} className="flex items-center gap-2">
+            <Checkbox
+              id={`brand-${brand}`}
+              checked={selectedBrands.includes(brand)}
+              onCheckedChange={(checked) => onToggle(brand, !!checked)}
+            />
+            <Label
+              htmlFor={`brand-${brand}`}
+              className="flex-1 cursor-pointer text-sm"
+            >
+              {brand}
+            </Label>
+          </div>
+        ))}
+      </div>
+      {hasMore && (
+        <button
+          type="button"
+          className="text-sm text-primary hover:underline mt-2"
+          onClick={() => setShowAll(!showAll)}
+        >
+          {showAll ? "Show less" : `Show all (${brands.length})`}
+        </button>
+      )}
+    </div>
+  );
 }
 
 // ============================================================================
@@ -119,7 +249,7 @@ function FilterSection({ title, collapsible = true, defaultOpen = true, children
 // ============================================================================
 
 export function FilterSidebarBlock({
-  variant = 'sidebar',
+  variant = "sidebar",
   collapsible = true,
   defaultExpanded = true,
   showCategories = true,
@@ -133,35 +263,43 @@ export function FilterSidebarBlock({
   priceStep = 100,
   brands: propBrands,
   onFilterChange,
-  className
+  className,
 }: FilterSidebarBlockProps) {
-  const { siteId, formatPrice } = useStorefront()
-  const { categories } = useStorefrontCategories(siteId)
-  const filterResult = useProductFilters()
-  const { filters } = filterResult
+  const { siteId, formatPrice } = useStorefront();
+  const { categories, isLoading: categoriesLoading } =
+    useStorefrontCategories(siteId);
+  const filterResult = useProductFilters();
+  const { filters } = filterResult;
 
-  const variantValue = getResponsiveValue(variant, 'sidebar')
+  const variantValue = getResponsiveValue(variant, "sidebar");
 
   // Sample brands (would come from API in production)
-  const brands = propBrands || ['Apple', 'Samsung', 'Sony', 'LG', 'Nike', 'Adidas']
+  const brands = propBrands || [
+    "Apple",
+    "Samsung",
+    "Sony",
+    "LG",
+    "Nike",
+    "Adidas",
+  ];
 
   // Handle price range change
   const handlePriceRangeChange = (values: number[]) => {
     filterResult.setPriceRange({
       min: values[0] || null,
-      max: values[1] || null
-    })
-  }
+      max: values[1] || null,
+    });
+  };
 
   // Category labels for active filters
   const categoryLabels = Object.fromEntries(
-    categories.map((c: Category) => [c.id, c.name])
-  )
+    categories.map((c: Category) => [c.id, c.name]),
+  );
 
   // Horizontal layout
-  if (variantValue === 'horizontal') {
+  if (variantValue === "horizontal") {
     return (
-      <div className={cn('flex flex-wrap items-center gap-4 py-4', className)}>
+      <div className={cn("flex flex-wrap items-center gap-4 py-4", className)}>
         {/* Categories dropdown would go here */}
         {/* Simplified for horizontal layout */}
         <ActiveFilters
@@ -170,7 +308,9 @@ export function FilterSidebarBlock({
           formatPrice={formatPrice}
           onRemoveCategory={(id) => filterResult.setCategory(id, false)}
           onRemoveBrand={(b) => filterResult.setBrand(b, false)}
-          onRemovePriceRange={() => filterResult.setPriceRange({ min: null, max: null })}
+          onRemovePriceRange={() =>
+            filterResult.setPriceRange({ min: null, max: null })
+          }
           onRemoveInStock={() => filterResult.setInStock(null)}
           onRemoveOnSale={() => filterResult.setOnSale(null)}
           onRemoveRating={() => filterResult.setRating(null)}
@@ -179,11 +319,11 @@ export function FilterSidebarBlock({
           onClearAll={filterResult.clearFilters}
         />
       </div>
-    )
+    );
   }
 
   return (
-    <div className={cn('', className)}>
+    <div className={cn("", className)}>
       {/* Header */}
       <div className="flex items-center justify-between py-4">
         <h2 className="text-lg font-semibold">Filters</h2>
@@ -202,28 +342,35 @@ export function FilterSidebarBlock({
       <Separator />
 
       {/* Categories */}
-      {showCategories && categories.length > 0 && (
+      {showCategories && (
         <>
-          <FilterSection title="Categories" collapsible={collapsible} defaultOpen={defaultExpanded}>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {categories.filter((c: Category) => !c.parent_id).map(category => (
-                <div key={category.id} className="flex items-center gap-2">
-                  <Checkbox
-                    id={`cat-${category.id}`}
-                    checked={filters.categories.includes(category.id)}
-                    onCheckedChange={(checked) => 
-                      filterResult.setCategory(category.id, !!checked)
-                    }
-                  />
-                  <Label 
-                    htmlFor={`cat-${category.id}`} 
-                    className="flex-1 cursor-pointer text-sm"
-                  >
-                    {category.name}
-                  </Label>
-                </div>
-              ))}
-            </div>
+          <FilterSection
+            title="Categories"
+            collapsible={collapsible}
+            defaultOpen={defaultExpanded}
+          >
+            {categoriesLoading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-4 rounded" />
+                    <Skeleton className="h-4 flex-1" />
+                  </div>
+                ))}
+              </div>
+            ) : categories.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No categories available
+              </p>
+            ) : (
+              <CategoryFilterList
+                categories={categories.filter((c: Category) => !c.parent_id)}
+                selectedIds={filters.categories}
+                onToggle={(id, checked) =>
+                  filterResult.setCategory(id, checked)
+                }
+              />
+            )}
           </FilterSection>
           <Separator />
         </>
@@ -232,12 +379,16 @@ export function FilterSidebarBlock({
       {/* Price Range */}
       {showPriceRange && (
         <>
-          <FilterSection title="Price" collapsible={collapsible} defaultOpen={defaultExpanded}>
+          <FilterSection
+            title="Price"
+            collapsible={collapsible}
+            defaultOpen={defaultExpanded}
+          >
             <div className="space-y-4">
               <Slider
                 value={[
                   filters.priceRange.min ?? minPrice,
-                  filters.priceRange.max ?? maxPrice
+                  filters.priceRange.max ?? maxPrice,
                 ]}
                 min={minPrice}
                 max={maxPrice}
@@ -249,22 +400,26 @@ export function FilterSidebarBlock({
                 <Input
                   type="number"
                   placeholder="Min"
-                  value={filters.priceRange.min ?? ''}
-                  onChange={(e) => filterResult.setPriceRange({
-                    ...filters.priceRange,
-                    min: e.target.value ? Number(e.target.value) : null
-                  })}
+                  value={filters.priceRange.min ?? ""}
+                  onChange={(e) =>
+                    filterResult.setPriceRange({
+                      ...filters.priceRange,
+                      min: e.target.value ? Number(e.target.value) : null,
+                    })
+                  }
                   className="w-24"
                 />
                 <span className="text-muted-foreground">—</span>
                 <Input
                   type="number"
                   placeholder="Max"
-                  value={filters.priceRange.max ?? ''}
-                  onChange={(e) => filterResult.setPriceRange({
-                    ...filters.priceRange,
-                    max: e.target.value ? Number(e.target.value) : null
-                  })}
+                  value={filters.priceRange.max ?? ""}
+                  onChange={(e) =>
+                    filterResult.setPriceRange({
+                      ...filters.priceRange,
+                      max: e.target.value ? Number(e.target.value) : null,
+                    })
+                  }
                   className="w-24"
                 />
               </div>
@@ -277,26 +432,18 @@ export function FilterSidebarBlock({
       {/* Brands */}
       {showBrands && brands.length > 0 && (
         <>
-          <FilterSection title="Brand" collapsible={collapsible} defaultOpen={defaultExpanded}>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {brands.map(brand => (
-                <div key={brand} className="flex items-center gap-2">
-                  <Checkbox
-                    id={`brand-${brand}`}
-                    checked={filters.brands.includes(brand)}
-                    onCheckedChange={(checked) => 
-                      filterResult.setBrand(brand, !!checked)
-                    }
-                  />
-                  <Label 
-                    htmlFor={`brand-${brand}`} 
-                    className="flex-1 cursor-pointer text-sm"
-                  >
-                    {brand}
-                  </Label>
-                </div>
-              ))}
-            </div>
+          <FilterSection
+            title="Brand"
+            collapsible={collapsible}
+            defaultOpen={defaultExpanded}
+          >
+            <BrandFilterList
+              brands={brands}
+              selectedBrands={filters.brands}
+              onToggle={(brand, checked) =>
+                filterResult.setBrand(brand, checked)
+              }
+            />
           </FilterSection>
           <Separator />
         </>
@@ -305,13 +452,17 @@ export function FilterSidebarBlock({
       {/* Availability */}
       {showAvailability && (
         <>
-          <FilterSection title="Availability" collapsible={collapsible} defaultOpen={defaultExpanded}>
+          <FilterSection
+            title="Availability"
+            collapsible={collapsible}
+            defaultOpen={defaultExpanded}
+          >
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Checkbox
                   id="in-stock"
                   checked={filters.inStock === true}
-                  onCheckedChange={(checked) => 
+                  onCheckedChange={(checked) =>
                     filterResult.setInStock(checked ? true : null)
                   }
                 />
@@ -328,12 +479,16 @@ export function FilterSidebarBlock({
       {/* On Sale */}
       {showOnSale && (
         <>
-          <FilterSection title="Deals" collapsible={collapsible} defaultOpen={defaultExpanded}>
+          <FilterSection
+            title="Deals"
+            collapsible={collapsible}
+            defaultOpen={defaultExpanded}
+          >
             <div className="flex items-center gap-2">
               <Checkbox
                 id="on-sale"
                 checked={filters.onSale === true}
-                onCheckedChange={(checked) => 
+                onCheckedChange={(checked) =>
                   filterResult.setOnSale(checked ? true : null)
                 }
               />
@@ -348,29 +503,33 @@ export function FilterSidebarBlock({
 
       {/* Rating */}
       {showRating && (
-        <FilterSection title="Rating" collapsible={collapsible} defaultOpen={defaultExpanded}>
+        <FilterSection
+          title="Rating"
+          collapsible={collapsible}
+          defaultOpen={defaultExpanded}
+        >
           <div className="space-y-2">
-            {[4, 3, 2, 1].map(rating => (
+            {[4, 3, 2, 1].map((rating) => (
               <div key={rating} className="flex items-center gap-2">
                 <Checkbox
                   id={`rating-${rating}`}
                   checked={filters.rating === rating}
-                  onCheckedChange={(checked) => 
+                  onCheckedChange={(checked) =>
                     filterResult.setRating(checked ? rating : null)
                   }
                 />
-                <Label 
-                  htmlFor={`rating-${rating}`} 
+                <Label
+                  htmlFor={`rating-${rating}`}
                   className="flex items-center gap-1 cursor-pointer"
                 >
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star
                       key={i}
                       className={cn(
-                        'h-4 w-4',
-                        i < rating 
-                          ? 'fill-yellow-400 text-yellow-400' 
-                          : 'text-muted-foreground'
+                        "h-4 w-4",
+                        i < rating
+                          ? "fill-warning text-warning"
+                          : "text-muted-foreground",
                       )}
                     />
                   ))}
@@ -383,7 +542,7 @@ export function FilterSidebarBlock({
       )}
 
       {/* Apply Button (for drawer variant) */}
-      {variantValue === 'drawer' && (
+      {variantValue === "drawer" && (
         <div className="pt-4">
           <Button onClick={filterResult.applyFilters} className="w-full">
             Apply Filters
@@ -394,7 +553,7 @@ export function FilterSidebarBlock({
         </div>
       )}
     </div>
-  )
+  );
 }
 
 // ============================================================================
@@ -402,12 +561,12 @@ export function FilterSidebarBlock({
 // ============================================================================
 
 export const filterSidebarBlockConfig = {
-  type: 'filter-sidebar',
-  label: 'Filter Sidebar',
-  category: 'e-commerce',
-  icon: 'SlidersHorizontal',
+  type: "filter-sidebar",
+  label: "Filter Sidebar",
+  category: "e-commerce",
+  icon: "SlidersHorizontal",
   defaultProps: {
-    variant: 'sidebar',
+    variant: "sidebar",
     collapsible: true,
     defaultExpanded: true,
     showCategories: true,
@@ -418,60 +577,60 @@ export const filterSidebarBlockConfig = {
     showOnSale: true,
     minPrice: 0,
     maxPrice: 10000,
-    priceStep: 100
+    priceStep: 100,
   },
   fields: [
     {
-      name: 'variant',
-      label: 'Layout',
-      type: 'select',
+      name: "variant",
+      label: "Layout",
+      type: "select",
       options: [
-        { value: 'sidebar', label: 'Sidebar' },
-        { value: 'drawer', label: 'Drawer' },
-        { value: 'horizontal', label: 'Horizontal' }
+        { value: "sidebar", label: "Sidebar" },
+        { value: "drawer", label: "Drawer" },
+        { value: "horizontal", label: "Horizontal" },
       ],
-      responsive: true
+      responsive: true,
     },
     {
-      name: 'collapsible',
-      label: 'Collapsible Sections',
-      type: 'toggle',
-      defaultValue: true
+      name: "collapsible",
+      label: "Collapsible Sections",
+      type: "toggle",
+      defaultValue: true,
     },
     {
-      name: 'showCategories',
-      label: 'Show Categories',
-      type: 'toggle',
-      defaultValue: true
+      name: "showCategories",
+      label: "Show Categories",
+      type: "toggle",
+      defaultValue: true,
     },
     {
-      name: 'showBrands',
-      label: 'Show Brands',
-      type: 'toggle',
-      defaultValue: true
+      name: "showBrands",
+      label: "Show Brands",
+      type: "toggle",
+      defaultValue: true,
     },
     {
-      name: 'showPriceRange',
-      label: 'Show Price Range',
-      type: 'toggle',
-      defaultValue: true
+      name: "showPriceRange",
+      label: "Show Price Range",
+      type: "toggle",
+      defaultValue: true,
     },
     {
-      name: 'showAvailability',
-      label: 'Show Availability',
-      type: 'toggle',
-      defaultValue: true
+      name: "showAvailability",
+      label: "Show Availability",
+      type: "toggle",
+      defaultValue: true,
     },
     {
-      name: 'showRating',
-      label: 'Show Rating Filter',
-      type: 'toggle',
-      defaultValue: true
-    }
+      name: "showRating",
+      label: "Show Rating Filter",
+      type: "toggle",
+      defaultValue: true,
+    },
   ],
   ai: {
     suggestable: true,
-    description: 'Product filter sidebar with faceted search',
-    contextHints: ['filters', 'refine', 'narrow down', 'faceted']
-  }
-}
+    description: "Product filter sidebar with faceted search",
+    contextHints: ["filters", "refine", "narrow down", "faceted"],
+  },
+};

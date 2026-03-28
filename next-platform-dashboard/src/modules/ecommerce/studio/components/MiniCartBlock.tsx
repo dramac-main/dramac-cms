@@ -1,43 +1,43 @@
 /**
  * MiniCartBlock - Compact cart preview component
- * 
+ *
  * Phase ECOM-22: Cart Components
- * 
+ *
  * A compact cart preview typically shown in headers or as a popover.
  * Shows item count, preview of items, and quick checkout link.
  */
-'use client'
+"use client";
 
-import React from 'react'
-import { cn } from '@/lib/utils'
-import { ShoppingCart, ChevronRight, Loader2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import React from "react";
+import { cn } from "@/lib/utils";
+import { ShoppingCart, ChevronRight, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover'
-import { Separator } from '@/components/ui/separator'
-import { CartItemCard } from './CartItemCard'
-import { CartEmptyState } from './CartEmptyState'
-import { useStorefrontCart } from '../../hooks/useStorefrontCart'
-import { useStorefront } from '../../context/storefront-context'
-import type { CartTotals } from '../../types/ecommerce-types'
-import Link from 'next/link'
+} from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
+import { CartItemCard } from "./CartItemCard";
+import { CartEmptyState } from "./CartEmptyState";
+import { useStorefrontCart } from "../../hooks/useStorefrontCart";
+import { useStorefront } from "../../context/storefront-context";
+import type { CartTotals } from "../../types/ecommerce-types";
+import Link from "next/link";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 interface MiniCartBlockProps {
-  trigger?: React.ReactNode
-  maxItems?: number
-  cartHref?: string
-  checkoutHref?: string
-  shopLink?: string
-  align?: 'start' | 'center' | 'end'
-  className?: string
+  trigger?: React.ReactNode;
+  maxItems?: number;
+  cartHref?: string;
+  checkoutHref?: string;
+  shopLink?: string;
+  align?: "start" | "center" | "end";
+  className?: string;
 }
 
 // ============================================================================
@@ -50,8 +50,8 @@ const DEFAULT_TOTALS: CartTotals = {
   tax: 0,
   shipping: 0,
   total: 0,
-  itemCount: 0
-}
+  itemCount: 0,
+};
 
 // ============================================================================
 // COMPONENT
@@ -60,17 +60,28 @@ const DEFAULT_TOTALS: CartTotals = {
 export function MiniCartBlock({
   trigger,
   maxItems = 3,
-  cartHref = '/cart',
-  checkoutHref: checkoutHrefProp = '/checkout',
-  shopLink = '/shop',
-  align = 'end',
-  className
+  cartHref = "/cart",
+  checkoutHref: checkoutHrefProp = "/checkout",
+  shopLink = "/shop",
+  align = "end",
+  className,
 }: MiniCartBlockProps) {
-  const { siteId, formatPrice, taxRate, quotationModeEnabled, quotationButtonLabel, quotationRedirectUrl } = useStorefront()
-  
+  const {
+    siteId,
+    formatPrice,
+    taxRate,
+    quotationModeEnabled,
+    quotationButtonLabel,
+    quotationRedirectUrl,
+  } = useStorefront();
+
   // In quotation mode, redirect to quotes page instead of checkout
-  const checkoutHref = quotationModeEnabled ? (quotationRedirectUrl || '/quotes') : checkoutHrefProp
-  const checkoutLabel = quotationModeEnabled ? (quotationButtonLabel || 'Request a Quote') : 'Checkout'
+  const checkoutHref = quotationModeEnabled
+    ? quotationRedirectUrl || "/quotes"
+    : checkoutHrefProp;
+  const checkoutLabel = quotationModeEnabled
+    ? quotationButtonLabel || "Request a Quote"
+    : "Checkout";
   const {
     items,
     totals: cartTotals,
@@ -78,17 +89,17 @@ export function MiniCartBlock({
     isLoading,
     isUpdating,
     updateItemQuantity,
-    removeItem
-  } = useStorefrontCart(siteId, undefined, taxRate)
+    removeItem,
+  } = useStorefrontCart(siteId, undefined, taxRate);
 
-  const [open, setOpen] = React.useState(false)
-  
+  const [open, setOpen] = React.useState(false);
+
   // Use default totals if null
-  const totals = cartTotals ?? DEFAULT_TOTALS
+  const totals = cartTotals ?? DEFAULT_TOTALS;
 
   // Show only first N items
-  const displayItems = items.slice(0, maxItems)
-  const remainingCount = items.length - maxItems
+  const displayItems = items.slice(0, maxItems);
+  const remainingCount = items.length - maxItems;
 
   // Default trigger button
   const defaultTrigger = (
@@ -99,28 +110,26 @@ export function MiniCartBlock({
           variant="destructive"
           className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-[10px]"
         >
-          {itemCount > 99 ? '99+' : itemCount}
+          {itemCount > 99 ? "99+" : itemCount}
         </Badge>
       )}
     </Button>
-  )
+  );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        {trigger || defaultTrigger}
-      </PopoverTrigger>
+      <PopoverTrigger asChild>{trigger || defaultTrigger}</PopoverTrigger>
 
       <PopoverContent
         align={align}
-        className={cn('w-80 p-0', className)}
+        className={cn("w-80 max-w-[calc(100vw-1rem)] p-0", className)}
       >
         {/* Header */}
         <div className="p-4 border-b">
           <div className="flex items-center justify-between">
             <h4 className="font-semibold flex items-center gap-2">
               <ShoppingCart className="h-4 w-4" />
-              {quotationModeEnabled ? 'Items' : 'Cart'}
+              {quotationModeEnabled ? "Items" : "Cart"}
               {itemCount > 0 && (
                 <Badge variant="secondary" className="text-xs">
                   {itemCount}
@@ -166,10 +175,11 @@ export function MiniCartBlock({
                   disabled={isUpdating}
                 />
               ))}
-              
+
               {remainingCount > 0 && (
                 <p className="text-xs text-muted-foreground text-center py-2">
-                  +{remainingCount} more {remainingCount === 1 ? 'item' : 'items'}
+                  +{remainingCount} more{" "}
+                  {remainingCount === 1 ? "item" : "items"}
                 </p>
               )}
             </div>
@@ -184,7 +194,9 @@ export function MiniCartBlock({
               {/* Total */}
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Subtotal</span>
-                <span className="font-semibold">{formatPrice(totals.subtotal)}</span>
+                <span className="font-semibold tabular-nums">
+                  {formatPrice(totals.subtotal)}
+                </span>
               </div>
 
               {/* Actions */}
@@ -195,9 +207,7 @@ export function MiniCartBlock({
                   asChild
                   onClick={() => setOpen(false)}
                 >
-                  <Link href={cartHref}>
-                    View Cart
-                  </Link>
+                  <Link href={cartHref}>View Cart</Link>
                 </Button>
                 <Button
                   className="flex-1"
@@ -215,5 +225,5 @@ export function MiniCartBlock({
         )}
       </PopoverContent>
     </Popover>
-  )
+  );
 }

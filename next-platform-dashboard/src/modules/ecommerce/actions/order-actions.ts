@@ -12,6 +12,7 @@ import { formatCurrency } from "@/lib/locale-config";
 import { sendBrandedEmail } from "@/lib/email/send-branded-email";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logAutomationEvent } from "@/modules/automation/services/event-processor";
+import { adjustStock } from "./inventory-actions";
 import type {
   Order,
   OrderStatus,
@@ -235,6 +236,49 @@ export async function updateOrderStatus(
 
   if (orderError) {
     return { success: false, error: orderError.message };
+  }
+
+  // ── Stock reversal on cancellation ─────────────────────────────────
+  if (status === "cancelled") {
+    try {
+      // Fetch order items with product info for inventory reversal
+      const { data: orderItems } = await supabase
+        .from(`${TABLE_PREFIX}_order_items`)
+        .select(
+          "product_id, variant_id, quantity, product:mod_ecommod01_products!product_id(track_inventory, name)",
+        )
+        .eq("order_id", orderId);
+
+      if (orderItems?.length) {
+        for (const item of orderItems) {
+          const product = Array.isArray(item.product)
+            ? item.product[0]
+            : item.product;
+          if (product?.track_inventory) {
+            const result = await adjustStock(
+              siteId,
+              item.product_id,
+              item.variant_id || null,
+              item.quantity, // positive = return stock
+              "return" as const,
+              `Order cancelled — stock returned`,
+              "order",
+              orderId,
+            );
+            if (!result.success) {
+              console.warn(
+                `[OrderActions] Stock reversal failed for product ${item.product_id}: ${result.error}`,
+              );
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error(
+        "[OrderActions] Stock reversal error on cancellation:",
+        err,
+      );
+    }
   }
 
   // Add timeline event
@@ -624,11 +668,15 @@ export async function updatePaymentProofStatus(
       .single();
 
     if (orderData?.customer_email) {
+      const totalStr = formatCurrency(
+        (orderData.total || 0) / 100,
+        orderData.currency || "USD",
+      );
+
       if (status === "approved") {
         // Notify chat that payment is confirmed
         import("@/modules/live-chat/lib/chat-event-bridge")
           .then(({ notifyChatPaymentConfirmed }) => {
-            const totalStr = `${orderData.currency || ""} ${((orderData.total || 0) / 100).toFixed(2)}`;
             notifyChatPaymentConfirmed(
               siteId,
               orderData.customer_email,
@@ -638,10 +686,19 @@ export async function updatePaymentProofStatus(
           })
           .catch(() => {});
 
-        // Send payment confirmed email (sendOrderEmail is local to this file)
-        sendOrderEmail(orderId, "confirmation", userId, userName).catch(
-          () => {},
-        );
+        // Send payment confirmed email to customer + in-app notification to owner
+        import("@/lib/services/business-notifications")
+          .then(({ notifyPaymentReceived }) => {
+            notifyPaymentReceived(
+              siteId,
+              orderData.order_number,
+              orderData.customer_email,
+              orderData.customer_name || "Customer",
+              totalStr,
+              "Manual (Payment Proof)",
+            ).catch(() => {});
+          })
+          .catch(() => {});
       } else {
         // Send rejection notification via chat
         import("@/modules/live-chat/lib/chat-event-bridge")
@@ -660,6 +717,41 @@ export async function updatePaymentProofStatus(
               .catch(() => {});
           })
           .catch(() => {});
+
+        // Send rejection email to customer
+        const adminClient = createAdminClient();
+        const { data: site } = await adminClient
+          .from("sites")
+          .select("name, agency_id, subdomain, custom_domain")
+          .eq("id", siteId)
+          .single();
+
+        if (site?.agency_id) {
+          const siteUrl = site.custom_domain
+            ? `https://${site.custom_domain}`
+            : site.subdomain
+              ? `https://${site.subdomain}.sites.dramacagency.com`
+              : null;
+          const orderUrl = siteUrl
+            ? `${siteUrl}/order-confirmation?order=${orderId}`
+            : undefined;
+
+          sendBrandedEmail(site.agency_id, {
+            to: {
+              email: orderData.customer_email,
+              name: orderData.customer_name || undefined,
+            },
+            emailType: "payment_proof_rejected_customer",
+            siteId,
+            data: {
+              customerName: orderData.customer_name || "Customer",
+              orderNumber: orderData.order_number,
+              total: totalStr,
+              orderUrl,
+              businessName: site.name || "Our Store",
+            },
+          }).catch(() => {});
+        }
       }
     }
   }

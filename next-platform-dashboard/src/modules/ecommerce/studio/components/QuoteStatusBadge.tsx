@@ -1,38 +1,38 @@
 /**
  * QuoteStatusBadge - Display quotation status
- * 
+ *
  * Phase ECOM-25: Quotation Frontend
- * 
+ *
  * Shows quote status with appropriate color and icon.
  */
-'use client'
+"use client";
 
-import * as React from 'react'
-import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
-import type { QuoteStatus } from '../../types/ecommerce-types'
-import { 
-  Clock, 
-  Send, 
-  Eye, 
-  CircleCheck, 
-  CircleX, 
+import * as React from "react";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import type { QuoteStatus } from "../../types/ecommerce-types";
+import {
+  Clock,
+  Send,
+  Eye,
+  CircleCheck,
+  CircleX,
   RefreshCw,
   FileText,
   CreditCard,
-  AlertCircle
-} from 'lucide-react'
+  AlertCircle,
+} from "lucide-react";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 export interface QuoteStatusBadgeProps {
-  status: QuoteStatus
-  variant?: 'default' | 'outline' | 'pill'
-  size?: 'sm' | 'md' | 'lg'
-  showIcon?: boolean
-  className?: string
+  status: QuoteStatus;
+  variant?: "default" | "outline" | "pill";
+  size?: "sm" | "md" | "lg";
+  showIcon?: boolean;
+  className?: string;
 }
 
 // ============================================================================
@@ -40,94 +40,94 @@ export interface QuoteStatusBadgeProps {
 // ============================================================================
 
 interface StatusConfig {
-  label: string
-  color: string
-  bgColor: string
-  borderColor: string
-  icon: React.ComponentType<{ className?: string }>
+  label: string;
+  color: string;
+  bgColor: string;
+  borderColor: string;
+  icon: React.ComponentType<{ className?: string }>;
 }
 
 const STATUS_CONFIG: Record<QuoteStatus, StatusConfig> = {
   draft: {
-    label: 'Draft',
-    color: 'text-gray-700',
-    bgColor: 'bg-gray-100',
-    borderColor: 'border-gray-300',
-    icon: FileText
+    label: "Draft",
+    color: "text-muted-foreground",
+    bgColor: "bg-muted",
+    borderColor: "border-border",
+    icon: FileText,
   },
   pending_approval: {
-    label: 'Pending Approval',
-    color: 'text-amber-700',
-    bgColor: 'bg-amber-100',
-    borderColor: 'border-amber-300',
-    icon: Clock
+    label: "Pending Approval",
+    color: "text-warning",
+    bgColor: "bg-warning/10",
+    borderColor: "border-warning/30",
+    icon: Clock,
   },
   sent: {
-    label: 'Sent',
-    color: 'text-blue-700',
-    bgColor: 'bg-blue-100',
-    borderColor: 'border-blue-300',
-    icon: Send
+    label: "Sent",
+    color: "text-primary",
+    bgColor: "bg-primary/10",
+    borderColor: "border-primary/30",
+    icon: Send,
   },
   viewed: {
-    label: 'Viewed',
-    color: 'text-indigo-700',
-    bgColor: 'bg-indigo-100',
-    borderColor: 'border-indigo-300',
-    icon: Eye
+    label: "Viewed",
+    color: "text-info",
+    bgColor: "bg-info/10",
+    borderColor: "border-info/30",
+    icon: Eye,
   },
   accepted: {
-    label: 'Accepted',
-    color: 'text-green-700',
-    bgColor: 'bg-green-100',
-    borderColor: 'border-green-300',
-    icon: CircleCheck
+    label: "Accepted",
+    color: "text-success",
+    bgColor: "bg-success/10",
+    borderColor: "border-success/30",
+    icon: CircleCheck,
   },
   rejected: {
-    label: 'Rejected',
-    color: 'text-red-700',
-    bgColor: 'bg-red-100',
-    borderColor: 'border-red-300',
-    icon: CircleX
+    label: "Rejected",
+    color: "text-destructive",
+    bgColor: "bg-destructive/10",
+    borderColor: "border-destructive/30",
+    icon: CircleX,
   },
   cancelled: {
-    label: 'Cancelled',
-    color: 'text-gray-700',
-    bgColor: 'bg-gray-100',
-    borderColor: 'border-gray-300',
-    icon: CircleX
+    label: "Cancelled",
+    color: "text-muted-foreground",
+    bgColor: "bg-muted",
+    borderColor: "border-border",
+    icon: CircleX,
   },
   expired: {
-    label: 'Expired',
-    color: 'text-orange-700',
-    bgColor: 'bg-orange-100',
-    borderColor: 'border-orange-300',
-    icon: AlertCircle
+    label: "Expired",
+    color: "text-warning",
+    bgColor: "bg-warning/10",
+    borderColor: "border-warning/30",
+    icon: AlertCircle,
   },
   converted: {
-    label: 'Converted to Order',
-    color: 'text-teal-700',
-    bgColor: 'bg-teal-100',
-    borderColor: 'border-teal-300',
-    icon: CreditCard
-  }
-}
+    label: "Converted to Order",
+    color: "text-success",
+    bgColor: "bg-success/10",
+    borderColor: "border-success/30",
+    icon: CreditCard,
+  },
+};
 
 // ============================================================================
 // SIZE CLASSES
 // ============================================================================
 
 const SIZE_CLASSES = {
-  sm: 'text-xs px-2 py-0.5',
-  md: 'text-sm px-2.5 py-1',
-  lg: 'text-base px-3 py-1.5'
-}
+  sm: "text-xs px-2 py-0.5",
+  md: "text-sm px-2.5 py-1",
+  lg: "text-base px-3 py-1.5",
+};
 
 const ICON_SIZES = {
-  sm: 'h-3 w-3',
-  md: 'h-4 w-4',
-  lg: 'h-5 w-5'
-}
+  sm: "h-3 w-3",
+  md: "h-4 w-4",
+  lg: "h-5 w-5",
+};
 
 // ============================================================================
 // COMPONENT
@@ -135,43 +135,43 @@ const ICON_SIZES = {
 
 export function QuoteStatusBadge({
   status,
-  variant = 'default',
-  size = 'md',
+  variant = "default",
+  size = "md",
   showIcon = true,
-  className
+  className,
 }: QuoteStatusBadgeProps) {
-  const config = STATUS_CONFIG[status]
-  
+  const config = STATUS_CONFIG[status];
+
   if (!config) {
     return (
       <Badge variant="outline" className={className}>
         {status}
       </Badge>
-    )
+    );
   }
 
-  const Icon = config.icon
-  
+  const Icon = config.icon;
+
   const variantClasses = {
     default: cn(config.bgColor, config.color),
-    outline: cn('bg-transparent border', config.borderColor, config.color),
-    pill: cn(config.bgColor, config.color, 'rounded-full')
-  }
+    outline: cn("bg-transparent border", config.borderColor, config.color),
+    pill: cn(config.bgColor, config.color, "rounded-full"),
+  };
 
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 font-medium whitespace-nowrap',
+        "inline-flex items-center gap-1.5 font-medium whitespace-nowrap",
         SIZE_CLASSES[size],
-        variant === 'pill' ? 'rounded-full' : 'rounded-md',
+        variant === "pill" ? "rounded-full" : "rounded-md",
         variantClasses[variant],
-        className
+        className,
       )}
     >
       {showIcon && <Icon className={ICON_SIZES[size]} />}
       {config.label}
     </span>
-  )
+  );
 }
 
 // ============================================================================
@@ -179,17 +179,23 @@ export function QuoteStatusBadge({
 // ============================================================================
 
 export function getQuoteStatusLabel(status: QuoteStatus): string {
-  return STATUS_CONFIG[status]?.label || status
+  return STATUS_CONFIG[status]?.label || status;
 }
 
 export function getQuoteStatusColor(status: QuoteStatus): string {
-  return STATUS_CONFIG[status]?.color || 'text-gray-700'
+  return STATUS_CONFIG[status]?.color || "text-muted-foreground";
 }
 
 export function isQuoteActionable(status: QuoteStatus): boolean {
-  return status === 'sent' || status === 'viewed'
+  return status === "sent" || status === "viewed";
 }
 
 export function isQuoteFinal(status: QuoteStatus): boolean {
-  return status === 'accepted' || status === 'rejected' || status === 'expired' || status === 'converted' || status === 'cancelled'
+  return (
+    status === "accepted" ||
+    status === "rejected" ||
+    status === "expired" ||
+    status === "converted" ||
+    status === "cancelled"
+  );
 }

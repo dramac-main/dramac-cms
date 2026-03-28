@@ -1,42 +1,42 @@
 /**
  * CartNotification - Add to cart toast notification
- * 
+ *
  * Phase ECOM-30: Mobile Cart Experience
- * 
+ *
  * Toast notification that appears when an item is added to cart.
  * Features "View Cart" quick action and auto-dismiss.
  */
-'use client'
+"use client";
 
-import React, { useEffect, useCallback, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Check, ShoppingBag, X } from 'lucide-react'
-import Image from 'next/image'
-import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import { useHapticFeedback } from '../../../hooks/useHapticFeedback'
-import { usePrefersReducedMotion } from '../../../hooks/useMobile'
+import React, { useEffect, useCallback, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Check, ShoppingBag, X } from "lucide-react";
+import Image from "next/image";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { useHapticFeedback } from "../../../hooks/useHapticFeedback";
+import { usePrefersReducedMotion } from "../../../hooks/useMobile";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 export interface CartNotificationData {
-  id: string
-  productName: string
-  productImage?: string | null
-  variantName?: string | null
-  quantity: number
-  price: number
+  id: string;
+  productName: string;
+  productImage?: string | null;
+  variantName?: string | null;
+  quantity: number;
+  price: number;
 }
 
 interface CartNotificationProps {
-  notification: CartNotificationData | null
-  onDismiss: () => void
-  onViewCart: () => void
-  autoDismissDelay?: number
-  position?: 'top' | 'bottom'
-  className?: string
+  notification: CartNotificationData | null;
+  onDismiss: () => void;
+  onViewCart: () => void;
+  autoDismissDelay?: number;
+  position?: "top" | "bottom";
+  className?: string;
 }
 
 // ============================================================================
@@ -48,41 +48,41 @@ export function CartNotification({
   onDismiss,
   onViewCart,
   autoDismissDelay = 4000,
-  position = 'bottom',
+  position = "bottom",
   className,
 }: CartNotificationProps) {
-  const haptic = useHapticFeedback()
-  const prefersReducedMotion = usePrefersReducedMotion()
+  const haptic = useHapticFeedback();
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   // Auto-dismiss after delay
   useEffect(() => {
-    if (!notification) return
+    if (!notification) return;
 
     const timer = setTimeout(() => {
-      onDismiss()
-    }, autoDismissDelay)
+      onDismiss();
+    }, autoDismissDelay);
 
-    return () => clearTimeout(timer)
-  }, [notification, autoDismissDelay, onDismiss])
+    return () => clearTimeout(timer);
+  }, [notification, autoDismissDelay, onDismiss]);
 
   // Handle view cart click
   const handleViewCart = useCallback(() => {
-    haptic.trigger('selection')
-    onViewCart()
-    onDismiss()
-  }, [haptic, onViewCart, onDismiss])
+    haptic.trigger("selection");
+    onViewCart();
+    onDismiss();
+  }, [haptic, onViewCart, onDismiss]);
 
   // Handle dismiss
   const handleDismiss = useCallback(() => {
-    haptic.trigger('light')
-    onDismiss()
-  }, [haptic, onDismiss])
+    haptic.trigger("light");
+    onDismiss();
+  }, [haptic, onDismiss]);
 
   // Animation variants
   const variants = {
     initial: {
       opacity: 0,
-      y: position === 'top' ? -100 : 100,
+      y: position === "top" ? -100 : 100,
       scale: 0.95,
     },
     animate: {
@@ -90,31 +90,30 @@ export function CartNotification({
       y: 0,
       scale: 1,
       transition: {
-        type: 'spring',
+        type: "spring",
         stiffness: 400,
         damping: 30,
       },
     },
     exit: {
       opacity: 0,
-      y: position === 'top' ? -50 : 50,
+      y: position === "top" ? -50 : 50,
       scale: 0.95,
       transition: {
         duration: 0.2,
       },
     },
-  }
+  };
 
   // Reduced motion variants
   const reducedMotionVariants = {
     initial: { opacity: 0 },
     animate: { opacity: 1 },
     exit: { opacity: 0 },
-  }
+  };
 
-  const positionClasses = position === 'top'
-    ? 'top-4 pt-safe'
-    : 'bottom-4 pb-safe'
+  const positionClasses =
+    position === "top" ? "top-4 pt-safe" : "bottom-4 pb-safe";
 
   return (
     <AnimatePresence>
@@ -125,21 +124,21 @@ export function CartNotification({
           exit="exit"
           variants={prefersReducedMotion ? reducedMotionVariants : variants}
           className={cn(
-            'fixed left-4 right-4 z-50',
+            "fixed left-4 right-4 z-50",
             positionClasses,
-            className
+            className,
           )}
         >
           <div
             className={cn(
-              'bg-background border rounded-xl shadow-lg',
-              'flex items-center gap-3 p-3'
+              "bg-background border rounded-xl shadow-lg",
+              "flex items-center gap-3 p-3",
             )}
           >
             {/* Success indicator */}
             <div className="flex-shrink-0">
-              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                <Check className="h-5 w-5 text-green-600" />
+              <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
+                <Check className="h-5 w-5 text-success" />
               </div>
             </div>
 
@@ -193,7 +192,7 @@ export function CartNotification({
         </motion.div>
       )}
     </AnimatePresence>
-  )
+  );
 }
 
 // ============================================================================
@@ -201,21 +200,23 @@ export function CartNotification({
 // ============================================================================
 
 export function useCartNotification() {
-  const [notification, setNotification] = useState<CartNotificationData | null>(null)
+  const [notification, setNotification] = useState<CartNotificationData | null>(
+    null,
+  );
 
   const showNotification = useCallback((data: CartNotificationData) => {
-    setNotification(data)
-  }, [])
+    setNotification(data);
+  }, []);
 
   const dismissNotification = useCallback(() => {
-    setNotification(null)
-  }, [])
+    setNotification(null);
+  }, []);
 
   return {
     notification,
     showNotification,
     dismissNotification,
-  }
+  };
 }
 
-export default CartNotification
+export default CartNotification;

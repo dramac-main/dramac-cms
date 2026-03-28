@@ -10,16 +10,16 @@
  *
  * Phase ECOM-PRODUCTION-READY — Bug 4 fix
  */
-'use client'
+"use client";
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback } from "react";
 
 interface NavCartBadgeProps {
-  siteId: string
+  siteId: string;
   /** Background color for the badge (defaults to red) */
-  badgeBg?: string
+  badgeBg?: string;
   /** Text color for the badge (defaults to white) */
-  badgeText?: string
+  badgeText?: string;
 }
 
 /**
@@ -27,70 +27,86 @@ interface NavCartBadgeProps {
  * or fetches it from the server on mount.
  */
 function getSessionId(): string | null {
-  if (typeof window === 'undefined') return null
+  if (typeof window === "undefined") return null;
   try {
-    return localStorage.getItem('ecom_session_id') || localStorage.getItem('storefront_session_id') || null
+    return (
+      localStorage.getItem("ecom_session_id") ||
+      localStorage.getItem("storefront_session_id") ||
+      null
+    );
   } catch {
-    return null
+    return null;
   }
 }
 
-export function NavCartBadge({ siteId, badgeBg, badgeText }: NavCartBadgeProps) {
-  const [count, setCount] = useState(0)
+export function NavCartBadge({
+  siteId,
+  badgeBg,
+  badgeText,
+}: NavCartBadgeProps) {
+  const [count, setCount] = useState(0);
 
   const fetchCount = useCallback(async () => {
     try {
-      const sessionId = getSessionId()
-      if (!sessionId || !siteId) return
+      const sessionId = getSessionId();
+      if (!sessionId || !siteId) return;
 
       // Call the public cart API to get the count
-      const res = await fetch(`/api/modules/ecommerce/cart?siteId=${siteId}&sessionId=${sessionId}`, {
-        method: 'GET',
-        cache: 'no-store',
-      })
+      const res = await fetch(
+        `/api/modules/ecommerce/cart?siteId=${siteId}&sessionId=${sessionId}`,
+        {
+          method: "GET",
+          cache: "no-store",
+        },
+      );
       if (res.ok) {
-        const data = await res.json()
-        const items = data?.items || data?.cart?.items || []
+        const data = await res.json();
+        const items = data?.items || data?.cart?.items || [];
         const total = Array.isArray(items)
-          ? items.reduce((sum: number, item: { quantity?: number }) => sum + (item?.quantity || 1), 0)
-          : 0
-        setCount(total)
+          ? items.reduce(
+              (sum: number, item: { quantity?: number }) =>
+                sum + (item?.quantity || 1),
+              0,
+            )
+          : 0;
+        setCount(total);
       }
     } catch {
       // Silently fail — badge just won't show
     }
-  }, [siteId])
+  }, [siteId]);
 
   useEffect(() => {
     // Initial fetch
-    fetchCount()
+    fetchCount();
 
     // Listen for cart-updated events from useStorefrontCart and other components
     const handleCartUpdated = (e: Event) => {
-      const detail = (e as CustomEvent)?.detail
+      const detail = (e as CustomEvent)?.detail;
       if (detail?.itemCount !== undefined) {
-        setCount(detail.itemCount)
+        setCount(detail.itemCount);
       } else {
         // Refetch if no count in detail
-        fetchCount()
+        fetchCount();
       }
-    }
+    };
 
-    window.addEventListener('cart-updated', handleCartUpdated)
-    return () => window.removeEventListener('cart-updated', handleCartUpdated)
-  }, [fetchCount])
+    window.addEventListener("cart-updated", handleCartUpdated);
+    return () => window.removeEventListener("cart-updated", handleCartUpdated);
+  }, [fetchCount]);
 
-  if (count <= 0) return null
+  if (count <= 0) return null;
 
   return (
     <span
-      className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold rounded-full pointer-events-none z-10 animate-in zoom-in-75 duration-200"
+      className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold rounded-full pointer-events-none z-10 animate-in zoom-in-75 duration-200 bg-destructive text-destructive-foreground"
       style={{
-        backgroundColor: badgeBg || '#ef4444',
-        color: badgeText || '#ffffff',
+        ...(badgeBg ? { backgroundColor: badgeBg } : {}),
+        ...(badgeText ? { color: badgeText } : {}),
       }}
+      aria-hidden="true"
     >
-      {count > 99 ? '99+' : count}
+      {count > 99 ? "99+" : count}
     </span>
-  )
+  );
 }

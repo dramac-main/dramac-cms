@@ -56,6 +56,8 @@ export interface AuthContextValue {
     email?: string,
   ) => Promise<{ error: string | null }>;
   refreshCustomer: () => Promise<void>;
+  /** Request a magic login link for password recovery */
+  requestMagicLink: (email: string) => Promise<{ error: string | null; message?: string }>;
   /** Open the auth dialog (login/register) */
   openAuthDialog: (mode?: "login" | "register") => void;
   /** Close the auth dialog */
@@ -78,6 +80,7 @@ const AuthContext = createContext<AuthContextValue>({
   logout: async () => {},
   setPassword: async () => ({ error: null }),
   refreshCustomer: async () => {},
+  requestMagicLink: async () => ({ error: null }),
   openAuthDialog: () => {},
   closeAuthDialog: () => {},
   authDialogOpen: false,
@@ -240,6 +243,19 @@ export function StorefrontAuthProvider({
     }
   }, [callAuth, token]);
 
+  const requestMagicLink = useCallback(
+    async (email: string): Promise<{ error: string | null; message?: string }> => {
+      try {
+        const data = await callAuth({ action: "magic-link", email });
+        if (data?.error) return { error: data.error };
+        return { error: null, message: data?.message || "If an account exists, a login link has been sent." };
+      } catch {
+        return { error: "Something went wrong. Please try again." };
+      }
+    },
+    [callAuth],
+  );
+
   const openAuthDialog = useCallback((mode?: "login" | "register") => {
     setAuthDialogMode(mode || "login");
     setAuthDialogOpen(true);
@@ -261,6 +277,7 @@ export function StorefrontAuthProvider({
         logout,
         setPassword,
         refreshCustomer,
+        requestMagicLink,
         openAuthDialog,
         closeAuthDialog,
         authDialogOpen,

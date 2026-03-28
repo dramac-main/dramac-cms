@@ -1,23 +1,23 @@
 /**
  * Brand Color Resolution System
- * 
+ *
  * Derives a complete, coherent color palette from a small set of brand colors.
  * This is the single source of truth for how brand identity flows into components.
- * 
+ *
  * ARCHITECTURE:
  *   site.settings.primary_color  ──┐
  *   site.settings.secondary_color ─┤
  *   site.settings.accent_color   ──┼──► resolveBrandColors() ──► BrandColorPalette
  *   site.settings.theme.* ────────┤
  *   component.props.primaryColor ──┘    (complete derived palette)
- * 
+ *
  * The renderer injects brand-derived defaults into every component at render time.
  * Components keep their individual color fields for studio overrides, but any
  * UNSET color field automatically inherits from the brand palette.
- * 
+ *
  * This eliminates the problem of 146 color fields with 83% having no defaults:
  * now they all fall back to brand-consistent values.
- * 
+ *
  * @phase BRAND-COLOR-SYSTEM - Centralized brand color inheritance
  */
 
@@ -34,37 +34,42 @@ export interface BrandColorPalette {
   foreground: string;
 
   /** Derived semantic colors */
-  primaryForeground: string;     // Text on primary bg (usually white)
-  secondaryForeground: string;   // Text on secondary bg
-  accentForeground: string;      // Text on accent bg
-  muted: string;                 // Muted/disabled backgrounds
-  mutedForeground: string;       // Text on muted bg
-  border: string;                // Default border color
-  divider: string;               // Divider/separator color
-  card: string;                  // Card backgrounds
-  cardBorder: string;            // Card border color
-  input: string;                 // Input background
-  inputBorder: string;           // Input border color
-  inputFocus: string;            // Input focus ring color (usually primary)
+  primaryForeground: string; // Text on primary bg (usually white)
+  secondaryForeground: string; // Text on secondary bg
+  accentForeground: string; // Text on accent bg
+  muted: string; // Muted/disabled backgrounds
+  mutedForeground: string; // Text on muted bg
+  border: string; // Default border color
+  divider: string; // Divider/separator color
+  card: string; // Card backgrounds
+  cardBorder: string; // Card border color
+  input: string; // Input background
+  inputBorder: string; // Input border color
+  inputFocus: string; // Input focus ring color (usually primary)
 
   /** State colors */
   success: string;
+  successForeground: string;
   error: string;
+  errorForeground: string;
   warning: string;
+  warningForeground: string;
+  info: string;
+  infoForeground: string;
 
   /** Interactive element colors */
-  buttonBg: string;              // Primary button background (= primary)
-  buttonText: string;            // Primary button text (= primaryForeground)
-  buttonHover: string;           // Primary button hover
-  secondaryButtonBg: string;     // Secondary button bg
-  secondaryButtonText: string;   // Secondary button text
+  buttonBg: string; // Primary button background (= primary)
+  buttonText: string; // Primary button text (= primaryForeground)
+  buttonHover: string; // Primary button hover
+  secondaryButtonBg: string; // Secondary button bg
+  secondaryButtonText: string; // Secondary button text
 
   /** Module-specific (booking/ecommerce) */
-  selectedBg: string;            // Selected card/slot background
-  selectedBorder: string;        // Selected card/slot border
-  selectedText: string;          // Text on selected items
-  priceBadge: string;            // Price highlight color
-  ratingColor: string;           // Star rating color
+  selectedBg: string; // Selected card/slot background
+  selectedBorder: string; // Selected card/slot border
+  selectedText: string; // Text on selected items
+  priceBadge: string; // Price highlight color
+  ratingColor: string; // Star rating color
 }
 
 export interface BrandColorSource {
@@ -92,9 +97,13 @@ export interface BrandColorSource {
 /** Parse hex color to RGB */
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
   const clean = hex.replace(/^#/, "");
-  const expanded = clean.length === 3
-    ? clean.split("").map(c => c + c).join("")
-    : clean;
+  const expanded =
+    clean.length === 3
+      ? clean
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : clean;
   if (expanded.length !== 6) return null;
   return {
     r: parseInt(expanded.slice(0, 2), 16),
@@ -117,7 +126,11 @@ function luminance(hex: string): number {
     const s = c / 255;
     return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
   };
-  return 0.2126 * toLinear(rgb.r) + 0.7152 * toLinear(rgb.g) + 0.0722 * toLinear(rgb.b);
+  return (
+    0.2126 * toLinear(rgb.r) +
+    0.7152 * toLinear(rgb.g) +
+    0.0722 * toLinear(rgb.b)
+  );
 }
 
 /** Is this color light? (luminance > 0.45) */
@@ -152,6 +165,22 @@ function contrastingForeground(bgHex: string): string {
   return isLight(bgHex) ? "#0f172a" : "#ffffff";
 }
 
+/** Calculate WCAG 2.1 contrast ratio between two colors (range 1–21) */
+function contrastRatio(fg: string, bg: string): number {
+  const lFg = luminance(fg);
+  const lBg = luminance(bg);
+  const lighter = Math.max(lFg, lBg);
+  const darker = Math.min(lFg, lBg);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+/** Ensure a foreground color meets minimum contrast against a background.
+ *  If not, returns a high-contrast alternative. Minimum ratio: 4.5:1 (WCAG AA). */
+function ensureContrast(fg: string, bg: string, minRatio = 4.5): string {
+  if (contrastRatio(fg, bg) >= minRatio) return fg;
+  return contrastingForeground(bg);
+}
+
 /** Create a very light tint of a color (for card/muted backgrounds) */
 function tint(hex: string, amount = 0.92): string {
   return lighten(hex, amount);
@@ -163,21 +192,28 @@ function tint(hex: string, amount = 0.92): string {
 
 /**
  * Resolve a complete brand color palette from partial brand color inputs.
- * 
+ *
  * This function takes whatever brand colors are available (from site settings,
  * theme, or component props) and derives a complete, consistent palette.
- * 
+ *
  * Priority order:
  * 1. theme.* colors (set by AI designer or theme editor)
  * 2. site settings flat colors (set in site branding)
  * 3. Sensible defaults
  */
-export function resolveBrandColors(source: BrandColorSource): BrandColorPalette {
+export function resolveBrandColors(
+  source: BrandColorSource,
+): BrandColorPalette {
   // Resolve core colors with priority: theme > site settings > defaults
-  const primary = source.theme?.primaryColor || source.primaryColor || "#0f172a";
-  const secondary = source.theme?.secondaryColor || source.secondaryColor || darken(primary, 0.15);
+  const primary =
+    source.theme?.primaryColor || source.primaryColor || "#0f172a";
+  const secondary =
+    source.theme?.secondaryColor ||
+    source.secondaryColor ||
+    darken(primary, 0.15);
   const accent = source.theme?.accentColor || source.accentColor || "#f59e0b";
-  const background = source.theme?.backgroundColor || source.backgroundColor || "#ffffff";
+  const background =
+    source.theme?.backgroundColor || source.backgroundColor || "#ffffff";
   const foreground = source.theme?.textColor || source.textColor || "#0f172a";
 
   // Derive the full palette from core colors
@@ -185,7 +221,13 @@ export function resolveBrandColors(source: BrandColorSource): BrandColorPalette 
   const secondaryFg = contrastingForeground(secondary);
   const accentFg = contrastingForeground(accent);
 
-  return {
+  // Derive state color foregrounds
+  const successColor = "#22c55e";
+  const errorColor = "#ef4444";
+  const warningColor = "#f59e0b";
+  const infoColor = "#3b82f6";
+
+  const palette: BrandColorPalette = {
     // Core
     primary,
     secondary,
@@ -199,20 +241,25 @@ export function resolveBrandColors(source: BrandColorSource): BrandColorPalette 
     accentForeground: accentFg,
 
     // Surfaces
-    muted: lighten(foreground, 0.93),         // Very light gray
+    muted: lighten(foreground, 0.93), // Very light gray
     mutedForeground: lighten(foreground, 0.4), // Dimmed text
-    border: lighten(foreground, 0.82),         // Subtle border
-    divider: lighten(foreground, 0.87),        // Even subtler
-    card: background,                          // Card bg = page bg
-    cardBorder: lighten(foreground, 0.85),     // Card border
-    input: background,                         // Input bg
-    inputBorder: lighten(foreground, 0.78),    // Slightly darker border for inputs
-    inputFocus: primary,                       // Focus ring = primary
+    border: lighten(foreground, 0.82), // Subtle border
+    divider: lighten(foreground, 0.87), // Even subtler
+    card: background, // Card bg = page bg
+    cardBorder: lighten(foreground, 0.85), // Card border
+    input: background, // Input bg
+    inputBorder: lighten(foreground, 0.78), // Slightly darker border for inputs
+    inputFocus: primary, // Focus ring = primary
 
     // State colors (semantic, don't change with brand)
-    success: "#22c55e",
-    error: "#ef4444",
-    warning: "#f59e0b",
+    success: successColor,
+    successForeground: contrastingForeground(successColor),
+    error: errorColor,
+    errorForeground: contrastingForeground(errorColor),
+    warning: warningColor,
+    warningForeground: contrastingForeground(warningColor),
+    info: infoColor,
+    infoForeground: contrastingForeground(infoColor),
 
     // Buttons
     buttonBg: primary,
@@ -226,8 +273,36 @@ export function resolveBrandColors(source: BrandColorSource): BrandColorPalette 
     selectedBorder: primary,
     selectedText: isLight(tint(primary, 0.88)) ? foreground : "#ffffff",
     priceBadge: primary,
-    ratingColor: "#f59e0b",                   // Stars are always amber/gold
+    ratingColor: "#f59e0b", // Stars are always amber/gold
   };
+
+  // ── WCAG AA Contrast Validation ──────────────────────────────────────
+  // Ensure all foreground/background pairs meet minimum 4.5:1 contrast ratio.
+  // If a site owner picks colors that create invisible text, we fix it automatically.
+  palette.foreground = ensureContrast(palette.foreground, palette.background);
+  palette.primaryForeground = ensureContrast(
+    palette.primaryForeground,
+    palette.primary,
+  );
+  palette.secondaryForeground = ensureContrast(
+    palette.secondaryForeground,
+    palette.secondary,
+  );
+  palette.accentForeground = ensureContrast(
+    palette.accentForeground,
+    palette.accent,
+  );
+  palette.mutedForeground = ensureContrast(
+    palette.mutedForeground,
+    palette.muted,
+  );
+  palette.buttonText = ensureContrast(palette.buttonText, palette.buttonBg);
+  palette.selectedText = ensureContrast(
+    palette.selectedText,
+    palette.selectedBg,
+  );
+
+  return palette;
 }
 
 // ============================================================================
@@ -236,10 +311,10 @@ export function resolveBrandColors(source: BrandColorSource): BrandColorPalette 
 
 /**
  * Maps brand palette keys to common component color prop names.
- * 
+ *
  * When a component has a color prop that isn't explicitly set,
  * the renderer looks up this map to find the brand palette value to inject.
- * 
+ *
  * This covers the 146 color fields across booking components (and beyond).
  * Components still accept explicit overrides — this only fills gaps.
  */
@@ -252,7 +327,7 @@ const BRAND_COLOR_MAP: Record<string, keyof BrandColorPalette> = {
   // Background & text
   backgroundColor: "background",
   textColor: "foreground",
-  
+
   // Header area
   headerBackgroundColor: "background",
   headerTextColor: "foreground",
@@ -311,6 +386,7 @@ const BRAND_COLOR_MAP: Record<string, keyof BrandColorPalette> = {
   successColor: "success",
   errorColor: "error",
   warningColor: "warning",
+  infoColor: "info",
 
   // Content colors
   priceColor: "primary",
@@ -398,6 +474,16 @@ const BRAND_COLOR_MAP: Record<string, keyof BrandColorPalette> = {
   // Specialty tags (staff)
   specialtyBgColor: "muted",
   specialtyTextColor: "foreground",
+
+  // Premium component (navbar/hero/footer) props
+  ctaTextColor: "buttonText",
+  badgeTextColor: "primaryForeground",
+  primaryButtonTextColor: "buttonText",
+  mobileMenuBackground: "background",
+  mobileMenuTextColor: "foreground",
+  mobileMenuOverlayColor: "foreground",
+  playButtonColor: "primaryForeground",
+  secondaryButtonColor: "secondaryButtonBg",
 };
 
 /**
@@ -410,16 +496,22 @@ const BRAND_COLOR_MAP: Record<string, keyof BrandColorPalette> = {
  * automatically pick up the site's brand colors without needing to be re-saved.
  */
 const PLACEHOLDER_COLORS = new Set([
-  "#3b82f6",   // Tailwind blue-500 (old primary default)
-  "#3B82F6",   // Case variant
-  "#2563eb",   // Tailwind blue-600
-  "#2563EB",   // Case variant
-  "#8b5cf6",   // Tailwind violet-500 (old secondary/gradient default)
-  "#8B5CF6",   // Case variant
-  "#6366f1",   // Tailwind indigo-500 (old flip card/particle default)
-  "#6366F1",   // Case variant
-  "#1d4ed8",   // Tailwind blue-700
-  "#1D4ED8",   // Case variant
+  "#3b82f6", // Tailwind blue-500 (old primary default)
+  "#3B82F6", // Case variant
+  "#2563eb", // Tailwind blue-600
+  "#2563EB", // Case variant
+  "#8b5cf6", // Tailwind violet-500 (old secondary/gradient default)
+  "#8B5CF6", // Case variant
+  "#6366f1", // Tailwind indigo-500 (old flip card/particle default)
+  "#6366F1", // Case variant
+  "#1d4ed8", // Tailwind blue-700
+  "#1D4ED8", // Case variant
+  "#ffffff", // White (old navbar/hero default background)
+  "#FFFFFF", // Case variant
+  "#1f2937", // Gray-800 (old navbar/hero default text)
+  "#1F2937", // Case variant
+  "#e5e7eb", // Gray-200 (old default border)
+  "#E5E7EB", // Case variant
 ]);
 
 /**
@@ -438,12 +530,12 @@ function isPlaceholderColor(value: unknown): boolean {
 
 /**
  * Inject brand-derived color defaults into a component's props.
- * 
+ *
  * Fills in colors that are NOT already explicitly set, AND replaces
  * known placeholder colors from old defaults with the site's actual
  * brand colors. This ensures both new and existing components
  * properly inherit site branding.
- * 
+ *
  * @param props - The component's current props
  * @param palette - The resolved brand color palette
  * @returns Props with brand colors filled in for any unset color fields
@@ -476,10 +568,10 @@ export function injectBrandColors(
 
 /**
  * Map of component font prop names → which brand font they should inherit.
- * 
+ *
  * "heading" → uses the site's heading font (e.g., Playfair Display)
  * "body"    → uses the site's body font (e.g., Inter)
- * 
+ *
  * This is the FONT counterpart to BRAND_COLOR_MAP. It ensures that any
  * component font field left empty inherits from the site's brand fonts,
  * giving a uniform typographic experience across the entire site.
@@ -502,10 +594,10 @@ const BRAND_FONT_MAP: Record<string, "heading" | "body"> = {
 
 /**
  * Inject brand-derived font defaults into a component's props.
- * 
+ *
  * Only fills in fonts that are NOT already explicitly set (by the user in Studio).
  * This preserves any studio customizations while ensuring consistency.
- * 
+ *
  * @param props - The component's current props
  * @param fontHeading - The site's heading font (e.g., "Playfair Display")
  * @param fontBody - The site's body font (e.g., "Inter")
@@ -519,7 +611,10 @@ export function injectBrandFonts(
   if (!fontHeading && !fontBody) return props;
 
   const result = { ...props };
-  const fonts = { heading: fontHeading || fontBody || "", body: fontBody || "" };
+  const fonts = {
+    heading: fontHeading || fontBody || "",
+    body: fontBody || "",
+  };
 
   // Old default value that was stored in DB before the brand font system.
   // Treat it as "unset" so brand fonts can take over.
@@ -542,11 +637,13 @@ export function injectBrandFonts(
 
 /**
  * Extract brand color source from site settings (as stored in the DB).
- * 
+ *
  * Handles both flat settings (site.settings.primary_color) and
  * nested theme (site.settings.theme.primaryColor).
  */
-export function extractBrandSource(siteSettings: Record<string, unknown>): BrandColorSource {
+export function extractBrandSource(
+  siteSettings: Record<string, unknown>,
+): BrandColorSource {
   const theme = siteSettings.theme as BrandColorSource["theme"] | undefined;
 
   return {
@@ -565,7 +662,7 @@ export function extractBrandSource(siteSettings: Record<string, unknown>): Brand
 
 /**
  * Convert hex color to HSL component string (e.g., "220 15% 93%").
- * 
+ *
  * This is the format used by Tailwind CSS variables in brand-variables.css.
  * The Tailwind config maps `bg-card` → `hsl(var(--color-card))`, where
  * `--color-card` must be space-separated HSL values WITHOUT the `hsl()` wrapper.
@@ -573,20 +670,34 @@ export function extractBrandSource(siteSettings: Record<string, unknown>): Brand
 function hexToHsl(hex: string): { h: number; s: number; l: number } | null {
   const rgb = hexToRgb(hex);
   if (!rgb) return null;
-  const r = rgb.r / 255, g = rgb.g / 255, b = rgb.b / 255;
-  const max = Math.max(r, g, b), min = Math.min(r, g, b);
-  let h = 0, s = 0;
+  const r = rgb.r / 255,
+    g = rgb.g / 255,
+    b = rgb.b / 255;
+  const max = Math.max(r, g, b),
+    min = Math.min(r, g, b);
+  let h = 0,
+    s = 0;
   const l = (max + min) / 2;
   if (max !== min) {
     const d = max - min;
     s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
     switch (max) {
-      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-      case g: h = ((b - r) / d + 2) / 6; break;
-      case b: h = ((r - g) / d + 4) / 6; break;
+      case r:
+        h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+        break;
+      case g:
+        h = ((b - r) / d + 2) / 6;
+        break;
+      case b:
+        h = ((r - g) / d + 4) / 6;
+        break;
     }
   }
-  return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+  return {
+    h: Math.round(h * 360),
+    s: Math.round(s * 100),
+    l: Math.round(l * 100),
+  };
 }
 
 function hexToHslString(hex: string): string {
@@ -597,24 +708,24 @@ function hexToHslString(hex: string): string {
 
 /**
  * Generate a complete set of CSS custom property overrides from a brand palette.
- * 
+ *
  * ARCHITECTURE:
  * This is the GLOBAL BRANDING CSS VARIABLE LAYER. When applied to `.studio-renderer`,
  * it overrides EVERY CSS variable that Tailwind utilities and shadcn/ui components
  * reference. This means:
- * 
+ *
  * - `bg-card` → uses site's card color (NOT dashboard's)
  * - `text-foreground` → uses site's text color (NOT dashboard's)
  * - `bg-primary` → uses site's primary color (NOT dashboard's)
  * - `bg-muted` → uses site's muted color (NOT dashboard's)
  * - `border` → uses site's border color (NOT dashboard's)
- * 
+ *
  * This is the ONE fix that ensures ALL shadcn components (used by ecommerce,
  * booking, and any other module) render with the site's brand colors.
- * 
+ *
  * It also forces LIGHT MODE by setting light-appropriate values, which means
  * even if the dashboard is in dark mode, published site components stay light.
- * 
+ *
  * @param palette - The resolved brand color palette
  * @param fontHeading - Google Font name for headings (e.g., "Playfair Display")
  * @param fontBody - Google Font name for body text (e.g., "Inter")
@@ -642,14 +753,27 @@ export function generateBrandCSSVars(
   vars["--color-input"] = hexToHslString(palette.inputBorder);
   vars["--color-ring"] = hexToHslString(palette.primary);
   vars["--color-primary"] = hexToHslString(palette.primary);
-  vars["--color-primary-foreground"] = hexToHslString(palette.primaryForeground);
+  vars["--color-primary-foreground"] = hexToHslString(
+    palette.primaryForeground,
+  );
   vars["--color-secondary"] = hexToHslString(palette.secondary);
-  vars["--color-secondary-foreground"] = hexToHslString(palette.secondaryForeground);
+  vars["--color-secondary-foreground"] = hexToHslString(
+    palette.secondaryForeground,
+  );
   vars["--color-accent"] = hexToHslString(palette.accent);
   vars["--color-accent-foreground"] = hexToHslString(palette.accentForeground);
   vars["--color-success"] = hexToHslString(palette.success);
+  vars["--color-success-foreground"] = hexToHslString(
+    palette.successForeground,
+  );
   vars["--color-warning"] = hexToHslString(palette.warning);
+  vars["--color-warning-foreground"] = hexToHslString(
+    palette.warningForeground,
+  );
   vars["--color-danger"] = hexToHslString(palette.error);
+  vars["--color-danger-foreground"] = hexToHslString(palette.errorForeground);
+  vars["--color-info"] = hexToHslString(palette.info);
+  vars["--color-info-foreground"] = hexToHslString(palette.infoForeground);
 
   // ── Shadcn v2 direct CSS variables ────────────────────────────────────
   // Some shadcn components or raw CSS references use these variables directly
@@ -669,6 +793,13 @@ export function generateBrandCSSVars(
   vars["--accent"] = palette.accent;
   vars["--accent-foreground"] = palette.accentForeground;
   vars["--destructive"] = palette.error;
+  vars["--destructive-foreground"] = palette.errorForeground;
+  vars["--success"] = palette.success;
+  vars["--success-foreground"] = palette.successForeground;
+  vars["--warning"] = palette.warning;
+  vars["--warning-foreground"] = palette.warningForeground;
+  vars["--info"] = palette.info;
+  vars["--info-foreground"] = palette.infoForeground;
   vars["--border"] = palette.border;
   vars["--input"] = palette.inputBorder;
   vars["--ring"] = palette.primary;
@@ -677,10 +808,12 @@ export function generateBrandCSSVars(
   // These override the dashboard's --font-sans and --font-display variables.
   // All components that use `font-sans` (body text) or headings get the site's fonts.
   if (fontBody) {
-    vars["--font-sans"] = `'${fontBody}', ui-sans-serif, system-ui, -apple-system, sans-serif`;
+    vars["--font-sans"] =
+      `'${fontBody}', ui-sans-serif, system-ui, -apple-system, sans-serif`;
   }
   if (fontHeading) {
-    vars["--font-display"] = `'${fontHeading}', ui-sans-serif, system-ui, sans-serif`;
+    vars["--font-display"] =
+      `'${fontHeading}', ui-sans-serif, system-ui, sans-serif`;
   }
 
   return vars;

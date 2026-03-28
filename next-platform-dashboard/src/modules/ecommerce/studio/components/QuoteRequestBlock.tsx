@@ -1,4 +1,4 @@
-/**
+﻿/**
  * QuoteRequestBlock - Quote request form
  *
  * Phase ECOM-25: Quotation Frontend
@@ -161,13 +161,13 @@ export function QuoteRequestBlock({
     return (
       <Card className={cn("text-center", className)}>
         <CardContent className="pt-6">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-            <ShoppingBag className="h-8 w-8 text-gray-400" />
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+            <ShoppingBag className="h-8 w-8 text-muted-foreground" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-900">
+          <h3 className="text-xl font-semibold text-foreground">
             Quotations Not Available
           </h3>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-muted-foreground">
             This store does not currently accept quote requests. Please browse
             our products and purchase directly.
           </p>
@@ -236,13 +236,13 @@ export function QuoteRequestBlock({
     return (
       <Card className={cn("text-center", className)}>
         <CardContent className="pt-6">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-            <CircleCheck className="h-8 w-8 text-green-600" />
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
+            <CircleCheck className="h-8 w-8 text-success" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-900">
+          <h3 className="text-xl font-semibold text-foreground">
             Quote Request Submitted!
           </h3>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-muted-foreground">
             We&apos;ve received your request and will send your quote to{" "}
             <strong>{formData.customer_email}</strong> shortly.
           </p>
@@ -273,11 +273,11 @@ export function QuoteRequestBlock({
       <Card className={className}>
         <CardContent className="pt-6">
           <div className="text-center">
-            <ShoppingBag className="mx-auto h-12 w-12 text-gray-300" />
-            <h3 className="mt-4 text-lg font-medium text-gray-900">
+            <ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground/40" />
+            <h3 className="mt-4 text-lg font-medium text-foreground">
               No Items Selected
             </h3>
-            <p className="mt-2 text-gray-500">
+            <p className="mt-2 text-muted-foreground">
               Add products to your quote request before submitting.
             </p>
           </div>
@@ -296,7 +296,9 @@ export function QuoteRequestBlock({
               placeholder="Your Name *"
               value={formData.customer_name}
               onChange={(e) => updateField("customer_name", e.target.value)}
-              className={validationErrors.customer_name ? "border-red-500" : ""}
+              className={
+                validationErrors.customer_name ? "border-destructive" : ""
+              }
             />
           </div>
           <div>
@@ -306,7 +308,7 @@ export function QuoteRequestBlock({
               value={formData.customer_email}
               onChange={(e) => updateField("customer_email", e.target.value)}
               className={
-                validationErrors.customer_email ? "border-red-500" : ""
+                validationErrors.customer_email ? "border-destructive" : ""
               }
             />
           </div>
@@ -367,7 +369,9 @@ export function QuoteRequestBlock({
               placeholder="Your Name *"
               value={formData.customer_name}
               onChange={(e) => updateField("customer_name", e.target.value)}
-              className={validationErrors.customer_name ? "border-red-500" : ""}
+              className={
+                validationErrors.customer_name ? "border-destructive" : ""
+              }
             />
             <Input
               type="email"
@@ -375,7 +379,7 @@ export function QuoteRequestBlock({
               value={formData.customer_email}
               onChange={(e) => updateField("customer_email", e.target.value)}
               className={
-                validationErrors.customer_email ? "border-red-500" : ""
+                validationErrors.customer_email ? "border-destructive" : ""
               }
             />
             <Textarea
@@ -425,7 +429,7 @@ export function QuoteRequestBlock({
           {/* Items section */}
           {showItems && builderItems.length > 0 && (
             <div className="space-y-3">
-              <h4 className="font-medium text-gray-900">
+              <h4 className="font-medium text-foreground">
                 Items ({builderCount})
               </h4>
               <div className="max-h-64 space-y-2 overflow-y-auto">
@@ -465,7 +469,7 @@ export function QuoteRequestBlock({
 
           {/* Customer info */}
           <div className="space-y-4">
-            <h4 className="font-medium text-gray-900">Your Information</h4>
+            <h4 className="font-medium text-foreground">Your Information</h4>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
@@ -476,11 +480,11 @@ export function QuoteRequestBlock({
                   onChange={(e) => updateField("customer_name", e.target.value)}
                   placeholder="Your full name"
                   className={
-                    validationErrors.customer_name ? "border-red-500" : ""
+                    validationErrors.customer_name ? "border-destructive" : ""
                   }
                 />
                 {validationErrors.customer_name && (
-                  <p className="text-sm text-red-500">
+                  <p className="text-sm text-destructive">
                     {validationErrors.customer_name}
                   </p>
                 )}
@@ -497,11 +501,11 @@ export function QuoteRequestBlock({
                   }
                   placeholder="email@example.com"
                   className={
-                    validationErrors.customer_email ? "border-red-500" : ""
+                    validationErrors.customer_email ? "border-destructive" : ""
                   }
                 />
                 {validationErrors.customer_email && (
-                  <p className="text-sm text-red-500">
+                  <p className="text-sm text-destructive">
                     {validationErrors.customer_email}
                   </p>
                 )}
@@ -522,11 +526,11 @@ export function QuoteRequestBlock({
                   }
                   placeholder="+260 97 1234567"
                   className={
-                    validationErrors.customer_phone ? "border-red-500" : ""
+                    validationErrors.customer_phone ? "border-destructive" : ""
                   }
                 />
                 {validationErrors.customer_phone && (
-                  <p className="text-sm text-red-500">
+                  <p className="text-sm text-destructive">
                     {validationErrors.customer_phone}
                   </p>
                 )}
@@ -542,11 +546,11 @@ export function QuoteRequestBlock({
                   onChange={(e) => updateField("company_name", e.target.value)}
                   placeholder="Your company name"
                   className={
-                    validationErrors.company_name ? "border-red-500" : ""
+                    validationErrors.company_name ? "border-destructive" : ""
                   }
                 />
                 {validationErrors.company_name && (
-                  <p className="text-sm text-red-500">
+                  <p className="text-sm text-destructive">
                     {validationErrors.company_name}
                   </p>
                 )}

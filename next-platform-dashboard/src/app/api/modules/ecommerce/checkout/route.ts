@@ -22,6 +22,7 @@ import type {
 } from "@/modules/ecommerce/types/ecommerce-types";
 import { calculateShipping } from "@/modules/ecommerce/lib/shipping-calculator";
 import { PUBLIC_RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
+import { isValidUUID, isValidEmail, truncateText } from "@/lib/api-validation";
 
 export const dynamic = "force-dynamic";
 
@@ -99,6 +100,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate UUID format
+    if (!isValidUUID(cartId)) {
+      return NextResponse.json(
+        { error: "Invalid cartId format" },
+        { status: 400 },
+      );
+    }
+
+    // Validate email format
+    if (!isValidEmail(customerEmail)) {
+      return NextResponse.json(
+        { error: "Invalid email format" },
+        { status: 400 },
+      );
+    }
+
+    // Sanitize text fields
+    const safeCustomerName = truncateText(customerName, 200);
+    const safeCustomerPhone = truncateText(customerPhone, 30);
+    const safeNotes = truncateText(notes, 2000);
+
     // Get cart (uses admin client — works for anonymous subdomain visitors)
     const cart = await getPublicCart(cartId);
     if (!cart) {
@@ -125,7 +147,28 @@ export async function POST(request: NextRequest) {
     );
     const discount = cart.discount_amount || 0;
     const taxableAmount = Math.max(0, subtotal - discount);
-    const tax = (taxableAmount * (settings.tax_rate || 0)) / 100;
+
+    // Per-product tax: only include items where product.is_taxable !== false
+    const taxRate = settings.tax_rate || 0;
+    let tax = 0;
+    if (taxRate > 0) {
+      // Calculate taxable subtotal (only for taxable products)
+      const taxableSubtotal = cart.items.reduce((sum, item) => {
+        const product = Array.isArray(item.product)
+          ? item.product[0]
+          : item.product;
+        // Default to taxable if is_taxable is not explicitly false
+        if (product && product.is_taxable === false) return sum;
+        return sum + item.unit_price * item.quantity;
+      }, 0);
+      // Apply discount proportionally to taxable amount
+      const discountRatio = subtotal > 0 ? discount / subtotal : 0;
+      const adjustedTaxable = Math.max(
+        0,
+        taxableSubtotal - taxableSubtotal * discountRatio,
+      );
+      tax = Math.round((adjustedTaxable * taxRate) / 100);
+    }
 
     // Calculate shipping from site's shipping zones/settings
     const shippingResult = calculateShipping({
@@ -191,10 +234,10 @@ export async function POST(request: NextRequest) {
       shipping_address: shippingAddress as Address,
       billing_address: (billingAddress || shippingAddress) as Address,
       customer_email: customerEmail,
-      customer_name: customerName || null,
-      customer_phone: customerPhone || null,
+      customer_name: safeCustomerName || null,
+      customer_phone: safeCustomerPhone || null,
       discount_code: cart.discount_code,
-      notes: notes || null,
+      notes: safeNotes || null,
       metadata: {},
       customer_token: customer_token || null,
     };
@@ -256,8 +299,8 @@ export async function POST(request: NextRequest) {
           currency: settings.currency,
           customer: {
             email: customerEmail,
-            name: customerName || customerEmail,
-            phone_number: customerPhone || "",
+            name: safeCustomerName || customerEmail,
+            phone_number: safeCustomerPhone || "",
           },
           customizations: {
             title: "Order Payment",
@@ -337,10 +380,10 @@ export async function POST(request: NextRequest) {
                   notification_id: ipnData.ipn_id,
                   billing_address: {
                     email_address: customerEmail,
-                    phone_number: customerPhone || "",
-                    first_name: customerName?.split(" ")[0] || "",
+                    phone_number: safeCustomerPhone || "",
+                    first_name: safeCustomerName?.split(" ")[0] || "",
                     last_name:
-                      customerName?.split(" ").slice(1).join(" ") || "",
+                      safeCustomerName?.split(" ").slice(1).join(" ") || "",
                   },
                 }),
               });
@@ -374,9 +417,9 @@ export async function POST(request: NextRequest) {
           notification_id: order.id,
           billing_address: {
             email: customerEmail,
-            phone: customerPhone || "",
-            first_name: customerName?.split(" ")[0] || "",
-            last_name: customerName?.split(" ").slice(1).join(" ") || "",
+            phone: safeCustomerPhone || "",
+            first_name: safeCustomerName?.split(" ")[0] || "",
+            last_name: safeCustomerName?.split(" ").slice(1).join(" ") || "",
           },
         };
         break;

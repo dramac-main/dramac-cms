@@ -173,8 +173,10 @@ export function QuoteDetailBlock({
     return (
       <Card className={className}>
         <CardContent className="py-12 text-center">
-          <h3 className="text-lg font-medium text-gray-900">Quote Not Found</h3>
-          <p className="mt-2 text-gray-500">
+          <h3 className="text-lg font-medium text-foreground">
+            Quote Not Found
+          </h3>
+          <p className="mt-2 text-muted-foreground">
             The quote you&apos;re looking for doesn&apos;t exist or has been
             removed.
           </p>
@@ -207,11 +209,11 @@ export function QuoteDetailBlock({
             <h1 className="text-2xl font-bold">
               Quote #{quote.quote_number || quote.id.slice(0, 8)}
             </h1>
-            <p className="mt-1 text-gray-600">
+            <p className="mt-1 text-muted-foreground">
               Date: {formatDate(quote.created_at)}
             </p>
             {quote.valid_until && (
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Valid Until: {formatDate(quote.valid_until)}
               </p>
             )}
@@ -224,8 +226,8 @@ export function QuoteDetailBlock({
         {/* Customer Info */}
         {showCustomerInfo && (
           <div className="mt-6 border-b pb-6">
-            <h2 className="font-semibold text-gray-900">Customer</h2>
-            <div className="mt-2 text-gray-600">
+            <h2 className="font-semibold text-foreground">Customer</h2>
+            <div className="mt-2 text-muted-foreground">
               {quote.customer_name && <p>{quote.customer_name}</p>}
               {quote.customer_company && <p>{quote.customer_company}</p>}
               {quote.customer_email && <p>{quote.customer_email}</p>}
@@ -236,7 +238,7 @@ export function QuoteDetailBlock({
 
         {/* Items */}
         <div className="mt-6">
-          <h2 className="font-semibold text-gray-900">Items</h2>
+          <h2 className="font-semibold text-foreground">Items</h2>
           <table className="mt-4 w-full">
             <thead>
               <tr className="border-b text-left">
@@ -279,8 +281,10 @@ export function QuoteDetailBlock({
         {/* Terms */}
         {quote.terms_and_conditions && (
           <div className="mt-8 border-t pt-6">
-            <h2 className="font-semibold text-gray-900">Terms & Conditions</h2>
-            <p className="mt-2 text-sm text-gray-600">
+            <h2 className="font-semibold text-foreground">
+              Terms & Conditions
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
               {quote.terms_and_conditions}
             </p>
           </div>
@@ -314,7 +318,7 @@ export function QuoteDetailBlock({
               />
             ))}
             {(quote.items?.length || 0) > 3 && (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 +{(quote.items?.length || 0) - 3} more items
               </p>
             )}
@@ -361,10 +365,10 @@ export function QuoteDetailBlock({
             </Button>
           )}
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-foreground">
               Quote #{quote.quote_number || quote.id.slice(0, 8)}
             </h1>
-            <div className="mt-1 flex items-center gap-3 text-sm text-gray-500">
+            <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
               <span className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
                 Created {formatDate(quote.created_at)}
@@ -395,25 +399,25 @@ export function QuoteDetailBlock({
                 <div className="grid gap-4 sm:grid-cols-2">
                   {quote.customer_name && (
                     <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-gray-400" />
+                      <User className="h-4 w-4 text-muted-foreground" />
                       <span>{quote.customer_name}</span>
                     </div>
                   )}
                   {quote.customer_company && (
                     <div className="flex items-center gap-2">
-                      <Building2 className="h-4 w-4 text-gray-400" />
+                      <Building2 className="h-4 w-4 text-muted-foreground" />
                       <span>{quote.customer_company}</span>
                     </div>
                   )}
                   {quote.customer_email && (
                     <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-gray-400" />
+                      <Mail className="h-4 w-4 text-muted-foreground" />
                       <span>{quote.customer_email}</span>
                     </div>
                   )}
                   {quote.customer_phone && (
                     <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-gray-400" />
+                      <Phone className="h-4 w-4 text-muted-foreground" />
                       <span>{quote.customer_phone}</span>
                     </div>
                   )}
@@ -452,7 +456,9 @@ export function QuoteDetailBlock({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600">{quote.notes_to_customer}</p>
+                <p className="text-muted-foreground">
+                  {quote.notes_to_customer}
+                </p>
               </CardContent>
             </Card>
           )}
@@ -498,7 +504,20 @@ export function QuoteDetailBlock({
                   onReject={(reason) => rejectQuote(quote.id, reason)}
                   onPrint={onPrint || (() => window.print())}
                   onDownload={onDownload}
-                  onShare={onShare}
+                  onShare={
+                    onShare ||
+                    (() => {
+                      const url = encodeURIComponent(window.location.href);
+                      const text = encodeURIComponent(
+                        `Quote #${quote.quote_number || quote.id.slice(0, 8)}`,
+                      );
+                      window.open(
+                        `https://wa.me/?text=${text}%20${url}`,
+                        "_blank",
+                        "noopener",
+                      );
+                    })
+                  }
                   variant="stacked"
                   showAllActions
                 />
@@ -516,10 +535,12 @@ export function QuoteDetailBlock({
                 <div className="space-y-3">
                   {quote.activities.map((activity, index) => (
                     <div key={index} className="flex gap-3 text-sm">
-                      <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-gray-300" />
+                      <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-border" />
                       <div>
-                        <p className="text-gray-900">{activity.description}</p>
-                        <p className="text-gray-500">
+                        <p className="text-foreground">
+                          {activity.description}
+                        </p>
+                        <p className="text-muted-foreground">
                           {activity.performed_by_name} ·{" "}
                           {formatDateTime(activity.created_at)}
                         </p>

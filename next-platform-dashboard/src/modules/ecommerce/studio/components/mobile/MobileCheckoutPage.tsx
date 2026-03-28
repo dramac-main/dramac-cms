@@ -332,7 +332,8 @@ export function MobileCheckoutPage({
             <button
               type="button"
               onClick={onBack}
-              className="p-2 -ml-2 hover:bg-muted rounded-lg transition-colors"
+              className="p-2 -ml-2 min-h-[44px] min-w-[44px] hover:bg-muted rounded-lg transition-colors"
+              aria-label="Go back"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
@@ -396,7 +397,7 @@ export function MobileCheckoutPage({
                   onChange={(e) =>
                     setContact({ ...contact, marketingOptIn: e.target.checked })
                   }
-                  className="w-5 h-5 rounded border-gray-300"
+                  className="w-5 h-5 rounded border-border"
                 />
                 <span className="text-sm text-muted-foreground">
                   Email me with news and offers
@@ -476,7 +477,7 @@ export function MobileCheckoutPage({
                     type="checkbox"
                     checked={billingSameAsShipping}
                     onChange={(e) => setBillingSameAsShipping(e.target.checked)}
-                    className="w-5 h-5 rounded border-gray-300"
+                    className="w-5 h-5 rounded border-border"
                   />
                   <span className="text-sm text-foreground">
                     Billing address same as shipping

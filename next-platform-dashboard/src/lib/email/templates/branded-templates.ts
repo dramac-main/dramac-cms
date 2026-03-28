@@ -605,6 +605,31 @@ const payment_received_customer: BrandedTemplate = {
     `Payment Confirmed!\n\nWe've received your payment for order #${data.orderNumber}.\nAmount: ${data.total}\n${data.paymentMethod ? `Method: ${data.paymentMethod}\n` : ""}\nThank you for shopping with ${data.businessName || b.agency_name}!`,
 };
 
+const payment_proof_rejected_customer: BrandedTemplate = {
+  subject: (data) =>
+    `Payment Proof Could Not Be Verified — Order #${data.orderNumber}`,
+  html: (data, b) =>
+    baseEmailTemplate(
+      b,
+      `<h1 style="${EMAIL_STYLES.heading}">Payment Proof Not Verified</h1>
+      <p style="${EMAIL_STYLES.text}">Hi ${data.customerName || "there"},</p>
+      <p style="${EMAIL_STYLES.text}">Unfortunately, the payment proof you submitted for order <strong>#${data.orderNumber}</strong> could not be verified.</p>
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:20px;margin:20px 0;">
+        <p style="margin:0;color:#991b1b;font-weight:600;">What to do next:</p>
+        <ul style="margin:8px 0 0;padding-left:20px;color:#374151;">
+          <li>Double-check the payment details and upload a clearer image</li>
+          <li>Ensure the amount matches the order total of <strong>${data.total}</strong></li>
+          <li>Contact us if you need assistance</li>
+        </ul>
+      </div>
+      ${data.orderUrl ? `${emailButton(b, String(data.orderUrl), "Upload New Proof")}` : ""}
+      <p style="${EMAIL_STYLES.muted}">If you believe this is an error, please contact ${data.businessName || b.agency_name} for assistance.</p>`,
+      `Payment proof not verified for order #${data.orderNumber}`,
+    ),
+  text: (data, b) =>
+    `Payment Proof Not Verified\n\nHi ${data.customerName || "there"},\n\nThe payment proof you submitted for order #${data.orderNumber} could not be verified.\n\nPlease upload a new proof of payment ensuring the amount matches ${data.total}.\n\n${data.orderUrl ? `Upload new proof: ${data.orderUrl}\n\n` : ""}Contact ${data.businessName || b.agency_name} if you need assistance.`,
+};
+
 const refund_issued_customer: BrandedTemplate = {
   subject: (data) => `Refund Issued for Order #${data.orderNumber}`,
   html: (data, b) =>
@@ -942,6 +967,7 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
   order_cancelled_owner,
   payment_received_customer,
   payment_proof_uploaded_owner,
+  payment_proof_rejected_customer,
   refund_issued_customer,
   low_stock_admin,
   back_in_stock_customer,
@@ -994,6 +1020,25 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
       `<p>Chat transcript for ${data.visitorName || "a visitor"}.</p><pre>${data.transcript || ""}</pre>`,
     text: (data) =>
       `Chat Transcript\n\n${data.transcript || "No transcript available."}`,
+  },
+  review_request_customer: {
+    subject: (data) =>
+      `How was your purchase${data.productName ? ` of ${data.productName}` : ""}?`,
+    html: (data, b) =>
+      baseEmailTemplate(
+        b,
+        `<h1 style="${EMAIL_STYLES.heading}">⭐ Share Your Experience</h1>
+        <p style="${EMAIL_STYLES.text}">Hi ${data.customerName || "there"},</p>
+        <p style="${EMAIL_STYLES.text}">We hope you're enjoying ${data.productName ? `your <strong>${data.productName}</strong>` : "your recent purchase"}. Your feedback helps other shoppers and helps us improve!</p>
+        <p style="${EMAIL_STYLES.text}">It only takes a minute to leave a review.</p>
+        ${data.reviewUrl ? emailButton(b, String(data.reviewUrl), "Write a Review") : ""}
+        ${emailInfoBox([
+          { label: "Order", value: `#${data.orderNumber || ""}` },
+        ])}`,
+        `Review your purchase${data.productName ? ` of ${data.productName}` : ""}`,
+      ),
+    text: (data, b) =>
+      `Share Your Experience\n\nHi ${data.customerName || "there"},\n\nWe hope you're enjoying ${data.productName || "your recent purchase"}. Your feedback helps other shoppers!\n\n${data.reviewUrl ? `Write a review: ${data.reviewUrl}` : ""}\n\nOrder: #${data.orderNumber || ""}`,
   },
   chat_missed_notification: {
     subject: (data) => `Missed Chat from ${data.visitorName || "a visitor"}`,

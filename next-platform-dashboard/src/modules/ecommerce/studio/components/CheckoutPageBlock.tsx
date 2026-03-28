@@ -698,13 +698,6 @@ export function CheckoutPageBlock({
           <div className="lg:col-span-2">
             <Card>
               <CardContent className="pt-6">
-                {/* Error Alert */}
-                {checkout.error && (
-                  <Alert variant="destructive" className="mb-6">
-                    <AlertDescription>{checkout.error}</AlertDescription>
-                  </Alert>
-                )}
-
                 {/* Sign-in prompt — shown on information step for guests */}
                 {checkout.currentStep === "information" && !authCustomer && (
                   <div className="mb-6 flex items-center justify-between rounded-md border border-primary/20 bg-primary/5 px-4 py-3 text-sm">
@@ -723,6 +716,13 @@ export function CheckoutPageBlock({
                   </div>
                 )}
 
+                {/* Error Alert */}
+                {checkout.error && (
+                  <Alert variant="destructive" className="mb-6">
+                    <AlertDescription>{checkout.error}</AlertDescription>
+                  </Alert>
+                )}
+
                 {/* Step Content */}
                 {renderStep()}
 
@@ -730,6 +730,7 @@ export function CheckoutPageBlock({
                 <div className="flex justify-between mt-8 pt-6 border-t">
                   <Button
                     variant="outline"
+                    className="min-h-11"
                     onClick={checkout.prevStep}
                     disabled={!checkout.canGoBack || checkout.isPlacingOrder}
                   >
@@ -740,6 +741,7 @@ export function CheckoutPageBlock({
                   {checkout.currentStep === "payment" ? (
                     <Button
                       size="lg"
+                      className="min-h-11"
                       onClick={handlePlaceOrder}
                       disabled={
                         !checkout.state.paymentMethod || checkout.isPlacingOrder
@@ -759,6 +761,7 @@ export function CheckoutPageBlock({
                     </Button>
                   ) : (
                     <Button
+                      className="min-h-11"
                       onClick={checkout.nextStep}
                       disabled={!checkout.canGoNext || checkout.isPlacingOrder}
                     >
@@ -823,8 +826,8 @@ function CheckoutSuccessCard({
           <CardContent>
             {isManualPayment ? (
               <>
-                <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-6">
-                  <Clock className="h-8 w-8 text-amber-600" />
+                <div className="w-16 h-16 rounded-full bg-warning/10 flex items-center justify-center mx-auto mb-6">
+                  <Clock className="h-8 w-8 text-warning" />
                 </div>
                 <h1 className="text-2xl font-bold mb-2">
                   Order Received — Payment Pending
@@ -841,7 +844,7 @@ function CheckoutSuccessCard({
                     className="p-1 hover:bg-background rounded transition-colors"
                   >
                     {copiedRef ? (
-                      <Check className="h-3 w-3 text-green-600" />
+                      <Check className="h-3 w-3 text-success" />
                     ) : (
                       <Copy className="h-3 w-3 text-muted-foreground" />
                     )}
@@ -851,14 +854,14 @@ function CheckoutSuccessCard({
                 <p className="text-muted-foreground mb-6">
                   Please complete your payment to confirm.
                 </p>
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-5 mb-6 text-left max-w-lg mx-auto">
+                <div className="bg-warning/5 border border-warning/20 rounded-lg p-5 mb-6 text-left max-w-lg mx-auto">
                   <div className="flex items-start gap-3">
-                    <Banknote className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+                    <Banknote className="h-5 w-5 text-warning mt-0.5 shrink-0" />
                     <div>
-                      <p className="font-semibold text-sm text-amber-900 mb-2">
+                      <p className="font-semibold text-sm text-foreground mb-2">
                         Payment Instructions
                       </p>
-                      <p className="text-sm text-amber-800 whitespace-pre-wrap">
+                      <p className="text-sm text-warning whitespace-pre-wrap">
                         {orderResult.paymentInstructions}
                       </p>
                     </div>
@@ -871,8 +874,8 @@ function CheckoutSuccessCard({
               </>
             ) : (
               <>
-                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
-                  <ShieldCheck className="h-8 w-8 text-green-600" />
+                <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-6">
+                  <ShieldCheck className="h-8 w-8 text-success" />
                 </div>
                 <h1 className="text-2xl font-bold mb-2">
                   Order Placed Successfully!
@@ -889,7 +892,7 @@ function CheckoutSuccessCard({
                     className="p-1 hover:bg-background rounded transition-colors"
                   >
                     {copiedRef ? (
-                      <Check className="h-3 w-3 text-green-600" />
+                      <Check className="h-3 w-3 text-success" />
                     ) : (
                       <Copy className="h-3 w-3 text-muted-foreground" />
                     )}

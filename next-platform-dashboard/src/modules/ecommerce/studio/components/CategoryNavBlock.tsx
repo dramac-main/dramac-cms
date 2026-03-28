@@ -10,9 +10,26 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { ChevronRight, ChevronDown, Folder, FolderOpen } from "lucide-react";
+import {
+  ChevronRight,
+  ChevronDown,
+  Folder,
+  FolderOpen,
+  ChevronsUpDown,
+  Check,
+  Search,
+  FolderOpen as FolderOpenIcon,
+} from "lucide-react";
 import { useStorefrontCategories } from "@/modules/ecommerce/hooks";
 import { useStorefront } from "@/modules/ecommerce/context/storefront-context";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { CategoryCard } from "./CategoryCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Category } from "@/modules/ecommerce/types/ecommerce-types";
@@ -25,7 +42,9 @@ type ResponsiveValue<T> = T | { mobile?: T; tablet?: T; desktop?: T };
 
 export interface CategoryNavBlockProps {
   // Display
-  variant?: ResponsiveValue<"tree" | "grid" | "list" | "cards">;
+  variant?: ResponsiveValue<
+    "tree" | "grid" | "list" | "cards" | "dropdown" | "auto"
+  >;
   columns?: ResponsiveValue<2 | 3 | 4 | 6>;
 
   // Content
@@ -167,6 +186,110 @@ function TreeItem({
 }
 
 // ============================================================================
+// DROPDOWN CATEGORY SELECTOR
+// ============================================================================
+
+interface DropdownCategoryNavProps {
+  categories: CategoryWithChildren[];
+  showCount: boolean;
+}
+
+function DropdownCategoryNav({
+  categories,
+  showCount,
+}: DropdownCategoryNavProps) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<string | null>(null);
+
+  const filtered = React.useMemo(() => {
+    if (!search.trim()) return categories;
+    const lower = search.toLowerCase();
+    return categories.filter((c) => c.name.toLowerCase().includes(lower));
+  }, [categories, search]);
+
+  const selectedCategory = categories.find((c) => c.id === selected);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between font-normal"
+        >
+          {selectedCategory ? selectedCategory.name : "Browse categories..."}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-[--radix-popover-trigger-width] p-0"
+        align="start"
+      >
+        <div className="p-2 border-b">
+          <Input
+            placeholder="Search categories..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-8"
+          />
+        </div>
+        <ScrollArea className="max-h-[300px]">
+          <div className="p-1">
+            {selected && (
+              <button
+                className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent transition-colors"
+                onClick={() => {
+                  setSelected(null);
+                  setOpen(false);
+                }}
+              >
+                Clear filter
+              </button>
+            )}
+            {filtered.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                No categories found.
+              </p>
+            ) : (
+              filtered.map((category) => (
+                <Link
+                  key={category.id}
+                  href={`/shop/category/${category.slug}`}
+                  className={cn(
+                    "flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent transition-colors",
+                    selected === category.id && "bg-accent",
+                  )}
+                  onClick={() => {
+                    setSelected(category.id);
+                    setOpen(false);
+                    setSearch("");
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "h-4 w-4 shrink-0",
+                      selected === category.id ? "opacity-100" : "opacity-0",
+                    )}
+                  />
+                  <span className="flex-1 truncate">{category.name}</span>
+                  {showCount && category.product_count !== undefined && (
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {category.product_count}
+                    </span>
+                  )}
+                </Link>
+              ))
+            )}
+          </div>
+        </ScrollArea>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
@@ -207,12 +330,21 @@ export function CategoryNavBlock({
       filtered = categories.filter((c: Category) => !c.parent_id);
     }
 
+    // Tree variant needs hierarchical structure
     if (variantValue === "tree") {
       return buildTree(filtered, parentCategory || null);
     }
 
     return filtered as CategoryWithChildren[];
   }, [categories, parentCategory, showSubcategories, variantValue]);
+
+  // Auto-detection: >8 categories = dropdown, ≤8 = cards/chips
+  const resolvedVariant = React.useMemo(() => {
+    if (variantValue === "auto") {
+      return displayCategories.length > 8 ? "dropdown" : "cards";
+    }
+    return variantValue;
+  }, [variantValue, displayCategories.length]);
 
   if (isLoading) {
     return (
@@ -222,6 +354,23 @@ export function CategoryNavBlock({
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-10 w-full" />
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Empty state
+  if (displayCategories.length === 0) {
+    return (
+      <div className={className}>
+        {showTitle && title && (
+          <h2 className="text-lg font-semibold mb-3 md:mb-4">{title}</h2>
+        )}
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <Folder className="h-10 w-10 text-muted-foreground/50 mb-3" />
+          <p className="text-sm text-muted-foreground">
+            No categories available
+          </p>
         </div>
       </div>
     );
@@ -261,10 +410,18 @@ export function CategoryNavBlock({
         </div>
       </div>
 
-      {/* Desktop: original variant layouts */}
+      {/* Desktop: variant layouts */}
       <div className="hidden md:block">
+        {/* Dropdown variant */}
+        {resolvedVariant === "dropdown" && (
+          <DropdownCategoryNav
+            categories={displayCategories}
+            showCount={showProductCount}
+          />
+        )}
+
         {/* Tree variant */}
-        {variantValue === "tree" && (
+        {resolvedVariant === "tree" && (
           <nav className="space-y-1">
             {displayCategories.map((category) => (
               <TreeItem
@@ -281,7 +438,7 @@ export function CategoryNavBlock({
         )}
 
         {/* Grid variant */}
-        {variantValue === "grid" && (
+        {resolvedVariant === "grid" && (
           <div className={cn("grid gap-4", gridClass)}>
             {displayCategories.map((category) => (
               <CategoryCard
@@ -296,7 +453,7 @@ export function CategoryNavBlock({
         )}
 
         {/* List variant */}
-        {variantValue === "list" && (
+        {resolvedVariant === "list" && (
           <div className="space-y-2">
             {displayCategories.map((category) => (
               <CategoryCard
@@ -312,7 +469,7 @@ export function CategoryNavBlock({
         )}
 
         {/* Cards (chips) variant */}
-        {variantValue === "cards" && (
+        {resolvedVariant === "cards" && (
           <div className="flex flex-wrap gap-2">
             {displayCategories.map((category) => (
               <CategoryCard
@@ -339,7 +496,7 @@ export const categoryNavBlockConfig = {
   category: "e-commerce",
   icon: "FolderTree",
   defaultProps: {
-    variant: "tree",
+    variant: "auto",
     columns: { mobile: 2, tablet: 3, desktop: 4 },
     title: "Categories",
     showTitle: true,
@@ -368,10 +525,12 @@ export const categoryNavBlockConfig = {
       label: "Display Style",
       type: "select",
       options: [
+        { value: "auto", label: "Auto (Smart)" },
         { value: "tree", label: "Tree Menu" },
         { value: "grid", label: "Grid Cards" },
         { value: "list", label: "List" },
         { value: "cards", label: "Chips/Tags" },
+        { value: "dropdown", label: "Dropdown Selector" },
       ],
       responsive: true,
     },

@@ -222,7 +222,10 @@ export async function processAbandonedCarts(
         const formattedItems = items.map((item: CartItemRow) => ({
           name: productMap.get(item.product_id) || "Product",
           quantity: item.quantity,
-          price: formatCurrency(item.unit_price * item.quantity, currency),
+          price: formatCurrency(
+            (item.unit_price * item.quantity) / 100,
+            currency,
+          ),
         }));
 
         // 4. Send recovery email
@@ -235,7 +238,7 @@ export async function processAbandonedCarts(
           data: {
             customerName: cart.customer_name || "there",
             items: formattedItems,
-            total: formatCurrency(total, currency),
+            total: formatCurrency(total / 100, currency),
             checkoutUrl,
             businessName: site.name || "Our Store",
           },

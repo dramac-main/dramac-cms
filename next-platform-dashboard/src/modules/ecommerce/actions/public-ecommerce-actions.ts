@@ -410,7 +410,7 @@ async function findPublicCart(
         *,
         items:${TABLE_PREFIX}_cart_items(
           *,
-          product:${TABLE_PREFIX}_products(id, name, slug, images, status, quantity, base_price, sku),
+          product:${TABLE_PREFIX}_products(id, name, slug, images, status, quantity, base_price, sku, is_taxable, track_inventory),
           variant:${TABLE_PREFIX}_product_variants(id, options, quantity, image_url, price)
         )
       `,
@@ -480,7 +480,7 @@ export async function getPublicCart(
         *,
         items:${TABLE_PREFIX}_cart_items(
           *,
-          product:${TABLE_PREFIX}_products(id, name, slug, images, status, quantity, base_price, sku),
+          product:${TABLE_PREFIX}_products(id, name, slug, images, status, quantity, base_price, sku, is_taxable, track_inventory),
           variant:${TABLE_PREFIX}_product_variants(id, options, quantity, image_url, price)
         )
       `,
@@ -765,6 +765,120 @@ export async function getPublicEcommerceSettings(
 // ============================================================================
 
 /**
+ * Adjust stock using admin client — for public checkout context where there's
+ * no authenticated user session. Records inventory movement and updates quantity.
+ */
+async function adjustStockAdmin(
+  siteId: string,
+  productId: string,
+  variantId: string | null,
+  quantity: number,
+  reason: string,
+  referenceType: string,
+  referenceId: string,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = getPublicClient();
+
+    // Get current stock
+    let currentStock = 0;
+    if (variantId) {
+      const { data: variant } = await supabase
+        .from(`${TABLE_PREFIX}_product_variants`)
+        .select("quantity")
+        .eq("id", variantId)
+        .single();
+      currentStock = variant?.quantity ?? 0;
+    } else {
+      const { data: product } = await supabase
+        .from(`${TABLE_PREFIX}_products`)
+        .select("quantity")
+        .eq("id", productId)
+        .single();
+      currentStock = product?.quantity ?? 0;
+    }
+
+    const newStock = Math.max(0, currentStock + quantity);
+
+    // Record movement
+    await supabase.from(`${TABLE_PREFIX}_inventory_movements`).insert({
+      site_id: siteId,
+      product_id: productId,
+      variant_id: variantId,
+      type: quantity < 0 ? "sale" : "return",
+      quantity,
+      previous_stock: currentStock,
+      new_stock: newStock,
+      reason,
+      reference_type: referenceType,
+      reference_id: referenceId,
+    });
+
+    // Update stock
+    if (variantId) {
+      await supabase
+        .from(`${TABLE_PREFIX}_product_variants`)
+        .update({ quantity: newStock })
+        .eq("id", variantId);
+    } else {
+      await supabase
+        .from(`${TABLE_PREFIX}_products`)
+        .update({ quantity: newStock })
+        .eq("id", productId);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("[Ecom Public] Stock adjustment error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Stock adjustment failed",
+    };
+  }
+}
+
+/**
+ * Increment discount usage count atomically using admin client.
+ * Resolves discount by code + siteId and increments usage_count.
+ */
+async function incrementDiscountUsageAdmin(
+  siteId: string,
+  discountCode: string,
+): Promise<void> {
+  try {
+    const supabase = getPublicClient();
+
+    // Atomic increment — avoids read-then-write race condition
+    const { error } = await supabase.rpc(
+      "mod_ecommod01_increment_discount_usage",
+      {
+        p_site_id: siteId,
+        p_discount_code: discountCode,
+      },
+    );
+
+    // If RPC doesn't exist, fall back to manual update
+    if (error?.message?.includes("function") || error?.code === "42883") {
+      const { data: discount } = await supabase
+        .from(`${TABLE_PREFIX}_discounts`)
+        .select("id, usage_count")
+        .eq("site_id", siteId)
+        .eq("code", discountCode)
+        .single();
+
+      if (discount) {
+        await supabase
+          .from(`${TABLE_PREFIX}_discounts`)
+          .update({ usage_count: (discount.usage_count || 0) + 1 })
+          .eq("id", discount.id);
+      }
+    }
+  } catch (err) {
+    console.error("[Ecom Public] Discount usage increment error:", err);
+  }
+}
+
+/**
  * Create an order from a cart (public / subdomain context).
  * Uses admin client to bypass RLS for anonymous visitors.
  */
@@ -948,6 +1062,44 @@ export async function createPublicOrderFromCart(
         .from(`${TABLE_PREFIX}_carts`)
         .update({ status: "converted" })
         .eq("id", input.cart_id);
+
+      // ── Stock deduction ──────────────────────────────────────────────
+      // Deduct stock for each item that has inventory tracking enabled
+      for (const item of cart.items) {
+        if (item.product?.track_inventory) {
+          const stockResult = await adjustStockAdmin(
+            input.site_id,
+            item.product_id,
+            item.variant_id || null,
+            -item.quantity,
+            "order",
+            "order",
+            order.id,
+          );
+          if (!stockResult.success) {
+            console.warn(
+              `[Ecom Public] Stock deduction failed for product ${item.product_id}: ${stockResult.error}`,
+            );
+            // Don't fail the order — flag for admin review via timeline
+            await supabase.from(`${TABLE_PREFIX}_order_timeline`).insert({
+              order_id: order.id,
+              event_type: "stock_warning",
+              title: "Stock Deduction Warning",
+              description: `Failed to deduct stock for ${item.product?.name || item.product_id}: ${stockResult.error}`,
+              metadata: {
+                product_id: item.product_id,
+                variant_id: item.variant_id,
+                quantity: item.quantity,
+              },
+            });
+          }
+        }
+      }
+
+      // ── Discount usage increment ─────────────────────────────────────
+      if (input.discount_code) {
+        await incrementDiscountUsageAdmin(input.site_id, input.discount_code);
+      }
 
       // Send notifications (awaited to ensure completion in serverless)
       const notificationItems = cart.items.map((item: CartItem) => ({

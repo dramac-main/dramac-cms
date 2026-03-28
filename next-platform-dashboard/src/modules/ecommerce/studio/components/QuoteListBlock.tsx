@@ -114,13 +114,9 @@ function QuoteCard({ quote, formatPrice, detailUrl }: QuoteCardProps) {
         <div className="flex items-start justify-between">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="font-medium text-gray-900">
+              <span className="font-medium text-foreground">
                 #{quote.quote_number || quote.id.slice(0, 8)}
               </span>
-              <QuoteStatusBadge status={quote.status} size="sm" />
-            </div>
-
-            <div className="flex items-center gap-3 text-sm text-gray-500">
               <span className="flex items-center gap-1">
                 <Calendar className="h-3.5 w-3.5" />
                 {formatDate(quote.created_at)}
@@ -132,7 +128,7 @@ function QuoteCard({ quote, formatPrice, detailUrl }: QuoteCardProps) {
             </div>
 
             {quote.valid_until && (
-              <p className="flex items-center gap-1 text-xs text-gray-400">
+              <p className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Clock className="h-3 w-3" />
                 Valid until {formatDate(quote.valid_until)}
               </p>
@@ -181,18 +177,18 @@ function QuoteListItem({ quote, formatPrice, detailUrl }: QuoteListItemProps) {
 
   const content = (
     <div className="flex items-center gap-4 rounded-lg border bg-card p-4 transition-colors hover:bg-muted">
-      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
-        <FileText className="h-5 w-5 text-gray-600" />
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+        <FileText className="h-5 w-5 text-muted-foreground" />
       </div>
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-foreground">
             #{quote.quote_number || quote.id.slice(0, 8)}
           </span>
           <QuoteStatusBadge status={quote.status} size="sm" variant="outline" />
         </div>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-muted-foreground">
           {formatDate(quote.created_at)} · {itemCount} item
           {itemCount !== 1 ? "s" : ""}
         </p>
@@ -206,7 +202,7 @@ function QuoteListItem({ quote, formatPrice, detailUrl }: QuoteListItemProps) {
       </div>
 
       {hasLink ? (
-        <ChevronRight className="h-5 w-5 text-gray-400" />
+        <ChevronRight className="h-5 w-5 text-muted-foreground" />
       ) : (
         <span className="text-xs text-muted-foreground">Processing</span>
       )}
@@ -275,11 +271,11 @@ export function QuoteListBlock({
     return (
       <div
         className={cn(
-          "rounded-lg border border-red-200 bg-red-50 p-6 text-center",
+          "rounded-lg border border-destructive/20 bg-destructive/10 p-6 text-center",
           className,
         )}
       >
-        <p className="text-red-600">Failed to load quotes</p>
+        <p className="text-destructive">Failed to load quotes</p>
         <Button
           variant="outline"
           size="sm"
@@ -297,11 +293,14 @@ export function QuoteListBlock({
     return (
       <Card className={className}>
         <CardContent className="py-12 text-center">
-          <FileText className="mx-auto h-12 w-12 text-gray-300" />
-          <h3 className="mt-4 text-lg font-medium text-gray-900">
+          <FileText className="mx-auto h-12 w-12 text-muted-foreground/50" />
+          <h3 className="mt-4 text-lg font-medium text-foreground">
             No Quotes Yet
           </h3>
-          <p className="mt-2 text-gray-500">{emptyMessage}</p>
+          <p className="mt-2 text-muted-foreground">{emptyMessage}</p>
+          <Button variant="outline" className="mt-4" asChild>
+            <a href="/shop">Browse Products</a>
+          </Button>
         </CardContent>
       </Card>
     );
@@ -311,7 +310,7 @@ export function QuoteListBlock({
     <div className={className}>
       {/* Header */}
       <div className="mb-4 flex items-center justify-between gap-2">
-        <h2 className="text-lg sm:text-xl font-semibold text-gray-900 min-w-0 truncate">
+        <h2 className="text-lg sm:text-xl font-semibold text-foreground min-w-0 truncate">
           {title}
         </h2>
 
@@ -350,21 +349,21 @@ export function QuoteListBlock({
       ) : variant === "table" ? (
         <div className="overflow-x-auto rounded-lg border">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-muted">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-medium text-foreground">
                   Quote #
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-medium text-foreground">
                   Date
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-medium text-foreground">
                   Items
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-medium text-foreground">
                   Status
                 </th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">
+                <th className="px-4 py-3 text-right text-sm font-medium text-foreground">
                   Total
                 </th>
                 <th className="px-4 py-3"></th>
@@ -379,14 +378,16 @@ export function QuoteListBlock({
                   : `/quote/${quote.access_token}`;
 
                 return (
-                  <tr key={quote.id} className="hover:bg-gray-50">
+                  <tr key={quote.id} className="hover:bg-muted">
                     <td className="px-4 py-3 font-medium">
                       #{quote.quote_number || quote.id.slice(0, 8)}
                     </td>
-                    <td className="px-4 py-3 text-gray-600">
+                    <td className="px-4 py-3 text-muted-foreground">
                       {formatDate(quote.created_at)}
                     </td>
-                    <td className="px-4 py-3 text-gray-600">{itemCount}</td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {itemCount}
+                    </td>
                     <td className="px-4 py-3">
                       <QuoteStatusBadge status={quote.status} size="sm" />
                     </td>
@@ -429,7 +430,7 @@ export function QuoteListBlock({
       {/* Load more indicator */}
       {maxItems && quotes.length > maxItems && (
         <div className="mt-4 text-center">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             Showing {maxItems} of {quotes.length} quotes
           </p>
         </div>

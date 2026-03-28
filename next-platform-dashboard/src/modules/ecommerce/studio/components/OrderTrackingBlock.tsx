@@ -197,11 +197,11 @@ export function OrderTrackingBlock({
 
               {/* Found order — show link (only after actual server-side lookup) */}
               {searchResultId && (
-                <Alert className="border-green-200 bg-green-50">
-                  <Package className="h-4 w-4 text-green-600" />
+                <Alert className="border-success/20 bg-success/5">
+                  <Package className="h-4 w-4 text-success" />
                   <AlertDescription>
                     <div className="flex items-center justify-between gap-3">
-                      <span className="text-green-800 font-medium">
+                      <span className="text-success font-medium">
                         Order found!
                       </span>
                       <Button size="sm" asChild>

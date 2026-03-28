@@ -191,15 +191,18 @@ export function MobileProductCard({
                 variant="secondary"
                 size="icon"
                 onClick={handleWishlistToggle}
+                aria-label={
+                  isInWishlist ? "Remove from wishlist" : "Add to wishlist"
+                }
                 className={cn(
-                  "h-9 w-9 rounded-full bg-background/80 backdrop-blur-sm",
+                  "h-9 w-9 min-h-[44px] min-w-[44px] rounded-full bg-background/80 backdrop-blur-sm",
                   "shadow-sm hover:bg-background",
                 )}
               >
                 <Heart
                   className={cn(
                     "h-4 w-4 transition-all",
-                    isInWishlist && "fill-red-500 text-red-500",
+                    isInWishlist && "fill-destructive text-destructive",
                   )}
                 />
               </Button>
@@ -211,8 +214,9 @@ export function MobileProductCard({
                 variant="secondary"
                 size="icon"
                 onClick={handleQuickView}
+                aria-label="Quick view"
                 className={cn(
-                  "h-9 w-9 rounded-full bg-background/80 backdrop-blur-sm",
+                  "h-9 w-9 min-h-[44px] min-w-[44px] rounded-full bg-background/80 backdrop-blur-sm",
                   "shadow-sm hover:bg-background",
                 )}
               >
@@ -229,8 +233,9 @@ export function MobileProductCard({
                 size="sm"
                 onClick={handleQuickAdd}
                 disabled={isAddingToCart}
+                aria-label="Quick add to cart"
                 className={cn(
-                  "w-full h-10 bg-background/90 backdrop-blur-sm",
+                  "w-full h-10 min-h-[44px] bg-background/90 backdrop-blur-sm",
                   "shadow-sm hover:bg-background",
                   // Visible by default on mobile, hidden until hover on desktop
                   "md:opacity-0 md:group-hover:opacity-100 transition-opacity",
@@ -260,7 +265,7 @@ export function MobileProductCard({
           {/* Rating (if available) */}
           {showRating && (
             <div className="flex items-center gap-1 mb-2">
-              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+              <Star className="h-3 w-3 fill-warning text-warning" />
               <span className="text-xs text-muted-foreground">4.5 (24)</span>
             </div>
           )}

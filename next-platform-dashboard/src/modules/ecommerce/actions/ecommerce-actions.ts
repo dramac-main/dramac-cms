@@ -246,11 +246,36 @@ export async function getProducts(
     query = query.not("compare_at_price", "is", null);
   }
 
+  // Category filter - look up product IDs via the join table
+  if (filters.category) {
+    const { data: productCategories } = await supabase
+      .from(`${TABLE_PREFIX}_product_categories`)
+      .select("product_id")
+      .eq("category_id", filters.category);
+    const productIds = productCategories?.map((pc: { product_id: string }) => pc.product_id) || [];
+    if (productIds.length === 0) {
+      return { data: [], total: 0, page, totalPages: 0, limit };
+    }
+    query = query.in("id", productIds);
+  }
+
   // Pagination
   const from = (page - 1) * limit;
-  query = query
-    .range(from, from + limit - 1)
-    .order("created_at", { ascending: false });
+  query = query.range(from, from + limit - 1);
+
+  // Sorting
+  if (filters.sortBy) {
+    const columnMap: Record<string, string> = {
+      price: "base_price",
+      name: "name",
+      created: "created_at",
+      updated: "updated_at",
+    };
+    const column = columnMap[filters.sortBy] || "created_at";
+    query = query.order(column, { ascending: filters.sortOrder === "asc" });
+  } else {
+    query = query.order("created_at", { ascending: false });
+  }
 
   const { data, count, error } = await query;
 

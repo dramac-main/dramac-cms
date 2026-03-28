@@ -40,6 +40,7 @@ import {
   mergeFooterLinks,
   type SiteNavigation,
 } from "./smart-navigation";
+import { StorefrontErrorBoundary } from "@/modules/ecommerce/studio/components/StorefrontErrorBoundary";
 import type { BrandColorPalette } from "./brand-colors";
 import type { StudioComponent } from "@/types/studio";
 import type { InstalledModuleInfo } from "@/types/studio-module";
@@ -298,13 +299,28 @@ function ComponentRenderer({
       (component.props?.sectionPaddingY as string) || "py-12 md:py-16";
     const paddingX =
       (component.props?.sectionPaddingX as string) || "px-4 sm:px-6 lg:px-8";
+
+    // Non-critical blocks can fail silently
+    const silentBlocks = new Set([
+      "EcommerceCategoryNav",
+      "EcommerceSearchBar",
+      "EcommerceMiniCart",
+    ]);
+
     return (
       <section
         key={`module-wrap-${component.id}`}
         className={`w-full ${paddingY}`}
         style={bgColor ? { backgroundColor: bgColor } : undefined}
       >
-        <div className={`max-w-screen-xl mx-auto ${paddingX}`}>{rendered}</div>
+        <div className={`max-w-screen-xl mx-auto ${paddingX}`}>
+          <StorefrontErrorBoundary
+            blockName={component.type.replace(/^Ecommerce/, "")}
+            silent={silentBlocks.has(component.type)}
+          >
+            {rendered}
+          </StorefrontErrorBoundary>
+        </div>
       </section>
     );
   }

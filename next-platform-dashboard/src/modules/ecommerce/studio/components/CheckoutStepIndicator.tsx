@@ -80,6 +80,8 @@ export function CheckoutStepIndicator({
                 type="button"
                 onClick={() => isClickable && onStepClick(step)}
                 disabled={!isClickable}
+                aria-current={isActive ? "step" : undefined}
+                aria-label={`Step ${index + 1}: ${config.label}${isCompleted ? " (completed)" : isActive ? " (current)" : ""}`}
                 className={cn(
                   "flex items-center gap-3 group",
                   isClickable && "cursor-pointer",
@@ -173,8 +175,10 @@ export function CheckoutStepIndicator({
                   onStepClick && (isCompleted || isActive) && onStepClick(step)
                 }
                 disabled={!onStepClick || (!isCompleted && !isActive)}
+                aria-current={isActive ? "step" : undefined}
+                aria-label={`Step ${index + 1}: ${STEP_CONFIG[step].label}${isCompleted ? " (completed)" : isActive ? " (current)" : ""}`}
                 className={cn(
-                  "w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors",
+                  "w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
                   isCompleted && "bg-primary text-primary-foreground",
                   isActive && "bg-primary text-primary-foreground",
                   !isCompleted && !isActive && "bg-muted text-muted-foreground",

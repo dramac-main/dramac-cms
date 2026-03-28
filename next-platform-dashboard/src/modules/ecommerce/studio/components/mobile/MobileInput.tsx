@@ -1,31 +1,34 @@
 /**
  * MobileInput - Touch-optimized input field
- * 
+ *
  * Phase ECOM-31: Mobile Checkout Flow
- * 
+ *
  * Input field with large touch targets, proper autocomplete,
  * and mobile keyboard hints.
  */
-'use client'
+"use client";
 
-import React, { forwardRef, useCallback } from 'react'
-import { cn } from '@/lib/utils'
-import { AlertCircle, Check } from 'lucide-react'
-import { useKeyboardVisible } from '../../../hooks/useKeyboardVisible'
+import React, { forwardRef, useCallback } from "react";
+import { cn } from "@/lib/utils";
+import { AlertCircle, Check } from "lucide-react";
+import { useKeyboardVisible } from "../../../hooks/useKeyboardVisible";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-export interface MobileInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
-  label: string
-  error?: string
-  success?: boolean
-  hint?: string
-  leftIcon?: React.ReactNode
-  rightIcon?: React.ReactNode
-  size?: 'md' | 'lg'
-  variant?: 'default' | 'filled'
+export interface MobileInputProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  "size"
+> {
+  label: string;
+  error?: string;
+  success?: boolean;
+  hint?: string;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
+  size?: "md" | "lg";
+  variant?: "default" | "filled";
 }
 
 // ============================================================================
@@ -41,8 +44,8 @@ export const MobileInput = forwardRef<HTMLInputElement, MobileInputProps>(
       hint,
       leftIcon,
       rightIcon,
-      size = 'lg',
-      variant = 'default',
+      size = "lg",
+      variant = "default",
       className,
       disabled,
       required,
@@ -50,47 +53,48 @@ export const MobileInput = forwardRef<HTMLInputElement, MobileInputProps>(
       onFocus,
       ...props
     },
-    ref
+    ref,
   ) => {
-    const { scrollInputIntoView } = useKeyboardVisible()
-    const inputId = id || `input-${(label || 'field').toLowerCase().replace(/\s+/g, '-')}`
+    const { scrollInputIntoView } = useKeyboardVisible();
+    const inputId =
+      id || `input-${(label || "field").toLowerCase().replace(/\s+/g, "-")}`;
 
     // Handle focus with scroll
     const handleFocus = useCallback(
       (e: React.FocusEvent<HTMLInputElement>) => {
-        scrollInputIntoView(e.target)
-        onFocus?.(e)
+        scrollInputIntoView(e.target);
+        onFocus?.(e);
       },
-      [scrollInputIntoView, onFocus]
-    )
+      [scrollInputIntoView, onFocus],
+    );
 
     // Size classes
     const sizeClasses = {
-      md: 'h-12 text-base',
-      lg: 'h-14 text-lg',
-    }
+      md: "h-12 text-base",
+      lg: "h-14 text-lg",
+    };
 
     // Variant classes
     const variantClasses = {
-      default: 'bg-background border',
-      filled: 'bg-muted border-transparent',
-    }
+      default: "bg-background border",
+      filled: "bg-muted border-transparent",
+    };
 
     // State classes
     const stateClasses = error
-      ? 'border-destructive focus:ring-destructive'
+      ? "border-destructive focus:ring-destructive"
       : success
-      ? 'border-green-500 focus:ring-green-500'
-      : 'border-input focus:ring-primary'
+        ? "border-success focus:ring-success"
+        : "border-input focus:ring-primary";
 
     return (
-      <div className={cn('space-y-2', className)}>
+      <div className={cn("space-y-2", className)}>
         {/* Label */}
         <label
           htmlFor={inputId}
           className={cn(
-            'block text-sm font-medium',
-            error ? 'text-destructive' : 'text-foreground'
+            "block text-sm font-medium",
+            error ? "text-destructive" : "text-foreground",
           )}
         >
           {label}
@@ -114,16 +118,16 @@ export const MobileInput = forwardRef<HTMLInputElement, MobileInputProps>(
             required={required}
             onFocus={handleFocus}
             className={cn(
-              'w-full rounded-lg px-4',
-              'transition-colors duration-200',
-              'focus:outline-none focus:ring-2 focus:ring-offset-0',
-              'disabled:cursor-not-allowed disabled:opacity-50',
-              'placeholder:text-muted-foreground',
+              "w-full rounded-lg px-4",
+              "transition-colors duration-200",
+              "focus:outline-none focus:ring-2 focus:ring-offset-0",
+              "disabled:cursor-not-allowed disabled:opacity-50",
+              "placeholder:text-muted-foreground",
               sizeClasses[size],
               variantClasses[variant],
               stateClasses,
-              leftIcon && 'pl-10',
-              (rightIcon || error || success) && 'pr-10'
+              leftIcon && "pl-10",
+              (rightIcon || error || success) && "pr-10",
             )}
             {...props}
           />
@@ -133,9 +137,11 @@ export const MobileInput = forwardRef<HTMLInputElement, MobileInputProps>(
             {error ? (
               <AlertCircle className="h-5 w-5 text-destructive" />
             ) : success ? (
-              <Check className="h-5 w-5 text-green-500" />
+              <Check className="h-5 w-5 text-success" />
             ) : (
-              rightIcon && <span className="text-muted-foreground">{rightIcon}</span>
+              rightIcon && (
+                <span className="text-muted-foreground">{rightIcon}</span>
+              )
             )}
           </div>
         </div>
@@ -144,18 +150,18 @@ export const MobileInput = forwardRef<HTMLInputElement, MobileInputProps>(
         {(error || hint) && (
           <p
             className={cn(
-              'text-sm',
-              error ? 'text-destructive' : 'text-muted-foreground'
+              "text-sm",
+              error ? "text-destructive" : "text-muted-foreground",
             )}
           >
             {error || hint}
           </p>
         )}
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-MobileInput.displayName = 'MobileInput'
+MobileInput.displayName = "MobileInput";
 
-export default MobileInput
+export default MobileInput;

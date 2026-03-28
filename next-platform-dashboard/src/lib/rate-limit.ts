@@ -309,4 +309,16 @@ export const PUBLIC_RATE_LIMITS = {
   auth: ipRateLimit("ecom-auth", 15, 60_000),
   /** 10 checkout attempts per minute per IP */
   checkout: ipRateLimit("ecom-checkout", 10, 60_000),
+  /** 30 cart operations per minute per IP */
+  cart: ipRateLimit("ecom-cart", 30, 60_000),
+  /** 60 product reads per minute per IP */
+  products: ipRateLimit("ecom-products", 60, 60_000),
+  /** 20 order reads per minute per IP */
+  orders: ipRateLimit("ecom-orders", 20, 60_000),
+  /** 5 payment proof uploads per minute per IP */
+  paymentProof: ipRateLimit("ecom-payment-proof", 5, 60_000),
+  /** 10 review submissions per minute per IP */
+  reviews: ipRateLimit("ecom-reviews", 10, 60_000),
+  /** 30 webhook callbacks per minute per gateway IP */
+  webhooks: ipRateLimit("ecom-webhooks", 30, 60_000),
 } as const;

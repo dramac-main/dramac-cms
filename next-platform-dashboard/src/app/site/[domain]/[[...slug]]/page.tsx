@@ -48,6 +48,19 @@ export async function generateMetadata({
       : undefined;
   const canonicalUrl = siteUrl && pageSlug ? `${siteUrl}/${pageSlug}` : siteUrl;
 
+  // Transactional pages should not be indexed by search engines
+  const noIndexSlugs = [
+    "checkout",
+    "cart",
+    "order-confirmation",
+    "order-tracking",
+    "quotes",
+    "account",
+  ];
+  const isNoIndex = noIndexSlugs.some(
+    (s) => pageSlug === s || pageSlug.startsWith(`${s}/`),
+  );
+
   // Base metadata
   const metadata: Metadata = {
     title: data.page.seoTitle || data.page.name || data.site.name,
@@ -57,7 +70,9 @@ export async function generateMetadata({
       description: data.page.seoDescription || undefined,
       images: data.page.seoImage ? [data.page.seoImage] : undefined,
       type: "website",
+      siteName: data.site.name,
     },
+    ...(isNoIndex && { robots: { index: false, follow: false } }),
   };
 
   // Add canonical URL
@@ -111,7 +126,7 @@ export async function generateMetadata({
         // Add product price as additional meta via other
         if (product.base_price) {
           metadata.other = {
-            "product:price:amount": String(product.base_price),
+            "product:price:amount": String(product.base_price / 100),
             "product:price:currency": product.currency || "ZMW",
           };
         }

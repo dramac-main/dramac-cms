@@ -1,61 +1,61 @@
 /**
  * CollapsibleProductDetails - Accordion product information
- * 
+ *
  * Phase ECOM-32: Mobile Product Experience
- * 
+ *
  * Collapsible accordion sections for product details, specifications,
  * shipping info, and reviews. Optimized for mobile with smooth
  * animations and accessible controls.
  */
-'use client'
+"use client";
 
-import React, { useState, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  ChevronDown, 
-  Package, 
-  Truck, 
-  RotateCcw, 
+import React, { useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ChevronDown,
+  Package,
+  Truck,
+  RotateCcw,
   Shield,
   FileText,
   Star,
   Info,
   Ruler,
   CheckCircle2,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { useHapticFeedback } from '../../../hooks/useHapticFeedback'
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useHapticFeedback } from "../../../hooks/useHapticFeedback";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 export interface ProductDetailSection {
-  id: string
-  title: string
-  icon?: React.ReactNode
-  content: React.ReactNode
-  defaultOpen?: boolean
+  id: string;
+  title: string;
+  icon?: React.ReactNode;
+  content: React.ReactNode;
+  defaultOpen?: boolean;
 }
 
 export interface CollapsibleProductDetailsProps {
-  sections?: ProductDetailSection[]
-  description?: string | null
-  specifications?: Record<string, string | number | boolean>
-  shippingInfo?: string | null
-  returnPolicy?: string | null
-  warranty?: string | null
-  allowMultipleOpen?: boolean
-  className?: string
+  sections?: ProductDetailSection[];
+  description?: string | null;
+  specifications?: Record<string, string | number | boolean>;
+  shippingInfo?: string | null;
+  returnPolicy?: string | null;
+  warranty?: string | null;
+  allowMultipleOpen?: boolean;
+  className?: string;
 }
 
 export interface CollapsibleSectionProps {
-  id: string
-  title: string
-  icon?: React.ReactNode
-  children: React.ReactNode
-  isOpen: boolean
-  onToggle: (id: string) => void
+  id: string;
+  title: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+  isOpen: boolean;
+  onToggle: (id: string) => void;
 }
 
 // ============================================================================
@@ -71,7 +71,7 @@ const DEFAULT_ICONS: Record<string, React.ReactNode> = {
   details: <Info className="h-5 w-5" />,
   features: <CheckCircle2 className="h-5 w-5" />,
   reviews: <Star className="h-5 w-5" />,
-}
+};
 
 // ============================================================================
 // SUB-COMPONENTS
@@ -85,12 +85,12 @@ export function CollapsibleSection({
   isOpen,
   onToggle,
 }: CollapsibleSectionProps) {
-  const haptic = useHapticFeedback()
+  const haptic = useHapticFeedback();
 
   const handleToggle = useCallback(() => {
-    haptic.trigger('selection')
-    onToggle(id)
-  }, [id, onToggle, haptic])
+    haptic.trigger("selection");
+    onToggle(id);
+  }, [id, onToggle, haptic]);
 
   return (
     <div className="border-b border-border last:border-b-0">
@@ -98,23 +98,19 @@ export function CollapsibleSection({
       <button
         onClick={handleToggle}
         className={cn(
-          'w-full flex items-center justify-between p-4',
-          'min-h-[56px] text-left',
-          'hover:bg-muted/50 transition-colors',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+          "w-full flex items-center justify-between p-4",
+          "min-h-[56px] text-left",
+          "hover:bg-muted/50 transition-colors",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         )}
         aria-expanded={isOpen}
         aria-controls={`section-content-${id}`}
       >
         <div className="flex items-center gap-3">
-          {icon && (
-            <span className="text-muted-foreground">
-              {icon}
-            </span>
-          )}
+          {icon && <span className="text-muted-foreground">{icon}</span>}
           <span className="font-medium">{title}</span>
         </div>
-        
+
         <motion.span
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.2 }}
@@ -130,19 +126,17 @@ export function CollapsibleSection({
           <motion.div
             id={`section-content-${id}`}
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
+            animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 pt-0">
-              {children}
-            </div>
+            <div className="px-4 pb-4 pt-0">{children}</div>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
-  )
+  );
 }
 
 // ============================================================================
@@ -151,68 +145,72 @@ export function CollapsibleSection({
 
 function DescriptionContent({ description }: { description: string }) {
   return (
-    <div 
-      className="prose prose-sm dark:prose-invert max-w-none"
+    <div
+      className="prose prose-sm max-w-none"
       dangerouslySetInnerHTML={{ __html: description }}
     />
-  )
+  );
 }
 
-function SpecificationsContent({ 
-  specifications 
-}: { 
-  specifications: Record<string, string | number | boolean> 
+function SpecificationsContent({
+  specifications,
+}: {
+  specifications: Record<string, string | number | boolean>;
 }) {
   return (
     <dl className="space-y-2">
       {Object.entries(specifications).map(([key, value]) => (
         <div key={key} className="flex justify-between items-start gap-4">
           <dt className="text-muted-foreground text-sm flex-shrink-0">
-            {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+            {key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
           </dt>
           <dd className="text-sm font-medium text-right">
-            {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value)}
+            {typeof value === "boolean"
+              ? value
+                ? "Yes"
+                : "No"
+              : String(value)}
           </dd>
         </div>
       ))}
     </dl>
-  )
+  );
 }
 
 function ShippingContent({ shippingInfo }: { shippingInfo: string }) {
   return (
     <div className="space-y-3">
-      <div 
+      <div
         className="prose prose-sm max-w-none"
         dangerouslySetInnerHTML={{ __html: shippingInfo }}
       />
-      <div className="flex items-center gap-2 text-sm text-green-600">
+      <div className="flex items-center gap-2 text-sm text-success">
         <Package className="h-4 w-4" />
         <span>Free shipping on orders over $50</span>
       </div>
     </div>
-  )
+  );
 }
 
 function ReturnPolicyContent({ returnPolicy }: { returnPolicy: string }) {
   return (
-    <div 
+    <div
       className="prose prose-sm max-w-none"
       dangerouslySetInnerHTML={{ __html: returnPolicy }}
     />
-  )
+  );
 }
 
 function WarrantyContent({ warranty }: { warranty: string }) {
   return (
     <div className="flex items-start gap-3">
       <Shield className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-      <div 
+      <div
         className="prose prose-sm max-w-none"
         dangerouslySetInnerHTML={{ __html: warranty }}
       />
     </div>
-  )
+  );
 }
 
 // ============================================================================
@@ -230,63 +228,67 @@ export function CollapsibleProductDetails({
   className,
 }: CollapsibleProductDetailsProps) {
   // Build sections from props or use custom sections
-  const defaultSections: ProductDetailSection[] = []
-  
+  const defaultSections: ProductDetailSection[] = [];
+
   if (description) {
     defaultSections.push({
-      id: 'description',
-      title: 'Description',
+      id: "description",
+      title: "Description",
       icon: DEFAULT_ICONS.description,
       content: <DescriptionContent description={description} />,
       defaultOpen: true,
-    })
+    });
   }
-  
+
   if (specifications && Object.keys(specifications).length > 0) {
     defaultSections.push({
-      id: 'specifications',
-      title: 'Specifications',
+      id: "specifications",
+      title: "Specifications",
       icon: DEFAULT_ICONS.specifications,
       content: <SpecificationsContent specifications={specifications} />,
-    })
+    });
   }
-  
+
   if (shippingInfo) {
     defaultSections.push({
-      id: 'shipping',
-      title: 'Shipping Information',
+      id: "shipping",
+      title: "Shipping Information",
       icon: DEFAULT_ICONS.shipping,
       content: <ShippingContent shippingInfo={shippingInfo} />,
-    })
+    });
   }
-  
+
   if (returnPolicy) {
     defaultSections.push({
-      id: 'returns',
-      title: 'Return Policy',
+      id: "returns",
+      title: "Return Policy",
       icon: DEFAULT_ICONS.returns,
       content: <ReturnPolicyContent returnPolicy={returnPolicy} />,
-    })
+    });
   }
-  
+
   if (warranty) {
     defaultSections.push({
-      id: 'warranty',
-      title: 'Warranty',
+      id: "warranty",
+      title: "Warranty",
       icon: DEFAULT_ICONS.warranty,
       content: <WarrantyContent warranty={warranty} />,
-    })
+    });
   }
 
-  const sections = customSections || defaultSections
+  const sections = customSections || defaultSections;
 
   // Initialize open state
-  const initialOpenState = sections.reduce((acc, section) => {
-    acc[section.id] = section.defaultOpen || false
-    return acc
-  }, {} as Record<string, boolean>)
+  const initialOpenState = sections.reduce(
+    (acc, section) => {
+      acc[section.id] = section.defaultOpen || false;
+      return acc;
+    },
+    {} as Record<string, boolean>,
+  );
 
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>(initialOpenState)
+  const [openSections, setOpenSections] =
+    useState<Record<string, boolean>>(initialOpenState);
 
   // Handle toggle
   const handleToggle = useCallback(
@@ -294,26 +296,26 @@ export function CollapsibleProductDetails({
       setOpenSections((prev) => {
         if (allowMultipleOpen) {
           // Toggle individual section
-          return { ...prev, [id]: !prev[id] }
+          return { ...prev, [id]: !prev[id] };
         } else {
           // Only allow one section open at a time
-          const newState: Record<string, boolean> = {}
+          const newState: Record<string, boolean> = {};
           for (const key of Object.keys(prev)) {
-            newState[key] = key === id ? !prev[id] : false
+            newState[key] = key === id ? !prev[id] : false;
           }
-          return newState
+          return newState;
         }
-      })
+      });
     },
-    [allowMultipleOpen]
-  )
+    [allowMultipleOpen],
+  );
 
   if (sections.length === 0) {
-    return null
+    return null;
   }
 
   return (
-    <div className={cn('border rounded-xl overflow-hidden', className)}>
+    <div className={cn("border rounded-xl overflow-hidden", className)}>
       {sections.map((section) => (
         <CollapsibleSection
           key={section.id}
@@ -327,7 +329,7 @@ export function CollapsibleProductDetails({
         </CollapsibleSection>
       ))}
     </div>
-  )
+  );
 }
 
-export default CollapsibleProductDetails
+export default CollapsibleProductDetails;

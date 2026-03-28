@@ -121,6 +121,63 @@ export async function generateSitemap(
     }
   }
 
+  // ── E-commerce: Products ───────────────────────────────────────────
+  const { data: products } = await supabase
+    .from("mod_ecommod01_products")
+    .select("slug, updated_at, images, name")
+    .eq("site_id", siteId)
+    .eq("status", "active");
+
+  if (products && products.length > 0) {
+    // Add shop index page
+    urls.push({
+      loc: `${baseUrl}/shop`,
+      changefreq: "daily",
+      priority: 0.9,
+    });
+
+    for (const product of products) {
+      const url: SitemapUrl = {
+        loc: `${baseUrl}/products/${product.slug}`,
+        lastmod: product.updated_at,
+        changefreq: "weekly",
+        priority: 0.8,
+      };
+
+      if (includeImages && product.images?.length > 0) {
+        url.images = product.images
+          .slice(0, 5)
+          .map((img: string) => ({ loc: img, title: product.name }));
+      }
+
+      urls.push(url);
+    }
+  }
+
+  // ── E-commerce: Categories ─────────────────────────────────────────
+  const { data: categories } = await supabase
+    .from("mod_ecommod01_categories")
+    .select("slug, updated_at, name, image_url")
+    .eq("site_id", siteId)
+    .eq("status", "active");
+
+  if (categories && categories.length > 0) {
+    for (const category of categories) {
+      const url: SitemapUrl = {
+        loc: `${baseUrl}/categories/${category.slug}`,
+        lastmod: category.updated_at,
+        changefreq: "weekly",
+        priority: 0.7,
+      };
+
+      if (includeImages && category.image_url) {
+        url.images = [{ loc: category.image_url, title: category.name }];
+      }
+
+      urls.push(url);
+    }
+  }
+
   // Generate XML
   return generateSitemapXml(urls);
 }
@@ -308,5 +365,13 @@ Sitemap: ${baseUrl}/sitemap.xml
 Disallow: /api/
 Disallow: /_next/
 Disallow: /admin/
+
+# Disallow transactional pages
+Disallow: /checkout
+Disallow: /cart
+Disallow: /account
+Disallow: /order-confirmation
+Disallow: /order-tracking
+Disallow: /quotes
 `;
 }
