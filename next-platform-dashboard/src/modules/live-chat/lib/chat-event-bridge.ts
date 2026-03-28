@@ -164,7 +164,7 @@ export async function notifyChatPaymentConfirmed(
 
   const message =
     `Your payment for order ${orderNumber} (${total}) has been confirmed! 🎉 ` +
-    `Your order is now being processed. You'll receive updates as it progresses through shipping and delivery.`;
+    `Your order is now confirmed and being prepared. You'll receive updates as it progresses through shipping and delivery.`;
 
   await sendProactiveMessage(
     siteId,

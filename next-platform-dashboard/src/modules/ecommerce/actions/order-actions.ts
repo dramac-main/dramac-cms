@@ -649,19 +649,24 @@ export async function updatePaymentProofStatus(
       );
 
       if (status === "approved") {
-        // Notify chat that payment is confirmed
-        import("@/modules/live-chat/lib/chat-event-bridge")
-          .then(({ notifyChatPaymentConfirmed }) => {
-            notifyChatPaymentConfirmed(
-              siteId,
-              orderData.customer_email,
-              orderData.order_number,
-              totalStr,
-            ).catch(() => {});
-          })
-          .catch(() => {});
+        // Auto-confirm the order: pending → confirmed
+        // This handles: status change, timeline event, confirmation email,
+        // chat notification ("Your order has been confirmed"), and automation event.
+        updateOrderStatus(
+          siteId,
+          orderId,
+          "confirmed",
+          userId,
+          userName,
+          "Payment proof approved — order auto-confirmed",
+        ).catch((err) =>
+          console.error(
+            "[OrderActions] Auto-confirm after payment approval failed:",
+            err,
+          ),
+        );
 
-        // Send payment confirmed email to customer + in-app notification to owner
+        // In-app notification to owner + payment receipt email to customer
         import("@/lib/services/business-notifications")
           .then(({ notifyPaymentReceived }) => {
             notifyPaymentReceived(
