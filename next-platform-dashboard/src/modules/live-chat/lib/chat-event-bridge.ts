@@ -64,7 +64,7 @@ export async function findActiveConversation(
   return {
     conversationId: conversation.id,
     visitorId: visitor.id,
-    assistantName: settings?.ai_assistant_name || "AI Assistant",
+    assistantName: settings?.ai_assistant_name || "Chiko",
   };
 }
 
@@ -531,7 +531,7 @@ export async function bridgeChatImageAsPaymentProof(
       .select("ai_assistant_name")
       .eq("site_id", siteId)
       .single();
-    const assistantName = widgetSettings?.ai_assistant_name || "AI Assistant";
+    const assistantName = widgetSettings?.ai_assistant_name || "Chiko";
 
     await sendProactiveMessage(
       siteId,

@@ -89,7 +89,7 @@ export async function generateTranscript(
         msg.sender_type === 'visitor'
           ? visitorName
           : msg.sender_type === 'system'
-            ? '🤖 AI Assistant'
+            ? '🤖 Chiko'
             : msg.sender_name || 'Agent'
 
       if (msg.content_type === 'text' || msg.content_type === 'note') {

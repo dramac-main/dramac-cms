@@ -1303,11 +1303,11 @@ export function SettingsPageWrapper({
               <div className="space-y-2">
                 <Label>Assistant Name</Label>
                 <Input
-                  value={settings.aiAssistantName || "AI Assistant"}
+                  value={settings.aiAssistantName || "Chiko"}
                   onChange={(e) =>
-                    update("aiAssistantName", e.target.value || "AI Assistant")
+                    update("aiAssistantName", e.target.value || "Chiko")
                   }
-                  placeholder="AI Assistant"
+                  placeholder="Chiko"
                   maxLength={50}
                 />
                 <p className="text-xs text-muted-foreground">
@@ -1425,7 +1425,7 @@ export function SettingsPageWrapper({
                       settings.aiConfidenceThreshold ?? 0.7,
                     aiResponseTone: settings.aiResponseTone || "friendly",
                     aiCustomInstructions: settings.aiCustomInstructions || null,
-                    aiAssistantName: settings.aiAssistantName || "AI Assistant",
+                    aiAssistantName: settings.aiAssistantName || "Chiko",
                   })
                 }
                 disabled={isPending}

@@ -116,7 +116,7 @@ export async function generateAutoResponse(
     const aiTone = settingsRes.data?.ai_response_tone || "friendly";
     const customInstructions = settingsRes.data?.ai_custom_instructions || "";
     const aiAssistantName =
-      settingsRes.data?.ai_assistant_name || "AI Assistant";
+      settingsRes.data?.ai_assistant_name || "Chiko";
     const paymentGreeting = settingsRes.data?.ai_payment_greeting || "";
     const kbArticles = kbRes.data || [];
     const previousMessages = (messagesRes.data || []).reverse();
