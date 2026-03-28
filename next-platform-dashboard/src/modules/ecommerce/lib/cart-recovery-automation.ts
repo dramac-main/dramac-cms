@@ -234,6 +234,7 @@ export async function processAbandonedCarts(
             email: cart.customer_email!,
             name: cart.customer_name || undefined,
           },
+          siteId,
           emailType: "abandoned_cart_customer",
           data: {
             customerName: cart.customer_name || "there",

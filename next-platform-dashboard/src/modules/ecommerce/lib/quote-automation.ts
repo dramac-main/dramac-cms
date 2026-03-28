@@ -189,6 +189,7 @@ export async function processQuoteReminders(siteId: string): Promise<{ sent: num
 
       await sendBrandedEmail(quote.agency_id || null, {
         to: { email: quote.customer_email, name: quote.customer_name || undefined },
+        siteId,
         emailType: 'quote_reminder_customer',
         data: {
           customerName: quote.customer_name || 'Customer',

@@ -1015,8 +1015,14 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
   // Live Chat (reuse simple text-based templates)
   chat_transcript: {
     subject: (data) => `Chat Transcript — ${data.visitorName || "Visitor"}`,
-    html: (data) =>
-      `<p>Chat transcript for ${data.visitorName || "a visitor"}.</p><pre>${data.transcript || ""}</pre>`,
+    html: (data, b) =>
+      baseEmailTemplate(
+        b,
+        `<h1 style="${EMAIL_STYLES.heading}">Chat Transcript</h1>
+        <p style="${EMAIL_STYLES.text}">Below is your chat with ${data.visitorName || "a visitor"}:</p>
+        <pre style="background:#f9fafb;padding:16px;border-radius:8px;overflow-x:auto;white-space:pre-wrap;word-wrap:break-word;font-size:14px;line-height:1.6;">${data.transcript || "No transcript available."}</pre>`,
+        `Chat transcript from ${data.visitorName || "visitor"}`,
+      ),
     text: (data) =>
       `Chat Transcript\n\n${data.transcript || "No transcript available."}`,
   },
@@ -1041,10 +1047,21 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
   },
   chat_missed_notification: {
     subject: (data) => `Missed Chat from ${data.visitorName || "a visitor"}`,
-    html: (data) =>
-      `<p>A visitor tried to chat but no agents were available.</p><p>Message: ${data.visitorMessage || "N/A"}</p>`,
+    html: (data, b) =>
+      baseEmailTemplate(
+        b,
+        `<h1 style="${EMAIL_STYLES.heading}">Missed Chat</h1>
+        <p style="${EMAIL_STYLES.text}">A visitor tried to chat but no agents were available.</p>
+        ${data.visitorName ? `<p style="${EMAIL_STYLES.text}"><strong>Visitor:</strong> ${data.visitorName}</p>` : ""}
+        ${data.visitorMessage ? `<div style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:16px;margin:16px 0;">
+          <p style="margin:0 0 8px;color:#92400e;font-weight:600;">Message:</p>
+          <p style="margin:0;color:#78350f;">${data.visitorMessage}</p>
+        </div>` : ""}
+        <p style="${EMAIL_STYLES.muted}">Consider reaching out to this visitor to offer assistance.</p>`,
+        `Missed chat from ${data.visitorName || "visitor"}`,
+      ),
     text: (data) =>
-      `Missed Chat\n\nVisitor: ${data.visitorName || "Unknown"}\nMessage: ${data.visitorMessage || "N/A"}`,
+      `Missed Chat\n\nVisitor: ${data.visitorName || "Unknown"}\nMessage: ${data.visitorMessage || "N/A"}\n\nConsider following up with this visitor.`,
   },
 };
 

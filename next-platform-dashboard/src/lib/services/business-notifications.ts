@@ -1358,6 +1358,17 @@ export async function notifyQuoteRejected(
 
     const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=quotes`;
 
+    // Fetch quote total for the email
+    const { data: quoteData } = await supabase
+      .from("mod_ecommod01_quotes")
+      .select("total, currency")
+      .eq("quote_number", quoteNumber)
+      .eq("site_id", siteId)
+      .single();
+    const total = quoteData?.total
+      ? formatCurrency(quoteData.total / 100, quoteData.currency || "USD")
+      : "";
+
     // 1. In-app notification to business owner
     if (agency?.owner_id) {
       await createNotification({
@@ -1383,7 +1394,8 @@ export async function notifyQuoteRejected(
           customerName,
           customerEmail,
           quoteNumber,
-          reason: reason || "",
+          totalAmount: total,
+          rejectionReason: reason || "",
           dashboardUrl,
         },
       });
