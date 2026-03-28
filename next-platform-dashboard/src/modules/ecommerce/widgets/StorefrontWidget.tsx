@@ -1,18 +1,29 @@
 /**
  * E-Commerce Storefront Widget
- * 
+ *
  * Phase EM-52: E-Commerce Module
- * 
+ *
  * Embeddable storefront widget that can be placed on external sites.
  * Provides product browsing, cart management, and checkout functionality.
- * 
+ *
  * FOLLOWS BOOKING WIDGET PATTERN
  */
 /* eslint-disable @next/next/no-img-element */
-'use client'
+"use client";
 
-import React, { useState, useEffect, createContext, useContext, useCallback, ReactNode } from 'react'
-import { DEFAULT_LOCALE, DEFAULT_CURRENCY, formatCurrency } from '@/lib/locale-config'
+import React, {
+  useState,
+  useEffect,
+  createContext,
+  useContext,
+  useCallback,
+  ReactNode,
+} from "react";
+import {
+  DEFAULT_LOCALE,
+  DEFAULT_CURRENCY,
+  formatCurrency,
+} from "@/lib/locale-config";
 import {
   getProducts,
   getCategories,
@@ -24,43 +35,49 @@ import {
   clearCart,
   applyDiscountToCart,
   removeDiscountFromCart,
-  getEcommerceSettings
-} from '../actions/ecommerce-actions'
-import type { 
-  Product, 
-  Category, 
-  Cart, 
+  getEcommerceSettings,
+} from "../actions/ecommerce-actions";
+import type {
+  Product,
+  Category,
+  Cart,
   CartItem,
   EcommerceSettings,
-  CartTotals
-} from '../types/ecommerce-types'
+  CartTotals,
+} from "../types/ecommerce-types";
 
 // ============================================================================
 // CART CONTEXT
 // ============================================================================
 
 interface CartContextValue {
-  cart: Cart | null
-  isLoading: boolean
-  error: string | null
-  totals: CartTotals | null
-  addItem: (productId: string, variantId: string | null, quantity: number) => Promise<void>
-  updateQuantity: (itemId: string, quantity: number) => Promise<void>
-  removeItem: (itemId: string) => Promise<void>
-  clear: () => Promise<void>
-  applyDiscount: (code: string) => Promise<{ success: boolean; message: string }>
-  removeDiscount: () => Promise<void>
-  refresh: () => Promise<void>
+  cart: Cart | null;
+  isLoading: boolean;
+  error: string | null;
+  totals: CartTotals | null;
+  addItem: (
+    productId: string,
+    variantId: string | null,
+    quantity: number,
+  ) => Promise<void>;
+  updateQuantity: (itemId: string, quantity: number) => Promise<void>;
+  removeItem: (itemId: string) => Promise<void>;
+  clear: () => Promise<void>;
+  applyDiscount: (
+    code: string,
+  ) => Promise<{ success: boolean; message: string }>;
+  removeDiscount: () => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
-const CartContext = createContext<CartContextValue | null>(null)
+const CartContext = createContext<CartContextValue | null>(null);
 
 export function useCart() {
-  const context = useContext(CartContext)
+  const context = useContext(CartContext);
   if (!context) {
-    throw new Error('useCart must be used within a CartProvider')
+    throw new Error("useCart must be used within a CartProvider");
   }
-  return context
+  return context;
 }
 
 // ============================================================================
@@ -68,157 +85,180 @@ export function useCart() {
 // ============================================================================
 
 interface CartProviderProps {
-  children: ReactNode
-  siteId: string
-  sessionId?: string
-  userId?: string
-  taxRate?: number
-  currency?: string
+  children: ReactNode;
+  siteId: string;
+  sessionId?: string;
+  userId?: string;
+  taxRate?: number;
+  currency?: string;
 }
 
-export function CartProvider({ 
-  children, 
-  siteId, 
-  sessionId, 
+export function CartProvider({
+  children,
+  siteId,
+  sessionId,
   userId,
   taxRate = 0,
-  currency: _currency 
+  currency: _currency,
 }: CartProviderProps) {
-  const [cart, setCart] = useState<Cart | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [cart, setCart] = useState<Cart | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Initialize cart
   const initCart = useCallback(async () => {
     try {
-      setIsLoading(true)
-      setError(null)
-      const c = await getOrCreateCart(siteId, userId, sessionId)
-      setCart(c)
+      setIsLoading(true);
+      setError(null);
+      const c = await getOrCreateCart(siteId, userId, sessionId);
+      setCart(c);
     } catch (err) {
-      console.error('Failed to initialize cart:', err)
-      setError(err instanceof Error ? err.message : 'Failed to load cart')
+      console.error("Failed to initialize cart:", err);
+      setError(err instanceof Error ? err.message : "Failed to load cart");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [siteId, userId, sessionId])
+  }, [siteId, userId, sessionId]);
 
   useEffect(() => {
-    initCart()
-  }, [initCart])
+    initCart();
+  }, [initCart]);
 
   const refresh = useCallback(async () => {
     if (cart?.id) {
-      const updated = await getCart(cart.id)
-      if (updated) setCart(updated)
+      const updated = await getCart(cart.id);
+      if (updated) setCart(updated);
     } else {
-      await initCart()
+      await initCart();
     }
-  }, [cart?.id, initCart])
+  }, [cart?.id, initCart]);
 
-  const addItem = useCallback(async (productId: string, variantId: string | null, quantity: number) => {
-    if (!cart) return
-    setIsLoading(true)
-    setError(null)
-    try {
-      await addCartItem(cart.id, productId, variantId, quantity)
-      await refresh()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add item')
-      throw err
-    } finally {
-      setIsLoading(false)
-    }
-  }, [cart, refresh])
+  const addItem = useCallback(
+    async (productId: string, variantId: string | null, quantity: number) => {
+      if (!cart) return;
+      setIsLoading(true);
+      setError(null);
+      try {
+        await addCartItem(cart.id, productId, variantId, quantity);
+        await refresh();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to add item");
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [cart, refresh],
+  );
 
-  const updateQuantity = useCallback(async (itemId: string, quantity: number) => {
-    setIsLoading(true)
-    setError(null)
-    try {
-      await updateCartItemQuantity(itemId, quantity)
-      await refresh()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update quantity')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [refresh])
+  const updateQuantity = useCallback(
+    async (itemId: string, quantity: number) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        await updateCartItemQuantity(itemId, quantity);
+        await refresh();
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to update quantity",
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [refresh],
+  );
 
-  const removeItem = useCallback(async (itemId: string) => {
-    setIsLoading(true)
-    setError(null)
-    try {
-      await removeCartItem(itemId)
-      await refresh()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to remove item')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [refresh])
+  const removeItem = useCallback(
+    async (itemId: string) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        await removeCartItem(itemId);
+        await refresh();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to remove item");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [refresh],
+  );
 
   const clear = useCallback(async () => {
-    if (!cart) return
-    setIsLoading(true)
-    setError(null)
+    if (!cart) return;
+    setIsLoading(true);
+    setError(null);
     try {
-      await clearCart(cart.id)
-      await refresh()
+      await clearCart(cart.id);
+      await refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to clear cart')
+      setError(err instanceof Error ? err.message : "Failed to clear cart");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [cart, refresh])
+  }, [cart, refresh]);
 
-  const applyDiscount = useCallback(async (code: string) => {
-    if (!cart) return { success: false, message: 'No cart' }
-    setIsLoading(true)
-    setError(null)
-    try {
-      const subtotal = calculateSubtotal(cart.items)
-      const result = await applyDiscountToCart(cart.id, code, subtotal)
-      await refresh()
-      return result.success 
-        ? { success: true, message: `Discount applied: -${formatCurrency(result.discountAmount / 100)}` }
-        : { success: false, message: result.error || 'Invalid code' }
-    } catch (err) {
-      return { success: false, message: err instanceof Error ? err.message : 'Failed to apply discount' }
-    } finally {
-      setIsLoading(false)
-    }
-  }, [cart, refresh])
+  const applyDiscount = useCallback(
+    async (code: string) => {
+      if (!cart) return { success: false, message: "No cart" };
+      setIsLoading(true);
+      setError(null);
+      try {
+        const subtotal = calculateSubtotal(cart.items);
+        const result = await applyDiscountToCart(cart.id, code, subtotal);
+        await refresh();
+        return result.success
+          ? {
+              success: true,
+              message: `Discount applied: -${formatCurrency(result.discountAmount / 100)}`,
+            }
+          : { success: false, message: result.error || "Invalid code" };
+      } catch (err) {
+        return {
+          success: false,
+          message:
+            err instanceof Error ? err.message : "Failed to apply discount",
+        };
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [cart, refresh],
+  );
 
   const removeDiscountAction = useCallback(async () => {
-    if (!cart) return
-    setIsLoading(true)
+    if (!cart) return;
+    setIsLoading(true);
     try {
-      await removeDiscountFromCart(cart.id)
-      await refresh()
+      await removeDiscountFromCart(cart.id);
+      await refresh();
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [cart, refresh])
+  }, [cart, refresh]);
 
-  const totals = cart ? calculateTotals(cart, taxRate) : null
+  const totals = cart ? calculateTotals(cart, taxRate) : null;
 
   return (
-    <CartContext.Provider value={{
-      cart,
-      isLoading,
-      error,
-      totals,
-      addItem,
-      updateQuantity,
-      removeItem,
-      clear,
-      applyDiscount,
-      removeDiscount: removeDiscountAction,
-      refresh
-    }}>
+    <CartContext.Provider
+      value={{
+        cart,
+        isLoading,
+        error,
+        totals,
+        addItem,
+        updateQuantity,
+        removeItem,
+        clear,
+        applyDiscount,
+        removeDiscount: removeDiscountAction,
+        refresh,
+      }}
+    >
       {children}
     </CartContext.Provider>
-  )
+  );
 }
 
 // ============================================================================
@@ -226,18 +266,18 @@ export function CartProvider({
 // ============================================================================
 
 function calculateSubtotal(items: CartItem[]): number {
-  return items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0)
+  return items.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
 }
 
 function calculateTotals(cart: Cart, taxRate: number): CartTotals {
-  const subtotal = calculateSubtotal(cart.items)
-  const discount = cart.discount_amount || 0
-  const taxableAmount = Math.max(0, subtotal - discount)
-  const tax = (taxableAmount * taxRate) / 100
+  const subtotal = calculateSubtotal(cart.items);
+  const discount = cart.discount_amount || 0;
+  const taxableAmount = Math.max(0, subtotal - discount);
+  const tax = (taxableAmount * taxRate) / 100;
   // Shipping is calculated at checkout with full address/settings context.
   // Widget shows pre-shipping total; final shipping added during checkout.
-  const shipping = 0
-  const total = taxableAmount + tax + shipping
+  const shipping = 0;
+  const total = taxableAmount + tax + shipping;
 
   return {
     subtotal,
@@ -245,8 +285,8 @@ function calculateTotals(cart: Cart, taxRate: number): CartTotals {
     tax,
     shipping,
     total,
-    itemCount: cart.items.reduce((sum, item) => sum + item.quantity, 0)
-  }
+    itemCount: cart.items.reduce((sum, item) => sum + item.quantity, 0),
+  };
 }
 
 // ============================================================================
@@ -254,47 +294,47 @@ function calculateTotals(cart: Cart, taxRate: number): CartTotals {
 // ============================================================================
 
 interface StorefrontWidgetProps {
-  siteId: string
-  sessionId?: string
-  userId?: string
-  config?: StorefrontConfig
-  onCheckout?: (cart: Cart) => void
+  siteId: string;
+  sessionId?: string;
+  userId?: string;
+  config?: StorefrontConfig;
+  onCheckout?: (cart: Cart) => void;
 }
 
 interface StorefrontConfig {
-  showCart?: boolean
-  showCategories?: boolean
-  productsPerPage?: number
-  theme?: 'light' | 'dark'
-  primaryColor?: string
-  borderRadius?: number
-  showSearch?: boolean
-  showFilters?: boolean
-  layout?: 'grid' | 'list'
-  columns?: 2 | 3 | 4
+  showCart?: boolean;
+  showCategories?: boolean;
+  productsPerPage?: number;
+  theme?: "light" | "dark";
+  primaryColor?: string;
+  borderRadius?: number;
+  showSearch?: boolean;
+  showFilters?: boolean;
+  layout?: "grid" | "list";
+  columns?: 2 | 3 | 4;
 }
 
 const defaultConfig: Required<StorefrontConfig> = {
   showCart: true,
   showCategories: true,
   productsPerPage: 12,
-  theme: 'light',
-  primaryColor: '',
+  theme: "light",
+  primaryColor: "",
   borderRadius: 8,
   showSearch: true,
   showFilters: true,
-  layout: 'grid',
-  columns: 3
-}
+  layout: "grid",
+  columns: 3,
+};
 
-export function StorefrontWidget({ 
-  siteId, 
-  sessionId, 
+export function StorefrontWidget({
+  siteId,
+  sessionId,
   userId,
   config = {},
-  onCheckout
+  onCheckout,
 }: StorefrontWidgetProps) {
-  const mergedConfig = { ...defaultConfig, ...config }
+  const mergedConfig = { ...defaultConfig, ...config };
   const {
     showCart,
     showCategories,
@@ -304,62 +344,75 @@ export function StorefrontWidget({
     borderRadius,
     showSearch,
     layout,
-    columns
-  } = mergedConfig
+    columns,
+  } = mergedConfig;
 
-  const [products, setProducts] = useState<Product[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
-  const [settings, setSettings] = useState<EcommerceSettings | null>(null)
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
-  const [cartOpen, setCartOpen] = useState(false)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [settings, setSettings] = useState<EcommerceSettings | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   // Fetch products and categories
   useEffect(() => {
     const fetchData = async () => {
-      setIsLoading(true)
+      setIsLoading(true);
       try {
-        const [productsResult, categoriesResult, settingsResult] = await Promise.all([
-          getProducts(siteId, { 
-            status: 'active',
-            category: selectedCategory || undefined,
-            search: searchQuery || undefined
-          }, currentPage, productsPerPage),
-          getCategories(siteId),
-          getEcommerceSettings(siteId)
-        ])
-        setProducts(productsResult.data)
-        setTotalPages(productsResult.totalPages)
-        setCategories(categoriesResult.filter(c => c.is_active))
-        setSettings(settingsResult)
+        const [productsResult, categoriesResult, settingsResult] =
+          await Promise.all([
+            getProducts(
+              siteId,
+              {
+                status: "active",
+                category: selectedCategory || undefined,
+                search: searchQuery || undefined,
+              },
+              currentPage,
+              productsPerPage,
+            ),
+            getCategories(siteId),
+            getEcommerceSettings(siteId),
+          ]);
+        setProducts(productsResult.data);
+        setTotalPages(productsResult.totalPages);
+        setCategories(categoriesResult.filter((c) => c.is_active));
+        setSettings(settingsResult);
       } catch (err) {
-        console.error('Failed to fetch storefront data:', err)
+        console.error("Failed to fetch storefront data:", err);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
-    fetchData()
-  }, [siteId, selectedCategory, searchQuery, currentPage, productsPerPage])
+    };
+    fetchData();
+  }, [siteId, selectedCategory, searchQuery, currentPage, productsPerPage]);
 
-  const isDark = theme === 'dark'
-  const taxRate = settings?.tax_rate || 0
-  const resolvedPrimary = primaryColor || 'var(--brand-primary, #0f172a)'
+  const isDark = theme === "dark";
+  const taxRate = settings?.tax_rate || 0;
+  const resolvedPrimary = primaryColor || "var(--brand-primary, #0f172a)";
 
   return (
-    <CartProvider siteId={siteId} sessionId={sessionId} userId={userId} taxRate={taxRate}>
-      <div 
-        className={`storefront-widget ${isDark ? 'sf-dark' : 'sf-light'}`}
-        style={{
-          '--sf-primary': resolvedPrimary,
-          '--sf-radius': `${borderRadius}px`,
-          fontFamily: 'inherit'
-        } as React.CSSProperties}
+    <CartProvider
+      siteId={siteId}
+      sessionId={sessionId}
+      userId={userId}
+      taxRate={taxRate}
+    >
+      <div
+        className={`storefront-widget ${isDark ? "sf-dark" : "sf-light"}`}
+        style={
+          {
+            "--sf-primary": resolvedPrimary,
+            "--sf-radius": `${borderRadius}px`,
+            fontFamily: "inherit",
+          } as React.CSSProperties
+        }
       >
         <style>{storefrontStyles}</style>
-        
+
         {/* Header */}
         <header className="sf-header">
           {showSearch && (
@@ -369,8 +422,8 @@ export function StorefrontWidget({
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => {
-                  setSearchQuery(e.target.value)
-                  setCurrentPage(1)
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
                 }}
                 className="sf-search-input"
               />
@@ -378,9 +431,9 @@ export function StorefrontWidget({
             </div>
           )}
           {showCart && (
-            <CartButton 
-              onClick={() => setCartOpen(true)} 
-              primaryColor={primaryColor} 
+            <CartButton
+              onClick={() => setCartOpen(true)}
+              primaryColor={primaryColor}
             />
           )}
         </header>
@@ -390,23 +443,31 @@ export function StorefrontWidget({
           <nav className="sf-categories">
             <button
               onClick={() => {
-                setSelectedCategory(null)
-                setCurrentPage(1)
+                setSelectedCategory(null);
+                setCurrentPage(1);
               }}
-              className={`sf-category-btn ${!selectedCategory ? 'sf-active' : ''}`}
-              style={!selectedCategory ? { backgroundColor: primaryColor, color: 'white' } : {}}
+              className={`sf-category-btn ${!selectedCategory ? "sf-active" : ""}`}
+              style={
+                !selectedCategory
+                  ? { backgroundColor: primaryColor, color: "white" }
+                  : {}
+              }
             >
               All
             </button>
-            {categories.map(cat => (
+            {categories.map((cat) => (
               <button
                 key={cat.id}
                 onClick={() => {
-                  setSelectedCategory(cat.id)
-                  setCurrentPage(1)
+                  setSelectedCategory(cat.id);
+                  setCurrentPage(1);
                 }}
-                className={`sf-category-btn ${selectedCategory === cat.id ? 'sf-active' : ''}`}
-                style={selectedCategory === cat.id ? { backgroundColor: primaryColor, color: 'white' } : {}}
+                className={`sf-category-btn ${selectedCategory === cat.id ? "sf-active" : ""}`}
+                style={
+                  selectedCategory === cat.id
+                    ? { backgroundColor: primaryColor, color: "white" }
+                    : {}
+                }
               >
                 {cat.name}
               </button>
@@ -417,7 +478,10 @@ export function StorefrontWidget({
         {/* Products */}
         {isLoading ? (
           <div className="sf-loading">
-            <div className="sf-spinner" style={{ borderTopColor: primaryColor }} />
+            <div
+              className="sf-spinner"
+              style={{ borderTopColor: primaryColor }}
+            />
           </div>
         ) : products.length === 0 ? (
           <div className="sf-empty">
@@ -426,14 +490,14 @@ export function StorefrontWidget({
           </div>
         ) : (
           <>
-            <div 
+            <div
               className={`sf-products sf-${layout}`}
-              style={{ '--sf-columns': columns } as React.CSSProperties}
+              style={{ "--sf-columns": columns } as React.CSSProperties}
             >
-              {products.map(product => (
-                <ProductCard 
-                  key={product.id} 
-                  product={product} 
+              {products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
                   primaryColor={primaryColor}
                   isDark={isDark}
                   currency={settings?.currency || DEFAULT_CURRENCY}
@@ -445,7 +509,7 @@ export function StorefrontWidget({
             {totalPages > 1 && (
               <div className="sf-pagination">
                 <button
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
                   className="sf-page-btn"
                 >
@@ -455,7 +519,9 @@ export function StorefrontWidget({
                   Page {currentPage} of {totalPages}
                 </span>
                 <button
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
                   disabled={currentPage === totalPages}
                   className="sf-page-btn"
                 >
@@ -468,7 +534,7 @@ export function StorefrontWidget({
 
         {/* Cart Drawer */}
         {showCart && (
-          <CartDrawer 
+          <CartDrawer
             isOpen={cartOpen}
             onClose={() => setCartOpen(false)}
             primaryColor={primaryColor}
@@ -479,7 +545,7 @@ export function StorefrontWidget({
         )}
       </div>
     </CartProvider>
-  )
+  );
 }
 
 // ============================================================================
@@ -487,60 +553,57 @@ export function StorefrontWidget({
 // ============================================================================
 
 interface ProductCardProps {
-  product: Product
-  primaryColor: string
-  isDark: boolean
-  currency: string
+  product: Product;
+  primaryColor: string;
+  isDark: boolean;
+  currency: string;
 }
 
-function ProductCard({ product, primaryColor, isDark, currency }: ProductCardProps) {
-  const { addItem, isLoading } = useCart()
-  const [adding, setAdding] = useState(false)
-  const [selectedVariant, setSelectedVariant] = useState<string | null>(null)
+function ProductCard({
+  product,
+  primaryColor,
+  isDark,
+  currency,
+}: ProductCardProps) {
+  const { addItem, isLoading } = useCart();
+  const [adding, setAdding] = useState(false);
+  const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
 
   const handleAddToCart = async () => {
-    setAdding(true)
+    setAdding(true);
     try {
-      await addItem(product.id, selectedVariant, 1)
+      await addItem(product.id, selectedVariant, 1);
     } catch (_err) {
       // Error handled in context
     } finally {
-      setAdding(false)
+      setAdding(false);
     }
-  }
+  };
 
-  const hasVariants = product.variants && product.variants.length > 0
-  const displayPrice = getDisplayPrice(product, selectedVariant, currency)
-  const inStock = isInStock(product, selectedVariant)
+  const hasVariants = product.variants && product.variants.length > 0;
+  const displayPrice = getDisplayPrice(product, selectedVariant, currency);
+  const inStock = isInStock(product, selectedVariant);
 
   return (
-    <div className={`sf-product-card ${isDark ? 'sf-dark' : ''}`}>
+    <div className={`sf-product-card ${isDark ? "sf-dark" : ""}`}>
       {/* Image */}
       <div className="sf-product-image">
         {product.images?.[0] ? (
-          <img 
-            src={product.images[0]} 
-            alt={product.name}
-            loading="lazy"
-          />
+          <img src={product.images[0]} alt={product.name} loading="lazy" />
         ) : (
           <div className="sf-no-image">
             <PackageIcon />
           </div>
         )}
         {product.is_featured && (
-          <span 
-            className="sf-badge"
-            style={{ backgroundColor: primaryColor }}
-          >
+          <span className="sf-badge" style={{ backgroundColor: primaryColor }}>
             Featured
           </span>
         )}
-        {product.compare_at_price && product.compare_at_price > product.base_price && (
-          <span className="sf-badge sf-sale">
-            Sale
-          </span>
-        )}
+        {product.compare_at_price &&
+          product.compare_at_price > product.base_price && (
+            <span className="sf-badge sf-sale">Sale</span>
+          )}
       </div>
 
       {/* Info */}
@@ -549,30 +612,32 @@ function ProductCard({ product, primaryColor, isDark, currency }: ProductCardPro
         {product.short_description && (
           <p className="sf-product-desc">{product.short_description}</p>
         )}
-        <div className="sf-product-price">
-          {displayPrice}
-        </div>
+        <div className="sf-product-price">{displayPrice}</div>
 
         {/* Variant selector (simplified) */}
         {hasVariants && product.options && product.options.length > 0 && (
           <div className="sf-variants">
-            {product.options.slice(0, 1).map(option => (
+            {product.options.slice(0, 1).map((option) => (
               <div key={option.id} className="sf-variant-group">
-                <label>{option.name || 'Option'}</label>
+                <label>{option.name || "Option"}</label>
                 <select
                   onChange={(e) => {
                     // Find variant matching this option
-                    const optionNameLower = (option.name || '').toLowerCase()
-                    const variant = product.variants?.find(v => 
-                      v.options && v.options[optionNameLower] === e.target.value
-                    )
-                    setSelectedVariant(variant?.id || null)
+                    const optionNameLower = (option.name || "").toLowerCase();
+                    const variant = product.variants?.find(
+                      (v) =>
+                        v.options &&
+                        v.options[optionNameLower] === e.target.value,
+                    );
+                    setSelectedVariant(variant?.id || null);
                   }}
                   className="sf-variant-select"
                 >
-                  <option value="">Select {option.name || 'Option'}</option>
-                  {option.values?.map(val => (
-                    <option key={val} value={val}>{val}</option>
+                  <option value="">Select {option.name || "Option"}</option>
+                  {option.values?.map((val) => (
+                    <option key={val} value={val}>
+                      {val}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -587,62 +652,77 @@ function ProductCard({ product, primaryColor, isDark, currency }: ProductCardPro
           className="sf-add-btn"
           style={{ backgroundColor: primaryColor }}
         >
-          {adding ? 'Adding...' : !inStock ? 'Out of Stock' : 'Add to Cart'}
+          {adding ? "Adding..." : !inStock ? "Out of Stock" : "Add to Cart"}
         </button>
       </div>
     </div>
-  )
+  );
 }
 
-function getDisplayPrice(product: Product, variantId: string | null, currency: string): React.ReactElement {
-  let price = product.base_price
-  let comparePrice = product.compare_at_price
+function getDisplayPrice(
+  product: Product,
+  variantId: string | null,
+  currency: string,
+): React.ReactElement {
+  let price = product.base_price;
+  let comparePrice = product.compare_at_price;
 
   if (variantId && product.variants) {
-    const variant = product.variants.find(v => v.id === variantId)
+    const variant = product.variants.find((v) => v.id === variantId);
     if (variant) {
-      if (variant.price) price = variant.price
-      if (variant.compare_at_price) comparePrice = variant.compare_at_price
+      if (variant.price) price = variant.price;
+      if (variant.compare_at_price) comparePrice = variant.compare_at_price;
     }
   }
 
-  const formatter = new Intl.NumberFormat(DEFAULT_LOCALE, { style: 'currency', currency })
-  
+  const formatter = new Intl.NumberFormat(DEFAULT_LOCALE, {
+    style: "currency",
+    currency,
+  });
+
   if (comparePrice && comparePrice > price) {
     return (
       <>
         <span className="sf-price-sale">{formatter.format(price / 100)}</span>
-        <span className="sf-price-compare">{formatter.format(comparePrice / 100)}</span>
+        <span className="sf-price-compare">
+          {formatter.format(comparePrice / 100)}
+        </span>
       </>
-    )
+    );
   }
 
-  return <span>{formatter.format(price / 100)}</span>
+  return <span>{formatter.format(price / 100)}</span>;
 }
 
 function isInStock(product: Product, variantId: string | null): boolean {
-  if (!product.track_inventory) return true
-  
+  if (!product.track_inventory) return true;
+
   if (variantId && product.variants) {
-    const variant = product.variants.find(v => v.id === variantId)
-    if (variant) return variant.quantity > 0
+    const variant = product.variants.find((v) => v.id === variantId);
+    if (variant) return variant.quantity > 0;
   }
-  
-  return product.quantity > 0
+
+  return product.quantity > 0;
 }
 
 // ============================================================================
 // CART COMPONENTS
 // ============================================================================
 
-function CartButton({ onClick, primaryColor }: { onClick: () => void; primaryColor: string }) {
-  const { totals } = useCart()
+function CartButton({
+  onClick,
+  primaryColor,
+}: {
+  onClick: () => void;
+  primaryColor: string;
+}) {
+  const { totals } = useCart();
 
   return (
     <button onClick={onClick} className="sf-cart-btn">
       <CartIcon />
       {totals && totals.itemCount > 0 && (
-        <span 
+        <span
           className="sf-cart-badge"
           style={{ backgroundColor: primaryColor }}
         >
@@ -650,50 +730,72 @@ function CartButton({ onClick, primaryColor }: { onClick: () => void; primaryCol
         </span>
       )}
     </button>
-  )
+  );
 }
 
 interface CartDrawerProps {
-  isOpen: boolean
-  onClose: () => void
-  primaryColor: string
-  isDark: boolean
-  currency: string
-  onCheckout?: (cart: Cart) => void
+  isOpen: boolean;
+  onClose: () => void;
+  primaryColor: string;
+  isDark: boolean;
+  currency: string;
+  onCheckout?: (cart: Cart) => void;
 }
 
-function CartDrawer({ isOpen, onClose, primaryColor, isDark, currency, onCheckout }: CartDrawerProps) {
-  const { cart, totals, updateQuantity, removeItem, applyDiscount, removeDiscount, isLoading, error } = useCart()
-  const [discountCode, setDiscountCode] = useState('')
-  const [discountMessage, setDiscountMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+function CartDrawer({
+  isOpen,
+  onClose,
+  primaryColor,
+  isDark,
+  currency,
+  onCheckout,
+}: CartDrawerProps) {
+  const {
+    cart,
+    totals,
+    updateQuantity,
+    removeItem,
+    applyDiscount,
+    removeDiscount,
+    isLoading,
+    error,
+  } = useCart();
+  const [discountCode, setDiscountCode] = useState("");
+  const [discountMessage, setDiscountMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   const handleApplyDiscount = async () => {
-    if (!discountCode.trim()) return
-    const result = await applyDiscount(discountCode)
+    if (!discountCode.trim()) return;
+    const result = await applyDiscount(discountCode);
     setDiscountMessage({
-      type: result.success ? 'success' : 'error',
-      text: result.message
-    })
-    if (result.success) setDiscountCode('')
-  }
+      type: result.success ? "success" : "error",
+      text: result.message,
+    });
+    if (result.success) setDiscountCode("");
+  };
 
   const handleCheckout = () => {
     if (cart && onCheckout) {
-      onCheckout(cart)
+      onCheckout(cart);
     }
-  }
+  };
 
-  const formatter = new Intl.NumberFormat(DEFAULT_LOCALE, { style: 'currency', currency })
+  const formatter = new Intl.NumberFormat(DEFAULT_LOCALE, {
+    style: "currency",
+    currency,
+  });
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <>
       {/* Backdrop */}
       <div className="sf-backdrop" onClick={onClose} />
-      
+
       {/* Drawer */}
-      <div className={`sf-cart-drawer ${isDark ? 'sf-dark' : ''}`}>
+      <div className={`sf-cart-drawer ${isDark ? "sf-dark" : ""}`}>
         <div className="sf-cart-header">
           <h2>Your Cart</h2>
           <button onClick={onClose} className="sf-close-btn">
@@ -701,9 +803,7 @@ function CartDrawer({ isOpen, onClose, primaryColor, isDark, currency, onCheckou
           </button>
         </div>
 
-        {error && (
-          <div className="sf-error">{error}</div>
-        )}
+        {error && <div className="sf-error">{error}</div>}
 
         {!cart || cart.items.length === 0 ? (
           <div className="sf-cart-empty">
@@ -713,29 +813,36 @@ function CartDrawer({ isOpen, onClose, primaryColor, isDark, currency, onCheckou
         ) : (
           <>
             <div className="sf-cart-items">
-              {cart.items.map(item => (
+              {cart.items.map((item) => (
                 <div key={item.id} className="sf-cart-item">
                   <div className="sf-item-image">
                     {item.product?.images?.[0] || item.variant?.image_url ? (
-                      <img 
-                        src={item.variant?.image_url || item.product?.images?.[0]} 
-                        alt={item.product?.name || 'Product'} 
+                      <img
+                        src={
+                          item.variant?.image_url || item.product?.images?.[0]
+                        }
+                        alt={item.product?.name || "Product"}
                       />
                     ) : (
                       <PackageIcon />
                     )}
                   </div>
                   <div className="sf-item-info">
-                    <p className="sf-item-name">{item.product?.name || 'Product'}</p>
-                    {item.variant?.options && Object.keys(item.variant.options).length > 0 && (
-                      <p className="sf-item-variant">
-                        {Object.values(item.variant.options).join(' / ')}
-                      </p>
-                    )}
-                    <p className="sf-item-price">{formatter.format(item.unit_price / 100)}</p>
+                    <p className="sf-item-name">
+                      {item.product?.name || "Product"}
+                    </p>
+                    {item.variant?.options &&
+                      Object.keys(item.variant.options).length > 0 && (
+                        <p className="sf-item-variant">
+                          {Object.values(item.variant.options).join(" / ")}
+                        </p>
+                      )}
+                    <p className="sf-item-price">
+                      {formatter.format(item.unit_price / 100)}
+                    </p>
                   </div>
                   <div className="sf-item-quantity">
-                    <button 
+                    <button
                       onClick={() => updateQuantity(item.id, item.quantity - 1)}
                       disabled={isLoading}
                       className="sf-qty-btn"
@@ -743,7 +850,7 @@ function CartDrawer({ isOpen, onClose, primaryColor, isDark, currency, onCheckou
                       -
                     </button>
                     <span>{item.quantity}</span>
-                    <button 
+                    <button
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
                       disabled={isLoading}
                       className="sf-qty-btn"
@@ -751,7 +858,7 @@ function CartDrawer({ isOpen, onClose, primaryColor, isDark, currency, onCheckou
                       +
                     </button>
                   </div>
-                  <button 
+                  <button
                     onClick={() => removeItem(item.id)}
                     disabled={isLoading}
                     className="sf-remove-btn"
@@ -767,7 +874,10 @@ function CartDrawer({ isOpen, onClose, primaryColor, isDark, currency, onCheckou
               {cart.discount_code ? (
                 <div className="sf-discount-applied">
                   <span>Code: {cart.discount_code}</span>
-                  <button onClick={removeDiscount} className="sf-discount-remove">
+                  <button
+                    onClick={removeDiscount}
+                    className="sf-discount-remove"
+                  >
                     Remove
                   </button>
                 </div>
@@ -777,10 +887,12 @@ function CartDrawer({ isOpen, onClose, primaryColor, isDark, currency, onCheckou
                     type="text"
                     placeholder="Discount code"
                     value={discountCode}
-                    onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
+                    onChange={(e) =>
+                      setDiscountCode(e.target.value.toUpperCase())
+                    }
                     className="sf-discount-input"
                   />
-                  <button 
+                  <button
                     onClick={handleApplyDiscount}
                     disabled={isLoading || !discountCode.trim()}
                     className="sf-discount-btn"
@@ -836,7 +948,7 @@ function CartDrawer({ isOpen, onClose, primaryColor, isDark, currency, onCheckou
         )}
       </div>
     </>
-  )
+  );
 }
 
 // ============================================================================
@@ -845,48 +957,78 @@ function CartDrawer({ isOpen, onClose, primaryColor, isDark, currency, onCheckou
 
 function SearchIcon() {
   return (
-    <svg className="sf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg
+      className="sf-icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
       <circle cx="11" cy="11" r="8" />
       <path d="m21 21-4.35-4.35" />
     </svg>
-  )
+  );
 }
 
 function CartIcon() {
   return (
-    <svg className="sf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg
+      className="sf-icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
       <circle cx="9" cy="21" r="1" />
       <circle cx="20" cy="21" r="1" />
       <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
     </svg>
-  )
+  );
 }
 
 function PackageIcon() {
   return (
-    <svg className="sf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg
+      className="sf-icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
       <path d="m16.5 9.4-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
       <polyline points="3.29 7 12 12 20.71 7" />
       <line x1="12" y1="22" x2="12" y2="12" />
     </svg>
-  )
+  );
 }
 
 function CloseIcon() {
   return (
-    <svg className="sf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg
+      className="sf-icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
       <path d="M18 6 6 18M6 6l12 12" />
     </svg>
-  )
+  );
 }
 
 function TrashIcon() {
   return (
-    <svg className="sf-icon sf-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg
+      className="sf-icon sf-icon-sm"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
       <polyline points="3 6 5 6 21 6" />
       <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
     </svg>
-  )
+  );
 }
 
 // ============================================================================
@@ -1520,4 +1662,4 @@ const storefrontStyles = `
   width: 1rem;
   height: 1rem;
 }
-`
+`;

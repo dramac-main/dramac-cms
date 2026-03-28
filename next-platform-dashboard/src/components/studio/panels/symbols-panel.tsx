@@ -11,7 +11,6 @@
 
 import * as React from 'react';
 import { useCallback, useMemo, useState } from 'react';
-import { useDraggable } from '@dnd-kit/core';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -60,7 +59,7 @@ import { toast } from 'sonner';
 import { useSymbolStore, useFilteredSymbols } from '@/lib/studio/store/symbol-store';
 import { useEditorStore } from '@/lib/studio/store/editor-store';
 import { DEFAULT_SYMBOL_CATEGORIES, type StudioSymbol } from '@/types/studio-symbols';
-import type { SymbolDragData } from '@/types/studio';
+import { useUIStore } from '@/lib/studio/store';
 
 // =============================================================================
 // TYPES
@@ -87,20 +86,30 @@ function DraggableSymbolItem({
   onDuplicate,
   onDelete,
 }: DraggableSymbolItemProps) {
-  const dragData: SymbolDragData = {
-    source: 'symbol',
-    symbolId: symbol.id,
-    symbolName: symbol.name,
-  };
-  
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: `symbol-${symbol.id}`,
-    data: dragData,
-  });
+  const [isDragging, setIsDragging] = useState(false);
+  const setDragging = useUIStore((s) => s.setDragging);
+
+  const handleDragStart = useCallback((e: React.DragEvent) => {
+    const payload = JSON.stringify({
+      symbolId: symbol.id,
+      symbolName: symbol.name,
+    });
+    e.dataTransfer.setData('application/studio-symbol', payload);
+    e.dataTransfer.effectAllowed = 'copy';
+    setIsDragging(true);
+    setDragging(true, `Symbol: ${symbol.name}`);
+  }, [symbol.id, symbol.name, setDragging]);
+
+  const handleDragEnd = useCallback(() => {
+    setIsDragging(false);
+    setDragging(false, null);
+  }, [setDragging]);
 
   return (
     <div
-      ref={setNodeRef}
+      draggable
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
       className={cn(
         'group flex items-center gap-2 rounded-md border bg-card p-2 transition-colors',
         isDragging ? 'opacity-50 border-primary' : 'hover:border-muted-foreground/30'
@@ -108,8 +117,6 @@ function DraggableSymbolItem({
     >
       {/* Drag handle */}
       <div
-        {...attributes}
-        {...listeners}
         className="cursor-grab active:cursor-grabbing p-1 -ml-1 text-muted-foreground hover:text-foreground"
       >
         <GripVertical className="h-4 w-4" />

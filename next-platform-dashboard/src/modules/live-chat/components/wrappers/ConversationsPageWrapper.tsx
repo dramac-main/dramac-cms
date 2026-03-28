@@ -1,86 +1,94 @@
-'use client'
+"use client";
 
 /**
  * ConversationsPageWrapper — Conversation list with filters, pagination, realtime
  */
 
-import { useState, useCallback, useTransition, useRef, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { useState, useCallback, useTransition, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Loader2, MessagesSquare, Search, Star, Tag } from 'lucide-react'
-import { toast } from 'sonner'
-import { ConversationStatusBadge } from '../shared/ConversationStatusBadge'
-import { ChannelBadge } from '../shared/ChannelBadge'
-import { PriorityBadge } from '../shared/PriorityBadge'
-import { Badge } from '@/components/ui/badge'
-import { LiveChatEmptyState } from '../shared/LiveChatEmptyState'
-import { useConversationsRealtime } from '@/modules/live-chat/hooks/use-conversations-realtime'
-import { getConversations } from '@/modules/live-chat/actions/conversation-actions'
+} from "@/components/ui/select";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Loader2, MessagesSquare, Search, Star, Tag } from "lucide-react";
+import { toast } from "sonner";
+import { ConversationStatusBadge } from "../shared/ConversationStatusBadge";
+import { ChannelBadge } from "../shared/ChannelBadge";
+import { PriorityBadge } from "../shared/PriorityBadge";
+import { Badge } from "@/components/ui/badge";
+import { LiveChatEmptyState } from "../shared/LiveChatEmptyState";
+import { useConversationsRealtime } from "@/modules/live-chat/hooks/use-conversations-realtime";
+import { getConversations } from "@/modules/live-chat/actions/conversation-actions";
 import type {
   ConversationListItem,
   ChatAgent,
   ChatDepartment,
   ConversationStatus,
   ConversationChannel,
-} from '@/modules/live-chat/types'
+} from "@/modules/live-chat/types";
 
 interface ConversationsPageWrapperProps {
-  initialConversations: ConversationListItem[]
-  total: number
-  agents: ChatAgent[]
-  departments: ChatDepartment[]
-  siteId: string
+  initialConversations: ConversationListItem[];
+  total: number;
+  agents: ChatAgent[];
+  departments: ChatDepartment[];
+  siteId: string;
 }
 
 function getInitials(name: string): string {
   return name
-    .split(' ')
+    .split(" ")
     .map((w) => w[0])
-    .join('')
+    .join("")
     .slice(0, 2)
-    .toUpperCase()
+    .toUpperCase();
 }
 
 function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
-  const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return `${hrs}h ago`
-  const days = Math.floor(hrs / 24)
-  return `${days}d ago`
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
 }
 
 /** Clean up raw JSON / markdown in conversation previews */
 function formatPreviewText(text: string | null): string {
-  if (!text) return 'No messages yet'
-  let clean = text
+  if (!text) return "No messages yet";
+  let clean = text;
   // Try to parse JSON content (payment_method_select, payment_upload_prompt, etc.)
-  if (clean.startsWith('{') || clean.startsWith('[')) {
+  if (clean.startsWith("{") || clean.startsWith("[")) {
     try {
-      const parsed = JSON.parse(clean)
-      if (parsed.text) return parsed.text.replace(/\*\*/g, '').replace(/\*/g, '').substring(0, 120)
-      if (parsed.message) return parsed.message.replace(/\*\*/g, '').replace(/\*/g, '').substring(0, 120)
+      const parsed = JSON.parse(clean);
+      if (parsed.text)
+        return parsed.text
+          .replace(/\*\*/g, "")
+          .replace(/\*/g, "")
+          .substring(0, 120);
+      if (parsed.message)
+        return parsed.message
+          .replace(/\*\*/g, "")
+          .replace(/\*/g, "")
+          .substring(0, 120);
     } catch {
       // Not JSON, continue with text cleanup
     }
   }
   // Strip markdown bold/italic
-  clean = clean.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1')
+  clean = clean.replace(/\*\*(.*?)\*\*/g, "$1").replace(/\*(.*?)\*/g, "$1");
   // Strip underscores markdown
-  clean = clean.replace(/__(.*?)__/g, '$1').replace(/_(.*?)_/g, '$1')
-  return clean.substring(0, 120)
+  clean = clean.replace(/__(.*?)__/g, "$1").replace(/_(.*?)_/g, "$1");
+  return clean.substring(0, 120);
 }
 
 export function ConversationsPageWrapper({
@@ -90,28 +98,30 @@ export function ConversationsPageWrapper({
   departments,
   siteId,
 }: ConversationsPageWrapperProps) {
-  const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [conversations, setConversations] =
-    useState<ConversationListItem[]>(initialConversations)
-  const [totalCount, setTotalCount] = useState(total)
-  const [page, setPage] = useState(1)
-  const pageSize = 20
-  const audioRef = useRef<HTMLAudioElement | null>(null)
+    useState<ConversationListItem[]>(initialConversations);
+  const [totalCount, setTotalCount] = useState(total);
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Filters
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [channelFilter, setChannelFilter] = useState<string>('all')
-  const [tagFilter, setTagFilter] = useState<string>('all')
-  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [channelFilter, setChannelFilter] = useState<string>("all");
+  const [tagFilter, setTagFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Set up notification sound
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      audioRef.current = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbsGczJ0qFrNHgykg3MVN3msnq1mxEOUVniLjJ4ddySDlBZYa2x+DVfEQ+QmeJu8jf0oJINTxxl7/K4tGIRTY4dom2weXVi0Q3OXiKt8Pp0YlEN0B3lL/H5deHQzs+d5O+xeXXjEI1PXmWwsXm14lCNj96m8LH5taIQjU+e5fCxOfYiUI1PnyXwsfo14lCNT59l8LI6NeJQjU+e5fCxOfYiUI1PnyXwsfo14lCNT59l8LI6NeJQjU=')
-      audioRef.current.volume = 0.4
+    if (typeof window !== "undefined") {
+      audioRef.current = new Audio(
+        "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbsGczJ0qFrNHgykg3MVN3msnq1mxEOUVniLjJ4ddySDlBZYa2x+DVfEQ+QmeJu8jf0oJINTxxl7/K4tGIRTY4dom2weXVi0Q3OXiKt8Pp0YlEN0B3lL/H5deHQzs+d5O+xeXXjEI1PXmWwsXm14lCNj96m8LH5taIQjU+e5fCxOfYiUI1PnyXwsfo14lCNT59l8LI6NeJQjU+e5fCxOfYiUI1PnyXwsfo14lCNT59l8LI6NeJQjU=",
+      );
+      audioRef.current.volume = 0.4;
     }
-  }, [])
+  }, []);
 
   // Realtime updates
   useConversationsRealtime(siteId, {
@@ -119,7 +129,7 @@ export function ConversationsPageWrapper({
       // Map ChatConversation to ConversationListItem
       const item: ConversationListItem = {
         id: conv.id,
-        visitorName: conv.visitor?.name || 'Visitor',
+        visitorName: conv.visitor?.name || "Visitor",
         visitorEmail: conv.visitor?.email || null,
         visitorAvatar: conv.visitor?.avatarUrl || null,
         channel: conv.channel,
@@ -135,19 +145,22 @@ export function ConversationsPageWrapper({
         rating: conv.rating ?? null,
         ratingComment: conv.ratingComment ?? null,
         createdAt: conv.createdAt,
-      }
-      setConversations((prev) => [item, ...prev])
-      setTotalCount((c) => c + 1)
+      };
+      setConversations((prev) => [item, ...prev]);
+      setTotalCount((c) => c + 1);
       // Toast + sound notification
-      audioRef.current?.play().catch(() => {})
-      toast.info('New chat conversation', {
-        description: `${conv.visitor?.name || 'A visitor'} started a new chat`,
+      audioRef.current?.play().catch(() => {});
+      toast.info("New chat conversation", {
+        description: `${conv.visitor?.name || "A visitor"} started a new chat`,
         duration: 8000,
         action: {
-          label: 'View',
-          onClick: () => router.push(`/dashboard/sites/${siteId}/live-chat/conversations/${conv.id}`),
+          label: "View",
+          onClick: () =>
+            router.push(
+              `/dashboard/sites/${siteId}/live-chat/conversations/${conv.id}`,
+            ),
         },
-      })
+      });
     },
     onConversationUpdate: (conv) => {
       setConversations((prev) =>
@@ -161,76 +174,81 @@ export function ConversationsPageWrapper({
                 lastMessageAt: conv.lastMessageAt ?? c.lastMessageAt,
                 unreadCount: conv.unreadAgentCount ?? c.unreadCount,
               }
-            : c
-        )
-      )
+            : c,
+        ),
+      );
     },
     onConversationDeleted: (convId) => {
-      setConversations((prev) => prev.filter((c) => c.id !== convId))
-      setTotalCount((c) => Math.max(0, c - 1))
+      setConversations((prev) => prev.filter((c) => c.id !== convId));
+      setTotalCount((c) => Math.max(0, c - 1));
     },
-  })
+  });
 
   const applyFilters = useCallback(
     (newStatus?: string, newChannel?: string, newTag?: string) => {
-      const s = newStatus ?? statusFilter
-      const ch = newChannel ?? channelFilter
-      const t = newTag ?? tagFilter
+      const s = newStatus ?? statusFilter;
+      const ch = newChannel ?? channelFilter;
+      const t = newTag ?? tagFilter;
 
       startTransition(async () => {
-        const filters: Record<string, string> = {}
-        if (s !== 'all') filters.status = s
-        if (ch !== 'all') filters.channel = ch
-        if (t !== 'all') filters.tag = t
+        const filters: Record<string, string> = {};
+        if (s !== "all") filters.status = s;
+        if (ch !== "all") filters.channel = ch;
+        if (t !== "all") filters.tag = t;
 
-        const result = await getConversations(siteId, filters, 1, pageSize)
-        setConversations(result.conversations)
-        setTotalCount(result.total)
-        setPage(1)
-      })
+        const result = await getConversations(siteId, filters, 1, pageSize);
+        setConversations(result.conversations);
+        setTotalCount(result.total);
+        setPage(1);
+      });
     },
-    [statusFilter, channelFilter, tagFilter, siteId]
-  )
+    [statusFilter, channelFilter, tagFilter, siteId],
+  );
 
   const handleStatusChange = (val: string) => {
-    setStatusFilter(val)
-    applyFilters(val, undefined, undefined)
-  }
+    setStatusFilter(val);
+    applyFilters(val, undefined, undefined);
+  };
 
   const handleChannelChange = (val: string) => {
-    setChannelFilter(val)
-    applyFilters(undefined, val, undefined)
-  }
+    setChannelFilter(val);
+    applyFilters(undefined, val, undefined);
+  };
 
   const handleTagChange = (val: string) => {
-    setTagFilter(val)
-    applyFilters(undefined, undefined, val)
-  }
+    setTagFilter(val);
+    applyFilters(undefined, undefined, val);
+  };
 
   const loadMore = useCallback(() => {
-    const nextPage = page + 1
+    const nextPage = page + 1;
     startTransition(async () => {
-      const filters: Record<string, string> = {}
-      if (statusFilter !== 'all') filters.status = statusFilter
-      if (channelFilter !== 'all') filters.channel = channelFilter
-      if (tagFilter !== 'all') filters.tag = tagFilter
+      const filters: Record<string, string> = {};
+      if (statusFilter !== "all") filters.status = statusFilter;
+      if (channelFilter !== "all") filters.channel = channelFilter;
+      if (tagFilter !== "all") filters.tag = tagFilter;
 
-      const result = await getConversations(siteId, filters, nextPage, pageSize)
+      const result = await getConversations(
+        siteId,
+        filters,
+        nextPage,
+        pageSize,
+      );
       if (result.conversations.length > 0) {
-        setConversations((prev) => [...prev, ...result.conversations])
-        setPage(nextPage)
+        setConversations((prev) => [...prev, ...result.conversations]);
+        setPage(nextPage);
       }
-    })
-  }, [page, siteId, statusFilter, channelFilter, tagFilter])
+    });
+  }, [page, siteId, statusFilter, channelFilter, tagFilter]);
 
   const filteredConversations = searchQuery
     ? conversations.filter(
         (c) =>
           c.visitorName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           c.visitorEmail?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          c.lastMessageText?.toLowerCase().includes(searchQuery.toLowerCase())
+          c.lastMessageText?.toLowerCase().includes(searchQuery.toLowerCase()),
       )
-    : conversations
+    : conversations;
 
   return (
     <div className="space-y-4">
@@ -315,9 +333,11 @@ export function ConversationsPageWrapper({
               icon={MessagesSquare}
               title="No conversations found"
               description={
-                statusFilter !== 'all' || channelFilter !== 'all' || tagFilter !== 'all'
-                  ? 'Try adjusting your filters'
-                  : 'Conversations will appear here when visitors start chatting'
+                statusFilter !== "all" ||
+                channelFilter !== "all" ||
+                tagFilter !== "all"
+                  ? "Try adjusting your filters"
+                  : "Conversations will appear here when visitors start chatting"
               }
             />
           </CardContent>
@@ -333,19 +353,19 @@ export function ConversationsPageWrapper({
                   className="w-full flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors text-left"
                   onClick={() =>
                     router.push(
-                      `/dashboard/sites/${siteId}/live-chat/conversations/${conv.id}`
+                      `/dashboard/sites/${siteId}/live-chat/conversations/${conv.id}`,
                     )
                   }
                 >
                   <Avatar className="h-10 w-10 shrink-0">
                     <AvatarFallback className="text-sm">
-                      {getInitials(conv.visitorName || 'V')}
+                      {getInitials(conv.visitorName || "V")}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-sm font-medium">
-                        {conv.visitorName || 'Visitor'}
+                        {conv.visitorName || "Visitor"}
                       </span>
                       <ChannelBadge channel={conv.channel} />
                       <ConversationStatusBadge status={conv.status} />
@@ -356,11 +376,16 @@ export function ConversationsPageWrapper({
                           {conv.rating}/5
                         </span>
                       )}
-                      {conv.tags?.length > 0 && conv.tags.map((tag) => (
-                        <Badge key={tag} variant="outline" className="text-[10px] px-1.5 py-0 h-4 capitalize">
-                          {tag}
-                        </Badge>
-                      ))}
+                      {conv.tags?.length > 0 &&
+                        conv.tags.map((tag) => (
+                          <Badge
+                            key={tag}
+                            variant="outline"
+                            className="text-[10px] px-1.5 py-0 h-4 capitalize"
+                          >
+                            {tag}
+                          </Badge>
+                        ))}
                     </div>
                     <p className="text-xs text-muted-foreground truncate mt-1">
                       {formatPreviewText(conv.lastMessageText)}
@@ -380,7 +405,7 @@ export function ConversationsPageWrapper({
                   </div>
                   <div className="text-right shrink-0">
                     <span className="text-xs text-muted-foreground">
-                      {conv.lastMessageAt ? timeAgo(conv.lastMessageAt) : ''}
+                      {conv.lastMessageAt ? timeAgo(conv.lastMessageAt) : ""}
                     </span>
                     {conv.unreadCount > 0 && (
                       <div className="mt-1 flex justify-end">
@@ -400,16 +425,12 @@ export function ConversationsPageWrapper({
       {/* Load more */}
       {conversations.length < totalCount && (
         <div className="flex justify-center">
-          <Button
-            variant="outline"
-            onClick={loadMore}
-            disabled={isPending}
-          >
+          <Button variant="outline" onClick={loadMore} disabled={isPending}>
             {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Load More
           </Button>
         </div>
       )}
     </div>
-  )
+  );
 }

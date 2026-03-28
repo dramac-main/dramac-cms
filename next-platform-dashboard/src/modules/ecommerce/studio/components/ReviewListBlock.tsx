@@ -260,7 +260,10 @@ export function ReviewListBlock({
             {totalReviews} review{totalReviews !== 1 ? "s" : ""}
           </div>
 
-          <Select value={sortBy} onValueChange={(v) => onSortChange(v as "newest")}>
+          <Select
+            value={sortBy}
+            onValueChange={(v) => onSortChange(v as "newest")}
+          >
             <SelectTrigger className="w-[160px] h-8 text-sm">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>

@@ -48,7 +48,7 @@ git push
 - **Hosting**: Vercel (platform), Supabase (data)
 - **UI**: Radix UI, Tailwind CSS, Framer Motion
 - **State**: Zustand, TanStack Query
-- **Editor**: DRAMAC Studio (custom dnd-kit based) - Replacing Puck (Feb 2026)
+- **Editor**: DRAMAC Studio (iframe-based canvas, hybrid DnD) - Replacing Puck (Feb 2026)
 - **Rich Text**: TipTap
 - **Email**: Resend (transactional + auth SMTP)
 - **AI Models**: Claude Sonnet 4.6 (`claude-sonnet-4-6`), Haiku 4.5 (`claude-haiku-4-5-20251001`), Opus 4.6 (`claude-opus-4-6`)

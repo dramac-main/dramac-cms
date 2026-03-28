@@ -38,6 +38,8 @@ interface StudioEditorProps {
   siteCustomDomain?: string | null;
   pageSlug?: string;
   pagePath?: string;
+  /** Site settings for brand colors, fonts, theme */
+  siteSettings?: Record<string, unknown> | null;
 }
 
 // =============================================================================
@@ -182,6 +184,7 @@ export function StudioEditor({
   siteCustomDomain,
   pageSlug,
   pagePath,
+  siteSettings,
 }: StudioEditorProps) {
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const addComponent = useEditorStore((s) => s.addComponent);

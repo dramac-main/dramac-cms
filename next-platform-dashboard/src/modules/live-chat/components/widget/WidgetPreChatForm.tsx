@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * WidgetPreChatForm — Pre-chat form for collecting visitor info
@@ -6,20 +6,20 @@
  * PHASE LC-04: Dynamic fields based on widget settings
  */
 
-import { useState, type FormEvent } from 'react'
-import type { WidgetPublicSettings, WidgetDepartment } from './ChatWidget'
+import { useState, type FormEvent } from "react";
+import type { WidgetPublicSettings, WidgetDepartment } from "./ChatWidget";
 
 interface WidgetPreChatFormProps {
-  settings: WidgetPublicSettings
-  departments: WidgetDepartment[]
+  settings: WidgetPublicSettings;
+  departments: WidgetDepartment[];
   onSubmit: (data: {
-    name?: string
-    email?: string
-    phone?: string
-    departmentId?: string
-    message?: string
-  }) => void
-  onClose: () => void
+    name?: string;
+    email?: string;
+    phone?: string;
+    departmentId?: string;
+    message?: string;
+  }) => void;
+  onClose: () => void;
 }
 
 export function WidgetPreChatForm({
@@ -28,60 +28,60 @@ export function WidgetPreChatForm({
   onSubmit,
   onClose,
 }: WidgetPreChatFormProps) {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
-  const [message, setMessage] = useState('')
-  const [departmentId, setDepartmentId] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [message, setMessage] = useState("");
+  const [departmentId, setDepartmentId] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validate = (): boolean => {
-    const newErrors: Record<string, string> = {}
+    const newErrors: Record<string, string> = {};
 
     if (settings.preChatNameRequired && !name.trim()) {
-      newErrors.name = 'Name is required'
+      newErrors.name = "Name is required";
     }
     if (settings.preChatEmailRequired && !email.trim()) {
-      newErrors.email = 'Email is required'
+      newErrors.email = "Email is required";
     } else if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = 'Invalid email address'
+      newErrors.email = "Invalid email address";
     }
     if (settings.preChatPhoneRequired && !phone.trim()) {
-      newErrors.phone = 'Phone is required'
+      newErrors.phone = "Phone is required";
     }
     if (settings.preChatMessageRequired && !message.trim()) {
-      newErrors.message = 'Message is required'
+      newErrors.message = "Message is required";
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    if (!validate()) return
+    e.preventDefault();
+    if (!validate()) return;
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     await onSubmit({
       name: name.trim() || undefined,
       email: email.trim() || undefined,
       phone: phone.trim() || undefined,
       departmentId: departmentId || undefined,
       message: message.trim() || undefined,
-    })
-    setIsSubmitting(false)
-  }
+    });
+    setIsSubmitting(false);
+  };
 
   const inputStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '10px 12px',
-    borderRadius: '8px',
-    border: '1px solid #e2e8f0',
-    fontSize: '14px',
-    outline: 'none',
-    transition: 'border-color 0.15s',
-  }
+    width: "100%",
+    padding: "10px 12px",
+    borderRadius: "8px",
+    border: "1px solid #e2e8f0",
+    fontSize: "14px",
+    outline: "none",
+    transition: "border-color 0.15s",
+  };
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -103,7 +103,7 @@ export function WidgetPreChatForm({
               className="text-sm font-semibold"
               style={{ color: settings.textColor }}
             >
-              {settings.companyName || 'Chat'}
+              {settings.companyName || "Chat"}
             </h3>
           </div>
         </div>
@@ -132,12 +132,18 @@ export function WidgetPreChatForm({
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-4 pb-4 space-y-3">
+      <form
+        onSubmit={handleSubmit}
+        className="flex-1 overflow-y-auto px-4 pb-4 space-y-3"
+      >
         {/* Name */}
         {settings.preChatNameRequired !== false && (
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">
-              Name {settings.preChatNameRequired && <span className="text-red-500">*</span>}
+              Name{" "}
+              {settings.preChatNameRequired && (
+                <span className="text-red-500">*</span>
+              )}
             </label>
             <input
               type="text"
@@ -156,7 +162,10 @@ export function WidgetPreChatForm({
         {settings.preChatEmailRequired !== false && (
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">
-              Email {settings.preChatEmailRequired && <span className="text-red-500">*</span>}
+              Email{" "}
+              {settings.preChatEmailRequired && (
+                <span className="text-red-500">*</span>
+              )}
             </label>
             <input
               type="email"
@@ -175,7 +184,10 @@ export function WidgetPreChatForm({
         {settings.preChatPhoneEnabled && (
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">
-              Phone {settings.preChatPhoneRequired && <span className="text-red-500">*</span>}
+              Phone{" "}
+              {settings.preChatPhoneRequired && (
+                <span className="text-red-500">*</span>
+              )}
             </label>
             <input
               type="tel"
@@ -201,7 +213,7 @@ export function WidgetPreChatForm({
               onChange={(e) => setDepartmentId(e.target.value)}
               style={{
                 ...inputStyle,
-                appearance: 'auto',
+                appearance: "auto",
               }}
             >
               <option value="">Select a department...</option>
@@ -217,7 +229,10 @@ export function WidgetPreChatForm({
         {/* Message */}
         <div>
           <label className="block text-xs font-medium text-gray-700 mb-1">
-            Message {settings.preChatMessageRequired && <span className="text-red-500">*</span>}
+            Message{" "}
+            {settings.preChatMessageRequired && (
+              <span className="text-red-500">*</span>
+            )}
           </label>
           <textarea
             value={message}
@@ -226,7 +241,7 @@ export function WidgetPreChatForm({
             rows={3}
             style={{
               ...inputStyle,
-              resize: 'none',
+              resize: "none",
             }}
           />
           {errors.message && (
@@ -244,16 +259,14 @@ export function WidgetPreChatForm({
             color: settings.textColor,
           }}
         >
-          {isSubmitting ? 'Starting...' : 'Start Chat'}
+          {isSubmitting ? "Starting..." : "Start Chat"}
         </button>
       </form>
 
       {/* Powered by */}
       <div className="px-4 py-2 text-center border-t shrink-0">
-        <span className="text-[10px] text-gray-400">
-          Powered by DRAMAC
-        </span>
+        <span className="text-[10px] text-gray-400">Powered by DRAMAC</span>
       </div>
     </div>
-  )
+  );
 }

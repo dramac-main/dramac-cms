@@ -27,10 +27,10 @@ export default async function StudioPage({ params }: StudioPageProps) {
     redirect("/login");
   }
 
-  // Verify site access
+  // Verify site access and fetch settings for brand colors/fonts
   const { data: site, error: siteError } = await supabase
     .from("sites")
-    .select("id, name, agency_id")
+    .select("id, name, agency_id, settings")
     .eq("id", siteId)
     .single();
 
@@ -72,6 +72,7 @@ export default async function StudioPage({ params }: StudioPageProps) {
       siteName={site.name}
       pageName={page.name}
       initialData={content}
+      siteSettings={(site.settings as Record<string, unknown>) ?? null}
     >
       <StudioEditor
         siteName={site.name}
@@ -79,6 +80,7 @@ export default async function StudioPage({ params }: StudioPageProps) {
         siteId={siteId}
         pageId={pageId}
         pageSlug={page.slug}
+        siteSettings={(site.settings as Record<string, unknown>) ?? null}
       />
     </StudioProvider>
   );

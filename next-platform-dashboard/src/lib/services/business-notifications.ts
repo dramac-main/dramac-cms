@@ -1136,7 +1136,9 @@ export async function notifyNewQuote(
 
     const businessName = site.name || "Our Business";
     const currency = data.currency || "USD";
-    const totalStr = data.total ? formatCurrency(data.total / 100, currency) : "";
+    const totalStr = data.total
+      ? formatCurrency(data.total / 100, currency)
+      : "";
     const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${data.siteId}/ecommerce?view=quotes`;
 
     // 1. In-app notification to business owner

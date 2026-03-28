@@ -1,83 +1,82 @@
 # Active Context
 
-## Current Focus: Live Chat Overhaul + Ecommerce Fixes
+## Current Focus: Studio Canvas iframe Rewrite
 
-### Status: COMPLETE — TypeScript 0 errors, committed & pushed (eede7ee2)
+### Status: COMPLETE — Build passes (0 errors), ready for commit & push
 
 ### What Was Done (This Session)
 
-#### 1. Product Images on Order Confirmation (OrderConfirmationBlock.tsx)
+#### Studio Canvas iframe Architecture Rewrite
 
-**Problem:** Order confirmation page showed Package icon placeholders instead of product images, even though images were saved in the database.
+**Problem:** The Designer Studio canvas rendered components directly in the dashboard DOM, causing:
+- Dashboard dark mode CSS bleeding into page content
+- Tailwind responsive @media queries not responding to canvas viewport width
+- Brand colors/fonts not matching the published site (preview/publish showed different rendering)
+- No CSS isolation — dashboard styles interfered with site component rendering
 
-**Root Cause:** Orders save product images as `image_url` column but OrderConfirmationBlock read `item.product_image` — field name mismatch.
+**Solution:** Industry-standard **iframe-based canvas** (same approach as Webflow, Wix, Squarespace, Framer):
 
-**Fix:** Changed mapping to `product_image: (item.image_url as string) || (item.product_image as string) || undefined` so it checks both fields.
+1. **CanvasIframe** (`canvas-iframe.tsx` — NEW, ~300 lines):
+   - Same-origin iframe (`about:blank`) with `doc.open()/write()/close()` HTML setup
+   - Clones parent stylesheets into iframe via `cloneParentStyles()` + `MutationObserver` for HMR
+   - Injects brand CSS variables via `injectBrandStyles()` targeting `:root, .light, body`
+   - Loads Google Fonts dynamically
+   - Renders children via React `createPortal(children, iframeBody)`
+   - Forwards keyboard events (shortcuts) and Ctrl+wheel (zoom) to parent
+   - Provides `useCanvasIframe()` context hook for `iframeDocument`/`iframeWindow`
 
-#### 2. AI Toggle Glow Animation (ConversationViewWrapper.tsx)
+2. **CanvasContent** (`canvas-content.tsx` — NEW, ~500 lines):
+   - Rendered inside iframe via portal
+   - `useBrandPalette()` hook resolves brand palette from site settings
+   - Brand color/font injection on components matching renderer.tsx pipeline exactly
+   - Inner `DndContext` for canvas reordering (MouseSensor, TouchSensor, KeyboardSensor)
+   - HTML5 drop handlers for library→canvas and symbol→canvas drops
+   - Drop position indicator (`DropIndicator`) for visual feedback
+   - `ComponentStateStyles` rendered inside iframe for hover/select effects
 
-**Problem:** When a store owner types a message while AI auto-responder is active, the AI would still respond. No visual cue to remind the agent to pause AI.
+3. **EditorCanvas rewrite** (`editor-canvas.tsx`):
+   - Removed direct component rendering (moved to CanvasContent)
+   - Now orchestrates `CanvasIframe` → `CanvasContent` pipeline
+   - Generates brand CSS variables and font families from site settings
 
-**Fix:** Added `aiGlowing` state that activates when agent sends a non-note message while AI is not paused. The AI toggle button pulses with amber ring animation + tooltip "AI is still active — click to pause AI while you're chatting". Glow clears on AI toggle or takeover.
+4. **Hybrid DnD Architecture**:
+   - **Library → Canvas**: HTML5 native Drag API (crosses iframe boundary)
+     - `DraggableComponent` rewired from @dnd-kit to `draggable="true"` + `dataTransfer`
+     - Symbols panel similarly converted to HTML5 native drag
+   - **Canvas reorder**: @dnd-kit DndContext inside iframe (CanvasContent)
+   - **DndProvider** simplified to pass-through `{children}` (outer DndContext removed)
 
-#### 3. Conversation Tagging System
+5. **Site Settings Plumbing** (4 files):
+   - Studio page route fetches `sites.settings`
+   - StudioProvider accepts and passes `siteSettings`
+   - Editor store has `siteSettings` in state + `setSiteSettings` action
+   - StudioEditor accepts `siteSettings` prop
 
-**Auto-tagging (conversations/route.ts):** Order conversations get `["order", "payment"]`, general get `["general"]`.
+### Files Changed (9 files)
 
-**Tag Filter UI (ConversationsPageWrapper.tsx):** Added tag filter dropdown (All Tags, Order, Payment, General, Support, Quotation) + Badge tags display on conversation list items.
+**New files:**
+1. `src/components/studio/canvas/canvas-iframe.tsx` — iframe rendering surface
+2. `src/components/studio/canvas/canvas-content.tsx` — canvas content with DnD + brand injection
 
-**Server filter (conversation-actions.ts):** Added `query.contains("tags", [filters.tag])` filter support. Added `tag` field to `ConversationFilters` type.
+**Substantially rewritten:**
+3. `src/components/studio/canvas/editor-canvas.tsx` — now wraps CanvasIframe
+4. `src/components/studio/dnd/draggable-component.tsx` — HTML5 native drag
+5. `src/components/studio/dnd/dnd-provider.tsx` — simplified to pass-through
 
-#### 4. Conversation Preview Text Cleanup (ConversationsPageWrapper.tsx)
+**Modified:**
+6. `src/components/studio/panels/symbols-panel.tsx` — HTML5 native drag for symbols
+7. `src/app/studio/[siteId]/[pageId]/page.tsx` — fetches site settings
+8. `src/components/studio/core/studio-provider.tsx` — passes siteSettings
+9. `src/lib/studio/store/editor-store.ts` — siteSettings in state
 
-**Problem:** Conversation previews showed raw JSON `{"text":"Great!..."}` and markdown `**ORD-1003**`.
+### Architecture Insight
 
-**Fix:** Added `formatPreviewText()` helper that parses JSON content, strips markdown bold/italic, truncates to 120 chars.
+The brand color pipeline now flows identically in both canvas and published site:
+`site.settings` → `extractBrandSource()` → `resolveBrandColors()` → `BrandColorPalette` → Both:
+1. `injectBrandColors()` + `injectBrandFonts()` — per-component prop injection
+2. `generateBrandCSSVars()` — CSS variable layer in iframe `<html>` element
 
-#### 5. Pre-Chat Form Bug Fix (WidgetPreChatForm.tsx)
-
-**Problem:** Name and email fields always showed regardless of settings because `(settings.preChatNameRequired || true)` always evaluates to `true`.
-
-**Fix:** Changed to `settings.preChatNameRequired !== false` to preserve default-show behavior while allowing explicit disable.
-
-#### 6. Agent Status Toggle (AgentsPageWrapper.tsx)
-
-**Problem:** `updateAgentStatus` server action existed but no UI invoked it.
-
-**Fix:** Added Select dropdown per agent card with Online/Away/Busy/Offline options + AgentStatusDot indicator.
-
-#### 7. Chat Markdown Rendering (from prior session, now committed)
-
-MessageBubble.tsx and WidgetMessageBubble.tsx render bold/italic markdown in chat messages.
-
-#### 8. Manual Payment Simplification (from prior session, now committed)
-
-PaymentMethodSelector.tsx and MobilePaymentSelector.tsx simplified UI.
-
-### Full Live Chat Audit Findings
-
-- **9 dashboard pages:** ALL WORKING
-- **10 server action files:** ALL WORKING
-- **3 hooks:** ALL WORKING
-- **7 shared components:** ALL WORKING
-- **6 widget components:** 5 working, 1 fixed (WidgetPreChatForm)
-- **Security:** Authorization check (verifyUserSiteAccess) confirmed present in chat-order-actions.ts
-- **WhatsApp type mismatch:** Non-issue — both use same `ChatDepartment[]` type, `departments` prop is unused in ConversationsPageWrapper (dead code)
-- **Low priority concerns:** Canned response usage increment race condition, setDefaultDepartment non-atomic
-
-### Files Changed (16 — committed as eede7ee2)
-
-1. `src/app/api/modules/live-chat/conversations/route.ts` — Auto-tagging
-2. `src/modules/ecommerce/actions/auto-setup-actions.ts` — Categories auto-creation
-3. `src/modules/ecommerce/actions/public-ecommerce-actions.ts` — Checkout improvements
-4. `src/modules/ecommerce/hooks/useCheckout.ts` — Checkout flow
-5. `src/modules/ecommerce/studio/components/OrderConfirmationBlock.tsx` — Image field mapping fix
-6. `src/modules/ecommerce/studio/components/PaymentMethodSelector.tsx` — Manual payment UI
-7. `src/modules/ecommerce/studio/components/mobile/MobilePaymentSelector.tsx` — Mobile payment UI
-8. `src/modules/live-chat/actions/conversation-actions.ts` — Tag filter support
-9. `src/modules/live-chat/components/shared/MessageBubble.tsx` — Markdown rendering
-10. `src/modules/live-chat/components/widget/ChatWidget.tsx` — Widget improvements
-11. `src/modules/live-chat/components/widget/WidgetMessageBubble.tsx` — Markdown rendering
+Responsive preview works naturally: Tailwind @media queries respond to iframe width, not dashboard window width.
 12. `src/modules/live-chat/components/widget/WidgetPreChatForm.tsx` — Pre-chat form bug fix
 13. `src/modules/live-chat/components/wrappers/AgentsPageWrapper.tsx` — Agent status toggle
 14. `src/modules/live-chat/components/wrappers/ConversationViewWrapper.tsx` — AI glow animation

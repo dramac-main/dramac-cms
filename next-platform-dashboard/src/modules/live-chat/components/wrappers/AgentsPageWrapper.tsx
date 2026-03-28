@@ -240,17 +240,32 @@ export function AgentsPageWrapper({
     });
   }, []);
 
-  const handleAgentStatusChange = useCallback((agentId: string, status: string) => {
-    startTransition(async () => {
-      const result = await updateAgentStatus(agentId, status as "online" | "away" | "busy" | "offline");
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        setAgents((prev) => prev.map((a) => a.id === agentId ? { ...a, status: status as "online" | "away" | "busy" | "offline" } : a));
-        toast.success(`Agent status set to ${status}`);
-      }
-    });
-  }, []);
+  const handleAgentStatusChange = useCallback(
+    (agentId: string, status: string) => {
+      startTransition(async () => {
+        const result = await updateAgentStatus(
+          agentId,
+          status as "online" | "away" | "busy" | "offline",
+        );
+        if (result.error) {
+          toast.error(result.error);
+        } else {
+          setAgents((prev) =>
+            prev.map((a) =>
+              a.id === agentId
+                ? {
+                    ...a,
+                    status: status as "online" | "away" | "busy" | "offline",
+                  }
+                : a,
+            ),
+          );
+          toast.success(`Agent status set to ${status}`);
+        }
+      });
+    },
+    [],
+  );
 
   const handleEditAgent = useCallback((agent: ChatAgent) => {
     setEditingAgent(agent);
@@ -731,7 +746,12 @@ export function AgentsPageWrapper({
 
                     {/* Status toggle */}
                     <div className="mt-2">
-                      <Select value={agent.status} onValueChange={(val) => handleAgentStatusChange(agent.id, val)}>
+                      <Select
+                        value={agent.status}
+                        onValueChange={(val) =>
+                          handleAgentStatusChange(agent.id, val)
+                        }
+                      >
                         <SelectTrigger className="h-7 text-xs w-[110px]">
                           <AgentStatusDot status={agent.status} />
                           <SelectValue />

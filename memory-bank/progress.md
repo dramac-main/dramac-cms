@@ -5,7 +5,36 @@
 
 ---
 
-## Latest Update: Live Chat Overhaul + Ecommerce Fixes (commit eede7ee2)
+## Latest Update: Studio Canvas iframe Rewrite
+
+### What Was Done
+
+Complete rewrite of the Designer Studio canvas to use an **iframe-based rendering architecture** (industry standard: Webflow, Wix, Squarespace, Framer). This ensures the canvas renders identically to the published site.
+
+### Key Changes (9 files, 2 new)
+
+1. **CanvasIframe** (NEW) — Same-origin iframe with CSS isolation, brand CSS vars, Google Fonts, React portal rendering
+2. **CanvasContent** (NEW) — Canvas content inside iframe with brand injection, inner DndContext for reordering, HTML5 drop handling
+3. **EditorCanvas** (REWRITTEN) — Now orchestrates CanvasIframe → CanvasContent pipeline
+4. **DraggableComponent** (REWRITTEN) — Switched from @dnd-kit to HTML5 native drag for cross-iframe drops
+5. **DndProvider** (SIMPLIFIED) — Outer DndContext removed; now pass-through `{children}`
+6. **Symbols panel** — Switched to HTML5 native drag
+7. **Studio page route** — Now fetches `sites.settings`
+8. **StudioProvider** — Passes `siteSettings` through
+9. **Editor store** — `siteSettings` in state
+
+### What This Fixes
+
+- Dashboard dark mode no longer bleeds into site content (iframe isolation)
+- Tailwind responsive @media queries respond to iframe width (responsive preview works)
+- Brand colors/fonts match published site exactly (same pipeline)
+- Canvas renders identically to preview/published pages
+
+### Build Status: ✅ PASSES (Next.js 16.1.1 Turbopack, 195 pages)
+
+---
+
+## Previous Update: Live Chat Overhaul + Ecommerce Fixes (commit eede7ee2)
 
 ### Fixes Applied (8 items, 16 files)
 
@@ -19,6 +48,7 @@
 8. **Chat markdown rendering** — Bold/italic in message bubbles (dashboard + widget)
 
 ### Full Audit Results
+
 - 9 dashboard pages: ALL WORKING
 - 10 server action files: ALL WORKING
 - 7 shared components: ALL WORKING

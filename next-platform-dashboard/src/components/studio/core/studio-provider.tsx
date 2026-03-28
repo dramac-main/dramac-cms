@@ -34,6 +34,8 @@ export interface StudioProviderProps {
   siteName: string;
   pageName: string;
   initialData?: unknown;
+  /** Site settings for brand colors, fonts, theme */
+  siteSettings?: Record<string, unknown> | null;
   /** Callback when save is triggered via shortcut or command palette */
   onSave?: () => Promise<void>;
 }
@@ -49,6 +51,7 @@ export function StudioProvider({
   siteName: _siteName,
   pageName,
   initialData,
+  siteSettings,
   onSave,
 }: StudioProviderProps) {
   // Store actions
@@ -100,7 +103,7 @@ export function StudioProvider({
         data.root.props.title = pageName;
       }
 
-      initialize(siteId, pageId, data);
+      initialize(siteId, pageId, data, siteSettings);
       clearHistory();
     } catch (error) {
       console.error("Error initializing editor:", error);

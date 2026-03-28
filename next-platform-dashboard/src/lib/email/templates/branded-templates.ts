@@ -1053,10 +1053,14 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
         `<h1 style="${EMAIL_STYLES.heading}">Missed Chat</h1>
         <p style="${EMAIL_STYLES.text}">A visitor tried to chat but no agents were available.</p>
         ${data.visitorName ? `<p style="${EMAIL_STYLES.text}"><strong>Visitor:</strong> ${data.visitorName}</p>` : ""}
-        ${data.visitorMessage ? `<div style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:16px;margin:16px 0;">
+        ${
+          data.visitorMessage
+            ? `<div style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:16px;margin:16px 0;">
           <p style="margin:0 0 8px;color:#92400e;font-weight:600;">Message:</p>
           <p style="margin:0;color:#78350f;">${data.visitorMessage}</p>
-        </div>` : ""}
+        </div>`
+            : ""
+        }
         <p style="${EMAIL_STYLES.muted}">Consider reaching out to this visitor to offer assistance.</p>`,
         `Missed chat from ${data.visitorName || "visitor"}`,
       ),

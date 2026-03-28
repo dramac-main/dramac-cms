@@ -31,6 +31,9 @@ export interface EditorState {
   /** Page ID being edited */
   pageId: string | null;
   
+  /** Site settings (brand colors, fonts, theme) for canvas rendering */
+  siteSettings: Record<string, unknown> | null;
+  
   /** Has unsaved changes */
   isDirty: boolean;
   
@@ -49,7 +52,8 @@ export interface EditorState {
 
 export interface EditorActions {
   // Initialization
-  initialize: (siteId: string, pageId: string, data: StudioPageData) => void;
+  initialize: (siteId: string, pageId: string, data: StudioPageData, siteSettings?: Record<string, unknown> | null) => void;
+  setSiteSettings: (settings: Record<string, unknown> | null) => void;
   reset: () => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -145,6 +149,7 @@ const initialState: EditorState = {
   data: createEmptyPageData(),
   siteId: null,
   pageId: null,
+  siteSettings: null,
   isDirty: false,
   isSaving: false,
   lastSavedAt: null,
@@ -166,15 +171,22 @@ export const useEditorStore = create<EditorStore>()(
       // INITIALIZATION
       // ---------------------------------------------------------------------------
       
-      initialize: (siteId, pageId, data) => {
+      initialize: (siteId, pageId, data, siteSettings) => {
         set((state) => {
           state.siteId = siteId;
           state.pageId = pageId;
           state.data = data;
+          state.siteSettings = siteSettings ?? null;
           state.isDirty = false;
           state.isLoading = false;
           state.error = null;
           state.lastSavedAt = Date.now();
+        });
+      },
+
+      setSiteSettings: (settings) => {
+        set((state) => {
+          state.siteSettings = settings;
         });
       },
 

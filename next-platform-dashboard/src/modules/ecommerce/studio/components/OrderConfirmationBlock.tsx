@@ -183,7 +183,10 @@ export function OrderConfirmationBlock({
           items: items.map((item: Record<string, unknown>) => ({
             id: item.id as string,
             product_name: (item.product_name as string) || "Product",
-            product_image: (item.image_url as string) || (item.product_image as string) || undefined,
+            product_image:
+              (item.image_url as string) ||
+              (item.product_image as string) ||
+              undefined,
             variant_name: item.variant_name as string | undefined,
             quantity: (item.quantity as number) || 1,
             unit_price: (item.unit_price as number) || 0,
