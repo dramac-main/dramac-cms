@@ -1,53 +1,57 @@
 # Active Context
 
-## Current Focus: E-Commerce Core Overhaul — VERIFIED & REMEDIATED (All 22 Phases)
+## Current Focus: Live Chat & AI Auto-Response Runtime Bug Fixes
 
-### Status: ALL 22 PHASES VERIFIED, GAP FIXES APPLIED, ZERO NEW TS ERRORS
+### Status: FIXES APPLIED — AI auto-response & file uploads restored
 
-### What Was Done (This Session): Full Audit & Gap Remediation
+### What Was Done (This Session): Runtime Bug Audit & Fixes
 
-A rigorous parallel audit of all 22 phases identified 7 gaps. All 7 have been fixed.
+User reported 3 issues during live testing:
+1. Payment methods appearing on order confirmation page
+2. File attachments not visible in live chat
+3. AI not auto-responding anymore
 
-#### Gap 1: Premium Components Hardcoded Colors (Phase 1/10) ✅ FIXED
-- Storefront studio/components/ were already 100% clean (0 hardcoded grays, 0 dark: prefixes)
-- **premium-components.tsx** had ~20 hardcoded hex values (#ffffff, #1f2937) in defaults and inline styles
-- Fix: All defaults changed to `""` (empty string) — brand injection pipeline fills them
-- Inline style fallbacks changed to `currentColor` / `inherit`
-- `bg-white/20` → `bg-card/20` for carousel play button
+#### Root Cause Analysis Results
 
-#### Gap 2: BRAND_COLOR_MAP Missing Props (Phase 1) ✅ FIXED
-- 8 new prop-to-palette mappings added: ctaTextColor, badgeTextColor, primaryButtonTextColor, mobileMenuBackground, mobileMenuTextColor, mobileMenuOverlayColor, playButtonColor, secondaryButtonColor
-- 6 hex values added to PLACEHOLDER_COLORS: #ffffff, #FFFFFF, #1f2937, #1F2937, #e5e7eb, #E5E7EB
+| Issue | Root Cause | Resolution |
+|-------|-----------|------------|
+| Payment methods on confirmation page | NOT a bug — the AI payment guidance chat widget auto-opens with interactive payment buttons. This is by design. | No fix needed |
+| AI not auto-responding | `convInsert` referenced at line 298 of conversations/route.ts but it's block-scoped inside an `else` block. For existing conversations, accessing it throws ReferenceError, crashing the AI trigger. | **FIXED** |
+| File attachments not visible | `mod_chat_widget_settings` has 0 rows → widget API returns `enableFileUploads: false` default → upload button hidden in widget UI. | **FIXED** |
 
-#### Gap 3: Forgot Password Flow (Phase 15) ✅ FIXED
-- Was showing "Please contact the store" — not wired to actual reset
-- Added `requestMagicLink(email)` to StorefrontAuthContext interface, default, and provider
-- Rewrote LoginForm forgot-password UI: email input → "Send Login Link" → success message with "Check your email"
+#### Fix 1: AI Auto-Response — `convInsert` Scope Bug (CRITICAL) ✅
 
-#### Gap 4: Missing review_request_customer Email (Phase 16) ✅ FIXED
-- Added "review_request_customer" to EmailType union and validTypes array
-- Added plain template in templates.ts (subject, html with stars + CTA button, text)
-- Added branded template in branded-templates.ts (baseEmailTemplate wrapper, emailButton, emailInfoBox)
+- File: `src/app/api/modules/live-chat/conversations/route.ts`
+- `convInsert` was declared inside `else` block (new conversation path) but referenced outside it at line 298
+- Fix: Added `let assignedAgentId: string | null = null;` before the if/else branches
+- For existing conversations: reads `assigned_agent_id` from the existing conv DB query
+- For new conversations: reads `assigned_agent_id` from `convData` after insert
+- Changed the AI trigger condition from `!convInsert.assigned_agent_id` to `!assignedAgentId`
+- Also updated the existing conv query from `.select("id")` to `.select("id, assigned_agent_id")`
 
-#### Items Confirmed NOT Gaps
-- StorefrontWidget.tsx: 16 hardcoded colors but it has its own CSS class theme system — separate widget, NOT in spec scope
-- low_stock_alert: Already exists as `low_stock_admin` — name difference only
-- Card brand colors (VISA blue, MC red) and product variant swatches (#ffffff for white) — legitimate semantic uses
+#### Fix 2: File Uploads Default Enabled ✅
+
+- File: `src/app/api/modules/live-chat/widget/route.ts`
+- Changed default `enableFileUploads: false` → `enableFileUploads: true`
+- When no `mod_chat_widget_settings` row exists, file upload button now shows
+
+#### AI Settings Verification
+
+- `auto-response-handler.ts` reads AI settings from `mod_chat_widget_settings`
+- Uses `!== false` comparison: when no row exists (null), defaults to enabled
+- Both `ai_auto_response_enabled` and `ai_payment_guidance_enabled` correctly default to `true`
 
 ### Type Check Status
 
-Only 3 pre-existing errors remain (not from our changes):
-1. `convInsert` in conversations/route.ts:298
-2. `bank_transfer` type mismatch in order-detail-dialog.tsx:228 and :555
+Down from 3 to 2 pre-existing errors (the convInsert error is now fixed):
 
-### Files Modified This Session (6)
-1. `src/lib/studio/engine/brand-colors.ts` — 8 new BRAND_COLOR_MAP entries, 6 new PLACEHOLDER_COLORS
-2. `src/lib/studio/blocks/premium-components.tsx` — ~20 hardcoded defaults → empty, fallbacks → currentColor/inherit
-3. `src/modules/ecommerce/context/storefront-auth-context.tsx` — Added requestMagicLink function
-4. `src/modules/ecommerce/studio/components/StorefrontAuthDialog.tsx` — Complete forgot-password rewrite with magic link flow
-5. `src/lib/email/email-types.ts` — Added review_request_customer type
-6. `src/lib/email/templates.ts` — Added review_request_customer plain template
-7. `src/lib/email/templates/branded-templates.ts` — Added review_request_customer branded template
+1. `bank_transfer` type mismatch in order-detail-dialog.tsx:228 and :555
+
+### Files Modified This Session (2)
+
+1. `src/app/api/modules/live-chat/conversations/route.ts` — Fixed convInsert scope bug, added assignedAgentId tracking
+2. `src/app/api/modules/live-chat/widget/route.ts` — Changed default enableFileUploads to true
+
 - Tracking info display with external link
 - "View Full Order" button opens full e-commerce page in new tab
 - Refresh button for manual re-fetch

@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
     // 2. Check for existing active conversation for this visitor (dedup)
     const { data: existingConv } = await (supabase as any)
       .from("mod_chat_conversations")
-      .select("id")
+      .select("id, assigned_agent_id")
       .eq("site_id", siteId)
       .eq("visitor_id", visitorId)
       .in("status", ["active", "pending", "open", "waiting"])
@@ -168,11 +168,13 @@ export async function POST(request: NextRequest) {
 
     let conversationId: string;
     let isExisting = false;
+    let assignedAgentId: string | null = null;
 
     if (existingConv) {
       // Reuse existing active conversation instead of creating a duplicate
       conversationId = existingConv.id;
       isExisting = true;
+      assignedAgentId = existingConv.assigned_agent_id || null;
 
       // If we have new order context, update conversation metadata so AI knows the current order
       if (orderContext?.orderNumber) {
@@ -241,6 +243,7 @@ export async function POST(request: NextRequest) {
 
       if (convError) throw convError;
       conversationId = convData.id;
+      assignedAgentId = convData.assigned_agent_id || null;
     }
 
     // 3. Send initial message if provided
@@ -295,7 +298,7 @@ export async function POST(request: NextRequest) {
         /need\s+help\s+with\s+payment/i.test(initialMessage || "") ||
         /just\s+placed\s+(?:an?\s+)?order/i.test(initialMessage || "");
 
-      if (isPaymentMsg || !convInsert.assigned_agent_id) {
+      if (isPaymentMsg || !assignedAgentId) {
         // Use after() to keep Vercel Lambda alive until AI work completes
         // Without this, the Lambda is killed after returning 201 and the
         // Claude API call (2-5s) never finishes

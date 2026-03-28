@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
             showAgentAvatar: true,
             showAgentName: true,
             showTypingIndicator: true,
-            enableFileUploads: false,
+            enableFileUploads: true,
             enableEmoji: true,
             enableSoundNotifications: true,
             enableSatisfactionRating: true,

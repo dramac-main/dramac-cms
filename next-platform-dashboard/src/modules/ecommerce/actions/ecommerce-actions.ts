@@ -252,7 +252,9 @@ export async function getProducts(
       .from(`${TABLE_PREFIX}_product_categories`)
       .select("product_id")
       .eq("category_id", filters.category);
-    const productIds = productCategories?.map((pc: { product_id: string }) => pc.product_id) || [];
+    const productIds =
+      productCategories?.map((pc: { product_id: string }) => pc.product_id) ||
+      [];
     if (productIds.length === 0) {
       return { data: [], total: 0, page, totalPages: 0, limit };
     }
