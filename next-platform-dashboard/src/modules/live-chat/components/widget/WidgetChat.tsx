@@ -239,6 +239,7 @@ export function WidgetChat({
             primaryColor={settings.primaryColor}
             textColor={settings.textColor}
             onSendMessage={onSendMessage}
+            onTriggerUpload={() => fileInputRef.current?.click()}
           />
         ))}
 

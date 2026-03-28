@@ -33,7 +33,8 @@ export type MessageContentType =
   | "system"
   | "note"
   | "whatsapp_template"
-  | "payment_method_select";
+  | "payment_method_select"
+  | "payment_upload_prompt";
 export type MessageStatus =
   | "sending"
   | "sent"

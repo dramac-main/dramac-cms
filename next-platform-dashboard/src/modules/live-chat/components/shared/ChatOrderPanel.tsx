@@ -34,6 +34,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
   Package,
   CreditCard,
   CheckCircle2,
@@ -54,10 +62,28 @@ import {
   type ChatOrderContext,
   type ChatStoreInfo,
 } from "@/modules/live-chat/actions/chat-order-actions";
-import { updateOrderStatus } from "@/modules/ecommerce/actions/order-actions";
-import { updatePaymentProofStatus } from "@/modules/ecommerce/actions/order-actions";
+import {
+  updateOrderStatus,
+  updatePaymentProofStatus,
+  addOrderShipment,
+} from "@/modules/ecommerce/actions/order-actions";
 import { ImageLightbox } from "./ImageLightbox";
 import { OrderDetailDialog } from "@/modules/ecommerce/components/orders/order-detail-dialog";
+
+const ZAMBIA_CARRIERS = [
+  { value: "Yango Deli", label: "Yango Deli" },
+  { value: "Platinum Courier", label: "Platinum Courier" },
+  { value: "Afri Delivery", label: "Afri Delivery" },
+  { value: "Speed Couriers Zambia", label: "Speed Couriers Zambia" },
+  { value: "Courier Express Zambia", label: "Courier Express Zambia" },
+  { value: "Zampost", label: "Zampost (Zambia Postal Services)" },
+  { value: "DHL", label: "DHL" },
+  { value: "FedEx", label: "FedEx" },
+  { value: "Skynet Worldwide Express", label: "Skynet Worldwide Express" },
+  { value: "G4S Courier", label: "G4S Courier" },
+  { value: "UPS", label: "UPS" },
+  { value: "other", label: "Other / My Own Delivery" },
+] as const;
 
 // Valid status transitions (mirrors order-actions.ts)
 const VALID_TRANSITIONS: Record<string, string[]> = {
@@ -144,6 +170,14 @@ export function ChatOrderPanel({
   const [storeInfo, setStoreInfo] = useState<ChatStoreInfo | null>(null);
   const [loadingStoreInfo, setLoadingStoreInfo] = useState(false);
 
+  // Shipping dialog state
+  const [showShippingDialog, setShowShippingDialog] = useState(false);
+  const [shippingCarrier, setShippingCarrier] = useState("");
+  const [shippingCarrierCustom, setShippingCarrierCustom] = useState("");
+  const [shippingTrackingNumber, setShippingTrackingNumber] = useState("");
+  const [shippingTrackingUrl, setShippingTrackingUrl] = useState("");
+  const [isSubmittingShipment, setIsSubmittingShipment] = useState(false);
+
   const fetchOrder = useCallback(async () => {
     try {
       setLoading(true);
@@ -164,10 +198,21 @@ export function ChatOrderPanel({
     fetchOrder();
   }, [fetchOrder]);
 
-  // Handle status change
+  // Handle status change — intercepts "shipped" to show shipping dialog
   const handleStatusChange = useCallback(
     (newStatus: string) => {
       if (!order) return;
+
+      // If changing to shipped, open shipping dialog to collect tracking info
+      if (newStatus === "shipped") {
+        setShippingCarrier("");
+        setShippingCarrierCustom("");
+        setShippingTrackingNumber("");
+        setShippingTrackingUrl("");
+        setShowShippingDialog(true);
+        return;
+      }
+
       startTransition(async () => {
         const result = await updateOrderStatus(
           siteId,
@@ -189,13 +234,59 @@ export function ChatOrderPanel({
           toast.success(
             `Order status updated to ${STATUS_LABELS[newStatus] || newStatus}`,
           );
-          // Refresh order data
           fetchOrder();
         }
       });
     },
     [order, siteId, userId, userName, fetchOrder],
   );
+
+  // Handle shipment form submission
+  const handleSubmitShipment = useCallback(async () => {
+    if (!order) return;
+    const actualCarrier =
+      shippingCarrier === "other"
+        ? shippingCarrierCustom.trim()
+        : shippingCarrier.trim();
+    if (!actualCarrier || !shippingTrackingNumber.trim()) {
+      toast.error("Courier and tracking number are required");
+      return;
+    }
+
+    setIsSubmittingShipment(true);
+    try {
+      const result = await addOrderShipment(
+        siteId,
+        order.id,
+        {
+          carrier: actualCarrier,
+          tracking_number: shippingTrackingNumber.trim(),
+          tracking_url: shippingTrackingUrl.trim()
+            ? ensureAbsoluteUrl(shippingTrackingUrl)
+            : undefined,
+        },
+        userId,
+        userName,
+      );
+
+      if (result) {
+        toast.success("Shipment created and customer notified");
+        setShowShippingDialog(false);
+        fetchOrder();
+      } else {
+        toast.error("Failed to create shipment");
+      }
+    } catch (err) {
+      console.error("Error creating shipment:", err);
+      toast.error("Failed to create shipment");
+    } finally {
+      setIsSubmittingShipment(false);
+    }
+  }, [
+    order, siteId, userId, userName, fetchOrder,
+    shippingCarrier, shippingCarrierCustom,
+    shippingTrackingNumber, shippingTrackingUrl,
+  ]);
 
   // Handle payment proof approval
   const handleProofApprove = useCallback(() => {
@@ -598,6 +689,94 @@ export function ChatOrderPanel({
             defaultCurrency={order.currency}
           />
         )}
+
+        {/* Shipping dialog — collect courier & tracking before marking shipped */}
+        <Dialog open={showShippingDialog} onOpenChange={setShowShippingDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Truck className="h-5 w-5" />
+                Ship Order {order.orderNumber}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 mt-2">
+              <div className="space-y-2">
+                <Label htmlFor="chat-shipping-carrier">Courier *</Label>
+                <Select
+                  value={shippingCarrier}
+                  onValueChange={(val) => {
+                    setShippingCarrier(val);
+                    if (val !== "other") setShippingCarrierCustom("");
+                  }}
+                >
+                  <SelectTrigger id="chat-shipping-carrier">
+                    <SelectValue placeholder="Select a courier..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ZAMBIA_CARRIERS.map((c) => (
+                      <SelectItem key={c.value} value={c.value}>
+                        {c.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {shippingCarrier === "other" && (
+                  <Input
+                    placeholder="Enter your carrier name..."
+                    value={shippingCarrierCustom}
+                    onChange={(e) => setShippingCarrierCustom(e.target.value)}
+                    className="mt-2"
+                    autoFocus
+                  />
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="chat-shipping-tracking">Tracking Number *</Label>
+                <Input
+                  id="chat-shipping-tracking"
+                  placeholder="Enter tracking number"
+                  value={shippingTrackingNumber}
+                  onChange={(e) => setShippingTrackingNumber(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="chat-shipping-url">Tracking URL (optional)</Label>
+                <Input
+                  id="chat-shipping-url"
+                  placeholder="https://tracking.example.com/..."
+                  value={shippingTrackingUrl}
+                  onChange={(e) => setShippingTrackingUrl(e.target.value)}
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowShippingDialog(false)}
+                  disabled={isSubmittingShipment}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSubmitShipment}
+                  disabled={
+                    isSubmittingShipment ||
+                    !shippingTrackingNumber.trim() ||
+                    (shippingCarrier === "other"
+                      ? !shippingCarrierCustom.trim()
+                      : !shippingCarrier)
+                  }
+                >
+                  {isSubmittingShipment ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Truck className="h-4 w-4 mr-2" />
+                  )}
+                  Ship Order
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );

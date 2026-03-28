@@ -35,6 +35,7 @@ interface WidgetMessageBubbleProps {
   primaryColor: string
   textColor: string
   onSendMessage?: (text: string) => void
+  onTriggerUpload?: () => void
 }
 
 export function WidgetMessageBubble({
@@ -42,6 +43,7 @@ export function WidgetMessageBubble({
   primaryColor,
   textColor,
   onSendMessage,
+  onTriggerUpload,
 }: WidgetMessageBubbleProps) {
   const isVisitor = message.senderType === 'visitor'
   const isSystem = message.senderType === 'system'
@@ -65,6 +67,17 @@ export function WidgetMessageBubble({
         message={message}
         primaryColor={primaryColor}
         onSendMessage={onSendMessage}
+      />
+    )
+  }
+
+  // ── Payment details with Upload Proof button ─────────────────────────────
+  if (message.contentType === 'payment_upload_prompt') {
+    return (
+      <PaymentUploadPrompt
+        message={message}
+        primaryColor={primaryColor}
+        onTriggerUpload={onTriggerUpload}
       />
     )
   }
@@ -208,6 +221,73 @@ function formatTime(iso: string): string {
   } catch {
     return ''
   }
+}
+
+// ─── Payment Upload Prompt (text + Upload Proof button) ────────────────────
+
+function PaymentUploadPrompt({
+  message,
+  primaryColor,
+  onTriggerUpload,
+}: {
+  message: WidgetMessage
+  primaryColor: string
+  onTriggerUpload?: () => void
+}) {
+  return (
+    <div className="flex justify-start mb-1">
+      <div className="max-w-[85%]">
+        {/* AI sender label */}
+        {message.senderName && (
+          <div className="flex items-center gap-1.5 mb-0.5 px-1">
+            <span className="text-[11px] font-medium text-gray-600">
+              {message.senderName}
+            </span>
+            <span className="text-[9px] px-1.5 py-0.5 bg-purple-100 text-purple-600 rounded-full font-medium">
+              AI
+            </span>
+          </div>
+        )}
+
+        {/* Message bubble with text + Upload Proof button */}
+        <div className="rounded-2xl rounded-bl-md bg-[#f1f5f9] overflow-hidden">
+          <div className="px-3 pt-2.5 pb-1.5">
+            <p className="text-sm text-[#1e293b] leading-relaxed whitespace-pre-wrap">
+              {message.text}
+            </p>
+          </div>
+
+          {/* Upload Proof button */}
+          <div className="px-3 pb-2.5">
+            <button
+              type="button"
+              onClick={onTriggerUpload}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-semibold rounded-lg border-2 transition-all duration-150 hover:shadow-sm active:scale-[0.98]"
+              style={{
+                borderColor: primaryColor,
+                color: 'white',
+                backgroundColor: primaryColor,
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              Upload Proof of Payment
+            </button>
+          </div>
+        </div>
+
+        {/* Timestamp */}
+        <div className="flex items-center mt-0.5 px-1">
+          <span className="text-[10px] text-gray-400">
+            {formatTime(message.createdAt)}
+          </span>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 // ─── Payment Method Selection Buttons ──────────────────────────────────────

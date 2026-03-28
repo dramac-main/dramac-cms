@@ -441,6 +441,7 @@ Previous conversations: ${visitorInfo?.total_conversations || 0}${customerCtx ? 
       shouldHandoff: confidence < CONFIDENCE_THRESHOLD,
       matchedArticleId,
       assistantName: aiAssistantName,
+      ...(selectedMethodDetails && { contentType: "payment_upload_prompt" as const }),
     };
   } catch (err) {
     console.error("[AI Responder] Error generating response:", err);
