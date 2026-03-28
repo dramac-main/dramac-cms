@@ -120,6 +120,8 @@ export interface SiteBrandingData {
   accent_color?: string | null;
   secondary_color?: string | null;
   logo_url?: string | null;
+  /** Store support/contact email — overrides agency support_email and reply_to */
+  support_email?: string | null;
 }
 
 /**
@@ -158,5 +160,9 @@ export function applySiteBranding(
     accent_color: site.accent_color || site.secondary_color || baseBranding.accent_color,
     // Use site logo if available, otherwise fall through to agency logo
     logo_url: site.logo_url || baseBranding.logo_url,
+    // "Contact Support" links to the store's email, not the agency/platform email
+    support_email: site.support_email || baseBranding.support_email,
+    // Reply-to should also point to the store's email for customer-facing emails
+    reply_to: site.support_email || baseBranding.reply_to,
   };
 }

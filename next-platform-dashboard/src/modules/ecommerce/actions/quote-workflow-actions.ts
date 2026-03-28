@@ -188,6 +188,7 @@ export async function sendQuote(
         email: quote.customer_email,
         name: quote.customer_name || undefined,
       },
+      siteId: input.site_id,
       emailType: "quote_sent_customer",
       data: {
         customerName: quote.customer_name || "Customer",
@@ -280,6 +281,7 @@ export async function resendQuote(
         email: quote.customer_email,
         name: quote.customer_name || undefined,
       },
+      siteId: siteId,
       emailType: "quote_sent_customer",
       data: {
         customerName: quote.customer_name || "Customer",
@@ -360,6 +362,7 @@ export async function sendQuoteReminder(
         email: quote.customer_email,
         name: quote.customer_name || undefined,
       },
+      siteId: siteId,
       emailType: "quote_reminder_customer",
       data: {
         customerName: quote.customer_name || "Customer",

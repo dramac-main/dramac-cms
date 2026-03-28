@@ -224,6 +224,20 @@ async function fetchSiteBranding(siteId: string): Promise<SiteBrandingData | nul
     }
 
     const settings = (site.settings || {}) as Record<string, unknown>;
+
+    // Also fetch the store's support email from ecommerce settings (if module is active)
+    let storeEmail: string | null = null;
+    try {
+      const { data: ecomSettings } = await supabase
+        .from("mod_ecommod01_settings")
+        .select("store_email")
+        .eq("site_id", siteId)
+        .single();
+      storeEmail = ecomSettings?.store_email || null;
+    } catch {
+      // Ecommerce module may not be active for this site — that's fine
+    }
+
     const result: SiteBrandingData = {
       name: site.name || "",
       primary_color: (settings.primary_color as string) || null,
@@ -231,6 +245,8 @@ async function fetchSiteBranding(siteId: string): Promise<SiteBrandingData | nul
       secondary_color: (settings.secondary_color as string) || null,
       // Sites don't have a logo_url column directly — check settings for one
       logo_url: (settings.logo_url as string) || (settings.site_logo_url as string) || null,
+      // Store email for "Contact Support" links and reply-to in customer emails
+      support_email: storeEmail,
     };
 
     siteBrandingCache.set(siteId, { data: result, expiry: Date.now() + SITE_CACHE_TTL });
