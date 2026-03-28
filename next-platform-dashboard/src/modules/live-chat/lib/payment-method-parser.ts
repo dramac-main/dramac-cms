@@ -131,10 +131,7 @@ function splitByColonHeadings(text: string): ParsedPaymentMethod[] | null {
       i + 1 < headingIndices.length
         ? headingIndices[i + 1].index
         : lines.length;
-    const details = lines
-      .slice(startLine, endLine)
-      .join("\n")
-      .trim();
+    const details = lines.slice(startLine, endLine).join("\n").trim();
 
     methods.push({
       id: slugify(headingIndices[i].title),

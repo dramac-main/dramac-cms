@@ -67,52 +67,14 @@ import {
   updatePaymentProofStatus,
   addOrderShipment,
 } from "@/modules/ecommerce/actions/order-actions";
+import {
+  ZAMBIA_CARRIERS,
+  VALID_TRANSITIONS,
+  STATUS_LABELS,
+  PAYMENT_STATUS_LABELS,
+} from "@/modules/ecommerce/lib/order-constants";
 import { ImageLightbox } from "./ImageLightbox";
 import { OrderDetailDialog } from "@/modules/ecommerce/components/orders/order-detail-dialog";
-
-const ZAMBIA_CARRIERS = [
-  { value: "Yango Deli", label: "Yango Deli" },
-  { value: "Platinum Courier", label: "Platinum Courier" },
-  { value: "Afri Delivery", label: "Afri Delivery" },
-  { value: "Speed Couriers Zambia", label: "Speed Couriers Zambia" },
-  { value: "Courier Express Zambia", label: "Courier Express Zambia" },
-  { value: "Zampost", label: "Zampost (Zambia Postal Services)" },
-  { value: "DHL", label: "DHL" },
-  { value: "FedEx", label: "FedEx" },
-  { value: "Skynet Worldwide Express", label: "Skynet Worldwide Express" },
-  { value: "G4S Courier", label: "G4S Courier" },
-  { value: "UPS", label: "UPS" },
-  { value: "other", label: "Other / My Own Delivery" },
-] as const;
-
-// Valid status transitions (mirrors order-actions.ts)
-const VALID_TRANSITIONS: Record<string, string[]> = {
-  pending: ["confirmed", "processing", "cancelled"],
-  confirmed: ["processing", "shipped", "cancelled"],
-  processing: ["shipped", "cancelled"],
-  shipped: ["delivered", "cancelled"],
-  delivered: ["refunded"],
-  cancelled: [],
-  refunded: [],
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  pending: "Pending",
-  confirmed: "Confirmed",
-  processing: "Processing",
-  shipped: "Shipped",
-  delivered: "Delivered",
-  cancelled: "Cancelled",
-  refunded: "Refunded",
-};
-
-const PAYMENT_STATUS_LABELS: Record<string, string> = {
-  pending: "Pending",
-  paid: "Paid",
-  partially_refunded: "Partially Refunded",
-  refunded: "Refunded",
-  failed: "Failed",
-};
 
 function getStatusVariant(
   status: string,
@@ -283,9 +245,15 @@ export function ChatOrderPanel({
       setIsSubmittingShipment(false);
     }
   }, [
-    order, siteId, userId, userName, fetchOrder,
-    shippingCarrier, shippingCarrierCustom,
-    shippingTrackingNumber, shippingTrackingUrl,
+    order,
+    siteId,
+    userId,
+    userName,
+    fetchOrder,
+    shippingCarrier,
+    shippingCarrierCustom,
+    shippingTrackingNumber,
+    shippingTrackingUrl,
   ]);
 
   // Handle payment proof approval
@@ -731,7 +699,9 @@ export function ChatOrderPanel({
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="chat-shipping-tracking">Tracking Number *</Label>
+                <Label htmlFor="chat-shipping-tracking">
+                  Tracking Number *
+                </Label>
                 <Input
                   id="chat-shipping-tracking"
                   placeholder="Enter tracking number"
@@ -740,7 +710,9 @@ export function ChatOrderPanel({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="chat-shipping-url">Tracking URL (optional)</Label>
+                <Label htmlFor="chat-shipping-url">
+                  Tracking URL (optional)
+                </Label>
                 <Input
                   id="chat-shipping-url"
                   placeholder="https://tracking.example.com/..."

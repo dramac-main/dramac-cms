@@ -285,9 +285,7 @@ export async function generateAutoResponse(
         if (m.content_type === "payment_method_select") {
           try {
             const data = JSON.parse(m.content as string);
-            const buttonLabels = (
-              data.buttons as { label: string }[]
-            )
+            const buttonLabels = (data.buttons as { label: string }[])
               .map((b: { label: string }) => b.label)
               .join(", ");
             return `${sender}: [Asked customer to choose a payment method: ${buttonLabels}]`;
@@ -342,12 +340,16 @@ ${proofUploaded ? `\nPAYMENT PROOF STATUS:\n- Proof uploaded: Yes (${pendingManu
 ${selectedMethodDetails ? `SELECTED PAYMENT METHOD:\nThe customer has chosen a specific payment method. Share ONLY these details:\n${selectedMethodDetails}\n\nDo NOT mention other payment methods. Only share the details above.` : paymentInstructions ? `STORE PAYMENT INSTRUCTIONS:\n${paymentInstructions}` : "No specific payment instructions configured. Ask the customer to contact the store for payment details."}
 
 HOW TO GUIDE THE CUSTOMER:
-${selectedMethodDetails ? `1. Acknowledge their payment method choice
+${
+  selectedMethodDetails
+    ? `1. Acknowledge their payment method choice
 2. Share the payment details above clearly — use simple numbered steps
 3. Tell them to use their order number (${pendingManualOrder.orderNumber}) as the payment reference
-4. Keep it short and clear — only the selected method, nothing else` : `1. Greet them warmly and confirm their order number and total
+4. Keep it short and clear — only the selected method, nothing else`
+    : `1. Greet them warmly and confirm their order number and total
 2. Share the payment instructions above in simple, clear language — break it into numbered steps
-3. Tell them to use their order number (${pendingManualOrder.orderNumber}) as the payment reference`}
+3. Tell them to use their order number (${pendingManualOrder.orderNumber}) as the payment reference`
+}
 ${proofUploaded ? `${selectedMethodDetails ? "5" : "4"}. Their proof is ALREADY uploaded — acknowledge it and reassure them\n${selectedMethodDetails ? "6" : "5"}. Let them know the store owner will verify and process their order` : `${selectedMethodDetails ? "5" : "4"}. After they confirm payment, let them know they can upload proof of payment on their order page\n${selectedMethodDetails ? "6" : "5"}. Reassure them that once the store owner verifies payment, their order will be processed and shipped`}
 ${selectedMethodDetails ? "" : "6. Be conversational and friendly — like a helpful friend, not a robot\n7. If they have questions about the payment process, answer patiently and clearly\n8. Keep each message short and easy to follow — avoid walls of text"}
 `
@@ -441,7 +443,9 @@ Previous conversations: ${visitorInfo?.total_conversations || 0}${customerCtx ? 
       shouldHandoff: confidence < CONFIDENCE_THRESHOLD,
       matchedArticleId,
       assistantName: aiAssistantName,
-      ...(selectedMethodDetails && { contentType: "payment_upload_prompt" as const }),
+      ...(selectedMethodDetails && {
+        contentType: "payment_upload_prompt" as const,
+      }),
     };
   } catch (err) {
     console.error("[AI Responder] Error generating response:", err);

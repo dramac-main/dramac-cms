@@ -13,6 +13,7 @@ import { sendBrandedEmail } from "@/lib/email/send-branded-email";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logAutomationEvent } from "@/modules/automation/services/event-processor";
 import { adjustStock } from "./inventory-actions";
+import { VALID_TRANSITIONS, STATUS_EMAIL_MAP } from "../lib/order-constants";
 import type {
   Order,
   OrderStatus,
@@ -150,32 +151,6 @@ export async function getOrders(
 // ============================================================================
 // ORDER STATUS
 // ============================================================================
-
-/**
- * Valid order status transitions
- */
-const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
-  pending: ["confirmed", "processing", "cancelled"],
-  confirmed: ["processing", "shipped", "cancelled"],
-  processing: ["shipped", "cancelled"],
-  shipped: ["delivered", "cancelled"],
-  delivered: ["refunded"],
-  cancelled: [],
-  refunded: [],
-};
-
-/**
- * Map status → email type for automatic customer notification
- */
-const STATUS_EMAIL_MAP: Record<
-  string,
-  "shipped" | "delivered" | "cancelled" | "refunded"
-> = {
-  shipped: "shipped",
-  delivered: "delivered",
-  cancelled: "cancelled",
-  refunded: "refunded",
-};
 
 /**
  * Update order status with timeline entry, timestamps, and email notification

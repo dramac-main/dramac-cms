@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * MessageBubble — Chat message display component
@@ -7,9 +7,9 @@
  * Supports: text, image, file, system, note, AI-generated content
  */
 
-import { cn } from '@/lib/utils'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
+import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import {
   Check,
   CheckCheck,
@@ -20,51 +20,51 @@ import {
   Bot,
   StickyNote,
   Image as ImageIcon,
-} from 'lucide-react'
+} from "lucide-react";
 import type {
   ChatMessage,
   MessageSenderType,
   MessageContentType,
   MessageStatus,
-} from '@/modules/live-chat/types'
+} from "@/modules/live-chat/types";
 
 interface MessageBubbleProps {
-  message: ChatMessage
-  className?: string
+  message: ChatMessage;
+  className?: string;
 }
 
 function getInitials(name: string): string {
   return name
-    .split(' ')
+    .split(" ")
     .map((w) => w[0])
-    .join('')
+    .join("")
     .slice(0, 2)
-    .toUpperCase()
+    .toUpperCase();
 }
 
 function formatTime(dateStr: string): string {
-  const date = new Date(dateStr)
-  return date.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
+  const date = new Date(dateStr);
+  return date.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
     hour12: true,
-  })
+  });
 }
 
 function StatusIcon({ status }: { status: MessageStatus }) {
   switch (status) {
-    case 'sending':
-      return <Clock className="h-3 w-3 text-muted-foreground" />
-    case 'sent':
-      return <Check className="h-3 w-3 text-muted-foreground" />
-    case 'delivered':
-      return <CheckCheck className="h-3 w-3 text-muted-foreground" />
-    case 'read':
-      return <CheckCheck className="h-3 w-3 text-blue-500" />
-    case 'failed':
-      return <AlertCircle className="h-3 w-3 text-destructive" />
+    case "sending":
+      return <Clock className="h-3 w-3 text-muted-foreground" />;
+    case "sent":
+      return <Check className="h-3 w-3 text-muted-foreground" />;
+    case "delivered":
+      return <CheckCheck className="h-3 w-3 text-muted-foreground" />;
+    case "read":
+      return <CheckCheck className="h-3 w-3 text-blue-500" />;
+    case "failed":
+      return <AlertCircle className="h-3 w-3 text-destructive" />;
     default:
-      return null
+      return null;
   }
 }
 
@@ -74,22 +74,22 @@ function FileAttachment({
   fileSize,
   contentType,
 }: {
-  fileName: string | null
-  fileUrl: string | null
-  fileSize: number | null
-  contentType: MessageContentType
+  fileName: string | null;
+  fileUrl: string | null;
+  fileSize: number | null;
+  contentType: MessageContentType;
 }) {
-  if (contentType === 'image' && fileUrl) {
+  if (contentType === "image" && fileUrl) {
     return (
       <div className="mt-1 rounded-lg overflow-hidden max-w-xs">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={fileUrl}
-          alt={fileName || 'Image'}
+          alt={fileName || "Image"}
           className="w-full h-auto max-h-64 object-cover"
         />
       </div>
-    )
+    );
   }
 
   if (fileUrl) {
@@ -99,7 +99,7 @@ function FileAttachment({
         : fileSize < 1048576
           ? `${(fileSize / 1024).toFixed(1)} KB`
           : `${(fileSize / 1048576).toFixed(1)} MB`
-      : ''
+      : "";
 
     return (
       <a
@@ -110,41 +110,39 @@ function FileAttachment({
       >
         <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium truncate">
-            {fileName || 'File'}
-          </p>
+          <p className="text-sm font-medium truncate">{fileName || "File"}</p>
           {sizeStr && (
             <p className="text-xs text-muted-foreground">{sizeStr}</p>
           )}
         </div>
         <Download className="h-4 w-4 text-muted-foreground shrink-0" />
       </a>
-    )
+    );
   }
 
-  return null
+  return null;
 }
 
 function PaymentMethodSelectBubble({
   content,
   isAgent,
 }: {
-  content: string | null
-  isAgent: boolean
+  content: string | null;
+  isAgent: boolean;
 }) {
-  if (!content) return null
+  if (!content) return null;
 
   try {
     const data = JSON.parse(content) as {
-      text: string
-      orderNumber: string
-      orderTotal: string
-      buttons: { id: string; label: string }[]
-    }
+      text: string;
+      orderNumber: string;
+      orderTotal: string;
+      buttons: { id: string; label: string }[];
+    };
 
     return (
       <div className="space-y-2">
-        <p className={cn('text-sm', isAgent ? 'text-primary-foreground' : '')}>
+        <p className={cn("text-sm", isAgent ? "text-primary-foreground" : "")}>
           {data.text}
         </p>
         <div className="flex flex-wrap gap-1.5">
@@ -152,54 +150,54 @@ function PaymentMethodSelectBubble({
             <span
               key={btn.id}
               className={cn(
-                'inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium border',
+                "inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium border",
                 isAgent
-                  ? 'border-primary-foreground/30 text-primary-foreground/90'
-                  : 'border-border text-foreground'
+                  ? "border-primary-foreground/30 text-primary-foreground/90"
+                  : "border-border text-foreground",
               )}
             >
               {btn.label}
             </span>
           ))}
         </div>
-        <p className={cn('text-[10px] opacity-60', isAgent ? 'text-primary-foreground' : 'text-muted-foreground')}>
+        <p
+          className={cn(
+            "text-[10px] opacity-60",
+            isAgent ? "text-primary-foreground" : "text-muted-foreground",
+          )}
+        >
           Payment method selection sent to customer
         </p>
       </div>
-    )
+    );
   } catch {
-    return (
-      <p className="text-sm whitespace-pre-wrap break-words">
-        {content}
-      </p>
-    )
+    return <p className="text-sm whitespace-pre-wrap break-words">{content}</p>;
   }
 }
 
 export function MessageBubble({ message, className }: MessageBubbleProps) {
   const isSystem =
-    message.senderType === 'system' || message.contentType === 'system'
-  const isNote = message.contentType === 'note'
-  const isAgent =
-    message.senderType === 'agent' || message.senderType === 'ai'
-  const isVisitor = message.senderType === 'visitor'
-  const isAI = message.senderType === 'ai'
+    message.senderType === "system" || message.contentType === "system";
+  const isNote = message.contentType === "note";
+  const isAgent = message.senderType === "agent" || message.senderType === "ai";
+  const isVisitor = message.senderType === "visitor";
+  const isAI = message.senderType === "ai";
 
   // ─── System messages ────────────────────────────────────────────────────
   if (isSystem) {
     return (
-      <div className={cn('flex justify-center my-2', className)}>
+      <div className={cn("flex justify-center my-2", className)}>
         <p className="text-xs text-muted-foreground bg-muted/50 px-3 py-1 rounded-full">
           {message.content}
         </p>
       </div>
-    )
+    );
   }
 
   // ─── Internal notes ─────────────────────────────────────────────────────
   if (isNote) {
     return (
-      <div className={cn('flex justify-end my-1', className)}>
+      <div className={cn("flex justify-end my-1", className)}>
         <div className="max-w-[70%]">
           <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
             <div className="flex items-center gap-1.5 mb-1">
@@ -211,7 +209,7 @@ export function MessageBubble({ message, className }: MessageBubbleProps) {
                 Internal Note
               </Badge>
               <span className="text-[10px] text-amber-600/70 dark:text-amber-400/70">
-                {message.senderName || 'Agent'}
+                {message.senderName || "Agent"}
               </span>
             </div>
             <p className="text-sm text-amber-900 dark:text-amber-200 whitespace-pre-wrap">
@@ -223,19 +221,19 @@ export function MessageBubble({ message, className }: MessageBubbleProps) {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // ─── Regular messages (visitor or agent) ─────────────────────────────────
-  const alignment = isVisitor ? 'justify-start' : 'justify-end'
+  const alignment = isVisitor ? "justify-start" : "justify-end";
   const bubbleBg = isVisitor
-    ? 'bg-muted'
-    : 'bg-primary text-primary-foreground'
-  const senderName = message.senderName || (isVisitor ? 'Visitor' : 'Agent')
-  const initials = getInitials(senderName)
+    ? "bg-muted"
+    : "bg-primary text-primary-foreground";
+  const senderName = message.senderName || (isVisitor ? "Visitor" : "Agent");
+  const initials = getInitials(senderName);
 
   return (
-    <div className={cn('flex gap-2 my-1', alignment, className)}>
+    <div className={cn("flex gap-2 my-1", alignment, className)}>
       {/* Avatar on left for visitor */}
       {isVisitor && (
         <Avatar className="h-7 w-7 shrink-0 mt-1">
@@ -245,22 +243,19 @@ export function MessageBubble({ message, className }: MessageBubbleProps) {
         </Avatar>
       )}
 
-      <div className={cn('max-w-[70%]', isAgent && 'flex flex-col items-end')}>
+      <div className={cn("max-w-[70%]", isAgent && "flex flex-col items-end")}>
         {/* Sender name + AI badge */}
         <div
           className={cn(
-            'flex items-center gap-1.5 mb-0.5',
-            isAgent && 'flex-row-reverse'
+            "flex items-center gap-1.5 mb-0.5",
+            isAgent && "flex-row-reverse",
           )}
         >
           <span className="text-xs font-medium text-muted-foreground">
             {senderName}
           </span>
           {isAI && (
-            <Badge
-              variant="outline"
-              className="text-[10px] py-0 px-1 gap-0.5"
-            >
+            <Badge variant="outline" className="text-[10px] py-0 px-1 gap-0.5">
               <Bot className="h-2.5 w-2.5" />
               AI
             </Badge>
@@ -268,16 +263,32 @@ export function MessageBubble({ message, className }: MessageBubbleProps) {
         </div>
 
         {/* Bubble */}
-        <div className={cn('rounded-lg px-3 py-2', bubbleBg)}>
-          {message.contentType === 'payment_method_select' ? (
-            <PaymentMethodSelectBubble content={message.content} isAgent={isAgent} />
-          ) : message.contentType === 'payment_upload_prompt' ? (
+        <div className={cn("rounded-lg px-3 py-2", bubbleBg)}>
+          {message.contentType === "payment_method_select" ? (
+            <PaymentMethodSelectBubble
+              content={message.content}
+              isAgent={isAgent}
+            />
+          ) : message.contentType === "payment_upload_prompt" ? (
             <>
               {message.content && (
-                <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                <p className="text-sm whitespace-pre-wrap break-words">
+                  {message.content}
+                </p>
               )}
               <div className="mt-2 px-2 py-1.5 bg-muted/50 rounded text-xs text-muted-foreground flex items-center gap-1.5">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
                 Upload Proof button shown to customer
               </div>
             </>
@@ -288,10 +299,10 @@ export function MessageBubble({ message, className }: MessageBubbleProps) {
                   {message.content}
                 </p>
               )}
-              {(message.contentType === 'image' ||
-                message.contentType === 'file' ||
-                message.contentType === 'audio' ||
-                message.contentType === 'video') && (
+              {(message.contentType === "image" ||
+                message.contentType === "file" ||
+                message.contentType === "audio" ||
+                message.contentType === "video") && (
                 <FileAttachment
                   fileName={message.fileName}
                   fileUrl={message.fileUrl}
@@ -306,8 +317,8 @@ export function MessageBubble({ message, className }: MessageBubbleProps) {
         {/* Timestamp + status */}
         <div
           className={cn(
-            'flex items-center gap-1 mt-0.5',
-            isAgent && 'flex-row-reverse'
+            "flex items-center gap-1 mt-0.5",
+            isAgent && "flex-row-reverse",
           )}
         >
           <span className="text-[10px] text-muted-foreground">
@@ -321,14 +332,10 @@ export function MessageBubble({ message, className }: MessageBubbleProps) {
       {isAgent && (
         <Avatar className="h-7 w-7 shrink-0 mt-1">
           <AvatarFallback className="text-xs bg-primary/10 text-primary">
-            {isAI ? (
-              <Bot className="h-3.5 w-3.5" />
-            ) : (
-              initials
-            )}
+            {isAI ? <Bot className="h-3.5 w-3.5" /> : initials}
           </AvatarFallback>
         </Avatar>
       )}
     </div>
-  )
+  );
 }

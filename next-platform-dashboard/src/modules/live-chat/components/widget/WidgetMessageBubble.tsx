@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * WidgetMessageBubble — Individual message bubble for the chat widget
@@ -7,35 +7,35 @@
  * AI indicator, timestamps, attachment support
  */
 
-import { DEFAULT_TIMEZONE } from '@/lib/locale-config'
+import { DEFAULT_TIMEZONE } from "@/lib/locale-config";
 
 export interface WidgetMessage {
-  id: string
-  text: string
-  senderType: 'visitor' | 'agent' | 'system' | 'ai'
-  senderName?: string
-  createdAt: string
-  attachmentUrl?: string
-  attachmentType?: string
-  attachmentName?: string
-  isRead?: boolean
-  contentType?: string
+  id: string;
+  text: string;
+  senderType: "visitor" | "agent" | "system" | "ai";
+  senderName?: string;
+  createdAt: string;
+  attachmentUrl?: string;
+  attachmentType?: string;
+  attachmentName?: string;
+  isRead?: boolean;
+  contentType?: string;
 }
 
 /** Parsed data for payment_method_select messages */
 export interface PaymentSelectData {
-  text: string
-  orderNumber: string
-  orderTotal: string
-  buttons: { id: string; label: string }[]
+  text: string;
+  orderNumber: string;
+  orderTotal: string;
+  buttons: { id: string; label: string }[];
 }
 
 interface WidgetMessageBubbleProps {
-  message: WidgetMessage
-  primaryColor: string
-  textColor: string
-  onSendMessage?: (text: string) => void
-  onTriggerUpload?: () => void
+  message: WidgetMessage;
+  primaryColor: string;
+  textColor: string;
+  onSendMessage?: (text: string) => void;
+  onTriggerUpload?: () => void;
 }
 
 export function WidgetMessageBubble({
@@ -45,9 +45,9 @@ export function WidgetMessageBubble({
   onSendMessage,
   onTriggerUpload,
 }: WidgetMessageBubbleProps) {
-  const isVisitor = message.senderType === 'visitor'
-  const isSystem = message.senderType === 'system'
-  const isAi = message.senderType === 'ai'
+  const isVisitor = message.senderType === "visitor";
+  const isSystem = message.senderType === "system";
+  const isAi = message.senderType === "ai";
 
   // System / info messages
   if (isSystem) {
@@ -57,40 +57,36 @@ export function WidgetMessageBubble({
           {message.text}
         </span>
       </div>
-    )
+    );
   }
 
   // ── Payment method selection buttons ────────────────────────────────────
-  if (message.contentType === 'payment_method_select') {
+  if (message.contentType === "payment_method_select") {
     return (
       <PaymentMethodSelect
         message={message}
         primaryColor={primaryColor}
         onSendMessage={onSendMessage}
       />
-    )
+    );
   }
 
   // ── Payment details with Upload Proof button ─────────────────────────────
-  if (message.contentType === 'payment_upload_prompt') {
+  if (message.contentType === "payment_upload_prompt") {
     return (
       <PaymentUploadPrompt
         message={message}
         primaryColor={primaryColor}
         onTriggerUpload={onTriggerUpload}
       />
-    )
+    );
   }
 
-  const formattedTime = formatTime(message.createdAt)
+  const formattedTime = formatTime(message.createdAt);
 
   return (
-    <div
-      className={`flex ${isVisitor ? 'justify-end' : 'justify-start'} mb-1`}
-    >
-      <div
-        className="max-w-[80%]"
-      >
+    <div className={`flex ${isVisitor ? "justify-end" : "justify-start"} mb-1`}>
+      <div className="max-w-[80%]">
         {/* Agent name */}
         {!isVisitor && message.senderName && (
           <div className="flex items-center gap-1.5 mb-0.5 px-1">
@@ -109,24 +105,24 @@ export function WidgetMessageBubble({
         <div
           className={`px-3 py-2 text-sm leading-relaxed break-words ${
             isVisitor
-              ? 'rounded-2xl rounded-br-md'
-              : 'rounded-2xl rounded-bl-md'
+              ? "rounded-2xl rounded-br-md"
+              : "rounded-2xl rounded-bl-md"
           }`}
           style={
             isVisitor
               ? { backgroundColor: primaryColor, color: textColor }
-              : { backgroundColor: '#f1f5f9', color: '#1e293b' }
+              : { backgroundColor: "#f1f5f9", color: "#1e293b" }
           }
         >
           {/* Attachment */}
           {message.attachmentUrl && (
             <div className="mb-1.5">
-              {message.attachmentType?.startsWith('image/') ? (
+              {message.attachmentType?.startsWith("image/") ? (
                 <img
                   src={message.attachmentUrl}
-                  alt={message.attachmentName || 'Attachment'}
+                  alt={message.attachmentName || "Attachment"}
                   className="rounded-lg max-w-full max-h-40 object-cover cursor-pointer"
-                  onClick={() => window.open(message.attachmentUrl, '_blank')}
+                  onClick={() => window.open(message.attachmentUrl, "_blank")}
                 />
               ) : (
                 <a
@@ -134,7 +130,7 @@ export function WidgetMessageBubble({
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`flex items-center gap-2 text-xs underline ${
-                    isVisitor ? 'opacity-90' : 'text-blue-600'
+                    isVisitor ? "opacity-90" : "text-blue-600"
                   }`}
                 >
                   <svg
@@ -147,7 +143,7 @@ export function WidgetMessageBubble({
                   >
                     <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
                   </svg>
-                  {message.attachmentName || 'Attachment'}
+                  {message.attachmentName || "Attachment"}
                 </a>
               )}
             </div>
@@ -162,19 +158,34 @@ export function WidgetMessageBubble({
         {/* Timestamp + status */}
         <div
           className={`flex items-center gap-1 mt-0.5 px-1 ${
-            isVisitor ? 'justify-end' : 'justify-start'
+            isVisitor ? "justify-end" : "justify-start"
           }`}
         >
           <span className="text-[10px] text-gray-400">{formattedTime}</span>
           {isVisitor && (
             <span className="text-[10px] text-gray-400">
               {message.isRead ? (
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-blue-500">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  className="text-blue-500"
+                >
                   <path d="M18 7l-8.5 8.5-4-4" />
                   <path d="M22 7l-8.5 8.5" />
                 </svg>
               ) : (
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
                   <path d="M20 6L9 17l-5-5" />
                 </svg>
               )}
@@ -183,43 +194,43 @@ export function WidgetMessageBubble({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function formatTime(iso: string): string {
   try {
-    const date = new Date(iso)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffMins = Math.floor(diffMs / 60000)
+    const date = new Date(iso);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
 
-    if (diffMins < 1) return 'Just now'
-    if (diffMins < 60) return `${diffMins}m ago`
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
 
     const isToday =
       date.getDate() === now.getDate() &&
       date.getMonth() === now.getMonth() &&
-      date.getFullYear() === now.getFullYear()
+      date.getFullYear() === now.getFullYear();
 
     if (isToday) {
-      return date.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
+      return date.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
         hour12: true,
         timeZone: DEFAULT_TIMEZONE,
-      })
+      });
     }
 
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
       hour12: true,
       timeZone: DEFAULT_TIMEZONE,
-    })
+    });
   } catch {
-    return ''
+    return "";
   }
 }
 
@@ -230,9 +241,9 @@ function PaymentUploadPrompt({
   primaryColor,
   onTriggerUpload,
 }: {
-  message: WidgetMessage
-  primaryColor: string
-  onTriggerUpload?: () => void
+  message: WidgetMessage;
+  primaryColor: string;
+  onTriggerUpload?: () => void;
 }) {
   return (
     <div className="flex justify-start mb-1">
@@ -265,11 +276,20 @@ function PaymentUploadPrompt({
               className="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-semibold rounded-lg border-2 transition-all duration-150 hover:shadow-sm active:scale-[0.98]"
               style={{
                 borderColor: primaryColor,
-                color: 'white',
+                color: "white",
                 backgroundColor: primaryColor,
               }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                 <polyline points="17 8 12 3 7 8" />
                 <line x1="12" y1="3" x2="12" y2="15" />
@@ -287,7 +307,7 @@ function PaymentUploadPrompt({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // ─── Payment Method Selection Buttons ──────────────────────────────────────
@@ -297,13 +317,13 @@ function PaymentMethodSelect({
   primaryColor,
   onSendMessage,
 }: {
-  message: WidgetMessage
-  primaryColor: string
-  onSendMessage?: (text: string) => void
+  message: WidgetMessage;
+  primaryColor: string;
+  onSendMessage?: (text: string) => void;
 }) {
-  let data: PaymentSelectData | null = null
+  let data: PaymentSelectData | null = null;
   try {
-    data = JSON.parse(message.text) as PaymentSelectData
+    data = JSON.parse(message.text) as PaymentSelectData;
   } catch {
     // If JSON parse fails, render as plain text
     return (
@@ -314,14 +334,14 @@ function PaymentMethodSelect({
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   const handleButtonClick = (label: string) => {
     if (onSendMessage) {
-      onSendMessage(`I'd like to pay using ${label}`)
+      onSendMessage(`I'd like to pay using ${label}`);
     }
-  }
+  };
 
   return (
     <div className="flex justify-start mb-1">
@@ -358,15 +378,15 @@ function PaymentMethodSelect({
                 style={{
                   borderColor: primaryColor,
                   color: primaryColor,
-                  backgroundColor: 'white',
+                  backgroundColor: "white",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = primaryColor
-                  e.currentTarget.style.color = 'white'
+                  e.currentTarget.style.backgroundColor = primaryColor;
+                  e.currentTarget.style.color = "white";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'white'
-                  e.currentTarget.style.color = primaryColor
+                  e.currentTarget.style.backgroundColor = "white";
+                  e.currentTarget.style.color = primaryColor;
                 }}
               >
                 {btn.label}
@@ -383,5 +403,5 @@ function PaymentMethodSelect({
         </div>
       </div>
     </div>
-  )
+  );
 }
