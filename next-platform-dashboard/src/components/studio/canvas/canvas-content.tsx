@@ -789,7 +789,7 @@ export function CanvasContent({ className }: CanvasContentProps) {
 
   return (
     <div
-      className={cn("relative min-h-full", className)}
+      className={cn("studio-renderer light relative min-h-full", className)}
       onDragOver={handleHTML5DragOver}
       onDragLeave={handleHTML5DragLeave}
       onDrop={handleHTML5Drop}

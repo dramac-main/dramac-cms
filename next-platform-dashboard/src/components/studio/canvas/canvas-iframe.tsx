@@ -69,8 +69,8 @@ interface CanvasIframeProps {
   fontFamilies?: string[];
   /** Width of the iframe viewport */
   width: number;
-  /** Minimum height of the iframe viewport */
-  minHeight: number;
+  /** Fixed height of the iframe viewport (creates a real scrollable viewport) */
+  height: number;
   /** CSS class for the iframe element */
   className?: string;
   /** Callback when iframe is ready */
@@ -193,7 +193,7 @@ export function CanvasIframe({
   foregroundColor = "#111827",
   fontFamilies = [],
   width,
-  minHeight,
+  height,
   className,
   onReady,
 }: CanvasIframeProps) {
@@ -216,10 +216,13 @@ export function CanvasIframe({
 
     initializedRef.current = true;
 
-    // Write the base HTML structure
+    // Write the base HTML structure.
+    // NO overflow restrictions on html/body — let the iframe viewport scroll naturally.
+    // This ensures: window.scrollY works, position:sticky works, scroll events fire.
+    // The iframe element's fixed height creates the viewport boundary.
     doc.open();
     doc.write(
-      '<!DOCTYPE html><html class="light" style="color-scheme:light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="margin:0;padding:0"></body></html>'
+      '<!DOCTYPE html><html class="light" style="color-scheme:light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>body{margin:0;padding:0}::-webkit-scrollbar{width:6px;background:transparent}::-webkit-scrollbar-thumb{background:rgba(0,0,0,.18);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,.3)}@supports(scrollbar-width:thin){html{scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.18) transparent}}</style></head><body></body></html>'
     );
     doc.close();
 
@@ -394,9 +397,8 @@ export function CanvasIframe({
         style={{
           border: "none",
           width,
-          minHeight,
+          height,
           display: "block",
-          overflow: "hidden",
           background: backgroundColor,
         }}
         // Security: same-origin, no sandbox (need full DOM access)

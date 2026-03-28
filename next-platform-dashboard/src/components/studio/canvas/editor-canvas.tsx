@@ -82,20 +82,22 @@ function CanvasFrame({ children }: CanvasFrameProps) {
     showDeviceFrame && devicePreset && devicePreset.category !== "custom";
 
   // The zoomed container - applies zoom transform
+  // The iframe inside has a fixed viewport height and scrolls internally,
+  // so we use exact height (not minHeight) and overflow-hidden to clip
+  // the scaled content cleanly at the viewport boundary.
   const zoomedContent = (
     <div
       className="relative shadow-lg rounded-lg overflow-hidden border border-gray-200"
       style={{
         width: viewportWidth * zoom,
-        minHeight: viewportHeight * zoom,
-        maxHeight: "calc(100vh - 200px)",
+        height: viewportHeight * zoom,
         borderRadius: 8,
       }}
     >
       <div
         style={{
           width: viewportWidth,
-          minHeight: viewportHeight,
+          height: viewportHeight,
           transform: `scale(${zoom})`,
           transformOrigin: "top left",
         }}
@@ -118,7 +120,7 @@ function CanvasFrame({ children }: CanvasFrameProps) {
         <div
           style={{
             width: viewportWidth,
-            minHeight: viewportHeight,
+            height: viewportHeight,
           }}
         >
           {children}
@@ -284,7 +286,7 @@ export function EditorCanvas({ className }: EditorCanvasProps) {
             foregroundColor={brandPalette?.foreground || "#111827"}
             fontFamilies={fontFamilies}
             width={viewportWidth}
-            minHeight={viewportHeight}
+            height={viewportHeight}
           >
             <CanvasContent />
           </CanvasIframe>
