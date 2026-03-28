@@ -73,6 +73,7 @@ import {
   STATUS_LABELS,
   PAYMENT_STATUS_LABELS,
 } from "@/modules/ecommerce/lib/order-constants";
+import type { OrderStatus } from "@/modules/ecommerce/types/ecommerce-types";
 import { ImageLightbox } from "./ImageLightbox";
 import { OrderDetailDialog } from "@/modules/ecommerce/components/orders/order-detail-dialog";
 
@@ -194,7 +195,7 @@ export function ChatOrderPanel({
           toast.error(result.error);
         } else {
           toast.success(
-            `Order status updated to ${STATUS_LABELS[newStatus] || newStatus}`,
+            `Order status updated to ${STATUS_LABELS[newStatus as OrderStatus] || newStatus}`,
           );
           fetchOrder();
         }
@@ -348,7 +349,7 @@ export function ChatOrderPanel({
     );
   }
 
-  const nextStatuses = VALID_TRANSITIONS[order.status] || [];
+  const nextStatuses = VALID_TRANSITIONS[order.status as OrderStatus] || [];
   const isManualPayment =
     order.paymentProvider === "manual" ||
     order.paymentMethod === "bank_transfer" ||
@@ -382,7 +383,7 @@ export function ChatOrderPanel({
             variant={getStatusVariant(order.status)}
             className="text-[10px]"
           >
-            {STATUS_LABELS[order.status] || order.status}
+            {STATUS_LABELS[order.status as OrderStatus] || order.status}
           </Badge>
           <Badge
             variant={getStatusVariant(order.paymentStatus)}
@@ -611,7 +612,7 @@ export function ChatOrderPanel({
                   <SelectValue placeholder="Change status..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {nextStatuses.map((s) => (
+                  {nextStatuses.map((s: OrderStatus) => (
                     <SelectItem key={s} value={s} className="text-xs">
                       {STATUS_LABELS[s] || s}
                     </SelectItem>

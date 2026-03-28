@@ -215,10 +215,17 @@ export async function generateAutoResponse(
     if (pendingManualOrder && paymentInstructions) {
       const parsedMethods = parsePaymentMethods(paymentInstructions);
 
-      // Check if we already sent a payment_method_select in this conversation
+      // Check if we already sent a payment_method_select for THIS order
       const existingButtonMsg = previousMessages.find(
-        (m: Record<string, unknown>) =>
-          m.content_type === "payment_method_select",
+        (m: Record<string, unknown>) => {
+          if (m.content_type !== "payment_method_select") return false;
+          try {
+            const data = JSON.parse(m.content as string);
+            return data.orderNumber === pendingManualOrder.orderNumber;
+          } catch {
+            return false;
+          }
+        },
       );
 
       if (!existingButtonMsg && parsedMethods && parsedMethods.length >= 2) {
@@ -243,7 +250,7 @@ export async function generateAutoResponse(
         };
       }
 
-      // Buttons were already sent — check if the user selected a specific method
+      // Buttons were already sent for this order — check if the user selected a specific method
       if (existingButtonMsg && parsedMethods && parsedMethods.length >= 2) {
         const lowerVisitorMsg = visitorMessage.toLowerCase();
         const matchedMethod = parsedMethods.find(

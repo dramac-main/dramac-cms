@@ -409,9 +409,6 @@ export function OrderConfirmationBlock({
     order.payment_status === "pending" || !order.payment_status;
   const isAwaitingPayment = isManualPayment && isPaymentPending;
 
-  // Get manual payment instructions from store settings
-  const manualInstructions = storefront.settings?.manual_payment_instructions;
-
   // Format payment method name for display
   const paymentMethodLabel = (() => {
     const method = order.payment_provider || order.payment_method;
@@ -569,13 +566,13 @@ export function OrderConfirmationBlock({
           </div>
         </div>
 
-        {/* Manual Payment Instructions — enhanced with copy buttons */}
+        {/* Manual Payment — Secure Payment Guidance via Chat */}
         {isAwaitingPayment && (
           <Card className="mb-6 border-warning/20 bg-warning/5">
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2 text-foreground">
                 <Banknote className="h-5 w-5 text-warning" />
-                Payment Instructions
+                How to Pay
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -637,70 +634,35 @@ export function OrderConfirmationBlock({
                 </Button>
               </div>
 
-              {/* Payment instructions text with per-line copy */}
-              {manualInstructions ? (
-                <div className="bg-card rounded-lg border p-4">
-                  <p className="text-xs text-muted-foreground mb-2 font-medium">
-                    Where to Send Payment
-                  </p>
-                  <div className="space-y-1.5">
-                    {manualInstructions
-                      .split("\n")
-                      .filter((line: string) => line.trim())
-                      .map((line: string, i: number) => {
-                        // Detect lines with copyable content (phone numbers, account numbers)
-                        const hasCopyable = /(\+?\d[\d\s-]{6,}|\d{5,})/.test(
-                          line,
-                        );
-                        const copyValue = line
-                          .match(/(\+?\d[\d\s-]{6,}|\d{5,})/)?.[0]
-                          ?.replace(/\s/g, "");
-                        return (
-                          <div
-                            key={i}
-                            className={cn(
-                              "flex items-center justify-between text-sm py-1",
-                              hasCopyable && "bg-warning/5 rounded px-2 -mx-2",
-                            )}
-                          >
-                            <span className="text-foreground">{line}</span>
-                            {hasCopyable && copyValue && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 shrink-0 ml-2"
-                                aria-label="Copy value"
-                                onClick={() => copyText(copyValue, `line-${i}`)}
-                              >
-                                {copiedField === `line-${i}` ? (
-                                  <Check className="h-3 w-3 text-success" />
-                                ) : (
-                                  <Copy className="h-3 w-3 text-muted-foreground" />
-                                )}
-                              </Button>
-                            )}
-                          </div>
-                        );
-                      })}
-                  </div>
+              {/* Direct to chat for secure payment details */}
+              <div className="bg-card rounded-lg border p-4 text-center space-y-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                  <MessageSquare className="h-5 w-5 text-primary" />
                 </div>
-              ) : (
-                <p className="text-sm text-warning">
-                  Please contact the store to arrange payment. Use order number{" "}
-                  <strong>{order.order_number}</strong> as the payment
-                  reference.
-                </p>
-              )}
+                <div>
+                  <p className="text-sm font-medium">
+                    Get your payment details securely via chat
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Our chat assistant will guide you through the payment
+                    process. Select your preferred payment method in the chat to
+                    receive the details you need.
+                  </p>
+                </div>
+                <Button
+                  onClick={openChatWithOrderContext}
+                  size="sm"
+                  className="mt-2"
+                >
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Open Payment Chat
+                </Button>
+              </div>
 
               <div className="text-xs text-warning border-t border-warning/20 pt-3">
                 <strong>Important:</strong> Your order will be processed once
                 payment is confirmed. Always use{" "}
                 <strong>{order.order_number}</strong> as your payment reference.
-              </div>
-              <div className="text-xs text-warning flex items-center gap-1.5 mt-2">
-                <MessageSquare className="h-3 w-3" />
-                Your chat assistant is also walking you through these payment
-                steps.
               </div>
             </CardContent>
           </Card>

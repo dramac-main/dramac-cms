@@ -344,7 +344,7 @@ const order_confirmation_customer: BrandedTemplate = {
       ? "Order Received — Payment Pending"
       : "Order Confirmed! 🎉";
     const introText = isPending
-      ? "Thank you for your order! To complete your purchase, please follow the payment instructions below."
+      ? "Thank you for your order! To complete your purchase, please use the chat on our website for secure payment details."
       : "Thank you for your order! Here's your order summary:";
 
     const paymentStatusSection = isPending
@@ -356,13 +356,13 @@ const order_confirmation_customer: BrandedTemplate = {
         <p style="margin:0;font-weight:600;color:#166534;">✅ Payment Status: Paid</p>
       </div>`;
 
-    const manualPaymentSection =
-      isManualPayment && data.manualPaymentInstructions
-        ? `<div style="background:#fef3c7;border:2px solid #f59e0b;border-radius:8px;padding:20px;margin:20px 0;">
-        <p style="margin:0 0 12px;font-weight:700;color:#92400e;font-size:16px;">💳 Payment Instructions</p>
-        <p style="margin:0;color:#78350f;font-size:14px;white-space:pre-wrap;line-height:1.6;">${data.manualPaymentInstructions}</p>
+    const manualPaymentSection = isManualPayment
+      ? `<div style="background:#fef3c7;border:2px solid #f59e0b;border-radius:8px;padding:20px;margin:20px 0;">
+        <p style="margin:0 0 12px;font-weight:700;color:#92400e;font-size:16px;">💳 How to Pay</p>
+        <p style="margin:0;color:#78350f;font-size:14px;line-height:1.6;">For secure payment details, please visit our website and use the <strong>chat widget</strong> — our assistant will guide you through the payment process.</p>
+        <p style="margin:8px 0 0;color:#78350f;font-size:14px;">Reference your order number: <strong>#${data.orderNumber}</strong></p>
       </div>`
-        : "";
+      : "";
 
     return baseEmailTemplate(
       b,
@@ -409,10 +409,9 @@ const order_confirmation_customer: BrandedTemplate = {
     const header = isPending
       ? "Order Received — Payment Pending"
       : "Order Confirmed!";
-    const paymentInstr =
-      isManualPayment && data.manualPaymentInstructions
-        ? `\n\nPayment Instructions:\n${data.manualPaymentInstructions}`
-        : "";
+    const paymentInstr = isManualPayment
+      ? `\n\nHow to Pay:\nFor secure payment details, please visit our website and use the chat widget — our assistant will guide you through the payment process.\nReference your order number: #${data.orderNumber}`
+      : "";
     const nextSteps = isPending
       ? "\n\nWhat happens next: Once we receive and confirm your payment, we'll process your order and send you a shipping confirmation."
       : "";

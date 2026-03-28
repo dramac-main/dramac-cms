@@ -201,7 +201,9 @@ function buildPaymentMethods(
         id: `manual-${m.id || i}`,
         name: m.name || "Manual Payment",
         icon: m.icon || "Banknote",
-        description: m.description,
+        // Don't expose payment details (account numbers etc.) on the checkout page.
+        // The AI chat widget provides these securely after order placement.
+        description: "Payment details provided after order is placed",
       });
     });
   } else if (
@@ -212,9 +214,7 @@ function buildPaymentMethods(
       id: "manual",
       name: "Manual Payment",
       icon: "Banknote",
-      description:
-        (settings.manual_payment_instructions as string) ||
-        "Pay via bank transfer or cash on delivery",
+      description: "Payment details provided after order is placed",
     });
   }
 

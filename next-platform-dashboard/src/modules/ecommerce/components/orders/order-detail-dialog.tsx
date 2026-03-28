@@ -208,7 +208,7 @@ export function OrderDetailDialog({
           // Load payment proof if it exists
           const isManualPayment =
             data.payment_provider === "manual" ||
-            data.payment_provider === "bank_transfer";
+            (data.payment_provider as string) === "bank_transfer";
           if (isManualPayment || data.metadata?.payment_proof) {
             const result = await getPaymentProofUrl(orderId, siteId);
             if (result.url) {
@@ -537,7 +537,7 @@ export function OrderDetailDialog({
 
               {/* Payment Proof Section — only shown for manual/bank_transfer orders */}
               {(orderData.payment_provider === "manual" ||
-                orderData.payment_provider === "bank_transfer" ||
+                (orderData.payment_provider as string) === "bank_transfer" ||
                 !!orderData.metadata?.payment_proof) && (
                 <div className="rounded-lg border p-4 space-y-3">
                   <h3 className="text-sm font-semibold flex items-center gap-2">
