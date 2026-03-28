@@ -9,6 +9,22 @@
 
 import { DEFAULT_TIMEZONE } from "@/lib/locale-config";
 
+/**
+ * Convert basic markdown (bold, italic) to HTML.
+ * Handles **bold**, *italic*, and __bold__, _italic_.
+ * Sanitises angle brackets to prevent XSS.
+ */
+function formatMessageText(text: string): string {
+  let safe = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  // **bold** or __bold__
+  safe = safe.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  safe = safe.replace(/__(.+?)__/g, "<strong>$1</strong>");
+  // *italic* or _italic_ (but not inside words like some_var_name)
+  safe = safe.replace(/(?<![\w])\*(.+?)\*(?![\w])/g, "<em>$1</em>");
+  safe = safe.replace(/(?<![\w])_(.+?)_(?![\w])/g, "<em>$1</em>");
+  return safe;
+}
+
 export interface WidgetMessage {
   id: string;
   text: string;
@@ -151,7 +167,10 @@ export function WidgetMessageBubble({
 
           {/* Message text */}
           {message.text && (
-            <p className="whitespace-pre-wrap">{message.text}</p>
+            <p
+              className="whitespace-pre-wrap"
+              dangerouslySetInnerHTML={{ __html: formatMessageText(message.text) }}
+            />
           )}
         </div>
 
@@ -263,9 +282,10 @@ function PaymentUploadPrompt({
         {/* Message bubble with text + Upload Proof button */}
         <div className="rounded-2xl rounded-bl-md bg-[#f1f5f9] overflow-hidden">
           <div className="px-3 pt-2.5 pb-1.5">
-            <p className="text-sm text-[#1e293b] leading-relaxed whitespace-pre-wrap">
-              {message.text}
-            </p>
+            <p
+              className="text-sm text-[#1e293b] leading-relaxed whitespace-pre-wrap"
+              dangerouslySetInnerHTML={{ __html: formatMessageText(message.text) }}
+            />
           </div>
 
           {/* Upload Proof button */}
@@ -330,7 +350,10 @@ function PaymentMethodSelect({
       <div className="flex justify-start mb-1">
         <div className="max-w-[80%]">
           <div className="px-3 py-2 text-sm leading-relaxed rounded-2xl rounded-bl-md bg-[#f1f5f9] text-[#1e293b]">
-            <p className="whitespace-pre-wrap">{message.text}</p>
+            <p
+              className="whitespace-pre-wrap"
+              dangerouslySetInnerHTML={{ __html: formatMessageText(message.text) }}
+            />
           </div>
         </div>
       </div>
@@ -362,9 +385,10 @@ function PaymentMethodSelect({
         <div className="rounded-2xl rounded-bl-md bg-[#f1f5f9] overflow-hidden">
           {/* Question text */}
           <div className="px-3 pt-2.5 pb-1.5">
-            <p className="text-sm text-[#1e293b] leading-relaxed">
-              {data.text}
-            </p>
+            <p
+              className="text-sm text-[#1e293b] leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: formatMessageText(data.text) }}
+            />
           </div>
 
           {/* Payment method buttons */}

@@ -195,21 +195,15 @@ function buildPaymentMethods(
     | Array<{ id?: string; name?: string; icon?: string; description?: string }>
     | undefined;
 
-  if (Array.isArray(manualMethods) && manualMethods.length > 0) {
-    manualMethods.forEach((m, i) => {
-      methods.push({
-        id: `manual-${m.id || i}`,
-        name: m.name || "Manual Payment",
-        icon: m.icon || "Banknote",
-        // Don't expose payment details (account numbers etc.) on the checkout page.
-        // The AI chat widget provides these securely after order placement.
-        description: "Payment details provided after order is placed",
-      });
-    });
-  } else if (
+  // Show a single "Manual Payment" option when manual methods are configured.
+  // The specific payment method (Airtel Money, MTN, Bank Transfer, etc.) is
+  // selected during the post-order live chat conversation.
+  const hasManualMethods =
+    (Array.isArray(manualMethods) && manualMethods.length > 0) ||
     settings.payment_provider === "manual" ||
-    (paymentSettingsJson?.active_provider as string) === "manual"
-  ) {
+    (paymentSettingsJson?.active_provider as string) === "manual";
+
+  if (hasManualMethods) {
     methods.push({
       id: "manual",
       name: "Manual Payment",

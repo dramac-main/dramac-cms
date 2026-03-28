@@ -10,6 +10,19 @@
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+
+/**
+ * Convert basic markdown (bold, italic) to HTML.
+ * Sanitises angle brackets to prevent XSS.
+ */
+function formatChatMarkdown(text: string): string {
+  let safe = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  safe = safe.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  safe = safe.replace(/__(.+?)__/g, "<strong>$1</strong>");
+  safe = safe.replace(/(?<![\w])\*(.+?)\*(?![\w])/g, "<em>$1</em>");
+  safe = safe.replace(/(?<![\w])_(.+?)_(?![\w])/g, "<em>$1</em>");
+  return safe;
+}
 import {
   Check,
   CheckCheck,
@@ -272,9 +285,10 @@ export function MessageBubble({ message, className }: MessageBubbleProps) {
           ) : message.contentType === "payment_upload_prompt" ? (
             <>
               {message.content && (
-                <p className="text-sm whitespace-pre-wrap break-words">
-                  {message.content}
-                </p>
+                <p
+                  className="text-sm whitespace-pre-wrap break-words"
+                  dangerouslySetInnerHTML={{ __html: formatChatMarkdown(message.content) }}
+                />
               )}
               <div className="mt-2 px-2 py-1.5 bg-muted/50 rounded text-xs text-muted-foreground flex items-center gap-1.5">
                 <svg
@@ -295,9 +309,10 @@ export function MessageBubble({ message, className }: MessageBubbleProps) {
           ) : (
             <>
               {message.content && (
-                <p className="text-sm whitespace-pre-wrap break-words">
-                  {message.content}
-                </p>
+                <p
+                  className="text-sm whitespace-pre-wrap break-words"
+                  dangerouslySetInnerHTML={{ __html: formatChatMarkdown(message.content) }}
+                />
               )}
               {(message.contentType === "image" ||
                 message.contentType === "file" ||
