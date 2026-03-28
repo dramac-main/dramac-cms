@@ -445,7 +445,12 @@ export function useCheckout(): UseCheckoutResult {
         shippingAmount,
       itemCount: safeCartTotals.itemCount,
     };
-  }, [safeCartTotals, state.shippingMethod, cart?.discount_type, cart?.discount_code]);
+  }, [
+    safeCartTotals,
+    state.shippingMethod,
+    cart?.discount_type,
+    cart?.discount_code,
+  ]);
 
   // Validation
   const validation = useMemo((): CheckoutValidation => {

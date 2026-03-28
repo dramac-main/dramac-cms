@@ -383,6 +383,7 @@ export interface ConversationFilters {
   assignedAgentId?: string | "unassigned" | "all";
   departmentId?: string | "all";
   priority?: ConversationPriority | "all";
+  tag?: string | "all";
   search?: string;
   dateFrom?: string;
   dateTo?: string;

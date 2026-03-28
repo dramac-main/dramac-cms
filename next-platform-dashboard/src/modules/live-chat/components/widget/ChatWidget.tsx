@@ -218,10 +218,7 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
       const freshMap: Record<string, string> = {};
       for (const conv of convs) {
         // Only track conversations that are still active
-        if (
-          conv.status === "resolved" ||
-          conv.status === "closed"
-        ) {
+        if (conv.status === "resolved" || conv.status === "closed") {
           continue;
         }
         const key = conv.orderNumber || GENERAL_KEY;

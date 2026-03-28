@@ -134,7 +134,7 @@ export function WidgetPreChatForm({
       {/* Form */}
       <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-4 pb-4 space-y-3">
         {/* Name */}
-        {(settings.preChatNameRequired || true) && (
+        {settings.preChatNameRequired !== false && (
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">
               Name {settings.preChatNameRequired && <span className="text-red-500">*</span>}
@@ -153,7 +153,7 @@ export function WidgetPreChatForm({
         )}
 
         {/* Email */}
-        {(settings.preChatEmailRequired || true) && (
+        {settings.preChatEmailRequired !== false && (
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">
               Email {settings.preChatEmailRequired && <span className="text-red-500">*</span>}

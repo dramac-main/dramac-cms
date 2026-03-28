@@ -694,10 +694,11 @@ export async function applyPublicDiscountToCart(
     }
 
     // Check minimum quantity
-    const itemCount = (cart.items as { quantity: number }[])?.reduce(
-      (sum: number, i: { quantity: number }) => sum + (i.quantity || 0),
-      0,
-    ) || 0;
+    const itemCount =
+      (cart.items as { quantity: number }[])?.reduce(
+        (sum: number, i: { quantity: number }) => sum + (i.quantity || 0),
+        0,
+      ) || 0;
     if (discount.minimum_quantity && itemCount < discount.minimum_quantity) {
       return {
         success: false,

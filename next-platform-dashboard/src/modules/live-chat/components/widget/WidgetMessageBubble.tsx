@@ -15,7 +15,10 @@ import { DEFAULT_TIMEZONE } from "@/lib/locale-config";
  * Sanitises angle brackets to prevent XSS.
  */
 function formatMessageText(text: string): string {
-  let safe = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  let safe = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
   // **bold** or __bold__
   safe = safe.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
   safe = safe.replace(/__(.+?)__/g, "<strong>$1</strong>");
@@ -169,7 +172,9 @@ export function WidgetMessageBubble({
           {message.text && (
             <p
               className="whitespace-pre-wrap"
-              dangerouslySetInnerHTML={{ __html: formatMessageText(message.text) }}
+              dangerouslySetInnerHTML={{
+                __html: formatMessageText(message.text),
+              }}
             />
           )}
         </div>
@@ -284,7 +289,9 @@ function PaymentUploadPrompt({
           <div className="px-3 pt-2.5 pb-1.5">
             <p
               className="text-sm text-[#1e293b] leading-relaxed whitespace-pre-wrap"
-              dangerouslySetInnerHTML={{ __html: formatMessageText(message.text) }}
+              dangerouslySetInnerHTML={{
+                __html: formatMessageText(message.text),
+              }}
             />
           </div>
 
@@ -352,7 +359,9 @@ function PaymentMethodSelect({
           <div className="px-3 py-2 text-sm leading-relaxed rounded-2xl rounded-bl-md bg-[#f1f5f9] text-[#1e293b]">
             <p
               className="whitespace-pre-wrap"
-              dangerouslySetInnerHTML={{ __html: formatMessageText(message.text) }}
+              dangerouslySetInnerHTML={{
+                __html: formatMessageText(message.text),
+              }}
             />
           </div>
         </div>

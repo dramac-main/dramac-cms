@@ -9,13 +9,7 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import {
-  Banknote,
-  CreditCard,
-  Landmark,
-  Lock,
-  Wallet,
-} from "lucide-react";
+import { Banknote, CreditCard, Landmark, Lock, Wallet } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { PaymentMethod } from "../../hooks/useCheckout";
 

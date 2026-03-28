@@ -91,6 +91,9 @@ export async function getConversations(
     if (filters?.dateTo) {
       query = query.lte("created_at", filters.dateTo);
     }
+    if (filters?.tag && filters.tag !== "all") {
+      query = query.contains("tags", [filters.tag]);
+    }
 
     const { data, count, error } = await query;
 

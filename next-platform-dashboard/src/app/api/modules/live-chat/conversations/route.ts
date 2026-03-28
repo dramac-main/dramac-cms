@@ -229,7 +229,7 @@ export async function POST(request: NextRequest) {
         message_count: 0,
         unread_agent_count: 0,
         unread_visitor_count: 0,
-        tags: [],
+        tags: orderNumber ? ["order", "payment"] : ["general"],
         metadata: orderNumber
           ? {
               order_number: orderNumber,
@@ -452,14 +452,12 @@ export async function GET(request: NextRequest) {
             id: c.id,
             status: c.status,
             subject: c.subject || null,
-            orderNumber: meta?.order_number
-              ? String(meta.order_number)
-              : null,
-          lastMessageText: c.last_message_text || null,
-          lastMessageAt: c.last_message_at || c.updated_at || c.created_at,
-          unreadCount: c.unread_visitor_count || 0,
-          messageCount: c.message_count || 0,
-          createdAt: c.created_at,
+            orderNumber: meta?.order_number ? String(meta.order_number) : null,
+            lastMessageText: c.last_message_text || null,
+            lastMessageAt: c.last_message_at || c.updated_at || c.created_at,
+            unreadCount: c.unread_visitor_count || 0,
+            messageCount: c.message_count || 0,
+            createdAt: c.created_at,
             agentName: c.assigned_agent_id
               ? agentMap[c.assigned_agent_id as string] || null
               : null,

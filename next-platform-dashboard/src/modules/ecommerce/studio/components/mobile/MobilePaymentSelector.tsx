@@ -135,8 +135,6 @@ export function MobilePaymentSelector({
     onAddNew();
   };
 
-
-
   const renderMethodButton = (method: PaymentMethod) => {
     const isSelected = method.id === selectedMethodId;
 

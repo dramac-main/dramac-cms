@@ -145,6 +145,7 @@ export function ConversationViewWrapper({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [showTransfer, setShowTransfer] = useState(false);
   const [tagInput, setTagInput] = useState("");
+  const [aiGlowing, setAiGlowing] = useState(false);
 
   // AI pause state — derived from conversation metadata
   const [aiPaused, setAiPaused] = useState(
@@ -267,10 +268,13 @@ export function ConversationViewWrapper({
       });
       if (result.error) {
         toast.error(result.error);
+      } else if (!isNote && !aiPaused) {
+        // Agent sent a real message while AI is still active — glow the AI button
+        setAiGlowing(true);
       }
       // Realtime will add the message to the list
     },
-    [conversation.id, siteId, userId, userName],
+    [conversation.id, siteId, userId, userName, aiPaused],
   );
 
   // Upload file and send as message
@@ -455,6 +459,7 @@ export function ConversationViewWrapper({
         toast.error(result.error);
       } else {
         setAiPaused(newPaused);
+        setAiGlowing(false);
         toast.success(
           newPaused ? "AI paused — you're in control" : "AI resumed",
         );
@@ -479,6 +484,7 @@ export function ConversationViewWrapper({
       } else {
         setConversation((c) => ({ ...c, assignedAgentId: currentAgent.id }));
         setAiPaused(true);
+        setAiGlowing(false);
         toast.success("You've taken over this conversation");
       }
     });
@@ -641,13 +647,15 @@ export function ConversationViewWrapper({
                 <Button
                   variant={aiPaused ? "outline" : "secondary"}
                   size="sm"
-                  className="h-8 text-xs"
+                  className={`h-8 text-xs ${aiGlowing ? "animate-pulse ring-2 ring-amber-400 ring-offset-1 bg-amber-50 dark:bg-amber-950 border-amber-400" : ""}`}
                   onClick={handleToggleAi}
                   disabled={isPending}
                   title={
-                    aiPaused
-                      ? `AI paused${(conversation.metadata as Record<string, unknown>)?.ai_paused_by ? ` by ${(conversation.metadata as Record<string, unknown>).ai_paused_by}` : ""} — click to resume`
-                      : "Pause AI auto-responses"
+                    aiGlowing
+                      ? "AI is still active — click to pause AI while you're chatting"
+                      : aiPaused
+                        ? `AI paused${(conversation.metadata as Record<string, unknown>)?.ai_paused_by ? ` by ${(conversation.metadata as Record<string, unknown>).ai_paused_by}` : ""} — click to resume`
+                        : "Pause AI auto-responses"
                   }
                 >
                   {aiPaused ? (

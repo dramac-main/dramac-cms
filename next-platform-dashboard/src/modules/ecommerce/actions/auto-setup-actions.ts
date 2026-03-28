@@ -1,15 +1,15 @@
 /**
  * E-Commerce Auto-Setup Server Actions
- * 
+ *
  * PHASE-ECOM-51: Auto-Page Generation & Templates
- * 
+ *
  * Server actions for automatic page creation, navigation setup,
  * and default settings application.
  */
 
-'use server';
+"use server";
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from "@/lib/supabase/server";
 import type {
   CreatePagesResult,
   DeletePagesResult,
@@ -20,12 +20,12 @@ import type {
   DefaultStoreSettings,
   SiteNavigation,
   NavigationItem,
-} from '../types/setup-types';
+} from "../types/setup-types";
 import {
   ecommercePageDefinitions,
   ecommerceDynamicRoutes,
   quotePageDefinition,
-} from '../lib/page-templates';
+} from "../lib/page-templates";
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -39,25 +39,25 @@ async function getEcommerceModuleUuid(): Promise<string | null> {
   const supabase = await createClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any;
-  
+
   // Try modules_v2 first
   const { data: moduleData } = await db
-    .from('modules_v2')
-    .select('id')
-    .eq('slug', 'ecommerce')
+    .from("modules_v2")
+    .select("id")
+    .eq("slug", "ecommerce")
     .single();
-  
+
   if (moduleData?.id) {
     return moduleData.id;
   }
-  
+
   // Fallback to module_source
   const { data: sourceModule } = await db
-    .from('module_source')
-    .select('id')
-    .eq('slug', 'ecommerce')
+    .from("module_source")
+    .select("id")
+    .eq("slug", "ecommerce")
     .single();
-  
+
   return sourceModule?.id || null;
 }
 
@@ -69,26 +69,28 @@ async function getEcommerceModuleUuid(): Promise<string | null> {
  * Create all e-commerce pages for a site
  */
 export async function createEcommercePages(
-  siteId: string
+  siteId: string,
 ): Promise<CreatePagesResult> {
   const supabase = await createClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any;
-  
+
   const result: CreatePagesResult = {
     success: true,
     pages: [],
     errors: [],
   };
-  
+
   // Get existing pages to avoid conflicts
   const { data: existingPages } = await db
-    .from('pages')
-    .select('slug')
-    .eq('site_id', siteId);
-  
-  const existingSlugs = new Set(existingPages?.map((p: { slug: string }) => p.slug) || []);
-  
+    .from("pages")
+    .select("slug")
+    .eq("site_id", siteId);
+
+  const existingSlugs = new Set(
+    existingPages?.map((p: { slug: string }) => p.slug) || [],
+  );
+
   // Create static pages
   // NOTE: The DB uses a two-table structure:
   //   - `pages` table: id, site_id, name, slug, seo_title, seo_description, is_homepage, sort_order, ...
@@ -99,42 +101,50 @@ export async function createEcommercePages(
       console.log(`[AutoSetup] Page /${pageDef.slug} already exists, skipping`);
       continue;
     }
-    
+
     try {
       // Step 1: Create the page row in `pages` table
       const { data: page, error } = await db
-        .from('pages')
+        .from("pages")
         .insert({
           site_id: siteId,
           slug: pageDef.slug,
           name: pageDef.title,
           seo_title: pageDef.metaTitle || pageDef.title,
-          seo_description: pageDef.metaDescription || '',
+          seo_description: pageDef.metaDescription || "",
           is_homepage: false,
         })
-        .select('id, slug, name')
+        .select("id, slug, name")
         .single();
-      
+
       if (error) {
-        console.error(`[AutoSetup] Failed to create page /${pageDef.slug}:`, error);
-        result.errors?.push(`Failed to create /${pageDef.slug}: ${error.message}`);
+        console.error(
+          `[AutoSetup] Failed to create page /${pageDef.slug}:`,
+          error,
+        );
+        result.errors?.push(
+          `Failed to create /${pageDef.slug}: ${error.message}`,
+        );
         continue;
       }
-      
+
       // Step 2: Create the page content in `page_content` table
-      const { error: contentError } = await db
-        .from('page_content')
-        .insert({
-          page_id: page.id,
-          content: pageDef.content,
-        });
-      
+      const { error: contentError } = await db.from("page_content").insert({
+        page_id: page.id,
+        content: pageDef.content,
+      });
+
       if (contentError) {
-        console.error(`[AutoSetup] Failed to save content for /${pageDef.slug}:`, contentError);
-        result.errors?.push(`Failed to save content for /${pageDef.slug}: ${contentError.message}`);
+        console.error(
+          `[AutoSetup] Failed to save content for /${pageDef.slug}:`,
+          contentError,
+        );
+        result.errors?.push(
+          `Failed to save content for /${pageDef.slug}: ${contentError.message}`,
+        );
         // Page row exists but content failed — still track it
       }
-      
+
       result.pages.push({
         id: page.id,
         slug: page.slug,
@@ -146,19 +156,20 @@ export async function createEcommercePages(
       result.errors?.push(`Error creating /${pageDef.slug}`);
     }
   }
-  
+
   // Store dynamic route definitions in site settings
   // These are used by the router to handle /products/[slug] and /categories/[slug]
   try {
     await storeDynamicRouteDefinitions(siteId, ecommerceDynamicRoutes);
-    console.log('[AutoSetup] Stored dynamic route definitions');
+    console.log("[AutoSetup] Stored dynamic route definitions");
   } catch (err) {
-    console.error('[AutoSetup] Failed to store dynamic routes:', err);
-    result.errors?.push('Failed to store dynamic route definitions');
+    console.error("[AutoSetup] Failed to store dynamic routes:", err);
+    result.errors?.push("Failed to store dynamic route definitions");
   }
-  
-  result.success = result.pages.length > 0 || (result.errors?.length || 0) === 0;
-  
+
+  result.success =
+    result.pages.length > 0 || (result.errors?.length || 0) === 0;
+
   return result;
 }
 
@@ -167,25 +178,25 @@ export async function createEcommercePages(
  */
 async function storeDynamicRouteDefinitions(
   siteId: string,
-  routes: typeof ecommerceDynamicRoutes
+  routes: typeof ecommerceDynamicRoutes,
 ): Promise<void> {
   const supabase = await createClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any;
-  
+
   // Get current site settings
   const { data: site } = await db
-    .from('sites')
-    .select('settings')
-    .eq('id', siteId)
+    .from("sites")
+    .select("settings")
+    .eq("id", siteId)
     .single();
-  
+
   const currentSettings = site?.settings || {};
-  
+
   // Add dynamic routes to settings
   const updatedSettings = {
     ...currentSettings,
-    ecommerce_dynamic_routes: routes.map(r => ({
+    ecommerce_dynamic_routes: routes.map((r) => ({
       pattern: r.slug,
       title: r.title,
       metaTitle: r.metaTitle,
@@ -193,11 +204,8 @@ async function storeDynamicRouteDefinitions(
       content: r.content,
     })),
   };
-  
-  await db
-    .from('sites')
-    .update({ settings: updatedSettings })
-    .eq('id', siteId);
+
+  await db.from("sites").update({ settings: updatedSettings }).eq("id", siteId);
 }
 
 /**
@@ -207,63 +215,59 @@ async function storeDynamicRouteDefinitions(
  */
 export async function deletePagesCreatedByModule(
   siteId: string,
-  _moduleId: string
+  _moduleId: string,
 ): Promise<DeletePagesResult> {
   const supabase = await createClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any;
-  
+
   const result: DeletePagesResult = {
     success: true,
     pagesRemoved: [],
     errors: [],
   };
-  
+
   try {
     // Find pages by known ecommerce slugs
     // Include 'quotes' which is created on-demand (not in ecommercePageDefinitions)
-    const ecommerceSlugs = [...ecommercePageDefinitions.map(p => p.slug), 'quotes'];
-    
+    const ecommerceSlugs = [
+      ...ecommercePageDefinitions.map((p) => p.slug),
+      "quotes",
+    ];
+
     const { data: modulePages } = await db
-      .from('pages')
-      .select('id, slug')
-      .eq('site_id', siteId)
-      .in('slug', ecommerceSlugs);
-    
+      .from("pages")
+      .select("id, slug")
+      .eq("site_id", siteId)
+      .in("slug", ecommerceSlugs);
+
     if (!modulePages || modulePages.length === 0) {
       return result;
     }
-    
+
     // Delete page content first (FK constraint), then pages
     for (const page of modulePages) {
       // Delete content
-      await db
-        .from('page_content')
-        .delete()
-        .eq('page_id', page.id);
-      
+      await db.from("page_content").delete().eq("page_id", page.id);
+
       // Delete the page row
-      const { error } = await db
-        .from('pages')
-        .delete()
-        .eq('id', page.id);
-      
+      const { error } = await db.from("pages").delete().eq("id", page.id);
+
       if (error) {
         result.errors?.push(`Failed to delete page /${page.slug}`);
       } else {
         result.pagesRemoved.push(page.slug);
       }
     }
-    
+
     // Remove dynamic route definitions
     await removeDynamicRouteDefinitions(siteId);
-    
   } catch (err) {
-    console.error('[AutoSetup] Error removing pages:', err);
-    result.errors?.push('Error removing module pages');
+    console.error("[AutoSetup] Error removing pages:", err);
+    result.errors?.push("Error removing module pages");
     result.success = false;
   }
-  
+
   return result;
 }
 
@@ -274,21 +278,18 @@ async function removeDynamicRouteDefinitions(siteId: string): Promise<void> {
   const supabase = await createClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any;
-  
+
   const { data: site } = await db
-    .from('sites')
-    .select('settings')
-    .eq('id', siteId)
+    .from("sites")
+    .select("settings")
+    .eq("id", siteId)
     .single();
-  
+
   if (site?.settings?.ecommerce_dynamic_routes) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { ecommerce_dynamic_routes, ...restSettings } = site.settings;
-    
-    await db
-      .from('sites')
-      .update({ settings: restSettings })
-      .eq('id', siteId);
+
+    await db.from("sites").update({ settings: restSettings }).eq("id", siteId);
   }
 }
 
@@ -301,34 +302,34 @@ async function removeDynamicRouteDefinitions(siteId: string): Promise<void> {
  */
 const ECOMMERCE_NAV_ITEMS: NavigationItem[] = [
   {
-    id: 'ecom-shop',
-    label: 'Shop',
-    href: '/shop',
-    icon: 'ShoppingBag',
-    position: 'main',
+    id: "ecom-shop",
+    label: "Shop",
+    href: "/shop",
+    icon: "ShoppingBag",
+    position: "main",
     sortOrder: 100, // After Home, before Contact
-    moduleId: 'ecommerce',
+    moduleId: "ecommerce",
   },
   {
-    id: 'ecom-categories',
-    label: 'Categories',
-    href: '/categories',
-    icon: 'LayoutGrid',
-    position: 'main',
+    id: "ecom-categories",
+    label: "Categories",
+    href: "/categories",
+    icon: "LayoutGrid",
+    position: "main",
     sortOrder: 101, // After Shop
-    moduleId: 'ecommerce',
+    moduleId: "ecommerce",
   },
   {
-    id: 'ecom-cart',
-    label: 'Cart',
-    href: '/cart',
-    icon: 'ShoppingCart',
-    position: 'utility',
+    id: "ecom-cart",
+    label: "Cart",
+    href: "/cart",
+    icon: "ShoppingCart",
+    position: "utility",
     sortOrder: 10,
     // No badge here — the live cart count is handled by the floating
     // EcommerceCartInjector widget (industry standard). Template strings
     // like "{{cartCount}}" can't be resolved server-side.
-    moduleId: 'ecommerce',
+    moduleId: "ecommerce",
   },
 ];
 
@@ -337,28 +338,28 @@ const ECOMMERCE_NAV_ITEMS: NavigationItem[] = [
  */
 const ECOMMERCE_FOOTER_ITEMS: NavigationItem[] = [
   {
-    id: 'ecom-footer-shop',
-    label: 'Shop All',
-    href: '/shop',
-    position: 'footer',
+    id: "ecom-footer-shop",
+    label: "Shop All",
+    href: "/shop",
+    position: "footer",
     sortOrder: 1,
-    moduleId: 'ecommerce',
+    moduleId: "ecommerce",
   },
   {
-    id: 'ecom-footer-categories',
-    label: 'Categories',
-    href: '/categories',
-    position: 'footer',
+    id: "ecom-footer-categories",
+    label: "Categories",
+    href: "/categories",
+    position: "footer",
     sortOrder: 2,
-    moduleId: 'ecommerce',
+    moduleId: "ecommerce",
   },
   {
-    id: 'ecom-footer-cart',
-    label: 'My Cart',
-    href: '/cart',
-    position: 'footer',
+    id: "ecom-footer-cart",
+    label: "My Cart",
+    href: "/cart",
+    position: "footer",
     sortOrder: 3,
-    moduleId: 'ecommerce',
+    moduleId: "ecommerce",
   },
 ];
 
@@ -366,91 +367,93 @@ const ECOMMERCE_FOOTER_ITEMS: NavigationItem[] = [
  * Add e-commerce navigation items to a site
  */
 export async function addEcommerceNavigation(
-  siteId: string
+  siteId: string,
 ): Promise<AddNavigationResult> {
   const supabase = await createClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any;
-  
+
   const result: AddNavigationResult = {
     success: true,
     itemsAdded: [],
     errors: [],
   };
-  
+
   try {
     // Get current site settings
     const { data: site, error: siteError } = await db
-      .from('sites')
-      .select('settings')
-      .eq('id', siteId)
+      .from("sites")
+      .select("settings")
+      .eq("id", siteId)
       .single();
-    
+
     if (siteError) {
       result.success = false;
-      result.errors?.push('Failed to fetch site settings');
+      result.errors?.push("Failed to fetch site settings");
       return result;
     }
-    
+
     const currentSettings = site?.settings || {};
     const currentNav: SiteNavigation = currentSettings.navigation || {
       main: [],
       utility: [],
       footer: [],
     };
-    
+
     // Add main navigation items
     for (const item of ECOMMERCE_NAV_ITEMS) {
-      const navArray = item.position === 'main' ? currentNav.main : currentNav.utility;
-      
+      const navArray =
+        item.position === "main" ? currentNav.main : currentNav.utility;
+
       // Check if already exists
       if (navArray.some((n: NavigationItem) => n.id === item.id)) {
         continue;
       }
-      
+
       // Insert at correct position based on sortOrder
-      const insertIndex = navArray.findIndex((n: NavigationItem) => (n.sortOrder || 0) > item.sortOrder);
+      const insertIndex = navArray.findIndex(
+        (n: NavigationItem) => (n.sortOrder || 0) > item.sortOrder,
+      );
       if (insertIndex === -1) {
         navArray.push(item);
       } else {
         navArray.splice(insertIndex, 0, item);
       }
-      
+
       result.itemsAdded.push(item.id);
     }
-    
+
     // Add footer items
     for (const item of ECOMMERCE_FOOTER_ITEMS) {
       if (currentNav.footer.some((n: NavigationItem) => n.id === item.id)) {
         continue;
       }
-      
+
       currentNav.footer.push(item);
       result.itemsAdded.push(item.id);
     }
-    
+
     // Save updated navigation
     const { error: updateError } = await db
-      .from('sites')
+      .from("sites")
       .update({
         settings: {
           ...currentSettings,
           navigation: currentNav,
         },
       })
-      .eq('id', siteId);
-    
+      .eq("id", siteId);
+
     if (updateError) {
       result.success = false;
-      result.errors?.push('Failed to update site navigation');
+      result.errors?.push("Failed to update site navigation");
     }
-    
   } catch (err) {
-    console.error('[AutoSetup] Error adding navigation:', err);
+    console.error("[AutoSetup] Error adding navigation:", err);
     result.success = false;
-    result.errors?.push('Error adding navigation items');
+    result.errors?.push("Error adding navigation items");
   }
-  
+
   return result;
 }
 
@@ -458,72 +461,71 @@ export async function addEcommerceNavigation(
  * Remove e-commerce navigation items from a site
  */
 export async function removeEcommerceNavigation(
-  siteId: string
+  siteId: string,
 ): Promise<RemoveNavigationResult> {
   const supabase = await createClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any;
-  
+
   const result: RemoveNavigationResult = {
     success: true,
     itemsRemoved: [],
     errors: [],
   };
-  
+
   try {
     const { data: site } = await db
-      .from('sites')
-      .select('settings')
-      .eq('id', siteId)
+      .from("sites")
+      .select("settings")
+      .eq("id", siteId)
       .single();
-    
+
     if (!site?.settings?.navigation) {
       return result; // No navigation to modify
     }
-    
+
     const nav: SiteNavigation = site.settings.navigation;
     const ecommerceIds = new Set([
-      ...ECOMMERCE_NAV_ITEMS.map(i => i.id),
-      ...ECOMMERCE_FOOTER_ITEMS.map(i => i.id),
+      ...ECOMMERCE_NAV_ITEMS.map((i) => i.id),
+      ...ECOMMERCE_FOOTER_ITEMS.map((i) => i.id),
     ]);
-    
+
     // Filter out e-commerce items
     const filterNav = (items: NavigationItem[]): NavigationItem[] =>
-      items.filter(item => {
-        if (ecommerceIds.has(item.id) || item.moduleId === 'ecommerce') {
+      items.filter((item) => {
+        if (ecommerceIds.has(item.id) || item.moduleId === "ecommerce") {
           result.itemsRemoved.push(item.id);
           return false;
         }
         return true;
       });
-    
+
     const updatedNav: SiteNavigation = {
       main: filterNav(nav.main || []),
       utility: filterNav(nav.utility || []),
       footer: filterNav(nav.footer || []),
     };
-    
+
     const { error } = await db
-      .from('sites')
+      .from("sites")
       .update({
         settings: {
           ...site.settings,
           navigation: updatedNav,
         },
       })
-      .eq('id', siteId);
-    
+      .eq("id", siteId);
+
     if (error) {
       result.success = false;
-      result.errors?.push('Failed to update site navigation');
+      result.errors?.push("Failed to update site navigation");
     }
-    
   } catch (err) {
-    console.error('[AutoSetup] Error removing navigation:', err);
+    console.error("[AutoSetup] Error removing navigation:", err);
     result.success = false;
-    result.errors?.push('Error removing navigation items');
+    result.errors?.push("Error removing navigation items");
   }
-  
+
   return result;
 }
 
@@ -536,13 +538,13 @@ export async function removeEcommerceNavigation(
  * Uses DEFAULT_CURRENCY (ZMW), DEFAULT_TAX_RATE (16) from locale-config
  */
 const DEFAULT_STORE_SETTINGS: DefaultStoreSettings = {
-  storeName: 'My Store',
-  currency: 'ZMW',           // Zambian Kwacha (from locale-config)
-  currencySymbol: 'K',       // Kwacha symbol
-  currencyPosition: 'before',
-  taxEnabled: true,           // VAT is standard in Zambia
-  taxRate: 16,                // Zambia standard VAT rate is 16%
-  taxIncluded: true,          // Prices typically shown inclusive of VAT
+  storeName: "My Store",
+  currency: "ZMW", // Zambian Kwacha (from locale-config)
+  currencySymbol: "K", // Kwacha symbol
+  currencyPosition: "before",
+  taxEnabled: true, // VAT is standard in Zambia
+  taxRate: 16, // Zambia standard VAT rate is 16%
+  taxIncluded: true, // Prices typically shown inclusive of VAT
   shippingEnabled: true,
   freeShippingThreshold: null,
   checkoutGuestEnabled: true,
@@ -557,42 +559,42 @@ const DEFAULT_STORE_SETTINGS: DefaultStoreSettings = {
  */
 export async function applyDefaultEcommerceSettings(
   siteId: string,
-  initialSettings?: Record<string, unknown>
+  initialSettings?: Record<string, unknown>,
 ): Promise<ApplySettingsResult> {
   const supabase = await createClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any;
-  
+
   const result: ApplySettingsResult = {
     success: true,
     settings: {},
     errors: [],
   };
-  
+
   try {
     // Get the e-commerce module's UUID from its slug
     const moduleUuid = await getEcommerceModuleUuid();
-    
+
     if (!moduleUuid) {
       result.success = false;
-      result.errors?.push('E-commerce module not found in database');
+      result.errors?.push("E-commerce module not found in database");
       return result;
     }
-    
+
     // Get the module installation to update its settings using the UUID
     const { data: installation } = await db
-      .from('site_module_installations')
-      .select('id, settings')
-      .eq('site_id', siteId)
-      .eq('module_id', moduleUuid)
+      .from("site_module_installations")
+      .select("id, settings")
+      .eq("site_id", siteId)
+      .eq("module_id", moduleUuid)
       .single();
-    
+
     if (!installation) {
       result.success = false;
-      result.errors?.push('E-commerce module not installed on this site');
+      result.errors?.push("E-commerce module not installed on this site");
       return result;
     }
-    
+
     // Merge defaults with initial settings
     const mergedSettings = {
       ...DEFAULT_STORE_SETTINGS,
@@ -602,25 +604,24 @@ export async function applyDefaultEcommerceSettings(
       _autoSetupApplied: true,
       _autoSetupDate: new Date().toISOString(),
     };
-    
+
     const { error } = await db
-      .from('site_module_installations')
+      .from("site_module_installations")
       .update({ settings: mergedSettings })
-      .eq('id', installation.id);
-    
+      .eq("id", installation.id);
+
     if (error) {
       result.success = false;
-      result.errors?.push('Failed to apply settings');
+      result.errors?.push("Failed to apply settings");
     } else {
       result.settings = mergedSettings;
     }
-    
   } catch (err) {
-    console.error('[AutoSetup] Error applying settings:', err);
+    console.error("[AutoSetup] Error applying settings:", err);
     result.success = false;
-    result.errors?.push('Error applying default settings');
+    result.errors?.push("Error applying default settings");
   }
-  
+
   return result;
 }
 
@@ -628,41 +629,42 @@ export async function applyDefaultEcommerceSettings(
  * Clear e-commerce setup data (but NOT product data)
  */
 export async function clearEcommerceSetupData(
-  siteId: string
+  siteId: string,
 ): Promise<ClearSetupDataResult> {
   const supabase = await createClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any;
-  
+
   const result: ClearSetupDataResult = {
     success: true,
     settingsCleaned: [],
     errors: [],
   };
-  
+
   try {
     // Get the e-commerce module's UUID
     const moduleUuid = await getEcommerceModuleUuid();
-    
+
     if (!moduleUuid) {
       return result; // Module not found, nothing to clean
     }
-    
+
     // Get the module installation
     const { data: installation } = await db
-      .from('site_module_installations')
-      .select('id, settings')
-      .eq('site_id', siteId)
-      .eq('module_id', moduleUuid)
+      .from("site_module_installations")
+      .select("id, settings")
+      .eq("site_id", siteId)
+      .eq("module_id", moduleUuid)
       .single();
-    
+
     if (installation?.settings) {
       // Remove auto-setup markers but keep user settings
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { _autoSetupApplied, _autoSetupDate, ...restSettings } = installation.settings;
-      
+      const { _autoSetupApplied, _autoSetupDate, ...restSettings } =
+        installation.settings;
+
       await db
-        .from('site_module_installations')
+        .from("site_module_installations")
         .update({
           settings: {
             ...restSettings,
@@ -670,17 +672,20 @@ export async function clearEcommerceSetupData(
             onboardingStep: 0,
           },
         })
-        .eq('id', installation.id);
-      
-      result.settingsCleaned.push('_autoSetupApplied', '_autoSetupDate', 'onboarding');
+        .eq("id", installation.id);
+
+      result.settingsCleaned.push(
+        "_autoSetupApplied",
+        "_autoSetupDate",
+        "onboarding",
+      );
     }
-    
   } catch (err) {
-    console.error('[AutoSetup] Error clearing setup data:', err);
+    console.error("[AutoSetup] Error clearing setup data:", err);
     result.success = false;
-    result.errors?.push('Error clearing setup data');
+    result.errors?.push("Error clearing setup data");
   }
-  
+
   return result;
 }
 
@@ -692,22 +697,22 @@ export async function clearEcommerceSetupData(
  * Check if e-commerce pages exist for a site
  */
 export async function checkEcommercePagesExist(
-  siteId: string
+  siteId: string,
 ): Promise<{ exists: boolean; pages: string[] }> {
   const supabase = await createClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any;
-  
-  const expectedSlugs = ecommercePageDefinitions.map(p => p.slug);
-  
+
+  const expectedSlugs = ecommercePageDefinitions.map((p) => p.slug);
+
   const { data: pages } = await db
-    .from('pages')
-    .select('slug')
-    .eq('site_id', siteId)
-    .in('slug', expectedSlugs);
-  
+    .from("pages")
+    .select("slug")
+    .eq("site_id", siteId)
+    .in("slug", expectedSlugs);
+
   const existingSlugs = pages?.map((p: { slug: string }) => p.slug) || [];
-  
+
   return {
     exists: existingSlugs.length > 0,
     pages: existingSlugs,
@@ -726,41 +731,45 @@ export async function getEcommerceSetupStatus(siteId: string): Promise<{
   const supabase = await createClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any;
-  
+
   // Check pages
   const pagesCheck = await checkEcommercePagesExist(siteId);
-  
+
   // Check navigation
   const { data: site } = await db
-    .from('sites')
-    .select('settings')
-    .eq('id', siteId)
+    .from("sites")
+    .select("settings")
+    .eq("id", siteId)
     .single();
-  
+
   const nav = site?.settings?.navigation;
-  const hasShopNav = nav?.main?.some((n: NavigationItem) => n.id === 'ecom-shop');
-  const hasCartNav = nav?.utility?.some((n: NavigationItem) => n.id === 'ecom-cart');
-  
+  const hasShopNav = nav?.main?.some(
+    (n: NavigationItem) => n.id === "ecom-shop",
+  );
+  const hasCartNav = nav?.utility?.some(
+    (n: NavigationItem) => n.id === "ecom-cart",
+  );
+
   // Get the e-commerce module's UUID
   const moduleUuid = await getEcommerceModuleUuid();
-  
+
   // Check module settings using the UUID
   let settingsApplied = false;
   let onboardingCompleted = false;
-  
+
   if (moduleUuid) {
     const { data: installation } = await db
-      .from('site_module_installations')
-      .select('settings')
-      .eq('site_id', siteId)
-      .eq('module_id', moduleUuid)
+      .from("site_module_installations")
+      .select("settings")
+      .eq("site_id", siteId)
+      .eq("module_id", moduleUuid)
       .single();
-    
+
     settingsApplied = installation?.settings?._autoSetupApplied || false;
     // Use snake_case to match database storage
     onboardingCompleted = installation?.settings?.onboarding_completed || false;
   }
-  
+
   return {
     pagesCreated: pagesCheck.exists,
     navigationAdded: hasShopNav && hasCartNav,
@@ -776,7 +785,9 @@ export async function getEcommerceSetupStatus(siteId: string): Promise<{
 /**
  * Create the /quotes page for a site (called when quotation mode is enabled)
  */
-export async function createQuotePage(siteId: string): Promise<{ success: boolean; error?: string }> {
+export async function createQuotePage(
+  siteId: string,
+): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any;
@@ -784,61 +795,64 @@ export async function createQuotePage(siteId: string): Promise<{ success: boolea
   try {
     // Check if the page already exists
     const { data: existing } = await db
-      .from('pages')
-      .select('id')
-      .eq('site_id', siteId)
-      .eq('slug', 'quotes')
+      .from("pages")
+      .select("id")
+      .eq("site_id", siteId)
+      .eq("slug", "quotes")
       .single();
 
     if (existing) {
-      console.log('[AutoSetup] Quote page already exists, skipping creation');
+      console.log("[AutoSetup] Quote page already exists, skipping creation");
       return { success: true };
     }
 
     // Create the page
     const { data: page, error } = await db
-      .from('pages')
+      .from("pages")
       .insert({
         site_id: siteId,
         slug: quotePageDefinition.slug,
         name: quotePageDefinition.title,
         seo_title: quotePageDefinition.metaTitle || quotePageDefinition.title,
-        seo_description: quotePageDefinition.metaDescription || '',
+        seo_description: quotePageDefinition.metaDescription || "",
         is_homepage: false,
       })
-      .select('id')
+      .select("id")
       .single();
 
     if (error) {
-      console.error('[AutoSetup] Failed to create quotes page:', error);
+      console.error("[AutoSetup] Failed to create quotes page:", error);
       return { success: false, error: error.message };
     }
 
     // Create the page content
-    const { error: contentError } = await db
-      .from('page_content')
-      .insert({
-        page_id: page.id,
-        content: quotePageDefinition.content,
-      });
+    const { error: contentError } = await db.from("page_content").insert({
+      page_id: page.id,
+      content: quotePageDefinition.content,
+    });
 
     if (contentError) {
-      console.error('[AutoSetup] Failed to create quotes page content:', contentError);
+      console.error(
+        "[AutoSetup] Failed to create quotes page content:",
+        contentError,
+      );
       return { success: false, error: contentError.message };
     }
 
-    console.log('[AutoSetup] Created /quotes page');
+    console.log("[AutoSetup] Created /quotes page");
     return { success: true };
   } catch (err) {
-    console.error('[AutoSetup] Error creating quotes page:', err);
-    return { success: false, error: 'Failed to create quotes page' };
+    console.error("[AutoSetup] Error creating quotes page:", err);
+    return { success: false, error: "Failed to create quotes page" };
   }
 }
 
 /**
  * Delete the /quotes page for a site (called when quotation mode is disabled)
  */
-export async function deleteQuotePage(siteId: string): Promise<{ success: boolean; error?: string }> {
+export async function deleteQuotePage(
+  siteId: string,
+): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any;
@@ -846,38 +860,32 @@ export async function deleteQuotePage(siteId: string): Promise<{ success: boolea
   try {
     // Find the quotes page
     const { data: page } = await db
-      .from('pages')
-      .select('id')
-      .eq('site_id', siteId)
-      .eq('slug', 'quotes')
+      .from("pages")
+      .select("id")
+      .eq("site_id", siteId)
+      .eq("slug", "quotes")
       .single();
 
     if (!page) {
-      console.log('[AutoSetup] Quote page does not exist, nothing to delete');
+      console.log("[AutoSetup] Quote page does not exist, nothing to delete");
       return { success: true };
     }
 
     // Delete content first (FK constraint)
-    await db
-      .from('page_content')
-      .delete()
-      .eq('page_id', page.id);
+    await db.from("page_content").delete().eq("page_id", page.id);
 
     // Delete the page
-    const { error } = await db
-      .from('pages')
-      .delete()
-      .eq('id', page.id);
+    const { error } = await db.from("pages").delete().eq("id", page.id);
 
     if (error) {
-      console.error('[AutoSetup] Failed to delete quotes page:', error);
+      console.error("[AutoSetup] Failed to delete quotes page:", error);
       return { success: false, error: error.message };
     }
 
-    console.log('[AutoSetup] Deleted /quotes page');
+    console.log("[AutoSetup] Deleted /quotes page");
     return { success: true };
   } catch (err) {
-    console.error('[AutoSetup] Error deleting quotes page:', err);
-    return { success: false, error: 'Failed to delete quotes page' };
+    console.error("[AutoSetup] Error deleting quotes page:", err);
+    return { success: false, error: "Failed to delete quotes page" };
   }
 }

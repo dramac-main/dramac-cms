@@ -49,6 +49,7 @@ import {
   createAgent,
   updateAgent,
   deleteAgent,
+  updateAgentStatus,
   getAgencyMembersForSite,
   inviteAndCreateAgent,
 } from "@/modules/live-chat/actions/agent-actions";
@@ -235,6 +236,18 @@ export function AgentsPageWrapper({
       } else {
         setAgents((prev) => prev.filter((a) => a.id !== agentId));
         toast.success("Agent removed");
+      }
+    });
+  }, []);
+
+  const handleAgentStatusChange = useCallback((agentId: string, status: string) => {
+    startTransition(async () => {
+      const result = await updateAgentStatus(agentId, status as "online" | "away" | "busy" | "offline");
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        setAgents((prev) => prev.map((a) => a.id === agentId ? { ...a, status: status as "online" | "away" | "busy" | "offline" } : a));
+        toast.success(`Agent status set to ${status}`);
       }
     });
   }, []);
@@ -714,6 +727,22 @@ export function AgentsPageWrapper({
                       >
                         {agent.role}
                       </Badge>
+                    </div>
+
+                    {/* Status toggle */}
+                    <div className="mt-2">
+                      <Select value={agent.status} onValueChange={(val) => handleAgentStatusChange(agent.id, val)}>
+                        <SelectTrigger className="h-7 text-xs w-[110px]">
+                          <AgentStatusDot status={agent.status} />
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="online">Online</SelectItem>
+                          <SelectItem value="away">Away</SelectItem>
+                          <SelectItem value="busy">Busy</SelectItem>
+                          <SelectItem value="offline">Offline</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 mt-4 text-sm">

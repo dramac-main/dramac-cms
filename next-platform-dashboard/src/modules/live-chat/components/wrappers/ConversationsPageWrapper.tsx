@@ -17,11 +17,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Loader2, MessagesSquare, Search, Star } from 'lucide-react'
+import { Loader2, MessagesSquare, Search, Star, Tag } from 'lucide-react'
 import { toast } from 'sonner'
 import { ConversationStatusBadge } from '../shared/ConversationStatusBadge'
 import { ChannelBadge } from '../shared/ChannelBadge'
 import { PriorityBadge } from '../shared/PriorityBadge'
+import { Badge } from '@/components/ui/badge'
 import { LiveChatEmptyState } from '../shared/LiveChatEmptyState'
 import { useConversationsRealtime } from '@/modules/live-chat/hooks/use-conversations-realtime'
 import { getConversations } from '@/modules/live-chat/actions/conversation-actions'
@@ -61,6 +62,27 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`
 }
 
+/** Clean up raw JSON / markdown in conversation previews */
+function formatPreviewText(text: string | null): string {
+  if (!text) return 'No messages yet'
+  let clean = text
+  // Try to parse JSON content (payment_method_select, payment_upload_prompt, etc.)
+  if (clean.startsWith('{') || clean.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(clean)
+      if (parsed.text) return parsed.text.replace(/\*\*/g, '').replace(/\*/g, '').substring(0, 120)
+      if (parsed.message) return parsed.message.replace(/\*\*/g, '').replace(/\*/g, '').substring(0, 120)
+    } catch {
+      // Not JSON, continue with text cleanup
+    }
+  }
+  // Strip markdown bold/italic
+  clean = clean.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1')
+  // Strip underscores markdown
+  clean = clean.replace(/__(.*?)__/g, '$1').replace(/_(.*?)_/g, '$1')
+  return clean.substring(0, 120)
+}
+
 export function ConversationsPageWrapper({
   initialConversations,
   total,
@@ -80,6 +102,7 @@ export function ConversationsPageWrapper({
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [channelFilter, setChannelFilter] = useState<string>('all')
+  const [tagFilter, setTagFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
 
   // Set up notification sound
@@ -149,14 +172,16 @@ export function ConversationsPageWrapper({
   })
 
   const applyFilters = useCallback(
-    (newStatus?: string, newChannel?: string) => {
+    (newStatus?: string, newChannel?: string, newTag?: string) => {
       const s = newStatus ?? statusFilter
       const ch = newChannel ?? channelFilter
+      const t = newTag ?? tagFilter
 
       startTransition(async () => {
         const filters: Record<string, string> = {}
         if (s !== 'all') filters.status = s
         if (ch !== 'all') filters.channel = ch
+        if (t !== 'all') filters.tag = t
 
         const result = await getConversations(siteId, filters, 1, pageSize)
         setConversations(result.conversations)
@@ -164,17 +189,22 @@ export function ConversationsPageWrapper({
         setPage(1)
       })
     },
-    [statusFilter, channelFilter, siteId]
+    [statusFilter, channelFilter, tagFilter, siteId]
   )
 
   const handleStatusChange = (val: string) => {
     setStatusFilter(val)
-    applyFilters(val, undefined)
+    applyFilters(val, undefined, undefined)
   }
 
   const handleChannelChange = (val: string) => {
     setChannelFilter(val)
-    applyFilters(undefined, val)
+    applyFilters(undefined, val, undefined)
+  }
+
+  const handleTagChange = (val: string) => {
+    setTagFilter(val)
+    applyFilters(undefined, undefined, val)
   }
 
   const loadMore = useCallback(() => {
@@ -183,6 +213,7 @@ export function ConversationsPageWrapper({
       const filters: Record<string, string> = {}
       if (statusFilter !== 'all') filters.status = statusFilter
       if (channelFilter !== 'all') filters.channel = channelFilter
+      if (tagFilter !== 'all') filters.tag = tagFilter
 
       const result = await getConversations(siteId, filters, nextPage, pageSize)
       if (result.conversations.length > 0) {
@@ -190,7 +221,7 @@ export function ConversationsPageWrapper({
         setPage(nextPage)
       }
     })
-  }, [page, siteId, statusFilter, channelFilter])
+  }, [page, siteId, statusFilter, channelFilter, tagFilter])
 
   const filteredConversations = searchQuery
     ? conversations.filter(
@@ -256,6 +287,22 @@ export function ConversationsPageWrapper({
                 <SelectItem value="api">API</SelectItem>
               </SelectContent>
             </Select>
+
+            {/* Tag filter */}
+            <Select value={tagFilter} onValueChange={handleTagChange}>
+              <SelectTrigger className="w-[140px]">
+                <Tag className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                <SelectValue placeholder="Tag" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Tags</SelectItem>
+                <SelectItem value="order">Order</SelectItem>
+                <SelectItem value="payment">Payment</SelectItem>
+                <SelectItem value="general">General</SelectItem>
+                <SelectItem value="support">Support</SelectItem>
+                <SelectItem value="quotation">Quotation</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
@@ -268,7 +315,7 @@ export function ConversationsPageWrapper({
               icon={MessagesSquare}
               title="No conversations found"
               description={
-                statusFilter !== 'all' || channelFilter !== 'all'
+                statusFilter !== 'all' || channelFilter !== 'all' || tagFilter !== 'all'
                   ? 'Try adjusting your filters'
                   : 'Conversations will appear here when visitors start chatting'
               }
@@ -309,9 +356,14 @@ export function ConversationsPageWrapper({
                           {conv.rating}/5
                         </span>
                       )}
+                      {conv.tags?.length > 0 && conv.tags.map((tag) => (
+                        <Badge key={tag} variant="outline" className="text-[10px] px-1.5 py-0 h-4 capitalize">
+                          {tag}
+                        </Badge>
+                      ))}
                     </div>
                     <p className="text-xs text-muted-foreground truncate mt-1">
-                      {conv.lastMessageText || 'No messages yet'}
+                      {formatPreviewText(conv.lastMessageText)}
                     </p>
                     <div className="flex items-center gap-2 mt-1">
                       {conv.assignedAgentName && (
