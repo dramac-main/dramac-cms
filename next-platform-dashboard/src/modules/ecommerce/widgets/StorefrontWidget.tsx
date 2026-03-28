@@ -1113,6 +1113,16 @@ const storefrontStyles = `
   font-size: 0.875rem;
 }
 
+.sf-dark .sf-variant-select {
+  background-color: #1f2937;
+  color: #f9fafb;
+}
+
+.sf-dark .sf-variant-select option {
+  background-color: #1f2937;
+  color: #f9fafb;
+}
+
 .sf-add-btn {
   width: 100%;
   padding: 0.75rem;

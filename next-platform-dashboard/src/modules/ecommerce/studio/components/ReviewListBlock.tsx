@@ -13,12 +13,18 @@ import { cn } from "@/lib/utils";
 import {
   Star,
   ThumbsUp,
-  ChevronDown,
   MessageSquare,
   Shield,
   BadgeCheck,
   Loader2,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { Review, ReviewStats } from "../../types/ecommerce-types";
 
 // ============================================================================
@@ -254,20 +260,18 @@ export function ReviewListBlock({
             {totalReviews} review{totalReviews !== 1 ? "s" : ""}
           </div>
 
-          <div className="relative">
-            <select
-              value={sortBy}
-              onChange={(e) => onSortChange(e.target.value as "newest")}
-              className="appearance-none text-sm bg-transparent border rounded-md pl-3 pr-8 py-1.5 text-foreground focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
-            >
-              <option value="newest">Newest</option>
-              <option value="oldest">Oldest</option>
-              <option value="highest">Highest Rated</option>
-              <option value="lowest">Lowest Rated</option>
-              <option value="helpful">Most Helpful</option>
-            </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-          </div>
+          <Select value={sortBy} onValueChange={(v) => onSortChange(v as "newest")}>
+            <SelectTrigger className="w-[160px] h-8 text-sm">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest</SelectItem>
+              <SelectItem value="oldest">Oldest</SelectItem>
+              <SelectItem value="highest">Highest Rated</SelectItem>
+              <SelectItem value="lowest">Lowest Rated</SelectItem>
+              <SelectItem value="helpful">Most Helpful</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       )}
 

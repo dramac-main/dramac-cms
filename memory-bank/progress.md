@@ -1,33 +1,30 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: March 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅ + **LIVE CHAT RUNTIME FIXES (AI auto-response + file uploads)** ✅ + **PER-ORDER CONVERSATION ISOLATION** ✅ + **PER-ORDER CHAT HARDENING AUDIT (10 bugs fixed, 0 TS errors)** ✅ + **CATEGORIES PAGE + DARK MODE POLISH** ✅
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅ + **LIVE CHAT RUNTIME FIXES (AI auto-response + file uploads)** ✅ + **PER-ORDER CONVERSATION ISOLATION** ✅ + **PER-ORDER CHAT HARDENING AUDIT (10 bugs fixed, 0 TS errors)** ✅ + **CATEGORIES PAGE + DARK MODE POLISH** ✅ + **LIVE CHAT OVERHAUL + ECOMMERCE FIXES** ✅
 
 ---
 
-## Latest Update: CategoriesPageBlock + Dark Mode Contrast Fixes
+## Latest Update: Live Chat Overhaul + Ecommerce Fixes (commit eede7ee2)
 
-### New: CategoriesPageBlock (EcommerceCategoriesPage)
+### Fixes Applied (8 items, 16 files)
 
-- Full-page browsable category grid with search, grid/list toggle, subcategory chips
-- Registered in studio as `EcommerceCategoriesPage`
-- AI generator now creates /categories page for all e-commerce sites (required page)
-- Updated prompts.ts, configurator.ts, industry-templates.ts
+1. **Product images on order confirmation** — Fixed `image_url` → `product_image` field mapping mismatch
+2. **AI toggle glow animation** — Amber pulse + ring when agent sends while AI is active
+3. **Conversation auto-tagging** — Order conversations get `["order", "payment"]`, general get `["general"]`
+4. **Tag filter UI** — Dropdown filter + Badge tags on conversation list items
+5. **Conversation preview text cleanup** — JSON/markdown stripped, truncated to 120 chars
+6. **Pre-chat form `|| true` bug** — Fixed name/email always showing regardless of settings
+7. **Agent status toggle UI** — Online/Away/Busy/Offline dropdown on agent cards
+8. **Chat markdown rendering** — Bold/italic in message bubbles (dashboard + widget)
 
-### Fixed: Dark Mode Contrast
-
-- CheckoutPageBlock sign-in prompt: `bg-primary/5` + `border-primary/20` → `bg-muted` + `border-border`
-- CategoryHeroBlock no-image fallback: `from-gray-100 to-gray-50` → `bg-muted`
-
-### Files Changed (7)
-
-1. NEW: `src/modules/ecommerce/studio/components/CategoriesPageBlock.tsx`
-2. MOD: `src/modules/ecommerce/studio/index.ts` — import + registry + re-export
-3. MOD: `src/modules/ecommerce/studio/components/CheckoutPageBlock.tsx` — sign-in contrast fix
-4. MOD: `src/modules/ecommerce/studio/components/CategoryHeroBlock.tsx` — muted fallback fix
-5. MOD: `src/lib/ai/website-designer/intelligence/industry-templates.ts` — /categories page
-6. MOD: `src/lib/ai/website-designer/prompts.ts` — EcommerceCategoriesPage in component list
-7. MOD: `src/lib/ai/website-designer/modules/configurator.ts` — auto-configure categories
+### Full Audit Results
+- 9 dashboard pages: ALL WORKING
+- 10 server action files: ALL WORKING
+- 7 shared components: ALL WORKING
+- 6 widget components: ALL WORKING (1 was fixed)
+- Security authorization: VERIFIED PRESENT
+- Low priority: Canned response race condition, setDefaultDepartment non-atomic
 
 ---
 

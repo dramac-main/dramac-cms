@@ -12,6 +12,13 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getCountryList } from "../../lib/settings-utils";
 import type { Address } from "../../types/ecommerce-types";
 
@@ -150,37 +157,30 @@ export function AddressForm({
         />
       </div>
 
-      {/* Country — Native select for brand consistency + better mobile UX */}
+      {/* Country */}
       <div className="space-y-2">
         <Label htmlFor="country">Country *</Label>
-        <select
-          id="country"
+        <Select
           value={address.country || "ZM"}
-          onChange={(e) => {
-            handleChange("country", e.target.value);
-            // Clear state when country changes
-            if (e.target.value !== address.country) {
+          onValueChange={(value) => {
+            handleChange("country", value);
+            if (value !== address.country) {
               handleChange("state", "");
             }
           }}
           disabled={disabled}
-          autoComplete="country"
-          className={cn(
-            "flex h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-base",
-            "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-            "disabled:cursor-not-allowed disabled:opacity-50",
-            'appearance-none bg-[url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E")] bg-[length:1.25rem] bg-[right_0.5rem_center] bg-no-repeat pr-10',
-          )}
         >
-          <option value="" disabled>
-            Select a country
-          </option>
-          {COUNTRIES.map((country) => (
-            <option key={country.code} value={country.code}>
-              {country.name}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger id="country" className="h-12 text-base">
+            <SelectValue placeholder="Select a country" />
+          </SelectTrigger>
+          <SelectContent>
+            {COUNTRIES.map((country) => (
+              <SelectItem key={country.code} value={country.code}>
+                {country.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* City, State/Province, Postal code Row */}
@@ -201,28 +201,22 @@ export function AddressForm({
         <div className="space-y-2">
           <Label htmlFor="state">{stateLabel}</Label>
           {isZambia ? (
-            <select
-              id="state"
+            <Select
               value={address.state || ""}
-              onChange={(e) => handleChange("state", e.target.value)}
+              onValueChange={(value) => handleChange("state", value)}
               disabled={disabled}
-              autoComplete="address-level1"
-              className={cn(
-                "flex h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-base",
-                "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                "disabled:cursor-not-allowed disabled:opacity-50",
-                'appearance-none bg-[url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E")] bg-[length:1.25rem] bg-[right_0.5rem_center] bg-no-repeat pr-10',
-              )}
             >
-              <option value="" disabled>
-                Select province
-              </option>
-              {ZM_PROVINCES.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id="state" className="h-12 text-base">
+                <SelectValue placeholder="Select province" />
+              </SelectTrigger>
+              <SelectContent>
+                {ZM_PROVINCES.map((p) => (
+                  <SelectItem key={p} value={p}>
+                    {p}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           ) : (
             <Input
               id="state"

@@ -1,44 +1,88 @@
 # Active Context
 
-## Current Focus: CategoriesPageBlock + Dark Mode Polish
+## Current Focus: Live Chat Overhaul + Ecommerce Fixes
 
-### Status: COMPLETE — TypeScript 0 errors, committed & pushed
+### Status: COMPLETE — TypeScript 0 errors, committed & pushed (eede7ee2)
 
 ### What Was Done (This Session)
 
-#### 1. New CategoriesPageBlock Component
+#### 1. Product Images on Order Confirmation (OrderConfirmationBlock.tsx)
 
-**Problem:** Every time AI generates an e-commerce site, there was no dedicated categories browsing page. Category infrastructure existed (types, hooks, API, CategoryHeroBlock for individual category pages, CategoryNavBlock for navigation menus) but no full-page grid of ALL categories.
+**Problem:** Order confirmation page showed Package icon placeholders instead of product images, even though images were saved in the database.
 
-**Solution:** Built `CategoriesPageBlock.tsx` — full-page browsable category grid with:
+**Root Cause:** Orders save product images as `image_url` column but OrderConfirmationBlock read `item.product_image` — field name mismatch.
 
-- Grid and list layout toggle
-- Search/filter categories
-- Responsive columns (1 on mobile → 2 on tablet → 3-4 on desktop)
-- Subcategory chips under each parent category card
-- Category images with fallback icons
-- Product count display
-- Loading/error/empty states
-- All semantic Tailwind classes (bg-card, text-foreground, bg-muted, etc.) — dark mode ready from day one
+**Fix:** Changed mapping to `product_image: (item.image_url as string) || (item.product_image as string) || undefined` so it checks both fields.
 
-**Registration:** Added `EcommerceCategoriesPage` to studio component registry in `studio/index.ts`
+#### 2. AI Toggle Glow Animation (ConversationViewWrapper.tsx)
 
-**AI Generator Updates:**
+**Problem:** When a store owner types a message while AI auto-responder is active, the AI would still respond. No visual cue to remind the agent to pause AI.
 
-- `industry-templates.ts`: Added `/categories` as required page (priority 3) for e-commerce sites
-- `prompts.ts`: Added `EcommerceCategoriesPage` to the AI's component list + updated module awareness to ALWAYS create /categories page
-- `configurator.ts`: Auto-configures EcommerceCategoriesPage on /categories route
+**Fix:** Added `aiGlowing` state that activates when agent sends a non-note message while AI is not paused. The AI toggle button pulses with amber ring animation + tooltip "AI is still active — click to pause AI while you're chatting". Glow clears on AI toggle or takeover.
 
-#### 2. Dark Mode Contrast Fixes
+#### 3. Conversation Tagging System
 
-**Problem:** "Sign in for faster checkout" section in CheckoutPageBlock used `bg-primary/5` and `border-primary/20` — raw Tailwind opacity modifiers that bypass the brand-colors.ts derivation system entirely. On dark backgrounds with dark primary colors, these produce invisible elements.
+**Auto-tagging (conversations/route.ts):** Order conversations get `["order", "payment"]`, general get `["general"]`.
 
-**Fixes Applied:**
+**Tag Filter UI (ConversationsPageWrapper.tsx):** Added tag filter dropdown (All Tags, Order, Payment, General, Support, Quotation) + Badge tags display on conversation list items.
 
-- **CheckoutPageBlock.tsx**: Replaced `border-primary/20 bg-primary/5` → `border-border bg-muted` for sign-in prompt. Changed User icon from `text-primary` → `text-foreground` for reliable contrast.
-- **CategoryHeroBlock.tsx**: Replaced `from-gray-100 to-gray-50` gradient → `bg-muted` for no-image fallback (was invisible on dark backgrounds).
+**Server filter (conversation-actions.ts):** Added `query.contains("tags", [filters.tag])` filter support. Added `tag` field to `ConversationFilters` type.
 
-**Pattern Note:** Remaining `bg-primary/5` and `bg-primary/10` usages in the codebase are ACCEPTABLE — they serve as subtle selected-state fills paired with full-opacity `border-primary` which provides the actual visual cue. Hover-only `hover:border-primary/50` is also fine as a subtle accent effect.
+#### 4. Conversation Preview Text Cleanup (ConversationsPageWrapper.tsx)
+
+**Problem:** Conversation previews showed raw JSON `{"text":"Great!..."}` and markdown `**ORD-1003**`.
+
+**Fix:** Added `formatPreviewText()` helper that parses JSON content, strips markdown bold/italic, truncates to 120 chars.
+
+#### 5. Pre-Chat Form Bug Fix (WidgetPreChatForm.tsx)
+
+**Problem:** Name and email fields always showed regardless of settings because `(settings.preChatNameRequired || true)` always evaluates to `true`.
+
+**Fix:** Changed to `settings.preChatNameRequired !== false` to preserve default-show behavior while allowing explicit disable.
+
+#### 6. Agent Status Toggle (AgentsPageWrapper.tsx)
+
+**Problem:** `updateAgentStatus` server action existed but no UI invoked it.
+
+**Fix:** Added Select dropdown per agent card with Online/Away/Busy/Offline options + AgentStatusDot indicator.
+
+#### 7. Chat Markdown Rendering (from prior session, now committed)
+
+MessageBubble.tsx and WidgetMessageBubble.tsx render bold/italic markdown in chat messages.
+
+#### 8. Manual Payment Simplification (from prior session, now committed)
+
+PaymentMethodSelector.tsx and MobilePaymentSelector.tsx simplified UI.
+
+### Full Live Chat Audit Findings
+
+- **9 dashboard pages:** ALL WORKING
+- **10 server action files:** ALL WORKING
+- **3 hooks:** ALL WORKING
+- **7 shared components:** ALL WORKING
+- **6 widget components:** 5 working, 1 fixed (WidgetPreChatForm)
+- **Security:** Authorization check (verifyUserSiteAccess) confirmed present in chat-order-actions.ts
+- **WhatsApp type mismatch:** Non-issue — both use same `ChatDepartment[]` type, `departments` prop is unused in ConversationsPageWrapper (dead code)
+- **Low priority concerns:** Canned response usage increment race condition, setDefaultDepartment non-atomic
+
+### Files Changed (16 — committed as eede7ee2)
+
+1. `src/app/api/modules/live-chat/conversations/route.ts` — Auto-tagging
+2. `src/modules/ecommerce/actions/auto-setup-actions.ts` — Categories auto-creation
+3. `src/modules/ecommerce/actions/public-ecommerce-actions.ts` — Checkout improvements
+4. `src/modules/ecommerce/hooks/useCheckout.ts` — Checkout flow
+5. `src/modules/ecommerce/studio/components/OrderConfirmationBlock.tsx` — Image field mapping fix
+6. `src/modules/ecommerce/studio/components/PaymentMethodSelector.tsx` — Manual payment UI
+7. `src/modules/ecommerce/studio/components/mobile/MobilePaymentSelector.tsx` — Mobile payment UI
+8. `src/modules/live-chat/actions/conversation-actions.ts` — Tag filter support
+9. `src/modules/live-chat/components/shared/MessageBubble.tsx` — Markdown rendering
+10. `src/modules/live-chat/components/widget/ChatWidget.tsx` — Widget improvements
+11. `src/modules/live-chat/components/widget/WidgetMessageBubble.tsx` — Markdown rendering
+12. `src/modules/live-chat/components/widget/WidgetPreChatForm.tsx` — Pre-chat form bug fix
+13. `src/modules/live-chat/components/wrappers/AgentsPageWrapper.tsx` — Agent status toggle
+14. `src/modules/live-chat/components/wrappers/ConversationViewWrapper.tsx` — AI glow animation
+15. `src/modules/live-chat/components/wrappers/ConversationsPageWrapper.tsx` — Tags, filter, preview
+16. `src/modules/live-chat/types/index.ts` — Tag filter type
 
 ### What Was Done (Previous Session): Smart Dark/Light Mode for E-Commerce Storefront
 
