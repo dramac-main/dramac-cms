@@ -10,14 +10,17 @@
  */
 'use client'
 
-import React from 'react'
-import { motion } from 'framer-motion'
+import React, { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
-  CreditCard,
-  Wallet,
+  Banknote,
   Building2,
-  Plus,
   Check,
+  ChevronDown,
+  ChevronRight,
+  CreditCard,
+  Plus,
+  Wallet,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useHapticFeedback } from '../../../hooks/useHapticFeedback'
@@ -125,29 +128,37 @@ export function MobilePaymentSelector({
     onAddNew()
   }
 
-  return (
-    <div className={cn('space-y-2', className)}>
-      {methods.map((method) => {
-        const isSelected = method.id === selectedMethodId
+  // Separate gateway vs manual methods for grouping
+  const gatewayMethods = methods.filter((m) => !m.id.startsWith('manual'))
+  const manualMethods = methods.filter((m) => m.id.startsWith('manual'))
+  const isManualSelected = selectedMethodId?.startsWith('manual') ?? false
+  const [manualExpanded, setManualExpanded] = useState(isManualSelected)
 
-        return (
-          <motion.button
-            key={method.id}
-            type="button"
-            onClick={() => handleSelect(method.id)}
-            disabled={disabled}
-            whileTap={{ scale: 0.98 }}
-            className={cn(
-              'w-full flex items-center gap-4 p-4 rounded-lg',
-              'min-h-[56px]', // Touch target
-              'border-2 transition-colors duration-200',
-              'text-left',
-              isSelected
-                ? 'border-primary bg-primary/5'
-                : 'border-border hover:border-primary/50 bg-background',
-              disabled && 'opacity-50 cursor-not-allowed'
-            )}
-          >
+  useEffect(() => {
+    if (isManualSelected) setManualExpanded(true)
+  }, [isManualSelected])
+
+  const renderMethodButton = (method: PaymentMethod) => {
+    const isSelected = method.id === selectedMethodId
+
+    return (
+      <motion.button
+        key={method.id}
+        type="button"
+        onClick={() => handleSelect(method.id)}
+        disabled={disabled}
+        whileTap={{ scale: 0.98 }}
+        className={cn(
+          'w-full flex items-center gap-4 p-4 rounded-lg',
+          'min-h-[56px]',
+          'border-2 transition-colors duration-200',
+          'text-left',
+          isSelected
+            ? 'border-primary bg-primary/5'
+            : 'border-border hover:border-primary/50 bg-background',
+          disabled && 'opacity-50 cursor-not-allowed'
+        )}
+      >
             {/* Icon */}
             <div
               className={cn(
@@ -201,8 +212,121 @@ export function MobilePaymentSelector({
               {isSelected && <Check className="h-3.5 w-3.5" />}
             </div>
           </motion.button>
-        )
-      })}
+    )
+  }
+
+  return (
+    <div className={cn('space-y-2', className)}>
+      {/* Gateway payment methods */}
+      {gatewayMethods.map(renderMethodButton)}
+
+      {/* Single manual method — render inline */}
+      {manualMethods.length === 1 && renderMethodButton(manualMethods[0])}
+
+      {/* Multiple manual methods — collapsible group */}
+      {manualMethods.length > 1 && (
+        <div
+          className={cn(
+            'rounded-lg border-2 overflow-hidden transition-colors duration-200',
+            isManualSelected ? 'border-primary' : 'border-border',
+          )}
+        >
+          {/* Group header */}
+          <motion.button
+            type="button"
+            onClick={() => {
+              trigger('light')
+              setManualExpanded((prev) => !prev)
+            }}
+            whileTap={{ scale: 0.98 }}
+            className={cn(
+              'w-full flex items-center gap-4 p-4 min-h-[56px] text-left transition-colors duration-200',
+              isManualSelected && 'bg-primary/5',
+              !isManualSelected && 'hover:bg-muted/50',
+              disabled && 'opacity-50 cursor-not-allowed'
+            )}
+          >
+            <div
+              className={cn(
+                'flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center',
+                isManualSelected ? 'bg-primary text-primary-foreground' : 'bg-muted'
+              )}
+            >
+              <Banknote className="h-5 w-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <span className="font-medium text-foreground">Manual Payment</span>
+              <p className="text-sm text-muted-foreground truncate">
+                {isManualSelected
+                  ? manualMethods.find((m) => m.id === selectedMethodId)?.label
+                  : `${manualMethods.length} payment options available`}
+              </p>
+            </div>
+            {manualExpanded ? (
+              <ChevronDown className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+            ) : (
+              <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+            )}
+          </motion.button>
+
+          {/* Sub-methods */}
+          <AnimatePresence>
+            {manualExpanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden border-t border-border"
+              >
+                <div className="divide-y divide-border">
+                  {manualMethods.map((method) => {
+                    const isSelected = method.id === selectedMethodId
+                    return (
+                      <motion.button
+                        key={method.id}
+                        type="button"
+                        onClick={() => handleSelect(method.id)}
+                        disabled={disabled}
+                        whileTap={{ scale: 0.98 }}
+                        className={cn(
+                          'w-full flex items-center gap-4 p-4 pl-8 min-h-[48px] text-left',
+                          'transition-colors duration-200',
+                          isSelected && 'bg-primary/5',
+                          !isSelected && 'hover:bg-muted/50',
+                          disabled && 'opacity-50 cursor-not-allowed'
+                        )}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <span className="font-medium text-foreground truncate">
+                            {method.label}
+                          </span>
+                          {method.description && (
+                            <p className="text-sm text-muted-foreground truncate">
+                              {method.description}
+                            </p>
+                          )}
+                        </div>
+                        <div
+                          className={cn(
+                            'flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center',
+                            'transition-colors duration-200',
+                            isSelected
+                              ? 'border-primary bg-primary text-primary-foreground'
+                              : 'border-muted-foreground/30'
+                          )}
+                        >
+                          {isSelected && <Check className="h-3.5 w-3.5" />}
+                        </div>
+                      </motion.button>
+                    )
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
 
       {/* Add new payment method */}
       {showAddNew && onAddNew && (

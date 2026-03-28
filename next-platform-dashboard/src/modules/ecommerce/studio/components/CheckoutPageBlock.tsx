@@ -204,7 +204,7 @@ function toMobilePaymentMethods(
   };
   return methods.map((m) => ({
     id: m.id,
-    type: typeMap[m.id] || "card",
+    type: typeMap[m.id] || (m.id.startsWith("manual") ? "bank" : "card"),
     label: m.name,
     description: m.description,
   }));

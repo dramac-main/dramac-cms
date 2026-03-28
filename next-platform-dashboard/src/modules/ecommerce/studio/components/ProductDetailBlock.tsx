@@ -34,6 +34,7 @@ import {
   Mail,
   Facebook,
   MessageCircle,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -204,6 +205,8 @@ export function ProductDetailBlock({
 
   const router = useRouter();
 
+  const [isBuyingNow, setIsBuyingNow] = useState(false);
+
   const handleAddToCart = async () => {
     if (!product) return;
     if (quotationModeEnabled) {
@@ -212,6 +215,19 @@ export function ProductDetailBlock({
       return;
     }
     await addItem(product.id, selectedVariant || null, quantity);
+  };
+
+  const handleBuyNow = async () => {
+    if (!product || isBuyingNow) return;
+    setIsBuyingNow(true);
+    try {
+      if (!isProductInCart) {
+        await addItem(product.id, selectedVariant || null, quantity);
+      }
+      router.push('/checkout');
+    } finally {
+      setIsBuyingNow(false);
+    }
   };
 
   const handleShare = () => {
@@ -503,7 +519,22 @@ export function ProductDetailBlock({
               {quotationModeEnabled ? quotationButtonLabel : "Add to Cart"}
             </Button>
           ))}
-
+        {showAddToCart && !quotationModeEnabled && (
+          <Button
+            size="lg"
+            variant="secondary"
+            className="flex-1"
+            onClick={handleBuyNow}
+            disabled={!isInStock || isBuyingNow}
+          >
+            {isBuyingNow ? (
+              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+            ) : (
+              <Zap className="h-5 w-5 mr-2" />
+            )}
+            Buy It Now
+          </Button>
+        )}
         {showWishlist && (
           <Button
             variant="outline"
@@ -718,19 +749,37 @@ export function ProductDetailBlock({
                 </Link>
               </Button>
             ) : (
-              <Button
-                size="lg"
-                className="flex-1 h-12"
-                onClick={handleAddToCart}
-                disabled={!isInStock || isAddingToCart}
-              >
-                {isAddingToCart ? (
-                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                ) : (
-                  <ShoppingCart className="h-5 w-5 mr-2" />
+              <div className="flex gap-2 flex-1">
+                <Button
+                  size="lg"
+                  className="flex-1 h-12"
+                  onClick={handleAddToCart}
+                  disabled={!isInStock || isAddingToCart}
+                >
+                  {isAddingToCart ? (
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  ) : (
+                    <ShoppingCart className="h-5 w-5 mr-2" />
+                  )}
+                  {quotationModeEnabled ? quotationButtonLabel : "Add to Cart"}
+                </Button>
+                {!quotationModeEnabled && (
+                  <Button
+                    size="lg"
+                    variant="secondary"
+                    className="h-12"
+                    onClick={handleBuyNow}
+                    disabled={!isInStock || isBuyingNow}
+                  >
+                    {isBuyingNow ? (
+                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    ) : (
+                      <Zap className="h-5 w-5 mr-2" />
+                    )}
+                    Buy It Now
+                  </Button>
                 )}
-                {quotationModeEnabled ? quotationButtonLabel : "Add to Cart"}
-              </Button>
+              </div>
             )}
           </div>
         </div>
