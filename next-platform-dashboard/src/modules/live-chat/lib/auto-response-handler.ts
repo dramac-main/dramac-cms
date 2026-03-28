@@ -114,6 +114,7 @@ export async function handleNewVisitorMessage(
       );
 
       // Save AI response — use actual DB columns (no metadata column on this table)
+      // PHASE LC-12: content_type may be 'payment_method_select' for button messages
       const { error: insertError } = await supabase
         .from("mod_chat_messages")
         .insert({
@@ -122,7 +123,7 @@ export async function handleNewVisitorMessage(
           sender_type: "ai",
           sender_name: aiResult.assistantName || "AI Assistant",
           content: aiResult.response,
-          content_type: "text",
+          content_type: aiResult.contentType || "text",
           status: "sent",
           is_ai_generated: true,
           ai_confidence: aiResult.confidence,

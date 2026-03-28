@@ -12,6 +12,7 @@ import {
   getCustomerContext,
   formatCustomerContext,
 } from "./customer-context-bridge";
+import { parsePaymentMethods } from "./payment-method-parser";
 
 // =============================================================================
 // CONFIG
@@ -59,6 +60,7 @@ export async function generateAutoResponse(
   shouldHandoff: boolean;
   matchedArticleId?: string;
   assistantName?: string;
+  contentType?: string;
 } | null> {
   if (!AI_ENABLED) return null;
 
@@ -205,6 +207,61 @@ export async function generateAutoResponse(
       paymentInstructions = ecomSettings?.manual_payment_instructions || null;
     }
 
+    // ── PHASE LC-12: Payment method selection buttons ─────────────────────
+    // If a pending manual order exists and we have structured payment instructions,
+    // send interactive buttons FIRST instead of dumping all instructions at once.
+    let selectedMethodDetails: string | null = null;
+
+    if (pendingManualOrder && paymentInstructions) {
+      const parsedMethods = parsePaymentMethods(paymentInstructions);
+
+      // Check if we already sent a payment_method_select in this conversation
+      const existingButtonMsg = previousMessages.find(
+        (m: Record<string, unknown>) =>
+          m.content_type === "payment_method_select",
+      );
+
+      if (!existingButtonMsg && parsedMethods && parsedMethods.length >= 2) {
+        // First time — send interactive buttons instead of AI text
+        const orderTotal = `${pendingManualOrder.currency} ${(pendingManualOrder.total / 100).toFixed(2)}`;
+        const selectContent = JSON.stringify({
+          text: `Great! To complete payment for order ${pendingManualOrder.orderNumber} (${orderTotal}), please choose your preferred payment method:`,
+          orderNumber: pendingManualOrder.orderNumber,
+          orderTotal,
+          buttons: parsedMethods.map((m) => ({
+            id: m.id,
+            label: m.label,
+          })),
+        });
+
+        return {
+          response: selectContent,
+          confidence: 1.0,
+          shouldHandoff: false,
+          assistantName: aiAssistantName,
+          contentType: "payment_method_select",
+        };
+      }
+
+      // Buttons were already sent — check if the user selected a specific method
+      if (existingButtonMsg && parsedMethods && parsedMethods.length >= 2) {
+        const lowerVisitorMsg = visitorMessage.toLowerCase();
+        const matchedMethod = parsedMethods.find(
+          (m) =>
+            lowerVisitorMsg.includes(m.label.toLowerCase()) ||
+            lowerVisitorMsg.includes(m.id.replace(/_/g, " ")),
+        );
+        if (matchedMethod) {
+          // Restrict the AI to only this method's details
+          selectedMethodDetails = `${matchedMethod.label}:\n${matchedMethod.details}`;
+          console.log(
+            "[AI Responder] User selected payment method:",
+            matchedMethod.label,
+          );
+        }
+      }
+    }
+
     // Format knowledge base
     const kbText =
       kbArticles.length > 0
@@ -218,10 +275,29 @@ export async function generateAutoResponse(
 
     // Format conversation history
     const historyText = previousMessages
-      .map(
-        (m: Record<string, unknown>) =>
-          `${m.sender_type === "visitor" ? "Visitor" : m.sender_name || "Agent"}: ${m.content}`,
-      )
+      .map((m: Record<string, unknown>) => {
+        const sender =
+          m.sender_type === "visitor"
+            ? "Visitor"
+            : (m.sender_name as string) || "Agent";
+
+        // Convert payment_method_select JSON to readable text for AI context
+        if (m.content_type === "payment_method_select") {
+          try {
+            const data = JSON.parse(m.content as string);
+            const buttonLabels = (
+              data.buttons as { label: string }[]
+            )
+              .map((b: { label: string }) => b.label)
+              .join(", ");
+            return `${sender}: [Asked customer to choose a payment method: ${buttonLabels}]`;
+          } catch {
+            return `${sender}: [Payment method selection message]`;
+          }
+        }
+
+        return `${sender}: ${m.content}`;
+      })
       .join("\n");
 
     const toneMap: Record<string, string> = {
@@ -263,16 +339,17 @@ ORDER DETAILS:
 - Placed: ${new Date(pendingManualOrder.createdAt).toLocaleDateString()}
 ${proofUploaded ? `\nPAYMENT PROOF STATUS:\n- Proof uploaded: Yes (${pendingManualOrder.paymentProof.fileName})\n- Proof status: ${proofStatus}\n- Uploaded at: ${pendingManualOrder.paymentProof.uploadedAt ? new Date(pendingManualOrder.paymentProof.uploadedAt).toLocaleString() : "unknown"}\n\nThe customer has ALREADY uploaded payment proof. Acknowledge this! Let them know the store owner is reviewing it. Do NOT ask them to upload proof again.` : ""}
 
-${paymentInstructions ? `STORE PAYMENT INSTRUCTIONS:\n${paymentInstructions}` : "No specific payment instructions configured. Ask the customer to contact the store for payment details."}
+${selectedMethodDetails ? `SELECTED PAYMENT METHOD:\nThe customer has chosen a specific payment method. Share ONLY these details:\n${selectedMethodDetails}\n\nDo NOT mention other payment methods. Only share the details above.` : paymentInstructions ? `STORE PAYMENT INSTRUCTIONS:\n${paymentInstructions}` : "No specific payment instructions configured. Ask the customer to contact the store for payment details."}
 
 HOW TO GUIDE THE CUSTOMER:
-1. Greet them warmly and confirm their order number and total
-2. Share the payment instructions above in simple, clear language — break it into numbered steps
+${selectedMethodDetails ? `1. Acknowledge their payment method choice
+2. Share the payment details above clearly — use simple numbered steps
 3. Tell them to use their order number (${pendingManualOrder.orderNumber}) as the payment reference
-${proofUploaded ? `4. Their proof is ALREADY uploaded — acknowledge it and reassure them\n5. Let them know the store owner will verify and process their order` : `4. After they confirm payment, let them know they can upload proof of payment on their order page\n5. Reassure them that once the store owner verifies payment, their order will be processed and shipped`}
-6. Be conversational and friendly — like a helpful friend, not a robot
-7. If they have questions about the payment process, answer patiently and clearly
-8. Keep each message short and easy to follow — avoid walls of text
+4. Keep it short and clear — only the selected method, nothing else` : `1. Greet them warmly and confirm their order number and total
+2. Share the payment instructions above in simple, clear language — break it into numbered steps
+3. Tell them to use their order number (${pendingManualOrder.orderNumber}) as the payment reference`}
+${proofUploaded ? `${selectedMethodDetails ? "5" : "4"}. Their proof is ALREADY uploaded — acknowledge it and reassure them\n${selectedMethodDetails ? "6" : "5"}. Let them know the store owner will verify and process their order` : `${selectedMethodDetails ? "5" : "4"}. After they confirm payment, let them know they can upload proof of payment on their order page\n${selectedMethodDetails ? "6" : "5"}. Reassure them that once the store owner verifies payment, their order will be processed and shipped`}
+${selectedMethodDetails ? "" : "6. Be conversational and friendly — like a helpful friend, not a robot\n7. If they have questions about the payment process, answer patiently and clearly\n8. Keep each message short and easy to follow — avoid walls of text"}
 `
     : ""
 }

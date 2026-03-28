@@ -32,7 +32,8 @@ export type MessageContentType =
   | "location"
   | "system"
   | "note"
-  | "whatsapp_template";
+  | "whatsapp_template"
+  | "payment_method_select";
 export type MessageStatus =
   | "sending"
   | "sent"

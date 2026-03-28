@@ -238,6 +238,7 @@ export function WidgetChat({
             message={msg}
             primaryColor={settings.primaryColor}
             textColor={settings.textColor}
+            onSendMessage={onSendMessage}
           />
         ))}
 

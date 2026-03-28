@@ -19,18 +19,29 @@ export interface WidgetMessage {
   attachmentType?: string
   attachmentName?: string
   isRead?: boolean
+  contentType?: string
+}
+
+/** Parsed data for payment_method_select messages */
+export interface PaymentSelectData {
+  text: string
+  orderNumber: string
+  orderTotal: string
+  buttons: { id: string; label: string }[]
 }
 
 interface WidgetMessageBubbleProps {
   message: WidgetMessage
   primaryColor: string
   textColor: string
+  onSendMessage?: (text: string) => void
 }
 
 export function WidgetMessageBubble({
   message,
   primaryColor,
   textColor,
+  onSendMessage,
 }: WidgetMessageBubbleProps) {
   const isVisitor = message.senderType === 'visitor'
   const isSystem = message.senderType === 'system'
@@ -44,6 +55,17 @@ export function WidgetMessageBubble({
           {message.text}
         </span>
       </div>
+    )
+  }
+
+  // ── Payment method selection buttons ────────────────────────────────────
+  if (message.contentType === 'payment_method_select') {
+    return (
+      <PaymentMethodSelect
+        message={message}
+        primaryColor={primaryColor}
+        onSendMessage={onSendMessage}
+      />
     )
   }
 
@@ -186,4 +208,100 @@ function formatTime(iso: string): string {
   } catch {
     return ''
   }
+}
+
+// ─── Payment Method Selection Buttons ──────────────────────────────────────
+
+function PaymentMethodSelect({
+  message,
+  primaryColor,
+  onSendMessage,
+}: {
+  message: WidgetMessage
+  primaryColor: string
+  onSendMessage?: (text: string) => void
+}) {
+  let data: PaymentSelectData | null = null
+  try {
+    data = JSON.parse(message.text) as PaymentSelectData
+  } catch {
+    // If JSON parse fails, render as plain text
+    return (
+      <div className="flex justify-start mb-1">
+        <div className="max-w-[80%]">
+          <div className="px-3 py-2 text-sm leading-relaxed rounded-2xl rounded-bl-md bg-[#f1f5f9] text-[#1e293b]">
+            <p className="whitespace-pre-wrap">{message.text}</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const handleButtonClick = (label: string) => {
+    if (onSendMessage) {
+      onSendMessage(`I'd like to pay using ${label}`)
+    }
+  }
+
+  return (
+    <div className="flex justify-start mb-1">
+      <div className="max-w-[85%]">
+        {/* AI sender label */}
+        {message.senderName && (
+          <div className="flex items-center gap-1.5 mb-0.5 px-1">
+            <span className="text-[11px] font-medium text-gray-600">
+              {message.senderName}
+            </span>
+            <span className="text-[9px] px-1.5 py-0.5 bg-purple-100 text-purple-600 rounded-full font-medium">
+              AI
+            </span>
+          </div>
+        )}
+
+        {/* Message bubble with text + buttons */}
+        <div className="rounded-2xl rounded-bl-md bg-[#f1f5f9] overflow-hidden">
+          {/* Question text */}
+          <div className="px-3 pt-2.5 pb-1.5">
+            <p className="text-sm text-[#1e293b] leading-relaxed">
+              {data.text}
+            </p>
+          </div>
+
+          {/* Payment method buttons */}
+          <div className="px-3 pb-2.5 flex flex-col gap-1.5">
+            {data.buttons.map((btn) => (
+              <button
+                key={btn.id}
+                type="button"
+                onClick={() => handleButtonClick(btn.label)}
+                className="w-full text-left px-3 py-2 text-sm font-medium rounded-lg border-2 transition-all duration-150 hover:shadow-sm active:scale-[0.98]"
+                style={{
+                  borderColor: primaryColor,
+                  color: primaryColor,
+                  backgroundColor: 'white',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = primaryColor
+                  e.currentTarget.style.color = 'white'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'white'
+                  e.currentTarget.style.color = primaryColor
+                }}
+              >
+                {btn.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Timestamp */}
+        <div className="flex items-center mt-0.5 px-1">
+          <span className="text-[10px] text-gray-400">
+            {formatTime(message.createdAt)}
+          </span>
+        </div>
+      </div>
+    </div>
+  )
 }

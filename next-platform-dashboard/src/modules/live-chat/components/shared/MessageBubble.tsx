@@ -125,6 +125,57 @@ function FileAttachment({
   return null
 }
 
+function PaymentMethodSelectBubble({
+  content,
+  isAgent,
+}: {
+  content: string | null
+  isAgent: boolean
+}) {
+  if (!content) return null
+
+  try {
+    const data = JSON.parse(content) as {
+      text: string
+      orderNumber: string
+      orderTotal: string
+      buttons: { id: string; label: string }[]
+    }
+
+    return (
+      <div className="space-y-2">
+        <p className={cn('text-sm', isAgent ? 'text-primary-foreground' : '')}>
+          {data.text}
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {data.buttons.map((btn) => (
+            <span
+              key={btn.id}
+              className={cn(
+                'inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium border',
+                isAgent
+                  ? 'border-primary-foreground/30 text-primary-foreground/90'
+                  : 'border-border text-foreground'
+              )}
+            >
+              {btn.label}
+            </span>
+          ))}
+        </div>
+        <p className={cn('text-[10px] opacity-60', isAgent ? 'text-primary-foreground' : 'text-muted-foreground')}>
+          Payment method selection sent to customer
+        </p>
+      </div>
+    )
+  } catch {
+    return (
+      <p className="text-sm whitespace-pre-wrap break-words">
+        {content}
+      </p>
+    )
+  }
+}
+
 export function MessageBubble({ message, className }: MessageBubbleProps) {
   const isSystem =
     message.senderType === 'system' || message.contentType === 'system'
@@ -218,21 +269,27 @@ export function MessageBubble({ message, className }: MessageBubbleProps) {
 
         {/* Bubble */}
         <div className={cn('rounded-lg px-3 py-2', bubbleBg)}>
-          {message.content && (
-            <p className="text-sm whitespace-pre-wrap break-words">
-              {message.content}
-            </p>
-          )}
-          {(message.contentType === 'image' ||
-            message.contentType === 'file' ||
-            message.contentType === 'audio' ||
-            message.contentType === 'video') && (
-            <FileAttachment
-              fileName={message.fileName}
-              fileUrl={message.fileUrl}
-              fileSize={message.fileSize}
-              contentType={message.contentType}
-            />
+          {message.contentType === 'payment_method_select' ? (
+            <PaymentMethodSelectBubble content={message.content} isAgent={isAgent} />
+          ) : (
+            <>
+              {message.content && (
+                <p className="text-sm whitespace-pre-wrap break-words">
+                  {message.content}
+                </p>
+              )}
+              {(message.contentType === 'image' ||
+                message.contentType === 'file' ||
+                message.contentType === 'audio' ||
+                message.contentType === 'video') && (
+                <FileAttachment
+                  fileName={message.fileName}
+                  fileUrl={message.fileUrl}
+                  fileSize={message.fileSize}
+                  contentType={message.contentType}
+                />
+              )}
+            </>
           )}
         </div>
 

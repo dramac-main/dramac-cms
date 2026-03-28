@@ -812,6 +812,7 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
     attachmentType: m.fileMimeType || undefined,
     attachmentName: m.fileName || undefined,
     isRead: m.status === "read",
+    contentType: m.contentType,
   }));
 
   return (
