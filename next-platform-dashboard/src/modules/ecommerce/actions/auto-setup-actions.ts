@@ -310,6 +310,15 @@ const ECOMMERCE_NAV_ITEMS: NavigationItem[] = [
     moduleId: 'ecommerce',
   },
   {
+    id: 'ecom-categories',
+    label: 'Categories',
+    href: '/categories',
+    icon: 'LayoutGrid',
+    position: 'main',
+    sortOrder: 101, // After Shop
+    moduleId: 'ecommerce',
+  },
+  {
     id: 'ecom-cart',
     label: 'Cart',
     href: '/cart',
@@ -336,11 +345,19 @@ const ECOMMERCE_FOOTER_ITEMS: NavigationItem[] = [
     moduleId: 'ecommerce',
   },
   {
+    id: 'ecom-footer-categories',
+    label: 'Categories',
+    href: '/categories',
+    position: 'footer',
+    sortOrder: 2,
+    moduleId: 'ecommerce',
+  },
+  {
     id: 'ecom-footer-cart',
     label: 'My Cart',
     href: '/cart',
     position: 'footer',
-    sortOrder: 2,
+    sortOrder: 3,
     moduleId: 'ecommerce',
   },
 ];

@@ -603,6 +603,54 @@ export const quotePageDefinition: PageDefinition = {
 };
 
 // ============================================================================
+// CATEGORIES BROWSE PAGE TEMPLATE
+// ============================================================================
+
+/**
+ * Create the categories browse page template
+ * URL: /categories
+ *
+ * Full-page browsable category grid with search, layout toggle,
+ * subcategory chips, and responsive columns.
+ * Uses the EcommerceCategoriesPage studio component.
+ */
+export function createCategoriesBrowseTemplate(): StudioPageData {
+  resetIdCounter();
+  const page = createEmptyPage("Categories");
+
+  // Single section wrapping the EcommerceCategoriesPage component
+  const mainSection = createSection(page, {
+    padding: "0",
+  });
+
+  const categoriesBlockId = genId("categoriespage");
+  page.components[categoriesBlockId] = {
+    id: categoriesBlockId,
+    type: "EcommerceCategoriesPage",
+    props: {},
+    parentId: mainSection,
+  };
+  page.root.children.push(categoriesBlockId);
+
+  return page;
+}
+
+/**
+ * Categories browse page definition
+ */
+export const categoriesBrowsePageDefinition: PageDefinition = {
+  slug: "categories",
+  title: "Categories",
+  metaTitle: "Browse Categories",
+  metaDescription:
+    "Browse all product categories. Find exactly what you need by exploring our organized collection.",
+  status: "published",
+  content: createCategoriesBrowseTemplate(),
+  moduleCreated: true,
+  moduleId: "ecommerce",
+};
+
+// ============================================================================
 // ALL PAGE DEFINITIONS
 // ============================================================================
 
@@ -616,6 +664,7 @@ export const ecommercePageDefinitions: PageDefinition[] = [
   cartPageDefinition,
   checkoutPageDefinition,
   orderConfirmationPageDefinition,
+  categoriesBrowsePageDefinition,
 ];
 
 /**
