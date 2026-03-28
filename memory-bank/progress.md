@@ -1,11 +1,50 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: March 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅ + **LIVE CHAT RUNTIME FIXES (AI auto-response + file uploads)** ✅ + **PER-ORDER CONVERSATION ISOLATION** ✅ + **PER-ORDER CHAT HARDENING AUDIT (10 bugs fixed, 0 TS errors)** ✅ + **CATEGORIES PAGE + DARK MODE POLISH** ✅ + **LIVE CHAT OVERHAUL + ECOMMERCE FIXES** ✅
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅ + **LIVE CHAT RUNTIME FIXES (AI auto-response + file uploads)** ✅ + **PER-ORDER CONVERSATION ISOLATION** ✅ + **PER-ORDER CHAT HARDENING AUDIT (10 bugs fixed, 0 TS errors)** ✅ + **CATEGORIES PAGE + DARK MODE POLISH** ✅ + **LIVE CHAT OVERHAUL + ECOMMERCE FIXES** ✅ + **CANVAS IFRAME RENDERING FIDELITY FIXES** ✅
 
 ---
 
-## Latest Update: Studio Canvas iframe Rewrite
+## Latest Update: Canvas iframe Rendering Fidelity Fixes (commit d061fbe9)
+
+### What Was Fixed
+
+Three rendering issues after the iframe canvas rewrite:
+
+1. **Sticky navbar** (`canvas-iframe.tsx`) — `minHeight` → `height`, removed `overflow:hidden`, body scrolls naturally → `position: sticky` works
+2. **Mobile/tablet accuracy** (`editor-canvas.tsx`) — Removed `maxHeight` clip, uses exact `height: viewportHeight` → iframe IS the device viewport
+3. **CSS fidelity** (`canvas-content.tsx`) — Added `studio-renderer light` classes to root div → font inheritance, color scheme, borders match published site
+
+**Build:** ✅ PASSES (195 pages, 0 errors). **Commit:** d061fbe9
+
+**Master Plan compatibility:** Full review of `LAYOUT-COMPONENTS-MASTER-PLAN.md` complete. All planned features (scroll-snap, parallax, Framer Motion, container queries, clamp(), 3D tilt, glassmorphism, shape dividers) compatible with iframe canvas.
+
+---
+
+## Previous Update: Layout Master Plan — System Dark Mode Specified
+
+### What Was Done
+
+Full system dark mode (`prefers-color-scheme`) specification added to **LAYOUT-COMPONENTS-MASTER-PLAN.md** and **LAYOUT-IMPLEMENTATION-PROMPT.md**. Deep platform scan (4 Explore subagents) confirmed feasibility and zero breakage risk.
+
+### Key Changes
+- **Section 12.7** rewritten from "NOT in scope" to comprehensive 9-subsection specification
+- **Phase 5** added to Implementation Phases (9 steps: dual palette generation, CSS injection, site setting, ThemeProvider, layout.tsx, E2E testing)
+- **Phases 1-2** updated to reference Section 12.7.5 dual-default render pattern
+- **Section 17.4** added for system dark mode testing
+- **Implementation prompt** updated with Key Rule #12, Phase 5 steps (23-30), and platform context
+
+### What This Enables
+- Sites with `colorScheme: "auto"` seamlessly switch between light and dark based on visitor's OS
+- Layout components use Tailwind semantic classes (auto-adapt) + inline style only for explicit AI colors
+- Zero regression: all existing sites default to `"light"` = exact current behavior
+- Dashboard completely unaffected (already isolated)
+
+### Status
+- **Plan:** COMPLETE ✅ (no code changes yet — this is specification only)
+- **Next:** Implementation will follow the 5-phase plan when the layout overhaul begins
+
+## Previous Update: Studio Canvas iframe Rewrite
 
 ### What Was Done
 

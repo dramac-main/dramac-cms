@@ -1,12 +1,131 @@
 # Active Context
 
-## Current Focus: Studio Canvas iframe Rewrite
+## Current Focus: Canvas iframe Rendering Fidelity Fixes
 
-### Status: COMPLETE — Build passes (0 errors), ready for commit & push
+### Status: COMPLETE — 3 files fixed, build passes, committed d061fbe9, pushed
 
 ### What Was Done (This Session)
 
-#### Studio Canvas iframe Architecture Rewrite
+#### Problem: Canvas Not Matching Published Site
+
+User reported after the iframe rewrite:
+1. **Sticky navbar not sticking when scrolling** in canvas
+2. **Mobile/tablet breakpoints don't match browser rendering**
+3. **Font, border styles missing** vs published site
+
+#### Root Cause Analysis & Fixes
+
+**Fix 1 — `canvas-iframe.tsx`:** Prop renamed `minHeight` → `height`. Removed `overflow: hidden` from iframe element style. HTML template rewritten: `body{margin:0;padding:0}` with no overflow restriction + thin scrollbar CSS. This gives the iframe a true scrolling viewport (identical to a browser tab), so `position: sticky; top: 0` on navbars works via CSS.
+
+**Fix 2 — `editor-canvas.tsx`:** CanvasFrame was using `minHeight` + `maxHeight: calc(100vh - 200px)` — this clipped the viewport and prevented internal scrolling. Changed to exact `height: viewportHeight * zoom` (outer zoom container) + `height: viewportHeight` (inner scale div) + passes `height={viewportHeight}` to CanvasIframe. The fixed height IS the viewport — identical to a phone screen.
+
+**Fix 3 — `canvas-content.tsx`:** Root div class was `"relative min-h-full"`. Changed to `"studio-renderer light relative min-h-full"`. This applies critical globals.css rules: `color-scheme: light !important`, `font-family: var(--font-sans, ...)`, heading font via `var(--font-display, ...)`, and border color neutralization. Without this, font inheritance and border styles were missing vs the published site.
+
+#### Why These Fixed Everything
+
+- **Sticky headers**: Pure CSS `position: sticky; top: 0` requires a scrolling ancestor. The old `minHeight` iframe auto-expanded (never scrolled). Fixed height creates a viewport that scrolls internally.
+- **Responsive accuracy**: `maxHeight: calc(100vh - 200px)` clipped the viewport to dashboard height. Now the iframe IS the device viewport (exact width × height).
+- **CSS fidelity**: Published site uses `<div class="studio-renderer light">` (renderer.tsx line ~80). Canvas was missing this class → missing font, color scheme, and border rules from globals.css.
+
+#### Compatibility: LAYOUT-COMPONENTS-MASTER-PLAN.md Review
+
+Completed full review of all 16 sections of the master plan. **All planned features are compatible with the iframe canvas:**
+
+| Feature | Status |
+|---------|--------|
+| CSS `position: sticky` | ✅ Works via fixed-height viewport |
+| Tailwind responsive @media | ✅ Responds to iframe width |
+| Framer Motion entrance animations | ✅ Works (JS in same iframe window) |
+| `useReducedMotion()` | ✅ Checks iframe window preference |
+| Scroll-driven animations (parallax etc.) | ✅ `window.scrollY` works within iframe |
+| Container queries | ✅ CSS feature, iframe-native |
+| CSS `clamp()` fluid sizing | ✅ CSS feature, iframe-native |
+| Glassmorphism / `backdrop-filter` | ✅ CSS feature |
+| Clip-path, blend modes | ✅ CSS feature |
+| Shape dividers (SVG) | ✅ Inline SVG, no iframe issues |
+| 3D tilt (onMouseMove) | ✅ Mouse events fire natively in iframe |
+| ScrollSection scroll-snap | ✅ CSS scroll-snap, iframe-native |
+| Dark/light `isDarkBackground()` | ✅ Existing pattern, works in canvas |
+| `studio-renderer light` css class | ✅ NOW applied to canvas root div |
+
+**One known limitation:** JS effects using `window.addEventListener("scroll")` in components (navbar hide-on-scroll etc.) are guarded by `enableEffects = !_isEditor || _liveEffects` — they default OFF in editor mode. Pure CSS `position: sticky` works. Live effects toggle in toolbar enables them.
+
+#### Commit & Build
+
+- **Commit:** `d061fbe9` — "fix(canvas): sticky headers, viewport accuracy, and CSS fidelity in iframe"
+- **Build:** ✅ Passes (Next.js, 195 pages, no errors)
+- **Pushed:** `dc2c55cf → d061fbe9` on `origin/main`
+
+---
+
+## Previous Focus: Layout Components Master Plan — System Dark Mode Added
+
+### Status: COMPLETE — Section 12.7 fully specified, Phase 5 added, implementation prompt updated
+
+### What Was Done (This Session)
+
+#### System Dark Mode (`prefers-color-scheme`) Added to Layout Master Plan
+
+**User Request:** "A full platform that fully works with light and dark mode. When the system switches to light mode, its light mode switches to dark mode, its dark mode."
+
+**Deep Platform Scan Results (4 Explore subagents):**
+- Dashboard dark mode: completely isolated (ThemeProvider forces `light` on `/site/` routes)
+- Tailwind config: `darkMode: ["class", "html"]` — class-based strategy
+- CSS variable infrastructure: 44 CSS vars already injected on `.studio-renderer`
+- `resolveBrandColors()`: already has full `isDarkBg` branching — can produce dual palettes
+- Ecommerce components: 72% use Tailwind semantic classes (auto-adapt ready)
+- Premium components: 45 components, inline hex (NOT part of layout overhaul, future upgrade)
+- CSS scoping: `.studio-renderer` is a containment boundary — dashboard safe
+
+**Conclusion:** YES, system dark mode CAN be added without breaking anything. Changes are opt-in, additive, and scoped.
+
+#### Files Modified
+
+**`docs/LAYOUT-COMPONENTS-MASTER-PLAN.md`:**
+1. **Section 12.7 REWRITTEN** — From "Future: NOT in scope" placeholder to comprehensive in-scope specification with 9 subsections:
+   - 12.7.1 Dual Palette Generation (`resolveDualPalettes()` → calls `resolveBrandColors()` twice)
+   - 12.7.2 CSS Variable Dark Mode Injection (`@media (prefers-color-scheme: dark)` scoped to `.studio-renderer`)
+   - 12.7.3 Site Color Scheme Setting (`colorScheme: "light" | "dark" | "auto"`, default `"light"`)
+   - 12.7.4 ThemeProvider & Layout Changes (conditional light/dark/auto class forcing)
+   - 12.7.5 Layout Component Dark Mode Render Pattern (Tailwind semantic classes as defaults, inline hex only for explicit colors)
+   - 12.7.6 Ecommerce Component Readiness (72% auto-adapt, 28% intentional hardcoded)
+   - 12.7.7 Premium Component Dark Mode Notes (future upgrade path documented)
+   - 12.7.8 AI Post-Processing Pipeline (no second AI call — algorithmic dual derivation)
+   - 12.7.9 Breakage Prevention Guarantees (6 concerns, all ZERO risk)
+
+2. **Phase 5 ADDED** to Implementation Phases — 9 numbered steps for system dark mode implementation (deriveDarkComplement, resolveDualPalettes, generateDarkModeCSSOverrides, site setting, StudioRenderer, ThemeProvider, layout.tsx, dual-default pattern verification, E2E testing)
+
+3. **Phase 1 & 2 UPDATED** — All layout render upgrade/build steps now reference Section 12.7.5 dual-default pattern
+
+4. **Section 17.4 ADDED** — System Dark Mode Testing subsection (Playwright with prefers-color-scheme emulation, visual verification checklist, edge cases)
+
+**`docs/LAYOUT-IMPLEMENTATION-PROMPT.md`:**
+1. Platform Context updated with System Dark Mode description
+2. Key Rule #12 added (system dark mode dual-default pattern)
+3. Phase 5 steps (23-30) added to implementation order
+4. Dark/light testing note expanded with dual-default pattern reference
+
+### Architecture: How System Dark Mode Works
+
+```
+Site owner sets colorScheme: "auto" in site settings
+    ↓
+resolveDualPalettes() produces { light, dark } BrandColorPalettes
+    ↓
+StudioRenderer injects:
+  - Inline style: light CSS vars (default, existing behavior)
+  - <style> tag: @media (prefers-color-scheme: dark) { .studio-renderer { dark CSS vars } }
+    ↓
+Browser picks light or dark CSS vars based on OS preference
+    ↓
+Tailwind semantic classes (bg-background, text-foreground, bg-card) auto-resolve
+    ↓
+Layout components with explicit AI-set colors stay fixed (inline style priority)
+```
+
+**Zero regression:** Sites default to `colorScheme: "light"` = exact current behavior. Only `"auto"` sites get dark switching.
+
+## Previous Focus: Studio Canvas iframe Rewrite
 
 **Problem:** The Designer Studio canvas rendered components directly in the dashboard DOM, causing:
 - Dashboard dark mode CSS bleeding into page content
