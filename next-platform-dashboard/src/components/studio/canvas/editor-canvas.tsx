@@ -36,6 +36,10 @@ import {
   extractBrandSource,
   generateBrandCSSVars,
 } from "@/lib/studio/engine/brand-colors";
+import {
+  generateFluidTypeScale,
+  generateTypographyCSSVars,
+} from "@/lib/ai/website-designer/design/typography-intelligence";
 
 // =============================================================================
 // TYPES
@@ -190,7 +194,28 @@ export function EditorCanvas({ className }: EditorCanvasProps) {
       (siteSettings?.font_body as string) ||
       (themeObj?.fontBody as string) ||
       null;
-    return generateBrandCSSVars(brandPalette, fontHeading, fontBody);
+    const brandVars = generateBrandCSSVars(brandPalette, fontHeading, fontBody);
+
+    // Generate fluid type scale CSS variables (matches renderer.tsx pipeline)
+    const typeScaleRatio =
+      (siteSettings?.type_scale_ratio as string) ||
+      (themeObj?.typeScaleRatio as string) ||
+      "minor-third";
+    const scale = generateFluidTypeScale(
+      16,
+      typeScaleRatio as Parameters<typeof generateFluidTypeScale>[1],
+    );
+    const fontMono =
+      (siteSettings?.font_mono as string) ||
+      (themeObj?.fontMono as string) ||
+      undefined;
+    const typeVars = generateTypographyCSSVars(scale, {
+      heading: fontHeading || undefined,
+      body: fontBody || undefined,
+      mono: fontMono,
+    });
+
+    return { ...brandVars, ...typeVars };
   }, [brandPalette, siteSettings]);
 
   const fontFamilies = useMemo(() => {

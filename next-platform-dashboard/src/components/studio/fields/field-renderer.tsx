@@ -51,6 +51,10 @@ const FIELD_EDITORS: Partial<Record<FieldType, React.ComponentType<any>>> = {
   toggle: ToggleField,
   checkbox: ToggleField,
   
+  // Content fields
+  richtext: TextareaField, // Rich text content (WYSIWYG planned for future)
+  code: TextareaField, // Code content (code editor planned for future)
+  
   // Advanced fields (from Wave 3 - STUDIO-09)
   // Note: We provide both old and new versions - new ones are more feature-rich
   color: ColorField, // Use existing for now, can switch to ColorFieldEditor
@@ -111,6 +115,8 @@ function InnerFieldRenderer({ field, value, onChange, disabled, componentType }:
   
   switch (field.type) {
     case 'textarea':
+    case 'richtext':
+    case 'code':
       return <Editor {...commonProps} />;
       
     case 'number':
