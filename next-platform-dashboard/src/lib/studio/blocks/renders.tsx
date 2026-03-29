@@ -35,6 +35,11 @@ import {
   Play,
   Send,
   Star,
+  AlertCircle,
+  Info,
+  CheckCircle2,
+  Clock,
+  Zap,
 } from "lucide-react";
 import {
   getImageUrl,
