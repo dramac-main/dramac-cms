@@ -1541,7 +1541,7 @@ function transformPropsForStudio(
     return {
       ...props,
       direction: toResponsive(props.direction, "column"),
-      gap: toResponsive(props.gap, "4"),
+      spacing: toResponsive(props.spacing || props.gap, "4"),
       align: toResponsive(props.align || props.alignItems, "stretch"),
       justify: toResponsive(props.justify || props.justifyContent, "start"),
     };
@@ -1573,8 +1573,14 @@ function transformPropsForStudio(
   if (type === "GridItem") {
     return {
       ...props,
-      colSpan: toResponsive(props.colSpan || props.columnSpan, "1"),
-      rowSpan: toResponsive(props.rowSpan, "1"),
+      colSpan: Number(props.colSpan || props.columnSpan || 1),
+      rowSpan: Number(props.rowSpan || 1),
+      colStart: props.colStart,
+      colEnd: props.colEnd,
+      rowStart: props.rowStart,
+      rowEnd: props.rowEnd,
+      area: props.area,
+      order: props.order,
     };
   }
 
@@ -1614,7 +1620,8 @@ function transformPropsForStudio(
     return {
       ...props,
       snapAlign: props.snapAlign || "start",
-      height: props.height || "100vh",
+      backgroundColor: props.backgroundColor,
+      backgroundImage: props.backgroundImage,
     };
   }
 
@@ -1622,29 +1629,79 @@ function transformPropsForStudio(
   if (type === "StickyContainer") {
     return {
       ...props,
-      offset: props.offset || props.stickyOffset || "0",
-      height: props.height || props.stickyHeight || "auto",
+      stickyPosition: props.stickyPosition || props.position || "left",
+      stickyWidth: toResponsive(props.stickyWidth || props.width || "1/3", "1/3"),
+      stickyOffset: props.stickyOffset || props.offset || "0px",
+      gap: toResponsive(props.gap, "8"),
+      stackOnMobile: props.stackOnMobile ?? true,
+      mobileOrder: props.mobileOrder || "sticky-first",
+      padding: toResponsive(props.padding, "0"),
+      backgroundColor: props.backgroundColor,
+      minHeight: props.minHeight,
     };
   }
 
-  // Animate
+  // Animate — render expects nested config objects: entrance, loop, scroll, stagger
   if (type === "Animate") {
+    const animType = String(props.animation || props.effect || props.entrance?.type || "fadeIn");
+    const trigger = String(props.trigger || "scroll");
+    const dur = Number(props.duration || props.entrance?.duration || 0.6);
+    const del = Number(props.delay || props.entrance?.delay || 0);
+
+    // Build entrance config (scroll-triggered entrance animation)
+    const entrance = props.entrance && typeof props.entrance === "object"
+      ? props.entrance
+      : {
+          type: animType,
+          duration: dur,
+          delay: del,
+          easing: props.easing || "ease",
+          once: props.once !== false,
+          threshold: Number(props.threshold || 0.2),
+        };
+
+    // Build loop config if specified
+    const loop = props.loop && typeof props.loop === "object"
+      ? props.loop
+      : props.loopAnimation
+        ? { type: String(props.loopAnimation), duration: Number(props.loopDuration || 2), delay: 0 }
+        : undefined;
+
+    // Build scroll config if trigger is scroll-driven effect
+    const scrollEffects = ["parallax", "fade", "scale", "rotate", "slide", "reveal"];
+    const scroll = props.scroll && typeof props.scroll === "object"
+      ? props.scroll
+      : scrollEffects.includes(trigger)
+        ? { type: trigger, speed: Number(props.speed || 0.5), direction: props.scrollDirection || "up" }
+        : undefined;
+
+    // Build stagger config
+    const stagger = props.stagger && typeof props.stagger === "object"
+      ? props.stagger
+      : props.staggerDelay
+        ? { enabled: true, delay: Number(props.staggerDelay), direction: props.staggerDirection || "normal" }
+        : undefined;
+
     return {
       ...props,
-      animation: props.animation || props.effect || "fadeIn",
-      trigger: props.trigger || "scroll",
-      duration: props.duration || 0.6,
-      delay: props.delay || 0,
+      entrance,
+      loop,
+      scroll,
+      stagger,
     };
   }
 
-  // Tilt3DContainer
+  // Tilt3DContainer — render expects maxAngle, not maxTilt
   if (type === "Tilt3DContainer") {
     return {
       ...props,
-      maxTilt: props.maxTilt || props.tiltAngle || 15,
-      perspective: props.perspective || 1000,
-      glare: props.glare ?? props.enableGlare ?? false,
+      maxAngle: Number(props.maxAngle || props.maxTilt || props.tiltAngle || 10),
+      speed: Number(props.speed || 400),
+      perspective: Number(props.perspective || 1000),
+      scale: Number(props.scale || 1.02),
+      glare: !!(props.glare ?? props.enableGlare ?? false),
+      glareMaxOpacity: Number(props.glareMaxOpacity || 0.3),
+      enabled: props.enabled !== false,
     };
   }
 
@@ -1660,13 +1717,13 @@ function transformPropsForStudio(
     };
   }
 
-  // CursorEffect
+  // CursorEffect — render expects `type` and `intensity`, not `effect`/`size`
   if (type === "CursorEffect") {
     return {
       ...props,
-      effect: props.effect || props.type || "glow",
-      color: props.color || props.cursorColor || "#3b82f6",
-      size: props.size || 20,
+      type: String(props.type || props.effect || "spotlight"),
+      intensity: Number(props.intensity || props.size ? (Number(props.size) / 40) : 0.5),
+      color: props.color || props.cursorColor || "rgba(255,255,255,0.15)",
     };
   }
 

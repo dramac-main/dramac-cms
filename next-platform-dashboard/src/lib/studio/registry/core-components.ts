@@ -382,19 +382,19 @@ const layoutComponents: ComponentDefinition[] = [
         ],
         defaultValue: "column",
       },
-      gap: {
+      spacing: {
         type: "select",
-        label: "Gap",
+        label: "Spacing",
         options: presetOptions.gap,
         defaultValue: "md",
       },
-      alignItems: {
+      align: {
         type: "select",
         label: "Align Items",
         options: presetOptions.verticalAlign,
         defaultValue: "stretch",
       },
-      justifyContent: {
+      justify: {
         type: "select",
         label: "Justify Content",
         options: [
@@ -406,6 +406,7 @@ const layoutComponents: ComponentDefinition[] = [
         ],
         defaultValue: "start",
       },
+      wrap: { type: "toggle", label: "Wrap", defaultValue: false },
       divider: { type: "toggle", label: "Show Dividers", defaultValue: false },
       backgroundColor: { type: "color", label: "Background Color" },
       padding: {
@@ -417,13 +418,13 @@ const layoutComponents: ComponentDefinition[] = [
     },
     defaultProps: {
       direction: "column",
-      gap: "md",
-      alignItems: "stretch",
-      justifyContent: "start",
+      spacing: "md",
+      align: "stretch",
+      justify: "start",
     },
     ai: {
       description: "A vertical or horizontal stack that arranges children with consistent spacing",
-      canModify: ["direction", "gap", "alignItems", "justifyContent", "backgroundColor", "padding"],
+      canModify: ["direction", "spacing", "align", "justify", "wrap", "backgroundColor", "padding"],
     },
   }),
 
@@ -464,7 +465,7 @@ const layoutComponents: ComponentDefinition[] = [
         options: presetOptions.gap,
         defaultValue: "md",
       },
-      justifyContent: {
+      justify: {
         type: "select",
         label: "Justify Content",
         options: [
@@ -477,7 +478,7 @@ const layoutComponents: ComponentDefinition[] = [
         ],
         defaultValue: "start",
       },
-      alignItems: {
+      align: {
         type: "select",
         label: "Align Items",
         options: presetOptions.verticalAlign,
@@ -495,12 +496,12 @@ const layoutComponents: ComponentDefinition[] = [
       direction: "row",
       wrap: "wrap",
       gap: "md",
-      justifyContent: "start",
-      alignItems: "stretch",
+      justify: "start",
+      align: "stretch",
     },
     ai: {
       description: "A full-featured flexbox container with wrapping and alignment control",
-      canModify: ["direction", "wrap", "gap", "justifyContent", "alignItems", "backgroundColor", "padding"],
+      canModify: ["direction", "wrap", "gap", "justify", "align", "backgroundColor", "padding"],
     },
   }),
 
@@ -746,8 +747,8 @@ const layoutComponents: ComponentDefinition[] = [
     acceptsChildren: true,
     isContainer: true,
     fields: {
-      showDots: { type: "toggle", label: "Show Navigation Dots", defaultValue: true },
-      dotPosition: {
+      showProgress: { type: "toggle", label: "Show Navigation Dots", defaultValue: true },
+      progressPosition: {
         type: "select",
         label: "Dot Position",
         options: [
@@ -756,7 +757,17 @@ const layoutComponents: ComponentDefinition[] = [
         ],
         defaultValue: "right",
       },
-      dotColor: { type: "color", label: "Dot Color", defaultValue: "#ffffff" },
+      progressColor: { type: "color", label: "Dot Color", defaultValue: "#ffffff" },
+      progressStyle: {
+        type: "select",
+        label: "Progress Style",
+        options: [
+          { label: "Dots", value: "dots" },
+          { label: "Line", value: "line" },
+          { label: "Numbers", value: "numbers" },
+        ],
+        defaultValue: "dots",
+      },
       snapType: {
         type: "select",
         label: "Snap Type",
@@ -766,15 +777,26 @@ const layoutComponents: ComponentDefinition[] = [
         ],
         defaultValue: "mandatory",
       },
+      direction: {
+        type: "select",
+        label: "Direction",
+        options: [
+          { label: "Vertical", value: "vertical" },
+          { label: "Horizontal", value: "horizontal" },
+        ],
+        defaultValue: "vertical",
+      },
     },
     defaultProps: {
-      showDots: true,
-      dotPosition: "right",
+      showProgress: true,
+      progressPosition: "right",
+      progressStyle: "dots",
       snapType: "mandatory",
+      direction: "vertical",
     },
     ai: {
       description: "A full-viewport scroll-snap container for immersive storytelling",
-      canModify: ["showDots", "dotPosition", "dotColor", "snapType"],
+      canModify: ["showProgress", "progressPosition", "progressColor", "progressStyle", "snapType", "direction"],
     },
   }),
 
@@ -823,16 +845,40 @@ const layoutComponents: ComponentDefinition[] = [
     acceptsChildren: true,
     isContainer: true,
     fields: {
+      stickyPosition: {
+        type: "select",
+        label: "Sticky Position",
+        options: [
+          { label: "Left", value: "left" },
+          { label: "Right", value: "right" },
+          { label: "Top", value: "top" },
+        ],
+        defaultValue: "left",
+      },
+      stickyWidth: {
+        type: "select",
+        label: "Sticky Width",
+        options: [
+          { label: "1/3", value: "1/3" },
+          { label: "2/5", value: "2/5" },
+          { label: "1/2", value: "1/2" },
+          { label: "3/5", value: "3/5" },
+          { label: "2/3", value: "2/3" },
+        ],
+        defaultValue: "1/3",
+      },
       stickyOffset: {
         type: "text",
         label: "Sticky Offset (e.g. 80px)",
         defaultValue: "0px",
       },
-      stickyDuration: {
-        type: "text",
-        label: "Sticky Duration (e.g. 200vh)",
-        defaultValue: "100vh",
+      gap: {
+        type: "select",
+        label: "Gap",
+        options: presetOptions.gap,
+        defaultValue: "8",
       },
+      stackOnMobile: { type: "toggle", label: "Stack on Mobile", defaultValue: true },
       backgroundColor: { type: "color", label: "Background Color" },
       padding: {
         type: "select",
@@ -842,12 +888,15 @@ const layoutComponents: ComponentDefinition[] = [
       },
     },
     defaultProps: {
+      stickyPosition: "left",
+      stickyWidth: "1/3",
       stickyOffset: "0px",
-      stickyDuration: "100vh",
+      gap: "8",
+      stackOnMobile: true,
     },
     ai: {
       description: "A container that sticks to a position while the user scrolls",
-      canModify: ["stickyOffset", "stickyDuration", "backgroundColor", "padding"],
+      canModify: ["stickyPosition", "stickyWidth", "stickyOffset", "gap", "stackOnMobile", "backgroundColor", "padding"],
     },
   }),
 
@@ -861,67 +910,41 @@ const layoutComponents: ComponentDefinition[] = [
     acceptsChildren: true,
     isContainer: true,
     fields: {
-      animation: {
-        type: "select",
-        label: "Animation",
-        options: [
-          { label: "Fade In", value: "fadeIn" },
-          { label: "Slide Up", value: "slideUp" },
-          { label: "Slide Down", value: "slideDown" },
-          { label: "Slide Left", value: "slideLeft" },
-          { label: "Slide Right", value: "slideRight" },
-          { label: "Scale Up", value: "scaleUp" },
-          { label: "Scale Down", value: "scaleDown" },
-          { label: "Rotate In", value: "rotateIn" },
-          { label: "Blur In", value: "blurIn" },
-          { label: "Bounce In", value: "bounceIn" },
-          { label: "Flip In", value: "flipIn" },
-        ],
-        defaultValue: "fadeIn",
+      entrance: {
+        type: "object",
+        label: "Entrance Animation",
+        fields: {
+          type: {
+            type: "select",
+            label: "Animation",
+            options: [
+              { label: "None", value: "none" },
+              { label: "Fade In", value: "fadeIn" },
+              { label: "Slide Up", value: "slideUp" },
+              { label: "Slide Down", value: "slideDown" },
+              { label: "Slide Left", value: "slideLeft" },
+              { label: "Slide Right", value: "slideRight" },
+              { label: "Scale Up", value: "scaleUp" },
+              { label: "Scale Down", value: "scaleDown" },
+              { label: "Rotate In", value: "rotateIn" },
+              { label: "Blur In", value: "blurIn" },
+              { label: "Bounce In", value: "bounceIn" },
+              { label: "Flip In", value: "flipIn" },
+            ],
+            defaultValue: "fadeIn",
+          },
+          duration: { type: "number", label: "Duration (s)", min: 0.1, max: 3, step: 0.1, defaultValue: 0.6 },
+          delay: { type: "number", label: "Delay (s)", min: 0, max: 2, step: 0.1, defaultValue: 0 },
+          once: { type: "toggle", label: "Animate Once", defaultValue: true },
+        },
       },
-      trigger: {
-        type: "select",
-        label: "Trigger",
-        options: [
-          { label: "On Scroll (In View)", value: "inView" },
-          { label: "On Hover", value: "hover" },
-          { label: "On Load", value: "load" },
-        ],
-        defaultValue: "inView",
-      },
-      duration: {
-        type: "number",
-        label: "Duration (ms)",
-        min: 100,
-        max: 3000,
-        defaultValue: 600,
-      },
-      delay: {
-        type: "number",
-        label: "Delay (ms)",
-        min: 0,
-        max: 2000,
-        defaultValue: 0,
-      },
-      stagger: {
-        type: "number",
-        label: "Stagger (ms)",
-        min: 0,
-        max: 500,
-        defaultValue: 0,
-      },
-      once: { type: "toggle", label: "Animate Once", defaultValue: true },
     },
     defaultProps: {
-      animation: "fadeIn",
-      trigger: "inView",
-      duration: 600,
-      delay: 0,
-      once: true,
+      entrance: { type: "fadeIn", duration: 0.6, delay: 0, once: true, threshold: 0.2 },
     },
     ai: {
       description: "Wraps content with entrance animations triggered on scroll or hover",
-      canModify: ["animation", "trigger", "duration", "delay", "stagger", "once"],
+      canModify: ["entrance"],
     },
   }),
 
@@ -935,12 +958,19 @@ const layoutComponents: ComponentDefinition[] = [
     acceptsChildren: true,
     isContainer: true,
     fields: {
-      maxTilt: {
+      maxAngle: {
         type: "number",
         label: "Max Tilt (degrees)",
         min: 1,
         max: 45,
-        defaultValue: 15,
+        defaultValue: 10,
+      },
+      speed: {
+        type: "number",
+        label: "Speed (ms)",
+        min: 100,
+        max: 1000,
+        defaultValue: 400,
       },
       perspective: {
         type: "number",
@@ -955,28 +985,29 @@ const layoutComponents: ComponentDefinition[] = [
         min: 1,
         max: 1.3,
         step: 0.01,
-        defaultValue: 1.05,
+        defaultValue: 1.02,
       },
-      glare: { type: "toggle", label: "Show Glare", defaultValue: true },
+      glare: { type: "toggle", label: "Show Glare", defaultValue: false },
       glareMaxOpacity: {
         type: "number",
         label: "Glare Max Opacity",
         min: 0,
         max: 1,
         step: 0.05,
-        defaultValue: 0.2,
+        defaultValue: 0.3,
       },
     },
     defaultProps: {
-      maxTilt: 15,
+      maxAngle: 10,
+      speed: 400,
       perspective: 1000,
-      scale: 1.05,
-      glare: true,
-      glareMaxOpacity: 0.2,
+      scale: 1.02,
+      glare: false,
+      glareMaxOpacity: 0.3,
     },
     ai: {
       description: "Applies an interactive 3D tilt effect on mouse hover",
-      canModify: ["maxTilt", "perspective", "scale", "glare", "glareMaxOpacity"],
+      canModify: ["maxAngle", "speed", "perspective", "scale", "glare", "glareMaxOpacity"],
     },
   }),
 
@@ -993,6 +1024,7 @@ const layoutComponents: ComponentDefinition[] = [
         label: "Shape",
         options: [
           { label: "Wave", value: "wave" },
+          { label: "Wave Smooth", value: "wave-smooth" },
           { label: "Curve", value: "curve" },
           { label: "Tilt", value: "tilt" },
           { label: "Arrow", value: "arrow" },
@@ -1000,6 +1032,8 @@ const layoutComponents: ComponentDefinition[] = [
           { label: "Zigzag", value: "zigzag" },
           { label: "Clouds", value: "clouds" },
           { label: "Mountains", value: "mountains" },
+          { label: "Drops", value: "drops" },
+          { label: "Pyramids", value: "pyramids" },
         ],
         defaultValue: "wave",
       },
@@ -1047,26 +1081,20 @@ const layoutComponents: ComponentDefinition[] = [
     acceptsChildren: true,
     isContainer: true,
     fields: {
-      effect: {
+      type: {
         type: "select",
         label: "Effect",
         options: [
-          { label: "Glow", value: "glow" },
           { label: "Spotlight", value: "spotlight" },
+          { label: "Glow", value: "glow" },
           { label: "Trail", value: "trail" },
           { label: "Magnetic", value: "magnetic" },
-          { label: "Ripple", value: "ripple" },
+          { label: "Tilt", value: "tilt" },
+          { label: "None", value: "none" },
         ],
-        defaultValue: "glow",
+        defaultValue: "spotlight",
       },
-      color: { type: "color", label: "Effect Color", defaultValue: "#3b82f6" },
-      size: {
-        type: "number",
-        label: "Effect Size (px)",
-        min: 50,
-        max: 500,
-        defaultValue: 200,
-      },
+      color: { type: "color", label: "Effect Color", defaultValue: "rgba(255,255,255,0.15)" },
       intensity: {
         type: "number",
         label: "Intensity",
@@ -1077,14 +1105,13 @@ const layoutComponents: ComponentDefinition[] = [
       },
     },
     defaultProps: {
-      effect: "glow",
-      color: "#3b82f6",
-      size: 200,
+      type: "spotlight",
+      color: "rgba(255,255,255,0.15)",
       intensity: 0.5,
     },
     ai: {
       description: "Adds interactive cursor-following effects to a container",
-      canModify: ["effect", "color", "size", "intensity"],
+      canModify: ["type", "color", "intensity"],
     },
   }),
 ];
