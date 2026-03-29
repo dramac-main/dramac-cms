@@ -12718,7 +12718,7 @@ const contentComponents: ComponentDefinition[] = [
     label: "Rich Text",
     description:
       "Rich text content section with title, subtitle, layout, pull quotes, and full typography controls",
-    category: "content",
+    category: "typography",
     icon: "FileText",
     render: RichTextRender,
     fields: {
@@ -12859,7 +12859,7 @@ const contentComponents: ComponentDefinition[] = [
     type: "Quote",
     label: "Quote",
     description: "Blockquote with 6 variants: simple, bordered, card, modern, pullquote, testimonial",
-    category: "content",
+    category: "typography",
     icon: "Quote",
     render: QuoteRender,
     fields: {
@@ -12986,7 +12986,7 @@ const contentComponents: ComponentDefinition[] = [
     type: "Label",
     label: "Label",
     description: "Small utility text for tags, badges, categories, and overlines",
-    category: "content",
+    category: "typography",
     icon: "Tag",
     render: LabelRender,
     fields: {
@@ -13072,7 +13072,7 @@ const contentComponents: ComponentDefinition[] = [
     type: "List",
     label: "List",
     description: "Styled list with bullet, numbered, check, arrow, dash, and icon variants",
-    category: "content",
+    category: "typography",
     icon: "List",
     render: ListRender,
     fields: {
@@ -13157,7 +13157,7 @@ const contentComponents: ComponentDefinition[] = [
     type: "DisplayText",
     label: "Display Text",
     description: "Large decorative display text for hero sections with gradient support",
-    category: "content",
+    category: "typography",
     icon: "Heading1",
     render: DisplayTextRender,
     fields: {
@@ -13294,7 +13294,7 @@ const contentComponents: ComponentDefinition[] = [
     type: "DividerText",
     label: "Divider Text",
     description: "Text with decorative divider lines in 5 variants",
-    category: "content",
+    category: "typography",
     icon: "Minus",
     render: DividerTextRender,
     fields: {
@@ -13382,7 +13382,7 @@ const contentComponents: ComponentDefinition[] = [
     type: "StatNumber",
     label: "Stat Number",
     description: "Large statistics/metrics display with prefix, suffix, and label",
-    category: "content",
+    category: "typography",
     icon: "Hash",
     render: StatNumberRender,
     fields: {
