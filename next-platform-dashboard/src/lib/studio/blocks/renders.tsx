@@ -120,6 +120,7 @@ import {
 type ResponsiveValue<T> = T | { mobile?: T; tablet?: T; desktop?: T };
 
 type ClassMapValue =
+  | string
   | { mobile: string; tablet: string; desktop: string }
   | [string, string, string];
 
@@ -133,6 +134,9 @@ function getResponsiveClasses<T extends string | number>(
     mapping: ClassMapValue,
     breakpoint: "mobile" | "tablet" | "desktop",
   ): string => {
+    if (typeof mapping === "string") {
+      return breakpoint === "mobile" ? mapping : "";
+    }
     if (Array.isArray(mapping)) {
       return breakpoint === "mobile"
         ? mapping[0]
@@ -6857,56 +6861,96 @@ export function MapRender({
 
 export interface HeroProps {
   title?: string;
+  titleSize?: "sm" | "md" | "lg" | "xl" | "2xl";
   subtitle?: string;
   description?: string;
+  descriptionMaxWidth?: "sm" | "md" | "lg" | "xl" | "full";
   variant?: "centered" | "split" | "fullscreen" | "minimal" | "video";
   backgroundColor?: string;
   backgroundImage?: string | ImageValue;
+  backgroundGradient?: GradientConfig;
   backgroundOverlay?: boolean;
+  backgroundOverlayColor?: string;
   backgroundOverlayOpacity?: number;
+  showPattern?: boolean;
+  patternType?: "dots" | "grid" | "diagonal" | "waves";
+  patternOpacity?: number;
   textColor?: string;
   primaryButtonText?: string;
   primaryButtonLink?: string;
   primaryButtonColor?: string;
+  primaryButtonTextColor?: string;
+  primaryButtonRadius?: "sm" | "md" | "lg" | "full";
   secondaryButtonText?: string;
   secondaryButtonLink?: string;
+  secondaryButtonColor?: string;
   image?: string | ImageValue;
   imageAlt?: string;
   imagePosition?: "left" | "right";
+  imageRounded?: "none" | "md" | "lg" | "xl" | "2xl";
+  imageShadow?: "none" | "md" | "lg" | "xl" | "2xl";
   videoSrc?: string;
   badge?: string;
   badgeColor?: string;
+  badgeTextColor?: string;
+  badgeStyle?: "filled" | "outline" | "pill";
   minHeight?: "auto" | "screen" | "half";
+  maxWidth?: "md" | "lg" | "xl" | "2xl" | "full";
   contentAlign?: "left" | "center" | "right";
   paddingY?: "sm" | "md" | "lg" | "xl";
+  paddingX?: "sm" | "md" | "lg" | "xl";
+  showScrollIndicator?: boolean;
+  scrollIndicatorColor?: string;
+  animateOnLoad?: boolean;
+  animationType?: "fade" | "slide-up" | "slide-down" | "zoom";
   id?: string;
   className?: string;
 }
 
 export function HeroRender({
   title = "Welcome to Our Platform",
+  titleSize = "xl",
   subtitle,
   description = "Build amazing experiences with our powerful tools and beautiful components.",
+  descriptionMaxWidth = "lg",
   variant = "centered",
   backgroundColor = "#ffffff",
   backgroundImage,
+  backgroundGradient,
   backgroundOverlay = true,
+  backgroundOverlayColor = "#000000",
   backgroundOverlayOpacity = 50,
+  showPattern = false,
+  patternType = "dots",
+  patternOpacity = 10,
   textColor,
   primaryButtonText = "Get Started",
   primaryButtonLink = "#",
   primaryButtonColor = "",
+  primaryButtonTextColor = "#ffffff",
+  primaryButtonRadius = "lg",
   secondaryButtonText,
   secondaryButtonLink = "#",
+  secondaryButtonColor,
   image,
   imageAlt = "Hero image",
   imagePosition = "right",
+  imageRounded = "xl",
+  imageShadow = "2xl",
   videoSrc,
   badge,
   badgeColor = "",
+  badgeTextColor = "#ffffff",
+  badgeStyle = "filled",
   minHeight = "auto",
+  maxWidth = "xl",
   contentAlign = "center",
   paddingY = "lg",
+  paddingX = "md",
+  showScrollIndicator = false,
+  scrollIndicatorColor,
+  animateOnLoad = false,
+  animationType = "fade",
   id,
   className = "",
 }: HeroProps) {
@@ -6914,13 +6958,34 @@ export function HeroRender({
   const bgImageUrl = getImageUrl(backgroundImage);
   const heroImageUrl = getImageUrl(image);
   const heroImageAlt = imageAlt || getImageAlt(image, "Hero image");
+  const dark = isDarkBackground(backgroundColor);
 
-  const paddingClasses = {
-    sm: "py-12 md:py-16",
-    md: "py-16 md:py-24",
-    lg: "py-20 md:py-32 lg:py-40",
-    xl: "py-24 md:py-40 lg:py-52",
-  }[paddingY];
+  const pyClasses = paddingYMapUtil[paddingY] || paddingYMapUtil.lg;
+  const pxClasses = paddingXMapUtil[paddingX] || paddingXMapUtil.md;
+
+  const titleSizeClasses = {
+    sm: "text-2xl sm:text-3xl md:text-4xl",
+    md: "text-3xl sm:text-4xl md:text-5xl",
+    lg: "text-3xl sm:text-4xl md:text-5xl lg:text-6xl",
+    xl: "text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl",
+    "2xl": "text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl",
+  }[titleSize];
+
+  const descMaxWidthClasses = {
+    sm: "max-w-sm",
+    md: "max-w-md",
+    lg: "max-w-2xl",
+    xl: "max-w-3xl",
+    full: "max-w-full",
+  }[descriptionMaxWidth];
+
+  const contentMaxWidthClasses = {
+    md: "max-w-3xl",
+    lg: "max-w-4xl",
+    xl: "max-w-5xl",
+    "2xl": "max-w-6xl",
+    full: "max-w-screen-xl",
+  }[maxWidth];
 
   const heightClasses = {
     auto: "",
@@ -6934,39 +6999,130 @@ export function HeroRender({
     right: "text-right items-end",
   }[contentAlign];
 
+  const imageRoundedClasses = {
+    none: "",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+    "2xl": "rounded-2xl",
+  }[imageRounded];
+
+  const imageShadowClasses = {
+    none: "",
+    md: "shadow-md",
+    lg: "shadow-lg",
+    xl: "shadow-xl",
+    "2xl": "shadow-2xl",
+  }[imageShadow];
+
+  const buttonRadiusClasses = {
+    sm: "rounded",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    full: "rounded-full",
+  }[primaryButtonRadius];
+
+  const resolvedBtnColor = primaryButtonColor || (dark ? "#e5a956" : "var(--brand-primary, #3b82f6)");
+  const resolvedSecondaryColor = secondaryButtonColor || textColor || (dark ? "#ffffff" : "#374151");
+
+  const animationClasses = animateOnLoad
+    ? {
+        fade: "animate-in fade-in duration-700",
+        "slide-up": "animate-in slide-in-from-bottom-4 duration-700",
+        "slide-down": "animate-in slide-in-from-top-4 duration-700",
+        zoom: "animate-in zoom-in-95 duration-700",
+      }[animationType] || ""
+    : "";
+
+  // Build background styles 
+  const backgroundStyles: React.CSSProperties = {};
+  if (backgroundGradient) {
+    backgroundStyles.backgroundImage = buildGradientCSS(backgroundGradient);
+  } else if (bgImageUrl) {
+    backgroundStyles.backgroundImage = `url(${bgImageUrl})`;
+    backgroundStyles.backgroundSize = "cover";
+    backgroundStyles.backgroundPosition = "center";
+  } else {
+    backgroundStyles.backgroundColor = backgroundColor;
+  }
+
+  // Pattern SVG backgrounds
+  const patternSvgs: Record<string, string> = {
+    dots: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1.5' cy='1.5' r='1.5' fill='%23${dark ? "ffffff" : "000000"}'/%3E%3C/svg%3E")`,
+    grid: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h40v40H0z' fill='none' stroke='%23${dark ? "ffffff" : "000000"}' stroke-width='0.5'/%3E%3C/svg%3E")`,
+    diagonal: `url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 16L16 0' stroke='%23${dark ? "ffffff" : "000000"}' stroke-width='0.5' fill='none'/%3E%3C/svg%3E")`,
+    waves: `url("data:image/svg+xml,%3Csvg width='100' height='20' viewBox='0 0 100 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 10c25 0 25-10 50-10s25 10 50 10' stroke='%23${dark ? "ffffff" : "000000"}' stroke-width='0.5' fill='none'/%3E%3C/svg%3E")`,
+  };
+
+  // Badge rendering 
+  const renderBadge = (centerSelf?: boolean) => {
+    if (!badge) return null;
+    const badgeStyles: React.CSSProperties =
+      badgeStyle === "outline"
+        ? { borderColor: badgeColor || resolvedBtnColor, color: badgeColor || resolvedBtnColor, backgroundColor: "transparent" }
+        : { backgroundColor: badgeColor || resolvedBtnColor, color: badgeTextColor };
+    return (
+      <span
+        className={`inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm font-medium mb-4 md:mb-6 ${centerSelf ? "self-center" : "self-start"} ${badgeStyle === "outline" ? "border" : ""}`}
+        style={badgeStyles}
+      >
+        {badge}
+      </span>
+    );
+  };
+
+  // Scroll indicator 
+  const renderScrollIndicator = () => {
+    if (!showScrollIndicator) return null;
+    const indicatorColor = scrollIndicatorColor || textColor || (dark ? "#ffffff" : "#374151");
+    return (
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 animate-bounce z-10">
+        <svg className="w-6 h-6" style={{ color: indicatorColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+        </svg>
+      </div>
+    );
+  };
+
+  // Overlay & pattern layers
+  const renderOverlays = () => (
+    <>
+      {(bgImageUrl || backgroundGradient) && backgroundOverlay && (
+        <div
+          className="absolute inset-0"
+          style={{ backgroundColor: backgroundOverlayColor, opacity: backgroundOverlayOpacity / 100 }}
+          aria-hidden="true"
+        />
+      )}
+      {showPattern && (
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: patternSvgs[patternType] || patternSvgs.dots,
+            backgroundRepeat: "repeat",
+            opacity: (patternOpacity || 10) / 100,
+          }}
+          aria-hidden="true"
+        />
+      )}
+    </>
+  );
+
   // Centered Hero
   if (variant === "centered" || variant === "minimal") {
     return (
       <section
         id={id}
-        className={`relative w-full ${paddingClasses} ${heightClasses} px-4 flex flex-col justify-center ${className}`}
-        style={{
-          backgroundColor: bgImageUrl ? undefined : backgroundColor,
-          backgroundImage: bgImageUrl ? `url(${bgImageUrl})` : undefined,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
+        className={`relative w-full ${pyClasses} ${pxClasses} ${heightClasses} flex flex-col justify-center ${animationClasses} ${className}`}
+        style={backgroundStyles}
       >
-        {bgImageUrl && backgroundOverlay && (
-          <div
-            className="absolute inset-0 bg-black"
-            style={{ opacity: backgroundOverlayOpacity / 100 }}
-            aria-hidden="true"
-          />
-        )}
+        {renderOverlays()}
         <div
-          className={`relative z-10 max-w-4xl mx-auto flex flex-col ${alignClasses}`}
+          className={`relative z-10 ${contentMaxWidthClasses} mx-auto flex flex-col ${alignClasses}`}
         >
-          {badge && (
-            <span
-              className="inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm font-medium text-white mb-4 md:mb-6 self-center"
-              style={{ backgroundColor: badgeColor }}
-            >
-              {badge}
-            </span>
-          )}
+          {renderBadge(contentAlign === "center")}
           <h1
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 md:mb-6 leading-tight"
+            className={`${titleSizeClasses} font-bold mb-4 md:mb-6 leading-tight`}
             style={{ color: textColor }}
           >
             {title}
@@ -6980,7 +7136,7 @@ export function HeroRender({
             </p>
           )}
           <p
-            className="text-base md:text-lg lg:text-xl max-w-2xl mb-6 md:mb-8 opacity-80 leading-relaxed"
+            className={`text-base md:text-lg lg:text-xl ${descMaxWidthClasses} mb-6 md:mb-8 opacity-80 leading-relaxed`}
             style={{ color: textColor }}
           >
             {description}
@@ -6988,18 +7144,18 @@ export function HeroRender({
           <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
             <a
               href={primaryButtonLink}
-              className="inline-flex items-center justify-center px-6 py-3 md:px-8 md:py-4 text-base md:text-lg font-medium text-white rounded-lg hover:opacity-90 transition-all shadow-lg hover:shadow-xl"
-              style={{ backgroundColor: primaryButtonColor }}
+              className={`inline-flex items-center justify-center px-6 py-3 md:px-8 md:py-4 text-base md:text-lg font-medium ${buttonRadiusClasses} hover:opacity-90 transition-all shadow-lg hover:shadow-xl`}
+              style={{ backgroundColor: resolvedBtnColor, color: primaryButtonTextColor }}
             >
               {primaryButtonText}
             </a>
             {secondaryButtonText && (
               <a
                 href={secondaryButtonLink}
-                className="inline-flex items-center justify-center px-6 py-3 md:px-8 md:py-4 text-base md:text-lg font-medium border-2 rounded-lg hover:opacity-80 transition-all"
+                className={`inline-flex items-center justify-center px-6 py-3 md:px-8 md:py-4 text-base md:text-lg font-medium border-2 ${buttonRadiusClasses} hover:opacity-80 transition-all`}
                 style={{
-                  borderColor: textColor || "#374151",
-                  color: textColor || "#374151",
+                  borderColor: resolvedSecondaryColor,
+                  color: resolvedSecondaryColor,
                 }}
               >
                 {secondaryButtonText}
@@ -7007,6 +7163,7 @@ export function HeroRender({
             )}
           </div>
         </div>
+        {renderScrollIndicator()}
       </section>
     );
   }
@@ -7019,21 +7176,15 @@ export function HeroRender({
     return (
       <section
         id={id}
-        className={`relative w-full ${paddingClasses} px-4 ${className}`}
-        style={{ backgroundColor }}
+        className={`relative w-full ${pyClasses} ${pxClasses} ${animationClasses} ${className}`}
+        style={backgroundStyles}
       >
-        <div className="max-w-screen-xl mx-auto grid md:grid-cols-2 gap-8 md:gap-12 lg:gap-16 items-center">
+        {renderOverlays()}
+        <div className="relative z-10 max-w-screen-xl mx-auto grid md:grid-cols-2 gap-8 md:gap-12 lg:gap-16 items-center">
           <div className={`flex flex-col ${contentOrder}`}>
-            {badge && (
-              <span
-                className="inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm font-medium text-white mb-4 self-start"
-                style={{ backgroundColor: badgeColor }}
-              >
-                {badge}
-              </span>
-            )}
+            {renderBadge(false)}
             <h1
-              className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 md:mb-6 leading-tight"
+              className={`${titleSizeClasses} font-bold mb-4 md:mb-6 leading-tight`}
               style={{ color: textColor }}
             >
               {title}
@@ -7055,18 +7206,18 @@ export function HeroRender({
             <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
               <a
                 href={primaryButtonLink}
-                className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white rounded-lg hover:opacity-90 transition-all shadow-lg"
-                style={{ backgroundColor: primaryButtonColor }}
+                className={`inline-flex items-center justify-center px-6 py-3 text-base font-medium ${buttonRadiusClasses} hover:opacity-90 transition-all shadow-lg`}
+                style={{ backgroundColor: resolvedBtnColor, color: primaryButtonTextColor }}
               >
                 {primaryButtonText}
               </a>
               {secondaryButtonText && (
                 <a
                   href={secondaryButtonLink}
-                  className="inline-flex items-center justify-center px-6 py-3 text-base font-medium border-2 rounded-lg hover:opacity-80 transition-all"
+                  className={`inline-flex items-center justify-center px-6 py-3 text-base font-medium border-2 ${buttonRadiusClasses} hover:opacity-80 transition-all`}
                   style={{
-                    borderColor: textColor || "#374151",
-                    color: textColor || "#374151",
+                    borderColor: resolvedSecondaryColor,
+                    color: resolvedSecondaryColor,
                   }}
                 >
                   {secondaryButtonText}
@@ -7079,22 +7230,23 @@ export function HeroRender({
               <img
                 src={heroImageUrl}
                 alt={heroImageAlt}
-                className="w-full h-auto rounded-xl shadow-2xl"
+                className={`w-full h-auto ${imageRoundedClasses} ${imageShadowClasses}`}
                 loading="lazy"
               />
             )}
           </div>
         </div>
+        {renderScrollIndicator()}
       </section>
     );
   }
 
-  // Video Hero (PHASE-STUDIO-29 Enhancement)
+  // Video Hero
   if (variant === "video" && videoSrc) {
     return (
       <section
         id={id}
-        className={`relative w-full min-h-screen flex items-center justify-center px-4 overflow-hidden ${className}`}
+        className={`relative w-full min-h-screen flex items-center justify-center ${pxClasses} overflow-hidden ${animationClasses} ${className}`}
       >
         {/* Video Background */}
         <video
@@ -7112,26 +7264,19 @@ export function HeroRender({
         {/* Overlay */}
         {backgroundOverlay && (
           <div
-            className="absolute inset-0 bg-black"
-            style={{ opacity: backgroundOverlayOpacity / 100 }}
+            className="absolute inset-0"
+            style={{ backgroundColor: backgroundOverlayColor, opacity: backgroundOverlayOpacity / 100 }}
             aria-hidden="true"
           />
         )}
 
         {/* Content */}
         <div
-          className={`relative z-10 max-w-4xl mx-auto flex flex-col ${alignClasses}`}
+          className={`relative z-10 ${contentMaxWidthClasses} mx-auto flex flex-col ${alignClasses}`}
         >
-          {badge && (
-            <span
-              className="inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm font-medium text-white mb-4 md:mb-6"
-              style={{ backgroundColor: badgeColor }}
-            >
-              {badge}
-            </span>
-          )}
+          {renderBadge(contentAlign === "center")}
           <h1
-            className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight"
+            className={`${titleSizeClasses} font-bold mb-6 leading-tight`}
             style={{ color: textColor || "#ffffff" }}
           >
             {title}
@@ -7145,7 +7290,7 @@ export function HeroRender({
             </p>
           )}
           <p
-            className="text-lg md:text-xl lg:text-2xl mb-8 opacity-90 max-w-2xl"
+            className={`text-lg md:text-xl lg:text-2xl mb-8 opacity-90 ${descMaxWidthClasses}`}
             style={{ color: textColor || "#ffffff" }}
           >
             {description}
@@ -7153,15 +7298,15 @@ export function HeroRender({
           <div className="flex flex-col sm:flex-row gap-4">
             <a
               href={primaryButtonLink}
-              className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white rounded-lg hover:opacity-90 transition-all shadow-lg"
-              style={{ backgroundColor: primaryButtonColor }}
+              className={`inline-flex items-center justify-center px-8 py-4 text-lg font-medium ${buttonRadiusClasses} hover:opacity-90 transition-all shadow-lg`}
+              style={{ backgroundColor: resolvedBtnColor, color: primaryButtonTextColor }}
             >
               {primaryButtonText}
             </a>
             {secondaryButtonText && (
               <a
                 href={secondaryButtonLink}
-                className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium border-2 rounded-lg hover:opacity-80 transition-all"
+                className={`inline-flex items-center justify-center px-8 py-4 text-lg font-medium border-2 ${buttonRadiusClasses} hover:opacity-80 transition-all`}
                 style={{
                   borderColor: textColor || "#ffffff",
                   color: textColor || "#ffffff",
@@ -7172,6 +7317,7 @@ export function HeroRender({
             )}
           </div>
         </div>
+        {renderScrollIndicator()}
       </section>
     );
   }
@@ -7180,40 +7326,22 @@ export function HeroRender({
   return (
     <section
       id={id}
-      className={`relative w-full min-h-screen flex items-center justify-center px-4 ${className}`}
-      style={{
-        backgroundImage: bgImageUrl ? `url(${bgImageUrl})` : undefined,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundColor,
-      }}
+      className={`relative w-full min-h-screen flex items-center justify-center ${pxClasses} ${animationClasses} ${className}`}
+      style={backgroundStyles}
     >
-      {bgImageUrl && backgroundOverlay && (
-        <div
-          className="absolute inset-0 bg-black"
-          style={{ opacity: backgroundOverlayOpacity / 100 }}
-          aria-hidden="true"
-        />
-      )}
+      {renderOverlays()}
       <div
-        className={`relative z-10 max-w-4xl mx-auto flex flex-col ${alignClasses}`}
+        className={`relative z-10 ${contentMaxWidthClasses} mx-auto flex flex-col ${alignClasses}`}
       >
-        {badge && (
-          <span
-            className="inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm font-medium text-white mb-4 md:mb-6"
-            style={{ backgroundColor: badgeColor }}
-          >
-            {badge}
-          </span>
-        )}
+        {renderBadge(contentAlign === "center")}
         <h1
-          className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight"
+          className={`${titleSizeClasses} font-bold mb-6 leading-tight`}
           style={{ color: textColor || "#ffffff" }}
         >
           {title}
         </h1>
         <p
-          className="text-lg md:text-xl lg:text-2xl mb-8 opacity-90 max-w-2xl"
+          className={`text-lg md:text-xl lg:text-2xl mb-8 opacity-90 ${descMaxWidthClasses}`}
           style={{ color: textColor || "#ffffff" }}
         >
           {description}
@@ -7221,15 +7349,15 @@ export function HeroRender({
         <div className="flex flex-col sm:flex-row gap-4">
           <a
             href={primaryButtonLink}
-            className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white rounded-lg hover:opacity-90 transition-all shadow-lg"
-            style={{ backgroundColor: primaryButtonColor }}
+            className={`inline-flex items-center justify-center px-8 py-4 text-lg font-medium ${buttonRadiusClasses} hover:opacity-90 transition-all shadow-lg`}
+            style={{ backgroundColor: resolvedBtnColor, color: primaryButtonTextColor }}
           >
             {primaryButtonText}
           </a>
           {secondaryButtonText && (
             <a
               href={secondaryButtonLink}
-              className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium border-2 rounded-lg hover:opacity-80 transition-all"
+              className={`inline-flex items-center justify-center px-8 py-4 text-lg font-medium border-2 ${buttonRadiusClasses} hover:opacity-80 transition-all`}
               style={{
                 borderColor: textColor || "#ffffff",
                 color: textColor || "#ffffff",
@@ -7240,6 +7368,7 @@ export function HeroRender({
           )}
         </div>
       </div>
+      {renderScrollIndicator()}
     </section>
   );
 }
@@ -13353,10 +13482,10 @@ export function GalleryRender({
   sectionGap = "lg",
 
   // Background
-  backgroundColor = "#ffffff",
+  backgroundColor,
   backgroundStyle = "solid",
-  backgroundGradientFrom = "#ffffff",
-  backgroundGradientTo = "#f3f4f6",
+  backgroundGradientFrom,
+  backgroundGradientTo,
   backgroundGradientDirection = "to-b",
   backgroundPattern,
   backgroundPatternOpacity = 0.1,
@@ -13558,7 +13687,7 @@ export function GalleryRender({
     const style: React.CSSProperties = {};
 
     if (backgroundStyle === "solid") {
-      style.backgroundColor = backgroundColor;
+      style.backgroundColor = backgroundColor || 'var(--color-background, #ffffff)';
     } else if (backgroundStyle === "gradient") {
       const direction = {
         "to-r": "to right",
@@ -13568,7 +13697,9 @@ export function GalleryRender({
         "to-br": "to bottom right",
         "to-bl": "to bottom left",
       }[backgroundGradientDirection];
-      style.background = `linear-gradient(${direction}, ${backgroundGradientFrom}, ${backgroundGradientTo})`;
+      const from = backgroundGradientFrom || 'var(--color-background, #ffffff)';
+      const to = backgroundGradientTo || 'var(--color-muted, #f3f4f6)';
+      style.background = `linear-gradient(${direction}, ${from}, ${to})`;
     } else if (backgroundStyle === "image" && backgroundImage) {
       style.backgroundImage = `url(${getImageUrl(backgroundImage)})`;
       style.backgroundSize = "cover";
@@ -15973,10 +16104,7 @@ export function ContactFormRender({
     lg: "shadow-lg",
     xl: "shadow-xl",
   }[shadow];
-  // Detect if we're on a dark background
-  const isDark = backgroundColor
-    ? parseInt(backgroundColor.replace("#", "").substring(0, 2), 16) < 100
-    : false;
+  const isDark = isDarkBackground(backgroundColor);
   const resolvedButtonColor =
     buttonColor || (isDark ? "#e5a956" : "var(--brand-primary, #3b82f6)");
   const resolvedTextColor = textColor || (isDark ? "#f9fafb" : "#1f2937");
@@ -16269,17 +16397,7 @@ export function NewsletterRender({
     lg: "px-5 py-3",
   }[size];
 
-  // Determine input styling based on background darkness
-  const bgDark = backgroundColor
-    ? (() => {
-        const hex = backgroundColor.replace("#", "");
-        if (hex.length < 6) return false;
-        const r = parseInt(hex.slice(0, 2), 16);
-        const g = parseInt(hex.slice(2, 4), 16);
-        const b = parseInt(hex.slice(4, 6), 16);
-        return (0.299 * r + 0.587 * g + 0.114 * b) / 255 < 0.5;
-      })()
-    : false;
+  const bgDark = isDarkBackground(backgroundColor);
 
   const resolvedTextColor = textColor || (bgDark ? "#f8fafc" : "#1f2937");
   const inputBorderColor = bgDark
@@ -16413,175 +16531,284 @@ export function NewsletterRender({
 // CAROUSEL - Image/Content Carousel
 // ============================================================================
 
+export interface CarouselItem {
+  image?: string | ImageValue;
+  title?: string;
+  description?: string;
+  link?: string;
+  buttonText?: string;
+}
+
 export interface CarouselProps {
-  items?: Array<{
-    image?: string | ImageValue;
-    title?: string;
-    description?: string;
-    link?: string;
-    buttonText?: string;
-  }>;
+  title?: string;
+  subtitle?: string;
+  badge?: string;
+  badgeColor?: string;
+  headerAlign?: "left" | "center" | "right";
+  items?: CarouselItem[];
   autoplay?: boolean;
   interval?: number;
+  pauseOnHover?: boolean;
+  loop?: boolean;
   showDots?: boolean;
+  dotColor?: string;
+  activeDotColor?: string;
   showArrows?: boolean;
+  arrowColor?: string;
+  arrowStyle?: "circle" | "square" | "minimal";
+  showCounter?: boolean;
   aspectRatio?: "video" | "square" | "wide" | "auto";
   borderRadius?: "none" | "sm" | "md" | "lg" | "xl";
   overlay?: boolean;
   overlayOpacity?: number;
   textColor?: string;
+  backgroundColor?: string;
+  paddingY?: "sm" | "md" | "lg" | "xl";
+  paddingX?: "sm" | "md" | "lg" | "xl";
   id?: string;
   className?: string;
 }
 
 export function CarouselRender({
+  title,
+  subtitle,
+  badge,
+  badgeColor,
+  headerAlign = "center",
   items = [],
   autoplay = false,
   interval = 5000,
+  pauseOnHover = true,
+  loop = true,
   showDots = true,
+  dotColor,
+  activeDotColor,
   showArrows = true,
+  arrowColor,
+  arrowStyle = "circle",
+  showCounter = false,
   aspectRatio = "video",
   borderRadius = "lg",
   overlay = true,
   overlayOpacity = 40,
   textColor = "#ffffff",
+  backgroundColor,
+  paddingY = "lg",
+  paddingX = "md",
   id,
   className = "",
 }: CarouselProps) {
+  const dark = isDarkBackground(backgroundColor);
+  const resolvedTextColor = textColor || "#ffffff";
+  const resolvedBadgeColor = badgeColor || (dark ? "#e5a956" : "var(--brand-primary, #3b82f6)");
+  const resolvedHeaderText = dark ? "#f8fafc" : "#1f2937";
+  const resolvedDotColor = dotColor || "rgba(255,255,255,0.5)";
+  const resolvedActiveDotColor = activeDotColor || "rgba(255,255,255,1)";
+  const resolvedArrowBg = arrowColor || "rgba(255,255,255,0.8)";
+
+  const pyClasses = paddingYMapUtil[paddingY] || paddingYMapUtil.lg;
+  const pxClasses = paddingXMapUtil[paddingX] || paddingXMapUtil.md;
+
   const aspectClasses = {
     video: "aspect-video",
     square: "aspect-square",
     wide: "aspect-[21/9]",
     auto: "",
   }[aspectRatio];
-  const radiusClasses = {
-    none: "",
-    sm: "rounded-sm",
-    md: "rounded-md",
-    lg: "rounded-lg",
-    xl: "rounded-xl",
-  }[borderRadius];
+  const radiusClasses = borderRadiusMapUtil[borderRadius]?.mobile || "rounded-lg";
+
+  const arrowClasses = {
+    circle: "p-2 rounded-full shadow-lg",
+    square: "p-2 rounded-md shadow-lg",
+    minimal: "p-1",
+  }[arrowStyle];
+
+  const alignClasses = {
+    left: "text-left",
+    center: "text-center",
+    right: "text-right",
+  }[headerAlign];
+
+  const hasHeader = title || subtitle || badge;
 
   return (
-    <div
+    <section
       id={id}
-      className={`relative overflow-hidden ${radiusClasses} ${className}`}
+      className={`w-full ${pyClasses} ${pxClasses} ${className}`}
+      style={{ backgroundColor: backgroundColor || undefined }}
     >
-      <div
-        className={`flex transition-transform duration-500 ${aspectClasses}`}
-      >
-        {items.map((item, i) => {
-          const itemImageUrl = getImageUrl(item.image);
-          return (
-            <div key={i} className="flex-none w-full h-full relative">
-              <img
-                src={itemImageUrl || "/placeholder.svg"}
-                alt={item.title || `Slide ${i + 1}`}
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
-              {overlay && (
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    backgroundColor: `rgba(0,0,0,${overlayOpacity / 100})`,
-                  }}
-                />
-              )}
-              {(item.title || item.description) && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-                  {item.title && (
-                    <h3
-                      className="text-xl md:text-3xl lg:text-4xl font-bold mb-2 md:mb-4"
-                      style={{ color: textColor }}
-                    >
-                      {item.title}
-                    </h3>
-                  )}
-                  {item.description && (
-                    <p
-                      className="text-sm md:text-lg max-w-2xl mb-4"
-                      style={{ color: textColor }}
-                    >
-                      {item.description}
-                    </p>
-                  )}
-                  {item.link && item.buttonText && (
-                    <a
-                      href={item.link}
-                      className="px-6 py-2 rounded-lg font-medium hover:opacity-90 transition-colors"
+      <div className="max-w-screen-xl mx-auto">
+        {/* Section Header */}
+        {hasHeader && (
+          <div className={`${alignClasses} mb-8 md:mb-12`}>
+            {badge && (
+              <span
+                className="inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm font-medium mb-4"
+                style={{
+                  backgroundColor: `${resolvedBadgeColor}20`,
+                  color: resolvedBadgeColor,
+                }}
+              >
+                {badge}
+              </span>
+            )}
+            {title && (
+              <h2
+                className="text-2xl md:text-3xl lg:text-4xl font-bold mb-3"
+                style={{ color: resolvedHeaderText }}
+              >
+                {title}
+              </h2>
+            )}
+            {subtitle && (
+              <p
+                className="text-base md:text-lg opacity-80 max-w-2xl"
+                style={{
+                  color: resolvedHeaderText,
+                  ...(headerAlign === "center" ? { margin: "0 auto" } : {}),
+                }}
+              >
+                {subtitle}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Carousel */}
+        <div
+          className={`relative overflow-hidden ${radiusClasses}`}
+        >
+          <div
+            className={`flex transition-transform duration-500 ${aspectClasses}`}
+          >
+            {items.map((item, i) => {
+              const itemImageUrl = getImageUrl(item.image);
+              return (
+                <div key={i} className="flex-none w-full h-full relative">
+                  <img
+                    src={itemImageUrl || "/placeholder.svg"}
+                    alt={item.title || `Slide ${i + 1}`}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                  {overlay && (
+                    <div
+                      className="absolute inset-0"
                       style={{
-                        backgroundColor: "rgba(255,255,255,0.95)",
-                        color: "#111827",
+                        backgroundColor: `rgba(0,0,0,${overlayOpacity / 100})`,
                       }}
-                    >
-                      {item.buttonText}
-                    </a>
+                    />
+                  )}
+                  {(item.title || item.description) && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                      {item.title && (
+                        <h3
+                          className="text-xl md:text-3xl lg:text-4xl font-bold mb-2 md:mb-4"
+                          style={{ color: resolvedTextColor }}
+                        >
+                          {item.title}
+                        </h3>
+                      )}
+                      {item.description && (
+                        <p
+                          className="text-sm md:text-lg max-w-2xl mb-4"
+                          style={{ color: resolvedTextColor }}
+                        >
+                          {item.description}
+                        </p>
+                      )}
+                      {item.link && item.buttonText && (
+                        <a
+                          href={item.link}
+                          className="px-6 py-2 rounded-lg font-medium hover:opacity-90 transition-colors"
+                          style={{
+                            backgroundColor: "rgba(255,255,255,0.95)",
+                            color: "#111827",
+                          }}
+                        >
+                          {item.buttonText}
+                        </a>
+                      )}
+                    </div>
                   )}
                 </div>
-              )}
+              );
+            })}
+          </div>
+
+          {/* Arrows */}
+          {showArrows && items.length > 1 && (
+            <>
+              <button
+                className={`absolute left-4 top-1/2 -translate-y-1/2 ${arrowClasses} transition-colors`}
+                style={{ backgroundColor: resolvedArrowBg }}
+                aria-label="Previous slide"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+              <button
+                className={`absolute right-4 top-1/2 -translate-y-1/2 ${arrowClasses} transition-colors`}
+                style={{ backgroundColor: resolvedArrowBg }}
+                aria-label="Next slide"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
+            </>
+          )}
+
+          {/* Counter */}
+          {showCounter && items.length > 1 && (
+            <div
+              className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-medium"
+              style={{ backgroundColor: "rgba(0,0,0,0.5)", color: "#ffffff" }}
+            >
+              1 / {items.length}
             </div>
-          );
-        })}
-      </div>
-      {showArrows && items.length > 1 && (
-        <>
-          <button
-            className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full shadow-lg transition-colors"
-            style={{ backgroundColor: "rgba(255,255,255,0.8)" }}
-            aria-label="Previous slide"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
-          <button
-            className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full shadow-lg transition-colors"
-            style={{ backgroundColor: "rgba(255,255,255,0.8)" }}
-            aria-label="Next slide"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
-        </>
-      )}
-      {showDots && items.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-          {items.map((_, i) => (
-            <button
-              key={i}
-              className={`w-2.5 h-2.5 rounded-full transition-colors`}
-              style={{
-                backgroundColor:
-                  i === 0 ? "rgba(255,255,255,1)" : "rgba(255,255,255,0.5)",
-              }}
-              aria-label={`Go to slide ${i + 1}`}
-            />
-          ))}
+          )}
+
+          {/* Dots */}
+          {showDots && items.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+              {items.map((_, i) => (
+                <button
+                  key={i}
+                  className="w-2.5 h-2.5 rounded-full transition-colors"
+                  style={{
+                    backgroundColor:
+                      i === 0 ? resolvedActiveDotColor : resolvedDotColor,
+                  }}
+                  aria-label={`Go to slide ${i + 1}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
-      )}
-    </div>
+      </div>
+    </section>
   );
 }
 
@@ -16593,6 +16820,9 @@ export interface CountdownProps {
   targetDate?: string;
   title?: string;
   subtitle?: string;
+  description?: string;
+  badge?: string;
+  badgeColor?: string;
   labels?: {
     days?: string;
     hours?: string;
@@ -16603,9 +16833,22 @@ export interface CountdownProps {
   size?: "sm" | "md" | "lg";
   backgroundColor?: string;
   cardBackgroundColor?: string;
+  cardBorderRadius?: "sm" | "md" | "lg" | "xl";
   textColor?: string;
+  numberColor?: string;
+  labelColor?: string;
   accentColor?: string;
   showLabels?: boolean;
+  showSeparator?: boolean;
+  separator?: ":" | "/" | "•";
+  separatorColor?: string;
+  expiredMessage?: string;
+  ctaText?: string;
+  ctaLink?: string;
+  ctaColor?: string;
+  headerAlign?: "left" | "center" | "right";
+  paddingY?: "sm" | "md" | "lg" | "xl";
+  paddingX?: "sm" | "md" | "lg" | "xl";
   id?: string;
   className?: string;
 }
@@ -16614,6 +16857,9 @@ export function CountdownRender({
   targetDate,
   title,
   subtitle,
+  description,
+  badge,
+  badgeColor,
   labels = {
     days: "Days",
     hours: "Hours",
@@ -16623,31 +16869,67 @@ export function CountdownRender({
   variant = "simple",
   size = "md",
   backgroundColor,
-  cardBackgroundColor = "#f3f4f6",
+  cardBackgroundColor,
+  cardBorderRadius = "xl",
   textColor,
+  numberColor,
+  labelColor,
   accentColor = "",
   showLabels = true,
+  showSeparator = false,
+  separator = ":",
+  separatorColor,
+  expiredMessage = "This event has ended",
+  ctaText,
+  ctaLink = "#",
+  ctaColor,
+  headerAlign = "center",
+  paddingY = "lg",
+  paddingX = "md",
   id,
   className = "",
 }: CountdownProps) {
+  const dark = isDarkBackground(backgroundColor);
+  const resolvedTextColor = textColor || (dark ? "#f8fafc" : "#1f2937");
+  const resolvedNumberColor = numberColor || accentColor || resolvedTextColor;
+  const resolvedLabelColor = labelColor || (dark ? "#94a3b8" : "#6b7280");
+  const resolvedCardBg = cardBackgroundColor || (dark ? "#1e293b" : "#f3f4f6");
+  const resolvedSepColor = separatorColor || (dark ? "#475569" : "#d1d5db");
+  const resolvedCtaColor = ctaColor || accentColor || "var(--brand-primary, #3b82f6)";
+  const resolvedBadgeColor = badgeColor || accentColor || resolvedCtaColor;
+
+  const pyClasses = paddingYMapUtil[paddingY] || paddingYMapUtil.lg;
+  const pxClasses = paddingXMapUtil[paddingX] || paddingXMapUtil.md;
+
+  const cardRadiusClasses = borderRadiusMapUtil[cardBorderRadius]?.mobile || "rounded-xl";
+
+  const alignClasses = {
+    left: "text-left",
+    center: "text-center",
+    right: "text-right",
+  }[headerAlign];
+
   const sizeClasses = {
     sm: {
       number: "text-2xl md:text-3xl",
       label: "text-xs",
       gap: "gap-3 md:gap-4",
       padding: "p-3",
+      separator: "text-xl md:text-2xl",
     },
     md: {
       number: "text-3xl md:text-5xl",
       label: "text-xs md:text-sm",
       gap: "gap-4 md:gap-6",
       padding: "p-4 md:p-5",
+      separator: "text-2xl md:text-4xl",
     },
     lg: {
       number: "text-4xl md:text-6xl lg:text-7xl",
       label: "text-sm md:text-base",
       gap: "gap-6 md:gap-8",
       padding: "p-5 md:p-6",
+      separator: "text-3xl md:text-5xl",
     },
   }[size];
 
@@ -16659,56 +16941,106 @@ export function CountdownRender({
   ];
 
   return (
-    <div
+    <section
       id={id}
-      className={`text-center ${className}`}
-      style={{ backgroundColor }}
+      className={`w-full ${pyClasses} ${pxClasses} ${alignClasses} ${className}`}
+      style={{ backgroundColor: backgroundColor || undefined }}
     >
-      {title && (
-        <h2
-          className="text-xl md:text-2xl lg:text-3xl font-bold mb-2"
-          style={{ color: textColor }}
-        >
-          {title}
-        </h2>
-      )}
-      {subtitle && (
-        <p
-          className="text-sm md:text-base opacity-80 mb-6 md:mb-8"
-          style={{ color: textColor }}
-        >
-          {subtitle}
-        </p>
-      )}
-      <div className={`flex justify-center ${sizeClasses.gap}`}>
-        {units.map((unit, i) => (
-          <div
-            key={i}
-            className={`text-center ${variant === "cards" ? `${sizeClasses.padding} rounded-xl` : ""}`}
-            style={
-              variant === "cards"
-                ? { backgroundColor: cardBackgroundColor }
-                : undefined
-            }
-          >
-            <div
-              className={`${sizeClasses.number} font-bold tabular-nums`}
-              style={{ color: accentColor }}
-            >
-              {unit.value}
-            </div>
-            {showLabels && (
-              <div
-                className={`${sizeClasses.label} opacity-75 mt-1`}
-                style={{ color: textColor }}
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        {(badge || title || subtitle || description) && (
+          <div className="mb-8 md:mb-10">
+            {badge && (
+              <span
+                className="inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm font-medium mb-4"
+                style={{
+                  backgroundColor: `${resolvedBadgeColor}20`,
+                  color: resolvedBadgeColor,
+                }}
               >
-                {unit.label}
-              </div>
+                {badge}
+              </span>
+            )}
+            {title && (
+              <h2
+                className="text-xl md:text-2xl lg:text-3xl font-bold mb-2"
+                style={{ color: resolvedTextColor }}
+              >
+                {title}
+              </h2>
+            )}
+            {subtitle && (
+              <p
+                className="text-base md:text-lg font-medium mb-1 opacity-90"
+                style={{ color: resolvedTextColor }}
+              >
+                {subtitle}
+              </p>
+            )}
+            {description && (
+              <p
+                className="text-sm md:text-base opacity-70 max-w-2xl mx-auto"
+                style={{ color: resolvedTextColor }}
+              >
+                {description}
+              </p>
             )}
           </div>
-        ))}
+        )}
+
+        {/* Countdown Units */}
+        <div className={`flex justify-center items-center ${sizeClasses.gap}`}>
+          {units.map((unit, i) => (
+            <React.Fragment key={i}>
+              {showSeparator && i > 0 && (
+                <span
+                  className={`${sizeClasses.separator} font-bold self-start mt-1`}
+                  style={{ color: resolvedSepColor }}
+                >
+                  {separator}
+                </span>
+              )}
+              <div
+                className={`text-center ${variant === "cards" ? `${sizeClasses.padding} ${cardRadiusClasses}` : ""}`}
+                style={
+                  variant === "cards"
+                    ? { backgroundColor: resolvedCardBg }
+                    : undefined
+                }
+              >
+                <div
+                  className={`${sizeClasses.number} font-bold tabular-nums`}
+                  style={{ color: resolvedNumberColor }}
+                >
+                  {unit.value}
+                </div>
+                {showLabels && (
+                  <div
+                    className={`${sizeClasses.label} mt-1`}
+                    style={{ color: resolvedLabelColor }}
+                  >
+                    {unit.label}
+                  </div>
+                )}
+              </div>
+            </React.Fragment>
+          ))}
+        </div>
+
+        {/* CTA Button */}
+        {ctaText && (
+          <div className="mt-8 md:mt-10">
+            <a
+              href={ctaLink}
+              className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white rounded-lg hover:opacity-90 transition-all shadow-lg"
+              style={{ backgroundColor: resolvedCtaColor }}
+            >
+              {ctaText}
+            </a>
+          </div>
+        )}
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -16716,28 +17048,54 @@ export function CountdownRender({
 // PRICING - Pricing Plans
 // ============================================================================
 
+export interface PricingPlan {
+  name?: string;
+  price?: string;
+  monthlyPrice?: string;
+  yearlyPrice?: string;
+  currency?: string;
+  period?: string;
+  description?: string;
+  features?: (string | { text?: string; label?: string; included?: boolean })[];
+  buttonText?: string;
+  buttonLink?: string;
+  popular?: boolean;
+  badge?: string;
+}
+
 export interface PricingProps {
   title?: string;
   subtitle?: string;
   description?: string;
-  plans?: Array<{
-    name?: string;
-    price?: string;
-    period?: string;
-    description?: string;
-    features?: string[];
-    buttonText?: string;
-    buttonLink?: string;
-    popular?: boolean;
-    badge?: string;
-  }>;
+  badge?: string;
+  badgeColor?: string;
+  headerAlign?: "left" | "center" | "right";
+  plans?: PricingPlan[];
+  showToggle?: boolean;
+  toggleLabels?: { monthly?: string; yearly?: string };
+  defaultBilling?: "monthly" | "yearly";
+  toggleSavingsText?: string;
+  savingsColor?: string;
   variant?: "cards" | "comparison" | "simple";
   columns?: 2 | 3 | 4;
+  gap?: "sm" | "md" | "lg";
   backgroundColor?: string;
   cardBackgroundColor?: string;
+  cardBorderRadius?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  cardShadow?: "none" | "sm" | "md" | "lg" | "xl";
+  cardBorderColor?: string;
   popularBorderColor?: string;
+  popularScale?: boolean;
   textColor?: string;
+  priceColor?: string;
+  periodColor?: string;
+  checkIconColor?: string;
+  buttonStyle?: "filled" | "outline";
+  showGuarantee?: boolean;
+  guaranteeText?: string;
+  animateOnScroll?: boolean;
   paddingY?: "sm" | "md" | "lg" | "xl";
+  paddingX?: "sm" | "md" | "lg" | "xl";
   id?: string;
   className?: string;
 }
@@ -16746,166 +17104,333 @@ export function PricingRender({
   title = "Pricing Plans",
   subtitle,
   description,
+  badge,
+  badgeColor,
+  headerAlign = "center",
   plans = [],
+  showToggle = false,
+  toggleLabels = { monthly: "Monthly", yearly: "Yearly" },
+  defaultBilling = "monthly",
+  toggleSavingsText = "Save 20%",
+  savingsColor,
   variant = "cards",
   columns = 3,
+  gap = "md",
   backgroundColor = "#ffffff",
   cardBackgroundColor = "#ffffff",
+  cardBorderRadius = "xl",
+  cardShadow = "none",
+  cardBorderColor,
   popularBorderColor = "",
+  popularScale = true,
   textColor,
+  priceColor,
+  periodColor,
+  checkIconColor = "#22c55e",
+  buttonStyle = "filled",
+  showGuarantee = false,
+  guaranteeText = "30-day money-back guarantee",
+  animateOnScroll = false,
   paddingY = "lg",
+  paddingX = "md",
   id,
   className = "",
 }: PricingProps) {
-  const paddingClasses = {
-    sm: "py-12 md:py-16",
-    md: "py-16 md:py-20",
-    lg: "py-20 md:py-28",
-    xl: "py-24 md:py-32",
-  }[paddingY];
+  const [billing, setBilling] = React.useState<"monthly" | "yearly">(defaultBilling);
+
+  const dark = isDarkBackground(backgroundColor);
+  const resolvedTextColor = textColor || (dark ? "#f8fafc" : "#1f2937");
+  const resolvedPriceColor = priceColor || resolvedTextColor;
+  const resolvedPeriodColor = periodColor || (dark ? "#94a3b8" : "#6b7280");
+  const resolvedCardBg = cardBackgroundColor || (dark ? "#1e293b" : "#ffffff");
+  const resolvedCardBorder = cardBorderColor || (dark ? "#334155" : "#e5e7eb");
+  const resolvedCheckColor = checkIconColor;
+  const resolvedSavingsColor = savingsColor || popularBorderColor || "#22c55e";
+
+  const pyClasses = paddingYMapUtil[paddingY] || paddingYMapUtil.lg;
+  const pxClasses = paddingXMapUtil[paddingX] || paddingXMapUtil.md;
+
   const colClasses = {
     2: "md:grid-cols-2 max-w-3xl",
     3: "md:grid-cols-2 lg:grid-cols-3",
     4: "md:grid-cols-2 lg:grid-cols-4",
   }[columns];
 
+  const gapClasses = {
+    sm: "gap-4 md:gap-5",
+    md: "gap-6 md:gap-8",
+    lg: "gap-8 md:gap-10",
+  }[gap];
+
+  const radiusClasses = borderRadiusMapUtil[cardBorderRadius]?.mobile || "rounded-xl";
+  const shadowClasses = shadowMapUtil[cardShadow] || "";
+
+  const alignClasses = {
+    left: "text-left",
+    center: "text-center",
+    right: "text-right",
+  }[headerAlign];
+
+  const getPlanPrice = (plan: PricingPlan) => {
+    if (showToggle && plan.monthlyPrice && plan.yearlyPrice) {
+      return billing === "monthly" ? plan.monthlyPrice : plan.yearlyPrice;
+    }
+    return plan.price;
+  };
+
+  const getPlanPeriod = (plan: PricingPlan) => {
+    if (showToggle && plan.monthlyPrice && plan.yearlyPrice) {
+      return billing === "monthly" ? "mo" : "yr";
+    }
+    return plan.period;
+  };
+
   return (
     <section
       id={id}
-      className={`w-full ${paddingClasses} px-4 ${className}`}
+      className={`w-full ${pyClasses} ${pxClasses} ${className}`}
       style={{ backgroundColor }}
     >
       <div className="max-w-screen-xl mx-auto">
-        <div className="text-center mb-12 md:mb-16">
+        {/* Header */}
+        <div className={`${alignClasses} mb-12 md:mb-16 ${headerAlign === "center" ? "max-w-3xl mx-auto" : ""}`}>
+          {badge && (
+            <span
+              className="inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm font-medium mb-4"
+              style={{
+                backgroundColor: badgeColor ? `${badgeColor}20` : `${popularBorderColor}20`,
+                color: badgeColor || popularBorderColor || resolvedTextColor,
+              }}
+            >
+              {badge}
+            </span>
+          )}
           {subtitle && (
             <p
               className="text-sm md:text-base font-semibold uppercase tracking-wider mb-2"
-              style={{ color: popularBorderColor }}
+              style={{ color: popularBorderColor || resolvedTextColor }}
             >
               {subtitle}
             </p>
           )}
           <h2
             className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4"
-            style={{ color: textColor }}
+            style={{ color: resolvedTextColor }}
           >
             {title}
           </h2>
           {description && (
             <p
-              className="text-base md:text-lg max-w-2xl mx-auto opacity-80"
-              style={{ color: textColor }}
+              className="text-base md:text-lg max-w-2xl opacity-80"
+              style={{
+                color: resolvedTextColor,
+                ...(headerAlign === "center" ? { margin: "0 auto" } : {}),
+              }}
             >
               {description}
             </p>
           )}
         </div>
-        <div
-          className={`grid grid-cols-1 ${colClasses} gap-6 md:gap-8 mx-auto`}
-        >
-          {plans.map((plan, i) => (
-            <div
-              key={i}
-              className={`relative p-6 md:p-8 rounded-xl border-2 transition-all duration-300 hover:shadow-xl ${plan.popular ? "shadow-lg scale-[1.02]" : "hover:-translate-y-1"}`}
-              style={{
-                backgroundColor: cardBackgroundColor,
-                borderColor: plan.popular
-                  ? popularBorderColor
-                  : `${textColor || "#000000"}15`,
-              }}
+
+        {/* Billing Toggle */}
+        {showToggle && (
+          <div className="flex items-center justify-center gap-3 mb-10 md:mb-14">
+            <span
+              className={`text-sm font-medium transition-colors ${billing === "monthly" ? "opacity-100" : "opacity-50"}`}
+              style={{ color: resolvedTextColor }}
             >
-              {plan.popular && (
-                <div
-                  className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 text-xs font-semibold text-white rounded-full"
-                  style={{ backgroundColor: popularBorderColor }}
-                >
-                  {plan.badge || "Most Popular"}
-                </div>
-              )}
-              <h3
-                className="text-lg md:text-xl font-bold mb-2"
-                style={{ color: textColor }}
+              {toggleLabels.monthly}
+            </span>
+            <button
+              type="button"
+              onClick={() => setBilling(billing === "monthly" ? "yearly" : "monthly")}
+              className="relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
+              style={{
+                backgroundColor: billing === "yearly"
+                  ? (popularBorderColor || "var(--brand-primary, #3b82f6)")
+                  : (dark ? "#475569" : "#d1d5db"),
+              }}
+              aria-label="Toggle billing period"
+            >
+              <span
+                className={`inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${billing === "yearly" ? "translate-x-6" : "translate-x-1"}`}
+              />
+            </button>
+            <span
+              className={`text-sm font-medium transition-colors ${billing === "yearly" ? "opacity-100" : "opacity-50"}`}
+              style={{ color: resolvedTextColor }}
+            >
+              {toggleLabels.yearly}
+            </span>
+            {toggleSavingsText && billing === "yearly" && (
+              <span
+                className="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full"
+                style={{
+                  backgroundColor: `${resolvedSavingsColor}20`,
+                  color: resolvedSavingsColor,
+                }}
               >
-                {plan.name}
-              </h3>
-              {plan.description && (
-                <p
-                  className="text-sm opacity-75 mb-4"
-                  style={{ color: textColor }}
-                >
-                  {plan.description}
-                </p>
-              )}
-              <div className="mb-6">
-                <span
-                  className="text-3xl md:text-4xl lg:text-5xl font-bold"
-                  style={{ color: textColor }}
-                >
-                  {plan.price}
-                </span>
-                {plan.period && (
-                  <span
-                    className="text-sm opacity-75 ml-1"
-                    style={{ color: textColor }}
+                {toggleSavingsText}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Plan Cards */}
+        <div
+          className={`grid grid-cols-1 ${colClasses} ${gapClasses} mx-auto`}
+        >
+          {plans.map((plan, i) => {
+            const currentPrice = getPlanPrice(plan);
+            const currentPeriod = getPlanPeriod(plan);
+            const isPopular = plan.popular;
+
+            return (
+              <div
+                key={i}
+                className={`relative p-6 md:p-8 ${radiusClasses} border-2 transition-all duration-300 hover:shadow-xl ${shadowClasses} ${isPopular && popularScale ? "shadow-lg scale-[1.02]" : "hover:-translate-y-1"}`}
+                style={{
+                  backgroundColor: resolvedCardBg,
+                  borderColor: isPopular
+                    ? popularBorderColor
+                    : resolvedCardBorder,
+                }}
+              >
+                {isPopular && (
+                  <div
+                    className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 text-xs font-semibold text-white rounded-full"
+                    style={{ backgroundColor: popularBorderColor }}
                   >
-                    /{plan.period}
+                    {plan.badge || "Most Popular"}
+                  </div>
+                )}
+                <h3
+                  className="text-lg md:text-xl font-bold mb-2"
+                  style={{ color: resolvedTextColor }}
+                >
+                  {plan.name}
+                </h3>
+                {plan.description && (
+                  <p
+                    className="text-sm opacity-75 mb-4"
+                    style={{ color: resolvedTextColor }}
+                  >
+                    {plan.description}
+                  </p>
+                )}
+                <div className="mb-6">
+                  {plan.currency && (
+                    <span
+                      className="text-lg font-medium align-super mr-0.5"
+                      style={{ color: resolvedPriceColor }}
+                    >
+                      {plan.currency}
+                    </span>
+                  )}
+                  <span
+                    className="text-3xl md:text-4xl lg:text-5xl font-bold"
+                    style={{ color: resolvedPriceColor }}
+                  >
+                    {currentPrice}
                   </span>
-                )}
-              </div>
-              <ul className="space-y-3 mb-8">
-                {(Array.isArray(plan.features) ? plan.features : []).map(
-                  (
-                    feature: string | { text?: string; label?: string },
-                    j: number,
-                  ) => {
-                    // Handle both string array and object array formats
-                    const featureText =
-                      typeof feature === "string"
-                        ? feature
-                        : feature?.text || feature?.label || "";
-                    if (!featureText) return null;
-                    return (
-                      <li
-                        key={j}
-                        className="flex items-start gap-3 text-sm"
-                        style={{ color: textColor }}
-                      >
-                        <svg
-                          className="w-5 h-5 flex-shrink-0 text-green-500 mt-0.5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                  {currentPeriod && (
+                    <span
+                      className="text-sm ml-1"
+                      style={{ color: resolvedPeriodColor }}
+                    >
+                      /{currentPeriod}
+                    </span>
+                  )}
+                </div>
+                <ul className="space-y-3 mb-8">
+                  {(Array.isArray(plan.features) ? plan.features : []).map(
+                    (
+                      feature: string | { text?: string; label?: string; included?: boolean },
+                      j: number,
+                    ) => {
+                      const featureText =
+                        typeof feature === "string"
+                          ? feature
+                          : feature?.text || feature?.label || "";
+                      const featureIncluded =
+                        typeof feature === "object" && feature?.included === false
+                          ? false
+                          : true;
+                      if (!featureText) return null;
+                      return (
+                        <li
+                          key={j}
+                          className={`flex items-start gap-3 text-sm ${!featureIncluded ? "opacity-40 line-through" : ""}`}
+                          style={{ color: resolvedTextColor }}
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                        {featureText}
-                      </li>
-                    );
-                  },
-                )}
-              </ul>
-              <a
-                href={plan.buttonLink || "#"}
-                className={`block w-full py-3 text-center font-medium rounded-lg transition-all ${plan.popular ? "text-white hover:opacity-90" : "border-2 hover:opacity-80"}`}
-                style={
-                  plan.popular
-                    ? { backgroundColor: popularBorderColor }
-                    : {
-                        borderColor: popularBorderColor,
-                        color: popularBorderColor,
-                      }
-                }
-              >
-                {plan.buttonText || "Get Started"}
-              </a>
-            </div>
-          ))}
+                          <svg
+                            className={`w-5 h-5 flex-shrink-0 mt-0.5`}
+                            style={{ color: featureIncluded ? resolvedCheckColor : (dark ? "#475569" : "#d1d5db") }}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            {featureIncluded ? (
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 13l4 4L19 7"
+                              />
+                            ) : (
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            )}
+                          </svg>
+                          {featureText}
+                        </li>
+                      );
+                    },
+                  )}
+                </ul>
+                <a
+                  href={plan.buttonLink || "#"}
+                  className={`block w-full py-3 text-center font-medium rounded-lg transition-all ${
+                    isPopular || buttonStyle === "filled"
+                      ? (isPopular ? "text-white hover:opacity-90" : "border-2 hover:opacity-80")
+                      : "border-2 hover:opacity-80"
+                  }`}
+                  style={
+                    isPopular
+                      ? { backgroundColor: popularBorderColor, color: "#ffffff" }
+                      : buttonStyle === "filled"
+                        ? { backgroundColor: popularBorderColor || resolvedTextColor, color: dark ? "#0f172a" : "#ffffff" }
+                        : {
+                            borderColor: popularBorderColor || resolvedTextColor,
+                            color: popularBorderColor || resolvedTextColor,
+                          }
+                  }
+                >
+                  {plan.buttonText || "Get Started"}
+                </a>
+              </div>
+            );
+          })}
         </div>
+
+        {/* Guarantee */}
+        {showGuarantee && guaranteeText && (
+          <div className="mt-10 md:mt-14 text-center">
+            <p
+              className="inline-flex items-center gap-2 text-sm opacity-70"
+              style={{ color: resolvedTextColor }}
+            >
+              <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              {guaranteeText}
+            </p>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -17624,7 +18149,7 @@ export function LinkRender({
       className={`inline-flex items-center gap-1 transition-colors ${weightClass} ${variantClasses} ${animationClass} ${className}`}
       style={{
         color: linkColor,
-        fontSize: resolvedFontSize,
+        fontSize: fontSize,
       }}
       aria-label={ariaLabel}
     >
@@ -18541,21 +19066,25 @@ export function AvatarRender({
         <img
           src={srcUrl}
           alt={srcAlt}
-          className={`${sizeClasses} ${shapeClasses} object-cover ${border ? "ring-2 ring-white" : ""}`}
+          className={`${sizeClasses} ${shapeClasses} object-cover`}
+          style={border ? { boxShadow: `0 0 0 2px ${borderColor}` } : undefined}
           loading="lazy"
         />
       ) : (
         <div
-          className={`${sizeClasses} ${shapeClasses} flex items-center justify-center font-medium ${border ? "ring-2 ring-white" : ""}`}
-          style={{ backgroundColor: fallbackColor }}
+          className={`${sizeClasses} ${shapeClasses} flex items-center justify-center font-medium`}
+          style={{
+            backgroundColor: fallbackColor,
+            ...(border ? { boxShadow: `0 0 0 2px ${borderColor}` } : {}),
+          }}
         >
           {initials}
         </div>
       )}
       {status && (
         <span
-          className={`absolute ${statusPositionClasses} ${statusSizeClasses} rounded-full ring-2 ring-white`}
-          style={{ backgroundColor: statusColors[status] }}
+          className={`absolute ${statusPositionClasses} ${statusSizeClasses} rounded-full`}
+          style={{ backgroundColor: statusColors[status], boxShadow: `0 0 0 2px ${borderColor}` }}
           aria-label={status}
         />
       )}
@@ -19107,6 +19636,10 @@ export interface SocialProofProps {
   showCount?: boolean;
   showPlatform?: boolean;
   starColor?: string;
+  emptyStarColor?: string;
+  scoreBackgroundColor?: string;
+  scoreTextColor?: string;
+  mutedTextColor?: string;
   id?: string;
   className?: string;
 }
@@ -19121,12 +19654,23 @@ export function SocialProofRender({
   size = "md",
   showCount = true,
   showPlatform = true,
-  starColor = "text-yellow-400",
+  starColor,
+  emptyStarColor,
+  scoreBackgroundColor,
+  scoreTextColor,
+  mutedTextColor,
   id,
   className = "",
 }: SocialProofProps) {
   // Normalize platformLogo image
   const platformLogoUrl = getImageUrl(platformLogo);
+
+  // Resolve colours with CSS variable fallbacks
+  const resolvedStarColor = starColor || 'var(--color-star, #facc15)';
+  const resolvedEmptyStarColor = emptyStarColor || 'var(--color-star-empty, #d1d5db)';
+  const resolvedScoreBg = scoreBackgroundColor || 'var(--color-success, #22c55e)';
+  const resolvedScoreText = scoreTextColor || '#ffffff';
+  const resolvedMutedText = mutedTextColor || 'var(--color-muted-foreground, #6b7280)';
 
   const sizeClasses = getResponsiveClasses(size, {
     sm: ["text-xs gap-1", "md:text-xs md:gap-1", "lg:text-xs lg:gap-1"],
@@ -19152,18 +19696,19 @@ export function SocialProofRender({
       {[...Array(fullStars)].map((_, i) => (
         <svg
           key={`full-${i}`}
-          className={`${starSize} ${starColor} fill-current`}
+          className={`${starSize} fill-current`}
+          style={{ color: resolvedStarColor }}
           viewBox="0 0 20 20"
         >
           <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
         </svg>
       ))}
       {hasHalfStar && (
-        <svg className={`${starSize} ${starColor}`} viewBox="0 0 20 20">
+        <svg className={`${starSize}`} style={{ color: resolvedStarColor }} viewBox="0 0 20 20">
           <defs>
             <linearGradient id="halfStar">
               <stop offset="50%" stopColor="currentColor" />
-              <stop offset="50%" stopColor="#D1D5DB" />
+              <stop offset="50%" stopColor={resolvedEmptyStarColor} />
             </linearGradient>
           </defs>
           <path
@@ -19175,7 +19720,8 @@ export function SocialProofRender({
       {[...Array(emptyStars)].map((_, i) => (
         <svg
           key={`empty-${i}`}
-          className={`${starSize} text-gray-300 fill-current`}
+          className={`${starSize} fill-current`}
+          style={{ color: resolvedEmptyStarColor }}
           viewBox="0 0 20 20"
         >
           <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
@@ -19191,14 +19737,15 @@ export function SocialProofRender({
         className={`inline-flex items-center ${sizeClasses} ${className}`}
       >
         <svg
-          className={`${starSize} ${starColor} fill-current`}
+          className={`${starSize} fill-current`}
+          style={{ color: resolvedStarColor }}
           viewBox="0 0 20 20"
         >
           <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
         </svg>
         <span className="font-semibold ml-1">{rating}</span>
         {showCount && (
-          <span className="text-gray-500">
+          <span style={{ color: resolvedMutedText }}>
             ({reviewCount.toLocaleString()})
           </span>
         )}
@@ -19212,18 +19759,21 @@ export function SocialProofRender({
         id={id}
         className={`inline-flex items-center ${sizeClasses} ${className}`}
       >
-        <div className="flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-lg bg-green-500 text-white font-bold text-lg md:text-xl">
+        <div
+          className="flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-lg font-bold text-lg md:text-xl"
+          style={{ backgroundColor: resolvedScoreBg, color: resolvedScoreText }}
+        >
           {rating}
         </div>
         <div className="ml-3">
           <div className="font-semibold">Excellent</div>
           {showCount && (
-            <div className="text-gray-500">
+            <div style={{ color: resolvedMutedText }}>
               {reviewCount.toLocaleString()} reviews
             </div>
           )}
           {showPlatform && (
-            <div className="text-gray-400 text-xs">{platform}</div>
+            <div className="text-xs" style={{ color: resolvedMutedText }}>{platform}</div>
           )}
         </div>
       </div>
@@ -19239,13 +19789,13 @@ export function SocialProofRender({
       <div className="flex items-center gap-1 mt-1">
         <span className="font-semibold">{rating}</span>
         {showCount && (
-          <span className="text-gray-500">
+          <span style={{ color: resolvedMutedText }}>
             ({reviewCount.toLocaleString()} reviews)
           </span>
         )}
       </div>
       {showPlatform && (
-        <div className="flex items-center gap-1 text-gray-400 text-xs mt-1">
+        <div className="flex items-center gap-1 text-xs mt-1" style={{ color: resolvedMutedText }}>
           {platformLogoUrl && (
             <img src={platformLogoUrl} alt={platform} className="w-4 h-4" />
           )}
@@ -19548,11 +20098,15 @@ export interface ComparisonColumn {
   highlight?: boolean;
   price?: string;
   priceSubtext?: string;
+  ctaText?: string;
+  ctaLink?: string;
+  ctaVariant?: 'primary' | 'outline';
 }
 
 export interface ComparisonRow {
   feature: string;
   tooltip?: string;
+  group?: string;
   values: (boolean | string)[];
 }
 
@@ -19562,13 +20116,21 @@ export interface ComparisonTableProps {
   title?: string;
   subtitle?: string;
   variant?: "simple" | "cards" | "striped";
-  highlightColor?: string;
+  highlightBackgroundColor?: string;
+  highlightBorderColor?: string;
   checkColor?: string;
   crossColor?: string;
+  headerBackgroundColor?: string;
+  titleColor?: string;
+  subtitleColor?: string;
+  featureTextColor?: string;
   stickyHeader?: boolean;
   stickyColumn?: boolean;
+  mobileLayout?: 'scroll' | 'stack';
   id?: string;
   className?: string;
+  // Legacy support
+  highlightColor?: string;
 }
 
 export function ComparisonTableRender({
@@ -19587,19 +20149,37 @@ export function ComparisonTableRender({
   title,
   subtitle,
   variant = "simple",
-  highlightColor = "bg-sky-50 border-sky-500",
-  checkColor = "text-green-500",
-  crossColor = "text-gray-300",
+  highlightBackgroundColor,
+  highlightBorderColor,
+  checkColor,
+  crossColor,
+  headerBackgroundColor,
+  titleColor,
+  subtitleColor,
+  featureTextColor,
   stickyHeader = true,
   stickyColumn = true,
+  mobileLayout = 'scroll',
   id,
   className = "",
+  highlightColor,
 }: ComparisonTableProps) {
+  // Resolve colours with CSS variable fallbacks
+  const resolvedHighlightBg = highlightBackgroundColor || 'var(--color-highlight-bg, rgba(14,165,233,0.08))';
+  const resolvedHighlightBorder = highlightBorderColor || 'var(--color-highlight-border, #0ea5e9)';
+  const resolvedCheckColor = checkColor || 'var(--color-check, #22c55e)';
+  const resolvedCrossColor = crossColor || 'var(--color-cross, #9ca3af)';
+  const resolvedHeaderBg = headerBackgroundColor || 'var(--color-muted, #f9fafb)';
+  const resolvedTitleColor = titleColor || 'var(--color-foreground, #111827)';
+  const resolvedSubtitleColor = subtitleColor || 'var(--color-muted-foreground, #6b7280)';
+  const resolvedFeatureColor = featureTextColor || 'var(--color-foreground, #111827)';
+
   const renderValue = (value: boolean | string) => {
     if (typeof value === "boolean") {
       return value ? (
         <svg
-          className={`w-5 h-5 mx-auto ${checkColor}`}
+          className="w-5 h-5 mx-auto"
+          style={{ color: resolvedCheckColor }}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -19613,7 +20193,8 @@ export function ComparisonTableRender({
         </svg>
       ) : (
         <svg
-          className={`w-5 h-5 mx-auto ${crossColor}`}
+          className="w-5 h-5 mx-auto"
+          style={{ color: resolvedCrossColor }}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -19630,41 +20211,59 @@ export function ComparisonTableRender({
     return <span className="text-sm md:text-base">{value}</span>;
   };
 
+  // Group rows by group label
+  const groupedRows: { group?: string; rows: ComparisonRow[] }[] = [];
+  let currentGroup: { group?: string; rows: ComparisonRow[] } = { rows: [] };
+  rows.forEach((row) => {
+    if (row.group && row.group !== currentGroup.group) {
+      if (currentGroup.rows.length > 0) groupedRows.push(currentGroup);
+      currentGroup = { group: row.group, rows: [row] };
+    } else {
+      currentGroup.rows.push(row);
+    }
+  });
+  if (currentGroup.rows.length > 0) groupedRows.push(currentGroup);
+
   return (
     <div id={id} className={className}>
       {(title || subtitle) && (
         <div className="text-center mb-8 md:mb-12">
           {title && (
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+            <h2 className="text-2xl md:text-3xl font-bold" style={{ color: resolvedTitleColor }}>
               {title}
             </h2>
           )}
-          {subtitle && <p className="text-gray-600 mt-2">{subtitle}</p>}
+          {subtitle && <p className="mt-2" style={{ color: resolvedSubtitleColor }}>{subtitle}</p>}
         </div>
       )}
 
       <div className="overflow-x-auto -mx-4 md:mx-0">
         <table className="w-full min-w-[600px]">
           <thead className={stickyHeader ? "sticky top-0 z-10" : ""}>
-            <tr className="bg-gray-50">
+            <tr style={{ backgroundColor: resolvedHeaderBg }}>
               <th
-                className={`text-left p-3 md:p-4 font-semibold text-gray-900 ${stickyColumn ? "sticky left-0 bg-gray-50 z-20" : ""}`}
+                className={`text-left p-3 md:p-4 font-semibold ${stickyColumn ? "sticky left-0 z-20" : ""}`}
+                style={{ color: resolvedFeatureColor, backgroundColor: resolvedHeaderBg }}
               >
                 Features
               </th>
               {columns.map((col, index) => (
                 <th
                   key={index}
-                  className={`text-center p-3 md:p-4 ${col.highlight ? highlightColor + " border-t-4" : ""}`}
+                  className="text-center p-3 md:p-4"
+                  style={col.highlight ? {
+                    backgroundColor: resolvedHighlightBg,
+                    borderTop: `4px solid ${resolvedHighlightBorder}`,
+                  } : undefined}
                 >
-                  <div className="font-bold text-gray-900">{col.name}</div>
+                  <div className="font-bold" style={{ color: resolvedFeatureColor }}>{col.name}</div>
                   {col.price && (
                     <div className="text-lg md:text-xl font-bold mt-1">
                       {col.price}
                     </div>
                   )}
                   {col.priceSubtext && (
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs" style={{ color: resolvedSubtitleColor }}>
                       {col.priceSubtext}
                     </div>
                   )}
@@ -19673,53 +20272,101 @@ export function ComparisonTableRender({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, rowIndex) => (
-              <tr
-                key={rowIndex}
-                className={
-                  variant === "striped" && rowIndex % 2 === 1
-                    ? "bg-gray-50"
-                    : ""
-                }
-              >
-                <td
-                  className={`p-3 md:p-4 font-medium text-gray-900 border-b ${stickyColumn ? "sticky left-0 bg-white z-10" : ""}`}
-                >
-                  <span className="flex items-center gap-1">
-                    {row.feature}
-                    {row.tooltip && (
-                      <span
-                        className="text-gray-400 cursor-help"
-                        title={row.tooltip}
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                      </span>
-                    )}
-                  </span>
-                </td>
-                {row.values.map((value, colIndex) => (
-                  <td
-                    key={colIndex}
-                    className={`p-3 md:p-4 text-center border-b ${columns[colIndex]?.highlight ? highlightColor.split(" ")[0] : ""}`}
+            {groupedRows.map((group, gIdx) => (
+              <React.Fragment key={gIdx}>
+                {group.group && (
+                  <tr>
+                    <td
+                      colSpan={columns.length + 1}
+                      className="p-3 md:p-4 font-bold text-sm uppercase tracking-wide"
+                      style={{ color: resolvedSubtitleColor, backgroundColor: resolvedHeaderBg }}
+                    >
+                      {group.group}
+                    </td>
+                  </tr>
+                )}
+                {group.rows.map((row, rowIndex) => (
+                  <tr
+                    key={rowIndex}
+                    className={
+                      variant === "striped" && rowIndex % 2 === 1
+                        ? ""
+                        : ""
+                    }
+                    style={
+                      variant === "striped" && rowIndex % 2 === 1
+                        ? { backgroundColor: resolvedHeaderBg }
+                        : undefined
+                    }
                   >
-                    {renderValue(value)}
+                    <td
+                      className={`p-3 md:p-4 font-medium border-b ${stickyColumn ? "sticky left-0 z-10" : ""}`}
+                      style={{ color: resolvedFeatureColor, backgroundColor: 'var(--color-background, #ffffff)' }}
+                    >
+                      <span className="flex items-center gap-1">
+                        {row.feature}
+                        {row.tooltip && (
+                          <span
+                            className="cursor-help"
+                            style={{ color: resolvedCrossColor }}
+                            title={row.tooltip}
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                          </span>
+                        )}
+                      </span>
+                    </td>
+                    {row.values.map((value, colIndex) => (
+                      <td
+                        key={colIndex}
+                        className="p-3 md:p-4 text-center border-b"
+                        style={columns[colIndex]?.highlight ? { backgroundColor: resolvedHighlightBg } : undefined}
+                      >
+                        {renderValue(value)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </React.Fragment>
+            ))}
+          </tbody>
+          {/* CTA Row */}
+          {columns.some(c => c.ctaText) && (
+            <tfoot>
+              <tr>
+                <td className="p-3 md:p-4"></td>
+                {columns.map((col, index) => (
+                  <td key={index} className="p-3 md:p-4 text-center">
+                    {col.ctaText && (
+                      <a
+                        href={col.ctaLink || '#'}
+                        className="inline-block px-6 py-2 rounded-lg font-medium transition-colors"
+                        style={
+                          col.ctaVariant === 'outline'
+                            ? { border: `2px solid ${resolvedHighlightBorder}`, color: resolvedHighlightBorder }
+                            : { backgroundColor: resolvedHighlightBorder, color: '#ffffff' }
+                        }
+                      >
+                        {col.ctaText}
+                      </a>
+                    )}
                   </td>
                 ))}
               </tr>
-            ))}
-          </tbody>
+            </tfoot>
+          )}
         </table>
       </div>
     </div>

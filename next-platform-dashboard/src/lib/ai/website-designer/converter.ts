@@ -822,6 +822,8 @@ function convertComponentToStudio(
     "Chip",
     "Breadcrumb",
     "Pagination",
+    "Button",
+    "Badge",
   ]);
 
   if (!KNOWN_REGISTRY_TYPES.has(resolvedType)) {

@@ -130,24 +130,44 @@ class ComponentRegistry {
   // ---------------------------------------------------------------------------
 
   /**
+   * Backward-compat aliases: premium-components.ts used lowercase types
+   * ("button", "section", etc.) while core-components.ts uses PascalCase.
+   * Old saved pages may reference the lowercase variants.
+   */
+  private static readonly TYPE_ALIASES: Record<string, string> = {
+    button: "Button",
+    section: "Section",
+    container: "Container",
+    heading: "Heading",
+    text: "Text",
+    image: "Image",
+  };
+
+  /** Resolve type, falling back to alias if direct lookup misses */
+  private resolveType(type: string): string {
+    if (this.components.has(type)) return type;
+    return ComponentRegistry.TYPE_ALIASES[type] ?? type;
+  }
+
+  /**
    * Get a component definition by type
    */
   get(type: string): ComponentDefinition | undefined {
-    return this.components.get(type)?.definition;
+    return this.components.get(this.resolveType(type))?.definition;
   }
 
   /**
    * Get component entry with metadata
    */
   getEntry(type: string): ComponentRegistryEntry | undefined {
-    return this.components.get(type);
+    return this.components.get(this.resolveType(type));
   }
 
   /**
    * Check if component type exists
    */
   has(type: string): boolean {
-    return this.components.has(type);
+    return this.components.has(this.resolveType(type));
   }
 
   /**

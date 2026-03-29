@@ -41,10 +41,10 @@ This plan focuses on **desktop dropdown rendering** (the biggest gap — registe
 
 | File | Path | Purpose | Key Locations |
 |------|------|---------|--------------|
-| **Render Functions** | `src/lib/studio/blocks/renders.tsx` | All 6 navigation render functions live here | Navbar L14397, Footer L14438, Tabs L17083, Link L17551, Breadcrumb L17938, Pagination L18147 |
-| **Shared Utilities** | `src/lib/studio/blocks/layout-utils.ts` | ALL shared class maps, dark-mode utilities, responsive helpers, shape dividers, gradient builder | `paddingYMap` L121, `isDarkBackground()` L454, `getDarkAwareDefaults()` L542 |
+| **Render Functions** | `src/lib/studio/blocks/renders.tsx` | All 6 navigation render functions live here | Navbar L14527, Footer L14568, Tabs L17620, Link L18088, Breadcrumb L18477, Pagination L18689 |
+| **Shared Utilities** | `src/lib/studio/blocks/layout-utils.ts` | ALL shared class maps, dark-mode utilities, responsive helpers, shape dividers, gradient builder | `paddingYMap` L120, `isDarkBackground()` L454, `getDarkAwareDefaults()` L542 |
 | **Converter typeMap** | `src/lib/ai/website-designer/converter.ts` | Maps AI-generated type names → registry types | `typeMap` at L361, `KNOWN_REGISTRY_TYPES` at L728, `navLinkKeys` at L247 |
-| **Component Registry** | `src/lib/studio/registry/core-components.ts` | `defineComponent()` calls with field definitions | Navbar L10737, Footer L11402, Link L12034, Breadcrumb L12161, Tabs L16798, Pagination L17626 |
+| **Component Registry** | `src/lib/studio/registry/core-components.ts` | `defineComponent()` calls with field definitions | Navbar L10737, Footer L11403, Link L12034, Breadcrumb L12161, Tabs L16798, Pagination L17626 |
 | **Component Metadata** | `src/lib/studio/registry/component-metadata.ts` | Labels, categories, keywords, AI descriptions | Navbar L526, Footer L538, Link L900, Breadcrumb L945, Pagination L960, **Tabs MISSING** |
 
 ### 0.2 The Props Pipeline (How Data Flows)
@@ -316,12 +316,12 @@ FILE 4: src/lib/ai/website-designer/converter.ts
 
 | # | Component | Render Location | Registry Location | Props | Variants | Registry Category | Metadata Category | Quality |
 |---|-----------|-----------------|-------------------|-------|----------|-------------------|-------------------|---------|
-| 1 | **NavbarRender** | `renders.tsx` L14397 | `core-components.ts` L10737 | ~56 | 4 (standard/centered/split/minimal) | `navigation` | `navigation` | ✅ Strong |
-| 2 | **FooterRender** | `renders.tsx` L14438 | `core-components.ts` L11402 | ~50 | 4 (standard/centered/simple/extended) | `navigation` | `navigation` | ✅ Good |
-| 3 | **TabsRender** | `renders.tsx` L17083 | `core-components.ts` L16798 | 50+ | 7 (underline/pills/boxed/enclosed/soft/minimal/lifted) | `interactive` | **MISSING** | ⚠️ Limited (render has 3 variants, registry has 7) |
-| 4 | **LinkRender** | `renders.tsx` L17551 | `core-components.ts` L12034 | ~10 | 6 (default/underline/hover-underline/subtle/bold/nav) | `navigation` | `buttons` ⚠️ | ✅ Good |
-| 5 | **BreadcrumbRender** | `renders.tsx` L17938 | `core-components.ts` L12161 | ~13 | 3 (default/contained/pills) | `navigation` | `buttons` ⚠️ | ✅ Good |
-| 6 | **PaginationRender** | `renders.tsx` L18147 | `core-components.ts` L17626 | ~18 | 4 (default/simple/minimal/dots) | `interactive` | `buttons` ⚠️ | ✅ Good |
+| 1 | **NavbarRender** | `renders.tsx` L14527 | `core-components.ts` L10737 | ~56 | 4 (standard/centered/split/minimal) | `navigation` | `navigation` | ✅ Strong |
+| 2 | **FooterRender** | `renders.tsx` L14568 | `core-components.ts` L11403 | ~50 | 4 (standard/centered/simple/extended) | `navigation` | `navigation` | ✅ Good |
+| 3 | **TabsRender** | `renders.tsx` L17620 | `core-components.ts` L16798 | 50+ | 7 (underline/pills/boxed/enclosed/soft/minimal/lifted) | `interactive` | **MISSING** | ⚠️ Limited (render has 3 variants, registry has 7) |
+| 4 | **LinkRender** | `renders.tsx` L18088 | `core-components.ts` L12034 | ~10 | 6 (default/underline/hover-underline/subtle/bold/nav) | `navigation` | `buttons` ⚠️ | ✅ Good |
+| 5 | **BreadcrumbRender** | `renders.tsx` L18477 | `core-components.ts` L12161 | ~13 | 3 (default/contained/pills) | `navigation` | `buttons` ⚠️ | ✅ Good |
+| 6 | **PaginationRender** | `renders.tsx` L18689 | `core-components.ts` L17626 | ~18 | 4 (default/simple/minimal/dots) | `interactive` | `buttons` ⚠️ | ✅ Good |
 
 ### 1.2 Quality Tier Summary
 
@@ -338,7 +338,7 @@ FILE 4: src/lib/ai/website-designer/converter.ts
 | 2 | **Category mismatch** | Link | Registry says `"navigation"`, metadata says `"buttons"` | 🟡 Medium |
 | 3 | **Category mismatch** | Breadcrumb | Registry says `"navigation"`, metadata says `"buttons"` | 🟡 Medium |
 | 4 | **Category mismatch** | Pagination | Registry says `"interactive"`, metadata says `"buttons"` | 🟡 Medium |
-| 5 | **Missing converter alias** | Breadcrumb | No direct `Breadcrumb` → `"Breadcrumb"` mapping in typeMap | 🟡 Medium |
+| 5 | **Converter conflict** | Breadcrumb | Direct `Breadcrumb` key is hijacked by `"EcommerceBreadcrumb"` mapping at converter.ts L695 — navigation aliases (`NavBreadcrumb`, etc.) still work correctly | 🟡 Medium |
 | 6 | **Render/registry variant gap** | Tabs | Registry defines 7 variants (underline/pills/boxed/enclosed/soft/minimal/lifted), render only implements 3 (underline/pills/boxed) | 🔴 Critical |
 | 7 | **Missing render props** | Pagination | `shape` and `boundaryCount` exist in render Props interface but NOT in registry fields — unreachable from editor | 🟡 Medium |
 | 8 | **Navbar inline class maps** | Navbar | Uses inline `{ sm: "h-14", md: "h-16" }` maps instead of layout-utils (acceptable for nav-specific sizing) | 🟢 Low |
@@ -469,7 +469,7 @@ Current violations of this rule are documented in Section 1.3. Any enhancement w
 
 ### 4.1 Current Implementation
 
-**Location:** `renders.tsx` L14025 (props interface) → L14093 (NavbarWithMenu) → L14397 (export)
+**Location:** `renders.tsx` L14151 (props interface) → L14217 (NavbarWithMenu) → L14527 (export)
 
 **Render Props Interface (~28 props):**
 ```typescript
@@ -572,7 +572,7 @@ The registry has an entire `scrollProgress` fieldGroup (6 fields) but the render
 
 ### 5.1 Current Implementation
 
-**Location:** `renders.tsx` L14406 (props interface) → L14438 (render function) → ~L14694 (end)
+**Location:** `renders.tsx` L14535 (props interface) → L14568 (render function) → ~L14824 (end)
 
 **Render Props Interface (~18 props + 2 extra):**
 ```typescript
@@ -646,7 +646,7 @@ The Footer has the **largest registry-render gap** of any navigation component. 
 
 ### 6.1 Current Implementation
 
-**Location:** `renders.tsx` L17060 (props interface) → L17083 (render function) → ~L17200 (end)
+**Location:** `renders.tsx` L17591 (props interface) → L17620 (render function) → ~L17740 (end)
 
 **Render Props Interface (~23 props):**
 ```typescript
@@ -717,7 +717,7 @@ textColor?: string; titleColor?: string; subtitleColor?: string;
 
 ### 7.1 Current Implementation
 
-**Location:** `renders.tsx` L17521 (props interface) → L17551 (render function) → ~L17660 (end)
+**Location:** `renders.tsx` L18052 (props interface) → L18088 (render function) → ~L18200 (end)
 
 **Render Props Interface (~16 props):**
 ```typescript
@@ -760,7 +760,7 @@ LinkRender is the **most well-aligned** navigation component — render and regi
 
 ### 8.1 Current Implementation
 
-**Location:** `renders.tsx` L17920 (props interface) → L17938 (render function) → ~L18146 (end)
+**Location:** `renders.tsx` L18451 (props interface) → L18477 (render function) → ~L18653 (end)
 
 **Render Props Interface (~13 props):**
 ```typescript
@@ -787,7 +787,7 @@ BreadcrumbRender is well-implemented with proper accessibility (`<nav>`, `<ol>`,
 **Gaps:**
 - `hoverColor`, `separatorColor`, `backgroundColor` exist in render but not in registry
 - Registry `separator` has 4 options (chevron/slash/arrow/dot) but render supports 8 (including literal characters `/`, `>`, `→`, `•`)
-- Missing converter alias: No direct `Breadcrumb` → `"Breadcrumb"` mapping (only `NavBreadcrumb`, `BreadcrumbTrail`, `BreadcrumbNav`, `PageBreadcrumb`)
+- Converter conflict: Direct `Breadcrumb` key is **hijacked** by `Breadcrumb: "EcommerceBreadcrumb"` at converter.ts L695 — the e-commerce mapping overrides the navigation one. Navigation aliases (`NavBreadcrumb`, `BreadcrumbTrail`, `BreadcrumbNav`, `PageBreadcrumb`) still correctly map to `"Breadcrumb"`. AI must use these aliases, not the bare `Breadcrumb` name.
 - Metadata category is `"buttons"` but registry is `"navigation"`
 
 ### 8.3 Enhancement Priority
@@ -795,7 +795,7 @@ BreadcrumbRender is well-implemented with proper accessibility (`<nav>`, `<ol>`,
 | Priority | Enhancement | Impact | Effort |
 |----------|------------|--------|--------|
 | **P0** | Fix metadata category from `"buttons"` to `"navigation"` | Category consistency | Low |
-| **P0** | Add `Breadcrumb` → `"Breadcrumb"` to converter typeMap | AI discoverability | Low |
+| **P0** | Resolve `Breadcrumb` converter conflict (L695 hijacks to `"EcommerceBreadcrumb"`) — rename e-comm key or document alias requirement | AI discoverability | Medium |
 | **P1** | Add `hoverColor`, `separatorColor`, `backgroundColor` to registry | Full editor control | Low |
 | **P2** | Add structured data (Schema.org BreadcrumbList) JSON-LD | SEO improvement | Medium |
 
@@ -805,7 +805,7 @@ BreadcrumbRender is well-implemented with proper accessibility (`<nav>`, `<ol>`,
 
 ### 9.1 Current Implementation
 
-**Location:** `renders.tsx` L18147 (props interface + render function) → ~L18400 (end)
+**Location:** `renders.tsx` L18654 (props interface) → L18689 (render function) → ~L18940 (end)
 
 **Render Props Interface (~18 props):**
 ```typescript
@@ -916,9 +916,9 @@ The Navbar has the most comprehensive mobile handling of any component:
 
 | Feature | Implementation | Location |
 |---------|---------------|----------|
-| Hamburger button | SVG toggle (3 bars ↔ X icon) | NavbarWithMenu ~L14320 |
-| Mobile menu overlay | Fixed backdrop with `bg-black/50` | L14360 |
-| Menu panel | Fixed panel with configurable position (left/right/full) | L14370 |
+| Hamburger button | SVG toggle (3 bars ↔ X icon) | NavbarWithMenu ~L14444 |
+| Mobile menu overlay | Fixed backdrop with `bg-black/50` | ~L14484 |
+| Menu panel | Fixed panel with configurable position (left/right/full) | ~L14494 |
 | Link rendering | Block-level links with padding | Mobile panel inner loop |
 | CTA in mobile | Optional CTA button at bottom of panel | `showCtaOnMobile` prop |
 
@@ -1174,7 +1174,7 @@ For **Tabs**, when used inside a dark section, inherit the section's dark-mode c
 | **Footer** | `FooterBlock`, `Footer` | 2 | — |
 | **Tabs** | `TabsBlock`, `TabsSection`, `Tabs` | 3 | — |
 | **Link** | `Link`, `TextLink`, `InlineLink`, `NavLink` | 4 | — |
-| **Breadcrumb** | `NavBreadcrumb`, `BreadcrumbTrail`, `BreadcrumbNav`, `PageBreadcrumb` | 4 | ⚠️ Missing direct `Breadcrumb` → `"Breadcrumb"` |
+| **Breadcrumb** | `NavBreadcrumb`, `BreadcrumbTrail`, `BreadcrumbNav`, `PageBreadcrumb` | 4 | ⚠️ Direct `Breadcrumb` hijacked by `"EcommerceBreadcrumb"` at L695 — use aliases only |
 | **Pagination** | `Pagination`, `Pager`, `PageNav`, `PageNumbers` | 4 | — |
 
 ### 15.2 KNOWN_REGISTRY_TYPES Verification
@@ -1200,7 +1200,7 @@ This auto-normalises link arrays to `{ label, href }` format. When adding new na
 
 | Fix | File | Detail |
 |-----|------|--------|
-| Add `Breadcrumb` alias | `converter.ts` typeMap | Add `Breadcrumb: "Breadcrumb"` alongside existing aliases |
+| Resolve `Breadcrumb` converter conflict | `converter.ts` typeMap | Direct `Breadcrumb` maps to `"EcommerceBreadcrumb"` at L695 — either rename the e-comm mapping key or ensure AI always uses navigation aliases (`NavBreadcrumb`, `BreadcrumbTrail`, etc.) |
 | Add Tabs metadata | `component-metadata.ts` | Add complete metadata entry for Tabs |
 | Fix Link category | `component-metadata.ts` | Change from `"buttons"` to `"navigation"` |
 | Fix Breadcrumb category | `component-metadata.ts` | Change from `"buttons"` to `"navigation"` |
@@ -1326,37 +1326,37 @@ For navigation components, visual regression matters because they appear on **ev
 
 ```
 NAVBAR
-  Render:   src/lib/studio/blocks/renders.tsx          L14025 (interface) → L14093 (NavbarWithMenu) → L14397 (export)
+  Render:   src/lib/studio/blocks/renders.tsx          L14151 (interface) → L14217 (NavbarWithMenu) → L14527 (export)
   Registry: src/lib/studio/registry/core-components.ts L10737 (defineComponent) → ~L11400 (end) — 9 fieldGroups
   Metadata: src/lib/studio/registry/component-metadata.ts L526
   Converter: src/lib/ai/website-designer/converter.ts  L384 (NavbarBlock), L519 (Navbar)
 
 FOOTER
-  Render:   src/lib/studio/blocks/renders.tsx          L14406 (interface) → L14438 (render) → ~L14694 (end)
-  Registry: src/lib/studio/registry/core-components.ts L11402 (defineComponent) → ~L11850 (end) — 9 fieldGroups
+  Render:   src/lib/studio/blocks/renders.tsx          L14535 (interface) → L14568 (render) → ~L14824 (end)
+  Registry: src/lib/studio/registry/core-components.ts L11403 (defineComponent) → ~L11850 (end) — 9 fieldGroups
   Metadata: src/lib/studio/registry/component-metadata.ts L538
   Converter: src/lib/ai/website-designer/converter.ts  L385 (FooterBlock), L520 (Footer)
 
 TABS
-  Render:   src/lib/studio/blocks/renders.tsx          L17060 (interface) → L17083 (render) → ~L17200 (end)
+  Render:   src/lib/studio/blocks/renders.tsx          L17591 (interface) → L17620 (render) → ~L17740 (end)
   Registry: src/lib/studio/registry/core-components.ts L16798 (defineComponent) → ~L17200 (end) — 12 fieldGroups
   Metadata: MISSING — needs to be added to component-metadata.ts
   Converter: src/lib/ai/website-designer/converter.ts  L435 (TabsBlock), L436 (TabsSection), L531 (Tabs)
 
 LINK
-  Render:   src/lib/studio/blocks/renders.tsx          L17521 (interface) → L17551 (render) → ~L17660 (end)
+  Render:   src/lib/studio/blocks/renders.tsx          L18052 (interface) → L18088 (render) → ~L18200 (end)
   Registry: src/lib/studio/registry/core-components.ts L12034 (defineComponent) → L12160 (end) — 4 fieldGroups
   Metadata: src/lib/studio/registry/component-metadata.ts L900 (category: "buttons" ← should be "navigation")
   Converter: src/lib/ai/website-designer/converter.ts  L569-573 (Link, TextLink, InlineLink, NavLink)
 
 BREADCRUMB
-  Render:   src/lib/studio/blocks/renders.tsx          L17920 (interface) → L17938 (render) → ~L18146 (end)
+  Render:   src/lib/studio/blocks/renders.tsx          L18451 (interface) → L18477 (render) → ~L18653 (end)
   Registry: src/lib/studio/registry/core-components.ts L12161 (defineComponent) → L12299 (end) — 5 fieldGroups
   Metadata: src/lib/studio/registry/component-metadata.ts L945 (category: "buttons" ← should be "navigation")
-  Converter: src/lib/ai/website-designer/converter.ts  L581-584 (NavBreadcrumb, BreadcrumbTrail, BreadcrumbNav, PageBreadcrumb) — MISSING direct "Breadcrumb"
+  Converter: src/lib/ai/website-designer/converter.ts  L581-584 (NavBreadcrumb, BreadcrumbTrail, BreadcrumbNav, PageBreadcrumb) — ⚠️ direct "Breadcrumb" hijacked by EcommerceBreadcrumb at L695
 
 PAGINATION
-  Render:   src/lib/studio/blocks/renders.tsx          L18147 (interface + render) → ~L18400 (end)
+  Render:   src/lib/studio/blocks/renders.tsx          L18654 (interface) → L18689 (render) → ~L18940 (end)
   Registry: src/lib/studio/registry/core-components.ts L17626 (defineComponent) → L17780 (end) — 4 fieldGroups
   Metadata: src/lib/studio/registry/component-metadata.ts L960 (category: "buttons" ← should be "interactive")
   Converter: src/lib/ai/website-designer/converter.ts  L585-588 (Pagination, Pager, PageNav, PageNumbers)
@@ -1364,6 +1364,7 @@ PAGINATION
 
 ---
 
-*Navigation Components Master Plan v1.0 — DRAMAC CMS*
+*Navigation Components Master Plan v1.1 — DRAMAC CMS*
 *Document covers 6 existing components, 2 proposed, 200+ props, 25+ variants, 19 converter aliases*
 *Primary focus: Registry/Render sync, Desktop Dropdowns, Scroll Behaviour, ARIA Accessibility*
+*v1.1: All line numbers verified against source, Breadcrumb converter conflict documented*

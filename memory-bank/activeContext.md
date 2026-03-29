@@ -1,43 +1,58 @@
 # Active Context
 
-## Current Focus: Section Components Master Plan — Document v2.0 COMPLETE ✅
+## Current Focus: Navigation Components Master Plan — v1.1 VERIFIED ✅
 
-### Status: SECTIONS-COMPONENTS-MASTER-PLAN.md upgraded from v1.0 (descriptive) to v2.0 (implementation-ready)
+### Status: NAVIGATION-COMPONENTS-MASTER-PLAN.md v1.1 — all line numbers verified against source, Breadcrumb converter conflict documented.
 
 ### What Was Done (Latest Session)
 
-**SECTIONS-COMPONENTS-MASTER-PLAN.md v2.0 Upgrade — 5 critical fixes:**
+**Critical verification pass of NAVIGATION-COMPONENTS-MASTER-PLAN.md:**
 
-1. **Added Section 0: Implementation Blueprint for AI Agents** (~200 lines)
-   - Critical File Map with exact paths + line numbers (renders.tsx, layout-utils.ts, converter.ts, core-components.ts, component-metadata.ts)
-   - Props Pipeline explanation (converter → registry → render)
-   - Complete shared utilities reference (class maps, dark-mode, shape dividers, gradients, visibility)
-   - Render function skeleton with exact import pattern
-   - defineComponent() field types reference (text/textarea/color/select/number/toggle/image/link/array)
-   - Component metadata entry skeleton
-   - Converter registration (typeMap + KNOWN_REGISTRY_TYPES) steps
-   - 4-file build checklist for creating new section components
-   - DO/DON'T rules for AI agents
+1. **All renders.tsx line numbers verified** — found ALL were wrong (code added since research, lines shifted +126 to +542). Corrected everywhere in the document.
+2. **Breadcrumb converter conflict discovered** — `Breadcrumb: "EcommerceBreadcrumb"` at L695 overrides any nav Breadcrumb mapping. Navigation aliases still work. Updated all references.
+3. **core-components.ts Footer** — defineComponent start corrected from L11402 to L11403.
+4. **layout-utils.ts paddingYMap** — corrected from L121 to L120.
+5. **Comparison with Sections v2.0 gold standard** — confirmed document follows same Section 0 Implementation Blueprint pattern.
 
-2. **Fixed Section 3.3 + Section 9.3** — Replaced inline `const paddingYClasses = {...}` maps with reference to `layout-utils.ts` shared maps + `getResponsiveClasses()`. Added complete map key reference table.
+**Corrected Line Number Reference (verified via grep):**
 
-3. **Fixed Section 13.3** — Replaced proposal to create new `utils/section-theme.ts` with reference to EXISTING `isDarkBackground()` (L454), `getDarkAwareDefaults()` (L542), `resolveShadow()`, `resolveGlassmorphism()` in layout-utils.ts.
+| Component | Props Interface | Render Function | Registry defineComponent |
+|-----------|----------------|-----------------|--------------------------|
+| Navbar | L14151 | L14527 (export), L14217 (NavbarWithMenu) | L10737 |
+| Footer | L14535 | L14568 | L11403 |
+| Tabs | L17591 | L17620 | L16798 |
+| Link | L18052 | L18088 | L12034 |
+| Breadcrumb | L18451 | L18477 | L12161 |
+| Pagination | L18654 | L18689 | L17626 |
 
-4. **Fixed Section 15** — Added exact file paths and line numbers. Fixed typeMap values to use PascalCase (matching actual code). Added real code examples from Newsletter defineComponent + metadata entries.
+### What Was Done (Latest Session)
 
-5. **Fixed Section 11.1** — Referenced existing `shapeDividerPaths` in layout-utils.ts (11 shapes: wave, wave-smooth, curve, triangle, tilt, arrow, zigzag, clouds, mountains, drops, pyramids) instead of proposing new SVG creation.
+**Full 7-layer verification audit of all 9 button/interactive components:**
+1. Confirmed all 9 render functions exist in renders.tsx
+2. Confirmed all 9 registered in core-components.ts with render functions
+3. Confirmed all 17 converter.ts typeMap entries
+4. Confirmed all 9 component-metadata.ts entries
+5. Confirmed renderer.tsx dispatch mechanism works
+6. **Discovered critical registry↔render prop mismatches across ALL 6 new components**
+7. Fixed all mismatches
 
-6. **Fixed Section 16 Phase 1** — Added note that `isDarkBackground()` already exists in layout-utils.ts; the Phase 1 task is about migrating ContactForm/Newsletter to use it.
+**Fixes applied (commit `e27189cb`):**
 
-### Key Discovery: layout-utils.ts
-The file `src/lib/studio/blocks/layout-utils.ts` is the single most important shared utility file — it contains ALL class maps, dark-mode detection, responsive helpers, shape dividers, and gradient builders. Every render function imports from it. The v1.0 document didn't properly reference this file, leading to incorrect inline class map examples and proposals to create utilities that already exist.
+1. **Link**: Fixed variant options (removed button/muted, added hover-underline/bold to match render). Fixed underlineAnimation values (slide→slide-in, expand→expand-center/expand-left). Added fontSizeMap for token→CSS rem conversion.
+
+2. **ButtonGroup**: Added `md: "gap-3"` and `lg: "gap-4"` to render's gapClass map (registry offered md/lg but render only handled none/xs/sm).
+
+3. **Chip**: Changed `rounded` field from toggle (boolean) to select with "default"/"full" options. Fixed defaultProps from `true` to `"full"`.
+
+4. **Breadcrumb**: Added word aliases (slash/arrow/dot) to render's separatorContent map. Updated TypeScript type union. Registry sends "slash"/"arrow"/"dot", render now maps them to "/"/""→"/"•".
+
+5. **Pagination**: Added `shape` field (rounded/circle/square) to registry. Added to style fieldGroup, defaultProps, and ai.canModify.
+
+6. **Badge** (biggest fix): Trimmed registry from 50+ fields (13 field groups) to ~17 fields (4 field groups) matching actual render. Removed: gradient, glass, shadow, glow, typography, hover effects, counter, responsive, custom border, removable, onClick handler groups. Fixed variant options (removed secondary/custom, added outline). Fixed size options (removed xl). Fixed rounded options (kept only default/full).
 
 ### Build Status
-- No code changes — document-only edits
-- Document is now at v2.0 with ~1700 lines
-
-### Files Modified This Session
-- `docs/SECTIONS-COMPONENTS-MASTER-PLAN.md` — 7 edits (TOC, Section 0, 3.3, 9.3, 11.1, 13.3, 15.1-15.3, 16, version bump)
+- TypeScript: No new errors introduced (verified with `tsc --noEmit`)
+- Commit: `e27189cb` pushed to main
 
 ### Master Plan Document Progress
 | Document | Status |
@@ -47,6 +62,7 @@ The file `src/lib/studio/blocks/layout-utils.ts` is the single most important sh
 | BUTTONS-COMPONENTS-MASTER-PLAN.md | ✅ COMPLETE + IMPLEMENTED |
 | MEDIA-COMPONENTS-MASTER-PLAN.md | ✅ COMPLETE (awaiting implementation) |
 | SECTIONS-COMPONENTS-MASTER-PLAN.md | ✅ v2.0 COMPLETE (implementation-ready) |
+| NAVIGATION-COMPONENTS-MASTER-PLAN.md | ✅ v1.1 VERIFIED (all line numbers corrected, Breadcrumb converter conflict documented) |
 | Forms & Inputs (future) | ❌ Not started |
 | GridItem | removed dead `backgroundColor`/`padding` fields |
 | ScrollSectionItem | removed dead `contentAlign`/`verticalAlign`, added `snapAlign` |

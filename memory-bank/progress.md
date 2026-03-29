@@ -5,7 +5,63 @@
 
 ---
 
-## Latest Update: Button Components Master Plan — ALL PHASES COMPLETE ✅
+## Latest Update: Navigation Components Master Plan — v1.1 VERIFIED ✅
+
+### What Was Done
+
+Created `NAVIGATION-COMPONENTS-MASTER-PLAN.md` (v1.0), then performed a critical verification pass (v1.1) — the 6th master plan document in the component documentation series. Covers all 6 navigation components (Navbar, Footer, Tabs, Link, Breadcrumb, Pagination) with:
+
+- **Section 0: Implementation Blueprint** — exact file paths, props pipeline, shared utilities, render skeletons, field type reference, metadata/converter registration, build checklist, DO/DON'T rules
+- **Section 1: Current State Audit** — all 6 components with line numbers, prop counts, variant counts, quality ratings, and 12 identified gaps/inconsistencies
+- **Sections 4-9: Per-Component Deep Dives** — current state, render/registry disconnect analysis, enhancement priorities for each component
+- **Sections 11-14: Cross-Cutting Concerns** — mobile navigation, scroll behaviour, accessibility/ARIA, dark mode
+- **Section 15: Registry & Converter Alignment** — all fixes needed (missing Tabs metadata, category mismatches, missing aliases)
+- **Section 16: Implementation Phases** — 4 phases from critical alignment to new components
+
+### Critical Findings
+
+| Issue | Severity | Component |
+|-------|----------|-----------|
+| Missing Tabs metadata entry | 🔴 Critical | Tabs |
+| Navbar prop name mismatches (6 fields) | 🔴 Critical | Navbar |
+| Desktop dropdowns not rendering | 🔴 Critical | Navbar |
+| Footer 50+ registry fields, only 18 consumed | 🔴 Critical | Footer |
+| Tabs 3 of 7 variants implemented | 🔴 Critical | Tabs |
+| Category mismatches (3 components) | 🟡 Medium | Link, Breadcrumb, Pagination |
+| Breadcrumb converter conflict (hijacked by EcommerceBreadcrumb) | 🟡 Medium | Breadcrumb |
+
+### v1.1 Verification Corrections
+- All renders.tsx line numbers corrected (shifted +126 to +542 due to code additions)
+- Breadcrumb converter conflict fully documented (L695 `Breadcrumb: "EcommerceBreadcrumb"` overrides nav mapping)
+- Footer defineComponent line corrected (L11402 → L11403)
+- paddingYMap line corrected (L121 → L120)
+
+---
+
+## Previous Update: Button Components — Registry↔Render Alignment COMPLETE ✅
+
+### What Was Done
+
+After the initial implementation (commit `f9e8dbef`), a comprehensive prop alignment audit revealed **significant mismatches** between registry field options and render function handlers across all 6 new components. Every registry option that the AI designer could select has been verified to produce the correct visual output.
+
+### Fixes Applied (commit `e27189cb`)
+
+| Component | Issue | Fix |
+|-----------|-------|-----|
+| **Link** | variant had button/muted (not in render), underlineAnimation values wrong, fontSize tokens not mapped to CSS | Fixed variant options, animation values, added fontSizeMap |
+| **ButtonGroup** | gap offered md/lg but render only handled none/xs/sm | Added md/lg to gapClass map |
+| **Chip** | rounded was toggle (boolean) but render expects string "default"/"full" | Changed to select field, fixed defaultProps |
+| **Breadcrumb** | separator sent words (slash/arrow/dot) but render expected symbols (/ → •) | Added word aliases to separatorContent map |
+| **Pagination** | render supports shape (rounded/circle/square) but registry didn't expose it | Added shape field to registry |
+| **Badge** | 50+ fields in registry, render only handles ~17 props; variant/size/rounded options mismatched | Trimmed to ~17 fields (4 groups), aligned all option values |
+
+### Build Status
+- **Zero new TypeScript errors** (verified with `tsc --noEmit`)
+- All components now **100% aligned**: every registry option produces correct render output
+
+---
+
+## Previous Update: Button Components Master Plan — ALL PHASES COMPLETE ✅
 
 ### What Was Done
 

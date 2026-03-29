@@ -105,10 +105,13 @@ export function initializeRegistry(): void {
 
   // Import dynamically to avoid circular dependencies
   const { registerCoreComponents } = require("./core-components");
-  const { registerPremiumComponents } = require("./premium-components");
   
   registerCoreComponents();
-  registerPremiumComponents();
+  
+  // NOTE: registerPremiumComponents() removed — core-components.ts now contains
+  // enhanced PascalCase versions of all 6 premium components (Section, Container,
+  // Heading, Text, Button, Image). Backward compat for lowercase types ("button",
+  // "section", etc.) is handled by TYPE_ALIASES in component-registry.ts.
   
   // Register module components as built-in fallbacks
   // This ensures booking/ecommerce components always render on public sites
@@ -118,7 +121,7 @@ export function initializeRegistry(): void {
   registerBuiltInModuleComponents();
   
   initialized = true;
-  console.log("[Studio] Registry initialized with core, premium, and built-in module components");
+  console.log("[Studio] Registry initialized with core and built-in module components");
 }
 
 /**

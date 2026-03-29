@@ -17,6 +17,7 @@
 export type ResponsiveValue<T> = T | { mobile?: T; tablet?: T; desktop?: T };
 
 type ClassMapValue =
+  | string
   | { mobile: string; tablet: string; desktop: string }
   | [string, string, string];
 
@@ -75,6 +76,9 @@ export function getResponsiveClasses<T extends string | number>(
     mapping: ClassMapValue,
     breakpoint: "mobile" | "tablet" | "desktop",
   ): string => {
+    if (typeof mapping === "string") {
+      return breakpoint === "mobile" ? mapping : "";
+    }
     if (Array.isArray(mapping)) {
       return breakpoint === "mobile"
         ? mapping[0]
