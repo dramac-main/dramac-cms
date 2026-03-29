@@ -1,52 +1,41 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: March 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅ + **LIVE CHAT RUNTIME FIXES (AI auto-response + file uploads)** ✅ + **PER-ORDER CONVERSATION ISOLATION** ✅ + **PER-ORDER CHAT HARDENING AUDIT (10 bugs fixed, 0 TS errors)** ✅ + **CATEGORIES PAGE + DARK MODE POLISH** ✅ + **LIVE CHAT OVERHAUL + ECOMMERCE FIXES** ✅ + **CANVAS IFRAME RENDERING FIDELITY FIXES** ✅ + **TYPOGRAPHY COMPONENTS OVERHAUL (4 enhanced + 5 new, CSS var type scale)** ✅
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅ + **LIVE CHAT RUNTIME FIXES (AI auto-response + file uploads)** ✅ + **PER-ORDER CONVERSATION ISOLATION** ✅ + **PER-ORDER CHAT HARDENING AUDIT (10 bugs fixed, 0 TS errors)** ✅ + **CATEGORIES PAGE + DARK MODE POLISH** ✅ + **LIVE CHAT OVERHAUL + ECOMMERCE FIXES** ✅ + **CANVAS IFRAME RENDERING FIDELITY FIXES** ✅ + **TYPOGRAPHY COMPONENTS OVERHAUL (4 enhanced + 5 new, CSS var type scale)** ✅ + **BUTTON COMPONENTS MASTER PLAN (Phases 1-5: renders, registrations, converter)** ✅
 
 ---
 
-## Latest Update: Typography Components Overhaul — ALL 18 TASKS COMPLETE ✅
+## Latest Update: Button Components Master Plan — ALL PHASES COMPLETE ✅
 
 ### What Was Done
 
-Complete overhaul of 4 existing typography components + creation of 5 brand-new components + CSS variable type scale system. Based on `docs/TYPOGRAPHY-COMPONENTS-MASTER-PLAN.md`.
+Complete overhaul of button ecosystem following `docs/BUTTONS-COMPONENTS-MASTER-PLAN.md`. All hardcoded colors → CSS variables, ring variant added, 5 new components created, SocialLinks expanded to 15 platforms, iconName system implemented, all components registered + converter mapped.
 
-### Files Modified (6)
+### Files Modified (3 this session, 1 prior session)
 
 | File | Changes |
 |------|---------|
-| `typography-intelligence.ts` | 4 new functions: `getAutoLineHeight`, `getAutoLetterSpacing`, `generateFluidTypeScale` (13-step clamp()), `generateTypographyCSSVars` |
-| `renderer.tsx` | CSS var injection (type scale + font vars), Google Fonts preconnect hints, weight range 100-900 |
-| `renders.tsx` | 4 components overhauled (Heading, Text, RichText, Quote) + 5 new created (Label, List, DisplayText, DividerText, StatNumber) |
-| `core-components.ts` | 3 registrations fixed (Heading/Quote/RichText) + 5 new component registrations with field groups |
-| `converter.ts` | typeMap entries for 5 new + aliases, KNOWN_REGISTRY_TYPES updated, 8 converter handlers enhanced/added |
-| `component-metadata.ts` | 5 new entries with keywords and AI descriptions |
-
-### Key Fixes
-
-- **Prop mismatches resolved:** Heading `alignment`→`align`, Quote `source`→`authorTitle`, Quote `style`→`variant`
-- **Hardcoded colors removed:** RichText `#1c2b2a` + `opacity:0.85`, Quote `#374151` + card `#ffffff`
-- **CSS variable type scale:** 13 steps (xs→9xl) + heading aliases (h1→h6) + font family vars + rhythm unit
-- **Fluid typography:** All sizes use `clamp(min, preferred, max)` scaling between 320px–1440px viewports
-- **Font loading:** Weight range expanded to 100-900, preconnect hints for Google Fonts
+| `renders.tsx` | Phase 1: CSS var fixes + ring variant. Phase 2: 5 new components. Phase 3: SocialLinks V2 (15 platforms). Phase 4.1: iconName + BUTTON_ICONS map |
+| `core-components.ts` | Button: ring variant + iconName field. SocialLinks: full overhaul (15 platforms, variant, brandColors, etc). 5 new registrations (ButtonGroup, Link, Chip, Breadcrumb, Pagination) |
+| `converter.ts` | 17 new typeMap entries for 5 new components + AI aliases |
 
 ### New Components
 
-| Component | Variants | Key Features |
-|-----------|----------|--------------|
-| Label | 7 (default/badge/overline/tag/pill/outline/subtle) | Sizes xs/sm/md, textTransform, letterSpacing |
-| List | 7 (bullet/numbered/check/arrow/dash/icon/none) | Multi-column, configurable spacing |
-| DisplayText | — | Hero text, 9xl/900 default, gradient support, textWrap balance |
-| DividerText | 5 (line-sides/line-through/dots/gradient/ornament) | Section separators |
-| StatNumber | — | Stacked/inline layout, tabular-nums, prefix/suffix/label |
+| Component | Array | Variants | Key Features |
+|-----------|-------|----------|--------------|
+| Link | navigationComponents | default/underline/subtle/nav/button/muted | Animated underlines, showExternalIcon |
+| ButtonGroup | buttonComponents | connected/separated/toggle | acceptsChildren, shared radius |
+| Chip | uiComponents | filled/outline/subtle | Selected/disabled states, avatar, removable |
+| Breadcrumb | navigationComponents | default/contained/pills | 4 separators, maxItems truncation, showHome |
+| Pagination | interactiveComponents | default/simple/compact/minimal | siblingsCount, showFirstLast/PrevNext |
 
 ### Build Status
 
-- **Zero new TypeScript errors** introduced — all remaining errors are pre-existing (toResponsive, ClassMapValue)
+- **Zero new TypeScript errors** from button work (31 pre-existing errors remain in other files)
 
 ---
 
-## Previous Update: Layout Component Prop Alignment — TWO ROUNDS COMPLETE ✅
+## Previous Update: Typography Components Overhaul — ALL 18 TASKS COMPLETE ✅
 
 ### What Was Done
 

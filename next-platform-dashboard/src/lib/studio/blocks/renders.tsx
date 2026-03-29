@@ -15,6 +15,28 @@
 
 import React from "react";
 import {
+  ArrowRight,
+  ArrowLeft,
+  Check,
+  Download,
+  ExternalLink,
+  ChevronRight,
+  ChevronDown,
+  Plus,
+  Minus,
+  X,
+  Search,
+  ShoppingCart,
+  Heart,
+  Share2,
+  Mail,
+  Phone,
+  Calendar,
+  Play,
+  Send,
+  Star,
+} from "lucide-react";
+import {
   getImageUrl,
   getImageAlt,
   type ImageValue,
@@ -4730,6 +4752,30 @@ export function StatNumberRender({
 // BUTTON PROPS - Premium Button with 60+ properties
 // ============================================================================
 
+// Pre-bundled icon map for the `iconName` string prop (avoids full Lucide bundle)
+const BUTTON_ICONS: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
+  "arrow-right": ArrowRight,
+  "arrow-left": ArrowLeft,
+  check: Check,
+  download: Download,
+  "external-link": ExternalLink,
+  "chevron-right": ChevronRight,
+  "chevron-down": ChevronDown,
+  plus: Plus,
+  minus: Minus,
+  x: X,
+  search: Search,
+  "shopping-cart": ShoppingCart,
+  heart: Heart,
+  share: Share2,
+  mail: Mail,
+  phone: Phone,
+  calendar: Calendar,
+  play: Play,
+  send: Send,
+  star: Star,
+};
+
 export interface ButtonProps {
   // Content
   label?: string;
@@ -4737,6 +4783,7 @@ export interface ButtonProps {
   iconLeft?: React.ReactNode;
   iconRight?: React.ReactNode;
   iconEmoji?: string;
+  iconName?: string;
   iconPosition?: "left" | "right" | "only";
 
   // Link & Action
@@ -4755,7 +4802,8 @@ export interface ButtonProps {
     | "destructive"
     | "success"
     | "warning"
-    | "gradient";
+    | "gradient"
+    | "ring";
   size?: "xs" | "sm" | "md" | "lg" | "xl";
 
   // Colors
@@ -4770,6 +4818,7 @@ export interface ButtonProps {
   // Gradient (for gradient variant)
   gradientFrom?: string;
   gradientTo?: string;
+  gradientVia?: string;
   gradientDirection?:
     | "to-r"
     | "to-l"
@@ -4801,11 +4850,12 @@ export interface ButtonProps {
   // Typography
   fontWeight?: "normal" | "medium" | "semibold" | "bold";
   fontFamily?: string;
+  fontSize?: string;
   textTransform?: "none" | "uppercase" | "lowercase" | "capitalize";
   letterSpacing?: "normal" | "wide" | "wider" | "widest";
 
   // Animation & Effects
-  hoverEffect?: "none" | "lift" | "scale" | "pulse" | "shine";
+  hoverEffect?: "none" | "lift" | "scale" | "pulse" | "shine" | "ripple" | "glow";
   transitionDuration?: "fast" | "normal" | "slow";
   animateOnLoad?: boolean;
   loadingAnimation?: "spinner" | "dots" | "pulse";
@@ -4853,6 +4903,7 @@ export function ButtonRender({
   iconLeft,
   iconRight,
   iconEmoji,
+  iconName,
   iconPosition = "left",
 
   // Link & Action
@@ -4876,6 +4927,7 @@ export function ButtonRender({
   // Gradient
   gradientFrom = "",
   gradientTo = "",
+  gradientVia,
   gradientDirection = "to-r",
 
   // Border & Radius
@@ -4899,6 +4951,7 @@ export function ButtonRender({
   // Typography
   fontWeight = "medium",
   fontFamily,
+  fontSize: fontSizeOverride,
   textTransform = "none",
   letterSpacing = "normal",
 
@@ -4961,11 +5014,12 @@ export function ButtonRender({
       "bg-transparent hover:opacity-80 active:opacity-70 border-transparent",
     link: "bg-transparent hover:underline border-transparent p-0",
     destructive:
-      "bg-red-600 text-white hover:bg-red-700 active:bg-red-800 border-transparent",
+      "hover:opacity-90 active:opacity-80 border-transparent",
     success:
-      "bg-green-600 text-white hover:bg-green-700 active:bg-green-800 border-transparent",
+      "hover:opacity-90 active:opacity-80 border-transparent",
     warning:
-      "bg-yellow-500 text-white hover:bg-yellow-600 active:bg-yellow-700 border-transparent",
+      "hover:opacity-90 active:opacity-80 border-transparent",
+    ring: "bg-transparent border-2 hover:opacity-80 active:opacity-70",
     gradient: "",
   }[variant];
 
@@ -5044,6 +5098,8 @@ export function ButtonRender({
     scale: "hover:scale-105",
     pulse: "hover:animate-pulse",
     shine: "overflow-hidden",
+    ripple: "overflow-hidden",
+    glow: "",
   }[hoverEffect];
 
   // Icon gap
@@ -5088,6 +5144,7 @@ export function ButtonRender({
   // Custom styles
   const customStyles: React.CSSProperties = {
     fontFamily: fontFamily || undefined,
+    fontSize: fontSizeOverride || undefined,
     minWidth: minWidth || undefined,
     borderStyle: borderStyle !== "solid" ? borderStyle : undefined,
     ["--tw-ring-color" as keyof React.CSSProperties]: focusRingColor,
@@ -5104,7 +5161,10 @@ export function ButtonRender({
       "to-tr": "to top right",
       "to-tl": "to top left",
     }[gradientDirection];
-    customStyles.background = `linear-gradient(${gradientDir}, ${gradientFrom}, ${gradientTo})`;
+    const stops = gradientVia
+      ? `${gradientFrom}, ${gradientVia}, ${gradientTo}`
+      : `${gradientFrom}, ${gradientTo}`;
+    customStyles.background = `linear-gradient(${gradientDir}, ${stops})`;
     customStyles.color = textColor || "#ffffff";
   } else if (variant === "primary") {
     customStyles.backgroundColor =
@@ -5120,6 +5180,26 @@ export function ButtonRender({
     customStyles.color = textColor || "inherit";
   } else if (variant === "link") {
     customStyles.color = textColor || backgroundColor || "inherit";
+  } else if (variant === "destructive") {
+    customStyles.backgroundColor =
+      backgroundColor || "var(--destructive, #dc2626)";
+    customStyles.color =
+      textColor || "var(--destructive-foreground, #ffffff)";
+  } else if (variant === "success") {
+    customStyles.backgroundColor =
+      backgroundColor || "var(--success, #16a34a)";
+    customStyles.color =
+      textColor || "var(--success-foreground, #ffffff)";
+  } else if (variant === "warning") {
+    customStyles.backgroundColor =
+      backgroundColor || "var(--warning, #d97706)";
+    customStyles.color =
+      textColor || "var(--warning-foreground, #ffffff)";
+  } else if (variant === "ring") {
+    customStyles.borderColor =
+      borderColor || backgroundColor || "var(--primary, #3b82f6)";
+    customStyles.color =
+      textColor || "var(--primary, #3b82f6)";
   } else {
     if (backgroundColor) customStyles.backgroundColor = backgroundColor;
     if (textColor) customStyles.color = textColor;
@@ -5127,9 +5207,10 @@ export function ButtonRender({
 
   if (borderColor) customStyles.borderColor = borderColor;
 
-  // Glow effect
-  if (glowOnHover) {
-    customStyles.boxShadow = `0 0 20px ${glowColor}40`;
+  // Glow effect (from glowOnHover prop or glow hoverEffect)
+  if (glowOnHover || hoverEffect === "glow") {
+    const gColor = glowColor || backgroundColor || "var(--primary, #3b82f6)";
+    customStyles.boxShadow = `0 0 20px ${gColor}40`;
   }
 
   // Loading spinner
@@ -5173,6 +5254,23 @@ export function ButtonRender({
   // Render icon
   const renderIcon = (position: "left" | "right") => {
     if (loading) return null;
+
+    // Resolve iconName from pre-bundled map
+    const ResolvedIcon = iconName ? BUTTON_ICONS[iconName] : null;
+
+    if (ResolvedIcon) {
+      const shouldShow =
+        iconPosition === "only"
+          ? position === "left"
+          : iconPosition === position;
+      if (!shouldShow) return null;
+      return (
+        <ResolvedIcon
+          className={iconSizeClass}
+          style={iconColor ? { color: iconColor } : undefined}
+        />
+      );
+    }
 
     const icon = iconEmoji ? (
       <span className={iconSizeClass} style={{ color: iconColor }}>
@@ -5219,6 +5317,11 @@ export function ButtonRender({
         <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
       )}
 
+      {/* Ripple effect overlay — CSS-only radial pulse on hover */}
+      {hoverEffect === "ripple" && (
+        <span className="absolute inset-0 rounded-[inherit] pointer-events-none opacity-0 group-hover:opacity-100 group-hover:animate-ping bg-current/10" style={{ animationDuration: "600ms", animationIterationCount: "1" }} />
+      )}
+
       {/* Badge */}
       {showBadge && badgeText && (
         <span
@@ -5242,6 +5345,7 @@ export function ButtonRender({
       style={customStyles}
       aria-label={ariaLabel}
       aria-describedby={ariaDescribedBy}
+      aria-busy={loading || undefined}
       tabIndex={tabIndex}
     >
       {buttonContent}
@@ -5256,6 +5360,8 @@ export function ButtonRender({
       disabled={disabled || loading}
       aria-label={ariaLabel}
       aria-describedby={ariaDescribedBy}
+      aria-busy={loading || undefined}
+      aria-disabled={disabled || undefined}
       tabIndex={tabIndex}
     >
       {buttonContent}
@@ -5275,7 +5381,8 @@ export function ButtonRender({
       <div className="relative inline-flex group/tooltip">
         {buttonElement}
         <span
-          className={`absolute ${tooltipPositionClasses} px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50`}
+          className={`absolute ${tooltipPositionClasses} px-2 py-1 text-xs rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50`}
+          style={{ backgroundColor: "var(--foreground, #111827)", color: "var(--background, #ffffff)" }}
         >
           {tooltip}
         </span>
@@ -8494,46 +8601,7 @@ export function CTARender({
 
   const buttonGapClasses = { sm: "gap-2", md: "gap-3", lg: "gap-4" }[buttonGap];
 
-  // Button size classes
-  const buttonSizeClasses = {
-    sm: "px-4 py-2 text-sm",
-    md: "px-5 py-2.5 text-base",
-    lg: "px-6 py-3 text-base md:text-lg",
-    xl: "px-8 py-4 text-lg md:text-xl",
-  }[buttonSize];
-
-  const buttonRadiusClasses = {
-    none: "rounded-none",
-    sm: "rounded-sm",
-    md: "rounded-md",
-    lg: "rounded-lg",
-    full: "rounded-full",
-  }[buttonRadius];
-
-  // Button shadow — use inline boxShadow for glow instead of hardcoded blue Tailwind
-  const buttonShadowClasses = {
-    none: "",
-    sm: "shadow-sm",
-    md: "shadow-md",
-    lg: "shadow-lg",
-    xl: "shadow-xl",
-    glow: "shadow-lg",
-  }[buttonShadow];
-  // Dynamic glow shadow using the button's own color
-  const buttonGlowStyle: React.CSSProperties =
-    buttonShadow === "glow"
-      ? { boxShadow: `0 10px 25px -5px ${resolvedButtonColor}80` }
-      : {};
-
-  const buttonHoverClasses = {
-    none: "",
-    scale: "hover:scale-105",
-    lift: "hover:-translate-y-1",
-    glow: "hover:shadow-xl",
-    shine: "overflow-hidden relative",
-    pulse: "hover:animate-pulse",
-  }[buttonHoverEffect];
-
+  // Image styling (for split variant)
   const imageRoundedClasses = {
     none: "rounded-none",
     sm: "rounded-sm",
@@ -8588,91 +8656,6 @@ export function CTARender({
   const glassClasses = glassEffect
     ? `backdrop-blur-${glassBlur} bg-opacity-80`
     : "";
-
-  // Button icons
-  const ButtonIcon = ({
-    type,
-    position,
-  }: {
-    type: string;
-    position: "left" | "right";
-  }) => {
-    const iconClass = `w-5 h-5 ${position === "left" ? "mr-2" : "ml-2"} transition-transform group-hover:translate-x-1`;
-    switch (type) {
-      case "arrow":
-        return (
-          <svg
-            className={iconClass}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M17 8l4 4m0 0l-4 4m4-4H3"
-            />
-          </svg>
-        );
-      case "chevron":
-        return (
-          <svg
-            className={iconClass}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        );
-      case "rocket":
-        return (
-          <svg
-            className={iconClass}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"
-            />
-          </svg>
-        );
-      case "sparkle":
-        return (
-          <svg
-            className={iconClass}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"
-            />
-          </svg>
-        );
-      case "play":
-        return (
-          <svg className={iconClass} fill="currentColor" viewBox="0 0 24 24">
-            <path d="M5 3l14 9-14 9V3z" />
-          </svg>
-        );
-      default:
-        return null;
-    }
-  };
 
   // Badge component
   const BadgeElement = () => {
@@ -8805,82 +8788,65 @@ export function CTARender({
     );
   };
 
-  // Primary button styling — uses resolvedButtonColor/resolvedButtonTextColor (contrast-aware)
-  const getPrimaryButtonStyle = (): React.CSSProperties => {
-    if (buttonStyle === "gradient") {
-      return {
-        background: `linear-gradient(135deg, ${buttonGradientFrom}, ${buttonGradientTo})`,
-        color: resolvedButtonTextColor,
-      };
-    }
-    if (buttonStyle === "outline") {
-      return {
-        backgroundColor: "transparent",
-        border: `2px solid ${resolvedButtonColor}`,
-        // FIXED: outline style was ignoring buttonTextColor — now uses resolved color
-        color: resolvedButtonTextColor || resolvedButtonColor,
-      };
-    }
-    if (buttonStyle === "3d") {
-      return {
-        backgroundColor: resolvedButtonColor,
-        color: resolvedButtonTextColor,
-        boxShadow: `0 4px 0 ${resolvedButtonColor}cc, 0 6px 20px rgba(0,0,0,0.2)`,
-        transform: "translateY(-2px)",
-      };
-    }
-    return {
-      backgroundColor: resolvedButtonColor,
-      color: resolvedButtonTextColor,
-      ...buttonGlowStyle,
-    };
+  // Primary button styling — composed via ButtonRender
+  const primaryButtonVariant: ButtonProps["variant"] = (() => {
+    if (buttonStyle === "gradient") return "gradient";
+    if (buttonStyle === "outline") return "outline";
+    return "primary";
+  })();
+
+  const primaryButtonRenderProps: Partial<ButtonProps> = {
+    label: buttonText,
+    href: buttonLink,
+    variant: primaryButtonVariant,
+    size: buttonSize as ButtonProps["size"],
+    backgroundColor: resolvedButtonColor,
+    textColor: resolvedButtonTextColor,
+    borderRadius: buttonRadius as ButtonProps["borderRadius"],
+    shadow: (buttonShadow === "glow" ? "lg" : buttonShadow) as ButtonProps["shadow"],
+    hoverEffect: buttonHoverEffect as ButtonProps["hoverEffect"],
+    iconName: buttonIcon !== "none" ? buttonIcon : undefined,
+    iconPosition: buttonIconPosition as ButtonProps["iconPosition"],
+    fullWidth: false,
+    className: mobileButtonFullWidth ? "w-full md:w-auto" : "",
+    ...(buttonStyle === "gradient"
+      ? { gradientFrom: buttonGradientFrom, gradientTo: buttonGradientTo, gradientDirection: "to-br" as const }
+      : {}),
+    ...(buttonStyle === "3d"
+      ? { shadow: "lg" as const }
+      : {}),
+    ...(buttonShadow === "glow" ? { glowOnHover: true, glowColor: resolvedButtonColor } : {}),
   };
 
-  // Secondary button styling
-  const getSecondaryButtonStyle = (): React.CSSProperties => {
-    const color = secondaryButtonColor || textColor;
-    const txtColor = secondaryButtonTextColor || color;
-    switch (secondaryButtonStyle) {
-      case "solid":
-        return { backgroundColor: color, color: backgroundColor };
-      case "outline":
-        return {
-          backgroundColor: "transparent",
-          border: `2px solid ${color}`,
-          color: txtColor,
-        };
-      case "ghost":
-        return { backgroundColor: "transparent", color: txtColor };
-      case "text":
-      case "link":
-        return {
-          backgroundColor: "transparent",
-          color: txtColor,
-          textDecoration:
-            secondaryButtonStyle === "link" ? "underline" : "none",
-        };
-      default:
-        return {
-          backgroundColor: "transparent",
-          border: `2px solid ${color}`,
-          color: txtColor,
-        };
-    }
+  // Secondary button styling — composed via ButtonRender
+  const secondaryButtonVariant: ButtonProps["variant"] = (() => {
+    if (secondaryButtonStyle === "solid") return "secondary";
+    if (secondaryButtonStyle === "ghost") return "ghost";
+    if (secondaryButtonStyle === "text" || secondaryButtonStyle === "link") return "link";
+    return "outline";
+  })();
+
+  const secondaryButtonRenderProps: Partial<ButtonProps> = {
+    label: secondaryButtonText || "",
+    href: secondaryButtonLink,
+    variant: secondaryButtonVariant,
+    size: (secondaryButtonSize || buttonSize) as ButtonProps["size"],
+    backgroundColor: secondaryButtonColor || textColor,
+    textColor: secondaryButtonTextColor || secondaryButtonColor || textColor,
+    borderRadius: secondaryButtonRadius as ButtonProps["borderRadius"],
+    iconName: secondaryButtonIcon !== "none" ? secondaryButtonIcon : undefined,
+    iconPosition: "right",
+    fullWidth: false,
+    className: mobileButtonFullWidth ? "w-full md:w-auto" : "",
   };
 
-  const secButtonRadiusClasses = {
-    none: "rounded-none",
-    sm: "rounded-sm",
-    md: "rounded-md",
-    lg: "rounded-lg",
-    full: "rounded-full",
-  }[secondaryButtonRadius];
+  // Reusable: render primary CTA button
+  const renderPrimaryButton = () =>
+    buttonText ? <ButtonRender {...(primaryButtonRenderProps as ButtonProps)} /> : null;
 
-  const secButtonSizeClasses = {
-    sm: "px-4 py-2 text-sm",
-    md: "px-5 py-2.5 text-base",
-    lg: "px-6 py-3 text-base md:text-lg",
-  }[secondaryButtonSize];
+  // Reusable: render secondary CTA button
+  const renderSecondaryButton = () =>
+    secondaryButtonText ? <ButtonRender {...(secondaryButtonRenderProps as ButtonProps)} /> : null;
 
   // Hide on mobile check
   if (hideOnMobile && _breakpoint === "mobile" && _isEditor) {
@@ -8944,34 +8910,8 @@ export function CTARender({
               <div
                 className={`flex ${buttonLayoutClasses} ${buttonGapClasses} ${mobileButtonFullWidth ? "w-full" : ""}`}
               >
-                {buttonText && (
-                  <a
-                    href={buttonLink}
-                    className={`group inline-flex items-center justify-center font-medium transition-all duration-300 ${buttonSizeClasses} ${buttonRadiusClasses} ${buttonShadowClasses} ${buttonHoverClasses} ${mobileButtonFullWidth ? "w-full md:w-auto" : ""}`}
-                    style={getPrimaryButtonStyle()}
-                  >
-                    {buttonIcon !== "none" && buttonIconPosition === "left" && (
-                      <ButtonIcon type={buttonIcon} position="left" />
-                    )}
-                    {buttonText}
-                    {buttonIcon !== "none" &&
-                      buttonIconPosition === "right" && (
-                        <ButtonIcon type={buttonIcon} position="right" />
-                      )}
-                  </a>
-                )}
-                {secondaryButtonText && (
-                  <a
-                    href={secondaryButtonLink}
-                    className={`inline-flex items-center justify-center font-medium transition-all duration-300 ${secButtonSizeClasses} ${secButtonRadiusClasses} hover:opacity-80 ${mobileButtonFullWidth ? "w-full md:w-auto" : ""}`}
-                    style={getSecondaryButtonStyle()}
-                  >
-                    {secondaryButtonText}
-                    {secondaryButtonIcon !== "none" && (
-                      <ButtonIcon type={secondaryButtonIcon} position="right" />
-                    )}
-                  </a>
-                )}
+                {renderPrimaryButton()}
+                {renderSecondaryButton()}
               </div>
             </div>
           </div>
@@ -9043,30 +8983,8 @@ export function CTARender({
             <div
               className={`flex ${buttonLayoutClasses} ${buttonGapClasses} justify-center`}
             >
-              {buttonText && (
-                <a
-                  href={buttonLink}
-                  className={`group inline-flex items-center justify-center font-medium transition-all duration-300 ${buttonSizeClasses} ${buttonRadiusClasses} ${buttonShadowClasses} ${buttonHoverClasses}`}
-                  style={getPrimaryButtonStyle()}
-                >
-                  {buttonIcon !== "none" && buttonIconPosition === "left" && (
-                    <ButtonIcon type={buttonIcon} position="left" />
-                  )}
-                  {buttonText}
-                  {buttonIcon !== "none" && buttonIconPosition === "right" && (
-                    <ButtonIcon type={buttonIcon} position="right" />
-                  )}
-                </a>
-              )}
-              {secondaryButtonText && (
-                <a
-                  href={secondaryButtonLink}
-                  className={`inline-flex items-center justify-center font-medium transition-all duration-300 ${secButtonSizeClasses} ${secButtonRadiusClasses} hover:opacity-80`}
-                  style={getSecondaryButtonStyle()}
-                >
-                  {secondaryButtonText}
-                </a>
-              )}
+              {renderPrimaryButton()}
+              {renderSecondaryButton()}
             </div>
             {trustBadgesPosition === "bottom" && <TrustBadgesElement />}
           </div>
@@ -9091,15 +9009,7 @@ export function CTARender({
             </p>
           </div>
           <div className="flex gap-3">
-            {buttonText && (
-              <a
-                href={buttonLink}
-                className={`inline-flex items-center justify-center font-medium transition-all ${buttonSizeClasses} ${buttonRadiusClasses}`}
-                style={getPrimaryButtonStyle()}
-              >
-                {buttonText}
-              </a>
-            )}
+            {renderPrimaryButton()}
           </div>
         </div>
       </section>
@@ -9157,31 +9067,8 @@ export function CTARender({
               <div
                 className={`flex ${buttonLayoutClasses} ${buttonGapClasses} justify-center`}
               >
-                {buttonText && (
-                  <a
-                    href={buttonLink}
-                    className={`group inline-flex items-center justify-center font-medium transition-all duration-300 ${buttonSizeClasses} ${buttonRadiusClasses} ${buttonShadowClasses} ${buttonHoverClasses}`}
-                    style={getPrimaryButtonStyle()}
-                  >
-                    {buttonIcon !== "none" && buttonIconPosition === "left" && (
-                      <ButtonIcon type={buttonIcon} position="left" />
-                    )}
-                    {buttonText}
-                    {buttonIcon !== "none" &&
-                      buttonIconPosition === "right" && (
-                        <ButtonIcon type={buttonIcon} position="right" />
-                      )}
-                  </a>
-                )}
-                {secondaryButtonText && (
-                  <a
-                    href={secondaryButtonLink}
-                    className={`inline-flex items-center justify-center font-medium transition-all duration-300 ${secButtonSizeClasses} ${secButtonRadiusClasses} hover:opacity-80`}
-                    style={getSecondaryButtonStyle()}
-                  >
-                    {secondaryButtonText}
-                  </a>
-                )}
+                {renderPrimaryButton()}
+                {renderSecondaryButton()}
               </div>
               {trustBadgesPosition === "bottom" && <TrustBadgesElement />}
             </div>
@@ -9239,30 +9126,8 @@ export function CTARender({
             </p>
           )}
           <div className={`flex ${buttonLayoutClasses} ${buttonGapClasses}`}>
-            {buttonText && (
-              <a
-                href={buttonLink}
-                className={`group inline-flex items-center justify-center font-medium transition-all duration-300 ${buttonSizeClasses} ${buttonRadiusClasses} ${buttonShadowClasses} ${buttonHoverClasses}`}
-                style={getPrimaryButtonStyle()}
-              >
-                {buttonIcon !== "none" && buttonIconPosition === "left" && (
-                  <ButtonIcon type={buttonIcon} position="left" />
-                )}
-                {buttonText}
-                {buttonIcon !== "none" && buttonIconPosition === "right" && (
-                  <ButtonIcon type={buttonIcon} position="right" />
-                )}
-              </a>
-            )}
-            {secondaryButtonText && (
-              <a
-                href={secondaryButtonLink}
-                className={`inline-flex items-center justify-center font-medium transition-all duration-300 ${secButtonSizeClasses} ${secButtonRadiusClasses} hover:opacity-80`}
-                style={getSecondaryButtonStyle()}
-              >
-                {secondaryButtonText}
-              </a>
-            )}
+            {renderPrimaryButton()}
+            {renderSecondaryButton()}
           </div>
           {trustBadgesPosition === "bottom" && <TrustBadgesElement />}
         </div>
@@ -9319,33 +9184,8 @@ export function CTARender({
         <div
           className={`flex ${buttonLayoutClasses} ${buttonGapClasses} justify-center ${mobileButtonFullWidth ? "w-full md:w-auto" : ""}`}
         >
-          {buttonText && (
-            <a
-              href={buttonLink}
-              className={`group inline-flex items-center justify-center font-medium transition-all duration-300 ${buttonSizeClasses} ${buttonRadiusClasses} ${buttonShadowClasses} ${buttonHoverClasses} ${mobileButtonFullWidth ? "w-full md:w-auto" : ""}`}
-              style={getPrimaryButtonStyle()}
-            >
-              {buttonIcon !== "none" && buttonIconPosition === "left" && (
-                <ButtonIcon type={buttonIcon} position="left" />
-              )}
-              {buttonText}
-              {buttonIcon !== "none" && buttonIconPosition === "right" && (
-                <ButtonIcon type={buttonIcon} position="right" />
-              )}
-            </a>
-          )}
-          {secondaryButtonText && (
-            <a
-              href={secondaryButtonLink}
-              className={`inline-flex items-center justify-center font-medium transition-all duration-300 ${secButtonSizeClasses} ${secButtonRadiusClasses} hover:opacity-80 ${mobileButtonFullWidth ? "w-full md:w-auto" : ""}`}
-              style={getSecondaryButtonStyle()}
-            >
-              {secondaryButtonText}
-              {secondaryButtonIcon !== "none" && (
-                <ButtonIcon type={secondaryButtonIcon} position="right" />
-              )}
-            </a>
-          )}
+          {renderPrimaryButton()}
+          {renderSecondaryButton()}
         </div>
         {trustBadgesPosition === "bottom" && <TrustBadgesElement />}
       </div>
@@ -14792,78 +14632,257 @@ export function FooterRender({
 }
 
 // ============================================================================
-// SOCIAL LINKS - Social Media Icons
+// SOCIAL LINKS - Social Media Icons (V2 — 15+ platforms, brand colours)
 // ============================================================================
+
+const SOCIAL_PLATFORMS: Record<
+  string,
+  { path: string; brandColor: string; label: string; viewBox?: string }
+> = {
+  facebook: {
+    path: "M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z",
+    brandColor: "#1877F2",
+    label: "Facebook",
+  },
+  x: {
+    path: "M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z",
+    brandColor: "#000000",
+    label: "X (Twitter)",
+  },
+  twitter: {
+    path: "M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z",
+    brandColor: "#1DA1F2",
+    label: "Twitter",
+  },
+  instagram: {
+    path: "M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z",
+    brandColor: "#E4405F",
+    label: "Instagram",
+  },
+  linkedin: {
+    path: "M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z",
+    brandColor: "#0A66C2",
+    label: "LinkedIn",
+  },
+  youtube: {
+    path: "M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z",
+    brandColor: "#FF0000",
+    label: "YouTube",
+  },
+  github: {
+    path: "M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12",
+    brandColor: "#181717",
+    label: "GitHub",
+  },
+  tiktok: {
+    path: "M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z",
+    brandColor: "#000000",
+    label: "TikTok",
+  },
+  pinterest: {
+    path: "M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12.017 24c6.624 0 11.99-5.367 11.99-11.988C24.007 5.367 18.641 0 12.017 0z",
+    brandColor: "#BD081C",
+    label: "Pinterest",
+  },
+  whatsapp: {
+    path: "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z",
+    brandColor: "#25D366",
+    label: "WhatsApp",
+  },
+  telegram: {
+    path: "M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z",
+    brandColor: "#26A5E4",
+    label: "Telegram",
+  },
+  discord: {
+    path: "M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.8732.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189z",
+    brandColor: "#5865F2",
+    label: "Discord",
+  },
+  threads: {
+    path: "M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017C1.5 8.418 2.35 5.564 3.995 3.517 5.845 1.213 8.598.032 12.179.008h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.504 3.616 8.914 3.589 12c.027 3.086.718 5.496 2.057 7.164 1.43 1.783 3.631 2.698 6.54 2.717 2.623-.02 4.358-.631 5.8-2.045 1.647-1.613 1.618-3.593 1.09-4.798-.31-.71-.873-1.3-1.634-1.75-.192 1.352-.622 2.446-1.29 3.276-.776.964-1.846 1.544-3.18 1.726-1.126.152-2.255-.058-3.18-.594-.986-.57-1.63-1.463-1.812-2.512-.325-1.87.756-3.608 2.74-4.408.83-.335 1.796-.536 2.883-.602-.15-.79-.442-1.367-.877-1.728-.524-.437-1.283-.66-2.254-.66l-.036.001c-1.207.014-2.14.453-2.772 1.31l-1.7-1.24C7.677 5.443 9.07 4.753 10.82 4.726l.05-.001c1.462 0 2.631.406 3.476 1.208.788.748 1.292 1.795 1.515 3.126 1.1.148 2.09.455 2.956.916 1.136.604 2.018 1.456 2.553 2.638.795 1.756.82 4.517-1.265 6.56C18.32 20.876 16.069 21.679 12.84 21.71l-.001.001z",
+    brandColor: "#000000",
+    label: "Threads",
+  },
+  snapchat: {
+    path: "M12.206.793c.99 0 4.347.276 5.93 3.821.529 1.193.403 3.219.299 4.847l-.003.06c-.012.18-.022.345-.03.51.075.045.203.09.401.09.3-.016.659-.12 1.033-.301.165-.088.344-.104.464-.104.182 0 .359.029.509.09.45.149.734.479.734.838.015.449-.39.839-1.213 1.168-.089.029-.209.075-.344.119-.45.135-1.139.36-1.333.81-.09.224-.061.524.12.868l.015.015c.06.136 1.526 3.475 4.791 4.014.255.044.435.27.42.509 0 .075-.015.149-.045.225-.24.569-1.273.988-3.146 1.271-.059.091-.12.375-.164.57-.029.179-.074.36-.134.553-.076.271-.27.405-.555.405h-.03c-.135 0-.313-.031-.538-.076-.375-.075-.81-.149-1.364-.149-.39 0-.794.029-1.199.135-.66.18-1.168.593-1.663 1.006-.704.585-1.424 1.185-2.7 1.185-.045 0-.09 0-.135-.015-.044.015-.089.015-.119.015-1.274 0-1.994-.6-2.699-1.185-.494-.42-1.004-.825-1.662-1.006-.405-.105-.809-.135-1.199-.135-.554 0-.989.074-1.364.149-.225.045-.403.076-.539.076-.284.001-.478-.134-.554-.405-.061-.194-.105-.374-.135-.553-.044-.194-.104-.479-.164-.57-1.873-.283-2.905-.702-3.146-1.271-.029-.075-.044-.149-.044-.225-.015-.24.164-.465.42-.509 3.264-.54 4.73-3.879 4.791-4.02l.016-.029c.18-.345.224-.645.119-.869-.195-.434-.884-.658-1.332-.809-.135-.044-.24-.09-.359-.119-.822-.33-1.213-.72-1.213-1.17 0-.36.284-.69.734-.838.15-.06.328-.09.51-.09.12 0 .284.015.449.104.374.18.719.3 1.019.3.255-.015.375-.09.42-.119-.015-.255-.03-.494-.046-.748v-.06c-.104-1.624-.225-3.654.3-4.843 1.577-3.545 4.937-3.821 5.914-3.821h.223z",
+    brandColor: "#FFFC00",
+    label: "Snapchat",
+  },
+  reddit: {
+    path: "M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z",
+    brandColor: "#FF4500",
+    label: "Reddit",
+  },
+};
 
 export interface SocialLinksProps {
   links?: Array<{
-    platform?:
-      | "facebook"
-      | "twitter"
-      | "instagram"
-      | "linkedin"
-      | "youtube"
-      | "github"
-      | "tiktok"
-      | "pinterest";
+    platform?: keyof typeof SOCIAL_PLATFORMS | string;
     url?: string;
     label?: string;
   }>;
-  size?: "sm" | "md" | "lg";
-  variant?: "icons" | "buttons" | "rounded";
+
+  // Display
+  variant?: "icons" | "buttons" | "rounded" | "pill" | "text";
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
+  gap?: "xs" | "sm" | "md" | "lg";
+  alignment?: "left" | "center" | "right";
+  direction?: "horizontal" | "vertical";
+
+  // Colours
+  useBrandColors?: boolean;
   color?: string;
   hoverColor?: string;
-  gap?: "sm" | "md" | "lg";
+  backgroundColor?: string;
+  hoverBackgroundColor?: string;
+
+  // Animation
+  hoverEffect?: "none" | "lift" | "scale" | "glow" | "bounce";
+
+  // Accessibility
+  showLabels?: boolean;
+  ariaLabel?: string;
+
   id?: string;
   className?: string;
 }
 
 export function SocialLinksRender({
   links = [],
-  size = "md",
   variant = "icons",
-  color = "#6b7280",
-  hoverColor = "",
+  size = "md",
   gap = "md",
+  alignment = "left",
+  direction = "horizontal",
+  useBrandColors = false,
+  color,
+  backgroundColor,
+  hoverEffect = "none",
+  showLabels = false,
+  ariaLabel,
   id,
   className = "",
 }: SocialLinksProps) {
-  const sizeClasses = { sm: "w-4 h-4", md: "w-5 h-5", lg: "w-6 h-6" }[size];
-  const gapClasses = { sm: "gap-2", md: "gap-4", lg: "gap-6" }[gap];
-  const containerClasses = {
-    icons: "",
-    buttons: "p-2 rounded-lg hover:opacity-80",
-    rounded: "p-2 rounded-full border hover:opacity-80",
-  }[variant];
+  const sizeClasses = {
+    xs: "w-3.5 h-3.5",
+    sm: "w-4 h-4",
+    md: "w-5 h-5",
+    lg: "w-6 h-6",
+    xl: "w-7 h-7",
+  }[size];
+
+  const containerSize = {
+    xs: "w-7 h-7",
+    sm: "w-8 h-8",
+    md: "w-10 h-10",
+    lg: "w-12 h-12",
+    xl: "w-14 h-14",
+  }[size];
+
+  const gapClasses = {
+    xs: "gap-1",
+    sm: "gap-2",
+    md: "gap-3",
+    lg: "gap-4",
+  }[gap];
+
+  const alignClasses = {
+    left: "justify-start",
+    center: "justify-center",
+    right: "justify-end",
+  }[alignment];
+
+  const directionClass =
+    direction === "vertical" ? "flex-col" : "flex-row flex-wrap";
+
+  const hoverClass = {
+    none: "",
+    lift: "hover:-translate-y-0.5",
+    scale: "hover:scale-110",
+    glow: "hover:shadow-lg",
+    bounce: "hover:animate-bounce",
+  }[hoverEffect];
+
+  const textSize = {
+    xs: "text-xs",
+    sm: "text-xs",
+    md: "text-sm",
+    lg: "text-sm",
+    xl: "text-base",
+  }[size];
+
+  const defaultColor = color || "var(--muted-foreground, #6b7280)";
 
   return (
-    <div id={id} className={`flex items-center ${gapClasses} ${className}`}>
-      {links.map((link, i) => (
-        <a
-          key={i}
-          href={link.url || "#"}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`transition-colors ${containerClasses}`}
-          style={{ color }}
-          aria-label={link.label || link.platform}
-        >
-          <svg className={sizeClasses} fill="currentColor" viewBox="0 0 24 24">
-            {link.platform === "facebook" && (
-              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+    <div
+      id={id}
+      role="list"
+      aria-label={ariaLabel || "Social media links"}
+      className={`flex items-center ${directionClass} ${gapClasses} ${alignClasses} ${className}`}
+    >
+      {links.map((link, i) => {
+        const platform = SOCIAL_PLATFORMS[link.platform || ""];
+        if (!platform) return null;
+
+        const iconColor = useBrandColors ? platform.brandColor : defaultColor;
+        const bgColor =
+          variant === "buttons" || variant === "pill"
+            ? useBrandColors
+              ? platform.brandColor
+              : backgroundColor || "var(--muted, #f3f4f6)"
+            : undefined;
+        const fgColor =
+          variant === "buttons" || variant === "pill"
+            ? useBrandColors
+              ? "#ffffff"
+              : defaultColor
+            : iconColor;
+
+        const variantClasses = {
+          icons: "inline-flex items-center justify-center",
+          buttons: `${containerSize} inline-flex items-center justify-center rounded-lg`,
+          rounded: `${containerSize} inline-flex items-center justify-center rounded-full border`,
+          pill: "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full",
+          text: "inline-flex items-center gap-1.5",
+        }[variant];
+
+        return (
+          <a
+            key={i}
+            role="listitem"
+            href={link.url || "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`transition-all ${variantClasses} ${hoverClass} hover:opacity-80`}
+            style={{
+              color: fgColor,
+              backgroundColor: bgColor,
+              borderColor:
+                variant === "rounded"
+                  ? useBrandColors
+                    ? platform.brandColor
+                    : "var(--border, #e5e7eb)"
+                  : undefined,
+            }}
+            aria-label={link.label || platform.label}
+          >
+            <svg
+              className={sizeClasses}
+              fill="currentColor"
+              viewBox={platform.viewBox || "0 0 24 24"}
+              aria-hidden="true"
+            >
+              <path d={platform.path} />
+            </svg>
+            {(showLabels || variant === "text") && (
+              <span className={textSize}>
+                {link.label || platform.label}
+              </span>
             )}
-            {link.platform === "twitter" && (
-              <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
-            )}
-            {link.platform === "instagram" && (
-              <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z" />
-            )}
-            {link.platform === "linkedin" && (
-              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-            )}
-          </svg>
-        </a>
-      ))}
+          </a>
+        );
+      })}
     </div>
   );
 }
@@ -17284,17 +17303,48 @@ export function ModalRender({
 
 export interface BadgeProps {
   text?: string;
-  variant?: "default" | "primary" | "success" | "warning" | "error" | "info";
-  size?: "sm" | "md" | "lg";
+  variant?: "default" | "primary" | "success" | "warning" | "error" | "info" | "outline";
+  size?: "xs" | "sm" | "md" | "lg";
   rounded?: "default" | "full";
   outline?: boolean;
   dot?: boolean;
+  pulse?: boolean;
   icon?: React.ReactNode;
+  iconName?: string;
+  iconPosition?: "left" | "right";
   backgroundColor?: string;
   textColor?: string;
+  borderColor?: string;
+  dotColor?: string;
+
+  // Interactive
+  href?: string;
+  target?: "_self" | "_blank";
+  onDismiss?: () => void;
+
+  // Animation
+  animateIn?: "none" | "fade" | "scale" | "slide";
+
   id?: string;
   className?: string;
 }
+
+// Pre-bundled icon subset for badge iconName resolution
+const BADGE_ICONS: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
+  check: Check,
+  x: X,
+  star: Star,
+  heart: Heart,
+  "alert-circle": AlertCircle,
+  info: Info,
+  "check-circle": CheckCircle2,
+  "shopping-cart": ShoppingCart,
+  "external-link": ExternalLink,
+  mail: Mail,
+  calendar: Calendar,
+  clock: Clock,
+  zap: Zap,
+};
 
 export function BadgeRender({
   text = "Badge",
@@ -17303,13 +17353,23 @@ export function BadgeRender({
   rounded = "full",
   outline = false,
   dot = false,
+  pulse = false,
   icon,
+  iconName,
+  iconPosition = "left",
   backgroundColor,
   textColor,
+  borderColor: borderColorProp,
+  dotColor,
+  href,
+  target = "_self",
+  onDismiss,
+  animateIn = "none",
   id,
   className = "",
 }: BadgeProps) {
   const sizeClasses = {
+    xs: "text-[10px] px-1.5 py-0.5",
     sm: "text-xs px-2 py-0.5",
     md: "text-xs px-2.5 py-1",
     lg: "text-sm px-3 py-1",
@@ -17318,40 +17378,1072 @@ export function BadgeRender({
     rounded
   ];
 
+  const iconSizeClass = {
+    xs: "w-2.5 h-2.5",
+    sm: "w-3 h-3",
+    md: "w-3.5 h-3.5",
+    lg: "w-4 h-4",
+  }[size];
+
+  const isOutline = outline || variant === "outline";
+
   const variantStyles: Record<
     string,
     { bg: string; text: string; border: string }
   > = {
-    default: { bg: "#f3f4f6", text: "#374151", border: "#d1d5db" },
-    primary: { bg: "#dbeafe", text: "#1e40af", border: "#93c5fd" },
-    success: { bg: "#dcfce7", text: "#166534", border: "#86efac" },
-    warning: { bg: "#fef3c7", text: "#92400e", border: "#fcd34d" },
-    error: { bg: "#fee2e2", text: "#991b1b", border: "#fca5a5" },
-    info: { bg: "#e0f2fe", text: "#075985", border: "#7dd3fc" },
+    default: {
+      bg: "var(--muted, #f3f4f6)",
+      text: "var(--muted-foreground, #374151)",
+      border: "var(--border, #d1d5db)",
+    },
+    primary: {
+      bg: "color-mix(in srgb, var(--primary, #3b82f6) 15%, transparent)",
+      text: "var(--primary, #1e40af)",
+      border: "color-mix(in srgb, var(--primary, #3b82f6) 40%, transparent)",
+    },
+    success: {
+      bg: "color-mix(in srgb, var(--success, #16a34a) 15%, transparent)",
+      text: "var(--success, #166534)",
+      border: "color-mix(in srgb, var(--success, #16a34a) 40%, transparent)",
+    },
+    warning: {
+      bg: "color-mix(in srgb, var(--warning, #d97706) 15%, transparent)",
+      text: "var(--warning, #92400e)",
+      border: "color-mix(in srgb, var(--warning, #d97706) 40%, transparent)",
+    },
+    error: {
+      bg: "color-mix(in srgb, var(--destructive, #dc2626) 15%, transparent)",
+      text: "var(--destructive, #991b1b)",
+      border: "color-mix(in srgb, var(--destructive, #dc2626) 40%, transparent)",
+    },
+    info: {
+      bg: "color-mix(in srgb, var(--info, #0ea5e9) 15%, transparent)",
+      text: "var(--info, #075985)",
+      border: "color-mix(in srgb, var(--info, #0ea5e9) 40%, transparent)",
+    },
+    outline: {
+      bg: "transparent",
+      text: "var(--foreground, #374151)",
+      border: "var(--border, #e5e7eb)",
+    },
   };
 
-  const styles = variantStyles[variant];
+  const styles = variantStyles[variant] || variantStyles.default;
+
+  const animationClass = {
+    none: "",
+    fade: "animate-in fade-in duration-300",
+    scale: "animate-in zoom-in-95 duration-200",
+    slide: "animate-in slide-in-from-bottom-1 duration-200",
+  }[animateIn];
+
+  // Resolve iconName from pre-bundled map
+  const ResolvedIcon = iconName ? BADGE_ICONS[iconName] : null;
+
+  const renderIcon = () => {
+    if (ResolvedIcon) {
+      return <ResolvedIcon className={iconSizeClass} />;
+    }
+    return icon || null;
+  };
+
+  const content = (
+    <>
+      {dot && (
+        <span
+          className={`w-1.5 h-1.5 rounded-full shrink-0 ${pulse ? "animate-pulse" : ""}`}
+          style={{ backgroundColor: dotColor || textColor || styles.text }}
+        />
+      )}
+      {iconPosition === "left" && renderIcon()}
+      {text}
+      {iconPosition === "right" && renderIcon()}
+      {onDismiss && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onDismiss();
+          }}
+          className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full hover:opacity-70 transition-opacity shrink-0 -mr-0.5 cursor-pointer"
+          aria-label={`Dismiss ${text}`}
+        >
+          ×
+        </button>
+      )}
+    </>
+  );
+
+  const sharedClasses = `inline-flex items-center gap-1.5 font-medium ${sizeClasses} ${roundedClasses} ${isOutline ? "border bg-transparent" : ""} ${animationClass} ${className}`;
+  const sharedStyle: React.CSSProperties = {
+    backgroundColor: backgroundColor || (isOutline ? "transparent" : styles.bg),
+    color: textColor || styles.text,
+    borderColor: isOutline ? (borderColorProp || styles.border) : undefined,
+  };
+
+  if (href) {
+    return (
+      <a
+        id={id}
+        href={href}
+        target={target}
+        rel={target === "_blank" ? "noopener noreferrer" : undefined}
+        className={`${sharedClasses} hover:opacity-80 transition-opacity no-underline`}
+        style={sharedStyle}
+      >
+        {content}
+      </a>
+    );
+  }
 
   return (
     <span
       id={id}
-      className={`inline-flex items-center gap-1.5 font-medium ${sizeClasses} ${roundedClasses} ${outline ? "border-2 bg-transparent" : ""} ${className}`}
-      style={{
-        backgroundColor:
-          backgroundColor || (outline ? "transparent" : styles.bg),
-        color: textColor || styles.text,
-        borderColor: outline ? styles.border : undefined,
-      }}
+      className={sharedClasses}
+      style={sharedStyle}
     >
-      {dot && (
-        <span
-          className="w-1.5 h-1.5 rounded-full"
-          style={{ backgroundColor: textColor || styles.text }}
+      {content}
+    </span>
+  );
+}
+
+// ============================================================================
+// LINK - Inline Text Link
+// ============================================================================
+
+export interface LinkProps {
+  text?: string;
+  href?: string;
+  target?: "_self" | "_blank";
+  rel?: string;
+
+  // Style
+  variant?:
+    | "default"
+    | "underline"
+    | "hover-underline"
+    | "subtle"
+    | "bold"
+    | "nav";
+  color?: string;
+  hoverColor?: string;
+
+  // Icon
+  iconName?: string;
+  iconPosition?: "left" | "right";
+  showExternalIcon?: boolean;
+
+  // Typography
+  fontSize?: string;
+  fontWeight?: "normal" | "medium" | "semibold" | "bold";
+
+  // Animation
+  underlineAnimation?: "none" | "slide-in" | "expand-center" | "expand-left";
+
+  // Accessibility
+  ariaLabel?: string;
+
+  id?: string;
+  className?: string;
+}
+
+export function LinkRender({
+  text = "Link",
+  href = "#",
+  target = "_self",
+  rel,
+
+  variant = "default",
+  color,
+  hoverColor,
+
+  iconName,
+  iconPosition = "right",
+  showExternalIcon = false,
+
+  fontSize,
+  fontWeight = "normal",
+
+  underlineAnimation = "none",
+
+  ariaLabel,
+
+  id,
+  className = "",
+}: LinkProps) {
+  const weightClass = {
+    normal: "font-normal",
+    medium: "font-medium",
+    semibold: "font-semibold",
+    bold: "font-bold",
+  }[fontWeight];
+
+  const variantClasses = {
+    default: "hover:underline",
+    underline: "underline underline-offset-2",
+    "hover-underline": "no-underline hover:underline",
+    subtle: "no-underline hover:underline",
+    bold: "font-bold no-underline",
+    nav: "no-underline hover:opacity-80",
+  }[variant];
+
+  const defaultColor =
+    variant === "subtle"
+      ? "inherit"
+      : variant === "nav"
+        ? "inherit"
+        : "var(--primary, #3b82f6)";
+
+  const linkColor = color || defaultColor;
+
+  const animationClass = {
+    none: "",
+    "slide-in": "group",
+    "expand-center": "group",
+    "expand-left": "group",
+  }[underlineAnimation];
+
+  const showExternal =
+    showExternalIcon || (target === "_blank" && showExternalIcon !== false);
+
+  const computedRel =
+    rel || (target === "_blank" ? "noopener noreferrer" : undefined);
+
+  return (
+    <a
+      id={id}
+      href={href}
+      target={target}
+      rel={computedRel}
+      className={`inline-flex items-center gap-1 transition-colors ${weightClass} ${variantClasses} ${animationClass} ${className}`}
+      style={{
+        color: linkColor,
+        fontSize: fontSize || undefined,
+      }}
+      aria-label={ariaLabel}
+    >
+      {iconName && iconPosition === "left" && (
+        <span className="inline-flex shrink-0" aria-hidden="true">
+          ›
+        </span>
+      )}
+      <span
+        className={
+          underlineAnimation !== "none"
+            ? "relative after:absolute after:bottom-0 after:left-0 after:h-px after:bg-current after:transition-all after:duration-300 " +
+              (underlineAnimation === "slide-in"
+                ? "after:w-0 group-hover:after:w-full"
+                : underlineAnimation === "expand-center"
+                  ? "after:w-0 after:left-1/2 group-hover:after:w-full group-hover:after:left-0"
+                  : "after:w-0 group-hover:after:w-full")
+            : ""
+        }
+      >
+        {text}
+      </span>
+      {iconName && iconPosition === "right" && (
+        <span className="inline-flex shrink-0" aria-hidden="true">
+          ›
+        </span>
+      )}
+      {showExternal && target === "_blank" && (
+        <svg
+          className="inline-block w-3 h-3 ml-0.5 shrink-0"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+          />
+        </svg>
+      )}
+    </a>
+  );
+}
+
+// ============================================================================
+// BUTTON GROUP - Adjacent Button Container
+// ============================================================================
+
+export interface ButtonGroupProps {
+  children?: React.ReactNode;
+
+  // Layout
+  direction?: "horizontal" | "vertical";
+  size?: "xs" | "sm" | "md" | "lg";
+  gap?: "none" | "xs" | "sm";
+  fullWidth?: boolean;
+
+  // Style
+  variant?: "connected" | "separated" | "toggle";
+  borderRadius?: "none" | "sm" | "md" | "lg" | "xl" | "full";
+
+  // Accessibility
+  ariaLabel?: string;
+  role?: "group" | "toolbar";
+
+  id?: string;
+  className?: string;
+}
+
+export function ButtonGroupRender({
+  children,
+
+  direction = "horizontal",
+  gap = "none",
+  fullWidth = false,
+
+  variant = "connected",
+  borderRadius = "md",
+
+  ariaLabel,
+  role = "group",
+
+  id,
+  className = "",
+}: ButtonGroupProps) {
+  const directionClass =
+    direction === "horizontal" ? "flex-row" : "flex-col";
+
+  const gapClass = {
+    none: "gap-0",
+    xs: "gap-1",
+    sm: "gap-2",
+  }[gap];
+
+  const radiusClass = {
+    none: "rounded-none",
+    sm: "rounded-sm",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+    full: "rounded-full",
+  }[borderRadius];
+
+  const connectedStyles =
+    variant === "connected" && gap === "none"
+      ? direction === "horizontal"
+        ? `[&>*]:rounded-none [&>*:first-child]:rounded-l-${borderRadius === "full" ? "full" : borderRadius} [&>*:last-child]:rounded-r-${borderRadius === "full" ? "full" : borderRadius} [&>*:not(:first-child)]:-ml-px`
+        : `[&>*]:rounded-none [&>*:first-child]:rounded-t-${borderRadius === "full" ? "full" : borderRadius} [&>*:last-child]:rounded-b-${borderRadius === "full" ? "full" : borderRadius} [&>*:not(:first-child)]:-mt-px`
+      : "";
+
+  return (
+    <div
+      id={id}
+      role={role}
+      aria-label={ariaLabel}
+      className={`inline-flex ${directionClass} ${gapClass} ${fullWidth ? "w-full [&>*]:flex-1" : ""} ${connectedStyles} ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+// ============================================================================
+// CHIP - Interactive Tag / Filter
+// ============================================================================
+
+export interface ChipProps {
+  label?: string;
+
+  // State
+  selected?: boolean;
+  disabled?: boolean;
+
+  // Style
+  variant?: "filled" | "outline" | "subtle";
+  size?: "sm" | "md" | "lg";
+  rounded?: "default" | "full";
+
+  // Colours
+  color?: string;
+  selectedColor?: string;
+  selectedTextColor?: string;
+
+  // Icon
+  iconName?: string;
+  avatar?: string;
+
+  // Interactive
+  onClick?: () => void;
+  onDelete?: () => void;
+
+  // Accessibility
+  ariaLabel?: string;
+
+  id?: string;
+  className?: string;
+}
+
+export function ChipRender({
+  label = "Chip",
+
+  selected = false,
+  disabled = false,
+
+  variant = "filled",
+  size = "md",
+  rounded = "full",
+
+  color,
+  selectedColor,
+  selectedTextColor,
+
+  avatar,
+
+  onClick,
+  onDelete,
+
+  ariaLabel,
+
+  id,
+  className = "",
+}: ChipProps) {
+  const sizeClasses = {
+    sm: "text-xs px-2 py-0.5 gap-1",
+    md: "text-sm px-3 py-1 gap-1.5",
+    lg: "text-base px-4 py-1.5 gap-2",
+  }[size];
+
+  const roundedClass = rounded === "full" ? "rounded-full" : "rounded-md";
+
+  const avatarSize = {
+    sm: "w-4 h-4",
+    md: "w-5 h-5",
+    lg: "w-6 h-6",
+  }[size];
+
+  const chipColor = color || "var(--primary, #3b82f6)";
+  const activeColor = selectedColor || chipColor;
+  const activeTextColor = selectedTextColor || "#ffffff";
+
+  const getStyles = (): React.CSSProperties => {
+    if (selected) {
+      return {
+        backgroundColor: activeColor,
+        color: activeTextColor,
+        borderColor: activeColor,
+      };
+    }
+    switch (variant) {
+      case "filled":
+        return {
+          backgroundColor: "var(--muted, #f3f4f6)",
+          color: "var(--muted-foreground, #374151)",
+          borderColor: "transparent",
+        };
+      case "outline":
+        return {
+          backgroundColor: "transparent",
+          color: "var(--foreground, #374151)",
+          borderColor: "var(--border, #d1d5db)",
+        };
+      case "subtle":
+        return {
+          backgroundColor: `color-mix(in srgb, ${chipColor} 10%, transparent)`,
+          color: chipColor,
+          borderColor: "transparent",
+        };
+      default:
+        return {};
+    }
+  };
+
+  return (
+    <button
+      id={id}
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={ariaLabel || label}
+      aria-pressed={selected}
+      className={`inline-flex items-center border transition-colors cursor-pointer select-none ${sizeClasses} ${roundedClass} ${disabled ? "opacity-50 cursor-not-allowed" : "hover:opacity-80"} ${className}`}
+      style={getStyles()}
+    >
+      {avatar && (
+        <img
+          src={avatar}
+          alt=""
+          className={`${avatarSize} rounded-full object-cover shrink-0`}
         />
       )}
-      {icon}
-      {text}
-    </span>
+      {label}
+      {onDelete && (
+        <span
+          role="button"
+          tabIndex={0}
+          aria-label={`Remove ${label}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              e.stopPropagation();
+              onDelete();
+            }
+          }}
+          className="inline-flex items-center justify-center w-4 h-4 rounded-full hover:opacity-70 cursor-pointer shrink-0"
+        >
+          ×
+        </span>
+      )}
+    </button>
+  );
+}
+
+// ============================================================================
+// BREADCRUMB - Navigation Trail
+// ============================================================================
+
+export interface BreadcrumbItem {
+  label: string;
+  href?: string;
+  iconName?: string;
+}
+
+export interface BreadcrumbProps {
+  items?: BreadcrumbItem[];
+
+  // Style
+  separator?: "/" | ">" | "→" | "•" | "chevron";
+  variant?: "default" | "contained" | "pills";
+  size?: "sm" | "md" | "lg";
+
+  // Colours
+  color?: string;
+  activeColor?: string;
+  hoverColor?: string;
+  separatorColor?: string;
+  backgroundColor?: string;
+
+  // Truncation
+  maxItems?: number;
+  showHome?: boolean;
+
+  // Accessibility
+  ariaLabel?: string;
+
+  id?: string;
+  className?: string;
+}
+
+export function BreadcrumbRender({
+  items = [],
+
+  separator = "chevron",
+  variant = "default",
+  size = "md",
+
+  color,
+  activeColor,
+  separatorColor,
+  backgroundColor,
+
+  maxItems,
+  showHome = false,
+
+  ariaLabel = "Breadcrumb navigation",
+
+  id,
+  className = "",
+}: BreadcrumbProps) {
+  const sizeClasses = {
+    sm: "text-xs",
+    md: "text-sm",
+    lg: "text-base",
+  }[size];
+
+  const defaultColor = color || "var(--muted-foreground, #6b7280)";
+  const currentColor = activeColor || "var(--foreground, #111827)";
+  const sepColor = separatorColor || "var(--muted-foreground, #9ca3af)";
+
+  const separatorContent = {
+    "/": "/",
+    ">": ">",
+    "→": "→",
+    "•": "•",
+    chevron: (
+      <svg
+        className={size === "sm" ? "w-3 h-3" : size === "lg" ? "w-5 h-5" : "w-4 h-4"}
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M9 5l7 7-7 7"
+        />
+      </svg>
+    ),
+  }[separator];
+
+  // Truncate items if maxItems is set
+  let displayItems = items;
+  if (maxItems && items.length > maxItems) {
+    const boundary = Math.floor(maxItems / 2);
+    const start = items.slice(0, boundary);
+    const end = items.slice(-boundary);
+    displayItems = [
+      ...start,
+      { label: "…", href: undefined },
+      ...end,
+    ];
+  }
+
+  const containerClasses =
+    variant === "contained"
+      ? "px-3 py-1.5 rounded-lg"
+      : variant === "pills"
+        ? "gap-1"
+        : "";
+
+  return (
+    <nav
+      id={id}
+      aria-label={ariaLabel}
+      className={`${sizeClasses} ${className}`}
+    >
+      <ol
+        className={`inline-flex items-center gap-1.5 ${containerClasses}`}
+        style={{
+          backgroundColor:
+            variant === "contained"
+              ? backgroundColor || "var(--muted, #f3f4f6)"
+              : undefined,
+        }}
+      >
+        {showHome && (
+          <>
+            <li>
+              <a
+                href="/"
+                className="inline-flex items-center hover:opacity-80 transition-opacity"
+                style={{ color: defaultColor }}
+                aria-label="Home"
+              >
+                <svg
+                  className={size === "sm" ? "w-3 h-3" : size === "lg" ? "w-5 h-5" : "w-4 h-4"}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"
+                  />
+                </svg>
+              </a>
+            </li>
+            {displayItems.length > 0 && (
+              <li
+                className="inline-flex items-center"
+                style={{ color: sepColor }}
+                aria-hidden="true"
+              >
+                {separatorContent}
+              </li>
+            )}
+          </>
+        )}
+        {displayItems.map((item, index) => {
+          const isLast = index === displayItems.length - 1;
+          const isEllipsis = item.label === "…";
+          const pillClasses =
+            variant === "pills"
+              ? "px-2 py-0.5 rounded-md hover:bg-black/5"
+              : "";
+
+          return (
+            <li key={index} className="inline-flex items-center gap-1.5">
+              {isEllipsis ? (
+                <span style={{ color: sepColor }}>…</span>
+              ) : isLast || !item.href ? (
+                <span
+                  className={`font-medium ${pillClasses}`}
+                  style={{ color: currentColor }}
+                  aria-current="page"
+                >
+                  {item.label}
+                </span>
+              ) : (
+                <a
+                  href={item.href}
+                  className={`hover:opacity-80 transition-opacity ${pillClasses}`}
+                  style={{ color: defaultColor }}
+                >
+                  {item.label}
+                </a>
+              )}
+              {!isLast && (
+                <span
+                  className="inline-flex items-center"
+                  style={{ color: sepColor }}
+                  aria-hidden="true"
+                >
+                  {separatorContent}
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
+  );
+}
+
+// ============================================================================
+// PAGINATION - Page Navigation
+// ============================================================================
+
+export interface PaginationProps {
+  currentPage?: number;
+  totalPages?: number;
+
+  // Style
+  variant?: "default" | "simple" | "minimal" | "dots";
+  size?: "sm" | "md" | "lg";
+  shape?: "rounded" | "circle" | "square";
+
+  // Colours
+  activeColor?: string;
+  activeTextColor?: string;
+  color?: string;
+  hoverColor?: string;
+
+  // Display
+  showFirstLast?: boolean;
+  showPrevNext?: boolean;
+  siblingsCount?: number;
+  boundaryCount?: number;
+
+  // Labels
+  prevLabel?: string;
+  nextLabel?: string;
+
+  // Callback
+  onPageChange?: (page: number) => void;
+
+  // Accessibility
+  ariaLabel?: string;
+
+  id?: string;
+  className?: string;
+}
+
+export function PaginationRender({
+  currentPage = 1,
+  totalPages = 1,
+
+  variant = "default",
+  size = "md",
+  shape = "rounded",
+
+  activeColor,
+  activeTextColor,
+  color,
+
+  showFirstLast = false,
+  showPrevNext = true,
+  siblingsCount = 1,
+  boundaryCount = 1,
+
+  prevLabel = "Previous",
+  nextLabel = "Next",
+
+  onPageChange,
+
+  ariaLabel = "Pagination",
+
+  id,
+  className = "",
+}: PaginationProps) {
+  const sizeClasses = {
+    sm: "h-8 min-w-8 text-xs px-2",
+    md: "h-10 min-w-10 text-sm px-3",
+    lg: "h-12 min-w-12 text-base px-4",
+  }[size];
+
+  const shapeClass = {
+    rounded: "rounded-md",
+    circle: "rounded-full",
+    square: "rounded-none",
+  }[shape];
+
+  const btnColor = color || "var(--muted-foreground, #6b7280)";
+  const acColor = activeColor || "var(--primary, #3b82f6)";
+  const acTextColor = activeTextColor || "#ffffff";
+
+  // Generate page numbers
+  const generatePages = (): (number | "...")[] => {
+    if (totalPages <= 1) return [1];
+
+    const pages: (number | "...")[] = [];
+    const left = Math.max(1, currentPage - siblingsCount);
+    const right = Math.min(totalPages, currentPage + siblingsCount);
+
+    // Boundary start
+    for (let i = 1; i <= Math.min(boundaryCount, totalPages); i++) {
+      if (!pages.includes(i)) pages.push(i);
+    }
+
+    // Ellipsis before siblings
+    if (left > boundaryCount + 1) {
+      pages.push("...");
+    } else {
+      for (let i = boundaryCount + 1; i < left; i++) {
+        if (!pages.includes(i)) pages.push(i);
+      }
+    }
+
+    // Sibling range
+    for (let i = left; i <= right; i++) {
+      if (!pages.includes(i)) pages.push(i);
+    }
+
+    // Ellipsis after siblings
+    if (right < totalPages - boundaryCount) {
+      pages.push("...");
+    } else {
+      for (let i = right + 1; i <= totalPages - boundaryCount; i++) {
+        if (!pages.includes(i)) pages.push(i);
+      }
+    }
+
+    // Boundary end
+    for (
+      let i = Math.max(1, totalPages - boundaryCount + 1);
+      i <= totalPages;
+      i++
+    ) {
+      if (!pages.includes(i)) pages.push(i);
+    }
+
+    return pages;
+  };
+
+  const pages = generatePages();
+
+  const handlePageClick = (page: number) => {
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+      onPageChange?.(page);
+    }
+  };
+
+  // Simple variant: just prev/next with page info
+  if (variant === "simple") {
+    return (
+      <nav id={id} aria-label={ariaLabel} className={className}>
+        <div className="inline-flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => handlePageClick(currentPage - 1)}
+            disabled={currentPage <= 1}
+            className={`${sizeClasses} ${shapeClass} inline-flex items-center justify-center border transition-opacity disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-80`}
+            style={{
+              color: btnColor,
+              borderColor: "var(--border, #e5e7eb)",
+            }}
+          >
+            {prevLabel}
+          </button>
+          <span
+            className="text-sm tabular-nums"
+            style={{ color: btnColor }}
+          >
+            {currentPage} / {totalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() => handlePageClick(currentPage + 1)}
+            disabled={currentPage >= totalPages}
+            className={`${sizeClasses} ${shapeClass} inline-flex items-center justify-center border transition-opacity disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-80`}
+            style={{
+              color: btnColor,
+              borderColor: "var(--border, #e5e7eb)",
+            }}
+          >
+            {nextLabel}
+          </button>
+        </div>
+      </nav>
+    );
+  }
+
+  // Minimal variant: just page numbers
+  if (variant === "minimal") {
+    return (
+      <nav id={id} aria-label={ariaLabel} className={className}>
+        <div className="inline-flex items-center gap-1">
+          {pages.map((page, idx) =>
+            page === "..." ? (
+              <span key={`e-${idx}`} className="px-1" style={{ color: btnColor }}>
+                …
+              </span>
+            ) : (
+              <button
+                key={page}
+                type="button"
+                onClick={() => handlePageClick(page)}
+                aria-current={page === currentPage ? "page" : undefined}
+                className={`${sizeClasses} inline-flex items-center justify-center transition-opacity hover:opacity-80`}
+                style={{
+                  color: page === currentPage ? acColor : btnColor,
+                  fontWeight: page === currentPage ? 600 : 400,
+                }}
+              >
+                {page}
+              </button>
+            ),
+          )}
+        </div>
+      </nav>
+    );
+  }
+
+  // Dots variant
+  if (variant === "dots") {
+    return (
+      <nav id={id} aria-label={ariaLabel} className={className}>
+        <div className="inline-flex items-center gap-2">
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+            (page) => (
+              <button
+                key={page}
+                type="button"
+                onClick={() => handlePageClick(page)}
+                aria-label={`Page ${page}`}
+                aria-current={page === currentPage ? "page" : undefined}
+                className={`${page === currentPage ? "w-3 h-3" : "w-2 h-2"} rounded-full transition-all hover:opacity-80`}
+                style={{
+                  backgroundColor:
+                    page === currentPage
+                      ? acColor
+                      : "var(--border, #d1d5db)",
+                }}
+              />
+            ),
+          )}
+        </div>
+      </nav>
+    );
+  }
+
+  // Default variant: full pagination
+  const chevronLeft = (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+    </svg>
+  );
+  const chevronRight = (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+    </svg>
+  );
+  const chevronsLeft = (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+    </svg>
+  );
+  const chevronsRight = (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+    </svg>
+  );
+
+  return (
+    <nav id={id} aria-label={ariaLabel} className={className}>
+      <div className="inline-flex items-center gap-1">
+        {showFirstLast && (
+          <button
+            type="button"
+            onClick={() => handlePageClick(1)}
+            disabled={currentPage <= 1}
+            aria-label="First page"
+            className={`${sizeClasses} ${shapeClass} inline-flex items-center justify-center transition-opacity disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-80`}
+            style={{ color: btnColor }}
+          >
+            {chevronsLeft}
+          </button>
+        )}
+        {showPrevNext && (
+          <button
+            type="button"
+            onClick={() => handlePageClick(currentPage - 1)}
+            disabled={currentPage <= 1}
+            aria-label="Previous page"
+            className={`${sizeClasses} ${shapeClass} inline-flex items-center justify-center transition-opacity disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-80`}
+            style={{ color: btnColor }}
+          >
+            {chevronLeft}
+          </button>
+        )}
+        {pages.map((page, idx) =>
+          page === "..." ? (
+            <span
+              key={`e-${idx}`}
+              className={`${sizeClasses} inline-flex items-center justify-center`}
+              style={{ color: btnColor }}
+            >
+              …
+            </span>
+          ) : (
+            <button
+              key={page}
+              type="button"
+              onClick={() => handlePageClick(page)}
+              aria-current={page === currentPage ? "page" : undefined}
+              className={`${sizeClasses} ${shapeClass} inline-flex items-center justify-center transition-all hover:opacity-80`}
+              style={{
+                backgroundColor:
+                  page === currentPage ? acColor : "transparent",
+                color: page === currentPage ? acTextColor : btnColor,
+                fontWeight: page === currentPage ? 600 : 400,
+              }}
+            >
+              {page}
+            </button>
+          ),
+        )}
+        {showPrevNext && (
+          <button
+            type="button"
+            onClick={() => handlePageClick(currentPage + 1)}
+            disabled={currentPage >= totalPages}
+            aria-label="Next page"
+            className={`${sizeClasses} ${shapeClass} inline-flex items-center justify-center transition-opacity disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-80`}
+            style={{ color: btnColor }}
+          >
+            {chevronRight}
+          </button>
+        )}
+        {showFirstLast && (
+          <button
+            type="button"
+            onClick={() => handlePageClick(totalPages)}
+            disabled={currentPage >= totalPages}
+            aria-label="Last page"
+            className={`${sizeClasses} ${shapeClass} inline-flex items-center justify-center transition-opacity disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-80`}
+            style={{ color: btnColor }}
+          >
+            {chevronsRight}
+          </button>
+        )}
+      </div>
+    </nav>
   );
 }
 

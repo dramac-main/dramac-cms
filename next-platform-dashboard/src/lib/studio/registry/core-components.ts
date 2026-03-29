@@ -47,6 +47,8 @@ import {
   GalleryRender,
   // Navigation
   SocialLinksRender,
+  LinkRender,
+  BreadcrumbRender,
   // Forms
   FormRender,
   FormFieldRender,
@@ -73,6 +75,9 @@ import {
   ModalRender,
   // UI Elements
   BadgeRender,
+  ChipRender,
+  ButtonGroupRender,
+  PaginationRender,
   AvatarRender,
   ProgressRender,
   AlertRender,
@@ -1676,6 +1681,12 @@ const buttonComponents: ComponentDefinition[] = [
       // Content
       label: { type: "text", label: "Button Text", defaultValue: "Click Me" },
       iconEmoji: { type: "text", label: "Icon (emoji)" },
+      iconName: {
+        type: "text",
+        label: "Icon Name",
+        description:
+          "Lucide icon name (e.g., arrow-right, check, download, shopping-cart)",
+      },
       iconPosition: {
         type: "select",
         label: "Icon Position",
@@ -1723,6 +1734,7 @@ const buttonComponents: ComponentDefinition[] = [
           { label: "Success", value: "success" },
           { label: "Warning", value: "warning" },
           { label: "Gradient", value: "gradient" },
+          { label: "Ring", value: "ring" },
         ],
         defaultValue: "primary",
       },
@@ -1953,7 +1965,7 @@ const buttonComponents: ComponentDefinition[] = [
         id: "content",
         label: "Content",
         icon: "type",
-        fields: ["label", "iconEmoji", "iconPosition"],
+        fields: ["label", "iconEmoji", "iconName", "iconPosition"],
         defaultExpanded: true,
       },
       {
@@ -2082,10 +2094,108 @@ const buttonComponents: ComponentDefinition[] = [
         "label",
         "variant",
         "size",
+        "iconName",
         "backgroundColor",
         "textColor",
         "hoverEffect",
       ],
+    },
+  }),
+
+  // =========================================================================
+  // BUTTON GROUP - Connected Button Container
+  // =========================================================================
+  defineComponent({
+    type: "ButtonGroup",
+    label: "Button Group",
+    description:
+      "Container for adjacent buttons with shared radius and connected/separated/toggle variants",
+    category: "buttons",
+    icon: "Columns",
+    render: ButtonGroupRender,
+    acceptsChildren: true,
+    fields: {
+      direction: {
+        type: "select",
+        label: "Direction",
+        options: [
+          { label: "Horizontal", value: "horizontal" },
+          { label: "Vertical", value: "vertical" },
+        ],
+        defaultValue: "horizontal",
+      },
+      variant: {
+        type: "select",
+        label: "Variant",
+        options: [
+          { label: "Connected", value: "connected" },
+          { label: "Separated", value: "separated" },
+          { label: "Toggle", value: "toggle" },
+        ],
+        defaultValue: "separated",
+      },
+      size: {
+        type: "select",
+        label: "Size",
+        options: presetOptions.buttonSize,
+        defaultValue: "md",
+      },
+      gap: {
+        type: "select",
+        label: "Gap",
+        options: [
+          { label: "None", value: "none" },
+          { label: "Extra Small", value: "xs" },
+          { label: "Small", value: "sm" },
+          { label: "Medium", value: "md" },
+          { label: "Large", value: "lg" },
+        ],
+        defaultValue: "sm",
+      },
+      fullWidth: { type: "toggle", label: "Full Width", defaultValue: false },
+      borderRadius: {
+        type: "select",
+        label: "Border Radius",
+        options: presetOptions.borderRadius,
+        defaultValue: "md",
+      },
+      ariaLabel: { type: "text", label: "Aria Label" },
+    },
+    fieldGroups: [
+      {
+        id: "layout",
+        label: "Layout",
+        icon: "layout",
+        fields: ["direction", "variant", "gap", "fullWidth"],
+        defaultExpanded: true,
+      },
+      {
+        id: "style",
+        label: "Style",
+        icon: "palette",
+        fields: ["size", "borderRadius"],
+        defaultExpanded: false,
+      },
+      {
+        id: "accessibility",
+        label: "Accessibility",
+        icon: "eye",
+        fields: ["ariaLabel"],
+        defaultExpanded: false,
+      },
+    ],
+    defaultProps: {
+      direction: "horizontal",
+      variant: "separated",
+      size: "md",
+      gap: "sm",
+      fullWidth: false,
+      borderRadius: "md",
+    },
+    ai: {
+      description:
+        "Container for grouping adjacent buttons with connected, separated, or toggle variants",
+      canModify: ["direction", "variant", "size", "gap", "fullWidth"],
     },
   }),
 ];
@@ -11744,7 +11854,8 @@ const navigationComponents: ComponentDefinition[] = [
   defineComponent({
     type: "SocialLinks",
     label: "Social Links",
-    description: "Social media icon links",
+    description:
+      "Social media icon links for 15 platforms with brand colours, multiple variants, and hover effects",
     category: "navigation",
     icon: "Share2",
     render: SocialLinksRender,
@@ -11758,15 +11869,36 @@ const navigationComponents: ComponentDefinition[] = [
             label: "Platform",
             options: [
               { label: "Facebook", value: "facebook" },
-              { label: "Twitter", value: "twitter" },
+              { label: "X (Twitter)", value: "x" },
+              { label: "Twitter (legacy)", value: "twitter" },
               { label: "Instagram", value: "instagram" },
               { label: "LinkedIn", value: "linkedin" },
               { label: "YouTube", value: "youtube" },
               { label: "TikTok", value: "tiktok" },
+              { label: "GitHub", value: "github" },
+              { label: "Pinterest", value: "pinterest" },
+              { label: "WhatsApp", value: "whatsapp" },
+              { label: "Telegram", value: "telegram" },
+              { label: "Discord", value: "discord" },
+              { label: "Threads", value: "threads" },
+              { label: "Snapchat", value: "snapchat" },
+              { label: "Reddit", value: "reddit" },
             ],
           },
           url: { type: "link", label: "URL" },
         },
+      },
+      variant: {
+        type: "select",
+        label: "Variant",
+        options: [
+          { label: "Icons Only", value: "icons" },
+          { label: "Buttons", value: "buttons" },
+          { label: "Rounded", value: "rounded" },
+          { label: "Pill", value: "pill" },
+          { label: "Text", value: "text" },
+        ],
+        defaultValue: "icons",
       },
       size: {
         type: "select",
@@ -11774,22 +11906,384 @@ const navigationComponents: ComponentDefinition[] = [
         options: presetOptions.buttonSize,
         defaultValue: "md",
       },
+      useBrandColors: {
+        type: "toggle",
+        label: "Use Brand Colours",
+        defaultValue: false,
+      },
       color: { type: "color", label: "Icon Color" },
+      backgroundColor: { type: "color", label: "Background Color" },
+      alignment: {
+        type: "select",
+        label: "Alignment",
+        options: [
+          { label: "Left", value: "left" },
+          { label: "Center", value: "center" },
+          { label: "Right", value: "right" },
+        ],
+        defaultValue: "center",
+      },
+      direction: {
+        type: "select",
+        label: "Direction",
+        options: [
+          { label: "Horizontal", value: "horizontal" },
+          { label: "Vertical", value: "vertical" },
+        ],
+        defaultValue: "horizontal",
+      },
+      gap: {
+        type: "select",
+        label: "Gap",
+        options: [
+          { label: "Extra Small", value: "xs" },
+          { label: "Small", value: "sm" },
+          { label: "Medium", value: "md" },
+          { label: "Large", value: "lg" },
+        ],
+        defaultValue: "md",
+      },
+      hoverEffect: {
+        type: "select",
+        label: "Hover Effect",
+        options: [
+          { label: "None", value: "none" },
+          { label: "Lift", value: "lift" },
+          { label: "Scale", value: "scale" },
+          { label: "Glow", value: "glow" },
+          { label: "Bounce", value: "bounce" },
+        ],
+        defaultValue: "lift",
+      },
+      showLabels: { type: "toggle", label: "Show Labels", defaultValue: false },
+      ariaLabel: { type: "text", label: "Aria Label" },
     },
+    fieldGroups: [
+      {
+        id: "links",
+        label: "Links",
+        icon: "link",
+        fields: ["links"],
+        defaultExpanded: true,
+      },
+      {
+        id: "style",
+        label: "Style",
+        icon: "palette",
+        fields: ["variant", "size", "useBrandColors"],
+        defaultExpanded: true,
+      },
+      {
+        id: "colors",
+        label: "Colors",
+        icon: "droplet",
+        fields: ["color", "backgroundColor"],
+        defaultExpanded: false,
+      },
+      {
+        id: "layout",
+        label: "Layout",
+        icon: "layout",
+        fields: ["alignment", "direction", "gap"],
+        defaultExpanded: false,
+      },
+      {
+        id: "effects",
+        label: "Effects",
+        icon: "zap",
+        fields: ["hoverEffect", "showLabels"],
+        defaultExpanded: false,
+      },
+      {
+        id: "accessibility",
+        label: "Accessibility",
+        icon: "eye",
+        fields: ["ariaLabel"],
+        defaultExpanded: false,
+      },
+    ],
     defaultProps: {
       links: [],
+      variant: "icons",
       size: "md",
+      useBrandColors: false,
+      alignment: "center",
+      direction: "horizontal",
+      gap: "md",
+      hoverEffect: "lift",
     },
     ai: {
-      description: "Social media icon links",
-      canModify: ["links", "size", "color"],
+      description:
+        "Social media icon links for 15 platforms with brand-accurate colours and multiple display variants",
+      canModify: [
+        "links",
+        "variant",
+        "size",
+        "useBrandColors",
+        "color",
+        "alignment",
+        "hoverEffect",
+      ],
+    },
+  }),
+
+  // =========================================================================
+  // LINK - Inline Text Link
+  // =========================================================================
+  defineComponent({
+    type: "Link",
+    label: "Link",
+    description:
+      "Inline text link with animated underline variants for paragraphs and navigation",
+    category: "navigation",
+    icon: "Link",
+    render: LinkRender,
+    fields: {
+      text: {
+        type: "text",
+        label: "Link Text",
+        defaultValue: "Click here",
+      },
+      href: { type: "link", label: "URL" },
+      target: {
+        type: "select",
+        label: "Target",
+        options: [
+          { label: "Same Window", value: "_self" },
+          { label: "New Tab", value: "_blank" },
+        ],
+        defaultValue: "_self",
+      },
+      variant: {
+        type: "select",
+        label: "Variant",
+        options: [
+          { label: "Default", value: "default" },
+          { label: "Underline", value: "underline" },
+          { label: "Subtle", value: "subtle" },
+          { label: "Nav", value: "nav" },
+          { label: "Button", value: "button" },
+          { label: "Muted", value: "muted" },
+        ],
+        defaultValue: "default",
+      },
+      color: { type: "color", label: "Color" },
+      fontSize: {
+        type: "select",
+        label: "Font Size",
+        options: [
+          { label: "Small", value: "sm" },
+          { label: "Base", value: "base" },
+          { label: "Large", value: "lg" },
+          { label: "Extra Large", value: "xl" },
+        ],
+        defaultValue: "base",
+      },
+      fontWeight: {
+        type: "select",
+        label: "Font Weight",
+        options: [
+          { label: "Normal", value: "normal" },
+          { label: "Medium", value: "medium" },
+          { label: "Semibold", value: "semibold" },
+          { label: "Bold", value: "bold" },
+        ],
+        defaultValue: "medium",
+      },
+      underlineAnimation: {
+        type: "select",
+        label: "Underline Animation",
+        options: [
+          { label: "None", value: "none" },
+          { label: "Slide", value: "slide" },
+          { label: "Fade", value: "fade" },
+          { label: "Expand", value: "expand" },
+        ],
+        defaultValue: "slide",
+      },
+      showExternalIcon: {
+        type: "toggle",
+        label: "Show External Icon",
+        defaultValue: true,
+      },
+      ariaLabel: { type: "text", label: "Aria Label" },
+    },
+    fieldGroups: [
+      {
+        id: "content",
+        label: "Content",
+        icon: "type",
+        fields: ["text", "href", "target"],
+        defaultExpanded: true,
+      },
+      {
+        id: "style",
+        label: "Style",
+        icon: "palette",
+        fields: ["variant", "color", "fontSize", "fontWeight"],
+        defaultExpanded: true,
+      },
+      {
+        id: "effects",
+        label: "Effects",
+        icon: "zap",
+        fields: ["underlineAnimation", "showExternalIcon"],
+        defaultExpanded: false,
+      },
+      {
+        id: "accessibility",
+        label: "Accessibility",
+        icon: "eye",
+        fields: ["ariaLabel"],
+        defaultExpanded: false,
+      },
+    ],
+    defaultProps: {
+      text: "Click here",
+      variant: "default",
+      fontSize: "base",
+      fontWeight: "medium",
+      target: "_self",
+      underlineAnimation: "slide",
+      showExternalIcon: true,
+    },
+    ai: {
+      description:
+        "Inline text link with animated underline variants for paragraphs and navigation",
+      canModify: ["text", "href", "variant", "color", "fontSize"],
+    },
+  }),
+
+  // =========================================================================
+  // BREADCRUMB - Navigation Breadcrumb Trail
+  // =========================================================================
+  defineComponent({
+    type: "Breadcrumb",
+    label: "Breadcrumb",
+    description:
+      "Page navigation breadcrumb trail with separator options and truncation",
+    category: "navigation",
+    icon: "ChevronRight",
+    render: BreadcrumbRender,
+    fields: {
+      items: {
+        type: "array",
+        label: "Breadcrumb Items",
+        itemFields: {
+          label: { type: "text", label: "Label" },
+          href: { type: "link", label: "URL" },
+        },
+      },
+      separator: {
+        type: "select",
+        label: "Separator",
+        options: [
+          { label: "Chevron (>)", value: "chevron" },
+          { label: "Slash (/)", value: "slash" },
+          { label: "Arrow (→)", value: "arrow" },
+          { label: "Dot (·)", value: "dot" },
+        ],
+        defaultValue: "chevron",
+      },
+      variant: {
+        type: "select",
+        label: "Variant",
+        options: [
+          { label: "Default", value: "default" },
+          { label: "Contained", value: "contained" },
+          { label: "Pills", value: "pills" },
+        ],
+        defaultValue: "default",
+      },
+      size: {
+        type: "select",
+        label: "Size",
+        options: [
+          { label: "Small", value: "sm" },
+          { label: "Medium", value: "md" },
+          { label: "Large", value: "lg" },
+        ],
+        defaultValue: "md",
+      },
+      maxItems: {
+        type: "select",
+        label: "Max Items (truncate)",
+        options: [
+          { label: "No Limit", value: "0" },
+          { label: "3", value: "3" },
+          { label: "5", value: "5" },
+          { label: "7", value: "7" },
+        ],
+        defaultValue: "0",
+      },
+      showHome: {
+        type: "toggle",
+        label: "Show Home Icon",
+        defaultValue: true,
+      },
+      color: { type: "color", label: "Text Color" },
+      activeColor: { type: "color", label: "Active Color" },
+      ariaLabel: {
+        type: "text",
+        label: "Aria Label",
+        defaultValue: "Breadcrumb",
+      },
+    },
+    fieldGroups: [
+      {
+        id: "items",
+        label: "Items",
+        icon: "list",
+        fields: ["items"],
+        defaultExpanded: true,
+      },
+      {
+        id: "style",
+        label: "Style",
+        icon: "palette",
+        fields: ["variant", "size", "separator"],
+        defaultExpanded: true,
+      },
+      {
+        id: "display",
+        label: "Display",
+        icon: "layout",
+        fields: ["maxItems", "showHome"],
+        defaultExpanded: false,
+      },
+      {
+        id: "colors",
+        label: "Colors",
+        icon: "droplet",
+        fields: ["color", "activeColor"],
+        defaultExpanded: false,
+      },
+      {
+        id: "accessibility",
+        label: "Accessibility",
+        icon: "eye",
+        fields: ["ariaLabel"],
+        defaultExpanded: false,
+      },
+    ],
+    defaultProps: {
+      items: [
+        { label: "Home", href: "/" },
+        { label: "Products", href: "/products" },
+        { label: "Current Page", href: "" },
+      ],
+      separator: "chevron",
+      variant: "default",
+      size: "md",
+      showHome: true,
+    },
+    ai: {
+      description:
+        "Page navigation breadcrumb trail with separator options and truncation",
+      canModify: ["items", "separator", "variant", "size", "showHome"],
     },
   }),
 ];
-
-// =============================================================================
-// FORM COMPONENTS - Premium Form Components with 40-50+ Properties
-// =============================================================================
 
 const formComponents: ComponentDefinition[] = [
   defineComponent({
@@ -17124,6 +17618,142 @@ const interactiveComponents: ComponentDefinition[] = [
       ],
     },
   }),
+
+  // =========================================================================
+  // PAGINATION - Page Navigation
+  // =========================================================================
+  defineComponent({
+    type: "Pagination",
+    label: "Pagination",
+    description:
+      "Page navigation for lists, galleries, and search results with multiple variants",
+    category: "interactive",
+    icon: "ChevronsLeftRight",
+    render: PaginationRender,
+    fields: {
+      currentPage: {
+        type: "select",
+        label: "Current Page",
+        options: [
+          { label: "1", value: "1" },
+          { label: "2", value: "2" },
+          { label: "3", value: "3" },
+          { label: "5", value: "5" },
+          { label: "10", value: "10" },
+        ],
+        defaultValue: "1",
+      },
+      totalPages: {
+        type: "select",
+        label: "Total Pages",
+        options: [
+          { label: "5", value: "5" },
+          { label: "10", value: "10" },
+          { label: "20", value: "20" },
+          { label: "50", value: "50" },
+          { label: "100", value: "100" },
+        ],
+        defaultValue: "10",
+      },
+      variant: {
+        type: "select",
+        label: "Variant",
+        options: [
+          { label: "Default", value: "default" },
+          { label: "Simple", value: "simple" },
+          { label: "Compact", value: "compact" },
+          { label: "Minimal", value: "minimal" },
+        ],
+        defaultValue: "default",
+      },
+      size: {
+        type: "select",
+        label: "Size",
+        options: [
+          { label: "Small", value: "sm" },
+          { label: "Medium", value: "md" },
+          { label: "Large", value: "lg" },
+        ],
+        defaultValue: "md",
+      },
+      activeColor: { type: "color", label: "Active Page Color" },
+      showFirstLast: {
+        type: "toggle",
+        label: "Show First/Last",
+        defaultValue: true,
+      },
+      showPrevNext: {
+        type: "toggle",
+        label: "Show Prev/Next",
+        defaultValue: true,
+      },
+      siblingsCount: {
+        type: "select",
+        label: "Visible Siblings",
+        options: [
+          { label: "1", value: "1" },
+          { label: "2", value: "2" },
+          { label: "3", value: "3" },
+        ],
+        defaultValue: "1",
+      },
+      ariaLabel: {
+        type: "text",
+        label: "Aria Label",
+        defaultValue: "Pagination",
+      },
+    },
+    fieldGroups: [
+      {
+        id: "pages",
+        label: "Pages",
+        icon: "file",
+        fields: ["currentPage", "totalPages"],
+        defaultExpanded: true,
+      },
+      {
+        id: "style",
+        label: "Style",
+        icon: "palette",
+        fields: ["variant", "size", "activeColor"],
+        defaultExpanded: true,
+      },
+      {
+        id: "display",
+        label: "Display",
+        icon: "layout",
+        fields: ["showFirstLast", "showPrevNext", "siblingsCount"],
+        defaultExpanded: false,
+      },
+      {
+        id: "accessibility",
+        label: "Accessibility",
+        icon: "eye",
+        fields: ["ariaLabel"],
+        defaultExpanded: false,
+      },
+    ],
+    defaultProps: {
+      currentPage: 1,
+      totalPages: 10,
+      variant: "default",
+      size: "md",
+      showFirstLast: true,
+      showPrevNext: true,
+      siblingsCount: 1,
+    },
+    ai: {
+      description:
+        "Page navigation for lists, galleries, and search results with multiple variants",
+      canModify: [
+        "currentPage",
+        "totalPages",
+        "variant",
+        "size",
+        "activeColor",
+      ],
+    },
+  }),
 ];
 
 // =============================================================================
@@ -17582,6 +18212,108 @@ const uiComponents: ComponentDefinition[] = [
         "Make removable",
         "Enable pulse animation",
       ],
+    },
+  }),
+
+  // =========================================================================
+  // CHIP - Interactive Selectable Tag
+  // =========================================================================
+  defineComponent({
+    type: "Chip",
+    label: "Chip",
+    description:
+      "Interactive selectable tag for filters, categories, and multi-choice inputs",
+    category: "content",
+    icon: "Tag",
+    render: ChipRender,
+    fields: {
+      label: { type: "text", label: "Label", defaultValue: "Chip" },
+      variant: {
+        type: "select",
+        label: "Variant",
+        options: [
+          { label: "Filled", value: "filled" },
+          { label: "Outline", value: "outline" },
+          { label: "Subtle", value: "subtle" },
+        ],
+        defaultValue: "filled",
+      },
+      size: {
+        type: "select",
+        label: "Size",
+        options: [
+          { label: "Small", value: "sm" },
+          { label: "Medium", value: "md" },
+          { label: "Large", value: "lg" },
+        ],
+        defaultValue: "md",
+      },
+      color: { type: "color", label: "Color" },
+      selected: {
+        type: "toggle",
+        label: "Selected",
+        defaultValue: false,
+      },
+      disabled: {
+        type: "toggle",
+        label: "Disabled",
+        defaultValue: false,
+      },
+      rounded: {
+        type: "toggle",
+        label: "Fully Rounded",
+        defaultValue: true,
+      },
+      avatar: { type: "text", label: "Avatar (emoji or URL)" },
+      removable: {
+        type: "toggle",
+        label: "Removable",
+        defaultValue: false,
+      },
+      ariaLabel: { type: "text", label: "Aria Label" },
+    },
+    fieldGroups: [
+      {
+        id: "content",
+        label: "Content",
+        icon: "type",
+        fields: ["label", "avatar"],
+        defaultExpanded: true,
+      },
+      {
+        id: "style",
+        label: "Style",
+        icon: "palette",
+        fields: ["variant", "size", "color", "rounded"],
+        defaultExpanded: true,
+      },
+      {
+        id: "state",
+        label: "State",
+        icon: "toggle-left",
+        fields: ["selected", "disabled", "removable"],
+        defaultExpanded: false,
+      },
+      {
+        id: "accessibility",
+        label: "Accessibility",
+        icon: "eye",
+        fields: ["ariaLabel"],
+        defaultExpanded: false,
+      },
+    ],
+    defaultProps: {
+      label: "Chip",
+      variant: "filled",
+      size: "md",
+      selected: false,
+      disabled: false,
+      rounded: true,
+    },
+    ai: {
+      description:
+        "Interactive selectable tag for filters, categories, and multi-choice inputs",
+      canModify: ["label", "variant", "size", "color", "selected"],
     },
   }),
 

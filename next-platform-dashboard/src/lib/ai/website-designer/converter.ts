@@ -566,6 +566,26 @@ function convertComponentToStudio(
     CounterStat: "StatNumber",
     Form: "Form",
     Badge: "Badge",
+    // New button/nav components
+    Link: "Link",
+    TextLink: "Link",
+    InlineLink: "Link",
+    NavLink: "Link",
+    ButtonGroup: "ButtonGroup",
+    ButtonRow: "ButtonGroup",
+    ActionBar: "ButtonGroup",
+    Chip: "Chip",
+    FilterChip: "Chip",
+    Tag: "Chip",
+    SelectableTag: "Chip",
+    NavBreadcrumb: "Breadcrumb",
+    BreadcrumbTrail: "Breadcrumb",
+    BreadcrumbNav: "Breadcrumb",
+    PageBreadcrumb: "Breadcrumb",
+    Pagination: "Pagination",
+    Pager: "Pagination",
+    PageNav: "Pagination",
+    PageNumbers: "Pagination",
     Typewriter: "Typewriter",
     TypewriterText: "Typewriter",
     TypingEffect: "Typewriter",
@@ -797,6 +817,11 @@ function convertComponentToStudio(
     "EcommerceReviewList",
     "ProductDetailBlock",
     "CategoryHeroBlock",
+    "Link",
+    "ButtonGroup",
+    "Chip",
+    "Breadcrumb",
+    "Pagination",
   ]);
 
   if (!KNOWN_REGISTRY_TYPES.has(resolvedType)) {
@@ -2087,6 +2112,101 @@ function transformPropsForStudio(
       authorImage: props.authorImage || props.avatar || props.image || "",
       // CRITICAL: Render expects 'variant' NOT 'style'
       variant: props.variant || props.style || "bordered",
+    };
+  }
+
+  // Link
+  if (type === "Link") {
+    return {
+      ...props,
+      text: props.text || props.label || props.linkText || props.content || "Link",
+      href: fixLink(String(props.href || props.url || props.link || ""), String(props.text || props.label || "Link")),
+      target: props.target || "_self",
+      variant: props.variant || props.style || "default",
+      color: props.color || props.textColor || undefined,
+      fontSize: props.fontSize || undefined,
+      fontWeight: props.fontWeight || undefined,
+      underlineAnimation: props.underlineAnimation || "slide",
+      showExternalIcon: props.showExternalIcon ?? (props.target === "_blank"),
+      iconName: props.iconName || props.icon || undefined,
+      iconPosition: props.iconPosition || "left",
+    };
+  }
+
+  // ButtonGroup
+  if (type === "ButtonGroup") {
+    return {
+      ...props,
+      direction: props.direction || props.layout || props.orientation || "horizontal",
+      variant: props.variant || props.style || "separated",
+      size: props.size || "md",
+      gap: props.gap || props.spacing || "sm",
+      fullWidth: props.fullWidth || false,
+      borderRadius: props.borderRadius || "md",
+    };
+  }
+
+  // Chip
+  if (type === "Chip") {
+    return {
+      ...props,
+      label: props.label || props.text || props.content || "Chip",
+      variant: props.variant || props.style || "filled",
+      size: props.size || "md",
+      color: props.color || props.chipColor || undefined,
+      selected: props.selected || false,
+      disabled: props.disabled || false,
+      rounded: props.rounded ?? "full",
+      avatar: props.avatar || props.image || props.icon || undefined,
+      selectedColor: props.selectedColor || props.activeColor || undefined,
+      selectedTextColor: props.selectedTextColor || props.activeTextColor || undefined,
+    };
+  }
+
+  // Breadcrumb (navigation, not ecommerce)
+  if (type === "Breadcrumb") {
+    const rawItems = props.items || props.links || props.breadcrumbs || [];
+    const separatorMap: Record<string, string> = {
+      slash: "/", chevron: "chevron", arrow: "→", dot: "•", gt: ">",
+    };
+    const rawSep = String(props.separator || "/");
+    return {
+      ...props,
+      items: Array.isArray(rawItems)
+        ? rawItems.map((item: Record<string, unknown>) => ({
+            label: item.label || item.text || item.name || "",
+            href: item.href || item.url || item.link || undefined,
+            iconName: item.iconName || item.icon || undefined,
+          }))
+        : [],
+      separator: separatorMap[rawSep] || rawSep,
+      variant: props.variant || props.style || "default",
+      size: props.size || "md",
+      color: props.color || props.textColor || undefined,
+      activeColor: props.activeColor || undefined,
+      separatorColor: props.separatorColor || undefined,
+      backgroundColor: props.backgroundColor || undefined,
+      maxItems: props.maxItems ? Number(props.maxItems) : undefined,
+      showHome: props.showHome ?? true,
+    };
+  }
+
+  // Pagination
+  if (type === "Pagination") {
+    return {
+      ...props,
+      currentPage: Number(props.currentPage || props.page || 1),
+      totalPages: Number(props.totalPages || props.pages || props.pageCount || 10),
+      variant: props.variant || props.style || "default",
+      size: props.size || "md",
+      shape: props.shape || "rounded",
+      activeColor: props.activeColor || props.accentColor || undefined,
+      activeTextColor: props.activeTextColor || undefined,
+      color: props.color || props.textColor || undefined,
+      hoverColor: props.hoverColor || undefined,
+      showFirstLast: props.showFirstLast !== false,
+      showPrevNext: props.showPrevNext !== false,
+      siblingsCount: Number(props.siblingsCount || props.siblings || 1),
     };
   }
 

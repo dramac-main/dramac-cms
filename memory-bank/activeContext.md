@@ -1,53 +1,47 @@
 # Active Context
 
-## Current Focus: Typography Components Overhaul — COMPLETE ✅
+## Current Focus: Button Components Master Plan — Phases 1-5 COMPLETE ✅
 
-### Status: All 18 tasks completed — 4 existing components overhauled, 5 new components created, full pipeline alignment
+### Status: All render changes, registrations, converter mappings, and TypeScript verification done
 
 ### What Was Done
 
-**Foundation (Tasks 1-2):**
-- Added `generateFluidTypeScale()`, `generateTypographyCSSVars()`, `getAutoLineHeight()`, `getAutoLetterSpacing()` to typography-intelligence.ts
-- Injected CSS variables (`--type-*`, `--leading-*`, `--tracking-*`, `--font-heading/body/mono`, `--rhythm`) into renderer.tsx
-- Added Google Fonts preconnect hints, expanded font weight range to 100-900
+**Phase 1 (prior session) — Critical Color Fixes:**
+- ButtonRender: destructive/success/warning variants → CSS variables, ring variant added, aria-busy/aria-disabled
+- BadgeRender: all 6 variants → CSS variables with color-mix()
+- Tooltip: hardcoded bg-gray-900 → CSS variable
 
-**4 Existing Component Overhauls (Tasks 3-6):**
+**Phase 2 (prior session) — 5 New Components in renders.tsx:**
+- LinkRender (6 variants: default/underline/subtle/nav/button/muted)
+- ButtonGroupRender (connected/separated/toggle)
+- ChipRender (filled/outline/subtle with selected/disabled states)
+- BreadcrumbRender (chevron/slash/arrow/dot separators, truncation)
+- PaginationRender (default/simple/compact/minimal)
 
-| Component | Key Changes |
-|-----------|------------|
-| HeadingRender | CSS var defaults per level, HEADING_DEFAULTS table, gradient text, fontStyle/textShadow/textDecoration/textWrap/maxWidth props |
-| TextRender | CSS var fonts, React.createElement (replaced switch), dropCap/columns/textWrap/hyphens/truncate props |
-| RichTextRender | Removed hardcoded #1c2b2a + opacity:0.85, upgraded markdownToHtml (headings/links/code/ordered lists/hr), titleLevel/titleFontFamily/bodyFontFamily/titleFontSize |
-| QuoteRender | Removed hardcoded #374151/#ffffff, added modern/pullquote/testimonial variants, fontFamily/fontStyle props |
+**Phase 3 — SocialLinks V2 Overhaul (renders.tsx):**
+- Replaced entire SocialLinksRender with V2: 15-platform SOCIAL_PLATFORMS map with SVG paths & brand colors
+- Props: variant/useBrandColors/alignment/direction/hoverEffect/showLabels
+- 5 variants: icons/buttons/rounded/pill/text
+- Proper role="list"/role="listitem" accessibility
 
-**5 New Components (Tasks 7-11):**
+**Phase 4.1 — Icon System (renders.tsx):**
+- 22 Lucide icon imports + BUTTON_ICONS map (20 entries)
+- iconName prop added to ButtonProps, renderIcon resolves from map
 
-| Component | Purpose | Variants |
-|-----------|---------|----------|
-| LabelRender | Tags, badges, overlines | default, badge, overline, tag, pill, outline, subtle |
-| ListRender | Styled lists | bullet, numbered, check, arrow, dash, icon, none |
-| DisplayTextRender | Hero text (4xl-9xl) | gradient support, textWrap balance |
-| DividerTextRender | Section separators | line-sides, line-through, dots, gradient, ornament |
-| StatNumberRender | Metrics display | stacked/inline layout, tabular-nums |
+**Phase 4.2-4.6 — CTA Refactoring: SKIPPED (too risky)**
 
-**Registry Fixes (Tasks 12-15):**
-- Heading: `alignment`→`align`, added 15+ new fields (fontFamily, fontSize, fontWeight, lineHeight, letterSpacing, textTransform, fontStyle, textDecoration, gradient*, textShadow, textWrap, maxWidth), field groups
-- Quote: `source`→`authorTitle`, `style`→`variant`, variants expanded to 6, added authorImage/textColor/backgroundColor/borderColor/fontFamily/fontStyle/size, field groups
-- RichText: Exposed 9 hidden props (proseSize, subtitleColor, pullQuoteColor, highlightColor, cardBackgroundColor, titleLevel, titleFontFamily, bodyFontFamily, titleFontSize), field groups
-- 5 new components registered in contentComponents array
+**Phase 5 — Registration & Pipeline (core-components.ts + converter.ts):**
+- Button: Added "ring" to variant options, added iconName text field + description, added iconName to content field group & AI canModify
+- SocialLinks: Complete overhaul — 15 platform options, variant/useBrandColors/alignment/direction/gap/hoverEffect/showLabels fields, 6 field groups, expanded AI canModify
+- ButtonGroup: New registration in buttonComponents array — direction/variant/size/gap/fullWidth/borderRadius/ariaLabel, acceptsChildren: true
+- Link: New registration in navigationComponents array — text/href/target/variant(6)/color/fontSize/fontWeight/underlineAnimation/showExternalIcon/ariaLabel
+- Breadcrumb: New registration in navigationComponents array — items array/separator(4)/variant(3)/size/maxItems/showHome/color/activeColor/ariaLabel
+- Chip: New registration in uiComponents array — label/variant(3)/size/color/selected/disabled/rounded/avatar/removable/ariaLabel
+- Pagination: New registration in interactiveComponents array — currentPage/totalPages/variant(4)/size/activeColor/showFirstLast/showPrevNext/siblingsCount/ariaLabel
+- Converter: Added 17 typeMap entries (Link/TextLink/InlineLink/NavLink→Link, ButtonGroup/ButtonRow/ActionBar→ButtonGroup, Chip/FilterChip/Tag/SelectableTag→Chip, NavBreadcrumb/BreadcrumbTrail/BreadcrumbNav/PageBreadcrumb→Breadcrumb, Pagination/Pager/PageNav/PageNumbers→Pagination)
 
-**Converter (Task 16):**
-- Added typeMap entries for Label, List, DisplayText, DividerText, StatNumber (+ AI alias variations)
-- Added KNOWN_REGISTRY_TYPES entries
-- Enhanced Heading handler (was minimal, now normalizes 15+ props)
-- Separated Text from RichText handler (were combined)
-- Added converter handlers for all 5 new component types
-
-**Metadata (Task 17):**
-- Added component-metadata.ts entries for all 5 new components with keywords and AI descriptions
-
-**Build (Task 18):**
-- TypeScript check passes — 0 new errors introduced (pre-existing layout errors remain)
+### Build Status
+- Zero new TypeScript errors from button work (31 pre-existing errors remain in other files)
 
 ### Files Modified
 - `src/lib/ai/website-designer/design/typography-intelligence.ts` — 4 new functions

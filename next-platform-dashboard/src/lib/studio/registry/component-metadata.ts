@@ -892,6 +892,100 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
       usageGuidelines: "Use in navigation header",
     },
   },
+
+  // ==========================================================================
+  // BUTTONS & INTERACTIVE (New Components)
+  // ==========================================================================
+  {
+    type: "Link",
+    label: "Link",
+    category: "buttons",
+    description: "Styled link with underline animations and external icon",
+    acceptsChildren: false,
+    keywords: ["link", "anchor", "hyperlink", "text link", "nav link", "inline link"],
+    ai: {
+      description:
+        "Styled inline or navigation link with 6 variants (default, underline, hover-underline, subtle, bold, nav), external link auto-detection, and CSS variable theming",
+      usageGuidelines:
+        "Use for inline text links, navigation links, and styled anchor elements. Prefer over raw <a> tags for consistent styling.",
+      suggestedWith: ["Text", "Breadcrumb", "Button"],
+    },
+  },
+  {
+    type: "ButtonGroup",
+    label: "Button Group",
+    category: "buttons",
+    description: "Groups multiple buttons together with connected or separated layouts",
+    acceptsChildren: false,
+    keywords: ["button group", "button row", "action bar", "toolbar", "button set"],
+    ai: {
+      description:
+        "Groups 2-5 buttons with connected, separated, or toggle variants. Supports horizontal/vertical direction and shared border radius.",
+      usageGuidelines:
+        "Use when 2+ buttons share a context, like view toggles (grid/list), segmented controls, or action groups. Provide items array with label, variant, and optional href/active.",
+      suggestedWith: ["Button", "Section"],
+    },
+  },
+  {
+    type: "Chip",
+    label: "Chip",
+    category: "buttons",
+    description: "Compact selectable element for filters, tags, and selections",
+    acceptsChildren: false,
+    keywords: ["chip", "tag", "filter", "selectable", "filter chip", "choice"],
+    ai: {
+      description:
+        "Compact interactive chip with filled/outline/subtle variants, selected state via aria-pressed, optional avatar and delete button. Ideal for filter bars and tag displays.",
+      usageGuidelines:
+        "Use for filter selections, tag displays, or multi-select inputs. Set selected=true for active state. Add onDelete for dismissible chips.",
+      suggestedWith: ["Section", "Badge", "ButtonGroup"],
+    },
+  },
+  {
+    type: "Breadcrumb",
+    label: "Breadcrumb",
+    category: "buttons",
+    description: "Navigation breadcrumb trail showing page hierarchy",
+    acceptsChildren: false,
+    keywords: ["breadcrumb", "navigation", "path", "trail", "hierarchy", "page path"],
+    ai: {
+      description:
+        "Breadcrumb navigation with 5 separator types (/, >, →, •, chevron), 3 variants (default, contained, pills), maxItems truncation with ellipsis, and home icon support.",
+      usageGuidelines:
+        "Use at the top of pages to show navigation hierarchy. Provide items array with label and href. Last item is automatically styled as current page.",
+      suggestedWith: ["Section", "Heading"],
+    },
+  },
+  {
+    type: "Pagination",
+    label: "Pagination",
+    category: "buttons",
+    description: "Page navigation with numbered buttons and prev/next controls",
+    acceptsChildren: false,
+    keywords: ["pagination", "pager", "page numbers", "page nav", "page navigation"],
+    ai: {
+      description:
+        "Pagination control with 4 variants (default, simple, minimal, dots), 3 shapes (rounded, pill, square), smart sibling/boundary algorithm, and first/last/prev/next buttons.",
+      usageGuidelines:
+        "Use below lists, grids, or tables that span multiple pages. Set totalPages and currentPage. Pairs well with product grids and blog listings.",
+      suggestedWith: ["Section", "ProductGrid", "BlogListing"],
+    },
+  },
+  {
+    type: "Badge",
+    label: "Badge",
+    category: "buttons",
+    description: "Small status indicator or label with optional link and dismiss",
+    acceptsChildren: false,
+    keywords: ["badge", "tag", "label", "status", "indicator", "pill"],
+    ai: {
+      description:
+        "Inline badge with 7 variants (default, primary, success, warning, error, info, outline), 4 sizes, dot indicator with pulse animation, icon support, linkable (href), and dismissible (onDismiss).",
+      usageGuidelines:
+        "Use for status indicators, category labels, notification counts, and feature tags. Add dot=true for status dots, pulse=true for attention. Use href to make clickable.",
+      suggestedWith: ["Text", "Heading", "Card"],
+    },
+  },
 ];
 
 /**
