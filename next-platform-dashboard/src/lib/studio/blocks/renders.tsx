@@ -19,6 +19,39 @@ import {
   getImageAlt,
   type ImageValue,
 } from "@/lib/studio/utils/image-helpers";
+import {
+  getResponsiveClasses as getResponsiveClassesUtil,
+  gridColsMap,
+  smGridColsMap,
+  lgGridColsMap,
+  alignItemsMap as alignItemsLookup,
+  paddingMap as paddingMapUtil,
+  paddingYMap as paddingYMapUtil,
+  paddingXMap as paddingXMapUtil,
+  gapMap as gapMapUtil,
+  marginYMap as marginYMapUtil,
+  borderRadiusMap as borderRadiusMapUtil,
+  shadowMap as shadowMapUtil,
+  hoverShadowMap as hoverShadowMapUtil,
+  overflowMap as overflowMapUtil,
+  widthFractionMap,
+  spacerHeightMap,
+  spacerWidthMap,
+  maxWidthMap as maxWidthMapUtil,
+  isDarkBackground,
+  resolveShadow,
+  resolveGlassmorphism,
+  getDarkAwareDefaults,
+  getVisibilityClasses,
+  buildGradientCSS,
+  shapeDividerPaths,
+  scrollSnapMap,
+  verticalAlignMap,
+  contentAlignMap,
+  aspectRatioMap,
+  type ResponsiveValue as UtilResponsiveValue,
+  type GradientConfig,
+} from "@/lib/studio/blocks/layout-utils";
 
 // ============================================================================
 // RESPONSIVE UTILITIES
@@ -162,21 +195,45 @@ const borderRadiusMap: Record<
 export interface SectionProps {
   children?: React.ReactNode;
   backgroundColor?: string;
+  textColor?: string;
   backgroundImage?: string | ImageValue;
   backgroundPosition?: "center" | "top" | "bottom" | "left" | "right";
   backgroundSize?: "cover" | "contain" | "auto";
   backgroundOverlay?: string;
   backgroundOverlayOpacity?: number;
+  backgroundGradient?: GradientConfig;
+  backgroundVideo?: {
+    url: string;
+    poster?: string;
+    playbackRate?: number;
+    loop?: boolean;
+    muted?: boolean;
+    overlay?: string;
+  };
   paddingY?: ResponsiveValue<"none" | "xs" | "sm" | "md" | "lg" | "xl">;
   paddingX?: ResponsiveValue<"none" | "xs" | "sm" | "md" | "lg">;
   maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "full" | "none";
   minHeight?: string;
   fullHeight?: boolean;
+  height?: "auto" | "screen" | "half-screen";
   contentAlign?: "left" | "center" | "right";
   verticalAlign?: "top" | "center" | "bottom";
   borderTop?: boolean;
   borderBottom?: boolean;
   borderColor?: string;
+  scrollSnap?: "none" | "start" | "center" | "end";
+  shapeDividerTop?: {
+    shape: "wave" | "curve" | "triangle" | "tilt" | "arrow" | "zigzag" | "clouds";
+    color: string;
+    height?: number;
+    flip?: boolean;
+  };
+  shapeDividerBottom?: {
+    shape: "wave" | "curve" | "triangle" | "tilt" | "arrow" | "zigzag" | "clouds";
+    color: string;
+    height?: number;
+    flip?: boolean;
+  };
   hideOnMobile?: boolean;
   hideOnTablet?: boolean;
   hideOnDesktop?: boolean;
@@ -187,21 +244,28 @@ export interface SectionProps {
 export function SectionRender({
   children,
   backgroundColor,
+  textColor,
   backgroundImage,
   backgroundPosition = "center",
   backgroundSize = "cover",
   backgroundOverlay,
   backgroundOverlayOpacity = 50,
+  backgroundGradient,
+  backgroundVideo,
   paddingY = "md",
   paddingX = "sm",
   maxWidth = "xl",
   minHeight,
   fullHeight = false,
+  height = "auto",
   contentAlign = "left",
   verticalAlign = "top",
   borderTop = false,
   borderBottom = false,
   borderColor = "#e5e7eb",
+  scrollSnap = "none",
+  shapeDividerTop,
+  shapeDividerBottom,
   hideOnMobile = false,
   hideOnTablet = false,
   hideOnDesktop = false,
@@ -214,7 +278,8 @@ export function SectionRender({
   const pyClasses = getResponsiveClasses(paddingY, paddingYMap);
   const pxClasses = getResponsiveClasses(paddingX, paddingXMap);
 
-  const maxWClass = {
+  // Section uses screen-* max-widths for its inner container
+  const sectionMaxWidthMap: Record<string, string> = {
     sm: "max-w-screen-sm",
     md: "max-w-screen-md",
     lg: "max-w-screen-lg",
@@ -222,40 +287,118 @@ export function SectionRender({
     "2xl": "max-w-screen-2xl",
     full: "max-w-full",
     none: "max-w-none",
-  }[maxWidth];
+  };
+  const maxWClass = sectionMaxWidthMap[maxWidth] || "max-w-screen-xl";
 
-  const vAlignClass = {
-    top: "justify-start",
-    center: "justify-center",
-    bottom: "justify-end",
-  }[verticalAlign];
-  const cAlignClass = {
-    left: "items-start text-left",
-    center: "items-center text-center",
-    right: "items-end text-right",
-  }[contentAlign];
+  const vAlignClass = verticalAlignMap[verticalAlign] || "justify-start";
+  const cAlignClass = contentAlignMap[contentAlign] || "items-start text-left";
 
-  const visibility = [
-    hideOnMobile ? "hidden md:block" : "",
-    hideOnTablet ? "md:hidden lg:block" : "",
-    hideOnDesktop ? "lg:hidden" : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const visibility = getVisibilityClasses({ hideOnMobile, hideOnTablet, hideOnDesktop });
+
+  // Dual-default render pattern (Section 12.7.5)
+  const hasExplicitBg = backgroundColor && backgroundColor !== "";
+  const hasExplicitText = textColor && textColor !== "";
+  const bgClass = hasExplicitBg ? "" : "bg-background";
+  const textClass = hasExplicitText ? "" : "text-foreground";
+
+  // Dark-aware defaults
+  const darkBg = isDarkBackground(backgroundColor);
+  const darkDefaults = getDarkAwareDefaults(darkBg);
+
+  // Background gradient CSS
+  const gradientCSS = backgroundGradient ? buildGradientCSS(backgroundGradient) : undefined;
+
+  // Scroll snap
+  const scrollSnapClass = scrollSnap !== "none" ? (scrollSnapMap[scrollSnap] || "") : "";
+
+  // Height resolution
+  const heightMap: Record<string, string> = {
+    auto: "",
+    screen: "min-h-screen",
+    "half-screen": "min-h-[50vh]",
+  };
+  const heightClass = heightMap[height] || "";
+
+  // Build inline styles
+  const sectionStyle: React.CSSProperties = {};
+  if (hasExplicitBg && !backgroundOverlay) sectionStyle.backgroundColor = backgroundColor;
+  if (bgImageUrl) sectionStyle.backgroundImage = `url(${bgImageUrl})`;
+  if (gradientCSS && !bgImageUrl) sectionStyle.backgroundImage = gradientCSS;
+  if (bgImageUrl || gradientCSS) {
+    sectionStyle.backgroundPosition = backgroundPosition;
+    sectionStyle.backgroundSize = backgroundSize;
+  }
+  if (fullHeight) sectionStyle.minHeight = "100vh";
+  else if (minHeight) sectionStyle.minHeight = minHeight;
+  if (borderTop || borderBottom) {
+    sectionStyle.borderColor = hasExplicitBg ? darkDefaults.borderColor : borderColor;
+  }
+  if (hasExplicitText) sectionStyle.color = textColor;
+
+  // Shape divider renderer
+  const renderShapeDivider = (
+    config: NonNullable<SectionProps["shapeDividerTop"]>,
+    position: "top" | "bottom",
+  ) => {
+    const path = shapeDividerPaths[config.shape];
+    if (!path) return null;
+    const h = config.height || 64;
+    return (
+      <div
+        className={`absolute left-0 right-0 z-1 overflow-hidden pointer-events-none ${
+          position === "top" ? "top-0" : "bottom-0"
+        }`}
+        style={{
+          height: `${h}px`,
+          transform: position === "bottom" ? "rotate(180deg)" : config.flip ? "scaleX(-1)" : undefined,
+        }}
+        aria-hidden="true"
+      >
+        <svg
+          viewBox="0 0 1920 128"
+          preserveAspectRatio="none"
+          className="block w-full h-full"
+          fill={config.color}
+        >
+          <path d={path} />
+        </svg>
+      </div>
+    );
+  };
 
   return (
     <section
       id={id}
-      className={`relative w-full ${pyClasses} ${fullHeight ? "min-h-screen flex flex-col " + vAlignClass : ""} ${visibility} ${borderTop ? "border-t" : ""} ${borderBottom ? "border-b" : ""} ${className}`}
-      style={{
-        backgroundColor: backgroundOverlay ? undefined : backgroundColor,
-        backgroundImage: bgImageUrl ? `url(${bgImageUrl})` : undefined,
-        backgroundPosition,
-        backgroundSize,
-        minHeight: fullHeight ? "100vh" : minHeight,
-        borderColor: borderTop || borderBottom ? borderColor : undefined,
-      }}
+      className={`relative w-full ${bgClass} ${textClass} ${pyClasses} ${heightClass} ${fullHeight ? "min-h-screen flex flex-col " + vAlignClass : ""} ${scrollSnapClass} ${visibility} ${borderTop ? "border-t" : ""} ${borderBottom ? "border-b" : ""} ${className}`}
+      style={Object.keys(sectionStyle).length > 0 ? sectionStyle : undefined}
     >
+      {/* Shape divider top */}
+      {shapeDividerTop && renderShapeDivider(shapeDividerTop, "top")}
+
+      {/* Video background */}
+      {backgroundVideo && (
+        <div className="absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
+          <video
+            className="w-full h-full object-cover"
+            autoPlay
+            loop={backgroundVideo.loop !== false}
+            muted={backgroundVideo.muted !== false}
+            playsInline
+            poster={backgroundVideo.poster}
+            style={{ playbackRate: backgroundVideo.playbackRate } as React.CSSProperties}
+          >
+            <source src={backgroundVideo.url} />
+          </video>
+          {backgroundVideo.overlay && (
+            <div
+              className="absolute inset-0"
+              style={{ backgroundColor: backgroundVideo.overlay, opacity: 0.5 }}
+            />
+          )}
+        </div>
+      )}
+
+      {/* Background overlay */}
       {backgroundOverlay && (
         <div
           className="absolute inset-0 z-0"
@@ -266,11 +409,16 @@ export function SectionRender({
           aria-hidden="true"
         />
       )}
+
+      {/* Content */}
       <div
         className={`relative z-10 w-full mx-auto ${pxClasses} ${maxWClass} flex flex-col ${cAlignClass}`}
       >
         {children}
       </div>
+
+      {/* Shape divider bottom */}
+      {shapeDividerBottom && renderShapeDivider(shapeDividerBottom, "bottom")}
     </section>
   );
 }
@@ -285,10 +433,20 @@ export interface ContainerProps {
   paddingX?: ResponsiveValue<"none" | "xs" | "sm" | "md" | "lg">;
   paddingY?: ResponsiveValue<"none" | "xs" | "sm" | "md" | "lg" | "xl">;
   backgroundColor?: string;
+  textColor?: string;
+  backgroundGradient?: GradientConfig;
   borderRadius?: ResponsiveValue<"none" | "sm" | "md" | "lg" | "xl" | "2xl">;
   border?: boolean;
   borderColor?: string;
-  shadow?: "none" | "sm" | "md" | "lg" | "xl";
+  shadow?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  glassmorphism?: boolean;
+  gradientBorder?: {
+    gradient: string;
+    width?: number;
+    radius?: string;
+  };
+  aspectRatio?: "auto" | "square" | "video" | "portrait" | "wide";
+  overflow?: "visible" | "hidden" | "auto" | "clip";
   id?: string;
   className?: string;
 }
@@ -299,14 +457,20 @@ export function ContainerRender({
   paddingX = "sm",
   paddingY,
   backgroundColor,
+  textColor,
+  backgroundGradient,
   borderRadius = "none",
   border = false,
   borderColor = "#e5e7eb",
   shadow = "none",
+  glassmorphism = false,
+  gradientBorder,
+  aspectRatio,
+  overflow,
   id,
   className = "",
 }: ContainerProps) {
-  const maxWClass = {
+  const containerMaxWMap: Record<string, string> = {
     xs: "max-w-xs",
     sm: "max-w-sm",
     md: "max-w-md",
@@ -315,23 +479,82 @@ export function ContainerRender({
     "2xl": "max-w-screen-2xl",
     full: "max-w-full",
     prose: "max-w-prose",
-  }[maxWidth];
+  };
+  const maxWClass = containerMaxWMap[maxWidth] || "max-w-screen-xl";
   const pxClasses = getResponsiveClasses(paddingX, paddingXMap);
   const pyClasses = paddingY ? getResponsiveClasses(paddingY, paddingYMap) : "";
   const radiusClasses = getResponsiveClasses(borderRadius, borderRadiusMap);
-  const shadowClass = {
-    none: "",
-    sm: "shadow-sm",
-    md: "shadow-md",
-    lg: "shadow-lg",
-    xl: "shadow-xl",
-  }[shadow];
+
+  // Dual-default render pattern (Section 12.7.5)
+  const hasExplicitBg = backgroundColor && backgroundColor !== "";
+  const hasExplicitText = textColor && textColor !== "";
+  const bgClass = hasExplicitBg ? "" : "";  // Container defaults to transparent
+  const textClass = hasExplicitText ? "" : "";  // Container inherits text color
+
+  // Dark-aware shadow
+  const darkBg = isDarkBackground(backgroundColor);
+  const darkDefaults = getDarkAwareDefaults(darkBg);
+  const shadowClass = shadowMapUtil[shadow] || "";
+  const darkShadowStyle = darkBg ? resolveShadow(shadow as "none" | "sm" | "md" | "lg" | "xl" | "2xl", true) : "";
+
+  // Glassmorphism
+  const glassStyles = glassmorphism ? resolveGlassmorphism(darkBg) : null;
+
+  // Aspect ratio
+  const aspectClass = aspectRatio ? (aspectRatioMap[aspectRatio] || "") : "";
+
+  // Overflow
+  const overflowClass = overflow ? (overflowMapUtil[overflow] || "") : "";
+
+  // Gradient background
+  const gradientCSS = backgroundGradient ? buildGradientCSS(backgroundGradient) : undefined;
+
+  // Build styles
+  const containerStyle: React.CSSProperties = {};
+  if (hasExplicitBg && !glassmorphism) containerStyle.backgroundColor = backgroundColor;
+  if (hasExplicitText) containerStyle.color = textColor;
+  if (gradientCSS) containerStyle.backgroundImage = gradientCSS;
+  if (border) containerStyle.borderColor = darkBg ? darkDefaults.borderColor : borderColor;
+  if (darkShadowStyle) containerStyle.boxShadow = darkShadowStyle;
+  if (glassStyles) {
+    containerStyle.background = glassStyles.background;
+    containerStyle.backdropFilter = glassStyles.backdropFilter;
+    containerStyle.WebkitBackdropFilter = glassStyles.WebkitBackdropFilter;
+    containerStyle.border = glassStyles.border;
+  }
+
+  // Gradient border wrapper
+  if (gradientBorder) {
+    const gbWidth = gradientBorder.width || 2;
+    const gbRadius = gradientBorder.radius || "inherit";
+    return (
+      <div
+        id={id}
+        className={`w-full mx-auto ${maxWClass}`}
+        style={{
+          padding: `${gbWidth}px`,
+          background: gradientBorder.gradient,
+          borderRadius: gbRadius,
+        }}
+      >
+        <div
+          className={`w-full ${pxClasses} ${pyClasses} ${radiusClasses} ${shadowClass} ${aspectClass} ${overflowClass} ${bgClass} ${textClass} ${className}`}
+          style={{
+            ...containerStyle,
+            borderRadius: gbRadius,
+          }}
+        >
+          {children}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
       id={id}
-      className={`w-full mx-auto ${maxWClass} ${pxClasses} ${pyClasses} ${radiusClasses} ${shadowClass} ${border ? "border" : ""} ${className}`}
-      style={{ backgroundColor, borderColor: border ? borderColor : undefined }}
+      className={`w-full mx-auto ${maxWClass} ${pxClasses} ${pyClasses} ${radiusClasses} ${shadowClass} ${border ? "border" : ""} ${aspectClass} ${overflowClass} ${bgClass} ${textClass} ${className}`}
+      style={Object.keys(containerStyle).length > 0 ? containerStyle : undefined}
     >
       {children}
     </div>
@@ -367,22 +590,24 @@ export function ColumnsRender({
   const cols = typeof columns === "number" ? columns : columns.desktop || 2;
   const tabletCols =
     typeof columns === "object" ? columns.tablet || cols : cols;
+  const mobileCols =
+    typeof columns === "object" ? columns.mobile || 1 : (stackOnMobile ? 1 : cols);
+
+  // Use lookup maps — NEVER template literals for Tailwind classes
+  const mobileColClass = gridColsMap[mobileCols] || "grid-cols-1";
+  const tabletColClass = smGridColsMap[tabletCols] || "sm:grid-cols-2";
+  const desktopColClass = lgGridColsMap[cols] || "lg:grid-cols-2";
 
   const gridColsClass = stackOnMobile
-    ? `grid-cols-1 md:grid-cols-${tabletCols} lg:grid-cols-${cols}`
-    : `grid-cols-${cols}`;
+    ? `grid-cols-1 ${tabletColClass} ${desktopColClass}`
+    : `${mobileColClass} ${tabletColClass} ${desktopColClass}`;
 
-  const alignClass = {
-    start: "items-start",
-    center: "items-center",
-    end: "items-end",
-    stretch: "items-stretch",
-  }[verticalAlign];
+  const alignClass = alignItemsLookup[verticalAlign] || "items-stretch";
 
   return (
     <div
       id={id}
-      className={`grid ${gridColsClass} ${gapClasses} ${alignClass} ${reverseOnMobile && stackOnMobile ? "flex flex-col-reverse md:grid" : ""} ${className}`}
+      className={`grid ${gridColsClass} ${gapClasses} ${alignClass} ${reverseOnMobile && stackOnMobile ? "flex flex-col-reverse sm:grid" : ""} ${className}`}
     >
       {children}
     </div>
@@ -390,20 +615,31 @@ export function ColumnsRender({
 }
 
 // ============================================================================
-// CARD - Card container with shadow
+// CARD - Content surface with variants and effects
 // ============================================================================
 
 export interface CardProps {
   children?: React.ReactNode;
+  variant?: "elevated" | "outlined" | "filled" | "ghost" | "glass" | "flat";
   padding?: ResponsiveValue<"none" | "xs" | "sm" | "md" | "lg" | "xl">;
   backgroundColor?: string;
+  textColor?: string;
+  backgroundGradient?: GradientConfig;
   borderRadius?: ResponsiveValue<"none" | "sm" | "md" | "lg" | "xl" | "2xl">;
   border?: boolean;
   borderColor?: string;
-  shadow?: "none" | "sm" | "md" | "lg" | "xl";
-  hoverShadow?: "none" | "sm" | "md" | "lg" | "xl";
+  shadow?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  hoverShadow?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  hoverEffect?: "none" | "lift" | "grow" | "glow" | "border" | "shadow";
   hoverScale?: boolean;
-  overflow?: "visible" | "hidden" | "auto";
+  glassmorphism?: boolean;
+  gradientBorder?: {
+    gradient: string;
+    width?: number;
+  };
+  overflow?: "visible" | "hidden" | "auto" | "clip";
+  linkUrl?: string;
+  linkTarget?: "_self" | "_blank";
   id?: string;
   className?: string;
   onClick?: () => void;
@@ -411,52 +647,131 @@ export interface CardProps {
 
 export function CardRender({
   children,
+  variant = "elevated",
   padding = "md",
-  backgroundColor = "#ffffff",
+  backgroundColor,
+  textColor,
+  backgroundGradient,
   borderRadius = "lg",
-  border = false,
-  borderColor = "#e5e7eb",
-  shadow = "md",
+  border,
+  borderColor,
+  shadow,
   hoverShadow,
+  hoverEffect = "none",
   hoverScale = false,
+  glassmorphism = false,
+  gradientBorder,
   overflow = "hidden",
+  linkUrl,
+  linkTarget = "_self",
   id,
   className = "",
   onClick,
 }: CardProps) {
-  const paddingMap: Record<
-    string,
-    { mobile: string; tablet: string; desktop: string }
-  > = {
-    none: { mobile: "p-0", tablet: "md:p-0", desktop: "lg:p-0" },
-    xs: { mobile: "p-2", tablet: "md:p-3", desktop: "lg:p-4" },
-    sm: { mobile: "p-3", tablet: "md:p-4", desktop: "lg:p-5" },
-    md: { mobile: "p-4", tablet: "md:p-6", desktop: "lg:p-8" },
-    lg: { mobile: "p-6", tablet: "md:p-8", desktop: "lg:p-10" },
-    xl: { mobile: "p-8", tablet: "md:p-10", desktop: "lg:p-12" },
+  // Dual-default render pattern (Section 12.7.5): bg-card / text-card-foreground
+  const hasExplicitBg = backgroundColor && backgroundColor !== "";
+  const hasExplicitText = textColor && textColor !== "";
+
+  // Variant-based defaults
+  const variantDefaults: Record<string, { bgClass: string; textClass: string; borderClass: string; shadowClass: string }> = {
+    elevated: { bgClass: "bg-card", textClass: "text-card-foreground", borderClass: "", shadowClass: "shadow-md" },
+    outlined: { bgClass: "bg-card", textClass: "text-card-foreground", borderClass: "border", shadowClass: "" },
+    filled: { bgClass: "bg-muted", textClass: "text-foreground", borderClass: "", shadowClass: "" },
+    ghost: { bgClass: "bg-transparent", textClass: "text-foreground", borderClass: "", shadowClass: "" },
+    glass: { bgClass: "", textClass: "text-foreground", borderClass: "", shadowClass: "" },
+    flat: { bgClass: "bg-card", textClass: "text-card-foreground", borderClass: "", shadowClass: "" },
   };
+  const vd = variantDefaults[variant] || variantDefaults.elevated;
 
-  const pClasses = getResponsiveClasses(padding, paddingMap);
+  const bgClass = hasExplicitBg ? "" : vd.bgClass;
+  const txtClass = hasExplicitText ? "" : vd.textClass;
+
+  // Dark-aware shadow resolution
+  const darkBg = isDarkBackground(backgroundColor);
+  const resolvedShadow = shadow ?? (variant === "elevated" ? "md" : "none");
+  const shadowClass = darkBg
+    ? "" // Will use inline glow style instead
+    : (shadowMapUtil[resolvedShadow] || "");
+  const darkShadowStyle = darkBg ? resolveShadow(resolvedShadow as "none" | "sm" | "md" | "lg" | "xl" | "2xl", true) : "";
+  const hoverShadowClass = hoverShadow ? (hoverShadowMapUtil[hoverShadow] || "") : "";
+
+  const pClasses = getResponsiveClasses(padding, paddingMapUtil);
   const radiusClasses = getResponsiveClasses(borderRadius, borderRadiusMap);
-  const shadowClass = {
-    none: "",
-    sm: "shadow-sm",
-    md: "shadow-md",
-    lg: "shadow-lg",
-    xl: "shadow-xl",
-  }[shadow];
-  const hoverShadowClass = hoverShadow ? `hover:shadow-${hoverShadow}` : "";
-  const overflowClass = {
-    visible: "overflow-visible",
-    hidden: "overflow-hidden",
-    auto: "overflow-auto",
-  }[overflow];
+  const overflowClass = overflowMapUtil[overflow] || "overflow-hidden";
 
-  return (
+  // Border resolution
+  const hasBorder = border ?? (variant === "outlined");
+  const darkDefaults = getDarkAwareDefaults(darkBg);
+
+  // Glassmorphism (variant="glass" or explicit)
+  const isGlass = glassmorphism || variant === "glass";
+  const glassStyles = isGlass ? resolveGlassmorphism(darkBg) : null;
+
+  // Gradient background
+  const gradientCSS = backgroundGradient ? buildGradientCSS(backgroundGradient) : undefined;
+
+  // Hover effect classes
+  const hoverEffectClasses: Record<string, string> = {
+    none: "",
+    lift: "hover:-translate-y-1 transition-transform duration-200",
+    grow: "hover:scale-[1.02] transition-transform duration-200",
+    glow: "hover:ring-2 hover:ring-primary/20 transition-all duration-200",
+    border: "hover:border-primary transition-colors duration-200",
+    shadow: "hover:shadow-xl transition-shadow duration-200",
+  };
+  const hoverClass = hoverEffectClasses[hoverEffect] || "";
+
+  // Build styles
+  const cardStyle: React.CSSProperties = {};
+  if (hasExplicitBg && !isGlass) cardStyle.backgroundColor = backgroundColor;
+  if (hasExplicitText) cardStyle.color = textColor;
+  if (gradientCSS) cardStyle.backgroundImage = gradientCSS;
+  if (hasBorder) cardStyle.borderColor = darkBg ? darkDefaults.borderColor : (borderColor || "#e5e7eb");
+  if (darkShadowStyle) cardStyle.boxShadow = darkShadowStyle;
+  if (glassStyles) {
+    cardStyle.background = glassStyles.background;
+    cardStyle.backdropFilter = glassStyles.backdropFilter;
+    cardStyle.WebkitBackdropFilter = glassStyles.WebkitBackdropFilter;
+    if (!hasBorder) cardStyle.border = glassStyles.border;
+  }
+
+  // Base class composition
+  const baseClasses = `${pClasses} ${radiusClasses} ${bgClass} ${txtClass} ${shadowClass} ${hoverShadowClass} ${hasBorder ? "border" : ""} ${vd.borderClass} ${overflowClass} ${hoverClass} ${hoverScale ? "hover:scale-[1.02] transition-transform duration-200" : ""} transition-shadow ${onClick || linkUrl ? "cursor-pointer" : ""} ${className}`;
+
+  // Gradient border wrapper
+  if (gradientBorder) {
+    const gbWidth = gradientBorder.width || 2;
+    const content = (
+      <div
+        style={{
+          padding: `${gbWidth}px`,
+          background: gradientBorder.gradient,
+          borderRadius: "inherit",
+        }}
+      >
+        <div
+          id={id}
+          className={baseClasses}
+          style={{ ...cardStyle, borderRadius: "inherit" }}
+          onClick={onClick}
+          role={onClick ? "button" : undefined}
+          tabIndex={onClick ? 0 : undefined}
+        >
+          {children}
+        </div>
+      </div>
+    );
+    if (linkUrl) {
+      return <a href={linkUrl} target={linkTarget} rel={linkTarget === "_blank" ? "noopener noreferrer" : undefined} className={`block ${radiusClasses}`}>{content}</a>;
+    }
+    return content;
+  }
+
+  const cardElement = (
     <div
       id={id}
-      className={`${pClasses} ${radiusClasses} ${shadowClass} ${hoverShadowClass} ${border ? "border" : ""} ${overflowClass} ${hoverScale ? "hover:scale-[1.02] transition-transform duration-200" : ""} transition-shadow ${onClick ? "cursor-pointer" : ""} ${className}`}
-      style={{ backgroundColor, borderColor: border ? borderColor : undefined }}
+      className={baseClasses}
+      style={Object.keys(cardStyle).length > 0 ? cardStyle : undefined}
       onClick={onClick}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
@@ -464,6 +779,21 @@ export function CardRender({
       {children}
     </div>
   );
+
+  if (linkUrl) {
+    return (
+      <a
+        href={linkUrl}
+        target={linkTarget}
+        rel={linkTarget === "_blank" ? "noopener noreferrer" : undefined}
+        className={`block ${radiusClasses}`}
+      >
+        {cardElement}
+      </a>
+    );
+  }
+
+  return cardElement;
 }
 
 // ============================================================================
@@ -472,7 +802,13 @@ export function CardRender({
 
 export interface SpacerProps {
   height?: number | { mobile?: number; tablet?: number; desktop?: number };
-  size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
+  size?: ResponsiveValue<"xs" | "sm" | "md" | "lg" | "xl" | "2xl">;
+  direction?: "vertical" | "horizontal";
+  customSize?: string;
+  showDivider?: boolean;
+  dividerColor?: string;
+  dividerStyle?: "solid" | "dashed" | "dotted";
+  dividerWidth?: "full" | "3/4" | "2/3" | "1/2" | "1/3" | "1/4";
   hideOnMobile?: boolean;
   hideOnTablet?: boolean;
   hideOnDesktop?: boolean;
@@ -483,96 +819,189 @@ export interface SpacerProps {
 export function SpacerRender({
   height,
   size,
+  direction = "vertical",
+  customSize,
+  showDivider = false,
+  dividerColor = "#e5e7eb",
+  dividerStyle = "solid",
+  dividerWidth = "full",
   hideOnMobile = false,
   hideOnTablet = false,
   hideOnDesktop = false,
   id,
   className = "",
 }: SpacerProps) {
-  const sizeHeights = { xs: 8, sm: 16, md: 32, lg: 48, xl: 64, "2xl": 96 };
-  const visibility = [
-    hideOnMobile ? "hidden md:block" : "",
-    hideOnTablet ? "md:hidden lg:block" : "",
-    hideOnDesktop ? "lg:hidden" : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const visibility = getVisibilityClasses({ hideOnMobile, hideOnTablet, hideOnDesktop });
+  const isHorizontal = direction === "horizontal";
 
+  // Custom size via inline style
+  if (customSize) {
+    return (
+      <div
+        id={id}
+        className={`${isHorizontal ? "h-full" : "w-full"} ${visibility} ${className}`}
+        style={isHorizontal ? { width: customSize } : { height: customSize }}
+        aria-hidden="true"
+      >
+        {showDivider && (
+          <div
+            className={`${isHorizontal ? "h-full border-l" : `w-full border-t ${widthFractionMap[dividerWidth] || "w-full"} mx-auto`}`}
+            style={{
+              borderColor: dividerColor,
+              borderStyle: dividerStyle,
+              [isHorizontal ? "height" : "width"]: "100%",
+            }}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // Size prop using Tailwind class maps (responsive-safe)
+  if (size) {
+    const sizeMap = isHorizontal ? spacerWidthMap : spacerHeightMap;
+    const sizeClasses = getResponsiveClasses(size, sizeMap);
+    return (
+      <div
+        id={id}
+        className={`${isHorizontal ? "h-full inline-block" : "w-full"} ${sizeClasses} ${visibility} ${className}`}
+        aria-hidden="true"
+      >
+        {showDivider && (
+          <div
+            className={`${isHorizontal ? "h-full border-l" : `border-t ${widthFractionMap[dividerWidth] || "w-full"} mx-auto`} absolute inset-0 m-auto`}
+            style={{ borderColor: dividerColor, borderStyle: dividerStyle }}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // Height prop — fallback to inline style for arbitrary pixel values
+  const sizeHeights: Record<string, number> = { xs: 8, sm: 16, md: 32, lg: 48, xl: 64, "2xl": 96 };
   let h = 32;
-  if (size) h = sizeHeights[size];
-  else if (typeof height === "number") h = height;
+  if (typeof height === "number") h = height;
+  else if (typeof height === "object") {
+    // Responsive height object — use CSS custom property approach
+    const mobileH = height.mobile ?? 32;
+    return (
+      <div
+        id={id}
+        className={`w-full ${visibility} ${className}`}
+        style={{
+          height: `${mobileH}px`,
+          // Mobile-first — tablet/desktop handled via media queries in style
+        }}
+        aria-hidden="true"
+      />
+    );
+  }
 
   return (
     <div
       id={id}
-      className={`w-full ${visibility} ${className}`}
-      style={{ height: `${h}px` }}
+      className={`${isHorizontal ? "h-full inline-block" : "w-full"} ${visibility} ${className}`}
+      style={isHorizontal ? { width: `${h}px` } : { height: `${h}px` }}
       aria-hidden="true"
     />
   );
 }
 
 // ============================================================================
-// DIVIDER - Horizontal line separator
+// DIVIDER - Horizontal / vertical line separator
 // ============================================================================
 
 export interface DividerProps {
   color?: string;
   thickness?: 1 | 2 | 4;
   style?: "solid" | "dashed" | "dotted";
-  width?: "full" | "3/4" | "1/2" | "1/4";
+  width?: "full" | "3/4" | "2/3" | "1/2" | "1/3" | "1/4";
   align?: "left" | "center" | "right";
   text?: string;
   textColor?: string;
+  direction?: "horizontal" | "vertical";
+  gradientColors?: [string, string];
+  gradientDirection?: "left-right" | "right-left" | "center-out";
+  fade?: boolean;
+  icon?: string;
+  spacing?: ResponsiveValue<"none" | "xs" | "sm" | "md" | "lg" | "xl">;
   marginY?: ResponsiveValue<"none" | "xs" | "sm" | "md" | "lg" | "xl">;
   id?: string;
   className?: string;
 }
 
 export function DividerRender({
-  color = "#e5e7eb",
+  color,
   thickness = 1,
   style = "solid",
   width = "full",
   align = "center",
   text,
-  textColor = "#6b7280",
+  textColor,
+  direction = "horizontal",
+  gradientColors,
+  gradientDirection = "left-right",
+  fade = false,
+  icon,
+  spacing,
   marginY = "md",
   id,
   className = "",
 }: DividerProps) {
-  const marginYMapLocal: Record<
-    string,
-    { mobile: string; tablet: string; desktop: string }
-  > = {
-    none: { mobile: "my-0", tablet: "md:my-0", desktop: "lg:my-0" },
-    xs: { mobile: "my-2", tablet: "md:my-2", desktop: "lg:my-3" },
-    sm: { mobile: "my-3", tablet: "md:my-4", desktop: "lg:my-6" },
-    md: { mobile: "my-4", tablet: "md:my-6", desktop: "lg:my-8" },
-    lg: { mobile: "my-6", tablet: "md:my-8", desktop: "lg:my-12" },
-    xl: { mobile: "my-8", tablet: "md:my-12", desktop: "lg:my-16" },
-  };
-
-  const myClasses = getResponsiveClasses(marginY, marginYMapLocal);
-  const widthClass = {
-    full: "w-full",
-    "3/4": "w-3/4",
-    "1/2": "w-1/2",
-    "1/4": "w-1/4",
-  }[width];
-  const alignClass = { left: "mr-auto", center: "mx-auto", right: "ml-auto" }[
-    align
-  ];
-  const thicknessClass = { 1: "border-t", 2: "border-t-2", 4: "border-t-4" }[
-    thickness
-  ];
+  // Use marginYMap from layout-utils (corrected sm: prefix) or spacing if provided
+  const spacingProp = spacing || marginY;
+  const myClasses = getResponsiveClasses(spacingProp, marginYMapUtil);
+  const widthClass = widthFractionMap[width] || "w-full";
+  const alignClass = { left: "mr-auto", center: "mx-auto", right: "ml-auto" }[align] || "mx-auto";
+  const thicknessClass = { 1: "border-t", 2: "border-t-2", 4: "border-t-4" }[thickness] || "border-t";
+  const vertThicknessClass = { 1: "border-l", 2: "border-l-2", 4: "border-l-4" }[thickness] || "border-l";
   const styleClass = {
     solid: "border-solid",
     dashed: "border-dashed",
     dotted: "border-dotted",
-  }[style];
+  }[style] || "border-solid";
 
-  if (text) {
+  // Dark-aware default color
+  const resolvedColor = color || "var(--border, #e5e7eb)";
+  const resolvedTextColor = textColor || "var(--muted-foreground, #6b7280)";
+
+  // Gradient line style
+  const getGradientStyle = (): React.CSSProperties | undefined => {
+    if (gradientColors) {
+      const [c1, c2] = gradientColors;
+      const dirMap = {
+        "left-right": `linear-gradient(to right, ${c1}, ${c2})`,
+        "right-left": `linear-gradient(to left, ${c1}, ${c2})`,
+        "center-out": `linear-gradient(to right, transparent, ${c1}, ${c2}, transparent)`,
+      };
+      return {
+        borderImage: dirMap[gradientDirection] || dirMap["left-right"],
+        borderImageSlice: 1,
+      };
+    }
+    if (fade) {
+      return {
+        borderImage: `linear-gradient(to right, transparent, ${resolvedColor} 20%, ${resolvedColor} 80%, transparent) 1`,
+      };
+    }
+    return { borderColor: resolvedColor };
+  };
+
+  // Vertical divider
+  if (direction === "vertical") {
+    return (
+      <div
+        id={id}
+        className={`inline-block self-stretch ${vertThicknessClass} ${styleClass} ${className}`}
+        style={getGradientStyle()}
+        role="separator"
+        aria-orientation="vertical"
+      />
+    );
+  }
+
+  // Text or icon divider
+  if (text || icon) {
     return (
       <div
         id={id}
@@ -580,15 +1009,22 @@ export function DividerRender({
         role="separator"
       >
         <div
-          className={`flex-grow ${thicknessClass} ${styleClass}`}
-          style={{ borderColor: color }}
+          className={`grow ${thicknessClass} ${styleClass}`}
+          style={getGradientStyle()}
         />
-        <span className="px-4 text-sm font-medium" style={{ color: textColor }}>
-          {text}
-        </span>
+        {text && (
+          <span className="px-4 text-sm font-medium" style={{ color: resolvedTextColor }}>
+            {text}
+          </span>
+        )}
+        {icon && !text && (
+          <span className="px-3 text-muted-foreground" aria-hidden="true">
+            {icon}
+          </span>
+        )}
         <div
-          className={`flex-grow ${thicknessClass} ${styleClass}`}
-          style={{ borderColor: color }}
+          className={`grow ${thicknessClass} ${styleClass}`}
+          style={getGradientStyle()}
         />
       </div>
     );
@@ -598,7 +1034,7 @@ export function DividerRender({
     <hr
       id={id}
       className={`${thicknessClass} ${styleClass} ${myClasses} ${widthClass} ${alignClass} ${className}`}
-      style={{ borderColor: color }}
+      style={getGradientStyle()}
       role="separator"
     />
   );
