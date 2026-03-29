@@ -12,6 +12,7 @@ When sections work together as a system rather than isolated blocks, the AI Desi
 
 ## Table of Contents
 
+0. [Implementation Blueprint for AI Agents](#0-implementation-blueprint-for-ai-agents)
 1. [Current State Audit](#1-current-state-audit)
 2. [Industry Benchmark Analysis](#2-industry-benchmark-analysis)
 3. [Architecture Principles](#3-architecture-principles)
@@ -29,6 +30,337 @@ When sections work together as a system rather than isolated blocks, the AI Desi
 15. [Registry & Converter Alignment](#15-registry--converter-alignment)
 16. [Implementation Phases](#16-implementation-phases)
 17. [Testing & Quality Gates](#17-testing--quality-gates)
+
+---
+
+## 0. Implementation Blueprint for AI Agents
+
+> **This section is the single most important reference.** Before creating or modifying ANY section component, read this section in full. It contains the exact file paths, import patterns, function signatures, field definitions, and step-by-step registration checklist that every section component must follow.
+
+### 0.1 Critical File Map
+
+| File | Path | Purpose | Key Locations |
+|------|------|---------|--------------|
+| **Render Functions** | `src/lib/studio/blocks/renders.tsx` | All 17 section render functions live here | Hero L6837, Features L7243, CTA L8132, Newsletter L16480 |
+| **Shared Utilities** | `src/lib/studio/blocks/layout-utils.ts` | ALL shared class maps, dark-mode utilities, responsive helpers, shape dividers, gradient builder | `paddingYMap` L121, `isDarkBackground()` L454, `getDarkAwareDefaults()` L542, `shapeDividerPaths` L597 |
+| **Converter typeMap** | `src/lib/ai/website-designer/converter.ts` | Maps AI-generated type names → registry types | `typeMap` at L361, `KNOWN_REGISTRY_TYPES` at L728 |
+| **Component Registry** | `src/lib/studio/registry/core-components.ts` | `defineComponent()` calls with field definitions | Newsletter at L13153, Features at L4342 |
+| **Component Metadata** | `src/lib/studio/registry/component-metadata.ts` | Labels, categories, keywords, AI descriptions | `ComponentMetadata` interface + `COMPONENT_METADATA` array |
+
+### 0.2 The Props Pipeline (How Data Flows)
+
+```
+AI Designer generates JSON → converter.ts typeMap resolves type name
+    → core-components.ts defineComponent fields validate props
+        → renders.tsx render function receives props via {...injectedProps}
+```
+
+**CRITICAL RULE:** Prop names MUST match EXACTLY across all three files. If `defineComponent` defines a field called `cardBorderRadius`, the render function MUST destructure `cardBorderRadius` (not `borderRadius` or `cardRadius`).
+
+### 0.3 Shared Utilities — ALREADY EXIST in `layout-utils.ts`
+
+**DO NOT create new utility files for these.** They already exist and are imported by all render functions:
+
+#### Class Maps (Tailwind-safe lookups)
+
+```typescript
+// Import from: "@/lib/studio/blocks/layout-utils"
+import {
+  getResponsiveClasses,    // Resolves responsive props to Tailwind classes
+  paddingYMap,              // "none"|"xs"|"sm"|"md"|"lg"|"xl" → py-* / sm:py-* / lg:py-*
+  paddingXMap,              // "none"|"xs"|"sm"|"md"|"lg" → px-* / sm:px-* / lg:px-*
+  gapMap,                   // "none"|"xs"|"sm"|"md"|"lg"|"xl" → gap-* / sm:gap-* / lg:gap-*
+  maxWidthMap,              // "xs".."7xl"|"full"|"none"|"screen-*" → max-w-*
+  shadowMap,                // "none"|"sm"|"md"|"lg"|"xl"|"2xl"|"inner" → shadow-*
+  borderRadiusMap,          // "none"|"sm"|"md"|"lg"|"xl"|"2xl"|"3xl"|"full" → rounded-* (responsive)
+  paddingMap,               // All-around padding (responsive)
+  marginYMap,               // Vertical margin (responsive)
+  alignItemsMap,            // "start"|"center"|"end"|"stretch"|"baseline" → items-*
+  contentAlignMap,          // "left"|"center"|"right" → items-* text-*
+  verticalAlignMap,         // "top"|"center"|"bottom" → justify-*
+  widthFractionMap,         // "full"|"3/4"|"2/3"|"1/2"|"1/3"|"1/4" → w-*
+} from "@/lib/studio/blocks/layout-utils";
+```
+
+**Usage pattern:**
+```typescript
+// ✅ CORRECT — use getResponsiveClasses with imported maps
+const pyClasses = getResponsiveClasses(paddingY, paddingYMap);
+const pxClasses = getResponsiveClasses(paddingX, paddingXMap);
+const gapClasses = getResponsiveClasses(gap, gapMap);
+
+// ❌ WRONG — never create inline class map objects
+const paddingYClasses = { sm: "py-8 md:py-12", ... }; // DO NOT DO THIS
+```
+
+#### Dark-Mode Utilities
+
+```typescript
+// Import from: "@/lib/studio/blocks/layout-utils"
+import {
+  isDarkBackground,       // (hex?: string) => boolean — ITU-R BT.601 luminance, threshold 0.45
+  getDarkAwareDefaults,   // (isDarkBg: boolean) => { borderColor, textColor, mutedTextColor, dividerColor, overlayBg, particleColor, patternColor, glowOpacity }
+  resolveShadow,          // (shadow, isDarkBg) => CSS box-shadow string (glow on dark, "" on light)
+  resolveGlassmorphism,   // (isDarkBg) => { background, backdropFilter, WebkitBackdropFilter, border }
+} from "@/lib/studio/blocks/layout-utils";
+```
+
+**Usage pattern:**
+```typescript
+// ✅ CORRECT — detect dark bg, get adaptive defaults
+const darkBg = isDarkBackground(backgroundColor);
+const darkDefaults = getDarkAwareDefaults(darkBg);
+const resolvedTextColor = textColor || darkDefaults.textColor;
+const resolvedMutedColor = subtitleColor || darkDefaults.mutedTextColor;
+const resolvedBorderColor = borderColor || darkDefaults.borderColor;
+```
+
+#### Shape Dividers & Gradients
+
+```typescript
+// Import from: "@/lib/studio/blocks/layout-utils"
+import {
+  shapeDividerPaths,  // Record<string, string> — 11 SVG path strings
+  buildGradientCSS,   // (GradientConfig) => CSS gradient string
+} from "@/lib/studio/blocks/layout-utils";
+
+// Available shapes: wave, wave-smooth, curve, triangle, tilt, arrow,
+//                   zigzag, clouds, mountains, drops, pyramids
+```
+
+#### Visibility & Responsive
+
+```typescript
+import {
+  getVisibilityClasses,  // ({ hideOnMobile?, hideOnTablet?, hideOnDesktop? }) => class string
+} from "@/lib/studio/blocks/layout-utils";
+```
+
+### 0.4 Render Function Skeleton
+
+Every section render function follows this exact pattern:
+
+```tsx
+// In renders.tsx
+
+export function MySectionRender({
+  // Standard section props
+  title,
+  subtitle,
+  description,
+  badge,
+  headerAlign = "center",
+  backgroundColor,
+  textColor,
+  paddingY = "lg",
+  paddingX = "md",
+  maxWidth = "7xl",
+  animateOnScroll = false,
+  animationType = "fade",
+  // Section-specific props
+  items = [],
+  variant = "cards",
+  // ... other props
+}: MySectionProps) {
+  // 1) Resolve responsive classes from shared maps
+  const pyClasses = getResponsiveClasses(paddingY, paddingYMap);
+  const pxClasses = getResponsiveClasses(paddingX, paddingXMap);
+  const maxWClass = maxWidthMap[maxWidth as string] || "max-w-7xl";
+
+  // 2) Detect dark background and get adaptive defaults
+  const darkBg = isDarkBackground(backgroundColor);
+  const darkDefaults = getDarkAwareDefaults(darkBg);
+  const resolvedTextColor = textColor || darkDefaults.textColor;
+
+  // 3) Build section styles
+  const sectionStyle: React.CSSProperties = {
+    ...(backgroundColor ? { backgroundColor } : {}),
+    ...(resolvedTextColor ? { color: resolvedTextColor } : {}),
+  };
+
+  // 4) Return JSX
+  return (
+    <section className={`relative ${pyClasses} ${pxClasses}`} style={sectionStyle}>
+      <div className={`${maxWClass} mx-auto`}>
+        {/* Section header */}
+        {(title || subtitle || description || badge) && (
+          <div className={`mb-12 ${headerAlign === "center" ? "text-center" : headerAlign === "right" ? "text-right" : "text-left"}`}>
+            {badge && <span className="...">{badge}</span>}
+            {subtitle && <p style={{ color: darkDefaults.mutedTextColor }}>...</p>}
+            {title && <h2 className="text-3xl font-bold">...</h2>}
+            {description && <p style={{ color: darkDefaults.mutedTextColor }}>...</p>}
+          </div>
+        )}
+
+        {/* Section body — variant-specific content */}
+        <div>
+          {/* Render items/content based on variant */}
+        </div>
+      </div>
+    </section>
+  );
+}
+```
+
+### 0.5 `defineComponent()` Field Types Reference
+
+When registering a component in `core-components.ts`, use `defineComponent()` with these field types:
+
+```typescript
+defineComponent({
+  type: "MySection",           // Must match KNOWN_REGISTRY_TYPES entry
+  label: "My Section",         // Editor display name
+  description: "Short desc",   // Tooltip description
+  category: "sections",        // Category: "sections" | "forms" | "trust" | "navigation" | etc.
+  icon: "LayoutGrid",          // Lucide icon name
+  render: MySectionRender,     // The render function from renders.tsx
+  fields: {
+    // TEXT — single-line string input
+    title: { type: "text", label: "Title", defaultValue: "Hello" },
+
+    // TEXTAREA — multi-line string
+    description: { type: "textarea", label: "Description" },
+
+    // COLOR — hex colour picker
+    backgroundColor: { type: "color", label: "Background Color" },
+
+    // SELECT — dropdown with fixed options
+    variant: {
+      type: "select",
+      label: "Variant",
+      options: [
+        { label: "Cards", value: "cards" },
+        { label: "Minimal", value: "minimal" },
+        { label: "Grid", value: "grid" },
+      ],
+      defaultValue: "cards",
+    },
+
+    // NUMBER — numeric input with min/max
+    columns: { type: "number", label: "Columns", min: 1, max: 6, defaultValue: 3 },
+
+    // TOGGLE — boolean switch
+    showBorder: { type: "toggle", label: "Show Border", defaultValue: false },
+
+    // IMAGE — image upload with URL result
+    backgroundImage: { type: "image", label: "Background Image" },
+
+    // LINK — URL input
+    ctaLink: { type: "link", label: "CTA Link" },
+
+    // ARRAY — repeatable list of items
+    items: {
+      type: "array",
+      label: "Items",
+      itemFields: {
+        title: { type: "text", label: "Title" },
+        description: { type: "textarea", label: "Description" },
+        icon: { type: "text", label: "Icon" },
+        image: { type: "image", label: "Image" },
+      },
+    },
+  },
+  defaultProps: {
+    title: "Hello",
+    variant: "cards",
+    columns: 3,
+    // ... defaults for all key props
+  },
+  ai: {
+    description: "Description for AI agent understanding",
+    canModify: ["title", "description", "items", "variant"],
+  },
+});
+```
+
+### 0.6 Component Metadata Entry
+
+Every component MUST also be registered in `component-metadata.ts`:
+
+```typescript
+{
+  type: "MySection",                    // Must match defineComponent type exactly
+  label: "My Section",                  // Human-readable label
+  category: "sections",                 // For editor grouping
+  description: "Short description",     // For editor tooltips
+  acceptsChildren: false,               // true only for container components
+  keywords: ["section", "feature"],     // Search keywords for editor
+  ai: {
+    description: "Longer description for AI understanding of when to use this",
+    usageGuidelines: "Use this section when...",
+    suggestedWith: ["Hero", "CTA"],     // Components that pair well
+  },
+},
+```
+
+### 0.7 Converter Registration (2 Steps)
+
+**Step 1:** Add aliases to `typeMap` in `converter.ts` (~L361):
+```typescript
+const typeMap: Record<string, string> = {
+  // ... existing entries ...
+  MySectionBlock: "MySection",
+  MySectionSection: "MySection",
+  MySection: "MySection",
+  // Add 3-5 natural language aliases the AI might generate
+};
+```
+
+**Step 2:** Add type name to `KNOWN_REGISTRY_TYPES` set in `converter.ts` (~L728):
+```typescript
+const KNOWN_REGISTRY_TYPES = new Set([
+  // ... existing entries ...
+  "MySection",
+]);
+```
+
+### 0.8 Build Checklist — Creating a New Section Component
+
+When building a new section component, modify these 4 files **in this order**:
+
+```
+FILE 1: src/lib/studio/blocks/renders.tsx
+  □ Create the render function (e.g., MySectionRender)
+  □ Import shared utilities from layout-utils.ts
+  □ Use getResponsiveClasses() for all spacing/sizing — NO inline maps
+  □ Use isDarkBackground() + getDarkAwareDefaults() for colour adaptation
+  □ Export the function
+
+FILE 2: src/lib/studio/registry/core-components.ts
+  □ Import the render function
+  □ Add defineComponent({ type, label, fields, render, defaultProps, ai })
+  □ Field names must EXACTLY match destructured props in the render function
+  □ Use correct field types (text/textarea/color/select/number/toggle/image/link/array)
+
+FILE 3: src/lib/studio/registry/component-metadata.ts
+  □ Add entry to COMPONENT_METADATA array
+  □ Include type, label, category, description, keywords, ai properties
+
+FILE 4: src/lib/ai/website-designer/converter.ts
+  □ Add 3-5 aliases to typeMap (e.g., "MySectionBlock": "MySection")
+  □ Add "MySection" to KNOWN_REGISTRY_TYPES set
+```
+
+### 0.9 DO / DON'T Rules
+
+```
+✅ DO:
+- Import ALL class maps from layout-utils.ts (paddingYMap, gapMap, etc.)
+- Use getResponsiveClasses(prop, map) for spacing/sizing classes
+- Use isDarkBackground() + getDarkAwareDefaults() for colour adaptation
+- Use shapeDividerPaths from layout-utils.ts for shape dividers (11 shapes already defined)
+- Match prop names EXACTLY across renders.tsx, core-components.ts, and converter.ts
+- Use Tailwind-safe class maps — never template literals like `py-${value}`
+- Provide sensible defaults so components render with zero props
+
+❌ DON'T:
+- Create new utility files for isDarkBackground or class maps (ALREADY EXIST in layout-utils.ts)
+- Create inline const paddingYClasses = {...} maps (USE the imported maps)
+- Use template literal Tailwind classes like `gap-${gap}` (Tailwind can't scan them)
+- Add props that don't exist in defineComponent fields (they won't be passed through)
+- Hardcode hex colours inline — always make them overridable via props
+- Mix up similar prop names (e.g., badgeText vs badge, bgColor vs backgroundColor)
+```
 
 ---
 
@@ -237,25 +569,20 @@ paddingX?: "none" | "sm" | "md" | "lg" | "xl";
 maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "full";
 ```
 
-**Padding Value Mapping (standardised):**
+**Padding Value Mapping — USE SHARED MAPS (see [Section 0.3](#03-shared-utilities--already-exist-in-layout-utilsts)):**
+
+> **DO NOT create inline class maps.** The canonical maps already exist in `layout-utils.ts` and are imported by all render functions. Use `getResponsiveClasses(paddingY, paddingYMap)` — see Section 0.3 for the exact import pattern.
 
 ```typescript
-const paddingYClasses = {
-  none: "",
-  sm: "py-8 md:py-12",
-  md: "py-12 md:py-16",
-  lg: "py-16 md:py-24",
-  xl: "py-20 md:py-32",
-  "2xl": "py-24 md:py-40",
-};
+// ✅ CORRECT — import from layout-utils.ts (already 3-breakpoint responsive)
+import { getResponsiveClasses, paddingYMap, paddingXMap } from "@/lib/studio/blocks/layout-utils";
 
-const paddingXClasses = {
-  none: "",
-  sm: "px-4",
-  md: "px-4 md:px-6",
-  lg: "px-4 md:px-8",
-  xl: "px-4 md:px-12",
-};
+const pyClasses = getResponsiveClasses(paddingY, paddingYMap);
+// paddingYMap keys: "none" | "xs" | "sm" | "md" | "lg" | "xl"
+// Each key maps to { mobile: "py-*", tablet: "sm:py-*", desktop: "lg:py-*" }
+
+const pxClasses = getResponsiveClasses(paddingX, paddingXMap);
+// paddingXMap keys: "none" | "xs" | "sm" | "md" | "lg"
 ```
 
 ### 3.4 Standard Background Props
@@ -1082,40 +1409,46 @@ type BorderRadius = "none" | "sm" | "md" | "lg" | "xl" | "2xl" | "full";
 type TitleSize = "sm" | "md" | "lg" | "xl" | "2xl";
 ```
 
-### 9.3 Tailwind Class Mapping (Canonical Values)
+### 9.3 Tailwind Class Mapping — USE SHARED MAPS
 
-Every section MUST use the exact same Tailwind mappings:
+> **DO NOT copy class maps into section components.** All canonical maps live in `layout-utils.ts` and are imported by every render function. See [Section 0.3](#03-shared-utilities--already-exist-in-layout-utilsts) for the full import list.
 
 ```typescript
-// paddingY — CANONICAL (copy this into every section)
-const paddingYClasses: Record<string, string> = {
-  none: "",
-  sm: "py-8 md:py-12",
-  md: "py-12 md:py-16",
-  lg: "py-16 md:py-24",
-  xl: "py-20 md:py-32",
-  "2xl": "py-24 md:py-40",
-};
+// ✅ CORRECT — import from layout-utils.ts
+import {
+  getResponsiveClasses,
+  paddingYMap,    // Responsive 3-breakpoint: { mobile: "py-*", tablet: "sm:py-*", desktop: "lg:py-*" }
+  paddingXMap,    // Responsive 3-breakpoint
+  maxWidthMap,    // Flat: "xs".."7xl" | "full" | "none" | "screen-*" → "max-w-*"
+  gapMap,         // Responsive 3-breakpoint
+  shadowMap,      // Flat: "none"|"sm"|"md"|"lg"|"xl"|"2xl"|"inner" → "shadow-*"
+  borderRadiusMap // Responsive 3-breakpoint
+} from "@/lib/studio/blocks/layout-utils";
 
-// paddingX — CANONICAL
-const paddingXClasses: Record<string, string> = {
-  none: "",
-  sm: "px-4",
-  md: "px-4 md:px-6",
-  lg: "px-4 md:px-8",
-  xl: "px-4 md:px-12",
-};
-
-// maxWidth — CANONICAL
-const maxWidthClasses: Record<string, string> = {
-  sm: "max-w-2xl",
-  md: "max-w-3xl",
-  lg: "max-w-5xl",
-  xl: "max-w-7xl",
-  "2xl": "max-w-screen-2xl",
-  full: "max-w-full",
-};
+// Usage:
+const pyClasses = getResponsiveClasses(paddingY, paddingYMap);
+const pxClasses = getResponsiveClasses(paddingX, paddingXMap);
+const maxWClass = maxWidthMap[maxWidth as string] || "max-w-7xl";
+const shadowClass = shadowMap[shadow as string] || "";
 ```
+
+**Available map keys in `layout-utils.ts`:**
+
+| Map | Keys | Responsive? |
+|-----|------|------------|
+| `paddingYMap` | none, xs, sm, md, lg, xl | ✅ 3-breakpoint |
+| `paddingXMap` | none, xs, sm, md, lg | ✅ 3-breakpoint |
+| `paddingMap` | none, xs, sm, md, lg, xl | ✅ 3-breakpoint |
+| `gapMap` | none, xs, sm, md, lg, xl | ✅ 3-breakpoint |
+| `marginYMap` | none, xs, sm, md, lg, xl | ✅ 3-breakpoint |
+| `borderRadiusMap` | none, sm, md, lg, xl, 2xl, 3xl, full | ✅ 3-breakpoint |
+| `maxWidthMap` | xs..7xl, full, none, screen-sm..2xl, prose | ❌ Flat |
+| `shadowMap` | none, sm, md, lg, xl, 2xl, inner | ❌ Flat |
+| `hoverShadowMap` | none, sm, md, lg, xl, 2xl | ❌ Flat |
+| `widthFractionMap` | full, 3/4, 2/3, 1/2, 1/3, 1/4 | ❌ Flat |
+| `alignItemsMap` | start, center, end, stretch, baseline | ❌ Flat |
+| `contentAlignMap` | left, center, right | ❌ Flat |
+| `verticalAlignMap` | top, center, bottom | ❌ Flat |
 
 ### 9.4 Current Inconsistencies to Resolve
 
@@ -1243,13 +1576,31 @@ Footer:         paddingY="lg" (standard structural section)
 
 ## 11. Section Transition & Divider System
 
-### 11.1 Shape Dividers
+### 11.1 Shape Dividers — USE EXISTING `shapeDividerPaths` from `layout-utils.ts`
 
-A new shared utility component that renders SVG dividers between sections:
+> **11 SVG shape divider paths already exist** in `layout-utils.ts` at ~L597 as the `shapeDividerPaths` record. DO NOT create new SVG paths — import and use the existing ones.
+
+**Available shapes in `shapeDividerPaths`:**
+
+| Shape | Description |
+|-------|-------------|
+| `wave` | Classic sine wave |
+| `wave-smooth` | Gentler, wider wave |
+| `curve` | Large quadratic bezier arc |
+| `triangle` | Single centered triangle peak |
+| `tilt` | Diagonal line from bottom-left to top-right |
+| `arrow` | Pointed arrow peak (like triangle but joins at base) |
+| `zigzag` | Repeating zigzag teeth |
+| `clouds` | Multiple overlapping circular bumps |
+| `mountains` | Irregular jagged mountain peaks |
+| `drops` | Repeating droplet/scallop shapes |
+| `pyramids` | Repeating equilateral triangles |
+
+**Section divider props interface:**
 
 ```typescript
 export interface SectionDividerProps {
-  shape?: "wave" | "curve" | "angle" | "triangle" | "zigzag" | "arrow" | "cloud" | "none";
+  shape?: "wave" | "wave-smooth" | "curve" | "triangle" | "tilt" | "arrow" | "zigzag" | "clouds" | "mountains" | "drops" | "pyramids" | "none";
   position?: "top" | "bottom";
   color?: string; // Matches next section's background
   height?: "sm" | "md" | "lg";
@@ -1258,14 +1609,20 @@ export interface SectionDividerProps {
 }
 ```
 
-**Implementation approach:** Each section optionally renders a top/bottom divider via props:
+**Implementation:** Each section renders top/bottom dividers using the existing SVG paths:
 
 ```typescript
+import { shapeDividerPaths } from "@/lib/studio/blocks/layout-utils";
+
 // Add to every section's props
-dividerTop?: "wave" | "curve" | "angle" | "triangle" | "none";
+dividerTop?: "wave" | "curve" | "triangle" | "tilt" | "none"; // etc.
 dividerTopColor?: string;
-dividerBottom?: "wave" | "curve" | "angle" | "triangle" | "none";
+dividerBottom?: "wave" | "curve" | "triangle" | "tilt" | "none";
 dividerBottomColor?: string;
+
+// Render the SVG divider
+const svgPath = shapeDividerPaths[dividerTop || "wave"];
+// <svg viewBox="0 0 1920 128" preserveAspectRatio="none"><path d={svgPath} fill={dividerTopColor} /></svg>
 ```
 
 ### 11.2 Scroll-Based Transitions
@@ -1331,43 +1688,42 @@ All 17 section components use **inline styles** for colours (via `backgroundColo
 | Dark-aware smart defaults | Static hex defaults | `isDark()` utility (ContactForm/Newsletter already have this) | ⚠️ Medium |
 | Colour contrast validation | None | Warn in editor when text/bg contrast < 4.5:1 | Low |
 
-### 13.3 Dark-Aware Utility (Reference Implementation)
+### 13.3 Dark-Aware Utilities — ALREADY EXIST in `layout-utils.ts`
 
-ContactFormRender and NewsletterRender already implement dark-aware logic:
+> **DO NOT create a new `utils/section-theme.ts` file.** The dark-aware utilities already exist in `layout-utils.ts` and are more comprehensive than the inline patterns in ContactFormRender/NewsletterRender. See [Section 0.3](#03-shared-utilities--already-exist-in-layout-utilsts) for the full reference.
+
+**Existing utilities in `layout-utils.ts`:**
+
+| Utility | Line | Signature | Returns |
+|---------|------|-----------|---------|
+| `isDarkBackground()` | L454 | `(hex?: string) => boolean` | Uses ITU-R BT.601 luminance formula. Threshold: `luminance <= 0.45`. Handles 3/6-digit hex, returns `false` for transparent/non-hex. |
+| `getDarkAwareDefaults()` | L542 | `(isDarkBg: boolean) => object` | `{ borderColor, textColor, mutedTextColor, dividerColor, overlayBg, particleColor, patternColor, glowOpacity }` |
+| `resolveShadow()` | L484 | `(shadow, isDarkBg) => string` | On dark: CSS box-shadow with white glow. On light: empty string (use Tailwind shadow-* classes). |
+| `resolveGlassmorphism()` | L517 | `(isDarkBg) => object` | `{ background, backdropFilter, WebkitBackdropFilter, border }` — adaptive for dark/light. |
+
+**The canonical pattern for ALL section components:**
 
 ```typescript
-// From ContactFormRender — EXCELLENT pattern to replicate
-const isDark = backgroundColor
-  ? parseInt(backgroundColor.replace("#", "").substring(0, 2), 16) < 100
-  : false;
-const resolvedTextColor = textColor || (isDark ? "#f9fafb" : "#1f2937");
-const resolvedInputBg = inputBackgroundColor || (isDark ? "#374151" : "#ffffff");
+import { isDarkBackground, getDarkAwareDefaults, resolveShadow, resolveGlassmorphism } from "@/lib/studio/blocks/layout-utils";
+
+// Inside the render function:
+const darkBg = isDarkBackground(backgroundColor);
+const darkDefaults = getDarkAwareDefaults(darkBg);
+
+// Resolve colours with smart fallbacks
+const resolvedTextColor = textColor || darkDefaults.textColor;           // "#f8fafc" on dark, "#0f172a" on light
+const resolvedSubtitleColor = subtitleColor || darkDefaults.mutedTextColor; // "#9ca3af" on dark, "#6b7280" on light
+const resolvedBorderColor = borderColor || darkDefaults.borderColor;     // "rgba(255,255,255,0.1)" on dark, "#e5e7eb" on light
+const resolvedDividerColor = dividerColor || darkDefaults.dividerColor;  // "rgba(255,255,255,0.15)" on dark, "#e5e7eb" on light
+
+// For card shadows (glow on dark backgrounds)
+const cardShadowStyle = resolveShadow(shadow || "md", darkBg);
+
+// For glassmorphism effects
+const glassStyle = resolveGlassmorphism(darkBg);
 ```
 
-**Recommendation:** Extract this into a shared utility:
-
-```typescript
-// utils/section-theme.ts
-export function isDarkBackground(hex?: string): boolean {
-  if (!hex) return false;
-  const clean = hex.replace("#", "");
-  if (clean.length < 6) return false;
-  const r = parseInt(clean.slice(0, 2), 16);
-  const g = parseInt(clean.slice(2, 4), 16);
-  const b = parseInt(clean.slice(4, 6), 16);
-  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 < 0.5;
-}
-
-export function resolveTextColor(textColor?: string, bgColor?: string): string {
-  if (textColor) return textColor;
-  return isDarkBackground(bgColor) ? "#f9fafb" : "#1f2937";
-}
-
-export function resolveSubtitleColor(color?: string, bgColor?: string): string {
-  if (color) return color;
-  return isDarkBackground(bgColor) ? "#9ca3af" : "#6b7280";
-}
-```
+**Migration note:** The existing inline `isDark` checks in ContactFormRender and NewsletterRender (which use a simpler `parseInt(hex...) < 100` comparison) should eventually be replaced with the more accurate `isDarkBackground()` from layout-utils.ts. This is a non-breaking improvement — the layout-utils version uses the ITU-R BT.601 perceived brightness formula which is more accurate for coloured backgrounds.
 
 ---
 
@@ -1437,64 +1793,168 @@ RULES:
 
 ## 15. Registry & Converter Alignment
 
+> **For the complete step-by-step registration process, see [Section 0.7](#07-converter-registration-2-steps) and [Section 0.8](#08-build-checklist--creating-a-new-section-component).**
+
 ### 15.1 Converter typeMap Aliases
 
-Every new section component MUST be registered in `converter.ts` typeMap with multiple natural-language aliases:
+**File:** `src/lib/ai/website-designer/converter.ts` — `typeMap` at ~L361, `KNOWN_REGISTRY_TYPES` at ~L728.
+
+Every new section component MUST be registered in the `typeMap` with multiple natural-language aliases. The values are **PascalCase registry type names** (not lowercase):
 
 ```typescript
-// Existing aliases (verified complete)
-"HeroSection": "hero",
-"Hero": "hero",
-"HeroBanner": "hero",
-"FeaturesSection": "features",
-"Features": "features",
-"KeyFeatures": "features",
-"Benefits": "features",
-"Services": "features",
-// ... 150+ total aliases
+// Existing aliases (excerpt — 150+ total in the real file)
+const typeMap: Record<string, string> = {
+  HeroBlock: "Hero",
+  HeroSection: "Hero",
+  FeaturesGridBlock: "Features",
+  FeaturesBlock: "Features",
+  CTABlock: "CTA",
+  CTASection: "CTA",
+  TestimonialsBlock: "Testimonials",
+  FAQBlock: "FAQ",
+  StatsBlock: "Stats",
+  TeamBlock: "Team",
+  GalleryBlock: "Gallery",
+  PricingBlock: "Pricing",
+  NewsletterBlock: "Newsletter",
+  FooterBlock: "Footer",
+  NavbarBlock: "Navbar",
+  // AI also generates these variations:
+  AboutBlock: "Features",
+  AboutSection: "Features",
+  ServiceBlock: "Features",
+  ServicesBlock: "Features",
+  BenefitsBlock: "Features",
+  WhyUsBlock: "Features",
+  HowItWorks: "Features",
+  LogoCloudBlock: "LogoCloud",
+  LogoCloudSection: "LogoCloud",
+  PartnerLogos: "LogoCloud",
+  Partners: "LogoCloud",
+  TrustedBy: "LogoCloud",
+  // ... continues
+};
+```
 
-// NEW aliases to add for new components
-"LogoCloud": "logoCloud",
-"ClientLogos": "logoCloud",
-"TrustedBy": "logoCloud",
-"Partners": "logoCloud",
-"AsSeenIn": "logoCloud",
-"Banner": "banner",
-"AnnouncementBar": "banner",
-"TopBar": "banner",
-"Content": "content",
-"RichText": "content",
-"TextBlock": "content",
-"AboutSection": "content",
-"BlogPreview": "blogPreview",
-"Blog": "blogPreview",
-"LatestPosts": "blogPreview",
-"ComparisonTable": "comparisonTable",
-"FeatureComparison": "comparisonTable",
-"Map": "map",
-"Location": "map",
-"FindUs": "map",
+**NEW aliases to add for new components:**
+
+```typescript
+// LogoCloud
+"LogoCloud": "LogoCloud",
+"ClientLogos": "LogoCloud",
+"AsSeenIn": "LogoCloud",
+
+// Banner / Announcement Bar
+"Banner": "AnnouncementBar",
+"AnnouncementBar": "AnnouncementBar",
+"TopBar": "AnnouncementBar",
+"AnnouncementBanner": "AnnouncementBar",
+
+// Content / Rich Text
+"Content": "RichText",
+"RichText": "RichText",
+"TextBlock": "RichText",
+"AboutContent": "RichText",
+"ContentSection": "RichText",
+
+// Blog Preview
+"BlogPreview": "BlogPreview",
+"Blog": "BlogPreview",
+"LatestPosts": "BlogPreview",
+"BlogSection": "BlogPreview",
+"ArticlePreview": "BlogPreview",
+
+// Comparison Table
+"ComparisonTable": "ComparisonTable",
+"FeatureComparison": "ComparisonTable",
+"CompareSection": "ComparisonTable",
+
+// Map
+"Map": "Map",
+"Location": "Map",
+"FindUs": "Map",
+"LocationMap": "Map",
+```
+
+**And add each new type to `KNOWN_REGISTRY_TYPES`** (~L728):
+
+```typescript
+const KNOWN_REGISTRY_TYPES = new Set([
+  // ... existing entries (Hero, Features, CTA, etc.) ...
+  // Add new section types:
+  "AnnouncementBar",    // Already present
+  "BlogPreview",        // NEW
+  "ComparisonTable",    // Already present
+  // LogoCloud, RichText, Map already present
+]);
 ```
 
 ### 15.2 Component Metadata
 
-Every new component MUST be registered in `component-metadata.ts` with:
+**File:** `src/lib/studio/registry/component-metadata.ts`
+
+Every new component MUST be registered in the `COMPONENT_METADATA` array. See [Section 0.6](#06-component-metadata-entry) for the exact interface. Real example from the codebase:
 
 ```typescript
+// From component-metadata.ts L601-614 (Newsletter entry)
 {
-  type: "logoCloud",
-  label: "Logo Cloud",
-  category: "trust",
-  description: "Display client, partner, or press logos",
-  icon: "building",
-  defaultProps: { /* sensible defaults */ },
-  propGroups: [ /* organised prop groups for editor */ ],
-}
+  type: "Newsletter",
+  label: "Newsletter Signup",
+  category: "forms",
+  description: "Email newsletter form",
+  acceptsChildren: false,
+  keywords: ["newsletter", "email", "signup", "subscribe"],
+  ai: {
+    description: "Email subscription form for newsletters",
+    usageGuidelines: "Use in footer or as standalone CTA",
+  },
+},
 ```
 
 ### 15.3 Core Components Registry
 
-Every new component MUST be registered in `core-components.ts` with field definitions that exactly match the render props interface.
+**File:** `src/lib/studio/registry/core-components.ts`
+
+Every new component MUST be registered via `defineComponent()` with field definitions that exactly match the render props interface. See [Section 0.5](#05-definecomponent-field-types-reference) for the full field types reference. Real example from the codebase:
+
+```typescript
+// From core-components.ts L13153-13209 (Newsletter entry)
+defineComponent({
+  type: "Newsletter",
+  label: "Newsletter",
+  description: "Email signup form",
+  category: "forms",
+  icon: "Newspaper",
+  render: NewsletterRender,
+  fields: {
+    title: { type: "text", label: "Title", defaultValue: "Subscribe to our newsletter" },
+    subtitle: { type: "textarea", label: "Subtitle" },
+    placeholder: { type: "text", label: "Placeholder", defaultValue: "Enter your email" },
+    submitText: { type: "text", label: "Button Text", defaultValue: "Subscribe" },
+    successMessage: { type: "text", label: "Success Message", defaultValue: "Thanks for subscribing!" },
+    layout: {
+      type: "select",
+      label: "Layout",
+      options: [
+        { label: "Inline", value: "inline" },
+        { label: "Stacked", value: "stacked" },
+      ],
+      defaultValue: "inline",
+    },
+  },
+  defaultProps: {
+    title: "Subscribe to our newsletter",
+    placeholder: "Enter your email",
+    submitText: "Subscribe",
+    successMessage: "Thanks for subscribing!",
+    layout: "inline",
+  },
+  ai: {
+    description: "An email newsletter signup form",
+    canModify: ["title", "subtitle", "submitText", "successMessage"],
+  },
+}),
+```
 
 ---
 
@@ -1512,6 +1972,8 @@ Every new component MUST be registered in `core-components.ts` with field defini
 | Add standard background system to Testimonials, Pricing, Accordion, Countdown | 4 | Medium |
 | Wrap CarouselRender in standard `<section>` container with header | 1 | Small |
 | Extract `isDarkBackground()` utility from ContactForm/Newsletter into shared module | — | Small |
+
+> **Note:** `isDarkBackground()` and `getDarkAwareDefaults()` already exist in `layout-utils.ts`. This task means migrating ContactForm/Newsletter to use the shared utility instead of their inline `parseInt(hex...) < 100` checks.
 
 **Estimated total:** 15-20 discrete changes, no API-breaking changes (additive only).
 
@@ -1646,7 +2108,7 @@ REGISTRY:
 
 ---
 
-*Document version: 1.0*  
-*Created: Session 11*  
+*Document version: 2.0 — Implementation-Ready*  
+*Created: Session 11 | Updated: Session 12 (added Section 0 Blueprint, fixed layout-utils.ts references)*  
 *Covers: 17 existing section components + 6 proposed new sections*  
 *Total existing props: 800+ | Total existing variants: 75+ | Total converter aliases: 150+*

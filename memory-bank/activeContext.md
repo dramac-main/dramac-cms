@@ -1,65 +1,53 @@
 # Active Context
 
-## Current Focus: Button Components Master Plan — Phases 1-5 COMPLETE ✅
+## Current Focus: Section Components Master Plan — Document v2.0 COMPLETE ✅
 
-### Status: All render changes, registrations, converter mappings, and TypeScript verification done
+### Status: SECTIONS-COMPONENTS-MASTER-PLAN.md upgraded from v1.0 (descriptive) to v2.0 (implementation-ready)
 
-### What Was Done
+### What Was Done (Latest Session)
 
-**Phase 1 (prior session) — Critical Color Fixes:**
-- ButtonRender: destructive/success/warning variants → CSS variables, ring variant added, aria-busy/aria-disabled
-- BadgeRender: all 6 variants → CSS variables with color-mix()
-- Tooltip: hardcoded bg-gray-900 → CSS variable
+**SECTIONS-COMPONENTS-MASTER-PLAN.md v2.0 Upgrade — 5 critical fixes:**
 
-**Phase 2 (prior session) — 5 New Components in renders.tsx:**
-- LinkRender (6 variants: default/underline/subtle/nav/button/muted)
-- ButtonGroupRender (connected/separated/toggle)
-- ChipRender (filled/outline/subtle with selected/disabled states)
-- BreadcrumbRender (chevron/slash/arrow/dot separators, truncation)
-- PaginationRender (default/simple/compact/minimal)
+1. **Added Section 0: Implementation Blueprint for AI Agents** (~200 lines)
+   - Critical File Map with exact paths + line numbers (renders.tsx, layout-utils.ts, converter.ts, core-components.ts, component-metadata.ts)
+   - Props Pipeline explanation (converter → registry → render)
+   - Complete shared utilities reference (class maps, dark-mode, shape dividers, gradients, visibility)
+   - Render function skeleton with exact import pattern
+   - defineComponent() field types reference (text/textarea/color/select/number/toggle/image/link/array)
+   - Component metadata entry skeleton
+   - Converter registration (typeMap + KNOWN_REGISTRY_TYPES) steps
+   - 4-file build checklist for creating new section components
+   - DO/DON'T rules for AI agents
 
-**Phase 3 — SocialLinks V2 Overhaul (renders.tsx):**
-- Replaced entire SocialLinksRender with V2: 15-platform SOCIAL_PLATFORMS map with SVG paths & brand colors
-- Props: variant/useBrandColors/alignment/direction/hoverEffect/showLabels
-- 5 variants: icons/buttons/rounded/pill/text
-- Proper role="list"/role="listitem" accessibility
+2. **Fixed Section 3.3 + Section 9.3** — Replaced inline `const paddingYClasses = {...}` maps with reference to `layout-utils.ts` shared maps + `getResponsiveClasses()`. Added complete map key reference table.
 
-**Phase 4.1 — Icon System (renders.tsx):**
-- 22 Lucide icon imports + BUTTON_ICONS map (20 entries)
-- iconName prop added to ButtonProps, renderIcon resolves from map
+3. **Fixed Section 13.3** — Replaced proposal to create new `utils/section-theme.ts` with reference to EXISTING `isDarkBackground()` (L454), `getDarkAwareDefaults()` (L542), `resolveShadow()`, `resolveGlassmorphism()` in layout-utils.ts.
 
-**Phase 4.2-4.6 — CTA Refactoring: SKIPPED (too risky)**
+4. **Fixed Section 15** — Added exact file paths and line numbers. Fixed typeMap values to use PascalCase (matching actual code). Added real code examples from Newsletter defineComponent + metadata entries.
 
-**Phase 5 — Registration & Pipeline (core-components.ts + converter.ts):**
-- Button: Added "ring" to variant options, added iconName text field + description, added iconName to content field group & AI canModify
-- SocialLinks: Complete overhaul — 15 platform options, variant/useBrandColors/alignment/direction/gap/hoverEffect/showLabels fields, 6 field groups, expanded AI canModify
-- ButtonGroup: New registration in buttonComponents array — direction/variant/size/gap/fullWidth/borderRadius/ariaLabel, acceptsChildren: true
-- Link: New registration in navigationComponents array — text/href/target/variant(6)/color/fontSize/fontWeight/underlineAnimation/showExternalIcon/ariaLabel
-- Breadcrumb: New registration in navigationComponents array — items array/separator(4)/variant(3)/size/maxItems/showHome/color/activeColor/ariaLabel
-- Chip: New registration in uiComponents array — label/variant(3)/size/color/selected/disabled/rounded/avatar/removable/ariaLabel
-- Pagination: New registration in interactiveComponents array — currentPage/totalPages/variant(4)/size/activeColor/showFirstLast/showPrevNext/siblingsCount/ariaLabel
-- Converter: Added 17 typeMap entries (Link/TextLink/InlineLink/NavLink→Link, ButtonGroup/ButtonRow/ActionBar→ButtonGroup, Chip/FilterChip/Tag/SelectableTag→Chip, NavBreadcrumb/BreadcrumbTrail/BreadcrumbNav/PageBreadcrumb→Breadcrumb, Pagination/Pager/PageNav/PageNumbers→Pagination)
+5. **Fixed Section 11.1** — Referenced existing `shapeDividerPaths` in layout-utils.ts (11 shapes: wave, wave-smooth, curve, triangle, tilt, arrow, zigzag, clouds, mountains, drops, pyramids) instead of proposing new SVG creation.
+
+6. **Fixed Section 16 Phase 1** — Added note that `isDarkBackground()` already exists in layout-utils.ts; the Phase 1 task is about migrating ContactForm/Newsletter to use it.
+
+### Key Discovery: layout-utils.ts
+The file `src/lib/studio/blocks/layout-utils.ts` is the single most important shared utility file — it contains ALL class maps, dark-mode detection, responsive helpers, shape dividers, and gradient builders. Every render function imports from it. The v1.0 document didn't properly reference this file, leading to incorrect inline class map examples and proposals to create utilities that already exist.
 
 ### Build Status
-- Zero new TypeScript errors from button work (31 pre-existing errors remain in other files)
+- No code changes — document-only edits
+- Document is now at v2.0 with ~1700 lines
 
-### Files Modified
-- `src/lib/ai/website-designer/design/typography-intelligence.ts` — 4 new functions
-- `src/lib/studio/engine/renderer.tsx` — CSS var injection + preconnect + font weights
-- `src/lib/studio/blocks/renders.tsx` — 4 overhauled + 5 new render functions
-- `src/lib/studio/registry/core-components.ts` — 3 fixed + 5 new registrations + new imports
-- `src/lib/ai/website-designer/converter.ts` — typeMap + KNOWN_REGISTRY + 8 handler updates
-- `src/lib/studio/registry/component-metadata.ts` — 5 new entries
+### Files Modified This Session
+- `docs/SECTIONS-COMPONENTS-MASTER-PLAN.md` — 7 edits (TOC, Section 0, 3.3, 9.3, 11.1, 13.3, 15.1-15.3, 16, version bump)
 
-### Previous Work: Layout Component Prop Alignment ✅
-
-**core-components.ts (7 components):**
-| Component | Fix |
-|-----------|-----|
-| Section | `padding` → split into `paddingY` + `paddingX` fields |
-| Container | `padding` → split into `paddingX` + `paddingY` fields |
-| Columns | added `stackOnMobile` toggle field |
-| Grid | removed dead `autoFit`/`minChildWidth` fields |
+### Master Plan Document Progress
+| Document | Status |
+|----------|--------|
+| LAYOUT-COMPONENTS-MASTER-PLAN.md | ✅ COMPLETE + IMPLEMENTED |
+| TYPOGRAPHY-COMPONENTS-MASTER-PLAN.md | ✅ COMPLETE + IMPLEMENTED |
+| BUTTONS-COMPONENTS-MASTER-PLAN.md | ✅ COMPLETE + IMPLEMENTED |
+| MEDIA-COMPONENTS-MASTER-PLAN.md | ✅ COMPLETE (awaiting implementation) |
+| SECTIONS-COMPONENTS-MASTER-PLAN.md | ✅ v2.0 COMPLETE (implementation-ready) |
+| Forms & Inputs (future) | ❌ Not started |
 | GridItem | removed dead `backgroundColor`/`padding` fields |
 | ScrollSectionItem | removed dead `contentAlign`/`verticalAlign`, added `snapAlign` |
 | ShapeDivider | added `width`/`animated` fields |

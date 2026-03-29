@@ -17624,7 +17624,7 @@ export function LinkRender({
       className={`inline-flex items-center gap-1 transition-colors ${weightClass} ${variantClasses} ${animationClass} ${className}`}
       style={{
         color: linkColor,
-        fontSize: fontSize || undefined,
+        fontSize: resolvedFontSize,
       }}
       aria-label={ariaLabel}
     >
@@ -17720,6 +17720,8 @@ export function ButtonGroupRender({
     none: "gap-0",
     xs: "gap-1",
     sm: "gap-2",
+    md: "gap-3",
+    lg: "gap-4",
   }[gap];
 
   const radiusClass = {
@@ -17918,7 +17920,7 @@ export interface BreadcrumbProps {
   items?: BreadcrumbItem[];
 
   // Style
-  separator?: "/" | ">" | "→" | "•" | "chevron";
+  separator?: "/" | ">" | "→" | "•" | "chevron" | "slash" | "arrow" | "dot";
   variant?: "default" | "contained" | "pills";
   size?: "sm" | "md" | "lg";
 
@@ -17975,6 +17977,9 @@ export function BreadcrumbRender({
     ">": ">",
     "→": "→",
     "•": "•",
+    slash: "/",
+    arrow: "→",
+    dot: "•",
     chevron: (
       <svg
         className={size === "sm" ? "w-3 h-3" : size === "lg" ? "w-5 h-5" : "w-4 h-4"}

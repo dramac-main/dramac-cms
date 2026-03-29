@@ -12060,10 +12060,10 @@ const navigationComponents: ComponentDefinition[] = [
         options: [
           { label: "Default", value: "default" },
           { label: "Underline", value: "underline" },
+          { label: "Hover Underline", value: "hover-underline" },
           { label: "Subtle", value: "subtle" },
+          { label: "Bold", value: "bold" },
           { label: "Nav", value: "nav" },
-          { label: "Button", value: "button" },
-          { label: "Muted", value: "muted" },
         ],
         defaultValue: "default",
       },
@@ -12095,9 +12095,9 @@ const navigationComponents: ComponentDefinition[] = [
         label: "Underline Animation",
         options: [
           { label: "None", value: "none" },
-          { label: "Slide", value: "slide" },
-          { label: "Fade", value: "fade" },
-          { label: "Expand", value: "expand" },
+          { label: "Slide In", value: "slide-in" },
+          { label: "Expand Center", value: "expand-center" },
+          { label: "Expand Left", value: "expand-left" },
         ],
         defaultValue: "slide",
       },
@@ -17697,6 +17697,16 @@ const interactiveComponents: ComponentDefinition[] = [
         ],
         defaultValue: "1",
       },
+      shape: {
+        type: "select",
+        label: "Shape",
+        options: [
+          { label: "Rounded", value: "rounded" },
+          { label: "Circle", value: "circle" },
+          { label: "Square", value: "square" },
+        ],
+        defaultValue: "rounded",
+      },
       ariaLabel: {
         type: "text",
         label: "Aria Label",
@@ -17715,7 +17725,7 @@ const interactiveComponents: ComponentDefinition[] = [
         id: "style",
         label: "Style",
         icon: "palette",
-        fields: ["variant", "size", "activeColor"],
+        fields: ["variant", "size", "shape", "activeColor"],
         defaultExpanded: true,
       },
       {
@@ -17738,6 +17748,7 @@ const interactiveComponents: ComponentDefinition[] = [
       totalPages: 10,
       variant: "default",
       size: "md",
+      shape: "rounded",
       showFirstLast: true,
       showPrevNext: true,
       siblingsCount: 1,
@@ -17750,6 +17761,7 @@ const interactiveComponents: ComponentDefinition[] = [
         "totalPages",
         "variant",
         "size",
+        "shape",
         "activeColor",
       ],
     },
@@ -17766,13 +17778,13 @@ const interactiveComponents: ComponentDefinition[] = [
 
 const uiComponents: ComponentDefinition[] = [
   // =========================================================================
-  // BADGE - Status/Label Badge (Enhanced)
+  // BADGE - Status/Label Badge
   // =========================================================================
   defineComponent({
     type: "Badge",
     label: "Badge",
     description:
-      "Premium status badge with icons, animations, and extensive styling (50+ fields)",
+      "Status badge with icons, animations, and color styling",
     category: "content",
     icon: "Tag",
     render: BadgeRender,
@@ -17781,14 +17793,7 @@ const uiComponents: ComponentDefinition[] = [
         id: "content",
         label: "Content",
         icon: "Type",
-        fields: [
-          "text",
-          "icon",
-          "iconPosition",
-          "showDot",
-          "dotPosition",
-          "dotAnimation",
-        ],
+        fields: ["text", "iconName", "iconPosition", "dot", "pulse"],
         defaultExpanded: true,
       },
       {
@@ -17797,60 +17802,13 @@ const uiComponents: ComponentDefinition[] = [
         icon: "Palette",
         fields: [
           "variant",
-          "customColor",
-          "customTextColor",
-          "gradient",
-          "gradientFrom",
-          "gradientTo",
-          "outline",
-          "glass",
-        ],
-        defaultExpanded: false,
-      },
-      {
-        id: "size",
-        label: "Size & Shape",
-        icon: "Maximize",
-        fields: [
           "size",
-          "customFontSize",
-          "customPadding",
           "rounded",
-          "customBorderRadius",
-        ],
-        defaultExpanded: false,
-      },
-      {
-        id: "border",
-        label: "Border",
-        icon: "Square",
-        fields: ["showBorder", "borderColor", "borderWidth", "borderStyle"],
-        defaultExpanded: false,
-      },
-      {
-        id: "shadow",
-        label: "Shadow & Glow",
-        icon: "Sun",
-        fields: ["shadow", "customShadow", "glowEffect", "glowColor"],
-        defaultExpanded: false,
-      },
-      {
-        id: "typography",
-        label: "Typography",
-        icon: "Type",
-        fields: ["fontWeight", "letterSpacing", "textTransform", "fontFamily"],
-        defaultExpanded: false,
-      },
-      {
-        id: "hover",
-        label: "Hover Effects",
-        icon: "MousePointer",
-        fields: [
-          "hoverEffect",
-          "hoverScale",
-          "hoverColor",
-          "hoverBorderColor",
-          "transitionDuration",
+          "outline",
+          "backgroundColor",
+          "textColor",
+          "borderColor",
+          "dotColor",
         ],
         defaultExpanded: false,
       },
@@ -17858,55 +17816,24 @@ const uiComponents: ComponentDefinition[] = [
         id: "animation",
         label: "Animation",
         icon: "Zap",
-        fields: [
-          "animateOnMount",
-          "animationType",
-          "animationDuration",
-          "pulseAnimation",
-          "bounceAnimation",
-        ],
+        fields: ["animateIn"],
         defaultExpanded: false,
       },
       {
         id: "link",
-        label: "Link/Click",
+        label: "Link",
         icon: "Link",
-        fields: ["asLink", "href", "linkTarget", "onClick"],
-        defaultExpanded: false,
-      },
-      {
-        id: "removable",
-        label: "Removable",
-        icon: "X",
-        fields: ["removable", "onRemove", "removeButtonStyle"],
-        defaultExpanded: false,
-      },
-      {
-        id: "counter",
-        label: "Counter Badge",
-        icon: "Hash",
-        fields: ["showCounter", "count", "maxCount", "counterPosition"],
-        defaultExpanded: false,
-      },
-      {
-        id: "responsive",
-        label: "Responsive",
-        icon: "Smartphone",
-        fields: ["hideOnMobile", "mobileSize"],
-        defaultExpanded: false,
-      },
-      {
-        id: "accessibility",
-        label: "Accessibility",
-        icon: "Eye",
-        fields: ["ariaLabel"],
+        fields: ["href", "target"],
         defaultExpanded: false,
       },
     ],
     fields: {
       // === Content ===
       text: { type: "text", label: "Text", defaultValue: "Badge" },
-      icon: { type: "text", label: "Icon (emoji or icon name)" },
+      iconName: {
+        type: "text",
+        label: "Icon Name (e.g., check, star, heart)",
+      },
       iconPosition: {
         type: "select",
         label: "Icon Position",
@@ -17916,19 +17843,10 @@ const uiComponents: ComponentDefinition[] = [
         ],
         defaultValue: "left",
       },
-      showDot: { type: "toggle", label: "Show Dot", defaultValue: false },
-      dotPosition: {
-        type: "select",
-        label: "Dot Position",
-        options: [
-          { label: "Left", value: "left" },
-          { label: "Right", value: "right" },
-        ],
-        defaultValue: "left",
-      },
-      dotAnimation: {
+      dot: { type: "toggle", label: "Show Dot", defaultValue: false },
+      pulse: {
         type: "toggle",
-        label: "Animate Dot (Pulse)",
+        label: "Pulse Dot Animation",
         defaultValue: false,
       },
       // === Style ===
@@ -17938,27 +17856,14 @@ const uiComponents: ComponentDefinition[] = [
         options: [
           { label: "Default", value: "default" },
           { label: "Primary", value: "primary" },
-          { label: "Secondary", value: "secondary" },
           { label: "Success", value: "success" },
           { label: "Warning", value: "warning" },
           { label: "Error", value: "error" },
           { label: "Info", value: "info" },
-          { label: "Custom", value: "custom" },
+          { label: "Outline", value: "outline" },
         ],
         defaultValue: "default",
       },
-      customColor: { type: "color", label: "Custom Background Color" },
-      customTextColor: { type: "color", label: "Custom Text Color" },
-      gradient: { type: "toggle", label: "Use Gradient", defaultValue: false },
-      gradientFrom: {
-        type: "color",
-        label: "Gradient Start",
-        defaultValue: "",
-      },
-      gradientTo: { type: "color", label: "Gradient End", defaultValue: "" },
-      outline: { type: "toggle", label: "Outline Style", defaultValue: false },
-      glass: { type: "toggle", label: "Glass Effect", defaultValue: false },
-      // === Size & Shape ===
       size: {
         type: "select",
         label: "Size",
@@ -17967,164 +17872,38 @@ const uiComponents: ComponentDefinition[] = [
           { label: "Small", value: "sm" },
           { label: "Medium", value: "md" },
           { label: "Large", value: "lg" },
-          { label: "Extra Large", value: "xl" },
         ],
         defaultValue: "md",
       },
-      customFontSize: { type: "text", label: "Custom Font Size (e.g., 14px)" },
-      customPadding: { type: "text", label: "Custom Padding (e.g., 4px 8px)" },
       rounded: {
         type: "select",
         label: "Rounded",
         options: [
-          { label: "None", value: "none" },
-          { label: "Small", value: "sm" },
-          { label: "Medium", value: "md" },
-          { label: "Large", value: "lg" },
+          { label: "Default", value: "default" },
           { label: "Full (Pill)", value: "full" },
         ],
         defaultValue: "full",
       },
-      customBorderRadius: { type: "text", label: "Custom Border Radius" },
-      // === Border ===
-      showBorder: { type: "toggle", label: "Show Border", defaultValue: false },
+      outline: { type: "toggle", label: "Outline Style", defaultValue: false },
+      backgroundColor: { type: "color", label: "Background Color" },
+      textColor: { type: "color", label: "Text Color" },
       borderColor: { type: "color", label: "Border Color" },
-      borderWidth: {
-        type: "select",
-        label: "Border Width",
-        options: [
-          { label: "1px", value: "1" },
-          { label: "2px", value: "2" },
-          { label: "3px", value: "3" },
-        ],
-        defaultValue: "1",
-      },
-      borderStyle: {
-        type: "select",
-        label: "Border Style",
-        options: [
-          { label: "Solid", value: "solid" },
-          { label: "Dashed", value: "dashed" },
-          { label: "Dotted", value: "dotted" },
-        ],
-        defaultValue: "solid",
-      },
-      // === Shadow & Glow ===
-      shadow: {
-        type: "select",
-        label: "Shadow",
-        options: [
-          { label: "None", value: "none" },
-          { label: "Small", value: "sm" },
-          { label: "Medium", value: "md" },
-          { label: "Large", value: "lg" },
-        ],
-        defaultValue: "none",
-      },
-      customShadow: { type: "text", label: "Custom Shadow" },
-      glowEffect: { type: "toggle", label: "Glow Effect", defaultValue: false },
-      glowColor: { type: "color", label: "Glow Color" },
-      // === Typography ===
-      fontWeight: {
-        type: "select",
-        label: "Font Weight",
-        options: [
-          { label: "Normal", value: "normal" },
-          { label: "Medium", value: "medium" },
-          { label: "Semibold", value: "semibold" },
-          { label: "Bold", value: "bold" },
-        ],
-        defaultValue: "medium",
-      },
-      letterSpacing: {
-        type: "select",
-        label: "Letter Spacing",
-        options: [
-          { label: "Normal", value: "normal" },
-          { label: "Wide", value: "wide" },
-          { label: "Wider", value: "wider" },
-        ],
-        defaultValue: "normal",
-      },
-      textTransform: {
-        type: "select",
-        label: "Text Transform",
-        options: [
-          { label: "None", value: "none" },
-          { label: "Uppercase", value: "uppercase" },
-          { label: "Capitalize", value: "capitalize" },
-        ],
-        defaultValue: "none",
-      },
-      fontFamily: { type: "text", label: "Font Family" },
-      // === Hover Effects ===
-      hoverEffect: {
-        type: "select",
-        label: "Hover Effect",
-        options: [
-          { label: "None", value: "none" },
-          { label: "Scale", value: "scale" },
-          { label: "Darken", value: "darken" },
-          { label: "Lighten", value: "lighten" },
-          { label: "Shadow", value: "shadow" },
-        ],
-        defaultValue: "none",
-      },
-      hoverScale: {
-        type: "number",
-        label: "Hover Scale",
-        min: 1,
-        max: 1.5,
-        step: 0.05,
-        defaultValue: 1.05,
-      },
-      hoverColor: { type: "color", label: "Hover Background Color" },
-      hoverBorderColor: { type: "color", label: "Hover Border Color" },
-      transitionDuration: {
-        type: "number",
-        label: "Transition (ms)",
-        min: 100,
-        max: 500,
-        defaultValue: 200,
-      },
+      dotColor: { type: "color", label: "Dot Color" },
       // === Animation ===
-      animateOnMount: {
-        type: "toggle",
-        label: "Animate on Mount",
-        defaultValue: false,
-      },
-      animationType: {
+      animateIn: {
         type: "select",
-        label: "Animation Type",
+        label: "Entrance Animation",
         options: [
+          { label: "None", value: "none" },
           { label: "Fade In", value: "fade" },
           { label: "Scale In", value: "scale" },
           { label: "Slide In", value: "slide" },
-          { label: "Bounce In", value: "bounce" },
         ],
-        defaultValue: "fade",
+        defaultValue: "none",
       },
-      animationDuration: {
-        type: "number",
-        label: "Animation Duration (ms)",
-        min: 100,
-        max: 1000,
-        defaultValue: 300,
-      },
-      pulseAnimation: {
-        type: "toggle",
-        label: "Pulse Animation",
-        defaultValue: false,
-      },
-      bounceAnimation: {
-        type: "toggle",
-        label: "Bounce Animation",
-        defaultValue: false,
-      },
-      // === Link/Click ===
-      asLink: { type: "toggle", label: "As Link", defaultValue: false },
+      // === Link ===
       href: { type: "link", label: "Link URL" },
-      linkTarget: {
+      target: {
         type: "select",
         label: "Link Target",
         options: [
@@ -18133,58 +17912,6 @@ const uiComponents: ComponentDefinition[] = [
         ],
         defaultValue: "_self",
       },
-      onClick: { type: "text", label: "Click Handler (function name)" },
-      // === Removable ===
-      removable: { type: "toggle", label: "Removable", defaultValue: false },
-      onRemove: { type: "text", label: "Remove Handler (function name)" },
-      removeButtonStyle: {
-        type: "select",
-        label: "Remove Button Style",
-        options: [
-          { label: "Icon", value: "icon" },
-          { label: "Circle", value: "circle" },
-        ],
-        defaultValue: "icon",
-      },
-      // === Counter Badge ===
-      showCounter: {
-        type: "toggle",
-        label: "Show Counter",
-        defaultValue: false,
-      },
-      count: { type: "number", label: "Count", min: 0, defaultValue: 0 },
-      maxCount: {
-        type: "number",
-        label: "Max Count (shows +)",
-        min: 1,
-        defaultValue: 99,
-      },
-      counterPosition: {
-        type: "select",
-        label: "Counter Position",
-        options: [
-          { label: "Top Right", value: "top-right" },
-          { label: "Top Left", value: "top-left" },
-        ],
-        defaultValue: "top-right",
-      },
-      // === Responsive ===
-      hideOnMobile: {
-        type: "toggle",
-        label: "Hide on Mobile",
-        defaultValue: false,
-      },
-      mobileSize: {
-        type: "select",
-        label: "Mobile Size",
-        options: [
-          { label: "Same", value: "same" },
-          { label: "Smaller", value: "smaller" },
-        ],
-        defaultValue: "same",
-      },
-      // === Accessibility ===
-      ariaLabel: { type: "text", label: "Aria Label" },
     },
     defaultProps: {
       text: "Badge",
@@ -18194,23 +17921,21 @@ const uiComponents: ComponentDefinition[] = [
     },
     ai: {
       description:
-        "A premium status badge with icons, animations, counters, gradients, and extensive styling options",
+        "A status badge with variant colors, icons, dot indicators, and entrance animations",
       canModify: [
         "text",
         "variant",
         "size",
-        "icon",
+        "rounded",
         "outline",
-        "gradient",
-        "showDot",
-        "removable",
-      ],
-      suggestions: [
-        "Add icon",
-        "Enable gradient",
-        "Add counter",
-        "Make removable",
-        "Enable pulse animation",
+        "iconName",
+        "iconPosition",
+        "dot",
+        "pulse",
+        "backgroundColor",
+        "textColor",
+        "animateIn",
+        "href",
       ],
     },
   }),
@@ -18260,9 +17985,13 @@ const uiComponents: ComponentDefinition[] = [
         defaultValue: false,
       },
       rounded: {
-        type: "toggle",
-        label: "Fully Rounded",
-        defaultValue: true,
+        type: "select",
+        label: "Rounded",
+        options: [
+          { label: "Default", value: "default" },
+          { label: "Full (Pill)", value: "full" },
+        ],
+        defaultValue: "full",
       },
       avatar: { type: "text", label: "Avatar (emoji or URL)" },
       removable: {
@@ -18308,7 +18037,7 @@ const uiComponents: ComponentDefinition[] = [
       size: "md",
       selected: false,
       disabled: false,
-      rounded: true,
+      rounded: "full",
     },
     ai: {
       description:
