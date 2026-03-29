@@ -465,12 +465,16 @@ export function getVisibilityClasses(props: {
 
 export const shapeDividerPaths: Record<string, string> = {
   wave: "M0,64 C320,128 640,0 960,64 C1280,128 1600,0 1920,64 L1920,0 L0,0 Z",
+  "wave-smooth": "M0,48 C480,128 960,0 1440,80 C1680,112 1920,48 1920,48 L1920,0 L0,0 Z",
   curve: "M0,96 Q960,192 1920,96 L1920,0 L0,0 Z",
   triangle: "M960,128 L1920,0 L0,0 Z",
   tilt: "M0,128 L1920,0 L1920,0 L0,0 Z",
   arrow: "M960,128 L1920,0 L1920,0 L0,0 L960,128 Z",
   zigzag: "M0,64 L120,0 L240,64 L360,0 L480,64 L600,0 L720,64 L840,0 L960,64 L1080,0 L1200,64 L1320,0 L1440,64 L1560,0 L1680,64 L1800,0 L1920,64 L1920,0 L0,0 Z",
   clouds: "M0,64 C160,128 320,0 480,64 C640,128 800,32 960,64 C1120,96 1280,0 1440,64 C1600,128 1760,32 1920,64 L1920,0 L0,0 Z",
+  mountains: "M0,128 L320,32 L480,96 L640,16 L800,80 L960,0 L1120,64 L1280,24 L1440,96 L1600,48 L1760,80 L1920,16 L1920,0 L0,0 Z",
+  drops: "M0,0 C80,64 160,64 240,0 C320,64 400,64 480,0 C560,64 640,64 720,0 C800,64 880,64 960,0 C1040,64 1120,64 1200,0 C1280,64 1360,64 1440,0 C1520,64 1600,64 1680,0 C1760,64 1840,64 1920,0 L1920,0 L0,0 Z",
+  pyramids: "M0,128 L160,0 L320,128 L480,0 L640,128 L800,0 L960,128 L1120,0 L1280,128 L1440,0 L1600,128 L1760,0 L1920,128 L1920,0 L0,0 Z",
 };
 
 // ============================================================================
@@ -779,4 +783,108 @@ export const gridPresetMap: Record<string, { columns: string; rows?: string }> =
   split:        { columns: "1fr 1fr" },
   "feature-grid": { columns: "repeat(3, 1fr)" },
   pricing:      { columns: "repeat(3, 1fr)" },
+};
+
+// ============================================================================
+// PHASE 3: ADVANCED EXPERIENCES UTILITY MAPS
+// ============================================================================
+
+// --- Entrance Animation Presets ---
+// Maps animation type to { initial, animate } CSS property objects
+export interface AnimationKeyframe {
+  opacity?: number;
+  transform?: string;
+  filter?: string;
+  clipPath?: string;
+}
+
+export const entranceAnimationPresets: Record<string, { initial: AnimationKeyframe; animate: AnimationKeyframe }> = {
+  none:          { initial: {}, animate: {} },
+  fade:          { initial: { opacity: 0 }, animate: { opacity: 1 } },
+  "fade-up":     { initial: { opacity: 0, transform: "translateY(40px)" }, animate: { opacity: 1, transform: "translateY(0)" } },
+  "fade-down":   { initial: { opacity: 0, transform: "translateY(-40px)" }, animate: { opacity: 1, transform: "translateY(0)" } },
+  "fade-left":   { initial: { opacity: 0, transform: "translateX(40px)" }, animate: { opacity: 1, transform: "translateX(0)" } },
+  "fade-right":  { initial: { opacity: 0, transform: "translateX(-40px)" }, animate: { opacity: 1, transform: "translateX(0)" } },
+  "slide-up":    { initial: { opacity: 0, transform: "translateY(80px)" }, animate: { opacity: 1, transform: "translateY(0)" } },
+  "slide-down":  { initial: { opacity: 0, transform: "translateY(-80px)" }, animate: { opacity: 1, transform: "translateY(0)" } },
+  "slide-left":  { initial: { opacity: 0, transform: "translateX(80px)" }, animate: { opacity: 1, transform: "translateX(0)" } },
+  "slide-right": { initial: { opacity: 0, transform: "translateX(-80px)" }, animate: { opacity: 1, transform: "translateX(0)" } },
+  "scale-up":    { initial: { opacity: 0, transform: "scale(0.8)" }, animate: { opacity: 1, transform: "scale(1)" } },
+  "scale-down":  { initial: { opacity: 0, transform: "scale(1.2)" }, animate: { opacity: 1, transform: "scale(1)" } },
+  "rotate-in":   { initial: { opacity: 0, transform: "rotate(-180deg) scale(0.5)" }, animate: { opacity: 1, transform: "rotate(0) scale(1)" } },
+  "flip-x":      { initial: { opacity: 0, transform: "perspective(1000px) rotateX(-90deg)" }, animate: { opacity: 1, transform: "perspective(1000px) rotateX(0)" } },
+  "flip-y":      { initial: { opacity: 0, transform: "perspective(1000px) rotateY(90deg)" }, animate: { opacity: 1, transform: "perspective(1000px) rotateY(0)" } },
+  bounce:        { initial: { opacity: 0, transform: "scale(0.3)" }, animate: { opacity: 1, transform: "scale(1)" } },
+  elastic:       { initial: { opacity: 0, transform: "scale(0.5)" }, animate: { opacity: 1, transform: "scale(1)" } },
+  "clip-top":    { initial: { clipPath: "inset(0 0 100% 0)" }, animate: { clipPath: "inset(0 0 0 0)" } },
+  "clip-bottom": { initial: { clipPath: "inset(100% 0 0 0)" }, animate: { clipPath: "inset(0 0 0 0)" } },
+  "clip-left":   { initial: { clipPath: "inset(0 100% 0 0)" }, animate: { clipPath: "inset(0 0 0 0)" } },
+  "clip-right":  { initial: { clipPath: "inset(0 0 0 100%)" }, animate: { clipPath: "inset(0 0 0 0)" } },
+  "blur-in":     { initial: { opacity: 0, filter: "blur(20px)" }, animate: { opacity: 1, filter: "blur(0px)" } },
+};
+
+// --- Loop Animation CSS Keyframes ---
+// Maps loop type to CSS animation class name (using Tailwind where possible)
+export const loopAnimationMap: Record<string, string> = {
+  none: "",
+  pulse: "animate-pulse",
+  bounce: "animate-bounce",
+  spin: "animate-spin",
+  ping: "animate-ping",
+};
+
+// For custom loops not in Tailwind, we use inline keyframes
+export const customLoopKeyframes: Record<string, { keyframes: string; defaultDuration: number }> = {
+  float: {
+    keyframes: "0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}",
+    defaultDuration: 3000,
+  },
+  shimmer: {
+    keyframes: "0%{background-position:-200% 0}100%{background-position:200% 0}",
+    defaultDuration: 2000,
+  },
+  breathe: {
+    keyframes: "0%,100%{transform:scale(1)}50%{transform:scale(1.05)}",
+    defaultDuration: 4000,
+  },
+  wiggle: {
+    keyframes: "0%,100%{transform:rotate(0)}25%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}",
+    defaultDuration: 1000,
+  },
+  swing: {
+    keyframes: "0%,100%{transform:rotate(0)}20%{transform:rotate(15deg)}40%{transform:rotate(-10deg)}60%{transform:rotate(5deg)}80%{transform:rotate(-5deg)}",
+    defaultDuration: 2000,
+  },
+};
+
+// --- Easing Presets ---
+export const easingMap: Record<string, string> = {
+  ease: "ease",
+  "ease-in": "ease-in",
+  "ease-out": "ease-out",
+  "ease-in-out": "ease-in-out",
+  spring: "cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+  bounce: "cubic-bezier(0.68, -0.55, 0.265, 1.55)",
+};
+
+// --- Sticky Width Map (for StickyContainer) ---
+export const stickyWidthMap: Record<string, { mobile: string; tablet: string; desktop: string }> = {
+  "1/3": { mobile: "w-full", tablet: "sm:w-1/3", desktop: "lg:w-1/3" },
+  "2/5": { mobile: "w-full", tablet: "sm:w-2/5", desktop: "lg:w-2/5" },
+  "1/2": { mobile: "w-full", tablet: "sm:w-1/2", desktop: "lg:w-1/2" },
+  "3/5": { mobile: "w-full", tablet: "sm:w-3/5", desktop: "lg:w-3/5" },
+  "2/3": { mobile: "w-full", tablet: "sm:w-2/3", desktop: "lg:w-2/3" },
+};
+
+// --- Scroll Snap Type Map ---
+export const scrollSnapTypeMap: Record<string, string> = {
+  mandatory: "snap-mandatory",
+  proximity: "snap-proximity",
+  none: "",
+};
+
+// --- Scroll Section Direction Map ---
+export const scrollDirectionMap: Record<string, { snap: string; child: string }> = {
+  vertical:   { snap: "snap-y", child: "min-h-screen" },
+  horizontal: { snap: "snap-x", child: "min-w-screen" },
 };

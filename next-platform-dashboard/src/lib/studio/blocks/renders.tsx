@@ -72,6 +72,16 @@ import {
   columnGapMap,
   overlayPositionMap,
   gridPresetMap,
+  // Phase 3 imports
+  entranceAnimationPresets,
+  loopAnimationMap,
+  customLoopKeyframes,
+  easingMap,
+  stickyWidthMap,
+  scrollSnapTypeMap,
+  scrollDirectionMap,
+  positionMap,
+  type AnimationKeyframe,
   type ResponsiveValue as UtilResponsiveValue,
   type GradientConfig,
 } from "@/lib/studio/blocks/layout-utils";
@@ -1747,6 +1757,891 @@ export function OverlayRender({
       aria-hidden={!children ? true : undefined}
     >
       {children}
+    </div>
+  );
+}
+
+// ============================================================================
+// SCROLL SECTION — Full-page scroll-snap experience (Phase 3)
+// ============================================================================
+
+export interface ScrollSectionItemProps {
+  snapAlign?: "start" | "center" | "end";
+  backgroundColor?: string;
+  backgroundImage?: string;
+  id?: string;
+  className?: string;
+  children?: React.ReactNode;
+}
+
+export interface ScrollSectionProps {
+  snapType?: "mandatory" | "proximity" | "none";
+  direction?: "vertical" | "horizontal";
+  smoothScroll?: boolean;
+  backgroundColor?: string;
+  showProgress?: boolean;
+  progressStyle?: "dots" | "line" | "numbers";
+  progressPosition?: "right" | "left" | "bottom";
+  progressColor?: string;
+  showNavigation?: boolean;
+  keyboardNavigation?: boolean;
+  hideOnMobile?: boolean;
+  hideOnTablet?: boolean;
+  hideOnDesktop?: boolean;
+  id?: string;
+  className?: string;
+  children?: React.ReactNode;
+}
+
+export function ScrollSectionItemRender({
+  snapAlign = "start",
+  backgroundColor,
+  backgroundImage,
+  id,
+  className = "",
+  children,
+}: ScrollSectionItemProps) {
+  const snapClass = scrollSnapMap[snapAlign] || "snap-start";
+
+  const inlineStyle: React.CSSProperties = {};
+  if (backgroundColor) inlineStyle.backgroundColor = backgroundColor;
+  if (backgroundImage) {
+    inlineStyle.backgroundImage = `url(${backgroundImage})`;
+    inlineStyle.backgroundSize = "cover";
+    inlineStyle.backgroundPosition = "center";
+  }
+
+  return (
+    <div
+      id={id}
+      className={`min-h-screen flex items-center justify-center ${snapClass} ${className}`.trim()}
+      style={Object.keys(inlineStyle).length > 0 ? inlineStyle : undefined}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function ScrollSectionRender({
+  snapType = "mandatory",
+  direction = "vertical",
+  smoothScroll = true,
+  backgroundColor,
+  showProgress = false,
+  progressStyle = "dots",
+  progressPosition = "right",
+  progressColor,
+  showNavigation = false,
+  keyboardNavigation = true,
+  hideOnMobile,
+  hideOnTablet,
+  hideOnDesktop,
+  id,
+  className = "",
+  children,
+}: ScrollSectionProps) {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = React.useState(0);
+
+  const childCount = React.Children.count(children);
+  const isVertical = direction === "vertical";
+
+  // Snap type class
+  const snapTypeClass = scrollSnapTypeMap[snapType] || "";
+  const dirClass = isVertical ? "snap-y" : "snap-x";
+  const scrollClass = smoothScroll ? "scroll-smooth" : "";
+  const layoutClass = isVertical ? "overflow-y-auto h-screen" : "overflow-x-auto flex h-screen";
+
+  const visClasses = getVisibilityClasses({ hideOnMobile, hideOnTablet, hideOnDesktop });
+
+  // Track scroll position for progress indicator
+  React.useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !showProgress) return;
+
+    const handleScroll = () => {
+      if (isVertical) {
+        const scrollTop = container.scrollTop;
+        const sectionHeight = container.clientHeight;
+        const idx = Math.round(scrollTop / sectionHeight);
+        setActiveIndex(Math.min(idx, childCount - 1));
+      } else {
+        const scrollLeft = container.scrollLeft;
+        const sectionWidth = container.clientWidth;
+        const idx = Math.round(scrollLeft / sectionWidth);
+        setActiveIndex(Math.min(idx, childCount - 1));
+      }
+    };
+
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [showProgress, isVertical, childCount]);
+
+  // Keyboard navigation
+  React.useEffect(() => {
+    if (!keyboardNavigation) return;
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isVertical) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          container.scrollBy({ top: container.clientHeight, behavior: "smooth" });
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          container.scrollBy({ top: -container.clientHeight, behavior: "smooth" });
+        }
+      } else {
+        if (e.key === "ArrowRight") {
+          e.preventDefault();
+          container.scrollBy({ left: container.clientWidth, behavior: "smooth" });
+        } else if (e.key === "ArrowLeft") {
+          e.preventDefault();
+          container.scrollBy({ left: -container.clientWidth, behavior: "smooth" });
+        }
+      }
+    };
+
+    container.addEventListener("keydown", handleKeyDown);
+    container.tabIndex = 0;
+    return () => container.removeEventListener("keydown", handleKeyDown);
+  }, [keyboardNavigation, isVertical]);
+
+  // Navigate to specific section
+  const navigateTo = (index: number) => {
+    const container = containerRef.current;
+    if (!container) return;
+    if (isVertical) {
+      container.scrollTo({ top: index * container.clientHeight, behavior: "smooth" });
+    } else {
+      container.scrollTo({ left: index * container.clientWidth, behavior: "smooth" });
+    }
+  };
+
+  // Progress indicator
+  const renderProgress = () => {
+    if (!showProgress || childCount <= 1) return null;
+
+    const positionClasses: Record<string, string> = {
+      right: "fixed right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2",
+      left: "fixed left-4 top-1/2 -translate-y-1/2 flex flex-col gap-2",
+      bottom: "fixed bottom-4 left-1/2 -translate-x-1/2 flex flex-row gap-2",
+    };
+
+    const color = progressColor || "currentColor";
+
+    if (progressStyle === "dots") {
+      return (
+        <div className={positionClasses[progressPosition] || positionClasses.right} style={{ zIndex: 50 }}>
+          {Array.from({ length: childCount }, (_, i) => (
+            <button
+              key={i}
+              onClick={() => navigateTo(i)}
+              className={`rounded-full transition-all duration-300 ${i === activeIndex ? "w-3 h-3" : "w-2 h-2 opacity-50"}`}
+              style={{ backgroundColor: color }}
+              aria-label={`Go to section ${i + 1}`}
+            />
+          ))}
+        </div>
+      );
+    }
+
+    if (progressStyle === "line") {
+      const progress = childCount > 1 ? (activeIndex / (childCount - 1)) * 100 : 0;
+      const isHoriz = progressPosition === "bottom";
+      return (
+        <div
+          className={isHoriz ? "fixed bottom-0 left-0 right-0 h-1" : "fixed right-0 top-0 bottom-0 w-1"}
+          style={{ zIndex: 50, backgroundColor: "rgba(128,128,128,0.3)" }}
+        >
+          <div
+            className="transition-all duration-300"
+            style={{
+              backgroundColor: color,
+              ...(isHoriz ? { height: "100%", width: `${progress}%` } : { width: "100%", height: `${progress}%` }),
+            }}
+          />
+        </div>
+      );
+    }
+
+    if (progressStyle === "numbers") {
+      return (
+        <div
+          className={positionClasses[progressPosition] || positionClasses.right}
+          style={{ zIndex: 50, color }}
+        >
+          <span className="text-sm font-mono font-bold">{activeIndex + 1}/{childCount}</span>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  // Navigation arrows
+  const renderNavigation = () => {
+    if (!showNavigation || childCount <= 1) return null;
+    return (
+      <>
+        {activeIndex > 0 && (
+          <button
+            onClick={() => navigateTo(activeIndex - 1)}
+            className={`fixed z-50 p-2 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors ${isVertical ? "top-4 left-1/2 -translate-x-1/2" : "left-4 top-1/2 -translate-y-1/2"}`}
+            aria-label="Previous section"
+          >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isVertical ? "M5 15l7-7 7 7" : "M15 19l-7-7 7-7"} />
+            </svg>
+          </button>
+        )}
+        {activeIndex < childCount - 1 && (
+          <button
+            onClick={() => navigateTo(activeIndex + 1)}
+            className={`fixed z-50 p-2 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors ${isVertical ? "bottom-4 left-1/2 -translate-x-1/2" : "right-4 top-1/2 -translate-y-1/2"}`}
+            aria-label="Next section"
+          >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isVertical ? "M19 9l-7 7-7-7" : "M9 5l7 7-7 7"} />
+            </svg>
+          </button>
+        )}
+      </>
+    );
+  };
+
+  const inlineStyle: React.CSSProperties = {};
+  if (backgroundColor) inlineStyle.backgroundColor = backgroundColor;
+
+  return (
+    <div className={`relative ${visClasses}`} style={Object.keys(inlineStyle).length > 0 ? inlineStyle : undefined}>
+      <div
+        ref={containerRef}
+        id={id}
+        className={`${layoutClass} ${dirClass} ${snapTypeClass} ${scrollClass} ${className}`.replace(/\s+/g, " ").trim()}
+        style={{ outline: "none" }}
+      >
+        {children}
+      </div>
+      {renderProgress()}
+      {renderNavigation()}
+    </div>
+  );
+}
+
+// ============================================================================
+// STICKY CONTAINER — Scroll storytelling component (Phase 3)
+// Default: bg-transparent text-inherit (structural component)
+// ============================================================================
+
+export interface StickyContainerProps {
+  stickyPosition?: "left" | "right" | "top";
+  stickyWidth?: UtilResponsiveValue<"1/3" | "2/5" | "1/2" | "3/5" | "2/3">;
+  stickyOffset?: string;
+  gap?: UtilResponsiveValue<string>;
+  stackOnMobile?: boolean;
+  mobileOrder?: "sticky-first" | "scroll-first";
+  padding?: UtilResponsiveValue<string>;
+  backgroundColor?: string;
+  minHeight?: string;
+  hideOnMobile?: boolean;
+  hideOnTablet?: boolean;
+  hideOnDesktop?: boolean;
+  id?: string;
+  className?: string;
+  children?: React.ReactNode;
+}
+
+export function StickyContainerRender({
+  stickyPosition = "left",
+  stickyWidth = "1/3",
+  stickyOffset = "0px",
+  gap = "8",
+  stackOnMobile = true,
+  mobileOrder = "sticky-first",
+  padding,
+  backgroundColor,
+  minHeight,
+  hideOnMobile,
+  hideOnTablet,
+  hideOnDesktop,
+  id,
+  className = "",
+  children,
+}: StickyContainerProps) {
+  const childArray = React.Children.toArray(children).filter(Boolean);
+  const stickyChild = childArray[0];
+  const scrollChildren = childArray.slice(1);
+
+  const gapClasses = getResponsiveClassesUtil(gap, gapMapUtil);
+  const padClasses = getResponsiveClassesUtil(padding, paddingMapUtil);
+  const visClasses = getVisibilityClasses({ hideOnMobile, hideOnTablet, hideOnDesktop });
+  const widthClasses = getResponsiveClassesUtil(stickyWidth, stickyWidthMap);
+
+  // Mobile stacking
+  const mobileLayout = stackOnMobile ? "flex-col" : "";
+  const mobileOrderClass = mobileOrder === "scroll-first" ? "order-2 sm:order-none" : "";
+  const scrollOrderClass = mobileOrder === "scroll-first" ? "order-1 sm:order-none" : "";
+
+  // Direction: top = column, left/right = row
+  const isTop = stickyPosition === "top";
+  const isRight = stickyPosition === "right";
+
+  const flexDirection = isTop ? "flex-col" : (isRight ? "sm:flex-row-reverse" : "sm:flex-row");
+
+  const inlineStyle: React.CSSProperties = {};
+  if (backgroundColor) inlineStyle.backgroundColor = backgroundColor;
+  if (minHeight) inlineStyle.minHeight = minHeight;
+
+  return (
+    <div
+      id={id}
+      className={`flex ${mobileLayout} ${flexDirection} ${gapClasses} ${padClasses} ${visClasses} ${className}`.replace(/\s+/g, " ").trim()}
+      style={Object.keys(inlineStyle).length > 0 ? inlineStyle : undefined}
+    >
+      {/* Sticky element */}
+      <div
+        className={`${isTop ? "" : widthClasses} ${mobileOrderClass} shrink-0`.trim()}
+        style={{ position: "sticky", top: stickyOffset, alignSelf: "flex-start" }}
+      >
+        {stickyChild}
+      </div>
+
+      {/* Scrolling content */}
+      <div className={`grow min-w-0 ${scrollOrderClass}`.trim()}>
+        {scrollChildren}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// ANIMATE — Universal animation wrapper (Phase 3)
+// Entrance, loop, scroll-driven, stagger children
+// ============================================================================
+
+export interface AnimateEntranceConfig {
+  type?: keyof typeof entranceAnimationPresets;
+  duration?: number;
+  delay?: number;
+  easing?: "ease" | "ease-in" | "ease-out" | "ease-in-out" | "spring" | "bounce";
+  once?: boolean;
+  threshold?: number;
+}
+
+export interface AnimateLoopConfig {
+  type?: "none" | "pulse" | "bounce" | "spin" | "ping" | "float" | "shimmer" | "breathe" | "wiggle" | "swing";
+  duration?: number;
+  delay?: number;
+}
+
+export interface AnimateScrollConfig {
+  type?: "none" | "parallax" | "fade-on-scroll" | "scale-on-scroll" | "rotate-on-scroll" | "slide-on-scroll" | "progress-reveal";
+  speed?: number;
+  direction?: "up" | "down" | "left" | "right";
+  range?: [number, number];
+}
+
+export interface AnimateStaggerConfig {
+  enabled?: boolean;
+  delay?: number;
+  direction?: "normal" | "reverse" | "center";
+}
+
+export interface AnimateProps {
+  entrance?: AnimateEntranceConfig;
+  loop?: AnimateLoopConfig;
+  scroll?: AnimateScrollConfig;
+  stagger?: AnimateStaggerConfig;
+  id?: string;
+  className?: string;
+  children?: React.ReactNode;
+}
+
+export function AnimateRender({
+  entrance,
+  loop,
+  scroll: scrollConfig,
+  stagger,
+  id,
+  className = "",
+  children,
+}: AnimateProps) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = React.useState(false);
+  const [hasAnimated, setHasAnimated] = React.useState(false);
+  const [scrollProgress, setScrollProgress] = React.useState(0);
+
+  /* --- Prefetch reduced motion preference --- */
+  const prefersReducedMotion = React.useRef(false);
+  React.useEffect(() => {
+    prefersReducedMotion.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }, []);
+
+  /* --- Entrance: IntersectionObserver --- */
+  const entranceType = entrance?.type || "none";
+  const once = entrance?.once !== false;
+  const threshold = entrance?.threshold ?? 0.2;
+
+  React.useEffect(() => {
+    if (entranceType === "none" || prefersReducedMotion.current) {
+      setIsVisible(true);
+      return;
+    }
+    const el = ref.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          if (once) {
+            setHasAnimated(true);
+            observer.disconnect();
+          }
+        } else if (!once) {
+          setIsVisible(false);
+        }
+      },
+      { threshold },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [entranceType, threshold, once]);
+
+  /* --- Scroll-driven animation --- */
+  const scrollType = scrollConfig?.type || "none";
+
+  React.useEffect(() => {
+    if (scrollType === "none" || prefersReducedMotion.current) return;
+    const el = ref.current;
+    if (!el) return;
+
+    const handleScroll = () => {
+      const rect = el.getBoundingClientRect();
+      const viewH = window.innerHeight;
+      const progress = Math.max(0, Math.min(1, 1 - (rect.top / viewH)));
+      setScrollProgress(progress);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [scrollType]);
+
+  /* --- Build entrance styles --- */
+  const preset = entranceAnimationPresets[entranceType] || entranceAnimationPresets.none;
+  const shouldShow = isVisible && (!once || !hasAnimated || entranceType === "none");
+  const entranceDuration = entrance?.duration ?? 600;
+  const entranceDelay = entrance?.delay ?? 0;
+  const entranceEasing = easingMap[entrance?.easing || "ease-out"] || "ease-out";
+
+  const entranceStyle: React.CSSProperties = {
+    ...(shouldShow ? (preset.animate as React.CSSProperties) : (preset.initial as React.CSSProperties)),
+    transition: entranceType !== "none"
+      ? `all ${entranceDuration}ms ${entranceEasing} ${entranceDelay}ms`
+      : undefined,
+  };
+
+  /* --- Build scroll-driven styles --- */
+  const scrollStyle: React.CSSProperties = {};
+  if (scrollType !== "none") {
+    const speed = scrollConfig?.speed ?? 1;
+    const range = scrollConfig?.range || [0, 1];
+    const normalized = Math.max(0, Math.min(1, (scrollProgress - range[0]) / (range[1] - range[0])));
+    const dir = scrollConfig?.direction || "up";
+
+    switch (scrollType) {
+      case "parallax": {
+        const offset = (normalized - 0.5) * 100 * speed;
+        const axis = dir === "left" || dir === "right" ? "X" : "Y";
+        const sign = dir === "down" || dir === "right" ? 1 : -1;
+        scrollStyle.transform = `translate${axis}(${offset * sign}px)`;
+        break;
+      }
+      case "fade-on-scroll":
+        scrollStyle.opacity = normalized;
+        break;
+      case "scale-on-scroll":
+        scrollStyle.transform = `scale(${0.5 + normalized * 0.5 * speed})`;
+        break;
+      case "rotate-on-scroll":
+        scrollStyle.transform = `rotate(${normalized * 360 * speed}deg)`;
+        break;
+      case "slide-on-scroll": {
+        const axis = dir === "left" || dir === "right" ? "X" : "Y";
+        const sign = dir === "right" || dir === "down" ? 1 : -1;
+        const dist = (1 - normalized) * 200 * speed;
+        scrollStyle.transform = `translate${axis}(${dist * sign}px)`;
+        break;
+      }
+      case "progress-reveal":
+        scrollStyle.clipPath = `inset(0 ${(1 - normalized) * 100}% 0 0)`;
+        break;
+    }
+  }
+
+  /* --- Build loop classes/styles --- */
+  const loopType = loop?.type || "none";
+  let loopClass = "";
+  let loopStyleTag: React.ReactNode = null;
+  const loopAnimName = `dramac-loop-${loopType}`;
+
+  if (loopType !== "none" && !prefersReducedMotion.current) {
+    const tailwindLoop = loopAnimationMap[loopType];
+    if (tailwindLoop) {
+      loopClass = tailwindLoop;
+    } else {
+      const custom = customLoopKeyframes[loopType];
+      if (custom) {
+        const dur = loop?.duration || custom.defaultDuration;
+        const del = loop?.delay || 0;
+        loopStyleTag = (
+          <style>{`@keyframes ${loopAnimName}{${custom.keyframes}}`}</style>
+        );
+        Object.assign(scrollStyle, {
+          animation: `${loopAnimName} ${dur}ms ease-in-out ${del}ms infinite`,
+        });
+      }
+    }
+  }
+
+  /* --- Stagger children --- */
+  const renderChildren = () => {
+    if (!stagger?.enabled || !children) return children;
+    const staggerDelay = stagger.delay ?? 100;
+    const childArray = React.Children.toArray(children);
+    const staggerDir = stagger.direction || "normal";
+
+    return childArray.map((child, i) => {
+      let delayIdx = i;
+      if (staggerDir === "reverse") delayIdx = childArray.length - 1 - i;
+      if (staggerDir === "center") delayIdx = Math.abs(i - Math.floor(childArray.length / 2));
+
+      return (
+        <div
+          key={i}
+          style={{
+            transitionDelay: `${delayIdx * staggerDelay}ms`,
+            ...(shouldShow ? (preset.animate as React.CSSProperties) : (preset.initial as React.CSSProperties)),
+            transition: `all ${entranceDuration}ms ${entranceEasing} ${delayIdx * staggerDelay}ms`,
+          }}
+        >
+          {child}
+        </div>
+      );
+    });
+  };
+
+  const mergedStyle: React.CSSProperties = { ...entranceStyle, ...scrollStyle };
+
+  return (
+    <>
+      {loopStyleTag}
+      <div
+        ref={ref}
+        id={id}
+        className={`${loopClass} ${className}`.trim()}
+        style={Object.keys(mergedStyle).length > 0 ? mergedStyle : undefined}
+      >
+        {stagger?.enabled ? renderChildren() : children}
+      </div>
+    </>
+  );
+}
+
+// ============================================================================
+// TILT 3D CONTAINER — Cursor-tracking perspective tilt (Phase 3)
+// ============================================================================
+
+export interface Tilt3DContainerProps {
+  enabled?: boolean;
+  maxAngle?: number;
+  speed?: number;
+  glare?: boolean;
+  glareMaxOpacity?: number;
+  scale?: number;
+  perspective?: number;
+  children?: React.ReactNode;
+  id?: string;
+  className?: string;
+}
+
+export function Tilt3DContainerRender({
+  enabled = true,
+  maxAngle = 10,
+  speed = 400,
+  glare = false,
+  glareMaxOpacity = 0.3,
+  scale = 1.02,
+  perspective = 1000,
+  children,
+  id,
+  className = "",
+}: Tilt3DContainerProps) {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [tiltStyle, setTiltStyle] = React.useState<React.CSSProperties>({});
+  const [glarePos, setGlarePos] = React.useState({ x: 50, y: 50 });
+
+  // Detect touch device — disable tilt on touch
+  const isTouch = React.useRef(false);
+  React.useEffect(() => {
+    isTouch.current = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+  }, []);
+
+  const handleMouseMove = React.useCallback(
+    (e: React.MouseEvent) => {
+      if (!enabled || isTouch.current || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+
+      const rotateX = ((y - centerY) / centerY) * -maxAngle;
+      const rotateY = ((x - centerX) / centerX) * maxAngle;
+
+      setTiltStyle({
+        transform: `perspective(${perspective}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${scale})`,
+        transition: `transform ${speed}ms cubic-bezier(0.03, 0.98, 0.52, 0.99)`,
+        transformStyle: "preserve-3d",
+      });
+      setGlarePos({ x: (x / rect.width) * 100, y: (y / rect.height) * 100 });
+    },
+    [enabled, maxAngle, perspective, scale, speed],
+  );
+
+  const handleMouseLeave = React.useCallback(() => {
+    setTiltStyle({
+      transform: `perspective(${perspective}px) rotateX(0deg) rotateY(0deg) scale(1)`,
+      transition: `transform ${speed}ms cubic-bezier(0.03, 0.98, 0.52, 0.99)`,
+      transformStyle: "preserve-3d",
+    });
+  }, [perspective, speed]);
+
+  return (
+    <div
+      ref={containerRef}
+      id={id}
+      className={`relative ${className}`.trim()}
+      style={enabled ? tiltStyle : undefined}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      {children}
+      {glare && enabled && (
+        <div
+          className="absolute inset-0 pointer-events-none rounded-inherit"
+          style={{
+            background: `radial-gradient(circle at ${glarePos.x}% ${glarePos.y}%, rgba(255,255,255,${glareMaxOpacity}), transparent 60%)`,
+            borderRadius: "inherit",
+          }}
+          aria-hidden="true"
+        />
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// SHAPE DIVIDER — SVG section separator (Phase 3)
+// Positioned absolutely at section top/bottom
+// ============================================================================
+
+export interface ShapeDividerProps {
+  position?: "top" | "bottom";
+  shape?: "wave" | "wave-smooth" | "curve" | "tilt" | "triangle" | "arrow" | "zigzag" | "clouds" | "mountains" | "drops" | "pyramids";
+  color?: string;
+  height?: number;
+  width?: number;
+  flip?: boolean;
+  invert?: boolean;
+  animated?: boolean;
+  id?: string;
+  className?: string;
+}
+
+export function ShapeDividerRender({
+  position = "bottom",
+  shape = "wave",
+  color = "#ffffff",
+  height = 60,
+  width = 100,
+  flip = false,
+  invert = false,
+  animated = false,
+  id,
+  className = "",
+}: ShapeDividerProps) {
+  const pathData = shapeDividerPaths[shape] || shapeDividerPaths.wave;
+
+  // Position: absolute top or bottom
+  const posClass = position === "top" ? "top-0" : "bottom-0";
+
+  // Flip/invert transforms
+  const transforms: string[] = [];
+  if (invert) transforms.push("scaleY(-1)");
+  if (flip) transforms.push("scaleX(-1)");
+  if (position === "bottom") transforms.push("rotate(180deg)");
+  const transformStr = transforms.length > 0 ? transforms.join(" ") : undefined;
+
+  // Animation: gentle morphing via CSS
+  const animationStyle: React.CSSProperties = animated
+    ? { animation: "dramac-shape-breathe 6s ease-in-out infinite" }
+    : {};
+
+  return (
+    <>
+      {animated && (
+        <style>{`@keyframes dramac-shape-breathe{0%,100%{transform:${transformStr || "none"} scaleY(1)}50%{transform:${transformStr || "none"} scaleY(1.1)}}`}</style>
+      )}
+      <div
+        id={id}
+        className={`absolute left-0 right-0 ${posClass} pointer-events-none overflow-hidden ${className}`.trim()}
+        style={{
+          height: `${height}px`,
+          transform: animated ? undefined : transformStr,
+          lineHeight: 0,
+          ...animationStyle,
+        }}
+        aria-hidden="true"
+      >
+        <svg
+          viewBox="0 0 1920 128"
+          preserveAspectRatio="none"
+          className="block w-full h-full"
+          style={{ width: `${width}%`, minWidth: "100%" }}
+        >
+          <path d={pathData} fill={color} />
+        </svg>
+      </div>
+    </>
+  );
+}
+
+// ============================================================================
+// CURSOR EFFECT — Spotlight, magnetic, tilt, glow, trail (Phase 3)
+// ============================================================================
+
+export interface CursorEffectProps {
+  type?: "none" | "spotlight" | "tilt" | "magnetic" | "glow" | "trail";
+  intensity?: number;
+  color?: string;
+  children?: React.ReactNode;
+  id?: string;
+  className?: string;
+}
+
+export function CursorEffectRender({
+  type = "spotlight",
+  intensity = 0.5,
+  color = "rgba(255,255,255,0.15)",
+  children,
+  id,
+  className = "",
+}: CursorEffectProps) {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [mousePos, setMousePos] = React.useState({ x: 0, y: 0 });
+  const [isHovering, setIsHovering] = React.useState(false);
+  const [magnetOffset, setMagnetOffset] = React.useState({ x: 0, y: 0 });
+
+  // Detect touch device
+  const isTouch = React.useRef(false);
+  React.useEffect(() => {
+    isTouch.current = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+  }, []);
+
+  const handleMouseMove = React.useCallback(
+    (e: React.MouseEvent) => {
+      if (type === "none" || isTouch.current || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      setMousePos({ x, y });
+
+      // Magnetic: move element subtly toward cursor
+      if (type === "magnetic") {
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const maxDist = 20 * intensity;
+        const dx = ((x - centerX) / centerX) * maxDist;
+        const dy = ((y - centerY) / centerY) * maxDist;
+        setMagnetOffset({ x: dx, y: dy });
+      }
+    },
+    [type, intensity],
+  );
+
+  const handleMouseLeave = React.useCallback(() => {
+    setIsHovering(false);
+    setMagnetOffset({ x: 0, y: 0 });
+  }, []);
+
+  if (type === "none") {
+    return <div id={id} className={className}>{children}</div>;
+  }
+
+  // Build effect overlay/styles
+  let effectOverlay: React.ReactNode = null;
+  const containerStyle: React.CSSProperties = { position: "relative", overflow: "hidden" };
+
+  if (type === "spotlight") {
+    effectOverlay = isHovering ? (
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `radial-gradient(circle 200px at ${mousePos.x}px ${mousePos.y}px, ${color}, transparent)`,
+          opacity: intensity,
+        }}
+        aria-hidden="true"
+      />
+    ) : null;
+  }
+
+  if (type === "glow") {
+    effectOverlay = isHovering ? (
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          boxShadow: `inset 0 0 80px ${color}`,
+          opacity: intensity,
+        }}
+        aria-hidden="true"
+      />
+    ) : null;
+  }
+
+  if (type === "magnetic") {
+    containerStyle.transform = `translate(${magnetOffset.x}px, ${magnetOffset.y}px)`;
+    containerStyle.transition = "transform 0.3s ease-out";
+  }
+
+  if (type === "tilt") {
+    if (containerRef.current && isHovering) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      const maxTilt = 10 * intensity;
+      const rotateX = ((mousePos.y - centerY) / centerY) * -maxTilt;
+      const rotateY = ((mousePos.x - centerX) / centerX) * maxTilt;
+      containerStyle.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+      containerStyle.transition = "transform 0.1s ease-out";
+    }
+  }
+
+  return (
+    <div
+      ref={containerRef}
+      id={id}
+      className={`${className}`.trim()}
+      style={containerStyle}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={handleMouseLeave}
+    >
+      {children}
+      {effectOverlay}
     </div>
   );
 }
