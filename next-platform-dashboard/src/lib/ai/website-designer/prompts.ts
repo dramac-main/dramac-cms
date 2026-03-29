@@ -106,6 +106,25 @@ ContactForm, Newsletter, Accordion, Tabs, Carousel, LogoCloud, TrustBadges,
 SocialProof, ComparisonTable, Map, Video, Quote, RichText, Section, Divider, Spacer,
 Typewriter, Parallax, Badge, SocialLinks
 
+**Layout components (for advanced page structure):**
+Stack, FlexBox, Grid, GridItem, Wrapper, AspectRatioBox, Overlay,
+ScrollSection, ScrollSectionItem, StickyContainer, Animate, Tilt3DContainer,
+ShapeDivider, CursorEffect
+
+**Layout component selection guide:**
+- Simple vertical/horizontal lists → Stack (direction: column or row)
+- Wrapping tag clouds or button groups → FlexBox (wrap: wrap)
+- Equal-width card grids → Grid (columns: 3) with GridItem children
+- Spacing/background around content → Wrapper
+- Fixed-ratio media containers → AspectRatioBox
+- Floating badges/labels over images → Overlay
+- Full-page slide storytelling → ScrollSection with ScrollSectionItem children
+- Sticky visual with scrolling text → StickyContainer
+- Entrance animations on any content → Animate (wrap around target)
+- Premium hover interactivity on cards → Tilt3DContainer
+- Flowing section transitions → ShapeDivider (between sections, color matches next section bg)
+- Hero wow-factor cursor effects → CursorEffect (one per page max, dark bg preferred)
+
 **Module components (use when the module is enabled in the business context):**
 
 Booking module (use when booking/appointment module is active):
@@ -212,6 +231,22 @@ Use these versatile components to represent ANY content:
 - Divider — for visual separators
 - Spacer — for vertical spacing
 
+**Advanced layout components (for rich page structure):**
+- Stack — vertical/horizontal stack with responsive direction and gap
+- FlexBox — full flexbox container with wrap, alignment, and gap
+- Grid — CSS Grid container with responsive columns (use with GridItem children)
+- GridItem — grid child with column/row span control
+- Wrapper — utility wrapper for padding, margin, background, borders
+- AspectRatioBox — container maintaining fixed aspect ratio (16:9, 4:3, 1:1, etc.)
+- Overlay — positioned floating layer on top of parent content
+- ScrollSection — full-page scroll-snap storytelling (use with ScrollSectionItem children)
+- ScrollSectionItem — individual slide within a ScrollSection
+- StickyContainer — sticky-positioned container for scroll storytelling
+- Animate — animation wrapper with scroll/hover triggers (fadeIn, slideUp, scaleUp, etc.)
+- Tilt3DContainer — interactive 3D tilt effect on hover
+- ShapeDivider — SVG shape transition between sections (wave, curve, tilt, arrow, etc.)
+- CursorEffect — cursor-following effects (glow, spotlight, trail, magnetic, ripple)
+
 **Module components (use ONLY when the module is mentioned in the business context):**
 
 Booking module:
@@ -310,6 +345,19 @@ Follow this pattern:
 - NEVER: white/light text on white/light backgrounds
 - NEVER: dark text on dark backgrounds
 - NEVER: a button whose text is the same shade as its background
+
+### ShapeDivider Color Rules (CRITICAL for section transitions)
+When using ShapeDivider between sections:
+- The ShapeDivider's **color** prop MUST match the **backgroundColor** of the section it points toward
+- Example: If a dark section (#0f172a) meets a light section (#ffffff), place ShapeDivider at bottom of dark section with color="#ffffff"
+- Example: wave divider between white CTA and navy footer → color="#0f172a" (matching footer)
+- NEVER use a ShapeDivider color that doesn't match either adjacent section — it creates a visible gap
+
+### Card-on-Dark Section Rules
+- On dark/branded background sections, cards MUST NOT be plain white (#ffffff)
+- Use semi-transparent cards: cardBackgroundColor="rgba(255,255,255,0.08)" or "rgba(255,255,255,0.12)"
+- Or use a tinted dark card: a slightly lighter shade than the section background
+- Card text must still be light (#ffffff or #f8fafc) for readability
 
 ### Creative Freedom
 - You have full creative control over the design — use it to make this site UNIQUE

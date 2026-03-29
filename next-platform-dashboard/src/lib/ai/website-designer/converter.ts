@@ -552,6 +552,63 @@ function convertComponentToStudio(
     Parallax: "Parallax",
     ParallaxSection: "Parallax",
     ParallaxScroll: "Parallax",
+    // Phase 2/3 layout components — direct + AI variations
+    Stack: "Stack",
+    StackBlock: "Stack",
+    StackSection: "Stack",
+    HStack: "Stack",
+    VStack: "Stack",
+    VerticalStack: "Stack",
+    HorizontalStack: "Stack",
+    FlexBox: "FlexBox",
+    FlexBoxBlock: "FlexBox",
+    FlexBoxSection: "FlexBox",
+    FlexContainer: "FlexBox",
+    FlexLayout: "FlexBox",
+    Grid: "Grid",
+    GridBlock: "Grid",
+    GridSection: "Grid",
+    GridLayout: "Grid",
+    CSSGrid: "Grid",
+    GridItem: "GridItem",
+    GridItemBlock: "GridItem",
+    GridCell: "GridItem",
+    Wrapper: "Wrapper",
+    WrapperBlock: "Wrapper",
+    BoxWrapper: "Wrapper",
+    ContentWrapper: "Wrapper",
+    AspectRatioBox: "AspectRatioBox",
+    AspectRatioBoxBlock: "AspectRatioBox",
+    AspectRatio: "AspectRatioBox",
+    Overlay: "Overlay",
+    OverlayBlock: "Overlay",
+    FloatingOverlay: "Overlay",
+    ScrollSection: "ScrollSection",
+    ScrollSectionBlock: "ScrollSection",
+    FullPageScroll: "ScrollSection",
+    ScrollSnap: "ScrollSection",
+    ScrollSectionItem: "ScrollSectionItem",
+    ScrollSectionItemBlock: "ScrollSectionItem",
+    ScrollSlide: "ScrollSectionItem",
+    StickyContainer: "StickyContainer",
+    StickyContainerBlock: "StickyContainer",
+    StickySection: "StickyContainer",
+    Sticky: "StickyContainer",
+    Animate: "Animate",
+    AnimateBlock: "Animate",
+    AnimationWrapper: "Animate",
+    MotionWrapper: "Animate",
+    Tilt3DContainer: "Tilt3DContainer",
+    Tilt3DContainerBlock: "Tilt3DContainer",
+    TiltCard: "Tilt3DContainer",
+    Tilt3D: "Tilt3DContainer",
+    ShapeDivider: "ShapeDivider",
+    ShapeDividerBlock: "ShapeDivider",
+    WaveDivider: "ShapeDivider",
+    SectionDivider: "ShapeDivider",
+    CursorEffect: "CursorEffect",
+    CursorEffectBlock: "CursorEffect",
+    CustomCursor: "CursorEffect",
     // Module component type mappings
     ServiceSelector: "BookingServiceSelector",
     BookingServiceSelector: "BookingServiceSelector",
@@ -668,6 +725,21 @@ function convertComponentToStudio(
     "Card",
     "Divider",
     "Spacer",
+    // Phase 2/3 layout components
+    "Stack",
+    "FlexBox",
+    "Grid",
+    "GridItem",
+    "Wrapper",
+    "AspectRatioBox",
+    "Overlay",
+    "ScrollSection",
+    "ScrollSectionItem",
+    "StickyContainer",
+    "Animate",
+    "Tilt3DContainer",
+    "ShapeDivider",
+    "CursorEffect",
     "Navbar",
     "Footer",
     // Module types — booking
@@ -1449,6 +1521,152 @@ function transformPropsForStudio(
     return {
       ...props,
       size: props.size || props.height || "md",
+    };
+  }
+
+  // ==========================================================================
+  // PHASE 2/3 LAYOUT COMPONENTS
+  // Normalize responsive values: AI may send "column" instead of
+  // { mobile: "column", tablet: "column", desktop: "column" }
+  // ==========================================================================
+
+  const toResponsive = (val: unknown, fallback: string) => {
+    if (typeof val === "object" && val !== null) return val;
+    const v = String(val || fallback);
+    return { mobile: v, tablet: v, desktop: v };
+  };
+
+  // Stack layout
+  if (type === "Stack") {
+    return {
+      ...props,
+      direction: toResponsive(props.direction, "column"),
+      gap: toResponsive(props.gap, "4"),
+      align: toResponsive(props.align || props.alignItems, "stretch"),
+      justify: toResponsive(props.justify || props.justifyContent, "start"),
+    };
+  }
+
+  // FlexBox layout
+  if (type === "FlexBox") {
+    return {
+      ...props,
+      direction: toResponsive(props.direction || props.flexDirection, "row"),
+      wrap: toResponsive(props.wrap || props.flexWrap, "wrap"),
+      gap: toResponsive(props.gap, "4"),
+      align: toResponsive(props.align || props.alignItems, "center"),
+      justify: toResponsive(props.justify || props.justifyContent, "start"),
+    };
+  }
+
+  // Grid layout
+  if (type === "Grid") {
+    return {
+      ...props,
+      columns: toResponsive(props.columns || props.gridColumns, "3"),
+      gap: toResponsive(props.gap || props.gridGap, "6"),
+      rowGap: toResponsive(props.rowGap, "6"),
+    };
+  }
+
+  // GridItem
+  if (type === "GridItem") {
+    return {
+      ...props,
+      colSpan: toResponsive(props.colSpan || props.columnSpan, "1"),
+      rowSpan: toResponsive(props.rowSpan, "1"),
+    };
+  }
+
+  // Wrapper
+  if (type === "Wrapper") {
+    return { ...props };
+  }
+
+  // AspectRatioBox
+  if (type === "AspectRatioBox") {
+    return {
+      ...props,
+      ratio: props.ratio || props.aspectRatio || "16:9",
+    };
+  }
+
+  // Overlay
+  if (type === "Overlay") {
+    return {
+      ...props,
+      position: props.position || "center",
+      zIndex: props.zIndex || 10,
+    };
+  }
+
+  // ScrollSection
+  if (type === "ScrollSection") {
+    return {
+      ...props,
+      direction: props.direction || "vertical",
+      snapType: props.snapType || "mandatory",
+    };
+  }
+
+  // ScrollSectionItem
+  if (type === "ScrollSectionItem") {
+    return {
+      ...props,
+      snapAlign: props.snapAlign || "start",
+      height: props.height || "100vh",
+    };
+  }
+
+  // StickyContainer
+  if (type === "StickyContainer") {
+    return {
+      ...props,
+      offset: props.offset || props.stickyOffset || "0",
+      height: props.height || props.stickyHeight || "auto",
+    };
+  }
+
+  // Animate
+  if (type === "Animate") {
+    return {
+      ...props,
+      animation: props.animation || props.effect || "fadeIn",
+      trigger: props.trigger || "scroll",
+      duration: props.duration || 0.6,
+      delay: props.delay || 0,
+    };
+  }
+
+  // Tilt3DContainer
+  if (type === "Tilt3DContainer") {
+    return {
+      ...props,
+      maxTilt: props.maxTilt || props.tiltAngle || 15,
+      perspective: props.perspective || 1000,
+      glare: props.glare ?? props.enableGlare ?? false,
+    };
+  }
+
+  // ShapeDivider
+  if (type === "ShapeDivider") {
+    return {
+      ...props,
+      shape: props.shape || props.type || "wave",
+      position: props.position || "bottom",
+      color: props.color || props.fillColor || "#ffffff",
+      height: props.height || 80,
+      flip: props.flip ?? false,
+    };
+  }
+
+  // CursorEffect
+  if (type === "CursorEffect") {
+    return {
+      ...props,
+      effect: props.effect || props.type || "glow",
+      color: props.color || props.cursorColor || "#3b82f6",
+      size: props.size || 20,
     };
   }
 
