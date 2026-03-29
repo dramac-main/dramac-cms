@@ -543,6 +543,27 @@ function convertComponentToStudio(
     AnnouncementBar: "AnnouncementBar",
     SocialLinks: "SocialLinks",
     CodeBlock: "CodeBlock",
+    // Typography — new components
+    Label: "Label",
+    LabelText: "Label",
+    TagLabel: "Label",
+    BadgeLabel: "Label",
+    Overline: "Label",
+    List: "List",
+    ListBlock: "List",
+    BulletList: "List",
+    CheckList: "List",
+    NumberedList: "List",
+    DisplayText: "DisplayText",
+    DisplayHeading: "DisplayText",
+    HeroText: "DisplayText",
+    DividerText: "DividerText",
+    TextDivider: "DividerText",
+    LineDividerText: "DividerText",
+    StatNumber: "StatNumber",
+    StatBlock: "StatNumber",
+    MetricNumber: "StatNumber",
+    CounterStat: "StatNumber",
     Form: "Form",
     Badge: "Badge",
     Typewriter: "Typewriter",
@@ -704,6 +725,11 @@ function convertComponentToStudio(
     "CodeBlock",
     "Heading",
     "Text",
+    "Label",
+    "List",
+    "DisplayText",
+    "DividerText",
+    "StatNumber",
     "Image",
     "ContactForm",
     "Newsletter",
@@ -1449,7 +1475,9 @@ function transformPropsForStudio(
     return {
       ...props,
       paddingX: toResponsive(props.paddingX || props.padding || "sm", "sm"),
-      paddingY: props.paddingY ? toResponsive(props.paddingY, "none") : undefined,
+      paddingY: props.paddingY
+        ? toResponsive(props.paddingY, "none")
+        : undefined,
     };
   }
 
@@ -1463,17 +1491,19 @@ function transformPropsForStudio(
     };
   }
 
-  // Text/RichText — Full section content block
-  if (type === "Text" || type === "RichText") {
+  // RichText — Full section content block
+  if (type === "RichText") {
     return {
       ...props,
-      // Content normalization
       content: props.content || props.text || props.body || "",
       title: props.title || props.headline || "",
       subtitle: props.subtitle || props.subheadline || "",
-      // Layout
       layout: props.layout || "centered",
-      // Color normalization — pass all AI-generated colors through
+      titleLevel: props.titleLevel || undefined,
+      titleFontFamily: props.titleFontFamily || undefined,
+      bodyFontFamily: props.bodyFontFamily || undefined,
+      titleFontSize: props.titleFontSize || undefined,
+      proseSize: props.proseSize || undefined,
       textColor: props.textColor || props.color || undefined,
       titleColor: props.titleColor || undefined,
       subtitleColor: props.subtitleColor || undefined,
@@ -1488,11 +1518,127 @@ function transformPropsForStudio(
     };
   }
 
+  // Text
+  if (type === "Text") {
+    return {
+      ...props,
+      text: props.text || props.content || props.body || "",
+      htmlTag: props.htmlTag || props.tag || "p",
+      fontFamily: props.fontFamily || undefined,
+      fontSize: props.fontSize || undefined,
+      fontWeight: props.fontWeight || undefined,
+      lineHeight: props.lineHeight || undefined,
+      letterSpacing: props.letterSpacing || undefined,
+      textTransform: props.textTransform || undefined,
+      color: props.color || props.textColor || undefined,
+      align: props.align || props.alignment || undefined,
+      dropCap: props.dropCap || undefined,
+      columns: props.columns || undefined,
+      textWrap: props.textWrap || undefined,
+      truncate: props.truncate || undefined,
+    };
+  }
+
   // Heading
   if (type === "Heading") {
     return {
       ...props,
       text: props.text || props.title || props.content || "",
+      level: props.level || props.tag || "h2",
+      align: props.align || props.alignment || undefined,
+      fontFamily: props.fontFamily || undefined,
+      fontSize: props.fontSize || undefined,
+      fontWeight: props.fontWeight || undefined,
+      lineHeight: props.lineHeight || undefined,
+      letterSpacing: props.letterSpacing || undefined,
+      textTransform: props.textTransform || undefined,
+      fontStyle: props.fontStyle || undefined,
+      gradient: props.gradient || false,
+      gradientFrom: props.gradientFrom || undefined,
+      gradientTo: props.gradientTo || undefined,
+      gradientDirection: props.gradientDirection || undefined,
+      textShadow: props.textShadow || undefined,
+      textDecoration: props.textDecoration || undefined,
+      textWrap: props.textWrap || undefined,
+      maxWidth: props.maxWidth || undefined,
+    };
+  }
+
+  // Label
+  if (type === "Label") {
+    return {
+      ...props,
+      text: props.text || props.label || props.content || "Label",
+      variant: props.variant || props.style || "default",
+      size: props.size || "sm",
+      color: props.color || props.textColor || undefined,
+      backgroundColor: props.backgroundColor || undefined,
+      borderColor: props.borderColor || undefined,
+      fontWeight: props.fontWeight || undefined,
+      textTransform: props.textTransform || "uppercase",
+    };
+  }
+
+  // List
+  if (type === "List") {
+    const items = props.items || props.listItems || [];
+    return {
+      ...props,
+      items: Array.isArray(items) ? items.map((i: unknown) => typeof i === "string" ? i : String((i as Record<string, unknown>)?.text || (i as Record<string, unknown>)?.content || i)) : [],
+      variant: props.variant || props.style || props.listStyle || "bullet",
+      spacing: props.spacing || "normal",
+      columns: props.columns ? Number(props.columns) : undefined,
+      color: props.color || props.textColor || undefined,
+      iconColor: props.iconColor || props.markerColor || undefined,
+    };
+  }
+
+  // DisplayText
+  if (type === "DisplayText") {
+    return {
+      ...props,
+      text: props.text || props.title || props.content || "Display",
+      fontSize: props.fontSize || undefined,
+      fontWeight: props.fontWeight || "900",
+      fontFamily: props.fontFamily || undefined,
+      color: props.color || props.textColor || undefined,
+      align: props.align || props.alignment || "center",
+      gradient: props.gradient || false,
+      gradientFrom: props.gradientFrom || undefined,
+      gradientTo: props.gradientTo || undefined,
+      gradientDirection: props.gradientDirection || undefined,
+      textShadow: props.textShadow || undefined,
+      textWrap: props.textWrap || "balance",
+      maxWidth: props.maxWidth || undefined,
+    };
+  }
+
+  // DividerText
+  if (type === "DividerText") {
+    return {
+      ...props,
+      text: props.text || props.label || props.content || "Section",
+      variant: props.variant || props.style || "line-sides",
+      color: props.color || props.textColor || undefined,
+      lineColor: props.lineColor || props.borderColor || undefined,
+      spacing: props.spacing || "md",
+      textTransform: props.textTransform || "uppercase",
+    };
+  }
+
+  // StatNumber
+  if (type === "StatNumber") {
+    return {
+      ...props,
+      value: props.value || props.number || props.stat || "100",
+      prefix: props.prefix || "",
+      suffix: props.suffix || "",
+      label: props.label || props.title || props.description || "Statistic",
+      color: props.color || props.valueColor || undefined,
+      labelColor: props.labelColor || undefined,
+      valueSize: props.valueSize || undefined,
+      align: props.align || props.alignment || "center",
+      layout: props.layout || "stacked",
     };
   }
 
@@ -1650,7 +1796,10 @@ function transformPropsForStudio(
     return {
       ...props,
       stickyPosition: props.stickyPosition || props.position || "left",
-      stickyWidth: toResponsive(props.stickyWidth || props.width || "1/3", "1/3"),
+      stickyWidth: toResponsive(
+        props.stickyWidth || props.width || "1/3",
+        "1/3",
+      ),
       stickyOffset: props.stickyOffset || props.offset || "0px",
       gap: toResponsive(props.gap, "8"),
       stackOnMobile: props.stackOnMobile ?? true,
@@ -1663,44 +1812,69 @@ function transformPropsForStudio(
 
   // Animate — render expects nested config objects: entrance, loop, scroll, stagger
   if (type === "Animate") {
-    const animType = String(props.animation || props.effect || props.entrance?.type || "fadeIn");
+    const animType = String(
+      props.animation || props.effect || props.entrance?.type || "fadeIn",
+    );
     const trigger = String(props.trigger || "scroll");
     const dur = Number(props.duration || props.entrance?.duration || 0.6);
     const del = Number(props.delay || props.entrance?.delay || 0);
 
     // Build entrance config (scroll-triggered entrance animation)
-    const entrance = props.entrance && typeof props.entrance === "object"
-      ? props.entrance
-      : {
-          type: animType,
-          duration: dur,
-          delay: del,
-          easing: props.easing || "ease",
-          once: props.once !== false,
-          threshold: Number(props.threshold || 0.2),
-        };
+    const entrance =
+      props.entrance && typeof props.entrance === "object"
+        ? props.entrance
+        : {
+            type: animType,
+            duration: dur,
+            delay: del,
+            easing: props.easing || "ease",
+            once: props.once !== false,
+            threshold: Number(props.threshold || 0.2),
+          };
 
     // Build loop config if specified
-    const loop = props.loop && typeof props.loop === "object"
-      ? props.loop
-      : props.loopAnimation
-        ? { type: String(props.loopAnimation), duration: Number(props.loopDuration || 2), delay: 0 }
-        : undefined;
+    const loop =
+      props.loop && typeof props.loop === "object"
+        ? props.loop
+        : props.loopAnimation
+          ? {
+              type: String(props.loopAnimation),
+              duration: Number(props.loopDuration || 2),
+              delay: 0,
+            }
+          : undefined;
 
     // Build scroll config if trigger is scroll-driven effect
-    const scrollEffects = ["parallax", "fade", "scale", "rotate", "slide", "reveal"];
-    const scroll = props.scroll && typeof props.scroll === "object"
-      ? props.scroll
-      : scrollEffects.includes(trigger)
-        ? { type: trigger, speed: Number(props.speed || 0.5), direction: props.scrollDirection || "up" }
-        : undefined;
+    const scrollEffects = [
+      "parallax",
+      "fade",
+      "scale",
+      "rotate",
+      "slide",
+      "reveal",
+    ];
+    const scroll =
+      props.scroll && typeof props.scroll === "object"
+        ? props.scroll
+        : scrollEffects.includes(trigger)
+          ? {
+              type: trigger,
+              speed: Number(props.speed || 0.5),
+              direction: props.scrollDirection || "up",
+            }
+          : undefined;
 
     // Build stagger config
-    const stagger = props.stagger && typeof props.stagger === "object"
-      ? props.stagger
-      : props.staggerDelay
-        ? { enabled: true, delay: Number(props.staggerDelay), direction: props.staggerDirection || "normal" }
-        : undefined;
+    const stagger =
+      props.stagger && typeof props.stagger === "object"
+        ? props.stagger
+        : props.staggerDelay
+          ? {
+              enabled: true,
+              delay: Number(props.staggerDelay),
+              direction: props.staggerDirection || "normal",
+            }
+          : undefined;
 
     return {
       ...props,
@@ -1715,7 +1889,9 @@ function transformPropsForStudio(
   if (type === "Tilt3DContainer") {
     return {
       ...props,
-      maxAngle: Number(props.maxAngle || props.maxTilt || props.tiltAngle || 10),
+      maxAngle: Number(
+        props.maxAngle || props.maxTilt || props.tiltAngle || 10,
+      ),
       speed: Number(props.speed || 400),
       perspective: Number(props.perspective || 1000),
       scale: Number(props.scale || 1.02),
@@ -1745,7 +1921,9 @@ function transformPropsForStudio(
     return {
       ...props,
       type: String(props.type || props.effect || "spotlight"),
-      intensity: Number(props.intensity || props.size ? (Number(props.size) / 40) : 0.5),
+      intensity: Number(
+        props.intensity || props.size ? Number(props.size) / 40 : 0.5,
+      ),
       color: props.color || props.cursorColor || "rgba(255,255,255,0.15)",
     };
   }

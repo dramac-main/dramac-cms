@@ -34,6 +34,10 @@ import {
   generateBrandCSSVars,
 } from "./brand-colors";
 import {
+  generateFluidTypeScale,
+  generateTypographyCSSVars,
+} from "@/lib/ai/website-designer/design/typography-intelligence";
+import {
   getModuleNavigation,
   mergeMainNavLinks,
   buildUtilityItems,
@@ -470,7 +474,28 @@ export function StudioRenderer({
       (siteSettings?.font_body as string) ||
       (themeObj?.fontBody as string) ||
       null;
-    return generateBrandCSSVars(brandPalette, fontHeading, fontBody);
+    const brandVars = generateBrandCSSVars(brandPalette, fontHeading, fontBody);
+
+    // Generate fluid type scale CSS variables
+    const typeScaleRatio =
+      (siteSettings?.type_scale_ratio as string) ||
+      (themeObj?.typeScaleRatio as string) ||
+      "minor-third";
+    const scale = generateFluidTypeScale(
+      16,
+      typeScaleRatio as Parameters<typeof generateFluidTypeScale>[1],
+    );
+    const fontMono =
+      (siteSettings?.font_mono as string) ||
+      (themeObj?.fontMono as string) ||
+      undefined;
+    const typeVars = generateTypographyCSSVars(scale, {
+      heading: fontHeading || undefined,
+      body: fontBody || undefined,
+      mono: fontMono,
+    });
+
+    return { ...brandVars, ...typeVars };
   }, [brandPalette, siteSettings]);
 
   // ── GOOGLE FONTS LOADER ──────────────────────────────────────────────
@@ -492,9 +517,27 @@ export function StudioRenderer({
     if (fontBody) fonts.add(fontBody);
     if (fonts.size === 0) return;
 
-    // Build Google Fonts URL
+    // Add preconnect hints for Google Fonts (performance optimization)
+    const preconnectOrigins = [
+      "https://fonts.googleapis.com",
+      "https://fonts.gstatic.com",
+    ];
+    for (const origin of preconnectOrigins) {
+      if (!document.querySelector(`link[rel="preconnect"][href="${origin}"]`)) {
+        const preconnect = document.createElement("link");
+        preconnect.rel = "preconnect";
+        preconnect.href = origin;
+        if (origin.includes("gstatic")) preconnect.crossOrigin = "anonymous";
+        document.head.appendChild(preconnect);
+      }
+    }
+
+    // Build Google Fonts URL — load full weight range for variable fonts
     const families = Array.from(fonts)
-      .map((f) => `family=${f.replace(/ /g, "+")}:wght@300;400;500;600;700`)
+      .map(
+        (f) =>
+          `family=${f.replace(/ /g, "+")}:wght@100;200;300;400;500;600;700;800;900`,
+      )
       .join("&");
     const href = `https://fonts.googleapis.com/css2?${families}&display=swap`;
 

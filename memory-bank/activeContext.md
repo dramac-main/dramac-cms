@@ -1,14 +1,210 @@
 # Active Context
 
-## Current Focus: Canvas iframe Rendering Fidelity Fixes
+## Current Focus: Typography Components Overhaul — COMPLETE ✅
 
-### Status: COMPLETE — 3 files fixed, build passes, committed d061fbe9, pushed
+### Status: All 18 tasks completed — 4 existing components overhauled, 5 new components created, full pipeline alignment
+
+### What Was Done
+
+**Foundation (Tasks 1-2):**
+- Added `generateFluidTypeScale()`, `generateTypographyCSSVars()`, `getAutoLineHeight()`, `getAutoLetterSpacing()` to typography-intelligence.ts
+- Injected CSS variables (`--type-*`, `--leading-*`, `--tracking-*`, `--font-heading/body/mono`, `--rhythm`) into renderer.tsx
+- Added Google Fonts preconnect hints, expanded font weight range to 100-900
+
+**4 Existing Component Overhauls (Tasks 3-6):**
+
+| Component | Key Changes |
+|-----------|------------|
+| HeadingRender | CSS var defaults per level, HEADING_DEFAULTS table, gradient text, fontStyle/textShadow/textDecoration/textWrap/maxWidth props |
+| TextRender | CSS var fonts, React.createElement (replaced switch), dropCap/columns/textWrap/hyphens/truncate props |
+| RichTextRender | Removed hardcoded #1c2b2a + opacity:0.85, upgraded markdownToHtml (headings/links/code/ordered lists/hr), titleLevel/titleFontFamily/bodyFontFamily/titleFontSize |
+| QuoteRender | Removed hardcoded #374151/#ffffff, added modern/pullquote/testimonial variants, fontFamily/fontStyle props |
+
+**5 New Components (Tasks 7-11):**
+
+| Component | Purpose | Variants |
+|-----------|---------|----------|
+| LabelRender | Tags, badges, overlines | default, badge, overline, tag, pill, outline, subtle |
+| ListRender | Styled lists | bullet, numbered, check, arrow, dash, icon, none |
+| DisplayTextRender | Hero text (4xl-9xl) | gradient support, textWrap balance |
+| DividerTextRender | Section separators | line-sides, line-through, dots, gradient, ornament |
+| StatNumberRender | Metrics display | stacked/inline layout, tabular-nums |
+
+**Registry Fixes (Tasks 12-15):**
+- Heading: `alignment`→`align`, added 15+ new fields (fontFamily, fontSize, fontWeight, lineHeight, letterSpacing, textTransform, fontStyle, textDecoration, gradient*, textShadow, textWrap, maxWidth), field groups
+- Quote: `source`→`authorTitle`, `style`→`variant`, variants expanded to 6, added authorImage/textColor/backgroundColor/borderColor/fontFamily/fontStyle/size, field groups
+- RichText: Exposed 9 hidden props (proseSize, subtitleColor, pullQuoteColor, highlightColor, cardBackgroundColor, titleLevel, titleFontFamily, bodyFontFamily, titleFontSize), field groups
+- 5 new components registered in contentComponents array
+
+**Converter (Task 16):**
+- Added typeMap entries for Label, List, DisplayText, DividerText, StatNumber (+ AI alias variations)
+- Added KNOWN_REGISTRY_TYPES entries
+- Enhanced Heading handler (was minimal, now normalizes 15+ props)
+- Separated Text from RichText handler (were combined)
+- Added converter handlers for all 5 new component types
+
+**Metadata (Task 17):**
+- Added component-metadata.ts entries for all 5 new components with keywords and AI descriptions
+
+**Build (Task 18):**
+- TypeScript check passes — 0 new errors introduced (pre-existing layout errors remain)
+
+### Files Modified
+- `src/lib/ai/website-designer/design/typography-intelligence.ts` — 4 new functions
+- `src/lib/studio/engine/renderer.tsx` — CSS var injection + preconnect + font weights
+- `src/lib/studio/blocks/renders.tsx` — 4 overhauled + 5 new render functions
+- `src/lib/studio/registry/core-components.ts` — 3 fixed + 5 new registrations + new imports
+- `src/lib/ai/website-designer/converter.ts` — typeMap + KNOWN_REGISTRY + 8 handler updates
+- `src/lib/studio/registry/component-metadata.ts` — 5 new entries
+
+### Previous Work: Layout Component Prop Alignment ✅
+
+**core-components.ts (7 components):**
+| Component | Fix |
+|-----------|-----|
+| Section | `padding` → split into `paddingY` + `paddingX` fields |
+| Container | `padding` → split into `paddingX` + `paddingY` fields |
+| Columns | added `stackOnMobile` toggle field |
+| Grid | removed dead `autoFit`/`minChildWidth` fields |
+| GridItem | removed dead `backgroundColor`/`padding` fields |
+| ScrollSectionItem | removed dead `contentAlign`/`verticalAlign`, added `snapAlign` |
+| ShapeDivider | added `width`/`animated` fields |
+
+### Key Architecture Insight
+
+Props flow: `converter.ts` output → stored in component data → `renderer.tsx` spreads via `{...injectedProps}` (lines 218-238, 281-290) with NO intermediate mapping. Prop names must match EXACTLY.
+
+### Next Steps
+
+1. All 14 layout components are now fully aligned — AI designer can use them freely
+2. Implementation continues with Phase 5+ (dark mode) when ready
+3. Memory bank files for dark mode spec still current
+
+#### FINAL Audit Confidence
+
+- **143 files audited** — every public-facing file that was not previously checked
+- **82% clean rate** — vast majority already use shadcn/ui semantic tokens
+- **49 ecommerce desktop components — 100% clean** — largest batch, zero gaps
+- **Booking studio — all clean** — comprehensive CSS variable + prop-based color systems
+- **Gap trend across 8 sessions:** 10→4→3→1→3→1→3→6 (final 6 from exhaustive 143-file sweep)
+- **No more unchecked public-facing files remain in the codebase**
+
+#### Total Dark Mode Coverage (24 Subsections, 43 Phase 5 Steps)
+
+Subsections 12.7.1-12.7.24, Phase 5A-5L, 17 test subsections (17.4.1-17.4.17), 18 key rules.
+
+### Previous Session: 5th Deep Audit (Gaps 15-17)
+
+**Gap #12 (CRITICAL) — Scrollbar & Native Control Adaptation (Section 12.7.20):**
+
+- Replace `color-scheme: light !important` with conditional `[data-color-scheme="auto"] { color-scheme: light dark }`
+- Published "auto" sites get OS-adaptive scrollbars, native inputs, selects, date pickers
+- Studio editor stays light. "light" sites unchanged (zero regression)
+- CRM form hardcoded styles → use CSS variable references
+- Custom webkit scrollbar styling with `var(--color-border)`, `var(--color-muted-foreground)`
+
+**Gap #13 (IMPORTANT) — Gradient Background Remapping (Section 12.7.21):**
+
+- `remapNeutralGradient()` companion function parses gradient strings
+- Neutral hex color stops → CSS variable references
+- Branded/saturated stops → stay as original hex
+- CSS vars inside `gradient()` functions valid in all modern browsers
+
+**Gap #14 (CRITICAL) — CRM Form Fix (noted in Section 12.7.20):**
+
+- `modules/crm/studio/renders.tsx` line ~63: `backgroundColor: '#fff'`, `color: '#1e293b'`
+- Fix: use `var(--color-background)`, `var(--color-foreground)`, `var(--color-border)`
+
+#### Cross-Reference Updates
+
+| Location               | Update                                                                      |
+| ---------------------- | --------------------------------------------------------------------------- |
+| Phase 5G (steps 31-32) | Shadow elevation system + render updates                                    |
+| Phase 5H (steps 33-34) | color-scheme fix + scrollbar styling                                        |
+| Phase 5I (step 35)     | `remapNeutralGradient()` utility                                            |
+| Phase 5J (steps 36-37) | CRM form fix + extended testing                                             |
+| Section 17.4.12        | Shadow & elevation verification                                             |
+| Section 17.4.13        | Scrollbar & native control verification                                     |
+| Section 17.4.14        | Gradient background verification                                            |
+| Implementation Prompt  | Key Rule #16 (elevation + scrollbar + gradients), Platform Context expanded |
+
+#### Phase 5 Now Has 37 Steps (5A-5J)
+
+Steps 1-30: Previous (unchanged)
+Steps 31-32: **NEW 5G** — Elevation CSS vars + render shadow updates
+Steps 33-34: **NEW 5H** — color-scheme fix + scrollbar styling
+Step 35: **NEW 5I** — `remapNeutralGradient()` utility
+Steps 36-37: **NEW 5J** — CRM form fix + extended testing
+
+#### Section 12.7 Now Has 21 Subsections (12.7.1-12.7.21)
+
+12.7.1: Auto default for new sites
+12.7.2: CSS variable dual injection
+12.7.3: ThemeProvider isolation
+12.7.4: Published site layout.tsx
+12.7.5: Dual-default pattern (Tailwind semantic + inline override)
+12.7.6: Transition system (0.3s ease, no FOUC)
+12.7.7: Premium component adaptation (injectBrandColors var mode)
+12.7.8: Ecommerce page adaptation
+12.7.9: Logo dark variant
+12.7.10: Image dimming
+12.7.11: Meta theme-color
+12.7.12: DarkModeToggle visitor component
+12.7.13: Studio preview toggle
+12.7.14: Accessibility
+12.7.15: Migration path (existing sites stay light)
+12.7.16: Neutral color remapping (remapNeutralColor)
+12.7.17: Print stylesheet
+12.7.18: Dark favicon
+12.7.19: **NEW** Shadow & elevation adaptation
+12.7.20: **NEW** Scrollbar & native control adaptation
+12.7.21: **NEW** Gradient background remapping
+
+### Hardcoded Shadow Locations (renders.tsx)
+
+- Line ~2321: Image block shadow
+- Line ~5458: 3D button effect
+- Line ~6457: Hero drop shadow
+- Line ~15690: Glassmorphism shadow
+
+### Key Source File Issues
+
+- `globals.css` line ~356: `color-scheme: light !important` — conflicts with dark mode
+- `modules/crm/studio/renders.tsx` line ~63: Hardcoded form input styles
+
+---
+
+## Previous Focus: Layout Master Plan — Dark Mode Critical Gaps Fixed (Session 3)
+
+```
+AI generates site → every section gets backgroundColor: "#ffffff" (inline style)
+    ↓
+colorScheme === "auto" or "dark" triggers remapping
+    ↓
+remapNeutralColor("#ffffff", "background")
+  → getLuminance("#ffffff") = 1.0 (> 0.95 threshold)
+  → getSaturation("#ffffff") = 0.0 (< 0.15 threshold)
+  → NEUTRAL → returns "var(--color-background)"
+    ↓
+Section renders with style={{ backgroundColor: "var(--color-background)" }}
+    ↓
+CSS vars resolve: light mode → white surface, dark mode → dark surface ✅
+    ↓
+remapNeutralColor("#2563eb", "background")
+  → getSaturation("#2563eb") = 0.84 (> 0.15 threshold)
+  → BRANDED → returns "#2563eb" unchanged ✅
+```
+
+---
+
+## Previous Focus: Canvas iframe Rendering Fidelity Fixes
 
 ### What Was Done (This Session)
 
 #### Problem: Canvas Not Matching Published Site
 
 User reported after the iframe rewrite:
+
 1. **Sticky navbar not sticking when scrolling** in canvas
 2. **Mobile/tablet breakpoints don't match browser rendering**
 3. **Font, border styles missing** vs published site
@@ -31,22 +227,22 @@ User reported after the iframe rewrite:
 
 Completed full review of all 16 sections of the master plan. **All planned features are compatible with the iframe canvas:**
 
-| Feature | Status |
-|---------|--------|
-| CSS `position: sticky` | ✅ Works via fixed-height viewport |
-| Tailwind responsive @media | ✅ Responds to iframe width |
-| Framer Motion entrance animations | ✅ Works (JS in same iframe window) |
-| `useReducedMotion()` | ✅ Checks iframe window preference |
+| Feature                                  | Status                                  |
+| ---------------------------------------- | --------------------------------------- |
+| CSS `position: sticky`                   | ✅ Works via fixed-height viewport      |
+| Tailwind responsive @media               | ✅ Responds to iframe width             |
+| Framer Motion entrance animations        | ✅ Works (JS in same iframe window)     |
+| `useReducedMotion()`                     | ✅ Checks iframe window preference      |
 | Scroll-driven animations (parallax etc.) | ✅ `window.scrollY` works within iframe |
-| Container queries | ✅ CSS feature, iframe-native |
-| CSS `clamp()` fluid sizing | ✅ CSS feature, iframe-native |
-| Glassmorphism / `backdrop-filter` | ✅ CSS feature |
-| Clip-path, blend modes | ✅ CSS feature |
-| Shape dividers (SVG) | ✅ Inline SVG, no iframe issues |
-| 3D tilt (onMouseMove) | ✅ Mouse events fire natively in iframe |
-| ScrollSection scroll-snap | ✅ CSS scroll-snap, iframe-native |
-| Dark/light `isDarkBackground()` | ✅ Existing pattern, works in canvas |
-| `studio-renderer light` css class | ✅ NOW applied to canvas root div |
+| Container queries                        | ✅ CSS feature, iframe-native           |
+| CSS `clamp()` fluid sizing               | ✅ CSS feature, iframe-native           |
+| Glassmorphism / `backdrop-filter`        | ✅ CSS feature                          |
+| Clip-path, blend modes                   | ✅ CSS feature                          |
+| Shape dividers (SVG)                     | ✅ Inline SVG, no iframe issues         |
+| 3D tilt (onMouseMove)                    | ✅ Mouse events fire natively in iframe |
+| ScrollSection scroll-snap                | ✅ CSS scroll-snap, iframe-native       |
+| Dark/light `isDarkBackground()`          | ✅ Existing pattern, works in canvas    |
+| `studio-renderer light` css class        | ✅ NOW applied to canvas root div       |
 
 **One known limitation:** JS effects using `window.addEventListener("scroll")` in components (navbar hide-on-scroll etc.) are guarded by `enableEffects = !_isEditor || _liveEffects` — they default OFF in editor mode. Pure CSS `position: sticky` works. Live effects toggle in toolbar enables them.
 
@@ -69,6 +265,7 @@ Completed full review of all 16 sections of the master plan. **All planned featu
 **User Request:** "A full platform that fully works with light and dark mode. When the system switches to light mode, its light mode switches to dark mode, its dark mode."
 
 **Deep Platform Scan Results (4 Explore subagents):**
+
 - Dashboard dark mode: completely isolated (ThemeProvider forces `light` on `/site/` routes)
 - Tailwind config: `darkMode: ["class", "html"]` — class-based strategy
 - CSS variable infrastructure: 44 CSS vars already injected on `.studio-renderer`
@@ -82,6 +279,7 @@ Completed full review of all 16 sections of the master plan. **All planned featu
 #### Files Modified
 
 **`docs/LAYOUT-COMPONENTS-MASTER-PLAN.md`:**
+
 1. **Section 12.7 REWRITTEN** — From "Future: NOT in scope" placeholder to comprehensive in-scope specification with 9 subsections:
    - 12.7.1 Dual Palette Generation (`resolveDualPalettes()` → calls `resolveBrandColors()` twice)
    - 12.7.2 CSS Variable Dark Mode Injection (`@media (prefers-color-scheme: dark)` scoped to `.studio-renderer`)
@@ -100,6 +298,7 @@ Completed full review of all 16 sections of the master plan. **All planned featu
 4. **Section 17.4 ADDED** — System Dark Mode Testing subsection (Playwright with prefers-color-scheme emulation, visual verification checklist, edge cases)
 
 **`docs/LAYOUT-IMPLEMENTATION-PROMPT.md`:**
+
 1. Platform Context updated with System Dark Mode description
 2. Key Rule #12 added (system dark mode dual-default pattern)
 3. Phase 5 steps (23-30) added to implementation order
@@ -128,6 +327,7 @@ Layout components with explicit AI-set colors stay fixed (inline style priority)
 ## Previous Focus: Studio Canvas iframe Rewrite
 
 **Problem:** The Designer Studio canvas rendered components directly in the dashboard DOM, causing:
+
 - Dashboard dark mode CSS bleeding into page content
 - Tailwind responsive @media queries not responding to canvas viewport width
 - Brand colors/fonts not matching the published site (preview/publish showed different rendering)
@@ -174,33 +374,23 @@ Layout components with explicit AI-set colors stay fixed (inline style priority)
 ### Files Changed (9 files)
 
 **New files:**
+
 1. `src/components/studio/canvas/canvas-iframe.tsx` — iframe rendering surface
 2. `src/components/studio/canvas/canvas-content.tsx` — canvas content with DnD + brand injection
 
-**Substantially rewritten:**
-3. `src/components/studio/canvas/editor-canvas.tsx` — now wraps CanvasIframe
-4. `src/components/studio/dnd/draggable-component.tsx` — HTML5 native drag
-5. `src/components/studio/dnd/dnd-provider.tsx` — simplified to pass-through
+**Substantially rewritten:** 3. `src/components/studio/canvas/editor-canvas.tsx` — now wraps CanvasIframe 4. `src/components/studio/dnd/draggable-component.tsx` — HTML5 native drag 5. `src/components/studio/dnd/dnd-provider.tsx` — simplified to pass-through
 
-**Modified:**
-6. `src/components/studio/panels/symbols-panel.tsx` — HTML5 native drag for symbols
-7. `src/app/studio/[siteId]/[pageId]/page.tsx` — fetches site settings
-8. `src/components/studio/core/studio-provider.tsx` — passes siteSettings
-9. `src/lib/studio/store/editor-store.ts` — siteSettings in state
+**Modified:** 6. `src/components/studio/panels/symbols-panel.tsx` — HTML5 native drag for symbols 7. `src/app/studio/[siteId]/[pageId]/page.tsx` — fetches site settings 8. `src/components/studio/core/studio-provider.tsx` — passes siteSettings 9. `src/lib/studio/store/editor-store.ts` — siteSettings in state
 
 ### Architecture Insight
 
 The brand color pipeline now flows identically in both canvas and published site:
 `site.settings` → `extractBrandSource()` → `resolveBrandColors()` → `BrandColorPalette` → Both:
+
 1. `injectBrandColors()` + `injectBrandFonts()` — per-component prop injection
 2. `generateBrandCSSVars()` — CSS variable layer in iframe `<html>` element
 
-Responsive preview works naturally: Tailwind @media queries respond to iframe width, not dashboard window width.
-12. `src/modules/live-chat/components/widget/WidgetPreChatForm.tsx` — Pre-chat form bug fix
-13. `src/modules/live-chat/components/wrappers/AgentsPageWrapper.tsx` — Agent status toggle
-14. `src/modules/live-chat/components/wrappers/ConversationViewWrapper.tsx` — AI glow animation
-15. `src/modules/live-chat/components/wrappers/ConversationsPageWrapper.tsx` — Tags, filter, preview
-16. `src/modules/live-chat/types/index.ts` — Tag filter type
+Responsive preview works naturally: Tailwind @media queries respond to iframe width, not dashboard window width. 12. `src/modules/live-chat/components/widget/WidgetPreChatForm.tsx` — Pre-chat form bug fix 13. `src/modules/live-chat/components/wrappers/AgentsPageWrapper.tsx` — Agent status toggle 14. `src/modules/live-chat/components/wrappers/ConversationViewWrapper.tsx` — AI glow animation 15. `src/modules/live-chat/components/wrappers/ConversationsPageWrapper.tsx` — Tags, filter, preview 16. `src/modules/live-chat/types/index.ts` — Tag filter type
 
 ### What Was Done (Previous Session): Smart Dark/Light Mode for E-Commerce Storefront
 

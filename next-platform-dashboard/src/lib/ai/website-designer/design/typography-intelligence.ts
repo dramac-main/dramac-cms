@@ -435,3 +435,155 @@ export function generateFontFaceCSS(pairing: FontPairing): string {
   const url = generateGoogleFontsUrl(pairing);
   return `@import url('${url}');`;
 }
+
+// =============================================================================
+// FLUID TYPE SCALE
+// =============================================================================
+
+/**
+ * Optimal line-height based on font size — larger text needs tighter leading.
+ */
+export function getAutoLineHeight(sizeRem: number): string {
+  if (sizeRem >= 4) return "1.1";
+  if (sizeRem >= 3) return "1.15";
+  if (sizeRem >= 2.5) return "1.2";
+  if (sizeRem >= 2) return "1.25";
+  if (sizeRem >= 1.5) return "1.3";
+  if (sizeRem >= 1.25) return "1.4";
+  return "1.5";
+}
+
+/**
+ * Optimal letter-spacing based on font size — larger text should be tighter.
+ */
+export function getAutoLetterSpacing(sizeRem: number): string {
+  if (sizeRem >= 4) return "-0.025em";
+  if (sizeRem >= 3) return "-0.02em";
+  if (sizeRem >= 2) return "-0.015em";
+  if (sizeRem >= 1.5) return "-0.01em";
+  if (sizeRem >= 1.25) return "-0.005em";
+  return "0em";
+}
+
+/**
+ * Generate a fluid type scale using CSS clamp() for smooth viewport scaling.
+ * Each step outputs a clamp(min, preferred, max) value.
+ */
+export function generateFluidTypeScale(
+  baseSize: number = 16,
+  ratio: TypeScaleRatio = "minor-third",
+  minViewport: number = 320,
+  maxViewport: number = 1440,
+): TypeScale {
+  const ratioValue = TYPE_SCALE_RATIOS[ratio];
+  const steps = [
+    "xs",
+    "sm",
+    "base",
+    "lg",
+    "xl",
+    "2xl",
+    "3xl",
+    "4xl",
+    "5xl",
+    "6xl",
+    "7xl",
+    "8xl",
+    "9xl",
+  ] as const;
+
+  // Base step index (where baseSize lives)
+  const baseIndex = 2; // "base" is index 2
+
+  const scale: Partial<TypeScale> = {};
+
+  steps.forEach((step, index) => {
+    const exponent = index - baseIndex;
+    const multiplier = Math.pow(ratioValue, exponent);
+    const idealPx = baseSize * multiplier;
+    const idealRem = idealPx / 16;
+
+    // Fluid range: smaller sizes scale less, larger sizes scale more
+    const fluidFactor = Math.max(0.15, Math.min(0.4, exponent * 0.05 + 0.2));
+    const minRem = idealRem * (1 - fluidFactor);
+    const maxRem = idealRem * (1 + fluidFactor * 0.5);
+
+    // Build clamp() value
+    // preferred = min + (max - min) * ((100vw - minVP) / (maxVP - minVP))
+    // Simplified: slope = (maxRem - minRem) / (maxViewport - minViewport) * 16
+    const slope = ((maxRem - minRem) * 16) / (maxViewport - minViewport);
+    const intercept = minRem - (slope * minViewport) / 16;
+
+    const clampValue = `clamp(${minRem.toFixed(4)}rem, ${intercept.toFixed(4)}rem + ${(slope * 100).toFixed(4)}vw, ${maxRem.toFixed(4)}rem)`;
+
+    const lineHeight = getAutoLineHeight(idealRem);
+    const letterSpacing = getAutoLetterSpacing(idealRem);
+
+    // Determine font weight: lighter for body sizes, heavier for headings
+    let fontWeight: FontWeight = 400;
+    if (exponent >= 4) fontWeight = 800;
+    else if (exponent >= 3) fontWeight = 700;
+    else if (exponent >= 2) fontWeight = 700;
+    else if (exponent >= 1) fontWeight = 600;
+
+    scale[step] = {
+      size: clampValue,
+      lineHeight,
+      letterSpacing,
+      fontWeight,
+    };
+  });
+
+  return scale as TypeScale;
+}
+
+// =============================================================================
+// CSS VARIABLE GENERATION
+// =============================================================================
+
+/**
+ * Generate CSS custom properties for the full typography system.
+ * These vars are injected at the root level by the renderer.
+ */
+export function generateTypographyCSSVars(
+  scale: TypeScale,
+  fonts: { heading?: string; body?: string; mono?: string },
+): Record<string, string> {
+  const vars: Record<string, string> = {};
+
+  // Font family variables
+  if (fonts.heading) vars["--font-heading"] = fonts.heading;
+  if (fonts.body) vars["--font-body"] = fonts.body;
+  if (fonts.mono) vars["--font-mono"] = fonts.mono;
+
+  // Type scale CSS variables
+  const stepNames = Object.keys(scale) as (keyof TypeScale)[];
+  for (const step of stepNames) {
+    const s = scale[step];
+    vars[`--type-${step}`] = s.size;
+    vars[`--leading-${step}`] = s.lineHeight;
+    vars[`--tracking-${step}`] = s.letterSpacing;
+  }
+
+  // Heading-level aliases (semantic mapping)
+  // h1→5xl, h2→4xl, h3→3xl, h4→2xl, h5→xl, h6→lg
+  const headingMap: Record<string, keyof TypeScale> = {
+    h1: "5xl",
+    h2: "4xl",
+    h3: "3xl",
+    h4: "2xl",
+    h5: "xl",
+    h6: "lg",
+  };
+  for (const [heading, step] of Object.entries(headingMap)) {
+    const s = scale[step];
+    vars[`--type-${heading}`] = s.size;
+    vars[`--leading-${heading}`] = s.lineHeight;
+    vars[`--tracking-${heading}`] = s.letterSpacing;
+  }
+
+  // Vertical rhythm base unit (based on body line-height * base size)
+  vars["--rhythm"] = `calc(${scale.base.lineHeight} * 1rem)`;
+
+  return vars;
+}

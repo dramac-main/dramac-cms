@@ -1,11 +1,272 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: March 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅ + **LIVE CHAT RUNTIME FIXES (AI auto-response + file uploads)** ✅ + **PER-ORDER CONVERSATION ISOLATION** ✅ + **PER-ORDER CHAT HARDENING AUDIT (10 bugs fixed, 0 TS errors)** ✅ + **CATEGORIES PAGE + DARK MODE POLISH** ✅ + **LIVE CHAT OVERHAUL + ECOMMERCE FIXES** ✅ + **CANVAS IFRAME RENDERING FIDELITY FIXES** ✅
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅ + **LIVE CHAT RUNTIME FIXES (AI auto-response + file uploads)** ✅ + **PER-ORDER CONVERSATION ISOLATION** ✅ + **PER-ORDER CHAT HARDENING AUDIT (10 bugs fixed, 0 TS errors)** ✅ + **CATEGORIES PAGE + DARK MODE POLISH** ✅ + **LIVE CHAT OVERHAUL + ECOMMERCE FIXES** ✅ + **CANVAS IFRAME RENDERING FIDELITY FIXES** ✅ + **TYPOGRAPHY COMPONENTS OVERHAUL (4 enhanced + 5 new, CSS var type scale)** ✅
 
 ---
 
-## Latest Update: Canvas iframe Rendering Fidelity Fixes (commit d061fbe9)
+## Latest Update: Typography Components Overhaul — ALL 18 TASKS COMPLETE ✅
+
+### What Was Done
+
+Complete overhaul of 4 existing typography components + creation of 5 brand-new components + CSS variable type scale system. Based on `docs/TYPOGRAPHY-COMPONENTS-MASTER-PLAN.md`.
+
+### Files Modified (6)
+
+| File | Changes |
+|------|---------|
+| `typography-intelligence.ts` | 4 new functions: `getAutoLineHeight`, `getAutoLetterSpacing`, `generateFluidTypeScale` (13-step clamp()), `generateTypographyCSSVars` |
+| `renderer.tsx` | CSS var injection (type scale + font vars), Google Fonts preconnect hints, weight range 100-900 |
+| `renders.tsx` | 4 components overhauled (Heading, Text, RichText, Quote) + 5 new created (Label, List, DisplayText, DividerText, StatNumber) |
+| `core-components.ts` | 3 registrations fixed (Heading/Quote/RichText) + 5 new component registrations with field groups |
+| `converter.ts` | typeMap entries for 5 new + aliases, KNOWN_REGISTRY_TYPES updated, 8 converter handlers enhanced/added |
+| `component-metadata.ts` | 5 new entries with keywords and AI descriptions |
+
+### Key Fixes
+
+- **Prop mismatches resolved:** Heading `alignment`→`align`, Quote `source`→`authorTitle`, Quote `style`→`variant`
+- **Hardcoded colors removed:** RichText `#1c2b2a` + `opacity:0.85`, Quote `#374151` + card `#ffffff`
+- **CSS variable type scale:** 13 steps (xs→9xl) + heading aliases (h1→h6) + font family vars + rhythm unit
+- **Fluid typography:** All sizes use `clamp(min, preferred, max)` scaling between 320px–1440px viewports
+- **Font loading:** Weight range expanded to 100-900, preconnect hints for Google Fonts
+
+### New Components
+
+| Component | Variants | Key Features |
+|-----------|----------|--------------|
+| Label | 7 (default/badge/overline/tag/pill/outline/subtle) | Sizes xs/sm/md, textTransform, letterSpacing |
+| List | 7 (bullet/numbered/check/arrow/dash/icon/none) | Multi-column, configurable spacing |
+| DisplayText | — | Hero text, 9xl/900 default, gradient support, textWrap balance |
+| DividerText | 5 (line-sides/line-through/dots/gradient/ornament) | Section separators |
+| StatNumber | — | Stacked/inline layout, tabular-nums, prefix/suffix/label |
+
+### Build Status
+
+- **Zero new TypeScript errors** introduced — all remaining errors are pre-existing (toResponsive, ClassMapValue)
+
+---
+
+## Previous Update: Layout Component Prop Alignment — TWO ROUNDS COMPLETE ✅
+
+### What Was Done
+
+Full end-to-end audit of all 14 layout components across the entire prop pipeline (render functions → converter → registry → AI prompt). TWO rounds of fixes applied and pushed.
+
+### Round 2 Fixes (commit `08936e20`)
+
+After the first round (commit `f6189c56`) fixed 7 converter + 8 registry mismatches, a second comprehensive audit found 8 MORE issues:
+
+**CRITICAL fixes:**
+
+- Section/Container: `padding` field → split into `paddingY`/`paddingX` (render functions use these, NOT `padding`)
+- Container/Columns: added missing converter cases (props were passing through unmapped)
+
+**Dead field removal:**
+
+- Grid: removed `autoFit`/`minChildWidth` (render doesn't use them)
+- GridItem: removed `backgroundColor`/`padding` (pure placement utility)
+- ScrollSectionItem: removed `contentAlign`/`verticalAlign` (alignment hardcoded), added `snapAlign`
+
+**Missing field additions:**
+
+- Columns: added `stackOnMobile` toggle to registry
+- ShapeDivider: added `width`/`animated` to registry + converter
+
+### Status
+
+- **All 14 layout components:** Fully aligned across render → converter → registry ✅
+- **Zero prop mismatches remaining** between the three files
+- **AI designer:** Can now use any layout component and props will render correctly
+- **Commits:** `f6189c56` (round 1) + `08936e20` (round 2) — both pushed
+
+---
+
+## Previous Update: Layout Master Plan — 7th Deep Audit (Gaps 19-21 — Portal, Forms, Widget)
+
+### What Was Done
+
+6th comprehensive dark mode audit targeted 8 NEW areas (::placeholder, blog/prose, rgba, HR/dividers, booking, loading states, toasts, dropdowns). Found 1 gap — blog pages.
+
+### Key Changes
+
+**Master Plan (`LAYOUT-COMPONENTS-MASTER-PLAN.md`):**
+
+- **Section 12.7.24 (NEW)** — Blog & Prose Dark Mode Adaptation: Both public blog pages (`/blog/[subdomain]/`) have hardcoded `text-gray-*`/`bg-gray-*`, missing `dark:prose-invert`, no blog layout for `data-color-scheme`. Full replacement mapping, prose-invert fix, `.prose-blog-content` CSS override for user-pasted HTML with inline styles, blog layout creation.
+- **Phase 5** — Expanded from 40 to 43 steps: 5L (blog post fix, listing fix, layout + CSS + verification)
+- **Section 17.4** — Added test subsection 17.4.17 for blog & prose dark mode verification (12 test cases)
+
+**Implementation Prompt (`LAYOUT-IMPLEMENTATION-PROMPT.md`):**
+
+- Key Rule #18 added for blog & prose dark mode
+- Subsection count updated to 24 (12.7.1-12.7.24)
+
+### Section 12.7 Now Has 24 Subsections (12.7.1-12.7.24)
+
+All 23 previous subsections plus:
+| 12.7.24 | Blog & prose dark mode adaptation (hardcoded colors, prose-invert, user HTML, blog layout) |
+
+### Confirmed NO GAP (7 more areas verified clean)
+
+- `::placeholder` styling — bgDark-adaptive
+- rgba/opacity backgrounds — minor, contextually correct
+- HR/Divider elements — prop-driven colors
+- Booking module views — CSS vars with hex fallbacks
+- Loading/transition states — N/A (SSR only)
+- Notification toasts — Sonner not mounted in published site layout
+- Dropdown/popover menus — none in published site code
+
+### Status
+
+- **Plan:** COMPLETE ✅ (24 subsections, 43 Phase 5 steps, 17 test subsections, 18 key rules)
+- **Total areas audited across 6 sessions:** 28+ distinct areas
+- **Convergence:** Gap count decreasing per audit (10→4→3→1) — approaching true completeness
+- **All critical/important gaps addressed** in spec
+
+---
+
+## Previous Update: Layout Master Plan — 5th Deep Audit (Gaps 15-17 Fixed)
+
+### What Was Done
+
+5th comprehensive dark mode audit targeted 6 NEW areas never previously checked (storefront ecommerce, emails, error pages, SVGs, third-party UIs, residual hardcoded colors). Found 3 more gaps.
+
+### Key Changes
+
+**Master Plan (`LAYOUT-COMPONENTS-MASTER-PLAN.md`):**
+
+- **Section 12.7.22 (NEW)** — Error Page Dark Mode: Published site 404/500 pages must use semantic Tailwind tokens instead of hardcoded colors/inline styles
+- **Section 12.7.23 (NEW)** — Render Function Residual Colors: ~25 instances of `text-gray-*`/`bg-white` cataloged with line numbers and replacement table; exclusion list for intentional hardcodes
+- **Phase 5** — Expanded from 37 to 40 steps: 5K (error pages, renders batch cleanup, verification)
+- **Section 17.4** — Added 2 new test subsections (17.4.15-17.4.16 for error pages and residual color cleanup)
+
+**Implementation Prompt (`LAYOUT-IMPLEMENTATION-PROMPT.md`):**
+
+- Key Rule #17 added for error pages + residual hardcoded colors
+- Subsection count updated to 23 (12.7.1-12.7.23)
+
+### Section 12.7 Now Has 23 Subsections (12.7.1-12.7.23)
+
+All 21 previous subsections plus:
+| 12.7.22 | Error page dark mode adaptation (404/500 semantic tokens) |
+| 12.7.23 | Render function residual hardcoded color cleanup (~25 instances) |
+
+### Confirmed NO GAP (4 more areas verified clean)
+
+- Storefront ecommerce — already uses shadcn/ui + semantic tokens
+- SVG icons — all use `currentColor` or `fill="none"`
+- Payment forms — no embedded Stripe Elements (external redirect gateways)
+- Cookie consent — no consent component exists
+
+### Email Templates (Noted, Low Priority)
+
+- Both email systems have hardcoded light colors, no dark mode support
+- Limited email client support for `@media (prefers-color-scheme: dark)`
+- Not added as full spec section — noted for future enhancement
+
+### Status
+
+- **Plan:** COMPLETE ✅ (23 subsections, 40 Phase 5 steps, 16 test subsections, 17 key rules)
+- **Total areas audited across 5 sessions:** 20+ distinct areas
+- **All critical/important gaps addressed** in spec
+
+---
+
+## Previous Update: Layout Master Plan — 4th Deep Audit (Gaps 11-14 Fixed)
+
+### What Was Done
+
+4th comprehensive dark mode audit targeted 7 specific areas (shadows, gradients, scrollbars, selection, focus rings, forms, skeletons). Found 4 MORE genuine gaps, fully spec'd in master plan.
+
+### Key Changes
+
+**Master Plan (`LAYOUT-COMPONENTS-MASTER-PLAN.md`):**
+
+- **Section 12.7.19 (NEW)** — Shadow & Elevation Adaptation: CSS variable-based elevation system (`--elevation-sm` through `--elevation-2xl` + glow variants). All renders use `var(--elevation-*)` instead of hardcoded `rgba(0,0,0,...)`
+- **Section 12.7.20 (NEW)** — Scrollbar & Native Control Adaptation: Fix `color-scheme: light !important` conflict. Published "auto" sites get `color-scheme: light dark`. CRM form hardcoded styles fixed.
+- **Section 12.7.21 (NEW)** — Gradient Background Remapping: `remapNeutralGradient()` parses gradient strings, remaps neutral color stops to CSS vars, preserves branded stops.
+- **Phase 5** — Expanded from 30 to 37 steps: 5G (elevation), 5H (scrollbar), 5I (gradients), 5J (CRM forms + testing)
+- **Section 17.4** — Added 3 new test subsections (17.4.12-17.4.14 for shadows/scrollbars/gradients)
+
+**Implementation Prompt (`LAYOUT-IMPLEMENTATION-PROMPT.md`):**
+
+- Platform Context expanded with elevation system, scrollbar adaptation, gradient remapping
+- Key Rule #16 added for elevation + scrollbar + gradient adaptation
+
+### Section 12.7 Now Has 21 Subsections (12.7.1-12.7.21)
+
+All 18 previous subsections plus:
+| 12.7.19 | Shadow & elevation adaptation (elevation CSS vars) |
+| 12.7.20 | Scrollbar & native control adaptation (color-scheme fix, CRM forms) |
+| 12.7.21 | Gradient background remapping (remapNeutralGradient) |
+
+### Confirmed NO GAP (3 areas verified clean)
+
+- `::selection` highlight — uses `bg-primary/20 text-foreground`
+- Focus rings — uses `ring-ring ring-offset-background`
+- Skeleton loaders — uses `bg-muted animate-pulse`
+
+### Status
+
+- **Plan:** COMPLETE ✅ (21 subsections, 37 Phase 5 steps, 14 test subsections)
+- **All audited areas addressed** — shadows, scrollbars, gradients, CRM forms, native controls all covered
+
+---
+
+## Previous Update: Layout Master Plan — Dark Mode Critical Gaps Fixed (Session 3)
+
+### What Was Done
+
+Deep audit of the dark mode spec uncovered a **CRITICAL flaw**: the AI always sets explicit `backgroundColor` on every section (inline styles, highest CSS specificity). CSS variable overrides via `@media (prefers-color-scheme: dark)` CANNOT override inline styles — meaning dark mode would only affect premium components (navbar/footer/hero), not content sections. Three new gaps found and fully spec'd:
+
+### Key Changes
+
+**Master Plan (`LAYOUT-COMPONENTS-MASTER-PLAN.md`):**
+
+- **Section 12.7.16 (NEW)** — Neutral Color Remapping (CRITICAL): `remapNeutralColor()` utility detects neutral colors (low saturation < 0.15) by luminance and replaces with CSS variable references at render time. Branded colors stay as hex.
+- **Section 12.7.17 (NEW)** — Print Stylesheet: expanded `@media print` to force light colors on all sections/cards for ink-saving print.
+- **Section 12.7.18 (NEW)** — Dark Favicon: `darkModeFavicon` site setting + `<link>` with media attribute for dark variant.
+- **Section 12.7.5** — Added CRITICAL AMENDMENT note referencing 12.7.16
+- **Section 12.7.8** — Added `remapNeutralColor()` step to pipeline + updated "Key point"
+- **Phase 5** — Expanded from 23 to 30 steps: new steps for remapNeutralColor utility, render updates, print stylesheet, favicon field, validation tests
+- **Section 17.4** — Added 4 new test subsections (17.4.8-17.4.10 for remapping/print/favicon, 17.4.7 expanded with 3 edge cases)
+
+**Implementation Prompt (`LAYOUT-IMPLEMENTATION-PROMPT.md`):**
+
+- Platform Context updated with neutral color remapping and print/favicon references
+- Phase 5 steps expanded (29-38): remapNeutralColor, render updates, print, favicon
+- Key Rule #15 added for neutral color remapping requirement
+
+### Section 12.7 Now Has 18 Subsections (12.7.1-12.7.18)
+
+| Subsection | Coverage                                              |
+| ---------- | ----------------------------------------------------- |
+| 12.7.1     | Dual palette generation                               |
+| 12.7.2     | CSS variable dark mode injection                      |
+| 12.7.3     | Site color scheme setting                             |
+| 12.7.4     | ThemeProvider & layout changes                        |
+| 12.7.5     | Layout component render pattern + remapping amendment |
+| 12.7.6     | Ecommerce component readiness                         |
+| 12.7.7     | Premium component CSS var injection mode              |
+| 12.7.8     | AI post-processing pipeline (with remapping step)     |
+| 12.7.9     | Breakage prevention guarantees                        |
+| 12.7.10    | Smooth color transitions                              |
+| 12.7.11    | Browser chrome adaptation                             |
+| 12.7.12    | Visitor manual override toggle                        |
+| 12.7.13    | Dark logo variant                                     |
+| 12.7.14    | Image adaptation                                      |
+| 12.7.15    | Studio dark mode preview                              |
+| 12.7.16    | **Neutral color remapping (CRITICAL)**                |
+| 12.7.17    | Print stylesheet for dark mode                        |
+| 12.7.18    | Dark favicon variant                                  |
+
+### Status
+
+- **Plan:** COMPLETE ✅ (no code changes — specification only, to be implemented during Phase 5)
+- **All gaps identified and addressed** — system dark mode spec now covers EVERY visual element on the page
+
+---
+
+## Previous Update: Canvas iframe Rendering Fidelity Fixes (commit d061fbe9)
 
 ### What Was Fixed
 
@@ -28,6 +289,7 @@ Three rendering issues after the iframe canvas rewrite:
 Full system dark mode (`prefers-color-scheme`) specification added to **LAYOUT-COMPONENTS-MASTER-PLAN.md** and **LAYOUT-IMPLEMENTATION-PROMPT.md**. Deep platform scan (4 Explore subagents) confirmed feasibility and zero breakage risk.
 
 ### Key Changes
+
 - **Section 12.7** rewritten from "NOT in scope" to comprehensive 9-subsection specification
 - **Phase 5** added to Implementation Phases (9 steps: dual palette generation, CSS injection, site setting, ThemeProvider, layout.tsx, E2E testing)
 - **Phases 1-2** updated to reference Section 12.7.5 dual-default render pattern
@@ -35,12 +297,14 @@ Full system dark mode (`prefers-color-scheme`) specification added to **LAYOUT-C
 - **Implementation prompt** updated with Key Rule #12, Phase 5 steps (23-30), and platform context
 
 ### What This Enables
+
 - Sites with `colorScheme: "auto"` seamlessly switch between light and dark based on visitor's OS
 - Layout components use Tailwind semantic classes (auto-adapt) + inline style only for explicit AI colors
 - Zero regression: all existing sites default to `"light"` = exact current behavior
 - Dashboard completely unaffected (already isolated)
 
 ### Status
+
 - **Plan:** COMPLETE ✅ (no code changes yet — this is specification only)
 - **Next:** Implementation will follow the 5-phase plan when the layout overhaul begins
 

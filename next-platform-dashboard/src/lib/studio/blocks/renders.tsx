@@ -256,13 +256,27 @@ export interface SectionProps {
   borderColor?: string;
   scrollSnap?: "none" | "start" | "center" | "end";
   shapeDividerTop?: {
-    shape: "wave" | "curve" | "triangle" | "tilt" | "arrow" | "zigzag" | "clouds";
+    shape:
+      | "wave"
+      | "curve"
+      | "triangle"
+      | "tilt"
+      | "arrow"
+      | "zigzag"
+      | "clouds";
     color: string;
     height?: number;
     flip?: boolean;
   };
   shapeDividerBottom?: {
-    shape: "wave" | "curve" | "triangle" | "tilt" | "arrow" | "zigzag" | "clouds";
+    shape:
+      | "wave"
+      | "curve"
+      | "triangle"
+      | "tilt"
+      | "arrow"
+      | "zigzag"
+      | "clouds";
     color: string;
     height?: number;
     flip?: boolean;
@@ -326,7 +340,11 @@ export function SectionRender({
   const vAlignClass = verticalAlignMap[verticalAlign] || "justify-start";
   const cAlignClass = contentAlignMap[contentAlign] || "items-start text-left";
 
-  const visibility = getVisibilityClasses({ hideOnMobile, hideOnTablet, hideOnDesktop });
+  const visibility = getVisibilityClasses({
+    hideOnMobile,
+    hideOnTablet,
+    hideOnDesktop,
+  });
 
   // Dual-default render pattern (Section 12.7.5)
   const hasExplicitBg = backgroundColor && backgroundColor !== "";
@@ -339,10 +357,13 @@ export function SectionRender({
   const darkDefaults = getDarkAwareDefaults(darkBg);
 
   // Background gradient CSS
-  const gradientCSS = backgroundGradient ? buildGradientCSS(backgroundGradient) : undefined;
+  const gradientCSS = backgroundGradient
+    ? buildGradientCSS(backgroundGradient)
+    : undefined;
 
   // Scroll snap
-  const scrollSnapClass = scrollSnap !== "none" ? (scrollSnapMap[scrollSnap] || "") : "";
+  const scrollSnapClass =
+    scrollSnap !== "none" ? scrollSnapMap[scrollSnap] || "" : "";
 
   // Height resolution
   const heightMap: Record<string, string> = {
@@ -354,7 +375,8 @@ export function SectionRender({
 
   // Build inline styles
   const sectionStyle: React.CSSProperties = {};
-  if (hasExplicitBg && !backgroundOverlay) sectionStyle.backgroundColor = backgroundColor;
+  if (hasExplicitBg && !backgroundOverlay)
+    sectionStyle.backgroundColor = backgroundColor;
   if (bgImageUrl) sectionStyle.backgroundImage = `url(${bgImageUrl})`;
   if (gradientCSS && !bgImageUrl) sectionStyle.backgroundImage = gradientCSS;
   if (bgImageUrl || gradientCSS) {
@@ -364,7 +386,9 @@ export function SectionRender({
   if (fullHeight) sectionStyle.minHeight = "100vh";
   else if (minHeight) sectionStyle.minHeight = minHeight;
   if (borderTop || borderBottom) {
-    sectionStyle.borderColor = hasExplicitBg ? darkDefaults.borderColor : borderColor;
+    sectionStyle.borderColor = hasExplicitBg
+      ? darkDefaults.borderColor
+      : borderColor;
   }
   if (hasExplicitText) sectionStyle.color = textColor;
 
@@ -383,7 +407,12 @@ export function SectionRender({
         }`}
         style={{
           height: `${h}px`,
-          transform: position === "bottom" ? "rotate(180deg)" : config.flip ? "scaleX(-1)" : undefined,
+          transform:
+            position === "bottom"
+              ? "rotate(180deg)"
+              : config.flip
+                ? "scaleX(-1)"
+                : undefined,
         }}
         aria-hidden="true"
       >
@@ -410,7 +439,10 @@ export function SectionRender({
 
       {/* Video background */}
       {backgroundVideo && (
-        <div className="absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
+        <div
+          className="absolute inset-0 z-0 overflow-hidden"
+          aria-hidden="true"
+        >
           <video
             className="w-full h-full object-cover"
             autoPlay
@@ -418,7 +450,11 @@ export function SectionRender({
             muted={backgroundVideo.muted !== false}
             playsInline
             poster={backgroundVideo.poster}
-            style={{ playbackRate: backgroundVideo.playbackRate } as React.CSSProperties}
+            style={
+              {
+                playbackRate: backgroundVideo.playbackRate,
+              } as React.CSSProperties
+            }
           >
             <source src={backgroundVideo.url} />
           </video>
@@ -521,33 +557,41 @@ export function ContainerRender({
   // Dual-default render pattern (Section 12.7.5)
   const hasExplicitBg = backgroundColor && backgroundColor !== "";
   const hasExplicitText = textColor && textColor !== "";
-  const bgClass = hasExplicitBg ? "" : "";  // Container defaults to transparent
-  const textClass = hasExplicitText ? "" : "";  // Container inherits text color
+  const bgClass = hasExplicitBg ? "" : ""; // Container defaults to transparent
+  const textClass = hasExplicitText ? "" : ""; // Container inherits text color
 
   // Dark-aware shadow
   const darkBg = isDarkBackground(backgroundColor);
   const darkDefaults = getDarkAwareDefaults(darkBg);
   const shadowClass = shadowMapUtil[shadow] || "";
-  const darkShadowStyle = darkBg ? resolveShadow(shadow as "none" | "sm" | "md" | "lg" | "xl" | "2xl", true) : "";
+  const darkShadowStyle = darkBg
+    ? resolveShadow(shadow as "none" | "sm" | "md" | "lg" | "xl" | "2xl", true)
+    : "";
 
   // Glassmorphism
   const glassStyles = glassmorphism ? resolveGlassmorphism(darkBg) : null;
 
   // Aspect ratio
-  const aspectClass = aspectRatio ? (aspectRatioMap[aspectRatio] || "") : "";
+  const aspectClass = aspectRatio ? aspectRatioMap[aspectRatio] || "" : "";
 
   // Overflow
-  const overflowClass = overflow ? (overflowMapUtil[overflow] || "") : "";
+  const overflowClass = overflow ? overflowMapUtil[overflow] || "" : "";
 
   // Gradient background
-  const gradientCSS = backgroundGradient ? buildGradientCSS(backgroundGradient) : undefined;
+  const gradientCSS = backgroundGradient
+    ? buildGradientCSS(backgroundGradient)
+    : undefined;
 
   // Build styles
   const containerStyle: React.CSSProperties = {};
-  if (hasExplicitBg && !glassmorphism) containerStyle.backgroundColor = backgroundColor;
+  if (hasExplicitBg && !glassmorphism)
+    containerStyle.backgroundColor = backgroundColor;
   if (hasExplicitText) containerStyle.color = textColor;
   if (gradientCSS) containerStyle.backgroundImage = gradientCSS;
-  if (border) containerStyle.borderColor = darkBg ? darkDefaults.borderColor : borderColor;
+  if (border)
+    containerStyle.borderColor = darkBg
+      ? darkDefaults.borderColor
+      : borderColor;
   if (darkShadowStyle) containerStyle.boxShadow = darkShadowStyle;
   if (glassStyles) {
     containerStyle.background = glassStyles.background;
@@ -587,7 +631,9 @@ export function ContainerRender({
     <div
       id={id}
       className={`w-full mx-auto ${maxWClass} ${pxClasses} ${pyClasses} ${radiusClasses} ${shadowClass} ${border ? "border" : ""} ${aspectClass} ${overflowClass} ${bgClass} ${textClass} ${className}`}
-      style={Object.keys(containerStyle).length > 0 ? containerStyle : undefined}
+      style={
+        Object.keys(containerStyle).length > 0 ? containerStyle : undefined
+      }
     >
       {children}
     </div>
@@ -624,7 +670,11 @@ export function ColumnsRender({
   const tabletCols =
     typeof columns === "object" ? columns.tablet || cols : cols;
   const mobileCols =
-    typeof columns === "object" ? columns.mobile || 1 : (stackOnMobile ? 1 : cols);
+    typeof columns === "object"
+      ? columns.mobile || 1
+      : stackOnMobile
+        ? 1
+        : cols;
 
   // Use lookup maps — NEVER template literals for Tailwind classes
   const mobileColClass = gridColsMap[mobileCols] || "grid-cols-1";
@@ -706,13 +756,51 @@ export function CardRender({
   const hasExplicitText = textColor && textColor !== "";
 
   // Variant-based defaults
-  const variantDefaults: Record<string, { bgClass: string; textClass: string; borderClass: string; shadowClass: string }> = {
-    elevated: { bgClass: "bg-card", textClass: "text-card-foreground", borderClass: "", shadowClass: "shadow-md" },
-    outlined: { bgClass: "bg-card", textClass: "text-card-foreground", borderClass: "border", shadowClass: "" },
-    filled: { bgClass: "bg-muted", textClass: "text-foreground", borderClass: "", shadowClass: "" },
-    ghost: { bgClass: "bg-transparent", textClass: "text-foreground", borderClass: "", shadowClass: "" },
-    glass: { bgClass: "", textClass: "text-foreground", borderClass: "", shadowClass: "" },
-    flat: { bgClass: "bg-card", textClass: "text-card-foreground", borderClass: "", shadowClass: "" },
+  const variantDefaults: Record<
+    string,
+    {
+      bgClass: string;
+      textClass: string;
+      borderClass: string;
+      shadowClass: string;
+    }
+  > = {
+    elevated: {
+      bgClass: "bg-card",
+      textClass: "text-card-foreground",
+      borderClass: "",
+      shadowClass: "shadow-md",
+    },
+    outlined: {
+      bgClass: "bg-card",
+      textClass: "text-card-foreground",
+      borderClass: "border",
+      shadowClass: "",
+    },
+    filled: {
+      bgClass: "bg-muted",
+      textClass: "text-foreground",
+      borderClass: "",
+      shadowClass: "",
+    },
+    ghost: {
+      bgClass: "bg-transparent",
+      textClass: "text-foreground",
+      borderClass: "",
+      shadowClass: "",
+    },
+    glass: {
+      bgClass: "",
+      textClass: "text-foreground",
+      borderClass: "",
+      shadowClass: "",
+    },
+    flat: {
+      bgClass: "bg-card",
+      textClass: "text-card-foreground",
+      borderClass: "",
+      shadowClass: "",
+    },
   };
   const vd = variantDefaults[variant] || variantDefaults.elevated;
 
@@ -724,16 +812,23 @@ export function CardRender({
   const resolvedShadow = shadow ?? (variant === "elevated" ? "md" : "none");
   const shadowClass = darkBg
     ? "" // Will use inline glow style instead
-    : (shadowMapUtil[resolvedShadow] || "");
-  const darkShadowStyle = darkBg ? resolveShadow(resolvedShadow as "none" | "sm" | "md" | "lg" | "xl" | "2xl", true) : "";
-  const hoverShadowClass = hoverShadow ? (hoverShadowMapUtil[hoverShadow] || "") : "";
+    : shadowMapUtil[resolvedShadow] || "";
+  const darkShadowStyle = darkBg
+    ? resolveShadow(
+        resolvedShadow as "none" | "sm" | "md" | "lg" | "xl" | "2xl",
+        true,
+      )
+    : "";
+  const hoverShadowClass = hoverShadow
+    ? hoverShadowMapUtil[hoverShadow] || ""
+    : "";
 
   const pClasses = getResponsiveClasses(padding, paddingMapUtil);
   const radiusClasses = getResponsiveClasses(borderRadius, borderRadiusMap);
   const overflowClass = overflowMapUtil[overflow] || "overflow-hidden";
 
   // Border resolution
-  const hasBorder = border ?? (variant === "outlined");
+  const hasBorder = border ?? variant === "outlined";
   const darkDefaults = getDarkAwareDefaults(darkBg);
 
   // Glassmorphism (variant="glass" or explicit)
@@ -741,7 +836,9 @@ export function CardRender({
   const glassStyles = isGlass ? resolveGlassmorphism(darkBg) : null;
 
   // Gradient background
-  const gradientCSS = backgroundGradient ? buildGradientCSS(backgroundGradient) : undefined;
+  const gradientCSS = backgroundGradient
+    ? buildGradientCSS(backgroundGradient)
+    : undefined;
 
   // Hover effect classes
   const hoverEffectClasses: Record<string, string> = {
@@ -759,7 +856,10 @@ export function CardRender({
   if (hasExplicitBg && !isGlass) cardStyle.backgroundColor = backgroundColor;
   if (hasExplicitText) cardStyle.color = textColor;
   if (gradientCSS) cardStyle.backgroundImage = gradientCSS;
-  if (hasBorder) cardStyle.borderColor = darkBg ? darkDefaults.borderColor : (borderColor || "#e5e7eb");
+  if (hasBorder)
+    cardStyle.borderColor = darkBg
+      ? darkDefaults.borderColor
+      : borderColor || "#e5e7eb";
   if (darkShadowStyle) cardStyle.boxShadow = darkShadowStyle;
   if (glassStyles) {
     cardStyle.background = glassStyles.background;
@@ -795,7 +895,16 @@ export function CardRender({
       </div>
     );
     if (linkUrl) {
-      return <a href={linkUrl} target={linkTarget} rel={linkTarget === "_blank" ? "noopener noreferrer" : undefined} className={`block ${radiusClasses}`}>{content}</a>;
+      return (
+        <a
+          href={linkUrl}
+          target={linkTarget}
+          rel={linkTarget === "_blank" ? "noopener noreferrer" : undefined}
+          className={`block ${radiusClasses}`}
+        >
+          {content}
+        </a>
+      );
     }
     return content;
   }
@@ -864,7 +973,11 @@ export function SpacerRender({
   id,
   className = "",
 }: SpacerProps) {
-  const visibility = getVisibilityClasses({ hideOnMobile, hideOnTablet, hideOnDesktop });
+  const visibility = getVisibilityClasses({
+    hideOnMobile,
+    hideOnTablet,
+    hideOnDesktop,
+  });
   const isHorizontal = direction === "horizontal";
 
   // Custom size via inline style
@@ -911,7 +1024,14 @@ export function SpacerRender({
   }
 
   // Height prop — fallback to inline style for arbitrary pixel values
-  const sizeHeights: Record<string, number> = { xs: 8, sm: 16, md: 32, lg: 48, xl: 64, "2xl": 96 };
+  const sizeHeights: Record<string, number> = {
+    xs: 8,
+    sm: 16,
+    md: 32,
+    lg: 48,
+    xl: 64,
+    "2xl": 96,
+  };
   let h = 32;
   if (typeof height === "number") h = height;
   else if (typeof height === "object") {
@@ -985,14 +1105,21 @@ export function DividerRender({
   const spacingProp = spacing || marginY;
   const myClasses = getResponsiveClasses(spacingProp, marginYMapUtil);
   const widthClass = widthFractionMap[width] || "w-full";
-  const alignClass = { left: "mr-auto", center: "mx-auto", right: "ml-auto" }[align] || "mx-auto";
-  const thicknessClass = { 1: "border-t", 2: "border-t-2", 4: "border-t-4" }[thickness] || "border-t";
-  const vertThicknessClass = { 1: "border-l", 2: "border-l-2", 4: "border-l-4" }[thickness] || "border-l";
-  const styleClass = {
-    solid: "border-solid",
-    dashed: "border-dashed",
-    dotted: "border-dotted",
-  }[style] || "border-solid";
+  const alignClass =
+    { left: "mr-auto", center: "mx-auto", right: "ml-auto" }[align] ||
+    "mx-auto";
+  const thicknessClass =
+    { 1: "border-t", 2: "border-t-2", 4: "border-t-4" }[thickness] ||
+    "border-t";
+  const vertThicknessClass =
+    { 1: "border-l", 2: "border-l-2", 4: "border-l-4" }[thickness] ||
+    "border-l";
+  const styleClass =
+    {
+      solid: "border-solid",
+      dashed: "border-dashed",
+      dotted: "border-dotted",
+    }[style] || "border-solid";
 
   // Dark-aware default color
   const resolvedColor = color || "var(--border, #e5e7eb)";
@@ -1046,7 +1173,10 @@ export function DividerRender({
           style={getGradientStyle()}
         />
         {text && (
-          <span className="px-4 text-sm font-medium" style={{ color: resolvedTextColor }}>
+          <span
+            className="px-4 text-sm font-medium"
+            style={{ color: resolvedTextColor }}
+          >
             {text}
           </span>
         )}
@@ -1082,7 +1212,9 @@ export interface StackProps {
   direction?: UtilResponsiveValue<"vertical" | "horizontal">;
   spacing?: UtilResponsiveValue<string>;
   align?: UtilResponsiveValue<"start" | "center" | "end" | "stretch">;
-  justify?: UtilResponsiveValue<"start" | "center" | "end" | "between" | "around">;
+  justify?: UtilResponsiveValue<
+    "start" | "center" | "end" | "between" | "around"
+  >;
   wrap?: UtilResponsiveValue<boolean>;
   divider?: boolean;
   dividerColor?: string;
@@ -1138,17 +1270,23 @@ export function StackRender({
 
   // Justify
   const justifyMap: Record<string, string> = {
-    start: "justify-start", center: "justify-center", end: "justify-end",
-    between: "justify-between", around: "justify-around",
+    start: "justify-start",
+    center: "justify-center",
+    end: "justify-end",
+    between: "justify-between",
+    around: "justify-around",
   };
-  const justifyClass = justify && typeof justify === "string" ? (justifyMap[justify] || "") : "";
+  const justifyClass =
+    justify && typeof justify === "string" ? justifyMap[justify] || "" : "";
 
   // Wrap
   const wrapClass = wrap === true ? "flex-wrap" : "";
 
   // Sizing
   const widthClasses = width ? getResponsiveClassesUtil(width, widthMap) : "";
-  const maxWClasses = maxWidth ? getResponsiveClassesUtil(maxWidth, maxWidthMapUtil) : "";
+  const maxWClasses = maxWidth
+    ? getResponsiveClassesUtil(maxWidth, maxWidthMapUtil)
+    : "";
 
   // Padding
   const padClasses = getResponsiveClassesUtil(padding, paddingMapUtil);
@@ -1156,11 +1294,18 @@ export function StackRender({
   const padYClasses = getResponsiveClassesUtil(paddingY, paddingYMapUtil);
 
   // Visual
-  const radiusClasses = getResponsiveClassesUtil(borderRadius, borderRadiusMapUtil);
+  const radiusClasses = getResponsiveClassesUtil(
+    borderRadius,
+    borderRadiusMapUtil,
+  );
   const shadowClasses = getResponsiveClassesUtil(shadow, shadowMapUtil);
 
   // Visibility
-  const visClasses = getVisibilityClasses({ hideOnMobile, hideOnTablet, hideOnDesktop });
+  const visClasses = getVisibilityClasses({
+    hideOnMobile,
+    hideOnTablet,
+    hideOnDesktop,
+  });
 
   // Inline style for explicit background only
   const inlineStyle: React.CSSProperties = {};
@@ -1170,7 +1315,8 @@ export function StackRender({
   const renderChildren = () => {
     if (!divider || !children) return children;
     const childArray = React.Children.toArray(children).filter(Boolean);
-    const isVertical = typeof direction === "string" ? direction === "vertical" : true;
+    const isVertical =
+      typeof direction === "string" ? direction === "vertical" : true;
     const divThickness = dividerThickness === "medium" ? "2px" : "1px";
     const divColor = dividerColor || "var(--border, #e5e7eb)";
     return childArray.map((child, i) => (
@@ -1180,7 +1326,8 @@ export function StackRender({
           <div
             aria-hidden="true"
             style={{
-              [isVertical ? "borderBottomWidth" : "borderRightWidth"]: divThickness,
+              [isVertical ? "borderBottomWidth" : "borderRightWidth"]:
+                divThickness,
               [isVertical ? "borderBottomStyle" : "borderRightStyle"]: "solid",
               borderColor: divColor,
               [isVertical ? "width" : "height"]: "100%",
@@ -1195,7 +1342,9 @@ export function StackRender({
   return (
     <div
       id={id}
-      className={`flex ${dirClasses} ${gapClasses} ${alignClasses} ${justifyClass} ${wrapClass} ${widthClasses} ${maxWClasses} ${padClasses} ${padXClasses} ${padYClasses} ${radiusClasses} ${shadowClasses} ${visClasses} ${className}`.replace(/\s+/g, " ").trim()}
+      className={`flex ${dirClasses} ${gapClasses} ${alignClasses} ${justifyClass} ${wrapClass} ${widthClasses} ${maxWClasses} ${padClasses} ${padXClasses} ${padYClasses} ${radiusClasses} ${shadowClasses} ${visClasses} ${className}`
+        .replace(/\s+/g, " ")
+        .trim()}
       style={Object.keys(inlineStyle).length > 0 ? inlineStyle : undefined}
     >
       {divider ? renderChildren() : children}
@@ -1209,11 +1358,19 @@ export function StackRender({
 // ============================================================================
 
 export interface FlexBoxProps {
-  direction?: UtilResponsiveValue<"row" | "column" | "row-reverse" | "column-reverse">;
+  direction?: UtilResponsiveValue<
+    "row" | "column" | "row-reverse" | "column-reverse"
+  >;
   wrap?: UtilResponsiveValue<"nowrap" | "wrap" | "wrap-reverse">;
-  justify?: UtilResponsiveValue<"start" | "center" | "end" | "between" | "around" | "evenly">;
-  align?: UtilResponsiveValue<"start" | "center" | "end" | "stretch" | "baseline">;
-  alignContent?: UtilResponsiveValue<"start" | "center" | "end" | "between" | "around" | "stretch">;
+  justify?: UtilResponsiveValue<
+    "start" | "center" | "end" | "between" | "around" | "evenly"
+  >;
+  align?: UtilResponsiveValue<
+    "start" | "center" | "end" | "stretch" | "baseline"
+  >;
+  alignContent?: UtilResponsiveValue<
+    "start" | "center" | "end" | "between" | "around" | "stretch"
+  >;
   gap?: UtilResponsiveValue<string>;
   rowGap?: UtilResponsiveValue<string>;
   columnGap?: UtilResponsiveValue<string>;
@@ -1270,15 +1427,42 @@ export function FlexBoxRender({
   const dirClasses = getResponsiveClassesUtil(direction, flexDirectionMap);
   const wrapClasses = getResponsiveClassesUtil(wrap, flexWrapMap);
   const justifyClasses = getResponsiveClassesUtil(justify, {
-    start: { mobile: "justify-start", tablet: "sm:justify-start", desktop: "lg:justify-start" },
-    center: { mobile: "justify-center", tablet: "sm:justify-center", desktop: "lg:justify-center" },
-    end: { mobile: "justify-end", tablet: "sm:justify-end", desktop: "lg:justify-end" },
-    between: { mobile: "justify-between", tablet: "sm:justify-between", desktop: "lg:justify-between" },
-    around: { mobile: "justify-around", tablet: "sm:justify-around", desktop: "lg:justify-around" },
-    evenly: { mobile: "justify-evenly", tablet: "sm:justify-evenly", desktop: "lg:justify-evenly" },
+    start: {
+      mobile: "justify-start",
+      tablet: "sm:justify-start",
+      desktop: "lg:justify-start",
+    },
+    center: {
+      mobile: "justify-center",
+      tablet: "sm:justify-center",
+      desktop: "lg:justify-center",
+    },
+    end: {
+      mobile: "justify-end",
+      tablet: "sm:justify-end",
+      desktop: "lg:justify-end",
+    },
+    between: {
+      mobile: "justify-between",
+      tablet: "sm:justify-between",
+      desktop: "lg:justify-between",
+    },
+    around: {
+      mobile: "justify-around",
+      tablet: "sm:justify-around",
+      desktop: "lg:justify-around",
+    },
+    evenly: {
+      mobile: "justify-evenly",
+      tablet: "sm:justify-evenly",
+      desktop: "lg:justify-evenly",
+    },
   });
   const alignClasses = getResponsiveClassesUtil(align, alignItemsLookup);
-  const alignCClasses = getResponsiveClassesUtil(alignContent, alignContentMapUtil);
+  const alignCClasses = getResponsiveClassesUtil(
+    alignContent,
+    alignContentMapUtil,
+  );
   const gapClasses = getResponsiveClassesUtil(gap, gapMapUtil);
   const rGapClasses = getResponsiveClassesUtil(rowGap, rowGapMap);
   const cGapClasses = getResponsiveClassesUtil(columnGap, columnGapMap);
@@ -1286,24 +1470,38 @@ export function FlexBoxRender({
   const padXClasses = getResponsiveClassesUtil(paddingX, paddingXMapUtil);
   const padYClasses = getResponsiveClassesUtil(paddingY, paddingYMapUtil);
   const widthClasses = width ? getResponsiveClassesUtil(width, widthMap) : "";
-  const maxWClasses = maxWidth ? getResponsiveClassesUtil(maxWidth, maxWidthMapUtil) : "";
-  const heightClasses = height ? getResponsiveClassesUtil(height, heightMap) : "";
-  const radiusClasses = getResponsiveClassesUtil(borderRadius, borderRadiusMapUtil);
+  const maxWClasses = maxWidth
+    ? getResponsiveClassesUtil(maxWidth, maxWidthMapUtil)
+    : "";
+  const heightClasses = height
+    ? getResponsiveClassesUtil(height, heightMap)
+    : "";
+  const radiusClasses = getResponsiveClassesUtil(
+    borderRadius,
+    borderRadiusMapUtil,
+  );
   const shadowClasses = getResponsiveClassesUtil(shadow, shadowMapUtil);
   const overflowClasses = getResponsiveClassesUtil(overflow, overflowMapUtil);
-  const visClasses = getVisibilityClasses({ hideOnMobile, hideOnTablet, hideOnDesktop });
+  const visClasses = getVisibilityClasses({
+    hideOnMobile,
+    hideOnTablet,
+    hideOnDesktop,
+  });
 
   const equalHeightClass = equalHeight ? "items-stretch" : "";
 
   const inlineStyle: React.CSSProperties = {};
   if (backgroundColor) inlineStyle.backgroundColor = backgroundColor;
-  if (backgroundGradient) inlineStyle.backgroundImage = buildGradientCSS(backgroundGradient);
+  if (backgroundGradient)
+    inlineStyle.backgroundImage = buildGradientCSS(backgroundGradient);
   if (minHeight) inlineStyle.minHeight = minHeight;
 
   return (
     <div
       id={id}
-      className={`flex ${dirClasses} ${wrapClasses} ${justifyClasses} ${alignClasses} ${alignCClasses} ${gapClasses} ${rGapClasses} ${cGapClasses} ${padClasses} ${padXClasses} ${padYClasses} ${equalHeightClass} ${widthClasses} ${maxWClasses} ${heightClasses} ${radiusClasses} ${shadowClasses} ${overflowClasses} ${visClasses} ${className}`.replace(/\s+/g, " ").trim()}
+      className={`flex ${dirClasses} ${wrapClasses} ${justifyClasses} ${alignClasses} ${alignCClasses} ${gapClasses} ${rGapClasses} ${cGapClasses} ${padClasses} ${padXClasses} ${padYClasses} ${equalHeightClass} ${widthClasses} ${maxWClasses} ${heightClasses} ${radiusClasses} ${shadowClasses} ${overflowClasses} ${visClasses} ${className}`
+        .replace(/\s+/g, " ")
+        .trim()}
       style={Object.keys(inlineStyle).length > 0 ? inlineStyle : undefined}
     >
       {children}
@@ -1325,8 +1523,12 @@ export interface GridProps {
   autoRows?: string;
   justifyItems?: UtilResponsiveValue<"start" | "center" | "end" | "stretch">;
   alignItems?: UtilResponsiveValue<"start" | "center" | "end" | "stretch">;
-  justifyContent?: UtilResponsiveValue<"start" | "center" | "end" | "between" | "around" | "evenly" | "stretch">;
-  alignContent?: UtilResponsiveValue<"start" | "center" | "end" | "between" | "around" | "evenly" | "stretch">;
+  justifyContent?: UtilResponsiveValue<
+    "start" | "center" | "end" | "between" | "around" | "evenly" | "stretch"
+  >;
+  alignContent?: UtilResponsiveValue<
+    "start" | "center" | "end" | "between" | "around" | "evenly" | "stretch"
+  >;
   placeItems?: UtilResponsiveValue<"start" | "center" | "end" | "stretch">;
   gap?: UtilResponsiveValue<string>;
   rowGap?: UtilResponsiveValue<string>;
@@ -1393,42 +1595,88 @@ export function GridRender({
   const jItemsClasses = getResponsiveClassesUtil(justifyItems, justifyItemsMap);
   const aItemsClasses = getResponsiveClassesUtil(alignItems, alignItemsLookup);
   const jContentClasses = getResponsiveClassesUtil(justifyContent, {
-    start: { mobile: "justify-start", tablet: "sm:justify-start", desktop: "lg:justify-start" },
-    center: { mobile: "justify-center", tablet: "sm:justify-center", desktop: "lg:justify-center" },
-    end: { mobile: "justify-end", tablet: "sm:justify-end", desktop: "lg:justify-end" },
-    between: { mobile: "justify-between", tablet: "sm:justify-between", desktop: "lg:justify-between" },
-    around: { mobile: "justify-around", tablet: "sm:justify-around", desktop: "lg:justify-around" },
-    evenly: { mobile: "justify-evenly", tablet: "sm:justify-evenly", desktop: "lg:justify-evenly" },
-    stretch: { mobile: "justify-stretch", tablet: "sm:justify-stretch", desktop: "lg:justify-stretch" },
+    start: {
+      mobile: "justify-start",
+      tablet: "sm:justify-start",
+      desktop: "lg:justify-start",
+    },
+    center: {
+      mobile: "justify-center",
+      tablet: "sm:justify-center",
+      desktop: "lg:justify-center",
+    },
+    end: {
+      mobile: "justify-end",
+      tablet: "sm:justify-end",
+      desktop: "lg:justify-end",
+    },
+    between: {
+      mobile: "justify-between",
+      tablet: "sm:justify-between",
+      desktop: "lg:justify-between",
+    },
+    around: {
+      mobile: "justify-around",
+      tablet: "sm:justify-around",
+      desktop: "lg:justify-around",
+    },
+    evenly: {
+      mobile: "justify-evenly",
+      tablet: "sm:justify-evenly",
+      desktop: "lg:justify-evenly",
+    },
+    stretch: {
+      mobile: "justify-stretch",
+      tablet: "sm:justify-stretch",
+      desktop: "lg:justify-stretch",
+    },
   });
   const aCClasses = getResponsiveClassesUtil(alignContent, alignContentMapUtil);
   const pItemsClasses = getResponsiveClassesUtil(placeItems, placeItemsMap);
   const widthClasses = width ? getResponsiveClassesUtil(width, widthMap) : "";
-  const maxWClasses = maxWidth ? getResponsiveClassesUtil(maxWidth, maxWidthMapUtil) : "";
-  const heightClasses = height ? getResponsiveClassesUtil(height, heightMap) : "";
-  const radiusClasses = getResponsiveClassesUtil(borderRadius, borderRadiusMapUtil);
+  const maxWClasses = maxWidth
+    ? getResponsiveClassesUtil(maxWidth, maxWidthMapUtil)
+    : "";
+  const heightClasses = height
+    ? getResponsiveClassesUtil(height, heightMap)
+    : "";
+  const radiusClasses = getResponsiveClassesUtil(
+    borderRadius,
+    borderRadiusMapUtil,
+  );
   const shadowClasses = getResponsiveClassesUtil(shadow, shadowMapUtil);
   const overflowClasses = getResponsiveClassesUtil(overflow, overflowMapUtil);
-  const visClasses = getVisibilityClasses({ hideOnMobile, hideOnTablet, hideOnDesktop });
-  const autoFlowClass = autoFlow ? (gridAutoFlowMap[autoFlow] || "") : "";
+  const visClasses = getVisibilityClasses({
+    hideOnMobile,
+    hideOnTablet,
+    hideOnDesktop,
+  });
+  const autoFlowClass = autoFlow ? gridAutoFlowMap[autoFlow] || "" : "";
 
   const inlineStyle: React.CSSProperties = {};
   // Grid template via inline style (custom CSS values)
   const gridCols = columns || resolvedPreset?.columns;
   const gridRows = rows || resolvedPreset?.rows;
-  if (gridCols) inlineStyle.gridTemplateColumns = typeof gridCols === "string" ? gridCols : undefined;
-  if (gridRows) inlineStyle.gridTemplateRows = typeof gridRows === "string" ? gridRows : undefined;
+  if (gridCols)
+    inlineStyle.gridTemplateColumns =
+      typeof gridCols === "string" ? gridCols : undefined;
+  if (gridRows)
+    inlineStyle.gridTemplateRows =
+      typeof gridRows === "string" ? gridRows : undefined;
   if (areas && typeof areas === "string") inlineStyle.gridTemplateAreas = areas;
   if (autoColumns) inlineStyle.gridAutoColumns = autoColumns;
   if (autoRows) inlineStyle.gridAutoRows = autoRows;
   if (backgroundColor) inlineStyle.backgroundColor = backgroundColor;
-  if (backgroundGradient) inlineStyle.backgroundImage = buildGradientCSS(backgroundGradient);
+  if (backgroundGradient)
+    inlineStyle.backgroundImage = buildGradientCSS(backgroundGradient);
   if (minHeight) inlineStyle.minHeight = minHeight;
 
   return (
     <div
       id={id}
-      className={`grid ${autoFlowClass} ${gapClasses} ${rGapClasses} ${cGapClasses} ${padClasses} ${jItemsClasses} ${aItemsClasses} ${jContentClasses} ${aCClasses} ${pItemsClasses} ${widthClasses} ${maxWClasses} ${heightClasses} ${radiusClasses} ${shadowClasses} ${overflowClasses} ${visClasses} ${className}`.replace(/\s+/g, " ").trim()}
+      className={`grid ${autoFlowClass} ${gapClasses} ${rGapClasses} ${cGapClasses} ${padClasses} ${jItemsClasses} ${aItemsClasses} ${jContentClasses} ${aCClasses} ${pItemsClasses} ${widthClasses} ${maxWClasses} ${heightClasses} ${radiusClasses} ${shadowClasses} ${overflowClasses} ${visClasses} ${className}`
+        .replace(/\s+/g, " ")
+        .trim()}
       style={Object.keys(inlineStyle).length > 0 ? inlineStyle : undefined}
     >
       {children}
@@ -1471,19 +1719,23 @@ export function GridItemRender({
   className = "",
   children,
 }: GridItemProps) {
-  const colSpanClass = colSpan ? (colSpanMap[colSpan] || "") : "";
-  const rowSpanClass = rowSpan ? (rowSpanMap[rowSpan] || "") : "";
+  const colSpanClass = colSpan ? colSpanMap[colSpan] || "" : "";
+  const rowSpanClass = rowSpan ? rowSpanMap[rowSpan] || "" : "";
   const aSelfClasses = getResponsiveClassesUtil(alignSelf, alignSelfMap);
   const jSelfClasses = getResponsiveClassesUtil(justifySelf, justifySelfMap);
 
   const inlineStyle: React.CSSProperties = {};
-  if (colStart !== undefined && colStart !== "auto") inlineStyle.gridColumnStart = colStart;
+  if (colStart !== undefined && colStart !== "auto")
+    inlineStyle.gridColumnStart = colStart;
   if (colStart === "auto") inlineStyle.gridColumnStart = "auto";
-  if (colEnd !== undefined && colEnd !== "auto") inlineStyle.gridColumnEnd = colEnd;
+  if (colEnd !== undefined && colEnd !== "auto")
+    inlineStyle.gridColumnEnd = colEnd;
   if (colEnd === "auto") inlineStyle.gridColumnEnd = "auto";
-  if (rowStart !== undefined && rowStart !== "auto") inlineStyle.gridRowStart = rowStart;
+  if (rowStart !== undefined && rowStart !== "auto")
+    inlineStyle.gridRowStart = rowStart;
   if (rowStart === "auto") inlineStyle.gridRowStart = "auto";
-  if (rowEnd !== undefined && rowEnd !== "auto") inlineStyle.gridRowEnd = rowEnd;
+  if (rowEnd !== undefined && rowEnd !== "auto")
+    inlineStyle.gridRowEnd = rowEnd;
   if (rowEnd === "auto") inlineStyle.gridRowEnd = "auto";
   if (area) inlineStyle.gridArea = area;
   if (order !== undefined) inlineStyle.order = order;
@@ -1491,7 +1743,9 @@ export function GridItemRender({
   return (
     <div
       id={id}
-      className={`${colSpanClass} ${rowSpanClass} ${aSelfClasses} ${jSelfClasses} ${className}`.replace(/\s+/g, " ").trim()}
+      className={`${colSpanClass} ${rowSpanClass} ${aSelfClasses} ${jSelfClasses} ${className}`
+        .replace(/\s+/g, " ")
+        .trim()}
       style={Object.keys(inlineStyle).length > 0 ? inlineStyle : undefined}
     >
       {children}
@@ -1505,17 +1759,32 @@ export function GridItemRender({
 // ============================================================================
 
 export interface WrapperProps {
-  display?: UtilResponsiveValue<"block" | "flex" | "grid" | "inline" | "inline-flex" | "inline-grid" | "contents" | "none">;
-  position?: UtilResponsiveValue<"static" | "relative" | "absolute" | "sticky" | "fixed">;
+  display?: UtilResponsiveValue<
+    | "block"
+    | "flex"
+    | "grid"
+    | "inline"
+    | "inline-flex"
+    | "inline-grid"
+    | "contents"
+    | "none"
+  >;
+  position?: UtilResponsiveValue<
+    "static" | "relative" | "absolute" | "sticky" | "fixed"
+  >;
   inset?: { top?: string; right?: string; bottom?: string; left?: string };
   zIndex?: number;
   width?: UtilResponsiveValue<"auto" | "full" | "fit" | "min" | "max" | string>;
-  height?: UtilResponsiveValue<"auto" | "full" | "fit" | "min" | "max" | string>;
+  height?: UtilResponsiveValue<
+    "auto" | "full" | "fit" | "min" | "max" | string
+  >;
   margin?: UtilResponsiveValue<"auto" | string>;
   padding?: UtilResponsiveValue<string>;
   flexGrow?: boolean;
   flexShrink?: boolean;
-  alignSelf?: UtilResponsiveValue<"start" | "center" | "end" | "stretch" | "baseline">;
+  alignSelf?: UtilResponsiveValue<
+    "start" | "center" | "end" | "stretch" | "baseline"
+  >;
   order?: number;
   colSpan?: number;
   rowSpan?: number;
@@ -1557,19 +1826,28 @@ export function WrapperRender({
 }: WrapperProps) {
   const displayClasses = getResponsiveClassesUtil(display, displayMap);
   const widthClasses = width ? getResponsiveClassesUtil(width, widthMap) : "";
-  const heightClasses = height ? getResponsiveClassesUtil(height, heightMap) : "";
-  const marginClasses = margin ? getResponsiveClassesUtil(margin, marginMap) : "";
+  const heightClasses = height
+    ? getResponsiveClassesUtil(height, heightMap)
+    : "";
+  const marginClasses = margin
+    ? getResponsiveClassesUtil(margin, marginMap)
+    : "";
   const padClasses = getResponsiveClassesUtil(padding, paddingMapUtil);
   const aSelfClasses = getResponsiveClassesUtil(alignSelf, alignSelfMap);
   const overflowClasses = getResponsiveClassesUtil(overflow, overflowMapUtil);
   const textAlignClasses = getResponsiveClassesUtil(textAlign, textAlignMap);
-  const visClasses = getVisibilityClasses({ hideOnMobile, hideOnTablet, hideOnDesktop });
+  const visClasses = getVisibilityClasses({
+    hideOnMobile,
+    hideOnTablet,
+    hideOnDesktop,
+  });
 
-  const posClass = position && typeof position === "string" ? (position || "") : "";
+  const posClass =
+    position && typeof position === "string" ? position || "" : "";
   const growClass = flexGrow ? "grow" : "";
   const shrinkClass = flexShrink === false ? "shrink-0" : "";
-  const colSpanClass = colSpan ? (colSpanMap[colSpan] || "") : "";
-  const rowSpanClass = rowSpan ? (rowSpanMap[rowSpan] || "") : "";
+  const colSpanClass = colSpan ? colSpanMap[colSpan] || "" : "";
+  const rowSpanClass = rowSpan ? rowSpanMap[rowSpan] || "" : "";
 
   const inlineStyle: React.CSSProperties = {};
   if (inset?.top) inlineStyle.top = inset.top;
@@ -1583,7 +1861,9 @@ export function WrapperRender({
   return (
     <div
       id={id}
-      className={`${displayClasses} ${posClass} ${widthClasses} ${heightClasses} ${marginClasses} ${padClasses} ${aSelfClasses} ${growClass} ${shrinkClass} ${colSpanClass} ${rowSpanClass} ${overflowClasses} ${textAlignClasses} ${visClasses} ${className}`.replace(/\s+/g, " ").trim()}
+      className={`${displayClasses} ${posClass} ${widthClasses} ${heightClasses} ${marginClasses} ${padClasses} ${aSelfClasses} ${growClass} ${shrinkClass} ${colSpanClass} ${rowSpanClass} ${overflowClasses} ${textAlignClasses} ${visClasses} ${className}`
+        .replace(/\s+/g, " ")
+        .trim()}
       style={Object.keys(inlineStyle).length > 0 ? inlineStyle : undefined}
     >
       {children}
@@ -1597,7 +1877,9 @@ export function WrapperRender({
 // ============================================================================
 
 export interface AspectRatioBoxProps {
-  ratio?: UtilResponsiveValue<"1:1" | "4:3" | "3:2" | "16:9" | "21:9" | "2:3" | "3:4" | "9:16" | string>;
+  ratio?: UtilResponsiveValue<
+    "1:1" | "4:3" | "3:2" | "16:9" | "21:9" | "2:3" | "3:4" | "9:16" | string
+  >;
   objectFit?: "cover" | "contain" | "fill" | "none" | "scale-down";
   objectPosition?: string;
   backgroundColor?: string;
@@ -1634,12 +1916,20 @@ export function AspectRatioBoxRender({
   // Resolve ratio: use map for known ratios, parse for custom
   const resolvedRatio = typeof ratio === "string" ? ratio : "16:9";
   const ratioClass = aspectRatioBoxMap[resolvedRatio] || "";
-  const radiusClasses = getResponsiveClassesUtil(borderRadius, borderRadiusMapUtil);
+  const radiusClasses = getResponsiveClassesUtil(
+    borderRadius,
+    borderRadiusMapUtil,
+  );
   const shadowClasses = getResponsiveClassesUtil(shadow, shadowMapUtil);
   const widthClasses = width ? getResponsiveClassesUtil(width, widthMap) : "";
-  const overflowClass = overflow === "visible" ? "overflow-visible" : "overflow-hidden";
-  const objectFitClass = objectFit ? (objectFitMap[objectFit] || "") : "";
-  const visClasses = getVisibilityClasses({ hideOnMobile, hideOnTablet, hideOnDesktop });
+  const overflowClass =
+    overflow === "visible" ? "overflow-visible" : "overflow-hidden";
+  const objectFitClass = objectFit ? objectFitMap[objectFit] || "" : "";
+  const visClasses = getVisibilityClasses({
+    hideOnMobile,
+    hideOnTablet,
+    hideOnDesktop,
+  });
 
   const inlineStyle: React.CSSProperties = {};
   if (backgroundColor) inlineStyle.backgroundColor = backgroundColor;
@@ -1654,7 +1944,9 @@ export function AspectRatioBoxRender({
   return (
     <div
       id={id}
-      className={`${ratioClass} ${overflowClass} ${radiusClasses} ${shadowClasses} ${widthClasses} ${objectFitClass} ${visClasses} ${className}`.replace(/\s+/g, " ").trim()}
+      className={`${ratioClass} ${overflowClass} ${radiusClasses} ${shadowClasses} ${widthClasses} ${objectFitClass} ${visClasses} ${className}`
+        .replace(/\s+/g, " ")
+        .trim()}
       style={Object.keys(inlineStyle).length > 0 ? inlineStyle : undefined}
     >
       {children}
@@ -1668,7 +1960,17 @@ export function AspectRatioBoxRender({
 // ============================================================================
 
 export interface OverlayProps {
-  position?: "fill" | "top" | "bottom" | "left" | "right" | "center" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  position?:
+    | "fill"
+    | "top"
+    | "bottom"
+    | "left"
+    | "right"
+    | "center"
+    | "top-left"
+    | "top-right"
+    | "bottom-left"
+    | "bottom-right";
   inset?: UtilResponsiveValue<string>;
   backgroundColor?: string;
   backgroundGradient?: GradientConfig;
@@ -1713,13 +2015,24 @@ export function OverlayRender({
   const padClasses = getResponsiveClassesUtil(padding, paddingMapUtil);
 
   // Backdrop blur
-  const blurClass = backdropBlur ? (backdropBlurMap[backdropBlur] || "") : "";
+  const blurClass = backdropBlur ? backdropBlurMap[backdropBlur] || "" : "";
 
   // Content alignment (for non-fill positions that don't include flex)
-  const alignMap: Record<string, string> = { start: "items-start", center: "items-center", end: "items-end" };
-  const justifyMap: Record<string, string> = { start: "justify-start", center: "justify-center", end: "justify-end" };
+  const alignMap: Record<string, string> = {
+    start: "items-start",
+    center: "items-center",
+    end: "items-end",
+  };
+  const justifyMap: Record<string, string> = {
+    start: "justify-start",
+    center: "justify-center",
+    end: "justify-end",
+  };
   const needsFlex = position !== "center"; // center already includes flex
-  const flexClasses = needsFlex && children ? `flex ${alignMap[contentAlign] || ""} ${justifyMap[contentJustify] || ""}` : "";
+  const flexClasses =
+    needsFlex && children
+      ? `flex ${alignMap[contentAlign] || ""} ${justifyMap[contentJustify] || ""}`
+      : "";
 
   // Show/hide behavior
   const visibilityClasses: Record<string, string> = {
@@ -1738,21 +2051,24 @@ export function OverlayRender({
     "slide-down": "transition-all -translate-y-2 hover:translate-y-0",
     scale: "transition-transform scale-95 hover:scale-100",
   };
-  const transClass = showOn !== "always" ? (transitionMap[transition] || "") : "";
+  const transClass = showOn !== "always" ? transitionMap[transition] || "" : "";
 
   const inlineStyle: React.CSSProperties = {
     zIndex,
     transitionDuration: transClass ? `${transitionDuration}ms` : undefined,
   };
   if (backgroundColor) inlineStyle.backgroundColor = backgroundColor;
-  if (backgroundGradient) inlineStyle.backgroundImage = buildGradientCSS(backgroundGradient);
+  if (backgroundGradient)
+    inlineStyle.backgroundImage = buildGradientCSS(backgroundGradient);
   if (width) inlineStyle.width = width;
   if (height) inlineStyle.height = height;
 
   return (
     <div
       id={id}
-      className={`${posClasses} ${flexClasses} ${padClasses} ${blurClass} ${showClass} ${transClass} ${className}`.replace(/\s+/g, " ").trim()}
+      className={`${posClasses} ${flexClasses} ${padClasses} ${blurClass} ${showClass} ${transClass} ${className}`
+        .replace(/\s+/g, " ")
+        .trim()}
       style={inlineStyle}
       aria-hidden={!children ? true : undefined}
     >
@@ -1850,9 +2166,15 @@ export function ScrollSectionRender({
   const snapTypeClass = scrollSnapTypeMap[snapType] || "";
   const dirClass = isVertical ? "snap-y" : "snap-x";
   const scrollClass = smoothScroll ? "scroll-smooth" : "";
-  const layoutClass = isVertical ? "overflow-y-auto h-screen" : "overflow-x-auto flex h-screen";
+  const layoutClass = isVertical
+    ? "overflow-y-auto h-screen"
+    : "overflow-x-auto flex h-screen";
 
-  const visClasses = getVisibilityClasses({ hideOnMobile, hideOnTablet, hideOnDesktop });
+  const visClasses = getVisibilityClasses({
+    hideOnMobile,
+    hideOnTablet,
+    hideOnDesktop,
+  });
 
   // Track scroll position for progress indicator
   React.useEffect(() => {
@@ -1887,18 +2209,30 @@ export function ScrollSectionRender({
       if (isVertical) {
         if (e.key === "ArrowDown") {
           e.preventDefault();
-          container.scrollBy({ top: container.clientHeight, behavior: "smooth" });
+          container.scrollBy({
+            top: container.clientHeight,
+            behavior: "smooth",
+          });
         } else if (e.key === "ArrowUp") {
           e.preventDefault();
-          container.scrollBy({ top: -container.clientHeight, behavior: "smooth" });
+          container.scrollBy({
+            top: -container.clientHeight,
+            behavior: "smooth",
+          });
         }
       } else {
         if (e.key === "ArrowRight") {
           e.preventDefault();
-          container.scrollBy({ left: container.clientWidth, behavior: "smooth" });
+          container.scrollBy({
+            left: container.clientWidth,
+            behavior: "smooth",
+          });
         } else if (e.key === "ArrowLeft") {
           e.preventDefault();
-          container.scrollBy({ left: -container.clientWidth, behavior: "smooth" });
+          container.scrollBy({
+            left: -container.clientWidth,
+            behavior: "smooth",
+          });
         }
       }
     };
@@ -1913,9 +2247,15 @@ export function ScrollSectionRender({
     const container = containerRef.current;
     if (!container) return;
     if (isVertical) {
-      container.scrollTo({ top: index * container.clientHeight, behavior: "smooth" });
+      container.scrollTo({
+        top: index * container.clientHeight,
+        behavior: "smooth",
+      });
     } else {
-      container.scrollTo({ left: index * container.clientWidth, behavior: "smooth" });
+      container.scrollTo({
+        left: index * container.clientWidth,
+        behavior: "smooth",
+      });
     }
   };
 
@@ -1933,7 +2273,10 @@ export function ScrollSectionRender({
 
     if (progressStyle === "dots") {
       return (
-        <div className={positionClasses[progressPosition] || positionClasses.right} style={{ zIndex: 50 }}>
+        <div
+          className={positionClasses[progressPosition] || positionClasses.right}
+          style={{ zIndex: 50 }}
+        >
           {Array.from({ length: childCount }, (_, i) => (
             <button
               key={i}
@@ -1948,18 +2291,25 @@ export function ScrollSectionRender({
     }
 
     if (progressStyle === "line") {
-      const progress = childCount > 1 ? (activeIndex / (childCount - 1)) * 100 : 0;
+      const progress =
+        childCount > 1 ? (activeIndex / (childCount - 1)) * 100 : 0;
       const isHoriz = progressPosition === "bottom";
       return (
         <div
-          className={isHoriz ? "fixed bottom-0 left-0 right-0 h-1" : "fixed right-0 top-0 bottom-0 w-1"}
+          className={
+            isHoriz
+              ? "fixed bottom-0 left-0 right-0 h-1"
+              : "fixed right-0 top-0 bottom-0 w-1"
+          }
           style={{ zIndex: 50, backgroundColor: "rgba(128,128,128,0.3)" }}
         >
           <div
             className="transition-all duration-300"
             style={{
               backgroundColor: color,
-              ...(isHoriz ? { height: "100%", width: `${progress}%` } : { width: "100%", height: `${progress}%` }),
+              ...(isHoriz
+                ? { height: "100%", width: `${progress}%` }
+                : { width: "100%", height: `${progress}%` }),
             }}
           />
         </div>
@@ -1972,7 +2322,9 @@ export function ScrollSectionRender({
           className={positionClasses[progressPosition] || positionClasses.right}
           style={{ zIndex: 50, color }}
         >
-          <span className="text-sm font-mono font-bold">{activeIndex + 1}/{childCount}</span>
+          <span className="text-sm font-mono font-bold">
+            {activeIndex + 1}/{childCount}
+          </span>
         </div>
       );
     }
@@ -1991,8 +2343,18 @@ export function ScrollSectionRender({
             className={`fixed z-50 p-2 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors ${isVertical ? "top-4 left-1/2 -translate-x-1/2" : "left-4 top-1/2 -translate-y-1/2"}`}
             aria-label="Previous section"
           >
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isVertical ? "M5 15l7-7 7 7" : "M15 19l-7-7 7-7"} />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d={isVertical ? "M5 15l7-7 7 7" : "M15 19l-7-7 7-7"}
+              />
             </svg>
           </button>
         )}
@@ -2002,8 +2364,18 @@ export function ScrollSectionRender({
             className={`fixed z-50 p-2 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors ${isVertical ? "bottom-4 left-1/2 -translate-x-1/2" : "right-4 top-1/2 -translate-y-1/2"}`}
             aria-label="Next section"
           >
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isVertical ? "M19 9l-7 7-7-7" : "M9 5l7 7-7 7"} />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d={isVertical ? "M19 9l-7 7-7-7" : "M9 5l7 7-7 7"}
+              />
             </svg>
           </button>
         )}
@@ -2015,11 +2387,16 @@ export function ScrollSectionRender({
   if (backgroundColor) inlineStyle.backgroundColor = backgroundColor;
 
   return (
-    <div className={`relative ${visClasses}`} style={Object.keys(inlineStyle).length > 0 ? inlineStyle : undefined}>
+    <div
+      className={`relative ${visClasses}`}
+      style={Object.keys(inlineStyle).length > 0 ? inlineStyle : undefined}
+    >
       <div
         ref={containerRef}
         id={id}
-        className={`${layoutClass} ${dirClass} ${snapTypeClass} ${scrollClass} ${className}`.replace(/\s+/g, " ").trim()}
+        className={`${layoutClass} ${dirClass} ${snapTypeClass} ${scrollClass} ${className}`
+          .replace(/\s+/g, " ")
+          .trim()}
         style={{ outline: "none" }}
       >
         {children}
@@ -2076,19 +2453,29 @@ export function StickyContainerRender({
 
   const gapClasses = getResponsiveClassesUtil(gap, gapMapUtil);
   const padClasses = getResponsiveClassesUtil(padding, paddingMapUtil);
-  const visClasses = getVisibilityClasses({ hideOnMobile, hideOnTablet, hideOnDesktop });
+  const visClasses = getVisibilityClasses({
+    hideOnMobile,
+    hideOnTablet,
+    hideOnDesktop,
+  });
   const widthClasses = getResponsiveClassesUtil(stickyWidth, stickyWidthMap);
 
   // Mobile stacking
   const mobileLayout = stackOnMobile ? "flex-col" : "";
-  const mobileOrderClass = mobileOrder === "scroll-first" ? "order-2 sm:order-none" : "";
-  const scrollOrderClass = mobileOrder === "scroll-first" ? "order-1 sm:order-none" : "";
+  const mobileOrderClass =
+    mobileOrder === "scroll-first" ? "order-2 sm:order-none" : "";
+  const scrollOrderClass =
+    mobileOrder === "scroll-first" ? "order-1 sm:order-none" : "";
 
   // Direction: top = column, left/right = row
   const isTop = stickyPosition === "top";
   const isRight = stickyPosition === "right";
 
-  const flexDirection = isTop ? "flex-col" : (isRight ? "sm:flex-row-reverse" : "sm:flex-row");
+  const flexDirection = isTop
+    ? "flex-col"
+    : isRight
+      ? "sm:flex-row-reverse"
+      : "sm:flex-row";
 
   const inlineStyle: React.CSSProperties = {};
   if (backgroundColor) inlineStyle.backgroundColor = backgroundColor;
@@ -2097,13 +2484,19 @@ export function StickyContainerRender({
   return (
     <div
       id={id}
-      className={`flex ${mobileLayout} ${flexDirection} ${gapClasses} ${padClasses} ${visClasses} ${className}`.replace(/\s+/g, " ").trim()}
+      className={`flex ${mobileLayout} ${flexDirection} ${gapClasses} ${padClasses} ${visClasses} ${className}`
+        .replace(/\s+/g, " ")
+        .trim()}
       style={Object.keys(inlineStyle).length > 0 ? inlineStyle : undefined}
     >
       {/* Sticky element */}
       <div
         className={`${isTop ? "" : widthClasses} ${mobileOrderClass} shrink-0`.trim()}
-        style={{ position: "sticky", top: stickyOffset, alignSelf: "flex-start" }}
+        style={{
+          position: "sticky",
+          top: stickyOffset,
+          alignSelf: "flex-start",
+        }}
       >
         {stickyChild}
       </div>
@@ -2125,19 +2518,42 @@ export interface AnimateEntranceConfig {
   type?: keyof typeof entranceAnimationPresets;
   duration?: number;
   delay?: number;
-  easing?: "ease" | "ease-in" | "ease-out" | "ease-in-out" | "spring" | "bounce";
+  easing?:
+    | "ease"
+    | "ease-in"
+    | "ease-out"
+    | "ease-in-out"
+    | "spring"
+    | "bounce";
   once?: boolean;
   threshold?: number;
 }
 
 export interface AnimateLoopConfig {
-  type?: "none" | "pulse" | "bounce" | "spin" | "ping" | "float" | "shimmer" | "breathe" | "wiggle" | "swing";
+  type?:
+    | "none"
+    | "pulse"
+    | "bounce"
+    | "spin"
+    | "ping"
+    | "float"
+    | "shimmer"
+    | "breathe"
+    | "wiggle"
+    | "swing";
   duration?: number;
   delay?: number;
 }
 
 export interface AnimateScrollConfig {
-  type?: "none" | "parallax" | "fade-on-scroll" | "scale-on-scroll" | "rotate-on-scroll" | "slide-on-scroll" | "progress-reveal";
+  type?:
+    | "none"
+    | "parallax"
+    | "fade-on-scroll"
+    | "scale-on-scroll"
+    | "rotate-on-scroll"
+    | "slide-on-scroll"
+    | "progress-reveal";
   speed?: number;
   direction?: "up" | "down" | "left" | "right";
   range?: [number, number];
@@ -2176,7 +2592,9 @@ export function AnimateRender({
   /* --- Prefetch reduced motion preference --- */
   const prefersReducedMotion = React.useRef(false);
   React.useEffect(() => {
-    prefersReducedMotion.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    prefersReducedMotion.current = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
   }, []);
 
   /* --- Entrance: IntersectionObserver --- */
@@ -2221,7 +2639,7 @@ export function AnimateRender({
     const handleScroll = () => {
       const rect = el.getBoundingClientRect();
       const viewH = window.innerHeight;
-      const progress = Math.max(0, Math.min(1, 1 - (rect.top / viewH)));
+      const progress = Math.max(0, Math.min(1, 1 - rect.top / viewH));
       setScrollProgress(progress);
     };
 
@@ -2231,17 +2649,23 @@ export function AnimateRender({
   }, [scrollType]);
 
   /* --- Build entrance styles --- */
-  const preset = entranceAnimationPresets[entranceType] || entranceAnimationPresets.none;
-  const shouldShow = isVisible && (!once || !hasAnimated || entranceType === "none");
+  const preset =
+    entranceAnimationPresets[entranceType] || entranceAnimationPresets.none;
+  const shouldShow =
+    isVisible && (!once || !hasAnimated || entranceType === "none");
   const entranceDuration = entrance?.duration ?? 600;
   const entranceDelay = entrance?.delay ?? 0;
-  const entranceEasing = easingMap[entrance?.easing || "ease-out"] || "ease-out";
+  const entranceEasing =
+    easingMap[entrance?.easing || "ease-out"] || "ease-out";
 
   const entranceStyle: React.CSSProperties = {
-    ...(shouldShow ? (preset.animate as React.CSSProperties) : (preset.initial as React.CSSProperties)),
-    transition: entranceType !== "none"
-      ? `all ${entranceDuration}ms ${entranceEasing} ${entranceDelay}ms`
-      : undefined,
+    ...(shouldShow
+      ? (preset.animate as React.CSSProperties)
+      : (preset.initial as React.CSSProperties)),
+    transition:
+      entranceType !== "none"
+        ? `all ${entranceDuration}ms ${entranceEasing} ${entranceDelay}ms`
+        : undefined,
   };
 
   /* --- Build scroll-driven styles --- */
@@ -2249,7 +2673,10 @@ export function AnimateRender({
   if (scrollType !== "none") {
     const speed = scrollConfig?.speed ?? 1;
     const range = scrollConfig?.range || [0, 1];
-    const normalized = Math.max(0, Math.min(1, (scrollProgress - range[0]) / (range[1] - range[0])));
+    const normalized = Math.max(
+      0,
+      Math.min(1, (scrollProgress - range[0]) / (range[1] - range[0])),
+    );
     const dir = scrollConfig?.direction || "up";
 
     switch (scrollType) {
@@ -2317,14 +2744,17 @@ export function AnimateRender({
     return childArray.map((child, i) => {
       let delayIdx = i;
       if (staggerDir === "reverse") delayIdx = childArray.length - 1 - i;
-      if (staggerDir === "center") delayIdx = Math.abs(i - Math.floor(childArray.length / 2));
+      if (staggerDir === "center")
+        delayIdx = Math.abs(i - Math.floor(childArray.length / 2));
 
       return (
         <div
           key={i}
           style={{
             transitionDelay: `${delayIdx * staggerDelay}ms`,
-            ...(shouldShow ? (preset.animate as React.CSSProperties) : (preset.initial as React.CSSProperties)),
+            ...(shouldShow
+              ? (preset.animate as React.CSSProperties)
+              : (preset.initial as React.CSSProperties)),
             transition: `all ${entranceDuration}ms ${entranceEasing} ${delayIdx * staggerDelay}ms`,
           }}
         >
@@ -2451,7 +2881,18 @@ export function Tilt3DContainerRender({
 
 export interface ShapeDividerProps {
   position?: "top" | "bottom";
-  shape?: "wave" | "wave-smooth" | "curve" | "tilt" | "triangle" | "arrow" | "zigzag" | "clouds" | "mountains" | "drops" | "pyramids";
+  shape?:
+    | "wave"
+    | "wave-smooth"
+    | "curve"
+    | "tilt"
+    | "triangle"
+    | "arrow"
+    | "zigzag"
+    | "clouds"
+    | "mountains"
+    | "drops"
+    | "pyramids";
   color?: string;
   height?: number;
   width?: number;
@@ -2579,12 +3020,19 @@ export function CursorEffectRender({
   }, []);
 
   if (type === "none") {
-    return <div id={id} className={className}>{children}</div>;
+    return (
+      <div id={id} className={className}>
+        {children}
+      </div>
+    );
   }
 
   // Build effect overlay/styles
   let effectOverlay: React.ReactNode = null;
-  const containerStyle: React.CSSProperties = { position: "relative", overflow: "hidden" };
+  const containerStyle: React.CSSProperties = {
+    position: "relative",
+    overflow: "hidden",
+  };
 
   if (type === "spotlight") {
     effectOverlay = isHovering ? (
@@ -2647,7 +3095,7 @@ export function CursorEffectRender({
 }
 
 // ============================================================================
-// HEADING - Responsive heading with all options
+// HEADING - Responsive heading with type-scale CSS variables
 // ============================================================================
 
 export interface HeadingProps {
@@ -2662,15 +3110,57 @@ export interface HeadingProps {
     | "medium"
     | "semibold"
     | "bold"
-    | "extrabold";
-  uppercase?: boolean;
+    | "extrabold"
+    | "100"
+    | "200"
+    | "300"
+    | "400"
+    | "500"
+    | "600"
+    | "700"
+    | "800"
+    | "900"
+    | number;
+  fontFamily?: string;
+  fontSize?: string;
+  lineHeight?: string;
+  letterSpacing?: string;
+  textTransform?: "none" | "uppercase" | "lowercase" | "capitalize";
+  fontStyle?: "normal" | "italic";
   gradient?: boolean;
   gradientFrom?: string;
   gradientTo?: string;
+  gradientDirection?:
+    | "to right"
+    | "to left"
+    | "to bottom"
+    | "to top"
+    | "to bottom right"
+    | "to bottom left"
+    | "to top right"
+    | "to top left";
+  textShadow?: string;
+  textDecoration?: "none" | "underline" | "line-through";
+  maxWidth?: string;
+  textWrap?: "balance" | "pretty" | "wrap" | "nowrap";
   marginBottom?: ResponsiveValue<"none" | "xs" | "sm" | "md" | "lg">;
+  uppercase?: boolean; // Backwards compat — prefer textTransform
   id?: string;
   className?: string;
 }
+
+// Default typography per heading level — used when CSS vars unavailable
+const HEADING_DEFAULTS: Record<
+  number,
+  { size: string; lineHeight: string; letterSpacing: string; weight: number }
+> = {
+  1: { size: "3rem", lineHeight: "1.1", letterSpacing: "-0.025em", weight: 800 },
+  2: { size: "2.25rem", lineHeight: "1.2", letterSpacing: "-0.02em", weight: 700 },
+  3: { size: "1.875rem", lineHeight: "1.25", letterSpacing: "-0.015em", weight: 700 },
+  4: { size: "1.5rem", lineHeight: "1.3", letterSpacing: "-0.01em", weight: 600 },
+  5: { size: "1.25rem", lineHeight: "1.4", letterSpacing: "-0.005em", weight: 600 },
+  6: { size: "1.125rem", lineHeight: "1.4", letterSpacing: "0em", weight: 600 },
+};
 
 export function HeadingRender({
   text = "Heading",
@@ -2678,25 +3168,28 @@ export function HeadingRender({
   level = 2,
   color,
   align = "left",
-  fontWeight = "bold",
-  uppercase = false,
+  fontWeight,
+  fontFamily,
+  fontSize,
+  lineHeight,
+  letterSpacing,
+  textTransform = "none",
+  fontStyle = "normal",
   gradient = false,
   gradientFrom = "",
   gradientTo = "",
+  gradientDirection = "to right",
+  textShadow,
+  textDecoration = "none",
+  maxWidth,
+  textWrap = "balance",
   marginBottom = "md",
+  uppercase = false,
   id,
   className = "",
 }: HeadingProps) {
   const Tag = `h${level}` as keyof React.JSX.IntrinsicElements;
-
-  const defaultSizes: Record<number, string> = {
-    1: "text-3xl md:text-4xl lg:text-5xl xl:text-6xl",
-    2: "text-2xl md:text-3xl lg:text-4xl",
-    3: "text-xl md:text-2xl lg:text-3xl",
-    4: "text-lg md:text-xl lg:text-2xl",
-    5: "text-base md:text-lg lg:text-xl",
-    6: "text-sm md:text-base lg:text-lg",
-  };
+  const defaults = HEADING_DEFAULTS[level] || HEADING_DEFAULTS[2];
 
   const alignMap: Record<
     string,
@@ -2732,25 +3225,52 @@ export function HeadingRender({
 
   const alignClasses = getResponsiveClasses(align, alignMap);
   const mbClasses = getResponsiveClasses(marginBottom, marginBottomMap);
-  const weightClass = {
-    light: "font-light",
-    normal: "font-normal",
-    medium: "font-medium",
-    semibold: "font-semibold",
-    bold: "font-bold",
-    extrabold: "font-extrabold",
-  }[fontWeight];
+
+  // Resolve font weight — accept numeric or named values
+  const resolvedWeight = (() => {
+    if (typeof fontWeight === "number") return fontWeight;
+    if (fontWeight && /^\d+$/.test(String(fontWeight))) return Number(fontWeight);
+    const namedWeights: Record<string, number> = {
+      light: 300,
+      normal: 400,
+      medium: 500,
+      semibold: 600,
+      bold: 700,
+      extrabold: 800,
+    };
+    return fontWeight ? namedWeights[fontWeight] || defaults.weight : defaults.weight;
+  })();
+
+  // Resolve textTransform — backwards compat with `uppercase` boolean
+  const resolvedTransform =
+    textTransform !== "none" ? textTransform : uppercase ? "uppercase" : "none";
+
+  // Build inline styles using CSS vars with smart fallbacks
+  const headingVar = `h${level}`;
+  const style: React.CSSProperties = {
+    fontFamily: fontFamily || `var(--font-heading, inherit)`,
+    fontSize: fontSize || `var(--type-${headingVar}, ${defaults.size})`,
+    lineHeight: lineHeight || `var(--leading-${headingVar}, ${defaults.lineHeight})`,
+    letterSpacing:
+      letterSpacing || `var(--tracking-${headingVar}, ${defaults.letterSpacing})`,
+    fontWeight: resolvedWeight,
+    fontStyle: fontStyle !== "normal" ? fontStyle : undefined,
+    textTransform: resolvedTransform !== "none" ? resolvedTransform : undefined,
+    textDecoration: textDecoration !== "none" ? textDecoration : undefined,
+    textShadow: textShadow || undefined,
+    maxWidth: maxWidth || undefined,
+    textWrap: textWrap !== "wrap" ? textWrap : undefined,
+    color: gradient ? undefined : color || undefined,
+    backgroundImage: gradient
+      ? `linear-gradient(${gradientDirection}, ${gradientFrom}, ${gradientTo})`
+      : undefined,
+  } as React.CSSProperties;
 
   return (
     <Tag
       id={id}
-      className={`${defaultSizes[level]} ${alignClasses} ${mbClasses} ${weightClass} ${uppercase ? "uppercase tracking-wider" : ""} leading-tight ${gradient ? "bg-clip-text text-transparent" : ""} ${className}`}
-      style={{
-        color: gradient ? undefined : color,
-        backgroundImage: gradient
-          ? `linear-gradient(to right, ${gradientFrom}, ${gradientTo})`
-          : undefined,
-      }}
+      className={`${alignClasses} ${mbClasses} ${gradient ? "bg-clip-text text-transparent" : ""} ${className}`.trim()}
+      style={style}
     >
       {children || text}
     </Tag>
@@ -2758,7 +3278,7 @@ export function HeadingRender({
 }
 
 // ============================================================================
-// TEXT - Paragraph text
+// TEXT - Paragraph text with full typography controls
 // ============================================================================
 
 export interface TextProps {
@@ -2801,13 +3321,19 @@ export interface TextProps {
   underline?: boolean;
   maxWidth?: "none" | "prose" | "md" | "lg" | "xl" | string;
   marginBottom?: ResponsiveValue<"none" | "xs" | "sm" | "md" | "lg">;
-  // New typography fields
+  // Typography controls
   htmlTag?: "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "span" | "div";
   fontFamily?: string;
   letterSpacing?: string;
   textTransform?: "none" | "uppercase" | "lowercase" | "capitalize";
   textDecoration?: "none" | "underline" | "line-through";
   textShadow?: string;
+  // Advanced typography
+  dropCap?: boolean;
+  columns?: 1 | 2 | 3;
+  textWrap?: "balance" | "pretty" | "wrap" | "nowrap";
+  hyphens?: "none" | "auto" | "manual";
+  truncate?: boolean | number; // true = 1 line, number = N lines
   id?: string;
   className?: string;
 }
@@ -2825,13 +3351,19 @@ export function TextRender({
   underline = false,
   maxWidth = "none",
   marginBottom = "md",
-  // New typography props
+  // Typography props
   htmlTag = "p",
   fontFamily,
   letterSpacing = "0",
   textTransform = "none",
   textDecoration = "none",
   textShadow,
+  // Advanced typography
+  dropCap = false,
+  columns,
+  textWrap,
+  hyphens,
+  truncate,
   id,
   className = "",
 }: TextProps) {
@@ -2878,87 +3410,75 @@ export function TextRender({
   const alignClasses = getResponsiveClasses(effectiveAlign, alignMap);
   const mbClasses = getResponsiveClasses(marginBottom, marginBottomMap);
 
-  // Font size mapping - supports both old preset values and new values
-  const fontSizeMap: Record<string, string> = {
-    xs: "text-xs",
-    sm: "text-sm",
-    base: "text-base",
-    lg: "text-lg",
-    xl: "text-xl",
-    "2xl": "text-2xl",
-    "3xl": "text-3xl",
-    "4xl": "text-4xl",
-    "5xl": "text-5xl",
-    "6xl": "text-6xl",
-    "7xl": "text-7xl",
-    "8xl": "text-8xl",
-    "9xl": "text-9xl",
-  };
-  const sizeClass = fontSizeMap[fontSize] || "text-base";
+  // Resolve font weight — accept numeric or named values
+  const resolvedWeight = (() => {
+    if (typeof fontWeight === "number") return fontWeight;
+    if (/^\d+$/.test(String(fontWeight))) return Number(fontWeight);
+    const namedWeights: Record<string, number> = {
+      light: 300,
+      normal: 400,
+      medium: 500,
+      semibold: 600,
+      bold: 700,
+    };
+    return namedWeights[String(fontWeight)] || 400;
+  })();
 
-  // Font weight mapping - supports both string names and numeric values
-  const fontWeightMap: Record<string, string> = {
-    light: "font-light",
-    normal: "font-normal",
-    medium: "font-medium",
-    semibold: "font-semibold",
-    bold: "font-bold",
-    "100": "font-thin",
-    "200": "font-extralight",
-    "300": "font-light",
-    "400": "font-normal",
-    "500": "font-medium",
-    "600": "font-semibold",
-    "700": "font-bold",
-    "800": "font-extrabold",
-    "900": "font-black",
-  };
-  const weightClass = fontWeightMap[String(fontWeight)] || "font-normal";
-
-  // Line height mapping
-  const lineHeightMap: Record<string, string> = {
-    tight: "leading-tight",
-    normal: "leading-normal",
-    relaxed: "leading-relaxed",
-    loose: "leading-loose",
-    "1": "leading-none",
-    "1.25": "leading-tight",
-    "1.375": "leading-snug",
-    "1.5": "leading-normal",
-    "1.625": "leading-relaxed",
-    "2": "leading-loose",
-  };
-  const leadingClass = lineHeightMap[String(lineHeight)] || "leading-normal";
-
-  // Max width - support both preset values and custom values
-  const maxWidthMap: Record<string, string> = {
+  // Max width classes
+  const maxWidthPresets: Record<string, string> = {
     none: "",
     prose: "max-w-prose",
     md: "max-w-md",
     lg: "max-w-lg",
     xl: "max-w-xl",
   };
-  const maxWClass = maxWidthMap[maxWidth] || "";
-
-  // Text transform classes
-  const textTransformClass = textTransform !== "none" ? `${textTransform}` : "";
+  const maxWClass = maxWidthPresets[maxWidth] || "";
 
   // Text decoration (replaces underline prop)
   const textDecorationClass =
     textDecoration !== "none" ? textDecoration : underline ? "underline" : "";
 
-  // Dynamic styles
+  // Truncate classes
+  const truncateClass = (() => {
+    if (!truncate) return "";
+    if (truncate === true || truncate === 1) return "truncate";
+    return `line-clamp-${truncate}`;
+  })();
+
+  // Column classes
+  const columnClass = columns && columns > 1 ? `columns-${columns} gap-8` : "";
+
+  // Drop cap styles
+  const dropCapCSS = dropCap
+    ? "[&::first-letter]:text-[3em] [&::first-letter]:font-bold [&::first-letter]:float-left [&::first-letter]:leading-[0.8] [&::first-letter]:mr-2 [&::first-letter]:mt-1"
+    : "";
+
+  // Build inline styles using CSS vars with fallbacks
   const style: React.CSSProperties = {
-    color,
-    fontFamily: fontFamily || undefined,
+    color: color || undefined,
+    fontFamily: fontFamily || `var(--font-body, inherit)`,
+    fontSize: `var(--type-${fontSize}, ${fontSize === "base" ? "1rem" : undefined})`,
+    fontWeight: resolvedWeight,
+    lineHeight:
+      lineHeight === "tight"
+        ? "1.25"
+        : lineHeight === "normal"
+          ? "1.5"
+          : lineHeight === "relaxed"
+            ? "1.625"
+            : lineHeight === "loose"
+              ? "2"
+              : lineHeight || undefined,
     letterSpacing: letterSpacing !== "0" ? letterSpacing : undefined,
     textTransform: textTransform !== "none" ? textTransform : undefined,
     textShadow: textShadow || undefined,
+    textWrap: textWrap && textWrap !== "wrap" ? textWrap : undefined,
+    hyphens: hyphens && hyphens !== "none" ? hyphens : undefined,
     maxWidth:
-      !maxWidthMap[maxWidth] && maxWidth !== "none" ? maxWidth : undefined,
-  };
+      !maxWidthPresets[maxWidth] && maxWidth !== "none" ? maxWidth : undefined,
+  } as React.CSSProperties;
 
-  // Valid HTML tags for text content
+  // Validate tag
   const validTags = [
     "p",
     "span",
@@ -2976,67 +3496,15 @@ export function TextRender({
     : "p";
 
   const baseClassName =
-    `${sizeClass} ${alignClasses} ${mbClasses} ${weightClass} ${leadingClass} ${maxWClass} ${italic ? "italic" : ""} ${textDecorationClass} ${textTransformClass} ${className}`
+    `${alignClasses} ${mbClasses} ${maxWClass} ${italic ? "italic" : ""} ${textDecorationClass} ${truncateClass} ${columnClass} ${dropCapCSS} ${className}`
       .trim()
       .replace(/\s+/g, " ");
 
-  // Render based on tag type
-  switch (tag) {
-    case "h1":
-      return (
-        <h1 id={id} className={baseClassName} style={style}>
-          {children || text}
-        </h1>
-      );
-    case "h2":
-      return (
-        <h2 id={id} className={baseClassName} style={style}>
-          {children || text}
-        </h2>
-      );
-    case "h3":
-      return (
-        <h3 id={id} className={baseClassName} style={style}>
-          {children || text}
-        </h3>
-      );
-    case "h4":
-      return (
-        <h4 id={id} className={baseClassName} style={style}>
-          {children || text}
-        </h4>
-      );
-    case "h5":
-      return (
-        <h5 id={id} className={baseClassName} style={style}>
-          {children || text}
-        </h5>
-      );
-    case "h6":
-      return (
-        <h6 id={id} className={baseClassName} style={style}>
-          {children || text}
-        </h6>
-      );
-    case "span":
-      return (
-        <span id={id} className={baseClassName} style={style}>
-          {children || text}
-        </span>
-      );
-    case "div":
-      return (
-        <div id={id} className={baseClassName} style={style}>
-          {children || text}
-        </div>
-      );
-    default:
-      return (
-        <p id={id} className={baseClassName} style={style}>
-          {children || text}
-        </p>
-      );
-  }
+  return React.createElement(
+    tag,
+    { id, className: baseClassName, style },
+    children || text,
+  );
 }
 
 // ============================================================================
@@ -3051,7 +3519,7 @@ export interface RichTextProps {
   pullQuote?: string;
   // Layout
   layout?: "centered" | "left" | "two-column" | "wide";
-  // Colors
+  // Colors — all optional, inherit from brand vars when unset
   color?: string;
   textColor?: string;
   titleColor?: string;
@@ -3067,13 +3535,18 @@ export interface RichTextProps {
   // Typography
   proseSize?: "sm" | "base" | "lg" | "xl";
   maxWidth?: "none" | "prose" | "md" | "lg" | "xl" | "4xl" | "6xl";
+  titleLevel?: "h1" | "h2" | "h3" | "h4";
+  titleFontFamily?: string;
+  bodyFontFamily?: string;
+  titleFontSize?: string;
   id?: string;
   className?: string;
 }
 
 /**
  * Converts markdown-style formatting in text to HTML.
- * Handles: **bold**, *italic*, \n newlines, bullet points (• or -).
+ * Handles: **bold**, *italic*, headings (#-####), [links](url),
+ * `inline code`, bullet/numbered lists, horizontal rules, newlines.
  * Shared by RichText, Accordion, and Tabs renderers.
  */
 function markdownToHtml(text: string): string {
@@ -3081,21 +3554,65 @@ function markdownToHtml(text: string): string {
   // If it already looks like HTML, return as-is
   if (/<[a-z][\s\S]*>/i.test(text)) return text;
 
-  return (
-    text
-      // Bold: **text** or __text__
-      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-      .replace(/__(.+?)__/g, "<strong>$1</strong>")
-      // Italic: *text* or _text_
-      .replace(/\*(.+?)\*/g, "<em>$1</em>")
-      .replace(/_(.+?)_/g, "<em>$1</em>")
-      // Convert lines starting with • or - into list items
-      .replace(/(?:^|\n)[•\-]\s*(.+)/g, '<li class="ml-4 list-disc">$1</li>')
-      // Paragraphs from double newlines
-      .replace(/\n\n/g, "</p><p>")
-      // Single newlines to line breaks
-      .replace(/\n/g, "<br/>")
+  let html = text;
+
+  // Headings: #### h4, ### h3, ## h2, # h1 (must be at start of line)
+  html = html.replace(/^####\s+(.+)$/gm, '<h4 class="text-lg font-semibold mt-6 mb-2">$1</h4>');
+  html = html.replace(/^###\s+(.+)$/gm, '<h3 class="text-xl font-semibold mt-6 mb-3">$1</h3>');
+  html = html.replace(/^##\s+(.+)$/gm, '<h2 class="text-2xl font-bold mt-8 mb-4">$1</h2>');
+  html = html.replace(/^#\s+(.+)$/gm, '<h1 class="text-3xl font-bold mt-8 mb-4">$1</h1>');
+
+  // Horizontal rules: --- or *** or ___
+  html = html.replace(/^(?:---|\*\*\*|___)\s*$/gm, '<hr class="my-6 border-current opacity-20" />');
+
+  // Bold: **text** or __text__
+  html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  html = html.replace(/__(.+?)__/g, "<strong>$1</strong>");
+
+  // Italic: *text* or _text_
+  html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
+  html = html.replace(/_(.+?)_/g, "<em>$1</em>");
+
+  // Inline code: `code`
+  html = html.replace(
+    /`([^`]+)`/g,
+    '<code class="px-1.5 py-0.5 rounded bg-black/5 text-[0.9em] font-mono">$1</code>',
   );
+
+  // Links: [text](url)
+  html = html.replace(
+    /\[([^\]]+)\]\(([^)]+)\)/g,
+    '<a href="$2" class="underline underline-offset-2 hover:opacity-80" rel="noopener noreferrer">$1</a>',
+  );
+
+  // Ordered lists: lines starting with 1. 2. etc
+  html = html.replace(
+    /(?:^|\n)\d+\.\s+(.+)/g,
+    '<li class="ml-6 list-decimal">$1</li>',
+  );
+
+  // Bullet lists: lines starting with • or -
+  html = html.replace(
+    /(?:^|\n)[•\-]\s*(.+)/g,
+    '<li class="ml-6 list-disc">$1</li>',
+  );
+
+  // Wrap consecutive <li> elements in <ul>/<ol>
+  html = html.replace(
+    /(<li class="ml-6 list-disc">[\s\S]*?<\/li>)+/g,
+    '<ul class="my-4 space-y-1">$&</ul>',
+  );
+  html = html.replace(
+    /(<li class="ml-6 list-decimal">[\s\S]*?<\/li>)+/g,
+    '<ol class="my-4 space-y-1">$&</ol>',
+  );
+
+  // Paragraphs from double newlines
+  html = html.replace(/\n\n/g, "</p><p>");
+  // Single newlines to line breaks
+  html = html.replace(/\n/g, "<br/>");
+
+  return html;
 }
 
 export function RichTextRender({
@@ -3117,10 +3634,15 @@ export function RichTextRender({
   highlightColor,
   proseSize = "base",
   maxWidth = "4xl",
+  titleLevel = "h2",
+  titleFontFamily,
+  bodyFontFamily,
+  titleFontSize,
   id,
   className = "",
 }: RichTextProps) {
-  const resolvedTextColor = textColor || color || "#1c2b2a";
+  // Colors — all inherit from CSS vars when unset (no hardcoded fallbacks)
+  const resolvedTextColor = textColor || color || undefined;
   const resolvedTitleColor = titleColor || accentColor || resolvedTextColor;
   const resolvedSubtitleColor = subtitleColor || resolvedTextColor;
   const resolvedPullQuoteColor =
@@ -3150,6 +3672,8 @@ export function RichTextRender({
   const isTwoColumn = layout === "two-column";
   const isCentered = layout === "centered";
 
+  const TitleTag = titleLevel as keyof React.JSX.IntrinsicElements;
+
   return (
     <section
       id={id}
@@ -3161,25 +3685,34 @@ export function RichTextRender({
         {(hasTitle || hasSubtitle) && (
           <div className={`mb-10 md:mb-12 ${isCentered ? "text-center" : ""}`}>
             {hasTitle && (
-              <h2
-                className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-4"
-                style={{ color: resolvedTitleColor }}
+              <TitleTag
+                className="font-bold leading-tight mb-4"
+                style={{
+                  color: resolvedTitleColor || undefined,
+                  fontFamily:
+                    titleFontFamily || `var(--font-heading, inherit)`,
+                  fontSize:
+                    titleFontSize ||
+                    `var(--type-${titleLevel}, var(--type-4xl, 2.25rem))`,
+                  lineHeight: `var(--leading-${titleLevel}, 1.2)`,
+                  letterSpacing: `var(--tracking-${titleLevel}, -0.02em)`,
+                }}
               >
                 {title}
-              </h2>
+              </TitleTag>
             )}
             {showDivider && (
               <div
                 className={`w-16 h-1 rounded-full mb-6 ${isCentered ? "mx-auto" : ""}`}
-                style={{ backgroundColor: resolvedDividerColor }}
+                style={{ backgroundColor: resolvedDividerColor || undefined }}
               />
             )}
             {hasSubtitle && (
               <p
                 className="text-lg md:text-xl leading-relaxed max-w-3xl"
                 style={{
-                  color: resolvedSubtitleColor,
-                  opacity: 0.85,
+                  color: resolvedSubtitleColor || undefined,
+                  fontFamily: bodyFontFamily || `var(--font-body, inherit)`,
                   ...(isCentered
                     ? { marginLeft: "auto", marginRight: "auto" }
                     : {}),
@@ -3201,7 +3734,8 @@ export function RichTextRender({
           <div
             className={`${proseSizeClass} max-w-none prose-headings:font-bold prose-p:leading-relaxed prose-strong:font-semibold`}
             style={{
-              color: resolvedTextColor,
+              color: resolvedTextColor || undefined,
+              fontFamily: bodyFontFamily || `var(--font-body, inherit)`,
               ...(accentColor
                 ? ({ "--tw-prose-links": accentColor } as React.CSSProperties)
                 : {}),
@@ -3228,8 +3762,8 @@ export function RichTextRender({
               <blockquote
                 className="border-l-4 pl-6 py-2 text-xl md:text-2xl font-medium italic leading-relaxed"
                 style={{
-                  borderColor: resolvedDividerColor,
-                  color: resolvedPullQuoteColor,
+                  borderColor: resolvedDividerColor || undefined,
+                  color: resolvedPullQuoteColor || undefined,
                 }}
               >
                 &ldquo;{pullQuote}&rdquo;
@@ -3243,7 +3777,7 @@ export function RichTextRender({
 }
 
 // ============================================================================
-// QUOTE - Blockquote with author
+// QUOTE - Blockquote with multiple variants and full typography controls
 // ============================================================================
 
 export interface QuoteProps {
@@ -3254,8 +3788,16 @@ export interface QuoteProps {
   borderColor?: string;
   backgroundColor?: string;
   textColor?: string;
-  variant?: "simple" | "bordered" | "card" | "modern";
+  variant?:
+    | "simple"
+    | "bordered"
+    | "card"
+    | "modern"
+    | "pullquote"
+    | "testimonial";
   size?: "sm" | "md" | "lg";
+  fontFamily?: string;
+  fontStyle?: "normal" | "italic";
   id?: string;
   className?: string;
 }
@@ -3265,11 +3807,13 @@ export function QuoteRender({
   author = "Author Name",
   authorTitle,
   authorImage,
-  borderColor = "",
+  borderColor,
   backgroundColor,
-  textColor = "#374151",
+  textColor,
   variant = "bordered",
   size = "md",
+  fontFamily,
+  fontStyle = "italic",
   id,
   className = "",
 }: QuoteProps) {
@@ -3297,36 +3841,53 @@ export function QuoteRender({
     },
   }[size];
 
+  const resolvedFontFamily = fontFamily || `var(--font-body, inherit)`;
+
+  // Author footer — shared across variants
+  const renderAuthor = (centered = false) =>
+    author ? (
+      <footer
+        className={`mt-4 ${sizeStyles.author} flex items-center gap-3 ${centered ? "justify-center" : ""}`}
+      >
+        {authorImageUrl && (
+          <img
+            src={authorImageUrl}
+            alt={author}
+            className={`${sizeStyles.avatar} rounded-full object-cover`}
+          />
+        )}
+        <div className={centered ? "text-center" : ""}>
+          <cite
+            className="not-italic font-semibold block"
+            style={{ color: textColor || undefined }}
+          >
+            {centered ? author : `— ${author}`}
+          </cite>
+          {authorTitle && (
+            <span className="opacity-75 block">{authorTitle}</span>
+          )}
+        </div>
+      </footer>
+    ) : null;
+
   if (variant === "bordered") {
     return (
       <blockquote
         id={id}
         className={`border-l-4 ${sizeStyles.padding} pl-6 ${className}`}
-        style={{ borderColor, backgroundColor }}
+        style={{
+          borderColor: borderColor || undefined,
+          backgroundColor: backgroundColor || undefined,
+          fontFamily: resolvedFontFamily,
+        }}
       >
         <p
-          className={`${sizeStyles.text} italic leading-relaxed`}
-          style={{ color: textColor }}
+          className={`${sizeStyles.text} ${fontStyle === "italic" ? "italic" : ""} leading-relaxed`}
+          style={{ color: textColor || undefined }}
         >
           &ldquo;{text}&rdquo;
         </p>
-        {author && (
-          <footer
-            className={`mt-4 ${sizeStyles.author} flex items-center gap-3`}
-          >
-            {authorImageUrl && (
-              <img
-                src={authorImageUrl}
-                alt={author}
-                className={`${sizeStyles.avatar} rounded-full object-cover`}
-              />
-            )}
-            <div>
-              <cite className="not-italic font-medium block">— {author}</cite>
-              {authorTitle && <span className="opacity-75">{authorTitle}</span>}
-            </div>
-          </footer>
-        )}
+        {renderAuthor()}
       </blockquote>
     );
   }
@@ -3336,7 +3897,10 @@ export function QuoteRender({
       <blockquote
         id={id}
         className={`${sizeStyles.padding} rounded-xl shadow-lg text-center ${className}`}
-        style={{ backgroundColor: backgroundColor || "#ffffff" }}
+        style={{
+          backgroundColor: backgroundColor || undefined,
+          fontFamily: resolvedFontFamily,
+        }}
       >
         <svg
           className="w-8 h-8 mb-4 mx-auto opacity-20"
@@ -3347,14 +3911,122 @@ export function QuoteRender({
         </svg>
         <p
           className={`${sizeStyles.text} leading-relaxed`}
-          style={{ color: textColor }}
+          style={{ color: textColor || undefined }}
+        >
+          {text}
+        </p>
+        {renderAuthor(true)}
+      </blockquote>
+    );
+  }
+
+  if (variant === "modern") {
+    return (
+      <blockquote
+        id={id}
+        className={`${sizeStyles.padding} relative ${className}`}
+        style={{
+          backgroundColor: backgroundColor || undefined,
+          fontFamily: resolvedFontFamily,
+        }}
+      >
+        {/* Large decorative quote mark */}
+        <span
+          className="absolute top-0 left-4 text-[6rem] leading-none opacity-10 font-serif pointer-events-none select-none"
+          style={{ color: borderColor || textColor || undefined }}
+          aria-hidden="true"
+        >
+          &ldquo;
+        </span>
+        <p
+          className={`${sizeStyles.text} ${fontStyle === "italic" ? "italic" : ""} leading-relaxed relative z-10 pt-10`}
+          style={{ color: textColor || undefined }}
         >
           {text}
         </p>
         {author && (
-          <footer
-            className={`mt-6 ${sizeStyles.author} flex items-center justify-center gap-3`}
-          >
+          <footer className={`mt-6 ${sizeStyles.author} flex items-center gap-4`}>
+            {authorImageUrl && (
+              <img
+                src={authorImageUrl}
+                alt={author}
+                className={`${sizeStyles.avatar} rounded-full object-cover`}
+              />
+            )}
+            <div>
+              <div
+                className="w-8 h-0.5 mb-2 rounded-full"
+                style={{ backgroundColor: borderColor || textColor || undefined }}
+              />
+              <cite
+                className="not-italic font-semibold block"
+                style={{ color: textColor || undefined }}
+              >
+                {author}
+              </cite>
+              {authorTitle && (
+                <span className="opacity-75 block">{authorTitle}</span>
+              )}
+            </div>
+          </footer>
+        )}
+      </blockquote>
+    );
+  }
+
+  if (variant === "pullquote") {
+    return (
+      <blockquote
+        id={id}
+        className={`${sizeStyles.padding} border-y-2 text-center ${className}`}
+        style={{
+          borderColor: borderColor || undefined,
+          fontFamily: resolvedFontFamily,
+        }}
+      >
+        <p
+          className={`${sizeStyles.text} ${fontStyle === "italic" ? "italic" : ""} font-medium leading-relaxed`}
+          style={{ color: textColor || undefined }}
+        >
+          &ldquo;{text}&rdquo;
+        </p>
+        {renderAuthor(true)}
+      </blockquote>
+    );
+  }
+
+  if (variant === "testimonial") {
+    return (
+      <blockquote
+        id={id}
+        className={`${sizeStyles.padding} rounded-2xl text-center ${className}`}
+        style={{
+          backgroundColor: backgroundColor || undefined,
+          fontFamily: resolvedFontFamily,
+        }}
+      >
+        {/* Star rating decoration */}
+        <div className="flex justify-center gap-1 mb-4">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <svg
+              key={star}
+              className="w-5 h-5"
+              fill={borderColor || "currentColor"}
+              viewBox="0 0 20 20"
+              style={{ opacity: 0.8 }}
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+          ))}
+        </div>
+        <p
+          className={`${sizeStyles.text} leading-relaxed`}
+          style={{ color: textColor || undefined }}
+        >
+          &ldquo;{text}&rdquo;
+        </p>
+        {author && (
+          <footer className={`mt-6 ${sizeStyles.author} flex flex-col items-center gap-3`}>
             {authorImageUrl && (
               <img
                 src={authorImageUrl}
@@ -3365,11 +4037,13 @@ export function QuoteRender({
             <div className="text-center">
               <cite
                 className="not-italic font-semibold block"
-                style={{ color: textColor }}
+                style={{ color: textColor || undefined }}
               >
                 {author}
               </cite>
-              {authorTitle && <span className="opacity-75">{authorTitle}</span>}
+              {authorTitle && (
+                <span className="opacity-75 block">{authorTitle}</span>
+              )}
             </div>
           </footer>
         )}
@@ -3377,12 +4051,16 @@ export function QuoteRender({
     );
   }
 
-  // Simple variant
+  // Simple variant (default fallback)
   return (
-    <blockquote id={id} className={`${sizeStyles.padding} ${className}`}>
+    <blockquote
+      id={id}
+      className={`${sizeStyles.padding} ${className}`}
+      style={{ fontFamily: resolvedFontFamily }}
+    >
       <p
-        className={`${sizeStyles.text} italic font-serif leading-relaxed`}
-        style={{ color: textColor }}
+        className={`${sizeStyles.text} ${fontStyle === "italic" ? "italic" : ""} font-serif leading-relaxed`}
+        style={{ color: textColor || undefined }}
       >
         &ldquo;{text}&rdquo;
       </p>
@@ -3395,6 +4073,656 @@ export function QuoteRender({
         </footer>
       )}
     </blockquote>
+  );
+}
+
+// ============================================================================
+// LABEL - Small utility text for tags, badges, categories, overlines
+// ============================================================================
+
+export interface LabelProps {
+  text?: string;
+  children?: React.ReactNode;
+  variant?:
+    | "default"
+    | "badge"
+    | "overline"
+    | "tag"
+    | "pill"
+    | "outline"
+    | "subtle";
+  color?: string;
+  backgroundColor?: string;
+  borderColor?: string;
+  size?: "xs" | "sm" | "md";
+  fontWeight?: number | string;
+  textTransform?: "none" | "uppercase" | "lowercase" | "capitalize";
+  letterSpacing?: string;
+  fontFamily?: string;
+  id?: string;
+  className?: string;
+}
+
+export function LabelRender({
+  text = "Label",
+  children,
+  variant = "default",
+  color,
+  backgroundColor,
+  borderColor,
+  size = "sm",
+  fontWeight,
+  textTransform = "uppercase",
+  letterSpacing = "0.05em",
+  fontFamily,
+  id,
+  className = "",
+}: LabelProps) {
+  const sizeStyles = {
+    xs: { text: "text-[0.625rem]", padding: "px-1.5 py-0.5" },
+    sm: { text: "text-xs", padding: "px-2 py-1" },
+    md: { text: "text-sm", padding: "px-3 py-1.5" },
+  }[size];
+
+  const resolvedWeight =
+    typeof fontWeight === "number"
+      ? fontWeight
+      : fontWeight
+        ? Number(fontWeight) || 600
+        : 600;
+
+  const baseStyle: React.CSSProperties = {
+    color: color || undefined,
+    fontFamily: fontFamily || `var(--font-body, inherit)`,
+    fontWeight: resolvedWeight,
+    textTransform: textTransform !== "none" ? textTransform : undefined,
+    letterSpacing,
+  };
+
+  if (variant === "badge" || variant === "pill") {
+    return (
+      <span
+        id={id}
+        className={`inline-flex items-center ${sizeStyles.text} ${sizeStyles.padding} ${variant === "pill" ? "rounded-full" : "rounded-md"} ${className}`}
+        style={{
+          ...baseStyle,
+          backgroundColor: backgroundColor || undefined,
+        }}
+      >
+        {children || text}
+      </span>
+    );
+  }
+
+  if (variant === "outline") {
+    return (
+      <span
+        id={id}
+        className={`inline-flex items-center ${sizeStyles.text} ${sizeStyles.padding} rounded-md border ${className}`}
+        style={{
+          ...baseStyle,
+          borderColor: borderColor || color || undefined,
+        }}
+      >
+        {children || text}
+      </span>
+    );
+  }
+
+  if (variant === "tag") {
+    return (
+      <span
+        id={id}
+        className={`inline-flex items-center ${sizeStyles.text} ${sizeStyles.padding} rounded ${className}`}
+        style={{
+          ...baseStyle,
+          backgroundColor: backgroundColor || undefined,
+        }}
+      >
+        {children || text}
+      </span>
+    );
+  }
+
+  if (variant === "overline") {
+    return (
+      <span
+        id={id}
+        className={`block ${sizeStyles.text} mb-2 ${className}`}
+        style={baseStyle}
+      >
+        {children || text}
+      </span>
+    );
+  }
+
+  if (variant === "subtle") {
+    return (
+      <span
+        id={id}
+        className={`${sizeStyles.text} opacity-70 ${className}`}
+        style={baseStyle}
+      >
+        {children || text}
+      </span>
+    );
+  }
+
+  // Default variant
+  return (
+    <span
+      id={id}
+      className={`${sizeStyles.text} ${className}`}
+      style={baseStyle}
+    >
+      {children || text}
+    </span>
+  );
+}
+
+// ============================================================================
+// LIST - Styled list with multiple variants
+// ============================================================================
+
+export interface ListProps {
+  items?: string[];
+  variant?:
+    | "bullet"
+    | "numbered"
+    | "check"
+    | "arrow"
+    | "dash"
+    | "icon"
+    | "none";
+  color?: string;
+  iconColor?: string;
+  fontSize?: string;
+  lineHeight?: string;
+  spacing?: "tight" | "normal" | "relaxed";
+  fontFamily?: string;
+  columns?: 1 | 2 | 3;
+  id?: string;
+  className?: string;
+}
+
+export function ListRender({
+  items = ["First item", "Second item", "Third item"],
+  variant = "bullet",
+  color,
+  iconColor,
+  fontSize,
+  lineHeight,
+  spacing = "normal",
+  fontFamily,
+  columns = 1,
+  id,
+  className = "",
+}: ListProps) {
+  const spacingClass = {
+    tight: "space-y-1",
+    normal: "space-y-2",
+    relaxed: "space-y-4",
+  }[spacing];
+
+  const columnClass = columns > 1 ? `grid grid-cols-${columns} gap-x-8` : "";
+
+  const resolvedIconColor = iconColor || color || undefined;
+
+  const getMarker = (index: number) => {
+    switch (variant) {
+      case "numbered":
+        return (
+          <span
+            className="font-semibold mr-3 shrink-0 tabular-nums"
+            style={{ color: resolvedIconColor }}
+          >
+            {index + 1}.
+          </span>
+        );
+      case "check":
+        return (
+          <svg
+            className="w-5 h-5 mr-3 shrink-0 mt-0.5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke={resolvedIconColor || "currentColor"}
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        );
+      case "arrow":
+        return (
+          <span
+            className="mr-3 shrink-0"
+            style={{ color: resolvedIconColor }}
+          >
+            →
+          </span>
+        );
+      case "dash":
+        return (
+          <span
+            className="mr-3 shrink-0"
+            style={{ color: resolvedIconColor }}
+          >
+            —
+          </span>
+        );
+      case "icon":
+        return (
+          <span
+            className="mr-3 shrink-0"
+            style={{ color: resolvedIconColor }}
+          >
+            •
+          </span>
+        );
+      case "none":
+        return null;
+      default:
+        // bullet
+        return (
+          <span
+            className="mr-3 shrink-0 mt-2 w-1.5 h-1.5 rounded-full inline-block"
+            style={{ backgroundColor: resolvedIconColor || "currentColor" }}
+          />
+        );
+    }
+  };
+
+  const listStyle: React.CSSProperties = {
+    color: color || undefined,
+    fontFamily: fontFamily || `var(--font-body, inherit)`,
+    fontSize: fontSize
+      ? `var(--type-${fontSize}, ${fontSize})`
+      : undefined,
+    lineHeight: lineHeight || undefined,
+  };
+
+  const Tag = variant === "numbered" ? "ol" : "ul";
+
+  return (
+    <Tag
+      id={id}
+      className={`${spacingClass} ${columnClass} ${className}`}
+      style={listStyle}
+    >
+      {items.map((item, index) => (
+        <li key={index} className="flex items-start">
+          {getMarker(index)}
+          <span>{item}</span>
+        </li>
+      ))}
+    </Tag>
+  );
+}
+
+// ============================================================================
+// DISPLAY TEXT - Large decorative display text for hero sections
+// ============================================================================
+
+export interface DisplayTextProps {
+  text?: string;
+  children?: React.ReactNode;
+  color?: string;
+  fontSize?: string;
+  fontWeight?: number | string;
+  fontFamily?: string;
+  lineHeight?: string;
+  letterSpacing?: string;
+  textTransform?: "none" | "uppercase" | "lowercase" | "capitalize";
+  gradient?: boolean;
+  gradientFrom?: string;
+  gradientTo?: string;
+  gradientDirection?: string;
+  textWrap?: "balance" | "pretty" | "wrap" | "nowrap";
+  align?: "left" | "center" | "right";
+  textShadow?: string;
+  maxWidth?: string;
+  id?: string;
+  className?: string;
+}
+
+export function DisplayTextRender({
+  text = "Display",
+  children,
+  color,
+  fontSize,
+  fontWeight,
+  fontFamily,
+  lineHeight,
+  letterSpacing = "-0.04em",
+  textTransform = "none",
+  gradient = false,
+  gradientFrom = "",
+  gradientTo = "",
+  gradientDirection = "to right",
+  textWrap = "balance",
+  align = "center",
+  textShadow,
+  maxWidth,
+  id,
+  className = "",
+}: DisplayTextProps) {
+  const resolvedWeight =
+    typeof fontWeight === "number"
+      ? fontWeight
+      : fontWeight
+        ? Number(fontWeight) || 900
+        : 900;
+
+  const alignClass =
+    align === "center"
+      ? "text-center"
+      : align === "right"
+        ? "text-right"
+        : "text-left";
+
+  const style: React.CSSProperties = {
+    fontFamily: fontFamily || `var(--font-heading, inherit)`,
+    fontSize: fontSize || `var(--type-9xl, 8rem)`,
+    fontWeight: resolvedWeight,
+    lineHeight: lineHeight || "1",
+    letterSpacing,
+    textTransform: textTransform !== "none" ? textTransform : undefined,
+    textWrap: textWrap !== "wrap" ? textWrap : undefined,
+    textShadow: textShadow || undefined,
+    maxWidth: maxWidth || undefined,
+    color: gradient ? undefined : color || undefined,
+    backgroundImage: gradient
+      ? `linear-gradient(${gradientDirection}, ${gradientFrom}, ${gradientTo})`
+      : undefined,
+  } as React.CSSProperties;
+
+  return (
+    <div
+      id={id}
+      className={`${alignClass} ${gradient ? "bg-clip-text text-transparent" : ""} ${className}`.trim()}
+      style={style}
+      role="heading"
+      aria-level={1}
+    >
+      {children || text}
+    </div>
+  );
+}
+
+// ============================================================================
+// DIVIDER TEXT - Text with decorative divider lines
+// ============================================================================
+
+export interface DividerTextProps {
+  text?: string;
+  variant?: "line-through" | "line-sides" | "dots" | "gradient" | "ornament";
+  color?: string;
+  lineColor?: string;
+  fontSize?: string;
+  fontWeight?: number | string;
+  fontFamily?: string;
+  textTransform?: "none" | "uppercase" | "lowercase" | "capitalize";
+  letterSpacing?: string;
+  spacing?: "sm" | "md" | "lg";
+  id?: string;
+  className?: string;
+}
+
+export function DividerTextRender({
+  text = "Section",
+  variant = "line-sides",
+  color,
+  lineColor,
+  fontSize,
+  fontWeight,
+  fontFamily,
+  textTransform = "uppercase",
+  letterSpacing = "0.1em",
+  spacing = "md",
+  id,
+  className = "",
+}: DividerTextProps) {
+  const resolvedWeight =
+    typeof fontWeight === "number"
+      ? fontWeight
+      : fontWeight
+        ? Number(fontWeight) || 600
+        : 600;
+
+  const spacingMap = { sm: "my-4", md: "my-8", lg: "my-12" };
+  const resolvedLineColor = lineColor || color || undefined;
+
+  const textStyle: React.CSSProperties = {
+    color: color || undefined,
+    fontFamily: fontFamily || `var(--font-body, inherit)`,
+    fontSize: fontSize || `var(--type-sm, 0.875rem)`,
+    fontWeight: resolvedWeight,
+    textTransform: textTransform !== "none" ? textTransform : undefined,
+    letterSpacing,
+  };
+
+  if (variant === "line-sides") {
+    return (
+      <div
+        id={id}
+        className={`flex items-center gap-4 ${spacingMap[spacing]} ${className}`}
+      >
+        <div
+          className="flex-1 h-px"
+          style={{ backgroundColor: resolvedLineColor || "currentColor", opacity: 0.2 }}
+        />
+        <span style={textStyle}>{text}</span>
+        <div
+          className="flex-1 h-px"
+          style={{ backgroundColor: resolvedLineColor || "currentColor", opacity: 0.2 }}
+        />
+      </div>
+    );
+  }
+
+  if (variant === "line-through") {
+    return (
+      <div
+        id={id}
+        className={`relative text-center ${spacingMap[spacing]} ${className}`}
+      >
+        <div
+          className="absolute inset-0 flex items-center"
+          aria-hidden="true"
+        >
+          <div
+            className="w-full h-px"
+            style={{ backgroundColor: resolvedLineColor || "currentColor", opacity: 0.2 }}
+          />
+        </div>
+        <span
+          className="relative px-4"
+          style={{
+            ...textStyle,
+            backgroundColor: "inherit",
+          }}
+        >
+          {text}
+        </span>
+      </div>
+    );
+  }
+
+  if (variant === "dots") {
+    return (
+      <div
+        id={id}
+        className={`flex items-center justify-center gap-3 ${spacingMap[spacing]} ${className}`}
+      >
+        <span
+          className="flex gap-1.5"
+          style={{ color: resolvedLineColor || "currentColor", opacity: 0.3 }}
+        >
+          •••
+        </span>
+        <span style={textStyle}>{text}</span>
+        <span
+          className="flex gap-1.5"
+          style={{ color: resolvedLineColor || "currentColor", opacity: 0.3 }}
+        >
+          •••
+        </span>
+      </div>
+    );
+  }
+
+  if (variant === "gradient") {
+    return (
+      <div
+        id={id}
+        className={`flex items-center gap-4 ${spacingMap[spacing]} ${className}`}
+      >
+        <div
+          className="flex-1 h-px"
+          style={{
+            background: `linear-gradient(to right, transparent, ${resolvedLineColor || "currentColor"})`,
+            opacity: 0.3,
+          }}
+        />
+        <span style={textStyle}>{text}</span>
+        <div
+          className="flex-1 h-px"
+          style={{
+            background: `linear-gradient(to left, transparent, ${resolvedLineColor || "currentColor"})`,
+            opacity: 0.3,
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (variant === "ornament") {
+    return (
+      <div
+        id={id}
+        className={`flex items-center justify-center gap-4 ${spacingMap[spacing]} ${className}`}
+      >
+        <span style={{ color: resolvedLineColor || "currentColor", opacity: 0.4 }}>
+          ✦
+        </span>
+        <span style={textStyle}>{text}</span>
+        <span style={{ color: resolvedLineColor || "currentColor", opacity: 0.4 }}>
+          ✦
+        </span>
+      </div>
+    );
+  }
+
+  // Default: line-sides
+  return (
+    <div
+      id={id}
+      className={`flex items-center gap-4 ${spacingMap[spacing]} ${className}`}
+    >
+      <div
+        className="flex-1 h-px"
+        style={{ backgroundColor: resolvedLineColor || "currentColor", opacity: 0.2 }}
+      />
+      <span style={textStyle}>{text}</span>
+      <div
+        className="flex-1 h-px"
+        style={{ backgroundColor: resolvedLineColor || "currentColor", opacity: 0.2 }}
+      />
+    </div>
+  );
+}
+
+// ============================================================================
+// STAT NUMBER - Animated statistics/metrics display
+// ============================================================================
+
+export interface StatNumberProps {
+  value?: string;
+  label?: string;
+  prefix?: string;
+  suffix?: string;
+  color?: string;
+  labelColor?: string;
+  valueSize?: string;
+  labelSize?: string;
+  fontFamily?: string;
+  fontWeight?: number | string;
+  align?: "left" | "center" | "right";
+  layout?: "stacked" | "inline";
+  id?: string;
+  className?: string;
+}
+
+export function StatNumberRender({
+  value = "100",
+  label = "Statistic",
+  prefix = "",
+  suffix = "+",
+  color,
+  labelColor,
+  valueSize,
+  labelSize,
+  fontFamily,
+  fontWeight,
+  align = "center",
+  layout = "stacked",
+  id,
+  className = "",
+}: StatNumberProps) {
+  const resolvedWeight =
+    typeof fontWeight === "number"
+      ? fontWeight
+      : fontWeight
+        ? Number(fontWeight) || 800
+        : 800;
+
+  const alignClass =
+    align === "center"
+      ? "text-center"
+      : align === "right"
+        ? "text-right"
+        : "text-left";
+
+  const isInline = layout === "inline";
+
+  return (
+    <div
+      id={id}
+      className={`${alignClass} ${isInline ? "flex items-baseline gap-3" : ""} ${className}`.trim()}
+    >
+      <div
+        className={isInline ? "" : "mb-1"}
+        style={{
+          fontFamily: fontFamily || `var(--font-heading, inherit)`,
+          fontSize: valueSize || `var(--type-5xl, 3rem)`,
+          fontWeight: resolvedWeight,
+          lineHeight: "1.1",
+          letterSpacing: "-0.02em",
+          color: color || undefined,
+          fontVariantNumeric: "tabular-nums",
+        }}
+      >
+        {prefix}
+        {value}
+        {suffix}
+      </div>
+      <div
+        style={{
+          fontFamily: `var(--font-body, inherit)`,
+          fontSize: labelSize || `var(--type-sm, 0.875rem)`,
+          fontWeight: 500,
+          letterSpacing: "0.025em",
+          textTransform: "uppercase" as const,
+          color: labelColor || undefined,
+          opacity: labelColor ? 1 : 0.7,
+        }}
+      >
+        {label}
+      </div>
+    </div>
   );
 }
 

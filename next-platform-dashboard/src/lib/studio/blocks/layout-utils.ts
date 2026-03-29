@@ -21,10 +21,37 @@ type ClassMapValue =
   | [string, string, string];
 
 export type SpacingScale =
-  | "0" | "1" | "2" | "3" | "4" | "5" | "6" | "8" | "10" | "12"
-  | "16" | "20" | "24" | "32" | "40" | "48" | "56" | "64" | "72" | "80" | "96";
+  | "0"
+  | "1"
+  | "2"
+  | "3"
+  | "4"
+  | "5"
+  | "6"
+  | "8"
+  | "10"
+  | "12"
+  | "16"
+  | "20"
+  | "24"
+  | "32"
+  | "40"
+  | "48"
+  | "56"
+  | "64"
+  | "72"
+  | "80"
+  | "96";
 
-export type RadiusScale = "none" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "full";
+export type RadiusScale =
+  | "none"
+  | "sm"
+  | "md"
+  | "lg"
+  | "xl"
+  | "2xl"
+  | "3xl"
+  | "full";
 
 export type ShadowScale = "none" | "sm" | "md" | "lg" | "xl" | "2xl" | "inner";
 
@@ -90,7 +117,10 @@ export function getResponsiveClasses<T extends string | number>(
 // ============================================================================
 
 /** Vertical padding: py-* / sm:py-* / lg:py-* */
-export const paddingYMap: Record<string, { mobile: string; tablet: string; desktop: string }> = {
+export const paddingYMap: Record<
+  string,
+  { mobile: string; tablet: string; desktop: string }
+> = {
   none: { mobile: "py-0", tablet: "sm:py-0", desktop: "lg:py-0" },
   xs: { mobile: "py-2", tablet: "sm:py-3", desktop: "lg:py-4" },
   sm: { mobile: "py-4", tablet: "sm:py-6", desktop: "lg:py-8" },
@@ -100,7 +130,10 @@ export const paddingYMap: Record<string, { mobile: string; tablet: string; deskt
 };
 
 /** Horizontal padding: px-* / sm:px-* / lg:px-* */
-export const paddingXMap: Record<string, { mobile: string; tablet: string; desktop: string }> = {
+export const paddingXMap: Record<
+  string,
+  { mobile: string; tablet: string; desktop: string }
+> = {
   none: { mobile: "px-0", tablet: "sm:px-0", desktop: "lg:px-0" },
   xs: { mobile: "px-2", tablet: "sm:px-3", desktop: "lg:px-4" },
   sm: { mobile: "px-4", tablet: "sm:px-6", desktop: "lg:px-8" },
@@ -109,7 +142,10 @@ export const paddingXMap: Record<string, { mobile: string; tablet: string; deskt
 };
 
 /** All-around padding: p-* / sm:p-* / lg:p-* */
-export const paddingMap: Record<string, { mobile: string; tablet: string; desktop: string }> = {
+export const paddingMap: Record<
+  string,
+  { mobile: string; tablet: string; desktop: string }
+> = {
   none: { mobile: "p-0", tablet: "sm:p-0", desktop: "lg:p-0" },
   xs: { mobile: "p-2", tablet: "sm:p-3", desktop: "lg:p-4" },
   sm: { mobile: "p-3", tablet: "sm:p-4", desktop: "lg:p-5" },
@@ -119,7 +155,10 @@ export const paddingMap: Record<string, { mobile: string; tablet: string; deskto
 };
 
 /** Gap: gap-* / sm:gap-* / lg:gap-* */
-export const gapMap: Record<string, { mobile: string; tablet: string; desktop: string }> = {
+export const gapMap: Record<
+  string,
+  { mobile: string; tablet: string; desktop: string }
+> = {
   none: { mobile: "gap-0", tablet: "sm:gap-0", desktop: "lg:gap-0" },
   xs: { mobile: "gap-1", tablet: "sm:gap-2", desktop: "lg:gap-2" },
   sm: { mobile: "gap-2", tablet: "sm:gap-3", desktop: "lg:gap-4" },
@@ -129,7 +168,10 @@ export const gapMap: Record<string, { mobile: string; tablet: string; desktop: s
 };
 
 /** Vertical margin: my-* / sm:my-* / lg:my-* */
-export const marginYMap: Record<string, { mobile: string; tablet: string; desktop: string }> = {
+export const marginYMap: Record<
+  string,
+  { mobile: string; tablet: string; desktop: string }
+> = {
   none: { mobile: "my-0", tablet: "sm:my-0", desktop: "lg:my-0" },
   xs: { mobile: "my-2", tablet: "sm:my-2", desktop: "lg:my-3" },
   sm: { mobile: "my-3", tablet: "sm:my-4", desktop: "lg:my-6" },
@@ -144,26 +186,50 @@ export const marginYMap: Record<string, { mobile: string; tablet: string; deskto
 
 /** Grid columns: grid-cols-* (base, sm:, lg:) */
 export const gridColsMap: Record<number, string> = {
-  1: "grid-cols-1", 2: "grid-cols-2", 3: "grid-cols-3",
-  4: "grid-cols-4", 5: "grid-cols-5", 6: "grid-cols-6",
-  7: "grid-cols-7", 8: "grid-cols-8", 9: "grid-cols-9",
-  10: "grid-cols-10", 11: "grid-cols-11", 12: "grid-cols-12",
+  1: "grid-cols-1",
+  2: "grid-cols-2",
+  3: "grid-cols-3",
+  4: "grid-cols-4",
+  5: "grid-cols-5",
+  6: "grid-cols-6",
+  7: "grid-cols-7",
+  8: "grid-cols-8",
+  9: "grid-cols-9",
+  10: "grid-cols-10",
+  11: "grid-cols-11",
+  12: "grid-cols-12",
 };
 
 /** sm: prefixed grid columns */
 export const smGridColsMap: Record<number, string> = {
-  1: "sm:grid-cols-1", 2: "sm:grid-cols-2", 3: "sm:grid-cols-3",
-  4: "sm:grid-cols-4", 5: "sm:grid-cols-5", 6: "sm:grid-cols-6",
-  7: "sm:grid-cols-7", 8: "sm:grid-cols-8", 9: "sm:grid-cols-9",
-  10: "sm:grid-cols-10", 11: "sm:grid-cols-11", 12: "sm:grid-cols-12",
+  1: "sm:grid-cols-1",
+  2: "sm:grid-cols-2",
+  3: "sm:grid-cols-3",
+  4: "sm:grid-cols-4",
+  5: "sm:grid-cols-5",
+  6: "sm:grid-cols-6",
+  7: "sm:grid-cols-7",
+  8: "sm:grid-cols-8",
+  9: "sm:grid-cols-9",
+  10: "sm:grid-cols-10",
+  11: "sm:grid-cols-11",
+  12: "sm:grid-cols-12",
 };
 
 /** lg: prefixed grid columns */
 export const lgGridColsMap: Record<number, string> = {
-  1: "lg:grid-cols-1", 2: "lg:grid-cols-2", 3: "lg:grid-cols-3",
-  4: "lg:grid-cols-4", 5: "lg:grid-cols-5", 6: "lg:grid-cols-6",
-  7: "lg:grid-cols-7", 8: "lg:grid-cols-8", 9: "lg:grid-cols-9",
-  10: "lg:grid-cols-10", 11: "lg:grid-cols-11", 12: "lg:grid-cols-12",
+  1: "lg:grid-cols-1",
+  2: "lg:grid-cols-2",
+  3: "lg:grid-cols-3",
+  4: "lg:grid-cols-4",
+  5: "lg:grid-cols-5",
+  6: "lg:grid-cols-6",
+  7: "lg:grid-cols-7",
+  8: "lg:grid-cols-8",
+  9: "lg:grid-cols-9",
+  10: "lg:grid-cols-10",
+  11: "lg:grid-cols-11",
+  12: "lg:grid-cols-12",
 };
 
 /** Max width classes */
@@ -215,15 +281,50 @@ export const hoverShadowMap: Record<string, string> = {
 // ============================================================================
 
 /** Border radius: rounded-* / sm:rounded-* / lg:rounded-* */
-export const borderRadiusMap: Record<string, { mobile: string; tablet: string; desktop: string }> = {
-  none: { mobile: "rounded-none", tablet: "sm:rounded-none", desktop: "lg:rounded-none" },
-  sm: { mobile: "rounded-sm", tablet: "sm:rounded-sm", desktop: "lg:rounded-sm" },
-  md: { mobile: "rounded-md", tablet: "sm:rounded-md", desktop: "lg:rounded-md" },
-  lg: { mobile: "rounded-lg", tablet: "sm:rounded-lg", desktop: "lg:rounded-lg" },
-  xl: { mobile: "rounded-xl", tablet: "sm:rounded-xl", desktop: "lg:rounded-xl" },
-  "2xl": { mobile: "rounded-2xl", tablet: "sm:rounded-2xl", desktop: "lg:rounded-2xl" },
-  "3xl": { mobile: "rounded-3xl", tablet: "sm:rounded-3xl", desktop: "lg:rounded-3xl" },
-  full: { mobile: "rounded-full", tablet: "sm:rounded-full", desktop: "lg:rounded-full" },
+export const borderRadiusMap: Record<
+  string,
+  { mobile: string; tablet: string; desktop: string }
+> = {
+  none: {
+    mobile: "rounded-none",
+    tablet: "sm:rounded-none",
+    desktop: "lg:rounded-none",
+  },
+  sm: {
+    mobile: "rounded-sm",
+    tablet: "sm:rounded-sm",
+    desktop: "lg:rounded-sm",
+  },
+  md: {
+    mobile: "rounded-md",
+    tablet: "sm:rounded-md",
+    desktop: "lg:rounded-md",
+  },
+  lg: {
+    mobile: "rounded-lg",
+    tablet: "sm:rounded-lg",
+    desktop: "lg:rounded-lg",
+  },
+  xl: {
+    mobile: "rounded-xl",
+    tablet: "sm:rounded-xl",
+    desktop: "lg:rounded-xl",
+  },
+  "2xl": {
+    mobile: "rounded-2xl",
+    tablet: "sm:rounded-2xl",
+    desktop: "lg:rounded-2xl",
+  },
+  "3xl": {
+    mobile: "rounded-3xl",
+    tablet: "sm:rounded-3xl",
+    desktop: "lg:rounded-3xl",
+  },
+  full: {
+    mobile: "rounded-full",
+    tablet: "sm:rounded-full",
+    desktop: "lg:rounded-full",
+  },
 };
 
 /** Divider width fractions */
@@ -250,7 +351,10 @@ export const overflowMap: Record<string, string> = {
 // ============================================================================
 
 /** Spacer size → height class (vertical spacer) */
-export const spacerHeightMap: Record<string, { mobile: string; tablet: string; desktop: string }> = {
+export const spacerHeightMap: Record<
+  string,
+  { mobile: string; tablet: string; desktop: string }
+> = {
   "0": { mobile: "h-0", tablet: "sm:h-0", desktop: "lg:h-0" },
   "1": { mobile: "h-1", tablet: "sm:h-1", desktop: "lg:h-1" },
   "2": { mobile: "h-2", tablet: "sm:h-2", desktop: "lg:h-2" },
@@ -279,7 +383,10 @@ export const spacerHeightMap: Record<string, { mobile: string; tablet: string; d
 };
 
 /** Spacer size → width class (horizontal spacer) */
-export const spacerWidthMap: Record<string, { mobile: string; tablet: string; desktop: string }> = {
+export const spacerWidthMap: Record<
+  string,
+  { mobile: string; tablet: string; desktop: string }
+> = {
   "0": { mobile: "w-0", tablet: "sm:w-0", desktop: "lg:w-0" },
   "1": { mobile: "w-1", tablet: "sm:w-1", desktop: "lg:w-1" },
   "2": { mobile: "w-2", tablet: "sm:w-2", desktop: "lg:w-2" },
@@ -349,7 +456,11 @@ export function isDarkBackground(backgroundColor?: string): boolean {
   if (!backgroundColor.startsWith("#")) return false;
   try {
     let hex = backgroundColor.replace(/^#/, "");
-    if (hex.length === 3) hex = hex.split("").map(c => c + c).join("");
+    if (hex.length === 3)
+      hex = hex
+        .split("")
+        .map((c) => c + c)
+        .join("");
     if (hex.length !== 6) return false;
     const r = parseInt(hex.slice(0, 2), 16);
     const g = parseInt(hex.slice(2, 4), 16);
@@ -382,7 +493,8 @@ export function resolveShadow(
       md: "0 0 15px rgba(255,255,255,0.05), 0 2px 4px rgba(255,255,255,0.03)",
       lg: "0 0 25px rgba(255,255,255,0.06), 0 4px 8px rgba(255,255,255,0.04)",
       xl: "0 0 35px rgba(255,255,255,0.07), 0 8px 16px rgba(255,255,255,0.05)",
-      "2xl": "0 0 50px rgba(255,255,255,0.08), 0 16px 32px rgba(255,255,255,0.06)",
+      "2xl":
+        "0 0 50px rgba(255,255,255,0.08), 0 16px 32px rgba(255,255,255,0.06)",
     };
     return glowMap[shadow] || "";
   }
@@ -465,16 +577,22 @@ export function getVisibilityClasses(props: {
 
 export const shapeDividerPaths: Record<string, string> = {
   wave: "M0,64 C320,128 640,0 960,64 C1280,128 1600,0 1920,64 L1920,0 L0,0 Z",
-  "wave-smooth": "M0,48 C480,128 960,0 1440,80 C1680,112 1920,48 1920,48 L1920,0 L0,0 Z",
+  "wave-smooth":
+    "M0,48 C480,128 960,0 1440,80 C1680,112 1920,48 1920,48 L1920,0 L0,0 Z",
   curve: "M0,96 Q960,192 1920,96 L1920,0 L0,0 Z",
   triangle: "M960,128 L1920,0 L0,0 Z",
   tilt: "M0,128 L1920,0 L1920,0 L0,0 Z",
   arrow: "M960,128 L1920,0 L1920,0 L0,0 L960,128 Z",
-  zigzag: "M0,64 L120,0 L240,64 L360,0 L480,64 L600,0 L720,64 L840,0 L960,64 L1080,0 L1200,64 L1320,0 L1440,64 L1560,0 L1680,64 L1800,0 L1920,64 L1920,0 L0,0 Z",
-  clouds: "M0,64 C160,128 320,0 480,64 C640,128 800,32 960,64 C1120,96 1280,0 1440,64 C1600,128 1760,32 1920,64 L1920,0 L0,0 Z",
-  mountains: "M0,128 L320,32 L480,96 L640,16 L800,80 L960,0 L1120,64 L1280,24 L1440,96 L1600,48 L1760,80 L1920,16 L1920,0 L0,0 Z",
-  drops: "M0,0 C80,64 160,64 240,0 C320,64 400,64 480,0 C560,64 640,64 720,0 C800,64 880,64 960,0 C1040,64 1120,64 1200,0 C1280,64 1360,64 1440,0 C1520,64 1600,64 1680,0 C1760,64 1840,64 1920,0 L1920,0 L0,0 Z",
-  pyramids: "M0,128 L160,0 L320,128 L480,0 L640,128 L800,0 L960,128 L1120,0 L1280,128 L1440,0 L1600,128 L1760,0 L1920,128 L1920,0 L0,0 Z",
+  zigzag:
+    "M0,64 L120,0 L240,64 L360,0 L480,64 L600,0 L720,64 L840,0 L960,64 L1080,0 L1200,64 L1320,0 L1440,64 L1560,0 L1680,64 L1800,0 L1920,64 L1920,0 L0,0 Z",
+  clouds:
+    "M0,64 C160,128 320,0 480,64 C640,128 800,32 960,64 C1120,96 1280,0 1440,64 C1600,128 1760,32 1920,64 L1920,0 L0,0 Z",
+  mountains:
+    "M0,128 L320,32 L480,96 L640,16 L800,80 L960,0 L1120,64 L1280,24 L1440,96 L1600,48 L1760,80 L1920,16 L1920,0 L0,0 Z",
+  drops:
+    "M0,0 C80,64 160,64 240,0 C320,64 400,64 480,0 C560,64 640,64 720,0 C800,64 880,64 960,0 C1040,64 1120,64 1200,0 C1280,64 1360,64 1440,0 C1520,64 1600,64 1680,0 C1760,64 1840,64 1920,0 L1920,0 L0,0 Z",
+  pyramids:
+    "M0,128 L160,0 L320,128 L480,0 L640,128 L800,0 L960,128 L1120,0 L1280,128 L1440,0 L1600,128 L1760,0 L1920,128 L1920,0 L0,0 Z",
 };
 
 // ============================================================================
@@ -492,7 +610,7 @@ export interface GradientConfig {
  */
 export function buildGradientCSS(gradient: GradientConfig): string {
   const stops = gradient.stops
-    .map(s => `${s.color} ${s.position}%`)
+    .map((s) => `${s.color} ${s.position}%`)
     .join(", ");
 
   switch (gradient.type) {
@@ -548,96 +666,208 @@ export const positionMap: Record<string, string> = {
 
 // --- Flex Direction Map (responsive) ---
 export const flexDirectionMap: Record<string, ClassMapValue> = {
-  row:              { mobile: "flex-row",         tablet: "sm:flex-row",         desktop: "lg:flex-row" },
-  column:           { mobile: "flex-col",         tablet: "sm:flex-col",         desktop: "lg:flex-col" },
-  "row-reverse":    { mobile: "flex-row-reverse", tablet: "sm:flex-row-reverse", desktop: "lg:flex-row-reverse" },
-  "column-reverse": { mobile: "flex-col-reverse", tablet: "sm:flex-col-reverse", desktop: "lg:flex-col-reverse" },
+  row: { mobile: "flex-row", tablet: "sm:flex-row", desktop: "lg:flex-row" },
+  column: { mobile: "flex-col", tablet: "sm:flex-col", desktop: "lg:flex-col" },
+  "row-reverse": {
+    mobile: "flex-row-reverse",
+    tablet: "sm:flex-row-reverse",
+    desktop: "lg:flex-row-reverse",
+  },
+  "column-reverse": {
+    mobile: "flex-col-reverse",
+    tablet: "sm:flex-col-reverse",
+    desktop: "lg:flex-col-reverse",
+  },
   // Stack aliases
-  vertical:         { mobile: "flex-col",         tablet: "sm:flex-col",         desktop: "lg:flex-col" },
-  horizontal:       { mobile: "flex-row",         tablet: "sm:flex-row",         desktop: "lg:flex-row" },
+  vertical: {
+    mobile: "flex-col",
+    tablet: "sm:flex-col",
+    desktop: "lg:flex-col",
+  },
+  horizontal: {
+    mobile: "flex-row",
+    tablet: "sm:flex-row",
+    desktop: "lg:flex-row",
+  },
 };
 
 // --- Flex Wrap Map (responsive) ---
 export const flexWrapMap: Record<string, ClassMapValue> = {
-  nowrap:         { mobile: "flex-nowrap",       tablet: "sm:flex-nowrap",       desktop: "lg:flex-nowrap" },
-  wrap:           { mobile: "flex-wrap",         tablet: "sm:flex-wrap",         desktop: "lg:flex-wrap" },
-  "wrap-reverse": { mobile: "flex-wrap-reverse", tablet: "sm:flex-wrap-reverse", desktop: "lg:flex-wrap-reverse" },
+  nowrap: {
+    mobile: "flex-nowrap",
+    tablet: "sm:flex-nowrap",
+    desktop: "lg:flex-nowrap",
+  },
+  wrap: {
+    mobile: "flex-wrap",
+    tablet: "sm:flex-wrap",
+    desktop: "lg:flex-wrap",
+  },
+  "wrap-reverse": {
+    mobile: "flex-wrap-reverse",
+    tablet: "sm:flex-wrap-reverse",
+    desktop: "lg:flex-wrap-reverse",
+  },
 };
 
 // --- Align Content Map (responsive) ---
 export const alignContentMap: Record<string, ClassMapValue> = {
-  start:   { mobile: "content-start",   tablet: "sm:content-start",   desktop: "lg:content-start" },
-  center:  { mobile: "content-center",  tablet: "sm:content-center",  desktop: "lg:content-center" },
-  end:     { mobile: "content-end",     tablet: "sm:content-end",     desktop: "lg:content-end" },
-  between: { mobile: "content-between", tablet: "sm:content-between", desktop: "lg:content-between" },
-  around:  { mobile: "content-around",  tablet: "sm:content-around",  desktop: "lg:content-around" },
-  stretch: { mobile: "content-stretch", tablet: "sm:content-stretch", desktop: "lg:content-stretch" },
-  evenly:  { mobile: "content-evenly",  tablet: "sm:content-evenly",  desktop: "lg:content-evenly" },
+  start: {
+    mobile: "content-start",
+    tablet: "sm:content-start",
+    desktop: "lg:content-start",
+  },
+  center: {
+    mobile: "content-center",
+    tablet: "sm:content-center",
+    desktop: "lg:content-center",
+  },
+  end: {
+    mobile: "content-end",
+    tablet: "sm:content-end",
+    desktop: "lg:content-end",
+  },
+  between: {
+    mobile: "content-between",
+    tablet: "sm:content-between",
+    desktop: "lg:content-between",
+  },
+  around: {
+    mobile: "content-around",
+    tablet: "sm:content-around",
+    desktop: "lg:content-around",
+  },
+  stretch: {
+    mobile: "content-stretch",
+    tablet: "sm:content-stretch",
+    desktop: "lg:content-stretch",
+  },
+  evenly: {
+    mobile: "content-evenly",
+    tablet: "sm:content-evenly",
+    desktop: "lg:content-evenly",
+  },
 };
 
 // --- Justify Items Map (responsive) ---
 export const justifyItemsMap: Record<string, ClassMapValue> = {
-  start:   { mobile: "justify-items-start",   tablet: "sm:justify-items-start",   desktop: "lg:justify-items-start" },
-  center:  { mobile: "justify-items-center",  tablet: "sm:justify-items-center",  desktop: "lg:justify-items-center" },
-  end:     { mobile: "justify-items-end",     tablet: "sm:justify-items-end",     desktop: "lg:justify-items-end" },
-  stretch: { mobile: "justify-items-stretch", tablet: "sm:justify-items-stretch", desktop: "lg:justify-items-stretch" },
+  start: {
+    mobile: "justify-items-start",
+    tablet: "sm:justify-items-start",
+    desktop: "lg:justify-items-start",
+  },
+  center: {
+    mobile: "justify-items-center",
+    tablet: "sm:justify-items-center",
+    desktop: "lg:justify-items-center",
+  },
+  end: {
+    mobile: "justify-items-end",
+    tablet: "sm:justify-items-end",
+    desktop: "lg:justify-items-end",
+  },
+  stretch: {
+    mobile: "justify-items-stretch",
+    tablet: "sm:justify-items-stretch",
+    desktop: "lg:justify-items-stretch",
+  },
 };
 
 // --- Place Items Map (responsive) ---
 export const placeItemsMap: Record<string, ClassMapValue> = {
-  start:   { mobile: "place-items-start",   tablet: "sm:place-items-start",   desktop: "lg:place-items-start" },
-  center:  { mobile: "place-items-center",  tablet: "sm:place-items-center",  desktop: "lg:place-items-center" },
-  end:     { mobile: "place-items-end",     tablet: "sm:place-items-end",     desktop: "lg:place-items-end" },
-  stretch: { mobile: "place-items-stretch", tablet: "sm:place-items-stretch", desktop: "lg:place-items-stretch" },
+  start: {
+    mobile: "place-items-start",
+    tablet: "sm:place-items-start",
+    desktop: "lg:place-items-start",
+  },
+  center: {
+    mobile: "place-items-center",
+    tablet: "sm:place-items-center",
+    desktop: "lg:place-items-center",
+  },
+  end: {
+    mobile: "place-items-end",
+    tablet: "sm:place-items-end",
+    desktop: "lg:place-items-end",
+  },
+  stretch: {
+    mobile: "place-items-stretch",
+    tablet: "sm:place-items-stretch",
+    desktop: "lg:place-items-stretch",
+  },
 };
 
 // --- Display Map (responsive) ---
 export const displayMap: Record<string, ClassMapValue> = {
-  block:       { mobile: "block",       tablet: "sm:block",       desktop: "lg:block" },
-  flex:        { mobile: "flex",        tablet: "sm:flex",        desktop: "lg:flex" },
-  grid:        { mobile: "grid",        tablet: "sm:grid",        desktop: "lg:grid" },
-  inline:      { mobile: "inline",      tablet: "sm:inline",      desktop: "lg:inline" },
-  "inline-flex":  { mobile: "inline-flex",  tablet: "sm:inline-flex",  desktop: "lg:inline-flex" },
-  "inline-grid":  { mobile: "inline-grid",  tablet: "sm:inline-grid",  desktop: "lg:inline-grid" },
-  contents:    { mobile: "contents",    tablet: "sm:contents",    desktop: "lg:contents" },
-  none:        { mobile: "hidden",      tablet: "sm:hidden",      desktop: "lg:hidden" },
+  block: { mobile: "block", tablet: "sm:block", desktop: "lg:block" },
+  flex: { mobile: "flex", tablet: "sm:flex", desktop: "lg:flex" },
+  grid: { mobile: "grid", tablet: "sm:grid", desktop: "lg:grid" },
+  inline: { mobile: "inline", tablet: "sm:inline", desktop: "lg:inline" },
+  "inline-flex": {
+    mobile: "inline-flex",
+    tablet: "sm:inline-flex",
+    desktop: "lg:inline-flex",
+  },
+  "inline-grid": {
+    mobile: "inline-grid",
+    tablet: "sm:inline-grid",
+    desktop: "lg:inline-grid",
+  },
+  contents: {
+    mobile: "contents",
+    tablet: "sm:contents",
+    desktop: "lg:contents",
+  },
+  none: { mobile: "hidden", tablet: "sm:hidden", desktop: "lg:hidden" },
 };
 
 // --- Text Align Map (responsive) ---
 export const textAlignMap: Record<string, ClassMapValue> = {
-  left:   { mobile: "text-left",   tablet: "sm:text-left",   desktop: "lg:text-left" },
-  center: { mobile: "text-center", tablet: "sm:text-center", desktop: "lg:text-center" },
-  right:  { mobile: "text-right",  tablet: "sm:text-right",  desktop: "lg:text-right" },
+  left: {
+    mobile: "text-left",
+    tablet: "sm:text-left",
+    desktop: "lg:text-left",
+  },
+  center: {
+    mobile: "text-center",
+    tablet: "sm:text-center",
+    desktop: "lg:text-center",
+  },
+  right: {
+    mobile: "text-right",
+    tablet: "sm:text-right",
+    desktop: "lg:text-right",
+  },
 };
 
 // --- Width Map (responsive) ---
 export const widthMap: Record<string, ClassMapValue> = {
   auto: { mobile: "w-auto", tablet: "sm:w-auto", desktop: "lg:w-auto" },
   full: { mobile: "w-full", tablet: "sm:w-full", desktop: "lg:w-full" },
-  fit:  { mobile: "w-fit",  tablet: "sm:w-fit",  desktop: "lg:w-fit" },
-  min:  { mobile: "w-min",  tablet: "sm:w-min",  desktop: "lg:w-min" },
-  max:  { mobile: "w-max",  tablet: "sm:w-max",  desktop: "lg:w-max" },
+  fit: { mobile: "w-fit", tablet: "sm:w-fit", desktop: "lg:w-fit" },
+  min: { mobile: "w-min", tablet: "sm:w-min", desktop: "lg:w-min" },
+  max: { mobile: "w-max", tablet: "sm:w-max", desktop: "lg:w-max" },
 };
 
 // --- Height Map (responsive) ---
 export const heightMap: Record<string, ClassMapValue> = {
-  auto:   { mobile: "h-auto",   tablet: "sm:h-auto",   desktop: "lg:h-auto" },
-  full:   { mobile: "h-full",   tablet: "sm:h-full",   desktop: "lg:h-full" },
+  auto: { mobile: "h-auto", tablet: "sm:h-auto", desktop: "lg:h-auto" },
+  full: { mobile: "h-full", tablet: "sm:h-full", desktop: "lg:h-full" },
   screen: { mobile: "h-screen", tablet: "sm:h-screen", desktop: "lg:h-screen" },
-  fit:    { mobile: "h-fit",    tablet: "sm:h-fit",    desktop: "lg:h-fit" },
-  min:    { mobile: "h-min",    tablet: "sm:h-min",    desktop: "lg:h-min" },
-  max:    { mobile: "h-max",    tablet: "sm:h-max",    desktop: "lg:h-max" },
+  fit: { mobile: "h-fit", tablet: "sm:h-fit", desktop: "lg:h-fit" },
+  min: { mobile: "h-min", tablet: "sm:h-min", desktop: "lg:h-min" },
+  max: { mobile: "h-max", tablet: "sm:h-max", desktop: "lg:h-max" },
 };
 
 // --- Aspect Ratio Box Map (ratio format: "1:1", "16:9", etc.) ---
 export const aspectRatioBoxMap: Record<string, string> = {
-  "1:1":  "aspect-square",
+  "1:1": "aspect-square",
   "16:9": "aspect-video",
-  "4:3":  "aspect-4/3",
-  "3:2":  "aspect-3/2",
+  "4:3": "aspect-4/3",
+  "3:2": "aspect-3/2",
   "21:9": "aspect-21/9",
-  "2:3":  "aspect-2/3",
-  "3:4":  "aspect-3/4",
+  "2:3": "aspect-2/3",
+  "3:4": "aspect-3/4",
   "9:16": "aspect-9/16",
 };
 
@@ -653,90 +883,135 @@ export function parseAspectRatio(ratio: string): string | undefined {
 
 // --- Object Fit Map ---
 export const objectFitMap: Record<string, string> = {
-  cover:      "object-cover",
-  contain:    "object-contain",
-  fill:       "object-fill",
-  none:       "object-none",
+  cover: "object-cover",
+  contain: "object-contain",
+  fill: "object-fill",
+  none: "object-none",
   "scale-down": "object-scale-down",
 };
 
 // --- Backdrop Blur Map ---
 export const backdropBlurMap: Record<string, string> = {
   none: "",
-  sm:   "backdrop-blur-sm",
-  md:   "backdrop-blur-md",
-  lg:   "backdrop-blur-lg",
-  xl:   "backdrop-blur-xl",
+  sm: "backdrop-blur-sm",
+  md: "backdrop-blur-md",
+  lg: "backdrop-blur-lg",
+  xl: "backdrop-blur-xl",
 };
 
 // --- Margin Map (responsive) ---
 export const marginMap: Record<string, ClassMapValue> = {
   auto: { mobile: "m-auto", tablet: "sm:m-auto", desktop: "lg:m-auto" },
-  "0":  { mobile: "m-0",    tablet: "sm:m-0",    desktop: "lg:m-0" },
-  "1":  { mobile: "m-1",    tablet: "sm:m-1",    desktop: "lg:m-1" },
-  "2":  { mobile: "m-2",    tablet: "sm:m-2",    desktop: "lg:m-2" },
-  "3":  { mobile: "m-3",    tablet: "sm:m-3",    desktop: "lg:m-3" },
-  "4":  { mobile: "m-4",    tablet: "sm:m-4",    desktop: "lg:m-4" },
-  "5":  { mobile: "m-5",    tablet: "sm:m-5",    desktop: "lg:m-5" },
-  "6":  { mobile: "m-6",    tablet: "sm:m-6",    desktop: "lg:m-6" },
-  "8":  { mobile: "m-8",    tablet: "sm:m-8",    desktop: "lg:m-8" },
-  "10": { mobile: "m-10",   tablet: "sm:m-10",   desktop: "lg:m-10" },
-  "12": { mobile: "m-12",   tablet: "sm:m-12",   desktop: "lg:m-12" },
-  "16": { mobile: "m-16",   tablet: "sm:m-16",   desktop: "lg:m-16" },
-  "20": { mobile: "m-20",   tablet: "sm:m-20",   desktop: "lg:m-20" },
-  "24": { mobile: "m-24",   tablet: "sm:m-24",   desktop: "lg:m-24" },
+  "0": { mobile: "m-0", tablet: "sm:m-0", desktop: "lg:m-0" },
+  "1": { mobile: "m-1", tablet: "sm:m-1", desktop: "lg:m-1" },
+  "2": { mobile: "m-2", tablet: "sm:m-2", desktop: "lg:m-2" },
+  "3": { mobile: "m-3", tablet: "sm:m-3", desktop: "lg:m-3" },
+  "4": { mobile: "m-4", tablet: "sm:m-4", desktop: "lg:m-4" },
+  "5": { mobile: "m-5", tablet: "sm:m-5", desktop: "lg:m-5" },
+  "6": { mobile: "m-6", tablet: "sm:m-6", desktop: "lg:m-6" },
+  "8": { mobile: "m-8", tablet: "sm:m-8", desktop: "lg:m-8" },
+  "10": { mobile: "m-10", tablet: "sm:m-10", desktop: "lg:m-10" },
+  "12": { mobile: "m-12", tablet: "sm:m-12", desktop: "lg:m-12" },
+  "16": { mobile: "m-16", tablet: "sm:m-16", desktop: "lg:m-16" },
+  "20": { mobile: "m-20", tablet: "sm:m-20", desktop: "lg:m-20" },
+  "24": { mobile: "m-24", tablet: "sm:m-24", desktop: "lg:m-24" },
 };
 
 // --- Align Self Map (responsive) ---
 export const alignSelfMap: Record<string, ClassMapValue> = {
-  start:    { mobile: "self-start",    tablet: "sm:self-start",    desktop: "lg:self-start" },
-  center:   { mobile: "self-center",   tablet: "sm:self-center",   desktop: "lg:self-center" },
-  end:      { mobile: "self-end",      tablet: "sm:self-end",      desktop: "lg:self-end" },
-  stretch:  { mobile: "self-stretch",  tablet: "sm:self-stretch",  desktop: "lg:self-stretch" },
-  baseline: { mobile: "self-baseline", tablet: "sm:self-baseline", desktop: "lg:self-baseline" },
+  start: {
+    mobile: "self-start",
+    tablet: "sm:self-start",
+    desktop: "lg:self-start",
+  },
+  center: {
+    mobile: "self-center",
+    tablet: "sm:self-center",
+    desktop: "lg:self-center",
+  },
+  end: { mobile: "self-end", tablet: "sm:self-end", desktop: "lg:self-end" },
+  stretch: {
+    mobile: "self-stretch",
+    tablet: "sm:self-stretch",
+    desktop: "lg:self-stretch",
+  },
+  baseline: {
+    mobile: "self-baseline",
+    tablet: "sm:self-baseline",
+    desktop: "lg:self-baseline",
+  },
 };
 
 // --- Justify Self Map (responsive) ---
 export const justifySelfMap: Record<string, ClassMapValue> = {
-  start:   { mobile: "justify-self-start",   tablet: "sm:justify-self-start",   desktop: "lg:justify-self-start" },
-  center:  { mobile: "justify-self-center",  tablet: "sm:justify-self-center",  desktop: "lg:justify-self-center" },
-  end:     { mobile: "justify-self-end",     tablet: "sm:justify-self-end",     desktop: "lg:justify-self-end" },
-  stretch: { mobile: "justify-self-stretch", tablet: "sm:justify-self-stretch", desktop: "lg:justify-self-stretch" },
+  start: {
+    mobile: "justify-self-start",
+    tablet: "sm:justify-self-start",
+    desktop: "lg:justify-self-start",
+  },
+  center: {
+    mobile: "justify-self-center",
+    tablet: "sm:justify-self-center",
+    desktop: "lg:justify-self-center",
+  },
+  end: {
+    mobile: "justify-self-end",
+    tablet: "sm:justify-self-end",
+    desktop: "lg:justify-self-end",
+  },
+  stretch: {
+    mobile: "justify-self-stretch",
+    tablet: "sm:justify-self-stretch",
+    desktop: "lg:justify-self-stretch",
+  },
 };
 
 // --- Grid Auto Flow Map ---
 export const gridAutoFlowMap: Record<string, string> = {
-  row:            "grid-flow-row",
-  column:         "grid-flow-col",
-  dense:          "grid-flow-dense",
-  "row dense":    "grid-flow-row-dense",
+  row: "grid-flow-row",
+  column: "grid-flow-col",
+  dense: "grid-flow-dense",
+  "row dense": "grid-flow-row-dense",
   "column dense": "grid-flow-col-dense",
 };
 
 // --- Col/Row Span Maps ---
 export const colSpanMap: Record<number | string, string> = {
-  1: "col-span-1", 2: "col-span-2", 3: "col-span-3", 4: "col-span-4",
-  5: "col-span-5", 6: "col-span-6", 7: "col-span-7", 8: "col-span-8",
-  9: "col-span-9", 10: "col-span-10", 11: "col-span-11", 12: "col-span-12",
+  1: "col-span-1",
+  2: "col-span-2",
+  3: "col-span-3",
+  4: "col-span-4",
+  5: "col-span-5",
+  6: "col-span-6",
+  7: "col-span-7",
+  8: "col-span-8",
+  9: "col-span-9",
+  10: "col-span-10",
+  11: "col-span-11",
+  12: "col-span-12",
   full: "col-span-full",
 };
 
 export const rowSpanMap: Record<number | string, string> = {
-  1: "row-span-1", 2: "row-span-2", 3: "row-span-3", 4: "row-span-4",
-  5: "row-span-5", 6: "row-span-6",
+  1: "row-span-1",
+  2: "row-span-2",
+  3: "row-span-3",
+  4: "row-span-4",
+  5: "row-span-5",
+  6: "row-span-6",
   full: "row-span-full",
 };
 
 // --- Row Gap / Column Gap Maps (responsive) ---
 export const rowGapMap: Record<string, ClassMapValue> = {
-  "0":  { mobile: "gap-y-0",  tablet: "sm:gap-y-0",  desktop: "lg:gap-y-0" },
-  "1":  { mobile: "gap-y-1",  tablet: "sm:gap-y-1",  desktop: "lg:gap-y-1" },
-  "2":  { mobile: "gap-y-2",  tablet: "sm:gap-y-2",  desktop: "lg:gap-y-2" },
-  "3":  { mobile: "gap-y-3",  tablet: "sm:gap-y-3",  desktop: "lg:gap-y-3" },
-  "4":  { mobile: "gap-y-4",  tablet: "sm:gap-y-4",  desktop: "lg:gap-y-4" },
-  "5":  { mobile: "gap-y-5",  tablet: "sm:gap-y-5",  desktop: "lg:gap-y-5" },
-  "6":  { mobile: "gap-y-6",  tablet: "sm:gap-y-6",  desktop: "lg:gap-y-6" },
-  "8":  { mobile: "gap-y-8",  tablet: "sm:gap-y-8",  desktop: "lg:gap-y-8" },
+  "0": { mobile: "gap-y-0", tablet: "sm:gap-y-0", desktop: "lg:gap-y-0" },
+  "1": { mobile: "gap-y-1", tablet: "sm:gap-y-1", desktop: "lg:gap-y-1" },
+  "2": { mobile: "gap-y-2", tablet: "sm:gap-y-2", desktop: "lg:gap-y-2" },
+  "3": { mobile: "gap-y-3", tablet: "sm:gap-y-3", desktop: "lg:gap-y-3" },
+  "4": { mobile: "gap-y-4", tablet: "sm:gap-y-4", desktop: "lg:gap-y-4" },
+  "5": { mobile: "gap-y-5", tablet: "sm:gap-y-5", desktop: "lg:gap-y-5" },
+  "6": { mobile: "gap-y-6", tablet: "sm:gap-y-6", desktop: "lg:gap-y-6" },
+  "8": { mobile: "gap-y-8", tablet: "sm:gap-y-8", desktop: "lg:gap-y-8" },
   "10": { mobile: "gap-y-10", tablet: "sm:gap-y-10", desktop: "lg:gap-y-10" },
   "12": { mobile: "gap-y-12", tablet: "sm:gap-y-12", desktop: "lg:gap-y-12" },
   "16": { mobile: "gap-y-16", tablet: "sm:gap-y-16", desktop: "lg:gap-y-16" },
@@ -745,14 +1020,14 @@ export const rowGapMap: Record<string, ClassMapValue> = {
 };
 
 export const columnGapMap: Record<string, ClassMapValue> = {
-  "0":  { mobile: "gap-x-0",  tablet: "sm:gap-x-0",  desktop: "lg:gap-x-0" },
-  "1":  { mobile: "gap-x-1",  tablet: "sm:gap-x-1",  desktop: "lg:gap-x-1" },
-  "2":  { mobile: "gap-x-2",  tablet: "sm:gap-x-2",  desktop: "lg:gap-x-2" },
-  "3":  { mobile: "gap-x-3",  tablet: "sm:gap-x-3",  desktop: "lg:gap-x-3" },
-  "4":  { mobile: "gap-x-4",  tablet: "sm:gap-x-4",  desktop: "lg:gap-x-4" },
-  "5":  { mobile: "gap-x-5",  tablet: "sm:gap-x-5",  desktop: "lg:gap-x-5" },
-  "6":  { mobile: "gap-x-6",  tablet: "sm:gap-x-6",  desktop: "lg:gap-x-6" },
-  "8":  { mobile: "gap-x-8",  tablet: "sm:gap-x-8",  desktop: "lg:gap-x-8" },
+  "0": { mobile: "gap-x-0", tablet: "sm:gap-x-0", desktop: "lg:gap-x-0" },
+  "1": { mobile: "gap-x-1", tablet: "sm:gap-x-1", desktop: "lg:gap-x-1" },
+  "2": { mobile: "gap-x-2", tablet: "sm:gap-x-2", desktop: "lg:gap-x-2" },
+  "3": { mobile: "gap-x-3", tablet: "sm:gap-x-3", desktop: "lg:gap-x-3" },
+  "4": { mobile: "gap-x-4", tablet: "sm:gap-x-4", desktop: "lg:gap-x-4" },
+  "5": { mobile: "gap-x-5", tablet: "sm:gap-x-5", desktop: "lg:gap-x-5" },
+  "6": { mobile: "gap-x-6", tablet: "sm:gap-x-6", desktop: "lg:gap-x-6" },
+  "8": { mobile: "gap-x-8", tablet: "sm:gap-x-8", desktop: "lg:gap-x-8" },
   "10": { mobile: "gap-x-10", tablet: "sm:gap-x-10", desktop: "lg:gap-x-10" },
   "12": { mobile: "gap-x-12", tablet: "sm:gap-x-12", desktop: "lg:gap-x-12" },
   "16": { mobile: "gap-x-16", tablet: "sm:gap-x-16", desktop: "lg:gap-x-16" },
@@ -762,28 +1037,29 @@ export const columnGapMap: Record<string, ClassMapValue> = {
 
 // --- Overlay Position Map ---
 export const overlayPositionMap: Record<string, string> = {
-  fill:          "absolute inset-0",
-  top:           "absolute top-0 left-0 right-0",
-  bottom:        "absolute bottom-0 left-0 right-0",
-  left:          "absolute top-0 left-0 bottom-0",
-  right:         "absolute top-0 right-0 bottom-0",
-  center:        "absolute inset-0 flex items-center justify-center",
-  "top-left":    "absolute top-0 left-0",
-  "top-right":   "absolute top-0 right-0",
+  fill: "absolute inset-0",
+  top: "absolute top-0 left-0 right-0",
+  bottom: "absolute bottom-0 left-0 right-0",
+  left: "absolute top-0 left-0 bottom-0",
+  right: "absolute top-0 right-0 bottom-0",
+  center: "absolute inset-0 flex items-center justify-center",
+  "top-left": "absolute top-0 left-0",
+  "top-right": "absolute top-0 right-0",
   "bottom-left": "absolute bottom-0 left-0",
-  "bottom-right":"absolute bottom-0 right-0",
+  "bottom-right": "absolute bottom-0 right-0",
 };
 
 // --- Grid Preset Templates ---
-export const gridPresetMap: Record<string, { columns: string; rows?: string }> = {
-  dashboard:    { columns: "repeat(4, 1fr)", rows: "auto" },
-  blog:         { columns: "2fr 1fr" },
-  gallery:      { columns: "repeat(3, 1fr)" },
-  portfolio:    { columns: "repeat(auto-fill, minmax(280px, 1fr))" },
-  split:        { columns: "1fr 1fr" },
-  "feature-grid": { columns: "repeat(3, 1fr)" },
-  pricing:      { columns: "repeat(3, 1fr)" },
-};
+export const gridPresetMap: Record<string, { columns: string; rows?: string }> =
+  {
+    dashboard: { columns: "repeat(4, 1fr)", rows: "auto" },
+    blog: { columns: "2fr 1fr" },
+    gallery: { columns: "repeat(3, 1fr)" },
+    portfolio: { columns: "repeat(auto-fill, minmax(280px, 1fr))" },
+    split: { columns: "1fr 1fr" },
+    "feature-grid": { columns: "repeat(3, 1fr)" },
+    pricing: { columns: "repeat(3, 1fr)" },
+  };
 
 // ============================================================================
 // PHASE 3: ADVANCED EXPERIENCES UTILITY MAPS
@@ -798,29 +1074,92 @@ export interface AnimationKeyframe {
   clipPath?: string;
 }
 
-export const entranceAnimationPresets: Record<string, { initial: AnimationKeyframe; animate: AnimationKeyframe }> = {
-  none:          { initial: {}, animate: {} },
-  fade:          { initial: { opacity: 0 }, animate: { opacity: 1 } },
-  "fade-up":     { initial: { opacity: 0, transform: "translateY(40px)" }, animate: { opacity: 1, transform: "translateY(0)" } },
-  "fade-down":   { initial: { opacity: 0, transform: "translateY(-40px)" }, animate: { opacity: 1, transform: "translateY(0)" } },
-  "fade-left":   { initial: { opacity: 0, transform: "translateX(40px)" }, animate: { opacity: 1, transform: "translateX(0)" } },
-  "fade-right":  { initial: { opacity: 0, transform: "translateX(-40px)" }, animate: { opacity: 1, transform: "translateX(0)" } },
-  "slide-up":    { initial: { opacity: 0, transform: "translateY(80px)" }, animate: { opacity: 1, transform: "translateY(0)" } },
-  "slide-down":  { initial: { opacity: 0, transform: "translateY(-80px)" }, animate: { opacity: 1, transform: "translateY(0)" } },
-  "slide-left":  { initial: { opacity: 0, transform: "translateX(80px)" }, animate: { opacity: 1, transform: "translateX(0)" } },
-  "slide-right": { initial: { opacity: 0, transform: "translateX(-80px)" }, animate: { opacity: 1, transform: "translateX(0)" } },
-  "scale-up":    { initial: { opacity: 0, transform: "scale(0.8)" }, animate: { opacity: 1, transform: "scale(1)" } },
-  "scale-down":  { initial: { opacity: 0, transform: "scale(1.2)" }, animate: { opacity: 1, transform: "scale(1)" } },
-  "rotate-in":   { initial: { opacity: 0, transform: "rotate(-180deg) scale(0.5)" }, animate: { opacity: 1, transform: "rotate(0) scale(1)" } },
-  "flip-x":      { initial: { opacity: 0, transform: "perspective(1000px) rotateX(-90deg)" }, animate: { opacity: 1, transform: "perspective(1000px) rotateX(0)" } },
-  "flip-y":      { initial: { opacity: 0, transform: "perspective(1000px) rotateY(90deg)" }, animate: { opacity: 1, transform: "perspective(1000px) rotateY(0)" } },
-  bounce:        { initial: { opacity: 0, transform: "scale(0.3)" }, animate: { opacity: 1, transform: "scale(1)" } },
-  elastic:       { initial: { opacity: 0, transform: "scale(0.5)" }, animate: { opacity: 1, transform: "scale(1)" } },
-  "clip-top":    { initial: { clipPath: "inset(0 0 100% 0)" }, animate: { clipPath: "inset(0 0 0 0)" } },
-  "clip-bottom": { initial: { clipPath: "inset(100% 0 0 0)" }, animate: { clipPath: "inset(0 0 0 0)" } },
-  "clip-left":   { initial: { clipPath: "inset(0 100% 0 0)" }, animate: { clipPath: "inset(0 0 0 0)" } },
-  "clip-right":  { initial: { clipPath: "inset(0 0 0 100%)" }, animate: { clipPath: "inset(0 0 0 0)" } },
-  "blur-in":     { initial: { opacity: 0, filter: "blur(20px)" }, animate: { opacity: 1, filter: "blur(0px)" } },
+export const entranceAnimationPresets: Record<
+  string,
+  { initial: AnimationKeyframe; animate: AnimationKeyframe }
+> = {
+  none: { initial: {}, animate: {} },
+  fade: { initial: { opacity: 0 }, animate: { opacity: 1 } },
+  "fade-up": {
+    initial: { opacity: 0, transform: "translateY(40px)" },
+    animate: { opacity: 1, transform: "translateY(0)" },
+  },
+  "fade-down": {
+    initial: { opacity: 0, transform: "translateY(-40px)" },
+    animate: { opacity: 1, transform: "translateY(0)" },
+  },
+  "fade-left": {
+    initial: { opacity: 0, transform: "translateX(40px)" },
+    animate: { opacity: 1, transform: "translateX(0)" },
+  },
+  "fade-right": {
+    initial: { opacity: 0, transform: "translateX(-40px)" },
+    animate: { opacity: 1, transform: "translateX(0)" },
+  },
+  "slide-up": {
+    initial: { opacity: 0, transform: "translateY(80px)" },
+    animate: { opacity: 1, transform: "translateY(0)" },
+  },
+  "slide-down": {
+    initial: { opacity: 0, transform: "translateY(-80px)" },
+    animate: { opacity: 1, transform: "translateY(0)" },
+  },
+  "slide-left": {
+    initial: { opacity: 0, transform: "translateX(80px)" },
+    animate: { opacity: 1, transform: "translateX(0)" },
+  },
+  "slide-right": {
+    initial: { opacity: 0, transform: "translateX(-80px)" },
+    animate: { opacity: 1, transform: "translateX(0)" },
+  },
+  "scale-up": {
+    initial: { opacity: 0, transform: "scale(0.8)" },
+    animate: { opacity: 1, transform: "scale(1)" },
+  },
+  "scale-down": {
+    initial: { opacity: 0, transform: "scale(1.2)" },
+    animate: { opacity: 1, transform: "scale(1)" },
+  },
+  "rotate-in": {
+    initial: { opacity: 0, transform: "rotate(-180deg) scale(0.5)" },
+    animate: { opacity: 1, transform: "rotate(0) scale(1)" },
+  },
+  "flip-x": {
+    initial: { opacity: 0, transform: "perspective(1000px) rotateX(-90deg)" },
+    animate: { opacity: 1, transform: "perspective(1000px) rotateX(0)" },
+  },
+  "flip-y": {
+    initial: { opacity: 0, transform: "perspective(1000px) rotateY(90deg)" },
+    animate: { opacity: 1, transform: "perspective(1000px) rotateY(0)" },
+  },
+  bounce: {
+    initial: { opacity: 0, transform: "scale(0.3)" },
+    animate: { opacity: 1, transform: "scale(1)" },
+  },
+  elastic: {
+    initial: { opacity: 0, transform: "scale(0.5)" },
+    animate: { opacity: 1, transform: "scale(1)" },
+  },
+  "clip-top": {
+    initial: { clipPath: "inset(0 0 100% 0)" },
+    animate: { clipPath: "inset(0 0 0 0)" },
+  },
+  "clip-bottom": {
+    initial: { clipPath: "inset(100% 0 0 0)" },
+    animate: { clipPath: "inset(0 0 0 0)" },
+  },
+  "clip-left": {
+    initial: { clipPath: "inset(0 100% 0 0)" },
+    animate: { clipPath: "inset(0 0 0 0)" },
+  },
+  "clip-right": {
+    initial: { clipPath: "inset(0 0 0 100%)" },
+    animate: { clipPath: "inset(0 0 0 0)" },
+  },
+  "blur-in": {
+    initial: { opacity: 0, filter: "blur(20px)" },
+    animate: { opacity: 1, filter: "blur(0px)" },
+  },
 };
 
 // --- Loop Animation CSS Keyframes ---
@@ -834,13 +1173,18 @@ export const loopAnimationMap: Record<string, string> = {
 };
 
 // For custom loops not in Tailwind, we use inline keyframes
-export const customLoopKeyframes: Record<string, { keyframes: string; defaultDuration: number }> = {
+export const customLoopKeyframes: Record<
+  string,
+  { keyframes: string; defaultDuration: number }
+> = {
   float: {
-    keyframes: "0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}",
+    keyframes:
+      "0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}",
     defaultDuration: 3000,
   },
   shimmer: {
-    keyframes: "0%{background-position:-200% 0}100%{background-position:200% 0}",
+    keyframes:
+      "0%{background-position:-200% 0}100%{background-position:200% 0}",
     defaultDuration: 2000,
   },
   breathe: {
@@ -848,11 +1192,13 @@ export const customLoopKeyframes: Record<string, { keyframes: string; defaultDur
     defaultDuration: 4000,
   },
   wiggle: {
-    keyframes: "0%,100%{transform:rotate(0)}25%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}",
+    keyframes:
+      "0%,100%{transform:rotate(0)}25%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}",
     defaultDuration: 1000,
   },
   swing: {
-    keyframes: "0%,100%{transform:rotate(0)}20%{transform:rotate(15deg)}40%{transform:rotate(-10deg)}60%{transform:rotate(5deg)}80%{transform:rotate(-5deg)}",
+    keyframes:
+      "0%,100%{transform:rotate(0)}20%{transform:rotate(15deg)}40%{transform:rotate(-10deg)}60%{transform:rotate(5deg)}80%{transform:rotate(-5deg)}",
     defaultDuration: 2000,
   },
 };
@@ -868,7 +1214,10 @@ export const easingMap: Record<string, string> = {
 };
 
 // --- Sticky Width Map (for StickyContainer) ---
-export const stickyWidthMap: Record<string, { mobile: string; tablet: string; desktop: string }> = {
+export const stickyWidthMap: Record<
+  string,
+  { mobile: string; tablet: string; desktop: string }
+> = {
   "1/3": { mobile: "w-full", tablet: "sm:w-1/3", desktop: "lg:w-1/3" },
   "2/5": { mobile: "w-full", tablet: "sm:w-2/5", desktop: "lg:w-2/5" },
   "1/2": { mobile: "w-full", tablet: "sm:w-1/2", desktop: "lg:w-1/2" },
@@ -884,7 +1233,10 @@ export const scrollSnapTypeMap: Record<string, string> = {
 };
 
 // --- Scroll Section Direction Map ---
-export const scrollDirectionMap: Record<string, { snap: string; child: string }> = {
-  vertical:   { snap: "snap-y", child: "min-h-screen" },
+export const scrollDirectionMap: Record<
+  string,
+  { snap: string; child: string }
+> = {
+  vertical: { snap: "snap-y", child: "min-h-screen" },
   horizontal: { snap: "snap-x", child: "min-w-screen" },
 };

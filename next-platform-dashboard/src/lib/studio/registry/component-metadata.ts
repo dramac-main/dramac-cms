@@ -1,9 +1,9 @@
 /**
  * Server-Compatible Component Metadata
- * 
+ *
  * This file contains component type information without React renders,
  * allowing it to be imported in server contexts (API routes).
- * 
+ *
  * Used by AI Page Generator to know what components are available.
  */
 
@@ -39,7 +39,8 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     acceptsChildren: true,
     keywords: ["section", "container", "wrapper", "block"],
     ai: {
-      description: "Primary container for page sections with padding and background options",
+      description:
+        "Primary container for page sections with padding and background options",
       usageGuidelines: "Use to create distinct content blocks",
       suggestedWith: ["Container", "Heading", "Text"],
     },
@@ -65,7 +66,8 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     keywords: ["columns", "grid", "layout", "side by side"],
     ai: {
       description: "Create multi-column layouts (2-4 columns)",
-      usageGuidelines: "Ideal for feature grids, team sections, and comparisons",
+      usageGuidelines:
+        "Ideal for feature grids, team sections, and comparisons",
     },
   },
   {
@@ -77,7 +79,8 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     keywords: ["card", "box", "panel"],
     ai: {
       description: "Elevated container for grouped content",
-      usageGuidelines: "Use for feature highlights, testimonials, or grouped info",
+      usageGuidelines:
+        "Use for feature highlights, testimonials, or grouped info",
     },
   },
   {
@@ -109,12 +112,15 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     type: "Stack",
     label: "Stack",
     category: "layout",
-    description: "Vertical or horizontal stack with responsive direction and gap",
+    description:
+      "Vertical or horizontal stack with responsive direction and gap",
     acceptsChildren: true,
     keywords: ["stack", "vstack", "hstack", "flex", "column", "row", "layout"],
     ai: {
-      description: "Arranges children vertically or horizontally with consistent spacing. Supports responsive direction (column on mobile, row on desktop) and dividers between items.",
-      usageGuidelines: "Use for simple linear layouts: vertical content stacks, horizontal button groups, icon+text pairs. Prefer over FlexBox when you only need direction + gap.",
+      description:
+        "Arranges children vertically or horizontally with consistent spacing. Supports responsive direction (column on mobile, row on desktop) and dividers between items.",
+      usageGuidelines:
+        "Use for simple linear layouts: vertical content stacks, horizontal button groups, icon+text pairs. Prefer over FlexBox when you only need direction + gap.",
       suggestedWith: ["Card", "Button", "Heading", "Text"],
     },
   },
@@ -122,12 +128,15 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     type: "FlexBox",
     label: "FlexBox",
     category: "layout",
-    description: "Full flexbox container with wrap, alignment, and responsive gap",
+    description:
+      "Full flexbox container with wrap, alignment, and responsive gap",
     acceptsChildren: true,
     keywords: ["flexbox", "flex", "row", "wrap", "align", "justify", "layout"],
     ai: {
-      description: "A full-featured flexbox container supporting direction, wrap, justify-content, align-items, and responsive gap. Use when you need wrapping behavior or advanced alignment that Stack doesn't cover.",
-      usageGuidelines: "Use for tag clouds, button groups that wrap, centered hero content, or any layout needing flex-wrap. Prefer over Grid when item count is dynamic.",
+      description:
+        "A full-featured flexbox container supporting direction, wrap, justify-content, align-items, and responsive gap. Use when you need wrapping behavior or advanced alignment that Stack doesn't cover.",
+      usageGuidelines:
+        "Use for tag clouds, button groups that wrap, centered hero content, or any layout needing flex-wrap. Prefer over Grid when item count is dynamic.",
       suggestedWith: ["Card", "Button", "Badge"],
     },
   },
@@ -139,8 +148,10 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     acceptsChildren: true,
     keywords: ["grid", "columns", "layout", "responsive", "masonry"],
     ai: {
-      description: "CSS Grid layout with responsive column counts (e.g., 1 col mobile, 2 tablet, 3 desktop), customizable gap, and auto-fit/auto-fill modes. Perfect for card grids and dashboards.",
-      usageGuidelines: "Use for equal-width card grids, image galleries, pricing tables, and feature grids where precise column control is needed. Contains GridItem children for per-cell span control.",
+      description:
+        "CSS Grid layout with responsive column counts (e.g., 1 col mobile, 2 tablet, 3 desktop), customizable gap, and auto-fit/auto-fill modes. Perfect for card grids and dashboards.",
+      usageGuidelines:
+        "Use for equal-width card grids, image galleries, pricing tables, and feature grids where precise column control is needed. Contains GridItem children for per-cell span control.",
       suggestedWith: ["GridItem", "Card"],
     },
   },
@@ -152,8 +163,10 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     acceptsChildren: true,
     keywords: ["grid item", "grid cell", "span", "column span", "row span"],
     ai: {
-      description: "A Grid child that can span multiple columns or rows. Use inside a Grid to create featured/larger cells.",
-      usageGuidelines: "Place inside Grid. Use colSpan/rowSpan for featured items (e.g., a hero card spanning 2 columns).",
+      description:
+        "A Grid child that can span multiple columns or rows. Use inside a Grid to create featured/larger cells.",
+      usageGuidelines:
+        "Place inside Grid. Use colSpan/rowSpan for featured items (e.g., a hero card spanning 2 columns).",
       suggestedWith: ["Grid"],
     },
   },
@@ -161,12 +174,15 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     type: "Wrapper",
     label: "Wrapper",
     category: "layout",
-    description: "Utility wrapper with padding, margin, background, and border control",
+    description:
+      "Utility wrapper with padding, margin, background, and border control",
     acceptsChildren: true,
     keywords: ["wrapper", "box", "div", "container", "padding", "margin"],
     ai: {
-      description: "A generic utility wrapper for adding padding, margin, background, borders, or click actions around any content. The CSS 'div' equivalent in the visual builder.",
-      usageGuidelines: "Use when you need fine-grained spacing/styling control around a group of elements without semantic meaning. Good for adding click-to-link behavior to a group.",
+      description:
+        "A generic utility wrapper for adding padding, margin, background, borders, or click actions around any content. The CSS 'div' equivalent in the visual builder.",
+      usageGuidelines:
+        "Use when you need fine-grained spacing/styling control around a group of elements without semantic meaning. Good for adding click-to-link behavior to a group.",
       suggestedWith: ["Card", "Section"],
     },
   },
@@ -178,8 +194,10 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     acceptsChildren: true,
     keywords: ["aspect ratio", "ratio", "16:9", "4:3", "square", "video frame"],
     ai: {
-      description: "Maintains a fixed aspect ratio (16:9, 4:3, 1:1, etc.) regardless of content or screen size. Content is absolutely positioned inside and can overflow-hidden.",
-      usageGuidelines: "Use for video embeds, image placeholders, hero banners, or any element that must maintain proportions. Supports custom ratios via width:height string.",
+      description:
+        "Maintains a fixed aspect ratio (16:9, 4:3, 1:1, etc.) regardless of content or screen size. Content is absolutely positioned inside and can overflow-hidden.",
+      usageGuidelines:
+        "Use for video embeds, image placeholders, hero banners, or any element that must maintain proportions. Supports custom ratios via width:height string.",
       suggestedWith: ["Image", "Video"],
     },
   },
@@ -191,8 +209,10 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     acceptsChildren: true,
     keywords: ["overlay", "absolute", "floating", "badge", "label", "position"],
     ai: {
-      description: "A positioned overlay that floats on top of sibling content. Supports preset positions (top-left, center, bottom-right, etc.), custom offsets, backdrop blur, and click-through mode.",
-      usageGuidelines: "Use for floating labels, sale badges, image captions, or decorative elements positioned over other content. Parent should be position:relative.",
+      description:
+        "A positioned overlay that floats on top of sibling content. Supports preset positions (top-left, center, bottom-right, etc.), custom offsets, backdrop blur, and click-through mode.",
+      usageGuidelines:
+        "Use for floating labels, sale badges, image captions, or decorative elements positioned over other content. Parent should be position:relative.",
       suggestedWith: ["Section", "Card", "Image"],
     },
   },
@@ -206,8 +226,10 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     acceptsChildren: true,
     keywords: ["scroll", "snap", "fullpage", "storytelling", "slides", "pages"],
     ai: {
-      description: "A full-viewport scroll-snap container that creates a slide-by-slide storytelling experience. Each child ScrollSectionItem snaps into view. Supports navigation dots and keyboard navigation.",
-      usageGuidelines: "Use for landing page hero sequences, product showcases, or immersive brand stories. Each slide should have distinct content and background. 3-7 slides recommended.",
+      description:
+        "A full-viewport scroll-snap container that creates a slide-by-slide storytelling experience. Each child ScrollSectionItem snaps into view. Supports navigation dots and keyboard navigation.",
+      usageGuidelines:
+        "Use for landing page hero sequences, product showcases, or immersive brand stories. Each slide should have distinct content and background. 3-7 slides recommended.",
       suggestedWith: ["ScrollSectionItem"],
     },
   },
@@ -219,8 +241,10 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     acceptsChildren: true,
     keywords: ["scroll item", "slide", "snap item", "page"],
     ai: {
-      description: "A single full-viewport slide inside a ScrollSection. Each item fills the viewport height and snaps into place during scrolling.",
-      usageGuidelines: "Place inside ScrollSection only. Set unique backgroundColor and content per slide. Can contain any components.",
+      description:
+        "A single full-viewport slide inside a ScrollSection. Each item fills the viewport height and snaps into place during scrolling.",
+      usageGuidelines:
+        "Place inside ScrollSection only. Set unique backgroundColor and content per slide. Can contain any components.",
       suggestedWith: ["ScrollSection"],
     },
   },
@@ -232,8 +256,10 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     acceptsChildren: true,
     keywords: ["sticky", "fixed", "scroll", "storytelling", "pin"],
     ai: {
-      description: "A container that sticks to a position while the user scrolls through its content region. Great for scroll-driven storytelling where a visual stays fixed while text content scrolls past.",
-      usageGuidelines: "Use for scroll-driven narratives: a sticky image/video on one side while text paragraphs scroll on the other. Set stickyOffset for top position.",
+      description:
+        "A container that sticks to a position while the user scrolls through its content region. Great for scroll-driven storytelling where a visual stays fixed while text content scrolls past.",
+      usageGuidelines:
+        "Use for scroll-driven narratives: a sticky image/video on one side while text paragraphs scroll on the other. Set stickyOffset for top position.",
       suggestedWith: ["Section", "Image"],
     },
   },
@@ -243,10 +269,20 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     category: "layout",
     description: "Universal animation wrapper with scroll and hover triggers",
     acceptsChildren: true,
-    keywords: ["animate", "animation", "motion", "fade", "slide", "scale", "scroll trigger"],
+    keywords: [
+      "animate",
+      "animation",
+      "motion",
+      "fade",
+      "slide",
+      "scale",
+      "scroll trigger",
+    ],
     ai: {
-      description: "Wraps any content with entrance animations (fade, slide, scale, rotate, blur, bounce, flip) triggered on scroll-into-view or hover. Supports delay, duration, easing, and stagger for child elements.",
-      usageGuidelines: "Use to add polish to any section. Wrap headings, cards, images, or entire sections. Use stagger for lists/grids where items should animate in sequence. Keep animations subtle for professionalism.",
+      description:
+        "Wraps any content with entrance animations (fade, slide, scale, rotate, blur, bounce, flip) triggered on scroll-into-view or hover. Supports delay, duration, easing, and stagger for child elements.",
+      usageGuidelines:
+        "Use to add polish to any section. Wrap headings, cards, images, or entire sections. Use stagger for lists/grids where items should animate in sequence. Keep animations subtle for professionalism.",
       suggestedWith: ["Card", "Heading", "Features"],
     },
   },
@@ -258,8 +294,10 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     acceptsChildren: true,
     keywords: ["tilt", "3d", "perspective", "interactive", "hover", "parallax"],
     ai: {
-      description: "Applies an interactive 3D tilt effect on mouse hover, with configurable max tilt angle, perspective, glare effect, and scale. Creates a premium, tactile feel.",
-      usageGuidelines: "Use on cards, product images, or hero elements for premium interactivity. Keep maxTilt modest (10-20deg) for elegance. Works best on individual cards rather than large sections.",
+      description:
+        "Applies an interactive 3D tilt effect on mouse hover, with configurable max tilt angle, perspective, glare effect, and scale. Creates a premium, tactile feel.",
+      usageGuidelines:
+        "Use on cards, product images, or hero elements for premium interactivity. Keep maxTilt modest (10-20deg) for elegance. Works best on individual cards rather than large sections.",
       suggestedWith: ["Card", "Image"],
     },
   },
@@ -271,8 +309,10 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     acceptsChildren: false,
     keywords: ["shape", "divider", "wave", "curve", "arrow", "triangle", "svg"],
     ai: {
-      description: "An SVG shape divider that creates smooth visual transitions between sections. Shapes include wave, curve, tilt, arrow, triangle, zigzag, and more. Color should match the adjacent section's background.",
-      usageGuidelines: "Place between sections to create flowing visual transitions. Set color to match the NEXT section's backgroundColor. Set position to 'top' or 'bottom'. Height 40-80px typical.",
+      description:
+        "An SVG shape divider that creates smooth visual transitions between sections. Shapes include wave, curve, tilt, arrow, triangle, zigzag, and more. Color should match the adjacent section's background.",
+      usageGuidelines:
+        "Place between sections to create flowing visual transitions. Set color to match the NEXT section's backgroundColor. Set position to 'top' or 'bottom'. Height 40-80px typical.",
       suggestedWith: ["Section"],
     },
   },
@@ -284,8 +324,10 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     acceptsChildren: true,
     keywords: ["cursor", "mouse", "glow", "spotlight", "trail", "interactive"],
     ai: {
-      description: "Adds interactive cursor-following effects to a container: glow (radial light), spotlight (focused beam), trail (particle trail), magnetic (element attraction), ripple (click waves). Creates engaging interactivity.",
-      usageGuidelines: "Use on hero sections or feature showcases for wow factor. Glow and spotlight work best on dark backgrounds. Keep subtle — one per page maximum.",
+      description:
+        "Adds interactive cursor-following effects to a container: glow (radial light), spotlight (focused beam), trail (particle trail), magnetic (element attraction), ripple (click waves). Creates engaging interactivity.",
+      usageGuidelines:
+        "Use on hero sections or feature showcases for wow factor. Glow and spotlight work best on dark backgrounds. Keep subtle — one per page maximum.",
       suggestedWith: ["Section", "Hero"],
     },
   },
@@ -302,7 +344,8 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     keywords: ["heading", "title", "h1", "h2", "h3"],
     ai: {
       description: "Headline text from H1 to H6",
-      usageGuidelines: "Use H1 for page title, H2 for sections, H3 for subsections",
+      usageGuidelines:
+        "Use H1 for page title, H2 for sections, H3 for subsections",
     },
   },
   {
@@ -384,7 +427,8 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     acceptsChildren: false,
     keywords: ["hero", "banner", "header", "jumbotron"],
     ai: {
-      description: "Full-width hero with headline, subheadline, image, and CTA buttons",
+      description:
+        "Full-width hero with headline, subheadline, image, and CTA buttons",
       usageGuidelines: "Use as first section on landing pages",
       suggestedWith: ["Features", "CTA"],
     },
@@ -470,7 +514,8 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     keywords: ["gallery", "images", "photos", "portfolio"],
     ai: {
       description: "Responsive image gallery grid",
-      usageGuidelines: "Use for portfolios, product showcases, or photo galleries",
+      usageGuidelines:
+        "Use for portfolios, product showcases, or photo galleries",
     },
   },
 
@@ -600,6 +645,66 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     ai: {
       description: "Code block with syntax highlighting",
       usageGuidelines: "Use for technical content and documentation",
+    },
+  },
+  {
+    type: "Label",
+    label: "Label",
+    category: "content",
+    description: "Small utility text for tags, badges, categories, and overlines",
+    acceptsChildren: false,
+    keywords: ["label", "tag", "badge", "pill", "overline", "category"],
+    ai: {
+      description: "Small utility text element with 7 variants: default, badge, overline, tag, pill, outline, subtle",
+      usageGuidelines: "Use above headings as overlines, as category tags, or as status badges",
+    },
+  },
+  {
+    type: "List",
+    label: "List",
+    category: "content",
+    description: "Styled list with bullet, numbered, check, arrow, and dash variants",
+    acceptsChildren: false,
+    keywords: ["list", "bullet", "numbered", "checklist", "items"],
+    ai: {
+      description: "Styled list component with 7 marker variants and multi-column support",
+      usageGuidelines: "Use for feature lists, benefits, steps, and checklists",
+    },
+  },
+  {
+    type: "DisplayText",
+    label: "Display Text",
+    category: "content",
+    description: "Large decorative display text for hero sections",
+    acceptsChildren: false,
+    keywords: ["display", "hero text", "large text", "decorative", "title"],
+    ai: {
+      description: "Extra-large decorative text for hero sections with gradient and shadow support",
+      usageGuidelines: "Use for dramatic hero headings, landing page titles, and splash text. Typically 4xl-9xl size.",
+    },
+  },
+  {
+    type: "DividerText",
+    label: "Divider Text",
+    category: "content",
+    description: "Text with decorative divider lines",
+    acceptsChildren: false,
+    keywords: ["divider", "separator", "section break", "ornament"],
+    ai: {
+      description: "Text element with decorative lines in 5 variants: line-sides, line-through, dots, gradient, ornament",
+      usageGuidelines: "Use as section separators, visual breaks between content areas",
+    },
+  },
+  {
+    type: "StatNumber",
+    label: "Stat Number",
+    category: "content",
+    description: "Large statistics/metrics display",
+    acceptsChildren: false,
+    keywords: ["stat", "number", "metric", "counter", "statistic"],
+    ai: {
+      description: "Large statistic display with value, prefix, suffix, and label using tabular-nums for aligned numbers",
+      usageGuidelines: "Use for key metrics, achievements, and data points. Combine multiple in a row for stats sections.",
     },
   },
 
@@ -792,15 +897,17 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
 /**
  * Get component metadata by type
  */
-export function getComponentMetadata(type: string): ComponentMetadata | undefined {
-  return COMPONENT_METADATA.find(c => c.type === type);
+export function getComponentMetadata(
+  type: string,
+): ComponentMetadata | undefined {
+  return COMPONENT_METADATA.find((c) => c.type === type);
 }
 
 /**
  * Get all component types as a simple list
  */
 export function getAvailableComponentTypes(): string[] {
-  return COMPONENT_METADATA.map(c => c.type);
+  return COMPONENT_METADATA.map((c) => c.type);
 }
 
 /**

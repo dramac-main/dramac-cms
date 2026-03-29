@@ -21,11 +21,12 @@ Layout components are the **foundation of every page**. Every other component �
 9. [3D & Perspective System](#9-3d--perspective-system)
 10. [Scroll-Driven Experiences](#10-scroll-driven-experiences)
 11. [Advanced CSS Systems](#11-advanced-css-systems)
-12. [AI Designer Integration](#12-ai-designer-integration)
-13. [Registry & Registration Requirements](#13-registry--registration-requirements)
-14. [Mobile-First Perfection Strategy](#14-mobile-first-perfection-strategy)
-15. [Implementation Phases](#15-implementation-phases)
-16. [Testing & Quality Gates](#16-testing--quality-gates)
+12. [Dark/Light Color Mode Awareness](#12-darklight-color-mode-awareness)
+13. [AI Designer Integration](#13-ai-designer-integration)
+14. [Registry & Registration Requirements](#14-registry--registration-requirements)
+15. [Mobile-First Perfection Strategy](#15-mobile-first-perfection-strategy)
+16. [Implementation Phases](#16-implementation-phases)
+17. [Testing & Quality Gates](#17-testing--quality-gates)
 
 ---
 
@@ -236,6 +237,88 @@ overlay?: {
 };
 ```
 
+**Background Effects Engine:**
+```typescript
+// Animated / morphing gradients (Stripe, Linear-style shifting backgrounds)
+animatedGradient?: {
+  type: "shift" | "rotate" | "morph";
+  // shift: Colors shift positions over time
+  // rotate: Gradient angle rotates continuously
+  // morph: Gradient stops morph between two states
+  colors: string[];           // 2-6 colors
+  duration?: number;          // seconds for full cycle (default 8)
+  angle?: number;             // Starting angle for linear (default 45)
+  paused?: boolean;           // Allow pausing the animation
+};
+
+// Pattern / texture overlay (Linear, Vercel, Raycast-style subtle textures)
+backgroundPattern?: {
+  type: "noise" | "dots" | "grid" | "diagonal-lines" | "cross-hatch" | "waves" | "mesh" | "circuit" | "none";
+  opacity?: number;           // 0-1 (default 0.05-0.15 for subtlety)
+  scale?: number;             // Pattern scale multiplier (default 1)
+  color?: string;             // Pattern color (default: rgba(255,255,255,0.1))
+  blendMode?: CSSBlendMode;   // How pattern blends with bg (default: overlay)
+  animated?: boolean;         // Subtle drift/shimmer animation
+};
+
+// Particle / floating element background (canvas/SVG layer behind content)
+backgroundParticles?: {
+  type: "particles" | "bubbles" | "confetti" | "stars" | "geometric-shapes" | "bokeh" | "fireflies" | "snow" | "none";
+  density?: number;           // 10-200, number of particles (default 50)
+  color?: string | string[];  // Single color or palette
+  speed?: number;             // Movement speed 0.1-3 (default 0.5)
+  size?: { min: number; max: number }; // Particle size range in px
+  opacity?: { min: number; max: number }; // Opacity range 0-1
+  interactive?: boolean;      // Respond to cursor movement (desktop only)
+  connectLines?: boolean;     // Draw lines between nearby particles (particles type)
+  direction?: "up" | "down" | "random" | "outward"; // Movement direction
+};
+
+// Gradient mesh (Apple, Figma-style organic multi-point gradients)
+gradientMesh?: {
+  points: Array<{
+    x: number;                // 0-100 (% position)
+    y: number;                // 0-100 (% position)
+    color: string;            // Color at this point
+    radius: number;           // Spread radius 10-100 (% of container)
+  }>;
+  animated?: boolean;         // Points slowly drift (default false)
+  animationDuration?: number; // Seconds per drift cycle (default 10)
+  blur?: number;              // Additional blur for softer blending (default 40)
+};
+
+// Scroll-triggered background changes
+scrollBackground?: {
+  type: "color-shift" | "gradient-shift" | "image-crossfade" | "blur-shift" | "opacity-shift";
+  stages: Array<{
+    scrollProgress: number;   // 0-1 (0 = top of section in view, 1 = bottom)
+    value: string;            // Color, gradient CSS, image URL, blur px, or opacity
+  }>;
+  // Example: background shifts from dark to light as you scroll through the hero
+  // stages: [{ scrollProgress: 0, value: "#0a0a0a" }, { scrollProgress: 1, value: "#ffffff" }]
+};
+
+// SVG background injection (scalable illustrations, geometric art)
+backgroundSvg?: {
+  content: string;            // Sanitized SVG markup (or URL to .svg file)
+  position?: string;          // CSS background-position (default "center")
+  size?: "cover" | "contain" | "auto" | string;
+  opacity?: number;           // 0-1 (default 0.1 for subtle, 1 for full)
+  animated?: boolean;         // SVG has internal CSS animations
+  parallaxSpeed?: number;     // Layer parallax speed
+};
+
+// Spotlight / glow effect (radial glow behind content area)
+backgroundGlow?: {
+  color: string;              // Glow color (often brand primary)
+  position?: string;          // CSS position (default "50% 30%")
+  radius?: number;            // % of container (default 50)
+  opacity?: number;           // 0-1 (default 0.15)
+  animated?: boolean;         // Slow pulse animation
+  followCursor?: boolean;     // Glow follows cursor (desktop only)
+};
+```
+
 **Sizing & Layout:**
 ```typescript
 // Height control
@@ -335,6 +418,12 @@ const SectionRender = ({ props, children, brandColors }) => {
     <Wrapper {...motionProps}>
       {shapeDividerTop && <ShapeDivider position="top" {...shapeDividerTop} />}
       {backgroundVideo && <VideoBackground {...backgroundVideo} />}
+      {gradientMesh && <GradientMeshLayer {...gradientMesh} />}
+      {animatedGradient && <AnimatedGradientLayer {...animatedGradient} />}
+      {backgroundPattern && <PatternLayer {...backgroundPattern} />}
+      {backgroundSvg && <SvgBackgroundLayer {...backgroundSvg} />}
+      {backgroundGlow && <GlowLayer {...backgroundGlow} />}
+      {backgroundParticles && <ParticlesCanvas {...backgroundParticles} />}
       {overlay && <Overlay {...overlay} />}
       <div className={innerContainerClasses}>
         {children}
@@ -342,6 +431,18 @@ const SectionRender = ({ props, children, brandColors }) => {
       {shapeDividerBottom && <ShapeDivider position="bottom" {...shapeDividerBottom} />}
     </Wrapper>
   );
+  // Layer order (back to front):
+  // 1. Background color/image/video (CSS on wrapper)
+  // 2. Gradient mesh (absolute div with radial gradients)
+  // 3. Animated gradient (absolute div with CSS @keyframes)
+  // 4. Pattern/texture (absolute div with repeating SVG/CSS pattern)
+  // 5. SVG background (absolute div with inline SVG)
+  // 6. Glow/spotlight (absolute div with radial gradient)
+  // 7. Particles (canvas element, lightweight, lazy-loaded)
+  // 8. Overlay (color/gradient overlay)
+  // 9. Shape dividers (inline SVG, absolute positioned)
+  // 10. Content (relative, z-10, above all background layers)
+  // All layers are pointer-events: none except content
 };
 ```
 
@@ -1694,9 +1795,1754 @@ clipPath?: ResponsiveValue<
 
 ---
 
-## 12. AI Designer Integration
+## 12. Dark/Light Color Mode Awareness
 
-### 12.1 Updated Component Metadata
+Every site the AI Designer generates chooses a color palette. Some palettes are dark-themed (dark backgrounds, light text), some are light-themed (white/cream backgrounds, dark text), and most sites alternate between dark and light SECTIONS for visual rhythm. Every layout component must handle both scenarios flawlessly without manual adjustment.
+
+### 12.1 The `isDarkBackground` Detection Pattern
+
+Every layout component that renders a background color MUST detect whether its background is dark or light and adapt its defaults accordingly. This is the foundation of the entire system.
+
+```typescript
+// Shared utility used by ALL layout component renders
+function isDarkBackground(backgroundColor?: string): boolean {
+  if (!backgroundColor || backgroundColor === "transparent") return false;
+  if (!backgroundColor.startsWith("#")) return false;
+  try {
+    let hex = backgroundColor.replace(/^#/, "");
+    if (hex.length === 3) hex = hex.split("").map(c => c + c).join("");
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance <= 0.45; // Dark if luminance is 45% or below
+  } catch { return false; }
+}
+
+// Used to derive adaptive defaults in every render function:
+const darkBg = isDarkBackground(props.backgroundColor);
+```
+
+### 12.2 Component-Specific Dark/Light Adaptations
+
+#### Section
+
+| Behavior | Light Background | Dark Background |
+|----------|-----------------|-----------------|
+| Default text color | `#0f172a` (near-black) | `#f8fafc` (near-white) |
+| Overlay opacity default | 30-50% | 50-70% (needs more contrast help) |
+| Background glow opacity | 0.08-0.15 | 0.15-0.30 (more visible on dark) |
+| Particle color default | `rgba(0,0,0,0.1)` | `rgba(255,255,255,0.15)` |
+| Pattern color default | `rgba(0,0,0,0.04)` | `rgba(255,255,255,0.06)` |
+| Shape divider color | Must match the ADJACENT section's background — not a static white/dark |
+
+**Shape Divider Color Rule (Critical):**
+Shape dividers sit at the boundary between two sections. The divider's `fill` color must match the background of the section it "points into":
+- Top shape divider → fill = background color of the PREVIOUS section (or page background if first)
+- Bottom shape divider → fill = background color of the NEXT section (or page background if last)
+- The AI Designer MUST set `shapeDividerTop.color` and `shapeDividerBottom.color` explicitly. Never default to white.
+
+#### Container
+
+| Behavior | Light Background | Dark Background |
+|----------|-----------------|-----------------|
+| Default border color | `#e5e7eb` (gray-200) | `rgba(255,255,255,0.12)` (subtle white) |
+| Glassmorphism tint | `rgba(255,255,255,0.7)` | `rgba(0,0,0,0.4)` |
+| Glassmorphism border | `rgba(255,255,255,0.3)` | `rgba(255,255,255,0.1)` |
+| Glassmorphism blur | 12px | 16px (more blur needed on dark) |
+| Shadow approach | Standard `box-shadow` | Subtle lighter shadow OR glow via `box-shadow: 0 0 20px rgba(255,255,255,0.05)` |
+
+#### Card
+
+Cards sit inside sections. Their styling MUST adapt to the parent section's background.
+
+| Behavior | On Light Section | On Dark Section |
+|----------|-----------------|-----------------|
+| Default card bg | `#ffffff` (white) | Slightly lighter than section bg (e.g., section `#0f172a` → card `#1e293b`) |
+| Default card border | `#e5e7eb` | `rgba(255,255,255,0.1)` |
+| Default card shadow | `shadow-md` (dark shadow) | `shadow-none` + subtle border instead (dark shadows invisible on dark bg) |
+| Card text color | `#0f172a` | `#f1f5f9` |
+| Hover shadow | Darker shadow | Lighter glow: `0 0 30px rgba(brand-primary, 0.2)` |
+| Glassmorphism bg | `rgba(255,255,255,0.8)` | `rgba(255,255,255,0.05)` |
+| Gradient border | Uses brand accent | Same, but consider higher opacity |
+
+**Card Default Derivation (Critical for AI):**
+The AI MUST NOT use `#ffffff` (white) card backgrounds on dark sections. The `resolveBrandColors()` function already derives the `card` color as the site's base background, but when a section has a different background from the page base, the AI must explicitly set `cardBackgroundColor` to a slightly lighter shade of that section's background.
+
+#### Columns
+
+No direct color impact — columns are structural. But gap areas show the parent section background, so no special handling needed.
+
+#### Spacer
+
+| Behavior | Light Background | Dark Background |
+|----------|-----------------|-----------------|
+| Divider line color (when visible) | `#e5e7eb` | `rgba(255,255,255,0.15)` |
+
+#### Divider
+
+| Behavior | Light Background | Dark Background |
+|----------|-----------------|-----------------|
+| Default color | `#e5e7eb` | `rgba(255,255,255,0.15)` |
+| Gradient divider | Dark-to-transparent | Light-to-transparent |
+| Icon color | `#6b7280` (gray-500) | `#9ca3af` (gray-400) |
+| Fade edges | Transparent at edges, dark center | Transparent at edges, light center |
+
+#### FlexBox, Grid, Stack, Wrapper, AspectRatioBox
+
+These are structural components. They inherit the parent section's color context. No special dark/light handling beyond passing `isDarkBackground` context down to children that need it.
+
+#### Overlay
+
+| Behavior | Light Parent | Dark Parent |
+|----------|-------------|-------------|
+| Default overlay bg | `rgba(0,0,0,0.5)` | `rgba(0,0,0,0.6)` |
+| Overlay text color | `#ffffff` | `#ffffff` (always white over overlay) |
+
+#### ScrollSection / StickyContainer
+
+These are containers for multiple sections. Each child section handles its own dark/light awareness independently.
+
+### 12.3 Shadow System for Dark Backgrounds
+
+Standard CSS `box-shadow` is nearly invisible on dark backgrounds. The plan must handle this:
+
+```typescript
+// Shadow resolver used in Card, Container, and any component with `shadow` prop
+function resolveShadow(
+  shadow: "none" | "sm" | "md" | "lg" | "xl" | "2xl",
+  isDarkBg: boolean
+): string {
+  if (shadow === "none") return "";
+  
+  if (isDarkBg) {
+    // On dark backgrounds: Use lighter shadow (glow effect) or border instead
+    const glowMap: Record<string, string> = {
+      sm:  "0 0 8px rgba(255,255,255,0.04), 0 1px 2px rgba(255,255,255,0.02)",
+      md:  "0 0 15px rgba(255,255,255,0.05), 0 2px 4px rgba(255,255,255,0.03)",
+      lg:  "0 0 25px rgba(255,255,255,0.06), 0 4px 8px rgba(255,255,255,0.04)",
+      xl:  "0 0 35px rgba(255,255,255,0.07), 0 8px 16px rgba(255,255,255,0.05)",
+      "2xl": "0 0 50px rgba(255,255,255,0.08), 0 16px 32px rgba(255,255,255,0.06)",
+    };
+    return glowMap[shadow] || "";
+  }
+  
+  // On light backgrounds: Standard shadow classes (via Tailwind: shadow-sm, shadow-md, etc.)
+  return ""; // Use Tailwind classes instead
+}
+```
+
+### 12.4 Glassmorphism Dark/Light Variants
+
+```typescript
+function resolveGlassmorphism(isDarkBg: boolean): {
+  background: string;
+  backdropFilter: string;
+  border: string;
+} {
+  if (isDarkBg) {
+    return {
+      background: "rgba(255, 255, 255, 0.05)",
+      backdropFilter: "blur(16px) saturate(150%)",
+      border: "1px solid rgba(255, 255, 255, 0.08)",
+    };
+  }
+  return {
+    background: "rgba(255, 255, 255, 0.7)",
+    backdropFilter: "blur(12px) saturate(180%)",
+    border: "1px solid rgba(255, 255, 255, 0.3)",
+  };
+}
+```
+
+### 12.5 AI Designer Color Rules for Mixed Dark/Light Sections
+
+The AI Designer MUST follow these rules when generating sites with alternating section backgrounds:
+
+1. **Alternation pattern for LIGHT-themed sites:**
+   - Hero: Use `primaryColor` as bg (often dark) → white text
+   - Next: White or very light gray (`#f8fafc`, `#f9fafb`) → dark text
+   - Next: Light tint of primary (e.g., primary at 5% opacity over white) → dark text
+   - Next: White → dark text
+   - Next: Dark accent section (`primaryColor` or `#0f172a`) → white text
+   - CTA: Match Hero energy → white text
+
+2. **Alternation pattern for DARK-themed sites:**
+   - Hero: Very dark bg (`#0a0a0a`, `#0d0d0d`) → light text
+   - Next: Slightly lighter dark (`#111827`, `#1a1a2e`) → light text
+   - Next: Dark with tinted accent (e.g., dark navy `#0c1222`) → light text
+   - Next: Original dark (`#0a0a0a`) → light text
+   - CTA: Accent-colored bg or gradient → contrasting text
+
+3. **For EVERY section, the AI MUST set:**
+   - `backgroundColor` — explicit hex
+   - `textColor` — contrasting with backgroundColor
+   - `cardBackgroundColor` — derived from section bg (lighter shade for dark, white for light)
+   - `cardBorderColor` — derived from section bg contrast
+   - `titleColor` — same as textColor or slightly brighter/bolder
+   - Button colors — MUST contrast with their own background, not the section bg
+
+4. **Shape divider colors MUST be set explicitly** — The AI does NOT get to skip these. `shapeDividerTop.color` = previous section's backgroundColor. `shapeDividerBottom.color` = next section's backgroundColor.
+
+5. **Cards on dark sections MUST NOT be white.** The AI must set `cardBackgroundColor` to a shade 10-15% lighter than the section background. Never `#ffffff` on a dark section.
+
+6. **Gradient backgrounds on dark sites** should use subtle shifts between dark shades, not dramatic dark-to-light gradients.
+
+### 12.6 The `brandPalette` Context Pipeline
+
+The rendering pipeline already passes `brandPalette` (from `resolveBrandColors()`) to every component. This palette includes `isDarkBg`-derived surface colors. Layout components should use these as fallback defaults:
+
+```typescript
+// Inside any layout component render:
+const darkBg = isDarkBackground(props.backgroundColor || brandPalette?.background);
+
+// Use brandPalette-derived defaults when component props are empty:
+const effectiveBorderColor = props.borderColor || (darkBg ? "rgba(255,255,255,0.1)" : brandPalette?.border || "#e5e7eb");
+const effectiveCardBg = props.cardBackgroundColor || (darkBg ? lighten(props.backgroundColor, 0.08) : brandPalette?.card || "#ffffff");
+const effectiveTextColor = props.textColor || (darkBg ? "#f8fafc" : brandPalette?.foreground || "#0f172a");
+```
+
+### 12.7 System Dark Mode (`prefers-color-scheme`) — IN SCOPE
+
+The platform supports full system dark mode for published sites. When a visitor's OS is set to dark mode, sites configured for automatic color scheme switching will display a dark variant — seamlessly, with zero JavaScript runtime cost. This is CSS-only switching using `@media (prefers-color-scheme: dark)` to swap CSS custom property values scoped entirely to `.studio-renderer`.
+
+**Core Principles:**
+
+- **CSS-only** — No runtime JS detection. Pure media query + CSS variable swap.
+- **Auto by default for new sites** — New sites default to `"auto"` (follows visitor's OS preference). Existing sites remain `"light"` (no regression). Site owners can override to `"light"` or `"dark"` at any time.
+- **Dashboard isolated** — Dashboard dark mode is completely separate. Nothing here affects it.
+- **Zero regression for existing sites** — Existing sites with no `colorScheme` setting continue at `"light"`. Only newly created sites get `"auto"` as default.
+- **AI-compatible** — The AI continues generating explicit colors per Section 12.1-12.6. The dark complement is derived algorithmically, not via a second AI call.
+
+#### 12.7.1 Dual Palette Generation
+
+A new function derives both light and dark palettes from a single `CuratedPalette`:
+
+```typescript
+// In brand-colors.ts
+function resolveDualPalettes(source: CuratedPalette): {
+  light: BrandColorPalette;
+  dark: BrandColorPalette;
+} {
+  // Light palette: call resolveBrandColors() with original palette as-is
+  const light = resolveBrandColors(source);
+
+  // Dark palette: call resolveBrandColors() with an inverted surface version
+  // - Background: invert luminance (light → dark, dark → light)
+  // - Foreground/text: invert to maintain WCAG AA contrast (≥ 4.5:1)
+  // - Primary/accent: preserve hue, adjust lightness for visibility on inverted background
+  // - Card/muted: derive from new (dark) background — slightly lighter shade
+  // - Border: derive from new foreground at reduced opacity
+  // - Ring: match primary adjusted for new background
+  const darkSource = deriveDarkComplement(source);
+  const dark = resolveBrandColors(darkSource);
+
+  return { light, dark };
+}
+```
+
+**Derivation rules for `deriveDarkComplement()`:**
+
+| Color Field | Light → Dark Derivation | Dark → Light Derivation |
+|-------------|------------------------|------------------------|
+| `background` | Invert luminance: `#ffffff` → `#0a0a0b`, `#f8fafc` → `#0f1117` | Invert luminance: `#0f172a` → `#f0f4fa` |
+| `foreground` | Invert to contrast: `#0f172a` → `#f0f4fa` | Invert: `#f8fafc` → `#0f172a` |
+| `primary` | Preserve hue, adjust L* for dark bg visibility (min contrast 4.5:1) | Preserve hue, adjust L* for light bg |
+| `secondary` | Preserve hue, adjust L* for dark bg | Preserve hue, adjust L* for light bg |
+| `accent` | Preserve hue, increase saturation slightly for dark bg pop | Preserve hue, reduce saturation slightly |
+| `card` | Lighten dark background by 4-8% → e.g., `#161822` | Darken light background by 2-4% → e.g., `#f1f5f9` |
+| `muted` | Dark bg + 10-15% lighter → e.g., `#1e2030` | Light bg + 5-8% darker → e.g., `#e2e8f0` |
+| `border` | Foreground at 12% opacity → `rgba(240,244,250,0.12)` | Foreground at 15% opacity → `rgba(15,23,42,0.15)` |
+
+The existing `resolveBrandColors()` already has full `isDarkBg` branching logic — `resolveDualPalettes()` leverages this by calling it with two differently-surfaced source palettes.
+
+#### 12.7.2 CSS Variable Dark Mode Injection
+
+A new function generates the CSS override string:
+
+```typescript
+// In brand-colors.ts
+function generateDarkModeCSSOverrides(darkPalette: BrandColorPalette): string {
+  // Convert each dark palette field to HSL for CSS var format
+  // (matches the format used by generateBrandCSSVars())
+  return `
+    @media (prefers-color-scheme: dark) {
+      .studio-renderer {
+        --color-background: ${toHSL(darkPalette.background)};
+        --color-foreground: ${toHSL(darkPalette.foreground)};
+        --color-card: ${toHSL(darkPalette.card)};
+        --color-card-foreground: ${toHSL(darkPalette.cardForeground)};
+        --color-popover: ${toHSL(darkPalette.popover)};
+        --color-popover-foreground: ${toHSL(darkPalette.popoverForeground)};
+        --color-primary: ${toHSL(darkPalette.primary)};
+        --color-primary-foreground: ${toHSL(darkPalette.primaryForeground)};
+        --color-secondary: ${toHSL(darkPalette.secondary)};
+        --color-secondary-foreground: ${toHSL(darkPalette.secondaryForeground)};
+        --color-muted: ${toHSL(darkPalette.muted)};
+        --color-muted-foreground: ${toHSL(darkPalette.mutedForeground)};
+        --color-accent: ${toHSL(darkPalette.accent)};
+        --color-accent-foreground: ${toHSL(darkPalette.accentForeground)};
+        --color-destructive: ${toHSL(darkPalette.destructive)};
+        --color-border: ${toHSL(darkPalette.border)};
+        --color-input: ${toHSL(darkPalette.input)};
+        --color-ring: ${toHSL(darkPalette.ring)};
+        /* All 44 CSS vars overridden with dark palette values */
+      }
+    }
+  `;
+}
+```
+
+**Where it's injected:** StudioRenderer outputs this as a `<style>` tag inside its `.studio-renderer` wrapper div. The tag lives alongside the existing inline `style` attribute that sets light-mode CSS vars.
+
+**Scoping guarantee:** The selector `.studio-renderer` ensures these overrides ONLY affect published site content. The dashboard, which lives outside `.studio-renderer`, is completely unaffected.
+
+#### 12.7.3 Site Color Scheme Setting
+
+A new field in the site's settings controls color scheme behavior:
+
+```typescript
+// In siteSettings (Record<string, unknown>)
+interface ColorSchemeSettings {
+  colorScheme: "light" | "dark" | "auto";
+  // "auto"  — DEFAULT for new sites. Injects both light (default) + dark (media query) CSS vars.
+  //           Browser decides based on visitor's OS preference.
+  // "light" — DEFAULT for existing sites (backward compat). Forces light class, single palette.
+  // "dark"  — Forces dark palette. No media query, dark CSS vars always active.
+}
+```
+
+**Default behavior:**
+- **New sites** (created after this feature ships): `"auto"` — follows the visitor's browser/system preference. Every new site built on DRAMAC automatically respects dark/light mode out of the box.
+- **Existing sites** (no `colorScheme` in settings): `"light"` — exact current behavior. Zero regression.
+- Site owners can change this at any time in dashboard site settings.
+
+**Where it's read:** `siteSettings?.colorScheme` is accessed in:
+1. `StudioRenderer` — to decide whether to inject dual CSS vars and which class to apply
+2. `theme-provider.tsx` — to decide whether to force `light` class on `<html>`
+3. `app/site/[domain]/layout.tsx` — to set `colorScheme` CSS property on the wrapper
+
+#### 12.7.4 ThemeProvider & Layout Changes
+
+**`components/providers/theme-provider.tsx`:**
+
+Currently forces `light` class on all `/site/` routes. Change to honor site color scheme:
+
+```typescript
+// Current behavior (forced light):
+if (isSiteRoute) {
+  document.documentElement.classList.add("light");
+}
+
+// New behavior (honor site setting):
+if (isSiteRoute) {
+  const scheme = siteColorScheme; // passed via context or prop
+  if (scheme === "auto") {
+    // Do NOT force a class — let CSS media queries handle it
+    document.documentElement.classList.remove("light", "dark");
+  } else if (scheme === "dark") {
+    document.documentElement.classList.replace("light", "dark");
+  } else {
+    // Default: "light" — exact current behavior
+    document.documentElement.classList.add("light");
+  }
+}
+```
+
+**`app/site/[domain]/layout.tsx`:**
+
+Currently has `colorScheme: "light"` on the wrapper div. Change to:
+
+```typescript
+// Migration-safe default:
+// - Existing sites (no colorScheme in settings) → "light" (zero regression)
+// - New sites (created after this feature) → "auto" is set during site creation
+const colorScheme = site?.settings?.colorScheme ?? "light";
+// When "auto": set colorScheme to "light dark" (CSS spec for auto-switching)
+// When "light" or "dark": set the specific value
+const cssColorScheme = colorScheme === "auto" ? "light dark" : colorScheme;
+
+<div style={{ colorScheme: cssColorScheme }}>
+  {children}
+</div>
+```
+
+> **Implementation note:** The site creation flow (`createSite()`) MUST set `siteSettings.colorScheme = "auto"` for all new sites. Existing sites without this field naturally fall back to `"light"` via the `??` operator. This gives every new site automatic dark/light switching by default while preserving existing site behavior.
+
+**`StudioRenderer` output:**
+
+```tsx
+// Current:
+<div className="studio-renderer light" style={brandCSSVars}>
+
+// New (depends on colorScheme):
+const schemeClass = colorScheme === "dark" ? "dark" : colorScheme === "auto" ? "" : "light";
+<div className={`studio-renderer ${schemeClass}`} style={lightBrandCSSVars}>
+  {colorScheme === "auto" && (
+    <style dangerouslySetInnerHTML={{ __html: darkModeCSSOverrides }} />
+  )}
+  {colorScheme === "dark" && (
+    <style dangerouslySetInnerHTML={{ __html: darkOnlyCSSOverrides }} />
+  )}
+  {/* ... page content ... */}
+</div>
+```
+
+#### 12.7.5 Layout Component Dark Mode Render Pattern
+
+**ALL layout component renders (Section, Card, Container, Columns, etc.) MUST follow this pattern:**
+
+```typescript
+// The dual-default pattern: Tailwind semantic classes for defaults, inline style for explicit colors
+
+function SectionRender(props: SectionProps, children: ReactNode, brandColors?: BrandColorPalette) {
+  const hasExplicitBg = props.backgroundColor && props.backgroundColor !== "";
+  const hasExplicitText = props.textColor && props.textColor !== "";
+
+  // Tailwind semantic classes resolve through CSS vars → auto-adapt on dark mode
+  const bgClass = hasExplicitBg ? "" : "bg-background";
+  const textClass = hasExplicitText ? "" : "text-foreground";
+
+  // Inline style only applied when user/AI sets an explicit color
+  const inlineStyle: React.CSSProperties = {};
+  if (hasExplicitBg) inlineStyle.backgroundColor = props.backgroundColor;
+  if (hasExplicitText) inlineStyle.color = props.textColor;
+
+  return (
+    <section
+      className={cn(bgClass, textClass, /* ...other classes */)}
+      style={Object.keys(inlineStyle).length > 0 ? inlineStyle : undefined}
+    >
+      {children}
+    </section>
+  );
+}
+```
+
+**Why this works:**
+
+- **AI-generated sites with explicit colors:** The AI sets `backgroundColor: "#1a1a2e"` on a section → inline style overrides → color stays fixed regardless of light/dark mode. This is correct because the AI already picked the right color for that section's visual intent (per Section 12.1-12.6 rules).
+- **Default/empty color sections:** No inline style → Tailwind `bg-background` class resolves to `hsl(var(--color-background))` → on dark mode, the CSS var changes to the dark palette value → section background seamlessly switches.
+- **Card components:** Same pattern. Cards without explicit `cardBackgroundColor` get `bg-card` class → adapts. Cards with AI-set custom color stay fixed.
+
+**This pattern integrates naturally with the Section 12.1-12.6 `isDarkBackground()` detection:**
+
+When a section has an explicit dark background (AI-set), the dark background detection still fires and adjusts child defaults (glow shadows, lighter card surfaces, etc.) — exactly as before. The system dark mode CSS var swap only affects components using Tailwind semantic class defaults.
+
+> **⚠️ CRITICAL AMENDMENT (Section 12.7.16):** Because the AI ALWAYS sets explicit `backgroundColor` on every section (see `prompts.ts` line 273), the dual-default pattern shown above would result in ZERO sections using the Tailwind `bg-background` fallback — meaning dark mode wouldn't affect any content sections. **Section 12.7.16 solves this** with `remapNeutralColor()`: when `colorScheme !== "light"`, neutral/generic hex colors (near-white backgrounds, near-black text) are automatically replaced with CSS variable references at render time. The updated render pattern is shown in Section 12.7.16. Branded/accent colors (saturation > 0.15) stay as inline hex.
+
+#### 12.7.6 Ecommerce Component Readiness
+
+The ecommerce module components are NOT part of the layout overhaul but benefit from dark mode automatically:
+
+| Component Category | Tailwind Semantic Classes | Dark Mode Behavior |
+|---|---|---|
+| Cart/Checkout pages | `bg-card`, `text-foreground`, `bg-muted`, `border-border` | **Auto-adapts** via CSS vars |
+| Product cards | `bg-card`, `text-card-foreground`, `border` | **Auto-adapts** |
+| Navigation/breadcrumbs | `text-muted-foreground`, `bg-background` | **Auto-adapts** |
+| Price/badge components | `bg-primary`, `text-primary-foreground` | **Auto-adapts** |
+| Overlay/image treatments | Hardcoded rgba for intentional opacity | **Stays fixed** (correct behavior) |
+
+**Result:** ~72% of ecommerce components auto-adapt to dark mode with zero changes. The remaining ~28% use intentional hardcoded colors for specific visual treatments (image overlays, promotional badges) — these correctly stay fixed.
+
+#### 12.7.7 Premium Component Dark Mode — FULLY IN SCOPE
+
+The 45 premium components in `premium-components.tsx` (Navbar, Hero, Footer, CTA blocks, feature grids, etc.) currently use inline hex styles injected by `injectBrandColors()` via `BRAND_COLOR_MAP` (146 field mappings). **These MUST adapt to dark mode** — a site where the navbar and footer stay light while the page content goes dark looks fundamentally broken.
+
+**The Problem:** Inline `style` attributes have the highest CSS specificity. A `@media (prefers-color-scheme: dark)` rule in a `<style>` tag CANNOT override them. This means the current hex injection approach blocks dark mode adaptation.
+
+**The Solution — CSS Variable Injection Mode:**
+
+`injectBrandColors()` gains a **dual-mode injection strategy** based on the site's `colorScheme`:
+
+```typescript
+// Current: always injects hex values
+// style={{ backgroundColor: "#1a1a2e", color: "#ffffff" }}
+
+// NEW: when colorScheme !== "light", inject CSS variable references instead
+// style={{ backgroundColor: "var(--brand-navbar-bg)", color: "var(--brand-navbar-text)" }}
+```
+
+**How it works:**
+
+1. **`colorScheme === "light"` (existing sites):** `injectBrandColors()` works EXACTLY as today — injects hex values as inline styles. Zero change. Zero regression.
+
+2. **`colorScheme === "auto"` or `"dark"`:** `injectBrandColors()` injects CSS variable references (`var(--brand-navbar-bg)`, `var(--brand-hero-text)`, etc.) instead of hex values. These CSS variables are defined in TWO places:
+   - **Light palette vars** — injected as inline `style` on `.studio-renderer` (current `generateBrandCSSVars()` output, expanded with `--brand-*` prefixed vars for every BRAND_COLOR_MAP field)
+   - **Dark palette vars** — injected in the `<style>` tag inside `@media (prefers-color-scheme: dark) { .studio-renderer { ... } }` (same expanded var set, dark palette values)
+
+3. Result: Premium components render with CSS var references → browser resolves to light or dark palette based on system preference → seamless switching.
+
+**Updated `injectBrandColors()` signature:**
+
+```typescript
+function injectBrandColors(
+  componentProps: Record<string, unknown>,
+  brandColors: BrandColorPalette,
+  colorScheme: "light" | "dark" | "auto" = "light"  // NEW parameter
+): Record<string, unknown> {
+  const useVarMode = colorScheme !== "light";
+
+  // For each field in BRAND_COLOR_MAP:
+  // If useVarMode: inject var(--brand-{fieldKey}) instead of hex
+  // If light mode: inject hex as today
+  return Object.entries(BRAND_COLOR_MAP).reduce((acc, [propField, brandField]) => {
+    if (acc[propField] === undefined || acc[propField] === "") {
+      acc[propField] = useVarMode
+        ? `var(--brand-${propField})`
+        : brandColors[brandField as keyof BrandColorPalette] || "";
+    }
+    return acc;
+  }, { ...componentProps });
+}
+```
+
+**Updated `generateBrandCSSVars()` — expanded output:**
+
+```typescript
+function generateBrandCSSVars(palette: BrandColorPalette): Record<string, string> {
+  // Existing 44 semantic CSS vars (--color-background, --color-foreground, etc.)
+  const semanticVars = { /* ...existing... */ };
+
+  // NEW: Brand field CSS vars for every BRAND_COLOR_MAP entry
+  // These map to the same palette colors but with --brand-* prefix
+  const brandFieldVars = Object.entries(BRAND_COLOR_MAP).reduce((acc, [propField, brandField]) => {
+    acc[`--brand-${propField}`] = palette[brandField as keyof BrandColorPalette] || "";
+    return acc;
+  }, {} as Record<string, string>);
+
+  return { ...semanticVars, ...brandFieldVars };
+}
+```
+
+**Why this approach wins:**
+
+- **Zero component modifications** — None of the 45 premium render functions need to change. They still receive props like `navbarBg`, `heroText` — the VALUE of those props changes from hex to `var(--brand-*)` but the render code doesn't care.
+- **Zero regression for `"light"` sites** — Existing behavior is byte-for-byte identical.
+- **Server-side rendered** — CSS vars are injected in the initial HTML. No layout shift, no FOUC.
+- **Incremental rollout** — If any premium component misbehaves with CSS var values, it can be individually excluded from var-mode injection via a `VAR_MODE_EXCLUDE` set.
+
+**Fallback safety:**
+
+```css
+/* Each --brand-* var includes a fallback to the light palette hex value */
+.studio-renderer {
+  --brand-navbarBg: #1a1a2e; /* light palette value as initial/fallback */
+}
+
+@media (prefers-color-scheme: dark) {
+  .studio-renderer {
+    --brand-navbarBg: #0a0a14; /* dark palette derived value */
+  }
+}
+```
+
+If a browser somehow fails to resolve the var, the inline `style` has `var(--brand-navbarBg)` which falls back to the `:root` / `.studio-renderer` definition (light value). Safe in all scenarios.
+
+#### 12.7.8 AI Post-Processing Pipeline
+
+After the AI generates a site design, the rendering pipeline handles dark mode automatically:
+
+```
+AI generates site (single palette, explicit colors per section)
+    ↓
+resolveBrandColors() produces light BrandColorPalette (existing step)
+    ↓
+resolveDualPalettes() also produces dark BrandColorPalette (NEW step)
+    ↓
+generateBrandCSSVars() produces light CSS vars as inline styles (existing)
+    ↓
+generateDarkModeCSSOverrides() produces dark CSS vars as <style> tag (NEW)
+    ↓
+★ remapNeutralColor() replaces neutral hex with CSS var refs (NEW — Section 12.7.16)
+    ↓
+StudioRenderer injects both into .studio-renderer output (UPDATED)
+    ↓
+Browser applies light or dark CSS vars based on prefers-color-scheme
+    ↓
+Tailwind semantic classes + remapped CSS var refs auto-resolve to correct palette
+```
+
+**Key point:** The AI does NOT need to generate two designs. It generates one, and the system derives the dark complement algorithmically. The `remapNeutralColor()` step (Section 12.7.16) ensures that neutral AI-set colors (near-white/near-black, low saturation) become CSS variable references that adapt with dark mode — while intentionally branded/accent colors (high saturation) stay as fixed inline hex. This means **every section on the page adapts**, not just components using Tailwind class defaults.
+
+#### 12.7.9 Breakage Prevention Guarantees
+
+| Concern | Risk | Mitigation |
+|---------|------|------------|
+| Dashboard dark mode breaks | **ZERO** | ThemeProvider already isolates `/site/` routes. Dashboard has independent dark mode. `.studio-renderer` scope prevents CSS leakage. |
+| Existing published sites change | **ZERO** | Existing sites have no `colorScheme` in settings → defaults to `"light"` via `?? "light"`. No dual CSS vars injected. Light class still forced. Only NEW sites get `"auto"` default (set at creation time). |
+| Existing components break | **ZERO** | No existing component code is modified in Phases 1-4. Premium components updated in Phase 5 with CSS var injection mode — inline hex fallback preserved for `colorScheme: "light"` sites. |
+| Color math functions break | **ZERO** | `resolveBrandColors()`, `injectBrandColors()`, `isDarkBackground()` unchanged. `resolveDualPalettes()` is additive. |
+| CSS specificity conflicts | **ZERO** | `@media (prefers-color-scheme: dark)` inside `.studio-renderer` only overrides CSS vars. Inline `style` attributes (highest specificity) are unaffected. |
+| Performance impact | **NEGLIGIBLE** | One additional `resolveBrandColors()` call (server-side). One `<style>` tag (~2KB). No runtime JS. |
+
+#### 12.7.10 Smooth Color Transitions
+
+When a visitor's OS switches between dark and light mode (e.g., macOS auto-switch at sunset), colors should animate smoothly rather than snapping instantly. This is an industry best practice (Google web.dev recommends it explicitly).
+
+**CSS injection (added to every site with `colorScheme: "auto"`):**
+
+```css
+/* Injected once in the <style> tag alongside dark mode CSS var overrides */
+.studio-renderer,
+.studio-renderer *,
+.studio-renderer *::before,
+.studio-renderer *::after {
+  transition: color 0.3s ease,
+              background-color 0.3s ease,
+              border-color 0.3s ease,
+              box-shadow 0.3s ease,
+              fill 0.3s ease,
+              stroke 0.3s ease;
+}
+
+/* Disable transitions on first paint to prevent FOUC flash animation */
+.studio-renderer.no-transitions,
+.studio-renderer.no-transitions *,
+.studio-renderer.no-transitions *::before,
+.studio-renderer.no-transitions *::after {
+  transition: none !important;
+}
+```
+
+**FOUC prevention strategy:**
+
+```typescript
+// In StudioRenderer output (when colorScheme === "auto"):
+<div className="studio-renderer no-transitions" ref={rendererRef}>
+  {/* content */}
+</div>
+
+// Client-side: remove no-transitions class after first paint
+useEffect(() => {
+  requestAnimationFrame(() => {
+    rendererRef.current?.classList.remove("no-transitions");
+  });
+}, []);
+```
+
+This ensures:
+- First paint: instant (no transition animation from wrong→right color)
+- Subsequent OS-level switches: smooth 0.3s animation
+- Performance: CSS transitions are GPU-accelerated, zero JS involvement
+
+**Elements excluded from transitions:** `<img>`, `<video>`, `<canvas>`, `<iframe>` — these don't have color properties to transition.
+
+#### 12.7.11 Browser Chrome Adaptation (Meta Theme-Color)
+
+On mobile browsers (Chrome, Safari, Samsung Internet, Firefox), the browser chrome (URL bar, status bar) can match the site's color scheme via `<meta name="theme-color">`. Without this, a dark-mode site has a jarring white/blue browser bar.
+
+**Implementation (injected into `<head>` of `app/site/[domain]/layout.tsx`):**
+
+```tsx
+// When colorScheme === "auto":
+<meta name="theme-color" media="(prefers-color-scheme: light)" content={lightPalette.background} />
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content={darkPalette.background} />
+
+// When colorScheme === "dark":
+<meta name="theme-color" content={darkPalette.background} />
+
+// When colorScheme === "light":
+<meta name="theme-color" content={lightPalette.background} />
+```
+
+**Also add `color-scheme` CSS property on `<html>` element:**
+
+```tsx
+// In app/site/[domain]/layout.tsx:
+<html style={{ colorScheme: cssColorScheme }}>
+```
+
+This tells the browser to adapt native UI elements (scrollbars, form controls, selection highlight) to the active color scheme. Without this, default scrollbars and form inputs look wrong in dark mode.
+
+#### 12.7.12 Visitor Manual Override Toggle
+
+Industry standard: visitors should be able to override the system color scheme preference. A site might follow the visitor's OS preference by default (`"auto"`), but the visitor may want to force light or dark regardless of their OS setting.
+
+**Toggle component specification:**
+
+```typescript
+// New component: DarkModeToggle
+// Available as an optional block that site owners can place in their Navbar or Footer
+interface DarkModeToggleProps {
+  position?: "navbar" | "footer" | "floating";  // Where the toggle appears
+  style?: "icon" | "switch" | "dropdown";         // Visual style
+  showLabel?: boolean;                              // "Light" / "Dark" / "Auto" text
+  floatingPosition?: "bottom-right" | "bottom-left"; // For floating style
+}
+```
+
+**How it works:**
+
+1. Toggle sets a `data-theme="light"` or `data-theme="dark"` attribute on `.studio-renderer`
+2. Preference persists to `localStorage` under key `dramac-color-scheme-{siteId}`
+3. On page load, check localStorage FIRST → if set, apply before render (prevents FOUC)
+4. CSS selector hierarchy:
+   ```css
+   /* System preference (lowest priority) */
+   @media (prefers-color-scheme: dark) {
+     .studio-renderer { /* dark vars */ }
+   }
+
+   /* Manual override via data-theme (highest priority) */
+   .studio-renderer[data-theme="dark"] { /* dark vars */ }
+   .studio-renderer[data-theme="light"] { /* light vars (reset to defaults) */ }
+   ```
+5. A "Reset to system" option clears localStorage and removes `data-theme`, returning to OS detection
+
+**Loading strategy (prevent FOUC):**
+
+```html
+<!-- Inline script in <head>, runs before body render -->
+<script>
+  (function() {
+    var pref = localStorage.getItem('dramac-color-scheme-SITE_ID');
+    if (pref === 'dark' || pref === 'light') {
+      document.documentElement.setAttribute('data-theme', pref);
+    }
+  })();
+</script>
+```
+
+**Site owner control:** The toggle is opt-in — site owners drag the DarkModeToggle block into their navbar/footer if they want visitors to have manual control. Sites without the toggle still respect the OS preference automatically.
+
+#### 12.7.13 Dark Logo Variant
+
+Sites need different logos for light and dark modes. A dark logo on a dark background is invisible. This is standard practice on every major platform (Framer, Webflow, Squarespace all support it).
+
+**Site settings addition:**
+
+```typescript
+interface SiteSettings {
+  // Existing:
+  logo?: string;               // URL to main (light mode) logo
+  colorScheme?: "light" | "dark" | "auto";
+
+  // NEW:
+  darkModeLogo?: string;       // URL to dark mode variant of the logo
+}
+```
+
+**Rendering logic:**
+
+```tsx
+// In Navbar/Header premium components:
+const effectiveLogo = (() => {
+  if (colorScheme === "light") return site.settings.logo;
+  if (colorScheme === "dark") return site.settings.darkModeLogo || site.settings.logo;
+  // "auto" — use CSS to show/hide correct logo
+  return null; // handled by <picture> below
+})();
+
+// For "auto" mode — pure CSS solution (no JS, no FOUC):
+{colorScheme === "auto" && (
+  <picture>
+    <source srcSet={site.settings.darkModeLogo || site.settings.logo} media="(prefers-color-scheme: dark)" />
+    <img src={site.settings.logo} alt={site.name} />
+  </picture>
+)}
+```
+
+**Dashboard UI:** The site settings page adds a "Dark Mode Logo" upload field right below the existing logo upload. Shown only when `colorScheme` is `"auto"` or `"dark"`. If not uploaded, the main logo is used for both modes (with CSS filter adjustment — see 12.7.14).
+
+**SVG logos:** If the logo is an SVG that uses `currentColor`, it automatically adapts to the text color in dark mode with zero configuration. The dark logo upload is only needed for raster logos (PNG, JPG, WebP) or SVGs with hardcoded colors.
+
+#### 12.7.14 Image Adaptation in Dark Mode
+
+Bright photographs and images can cause eye strain and look jarring on dark backgrounds. Industry best practice (per Google web.dev) is to apply subtle dimming in dark mode.
+
+**CSS filter for photographic images:**
+
+```css
+/* Applied only in dark mode, only to images inside content areas */
+@media (prefers-color-scheme: dark) {
+  .studio-renderer img:not([data-no-dim]):not(.logo-image) {
+    filter: brightness(0.85) saturate(0.9);
+    transition: filter 0.3s ease;
+  }
+
+  /* On hover, show full brightness (lets visitors see original) */
+  .studio-renderer img:not([data-no-dim]):not(.logo-image):hover {
+    filter: brightness(1) saturate(1);
+  }
+}
+
+/* Manual override data attribute — content creators can opt specific images out */
+/* Usage: <img data-no-dim src="..." /> */
+```
+
+**What this affects:**
+- Product images, blog post images, hero background images, gallery images
+- Dims brightness to 85% and reduces saturation by 10% — subtle but effective
+
+**What this does NOT affect:**
+- Logo images (excluded via `.logo-image` class)
+- SVG icons/illustrations (these already adapt via `currentColor` or CSS vars)
+- Images with `data-no-dim` attribute (opt-out for hero images, etc.)
+- Background images set via CSS (handled separately by the dark CSS var swap)
+
+**Art direction for hero/banner images (advanced):**
+
+Site owners can optionally upload a dark-mode variant of key images (hero banners, etc.) via a "Dark Mode Image" field on image blocks. When set:
+
+```tsx
+// Pure CSS solution — no JS, no FOUC:
+<picture>
+  <source srcSet={darkImageUrl} media="(prefers-color-scheme: dark)" />
+  <img src={lightImageUrl} alt={altText} />
+</picture>
+```
+
+#### 12.7.15 Studio Dark Mode Preview Toggle
+
+Site owners need to preview how their site looks in dark mode while editing in the Studio, WITHOUT changing their own OS preference. Every major website builder (Framer, Webflow, Wix) provides this.
+
+**Implementation:**
+
+```typescript
+// New button in Studio editor toolbar (alongside device preview, zoom controls)
+interface StudioDarkModePreview {
+  modes: ["light", "dark", "auto"];        // Three-state toggle
+  default: "auto";                           // Matches the site's colorScheme setting
+  scope: "canvas-iframe";                    // Only affects the preview iframe
+}
+```
+
+**How it works:**
+
+1. Studio editor renders the site preview in an `<iframe>` (already the case in the current architecture)
+2. The dark mode preview toggle sends a `postMessage` to the iframe to set `data-theme` on the `.studio-renderer` element
+3. This is PURELY a preview mechanism — it does NOT change the site's `colorScheme` setting
+4. Toggle states:
+   - **Auto** (default): preview respects the editor's OS preference (same as the visitor would see)
+   - **Light**: forces `data-theme="light"` on the iframe's `.studio-renderer`
+   - **Dark**: forces `data-theme="dark"` on the iframe's `.studio-renderer`
+
+**Visual indicator:** When preview is forced to light or dark (not auto), show a small badge/indicator on the toggle so the site owner knows they're viewing a forced mode, not the auto behavior.
+
+**Why this matters:** A site owner designing in a bright office (OS set to light mode) can't see how their site looks in dark mode without this toggle. They need to verify that their brand colors, images, and content look good in both modes before publishing.
+
+#### 12.7.16 Neutral Color Remapping — CRITICAL
+
+> **⚠️ WITHOUT THIS, DARK MODE BARELY WORKS FOR LAYOUT SECTIONS.**
+
+**The Problem:** The AI Designer is explicitly instructed to set `backgroundColor` on EVERY section (see `prompts.ts` line 273: *"You MUST set color props on EVERY section component"*). This means every section gets an inline `style={{ backgroundColor: "#ffffff" }}` or similar hex value. **Inline styles have the highest CSS specificity** — they CANNOT be overridden by `@media (prefers-color-scheme: dark)` CSS variable rules.
+
+Without mitigation, on an `"auto"` site:
+- ✅ Navbar/Footer switch to dark (premium component CSS var injection, Section 12.7.7)
+- ✅ Ecommerce pages switch to dark (~72% use Tailwind semantic classes)
+- ❌ ALL content sections stay light — their inline `backgroundColor: "#ffffff"` is immutable
+- Result: **A half-dark site** where only the header/footer adapt. This looks WORSE than no dark mode at all.
+
+**The Solution — Luminance-Based CSS Variable Substitution:**
+
+When `colorScheme !== "light"`, the rendering pipeline detects **neutral/generic colors** (near-white backgrounds, near-black text) and replaces them with CSS variable references instead of hex values. Intentionally branded/accent colors stay as hex.
+
+```typescript
+/**
+ * Replaces neutral (non-branded) hex colors with CSS variable references
+ * so they can be swapped by dark mode media queries.
+ *
+ * Called in Section/Card/Container renders ONLY when colorScheme !== "light".
+ */
+function remapNeutralColor(
+  hexColor: string,
+  role: "background" | "text" | "border" | "cardBg"
+): string {
+  const lum = getLuminance(hexColor);
+  const sat = getSaturation(hexColor);
+
+  // High-saturation colors are intentionally branded — never remap
+  if (sat > 0.15) return hexColor;
+
+  if (role === "background") {
+    if (lum > 0.95) return "var(--color-background)";    // #ffffff, #fefefe → page background
+    if (lum > 0.88) return "var(--color-muted)";          // #f8fafc, #f1f5f9 → alternating section
+    if (lum > 0.78) return "var(--color-accent)";         // #e2e8f0, #e5e7eb → accent surface
+    if (lum < 0.08) return "var(--color-background)";     // #0a0a0a, #09090b → already dark, remap to adaptive dark
+    if (lum < 0.15) return "var(--color-card)";           // #111827, #1e1e2e → dark surface
+    return hexColor; // Mid-range grays or intentionally colored — keep as hex
+  }
+
+  if (role === "text") {
+    if (lum < 0.05) return "var(--color-foreground)";     // #000000, #0a0a0a → primary text
+    if (lum < 0.20) return "var(--color-foreground)";     // #1f2937, #171717 → dark text
+    if (lum > 0.95) return "var(--color-background)";     // #ffffff → white text on dark bg → adaptive
+    if (lum > 0.85) return "var(--color-muted-foreground)"; // #e5e7eb → light text → adaptive
+    return hexColor;
+  }
+
+  if (role === "cardBg") {
+    if (lum > 0.95) return "var(--color-card)";           // White cards → adaptive card surface
+    if (lum > 0.88) return "var(--color-card)";           // Off-white cards → adaptive
+    if (lum < 0.12) return "var(--color-card)";           // Dark cards → adaptive
+    return hexColor;
+  }
+
+  if (role === "border") {
+    if (lum > 0.80 && sat < 0.10) return "var(--color-border)"; // Light gray borders → adaptive
+    if (lum < 0.20 && sat < 0.10) return "var(--color-border)"; // Dark gray borders → adaptive
+    return hexColor;
+  }
+
+  return hexColor;
+}
+```
+
+**How `getLuminance()` and `getSaturation()` work:**
+- `getLuminance(hex)` — Returns relative luminance (0=black, 1=white) per WCAG formula. Already exists in the codebase as part of `isDarkBackground()`.
+- `getSaturation(hex)` — Returns HSL saturation (0=gray, 1=vivid). New utility, trivial to implement. This is the KEY differentiator: a gray `#e2e8f0` (sat ≈ 0.05) is neutral and should be remapped, but a pastel blue `#dbeafe` (sat ≈ 0.65) is intentionally branded and stays as hex.
+
+**Where it's applied — Updated render pattern (amends Section 12.7.5):**
+
+```typescript
+function SectionRender(props, children, brandColors, colorScheme) {
+  const hasExplicitBg = props.backgroundColor && props.backgroundColor !== "";
+  const hasExplicitText = props.textColor && props.textColor !== "";
+
+  // When colorScheme is "auto" or "dark", remap neutral colors to CSS vars
+  const shouldRemap = colorScheme !== "light";
+
+  const bgClass = hasExplicitBg ? "" : "bg-background";
+  const textClass = hasExplicitText ? "" : "text-foreground";
+
+  const inlineStyle: React.CSSProperties = {};
+  if (hasExplicitBg) {
+    inlineStyle.backgroundColor = shouldRemap
+      ? remapNeutralColor(props.backgroundColor, "background")
+      : props.backgroundColor;
+  }
+  if (hasExplicitText) {
+    inlineStyle.color = shouldRemap
+      ? remapNeutralColor(props.textColor, "text")
+      : props.textColor;
+  }
+
+  return (
+    <section className={cn(bgClass, textClass)} style={inlineStyle}>
+      {children}
+    </section>
+  );
+}
+```
+
+**The result — full dark mode coverage:**
+
+| Element | Without Remapping (BROKEN) | With Remapping (CORRECT) |
+|---------|---------------------------|-------------------------|
+| Section `bg: #ffffff` | Stays white in dark mode ❌ | Becomes `var(--color-background)` → dark surface ✅ |
+| Section `bg: #f8fafc` | Stays off-white in dark mode ❌ | Becomes `var(--color-muted)` → dark muted surface ✅ |
+| Section `bg: #2563eb` (brand blue) | Stays blue ✅ | Stays blue ✅ (saturation > 0.15, not remapped) |
+| Card `bg: #ffffff` | Stays white ❌ | Becomes `var(--color-card)` → dark card surface ✅ |
+| Text `color: #000000` | Stays black on dark bg ❌ | Becomes `var(--color-foreground)` → light text ✅ |
+| Text `color: #2563eb` (brand blue) | Stays blue ✅ | Stays blue ✅ (branded, not remapped) |
+
+**Why saturation is the key signal:**
+- `#ffffff` (white) → sat: 0, lum: 1.0 → NEUTRAL → remap
+- `#f8fafc` (slate-50) → sat: 0.04, lum: 0.97 → NEUTRAL → remap
+- `#0f172a` (slate-900) → sat: 0.12, lum: 0.08 → NEUTRAL → remap
+- `#2563eb` (blue-600) → sat: 0.84, lum: 0.25 → BRANDED → keep hex
+- `#059669` (emerald-600) → sat: 0.93, lum: 0.31 → BRANDED → keep hex
+- `#dc2626` (red-600) → sat: 0.82, lum: 0.22 → BRANDED → keep hex
+- Gold `#d4af37` → sat: 0.60, lum: 0.46 → BRANDED → keep hex
+
+**Performance:** Remapping runs once per component per render (server-side). Two function calls per color prop. Negligible cost (< 0.1ms per component).
+
+**Backward compatibility:** Only active when `colorScheme !== "light"`. Existing `"light"` sites (all current sites) use raw hex as today. Zero regression.
+
+**Edge case: near-white branded sections.** Some brands use very pale tints (e.g., pastel pink `#fff1f2`, sat ≈ 0.10) as intentional section backgrounds. The saturation threshold (0.15) correctly catches most of these, but very pale tints with sat < 0.15 might get remapped. **Safeguard:** Site owners can add `data-keep-color` attribute to any section to opt out of remapping. The render function checks for this attribute before remapping.
+
+#### 12.7.17 Print Stylesheet for Dark Mode
+
+When a visitor prints a dark-mode page, the print output should revert to light colors to save ink and ensure readability. The current `@media print` rules in `globals.css` only reset the `.studio-renderer` wrapper background — individual sections with dark inline backgrounds still print dark.
+
+**Updated print rules (append to existing `@media print` block in `globals.css`):**
+
+```css
+@media print {
+  /* Existing: editor chrome hiding, nav/footer hiding */
+
+  /* Force all section and content backgrounds to white for printing */
+  .studio-renderer,
+  .studio-renderer section,
+  .studio-renderer [data-block],
+  .studio-renderer .card,
+  .studio-renderer [class*="bg-"] {
+    background-color: #fff !important;
+    background-image: none !important;
+    color: #000 !important;
+    box-shadow: none !important;
+  }
+
+  /* Preserve intentional images but remove decorative overlays */
+  .studio-renderer img {
+    filter: none !important;  /* Remove dark-mode dimming */
+  }
+
+  /* Ensure all text is black for maximum print readability */
+  .studio-renderer h1, .studio-renderer h2, .studio-renderer h3,
+  .studio-renderer h4, .studio-renderer h5, .studio-renderer h6,
+  .studio-renderer p, .studio-renderer span, .studio-renderer a,
+  .studio-renderer li, .studio-renderer td, .studio-renderer th {
+    color: #000 !important;
+  }
+
+  /* Links show URL for print */
+  .studio-renderer a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #666 !important;
+  }
+}
+```
+
+**Why this matters:**
+- E-commerce order summary pages printed in dark mode waste ink/toner
+- Product pages shared via "Print to PDF" should be readable
+- Invoice pages (when added) must always print light
+
+#### 12.7.18 Dark Favicon Variant
+
+The branding system already supports `logo_url` + `logo_dark_url` for the dashboard. Published sites should support dark-mode favicon switching too, matching the browser chrome color.
+
+**Site settings addition:**
+
+```typescript
+interface SiteSettings {
+  // Existing:
+  favicon?: string;                // URL to favicon (used in light mode)
+  // NEW:
+  darkModeFavicon?: string;        // URL to dark mode favicon variant
+}
+```
+
+**Implementation in `app/site/[domain]/layout.tsx`:**
+
+```tsx
+// When colorScheme === "auto":
+<link rel="icon" href={site.settings.favicon} media="(prefers-color-scheme: light)" />
+<link rel="icon" href={site.settings.darkModeFavicon || site.settings.favicon} media="(prefers-color-scheme: dark)" />
+
+// When colorScheme === "dark":
+<link rel="icon" href={site.settings.darkModeFavicon || site.settings.favicon} />
+
+// When colorScheme === "light":
+<link rel="icon" href={site.settings.favicon} />
+```
+
+**Browser support:** Safari 14+, Chrome 93+, Firefox 106+ support `media` attribute on `<link rel="icon">`. Older browsers ignore the `media` attribute and use the first `<link rel="icon">` they find (which is the light favicon). Graceful degradation.
+
+**Dashboard UI:** "Dark Mode Favicon" upload field alongside the existing favicon upload, shown only when `colorScheme` is `"auto"` or `"dark"`. SVG favicons with `currentColor` or CSS `@media` blocks inside the SVG can auto-adapt without a separate upload.
+
+#### 12.7.19 Shadow & Elevation Adaptation for Remapped Sections
+
+> **⚠️ WITHOUT THIS, SHADOWS DISAPPEAR ON DARK-MODE SECTIONS.**
+
+**The Problem:** The layout renders apply inline `boxShadow` with hardcoded `rgba(0,0,0,...)` colors (black shadows). These work on light backgrounds but are **invisible on dark backgrounds**. When neutral color remapping (Section 12.7.16) converts a white section to `var(--color-background)` — which resolves to a dark surface in dark mode — the black shadows vanish.
+
+Additionally, the Master Plan Phase 1 specifies that `isDarkBackground()` should adapt shadows to glows for explicitly dark sections. But `isDarkBackground()` checks the **original hex** (pre-remap). A section with `backgroundColor: "#ffffff"` still returns `isDarkBackground = false`, even when its visible background is dark via CSS variable resolution.
+
+**Specific hardcoded shadows found in renders.tsx:**
+- Image components: `"0 4px 20px rgba(0,0,0,0.15)"` (line ~2321)
+- 3D button effects: `"0 4px 0 ${color}cc, 0 6px 20px rgba(0,0,0,0.2)"` (line ~5458)
+- Hero section: `"0 25px 50px -12px rgba(0,0,0,0.25)"` (line ~6457)
+- Glassmorphism: `"0 10px 15px -3px rgba(0,0,0,0.1)"` (line ~15690)
+
+**The Solution — CSS Variable-Based Elevation System:**
+
+Define shadow/elevation CSS variables in the light and dark CSS variable blocks, then use them in inline styles instead of hardcoded rgba values.
+
+```css
+/* Light mode (default) */
+.studio-renderer {
+  --elevation-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --elevation-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+  --elevation-lg: 0 10px 15px rgba(0,0,0,0.08), 0 4px 6px rgba(0,0,0,0.05);
+  --elevation-xl: 0 20px 25px rgba(0,0,0,0.10), 0 8px 10px rgba(0,0,0,0.06);
+  --elevation-2xl: 0 25px 50px -12px rgba(0,0,0,0.25);
+  --elevation-glow-sm: 0 0 10px rgba(255,255,255,0);       /* invisible in light */
+  --elevation-glow-md: 0 0 20px rgba(255,255,255,0);       /* invisible in light */
+}
+
+/* Dark mode override */
+@media (prefers-color-scheme: dark) {
+  .studio-renderer {
+    --elevation-sm: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+    --elevation-md: 0 4px 6px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.25);
+    --elevation-lg: 0 10px 15px rgba(0,0,0,0.5), 0 4px 6px rgba(0,0,0,0.3);
+    --elevation-xl: 0 20px 25px rgba(0,0,0,0.6), 0 8px 10px rgba(0,0,0,0.35);
+    --elevation-2xl: 0 25px 50px -12px rgba(0,0,0,0.7);
+    --elevation-glow-sm: 0 0 10px rgba(255,255,255,0.06);  /* subtle glow in dark */
+    --elevation-glow-md: 0 0 20px rgba(255,255,255,0.08);  /* visible glow in dark */
+  }
+}
+```
+
+**How renders use this:**
+
+```typescript
+// BEFORE (hardcoded — invisible on dark backgrounds):
+style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}
+
+// AFTER (adaptive — works in both modes):
+style={{ boxShadow: "var(--elevation-lg)" }}
+```
+
+**The elevation vars work in BOTH scenarios:**
+1. **Explicitly dark sections** (AI chose `#0a0a0a` background) — in light mode, the dark CSS override isn't active, but the section IS dark. Solution: `isDarkBackground()` still fires and applies glow-style shadows as inline override (Phase 1 behavior). The elevation vars handle the CSS-variable-remapped dark case.
+2. **Remapped sections** (`#ffffff` → `var(--color-background)` → dark in dark mode) — the elevation CSS vars automatically switch to darker/higher-contrast shadows in the dark media query. No JS needed.
+
+**Dual strategy:** `isDarkBackground()` for explicit-dark sections (Phase 1, runtime check) + elevation CSS vars for remapped sections (Phase 5, media query). Both can coexist — `isDarkBackground()` overrides with inline style when it detects an explicit dark hex, otherwise the CSS var elevation applies.
+
+**Performance:** Zero additional JS. CSS vars resolve at paint time. No shadow recalculation during theme switch.
+
+#### 12.7.20 Scrollbar & Native Control Adaptation
+
+**The Problem:** `globals.css` line ~356 sets `color-scheme: light !important` on `.studio-renderer`. This forces ALL published site native controls (scrollbars, `<input>`, `<select>`, `<textarea>`, checkboxes, radio buttons, date pickers) into light appearance regardless of OS dark mode preference.
+
+This **directly conflicts** with the dark mode system: even after all CSS variable overrides, transitions, and neutral color remapping, the browser's native UI elements stay light — creating a jarring mismatch.
+
+**The Fix:**
+
+```css
+/* IN globals.css — REPLACE the static color-scheme */
+
+/* Default: light (existing behavior, zero regression) */
+.studio-renderer {
+  color-scheme: light;
+}
+
+/* When site opts into auto/dark, allow system preference */
+.studio-renderer[data-color-scheme="auto"] {
+  color-scheme: light dark;
+}
+.studio-renderer[data-color-scheme="dark"] {
+  color-scheme: dark;
+}
+```
+
+The StudioRenderer already outputs `data-color-scheme` based on site settings (Section 12.7.4). This CSS rule makes native controls match.
+
+**What this enables:**
+- ✅ Scrollbar thumb/track colors follow OS dark mode
+- ✅ Native `<input>`, `<select>`, `<textarea>` backgrounds adapt
+- ✅ Checkbox/radio/range controls adapt
+- ✅ Date picker popups adapt
+- ✅ Browser's autofill suggestion styling adapts
+
+**Published site scrollbar styling (supplement `.studio-scrollbar` pattern):**
+
+```css
+/* Scoped to published sites — not editor/dashboard */
+.studio-renderer {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+.studio-renderer::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.studio-renderer::-webkit-scrollbar-track {
+  background: transparent;
+}
+.studio-renderer::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+.studio-renderer::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted-foreground);
+}
+```
+
+Since `--color-border` and `--color-muted-foreground` are in the dark/light CSS variable sets, scrollbars adapt automatically.
+
+**CRM module form styling note:** The CRM module's `renders.tsx` has hardcoded `backgroundColor: '#fff'`, `color: '#1e293b'`, `border: '1px solid #e2e8f0'` on form inputs. These must be updated to use the same `isDarkBackground()` pattern used by the main ContactForm render (which already correctly adapts). This is a code fix for Phase 5 implementation, not a new architectural pattern.
+
+#### 12.7.21 Gradient Background Remapping
+
+**The Problem:** `remapNeutralColor()` (Section 12.7.16) takes a single hex color. But the AI can generate sections with gradient backgrounds like `linear-gradient(135deg, #ffffff, #f1f5f9)`. These gradient strings contain multiple color stops that are each neutral — but the function can't parse them.
+
+**Solution — `remapNeutralGradient()` companion function:**
+
+```typescript
+/**
+ * Parses a CSS gradient string, remaps each neutral color stop to a CSS var,
+ * and reconstructs the gradient. Non-neutral color stops stay as hex.
+ * 
+ * Only called when colorScheme !== "light" AND the value looks like a gradient.
+ */
+function remapNeutralGradient(gradientValue: string): string {
+  // Regex to match hex colors within the gradient string
+  const hexPattern = /#[0-9a-fA-F]{3,8}/g;
+
+  return gradientValue.replace(hexPattern, (hex) => {
+    const remapped = remapNeutralColor(hex, "background");
+    return remapped; // CSS vars work inside gradient() functions
+  });
+}
+```
+
+**Example transformation:**
+```css
+/* Input (AI-generated, neutral gradient): */
+background: linear-gradient(135deg, #ffffff, #f1f5f9);
+
+/* Output (remapped for dark mode): */
+background: linear-gradient(135deg, var(--color-background), var(--color-muted));
+
+/* In dark mode, resolves to: */
+background: linear-gradient(135deg, #09090b, #1a1a2e);
+```
+
+**CSS variables inside gradients:** This is valid CSS. All modern browsers (Chrome 49+, Firefox 31+, Safari 9+) support `var()` inside `linear-gradient()`, `radial-gradient()`, and `conic-gradient()`.
+
+**Branded gradient example (stays as hex):**
+```css
+/* Input (branded gradient): */
+background: linear-gradient(135deg, #2563eb, #7c3aed);
+
+/* Output (no remapping — both colors have high saturation): */
+background: linear-gradient(135deg, #2563eb, #7c3aed);
+```
+
+**Integration with Section 12.7.16 render pattern:**
+
+```typescript
+// In Section/Card renders:
+if (hasExplicitBg && shouldRemap) {
+  const bgValue = props.backgroundColor;
+  if (bgValue.includes("gradient")) {
+    inlineStyle.background = remapNeutralGradient(bgValue);
+  } else {
+    inlineStyle.backgroundColor = remapNeutralColor(bgValue, "background");
+  }
+}
+```
+
+**Note on `backgroundImage` vs `backgroundColor`:** Some renders store gradients in `backgroundImage` while solid colors go in `backgroundColor`. The render function checks both properties and applies remapping to whichever contains the value.
+
+#### 12.7.22 Error page dark mode adaptation
+
+Published site error pages (404, 500) are **Next.js route pages**, not layout component renders. They currently use hardcoded colors that will NOT adapt in dark mode:
+
+**Published site 404** (`src/app/site/[domain]/[[...slug]]/not-found.tsx`):
+```tsx
+// CURRENT — hardcoded inline styles
+<p style={{ color: '#666' }}>Site not found or not published yet</p>
+<p style={{ color: '#999', marginTop: '2rem' }}>If you're the site owner...</p>
+```
+
+**Published site 500** (`src/app/site/[domain]/error.tsx`):
+```tsx
+// CURRENT — hardcoded Tailwind gray + forced light
+<div className="bg-white" style={{ colorScheme: 'light' }}>
+  <h1 className="text-gray-900">Something went wrong</h1>
+  <p className="text-gray-600">...</p>
+  <button className="bg-gray-900 text-white hover:bg-gray-800">Try again</button>
+</div>
+```
+
+**Fix:** Replace with Tailwind semantic tokens so error pages inherit the site's dark mode:
+
+```tsx
+// 404 — replace inline styles with Tailwind classes
+<p className="text-muted-foreground">Site not found or not published yet</p>
+<p className="text-muted-foreground mt-8">If you're the site owner...</p>
+
+// 500 — replace hardcoded gray + remove forced light colorScheme
+<div className="bg-background">
+  <h1 className="text-foreground">Something went wrong</h1>
+  <p className="text-muted-foreground">...</p>
+  <button className="bg-primary text-primary-foreground hover:bg-primary/90">Try again</button>
+</div>
+```
+
+**Quote portal 404** (`src/app/quote/[token]/not-found.tsx`) also uses `bg-gray-50 dark:bg-gray-900` — replace with `bg-background`.
+
+These pages must inherit the same CSS variable scope (`.studio-renderer` or the published site layout) so that `bg-background` resolves to the correct light/dark value based on `prefers-color-scheme`.
+
+#### 12.7.23 Render function residual hardcoded color cleanup
+
+Beyond the shadow, gradient, and neutral-color remapping fixes (Sections 12.7.16-12.7.21), approximately **25 render functions** in `renders.tsx` still use hardcoded Tailwind gray-scale classes (`text-gray-*`, `bg-white`, `bg-gray-*`) instead of semantic tokens. These don't break today (published sites force light) but will fail when dark mode is enabled.
+
+**Batch replacement rules:**
+
+| Current | Replacement | Used For |
+|---------|-------------|----------|
+| `bg-white` | `bg-card` | Card surfaces, overlays, info windows |
+| `bg-gray-100` / `bg-gray-50` | `bg-muted` | Subtle backgrounds, placeholders |
+| `text-gray-900` | `text-foreground` | Primary text, headings |
+| `text-gray-700` / `text-gray-600` | `text-muted-foreground` | Secondary text, descriptions |
+| `text-gray-500` / `text-gray-400` | `text-muted-foreground` | Tertiary text, timestamps |
+| `text-gray-300` | `text-muted` | Empty star ratings, disabled text |
+| `border-gray-*` | `border-border` | All borders |
+
+**Known locations requiring cleanup (approximate line numbers — may shift after other edits):**
+
+- **Map overlay** (~L3274): `bg-white` → `bg-card`
+- **Map info window** (~L3334-3336): `bg-white` → `bg-card`, `text-gray-900` → `text-card-foreground`, `text-gray-600` → `text-muted-foreground`
+- **CTA placeholder** (~L5518): `text-gray-500 bg-gray-100` → `text-muted-foreground bg-muted`
+- **Search icon** (~L7608): `text-gray-400` → `text-muted-foreground`
+- **Form help text** (~L12379): `text-gray-500` → `text-muted-foreground`
+- **Progress label** (~L14134): `text-gray-700` → `text-foreground`
+- **Progress percentage** (~L14136): `text-gray-500` → `text-muted-foreground`
+- **Empty star ratings** (~L14706): `text-gray-300` → `text-muted`
+- **Testimonials** (~L14729-14776): `text-gray-500`, `text-gray-400` → `text-muted-foreground`
+- **Social proof** (~L14863): `text-gray-500` → `text-muted-foreground`
+- **Logo cards** (~L14986): `bg-white` → `bg-card`
+- **Stats** (~L15030-15060): `text-gray-500`, `text-gray-400` → `text-muted-foreground`
+- **Comparison checkmarks** (~L15120): `text-gray-300` → `text-muted`
+- **Pricing heading** (~L15166): `text-gray-900` → `text-foreground`
+- **Pricing subtitle** (~L15170): `text-gray-600` → `text-muted-foreground`
+
+**Exception — intentional hardcoded colors (DO NOT change):**
+- Toast "light" variant (`bg-white text-gray-900` at ~L14352) — this is an explicit named variant, not a default
+- Payment brand colors (Visa blue, Amex blue) — brand identity, not UI chrome
+- Image overlay controls (`text-white` on dark image backgrounds) — always correct regardless of mode
+- Color swatch names (`white: "#ffffff"`) — product attribute data, not UI
+
+**Implementation note:** This cleanup should be done as a single batch pass during Phase 5. Use find-and-replace with manual review — some `text-gray-*` usages are intentional (listed above). Every replacement must be verified in context.
+
+#### 12.7.24 Blog & Prose Dark Mode Adaptation
+
+The public blog pages (`/blog/[subdomain]/page.tsx` listing and `/blog/[subdomain]/[slug]/page.tsx` post) are published-site routes that visitors see. They currently use hardcoded `text-gray-*` / `bg-gray-*` classes throughout AND the Tailwind `prose` wrapper lacks `dark:prose-invert`, making them completely dark-mode-incompatible.
+
+**Blog post page (`/blog/[subdomain]/[slug]/page.tsx`) — hardcoded colors to fix:**
+- `text-gray-500` on back link ("← Back to blog")
+- `text-gray-500` on meta date/reading-time row
+- `bg-gray-200` on avatar placeholder fallback circle
+- `text-gray-900` on author name
+- `prose prose-lg` wrapper — missing `dark:prose-invert`
+- `text-gray-500` on tags label
+- `text-gray-500` on related post dates
+
+**Blog listing page (`/blog/[subdomain]/page.tsx`) — hardcoded colors to fix:**
+- `text-gray-600` on subtitle "Latest news and articles"
+- `text-gray-600` on post excerpts
+- `text-gray-500` on post meta row (author, date, reading time)
+- `text-gray-500` / `text-gray-400` on empty-state text "No posts published yet" / "Check back soon"
+
+**Replacement mapping (both files):**
+| Hardcoded class | Semantic replacement |
+|----------------|---------------------|
+| `text-gray-900` | `text-foreground` |
+| `text-gray-600` | `text-muted-foreground` |
+| `text-gray-500` | `text-muted-foreground` |
+| `text-gray-400` | `text-muted-foreground/70` |
+| `bg-gray-200` | `bg-muted` |
+
+**Prose dark mode fix:**
+Change the prose wrapper class from:
+```
+className="prose prose-lg max-w-none prose-headings:font-bold prose-a:text-primary prose-img:rounded-lg"
+```
+To:
+```
+className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-a:text-primary prose-img:rounded-lg"
+```
+
+`dark:prose-invert` flips all Tailwind typography defaults (headings, body text, links, blockquotes, code blocks, tables, lists) to light-on-dark when `prefers-color-scheme: dark` is active.
+
+**User-generated HTML content (CRITICAL):**
+Blog post content is rendered via `dangerouslySetInnerHTML={{ __html: post.content_html || "" }}`. Users may paste HTML with inline `style="color: #333"` or `style="background-color: white"` which cannot be overridden by CSS classes.
+
+**Solution — add a CSS override in `globals.css`:**
+```css
+/* Blog prose: strip inline colors from user-pasted HTML so dark mode works */
+@media (prefers-color-scheme: dark) {
+  .prose-blog-content [style*="color"],
+  .prose-blog-content [style*="background"] {
+    color: inherit !important;
+    background-color: inherit !important;
+  }
+}
+```
+Then wrap the prose div with the `.prose-blog-content` class so the override only applies to blog content, not the studio renderer.
+
+**Blog layout wrapper:**
+The blog routes do NOT currently have a layout that sets `data-color-scheme` on `<html>`. The published site routes (`/site/[domain]/`) already do this via `PublishedSiteLayout`. Blog routes need the same treatment — either:
+- Create a `blog/[subdomain]/layout.tsx` that reads the site's `colorScheme` setting and sets `data-color-scheme` on `<html>` (preferred), OR
+- Ensure the root layout already handles this for all published routes
+
+Without `data-color-scheme="auto"` on `<html>`, the CSS variable overrides for dark mode will NOT activate on blog pages even after fixing the hardcoded classes.
+
+#### 12.7.25 Portal Client Route Dark Mode — Status Badges & Stat Colors
+
+The customer-facing portal (`/portal/`) has ~12 files with ~50+ hardcoded color classes for status badges and stat icon accents. These render as bright pastel blocks on dark backgrounds.
+
+**Pattern A — Status badges (most common):**
+Used across `portal/page.tsx`, `portal/support/page.tsx`, `portal/invoices/page.tsx`, `portal/notifications/page.tsx`, `components/portal/ticket-detail.tsx`:
+```
+bg-yellow-100 text-yellow-800   → needs dark:bg-yellow-900/30 dark:text-yellow-300
+bg-green-100 text-green-800     → needs dark:bg-green-900/30 dark:text-green-300
+bg-blue-100 text-blue-800       → needs dark:bg-blue-900/30 dark:text-blue-300
+bg-red-100 text-red-800         → needs dark:bg-red-900/30 dark:text-red-300
+bg-orange-100 text-orange-800   → needs dark:bg-orange-900/30 dark:text-orange-300
+bg-gray-100 text-gray-700       → needs dark:bg-gray-800 dark:text-gray-300
+```
+
+**Pattern B — Stat icon colors:**
+Used across `portal/page.tsx`, `portal/analytics/page.tsx`, `portal/sites/[siteId]/page.tsx`:
+```
+bg-blue-500/10 text-blue-600     → needs dark:text-blue-400
+bg-green-500/10 text-green-600   → needs dark:text-green-400
+bg-orange-500/10 text-orange-600 → needs dark:text-orange-400
+```
+Note: The `bg-*-500/10` backgrounds are semi-transparent and work on both light/dark backgrounds. Only the text colors need `dark:` variants.
+
+**Pattern C — Priority/status-specific (support/ticket pages):**
+Used in `portal/support/page.tsx`, `components/portal/ticket-detail.tsx`:
+```
+bg-orange-100  → dark:bg-orange-900/30
+bg-red-100     → dark:bg-red-900/30
+```
+
+**Pattern D — Blog category inline styles:**
+In `portal/blog/[siteId]/page.tsx`: `backgroundColor: ${cat.color}20`, `color: cat.color` — these are already dynamic based on category color and work acceptably on dark backgrounds due to the `20` (12%) opacity. **No fix needed** for category colors.
+
+**Files that are already CLEAN (no changes needed):**
+- `portal/layout.tsx` — `BrandingProvider`, `ServerBrandingStyle`
+- `portal/error.tsx` — `text-destructive`, `text-muted-foreground`
+- `portal/not-found.tsx` — `text-muted-foreground`
+- `portal/loading.tsx` — `SkeletonComposer`
+- `portal/login/page.tsx` — `bg-muted/30`, `text-primary`, `text-foreground`
+- `portal/email/page.tsx` — Already has `dark:` variants
+- `portal/media/`, `portal/domains/`, `portal/settings/`, `portal/apps/`, `portal/support/new/` — Clean
+
+**Reference implementation:** `portal/email/page.tsx` already correctly uses `bg-blue-50 dark:bg-blue-950`, `text-blue-600 dark:text-blue-400`, `text-blue-900 dark:text-blue-100` — follow this pattern.
+
+**Recommended approach:** Create a shared `statusBadgeClasses` utility map:
+```typescript
+const STATUS_BADGE_CLASSES: Record<string, string> = {
+  pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
+  active: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  processing: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+  closed: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+  overdue: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+  // ... extend per status
+};
+```
+This centralizes the mapping and ensures consistency across all ~12 portal files.
+
+#### 12.7.26 Form Submission Feedback Dark Mode
+
+Two form components on published sites show success/error feedback with hardcoded colors that fail in dark mode:
+
+**A. FormRender (renders.tsx ~L11824-11833):**
+```
+Success: bg-green-50 text-green-700   → bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-300
+Error:   bg-red-50 text-red-700       → bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-300
+```
+These are Tailwind classes — adding `dark:` variants is straightforward.
+
+**B. ContactFormRender (renders.tsx ~L12535-12680):**
+Uses hardcoded hex values in inline styles:
+```
+defaultBackgroundColor = "#ffffff"       → var(--color-background)
+resolvedTextColor = "#1f2937"            → var(--color-foreground)
+resolvedInputBg = "#ffffff"              → var(--color-card)
+resolvedInputBorder = "#d1d5db"          → var(--color-border)
+resolvedLabelColor = "#374151"           → var(--color-foreground)
+descriptionColor || "#6b7280"            → var(--color-muted-foreground)
+
+Error state:
+backgroundColor: "#fef2f2"              → var(--color-destructive)/10 or keep hardcoded with dark conditional
+color: "#991b1b"                         → var(--color-destructive)
+border: "1px solid #fecaca"             → 1px solid var(--color-destructive)/30
+```
+
+**Note:** ContactFormRender already has an `isDark` detection based on explicit section `backgroundColor`, which handles cases where the user places a form on a dark background section. However, this does NOT handle the case where the SITE is in dark mode via `prefers-color-scheme` while the section has a neutral/white background (which gets remapped by `remapNeutralColor()`). The hex values should be replaced with CSS variable references so the form adapts to system-level dark mode, not just section-level dark backgrounds.
+
+#### 12.7.27 StorefrontWidget Auto Dark Mode
+
+The embeddable StorefrontWidget (`src/modules/ecommerce/widgets/StorefrontWidget.tsx`, ~1700 lines) uses a CSS-in-JS `storefrontStyles` string with ~12 hardcoded hex values. Dark mode is config-driven (`theme: "light" | "dark"` prop) but does NOT auto-detect `prefers-color-scheme`.
+
+**Issues:**
+1. **No auto-detection:** Widget must be explicitly configured as `theme: "dark"` — it should support `theme: "auto"` that respects `prefers-color-scheme`
+2. **Error state has no dark variant:** `.sf-error { background: #fee2e2; color: #dc2626 }` renders as red-on-pink regardless of theme
+3. **Sale/discount colors hardcoded:** `.sf-badge.sf-sale { background: #ef4444 }`, `.sf-price-sale { color: #ef4444 }`, `.sf-discount-msg.sf-success { color: #22c55e }` — these are accent colors that should have dark-mode-appropriate brightness
+
+**Fix:**
+1. Add `theme: "auto"` option that wraps styles in `@media (prefers-color-scheme: dark) { ... }` for automatic switching
+2. When `theme: "auto"`, derive `.sf-dark` styles from the media query instead of the class
+3. Add `.sf-dark .sf-error { background: #450a0a; color: #fca5a5 }` dark variant
+4. Adjust accent colors for dark: `.sf-dark .sf-price-sale { color: #f87171 }`, `.sf-dark .sf-discount-msg.sf-success { color: #4ade80 }`
+5. Wire the widget's `theme` prop to the site's `colorScheme` setting — when a site has `colorScheme: "auto"`, pass `theme: "auto"` to the widget
+
+**Hardcoded hex inventory (storefrontStyles string):**
+| CSS Rule | Light hex | Dark equivalent needed |
+|----------|-----------|------------------------|
+| `.sf-light` background | `#ffffff` | N/A (only applies in light) |
+| `.sf-light` color | `#1f2937` | N/A |
+| `.sf-dark` background | `#1f2937` | Already dark |
+| `.sf-dark` color | `#f9fafb` | Already light |
+| `.sf-cart-drawer` | `#ffffff` | Needs `.sf-dark .sf-cart-drawer { background: #1f2937 }` |
+| `.sf-error` | `#fee2e2` / `#dc2626` | `#450a0a` / `#fca5a5` |
+| `.sf-badge.sf-sale` | `#ef4444` | `#f87171` (brighter for dark bg) |
+| `.sf-price-sale` | `#ef4444` | `#f87171` |
+| `.sf-remove-btn` | `#ef4444` | `#f87171` |
+| `.sf-discount-msg.sf-success` | `#22c55e` | `#4ade80` |
+| `.sf-discount-msg.sf-error` | `#ef4444` | `#f87171` |
+| `.sf-discount-row` | `#22c55e` | `#4ade80` |
+
+#### 12.7.28 Embed & Module Error State Dark Mode
+
+Three embed routes render error/loading states with hardcoded inline hex colors. These are visible inside iframes on customer websites when modules fail or are unavailable.
+
+**Affected files:**
+1. `src/app/embed/booking/[siteId]/page.tsx` — "Booking Not Available" error
+2. `src/app/embed/[moduleId]/[siteId]/page.tsx` — "Access Denied" / "Module Not Available" errors
+3. `src/components/modules/embed/module-embed-renderer.tsx` — Error card + loading text inside embeds
+
+**Hardcoded colors to fix:**
+
+| File | Hardcoded Value | Context | Replacement |
+|------|----------------|---------|-------------|
+| booking embed | `background: #fafafa` | Error page body | Use CSS variable or semantic class |
+| booking embed | `color: "#dc2626"` | Error heading | `color: "hsl(var(--destructive))"` |
+| booking embed | `color: "#6b7280"` | Error subtitle | `color: "hsl(var(--muted-foreground))"` |
+| booking embed | `background: #fff; color: #111827` | Body defaults | Add `.dark { background: #0a0a0b; color: #fafafa }` |
+| module embed | `background: #fafafa` | Error pages (×2) | Same as above |
+| module embed | `color: "#dc2626"` | Error headings (×2) | Same as above |
+| module embed | `color: "#6b7280"` | Error subtitles (×2) | Same as above |
+| embed renderer | `background: 'rgb(254,242,242)'` | Error card | `hsl(var(--destructive) / 0.1)` |
+| embed renderer | `border: '1px solid rgb(254,202,202)'` | Error border | `hsl(var(--destructive) / 0.3)` |
+| embed renderer | `color: 'rgb(220,38,38)'` | Error heading | `hsl(var(--destructive))` |
+| embed renderer | `color: 'rgb(239,68,68)'` | Error body | `hsl(var(--destructive) / 0.8)` |
+| embed renderer | `color: 'rgb(113,113,122)'` | Loading text | `hsl(var(--muted-foreground))` |
+
+**Fix approach:** Since embed error pages render their own `<html>`, they must include a minimal dark mode CSS block:
+```html
+<style>
+  body { background: #fff; color: #111827; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #0a0a0b; color: #fafafa; }
+    .error-heading { color: #fca5a5; }
+    .error-subtitle { color: #a1a1aa; }
+  }
+</style>
+```
+For `module-embed-renderer.tsx`, replace hardcoded `rgb()` values with CSS variable references that resolve correctly in both light and dark modes.
+
+#### 12.7.29 Quote Portal Full Dark Mode
+
+The customer-facing quote portal (`/quote/[token]/`) is **forced to light mode** and its sub-components have hardcoded colors. Customers viewing quotes should get the same dark mode experience as the rest of the published site.
+
+**Affected files:**
+1. `src/app/quote/[token]/page.tsx` — Forces `data-theme="light"` + `colorScheme: 'light'`, uses `bg-gray-50`
+2. `src/modules/ecommerce/components/portal/quote-portal-view.tsx` — 6 hardcoded icon/text colors
+3. `src/modules/ecommerce/components/portal/quote-accept-form.tsx` — Canvas stroke `#000`
+4. `src/modules/ecommerce/components/portal/quote-reject-dialog.tsx` — `text-red-600` heading
+
+**Fix for page.tsx (forced light removal):**
+- Remove `data-theme="light"` from the HTML element
+- Remove `colorScheme: 'light'` from inline styles
+- Replace `bg-gray-50` with `bg-background`
+- Read the originating site's `colorScheme` setting and set `data-color-scheme` accordingly (same as `PublishedSiteLayout`)
+
+**Fix for quote-portal-view.tsx:**
+| Line | Hardcoded | Fix |
+|------|-----------|-----|
+| ~75 | `text-green-600` (accepted icon) | `text-green-600 dark:text-green-400` |
+| ~87 | `text-red-600` (rejected icon) | `text-red-600 dark:text-red-400` |
+| ~99 | `text-amber-600` (expired icon) | `text-amber-600 dark:text-amber-400` |
+| ~129 | `text-amber-600` (countdown) | `text-amber-600 dark:text-amber-400` |
+| ~166 | `text-red-600` (expired date) | `text-red-600 dark:text-red-400` |
+| ~248 | `text-green-600` (discount) | `text-green-600 dark:text-green-400` |
+
+**Fix for quote-accept-form.tsx (canvas signature):**
+The canvas `ctx.strokeStyle = '#000'` will produce invisible black strokes on a dark background. Replace with runtime CSS variable read:
+```typescript
+const computedStyle = getComputedStyle(canvasRef.current);
+ctx.strokeStyle = computedStyle.getPropertyValue('--foreground').trim()
+  ? `hsl(${computedStyle.getPropertyValue('--foreground').trim()})`
+  : '#000'; // fallback
+```
+
+**Fix for quote-reject-dialog.tsx:**
+- `text-red-600` → `text-red-600 dark:text-red-400`
+
+#### 12.7.30 Live Chat Widget Dark Mode
+
+The live chat widget renders **inside an iframe** on customer websites. It has its own theming for the header/launcher (via `settings.primaryColor` / `settings.textColor`), but ALL "chrome" — agent message bubbles, form fields, labels, system messages, star ratings, timestamps — uses hardcoded light-only colors. The dashboard's `dark` class does NOT penetrate iframes.
+
+**Affected files (7 widget components + 1 embed script):**
+1. `src/modules/live-chat/components/widget/ChatWidget.tsx` — Loading spinner, error banner
+2. `src/modules/live-chat/components/widget/WidgetChat.tsx` — Container bg-white, agent bubbles, typing indicator, input, footer
+3. `src/modules/live-chat/components/widget/WidgetMessageBubble.tsx` — Agent bubbles, system messages, AI badges, timestamps, payment UI
+4. `src/modules/live-chat/components/widget/WidgetConversationList.tsx` — ALL inline hex styles (~20 instances)
+5. `src/modules/live-chat/components/widget/WidgetOfflineForm.tsx` — Container bg-white, form labels, amber alert, inputs
+6. `src/modules/live-chat/components/widget/WidgetPreChatForm.tsx` — Container bg-white, form labels, inputs
+7. `src/modules/live-chat/components/widget/WidgetRating.tsx` — Star SVGs, text, textarea border, skip button
+8. `src/app/api/modules/live-chat/embed/route.ts` — Embed script: bg:#ffffff, shadows, unread badge
+
+**Total hardcoded instances:** ~80+ across all 8 files.
+
+**Architecture for the fix:**
+
+Since widget components render in an iframe with their own styles (no access to the published site's Tailwind theme), the dark mode approach must be self-contained:
+
+1. **Add a `darkMode` setting to the live chat widget configuration** — mirrors the site's `colorScheme`. Options: `"light"` (default/legacy), `"dark"`, `"auto"`. When the site has `colorScheme: "auto"`, the widget should receive `darkMode: "auto"`.
+
+2. **Create a widget CSS variable system** — define light/dark variables for ALL widget chrome colors:
+```css
+:root {
+  --widget-bg: #ffffff;
+  --widget-text: #1f2937;
+  --widget-text-muted: #6b7280;
+  --widget-border: #e5e7eb;
+  --widget-surface: #f1f5f9;
+  --widget-input-border: #d1d5db;
+  --widget-star-filled: #f59e0b;
+  --widget-star-empty: #d1d5db;
+  --widget-error-bg: #fef2f2;
+  --widget-error-text: #991b1b;
+  --widget-error-border: #fecaca;
+  --widget-system-bg: #f9fafb;
+  --widget-system-text: #9ca3af;
+}
+@media (prefers-color-scheme: dark) {
+  :root.widget-auto {
+    --widget-bg: #1a1a2e;
+    --widget-text: #f1f5f9;
+    --widget-text-muted: #94a3b8;
+    --widget-border: #334155;
+    --widget-surface: #1e293b;
+    --widget-input-border: #475569;
+    --widget-star-filled: #fbbf24;
+    --widget-star-empty: #4b5563;
+    --widget-error-bg: #450a0a;
+    --widget-error-text: #fca5a5;
+    --widget-error-border: #7f1d1d;
+    --widget-system-bg: #1e293b;
+    --widget-system-text: #64748b;
+  }
+}
+```
+
+3. **Inject the CSS variables into the iframe** — the embed script (`route.ts`) must include the variable block in the iframe's `<style>` tag and set `class="widget-auto"` on the iframe's `<html>` when `darkMode === "auto"`.
+
+4. **Replace ALL hardcoded colors** in the 7 widget components with `var(--widget-*)` references.
+
+5. **Update the embed script** (`route.ts`) to:
+   - Accept a `darkMode` parameter from the embed configuration
+   - Replace `background:#ffffff` with `var(--widget-bg)`
+   - Replace `box-shadow` values with variable-based equivalents
+   - Add `@media (prefers-color-scheme: dark)` overrides for the launcher button
+
+**Implementation priority:** This is a MEDIUM-priority fix. The widget works today (forced light), but on dark-mode customer sites, the white chat bubble creates a jarring visual mismatch.
+
+#### 12.7.31 Ecommerce Mobile Dark Mode Gaps
+
+Two ecommerce mobile components have dark mode gaps:
+
+**A. CollapsibleProductDetails.tsx — Missing `dark:prose-invert`**
+
+Four instances of the `prose` class render user-generated HTML (product descriptions, shipping info, return policies, custom tabs) without `dark:prose-invert`:
+
+```tsx
+// CURRENT (×4 locations)
+className="prose prose-sm max-w-none"
+
+// FIX
+className="prose prose-sm dark:prose-invert max-w-none"
+```
+
+This is the same issue documented in 12.7.24 (Blog prose) but in a different context. The `dark:prose-invert` modifier flips all Tailwind Typography plugin defaults to light-on-dark.
+
+**B. MobilePaymentSelector.tsx — Card brand label colors**
+
+Payment card brand labels use hardcoded colors without `dark:` variants:
+
+| Line | Current | Fix |
+|------|---------|-----|
+| ~99 | `text-blue-600` (Visa) | `text-blue-600 dark:text-blue-400` |
+| ~101 | `text-red-500` (Mastercard) | `text-red-500 dark:text-red-400` |
+| ~103 | `text-blue-400` (Amex) | `text-blue-400 dark:text-blue-300` |
+| ~105 | `text-orange-500` (Discover) | `text-orange-500 dark:text-orange-400` |
+
+#### 12.7.32 Platform Pages Dark Mode (Pricing, Global Error, Developer Statement)
+
+These are DRAMAC platform pages (not published customer sites) that are publicly visible. They are separate from the published-site dark mode engine but should still respect `prefers-color-scheme` for a consistent user experience.
+
+**A. `src/app/global-error.tsx` — Hardcoded dark-only inline styles**
+
+This global error fallback renders its own `<html>`/`<body>`, bypassing Tailwind entirely. It's currently forced dark with ~12 hardcoded hex values (`backgroundColor: "#0a0a0b"`, `color: "#fafafa"`, etc.). Users on light mode see a dark page.
+
+**Fix:** Add a `<style>` block inside the generated `<html>` that provides light/dark variants:
+```html
+<style>
+  :root { --bg: #ffffff; --fg: #111827; --card-bg: #f9fafb; --card-border: #e5e7eb; --muted: #6b7280; --accent: #7c3aed; --error-bg: rgba(239,68,68,0.1); }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0a0a0b; --fg: #fafafa; --card-bg: #18181b; --card-border: #27272a; --muted: #a1a1aa; --accent: #8b5cf6; --error-bg: rgba(239,68,68,0.1); }
+  }
+</style>
+```
+Then replace all inline hex values with `var(--*)` references.
+
+**B. `src/app/pricing/page.tsx` + billing components — Accent color gaps**
+
+| File | Issue | Fix |
+|------|-------|-----|
+| `pricing/page.tsx` L271,277,283 | `text-green-600` (overage discounts, ×3) | `text-green-600 dark:text-green-400` |
+| `billing-cycle-toggle.tsx` L54 | `bg-green-500 text-white` (savings badge) | `bg-green-500 dark:bg-green-600 text-white` (or keep — white on green works in both modes) |
+| `pricing-card.tsx` L163 | `text-green-600` (save percentage) | `text-green-600 dark:text-green-400` |
+
+**C. `src/app/api/developer/statements/[payoutId]/route.ts` — HTML earnings statement**
+
+The entire HTML document (~50 lines of inline CSS) is light-only with zero dark mode support (`color: #333`, `background: #f9fafb`, etc.). This is primarily a printable document, so light mode is acceptable for the print use case.
+
+**Fix:** Add a `@media (prefers-color-scheme: dark)` block to the inline `<style>`:
+```css
+@media (prefers-color-scheme: dark) {
+  body { background: #0a0a0b; color: #e5e7eb; }
+  .summary { background: #18181b; border-color: #27272a; }
+  h1 { color: #fafafa; }
+  .subtitle { color: #a1a1aa; }
+  table { border-color: #27272a; }
+  .total-row { border-top-color: #e5e7eb; }
+  .footer { color: #a1a1aa; }
+}
+@media print { /* force light for printing */ body { background: white; color: #333; } }
+```
+
+#### 12.7.33 Canvas-Rendered Element Dark Adaptation
+
+Canvas-drawn elements cannot use CSS variables or `prefers-color-scheme` media queries because canvas rendering is imperative (JavaScript pixel drawing, not DOM styling).
+
+**Affected files:**
+1. `src/components/studio/effects/particle-background.tsx` — Default particle color prop `"#6366f1"` (indigo)
+
+**Fix approach for canvas elements:**
+
+At render time, read the current color scheme and select an appropriate color:
+```typescript
+// In particle-background.tsx
+const [resolvedColor, setResolvedColor] = useState(color);
+
+useEffect(() => {
+  if (color !== defaultColor) return; // User set a custom color — respect it
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  setResolvedColor(isDark ? '#818cf8' : '#6366f1'); // brighter indigo for dark bg
+  
+  const mq = window.matchMedia('(prefers-color-scheme: dark)');
+  const handler = (e: MediaQueryListEvent) => {
+    setResolvedColor(e.matches ? '#818cf8' : '#6366f1');
+  };
+  mq.addEventListener('change', handler);
+  return () => mq.removeEventListener('change', handler);
+}, [color]);
+```
+
+This uses a `matchMedia` listener instead of CSS to reactively adapt canvas-painted colors. The same pattern applies to any future canvas-based studio effects.
+
+**Note:** The quote-accept-form canvas stroke (`#000`) is addressed in Section 12.7.29 as part of the quote portal dark mode fix.
+
+---
+
+## 13. AI Designer Integration
+
+### 13.1 Updated Component Metadata
 
 Each layout component needs rich metadata in `component-metadata.ts` so the AI Designer knows WHEN and HOW to use each component:
 
@@ -1734,7 +3580,7 @@ Each layout component needs rich metadata in `component-metadata.ts` so the AI D
 }
 ```
 
-### 12.2 AI Prompt Updates
+### 13.2 AI Prompt Updates
 
 The `prompts.ts` SITE_ARCHITECT_PROMPT and PAGE_GENERATOR_PROMPT need these additions:
 
@@ -1781,7 +3627,7 @@ ANIMATION GUIDELINES:
 - Set once: true on entrance animations (don't re-animate on scroll back).
 ```
 
-### 12.3 Converter Updates
+### 13.3 Converter Updates
 
 `converter.ts` needs to:
 
@@ -1793,9 +3639,9 @@ ANIMATION GUIDELINES:
 
 ---
 
-## 13. Registry & Registration Requirements
+## 14. Registry & Registration Requirements
 
-### 13.1 Files That Need Updates
+### 14.1 Files That Need Updates
 
 For EACH layout component, the following files MUST be updated:
 
@@ -1811,7 +3657,7 @@ For EACH layout component, the following files MUST be updated:
 | `src/lib/ai/website-designer/prompts.ts` | Layout guidance in AI prompts |
 | `src/lib/studio/engine/renderer.tsx` | Component rendering pipeline support |
 
-### 13.2 Registration Pattern
+### 14.2 Registration Pattern
 
 Every component follows the same registration structure:
 
@@ -1845,7 +3691,7 @@ Every component follows the same registration structure:
 }
 ```
 
-### 13.3 Field Types for Responsive Props
+### 14.3 Field Types for Responsive Props
 
 ```typescript
 // New field type for responsive values
@@ -1861,9 +3707,9 @@ Every component follows the same registration structure:
 
 ---
 
-## 14. Mobile-First Perfection Strategy
+## 15. Mobile-First Perfection Strategy
 
-### 14.1 Mobile Layout Rules (Non-Negotiable)
+### 15.1 Mobile Layout Rules (Non-Negotiable)
 
 1. **No horizontal overflow.** Every layout component must `max-width: 100%` on mobile. No side scrolling unless explicitly intended (carousel/scroll mode).
 2. **Touch-friendly spacing.** Minimum 44px tap targets. Minimum 8px gap between interactive elements.
@@ -1875,7 +3721,7 @@ Every component follows the same registration structure:
 8. **Animations simplified.** Scroll-driven animations disabled on mobile. Entrance animations kept but simplified (shorter duration, less travel distance).
 9. **Safe areas.** Account for notches, dynamic toolbars, and rounded corners via `padding: env(safe-area-inset-*)`.
 
-### 14.2 Mobile Testing Checklist
+### 15.2 Mobile Testing Checklist
 
 Every layout component render must pass:
 
@@ -1890,7 +3736,7 @@ Every layout component render must pass:
 - [ ] No CLS (Cumulative Layout Shift) during load
 - [ ] No FOUC (Flash of Unstyled Content)
 
-### 14.3 App-Like Mobile Experience
+### 15.3 App-Like Mobile Experience
 
 To make sites "look splendid on mobile and fit perfectly like mobile apps":
 
@@ -1903,7 +3749,7 @@ To make sites "look splendid on mobile and fit perfectly like mobile apps":
 
 ---
 
-## 15. Implementation Phases
+## 16. Implementation Phases
 
 ### Phase 1: Foundation (Fix & Upgrade Existing)
 **Priority: CRITICAL** — Fix what's broken before adding new things.
@@ -1912,20 +3758,23 @@ To make sites "look splendid on mobile and fit perfectly like mobile apps":
 2. **Fix Spacer responsive support** — Handle `ResponsiveValue` objects properly
 3. **Complete Tailwind class maps** — Create comprehensive maps for ALL spacing, sizing, layout values
 4. **Create `resolveResponsive()` utility** — Centralized responsive class resolver used by ALL components
-5. **Upgrade Section** — Add gradient backgrounds, video backgrounds, shape dividers, responsive height, scroll-snap-align
-6. **Upgrade Container** — Add glassmorphism, gradient borders, aspect ratios, container queries, full flex/grid props
-7. **Upgrade Card** — Add variant presets, 3D tilt hover, glassmorphism, gradient borders
-8. **Upgrade Divider** — Add gradient, fade, icon, vertical direction
+5. **Create `isDarkBackground()` utility** — Shared dark/light detection used by ALL layout renders (Section 12)
+6. **Create `resolveShadow()` utility** — Dark-aware shadow resolver that returns glow on dark bg, standard shadow on light (Section 12.3)
+7. **Create `resolveGlassmorphism()` utility** — Dark-aware glassmorphism (Section 12.4)
+8. **Upgrade Section** — Add gradient backgrounds, video backgrounds, shape dividers, Background Effects Engine, responsive height, scroll-snap-align, dark-aware overlay defaults. **Follow the dual-default render pattern (Section 12.7.5):** use `bg-background` / `text-foreground` Tailwind classes as defaults, inline `style` only for explicit custom colors.
+9. **Upgrade Container** — Add glassmorphism (dark/light-aware), gradient borders, aspect ratios, container queries, dark-aware border defaults. **Follow Section 12.7.5 dual-default pattern.**
+10. **Upgrade Card** — Add variant presets, 3D tilt hover, glassmorphism, gradient borders, **dark-aware card backgrounds and shadow→glow fallback** (Section 12.2). **Follow Section 12.7.5 dual-default pattern:** use `bg-card` / `text-card-foreground` as defaults.
+11. **Upgrade Divider** — Add gradient, fade, icon, vertical direction, dark-aware color defaults. **Follow Section 12.7.5 dual-default pattern.**
 
 ### Phase 2: New Components
-**Priority: HIGH** — Add the components needed for modern layouts.
+**Priority: HIGH** — Add the components needed for modern layouts. **All new layout components MUST follow the Section 12.7.5 dual-default render pattern** (Tailwind semantic classes as defaults, inline style only for explicit custom colors).
 
-1. **Build Stack** — Simple vertical/horizontal stacker (most commonly used)
-2. **Build FlexBox** — Dedicated flexbox layout builder
-3. **Build Grid** — Dedicated CSS Grid layout builder
-4. **Build Wrapper** — Invisible layout helper
-5. **Build AspectRatioBox** — Ratio-preserving container
-6. **Build Overlay** — Layer component for overlaid content
+1. **Build Stack** — Simple vertical/horizontal stacker (most commonly used). Default: `bg-transparent text-inherit`.
+2. **Build FlexBox** — Dedicated flexbox layout builder. Default: `bg-transparent text-inherit`.
+3. **Build Grid** — Dedicated CSS Grid layout builder. Default: `bg-transparent text-inherit`.
+4. **Build Wrapper** — Invisible layout helper. No visual styling defaults.
+5. **Build AspectRatioBox** — Ratio-preserving container. Default: `bg-transparent`.
+6. **Build Overlay** — Layer component for overlaid content. Default: transparent/semi-transparent.
 
 ### Phase 3: Advanced Experiences
 **Priority: MEDIUM** — Premium layout experiences.
@@ -1941,17 +3790,294 @@ To make sites "look splendid on mobile and fit perfectly like mobile apps":
 **Priority: HIGH** — Make AI generate all of this correctly.
 
 1. **Update component-metadata.ts** — Rich metadata for all 14 layout components
-2. **Update prompts.ts** — Layout selection rules, responsive rules, animation rules
-3. **Update converter.ts** — New type mappings, responsive value preservation, validation
-4. **Test AI generation** — Generate 20+ different website types, audit layouts at every breakpoint
+2. **Update prompts.ts** — Layout selection rules, responsive rules, animation rules, **dark/light section color rules (Section 12.5)**
+3. **Update converter.ts** — New type mappings, responsive value preservation, validation, **dark-bg card color derivation**
+4. **Test AI generation — dark/light audit** — Generate 10 light-themed + 10 dark-themed sites. Verify: cards on dark sections NOT white, shadows visible, shape dividers match adjacent sections, text contrast passes WCAG AA
 5. **Create block editor fields** — Studio editor fields for every new prop
 6. **Write Playwright tests** — Visual regression tests at 320px, 768px, 1024px, 1440px
 
+### Phase 5: System Dark Mode
+**Priority: HIGH** — Enables full `prefers-color-scheme` dark/light switching on published sites. See **Section 12.7** for complete specification. This phase delivers a **complete, industry-leading dark mode** — every element on the page adapts, including premium components, browser chrome, images, and logos.
+
+**5A — Core Infrastructure:**
+
+1. **Create `deriveDarkComplement()` utility** — Takes a `CuratedPalette`, returns a dark-surface variant with inverted luminance, preserved brand hues, and derived surface/border/muted colors (Section 12.7.1 derivation table)
+2. **Create `resolveDualPalettes()` utility** — In `brand-colors.ts`. Calls `resolveBrandColors()` twice (light + dark source) → returns `{ light, dark }` palettes
+3. **Create `generateDarkModeCSSOverrides()` utility** — Produces a CSS string with `@media (prefers-color-scheme: dark) { .studio-renderer { ... } }` overriding all 44 semantic CSS vars + all `--brand-*` field vars with dark palette values (Section 12.7.2). Also includes the **smooth transition CSS** (Section 12.7.10) and **image dimming filter** (Section 12.7.14) inside the dark media query block.
+4. **Add `colorScheme` to site settings UI** — Radio/select in dashboard site settings: "Auto (follow system)" (DEFAULT for new sites), "Light", "Dark". Stored as `siteSettings.colorScheme`. Show "Dark Mode Logo" upload field when scheme is "auto" or "dark" (Section 12.7.13).
+5. **Set `colorScheme: "auto"` in site creation flow** — Update `createSite()` to set `siteSettings.colorScheme = "auto"` for all new sites. Existing sites without this field default to `"light"` via `?? "light"`.
+
+**5B — Renderer Updates:**
+
+6. **Update `generateBrandCSSVars()` — expanded output** — Add `--brand-{fieldKey}` CSS vars for every BRAND_COLOR_MAP entry (146 vars), alongside existing 44 semantic vars. These are the targets that premium component inline styles resolve to (Section 12.7.7).
+7. **Update `injectBrandColors()` — dual-mode injection** — Add `colorScheme` parameter. When `"light"`: inject hex as today (zero change). When `"auto"` or `"dark"`: inject `var(--brand-{fieldKey})` CSS variable references instead of hex values. Premium components auto-adapt with zero component-level code changes (Section 12.7.7).
+8. **Create `remapNeutralColor()` utility** — In `lib/studio/engine/color-remap.ts`. Takes a hex color and role ("background"/"text"/"border"/"cardBg"), returns CSS variable reference if the color is neutral (low saturation < 0.15, appropriate luminance range), or original hex if branded/intentional. Uses `getLuminance()` + new `getSaturation()` utility. See Section 12.7.16 for full specification with thresholds.
+9. **Update ALL layout component renders to call `remapNeutralColor()`** — In Section/Card/Container/Columns/Hero/Footer renders: when `colorScheme !== "light"`, pass explicit AI-set colors through `remapNeutralColor()` before applying as inline styles. Near-white `#ffffff` → `var(--color-background)`, off-white `#f8fafc` → `var(--color-muted)`, etc. Branded colors (blue, green, gold) stay as hex. This is the **CRITICAL step** that makes content sections actually switch in dark mode (Section 12.7.16).
+10. **Update StudioRenderer** — Read `colorScheme` from site settings. When `"auto"`: inject `<style>` tag with dark CSS overrides (including transitions, image filter, manual override selector), add FOUC-prevention `no-transitions` class + client-side removal (Section 12.7.10), output `className="studio-renderer no-transitions"`. When `"dark"`: inject dark-only CSS vars, pass `colorScheme` to `injectBrandColors()`. When `"light"`: exact current behavior (Section 12.7.4).
+11. **Update ThemeProvider** — Honor `colorScheme` setting for `/site/` routes instead of always forcing `light` class. `"auto"` removes forced class. `"dark"` forces dark. `"light"` forces light (default, current behavior).
+12. **Update `app/site/[domain]/layout.tsx`** — Read `colorScheme` from site settings. Set CSS `colorScheme` property to `"light dark"` for auto, or the specific value for light/dark. Inject dual `<meta name="theme-color">` tags (Section 12.7.11). Add `color-scheme` CSS property on `<html>` element. Add inline `<script>` for visitor preference detection from localStorage (Section 12.7.12 FOUC prevention). Add favicon `<link>` tags with `media` attribute for dark variant (Section 12.7.18).
+13. **Update print stylesheet** — In `globals.css`, expand `@media print` block to force white backgrounds and black text on ALL `.studio-renderer` sections and cards (not just the wrapper). Remove/scope `print-color-adjust: exact` away from `.studio-renderer` content. See Section 12.7.17.
+
+**5C — Premium Component Adaptation:**
+
+14. **Verify all layout renders use dual-default pattern + remapping** — Confirm every layout render from Phases 1-2 follows Section 12.7.5 with the Section 12.7.16 amendment: Tailwind semantic classes as defaults, remapped CSS var refs for neutral explicit colors, raw hex for branded explicit colors.
+15. **Test premium components in CSS var injection mode** — Generate 5 sites with `colorScheme: "auto"`. Verify all 45 premium components (Navbar, Hero, Footer, CTA, etc.) seamlessly switch between light and dark palettes. Pay special attention to:
+    - Navbar background and text colors
+    - Hero overlay colors and gradient directions
+    - Footer background, link colors, and border colors
+    - CTA button backgrounds and hover states
+    - Feature grid card backgrounds
+16. **Add `VAR_MODE_EXCLUDE` safety set** — If any premium component misbehaves with CSS var values during testing, add it to an exclusion set that forces hex injection for that component while allowing all others to use vars. Document which components (if any) are excluded and why.
+
+**5D — Logo & Image Dark Mode:**
+
+17. **Add `darkModeLogo` field to site settings** — Upload field for dark mode logo variant (Section 12.7.13). Shown only when `colorScheme` is `"auto"` or `"dark"`.
+18. **Add `darkModeFavicon` field to site settings** — Upload field for dark mode favicon variant (Section 12.7.18). Shown only when `colorScheme` is `"auto"` or `"dark"`. SVG favicons with CSS media queries noted as auto-adaptive.
+19. **Update Navbar/Header premium renders** — Use `<picture>` element with `<source media="(prefers-color-scheme: dark)">` for automatic logo switching when `colorScheme === "auto"` (Section 12.7.13). Use `darkModeLogo` directly when `colorScheme === "dark"`.
+20. **Add image `data-no-dim` support** — Hero image components and key visual blocks get `data-no-dim` attribute to opt out of the automatic brightness/saturation filter (Section 12.7.14). Document which block types get this by default.
+21. **Add "Dark Mode Image" field to Image blocks** — Optional alternate image URL for dark mode, rendered via `<picture>` + `<source>` media query (Section 12.7.14 art direction).
+
+**5E — Visitor Control & Studio Preview:**
+
+22. **Build DarkModeToggle component** — Optional block for Navbar/Footer placement. Three states: Light, Dark, Auto. Persists to `localStorage`, applies via `data-theme` attribute. Includes CSS selector hierarchy for manual override priority (Section 12.7.12).
+23. **Register DarkModeToggle in core-components.ts** — Full prop definitions (position, style, showLabel, floatingPosition). Category: "interactive". Only available when site's `colorScheme` is `"auto"`.
+24. **Build Studio dark mode preview toggle** — Three-state button (Auto/Light/Dark) in Studio editor toolbar. Sends `postMessage` to canvas iframe to toggle `data-theme` on `.studio-renderer`. Visual indicator when forced mode active (Section 12.7.15).
+
+**5F — Comprehensive Testing:**
+
+25. **Neutral color remapping validation** — Generate sites with typical AI output (alternating `#ffffff`/`#f8fafc` sections, `#000000` text). Enable `colorScheme: "auto"`. Verify:
+    - Near-white sections become dark surfaces in dark mode
+    - Near-black text becomes light in dark mode
+    - Brand-colored sections (blue hero, green CTA) stay their exact color in BOTH modes
+    - Alternating section rhythm is preserved (different dark shades for background vs. muted)
+    - `data-keep-color` attribute opts a section out of remapping
+    - `colorScheme: "light"` sites have NO remapping (zero regression)
+26. **Print stylesheet validation** — Print/PDF a page in dark mode. Verify all sections print with white backgrounds, black text, no dimmed images, and links show URLs. Verify `@media print` rules override all dark inline styles.
+27. **Dark favicon validation** — Upload dark favicon variant. Toggle OS dark mode. Verify browser tab shows correct favicon for each mode. Test with SVG favicon containing `@media (prefers-color-scheme: dark)` — verify auto-adaptation without separate upload.
+28. **Dark mode end-to-end testing** — Generate 5 sites with `colorScheme: "auto"`. Toggle system dark/light mode. Verify:
+    - ALL layout components (Section, Card, Container, etc.) seamlessly switch colors
+    - ALL premium components (Navbar, Hero, Footer, CTA, etc.) seamlessly switch colors
+    - Ecommerce pages (cart, checkout, product) adapt via CSS vars
+    - Browser chrome (URL bar) matches site colors via meta theme-color
+    - Logo switches to dark variant (or same logo if no dark variant uploaded)
+    - Images are subtly dimmed in dark mode, full brightness on hover
+    - Color transitions are smooth (0.3s ease), no instant snapping
+    - No FOUC on page load (first paint is correct scheme)
+    - Dashboard is COMPLETELY unaffected (stays on its own dark mode system)
+    - Text contrast passes WCAG AA (4.5:1) in BOTH modes
+    - Sites set to `"light"` (existing sites) show ZERO change from current behavior
+    - Printed dark-mode pages revert to light colors (white backgrounds, black text)
+29. **Visitor toggle testing** — On a site with DarkModeToggle: switch to dark manually → refresh page → still dark (localStorage). Switch to "Auto" → returns to OS preference. Close and reopen browser → preference persists.
+30. **Studio preview testing** — Open site in Studio editor. Toggle preview to Dark → canvas shows dark mode. Toggle to Light → canvas shows light mode. Toggle to Auto → follows editor's OS preference. Confirm changes are preview-only — site's `colorScheme` setting is NOT modified.
+
+#### Phase 5G: Shadow & Elevation Adaptation (Section 12.7.19)
+
+31. **Create elevation CSS variable system** — In the same CSS variable block that defines `--color-background`, `--color-foreground`, etc. (from step 22), add elevation/shadow variables:
+    ```css
+    /* Light mode (default) */
+    --elevation-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --elevation-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    --elevation-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    --elevation-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    --elevation-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    --elevation-glow-sm: 0 0 10px rgba(255, 255, 255, 0.05);
+    --elevation-glow-md: 0 0 20px rgba(255, 255, 255, 0.08);
+
+    /* Dark mode overrides (inside @media (prefers-color-scheme: dark)) */
+    --elevation-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --elevation-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+    --elevation-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+    --elevation-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+    --elevation-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    --elevation-glow-sm: 0 0 15px rgba(255, 255, 255, 0.06);
+    --elevation-glow-md: 0 0 30px rgba(255, 255, 255, 0.1);
+    ```
+    Dark mode shadows use higher opacity (compensating for dark backgrounds eating contrast) and glow variants add subtle light halos for "lifted" feel on dark surfaces.
+
+32. **Update all layout render shadow usage** — In `renders.tsx`, replace every hardcoded `boxShadow` using `rgba(0,0,0,...)` with `var(--elevation-*)` references. Key locations:
+    - Image block shadow (~line 2321) → `var(--elevation-lg)`
+    - 3D button effect (~line 5458) → keep the colored shadow portion, wrap neutral portion with `var(--elevation-md)`
+    - Hero drop-shadow (~line 6457) → `var(--elevation-xl)`
+    - Glassmorphism shadow (~line 15690) → `var(--elevation-lg)` combined with `backdrop-filter`
+    - **For sections using explicit dark backgrounds** (checked via `isDarkBackground()`), ALSO add a subtle glow: `boxShadow: \`var(--elevation-lg), var(--elevation-glow-sm)\``
+
+#### Phase 5H: Scrollbar & Native Control Adaptation (Section 12.7.20)
+
+33. **Fix color-scheme conflict** — In `globals.css`, find `.studio-renderer { color-scheme: light !important; }` and replace with conditional approach:
+    ```css
+    /* Studio editor always forces light for its own UI chrome */
+    .studio-renderer { color-scheme: light; }
+    
+    /* Published sites: respect the site's colorScheme setting */
+    [data-color-scheme="auto"] { color-scheme: light dark; }
+    [data-color-scheme="light"] { color-scheme: light; }
+    [data-color-scheme="dark"] { color-scheme: dark; }
+    ```
+    The `data-color-scheme` attribute is set on `<html>` by the published site layout (from step 22). This ensures:
+    - Studio editor stays light (no dark scrollbars in the builder)
+    - Published "auto" sites get OS-adaptive scrollbars and native controls
+    - Published "light" sites keep current behavior (zero change)
+
+34. **Add published site scrollbar styling** — In the published site's injected CSS (same block as step 22's CSS variables), add custom scrollbar rules:
+    ```css
+    [data-color-scheme="auto"] ::-webkit-scrollbar { width: 10px; }
+    [data-color-scheme="auto"] ::-webkit-scrollbar-track { background: var(--color-background); }
+    [data-color-scheme="auto"] ::-webkit-scrollbar-thumb { background: var(--color-muted-foreground); border-radius: 5px; }
+    [data-color-scheme="auto"] ::-webkit-scrollbar-thumb:hover { background: var(--color-foreground); }
+    ```
+    Firefox uses `scrollbar-color` (already handled by `color-scheme: light dark`). Chromium needs explicit webkit overrides for styled scrollbars.
+
+#### Phase 5I: Gradient Background Remapping (Section 12.7.21)
+
+35. **Create `remapNeutralGradient()` utility** — Add companion function to `remapNeutralColor()`:
+    ```typescript
+    function remapNeutralGradient(gradient: string): string {
+      // Regex to find hex colors in gradient strings
+      // For each hex color stop:
+      //   - If isNeutralColor(hex) → replace with var(--color-background) or var(--color-muted)
+      //   - If branded color → leave as original hex
+      // Return the full gradient string with remapped stops
+    }
+    ```
+    Update the Section and Card render functions: before applying `remapNeutralColor()` to `backgroundColor`, check if the value starts with `linear-gradient(` or `radial-gradient(`. If so, use `remapNeutralGradient()` instead. CSS custom properties inside `gradient()` functions are valid in all modern browsers (Chrome 49+, Firefox 31+, Safari 9+, Edge 16+).
+
+#### Phase 5J: CRM Module Form Adaptation (Section 12.7.20 note)
+
+36. **Fix CRM form hardcoded styles** — In `modules/crm/studio/renders.tsx`, find the `inputStyle` object (currently hardcodes `backgroundColor: '#fff'`, `color: '#1e293b'`, `border: '1px solid #e2e8f0'`). Replace with CSS variable references:
+    ```typescript
+    const inputStyle = {
+      backgroundColor: 'var(--color-background)',
+      color: 'var(--color-foreground)',
+      border: '1px solid var(--color-border)',
+      // ... rest of styles
+    };
+    ```
+    This ensures CRM forms embedded in published site sections adapt to dark mode the same way the main ContactForm does (which already uses `isDarkBackground()`). Test with CRM form placed on both light and dark section backgrounds.
+
+37. **Extended testing for gaps 11-14** — After completing steps 31-36, run targeted verification:
+    - **Shadows:** On a dark-background section, confirm shadows are visible (not black-on-black). On a neutral-remapped auto-mode section in dark OS preference, confirm elevation vars produce visible shadows.
+    - **Scrollbars:** On a `colorScheme: "auto"` site, toggle OS dark/light. Scrollbars and native `<select>`/`<input type="date">` should adapt. On a `colorScheme: "light"` site, NO change from current behavior.
+    - **Gradients:** Create a section with `background: linear-gradient(135deg, #ffffff, #f1f5f9)`. In auto dark mode, both neutral stops should remap. Create a section with `background: linear-gradient(135deg, #3b82f6, #8b5cf6)`. In auto dark mode, branded stops should remain as-is.
+    - **CRM forms:** Place a CRM form on a dark section. Input fields should have dark backgrounds, light text, visible borders. Place on a light section — original appearance unchanged.
+
+#### Phase 5K: Error Pages & Residual Hardcoded Colors (Sections 12.7.22-12.7.23)
+
+38. **Fix published site error pages** — Update the 3 error page files to use semantic Tailwind tokens:
+    - `src/app/site/[domain]/[[...slug]]/not-found.tsx`: Replace inline `style={{ color: '#666' }}` / `style={{ color: '#999' }}` with `className="text-muted-foreground"`. Remove all inline color styles.
+    - `src/app/site/[domain]/error.tsx`: Replace `bg-white` → `bg-background`, `text-gray-900` → `text-foreground`, `text-gray-600` → `text-muted-foreground`, `bg-gray-900 text-white` → `bg-primary text-primary-foreground`. Remove `style={{ colorScheme: 'light' }}`.
+    - `src/app/quote/[token]/not-found.tsx`: Replace `bg-gray-50 dark:bg-gray-900` → `bg-background`.
+    These pages must be wrapped in (or inherit from) the published site's CSS variable scope so semantic tokens resolve correctly in both modes.
+
+39. **Batch cleanup renders.tsx hardcoded colors** — Perform a single-pass replacement across `renders.tsx` for all ~25 hardcoded Tailwind gray classes in published-site render functions. Use the replacement table in Section 12.7.23:
+    - `bg-white` → `bg-card` (map overlay, info window, logo cards)
+    - `text-gray-900` → `text-foreground` (pricing headings, etc.)
+    - `text-gray-700/600/500/400` → `text-muted-foreground` (descriptions, timestamps, stats)
+    - `text-gray-300` → `text-muted` (empty stars, comparison marks)
+    - `bg-gray-100/50` → `bg-muted` (CTA placeholder)
+    **SKIP intentional hardcoded colors:** Toast "light" variant, payment brand colors, image overlay controls, color swatch names (see exclusion list in Section 12.7.23).
+
+40. **Verify error pages & cleanup** — After steps 38-39:
+    - Navigate to a non-existent page on a `colorScheme: "auto"` site in dark OS mode → 404 page shows dark background, light text, readable contrast
+    - Trigger an error on a `colorScheme: "auto"` site in dark OS mode → 500 page shows dark background, retry button visible
+    - On a `colorScheme: "light"` site → error pages look identical to current behavior (zero regression)
+    - Map info window on dark section → `bg-card` resolves to dark surface, text is readable
+    - Testimonials, stats, pricing sections → no `text-gray-*` classes remaining (except intentional exclusions)
+
+**Phase 5L — Blog & Prose Dark Mode Adaptation (Section 12.7.24)**
+
+41. **Fix blog post page hardcoded colors** — In `src/app/blog/[subdomain]/[slug]/page.tsx`:
+    - Replace all `text-gray-500` → `text-muted-foreground`, `text-gray-900` → `text-foreground`, `bg-gray-200` → `bg-muted`
+    - Add `dark:prose-invert` to the `prose` wrapper class
+    - Add `.prose-blog-content` wrapper class around the `dangerouslySetInnerHTML` div
+    - Verify related posts section uses semantic tokens
+
+42. **Fix blog listing page hardcoded colors** — In `src/app/blog/[subdomain]/page.tsx`:
+    - Replace all `text-gray-600` / `text-gray-500` / `text-gray-400` → `text-muted-foreground` (with `/70` opacity variant for `text-gray-400`)
+    - Empty state text → `text-muted-foreground`
+
+43. **Add blog layout with dark mode support** — Create `src/app/blog/[subdomain]/layout.tsx` (or update existing):
+    - Read site's `colorScheme` setting from Supabase
+    - Set `data-color-scheme` attribute on `<html>` (same pattern as `PublishedSiteLayout`)
+    - Add `globals.css` rule for `.prose-blog-content` inline color stripping under `prefers-color-scheme: dark`
+    - **Verify:** Visit blog post on `colorScheme: "auto"` site in dark OS mode → prose content adapts, back link readable, meta text readable, avatar placeholder visible, tags readable, related posts adapt
+    - **Verify:** Visit blog listing on same site → subtitle, excerpts, meta rows, empty state all adapt
+    - **Verify:** Paste HTML with inline `style="color: #333"` into a blog post → dark mode overrides inline color via `.prose-blog-content` rule
+    - **Verify:** `colorScheme: "light"` site → blog pages look identical to current behavior (zero regression)
+
+**Phase 5M — Portal, Form Feedback & StorefrontWidget Dark Mode (Sections 12.7.25-12.7.27)**
+
+44. **Portal status badges — add `dark:` variants** — Across ~12 portal files, add `dark:` Tailwind variants to all status badge classes. Follow the pattern from `portal/email/page.tsx` (the one file that already does this correctly). Recommended: create a shared `STATUS_BADGE_CLASSES` map utility to centralize badge styling across portal.
+    - `bg-yellow-100 text-yellow-800` → add `dark:bg-yellow-900/30 dark:text-yellow-300`
+    - `bg-green-100 text-green-800` → add `dark:bg-green-900/30 dark:text-green-300`
+    - `bg-blue-100 text-blue-800` → add `dark:bg-blue-900/30 dark:text-blue-300`
+    - `bg-gray-100 text-gray-700` → add `dark:bg-gray-800 dark:text-gray-300`
+    - `bg-red-100 text-red-800` → add `dark:bg-red-900/30 dark:text-red-300`
+    - `bg-orange-100 text-orange-800` → add `dark:bg-orange-900/30 dark:text-orange-300`
+    - Stat icon text: `text-blue-600` → add `dark:text-blue-400`, `text-green-600` → add `dark:text-green-400`, etc.
+
+45. **FormRender success/error — add `dark:` variants** — In `renders.tsx` FormRender (~L11824):
+    - Success: `bg-green-50 text-green-700` → add `dark:bg-green-950/20 dark:text-green-300`
+    - Error: `bg-red-50 text-red-700` → add `dark:bg-red-950/20 dark:text-red-300`
+
+46. **ContactFormRender — replace hex with CSS vars** — In `renders.tsx` ContactFormRender (~L12535):
+    - Replace `"#ffffff"` defaults → `var(--color-background)` / `var(--color-card)`
+    - Replace `"#1f2937"` text → `var(--color-foreground)`
+    - Replace `"#d1d5db"` border → `var(--color-border)`
+    - Replace `"#6b7280"` description → `var(--color-muted-foreground)`
+    - Error state hex → CSS variable equivalents with destructive tokens
+
+47. **StorefrontWidget — add `theme: "auto"` support** — In `StorefrontWidget.tsx`:
+    - Add `"auto"` to the `theme` prop type
+    - When `theme === "auto"`, generate `@media (prefers-color-scheme: dark)` CSS block in `storefrontStyles`
+    - Add `.sf-dark .sf-error { background: #450a0a; color: #fca5a5 }` dark variant
+    - Add dark variants for sale/discount accent colors (brighter for dark backgrounds)
+    - Wire site `colorScheme` setting → widget `theme` prop
+
+48. **Verify portal, forms & widget dark mode** — After steps 44-47:
+    - Portal dashboard in dark OS mode → all status badges readable (dark pastel backgrounds, light text)
+    - Portal invoices, support tickets, notifications → badges all adapt
+    - Form on published site in dark mode → success message has dark-appropriate green background
+    - Contact form on published site in dark mode → inputs, labels, description text all adapt via CSS vars
+    - StorefrontWidget with `theme: "auto"` → switches light/dark based on OS preference
+    - StorefrontWidget error state in dark mode → readable (dark red background, light red text)
+    - `colorScheme: "light"` site → all portal/form/widget behavior identical (zero regression)
+
+**Phase 5N — Embed Errors, Quote Portal, Live Chat Widget, Mobile Gaps, Platform Pages & Canvas (Sections 12.7.28-12.7.33)**
+
+49. **Fix embed error states** — In `src/app/embed/booking/[siteId]/page.tsx` and `src/app/embed/[moduleId]/[siteId]/page.tsx`: add `@media (prefers-color-scheme: dark)` CSS block to the inline `<style>` with dark body/text colors. In `src/components/modules/embed/module-embed-renderer.tsx`: replace hardcoded `rgb()` inline styles with CSS variable references (`hsl(var(--destructive))`, `hsl(var(--muted-foreground))`). See Section 12.7.28.
+
+50. **Fix quote portal dark mode** — In `src/app/quote/[token]/page.tsx`:
+    - Remove `data-theme="light"` forced attribute
+    - Remove `colorScheme: 'light'` from inline styles
+    - Replace `bg-gray-50` with `bg-background`
+    - Read originating site's `colorScheme` setting and set `data-color-scheme` accordingly
+    In `quote-portal-view.tsx`: add `dark:` variants to all 6 hardcoded icon/text colors (`text-green-600 dark:text-green-400`, `text-red-600 dark:text-red-400`, `text-amber-600 dark:text-amber-400`).
+    In `quote-accept-form.tsx`: replace `ctx.strokeStyle = '#000'` with runtime CSS variable read using `getComputedStyle()`.
+    In `quote-reject-dialog.tsx`: add `dark:text-red-400` to the `text-red-600` heading. See Section 12.7.29.
+
+51. **Build live chat widget dark mode system** — Create the widget CSS variable system (Section 12.7.30): define `--widget-bg`, `--widget-text`, `--widget-text-muted`, `--widget-border`, `--widget-surface`, `--widget-input-border`, `--widget-star-filled`, `--widget-star-empty`, `--widget-error-bg`, `--widget-error-text`, `--widget-error-border`, `--widget-system-bg`, `--widget-system-text` with light defaults and dark `@media (prefers-color-scheme: dark)` overrides gated by `.widget-auto` class on iframe `<html>`.
+
+52. **Replace all live chat widget hardcoded colors** — Across 7 widget component files (ChatWidget, WidgetChat, WidgetMessageBubble, WidgetConversationList, WidgetOfflineForm, WidgetPreChatForm, WidgetRating), replace all ~80 hardcoded color instances with `var(--widget-*)` references. Update `src/app/api/modules/live-chat/embed/route.ts` to inject the CSS variable block into the iframe `<style>` and accept a `darkMode` parameter. See Section 12.7.30.
+
+53. **Fix ecommerce mobile dark mode gaps** — In `CollapsibleProductDetails.tsx`: add `dark:prose-invert` to all 4 prose class instances (Section 12.7.31). In `MobilePaymentSelector.tsx`: add `dark:` variants to 4 card brand label colors (`text-blue-600 dark:text-blue-400`, `text-red-500 dark:text-red-400`, `text-blue-400 dark:text-blue-300`, `text-orange-500 dark:text-orange-400`). See Section 12.7.31.
+
+54. **Fix platform pages dark mode** — In `global-error.tsx`: add inline `<style>` with CSS variables and `@media (prefers-color-scheme: dark)` overrides, replace all ~12 hardcoded hex inline styles with `var()` references (Section 12.7.32). In `pricing/page.tsx`: add `dark:text-green-400` to 3 `text-green-600` instances. In `pricing-card.tsx`: add `dark:text-green-400` to `text-green-600`. In `api/developer/statements/[payoutId]/route.ts`: add `@media (prefers-color-scheme: dark)` CSS block + print media query forcing light (Section 12.7.32).
+
+55. **Fix canvas dark adaptation** — In `particle-background.tsx`: add `matchMedia('(prefers-color-scheme: dark)')` listener to resolve a brighter default particle color when system is in dark mode. Only apply when user hasn't set a custom color prop. See Section 12.7.33.
+
+56. **Verify ALL Phase 5N fixes** — After steps 49-55, run comprehensive verification:
+    - **Embeds:** Navigate to an embed booking error page in dark OS mode → dark background, readable error text. Module embed error → same result. Module-embed-renderer error card → dark-adapted colors.
+    - **Quote portal:** View quote on `colorScheme: "auto"` site in dark OS mode → dark background, all icons/text readable, signature canvas stroke visible on dark canvas bg, reject dialog text readable.
+    - **Live chat widget:** On a dark-mode customer site with `darkMode: "auto"` configured → widget chrome adapts: dark container, light text, dark input borders, star ratings visible, agent bubbles dark, system messages dark, offline/pre-chat forms dark. On light-mode site → zero change from current behavior.
+    - **Mobile ecommerce:** View product details on dark mode → prose content readable (dark:prose-invert). Mobile checkout payment selector → card brand labels visible on dark background.
+    - **Platform pages:** Visit pricing page in dark OS mode → green accent text readable. Trigger global error → page adapts to OS preference. View developer statement in dark OS mode → dark background with readable table; print → forces light.
+    - **Particle background:** On a dark section with particle effect → default particle color is brighter indigo. On light section → original indigo.
+
 ---
 
-## 16. Testing & Quality Gates
+## 17. Testing & Quality Gates
 
-### 16.1 Visual Regression Testing
+### 17.1 Visual Regression Testing
 
 Every layout component render must be tested at 4 viewport widths:
 - 320px (Mobile S)
@@ -1959,7 +4085,7 @@ Every layout component render must be tested at 4 viewport widths:
 - 1024px (Desktop)
 - 1440px (Wide)
 
-### 16.2 Nesting Stress Tests
+### 17.2 Nesting Stress Tests
 
 Test every valid nesting combination:
 - Section → Container → Columns → Card
@@ -1969,7 +4095,7 @@ Test every valid nesting combination:
 - Section → FlexBox → Wrapper → Image
 - Etc.
 
-### 16.3 AI Generation Audit
+### 17.3 AI Generation Audit
 
 Generate complete websites of these types and verify layout perfection:
 1. Business / Corporate
@@ -1995,7 +4121,251 @@ Generate complete websites of these types and verify layout perfection:
 
 For each: Verify mobile, tablet, and desktop rendering. Zero misalignment. Zero overflow. Zero broken layouts.
 
-### 16.4 Performance Budget
+**Generate HALF of these as dark-themed sites** (dark backgrounds with light text). Verify:
+- Cards on dark sections are NOT white (#ffffff)
+- Shadows/glow visible and appropriate for dark backgrounds
+- Shape dividers match adjacent section backgrounds
+- All text passes WCAG AA contrast (4.5:1 minimum)
+- Borders visible on dark backgrounds (using rgba white, not gray)
+- Glassmorphism looks correct on both dark and light sections
+- Alternating section pattern creates visual rhythm (different dark shades, not same monotone)
+
+### 17.4 System Dark Mode Testing
+
+For sites with `colorScheme: "auto"`, test the **complete** dark/light switching experience across every layer of the platform:
+
+**17.4.1 Automated checks (Playwright with `prefers-color-scheme` emulation):**
+1. Load site in light mode → screenshot all pages at 4 viewports
+2. Switch to dark mode → screenshot all pages at 4 viewports
+3. Compare: layout structure identical, only colors changed
+4. No flash of unstyled content (FOUC) during scheme switch — first paint matches OS preference
+5. WCAG AA contrast (4.5:1) passes in BOTH modes for all text
+6. Color transitions animate smoothly (0.3s ease) — no instant color snapping after first paint
+7. Browser meta theme-color matches the active mode's background color
+8. Images in dark mode are subtly dimmed (brightness 85%, saturation 90%) — verify via computed style
+
+**17.4.2 Layout component verification:**
+- Section/Card/Container backgrounds switch via CSS vars — neutral AI-set colors (near-white/near-black, low saturation) are remapped to CSS variable references by `remapNeutralColor()` (Section 12.7.16)
+- Branded/accent color sections (high saturation) stay their exact AI-set hex in BOTH modes
+- Alternating section rhythm preserved: pure white → `var(--color-background)`, off-white → `var(--color-muted)` → resolves to alternating dark shades
+- `data-keep-color` attribute correctly opts a section out of neutral color remapping
+- Cards within remapped sections inherit adaptive backgrounds (white cards → `var(--color-card)`)
+- Ecommerce pages (cart, checkout, product) adapt correctly
+- Dashboard is completely unaffected — navigate to dashboard and confirm no visual change
+- `colorScheme: "light"` sites show ZERO visual difference from before this feature existed — remapping is completely disabled, raw hex applied as today
+- No color bleed between dashboard and published site views
+
+**17.4.3 Premium component verification:**
+- Navbar: background, text, link colors all switch between light and dark palettes
+- Hero: background, overlay, heading text, subtext all adapt
+- Footer: background, text, link, border colors all adapt
+- CTA blocks: button backgrounds, hover states, text colors adapt
+- Feature grids: card backgrounds, icon colors, text colors adapt
+- ALL 45 premium components render correctly in both modes — no missing colors, no invisible text, no broken gradients
+
+**17.4.4 Logo & image verification:**
+- Main logo displays in light mode, dark mode logo displays in dark mode (if uploaded)
+- If no dark logo uploaded, main logo shows in both modes
+- Logo swap uses `<picture>` — no flash between logos on scheme change
+- Product images and blog images are subtly dimmed in dark mode
+- Images with `data-no-dim` attribute are NOT dimmed
+- Hero images with dark-mode variants swap correctly via `<picture>`
+- Images return to full brightness on hover
+
+**17.4.5 Visitor toggle verification:**
+- DarkModeToggle component renders in navbar/footer when placed by site owner
+- Toggling to "Dark" forces dark mode, overriding OS preference
+- Toggling to "Light" forces light mode, overriding OS preference
+- Toggling to "Auto" returns to OS preference detection
+- Preference persists to localStorage — survives page refresh and browser restart
+- On page load, localStorage preference is applied BEFORE first paint (inline `<script>` in `<head>`)
+- CSS selector priority: `[data-theme]` overrides `@media (prefers-color-scheme)` correctly
+
+**17.4.6 Studio preview verification:**
+- Dark mode preview toggle appears in Studio editor toolbar
+- Toggle to "Dark" → canvas iframe shows dark mode preview
+- Toggle to "Light" → canvas iframe shows light mode preview
+- Toggle to "Auto" → canvas follows editor's OS preference
+- Preview toggle does NOT modify the site's `colorScheme` setting
+- Visual indicator shows when forced mode is active
+
+**17.4.7 Edge cases:**
+- Site with mixed AI-set and default-color sections (both should look correct)
+- Site with all dark palette + `colorScheme: "auto"` (dark-to-light inversion)
+- Site with all light palette + `colorScheme: "auto"` (light-to-dark inversion)
+- Nested cards inside sections with explicit backgrounds — cards should also remap neutral colors
+- Rapid OS theme switching (5x in 2 seconds) — no race conditions, final state correct
+- Site with DarkModeToggle + `colorScheme: "light"` — toggle should not appear (only available for "auto" sites)
+- Site with SVG logo using `currentColor` — verify it adapts automatically without dark logo upload
+- Premium component with `VAR_MODE_EXCLUDE` — verify it falls back to hex injection cleanly
+- Ecommerce checkout in dark mode — form inputs, buttons, error states all readable
+- Section with very pale branded tint (e.g., pastel pink `#fff1f2`, sat ≈ 0.10) — verify it gets remapped (sat < 0.15). If site owner doesn't want this, `data-keep-color` opts out.
+- Section with medium gray intentional background (e.g., `#6b7280`, sat 0.03, lum 0.45) — should NOT be remapped (mid-luminance, outside thresholds)
+- Site switching from `"light"` to `"auto"` without AI re-generation — neutral colors should remap correctly on existing AI-generated sections
+
+**17.4.8 Neutral color remapping verification:**
+- Typical AI-generated sections with `#ffffff` background → becomes `var(--color-background)` → dark surface in dark mode ✅
+- Alternating `#f8fafc` sections → becomes `var(--color-muted)` → different dark shade ✅
+- Card with `#ffffff` background → becomes `var(--color-card)` ✅
+- Text with `#000000` color → becomes `var(--color-foreground)` → light text in dark mode ✅
+- Brand blue section `#2563eb` (sat 0.84) → stays `#2563eb` in BOTH modes ✅
+- Gold accent `#d4af37` (sat 0.60) → stays `#d4af37` in BOTH modes ✅
+- `remapNeutralColor()` called 0 times when `colorScheme === "light"` (verify in profiler/logging)
+
+**17.4.9 Print verification:**
+- Print/PDF a dark-mode page → all sections print with white backgrounds, black text
+- Images are NOT dimmed in print (filter removed)
+- Print link URLs are shown after anchor text
+- `print-color-adjust: exact` does NOT force dark backgrounds on `.studio-renderer` content
+- Product pages, order summaries print correctly regardless of OS dark mode setting
+
+**17.4.10 Favicon verification:**
+- Published site has favicon `<link>` tag in `<head>` (basic requirement)
+- When `darkModeFavicon` is set: dark OS → dark favicon, light OS → light favicon
+- When no `darkModeFavicon`: same favicon in both modes (graceful fallback)
+- SVG favicon with internal `@media (prefers-color-scheme: dark)` auto-adapts without separate upload
+- Older browsers (no `media` attribute support) use first favicon found (no error)
+
+**17.4.11 Performance impact verification:**
+- Dark mode `<style>` tag adds < 5KB to page weight
+- No additional JavaScript for dark mode detection (pure CSS `@media` queries)
+- `no-transitions` → transition enable happens within 1 frame (16ms)
+- No CLS (Cumulative Layout Shift) from theme application
+
+**17.4.12 Shadow & elevation verification:**
+- On a section with explicit dark background (`isDarkBackground()` returns true): shadows use glow variant (`var(--elevation-glow-sm)`) — verify via computed style that shadows are NOT `rgba(0,0,0,...)` on dark surfaces
+- On a neutral-remapped section (auto dark mode): elevation CSS vars resolve to dark variants (higher opacity black shadows) — shadows remain visible against dark `var(--color-background)`
+- On a light-mode site: elevation vars resolve to standard light shadows — no visual change from current behavior
+- 3D button, hero drop-shadow, glassmorphism, and image shadows all use `var(--elevation-*)` — no hardcoded `rgba(0,0,0,...)` remaining in renders.tsx shadow output
+- Cards/containers nested inside sections have appropriate elevation layering (card shadow slightly less than section shadow)
+
+**17.4.13 Scrollbar & native control verification:**
+- On a `colorScheme: "auto"` published site: toggle OS to dark mode → scrollbars turn dark, native `<select>` dropdowns have dark backgrounds, `<input type="date">` picker adapts, checkboxes/radios use dark chrome
+- On a `colorScheme: "light"` published site: scrollbars and native controls remain light regardless of OS preference — ZERO change from current behavior
+- In Studio editor: scrollbars and controls remain light (studio renderer not affected by `data-color-scheme`)
+- CRM form inputs on a dark section: background, text, and borders adapt (no hardcoded `#fff`, `#1e293b`, `#e2e8f0`)
+- Custom webkit scrollbar styling (track, thumb, thumb:hover) matches the site's color palette via CSS vars
+
+**17.4.14 Gradient background verification:**
+- Section with neutral gradient (`linear-gradient(135deg, #ffffff, #f1f5f9)`) in auto dark mode: both color stops remap to CSS vars → gradient smoothly transitions to dark variant
+- Section with branded gradient (`linear-gradient(135deg, #3b82f6, #8b5cf6)`) in auto dark mode: gradient stays exactly as AI-set — no remapping applied to saturated colors
+- Section with mixed gradient (one neutral stop + one branded stop): only the neutral stop is remapped
+- Gradient remapping is disabled when `colorScheme: "light"` — raw hex gradients applied as-is
+- CSS `var()` references inside `linear-gradient()` / `radial-gradient()` render correctly in Chrome, Firefox, Safari, Edge (no fallback needed for modern browsers)
+
+**17.4.15 Error page verification:**
+- Navigate to a non-existent URL on a `colorScheme: "auto"` site → toggle OS dark mode → 404 page has dark background (`bg-background`), readable text (`text-muted-foreground`), no inline color styles remaining
+- Trigger a runtime error on a `colorScheme: "auto"` site in dark mode → 500 page shows dark background, visible retry button (`bg-primary text-primary-foreground`), no `colorScheme: 'light'` override
+- On a `colorScheme: "light"` site → both error pages look identical to current behavior (white bg, gray text)
+- Quote portal 404 uses `bg-background` (not `bg-gray-50 dark:bg-gray-900`)
+
+**17.4.16 Render function hardcoded color cleanup verification:**
+- Grep `renders.tsx` for `text-gray-` and `bg-white` — only intentional exclusions remain (Toast "light" variant, payment brand colors, image overlay controls, color swatch names)
+- Map info window overlay on dark section: card surface (`bg-card`) is dark, title (`text-card-foreground`) and address (`text-muted-foreground`) are readable
+- Testimonial block in dark mode: author names, dates, descriptions all use semantic tokens — no gray text on dark background
+- Pricing section in dark mode: heading and subtitle adapt, currency/price text is readable
+- Stats section in dark mode: stat labels and values use semantic tokens
+- Empty star ratings in dark mode: `text-muted` is visible but subtle (correct behavior)
+- Logo card grid in dark mode: cards use `bg-card` (dark surface), not `bg-white`
+
+**17.4.17 Blog & prose dark mode verification:**
+- Blog post page (`/blog/[subdomain]/[slug]/`) in dark OS mode on `colorScheme: "auto"` site: background is dark, all text is light/readable
+- Back link ("← Back to blog") uses `text-muted-foreground` — visible on dark background
+- Author name uses `text-foreground` — high contrast on dark background
+- Avatar placeholder circle uses `bg-muted` — distinguishable from background
+- Date, reading time, tags label all use `text-muted-foreground` — visible but secondary
+- Prose content wrapper has `dark:prose-invert` — headings, paragraphs, lists, blockquotes, code blocks all invert correctly
+- Blog post with user-pasted HTML containing `style="color: #333"` — `.prose-blog-content` CSS override strips inline color in dark mode, text inherits from prose-invert
+- Blog listing page (`/blog/[subdomain]/`) in dark mode: subtitle, excerpts, meta rows all use semantic tokens
+- Empty state ("No posts published yet") uses `text-muted-foreground` — visible on dark background
+- Related posts section: dates use `text-muted-foreground`, titles hover adapts, image scaling unaffected
+- `colorScheme: "light"` site: blog pages render identically to current behavior (zero regression)
+- Blog layout sets `data-color-scheme` attribute on `<html>` — CSS variable overrides activate correctly
+
+**17.4.18 Portal client route dark mode verification:**
+- Portal dashboard (`/portal/`) in dark OS mode: stat cards with `bg-blue-500/10` icons → icon text `dark:text-blue-400` readable
+- Status badges across portal: `bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300` → visible pastel on dark
+- Portal invoices page: "Paid" badge green, "Pending" badge yellow, "Overdue" badge red — all readable in dark mode
+- Portal support tickets: priority badges (Low/Medium/High/Urgent) all have `dark:` variants
+- `components/portal/ticket-detail.tsx`: staff/customer message bubbles distinguishable in dark mode
+- Portal notifications: icon accent colors have `dark:` text variants
+- Portal analytics: chart accent colors (blue/green/orange) visible on dark background
+- Shared `STATUS_BADGE_CLASSES` utility (if created) used consistently across all portal files
+- `colorScheme: "light"` site → portal pages identical to current behavior
+
+**17.4.19 Form submission feedback dark mode verification:**
+- FormRender success message: `bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-300` → readable on dark
+- FormRender error message: `bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-300` → readable on dark
+- ContactFormRender on `colorScheme: "auto"` site in dark mode: input background adapts via `var(--color-card)`, text via `var(--color-foreground)`, borders via `var(--color-border)`
+- ContactFormRender error state: uses destructive CSS variable tokens, readable on dark
+- ContactFormRender description text: `var(--color-muted-foreground)` adapts to dark
+- ContactFormRender on explicitly dark background section: existing `isDark` logic still works (no regression)
+- ContactFormRender on `colorScheme: "light"` site: renders identically to current behavior
+
+**17.4.20 StorefrontWidget dark mode verification:**
+- Widget with `theme: "auto"` on OS dark mode: switches to dark styles automatically
+- Widget with `theme: "auto"` on OS light mode: renders light styles
+- Widget with `theme: "light"` / `theme: "dark"`: explicit theme still works (backward compatible)
+- Error state in dark mode: `#450a0a` background, `#fca5a5` text — readable
+- Sale badge in dark mode: `#f87171` background — visible on dark card
+- Discount success message in dark mode: `#4ade80` text — readable
+- Cart drawer in dark mode: dark background, all text/prices readable
+- Site `colorScheme: "auto"` → widget receives `theme: "auto"` prop automatically
+
+**17.4.21 Embed error state dark mode verification:**
+- Navigate to embed booking route with disabled module in dark OS mode → error page has dark background, red heading readable, gray subtitle readable
+- Navigate to module embed route with invalid module in dark OS mode → "Access Denied" / "Module Not Available" dark-adapted
+- Trigger module-embed-renderer error in dark OS mode → error card has dark red tinted background, readable error text
+- Trigger module-embed-renderer loading in dark OS mode → loading text readable
+- All embed error states in light OS mode → zero regression from current behavior
+
+**17.4.22 Quote portal dark mode verification:**
+- View quote on `colorScheme: "auto"` site in dark OS mode → page background dark (not forced light), all text readable
+- Accepted quote banner → green icon visible on dark background
+- Rejected quote banner → red icon visible on dark background
+- Expired quote banner → amber icon visible, countdown text readable
+- Discount line in totals → green text readable on dark background
+- Quote accept signature → stroke visible on dark canvas background
+- Quote reject dialog → heading text readable in dark mode
+- View quote on `colorScheme: "light"` site → page appearance identical to current behavior
+
+**17.4.23 Live chat widget dark mode verification:**
+- On a `darkMode: "auto"` configured site in dark OS mode:
+  - Chat widget container → dark background (not white flash)
+  - Agent message bubbles → dark surface with light text
+  - Visitor message bubbles → primary color (unchanged, still uses settings.primaryColor)
+  - System messages → dark pill background, muted text readable
+  - Typing indicator → dark surface with visible dots
+  - Input textarea → dark background, light text, visible border
+  - "Powered by DRAMAC" footer → muted text readable
+  - Conversation list → dark backgrounds, conversation titles readable, status dots visible
+  - Offline form → dark background, form labels readable, amber alert visible with dark amber tones
+  - Pre-chat form → dark background, all labels and inputs themed
+  - Rating stars → filled stars visible (golden), empty stars visible (dark gray), all text readable
+  - Payment method selector in chat → dark cards, readable text
+  - AI badge → dark-adapted purple tones
+- On `darkMode: "light"` site → all widget appearance identical to current behavior
+- On `darkMode: "auto"` site with light OS mode → widget renders light (backward compatible)
+
+**17.4.24 Ecommerce mobile dark mode verification:**
+- View product page with collapsible details in dark OS mode → all prose sections (description, shipping, returns, custom tabs) readable with dark:prose-invert active
+- Mobile checkout with card payment → Visa (blue), Mastercard (red), Amex (blue), Discover (orange) brand labels all readable on dark background
+- Same pages in light OS mode → zero regression
+
+**17.4.25 Platform pages dark mode verification:**
+- Global error page in dark OS mode → adapts to dark (dark background, light text, visible card, purple button)
+- Global error page in light OS mode → adapts to light (white background, dark text)
+- Pricing page in dark OS mode → green "Save X%" text readable on dark background
+- Billing cycle toggle → savings badge visible in dark mode
+- Developer earnings statement in browser (dark OS mode) → dark background, readable table, visible borders
+- Developer earnings statement printed → always light regardless of OS preference
+
+**17.4.26 Canvas element dark mode verification:**
+- Particle background effect on dark section → brighter default indigo color (not dark indigo on dark bg)
+- Particle background with custom color prop → custom color used regardless of OS preference
+- Toggle OS preference light→dark while particle is visible → color updates reactively via matchMedia listener
+
+### 17.5 Performance Budget
 
 | Metric | Target |
 |--------|--------|
@@ -2042,13 +4412,15 @@ For each: Verify mobile, tablet, and desktop rendering. Zero misalignment. Zero 
 | System | Purpose |
 |--------|---------|
 | **Responsive Engine** | `resolveResponsive()` + complete Tailwind class maps for every breakpoint |
+| **Dark/Light Color Awareness** | `isDarkBackground()` detection, adaptive shadows→glow, glassmorphism variants, card bg derivation, shape divider color matching, WCAG AA contrast enforcement |
+| **System Dark Mode** | Full `prefers-color-scheme` support: dual CSS var injection, premium component CSS var mode, smooth transitions, browser chrome `<meta name="theme-color">`, dark logo variants, image dimming, visitor manual toggle (DarkModeToggle component), Studio preview toggle. New sites default to `"auto"`. See Section 12.7. |
 | **Animation Engine** | Framer Motion integration with 30+ entrance, 10+ scroll, loop, stagger, 3D |
 | **3D System** | Perspective containers, cursor-tracking tilt, depth parallax layers |
 | **Scroll System** | Snap sections, progress indicators, section transitions, sticky scrolling |
 | **Visual System** | Glassmorphism, gradient borders, shape dividers, clip paths, blend modes |
 | **Container Queries** | Component-level responsive design independent of viewport |
-| **AI Integration** | Rich metadata, layout selection rules, responsive defaults, preset system |
+| **AI Integration** | Rich metadata, layout selection rules, responsive defaults, dark/light palette generation, preset system |
 
 ---
 
-*This plan gives DRAMAC's layout system the capability to generate ANY modern website design — from minimalist portfolios to complex dashboards, from scroll-storytelling pages to full-page cinematic experiences — all through the AI Designer, all perfectly responsive, all award-worthy.*
+*This plan gives DRAMAC's layout system the capability to generate ANY modern website design — from minimalist portfolios to complex dashboards, from scroll-storytelling pages to full-page cinematic experiences — in both dark-themed and light-themed aesthetics — with full system dark/light mode adaptation that matches or exceeds Framer, Webflow, and Squarespace — all through the AI Designer, all perfectly responsive, all requiring zero manual color adjustment, all award-worthy.*
