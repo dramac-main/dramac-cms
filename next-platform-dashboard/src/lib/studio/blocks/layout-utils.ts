@@ -537,3 +537,246 @@ export const positionMap: Record<string, string> = {
   fixed: "fixed",
   absolute: "absolute",
 };
+
+// ============================================================================
+// PHASE 2: NEW COMPONENT UTILITY MAPS
+// ============================================================================
+
+// --- Flex Direction Map (responsive) ---
+export const flexDirectionMap: Record<string, ClassMapValue> = {
+  row:              { mobile: "flex-row",         tablet: "sm:flex-row",         desktop: "lg:flex-row" },
+  column:           { mobile: "flex-col",         tablet: "sm:flex-col",         desktop: "lg:flex-col" },
+  "row-reverse":    { mobile: "flex-row-reverse", tablet: "sm:flex-row-reverse", desktop: "lg:flex-row-reverse" },
+  "column-reverse": { mobile: "flex-col-reverse", tablet: "sm:flex-col-reverse", desktop: "lg:flex-col-reverse" },
+  // Stack aliases
+  vertical:         { mobile: "flex-col",         tablet: "sm:flex-col",         desktop: "lg:flex-col" },
+  horizontal:       { mobile: "flex-row",         tablet: "sm:flex-row",         desktop: "lg:flex-row" },
+};
+
+// --- Flex Wrap Map (responsive) ---
+export const flexWrapMap: Record<string, ClassMapValue> = {
+  nowrap:         { mobile: "flex-nowrap",       tablet: "sm:flex-nowrap",       desktop: "lg:flex-nowrap" },
+  wrap:           { mobile: "flex-wrap",         tablet: "sm:flex-wrap",         desktop: "lg:flex-wrap" },
+  "wrap-reverse": { mobile: "flex-wrap-reverse", tablet: "sm:flex-wrap-reverse", desktop: "lg:flex-wrap-reverse" },
+};
+
+// --- Align Content Map (responsive) ---
+export const alignContentMap: Record<string, ClassMapValue> = {
+  start:   { mobile: "content-start",   tablet: "sm:content-start",   desktop: "lg:content-start" },
+  center:  { mobile: "content-center",  tablet: "sm:content-center",  desktop: "lg:content-center" },
+  end:     { mobile: "content-end",     tablet: "sm:content-end",     desktop: "lg:content-end" },
+  between: { mobile: "content-between", tablet: "sm:content-between", desktop: "lg:content-between" },
+  around:  { mobile: "content-around",  tablet: "sm:content-around",  desktop: "lg:content-around" },
+  stretch: { mobile: "content-stretch", tablet: "sm:content-stretch", desktop: "lg:content-stretch" },
+  evenly:  { mobile: "content-evenly",  tablet: "sm:content-evenly",  desktop: "lg:content-evenly" },
+};
+
+// --- Justify Items Map (responsive) ---
+export const justifyItemsMap: Record<string, ClassMapValue> = {
+  start:   { mobile: "justify-items-start",   tablet: "sm:justify-items-start",   desktop: "lg:justify-items-start" },
+  center:  { mobile: "justify-items-center",  tablet: "sm:justify-items-center",  desktop: "lg:justify-items-center" },
+  end:     { mobile: "justify-items-end",     tablet: "sm:justify-items-end",     desktop: "lg:justify-items-end" },
+  stretch: { mobile: "justify-items-stretch", tablet: "sm:justify-items-stretch", desktop: "lg:justify-items-stretch" },
+};
+
+// --- Place Items Map (responsive) ---
+export const placeItemsMap: Record<string, ClassMapValue> = {
+  start:   { mobile: "place-items-start",   tablet: "sm:place-items-start",   desktop: "lg:place-items-start" },
+  center:  { mobile: "place-items-center",  tablet: "sm:place-items-center",  desktop: "lg:place-items-center" },
+  end:     { mobile: "place-items-end",     tablet: "sm:place-items-end",     desktop: "lg:place-items-end" },
+  stretch: { mobile: "place-items-stretch", tablet: "sm:place-items-stretch", desktop: "lg:place-items-stretch" },
+};
+
+// --- Display Map (responsive) ---
+export const displayMap: Record<string, ClassMapValue> = {
+  block:       { mobile: "block",       tablet: "sm:block",       desktop: "lg:block" },
+  flex:        { mobile: "flex",        tablet: "sm:flex",        desktop: "lg:flex" },
+  grid:        { mobile: "grid",        tablet: "sm:grid",        desktop: "lg:grid" },
+  inline:      { mobile: "inline",      tablet: "sm:inline",      desktop: "lg:inline" },
+  "inline-flex":  { mobile: "inline-flex",  tablet: "sm:inline-flex",  desktop: "lg:inline-flex" },
+  "inline-grid":  { mobile: "inline-grid",  tablet: "sm:inline-grid",  desktop: "lg:inline-grid" },
+  contents:    { mobile: "contents",    tablet: "sm:contents",    desktop: "lg:contents" },
+  none:        { mobile: "hidden",      tablet: "sm:hidden",      desktop: "lg:hidden" },
+};
+
+// --- Text Align Map (responsive) ---
+export const textAlignMap: Record<string, ClassMapValue> = {
+  left:   { mobile: "text-left",   tablet: "sm:text-left",   desktop: "lg:text-left" },
+  center: { mobile: "text-center", tablet: "sm:text-center", desktop: "lg:text-center" },
+  right:  { mobile: "text-right",  tablet: "sm:text-right",  desktop: "lg:text-right" },
+};
+
+// --- Width Map (responsive) ---
+export const widthMap: Record<string, ClassMapValue> = {
+  auto: { mobile: "w-auto", tablet: "sm:w-auto", desktop: "lg:w-auto" },
+  full: { mobile: "w-full", tablet: "sm:w-full", desktop: "lg:w-full" },
+  fit:  { mobile: "w-fit",  tablet: "sm:w-fit",  desktop: "lg:w-fit" },
+  min:  { mobile: "w-min",  tablet: "sm:w-min",  desktop: "lg:w-min" },
+  max:  { mobile: "w-max",  tablet: "sm:w-max",  desktop: "lg:w-max" },
+};
+
+// --- Height Map (responsive) ---
+export const heightMap: Record<string, ClassMapValue> = {
+  auto:   { mobile: "h-auto",   tablet: "sm:h-auto",   desktop: "lg:h-auto" },
+  full:   { mobile: "h-full",   tablet: "sm:h-full",   desktop: "lg:h-full" },
+  screen: { mobile: "h-screen", tablet: "sm:h-screen", desktop: "lg:h-screen" },
+  fit:    { mobile: "h-fit",    tablet: "sm:h-fit",    desktop: "lg:h-fit" },
+  min:    { mobile: "h-min",    tablet: "sm:h-min",    desktop: "lg:h-min" },
+  max:    { mobile: "h-max",    tablet: "sm:h-max",    desktop: "lg:h-max" },
+};
+
+// --- Aspect Ratio Box Map (ratio format: "1:1", "16:9", etc.) ---
+export const aspectRatioBoxMap: Record<string, string> = {
+  "1:1":  "aspect-square",
+  "16:9": "aspect-video",
+  "4:3":  "aspect-4/3",
+  "3:2":  "aspect-3/2",
+  "21:9": "aspect-21/9",
+  "2:3":  "aspect-2/3",
+  "3:4":  "aspect-3/4",
+  "9:16": "aspect-9/16",
+};
+
+/**
+ * Parse an aspect ratio string like "4:3" to CSS aspect-ratio value "4/3".
+ * Returns undefined if the string is not a valid ratio.
+ */
+export function parseAspectRatio(ratio: string): string | undefined {
+  const match = ratio.match(/^(\d+):(\d+)$/);
+  if (!match) return undefined;
+  return `${match[1]}/${match[2]}`;
+}
+
+// --- Object Fit Map ---
+export const objectFitMap: Record<string, string> = {
+  cover:      "object-cover",
+  contain:    "object-contain",
+  fill:       "object-fill",
+  none:       "object-none",
+  "scale-down": "object-scale-down",
+};
+
+// --- Backdrop Blur Map ---
+export const backdropBlurMap: Record<string, string> = {
+  none: "",
+  sm:   "backdrop-blur-sm",
+  md:   "backdrop-blur-md",
+  lg:   "backdrop-blur-lg",
+  xl:   "backdrop-blur-xl",
+};
+
+// --- Margin Map (responsive) ---
+export const marginMap: Record<string, ClassMapValue> = {
+  auto: { mobile: "m-auto", tablet: "sm:m-auto", desktop: "lg:m-auto" },
+  "0":  { mobile: "m-0",    tablet: "sm:m-0",    desktop: "lg:m-0" },
+  "1":  { mobile: "m-1",    tablet: "sm:m-1",    desktop: "lg:m-1" },
+  "2":  { mobile: "m-2",    tablet: "sm:m-2",    desktop: "lg:m-2" },
+  "3":  { mobile: "m-3",    tablet: "sm:m-3",    desktop: "lg:m-3" },
+  "4":  { mobile: "m-4",    tablet: "sm:m-4",    desktop: "lg:m-4" },
+  "5":  { mobile: "m-5",    tablet: "sm:m-5",    desktop: "lg:m-5" },
+  "6":  { mobile: "m-6",    tablet: "sm:m-6",    desktop: "lg:m-6" },
+  "8":  { mobile: "m-8",    tablet: "sm:m-8",    desktop: "lg:m-8" },
+  "10": { mobile: "m-10",   tablet: "sm:m-10",   desktop: "lg:m-10" },
+  "12": { mobile: "m-12",   tablet: "sm:m-12",   desktop: "lg:m-12" },
+  "16": { mobile: "m-16",   tablet: "sm:m-16",   desktop: "lg:m-16" },
+  "20": { mobile: "m-20",   tablet: "sm:m-20",   desktop: "lg:m-20" },
+  "24": { mobile: "m-24",   tablet: "sm:m-24",   desktop: "lg:m-24" },
+};
+
+// --- Align Self Map (responsive) ---
+export const alignSelfMap: Record<string, ClassMapValue> = {
+  start:    { mobile: "self-start",    tablet: "sm:self-start",    desktop: "lg:self-start" },
+  center:   { mobile: "self-center",   tablet: "sm:self-center",   desktop: "lg:self-center" },
+  end:      { mobile: "self-end",      tablet: "sm:self-end",      desktop: "lg:self-end" },
+  stretch:  { mobile: "self-stretch",  tablet: "sm:self-stretch",  desktop: "lg:self-stretch" },
+  baseline: { mobile: "self-baseline", tablet: "sm:self-baseline", desktop: "lg:self-baseline" },
+};
+
+// --- Justify Self Map (responsive) ---
+export const justifySelfMap: Record<string, ClassMapValue> = {
+  start:   { mobile: "justify-self-start",   tablet: "sm:justify-self-start",   desktop: "lg:justify-self-start" },
+  center:  { mobile: "justify-self-center",  tablet: "sm:justify-self-center",  desktop: "lg:justify-self-center" },
+  end:     { mobile: "justify-self-end",     tablet: "sm:justify-self-end",     desktop: "lg:justify-self-end" },
+  stretch: { mobile: "justify-self-stretch", tablet: "sm:justify-self-stretch", desktop: "lg:justify-self-stretch" },
+};
+
+// --- Grid Auto Flow Map ---
+export const gridAutoFlowMap: Record<string, string> = {
+  row:            "grid-flow-row",
+  column:         "grid-flow-col",
+  dense:          "grid-flow-dense",
+  "row dense":    "grid-flow-row-dense",
+  "column dense": "grid-flow-col-dense",
+};
+
+// --- Col/Row Span Maps ---
+export const colSpanMap: Record<number | string, string> = {
+  1: "col-span-1", 2: "col-span-2", 3: "col-span-3", 4: "col-span-4",
+  5: "col-span-5", 6: "col-span-6", 7: "col-span-7", 8: "col-span-8",
+  9: "col-span-9", 10: "col-span-10", 11: "col-span-11", 12: "col-span-12",
+  full: "col-span-full",
+};
+
+export const rowSpanMap: Record<number | string, string> = {
+  1: "row-span-1", 2: "row-span-2", 3: "row-span-3", 4: "row-span-4",
+  5: "row-span-5", 6: "row-span-6",
+  full: "row-span-full",
+};
+
+// --- Row Gap / Column Gap Maps (responsive) ---
+export const rowGapMap: Record<string, ClassMapValue> = {
+  "0":  { mobile: "gap-y-0",  tablet: "sm:gap-y-0",  desktop: "lg:gap-y-0" },
+  "1":  { mobile: "gap-y-1",  tablet: "sm:gap-y-1",  desktop: "lg:gap-y-1" },
+  "2":  { mobile: "gap-y-2",  tablet: "sm:gap-y-2",  desktop: "lg:gap-y-2" },
+  "3":  { mobile: "gap-y-3",  tablet: "sm:gap-y-3",  desktop: "lg:gap-y-3" },
+  "4":  { mobile: "gap-y-4",  tablet: "sm:gap-y-4",  desktop: "lg:gap-y-4" },
+  "5":  { mobile: "gap-y-5",  tablet: "sm:gap-y-5",  desktop: "lg:gap-y-5" },
+  "6":  { mobile: "gap-y-6",  tablet: "sm:gap-y-6",  desktop: "lg:gap-y-6" },
+  "8":  { mobile: "gap-y-8",  tablet: "sm:gap-y-8",  desktop: "lg:gap-y-8" },
+  "10": { mobile: "gap-y-10", tablet: "sm:gap-y-10", desktop: "lg:gap-y-10" },
+  "12": { mobile: "gap-y-12", tablet: "sm:gap-y-12", desktop: "lg:gap-y-12" },
+  "16": { mobile: "gap-y-16", tablet: "sm:gap-y-16", desktop: "lg:gap-y-16" },
+  "20": { mobile: "gap-y-20", tablet: "sm:gap-y-20", desktop: "lg:gap-y-20" },
+  "24": { mobile: "gap-y-24", tablet: "sm:gap-y-24", desktop: "lg:gap-y-24" },
+};
+
+export const columnGapMap: Record<string, ClassMapValue> = {
+  "0":  { mobile: "gap-x-0",  tablet: "sm:gap-x-0",  desktop: "lg:gap-x-0" },
+  "1":  { mobile: "gap-x-1",  tablet: "sm:gap-x-1",  desktop: "lg:gap-x-1" },
+  "2":  { mobile: "gap-x-2",  tablet: "sm:gap-x-2",  desktop: "lg:gap-x-2" },
+  "3":  { mobile: "gap-x-3",  tablet: "sm:gap-x-3",  desktop: "lg:gap-x-3" },
+  "4":  { mobile: "gap-x-4",  tablet: "sm:gap-x-4",  desktop: "lg:gap-x-4" },
+  "5":  { mobile: "gap-x-5",  tablet: "sm:gap-x-5",  desktop: "lg:gap-x-5" },
+  "6":  { mobile: "gap-x-6",  tablet: "sm:gap-x-6",  desktop: "lg:gap-x-6" },
+  "8":  { mobile: "gap-x-8",  tablet: "sm:gap-x-8",  desktop: "lg:gap-x-8" },
+  "10": { mobile: "gap-x-10", tablet: "sm:gap-x-10", desktop: "lg:gap-x-10" },
+  "12": { mobile: "gap-x-12", tablet: "sm:gap-x-12", desktop: "lg:gap-x-12" },
+  "16": { mobile: "gap-x-16", tablet: "sm:gap-x-16", desktop: "lg:gap-x-16" },
+  "20": { mobile: "gap-x-20", tablet: "sm:gap-x-20", desktop: "lg:gap-x-20" },
+  "24": { mobile: "gap-x-24", tablet: "sm:gap-x-24", desktop: "lg:gap-x-24" },
+};
+
+// --- Overlay Position Map ---
+export const overlayPositionMap: Record<string, string> = {
+  fill:          "absolute inset-0",
+  top:           "absolute top-0 left-0 right-0",
+  bottom:        "absolute bottom-0 left-0 right-0",
+  left:          "absolute top-0 left-0 bottom-0",
+  right:         "absolute top-0 right-0 bottom-0",
+  center:        "absolute inset-0 flex items-center justify-center",
+  "top-left":    "absolute top-0 left-0",
+  "top-right":   "absolute top-0 right-0",
+  "bottom-left": "absolute bottom-0 left-0",
+  "bottom-right":"absolute bottom-0 right-0",
+};
+
+// --- Grid Preset Templates ---
+export const gridPresetMap: Record<string, { columns: string; rows?: string }> = {
+  dashboard:    { columns: "repeat(4, 1fr)", rows: "auto" },
+  blog:         { columns: "2fr 1fr" },
+  gallery:      { columns: "repeat(3, 1fr)" },
+  portfolio:    { columns: "repeat(auto-fill, minmax(280px, 1fr))" },
+  split:        { columns: "1fr 1fr" },
+  "feature-grid": { columns: "repeat(3, 1fr)" },
+  pricing:      { columns: "repeat(3, 1fr)" },
+};

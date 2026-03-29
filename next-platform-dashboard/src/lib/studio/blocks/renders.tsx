@@ -49,6 +49,29 @@ import {
   verticalAlignMap,
   contentAlignMap,
   aspectRatioMap,
+  flexDirectionMap,
+  flexWrapMap,
+  alignContentMap as alignContentMapUtil,
+  justifyItemsMap,
+  placeItemsMap,
+  displayMap,
+  textAlignMap,
+  widthMap,
+  heightMap,
+  aspectRatioBoxMap,
+  parseAspectRatio,
+  objectFitMap,
+  backdropBlurMap,
+  marginMap,
+  alignSelfMap,
+  justifySelfMap,
+  gridAutoFlowMap,
+  colSpanMap,
+  rowSpanMap,
+  rowGapMap,
+  columnGapMap,
+  overlayPositionMap,
+  gridPresetMap,
   type ResponsiveValue as UtilResponsiveValue,
   type GradientConfig,
 } from "@/lib/studio/blocks/layout-utils";
@@ -1037,6 +1060,694 @@ export function DividerRender({
       style={getGradientStyle()}
       role="separator"
     />
+  );
+}
+
+// ============================================================================
+// STACK — Simple vertical/horizontal stacker (Phase 2)
+// Default: bg-transparent text-inherit (structural component)
+// ============================================================================
+
+export interface StackProps {
+  direction?: UtilResponsiveValue<"vertical" | "horizontal">;
+  spacing?: UtilResponsiveValue<string>;
+  align?: UtilResponsiveValue<"start" | "center" | "end" | "stretch">;
+  justify?: UtilResponsiveValue<"start" | "center" | "end" | "between" | "around">;
+  wrap?: UtilResponsiveValue<boolean>;
+  divider?: boolean;
+  dividerColor?: string;
+  dividerThickness?: "thin" | "medium";
+  width?: UtilResponsiveValue<"auto" | "full" | string>;
+  maxWidth?: UtilResponsiveValue<string>;
+  padding?: UtilResponsiveValue<string>;
+  paddingX?: UtilResponsiveValue<string>;
+  paddingY?: UtilResponsiveValue<string>;
+  backgroundColor?: string;
+  borderRadius?: UtilResponsiveValue<string>;
+  shadow?: UtilResponsiveValue<string>;
+  hideOnMobile?: boolean;
+  hideOnTablet?: boolean;
+  hideOnDesktop?: boolean;
+  id?: string;
+  className?: string;
+  children?: React.ReactNode;
+}
+
+export function StackRender({
+  direction = "vertical",
+  spacing = "4",
+  align,
+  justify,
+  wrap,
+  divider = false,
+  dividerColor,
+  dividerThickness = "thin",
+  width,
+  maxWidth,
+  padding,
+  paddingX,
+  paddingY,
+  backgroundColor,
+  borderRadius,
+  shadow,
+  hideOnMobile,
+  hideOnTablet,
+  hideOnDesktop,
+  id,
+  className = "",
+  children,
+}: StackProps) {
+  // Direction classes
+  const dirClasses = getResponsiveClassesUtil(direction, flexDirectionMap);
+
+  // Gap
+  const gapClasses = getResponsiveClassesUtil(spacing, gapMapUtil);
+
+  // Alignment
+  const alignClasses = getResponsiveClassesUtil(align, alignItemsLookup);
+
+  // Justify
+  const justifyMap: Record<string, string> = {
+    start: "justify-start", center: "justify-center", end: "justify-end",
+    between: "justify-between", around: "justify-around",
+  };
+  const justifyClass = justify && typeof justify === "string" ? (justifyMap[justify] || "") : "";
+
+  // Wrap
+  const wrapClass = wrap === true ? "flex-wrap" : "";
+
+  // Sizing
+  const widthClasses = width ? getResponsiveClassesUtil(width, widthMap) : "";
+  const maxWClasses = maxWidth ? getResponsiveClassesUtil(maxWidth, maxWidthMapUtil) : "";
+
+  // Padding
+  const padClasses = getResponsiveClassesUtil(padding, paddingMapUtil);
+  const padXClasses = getResponsiveClassesUtil(paddingX, paddingXMapUtil);
+  const padYClasses = getResponsiveClassesUtil(paddingY, paddingYMapUtil);
+
+  // Visual
+  const radiusClasses = getResponsiveClassesUtil(borderRadius, borderRadiusMapUtil);
+  const shadowClasses = getResponsiveClassesUtil(shadow, shadowMapUtil);
+
+  // Visibility
+  const visClasses = getVisibilityClasses({ hideOnMobile, hideOnTablet, hideOnDesktop });
+
+  // Inline style for explicit background only
+  const inlineStyle: React.CSSProperties = {};
+  if (backgroundColor) inlineStyle.backgroundColor = backgroundColor;
+
+  // Divider rendering
+  const renderChildren = () => {
+    if (!divider || !children) return children;
+    const childArray = React.Children.toArray(children).filter(Boolean);
+    const isVertical = typeof direction === "string" ? direction === "vertical" : true;
+    const divThickness = dividerThickness === "medium" ? "2px" : "1px";
+    const divColor = dividerColor || "var(--border, #e5e7eb)";
+    return childArray.map((child, i) => (
+      <React.Fragment key={i}>
+        {child}
+        {i < childArray.length - 1 && (
+          <div
+            aria-hidden="true"
+            style={{
+              [isVertical ? "borderBottomWidth" : "borderRightWidth"]: divThickness,
+              [isVertical ? "borderBottomStyle" : "borderRightStyle"]: "solid",
+              borderColor: divColor,
+              [isVertical ? "width" : "height"]: "100%",
+              flexShrink: 0,
+            }}
+          />
+        )}
+      </React.Fragment>
+    ));
+  };
+
+  return (
+    <div
+      id={id}
+      className={`flex ${dirClasses} ${gapClasses} ${alignClasses} ${justifyClass} ${wrapClass} ${widthClasses} ${maxWClasses} ${padClasses} ${padXClasses} ${padYClasses} ${radiusClasses} ${shadowClasses} ${visClasses} ${className}`.replace(/\s+/g, " ").trim()}
+      style={Object.keys(inlineStyle).length > 0 ? inlineStyle : undefined}
+    >
+      {divider ? renderChildren() : children}
+    </div>
+  );
+}
+
+// ============================================================================
+// FLEXBOX — Dedicated flexbox layout builder (Phase 2)
+// Default: bg-transparent text-inherit (structural component)
+// ============================================================================
+
+export interface FlexBoxProps {
+  direction?: UtilResponsiveValue<"row" | "column" | "row-reverse" | "column-reverse">;
+  wrap?: UtilResponsiveValue<"nowrap" | "wrap" | "wrap-reverse">;
+  justify?: UtilResponsiveValue<"start" | "center" | "end" | "between" | "around" | "evenly">;
+  align?: UtilResponsiveValue<"start" | "center" | "end" | "stretch" | "baseline">;
+  alignContent?: UtilResponsiveValue<"start" | "center" | "end" | "between" | "around" | "stretch">;
+  gap?: UtilResponsiveValue<string>;
+  rowGap?: UtilResponsiveValue<string>;
+  columnGap?: UtilResponsiveValue<string>;
+  padding?: UtilResponsiveValue<string>;
+  paddingX?: UtilResponsiveValue<string>;
+  paddingY?: UtilResponsiveValue<string>;
+  equalHeight?: boolean;
+  width?: UtilResponsiveValue<"auto" | "full" | string>;
+  maxWidth?: UtilResponsiveValue<string>;
+  height?: UtilResponsiveValue<"auto" | "full" | "screen" | string>;
+  minHeight?: string;
+  backgroundColor?: string;
+  backgroundGradient?: GradientConfig;
+  borderRadius?: UtilResponsiveValue<string>;
+  shadow?: UtilResponsiveValue<string>;
+  overflow?: UtilResponsiveValue<string>;
+  hideOnMobile?: boolean;
+  hideOnTablet?: boolean;
+  hideOnDesktop?: boolean;
+  id?: string;
+  className?: string;
+  children?: React.ReactNode;
+}
+
+export function FlexBoxRender({
+  direction = "row",
+  wrap = "nowrap",
+  justify,
+  align,
+  alignContent,
+  gap = "4",
+  rowGap,
+  columnGap,
+  padding,
+  paddingX,
+  paddingY,
+  equalHeight = false,
+  width,
+  maxWidth,
+  height,
+  minHeight,
+  backgroundColor,
+  backgroundGradient,
+  borderRadius,
+  shadow,
+  overflow,
+  hideOnMobile,
+  hideOnTablet,
+  hideOnDesktop,
+  id,
+  className = "",
+  children,
+}: FlexBoxProps) {
+  const dirClasses = getResponsiveClassesUtil(direction, flexDirectionMap);
+  const wrapClasses = getResponsiveClassesUtil(wrap, flexWrapMap);
+  const justifyClasses = getResponsiveClassesUtil(justify, {
+    start: { mobile: "justify-start", tablet: "sm:justify-start", desktop: "lg:justify-start" },
+    center: { mobile: "justify-center", tablet: "sm:justify-center", desktop: "lg:justify-center" },
+    end: { mobile: "justify-end", tablet: "sm:justify-end", desktop: "lg:justify-end" },
+    between: { mobile: "justify-between", tablet: "sm:justify-between", desktop: "lg:justify-between" },
+    around: { mobile: "justify-around", tablet: "sm:justify-around", desktop: "lg:justify-around" },
+    evenly: { mobile: "justify-evenly", tablet: "sm:justify-evenly", desktop: "lg:justify-evenly" },
+  });
+  const alignClasses = getResponsiveClassesUtil(align, alignItemsLookup);
+  const alignCClasses = getResponsiveClassesUtil(alignContent, alignContentMapUtil);
+  const gapClasses = getResponsiveClassesUtil(gap, gapMapUtil);
+  const rGapClasses = getResponsiveClassesUtil(rowGap, rowGapMap);
+  const cGapClasses = getResponsiveClassesUtil(columnGap, columnGapMap);
+  const padClasses = getResponsiveClassesUtil(padding, paddingMapUtil);
+  const padXClasses = getResponsiveClassesUtil(paddingX, paddingXMapUtil);
+  const padYClasses = getResponsiveClassesUtil(paddingY, paddingYMapUtil);
+  const widthClasses = width ? getResponsiveClassesUtil(width, widthMap) : "";
+  const maxWClasses = maxWidth ? getResponsiveClassesUtil(maxWidth, maxWidthMapUtil) : "";
+  const heightClasses = height ? getResponsiveClassesUtil(height, heightMap) : "";
+  const radiusClasses = getResponsiveClassesUtil(borderRadius, borderRadiusMapUtil);
+  const shadowClasses = getResponsiveClassesUtil(shadow, shadowMapUtil);
+  const overflowClasses = getResponsiveClassesUtil(overflow, overflowMapUtil);
+  const visClasses = getVisibilityClasses({ hideOnMobile, hideOnTablet, hideOnDesktop });
+
+  const equalHeightClass = equalHeight ? "items-stretch" : "";
+
+  const inlineStyle: React.CSSProperties = {};
+  if (backgroundColor) inlineStyle.backgroundColor = backgroundColor;
+  if (backgroundGradient) inlineStyle.backgroundImage = buildGradientCSS(backgroundGradient);
+  if (minHeight) inlineStyle.minHeight = minHeight;
+
+  return (
+    <div
+      id={id}
+      className={`flex ${dirClasses} ${wrapClasses} ${justifyClasses} ${alignClasses} ${alignCClasses} ${gapClasses} ${rGapClasses} ${cGapClasses} ${padClasses} ${padXClasses} ${padYClasses} ${equalHeightClass} ${widthClasses} ${maxWClasses} ${heightClasses} ${radiusClasses} ${shadowClasses} ${overflowClasses} ${visClasses} ${className}`.replace(/\s+/g, " ").trim()}
+      style={Object.keys(inlineStyle).length > 0 ? inlineStyle : undefined}
+    >
+      {children}
+    </div>
+  );
+}
+
+// ============================================================================
+// GRID — Dedicated CSS Grid layout builder (Phase 2)
+// Default: bg-transparent text-inherit (structural component)
+// ============================================================================
+
+export interface GridProps {
+  columns?: UtilResponsiveValue<string>;
+  rows?: UtilResponsiveValue<string>;
+  areas?: UtilResponsiveValue<string>;
+  autoFlow?: string;
+  autoColumns?: string;
+  autoRows?: string;
+  justifyItems?: UtilResponsiveValue<"start" | "center" | "end" | "stretch">;
+  alignItems?: UtilResponsiveValue<"start" | "center" | "end" | "stretch">;
+  justifyContent?: UtilResponsiveValue<"start" | "center" | "end" | "between" | "around" | "evenly" | "stretch">;
+  alignContent?: UtilResponsiveValue<"start" | "center" | "end" | "between" | "around" | "evenly" | "stretch">;
+  placeItems?: UtilResponsiveValue<"start" | "center" | "end" | "stretch">;
+  gap?: UtilResponsiveValue<string>;
+  rowGap?: UtilResponsiveValue<string>;
+  columnGap?: UtilResponsiveValue<string>;
+  padding?: UtilResponsiveValue<string>;
+  preset?: string;
+  width?: UtilResponsiveValue<"auto" | "full" | string>;
+  maxWidth?: UtilResponsiveValue<string>;
+  height?: UtilResponsiveValue<"auto" | "full" | "screen" | string>;
+  minHeight?: string;
+  backgroundColor?: string;
+  backgroundGradient?: GradientConfig;
+  borderRadius?: UtilResponsiveValue<string>;
+  shadow?: UtilResponsiveValue<string>;
+  overflow?: UtilResponsiveValue<string>;
+  hideOnMobile?: boolean;
+  hideOnTablet?: boolean;
+  hideOnDesktop?: boolean;
+  id?: string;
+  className?: string;
+  children?: React.ReactNode;
+}
+
+export function GridRender({
+  columns,
+  rows,
+  areas,
+  autoFlow,
+  autoColumns,
+  autoRows,
+  justifyItems,
+  alignItems,
+  justifyContent,
+  alignContent,
+  placeItems,
+  gap = "4",
+  rowGap,
+  columnGap,
+  padding,
+  preset,
+  width,
+  maxWidth,
+  height,
+  minHeight,
+  backgroundColor,
+  backgroundGradient,
+  borderRadius,
+  shadow,
+  overflow,
+  hideOnMobile,
+  hideOnTablet,
+  hideOnDesktop,
+  id,
+  className = "",
+  children,
+}: GridProps) {
+  // Apply preset if no explicit columns
+  const resolvedPreset = preset && !columns ? gridPresetMap[preset] : undefined;
+
+  const gapClasses = getResponsiveClassesUtil(gap, gapMapUtil);
+  const rGapClasses = getResponsiveClassesUtil(rowGap, rowGapMap);
+  const cGapClasses = getResponsiveClassesUtil(columnGap, columnGapMap);
+  const padClasses = getResponsiveClassesUtil(padding, paddingMapUtil);
+  const jItemsClasses = getResponsiveClassesUtil(justifyItems, justifyItemsMap);
+  const aItemsClasses = getResponsiveClassesUtil(alignItems, alignItemsLookup);
+  const jContentClasses = getResponsiveClassesUtil(justifyContent, {
+    start: { mobile: "justify-start", tablet: "sm:justify-start", desktop: "lg:justify-start" },
+    center: { mobile: "justify-center", tablet: "sm:justify-center", desktop: "lg:justify-center" },
+    end: { mobile: "justify-end", tablet: "sm:justify-end", desktop: "lg:justify-end" },
+    between: { mobile: "justify-between", tablet: "sm:justify-between", desktop: "lg:justify-between" },
+    around: { mobile: "justify-around", tablet: "sm:justify-around", desktop: "lg:justify-around" },
+    evenly: { mobile: "justify-evenly", tablet: "sm:justify-evenly", desktop: "lg:justify-evenly" },
+    stretch: { mobile: "justify-stretch", tablet: "sm:justify-stretch", desktop: "lg:justify-stretch" },
+  });
+  const aCClasses = getResponsiveClassesUtil(alignContent, alignContentMapUtil);
+  const pItemsClasses = getResponsiveClassesUtil(placeItems, placeItemsMap);
+  const widthClasses = width ? getResponsiveClassesUtil(width, widthMap) : "";
+  const maxWClasses = maxWidth ? getResponsiveClassesUtil(maxWidth, maxWidthMapUtil) : "";
+  const heightClasses = height ? getResponsiveClassesUtil(height, heightMap) : "";
+  const radiusClasses = getResponsiveClassesUtil(borderRadius, borderRadiusMapUtil);
+  const shadowClasses = getResponsiveClassesUtil(shadow, shadowMapUtil);
+  const overflowClasses = getResponsiveClassesUtil(overflow, overflowMapUtil);
+  const visClasses = getVisibilityClasses({ hideOnMobile, hideOnTablet, hideOnDesktop });
+  const autoFlowClass = autoFlow ? (gridAutoFlowMap[autoFlow] || "") : "";
+
+  const inlineStyle: React.CSSProperties = {};
+  // Grid template via inline style (custom CSS values)
+  const gridCols = columns || resolvedPreset?.columns;
+  const gridRows = rows || resolvedPreset?.rows;
+  if (gridCols) inlineStyle.gridTemplateColumns = typeof gridCols === "string" ? gridCols : undefined;
+  if (gridRows) inlineStyle.gridTemplateRows = typeof gridRows === "string" ? gridRows : undefined;
+  if (areas && typeof areas === "string") inlineStyle.gridTemplateAreas = areas;
+  if (autoColumns) inlineStyle.gridAutoColumns = autoColumns;
+  if (autoRows) inlineStyle.gridAutoRows = autoRows;
+  if (backgroundColor) inlineStyle.backgroundColor = backgroundColor;
+  if (backgroundGradient) inlineStyle.backgroundImage = buildGradientCSS(backgroundGradient);
+  if (minHeight) inlineStyle.minHeight = minHeight;
+
+  return (
+    <div
+      id={id}
+      className={`grid ${autoFlowClass} ${gapClasses} ${rGapClasses} ${cGapClasses} ${padClasses} ${jItemsClasses} ${aItemsClasses} ${jContentClasses} ${aCClasses} ${pItemsClasses} ${widthClasses} ${maxWClasses} ${heightClasses} ${radiusClasses} ${shadowClasses} ${overflowClasses} ${visClasses} ${className}`.replace(/\s+/g, " ").trim()}
+      style={Object.keys(inlineStyle).length > 0 ? inlineStyle : undefined}
+    >
+      {children}
+    </div>
+  );
+}
+
+// ============================================================================
+// GRID ITEM — Child placement within Grid (Phase 2)
+// ============================================================================
+
+export interface GridItemProps {
+  colSpan?: number;
+  rowSpan?: number;
+  colStart?: number | "auto";
+  colEnd?: number | "auto";
+  rowStart?: number | "auto";
+  rowEnd?: number | "auto";
+  area?: string;
+  alignSelf?: UtilResponsiveValue<"start" | "center" | "end" | "stretch">;
+  justifySelf?: UtilResponsiveValue<"start" | "center" | "end" | "stretch">;
+  order?: number;
+  id?: string;
+  className?: string;
+  children?: React.ReactNode;
+}
+
+export function GridItemRender({
+  colSpan,
+  rowSpan,
+  colStart,
+  colEnd,
+  rowStart,
+  rowEnd,
+  area,
+  alignSelf,
+  justifySelf,
+  order,
+  id,
+  className = "",
+  children,
+}: GridItemProps) {
+  const colSpanClass = colSpan ? (colSpanMap[colSpan] || "") : "";
+  const rowSpanClass = rowSpan ? (rowSpanMap[rowSpan] || "") : "";
+  const aSelfClasses = getResponsiveClassesUtil(alignSelf, alignSelfMap);
+  const jSelfClasses = getResponsiveClassesUtil(justifySelf, justifySelfMap);
+
+  const inlineStyle: React.CSSProperties = {};
+  if (colStart !== undefined && colStart !== "auto") inlineStyle.gridColumnStart = colStart;
+  if (colStart === "auto") inlineStyle.gridColumnStart = "auto";
+  if (colEnd !== undefined && colEnd !== "auto") inlineStyle.gridColumnEnd = colEnd;
+  if (colEnd === "auto") inlineStyle.gridColumnEnd = "auto";
+  if (rowStart !== undefined && rowStart !== "auto") inlineStyle.gridRowStart = rowStart;
+  if (rowStart === "auto") inlineStyle.gridRowStart = "auto";
+  if (rowEnd !== undefined && rowEnd !== "auto") inlineStyle.gridRowEnd = rowEnd;
+  if (rowEnd === "auto") inlineStyle.gridRowEnd = "auto";
+  if (area) inlineStyle.gridArea = area;
+  if (order !== undefined) inlineStyle.order = order;
+
+  return (
+    <div
+      id={id}
+      className={`${colSpanClass} ${rowSpanClass} ${aSelfClasses} ${jSelfClasses} ${className}`.replace(/\s+/g, " ").trim()}
+      style={Object.keys(inlineStyle).length > 0 ? inlineStyle : undefined}
+    >
+      {children}
+    </div>
+  );
+}
+
+// ============================================================================
+// WRAPPER — Invisible layout helper (Phase 2)
+// No visual styling defaults — pure structural component
+// ============================================================================
+
+export interface WrapperProps {
+  display?: UtilResponsiveValue<"block" | "flex" | "grid" | "inline" | "inline-flex" | "inline-grid" | "contents" | "none">;
+  position?: UtilResponsiveValue<"static" | "relative" | "absolute" | "sticky" | "fixed">;
+  inset?: { top?: string; right?: string; bottom?: string; left?: string };
+  zIndex?: number;
+  width?: UtilResponsiveValue<"auto" | "full" | "fit" | "min" | "max" | string>;
+  height?: UtilResponsiveValue<"auto" | "full" | "fit" | "min" | "max" | string>;
+  margin?: UtilResponsiveValue<"auto" | string>;
+  padding?: UtilResponsiveValue<string>;
+  flexGrow?: boolean;
+  flexShrink?: boolean;
+  alignSelf?: UtilResponsiveValue<"start" | "center" | "end" | "stretch" | "baseline">;
+  order?: number;
+  colSpan?: number;
+  rowSpan?: number;
+  area?: string;
+  overflow?: UtilResponsiveValue<string>;
+  textAlign?: UtilResponsiveValue<"left" | "center" | "right">;
+  hideOnMobile?: boolean;
+  hideOnTablet?: boolean;
+  hideOnDesktop?: boolean;
+  id?: string;
+  className?: string;
+  children?: React.ReactNode;
+}
+
+export function WrapperRender({
+  display,
+  position,
+  inset,
+  zIndex,
+  width,
+  height,
+  margin,
+  padding,
+  flexGrow,
+  flexShrink,
+  alignSelf,
+  order,
+  colSpan,
+  rowSpan,
+  area,
+  overflow,
+  textAlign,
+  hideOnMobile,
+  hideOnTablet,
+  hideOnDesktop,
+  id,
+  className = "",
+  children,
+}: WrapperProps) {
+  const displayClasses = getResponsiveClassesUtil(display, displayMap);
+  const widthClasses = width ? getResponsiveClassesUtil(width, widthMap) : "";
+  const heightClasses = height ? getResponsiveClassesUtil(height, heightMap) : "";
+  const marginClasses = margin ? getResponsiveClassesUtil(margin, marginMap) : "";
+  const padClasses = getResponsiveClassesUtil(padding, paddingMapUtil);
+  const aSelfClasses = getResponsiveClassesUtil(alignSelf, alignSelfMap);
+  const overflowClasses = getResponsiveClassesUtil(overflow, overflowMapUtil);
+  const textAlignClasses = getResponsiveClassesUtil(textAlign, textAlignMap);
+  const visClasses = getVisibilityClasses({ hideOnMobile, hideOnTablet, hideOnDesktop });
+
+  const posClass = position && typeof position === "string" ? (position || "") : "";
+  const growClass = flexGrow ? "grow" : "";
+  const shrinkClass = flexShrink === false ? "shrink-0" : "";
+  const colSpanClass = colSpan ? (colSpanMap[colSpan] || "") : "";
+  const rowSpanClass = rowSpan ? (rowSpanMap[rowSpan] || "") : "";
+
+  const inlineStyle: React.CSSProperties = {};
+  if (inset?.top) inlineStyle.top = inset.top;
+  if (inset?.right) inlineStyle.right = inset.right;
+  if (inset?.bottom) inlineStyle.bottom = inset.bottom;
+  if (inset?.left) inlineStyle.left = inset.left;
+  if (zIndex !== undefined) inlineStyle.zIndex = zIndex;
+  if (area) inlineStyle.gridArea = area;
+  if (order !== undefined) inlineStyle.order = order;
+
+  return (
+    <div
+      id={id}
+      className={`${displayClasses} ${posClass} ${widthClasses} ${heightClasses} ${marginClasses} ${padClasses} ${aSelfClasses} ${growClass} ${shrinkClass} ${colSpanClass} ${rowSpanClass} ${overflowClasses} ${textAlignClasses} ${visClasses} ${className}`.replace(/\s+/g, " ").trim()}
+      style={Object.keys(inlineStyle).length > 0 ? inlineStyle : undefined}
+    >
+      {children}
+    </div>
+  );
+}
+
+// ============================================================================
+// ASPECT RATIO BOX — Ratio-preserving container (Phase 2)
+// Default: bg-transparent, overflow hidden
+// ============================================================================
+
+export interface AspectRatioBoxProps {
+  ratio?: UtilResponsiveValue<"1:1" | "4:3" | "3:2" | "16:9" | "21:9" | "2:3" | "3:4" | "9:16" | string>;
+  objectFit?: "cover" | "contain" | "fill" | "none" | "scale-down";
+  objectPosition?: string;
+  backgroundColor?: string;
+  borderRadius?: UtilResponsiveValue<string>;
+  shadow?: UtilResponsiveValue<string>;
+  overflow?: "hidden" | "visible";
+  width?: UtilResponsiveValue<"full" | "auto" | string>;
+  maxWidth?: string;
+  hideOnMobile?: boolean;
+  hideOnTablet?: boolean;
+  hideOnDesktop?: boolean;
+  id?: string;
+  className?: string;
+  children?: React.ReactNode;
+}
+
+export function AspectRatioBoxRender({
+  ratio = "16:9",
+  objectFit,
+  objectPosition,
+  backgroundColor,
+  borderRadius,
+  shadow,
+  overflow = "hidden",
+  width,
+  maxWidth,
+  hideOnMobile,
+  hideOnTablet,
+  hideOnDesktop,
+  id,
+  className = "",
+  children,
+}: AspectRatioBoxProps) {
+  // Resolve ratio: use map for known ratios, parse for custom
+  const resolvedRatio = typeof ratio === "string" ? ratio : "16:9";
+  const ratioClass = aspectRatioBoxMap[resolvedRatio] || "";
+  const radiusClasses = getResponsiveClassesUtil(borderRadius, borderRadiusMapUtil);
+  const shadowClasses = getResponsiveClassesUtil(shadow, shadowMapUtil);
+  const widthClasses = width ? getResponsiveClassesUtil(width, widthMap) : "";
+  const overflowClass = overflow === "visible" ? "overflow-visible" : "overflow-hidden";
+  const objectFitClass = objectFit ? (objectFitMap[objectFit] || "") : "";
+  const visClasses = getVisibilityClasses({ hideOnMobile, hideOnTablet, hideOnDesktop });
+
+  const inlineStyle: React.CSSProperties = {};
+  if (backgroundColor) inlineStyle.backgroundColor = backgroundColor;
+  if (maxWidth) inlineStyle.maxWidth = maxWidth;
+  if (objectPosition) inlineStyle.objectPosition = objectPosition;
+  // Custom ratio via inline style when not in the map
+  if (!ratioClass && resolvedRatio) {
+    const parsed = parseAspectRatio(resolvedRatio);
+    if (parsed) inlineStyle.aspectRatio = parsed;
+  }
+
+  return (
+    <div
+      id={id}
+      className={`${ratioClass} ${overflowClass} ${radiusClasses} ${shadowClasses} ${widthClasses} ${objectFitClass} ${visClasses} ${className}`.replace(/\s+/g, " ").trim()}
+      style={Object.keys(inlineStyle).length > 0 ? inlineStyle : undefined}
+    >
+      {children}
+    </div>
+  );
+}
+
+// ============================================================================
+// OVERLAY — Layer component for overlaid content (Phase 2)
+// Default: transparent/semi-transparent, requires parent with relative positioning
+// ============================================================================
+
+export interface OverlayProps {
+  position?: "fill" | "top" | "bottom" | "left" | "right" | "center" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  inset?: UtilResponsiveValue<string>;
+  backgroundColor?: string;
+  backgroundGradient?: GradientConfig;
+  backdropBlur?: "none" | "sm" | "md" | "lg" | "xl";
+  contentAlign?: "start" | "center" | "end";
+  contentJustify?: "start" | "center" | "end";
+  showOn?: "always" | "hover" | "focus" | "group-hover";
+  transition?: "fade" | "slide-up" | "slide-down" | "scale" | "none";
+  transitionDuration?: number;
+  width?: string;
+  height?: string;
+  padding?: UtilResponsiveValue<string>;
+  zIndex?: number;
+  id?: string;
+  className?: string;
+  children?: React.ReactNode;
+}
+
+export function OverlayRender({
+  position = "fill",
+  inset,
+  backgroundColor,
+  backgroundGradient,
+  backdropBlur,
+  contentAlign = "center",
+  contentJustify = "center",
+  showOn = "always",
+  transition = "fade",
+  transitionDuration = 300,
+  width,
+  height,
+  padding,
+  zIndex = 10,
+  id,
+  className = "",
+  children,
+}: OverlayProps) {
+  // Position classes
+  const posClasses = overlayPositionMap[position] || overlayPositionMap.fill;
+
+  // Padding
+  const padClasses = getResponsiveClassesUtil(padding, paddingMapUtil);
+
+  // Backdrop blur
+  const blurClass = backdropBlur ? (backdropBlurMap[backdropBlur] || "") : "";
+
+  // Content alignment (for non-fill positions that don't include flex)
+  const alignMap: Record<string, string> = { start: "items-start", center: "items-center", end: "items-end" };
+  const justifyMap: Record<string, string> = { start: "justify-start", center: "justify-center", end: "justify-end" };
+  const needsFlex = position !== "center"; // center already includes flex
+  const flexClasses = needsFlex && children ? `flex ${alignMap[contentAlign] || ""} ${justifyMap[contentJustify] || ""}` : "";
+
+  // Show/hide behavior
+  const visibilityClasses: Record<string, string> = {
+    always: "",
+    hover: "opacity-0 hover:opacity-100",
+    focus: "opacity-0 focus-within:opacity-100",
+    "group-hover": "opacity-0 group-hover:opacity-100",
+  };
+  const showClass = visibilityClasses[showOn] || "";
+
+  // Transition classes
+  const transitionMap: Record<string, string> = {
+    none: "",
+    fade: "transition-opacity",
+    "slide-up": "transition-all translate-y-2 hover:translate-y-0",
+    "slide-down": "transition-all -translate-y-2 hover:translate-y-0",
+    scale: "transition-transform scale-95 hover:scale-100",
+  };
+  const transClass = showOn !== "always" ? (transitionMap[transition] || "") : "";
+
+  const inlineStyle: React.CSSProperties = {
+    zIndex,
+    transitionDuration: transClass ? `${transitionDuration}ms` : undefined,
+  };
+  if (backgroundColor) inlineStyle.backgroundColor = backgroundColor;
+  if (backgroundGradient) inlineStyle.backgroundImage = buildGradientCSS(backgroundGradient);
+  if (width) inlineStyle.width = width;
+  if (height) inlineStyle.height = height;
+
+  return (
+    <div
+      id={id}
+      className={`${posClasses} ${flexClasses} ${padClasses} ${blurClass} ${showClass} ${transClass} ${className}`.replace(/\s+/g, " ").trim()}
+      style={inlineStyle}
+      aria-hidden={!children ? true : undefined}
+    >
+      {children}
+    </div>
   );
 }
 
