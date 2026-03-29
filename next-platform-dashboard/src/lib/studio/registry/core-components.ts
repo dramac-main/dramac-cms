@@ -118,11 +118,17 @@ const layoutComponents: ComponentDefinition[] = [
     fields: {
       backgroundColor: { type: "color", label: "Background Color" },
       backgroundImage: { type: "image", label: "Background Image" },
-      padding: {
+      paddingY: {
         type: "select",
-        label: "Padding",
+        label: "Vertical Padding",
         options: presetOptions.padding,
         defaultValue: "md",
+      },
+      paddingX: {
+        type: "select",
+        label: "Horizontal Padding",
+        options: presetOptions.padding,
+        defaultValue: "sm",
       },
       maxWidth: {
         type: "select",
@@ -139,13 +145,14 @@ const layoutComponents: ComponentDefinition[] = [
       },
     },
     defaultProps: {
-      padding: "md",
+      paddingY: "md",
+      paddingX: "sm",
       maxWidth: "xl",
       minHeight: 0,
     },
     ai: {
       description: "A full-width section that can contain other components",
-      canModify: ["backgroundColor", "padding", "minHeight"],
+      canModify: ["backgroundColor", "paddingY", "paddingX", "minHeight"],
       suggestions: ["Change background color", "Adjust padding"],
     },
   }),
@@ -166,21 +173,27 @@ const layoutComponents: ComponentDefinition[] = [
         options: presetOptions.maxWidth,
         defaultValue: "xl",
       },
-      padding: {
+      paddingX: {
         type: "select",
-        label: "Padding",
+        label: "Horizontal Padding",
         options: presetOptions.padding,
-        defaultValue: "md",
+        defaultValue: "sm",
+      },
+      paddingY: {
+        type: "select",
+        label: "Vertical Padding",
+        options: presetOptions.padding,
+        defaultValue: "none",
       },
       backgroundColor: { type: "color", label: "Background Color" },
     },
     defaultProps: {
       maxWidth: "xl",
-      padding: "md",
+      paddingX: "sm",
     },
     ai: {
       description: "A centered container with max-width constraint",
-      canModify: ["maxWidth", "padding", "backgroundColor"],
+      canModify: ["maxWidth", "paddingX", "paddingY", "backgroundColor"],
     },
   }),
 
@@ -222,6 +235,7 @@ const layoutComponents: ComponentDefinition[] = [
         options: presetOptions.verticalAlign,
         defaultValue: "top",
       },
+      stackOnMobile: { type: "toggle", label: "Stack on Mobile", defaultValue: true },
       reverseOnMobile: {
         type: "toggle",
         label: "Reverse on Mobile",
@@ -232,11 +246,12 @@ const layoutComponents: ComponentDefinition[] = [
       columns: 2,
       gap: "md",
       verticalAlign: "top",
+      stackOnMobile: true,
       reverseOnMobile: false,
     },
     ai: {
       description: "A multi-column layout grid",
-      canModify: ["columns", "gap", "verticalAlign"],
+      canModify: ["columns", "gap", "verticalAlign", "stackOnMobile"],
     },
   }),
 
@@ -528,19 +543,13 @@ const layoutComponents: ComponentDefinition[] = [
         options: presetOptions.gap,
         defaultValue: "md",
       },
-      autoFit: { type: "toggle", label: "Auto-Fit Columns", defaultValue: false },
-      minChildWidth: {
-        type: "text",
-        label: "Min Child Width",
-        defaultValue: "250px",
-      },
-      backgroundColor: { type: "color", label: "Background Color" },
       padding: {
         type: "select",
         label: "Padding",
         options: presetOptions.padding,
         defaultValue: "none",
       },
+      backgroundColor: { type: "color", label: "Background Color" },
     },
     defaultProps: {
       columns: 3,
@@ -548,7 +557,7 @@ const layoutComponents: ComponentDefinition[] = [
     },
     ai: {
       description: "A CSS Grid layout with responsive column control",
-      canModify: ["columns", "gap", "autoFit", "minChildWidth", "backgroundColor", "padding"],
+      canModify: ["columns", "gap", "padding", "backgroundColor"],
     },
   }),
 
@@ -576,13 +585,6 @@ const layoutComponents: ComponentDefinition[] = [
         max: 6,
         defaultValue: 1,
       },
-      backgroundColor: { type: "color", label: "Background Color" },
-      padding: {
-        type: "select",
-        label: "Padding",
-        options: presetOptions.padding,
-        defaultValue: "none",
-      },
     },
     defaultProps: {
       colSpan: 1,
@@ -590,7 +592,7 @@ const layoutComponents: ComponentDefinition[] = [
     },
     ai: {
       description: "A Grid child that can span multiple columns or rows",
-      canModify: ["colSpan", "rowSpan", "backgroundColor", "padding"],
+      canModify: ["colSpan", "rowSpan"],
     },
   }),
 
@@ -810,28 +812,25 @@ const layoutComponents: ComponentDefinition[] = [
     acceptsChildren: true,
     isContainer: true,
     fields: {
+      snapAlign: {
+        type: "select",
+        label: "Snap Alignment",
+        options: [
+          { label: "Start", value: "start" },
+          { label: "Center", value: "center" },
+          { label: "End", value: "end" },
+        ],
+        defaultValue: "start",
+      },
       backgroundColor: { type: "color", label: "Background Color" },
       backgroundImage: { type: "image", label: "Background Image" },
-      contentAlign: {
-        type: "select",
-        label: "Content Alignment",
-        options: presetOptions.alignment,
-        defaultValue: "center",
-      },
-      verticalAlign: {
-        type: "select",
-        label: "Vertical Alignment",
-        options: presetOptions.verticalAlign,
-        defaultValue: "center",
-      },
     },
     defaultProps: {
-      contentAlign: "center",
-      verticalAlign: "center",
+      snapAlign: "start",
     },
     ai: {
       description: "A single full-viewport slide inside a ScrollSection",
-      canModify: ["backgroundColor", "backgroundImage", "contentAlign", "verticalAlign"],
+      canModify: ["snapAlign", "backgroundColor", "backgroundImage"],
     },
   }),
 
@@ -1045,8 +1044,16 @@ const layoutComponents: ComponentDefinition[] = [
         max: 200,
         defaultValue: 60,
       },
+      width: {
+        type: "number",
+        label: "Width (%)",
+        min: 100,
+        max: 300,
+        defaultValue: 100,
+      },
       flip: { type: "toggle", label: "Flip Horizontally", defaultValue: false },
       invert: { type: "toggle", label: "Invert (Bottom)", defaultValue: false },
+      animated: { type: "toggle", label: "Animated", defaultValue: false },
       position: {
         type: "select",
         label: "Position",
@@ -1061,13 +1068,15 @@ const layoutComponents: ComponentDefinition[] = [
       shape: "wave",
       color: "#ffffff",
       height: 60,
+      width: 100,
       flip: false,
       invert: false,
+      animated: false,
       position: "bottom",
     },
     ai: {
       description: "An SVG shape divider for smooth visual transitions between sections",
-      canModify: ["shape", "color", "height", "flip", "invert", "position"],
+      canModify: ["shape", "color", "height", "width", "flip", "invert", "animated", "position"],
     },
   }),
 

@@ -1435,11 +1435,31 @@ function transformPropsForStudio(
     };
   }
 
-  // Section wrapper
+  // Section wrapper — render expects paddingY/paddingX, NOT padding
   if (type === "Section") {
     return {
       ...props,
-      padding: props.padding || "md",
+      paddingY: toResponsive(props.paddingY || props.padding || "md", "md"),
+      paddingX: toResponsive(props.paddingX || "sm", "sm"),
+    };
+  }
+
+  // Container — render expects paddingX/paddingY, NOT padding
+  if (type === "Container") {
+    return {
+      ...props,
+      paddingX: toResponsive(props.paddingX || props.padding || "sm", "sm"),
+      paddingY: props.paddingY ? toResponsive(props.paddingY, "none") : undefined,
+    };
+  }
+
+  // Columns
+  if (type === "Columns") {
+    return {
+      ...props,
+      columns: Number(props.columns || 2),
+      gap: toResponsive(props.gap, "md"),
+      stackOnMobile: props.stackOnMobile ?? true,
     };
   }
 
@@ -1712,8 +1732,11 @@ function transformPropsForStudio(
       shape: props.shape || props.type || "wave",
       position: props.position || "bottom",
       color: props.color || props.fillColor || "#ffffff",
-      height: props.height || 80,
+      height: Number(props.height || 60),
+      width: Number(props.width || 100),
       flip: props.flip ?? false,
+      invert: props.invert ?? false,
+      animated: props.animated ?? false,
     };
   }
 
