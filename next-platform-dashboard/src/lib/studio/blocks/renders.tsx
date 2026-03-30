@@ -23919,75 +23919,411 @@ export function AvatarRender({
 export interface ProgressProps {
   value?: number;
   max?: number;
-  label?: string;
+  indeterminate?: boolean;
   showValue?: boolean;
-  size?: "sm" | "md" | "lg";
-  variant?: "default" | "gradient" | "striped";
+  valuePosition?: "inside" | "outside-right" | "above" | "below";
+  valueFormat?: "percent" | "fraction" | "value";
+  valueSuffix?: string;
+  label?: string;
+  labelPosition?: "above" | "left" | "below";
+  description?: string;
+  showMinMax?: boolean;
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
+  customHeight?: number;
+  rounded?: "none" | "sm" | "md" | "lg" | "full";
+  customBorderRadius?: string;
+  variant?: "default" | "gradient" | "striped" | "segmented";
   color?: string;
-  backgroundColor?: string;
-  rounded?: boolean;
+  trackColor?: string;
+  gradient?: boolean;
+  gradientFrom?: string;
+  gradientTo?: string;
+  gradientDirection?: "to-r" | "to-l" | "diagonal";
+  segmented?: boolean;
+  segmentCount?: number;
+  segmentGap?: number;
+  striped?: boolean;
+  stripeAngle?: number;
+  stripeWidth?: number;
+  stripeColor?: string;
+  animatedStripes?: boolean;
+  glowEffect?: boolean;
+  glowColor?: string;
+  shadow?: "none" | "sm" | "md";
+  innerShadow?: boolean;
+  showMilestones?: boolean;
+  milestones?: string;
+  milestoneStyle?: "line" | "dot" | "diamond";
+  milestoneColor?: string;
   animate?: boolean;
+  animationDuration?: number;
+  animateOnMount?: boolean;
+  pulseAnimation?: boolean;
+  useStatusColors?: boolean;
+  successThreshold?: number;
+  warningThreshold?: number;
+  successColor?: string;
+  warningColor?: string;
+  errorColor?: string;
+  circular?: boolean;
+  circularSize?: number;
+  circularStrokeWidth?: number;
+  circularShowCenter?: boolean;
+  hideOnMobile?: boolean;
+  mobileSize?: "same" | "smaller";
+  ariaLabel?: string;
+  ariaValueText?: string;
   id?: string;
   className?: string;
 }
 
 export function ProgressRender({
-  value = 0,
+  value = 50,
   max = 100,
+  indeterminate = false,
+  showValue = true,
+  valuePosition = "outside-right",
+  valueFormat = "percent",
+  valueSuffix = "",
   label,
-  showValue = false,
+  labelPosition = "above",
+  description,
+  showMinMax = false,
   size = "md",
+  customHeight,
+  rounded = "full",
+  customBorderRadius,
   variant = "default",
   color = "",
-  backgroundColor = "",
-  rounded = true,
-  animate = false,
+  trackColor = "",
+  gradient = false,
+  gradientFrom = "",
+  gradientTo = "",
+  gradientDirection = "to-r",
+  segmented = false,
+  segmentCount = 5,
+  segmentGap = 2,
+  striped = false,
+  stripeAngle = 45,
+  stripeWidth = 10,
+  stripeColor,
+  animatedStripes = false,
+  glowEffect = false,
+  glowColor,
+  shadow = "none",
+  innerShadow = false,
+  showMilestones = false,
+  milestones = "25,50,75",
+  milestoneStyle = "line",
+  milestoneColor,
+  animate = true,
+  animationDuration = 1000,
+  animateOnMount = true,
+  pulseAnimation = false,
+  useStatusColors = false,
+  successThreshold = 100,
+  warningThreshold = 50,
+  successColor = "#10b981",
+  warningColor = "#f59e0b",
+  errorColor = "#ef4444",
+  circular = false,
+  circularSize = 120,
+  circularStrokeWidth = 10,
+  circularShowCenter = true,
+  hideOnMobile = false,
+  mobileSize = "same",
+  ariaLabel,
+  ariaValueText,
   id,
   className = "",
 }: ProgressProps) {
-  const percentage = Math.min(100, Math.max(0, (value / max) * 100));
-  const sizeClasses = { sm: "h-1.5", md: "h-2.5", lg: "h-4" }[size];
-  const resolvedTrackBg = backgroundColor || "var(--color-muted, #e5e7eb)";
+  const percentage = indeterminate ? 50 : Math.min(100, Math.max(0, (value / max) * 100));
+
+  // Resolve bar color (status colors take priority)
+  const resolvedBarColor = (() => {
+    if (useStatusColors) {
+      if (percentage >= successThreshold) return successColor;
+      if (percentage >= warningThreshold) return warningColor;
+      return errorColor;
+    }
+    return color || "var(--brand-primary, #3b82f6)";
+  })();
+
+  const resolvedTrackBg = trackColor || "var(--color-muted, #e5e7eb)";
+  const textColor = "var(--color-foreground, #374151)";
+  const mutedColor = "var(--color-muted-foreground, #6b7280)";
+
+  // Size classes
+  const heightPx = customHeight || { xs: 4, sm: 6, md: 10, lg: 16, xl: 24 }[size];
+  const mobileHeightPx = mobileSize === "smaller" ? Math.max(4, (heightPx || 10) * 0.7) : heightPx;
+
+  // Border radius
+  const radiusMap = { none: "0", sm: "2px", md: "4px", lg: "8px", full: "9999px" };
+  const resolvedRadius = customBorderRadius || radiusMap[rounded] || "9999px";
+
+  // Shadow
+  const shadowStyle = shadow === "sm" ? "0 1px 2px rgba(0,0,0,0.1)" : shadow === "md" ? "0 2px 4px rgba(0,0,0,0.15)" : "none";
+
+  // Gradient background
+  const gradientBg = (() => {
+    if (gradient || variant === "gradient") {
+      const from = gradientFrom || resolvedBarColor;
+      const to = gradientTo || "var(--brand-secondary, #8b5cf6)";
+      if (gradientDirection === "diagonal") return `linear-gradient(135deg, ${from}, ${to})`;
+      if (gradientDirection === "to-l") return `linear-gradient(270deg, ${from}, ${to})`;
+      return `linear-gradient(90deg, ${from}, ${to})`;
+    }
+    return undefined;
+  })();
+
+  // Stripe background
+  const stripeBg = (striped || variant === "striped") ? `repeating-linear-gradient(${stripeAngle}deg, transparent, transparent ${stripeWidth}px, ${stripeColor || "rgba(255,255,255,0.2)"} ${stripeWidth}px, ${stripeColor || "rgba(255,255,255,0.2)"} ${stripeWidth * 2}px)` : undefined;
+
+  // Format value display
+  const formatValue = () => {
+    if (indeterminate) return "...";
+    if (valueFormat === "fraction") return `${value}/${max}${valueSuffix}`;
+    if (valueFormat === "value") return `${value}${valueSuffix}`;
+    return `${Math.round(percentage)}%${valueSuffix}`;
+  };
+
+  // Milestone markers
+  const milestoneValues = showMilestones
+    ? milestones.split(",").map((m) => parseFloat(m.trim())).filter((m) => !isNaN(m))
+    : [];
+
+  // Glow
+  const glowStyle = glowEffect
+    ? { boxShadow: `0 0 8px 2px ${glowColor || resolvedBarColor}40` }
+    : {};
+
+  // ── Circular mode ──
+  if (circular) {
+    const svgSize = circularSize;
+    const radius = (svgSize - circularStrokeWidth) / 2;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDashoffset = indeterminate ? circumference * 0.25 : circumference * (1 - percentage / 100);
+
+    return (
+      <div
+        id={id}
+        className={`inline-flex flex-col items-center ${hideOnMobile ? "hidden md:inline-flex" : ""} ${className}`}
+      >
+        {label && labelPosition === "above" && (
+          <span className="text-sm font-medium mb-2" style={{ color: textColor }}>{label}</span>
+        )}
+        <div className="relative" style={{ width: svgSize, height: svgSize }}>
+          <svg width={svgSize} height={svgSize} className={indeterminate ? "animate-spin" : ""} style={{ transform: "rotate(-90deg)" }}>
+            {/* Track */}
+            <circle
+              cx={svgSize / 2}
+              cy={svgSize / 2}
+              r={radius}
+              fill="none"
+              stroke={resolvedTrackBg}
+              strokeWidth={circularStrokeWidth}
+            />
+            {/* Progress */}
+            <circle
+              cx={svgSize / 2}
+              cy={svgSize / 2}
+              r={radius}
+              fill="none"
+              stroke={gradientBg ? undefined : resolvedBarColor}
+              strokeWidth={circularStrokeWidth}
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              strokeLinecap="round"
+              style={{
+                transition: animate ? `stroke-dashoffset ${animationDuration}ms ease-out` : "none",
+                ...glowStyle,
+              }}
+            />
+          </svg>
+          {circularShowCenter && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-lg font-bold" style={{ color: textColor }}>
+                {formatValue()}
+              </span>
+            </div>
+          )}
+        </div>
+        {label && labelPosition === "below" && (
+          <span className="text-sm font-medium mt-2" style={{ color: textColor }}>{label}</span>
+        )}
+        {description && (
+          <span className="text-xs mt-1" style={{ color: mutedColor }}>{description}</span>
+        )}
+      </div>
+    );
+  }
+
+  // ── Linear mode ──
+
+  // Label row (above)
+  const labelAbove = labelPosition === "above" && (label || (showValue && valuePosition === "above"));
+  const labelBelow = labelPosition === "below" && label;
+
+  // Segmented rendering
+  const renderSegments = segmented || variant === "segmented";
+  const segmentWidth = renderSegments ? `calc((100% - ${(segmentCount - 1) * segmentGap}px) / ${segmentCount})` : undefined;
+  const filledSegments = renderSegments ? Math.round((percentage / 100) * segmentCount) : 0;
 
   return (
-    <div id={id} className={className}>
-      {(label || showValue) && (
+    <div
+      id={id}
+      className={`${hideOnMobile ? "hidden md:block" : ""} ${className}`}
+      role="progressbar"
+      aria-valuenow={indeterminate ? undefined : value}
+      aria-valuemin={0}
+      aria-valuemax={max}
+      aria-label={ariaLabel || label || undefined}
+      aria-valuetext={ariaValueText || (indeterminate ? "Loading" : formatValue())}
+    >
+      {/* Animated stripes keyframe */}
+      {animatedStripes && (striped || variant === "striped") && (
+        <style>{`@keyframes progressStripeMove { 0% { background-position: 0 0; } 100% { background-position: ${stripeWidth * 4}px 0; } }`}</style>
+      )}
+      {/* Indeterminate keyframe */}
+      {indeterminate && (
+        <style>{`@keyframes progressIndeterminate { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }`}</style>
+      )}
+      {/* Pulse keyframe */}
+      {pulseAnimation && (
+        <style>{`@keyframes progressPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }`}</style>
+      )}
+
+      {/* Label above + value */}
+      {labelAbove && (
         <div className="flex justify-between mb-1.5 text-sm">
-          {label && (
-            <span
-              className="font-medium"
-              style={{ color: "var(--color-foreground, #374151)" }}
-            >
-              {label}
-            </span>
-          )}
-          {showValue && (
-            <span style={{ color: "var(--color-muted-foreground, #6b7280)" }}>
-              {Math.round(percentage)}%
-            </span>
+          {label && <span className="font-medium" style={{ color: textColor }}>{label}</span>}
+          {showValue && valuePosition === "above" && (
+            <span style={{ color: mutedColor }}>{formatValue()}</span>
           )}
         </div>
       )}
-      <div
-        className={`w-full ${sizeClasses} ${rounded ? "rounded-full" : ""} overflow-hidden`}
-        style={{ backgroundColor: resolvedTrackBg }}
-        role="progressbar"
-        aria-valuenow={value}
-        aria-valuemin={0}
-        aria-valuemax={max}
-      >
-        <div
-          className={`h-full transition-all duration-500 ${rounded ? "rounded-full" : ""} ${animate ? "animate-pulse" : ""} ${variant === "striped" ? "bg-[length:1rem_1rem] bg-gradient-to-r from-white/20 via-transparent to-transparent" : ""}`}
-          style={{
-            width: `${percentage}%`,
-            backgroundColor: variant === "gradient" ? undefined : color,
-            backgroundImage:
-              variant === "gradient"
-                ? `linear-gradient(90deg, ${color}, var(--brand-secondary, #8b5cf6))`
-                : undefined,
-          }}
-        />
+
+      {/* Label left layout */}
+      <div className={labelPosition === "left" ? "flex items-center gap-3" : ""}>
+        {labelPosition === "left" && label && (
+          <span className="text-sm font-medium flex-shrink-0" style={{ color: textColor }}>{label}</span>
+        )}
+
+        <div className="flex-1 flex items-center gap-2">
+          {/* Track */}
+          {renderSegments ? (
+            /* Segmented bar */
+            <div className="flex-1 flex" style={{ gap: `${segmentGap}px` }}>
+              {Array.from({ length: segmentCount }).map((_, i) => (
+                <div
+                  key={i}
+                  style={{
+                    width: segmentWidth,
+                    height: `${heightPx}px`,
+                    borderRadius: resolvedRadius,
+                    backgroundColor: i < filledSegments ? resolvedBarColor : resolvedTrackBg,
+                    transition: animate ? `background-color ${animationDuration}ms ease-out` : "none",
+                    boxShadow: shadowStyle === "none" ? undefined : shadowStyle,
+                  }}
+                />
+              ))}
+            </div>
+          ) : (
+            /* Standard bar */
+            <div
+              className="flex-1 overflow-hidden relative"
+              style={{
+                height: `${heightPx}px`,
+                borderRadius: resolvedRadius,
+                backgroundColor: resolvedTrackBg,
+                boxShadow: innerShadow ? "inset 0 1px 3px rgba(0,0,0,0.15)" : shadowStyle === "none" ? undefined : shadowStyle,
+              }}
+            >
+              <div
+                style={{
+                  height: "100%",
+                  width: indeterminate ? "40%" : `${percentage}%`,
+                  borderRadius: resolvedRadius,
+                  backgroundColor: gradientBg ? undefined : resolvedBarColor,
+                  backgroundImage: gradientBg || stripeBg || undefined,
+                  backgroundSize: stripeBg ? `${stripeWidth * 4}px ${stripeWidth * 4}px` : undefined,
+                  transition: animate && !indeterminate ? `width ${animationDuration}ms ease-out` : "none",
+                  animation: indeterminate
+                    ? "progressIndeterminate 1.5s ease-in-out infinite"
+                    : animatedStripes && stripeBg
+                      ? `progressStripeMove 1s linear infinite`
+                      : pulseAnimation
+                        ? "progressPulse 2s ease-in-out infinite"
+                        : undefined,
+                  ...glowStyle,
+                }}
+              >
+                {/* Value inside bar */}
+                {showValue && valuePosition === "inside" && (heightPx || 10) >= 14 && (
+                  <span
+                    className="absolute inset-0 flex items-center justify-center text-xs font-medium"
+                    style={{ color: isDarkBackground(resolvedBarColor) ? "#ffffff" : "#1f2937" }}
+                  >
+                    {formatValue()}
+                  </span>
+                )}
+              </div>
+              {/* Milestones */}
+              {milestoneValues.map((m) => (
+                <div
+                  key={m}
+                  className="absolute top-0 bottom-0"
+                  style={{ left: `${m}%` }}
+                >
+                  {milestoneStyle === "line" && (
+                    <div className="w-0.5 h-full" style={{ backgroundColor: milestoneColor || "rgba(0,0,0,0.3)" }} />
+                  )}
+                  {milestoneStyle === "dot" && (
+                    <div
+                      className="w-2 h-2 rounded-full absolute top-1/2 -translate-y-1/2 -translate-x-1/2"
+                      style={{ backgroundColor: milestoneColor || "rgba(0,0,0,0.4)" }}
+                    />
+                  )}
+                  {milestoneStyle === "diamond" && (
+                    <div
+                      className="w-2 h-2 absolute top-1/2 -translate-y-1/2 -translate-x-1/2 rotate-45"
+                      style={{ backgroundColor: milestoneColor || "rgba(0,0,0,0.4)" }}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Value outside-right */}
+          {showValue && valuePosition === "outside-right" && (
+            <span className="text-sm flex-shrink-0" style={{ color: mutedColor }}>{formatValue()}</span>
+          )}
+        </div>
       </div>
+
+      {/* Label below */}
+      {labelBelow && (
+        <span className="text-sm font-medium mt-1.5 block" style={{ color: textColor }}>{label}</span>
+      )}
+
+      {/* Value below */}
+      {showValue && valuePosition === "below" && (
+        <span className="text-sm mt-1 block" style={{ color: mutedColor }}>{formatValue()}</span>
+      )}
+
+      {/* Min/Max labels */}
+      {showMinMax && (
+        <div className="flex justify-between mt-1 text-xs" style={{ color: mutedColor }}>
+          <span>0</span>
+          <span>{max}</span>
+        </div>
+      )}
+
+      {/* Description */}
+      {description && (
+        <p className="text-xs mt-1" style={{ color: mutedColor }}>{description}</p>
+      )}
     </div>
   );
 }
@@ -23999,11 +24335,54 @@ export function ProgressRender({
 export interface AlertProps {
   title?: string;
   message?: string;
-  variant?: "info" | "success" | "warning" | "error";
+  description?: string;
+  variant?: "info" | "success" | "warning" | "error" | "neutral" | "custom";
+  customBackgroundColor?: string;
+  customTextColor?: string;
+  customBorderColor?: string;
+  customIconColor?: string;
+  showIcon?: boolean;
+  customIcon?: string;
+  iconPosition?: "left" | "top";
+  iconSize?: "sm" | "md" | "lg";
   size?: "sm" | "md" | "lg";
-  icon?: boolean;
+  layout?: "horizontal" | "vertical";
+  fullWidth?: boolean;
+  maxWidth?: "sm" | "md" | "lg" | "xl" | "full";
+  showBorder?: boolean;
+  borderWidth?: "1" | "2" | "4";
+  borderStyle?: "solid" | "dashed";
+  borderPosition?: "all" | "left" | "top" | "bottom";
+  borderRadius?: "none" | "sm" | "md" | "lg";
+  shadow?: "none" | "sm" | "md" | "lg";
+  shadowColor?: string;
+  showActions?: boolean;
+  primaryActionText?: string;
+  primaryActionLink?: string;
+  secondaryActionText?: string;
+  secondaryActionLink?: string;
   closable?: boolean;
-  action?: { label?: string; onClick?: () => void };
+  closeButtonPosition?: "top-right" | "center-right";
+  closeButtonStyle?: "icon" | "text";
+  autoClose?: boolean;
+  autoCloseDelay?: number;
+  showProgress?: boolean;
+  progressValue?: number;
+  progressColor?: string;
+  progressPosition?: "top" | "bottom";
+  showLink?: boolean;
+  linkText?: string;
+  linkUrl?: string;
+  linkTarget?: "_self" | "_blank";
+  animateOnMount?: boolean;
+  animationType?: "fade" | "slide-down" | "slide-up" | "scale";
+  animationDuration?: number;
+  hideOnMobile?: boolean;
+  mobileSize?: "same" | "smaller";
+  stackOnMobile?: boolean;
+  ariaLabel?: string;
+  role?: "alert" | "status" | "log";
+  live?: "off" | "polite" | "assertive";
   id?: string;
   className?: string;
   onClose?: () => void;
@@ -24012,145 +24391,274 @@ export interface AlertProps {
 export function AlertRender({
   title,
   message,
+  description,
   variant = "info",
+  customBackgroundColor,
+  customTextColor,
+  customBorderColor,
+  customIconColor,
+  showIcon = true,
+  customIcon,
+  iconPosition = "left",
+  iconSize = "md",
   size = "md",
-  icon = true,
+  layout = "horizontal",
+  fullWidth = true,
+  maxWidth = "full",
+  showBorder = true,
+  borderWidth = "1",
+  borderStyle = "solid",
+  borderPosition = "all",
+  borderRadius = "md",
+  shadow = "none",
+  shadowColor,
+  showActions = false,
+  primaryActionText,
+  primaryActionLink,
+  secondaryActionText,
+  secondaryActionLink,
   closable = false,
-  action,
+  closeButtonPosition = "top-right",
+  closeButtonStyle = "icon",
+  autoClose = false,
+  autoCloseDelay = 5,
+  showProgress = false,
+  progressValue = 0,
+  progressColor,
+  progressPosition = "bottom",
+  showLink = false,
+  linkText = "Learn more",
+  linkUrl,
+  linkTarget = "_self",
+  animateOnMount = true,
+  animationType = "fade",
+  animationDuration = 300,
+  hideOnMobile = false,
+  mobileSize = "same",
+  stackOnMobile = true,
+  ariaLabel,
+  role = "alert",
+  live = "polite",
   id,
   className = "",
   onClose,
 }: AlertProps) {
-  const variantStyles: Record<
-    string,
-    { bg: string; border: string; text: string; iconColor: string }
-  > = {
-    info: {
-      bg: "#f0f9ff",
-      border: "#bae6fd",
-      text: "#075985",
-      iconColor: "#0ea5e9",
-    },
-    success: {
-      bg: "#f0fdf4",
-      border: "#bbf7d0",
-      text: "#166534",
-      iconColor: "#22c55e",
-    },
-    warning: {
-      bg: "#fefce8",
-      border: "#fde68a",
-      text: "#854d0e",
-      iconColor: "#eab308",
-    },
-    error: {
-      bg: "#fef2f2",
-      border: "#fecaca",
-      text: "#991b1b",
-      iconColor: "#ef4444",
-    },
+  // Variant color schemes
+  const variantStyles: Record<string, { bg: string; border: string; text: string; iconColor: string }> = {
+    info: { bg: "#f0f9ff", border: "#bae6fd", text: "#075985", iconColor: "#0ea5e9" },
+    success: { bg: "#f0fdf4", border: "#bbf7d0", text: "#166534", iconColor: "#22c55e" },
+    warning: { bg: "#fefce8", border: "#fde68a", text: "#854d0e", iconColor: "#eab308" },
+    error: { bg: "#fef2f2", border: "#fecaca", text: "#991b1b", iconColor: "#ef4444" },
+    neutral: { bg: "#f9fafb", border: "#e5e7eb", text: "#374151", iconColor: "#6b7280" },
+    custom: { bg: customBackgroundColor || "#f9fafb", border: customBorderColor || "#e5e7eb", text: customTextColor || "#374151", iconColor: customIconColor || "#6b7280" },
   };
 
   const icons: Record<string, React.ReactNode> = {
-    info: (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    ),
-    success: (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    ),
-    warning: (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-      />
-    ),
-    error: (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    ),
+    info: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
+    success: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />,
+    warning: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />,
+    error: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />,
+    neutral: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
+    custom: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
   };
 
-  const styles = variantStyles[variant];
-  const sizeClasses = {
-    sm: "p-3 text-sm",
-    md: "p-4 text-base",
-    lg: "p-5 text-lg",
-  }[size];
+  const styles = variantStyles[variant] || variantStyles.info;
+
+  // Size
+  const sizeStyles = {
+    sm: { padding: "12px", fontSize: "14px" },
+    md: { padding: "16px", fontSize: "16px" },
+    lg: { padding: "20px", fontSize: "18px" },
+  }[mobileSize === "smaller" && size !== "sm" ? "sm" : size];
+
+  // Icon size
+  const iconSizeClasses = { sm: "w-4 h-4", md: "w-5 h-5", lg: "w-6 h-6" }[iconSize];
+
+  // Border
+  const borderMap: Record<string, React.CSSProperties> = {
+    all: { border: `${borderWidth}px ${borderStyle} ${styles.border}` },
+    left: { borderLeft: `${Number(borderWidth) * 2 || 4}px ${borderStyle} ${styles.border}` },
+    top: { borderTop: `${Number(borderWidth) * 2 || 4}px ${borderStyle} ${styles.border}` },
+    bottom: { borderBottom: `${Number(borderWidth) * 2 || 4}px ${borderStyle} ${styles.border}` },
+  };
+  const borderStyles = showBorder ? (borderMap[borderPosition] || borderMap.all) : {};
+
+  // Border radius
+  const radiusMap = { none: "0", sm: "4px", md: "8px", lg: "12px" };
+  const resolvedRadius = radiusMap[borderRadius] || "8px";
+
+  // Shadow
+  const shadowMap = {
+    none: "none",
+    sm: shadowColor ? `0 1px 2px ${shadowColor}` : "0 1px 2px rgba(0,0,0,0.1)",
+    md: shadowColor ? `0 2px 8px ${shadowColor}` : "0 2px 8px rgba(0,0,0,0.12)",
+    lg: shadowColor ? `0 4px 16px ${shadowColor}` : "0 4px 16px rgba(0,0,0,0.15)",
+  };
+
+  // Max width
+  const maxWidthMap = { sm: "24rem", md: "28rem", lg: "32rem", xl: "36rem", full: "100%" };
+
+  // Animation
+  const animationMap: Record<string, string> = {
+    fade: `alertFadeIn ${animationDuration}ms ease-out`,
+    "slide-down": `alertSlideDown ${animationDuration}ms ease-out`,
+    "slide-up": `alertSlideUp ${animationDuration}ms ease-out`,
+    scale: `alertScaleIn ${animationDuration}ms ease-out`,
+  };
+
+  const isVertical = layout === "vertical" || iconPosition === "top";
+  const hasActions = showActions && (primaryActionText || secondaryActionText);
+  const hasProgressBar = showProgress && progressValue > 0;
+
+  // Close button
+  const closeButton = closable && (
+    <button
+      className={`flex-shrink-0 hover:opacity-75 transition-opacity ${closeButtonPosition === "center-right" ? "self-center" : ""}`}
+      style={{ color: styles.text, padding: "4px" }}
+      onClick={onClose}
+      aria-label="Close"
+    >
+      {closeButtonStyle === "text" ? (
+        <span className="text-sm font-medium">Dismiss</span>
+      ) : (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      )}
+    </button>
+  );
+
+  // Progress bar element
+  const progressBar = hasProgressBar && (
+    <div
+      className="overflow-hidden"
+      style={{
+        height: "3px",
+        backgroundColor: `${styles.border}`,
+        ...(progressPosition === "top" ? { borderRadius: `${resolvedRadius} ${resolvedRadius} 0 0` } : { borderRadius: `0 0 ${resolvedRadius} ${resolvedRadius}` }),
+      }}
+    >
+      <div
+        style={{
+          height: "100%",
+          width: `${Math.min(100, Math.max(0, progressValue))}%`,
+          backgroundColor: progressColor || styles.iconColor,
+          transition: "width 300ms ease-out",
+        }}
+      />
+    </div>
+  );
+
+  // Icon element
+  const iconElement = showIcon && (
+    customIcon ? (
+      <span className={`flex-shrink-0 ${iconSizeClasses.replace("w-", "text-").replace(/h-\S+/, "")}`} style={{ color: styles.iconColor }}>
+        {customIcon}
+      </span>
+    ) : (
+      <svg
+        className={`${iconSizeClasses} flex-shrink-0`}
+        style={{ color: styles.iconColor }}
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        {icons[variant] || icons.info}
+      </svg>
+    )
+  );
 
   return (
-    <div
-      id={id}
-      className={`border rounded-lg ${sizeClasses} ${className}`}
-      style={{
-        backgroundColor: styles.bg,
-        borderColor: styles.border,
-        color: styles.text,
-      }}
-      role="alert"
-    >
-      <div className="flex items-start gap-3">
-        {icon && (
-          <svg
-            className="w-5 h-5 flex-shrink-0 mt-0.5"
-            style={{ color: styles.iconColor }}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            {icons[variant]}
-          </svg>
+    <>
+      {animateOnMount && (
+        <style>{`
+          @keyframes alertFadeIn { from { opacity: 0; } to { opacity: 1; } }
+          @keyframes alertSlideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+          @keyframes alertSlideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+          @keyframes alertScaleIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+        `}</style>
+      )}
+      <div
+        id={id}
+        className={`${hideOnMobile ? "hidden md:block" : ""} ${fullWidth ? "w-full" : "inline-block"} ${className}`}
+        style={{
+          maxWidth: maxWidthMap[maxWidth] || "100%",
+          backgroundColor: styles.bg,
+          color: styles.text,
+          borderRadius: resolvedRadius,
+          boxShadow: shadowMap[shadow],
+          padding: sizeStyles.padding,
+          fontSize: sizeStyles.fontSize,
+          ...borderStyles,
+          ...(animateOnMount ? { animation: animationMap[animationType] } : {}),
+        }}
+        role={role}
+        aria-label={ariaLabel || undefined}
+        aria-live={live !== "off" ? live : undefined}
+      >
+        {/* Progress bar top */}
+        {hasProgressBar && progressPosition === "top" && (
+          <div style={{ margin: `-${sizeStyles.padding} -${sizeStyles.padding} 12px -${sizeStyles.padding}` }}>
+            {progressBar}
+          </div>
         )}
-        <div className="flex-1">
-          {title && <p className="font-semibold mb-1">{title}</p>}
-          {message && <p className="opacity-90">{message}</p>}
-          {action && (
-            <button
-              className="mt-2 font-medium underline hover:no-underline"
-              onClick={action.onClick}
-            >
-              {action.label}
-            </button>
-          )}
+
+        {/* Main content */}
+        <div className={`flex ${isVertical ? "flex-col gap-2" : "items-start gap-3"} ${stackOnMobile && !isVertical ? "max-md:flex-col max-md:gap-2" : ""}`}>
+          {iconElement}
+          <div className="flex-1 min-w-0">
+            {title && <p className="font-semibold mb-0.5">{title}</p>}
+            {message && <p className="opacity-90">{message}</p>}
+            {description && <p className="opacity-70 text-sm mt-1">{description}</p>}
+
+            {/* Link */}
+            {showLink && linkUrl && (
+              <a
+                href={linkUrl}
+                target={linkTarget}
+                rel={linkTarget === "_blank" ? "noopener noreferrer" : undefined}
+                className="inline-block mt-2 font-medium underline hover:no-underline text-sm"
+                style={{ color: styles.iconColor }}
+              >
+                {linkText}
+              </a>
+            )}
+
+            {/* Actions */}
+            {hasActions && (
+              <div className="flex items-center gap-3 mt-3">
+                {primaryActionText && (
+                  <a
+                    href={primaryActionLink || "#"}
+                    className="px-3 py-1.5 text-sm font-medium rounded-md text-white transition-opacity hover:opacity-90"
+                    style={{ backgroundColor: styles.iconColor }}
+                  >
+                    {primaryActionText}
+                  </a>
+                )}
+                {secondaryActionText && (
+                  <a
+                    href={secondaryActionLink || "#"}
+                    className="px-3 py-1.5 text-sm font-medium rounded-md transition-opacity hover:opacity-80"
+                    style={{ border: `1px solid ${styles.border}`, color: styles.text }}
+                  >
+                    {secondaryActionText}
+                  </a>
+                )}
+              </div>
+            )}
+          </div>
+          {closeButton}
         </div>
-        {closable && (
-          <button
-            className="p-1 hover:opacity-75 transition-opacity"
-            onClick={onClose}
-            aria-label="Close"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+
+        {/* Progress bar bottom */}
+        {hasProgressBar && progressPosition === "bottom" && (
+          <div style={{ margin: `12px -${sizeStyles.padding} -${sizeStyles.padding} -${sizeStyles.padding}` }}>
+            {progressBar}
+          </div>
         )}
       </div>
-    </div>
+    </>
   );
 }
 
@@ -24815,7 +25323,7 @@ export function TrustBadgesRender({
   return (
     <div id={id} className={className}>
       {title && (
-        <p className="text-xs md:text-sm text-gray-500 text-center mb-4">
+        <p className="text-xs md:text-sm text-center mb-4" style={{ color: "var(--color-muted-foreground, #6b7280)" }}>
           {title}
         </p>
       )}
@@ -26281,7 +26789,7 @@ export function ScrollAnimateRender({
       }}
     >
       <h3 className="text-xl font-bold mb-2">{title}</h3>
-      <p className="text-sm text-gray-600">{description}</p>
+      <p className="text-sm" style={{ color: "var(--color-muted-foreground, #4b5563)" }}>{description}</p>
     </div>
   );
 }

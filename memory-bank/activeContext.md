@@ -152,6 +152,9 @@
 | SECTIONS-COMPONENTS-MASTER-PLAN.md   | ✅ v2.0 COMPLETE (implementation-ready)                                                       |
 | NAVIGATION-COMPONENTS-MASTER-PLAN.md | ✅ v1.1 VERIFIED (all line numbers corrected, Breadcrumb converter conflict documented)       |
 | FORMS-COMPONENTS-MASTER-PLAN.md      | ✅ v1.1 VERIFIED (all line numbers re-verified, factual errors corrected, ready for AI agent) |
+| CONTENT-COMPONENTS-MASTER-PLAN.md    | ✅ v2.0 COMPLETE (implementation-ready)                                                       |
+| INTERACTIVE-COMPONENTS-MASTER-PLAN.md| ✅ v1.1 VERIFIED (14 critical issues, 6 guard rails)                                         |
+| MARKETING-COMPONENTS-MASTER-PLAN.md  | ✅ v1.0 COMPLETE (1718 lines, 17 sections, 12 critical issues, 5 components)                  |
 | GridItem                             | removed dead `backgroundColor`/`padding` fields                                               |
 | ScrollSectionItem                    | removed dead `contentAlign`/`verticalAlign`, added `snapAlign`                                |
 | ShapeDivider                         | added `width`/`animated` fields                                                               |

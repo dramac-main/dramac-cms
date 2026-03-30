@@ -5,7 +5,48 @@
 
 ---
 
-## Latest Update: Interactive Components Master Plan — v1.1 VERIFIED ✅
+## Latest Update: Marketing Components Master Plan — v1.0 COMPLETE ✅
+
+### What Was Done
+
+Created `MARKETING-COMPONENTS-MASTER-PLAN.md` — the 10th master plan document. Comprehensive deep audit of all 5 marketing components (AnnouncementBar, SocialProof, TrustBadges, LogoCloud, ComparisonTable) across 4 source files (renders.tsx, core-components.ts, component-metadata.ts, converter.ts).
+
+**Document Structure (17 sections, 1718 lines):**
+- Section 0: Implementation Blueprint — file map, exact line numbers, props pipeline, render patterns, shared utils
+- Section 1: Current State Audit — inventory tables, 12 critical issues
+- Section 2: Industry Benchmark — comparison with Webflow/Framer/Squarespace/WordPress
+- Sections 3-7: Per-component deep dives (AnnouncementBar, SocialProof, TrustBadges, LogoCloud, ComparisonTable)
+- Section 8: Dark mode & accessibility audit
+- Section 9: CSS variable compliance
+- Section 10: AI integration patterns
+- Sections 11-12: Component interactions & shared patterns
+- Section 13: Registry & converter alignment matrix
+- Section 14: 6-phase implementation roadmap
+- Section 15: Testing & quality gates
+- Section 16: AI Agent Guard Rails
+
+**12 Critical Issues Documented:**
+- P0: AnnouncementBar `closable` vs `dismissible` mismatch — dismiss button ignores registry config
+- P0: AnnouncementBar variant values completely different between registry and render
+- P0: SocialProof registry and render are DIFFERENT components (count+avatars vs stars+reviews)
+- P0: ComparisonTable `highlight` vs `highlighted` — column highlighting never activates
+- P1: ComparisonTable 3 more field mismatches (priceSubtext/priceNote, tooltip/description, group/category)
+- P1: TrustBadges badge array fields don't align (render vs registry)
+- P1: SocialProof, AnnouncementBar, ComparisonTable missing normalizers
+- SocialProof missing `usageGuidelines` in component-metadata.ts
+
+**Normalizer Status:**
+- LogoCloud ✅ (comprehensive: URL validation, responsive columns, __convertedToFeatures fallback)
+- TrustBadges ✅ (emoji/URL separation, shield default)
+- AnnouncementBar ❌ (needs normalizer)
+- SocialProof ❌ (needs normalizer)
+- ComparisonTable ❌ (needs normalizer)
+
+**Document:** `next-platform-dashboard/docs/MARKETING-COMPONENTS-MASTER-PLAN.md` (v1.0)
+
+---
+
+## Previous Update: Interactive Components Master Plan — v1.1 VERIFIED ✅
 
 ### What Was Done
 
