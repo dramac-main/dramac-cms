@@ -1289,6 +1289,16 @@ function transformPropsForStudio(
     };
   }
 
+  // Form component — ensure platform submission is always on for AI-generated forms
+  if (type === "Form") {
+    return {
+      ...props,
+      enablePlatformSubmission: props.enablePlatformSubmission ?? true,
+      submitText: props.submitText || props.buttonText || "Submit",
+      successMessage: props.successMessage || "Submitted successfully!",
+    };
+  }
+
   // ContactForm component
   if (type === "ContactForm") {
     const fields = Array.isArray(props.fields)
@@ -1726,6 +1736,24 @@ function transformPropsForStudio(
       valueSize: props.valueSize || undefined,
       align: props.align || props.alignment || "center",
       layout: props.layout || "stacked",
+    };
+  }
+
+  // CodeBlock
+  if (type === "CodeBlock") {
+    const highlightLines = props.highlightLines;
+    return {
+      ...props,
+      code: props.code || props.content || props.snippet || "",
+      language: props.language || props.lang || "javascript",
+      theme: props.theme || "dark",
+      title: props.title || props.filename || props.name || undefined,
+      showLineNumbers: props.showLineNumbers ?? true,
+      showCopyButton: props.showCopyButton ?? true,
+      showLanguage: props.showLanguage ?? true,
+      highlightLines: Array.isArray(highlightLines) ? highlightLines : [],
+      maxHeight: props.maxHeight || "lg",
+      wrap: props.wrap ?? false,
     };
   }
 

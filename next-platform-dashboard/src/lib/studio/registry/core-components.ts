@@ -14370,7 +14370,7 @@ const contentComponents: ComponentDefinition[] = [
     label: "Rich Text",
     description:
       "Rich text content section with title, subtitle, layout, pull quotes, and full typography controls",
-    category: "typography",
+    category: "content",
     icon: "FileText",
     render: RichTextRender,
     fields: {
@@ -14537,7 +14537,7 @@ const contentComponents: ComponentDefinition[] = [
     label: "Quote",
     description:
       "Blockquote with 6 variants: simple, bordered, card, modern, pullquote, testimonial",
-    category: "typography",
+    category: "content",
     icon: "Quote",
     render: QuoteRender,
     fields: {
@@ -14645,7 +14645,8 @@ const contentComponents: ComponentDefinition[] = [
   defineComponent({
     type: "CodeBlock",
     label: "Code Block",
-    description: "Syntax highlighted code",
+    description:
+      "Syntax highlighted code block with 4 themes, line numbers, copy button, line highlighting, and responsive height",
     category: "content",
     icon: "Code",
     render: CodeBlockRender,
@@ -14661,23 +14662,124 @@ const contentComponents: ComponentDefinition[] = [
           { label: "CSS", value: "css" },
           { label: "Python", value: "python" },
           { label: "JSON", value: "json" },
+          { label: "Bash", value: "bash" },
+          { label: "Ruby", value: "ruby" },
+          { label: "Go", value: "go" },
+          { label: "Rust", value: "rust" },
+          { label: "SQL", value: "sql" },
+          { label: "PHP", value: "php" },
+          { label: "Java", value: "java" },
+          { label: "C#", value: "csharp" },
+          { label: "Markdown", value: "markdown" },
+          { label: "YAML", value: "yaml" },
         ],
         defaultValue: "javascript",
+      },
+      title: { type: "text", label: "Title / Filename" },
+      theme: {
+        type: "select",
+        label: "Theme",
+        options: [
+          { label: "Dark", value: "dark" },
+          { label: "Light", value: "light" },
+          { label: "GitHub", value: "github" },
+          { label: "Monokai", value: "monokai" },
+        ],
+        defaultValue: "dark",
       },
       showLineNumbers: {
         type: "toggle",
         label: "Show Line Numbers",
         defaultValue: true,
       },
+      showCopyButton: {
+        type: "toggle",
+        label: "Show Copy Button",
+        defaultValue: true,
+      },
+      showLanguage: {
+        type: "toggle",
+        label: "Show Language",
+        defaultValue: true,
+      },
+      highlightLines: {
+        type: "text",
+        label: "Highlight Lines",
+        placeholder: "1,3,5-7",
+      },
+      maxHeight: {
+        type: "select",
+        label: "Max Height",
+        options: [
+          { label: "Small", value: "sm" },
+          { label: "Medium", value: "md" },
+          { label: "Large", value: "lg" },
+          { label: "Extra Large", value: "xl" },
+          { label: "None (Unlimited)", value: "none" },
+        ],
+        defaultValue: "lg",
+      },
+      wrap: {
+        type: "toggle",
+        label: "Word Wrap",
+        defaultValue: false,
+      },
     },
+    fieldGroups: [
+      {
+        id: "content",
+        label: "Content",
+        icon: "Code",
+        fields: ["code", "language", "title"],
+        defaultExpanded: true,
+      },
+      {
+        id: "appearance",
+        label: "Appearance",
+        icon: "Palette",
+        fields: ["theme", "maxHeight", "wrap"],
+        defaultExpanded: false,
+      },
+      {
+        id: "features",
+        label: "Features",
+        icon: "Settings",
+        fields: [
+          "showLineNumbers",
+          "showCopyButton",
+          "showLanguage",
+          "highlightLines",
+        ],
+        defaultExpanded: false,
+      },
+    ],
     defaultProps: {
       code: "// Your code here",
       language: "javascript",
+      theme: "dark",
       showLineNumbers: true,
+      showCopyButton: true,
+      showLanguage: true,
+      maxHeight: "lg",
+      wrap: false,
     },
     ai: {
-      description: "A code block with syntax highlighting",
-      canModify: ["code", "language"],
+      description:
+        "Code block with 4 syntax themes (dark, light, github, monokai), line numbers, copy button, line highlighting, and responsive height control",
+      canModify: [
+        "code",
+        "language",
+        "theme",
+        "title",
+        "showLineNumbers",
+        "highlightLines",
+        "maxHeight",
+      ],
+      suggestions: [
+        "Switch to GitHub theme",
+        "Add line numbers",
+        "Highlight key lines",
+      ],
     },
   }),
 
@@ -14686,7 +14788,7 @@ const contentComponents: ComponentDefinition[] = [
     label: "Label",
     description:
       "Small utility text for tags, badges, categories, and overlines",
-    category: "typography",
+    category: "content",
     icon: "Tag",
     render: LabelRender,
     fields: {
@@ -14774,7 +14876,7 @@ const contentComponents: ComponentDefinition[] = [
     label: "List",
     description:
       "Styled list with bullet, numbered, check, arrow, dash, and icon variants",
-    category: "typography",
+    category: "content",
     icon: "List",
     render: ListRender,
     fields: {
@@ -14868,7 +14970,7 @@ const contentComponents: ComponentDefinition[] = [
     label: "Display Text",
     description:
       "Large decorative display text for hero sections with gradient support",
-    category: "typography",
+    category: "content",
     icon: "Heading1",
     render: DisplayTextRender,
     fields: {
@@ -15031,7 +15133,7 @@ const contentComponents: ComponentDefinition[] = [
     type: "DividerText",
     label: "Divider Text",
     description: "Text with decorative divider lines in 5 variants",
-    category: "typography",
+    category: "content",
     icon: "Minus",
     render: DividerTextRender,
     fields: {
@@ -15121,7 +15223,7 @@ const contentComponents: ComponentDefinition[] = [
     label: "Stat Number",
     description:
       "Large statistics/metrics display with prefix, suffix, and label",
-    category: "typography",
+    category: "content",
     icon: "Hash",
     render: StatNumberRender,
     fields: {

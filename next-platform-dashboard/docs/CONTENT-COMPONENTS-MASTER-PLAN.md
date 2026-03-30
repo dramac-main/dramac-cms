@@ -10,6 +10,7 @@ Content components are the **substance of every website**. They carry the messag
 
 ## Table of Contents
 
+0. [Implementation Blueprint](#section-0--implementation-blueprint)
 1. [Current State Audit](#1-current-state-audit)
 2. [Industry Benchmark Analysis](#2-industry-benchmark-analysis)
 3. [Architecture Principles](#3-architecture-principles)
@@ -25,6 +26,190 @@ Content components are the **substance of every website**. They carry the messag
 
 ---
 
+## Section 0 — Implementation Blueprint
+
+> **For the AI agent implementing this plan.** Read this section FIRST. It contains every file path, every line number, and every registration point you need. Do NOT guess — use these exact references.
+
+### 0.1 File Map
+
+| File | Path | Purpose |
+|------|------|---------|
+| **renders.tsx** | `src/lib/studio/blocks/renders.tsx` | Render functions for all 8 content components |
+| **core-components.ts** | `src/lib/studio/registry/core-components.ts` | `defineComponent()` registrations with fields, defaultProps, AI hints |
+| **component-metadata.ts** | `src/lib/studio/registry/component-metadata.ts` | AI discovery metadata (keywords, usageGuidelines, category) |
+| **converter.ts** | `src/lib/ai/website-designer/converter.ts` | `typeMap` aliases + `KNOWN_REGISTRY_TYPES` + `normalizeComponentProps()` handlers |
+| **renderer.tsx** | `src/lib/studio/engine/renderer.tsx` | Dispatches render functions, injects props via `{...injectedProps}` |
+| **layout-utils.ts** | `src/lib/studio/blocks/layout-utils.ts` | Shared sizing/spacing utility maps (`getResponsiveClasses`, etc.) |
+
+### 0.2 Exact Line Numbers (Verified via grep — 2026-07)
+
+#### renders.tsx
+
+| Component | Interface Start | Export Function | Props Count |
+|-----------|----------------|-----------------|-------------|
+| **RichText** | L3575 (`export interface RichTextProps`) | L3694 (`export function RichTextRender`) | 24 |
+| **Quote** | L3858 (`export interface QuoteProps`) | L3880 (`export function QuoteRender`) | 13 |
+| **CodeBlock** | L25282 (`export interface CodeBlockProps`) | L25297 (`export function CodeBlockRender`) | 12 |
+| **Label** | L4164 (`export interface LabelProps`) | L4187 (`export function LabelRender`) | 12 |
+| **List** | L4308 (`export interface ListProps`) | L4329 (`export function ListRender`) | 10 |
+| **DisplayText** | L4439 (`export interface DisplayTextProps`) | L4461 (`export function DisplayTextRender`) | 17 |
+| **DividerText** | L4529 (`export interface DividerTextProps`) | L4544 (`export function DividerTextRender`) | 12 |
+| **StatNumber** | L4728 (`export interface StatNumberProps`) | L4745 (`export function StatNumberRender`) | 14 |
+
+> 7 of 8 components sit in a contiguous block (L3575–L4845). CodeBlock is an outlier at L25282, separated by ~20,500 lines.
+
+#### core-components.ts
+
+| Component | `defineComponent({` | `type:` line | Category | Fields | defaultProps |
+|-----------|---------------------|-------------|----------|--------|-------------|
+| **RichText** | L14368 | L14369 | typography | 21 | L14510 |
+| **Quote** | L14535 | L14536 | typography | 11 | L14620 |
+| **CodeBlock** | L14645 | L14646 | content | 3 ⚠️ | L14673 |
+| **Label** | L14684 | L14685 | typography | 10 | L14758 |
+| **List** | L14772 | L14773 | typography | 8 | L14846 |
+| **DisplayText** | L14866 | L14867 | typography | 16 | L15008 |
+| **DividerText** | L15030 | L15031 | typography | 10 | L15105 |
+| **StatNumber** | L15119 | L15120 | typography | 12 | L15180 |
+
+> ⚠️ CodeBlock has only 3 registered fields out of 10 render props (30% coverage). See Section 4.3 for the full fix specification.
+>
+> ⚠️ 7 of 8 components use `category: "typography"` — must be changed to `"content"` to match component-metadata.ts.
+
+#### component-metadata.ts
+
+| Component | `type:` line | Category |
+|-----------|-------------|----------|
+| **RichText** | L716 | content |
+| **Quote** | L727 | content |
+| **CodeBlock** | L738 | content |
+| **Label** | L750 | content |
+| **List** | L765 | content |
+| **DisplayText** | L779 | content |
+| **DividerText** | L793 | content |
+| **StatNumber** | L807 | content |
+
+#### converter.ts
+
+| Data | Lines | Status |
+|------|-------|--------|
+| typeMap aliases (32 total) | L370–L607 | ✅ All 8 components have aliases |
+| KNOWN_REGISTRY_TYPES | L792–L801 (RichText L792, Quote L793, CodeBlock L794, Label L797, List L798, DisplayText L799, DividerText L800, StatNumber L801) | ✅ All 8 present |
+| Normalizer handlers | RichText L1572, Label L1645, List L1660, DisplayText L1684, DividerText L1704, StatNumber L1717, Quote L2166 | ⚠️ CodeBlock has NO normalizer |
+
+### 0.3 Props Pipeline
+
+```
+AI Designer generates component JSON
+  ↓
+converter.ts typeMap resolves alias → registered type name
+  (e.g., "ContentBlock" → "RichText", "QuoteBlock" → "Quote")
+  ↓
+converter.ts normalizeComponentProps() normalises prop names
+  (e.g., props.quote → props.text, props.attribution → props.author)
+  ↓
+Component JSON stored in site content (Supabase JSONB)
+  ↓
+renderer.tsx reads component.type → looks up render function from registry
+  ↓
+renderer.tsx injects props: { ...component.props, siteId }
+  ↓
+Render function receives props via destructuring
+```
+
+**Critical rule:** Render function parameter names MUST match registry field names EXACTLY. There is NO mapping layer. If registry says `text` and render expects `content`, the prop is silently lost.
+
+### 0.4 Render Skeleton Pattern
+
+Every content render function follows this structure:
+
+```tsx
+export function [Component]Render({
+  text = "",
+  variant = "default",
+  color,
+  backgroundColor,
+  fontFamily,
+  id,
+  className,
+}: [Component]Props) {
+  // 1. Colour resolution — inline styles for ALL colours
+  const resolvedColor = color || undefined;
+  const resolvedBg = backgroundColor || undefined;
+  const resolvedFont = fontFamily || `var(--font-body, inherit)`;
+
+  // 2. Return JSX with semantic HTML
+  return (
+    <div
+      id={id}
+      className={`... ${className || ""}`}
+      style={{
+        color: resolvedColor,
+        backgroundColor: resolvedBg,
+        fontFamily: resolvedFont,
+      }}
+    >
+      {/* Component content with semantic elements */}
+    </div>
+  );
+}
+```
+
+**Key patterns:**
+- ALL colours via `style={{}}` — NEVER Tailwind colour classes
+- CSS variables as fallbacks: `var(--font-heading, inherit)`
+- Colour chains terminate with `|| undefined` → inherits from parent/theme
+- Tailwind classes ONLY for structure (padding, flex, grid, transitions)
+
+### 0.5 defineComponent() Field Type Reference
+
+| Field Type | UI Element | Use For | Example |
+|-----------|-----------|---------|---------|
+| `text` | Text input | Short strings | `title`, `prefix`, `suffix` |
+| `textarea` | Multi-line input | Longer text | `text` (Quote), `pullQuote` |
+| `richtext` | Rich text editor | HTML/markdown content | `content` (RichText) |
+| `code` | Code editor | Source code | `code` (CodeBlock) |
+| `select` | Dropdown | Constrained choices | `variant`, `size`, `layout` |
+| `toggle` | Boolean switch | On/off features | `showLineNumbers`, `gradient` |
+| `color` | Colour picker | Any colour prop | `textColor`, `backgroundColor` |
+| `image` | Image picker | Images/avatars | `authorImage` (Quote) |
+| `array` | List editor | String arrays | `items` (List) |
+
+### 0.6 Build Checklist — Use for EVERY Change
+
+```
+□ renders.tsx      — render function compiles with zero TS errors
+□ renders.tsx      — every prop in interface is consumed in function body
+□ renders.tsx      — ALL colours via style={{}} (no Tailwind colour classes)
+□ renders.tsx      — semantic HTML used (blockquote, ul/ol, pre/code, etc.)
+□ core-components.ts — every field name matches a render prop name EXACTLY
+□ core-components.ts — defaultProps keys exist in fields
+□ core-components.ts — ai.canModify keys exist in fields
+□ core-components.ts — category is "content" (not "typography")
+□ component-metadata.ts — entry exists with type, category: "content", keywords
+□ converter.ts     — typeMap alias(es) exist for the component
+□ converter.ts     — type is in KNOWN_REGISTRY_TYPES set
+□ converter.ts     — normalizer handler exists in normalizeComponentProps()
+□ npx tsc --noEmit — zero new errors introduced
+```
+
+### 0.7 DO / DON'T Rules
+
+| ✅ DO | ❌ DON'T |
+|-------|---------|
+| Use `style={{}}` for ALL colours | Use Tailwind colour classes (bg-red-600, text-blue-500) |
+| Use CSS variables with fallbacks: `var(--font-body, inherit)` | Hardcode hex/rgb values without CSS variable wrapper |
+| Terminate colour chains with `... or undefined` to enable inheritance | Hardcode a colour as the final fallback (e.g., `... or "#000"`) |
+| Match field names in registry EXACTLY to prop names in render | Use `text` in registry and `content` in render |
+| Use semantic HTML (blockquote, ul/ol, pre/code, role="heading") | Use bare `<div>` for everything |
+| Add converter normalizer for EVERY component | Skip normalizer — AI-generated props pass through unnormalized |
+| Use `font-variant-numeric: tabular-nums` for number displays | Use proportional-width digits for stats |
+| Use `text-wrap: balance` for display/hero text | Let long hero text create orphan words |
+| Put ALL render functions in `renders.tsx` only | Create separate files for individual renders |
+| Use `getResponsiveClasses()` from `layout-utils.ts` | Reimplement responsive logic in each component |
+| Set `category: "content"` for all 8 content components | Leave the 7 that currently say `"typography"` |
+
+---
+
 ## 1. Current State Audit
 
 ### 1.1 Content Components Inventory (8 total)
@@ -33,14 +218,14 @@ Content components are the **substance of every website**. They carry the messag
 |---|-----------|---------------------|-------------------|-------|---------|--------------|
 | 1 | **RichText** | L3575 | L3694 | 24 | ✅ Strong | Full layout system (centered/left/two-column/wide), 10 colour props, pull quotes, markdown-to-HTML utility |
 | 2 | **Quote** | L3858 | L3880 | 13 | ✅ Strong | 6 polished variants (simple/bordered/card/modern/pullquote/testimonial), author images, per-size responsive styles |
-| 3 | **CodeBlock** | L25223 | L25238 | 12 | ⚠️ Under-registered | 4 themes, line numbers, copy button, highlight lines. BUT only 3 of 10 props registered in registry |
+| 3 | **CodeBlock** | L25282 | L25297 | 12 | ⚠️ Under-registered | 4 themes, line numbers, copy button, highlight lines. BUT only 3 of 10 props registered in registry |
 | 4 | **Label** | L4164 | L4187 | 12 | ✅ Strong | 7 variants (default/badge/overline/tag/pill/outline/subtle), text transform, letter spacing |
 | 5 | **List** | L4308 | L4329 | 10 | ✅ Strong | 7 marker variants, multi-column support (1/2/3), semantic `<ol>`/`<ul>` |
 | 6 | **DisplayText** | L4439 | L4461 | 17 | ✅ Excellent | Gradient text, `text-wrap: balance`, `role="heading"`, custom font sizing |
 | 7 | **DividerText** | L4529 | L4544 | 12 | ✅ Strong | 5 decorative variants (line-through/line-sides/dots/gradient/ornament) |
 | 8 | **StatNumber** | L4728 | L4745 | 14 | ✅ Strong | Tabular-nums, prefix/suffix, stacked/inline layouts |
 
-> **Note:** 7 of 8 components sit in a contiguous block (L3575–L4845). CodeBlock is an outlier at L25223, separated by ~20,000 lines.
+> **Note:** 7 of 8 components sit in a contiguous block (L3575–L4845). CodeBlock is an outlier at L25282, separated by ~20,500 lines.
 
 ### 1.2 Critical Issues Found
 
@@ -59,14 +244,14 @@ Content components are the **substance of every website**. They carry the messag
 
 | Component | `core-components.ts` category | `component-metadata.ts` category | Consistent? |
 |-----------|------------------------------|----------------------------------|-------------|
-| RichText | `typography` (L13760) | `content` (L674) | ❌ |
-| Quote | `typography` (L13901) | `content` (L685) | ❌ |
-| CodeBlock | `content` (L13989) | `content` (L696) | ✅ |
-| Label | `typography` (L14028) | `content` (L708) | ❌ |
-| List | `typography` (L14114) | `content` (L723) | ❌ |
-| DisplayText | `typography` (L14199) | `content` (L737) | ❌ |
-| DividerText | `typography` (L14336) | `content` (L751) | ❌ |
-| StatNumber | `typography` (L14424) | `content` (L765) | ❌ |
+| RichText | `typography` (L14373) | `content` (L716) | ❌ |
+| Quote | `typography` (L14540) | `content` (L727) | ❌ |
+| CodeBlock | `content` (L14649) | `content` (L738) | ✅ |
+| Label | `typography` (L14689) | `content` (L750) | ❌ |
+| List | `typography` (L14777) | `content` (L765) | ❌ |
+| DisplayText | `typography` (L14871) | `content` (L779) | ❌ |
+| DividerText | `typography` (L15034) | `content` (L793) | ❌ |
+| StatNumber | `typography` (L15124) | `content` (L807) | ❌ |
 
 **Recommendation:** Align on `content` for all 8. component-metadata.ts has the correct grouping. The 7 "typography" labels in core-components.ts should be updated to `content`.
 
@@ -247,8 +432,8 @@ converter.ts normalizes AI output →  stored as { type, props }  →  core-comp
 ### 4.1 RichTextRender
 
 **Location:** `renders.tsx` L3575 (interface) → L3694 (export)
-**Registry:** `core-components.ts` L13737 (defineComponent) → L13829 (defaultProps)
-**Metadata:** `component-metadata.ts` L674
+**Registry:** `core-components.ts` L14368 (defineComponent) → L14510 (defaultProps)
+**Metadata:** `component-metadata.ts` L716
 **Converter:** Normalizer at L1572, 6 typeMap aliases
 
 #### Current Props (24 including id/className)
@@ -351,8 +536,8 @@ Every chain terminates with `|| undefined` — inherits from CSS when no explici
 ### 4.2 QuoteRender
 
 **Location:** `renders.tsx` L3858 (interface) → L3880 (export)
-**Registry:** `core-components.ts` L13879 (defineComponent) → L13950 (defaultProps)
-**Metadata:** `component-metadata.ts` L685
+**Registry:** `core-components.ts` L14535 (defineComponent) → L14620 (defaultProps)
+**Metadata:** `component-metadata.ts` L727
 **Converter:** Normalizer at L2166, 4 typeMap aliases
 
 #### Current Props (13 including id/className)
@@ -427,9 +612,9 @@ Note: Normalizer sets `variant` default to `"bordered"` while render defaults to
 
 ### 4.3 CodeBlockRender
 
-**Location:** `renders.tsx` L25223 (interface) → L25238 (export)
-**Registry:** `core-components.ts` L13967 (defineComponent) → L13995 (defaultProps)
-**Metadata:** `component-metadata.ts` L696
+**Location:** `renders.tsx` L25282 (interface) → L25297 (export)
+**Registry:** `core-components.ts` L14645 (defineComponent) → L14673 (defaultProps)
+**Metadata:** `component-metadata.ts` L738
 **Converter:** No normalizer (❌), 2 typeMap aliases
 
 > ⚠️ **This is the most under-developed content component.** It has the richest render function but the poorest registry coverage.
@@ -489,9 +674,9 @@ Lines specified in `highlightLines[]` receive `bg-yellow-500/20` with negative m
 
 | Prop | In Registry? | In Render? | Impact |
 |------|-------------|-----------|--------|
-| `code` | ✅ L13968 (type: "code") | ✅ | Editor can set code |
-| `language` | ✅ L13968 (select, 6 options) | ✅ | Editor can pick language |
-| `showLineNumbers` | ✅ L13968 (toggle) | ✅ | Editor can toggle |
+| `code` | ✅ L14646 (type: "code") | ✅ | Editor can set code |
+| `language` | ✅ L14646 (select, 6 options) | ✅ | Editor can pick language |
+| `showLineNumbers` | ✅ L14646 (toggle) | ✅ | Editor can toggle |
 | `showCopyButton` | ❌ | ✅ (default: true) | Cannot disable copy button from UI |
 | `showLanguage` | ❌ | ✅ (default: true) | Cannot hide language label from UI |
 | `title` | ❌ | ✅ | Cannot set title/filename from UI |
@@ -606,8 +791,8 @@ if (type === "CodeBlock") {
 ### 4.4 LabelRender
 
 **Location:** `renders.tsx` L4164 (interface) → L4187 (export)
-**Registry:** `core-components.ts` L14006 (defineComponent) → L14078 (defaultProps)
-**Metadata:** `component-metadata.ts` L708
+**Registry:** `core-components.ts` L14684 (defineComponent) → L14758 (defaultProps)
+**Metadata:** `component-metadata.ts` L750
 **Converter:** Normalizer at L1645, 5 typeMap aliases
 
 #### Current Props (12 including id/className)
@@ -661,8 +846,8 @@ interface LabelProps {
 ### 4.5 ListRender
 
 **Location:** `renders.tsx` L4308 (interface) → L4329 (export)
-**Registry:** `core-components.ts` L14092 (defineComponent) → L14163 (defaultProps)
-**Metadata:** `component-metadata.ts` L723
+**Registry:** `core-components.ts` L14772 (defineComponent) → L14846 (defaultProps)
+**Metadata:** `component-metadata.ts` L765
 **Converter:** Normalizer at L1660, 5 typeMap aliases
 
 #### Current Props (10 including id/className)
@@ -740,8 +925,8 @@ iconColor: props.iconColor || props.markerColor || undefined
 ### 4.6 DisplayTextRender
 
 **Location:** `renders.tsx` L4439 (interface) → L4461 (export)
-**Registry:** `core-components.ts` L14177 (defineComponent) → L14302 (defaultProps)
-**Metadata:** `component-metadata.ts` L737
+**Registry:** `core-components.ts` L14866 (defineComponent) → L15008 (defaultProps)
+**Metadata:** `component-metadata.ts` L779
 **Converter:** Normalizer at L1684, 3 typeMap aliases
 
 #### Current Props (17 including id/className)
@@ -821,8 +1006,8 @@ Uses ARIA `role="heading"` with `aria-level={1}` — correctly identifies the di
 ### 4.7 DividerTextRender
 
 **Location:** `renders.tsx` L4529 (interface) → L4544 (export)
-**Registry:** `core-components.ts` L14314 (defineComponent) → L14399 (defaultProps)
-**Metadata:** `component-metadata.ts` L751
+**Registry:** `core-components.ts` L15030 (defineComponent) → L15105 (defaultProps)
+**Metadata:** `component-metadata.ts` L793
 **Converter:** Normalizer at L1704, 3 typeMap aliases
 
 #### Current Props (12 including id/className)
@@ -883,8 +1068,8 @@ textTransform: props.textTransform || "uppercase"
 ### 4.8 StatNumberRender
 
 **Location:** `renders.tsx` L4728 (interface) → L4745 (export)
-**Registry:** `core-components.ts` L14402 (defineComponent) → L14461 (defaultProps)
-**Metadata:** `component-metadata.ts` L765
+**Registry:** `core-components.ts` L15119 (defineComponent) → L15180 (defaultProps)
+**Metadata:** `component-metadata.ts` L807
 **Converter:** Normalizer at L1717, 4 typeMap aliases
 
 #### Current Props (14 including id/className)
@@ -1356,11 +1541,11 @@ function scoreContentQuality(page: GeneratedPage): { score: number; issues: stri
 
 ### 10.1 Full Registry Map
 
-#### RichText — core-components.ts L13737
+#### RichText — core-components.ts L14368
 
 | Field | Type | Default | Registry | Render | Aligned |
 |-------|------|---------|----------|--------|---------|
-| content | richtext | `<p>Start typing...</p>` | ✅ L13737 | ✅ L3694 | ✅ |
+| content | richtext | `<p>Start typing...</p>` | ✅ L14368 | ✅ L3694 | ✅ |
 | title | text | — | ✅ | ✅ | ✅ |
 | subtitle | text | — | ✅ | ✅ | ✅ |
 | pullQuote | textarea | — | ✅ | ✅ | ✅ |
@@ -1385,11 +1570,11 @@ function scoreContentQuality(page: GeneratedPage): { score: number; issues: stri
 
 **Gaps:** 1 minor (proseSize default mismatch), 1 non-blocking (`color` render-only fallback)
 
-#### Quote — core-components.ts L13879
+#### Quote — core-components.ts L14535
 
 | Field | Type | Default | Registry | Render | Aligned |
 |-------|------|---------|----------|--------|---------|
-| text | textarea | "This is a quote." | ✅ L13879 | ✅ L3880 | ✅ |
+| text | textarea | "This is a quote." | ✅ L14535 | ✅ L3880 | ✅ |
 | author | text | — | ✅ | ✅ | ✅ |
 | authorTitle | text | — | ✅ | ✅ | ✅ |
 | authorImage | image | — | ✅ | ✅ | ✅ |
@@ -1403,11 +1588,11 @@ function scoreContentQuality(page: GeneratedPage): { score: number; issues: stri
 
 **Gaps:** None. 100% aligned. ✅
 
-#### CodeBlock — core-components.ts L13967
+#### CodeBlock — core-components.ts L14645
 
 | Field | Type | Default | Registry | Render | Aligned |
 |-------|------|---------|----------|--------|---------|
-| code | code | `// Your code here` | ✅ L13967 | ✅ L25238 | ✅ |
+| code | code | `// Your code here` | ✅ L14645 | ✅ L25297 | ✅ |
 | language | select | "javascript" | ✅ | ✅ | ✅ |
 | showLineNumbers | toggle | true | ✅ | ✅ | ✅ |
 | showCopyButton | — | true (render) | ❌ | ✅ | 🔴 Missing |
@@ -1420,7 +1605,7 @@ function scoreContentQuality(page: GeneratedPage): { score: number; issues: stri
 
 **Gaps:** 7 render props with ZERO registry coverage. See Section 4.3 for full fix specification.
 
-#### Label — core-components.ts L14006
+#### Label — core-components.ts L14684
 
 | Field | Type | Default | Aligned |
 |-------|------|---------|---------|
@@ -1437,7 +1622,7 @@ function scoreContentQuality(page: GeneratedPage): { score: number; issues: stri
 
 **Gaps:** None. 100% aligned. ✅
 
-#### List — core-components.ts L14092
+#### List — core-components.ts L14772
 
 | Field | Type | Default | Aligned |
 |-------|------|---------|---------|
@@ -1452,7 +1637,7 @@ function scoreContentQuality(page: GeneratedPage): { score: number; issues: stri
 
 **Gaps:** None. 100% aligned. ✅
 
-#### DisplayText — core-components.ts L14177
+#### DisplayText — core-components.ts L14866
 
 | Field | Type | Default | Aligned |
 |-------|------|---------|---------|
@@ -1475,7 +1660,7 @@ function scoreContentQuality(page: GeneratedPage): { score: number; issues: stri
 
 **Gaps:** None. 100% aligned. ✅
 
-#### DividerText — core-components.ts L14314
+#### DividerText — core-components.ts L15030
 
 | Field | Type | Default | Aligned |
 |-------|------|---------|---------|
@@ -1492,7 +1677,7 @@ function scoreContentQuality(page: GeneratedPage): { score: number; issues: stri
 
 **Gaps:** None. 100% aligned. ✅
 
-#### StatNumber — core-components.ts L14402
+#### StatNumber — core-components.ts L15119
 
 | Field | Type | Default | Aligned |
 |-------|------|---------|---------|
@@ -1550,13 +1735,13 @@ All 8 content components confirmed present in `converter.ts` KNOWN_REGISTRY_TYPE
 
 | Step | Task | File | Priority |
 |------|------|------|----------|
-| 1.1 | Add 7 missing fields to CodeBlock registry (theme, title, showCopyButton, showLanguage, highlightLines, maxHeight, wrap) | `core-components.ts` L13967 | 🔴 Critical |
+| 1.1 | Add 7 missing fields to CodeBlock registry (theme, title, showCopyButton, showLanguage, highlightLines, maxHeight, wrap) | `core-components.ts` L14645 | 🔴 Critical |
 | 1.2 | Add field groups to CodeBlock registry (Content, Appearance, Features) | `core-components.ts` | 🔴 Critical |
 | 1.3 | Update CodeBlock AI config (canModify, suggestions) | `core-components.ts` | 🔴 Critical |
 | 1.4 | Add CodeBlock converter normalizer | `converter.ts` | 🔴 Critical |
 | 1.5 | Fix RichText `prose` dark mode — add inherited colour cascade to prose wrapper | `renders.tsx` L3694 | 🔴 Critical |
 | 1.6 | Align RichText `proseSize` default: render says "base", registry says "lg" | `renders.tsx` L3694 | ⚠️ Medium |
-| 1.7 | Fix category mismatch: change 7 `category: "typography"` to `category: "content"` in core-components.ts | `core-components.ts` L13760, L13901, L14028, L14114, L14199, L14336, L14424 | ⚠️ Medium |
+| 1.7 | Fix category mismatch: change 7 `category: "typography"` to `category: "content"` in core-components.ts | `core-components.ts` L14373, L14540, L14689, L14777, L14871, L15034, L15124 | ⚠️ Medium |
 
 **Completion Criteria:**
 - CodeBlock has 10/10 render props registered (was 3/10)
@@ -1573,7 +1758,7 @@ All 8 content components confirmed present in `converter.ts` KNOWN_REGISTRY_TYPE
 |------|------|------|----------|
 | 2.1 | Add `role="separator"` to DividerText wrapper | `renders.tsx` L4544 | ⚠️ Medium |
 | 2.2 | Add composite `aria-label` to StatNumber | `renders.tsx` L4745 | ⚠️ Medium |
-| 2.3 | Add `aria-label` to CodeBlock copy button | `renders.tsx` L25238 | ⚠️ Medium |
+| 2.3 | Add `aria-label` to CodeBlock copy button | `renders.tsx` L25297 | ⚠️ Medium |
 | 2.4 | Fix Quote simple variant font — use `resolvedFontFamily` instead of hardcoded `font-serif` | `renders.tsx` L3880 | ⚠️ Low |
 
 **Completion Criteria:**
@@ -1592,8 +1777,8 @@ All 8 content components confirmed present in `converter.ts` KNOWN_REGISTRY_TYPE
 | 3.1 | Add content component selection rules to AI Designer prompt | AI prompt files | ⚠️ Medium |
 | 3.2 | Add industry-specific content styling rules | AI prompt files | ⚠️ Medium |
 | 3.3 | Add content quality scoring function | Quality scoring file | ⚠️ Medium |
-| 3.4 | Expand CodeBlock language options (add: Bash, Ruby, Go, Rust, SQL, PHP, Java, C#, Markdown, YAML) | `core-components.ts` L13967 | ⚠️ Low |
-| 3.5 | Update component-metadata.ts AI descriptions and usageGuidelines for richer AI context | `component-metadata.ts` L674–L765 | ⚠️ Low |
+| 3.4 | Expand CodeBlock language options (add: Bash, Ruby, Go, Rust, SQL, PHP, Java, C#, Markdown, YAML) | `core-components.ts` L14645 | ⚠️ Low |
+| 3.5 | Update component-metadata.ts AI descriptions and usageGuidelines for richer AI context | `component-metadata.ts` L716–L807 | ⚠️ Low |
 
 **Completion Criteria:**
 - AI Designer selects contextually appropriate content components
@@ -1714,6 +1899,6 @@ All 8 content components confirmed present in `converter.ts` KNOWN_REGISTRY_TYPE
 
 ---
 
-*Document Version: 1.0*
+*Document Version: 2.0*
 *Components Covered: 8 (RichText, Quote, CodeBlock, Label, List, DisplayText, DividerText, StatNumber)*
-*All line numbers grep-verified against source as of document creation.*
+*All line numbers grep-verified against source — 2026-07. Updated after Forms implementation shifted core-components.ts (+630–717 lines), component-metadata.ts (+42 lines), and CodeBlock in renders.tsx (+59 lines). converter.ts unchanged.*

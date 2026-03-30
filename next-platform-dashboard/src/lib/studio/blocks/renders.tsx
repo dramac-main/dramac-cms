@@ -18523,8 +18523,12 @@ export function FormRender({
   // Platform submission
   siteId,
   formId,
-  enablePlatformSubmission = false,
+  enablePlatformSubmission,
 }: FormProps) {
+  // Auto-enable platform submission when siteId is available (renderer always injects it)
+  // This ensures every AI-generated Form submits to the platform out of the gate
+  const effectivePlatformSubmission = enablePlatformSubmission ?? !!siteId;
+
   const [platformStatus, setPlatformStatus] = React.useState<
     "idle" | "submitting" | "success" | "error"
   >("idle");
@@ -18585,18 +18589,18 @@ export function FormRender({
     }
   };
 
-  const resolvedOnSubmit = enablePlatformSubmission
+  const resolvedOnSubmit = effectivePlatformSubmission
     ? handlePlatformSubmit
     : onSubmit;
-  const resolvedIsLoading = enablePlatformSubmission
+  const resolvedIsLoading = effectivePlatformSubmission
     ? platformStatus === "submitting"
     : isLoading;
   const resolvedSuccessMessage =
-    enablePlatformSubmission && platformStatus === "success"
+    effectivePlatformSubmission && platformStatus === "success"
       ? successMessage || "Submitted successfully!"
       : successMessage;
   const resolvedErrorMessage =
-    enablePlatformSubmission && platformStatus === "error"
+    effectivePlatformSubmission && platformStatus === "error"
       ? platformError
       : errorMessage;
 
@@ -18717,8 +18721,8 @@ export function FormRender({
     <form
       ref={formRef}
       id={id}
-      action={enablePlatformSubmission ? undefined : action}
-      method={enablePlatformSubmission ? undefined : method}
+      action={effectivePlatformSubmission ? undefined : action}
+      method={effectivePlatformSubmission ? undefined : method}
       encType={enctype}
       noValidate={novalidate}
       autoComplete={autocomplete}
@@ -18733,7 +18737,7 @@ export function FormRender({
       onSubmit={resolvedOnSubmit}
     >
       {/* Honeypot field for platform submission */}
-      {enablePlatformSubmission && (
+      {effectivePlatformSubmission && (
         <input
           type="text"
           name="_honeypot"

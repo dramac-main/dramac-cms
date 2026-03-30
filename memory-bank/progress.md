@@ -29,28 +29,27 @@ Implemented the entire FORMS-COMPONENTS-MASTER-PLAN.md — all 5 phases across 5
 
 ---
 
-## Previous Update: Content Components Master Plan — v1.0 COMPLETE ✅
+## Previous Update: Content Components Master Plan — v2.0 VERIFIED ✅
 
 ### What Was Done
 
-Created `CONTENT-COMPONENTS-MASTER-PLAN.md` v1.0 — the 8th master plan document in the component documentation series. Covers all 8 content components (RichText, Quote, CodeBlock, Label, List, DisplayText, DividerText, StatNumber) with full registry/render alignment, converter alias verification, and implementation plan.
+Updated `CONTENT-COMPONENTS-MASTER-PLAN.md` from v1.0 to v2.0. All line numbers re-verified against source after Forms implementation shifted core-components.ts (+630–717 lines), component-metadata.ts (+42 lines), and CodeBlock in renders.tsx (+59 lines). converter.ts unchanged.
 
-**Critical Issues Documented:**
-1. **CodeBlock: 30% registry coverage** — 7 render props have no registry fields (theme, title, showCopyButton, showLanguage, highlightLines, maxHeight, wrap)
-2. **Category mismatch** — 7 of 8 use `category: "typography"` in core-components.ts vs `category: "content"` in metadata
-3. **RichText prose dark mode** — Tailwind `prose` class invisible on dark backgrounds
-4. **No CodeBlock converter normalizer** — AI-generated CodeBlock props pass through unnormalized
-5. **DividerText missing `role="separator"`** — accessibility gap
-6. **StatNumber missing `aria-label`** — accessibility gap
+**v2.0 Changes:**
+1. **Added Section 0 — Implementation Blueprint** — Modeled after Forms/Navigation/Sections master plans. Contains File Map, Exact Line Numbers (all 4 source files), Props Pipeline, Render Skeleton Pattern, defineComponent() Field Type Reference, Build Checklist, DO/DON'T Rules. This is the "AI agent quick reference" section that makes the document implementation-ready.
+2. **Fixed all stale line numbers** — 50+ line references corrected across Sections 1.1, 1.3, 4.1–4.8, 10.1, and 11. Every reference independently grep-verified.
+3. **Updated TOC** — Added Section 0 link.
+4. **Updated footer** — Version 2.0 with verification date and drift explanation.
 
-**Overall Content Category Health:**
-- 7 of 8 components have 91-100% registry coverage (best category so far)
-- All 8 in KNOWN_REGISTRY_TYPES (100% converter integration)
-- 32 total converter aliases across 8 components (all verified)
-- 7 of 8 have normalizeProps handlers (CodeBlock sole outlier)
-- CodeBlock is the one problem child — fix specification included in document
+**Critical Issues Still Outstanding (unchanged from v1.0):**
+1. CodeBlock: 30% registry coverage (7 render props unregistered)
+2. Category mismatch: 7 of 8 use "typography" instead of "content"
+3. RichText prose dark mode broken
+4. No CodeBlock converter normalizer
+5. DividerText missing role="separator"
+6. StatNumber missing aria-label
 
-**Document:** `next-platform-dashboard/docs/CONTENT-COMPONENTS-MASTER-PLAN.md`
+**Document:** `next-platform-dashboard/docs/CONTENT-COMPONENTS-MASTER-PLAN.md` (v2.0)
 
 ---
 
