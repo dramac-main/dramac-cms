@@ -4141,7 +4141,10 @@ export function QuoteRender({
     >
       <p
         className={`${sizeStyles.text} ${fontStyle === "italic" ? "italic" : ""} leading-relaxed`}
-        style={{ color: textColor || undefined, fontFamily: resolvedFontFamily }}
+        style={{
+          color: textColor || undefined,
+          fontFamily: resolvedFontFamily,
+        }}
       >
         &ldquo;{text}&rdquo;
       </p>
@@ -22310,7 +22313,9 @@ export function ModalRender({
   }[shadow];
 
   const positionClasses = {
-    center: centered ? "items-center justify-center" : "items-start pt-20 justify-center",
+    center: centered
+      ? "items-center justify-center"
+      : "items-start pt-20 justify-center",
     top: "items-start pt-8 justify-center",
     bottom: "items-end pb-8 justify-center",
     left: "items-center justify-start pl-4",
@@ -22334,8 +22339,10 @@ export function ModalRender({
   const getAnimationStyle = (): React.CSSProperties => {
     const duration = `${animationDuration}ms`;
     if (animationType === "none") return {};
-    if (animationType === "fade") return { animation: `modalFadeIn ${duration} ease-out` };
-    if (animationType === "zoom") return { animation: `modalZoomIn ${duration} ease-out` };
+    if (animationType === "fade")
+      return { animation: `modalFadeIn ${duration} ease-out` };
+    if (animationType === "zoom")
+      return { animation: `modalZoomIn ${duration} ease-out` };
     if (animationType === "slide") {
       const slideMap = {
         up: `modalSlideUp ${duration} ease-out`,
@@ -22353,16 +22360,30 @@ export function ModalRender({
 
   // Close button SVG
   const closeIcon = (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+    <svg
+      className="w-5 h-5"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M6 18L18 6M6 6l12 12"
+      />
     </svg>
   );
 
   if (!isOpen) return null;
 
   const dark = isDarkBackground(backgroundColor);
-  const resolvedTextColor = dark ? "#f8fafc" : "var(--color-foreground, #1f2937)";
-  const resolvedSecondaryText = dark ? "#94a3b8" : "var(--color-muted-foreground, #6b7280)";
+  const resolvedTextColor = dark
+    ? "#f8fafc"
+    : "var(--color-foreground, #1f2937)";
+  const resolvedSecondaryText = dark
+    ? "#94a3b8"
+    : "var(--color-muted-foreground, #6b7280)";
 
   return (
     <>
@@ -22389,7 +22410,9 @@ export function ModalRender({
           style={{
             backgroundColor: overlayColor,
             opacity: overlayOpacity / 100,
-            ...(overlayBlur > 0 ? { backdropFilter: `blur(${overlayBlur}px)` } : {}),
+            ...(overlayBlur > 0
+              ? { backdropFilter: `blur(${overlayBlur}px)` }
+              : {}),
           }}
           onClick={closeOnOverlay ? onClose : undefined}
           aria-hidden="true"
@@ -22402,7 +22425,9 @@ export function ModalRender({
             backgroundColor,
             ...getAnimationStyle(),
             ...(showBorder
-              ? { border: `1px solid ${borderColor || "var(--color-border, #e5e7eb)"}` }
+              ? {
+                  border: `1px solid ${borderColor || "var(--color-border, #e5e7eb)"}`,
+                }
               : {}),
           }}
         >
@@ -22410,7 +22435,10 @@ export function ModalRender({
           {showCloseButton && closeButtonPosition === "outside" && (
             <button
               className="absolute -top-3 -right-3 p-1.5 rounded-full transition-opacity hover:opacity-80 z-10"
-              style={{ backgroundColor: "var(--color-background, #ffffff)", color: resolvedTextColor }}
+              style={{
+                backgroundColor: "var(--color-background, #ffffff)",
+                color: resolvedTextColor,
+              }}
               onClick={onClose}
               aria-label="Close"
             >
@@ -22434,7 +22462,11 @@ export function ModalRender({
                   {closeButtonStyle === "circle" ? (
                     <span
                       className="w-8 h-8 rounded-full flex items-center justify-center"
-                      style={{ backgroundColor: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)" }}
+                      style={{
+                        backgroundColor: dark
+                          ? "rgba(255,255,255,0.1)"
+                          : "rgba(0,0,0,0.05)",
+                      }}
                     >
                       {closeIcon}
                     </span>
@@ -22455,7 +22487,10 @@ export function ModalRender({
                   </h2>
                 )}
                 {description && (
-                  <p className="text-sm" style={{ color: resolvedSecondaryText }}>
+                  <p
+                    className="text-sm"
+                    style={{ color: resolvedSecondaryText }}
+                  >
                     {description}
                   </p>
                 )}
@@ -22471,7 +22506,11 @@ export function ModalRender({
                   {closeButtonStyle === "circle" ? (
                     <span
                       className="w-8 h-8 rounded-full flex items-center justify-center"
-                      style={{ backgroundColor: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)" }}
+                      style={{
+                        backgroundColor: dark
+                          ? "rgba(255,255,255,0.1)"
+                          : "rgba(0,0,0,0.05)",
+                      }}
                     >
                       {closeIcon}
                     </span>
@@ -22486,22 +22525,22 @@ export function ModalRender({
           )}
 
           {/* No header but still need close button */}
-          {!hasHeader && showCloseButton && closeButtonPosition !== "outside" && (
-            <button
-              className={`absolute ${closeButtonPosition === "header-left" ? "top-4 left-4" : "top-4 right-4"} p-1 rounded-lg hover:opacity-80 transition-opacity z-10`}
-              style={{ color: resolvedSecondaryText }}
-              onClick={onClose}
-              aria-label="Close"
-            >
-              {closeIcon}
-            </button>
-          )}
+          {!hasHeader &&
+            showCloseButton &&
+            closeButtonPosition !== "outside" && (
+              <button
+                className={`absolute ${closeButtonPosition === "header-left" ? "top-4 left-4" : "top-4 right-4"} p-1 rounded-lg hover:opacity-80 transition-opacity z-10`}
+                style={{ color: resolvedSecondaryText }}
+                onClick={onClose}
+                aria-label="Close"
+              >
+                {closeIcon}
+              </button>
+            )}
 
           {/* Body */}
           {children && (
-            <div className="px-6 py-2 flex-1 overflow-y-auto">
-              {children}
-            </div>
+            <div className="px-6 py-2 flex-1 overflow-y-auto">{children}</div>
           )}
 
           {/* Footer */}
@@ -22514,7 +22553,9 @@ export function ModalRender({
                   href={secondaryButtonAction || "#"}
                   className="px-4 py-2 text-sm font-medium rounded-lg border transition-opacity hover:opacity-80"
                   style={{
-                    borderColor: dark ? "rgba(255,255,255,0.2)" : "var(--color-border, #d1d5db)",
+                    borderColor: dark
+                      ? "rgba(255,255,255,0.2)"
+                      : "var(--color-border, #d1d5db)",
                     color: resolvedTextColor,
                   }}
                 >
@@ -24037,7 +24078,9 @@ export function ProgressRender({
   id,
   className = "",
 }: ProgressProps) {
-  const percentage = indeterminate ? 50 : Math.min(100, Math.max(0, (value / max) * 100));
+  const percentage = indeterminate
+    ? 50
+    : Math.min(100, Math.max(0, (value / max) * 100));
 
   // Resolve bar color (status colors take priority)
   const resolvedBarColor = (() => {
@@ -24054,30 +24097,48 @@ export function ProgressRender({
   const mutedColor = "var(--color-muted-foreground, #6b7280)";
 
   // Size classes
-  const heightPx = customHeight || { xs: 4, sm: 6, md: 10, lg: 16, xl: 24 }[size];
-  const mobileHeightPx = mobileSize === "smaller" ? Math.max(4, (heightPx || 10) * 0.7) : heightPx;
+  const heightPx =
+    customHeight || { xs: 4, sm: 6, md: 10, lg: 16, xl: 24 }[size];
+  const mobileHeightPx =
+    mobileSize === "smaller" ? Math.max(4, (heightPx || 10) * 0.7) : heightPx;
 
   // Border radius
-  const radiusMap = { none: "0", sm: "2px", md: "4px", lg: "8px", full: "9999px" };
+  const radiusMap = {
+    none: "0",
+    sm: "2px",
+    md: "4px",
+    lg: "8px",
+    full: "9999px",
+  };
   const resolvedRadius = customBorderRadius || radiusMap[rounded] || "9999px";
 
   // Shadow
-  const shadowStyle = shadow === "sm" ? "0 1px 2px rgba(0,0,0,0.1)" : shadow === "md" ? "0 2px 4px rgba(0,0,0,0.15)" : "none";
+  const shadowStyle =
+    shadow === "sm"
+      ? "0 1px 2px rgba(0,0,0,0.1)"
+      : shadow === "md"
+        ? "0 2px 4px rgba(0,0,0,0.15)"
+        : "none";
 
   // Gradient background
   const gradientBg = (() => {
     if (gradient || variant === "gradient") {
       const from = gradientFrom || resolvedBarColor;
       const to = gradientTo || "var(--brand-secondary, #8b5cf6)";
-      if (gradientDirection === "diagonal") return `linear-gradient(135deg, ${from}, ${to})`;
-      if (gradientDirection === "to-l") return `linear-gradient(270deg, ${from}, ${to})`;
+      if (gradientDirection === "diagonal")
+        return `linear-gradient(135deg, ${from}, ${to})`;
+      if (gradientDirection === "to-l")
+        return `linear-gradient(270deg, ${from}, ${to})`;
       return `linear-gradient(90deg, ${from}, ${to})`;
     }
     return undefined;
   })();
 
   // Stripe background
-  const stripeBg = (striped || variant === "striped") ? `repeating-linear-gradient(${stripeAngle}deg, transparent, transparent ${stripeWidth}px, ${stripeColor || "rgba(255,255,255,0.2)"} ${stripeWidth}px, ${stripeColor || "rgba(255,255,255,0.2)"} ${stripeWidth * 2}px)` : undefined;
+  const stripeBg =
+    striped || variant === "striped"
+      ? `repeating-linear-gradient(${stripeAngle}deg, transparent, transparent ${stripeWidth}px, ${stripeColor || "rgba(255,255,255,0.2)"} ${stripeWidth}px, ${stripeColor || "rgba(255,255,255,0.2)"} ${stripeWidth * 2}px)`
+      : undefined;
 
   // Format value display
   const formatValue = () => {
@@ -24089,7 +24150,10 @@ export function ProgressRender({
 
   // Milestone markers
   const milestoneValues = showMilestones
-    ? milestones.split(",").map((m) => parseFloat(m.trim())).filter((m) => !isNaN(m))
+    ? milestones
+        .split(",")
+        .map((m) => parseFloat(m.trim()))
+        .filter((m) => !isNaN(m))
     : [];
 
   // Glow
@@ -24102,7 +24166,9 @@ export function ProgressRender({
     const svgSize = circularSize;
     const radius = (svgSize - circularStrokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
-    const strokeDashoffset = indeterminate ? circumference * 0.25 : circumference * (1 - percentage / 100);
+    const strokeDashoffset = indeterminate
+      ? circumference * 0.25
+      : circumference * (1 - percentage / 100);
 
     return (
       <div
@@ -24110,10 +24176,20 @@ export function ProgressRender({
         className={`inline-flex flex-col items-center ${hideOnMobile ? "hidden md:inline-flex" : ""} ${className}`}
       >
         {label && labelPosition === "above" && (
-          <span className="text-sm font-medium mb-2" style={{ color: textColor }}>{label}</span>
+          <span
+            className="text-sm font-medium mb-2"
+            style={{ color: textColor }}
+          >
+            {label}
+          </span>
         )}
         <div className="relative" style={{ width: svgSize, height: svgSize }}>
-          <svg width={svgSize} height={svgSize} className={indeterminate ? "animate-spin" : ""} style={{ transform: "rotate(-90deg)" }}>
+          <svg
+            width={svgSize}
+            height={svgSize}
+            className={indeterminate ? "animate-spin" : ""}
+            style={{ transform: "rotate(-90deg)" }}
+          >
             {/* Track */}
             <circle
               cx={svgSize / 2}
@@ -24135,7 +24211,9 @@ export function ProgressRender({
               strokeDashoffset={strokeDashoffset}
               strokeLinecap="round"
               style={{
-                transition: animate ? `stroke-dashoffset ${animationDuration}ms ease-out` : "none",
+                transition: animate
+                  ? `stroke-dashoffset ${animationDuration}ms ease-out`
+                  : "none",
                 ...glowStyle,
               }}
             />
@@ -24149,10 +24227,17 @@ export function ProgressRender({
           )}
         </div>
         {label && labelPosition === "below" && (
-          <span className="text-sm font-medium mt-2" style={{ color: textColor }}>{label}</span>
+          <span
+            className="text-sm font-medium mt-2"
+            style={{ color: textColor }}
+          >
+            {label}
+          </span>
         )}
         {description && (
-          <span className="text-xs mt-1" style={{ color: mutedColor }}>{description}</span>
+          <span className="text-xs mt-1" style={{ color: mutedColor }}>
+            {description}
+          </span>
         )}
       </div>
     );
@@ -24161,13 +24246,19 @@ export function ProgressRender({
   // ── Linear mode ──
 
   // Label row (above)
-  const labelAbove = labelPosition === "above" && (label || (showValue && valuePosition === "above"));
+  const labelAbove =
+    labelPosition === "above" &&
+    (label || (showValue && valuePosition === "above"));
   const labelBelow = labelPosition === "below" && label;
 
   // Segmented rendering
   const renderSegments = segmented || variant === "segmented";
-  const segmentWidth = renderSegments ? `calc((100% - ${(segmentCount - 1) * segmentGap}px) / ${segmentCount})` : undefined;
-  const filledSegments = renderSegments ? Math.round((percentage / 100) * segmentCount) : 0;
+  const segmentWidth = renderSegments
+    ? `calc((100% - ${(segmentCount - 1) * segmentGap}px) / ${segmentCount})`
+    : undefined;
+  const filledSegments = renderSegments
+    ? Math.round((percentage / 100) * segmentCount)
+    : 0;
 
   return (
     <div
@@ -24178,7 +24269,9 @@ export function ProgressRender({
       aria-valuemin={0}
       aria-valuemax={max}
       aria-label={ariaLabel || label || undefined}
-      aria-valuetext={ariaValueText || (indeterminate ? "Loading" : formatValue())}
+      aria-valuetext={
+        ariaValueText || (indeterminate ? "Loading" : formatValue())
+      }
     >
       {/* Animated stripes keyframe */}
       {animatedStripes && (striped || variant === "striped") && (
@@ -24196,7 +24289,11 @@ export function ProgressRender({
       {/* Label above + value */}
       {labelAbove && (
         <div className="flex justify-between mb-1.5 text-sm">
-          {label && <span className="font-medium" style={{ color: textColor }}>{label}</span>}
+          {label && (
+            <span className="font-medium" style={{ color: textColor }}>
+              {label}
+            </span>
+          )}
           {showValue && valuePosition === "above" && (
             <span style={{ color: mutedColor }}>{formatValue()}</span>
           )}
@@ -24204,9 +24301,16 @@ export function ProgressRender({
       )}
 
       {/* Label left layout */}
-      <div className={labelPosition === "left" ? "flex items-center gap-3" : ""}>
+      <div
+        className={labelPosition === "left" ? "flex items-center gap-3" : ""}
+      >
         {labelPosition === "left" && label && (
-          <span className="text-sm font-medium flex-shrink-0" style={{ color: textColor }}>{label}</span>
+          <span
+            className="text-sm font-medium flex-shrink-0"
+            style={{ color: textColor }}
+          >
+            {label}
+          </span>
         )}
 
         <div className="flex-1 flex items-center gap-2">
@@ -24221,8 +24325,11 @@ export function ProgressRender({
                     width: segmentWidth,
                     height: `${heightPx}px`,
                     borderRadius: resolvedRadius,
-                    backgroundColor: i < filledSegments ? resolvedBarColor : resolvedTrackBg,
-                    transition: animate ? `background-color ${animationDuration}ms ease-out` : "none",
+                    backgroundColor:
+                      i < filledSegments ? resolvedBarColor : resolvedTrackBg,
+                    transition: animate
+                      ? `background-color ${animationDuration}ms ease-out`
+                      : "none",
                     boxShadow: shadowStyle === "none" ? undefined : shadowStyle,
                   }}
                 />
@@ -24236,7 +24343,11 @@ export function ProgressRender({
                 height: `${heightPx}px`,
                 borderRadius: resolvedRadius,
                 backgroundColor: resolvedTrackBg,
-                boxShadow: innerShadow ? "inset 0 1px 3px rgba(0,0,0,0.15)" : shadowStyle === "none" ? undefined : shadowStyle,
+                boxShadow: innerShadow
+                  ? "inset 0 1px 3px rgba(0,0,0,0.15)"
+                  : shadowStyle === "none"
+                    ? undefined
+                    : shadowStyle,
               }}
             >
               <div
@@ -24246,8 +24357,13 @@ export function ProgressRender({
                   borderRadius: resolvedRadius,
                   backgroundColor: gradientBg ? undefined : resolvedBarColor,
                   backgroundImage: gradientBg || stripeBg || undefined,
-                  backgroundSize: stripeBg ? `${stripeWidth * 4}px ${stripeWidth * 4}px` : undefined,
-                  transition: animate && !indeterminate ? `width ${animationDuration}ms ease-out` : "none",
+                  backgroundSize: stripeBg
+                    ? `${stripeWidth * 4}px ${stripeWidth * 4}px`
+                    : undefined,
+                  transition:
+                    animate && !indeterminate
+                      ? `width ${animationDuration}ms ease-out`
+                      : "none",
                   animation: indeterminate
                     ? "progressIndeterminate 1.5s ease-in-out infinite"
                     : animatedStripes && stripeBg
@@ -24259,14 +24375,20 @@ export function ProgressRender({
                 }}
               >
                 {/* Value inside bar */}
-                {showValue && valuePosition === "inside" && (heightPx || 10) >= 14 && (
-                  <span
-                    className="absolute inset-0 flex items-center justify-center text-xs font-medium"
-                    style={{ color: isDarkBackground(resolvedBarColor) ? "#ffffff" : "#1f2937" }}
-                  >
-                    {formatValue()}
-                  </span>
-                )}
+                {showValue &&
+                  valuePosition === "inside" &&
+                  (heightPx || 10) >= 14 && (
+                    <span
+                      className="absolute inset-0 flex items-center justify-center text-xs font-medium"
+                      style={{
+                        color: isDarkBackground(resolvedBarColor)
+                          ? "#ffffff"
+                          : "#1f2937",
+                      }}
+                    >
+                      {formatValue()}
+                    </span>
+                  )}
               </div>
               {/* Milestones */}
               {milestoneValues.map((m) => (
@@ -24276,18 +24398,27 @@ export function ProgressRender({
                   style={{ left: `${m}%` }}
                 >
                   {milestoneStyle === "line" && (
-                    <div className="w-0.5 h-full" style={{ backgroundColor: milestoneColor || "rgba(0,0,0,0.3)" }} />
+                    <div
+                      className="w-0.5 h-full"
+                      style={{
+                        backgroundColor: milestoneColor || "rgba(0,0,0,0.3)",
+                      }}
+                    />
                   )}
                   {milestoneStyle === "dot" && (
                     <div
                       className="w-2 h-2 rounded-full absolute top-1/2 -translate-y-1/2 -translate-x-1/2"
-                      style={{ backgroundColor: milestoneColor || "rgba(0,0,0,0.4)" }}
+                      style={{
+                        backgroundColor: milestoneColor || "rgba(0,0,0,0.4)",
+                      }}
                     />
                   )}
                   {milestoneStyle === "diamond" && (
                     <div
                       className="w-2 h-2 absolute top-1/2 -translate-y-1/2 -translate-x-1/2 rotate-45"
-                      style={{ backgroundColor: milestoneColor || "rgba(0,0,0,0.4)" }}
+                      style={{
+                        backgroundColor: milestoneColor || "rgba(0,0,0,0.4)",
+                      }}
                     />
                   )}
                 </div>
@@ -24297,24 +24428,39 @@ export function ProgressRender({
 
           {/* Value outside-right */}
           {showValue && valuePosition === "outside-right" && (
-            <span className="text-sm flex-shrink-0" style={{ color: mutedColor }}>{formatValue()}</span>
+            <span
+              className="text-sm flex-shrink-0"
+              style={{ color: mutedColor }}
+            >
+              {formatValue()}
+            </span>
           )}
         </div>
       </div>
 
       {/* Label below */}
       {labelBelow && (
-        <span className="text-sm font-medium mt-1.5 block" style={{ color: textColor }}>{label}</span>
+        <span
+          className="text-sm font-medium mt-1.5 block"
+          style={{ color: textColor }}
+        >
+          {label}
+        </span>
       )}
 
       {/* Value below */}
       {showValue && valuePosition === "below" && (
-        <span className="text-sm mt-1 block" style={{ color: mutedColor }}>{formatValue()}</span>
+        <span className="text-sm mt-1 block" style={{ color: mutedColor }}>
+          {formatValue()}
+        </span>
       )}
 
       {/* Min/Max labels */}
       {showMinMax && (
-        <div className="flex justify-between mt-1 text-xs" style={{ color: mutedColor }}>
+        <div
+          className="flex justify-between mt-1 text-xs"
+          style={{ color: mutedColor }}
+        >
           <span>0</span>
           <span>{max}</span>
         </div>
@@ -24322,7 +24468,9 @@ export function ProgressRender({
 
       {/* Description */}
       {description && (
-        <p className="text-xs mt-1" style={{ color: mutedColor }}>{description}</p>
+        <p className="text-xs mt-1" style={{ color: mutedColor }}>
+          {description}
+        </p>
       )}
     </div>
   );
@@ -24444,22 +24592,97 @@ export function AlertRender({
   onClose,
 }: AlertProps) {
   // Variant color schemes
-  const variantStyles: Record<string, { bg: string; border: string; text: string; iconColor: string }> = {
-    info: { bg: "#f0f9ff", border: "#bae6fd", text: "#075985", iconColor: "#0ea5e9" },
-    success: { bg: "#f0fdf4", border: "#bbf7d0", text: "#166534", iconColor: "#22c55e" },
-    warning: { bg: "#fefce8", border: "#fde68a", text: "#854d0e", iconColor: "#eab308" },
-    error: { bg: "#fef2f2", border: "#fecaca", text: "#991b1b", iconColor: "#ef4444" },
-    neutral: { bg: "#f9fafb", border: "#e5e7eb", text: "#374151", iconColor: "#6b7280" },
-    custom: { bg: customBackgroundColor || "#f9fafb", border: customBorderColor || "#e5e7eb", text: customTextColor || "#374151", iconColor: customIconColor || "#6b7280" },
+  const variantStyles: Record<
+    string,
+    { bg: string; border: string; text: string; iconColor: string }
+  > = {
+    info: {
+      bg: "#f0f9ff",
+      border: "#bae6fd",
+      text: "#075985",
+      iconColor: "#0ea5e9",
+    },
+    success: {
+      bg: "#f0fdf4",
+      border: "#bbf7d0",
+      text: "#166534",
+      iconColor: "#22c55e",
+    },
+    warning: {
+      bg: "#fefce8",
+      border: "#fde68a",
+      text: "#854d0e",
+      iconColor: "#eab308",
+    },
+    error: {
+      bg: "#fef2f2",
+      border: "#fecaca",
+      text: "#991b1b",
+      iconColor: "#ef4444",
+    },
+    neutral: {
+      bg: "#f9fafb",
+      border: "#e5e7eb",
+      text: "#374151",
+      iconColor: "#6b7280",
+    },
+    custom: {
+      bg: customBackgroundColor || "#f9fafb",
+      border: customBorderColor || "#e5e7eb",
+      text: customTextColor || "#374151",
+      iconColor: customIconColor || "#6b7280",
+    },
   };
 
   const icons: Record<string, React.ReactNode> = {
-    info: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
-    success: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />,
-    warning: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />,
-    error: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />,
-    neutral: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
-    custom: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
+    info: (
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    ),
+    success: (
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    ),
+    warning: (
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+      />
+    ),
+    error: (
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    ),
+    neutral: (
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    ),
+    custom: (
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    ),
   };
 
   const styles = variantStyles[variant] || variantStyles.info;
@@ -24472,16 +24695,26 @@ export function AlertRender({
   }[mobileSize === "smaller" && size !== "sm" ? "sm" : size];
 
   // Icon size
-  const iconSizeClasses = { sm: "w-4 h-4", md: "w-5 h-5", lg: "w-6 h-6" }[iconSize];
+  const iconSizeClasses = { sm: "w-4 h-4", md: "w-5 h-5", lg: "w-6 h-6" }[
+    iconSize
+  ];
 
   // Border
   const borderMap: Record<string, React.CSSProperties> = {
     all: { border: `${borderWidth}px ${borderStyle} ${styles.border}` },
-    left: { borderLeft: `${Number(borderWidth) * 2 || 4}px ${borderStyle} ${styles.border}` },
-    top: { borderTop: `${Number(borderWidth) * 2 || 4}px ${borderStyle} ${styles.border}` },
-    bottom: { borderBottom: `${Number(borderWidth) * 2 || 4}px ${borderStyle} ${styles.border}` },
+    left: {
+      borderLeft: `${Number(borderWidth) * 2 || 4}px ${borderStyle} ${styles.border}`,
+    },
+    top: {
+      borderTop: `${Number(borderWidth) * 2 || 4}px ${borderStyle} ${styles.border}`,
+    },
+    bottom: {
+      borderBottom: `${Number(borderWidth) * 2 || 4}px ${borderStyle} ${styles.border}`,
+    },
   };
-  const borderStyles = showBorder ? (borderMap[borderPosition] || borderMap.all) : {};
+  const borderStyles = showBorder
+    ? borderMap[borderPosition] || borderMap.all
+    : {};
 
   // Border radius
   const radiusMap = { none: "0", sm: "4px", md: "8px", lg: "12px" };
@@ -24492,11 +24725,19 @@ export function AlertRender({
     none: "none",
     sm: shadowColor ? `0 1px 2px ${shadowColor}` : "0 1px 2px rgba(0,0,0,0.1)",
     md: shadowColor ? `0 2px 8px ${shadowColor}` : "0 2px 8px rgba(0,0,0,0.12)",
-    lg: shadowColor ? `0 4px 16px ${shadowColor}` : "0 4px 16px rgba(0,0,0,0.15)",
+    lg: shadowColor
+      ? `0 4px 16px ${shadowColor}`
+      : "0 4px 16px rgba(0,0,0,0.15)",
   };
 
   // Max width
-  const maxWidthMap = { sm: "24rem", md: "28rem", lg: "32rem", xl: "36rem", full: "100%" };
+  const maxWidthMap = {
+    sm: "24rem",
+    md: "28rem",
+    lg: "32rem",
+    xl: "36rem",
+    full: "100%",
+  };
 
   // Animation
   const animationMap: Record<string, string> = {
@@ -24521,8 +24762,18 @@ export function AlertRender({
       {closeButtonStyle === "text" ? (
         <span className="text-sm font-medium">Dismiss</span>
       ) : (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+          />
         </svg>
       )}
     </button>
@@ -24535,7 +24786,9 @@ export function AlertRender({
       style={{
         height: "3px",
         backgroundColor: `${styles.border}`,
-        ...(progressPosition === "top" ? { borderRadius: `${resolvedRadius} ${resolvedRadius} 0 0` } : { borderRadius: `0 0 ${resolvedRadius} ${resolvedRadius}` }),
+        ...(progressPosition === "top"
+          ? { borderRadius: `${resolvedRadius} ${resolvedRadius} 0 0` }
+          : { borderRadius: `0 0 ${resolvedRadius} ${resolvedRadius}` }),
       }}
     >
       <div
@@ -24550,9 +24803,13 @@ export function AlertRender({
   );
 
   // Icon element
-  const iconElement = showIcon && (
-    customIcon ? (
-      <span className={`flex-shrink-0 ${iconSizeClasses.replace("w-", "text-").replace(/h-\S+/, "")}`} style={{ color: styles.iconColor }}>
+  const iconElement =
+    showIcon &&
+    (customIcon ? (
+      <span
+        className={`flex-shrink-0 ${iconSizeClasses.replace("w-", "text-").replace(/h-\S+/, "")}`}
+        style={{ color: styles.iconColor }}
+      >
         {customIcon}
       </span>
     ) : (
@@ -24565,8 +24822,7 @@ export function AlertRender({
       >
         {icons[variant] || icons.info}
       </svg>
-    )
-  );
+    ));
 
   return (
     <>
@@ -24598,25 +24854,35 @@ export function AlertRender({
       >
         {/* Progress bar top */}
         {hasProgressBar && progressPosition === "top" && (
-          <div style={{ margin: `-${sizeStyles.padding} -${sizeStyles.padding} 12px -${sizeStyles.padding}` }}>
+          <div
+            style={{
+              margin: `-${sizeStyles.padding} -${sizeStyles.padding} 12px -${sizeStyles.padding}`,
+            }}
+          >
             {progressBar}
           </div>
         )}
 
         {/* Main content */}
-        <div className={`flex ${isVertical ? "flex-col gap-2" : "items-start gap-3"} ${stackOnMobile && !isVertical ? "max-md:flex-col max-md:gap-2" : ""}`}>
+        <div
+          className={`flex ${isVertical ? "flex-col gap-2" : "items-start gap-3"} ${stackOnMobile && !isVertical ? "max-md:flex-col max-md:gap-2" : ""}`}
+        >
           {iconElement}
           <div className="flex-1 min-w-0">
             {title && <p className="font-semibold mb-0.5">{title}</p>}
             {message && <p className="opacity-90">{message}</p>}
-            {description && <p className="opacity-70 text-sm mt-1">{description}</p>}
+            {description && (
+              <p className="opacity-70 text-sm mt-1">{description}</p>
+            )}
 
             {/* Link */}
             {showLink && linkUrl && (
               <a
                 href={linkUrl}
                 target={linkTarget}
-                rel={linkTarget === "_blank" ? "noopener noreferrer" : undefined}
+                rel={
+                  linkTarget === "_blank" ? "noopener noreferrer" : undefined
+                }
                 className="inline-block mt-2 font-medium underline hover:no-underline text-sm"
                 style={{ color: styles.iconColor }}
               >
@@ -24640,7 +24906,10 @@ export function AlertRender({
                   <a
                     href={secondaryActionLink || "#"}
                     className="px-3 py-1.5 text-sm font-medium rounded-md transition-opacity hover:opacity-80"
-                    style={{ border: `1px solid ${styles.border}`, color: styles.text }}
+                    style={{
+                      border: `1px solid ${styles.border}`,
+                      color: styles.text,
+                    }}
                   >
                     {secondaryActionText}
                   </a>
@@ -24653,7 +24922,11 @@ export function AlertRender({
 
         {/* Progress bar bottom */}
         {hasProgressBar && progressPosition === "bottom" && (
-          <div style={{ margin: `12px -${sizeStyles.padding} -${sizeStyles.padding} -${sizeStyles.padding}` }}>
+          <div
+            style={{
+              margin: `12px -${sizeStyles.padding} -${sizeStyles.padding} -${sizeStyles.padding}`,
+            }}
+          >
             {progressBar}
           </div>
         )}
@@ -24670,7 +24943,9 @@ export interface TooltipProps {
   children?: React.ReactNode;
   text?: string;
   position?: "top" | "bottom" | "left" | "right";
-  variant?: "dark" | "light";
+  variant?: "dark" | "light" | "primary" | "success" | "warning" | "error" | "custom";
+  customBackgroundColor?: string;
+  customTextColor?: string;
   delay?: number;
   id?: string;
   className?: string;
@@ -24681,6 +24956,8 @@ export function TooltipRender({
   text = "Tooltip",
   position = "top",
   variant = "dark",
+  customBackgroundColor,
+  customTextColor,
   delay = 0,
   id,
   className = "",
@@ -24692,16 +24969,24 @@ export function TooltipRender({
     right: "left-full top-1/2 -translate-y-1/2 ml-2",
   }[position];
 
-  const variantClasses = {
-    dark: "bg-gray-900 text-white",
-    light: "bg-white text-gray-900 border shadow-lg",
-  }[variant];
+  const variantStyles: Record<string, { bg: string; text: string; extra?: string }> = {
+    dark: { bg: "#111827", text: "#ffffff" },
+    light: { bg: "#ffffff", text: "#111827", extra: "border border-gray-200 shadow-lg" },
+    primary: { bg: "#2563eb", text: "#ffffff" },
+    success: { bg: "#16a34a", text: "#ffffff" },
+    warning: { bg: "#d97706", text: "#ffffff" },
+    error: { bg: "#dc2626", text: "#ffffff" },
+    custom: { bg: customBackgroundColor || "#111827", text: customTextColor || "#ffffff" },
+  };
+
+  const styles = variantStyles[variant] || variantStyles.dark;
 
   return (
     <span id={id} className={`relative inline-flex group ${className}`}>
       {children}
       <span
-        className={`absolute ${positionClasses} ${variantClasses} px-2 py-1 text-xs rounded whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50`}
+        className={`absolute ${positionClasses} ${styles.extra || ""} px-2 py-1 text-xs rounded whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50`}
+        style={{ backgroundColor: styles.bg, color: styles.text }}
       >
         {text}
       </span>
@@ -24809,7 +25094,7 @@ export function ParallaxRender({
   backgroundPosition = "center",
   speed = 0.5,
   overlay = true,
-  overlayColor = "bg-black",
+  overlayColor = "#000000",
   overlayOpacity = 50,
   minHeight = "lg",
   contentAlignment = "center",
@@ -24855,8 +25140,8 @@ export function ParallaxRender({
       />
       {overlay && (
         <div
-          className={`absolute inset-0 ${overlayColor}`}
-          style={{ opacity: overlayOpacity / 100 }}
+          className="absolute inset-0"
+          style={{ backgroundColor: overlayColor, opacity: overlayOpacity / 100 }}
         />
       )}
       <div
@@ -24880,11 +25165,15 @@ export interface AnnouncementBarProps {
   position?: "top" | "bottom";
   variant?:
     | "default"
+    | "gradient"
+    | "glass"
+    | "outlined"
+    | "minimal"
+    | "animated"
     | "success"
     | "warning"
     | "error"
     | "info"
-    | "gradient"
     | "custom";
   icon?: React.ReactNode;
   textAlign?: "left" | "center" | "right";
@@ -24920,18 +25209,22 @@ export function AnnouncementBarRender({
 }: AnnouncementBarProps) {
   const isCustom = variant === "custom" || backgroundColor;
 
-  const variantClasses = isCustom
-    ? ""
-    : {
-        default: "bg-gray-900 text-white",
-        success: "bg-green-600 text-white",
-        warning: "bg-yellow-500 text-black",
-        error: "bg-red-600 text-white",
-        info: "bg-sky-600 text-white",
-        gradient:
-          "bg-gradient-to-r from-purple-600 via-pink-600 to-red-500 text-white",
-        custom: "",
-      }[variant];
+  // Variant styles using inline colors (no Tailwind color classes)
+  const variantColorMap: Record<string, { bg: string; text: string }> = {
+    default: { bg: "#111827", text: "#ffffff" },
+    success: { bg: "#16a34a", text: "#ffffff" },
+    warning: { bg: "#eab308", text: "#000000" },
+    error: { bg: "#dc2626", text: "#ffffff" },
+    info: { bg: "#0284c7", text: "#ffffff" },
+    gradient: { bg: "transparent", text: "#ffffff" },
+    glass: { bg: "rgba(255,255,255,0.15)", text: "#ffffff" },
+    outlined: { bg: "transparent", text: "#111827" },
+    minimal: { bg: "transparent", text: "#111827" },
+    animated: { bg: "#111827", text: "#ffffff" },
+    custom: { bg: backgroundColor || "#111827", text: textColor || "#ffffff" },
+  };
+
+  const colors = variantColorMap[variant] || variantColorMap.default;
 
   const sizeClasses = {
     sm: "py-1.5 px-3 text-xs",
@@ -24957,22 +25250,36 @@ export function AnnouncementBarRender({
 
   const gradientCss = backgroundGradient
     ? buildGradientCSS(backgroundGradient)
-    : undefined;
+    : variant === "gradient"
+      ? "linear-gradient(to right, #9333ea, #ec4899, #ef4444)"
+      : undefined;
 
+  const resolvedBg = isCustom ? (backgroundColor || colors.bg) : colors.bg;
   const dark = isCustom
     ? isDarkBackground(backgroundColor)
-    : !["warning"].includes(variant);
+    : !["warning", "outlined", "minimal"].includes(variant);
   const resolvedTextColor = textColor || (dark ? "#ffffff" : "#111827");
   const resolvedLinkColor = linkColor || resolvedTextColor;
+
+  // Variant-specific extra styles
+  const variantExtraStyle: React.CSSProperties = {};
+  if (variant === "glass") {
+    variantExtraStyle.backdropFilter = "blur(12px)";
+    variantExtraStyle.WebkitBackdropFilter = "blur(12px)";
+  }
+  if (variant === "outlined") {
+    variantExtraStyle.border = "1px solid #e5e7eb";
+  }
 
   return (
     <div
       id={id}
-      className={`w-full ${variantClasses} ${sizeClasses} ${weightClasses} ${stickyClasses} ${className}`}
+      className={`w-full ${sizeClasses} ${weightClasses} ${stickyClasses} ${className}`}
       style={{
-        ...(isCustom && backgroundColor ? { backgroundColor } : {}),
-        ...(gradientCss ? { background: gradientCss } : {}),
-        color: isCustom ? resolvedTextColor : undefined,
+        backgroundColor: gradientCss ? undefined : resolvedBg,
+        background: gradientCss || undefined,
+        color: resolvedTextColor,
+        ...variantExtraStyle,
       }}
     >
       <div
@@ -25323,7 +25630,10 @@ export function TrustBadgesRender({
   return (
     <div id={id} className={className}>
       {title && (
-        <p className="text-xs md:text-sm text-center mb-4" style={{ color: "var(--color-muted-foreground, #6b7280)" }}>
+        <p
+          className="text-xs md:text-sm text-center mb-4"
+          style={{ color: "var(--color-muted-foreground, #6b7280)" }}
+        >
           {title}
         </p>
       )}
@@ -26295,7 +26605,7 @@ export function CardFlip3DRender({
             backgroundPosition: "center",
           }}
         >
-          {frontImageUrl && <div className="absolute inset-0 bg-black/30" />}
+          {frontImageUrl && <div className="absolute inset-0" style={{ backgroundColor: "rgba(0,0,0,0.3)" }} />}
           <div className="relative z-10 text-center">
             <h3 className="text-xl font-bold mb-2">{frontTitle}</h3>
             <p className="text-sm opacity-80">{frontDescription}</p>
@@ -26314,7 +26624,7 @@ export function CardFlip3DRender({
             backgroundPosition: "center",
           }}
         >
-          {backImageUrl && <div className="absolute inset-0 bg-black/30" />}
+          {backImageUrl && <div className="absolute inset-0" style={{ backgroundColor: "rgba(0,0,0,0.3)" }} />}
           <div className="relative z-10 text-center">
             <h3 className="text-xl font-bold mb-2">{backTitle}</h3>
             <p className="text-sm opacity-80">{backDescription}</p>
@@ -26339,6 +26649,7 @@ export interface TiltCardProps {
   maxRotation?: number;
   scale?: number;
   glare?: boolean;
+  overlayOpacity?: number;
   padding?: ResponsiveValue<"none" | "xs" | "sm" | "md" | "lg">;
   borderRadius?: ResponsiveValue<"none" | "sm" | "md" | "lg" | "xl" | "2xl">;
   shadow?: "none" | "sm" | "md" | "lg" | "xl";
@@ -26355,6 +26666,7 @@ export function TiltCardRender({
   maxRotation = 15,
   scale = 1.05,
   glare = true,
+  overlayOpacity = 0.3,
   padding = "lg",
   borderRadius = "xl",
   shadow = "xl",
@@ -26418,7 +26730,7 @@ export function TiltCardRender({
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
-      {bgImageUrl && <div className="absolute inset-0 bg-black/30" />}
+      {bgImageUrl && <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${overlayOpacity})` }} />}
       {glare && (
         <div
           className="absolute inset-0 pointer-events-none"
@@ -26789,7 +27101,12 @@ export function ScrollAnimateRender({
       }}
     >
       <h3 className="text-xl font-bold mb-2">{title}</h3>
-      <p className="text-sm" style={{ color: "var(--color-muted-foreground, #4b5563)" }}>{description}</p>
+      <p
+        className="text-sm"
+        style={{ color: "var(--color-muted-foreground, #4b5563)" }}
+      >
+        {description}
+      </p>
     </div>
   );
 }

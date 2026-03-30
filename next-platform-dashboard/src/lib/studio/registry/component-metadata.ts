@@ -860,8 +860,7 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     type: "DividerText",
     label: "Divider Text",
     category: "content",
-    description:
-      "Text with decorative divider lines in 5 ornamental variants",
+    description: "Text with decorative divider lines in 5 ornamental variants",
     acceptsChildren: false,
     keywords: [
       "divider",
@@ -1454,8 +1453,7 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     type: "CardFlip3D",
     label: "3D Flip Card",
     category: "interactive",
-    description:
-      "Two-sided card with 3D flip animation on hover or click",
+    description: "Two-sided card with 3D flip animation on hover or click",
     acceptsChildren: true,
     keywords: [
       "card",
@@ -1481,8 +1479,7 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     type: "TiltCard",
     label: "Tilt Card",
     category: "interactive",
-    description:
-      "Mouse-tracking 3D tilt effect card with parallax layers",
+    description: "Mouse-tracking 3D tilt effect card with parallax layers",
     acceptsChildren: true,
     keywords: [
       "tilt",

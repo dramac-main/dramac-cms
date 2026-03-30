@@ -12,6 +12,7 @@
 Created `MARKETING-COMPONENTS-MASTER-PLAN.md` — the 10th master plan document. Comprehensive deep audit of all 5 marketing components (AnnouncementBar, SocialProof, TrustBadges, LogoCloud, ComparisonTable) across 4 source files (renders.tsx, core-components.ts, component-metadata.ts, converter.ts).
 
 **Document Structure (17 sections, 1718 lines):**
+
 - Section 0: Implementation Blueprint — file map, exact line numbers, props pipeline, render patterns, shared utils
 - Section 1: Current State Audit — inventory tables, 12 critical issues
 - Section 2: Industry Benchmark — comparison with Webflow/Framer/Squarespace/WordPress
@@ -26,6 +27,7 @@ Created `MARKETING-COMPONENTS-MASTER-PLAN.md` — the 10th master plan document.
 - Section 16: AI Agent Guard Rails
 
 **12 Critical Issues Documented:**
+
 - P0: AnnouncementBar `closable` vs `dismissible` mismatch — dismiss button ignores registry config
 - P0: AnnouncementBar variant values completely different between registry and render
 - P0: SocialProof registry and render are DIFFERENT components (count+avatars vs stars+reviews)
@@ -36,7 +38,8 @@ Created `MARKETING-COMPONENTS-MASTER-PLAN.md` — the 10th master plan document.
 - SocialProof missing `usageGuidelines` in component-metadata.ts
 
 **Normalizer Status:**
-- LogoCloud ✅ (comprehensive: URL validation, responsive columns, __convertedToFeatures fallback)
+
+- LogoCloud ✅ (comprehensive: URL validation, responsive columns, \_\_convertedToFeatures fallback)
 - TrustBadges ✅ (emoji/URL separation, shield default)
 - AnnouncementBar ❌ (needs normalizer)
 - SocialProof ❌ (needs normalizer)
@@ -53,6 +56,7 @@ Created `MARKETING-COMPONENTS-MASTER-PLAN.md` — the 10th master plan document.
 Created and VERIFIED `INTERACTIVE-COMPONENTS-MASTER-PLAN.md` — the 9th master plan document. v1.0 created, then rigorously verified against live codebase. v1.1 corrects all inaccuracies and adds Section 17 (Critical Guard Rails for AI Agents).
 
 **Verification Findings (v1.0 → v1.1):**
+
 - ~25 missing typeMap aliases added across 14 components
 - BlogPreview added as 5th missing KNOWN_REGISTRY_TYPES entry
 - Countdown `simple` vs `default` variant name mismatch flagged as critical bug
@@ -63,6 +67,7 @@ Created and VERIFIED `INTERACTIVE-COMPONENTS-MASTER-PLAN.md` — the 9th master 
 - Section 17 added: 6 critical guard rails for AI implementation agents
 
 **Document Structure (17 sections):**
+
 - Section 0: Implementation Blueprint — file map, exact line numbers, props pipeline, render patterns, build checklist, DO/DON'T rules
 - Section 1: Current State Audit — inventory tables, 14 critical issues (12 original + 2 new), category consistency, prop pipeline coverage
 - Section 2: Industry Benchmark — comparison vs Webflow/Framer/Squarespace/WordPress
@@ -73,20 +78,22 @@ Created and VERIFIED `INTERACTIVE-COMPONENTS-MASTER-PLAN.md` — the 9th master 
 - **Section 17: CRITICAL FOR AI AGENT — Implementation Guard Rails** (NEW)
 
 **Critical Issues Documented (14 total):**
+
 1. 8 components missing from component-metadata.ts
 2. 6 components completely absent from converter.ts
 3. **5** components missing from KNOWN_REGISTRY_TYPES (BeforeAfter, Audio, Embed, AvatarGroup, **BlogPreview**)
 4. 9 components have no converter normalizer
 5. Carousel: `slides` (registry) vs `items` (render) field name mismatch
-6-8. Modal/Progress/Alert: massive render-registry gaps
-9. Accordion: 2 missing variants
-10. Countdown: 3 missing variants
-10b. **Countdown: `simple` vs `default` variant name mismatch** (NEW)
-10c. **Carousel: defaultProps compounds slides/items bug** (NEW)
-11. 5+ components lack isDarkBackground()
-12. Zero Framer Motion usage
+   6-8. Modal/Progress/Alert: massive render-registry gaps
+6. Accordion: 2 missing variants
+7. Countdown: 3 missing variants
+   10b. **Countdown: `simple` vs `default` variant name mismatch** (NEW)
+   10c. **Carousel: defaultProps compounds slides/items bug** (NEW)
+8. 5+ components lack isDarkBackground()
+9. Zero Framer Motion usage
 
 **Health Summary:**
+
 - 11 Excellent (>90%): Tabs, BeforeAfter, Tilt3DContainer, ShapeDivider, CursorEffect, Testimonials, FAQ, Stats, Audio, Embed, AvatarGroup
 - 7 Good (70-90%): Accordion, Carousel, Countdown, Animate, LogoCloud, AnnouncementBar, BlogPreview
 - 5 Gaps (30-70%): Typewriter, Parallax, SocialProof, TrustBadges, ComparisonTable
@@ -104,21 +111,16 @@ Created and VERIFIED `INTERACTIVE-COMPONENTS-MASTER-PLAN.md` — the 9th master 
 Implemented the entire CONTENT-COMPONENTS-MASTER-PLAN.md — all 3 phases across 4 files, zero new TS errors.
 
 **Phase 1 Critical Fixes:**
+
 1. ~~CodeBlock: 30% registry coverage~~ → 100% (7 fields added: theme, title, showCopyButton, showLanguage, highlightLines, maxHeight, wrap)
 2. ~~CodeBlock: no converter normalizer~~ → Full normalizer with code/content/snippet, lang, filename aliases
 3. ~~RichText: prose dark mode broken~~ → `[&_*]:!text-inherit` forces colour inheritance
 4. ~~RichText: proseSize default mismatch~~ → Aligned to "lg"
 5. ~~Category mismatch: 7 of 8 use "typography"~~ → All 8 now "content"
 
-**Phase 2 Accessibility Fixes:**
-6. DividerText: `role="separator"` on all 6 variant return paths
-7. StatNumber: composite `aria-label` (prefix+value+suffix label)
-8. CodeBlock: copy button `aria-label` with language context
-9. Quote: simple variant `font-serif` replaced with `resolvedFontFamily`
+**Phase 2 Accessibility Fixes:** 6. DividerText: `role="separator"` on all 6 variant return paths 7. StatNumber: composite `aria-label` (prefix+value+suffix label) 8. CodeBlock: copy button `aria-label` with language context 9. Quote: simple variant `font-serif` replaced with `resolvedFontFamily`
 
-**Phase 3 AI Integration:**
-10. All 8 content components get rich metadata (expanded keywords 6-10 each, detailed usageGuidelines)
-11. CodeBlock language options expanded 6 → 16
+**Phase 3 AI Integration:** 10. All 8 content components get rich metadata (expanded keywords 6-10 each, detailed usageGuidelines) 11. CodeBlock language options expanded 6 → 16
 
 **Files Modified:** renders.tsx, core-components.ts, converter.ts, component-metadata.ts
 **TS errors:** 17 pre-existing, 0 new

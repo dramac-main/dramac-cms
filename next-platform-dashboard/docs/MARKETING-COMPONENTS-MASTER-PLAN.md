@@ -53,13 +53,15 @@ Marketing components are the **conversion engine of every website**. They create
 
 | #  | Component           | Interface Start | Export Function | Props Count | Variants                                                     |
 | -- | ------------------- | --------------- | --------------- | ----------- | ------------------------------------------------------------ |
-| 1  | **AnnouncementBar** | L24367          | L24394          | 17          | default, success, warning, error, info, gradient, custom (7) |
-| 2  | **SocialProof**     | L24510          | L24534          | 19          | stars, score, compact, detailed (4)                          |
-| 3  | **TrustBadges**     | L24747          | L24764          | 13          | row, grid (2 layouts)                                        |
-| 4  | **LogoCloud**       | L24874          | L24900          | 22          | simple, cards, marquee (3)                                   |
-| 5  | **ComparisonTable** | L25135          | L25159          | 20          | simple, cards, striped (3)                                   |
+| 1  | **AnnouncementBar** | L24875          | L24902          | 17          | default, success, warning, error, info, gradient, custom (7) |
+| 2  | **SocialProof**     | L25018          | L25042          | 19          | stars, score, compact, detailed (4)                          |
+| 3  | **TrustBadges**     | L25255          | L25272          | 13          | row, grid (2 layouts)                                        |
+| 4  | **LogoCloud**       | L25382          | L25408          | 22          | simple, cards, marquee (3)                                   |
+| 5  | **ComparisonTable** | L25643          | L25667          | 20          | simple, cards, striped (3)                                   |
 
-> **Nested element:** `TrustBadgesElement` at L9144 is a nested function inside CTARender — NOT the standalone TrustBadgesRender. The standalone export is at L24764.
+> **Nested element:** `TrustBadgesElement` at L9144 is a nested function inside CTARender — NOT the standalone TrustBadgesRender. The standalone export is at L25272.
+
+> **Sub-interfaces:** `TrustBadge` at L25249, `LogoItem` at L25376, `ComparisonColumn` at L25625, `ComparisonRow` at L25636 are helper types used by TrustBadges, LogoCloud, and ComparisonTable respectively.
 
 #### core-components.ts — All 5 Marketing Registrations
 
@@ -181,11 +183,11 @@ export function ComponentRender({ variant = "default", ...props }: ComponentProp
 
 | #  | Component           | Category  | renders.tsx | core-components.ts | metadata.ts | converter aliases | Normalizer | Health  |
 | -- | ------------------- | --------- | ----------- | ------------------ | ----------- | ----------------- | ---------- | ------- |
-| 1  | AnnouncementBar     | marketing | ✅ L24367   | ✅ L21197          | ✅ L959     | 4 aliases         | ❌ Missing | 🔴 40% |
-| 2  | SocialProof         | marketing | ✅ L24510   | ✅ L21757          | ✅ L971     | 2 aliases         | ❌ Missing | 🔴 20% |
-| 3  | TrustBadges         | marketing | ✅ L24747   | ✅ L22387          | ✅ L982     | 6 aliases         | ✅ L2204   | 🟡 55% |
-| 4  | LogoCloud           | marketing | ✅ L24874   | ✅ L22999          | ✅ L994     | 5 aliases         | ✅ L2131   | 🟡 65% |
-| 5  | ComparisonTable     | marketing | ✅ L25135   | ✅ L23750          | ✅ L1006    | 3 aliases         | ❌ Missing | 🔴 35% |
+| 1  | AnnouncementBar     | marketing | ✅ L24875   | ✅ L21197          | ✅ L959     | 4 aliases         | ❌ Missing | 🔴 40% |
+| 2  | SocialProof         | marketing | ✅ L25018   | ✅ L21757          | ✅ L971     | 2 aliases         | ❌ Missing | 🔴 20% |
+| 3  | TrustBadges         | marketing | ✅ L25255   | ✅ L22387          | ✅ L982     | 6 aliases         | ✅ L2204   | 🟡 55% |
+| 4  | LogoCloud           | marketing | ✅ L25382   | ✅ L22999          | ✅ L994     | 5 aliases         | ✅ L2131   | 🟡 65% |
+| 5  | ComparisonTable     | marketing | ✅ L25643   | ✅ L23750          | ✅ L1006    | 3 aliases         | ❌ Missing | 🔴 35% |
 
 **Overall Marketing Category Health: 43% — WORST of all 10 component categories.**
 
@@ -235,11 +237,11 @@ All 5 marketing components correctly use:
 
 | Component       | Render Props | Registry Fields | Coverage | Gap   |
 | --------------- | ------------ | --------------- | -------- | ----- |
-| AnnouncementBar | 19           | 50+             | ~35%     | 31+   |
-| SocialProof     | 22           | 50+             | ~15%     | 35+   |
-| TrustBadges     | 14           | 50+             | ~25%     | 36+   |
-| LogoCloud       | 24           | 60+             | ~40%     | 36+   |
-| ComparisonTable | 18           | 70+             | ~25%     | 52+   |
+| AnnouncementBar | 17           | 50+             | ~35%     | 33+   |
+| SocialProof     | 19           | 50+             | ~20%     | 31+   |
+| TrustBadges     | 13           | 50+             | ~25%     | 37+   |
+| LogoCloud       | 22           | 60+             | ~35%     | 38+   |
+| ComparisonTable | 20           | 70+             | ~28%     | 50+   |
 
 > **Interpretation:** Registries were designed aspirationally with rich field sets. Renders were built pragmatically with minimal props. The gap must be closed **from the render side** — extend renders to consume more registry fields. Do NOT remove fields from registries; they represent the target feature set.
 
@@ -366,7 +368,7 @@ None of these components accept children (`acceptsChildren: false`). They are al
 
 ### 4.1 Current Render Implementation
 
-**File:** `renders.tsx` L24367–L24503  
+**File:** `renders.tsx` L24875–L25017  
 **Export:** `AnnouncementBarRender(props: AnnouncementBarProps)`
 
 #### Props Interface (17 props)
@@ -476,35 +478,32 @@ typeMap: Banner → AnnouncementBar        (L448)
 
 ### 5.1 Current Render Implementation
 
-**File:** `renders.tsx` L24261–L24474  
+**File:** `renders.tsx` L25018–L25248  
 **Export:** `SocialProofRender(props: SocialProofProps)`
 
-#### Props Interface (22 props)
+#### Props Interface (19 props)
 
-| Prop                | Type                                          | Default    | Used In Render |
-| ------------------- | --------------------------------------------- | ---------- | -------------- |
-| `variant`           | "stars" \| "score" \| "compact" \| "detailed" | "stars"    | ✅ Switch      |
-| `rating`            | number                                        | 4.5        | ✅ Star render |
-| `maxRating`         | number                                        | 5          | ✅ Star count  |
-| `reviewCount`       | number                                        | —          | ✅ Count text  |
-| `platform`          | string                                        | —          | ✅ Label       |
-| `platformLogo`      | string                                        | —          | ✅ Logo image  |
-| `title`             | string                                        | —          | ✅ Heading     |
-| `subtitle`          | string                                        | —          | ✅ Sub text    |
-| `size`              | "sm" \| "md" \| "lg"                          | "md"       | ✅ Size class  |
-| `background`        | string                                        | —          | ✅ BG colour   |
-| `textColor`         | string                                        | —          | ✅ Text colour |
-| `starColor`         | string                                        | "#fbbf24"  | ✅ Star fill   |
-| `starEmptyColor`    | string                                        | "#d1d5db"  | ✅ Star empty  |
-| `accentColor`       | string                                        | —          | ✅ Score badge |
-| `borderColor`       | string                                        | —          | ✅ Border      |
-| `borderWidth`       | number                                        | —          | ✅ Border      |
-| `borderRadius`      | number                                        | —          | ✅ Border      |
-| `showPlatformLogo`  | boolean                                       | true       | ✅ Logo toggle |
-| `schemaType`        | string                                        | "Product"  | ✅ JSON-LD     |
-| `schemaName`        | string                                        | —          | ✅ JSON-LD     |
-| `fontWeight`        | string                                        | —          | ✅ Typography  |
-| `textAlign`         | string                                        | "center"   | ✅ Alignment   |
+| Prop                  | Type                                          | Default           | Used In Render |
+| --------------------- | --------------------------------------------- | ----------------- | -------------- |
+| `rating`              | number                                        | 4.8               | ✅ Star render |
+| `maxRating`           | number                                        | 5                 | ✅ Star count  |
+| `reviewCount`         | number                                        | 1250              | ✅ Count text  |
+| `platform`            | string                                        | "Google Reviews"  | ✅ Label       |
+| `platformLogo`        | string \| ImageValue                          | —                 | ✅ Logo image  |
+| `variant`             | "stars" \| "score" \| "compact" \| "detailed" | "stars"           | ✅ Switch      |
+| `size`                | ResponsiveValue<"sm" \| "md" \| "lg">         | "md"              | ✅ Size class  |
+| `showCount`           | boolean                                       | —                 | ✅ Count toggle |
+| `showPlatform`        | boolean                                       | —                 | ✅ Platform toggle |
+| `starColor`           | string                                        | —                 | ✅ Star fill   |
+| `emptyStarColor`      | string                                        | —                 | ✅ Star empty  |
+| `scoreBackgroundColor`| string                                        | —                 | ✅ Score badge BG |
+| `scoreTextColor`      | string                                        | —                 | ✅ Score text  |
+| `mutedTextColor`      | string                                        | —                 | ✅ Muted text  |
+| `enableSchema`        | boolean                                       | —                 | ✅ JSON-LD     |
+| `schemaItemReviewed`  | string                                        | —                 | ✅ JSON-LD item |
+| `animateOnScroll`     | boolean                                       | —                 | ✅ Animation   |
+| `id`                  | string                                        | —                 | ✅ HTML id     |
+| `className`           | string                                        | —                 | ✅ CSS class   |
 
 #### What the Render Actually Does
 
