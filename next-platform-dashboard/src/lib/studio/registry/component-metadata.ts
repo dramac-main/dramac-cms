@@ -1369,6 +1369,217 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
       suggestedWith: ["Text", "Stats", "Card", "SocialProof"],
     },
   },
+
+  // Modal
+  {
+    type: "Modal",
+    label: "Modal / Dialog",
+    category: "interactive",
+    description:
+      "Full-featured modal dialog with backdrop, close button, and configurable size",
+    acceptsChildren: true,
+    keywords: [
+      "modal",
+      "dialog",
+      "popup",
+      "overlay",
+      "lightbox",
+      "drawer",
+      "sheet",
+    ],
+    ai: {
+      description:
+        "A modal overlay dialog with configurable size (sm-xl/full), close-on-backdrop-click, close-on-escape, backdrop blur, header/footer sections, and smooth enter/exit animations. Supports primary/secondary action buttons in footer.",
+      usageGuidelines:
+        "Use for confirmations, forms, image lightboxes, or any content requiring focused attention. Always provide a clear close mechanism. Use size to match content complexity.",
+      suggestedWith: ["Button", "Form", "Card", "Text"],
+    },
+  },
+
+  // Progress
+  {
+    type: "Progress",
+    label: "Progress Bar",
+    category: "interactive",
+    description:
+      "Animated progress bar with label, percentage display, and multiple variants",
+    acceptsChildren: false,
+    keywords: [
+      "progress",
+      "bar",
+      "loading",
+      "percentage",
+      "meter",
+      "completion",
+      "status",
+    ],
+    ai: {
+      description:
+        "A horizontal progress bar with configurable value/max, size (sm/md/lg), variant (default/gradient/striped), optional label and percentage display, custom colours, and smooth animation.",
+      usageGuidelines:
+        "Use to show completion status, upload progress, skill levels, or any measurable metric. Set showValue for explicit percentage. Use gradient variant for visual emphasis.",
+      suggestedWith: ["Text", "Stats", "Card", "Heading"],
+    },
+  },
+
+  // Alert
+  {
+    type: "Alert",
+    label: "Alert / Notification",
+    category: "interactive",
+    description:
+      "Contextual alert message with icon, variant colours, and optional close button",
+    acceptsChildren: false,
+    keywords: [
+      "alert",
+      "notification",
+      "banner",
+      "message",
+      "info",
+      "warning",
+      "error",
+      "success",
+    ],
+    ai: {
+      description:
+        "A contextual alert with variant (info/success/warning/error), icon, optional title and message, closable dismiss button, and action link. Three sizes (sm/md/lg).",
+      usageGuidelines:
+        "Use for system messages, form validation feedback, status updates, or important notices. Match variant to message severity. Use closable for dismissible notifications.",
+      suggestedWith: ["Text", "Button", "Form", "Card"],
+    },
+  },
+
+  // CardFlip3D
+  {
+    type: "CardFlip3D",
+    label: "3D Flip Card",
+    category: "interactive",
+    description:
+      "Two-sided card with 3D flip animation on hover or click",
+    acceptsChildren: true,
+    keywords: [
+      "card",
+      "flip",
+      "3d",
+      "rotate",
+      "two-sided",
+      "hover",
+      "interactive",
+      "reveal",
+    ],
+    ai: {
+      description:
+        "A perspective-transformed card that flips 180° on hover/click to reveal back content. Configurable flip direction (horizontal/vertical), trigger, animation duration, front/back background colours, and border radius.",
+      usageGuidelines:
+        "Use for team member reveals, pricing comparisons, product before/after, or any content with a hidden secondary side. Keep front content concise to encourage interaction.",
+      suggestedWith: ["Image", "Text", "Button", "Avatar"],
+    },
+  },
+
+  // TiltCard
+  {
+    type: "TiltCard",
+    label: "Tilt Card",
+    category: "interactive",
+    description:
+      "Mouse-tracking 3D tilt effect card with parallax layers",
+    acceptsChildren: true,
+    keywords: [
+      "tilt",
+      "3d",
+      "parallax",
+      "hover",
+      "perspective",
+      "interactive",
+      "card",
+    ],
+    ai: {
+      description:
+        "A card that tracks mouse position to create a 3D tilt effect with configurable max angle, glare, perspective depth, and parallax child layers. Resets smoothly on mouse leave.",
+      usageGuidelines:
+        "Use for featured content, product showcases, or hero elements that benefit from depth. Pair with images or icons. Use sparingly to avoid motion fatigue.",
+      suggestedWith: ["Image", "Card", "Heading", "Button"],
+    },
+  },
+
+  // GlassCard
+  {
+    type: "GlassCard",
+    label: "Glass Card",
+    category: "interactive",
+    description:
+      "Frosted glass effect card with backdrop blur and transparency",
+    acceptsChildren: true,
+    keywords: [
+      "glass",
+      "glassmorphism",
+      "frosted",
+      "blur",
+      "transparent",
+      "card",
+      "modern",
+    ],
+    ai: {
+      description:
+        "A glassmorphism card with configurable backdrop blur intensity, background opacity, border opacity, tint colour, and optional glow ring. Works best over colourful or image backgrounds.",
+      usageGuidelines:
+        "Use over hero images, gradient backgrounds, or colourful sections for a modern frosted effect. Ensure sufficient text contrast. Works best with light content on darker backgrounds.",
+      suggestedWith: ["Parallax", "Image", "Text", "Button"],
+    },
+  },
+
+  // ParticleBackground
+  {
+    type: "ParticleBackground",
+    label: "Particle Background",
+    category: "interactive",
+    description:
+      "Animated particle system background with configurable density and behaviour",
+    acceptsChildren: true,
+    keywords: [
+      "particles",
+      "background",
+      "animation",
+      "dots",
+      "stars",
+      "floating",
+      "ambient",
+    ],
+    ai: {
+      description:
+        "A CSS/canvas particle animation background with configurable particle count, size range, speed, colour, connecting lines, mouse interaction, and blend mode. Children render above via z-index.",
+      usageGuidelines:
+        "Use for hero sections, landing pages, or sections needing visual dynamism. Keep particle count reasonable for performance. Pair with high-contrast text for readability.",
+      suggestedWith: ["Hero", "Heading", "CTA", "GlassCard"],
+    },
+  },
+
+  // ScrollAnimate
+  {
+    type: "ScrollAnimate",
+    label: "Scroll Animate",
+    category: "interactive",
+    description:
+      "Scroll-triggered animation wrapper using IntersectionObserver",
+    acceptsChildren: true,
+    keywords: [
+      "scroll",
+      "animate",
+      "reveal",
+      "intersection",
+      "observer",
+      "fade",
+      "slide",
+      "entrance",
+    ],
+    ai: {
+      description:
+        "A wrapper that triggers CSS entrance animations when children scroll into view using IntersectionObserver. Configurable animation type (fade/slide/scale/rotate), direction, duration, delay, easing, threshold, and one-shot vs repeat modes.",
+      usageGuidelines:
+        "Use to add entrance animations to any content as users scroll. Wrap sections, cards, or text blocks. Stagger delays for sequential reveals. Use sparingly on mobile for performance.",
+      suggestedWith: ["Card", "Stats", "Features", "Timeline"],
+    },
+  },
 ];
 
 /**

@@ -20209,8 +20209,8 @@ export interface CarouselProps {
   badgeColor?: string;
   headerAlign?: "left" | "center" | "right";
 
-  // Items
-  items?: CarouselItem[];
+  // Slides
+  slides?: CarouselItem[];
 
   // Behaviour
   autoplay?: boolean;
@@ -20268,7 +20268,7 @@ export function CarouselRender({
   badge,
   badgeColor,
   headerAlign = "center",
-  items = [],
+  slides = [],
   autoplay = false,
   interval = 5000,
   pauseOnHover = true,
@@ -20328,7 +20328,7 @@ export function CarouselRender({
   const [touchStart, setTouchStart] = React.useState<number | null>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
-  const totalSlides = items.length;
+  const totalSlides = slides.length;
   const maxIndex = Math.max(0, totalSlides - slidesToShow);
 
   // Autoplay
@@ -20569,7 +20569,7 @@ export function CarouselRender({
             className={transition !== "fade" ? `${gapClasses}` : ""}
             style={getSlideContainerStyle()}
           >
-            {items.map((item, i) => {
+            {slides.map((item, i) => {
               const itemImageUrl = getImageUrl(item.image);
               const loaded = shouldLoadSlide(i);
               const itemOverlayColor = item.overlayColor || "rgba(0,0,0,1)";
@@ -20811,7 +20811,7 @@ export interface CountdownProps {
     minutes?: string;
     seconds?: string;
   };
-  variant?: "simple" | "cards" | "circles";
+  variant?: "default" | "simple" | "cards" | "circles";
   size?: "sm" | "md" | "lg";
   backgroundColor?: string;
   cardBackgroundColor?: string;
@@ -20848,7 +20848,7 @@ export function CountdownRender({
     minutes: "Minutes",
     seconds: "Seconds",
   },
-  variant = "simple",
+  variant = "default",
   size = "md",
   backgroundColor,
   cardBackgroundColor,
@@ -22206,12 +22206,37 @@ export interface ModalProps {
   title?: string;
   description?: string;
   isOpen?: boolean;
-  size?: "sm" | "md" | "lg" | "xl" | "full";
+  size?: "xs" | "sm" | "md" | "lg" | "xl" | "full";
+  showHeader?: boolean;
+  showFooter?: boolean;
   showCloseButton?: boolean;
+  closeButtonPosition?: "header-right" | "outside" | "header-left";
+  closeButtonStyle?: "icon" | "text" | "circle";
   closeOnOverlay?: boolean;
+  closeOnEscape?: boolean;
   centered?: boolean;
+  position?: "center" | "top" | "bottom" | "left" | "right";
   backgroundColor?: string;
+  borderRadius?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  shadow?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  showBorder?: boolean;
+  borderColor?: string;
+  overlayColor?: string;
   overlayOpacity?: number;
+  overlayBlur?: number;
+  animationType?: "fade" | "scale" | "slide" | "zoom" | "none";
+  animationDuration?: number;
+  animationDirection?: "up" | "down" | "left" | "right";
+  headerAlign?: "left" | "center" | "right";
+  footerAlign?: "left" | "center" | "right" | "space-between";
+  primaryButtonText?: string;
+  primaryButtonAction?: string;
+  secondaryButtonText?: string;
+  secondaryButtonAction?: string;
+  mobileFullScreen?: boolean;
+  mobilePosition?: "center" | "bottom";
+  ariaLabel?: string;
+  role?: "dialog" | "alertdialog";
   id?: string;
   className?: string;
   onClose?: () => void;
@@ -22223,16 +22248,42 @@ export function ModalRender({
   description,
   isOpen = true,
   size = "md",
+  showHeader = true,
+  showFooter = false,
   showCloseButton = true,
+  closeButtonPosition = "header-right",
+  closeButtonStyle = "icon",
   closeOnOverlay = true,
+  closeOnEscape = true,
   centered = true,
+  position = "center",
   backgroundColor = "#ffffff",
+  borderRadius = "lg",
+  shadow = "xl",
+  showBorder = false,
+  borderColor,
+  overlayColor = "#000000",
   overlayOpacity = 50,
+  overlayBlur = 0,
+  animationType = "scale",
+  animationDuration = 200,
+  animationDirection = "up",
+  headerAlign = "left",
+  footerAlign = "right",
+  primaryButtonText,
+  primaryButtonAction,
+  secondaryButtonText,
+  secondaryButtonAction,
+  mobileFullScreen = false,
+  mobilePosition = "center",
+  ariaLabel,
+  role = "dialog",
   id,
   className = "",
   onClose,
 }: ModalProps) {
   const sizeClasses = {
+    xs: "max-w-xs",
     sm: "max-w-sm",
     md: "max-w-md",
     lg: "max-w-lg",
@@ -22240,53 +22291,250 @@ export function ModalRender({
     full: "max-w-full mx-4",
   }[size];
 
+  const radiusClasses = {
+    none: "rounded-none",
+    sm: "rounded-sm",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+    "2xl": "rounded-2xl",
+  }[borderRadius];
+
+  const shadowClasses = {
+    none: "",
+    sm: "shadow-sm",
+    md: "shadow-md",
+    lg: "shadow-lg",
+    xl: "shadow-xl",
+    "2xl": "shadow-2xl",
+  }[shadow];
+
+  const positionClasses = {
+    center: centered ? "items-center justify-center" : "items-start pt-20 justify-center",
+    top: "items-start pt-8 justify-center",
+    bottom: "items-end pb-8 justify-center",
+    left: "items-center justify-start pl-4",
+    right: "items-center justify-end pr-4",
+  }[position];
+
+  const headerAlignClasses = {
+    left: "text-left",
+    center: "text-center",
+    right: "text-right",
+  }[headerAlign];
+
+  const footerAlignClasses = {
+    left: "justify-start",
+    center: "justify-center",
+    right: "justify-end",
+    "space-between": "justify-between",
+  }[footerAlign];
+
+  // Animation CSS
+  const getAnimationStyle = (): React.CSSProperties => {
+    const duration = `${animationDuration}ms`;
+    if (animationType === "none") return {};
+    if (animationType === "fade") return { animation: `modalFadeIn ${duration} ease-out` };
+    if (animationType === "zoom") return { animation: `modalZoomIn ${duration} ease-out` };
+    if (animationType === "slide") {
+      const slideMap = {
+        up: `modalSlideUp ${duration} ease-out`,
+        down: `modalSlideDown ${duration} ease-out`,
+        left: `modalSlideLeft ${duration} ease-out`,
+        right: `modalSlideRight ${duration} ease-out`,
+      };
+      return { animation: slideMap[animationDirection] };
+    }
+    return { animation: `modalScaleIn ${duration} ease-out` };
+  };
+
+  const hasFooter = showFooter && (primaryButtonText || secondaryButtonText);
+  const hasHeader = showHeader && (title || description);
+
+  // Close button SVG
+  const closeIcon = (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  );
+
   if (!isOpen) return null;
 
+  const dark = isDarkBackground(backgroundColor);
+  const resolvedTextColor = dark ? "#f8fafc" : "var(--color-foreground, #1f2937)";
+  const resolvedSecondaryText = dark ? "#94a3b8" : "var(--color-muted-foreground, #6b7280)";
+
   return (
-    <div
-      id={id}
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${centered ? "" : "items-start pt-20"} ${className}`}
-      role="dialog"
-      aria-modal="true"
-    >
+    <>
+      {/* Keyframe animations */}
+      <style>{`
+        @keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes modalScaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes modalZoomIn { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+        @keyframes modalSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes modalSlideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes modalSlideLeft { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes modalSlideRight { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+      `}</style>
       <div
-        className="absolute inset-0 bg-black transition-opacity"
-        style={{ opacity: overlayOpacity / 100 }}
-        onClick={closeOnOverlay ? onClose : undefined}
-        aria-hidden="true"
-      />
-      <div
-        className={`relative ${sizeClasses} w-full p-6 md:p-8 rounded-xl shadow-2xl animate-in fade-in zoom-in-95 duration-200`}
-        style={{ backgroundColor }}
+        id={id}
+        className={`fixed inset-0 z-50 flex ${positionClasses} p-4 ${mobileFullScreen ? "max-md:p-0" : ""} ${mobilePosition === "bottom" ? "max-md:items-end max-md:pb-0" : ""} ${className}`}
+        role={role}
+        aria-modal="true"
+        aria-label={ariaLabel || title || undefined}
       >
-        {showCloseButton && (
-          <button
-            className="absolute top-4 right-4 p-1 rounded-lg hover:opacity-80 transition-colors"
-            onClick={onClose}
-            aria-label="Close modal"
-          >
-            <svg
-              className="w-5 h-5 opacity-60"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+        {/* Overlay */}
+        <div
+          className="absolute inset-0 transition-opacity"
+          style={{
+            backgroundColor: overlayColor,
+            opacity: overlayOpacity / 100,
+            ...(overlayBlur > 0 ? { backdropFilter: `blur(${overlayBlur}px)` } : {}),
+          }}
+          onClick={closeOnOverlay ? onClose : undefined}
+          aria-hidden="true"
+        />
+
+        {/* Dialog */}
+        <div
+          className={`relative ${sizeClasses} w-full ${radiusClasses} ${shadowClasses} ${mobileFullScreen ? "max-md:max-w-full max-md:h-full max-md:rounded-none" : ""} flex flex-col`}
+          style={{
+            backgroundColor,
+            ...getAnimationStyle(),
+            ...(showBorder
+              ? { border: `1px solid ${borderColor || "var(--color-border, #e5e7eb)"}` }
+              : {}),
+          }}
+        >
+          {/* Close button (outside position) */}
+          {showCloseButton && closeButtonPosition === "outside" && (
+            <button
+              className="absolute -top-3 -right-3 p-1.5 rounded-full transition-opacity hover:opacity-80 z-10"
+              style={{ backgroundColor: "var(--color-background, #ffffff)", color: resolvedTextColor }}
+              onClick={onClose}
+              aria-label="Close"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        )}
-        {title && (
-          <h2 className="text-xl md:text-2xl font-bold mb-2">{title}</h2>
-        )}
-        {description && <p className="opacity-70 mb-6">{description}</p>}
-        {children}
+              {closeIcon}
+            </button>
+          )}
+
+          {/* Header */}
+          {hasHeader && (
+            <div
+              className={`px-6 pt-6 ${hasFooter || children ? "pb-4" : "pb-6"} ${headerAlignClasses} flex items-start gap-4`}
+            >
+              {/* Close button (header-left) */}
+              {showCloseButton && closeButtonPosition === "header-left" && (
+                <button
+                  className="p-1 rounded-lg hover:opacity-80 transition-opacity flex-shrink-0"
+                  style={{ color: resolvedSecondaryText }}
+                  onClick={onClose}
+                  aria-label="Close"
+                >
+                  {closeButtonStyle === "circle" ? (
+                    <span
+                      className="w-8 h-8 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)" }}
+                    >
+                      {closeIcon}
+                    </span>
+                  ) : closeButtonStyle === "text" ? (
+                    <span className="text-sm font-medium">Close</span>
+                  ) : (
+                    closeIcon
+                  )}
+                </button>
+              )}
+              <div className="flex-1">
+                {title && (
+                  <h2
+                    className="text-xl md:text-2xl font-bold mb-1"
+                    style={{ color: resolvedTextColor }}
+                  >
+                    {title}
+                  </h2>
+                )}
+                {description && (
+                  <p className="text-sm" style={{ color: resolvedSecondaryText }}>
+                    {description}
+                  </p>
+                )}
+              </div>
+              {/* Close button (header-right — default) */}
+              {showCloseButton && closeButtonPosition === "header-right" && (
+                <button
+                  className="p-1 rounded-lg hover:opacity-80 transition-opacity flex-shrink-0"
+                  style={{ color: resolvedSecondaryText }}
+                  onClick={onClose}
+                  aria-label="Close"
+                >
+                  {closeButtonStyle === "circle" ? (
+                    <span
+                      className="w-8 h-8 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)" }}
+                    >
+                      {closeIcon}
+                    </span>
+                  ) : closeButtonStyle === "text" ? (
+                    <span className="text-sm font-medium">Close</span>
+                  ) : (
+                    closeIcon
+                  )}
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* No header but still need close button */}
+          {!hasHeader && showCloseButton && closeButtonPosition !== "outside" && (
+            <button
+              className={`absolute ${closeButtonPosition === "header-left" ? "top-4 left-4" : "top-4 right-4"} p-1 rounded-lg hover:opacity-80 transition-opacity z-10`}
+              style={{ color: resolvedSecondaryText }}
+              onClick={onClose}
+              aria-label="Close"
+            >
+              {closeIcon}
+            </button>
+          )}
+
+          {/* Body */}
+          {children && (
+            <div className="px-6 py-2 flex-1 overflow-y-auto">
+              {children}
+            </div>
+          )}
+
+          {/* Footer */}
+          {hasFooter && (
+            <div
+              className={`px-6 pb-6 pt-4 flex items-center gap-3 ${footerAlignClasses}`}
+            >
+              {secondaryButtonText && (
+                <a
+                  href={secondaryButtonAction || "#"}
+                  className="px-4 py-2 text-sm font-medium rounded-lg border transition-opacity hover:opacity-80"
+                  style={{
+                    borderColor: dark ? "rgba(255,255,255,0.2)" : "var(--color-border, #d1d5db)",
+                    color: resolvedTextColor,
+                  }}
+                >
+                  {secondaryButtonText}
+                </a>
+              )}
+              {primaryButtonText && (
+                <a
+                  href={primaryButtonAction || "#"}
+                  className="px-4 py-2 text-sm font-medium rounded-lg text-white transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: "var(--brand-primary, #3b82f6)" }}
+                >
+                  {primaryButtonText}
+                </a>
+              )}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -23691,7 +23939,7 @@ export function ProgressRender({
   size = "md",
   variant = "default",
   color = "",
-  backgroundColor = "#e5e7eb",
+  backgroundColor = "",
   rounded = true,
   animate = false,
   id,
@@ -23699,20 +23947,30 @@ export function ProgressRender({
 }: ProgressProps) {
   const percentage = Math.min(100, Math.max(0, (value / max) * 100));
   const sizeClasses = { sm: "h-1.5", md: "h-2.5", lg: "h-4" }[size];
+  const resolvedTrackBg = backgroundColor || "var(--color-muted, #e5e7eb)";
 
   return (
     <div id={id} className={className}>
       {(label || showValue) && (
         <div className="flex justify-between mb-1.5 text-sm">
-          {label && <span className="font-medium text-gray-700">{label}</span>}
+          {label && (
+            <span
+              className="font-medium"
+              style={{ color: "var(--color-foreground, #374151)" }}
+            >
+              {label}
+            </span>
+          )}
           {showValue && (
-            <span className="text-gray-500">{Math.round(percentage)}%</span>
+            <span style={{ color: "var(--color-muted-foreground, #6b7280)" }}>
+              {Math.round(percentage)}%
+            </span>
           )}
         </div>
       )}
       <div
         className={`w-full ${sizeClasses} ${rounded ? "rounded-full" : ""} overflow-hidden`}
-        style={{ backgroundColor }}
+        style={{ backgroundColor: resolvedTrackBg }}
         role="progressbar"
         aria-valuenow={value}
         aria-valuemin={0}
@@ -23768,28 +24026,28 @@ export function AlertRender({
     { bg: string; border: string; text: string; iconColor: string }
   > = {
     info: {
-      bg: "bg-sky-50",
-      border: "border-sky-200",
-      text: "text-sky-800",
-      iconColor: "text-sky-500",
+      bg: "#f0f9ff",
+      border: "#bae6fd",
+      text: "#075985",
+      iconColor: "#0ea5e9",
     },
     success: {
-      bg: "bg-green-50",
-      border: "border-green-200",
-      text: "text-green-800",
-      iconColor: "text-green-500",
+      bg: "#f0fdf4",
+      border: "#bbf7d0",
+      text: "#166534",
+      iconColor: "#22c55e",
     },
     warning: {
-      bg: "bg-yellow-50",
-      border: "border-yellow-200",
-      text: "text-yellow-800",
-      iconColor: "text-yellow-500",
+      bg: "#fefce8",
+      border: "#fde68a",
+      text: "#854d0e",
+      iconColor: "#eab308",
     },
     error: {
-      bg: "bg-red-50",
-      border: "border-red-200",
-      text: "text-red-800",
-      iconColor: "text-red-500",
+      bg: "#fef2f2",
+      border: "#fecaca",
+      text: "#991b1b",
+      iconColor: "#ef4444",
     },
   };
 
@@ -23838,13 +24096,19 @@ export function AlertRender({
   return (
     <div
       id={id}
-      className={`${styles.bg} ${styles.text} border ${styles.border} rounded-lg ${sizeClasses} ${className}`}
+      className={`border rounded-lg ${sizeClasses} ${className}`}
+      style={{
+        backgroundColor: styles.bg,
+        borderColor: styles.border,
+        color: styles.text,
+      }}
       role="alert"
     >
       <div className="flex items-start gap-3">
         {icon && (
           <svg
-            className={`w-5 h-5 flex-shrink-0 mt-0.5 ${styles.iconColor}`}
+            className="w-5 h-5 flex-shrink-0 mt-0.5"
+            style={{ color: styles.iconColor }}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -23969,7 +24233,7 @@ export function TypewriterRender({
   cursor = true,
   cursorChar = "|",
   textSize = "2xl",
-  textColor = "text-gray-900",
+  textColor = "",
   fontWeight = "bold",
   prefix = "",
   suffix = "",
@@ -24002,7 +24266,8 @@ export function TypewriterRender({
   return (
     <span
       id={id}
-      className={`inline-flex items-center ${sizeClasses} ${textColor} ${weightClasses} ${className}`}
+      className={`inline-flex items-center ${sizeClasses} ${weightClasses} ${className}`}
+      style={{ color: textColor || "var(--color-foreground, #111827)" }}
     >
       {prefix && <span className="mr-1">{prefix}</span>}
       <span className="typewriter-text">{displayText}</span>

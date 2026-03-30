@@ -762,6 +762,38 @@ function convertComponentToStudio(
     BlogList: "BlogPreview",
     LatestPosts: "BlogPreview",
     RecentPosts: "BlogPreview",
+    // Interactive components — Progress, Alert, CardFlip3D, GlassCard, ParticleBackground, ScrollAnimate
+    Progress: "Progress",
+    ProgressBar: "Progress",
+    ProgressMeter: "Progress",
+    LoadingBar: "Progress",
+    SkillBar: "Progress",
+    Alert: "Alert",
+    AlertBanner: "Alert",
+    AlertMessage: "Alert",
+    Notification: "Alert",
+    NotificationBanner: "Alert",
+    StatusMessage: "Alert",
+    CardFlip3D: "CardFlip3D",
+    FlipCard: "CardFlip3D",
+    FlipCard3D: "CardFlip3D",
+    Card3DFlip: "CardFlip3D",
+    TwoSidedCard: "CardFlip3D",
+    GlassCard: "GlassCard",
+    GlassmorphismCard: "GlassCard",
+    FrostedCard: "GlassCard",
+    BlurCard: "GlassCard",
+    ParticleBackground: "ParticleBackground",
+    ParticleSection: "ParticleBackground",
+    ParticleEffect: "ParticleBackground",
+    Particles: "ParticleBackground",
+    FloatingParticles: "ParticleBackground",
+    ScrollAnimate: "ScrollAnimate",
+    ScrollAnimation: "ScrollAnimate",
+    ScrollReveal: "ScrollAnimate",
+    ScrollTrigger: "ScrollAnimate",
+    OnScrollAnimate: "ScrollAnimate",
+    InViewAnimate: "ScrollAnimate",
   };
 
   const studioType = typeMap[genComponent.type] || genComponent.type;
@@ -874,6 +906,21 @@ function convertComponentToStudio(
     "Button",
     "Badge",
     "BlogPreview",
+    // Media/content components
+    "Audio",
+    "Embed",
+    "AvatarGroup",
+    "BeforeAfter",
+    "Timeline",
+    "Icon",
+    "Avatar",
+    // Interactive components
+    "Progress",
+    "Alert",
+    "CardFlip3D",
+    "GlassCard",
+    "ParticleBackground",
+    "ScrollAnimate",
   ]);
 
   if (!KNOWN_REGISTRY_TYPES.has(resolvedType)) {
@@ -2360,6 +2407,83 @@ function transformPropsForStudio(
         "max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8",
       sectionPaddingY: props.sectionPaddingY || "py-12 md:py-16",
       sectionPaddingX: props.sectionPaddingX || "px-4 sm:px-6 lg:px-8",
+    };
+  }
+
+  // ── Carousel normalizer ──
+  if (type === "Carousel") {
+    // Normalise "items" → "slides" (registry field name)
+    const slides =
+      props.slides || props.items || props.images || props.carouselItems || [];
+    return {
+      ...props,
+      slides: Array.isArray(slides) ? slides : [],
+      items: undefined, // remove legacy key
+    };
+  }
+
+  // ── Countdown normalizer ──
+  if (type === "Countdown") {
+    return {
+      ...props,
+      variant: props.variant || "default",
+      targetDate:
+        props.targetDate || props.date || props.endDate || props.deadline || "",
+    };
+  }
+
+  // ── Modal normalizer ──
+  if (type === "Modal") {
+    return {
+      ...props,
+      size: props.size || "md",
+      closeOnBackdrop: props.closeOnBackdrop ?? props.closeOnOverlay ?? true,
+      closeOnEscape: props.closeOnEscape ?? true,
+    };
+  }
+
+  // ── BlogPreview normalizer ──
+  if (type === "BlogPreview") {
+    const posts =
+      props.posts || props.articles || props.items || props.blogPosts || [];
+    return {
+      ...props,
+      posts: Array.isArray(posts) ? posts : [],
+    };
+  }
+
+  // ── BeforeAfter normalizer ──
+  if (type === "BeforeAfter") {
+    return {
+      ...props,
+      beforeImage: props.beforeImage || props.before || "",
+      afterImage: props.afterImage || props.after || "",
+      orientation: props.orientation || "horizontal",
+    };
+  }
+
+  // ── Progress normalizer ──
+  if (type === "Progress") {
+    return {
+      ...props,
+      value:
+        typeof props.value === "number"
+          ? props.value
+          : typeof props.percentage === "number"
+            ? props.percentage
+            : 0,
+      color: props.color || props.barColor || "var(--brand-primary, #3b82f6)",
+    };
+  }
+
+  // ── Alert normalizer ──
+  if (type === "Alert") {
+    return {
+      ...props,
+      variant:
+        props.variant || props.severity || props.status || props.type || "info",
+      message:
+        props.message || props.description || props.text || props.content || "",
     };
   }
 

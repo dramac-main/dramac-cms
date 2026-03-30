@@ -1,40 +1,42 @@
 # Active Context
 
-## Current Focus: Content Components Master Plan — IMPLEMENTATION COMPLETE ✅
+## Current Focus: Interactive Components Master Plan — VERIFIED & ENHANCED ✅
 
-### Status: All 3 phases implemented across 4 files. Zero new TS errors. Committed and pushed.
+### Status: `INTERACTIVE-COMPONENTS-MASTER-PLAN.md` v1.1 — verified against live codebase, all inaccuracies fixed, Section 17 (Critical Guard Rails) added.
 
-### What Was Done (Latest Session — Content Components Implementation)
+### What Was Done (Latest Session — Interactive Components Verification & Enhancement)
 
-**Implemented the entire CONTENT-COMPONENTS-MASTER-PLAN.md — Phases 1-3 across 4 files, zero new TS errors.**
+**Verified v1.0 against live codebase and upgraded to v1.1 with corrections:**
 
-#### Phase 1: Critical Fixes
-1. **CodeBlock registry expanded** (`core-components.ts`) — Added 7 missing fields (theme, title, showCopyButton, showLanguage, highlightLines, maxHeight, wrap). Added fieldGroups (Content, Appearance, Features). Updated AI config with canModify and suggestions. Expanded language options from 6 to 16. Coverage: 30% → 100%.
-2. **CodeBlock converter normalizer** (`converter.ts`) — Added normalizer handling code/content/snippet, lang, theme, filename/name aliases, and sensible defaults for all 10 props.
-3. **RichText prose dark mode fix** (`renders.tsx`) — Added `[&_*]:!text-inherit` to prose wrapper, forcing all child elements to inherit the resolved text colour instead of using Tailwind prose light-theme defaults.
-4. **RichText proseSize default aligned** (`renders.tsx`) — Changed render default from "base" to "lg" to match registry default.
-5. **Category mismatch fixed** (`core-components.ts`) — Changed 7 components from `category: "typography"` to `category: "content"` (RichText, Quote, Label, List, DisplayText, DividerText, StatNumber). Now all 8 consistently use "content".
+#### Verification Process
+- Ran comprehensive sub-agent audit comparing document against all 4 source files
+- Checked every typeMap alias, KNOWN_REGISTRY_TYPES entry, normalizer line, render prop count
+- Cross-referenced Section 0.2 and Section 14.1 tables against fresh converter.ts extraction
 
-#### Phase 2: Accessibility Fixes
-6. **DividerText `role="separator"`** (`renders.tsx`) — Added to all 6 variant return paths (line-sides, line-through, dots, gradient, ornament, default fallback).
-7. **StatNumber `aria-label`** (`renders.tsx`) — Added composite `aria-label={prefix+value+suffix+label}` to wrapper div.
-8. **CodeBlock copy button accessibility** (`renders.tsx`) — Added `aria-label={Copy ${language} code to clipboard}`.
-9. **Quote simple variant font fix** (`renders.tsx`) — Replaced hardcoded `font-serif` with `resolvedFontFamily` so the font respects brand settings.
+#### Fixes Applied (v1.0 → v1.1)
+1. **14 converter alias rows updated** — Added ~25 omitted typeMap aliases across BeforeAfter, Animate, Tilt3DContainer, ShapeDivider, CursorEffect, Testimonials, TrustBadges, LogoCloud, ComparisonTable, AnnouncementBar, BlogPreview, Audio, Embed, AvatarGroup
+2. **BlogPreview added to KNOWN_REGISTRY_TYPES missing list** — Was absent from both the set AND the document's "missing" count
+3. **KNOWN_REGISTRY count fixed** — 5 (not 4) components missing: BeforeAfter, Audio, Embed, AvatarGroup, BlogPreview
+4. **Countdown variant name mismatch flagged** — Render uses `"simple"`, registry sends `"default"` — silent rendering bug
+5. **Carousel defaultProps compounds slides/items bug** — Registry `defaultProps.slides = []` + render reads `items` = double failure point
+6. **Function name corrected** — `normalizeComponentProps()` → `transformPropsForStudio()` (actual function name at L1028)
+7. **Brand injection documented** — renderer.tsx injects brand colours + fonts via `injectBrandColors()` / `injectBrandFonts()` into ALL component props
+8. **LogoCloud `__convertedToFeatures` fallback warning** — Normalizer silently converts to Features-shaped props when no valid logo URLs
+9. **Section 17 added** — CRITICAL FOR AI AGENT: Implementation Guard Rails (6 subsections covering silent data loss bugs, render props truth, colour rules, file size warning, normalizer function, renderer dispatch)
+10. **Phase 1 updated** — Added BlogPreview KNOWN_REG and Countdown variant fix as critical tasks
 
-#### Phase 3: AI Integration & Polish
-10. **Component metadata enriched** (`component-metadata.ts`) — All 8 content components updated with expanded descriptions, richer keywords (6-10 per component vs 3-5 before), and detailed usageGuidelines for AI context.
+#### Key Findings
+- **8 components missing from component-metadata.ts** (Modal, Progress, Alert, CardFlip3D, TiltCard, GlassCard, ParticleBackground, ScrollAnimate)
+- **6 components completely absent from converter.ts** (Progress, Alert, CardFlip3D, GlassCard, ParticleBackground, ScrollAnimate)
+- **4 components missing from KNOWN_REGISTRY_TYPES** (BeforeAfter, Audio, Embed, AvatarGroup)
+- **9 components have no converter normalizer**
+- **Carousel critical bug:** Registry uses `slides`, render uses `items` — data never arrives
+- **Modal/Progress/Alert:** Massive render-registry gaps (13-20% of registry fields implemented)
+- **Zero Framer Motion usage** across all 31 components — all CSS animations
+- **Tabs is best-in-class** (~95% coverage, 7 variants, full ARIA keyboard nav)
+- **BeforeAfter is perfectly aligned** (18 registry fields = 20 render props)
 
-### Files Modified
-- `src/lib/studio/blocks/renders.tsx` — RichText prose fix, proseSize default, DividerText role=separator (6 paths), StatNumber aria-label, CodeBlock copy button aria-label, Quote font fix
-- `src/lib/studio/registry/core-components.ts` — CodeBlock registry expansion (3→10 fields), 7 category fixes
-- `src/lib/ai/website-designer/converter.ts` — CodeBlock normalizer added
-- `src/lib/studio/registry/component-metadata.ts` — All 8 content components enriched
-
-### TypeScript Status
-- 17 pre-existing errors (converter.ts toResponsive, animation types, business-notifications.ts) — unchanged
-- **Zero new errors introduced**
-
-### Master Plan Document Status (8 of 8 complete)
+### Master Plan Document Status (9 of 9 complete)
 
 1. LAYOUT ✅
 2. TYPOGRAPHY ✅
@@ -43,7 +45,8 @@
 5. SECTIONS ✅ v2.0
 6. NAVIGATION ✅ v1.1
 7. FORMS ✅ v1.1 → IMPLEMENTED
-8. CONTENT ✅ v2.0 ← JUST VERIFIED
+8. CONTENT ✅ v2.0 → IMPLEMENTED
+9. INTERACTIVE ✅ v1.0 ← JUST COMPLETED
 
 ### What Was Done (Latest Session — Forms Implementation)
 

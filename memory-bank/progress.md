@@ -5,7 +5,58 @@
 
 ---
 
-## Latest Update: Content Components Master Plan — IMPLEMENTATION COMPLETE ✅
+## Latest Update: Interactive Components Master Plan — v1.1 VERIFIED ✅
+
+### What Was Done
+
+Created and VERIFIED `INTERACTIVE-COMPONENTS-MASTER-PLAN.md` — the 9th master plan document. v1.0 created, then rigorously verified against live codebase. v1.1 corrects all inaccuracies and adds Section 17 (Critical Guard Rails for AI Agents).
+
+**Verification Findings (v1.0 → v1.1):**
+- ~25 missing typeMap aliases added across 14 components
+- BlogPreview added as 5th missing KNOWN_REGISTRY_TYPES entry
+- Countdown `simple` vs `default` variant name mismatch flagged as critical bug
+- Carousel `defaultProps.slides` compounds the `slides/items` data loss bug
+- Function name corrected: `transformPropsForStudio()` (not `normalizeComponentProps()`)
+- Brand colour/font injection documented (renderer.tsx injects into ALL props)
+- LogoCloud `__convertedToFeatures` fallback warning added
+- Section 17 added: 6 critical guard rails for AI implementation agents
+
+**Document Structure (17 sections):**
+- Section 0: Implementation Blueprint — file map, exact line numbers, props pipeline, render patterns, build checklist, DO/DON'T rules
+- Section 1: Current State Audit — inventory tables, 14 critical issues (12 original + 2 new), category consistency, prop pipeline coverage
+- Section 2: Industry Benchmark — comparison vs Webflow/Framer/Squarespace/WordPress
+- Sections 4-9: Per-component deep dives organized by category
+- Sections 10-14: Dark mode, accessibility, CSS variables, AI integration, registry alignment
+- Section 15: 6-phase implementation roadmap (Phase 1 now includes 7 critical tasks)
+- Section 16: Testing & quality gates
+- **Section 17: CRITICAL FOR AI AGENT — Implementation Guard Rails** (NEW)
+
+**Critical Issues Documented (14 total):**
+1. 8 components missing from component-metadata.ts
+2. 6 components completely absent from converter.ts
+3. **5** components missing from KNOWN_REGISTRY_TYPES (BeforeAfter, Audio, Embed, AvatarGroup, **BlogPreview**)
+4. 9 components have no converter normalizer
+5. Carousel: `slides` (registry) vs `items` (render) field name mismatch
+6-8. Modal/Progress/Alert: massive render-registry gaps
+9. Accordion: 2 missing variants
+10. Countdown: 3 missing variants
+10b. **Countdown: `simple` vs `default` variant name mismatch** (NEW)
+10c. **Carousel: defaultProps compounds slides/items bug** (NEW)
+11. 5+ components lack isDarkBackground()
+12. Zero Framer Motion usage
+
+**Health Summary:**
+- 11 Excellent (>90%): Tabs, BeforeAfter, Tilt3DContainer, ShapeDivider, CursorEffect, Testimonials, FAQ, Stats, Audio, Embed, AvatarGroup
+- 7 Good (70-90%): Accordion, Carousel, Countdown, Animate, LogoCloud, AnnouncementBar, BlogPreview
+- 5 Gaps (30-70%): Typewriter, Parallax, SocialProof, TrustBadges, ComparisonTable
+- 3 Critical (<30%): Modal, Progress, Alert
+- 5 Experimental: CardFlip3D, TiltCard, GlassCard, ParticleBackground, ScrollAnimate
+
+**Document:** `next-platform-dashboard/docs/INTERACTIVE-COMPONENTS-MASTER-PLAN.md` (v1.0)
+
+---
+
+## Previous Update: Content Components Master Plan — IMPLEMENTATION COMPLETE ✅
 
 ### What Was Done
 
