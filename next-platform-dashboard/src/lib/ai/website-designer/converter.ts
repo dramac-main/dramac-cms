@@ -1687,6 +1687,7 @@ function transformPropsForStudio(
       columns: props.columns ? Number(props.columns) : undefined,
       color: props.color || props.textColor || undefined,
       iconColor: props.iconColor || props.markerColor || undefined,
+      lineHeight: props.lineHeight || undefined,
     };
   }
 

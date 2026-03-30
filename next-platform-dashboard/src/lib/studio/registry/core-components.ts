@@ -14944,6 +14944,16 @@ const contentComponents: ComponentDefinition[] = [
         ],
         defaultValue: "",
       },
+      lineHeight: {
+        type: "select",
+        label: "Line Height",
+        options: [
+          { label: "Tight", value: "1.25" },
+          { label: "Normal", value: "1.5" },
+          { label: "Relaxed", value: "1.75" },
+          { label: "Loose", value: "2" },
+        ],
+      },
     },
     defaultProps: {
       items: ["First item", "Second item", "Third item"],
@@ -14960,6 +14970,7 @@ const contentComponents: ComponentDefinition[] = [
         "color",
         "iconColor",
         "columns",
+        "lineHeight",
       ],
       suggestions: ["Add more items", "Try checkmark style", "Use two columns"],
     },

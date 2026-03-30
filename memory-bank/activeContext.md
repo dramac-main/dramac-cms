@@ -1,27 +1,38 @@
 # Active Context
 
-## Current Focus: Content Components Master Plan — v2.0 VERIFIED ✅
+## Current Focus: Content Components Master Plan — IMPLEMENTATION COMPLETE ✅
 
-### Status: Document updated from v1.0 to v2.0. Section 0 Implementation Blueprint added. All line numbers re-verified after Forms implementation shifted source files. Document is now AI-agent-implementation-ready.
+### Status: All 3 phases implemented across 4 files. Zero new TS errors. Committed and pushed.
 
-### What Was Done (Latest Session — Content Document v2.0 Verification)
+### What Was Done (Latest Session — Content Components Implementation)
 
-1. **Verified all line numbers** against source — Forms implementation shifted core-components.ts (+630–717 lines), component-metadata.ts (+42 lines), CodeBlock in renders.tsx (+59 lines). converter.ts was unchanged.
+**Implemented the entire CONTENT-COMPONENTS-MASTER-PLAN.md — Phases 1-3 across 4 files, zero new TS errors.**
 
-2. **Added Section 0 — Implementation Blueprint** — Contains:
-   - 0.1 File Map (6 source files with paths)
-   - 0.2 Exact Line Numbers (4 verified tables: renders.tsx, core-components.ts, component-metadata.ts, converter.ts)
-   - 0.3 Props Pipeline (full flow diagram from AI → converter → registry → render)
-   - 0.4 Render Skeleton Pattern (template for content component render functions)
-   - 0.5 defineComponent() Field Type Reference (9 field types)
-   - 0.6 Build Checklist (13-item verification list)
-   - 0.7 DO/DON'T Rules (11 rules)
+#### Phase 1: Critical Fixes
+1. **CodeBlock registry expanded** (`core-components.ts`) — Added 7 missing fields (theme, title, showCopyButton, showLanguage, highlightLines, maxHeight, wrap). Added fieldGroups (Content, Appearance, Features). Updated AI config with canModify and suggestions. Expanded language options from 6 to 16. Coverage: 30% → 100%.
+2. **CodeBlock converter normalizer** (`converter.ts`) — Added normalizer handling code/content/snippet, lang, theme, filename/name aliases, and sensible defaults for all 10 props.
+3. **RichText prose dark mode fix** (`renders.tsx`) — Added `[&_*]:!text-inherit` to prose wrapper, forcing all child elements to inherit the resolved text colour instead of using Tailwind prose light-theme defaults.
+4. **RichText proseSize default aligned** (`renders.tsx`) — Changed render default from "base" to "lg" to match registry default.
+5. **Category mismatch fixed** (`core-components.ts`) — Changed 7 components from `category: "typography"` to `category: "content"` (RichText, Quote, Label, List, DisplayText, DividerText, StatNumber). Now all 8 consistently use "content".
 
-3. **Fixed 50+ stale line references** across Sections 1.1, 1.3, 4.1–4.8, 10.1, and 11.
+#### Phase 2: Accessibility Fixes
+6. **DividerText `role="separator"`** (`renders.tsx`) — Added to all 6 variant return paths (line-sides, line-through, dots, gradient, ornament, default fallback).
+7. **StatNumber `aria-label`** (`renders.tsx`) — Added composite `aria-label={prefix+value+suffix+label}` to wrapper div.
+8. **CodeBlock copy button accessibility** (`renders.tsx`) — Added `aria-label={Copy ${language} code to clipboard}`.
+9. **Quote simple variant font fix** (`renders.tsx`) — Replaced hardcoded `font-serif` with `resolvedFontFamily` so the font respects brand settings.
 
-4. **Updated TOC** to include Section 0 and **footer** to version 2.0.
+#### Phase 3: AI Integration & Polish
+10. **Component metadata enriched** (`component-metadata.ts`) — All 8 content components updated with expanded descriptions, richer keywords (6-10 per component vs 3-5 before), and detailed usageGuidelines for AI context.
 
-5. **Independent verification** — Sub-agent grep-searched for ALL old line numbers (20 patterns) and confirmed zero stale references remain.
+### Files Modified
+- `src/lib/studio/blocks/renders.tsx` — RichText prose fix, proseSize default, DividerText role=separator (6 paths), StatNumber aria-label, CodeBlock copy button aria-label, Quote font fix
+- `src/lib/studio/registry/core-components.ts` — CodeBlock registry expansion (3→10 fields), 7 category fixes
+- `src/lib/ai/website-designer/converter.ts` — CodeBlock normalizer added
+- `src/lib/studio/registry/component-metadata.ts` — All 8 content components enriched
+
+### TypeScript Status
+- 17 pre-existing errors (converter.ts toResponsive, animation types, business-notifications.ts) — unchanged
+- **Zero new errors introduced**
 
 ### Master Plan Document Status (8 of 8 complete)
 
