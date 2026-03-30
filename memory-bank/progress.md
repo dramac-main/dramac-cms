@@ -5,7 +5,29 @@
 
 ---
 
-## Latest Update: Navigation Components Master Plan — v1.1 VERIFIED ✅
+## Latest Update: Forms Components Master Plan — v1.0 COMPLETE ✅
+
+### What Was Done
+
+Created `FORMS-COMPONENTS-MASTER-PLAN.md` v1.0 — the 7th master plan document in the component documentation series. Covers all 4 form components (Form, FormField, ContactForm, Newsletter) with full submission pipeline analysis and "Out of the Gate" architecture.
+
+**Critical Bugs Documented:**
+1. **Newsletter completely non-functional** — `<form action="#" method="POST">`, no JS handler, no API integration
+2. **ContactForm `emailTo` is decorative** — `_emailTo` sent in data but API ignores it; `form_settings.notify_emails` defaults to `[]`
+3. **Newsletter registry has 3 BREAKING field name mismatches** — submitText/layout/subtitle don't match render prop names
+4. **23 ContactForm render props missing from registry** — all styling props not configurable in sidebar
+5. **Form + FormField not in KNOWN_REGISTRY_TYPES** — AI cannot generate them
+
+**"Out of the Gate" Architecture Specified:**
+- 3-layer email fallback: form_settings → _emailTo → site owner email
+- Auto-provision form_settings on site creation with owner's email
+- Newsletter rewrite to use fetch + /api/forms/submit (matching ContactForm pattern)
+- Form generic platform submission opt-in via `enablePlatformSubmission` prop
+- 5-phase implementation plan from critical fixes through auto-provisioning
+
+---
+
+## Previous Update: Navigation Components Master Plan — v1.1 VERIFIED ✅
 
 ### What Was Done
 
@@ -20,17 +42,18 @@ Created `NAVIGATION-COMPONENTS-MASTER-PLAN.md` (v1.0), then performed a critical
 
 ### Critical Findings
 
-| Issue | Severity | Component |
-|-------|----------|-----------|
-| Missing Tabs metadata entry | 🔴 Critical | Tabs |
-| Navbar prop name mismatches (6 fields) | 🔴 Critical | Navbar |
-| Desktop dropdowns not rendering | 🔴 Critical | Navbar |
-| Footer 50+ registry fields, only 18 consumed | 🔴 Critical | Footer |
-| Tabs 3 of 7 variants implemented | 🔴 Critical | Tabs |
-| Category mismatches (3 components) | 🟡 Medium | Link, Breadcrumb, Pagination |
-| Breadcrumb converter conflict (hijacked by EcommerceBreadcrumb) | 🟡 Medium | Breadcrumb |
+| Issue                                                           | Severity    | Component                    |
+| --------------------------------------------------------------- | ----------- | ---------------------------- |
+| Missing Tabs metadata entry                                     | 🔴 Critical | Tabs                         |
+| Navbar prop name mismatches (6 fields)                          | 🔴 Critical | Navbar                       |
+| Desktop dropdowns not rendering                                 | 🔴 Critical | Navbar                       |
+| Footer 50+ registry fields, only 18 consumed                    | 🔴 Critical | Footer                       |
+| Tabs 3 of 7 variants implemented                                | 🔴 Critical | Tabs                         |
+| Category mismatches (3 components)                              | 🟡 Medium   | Link, Breadcrumb, Pagination |
+| Breadcrumb converter conflict (hijacked by EcommerceBreadcrumb) | 🟡 Medium   | Breadcrumb                   |
 
 ### v1.1 Verification Corrections
+
 - All renders.tsx line numbers corrected (shifted +126 to +542 due to code additions)
 - Breadcrumb converter conflict fully documented (L695 `Breadcrumb: "EcommerceBreadcrumb"` overrides nav mapping)
 - Footer defineComponent line corrected (L11402 → L11403)
@@ -46,16 +69,17 @@ After the initial implementation (commit `f9e8dbef`), a comprehensive prop align
 
 ### Fixes Applied (commit `e27189cb`)
 
-| Component | Issue | Fix |
-|-----------|-------|-----|
-| **Link** | variant had button/muted (not in render), underlineAnimation values wrong, fontSize tokens not mapped to CSS | Fixed variant options, animation values, added fontSizeMap |
-| **ButtonGroup** | gap offered md/lg but render only handled none/xs/sm | Added md/lg to gapClass map |
-| **Chip** | rounded was toggle (boolean) but render expects string "default"/"full" | Changed to select field, fixed defaultProps |
-| **Breadcrumb** | separator sent words (slash/arrow/dot) but render expected symbols (/ → •) | Added word aliases to separatorContent map |
-| **Pagination** | render supports shape (rounded/circle/square) but registry didn't expose it | Added shape field to registry |
-| **Badge** | 50+ fields in registry, render only handles ~17 props; variant/size/rounded options mismatched | Trimmed to ~17 fields (4 groups), aligned all option values |
+| Component       | Issue                                                                                                        | Fix                                                         |
+| --------------- | ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| **Link**        | variant had button/muted (not in render), underlineAnimation values wrong, fontSize tokens not mapped to CSS | Fixed variant options, animation values, added fontSizeMap  |
+| **ButtonGroup** | gap offered md/lg but render only handled none/xs/sm                                                         | Added md/lg to gapClass map                                 |
+| **Chip**        | rounded was toggle (boolean) but render expects string "default"/"full"                                      | Changed to select field, fixed defaultProps                 |
+| **Breadcrumb**  | separator sent words (slash/arrow/dot) but render expected symbols (/ → •)                                   | Added word aliases to separatorContent map                  |
+| **Pagination**  | render supports shape (rounded/circle/square) but registry didn't expose it                                  | Added shape field to registry                               |
+| **Badge**       | 50+ fields in registry, render only handles ~17 props; variant/size/rounded options mismatched               | Trimmed to ~17 fields (4 groups), aligned all option values |
 
 ### Build Status
+
 - **Zero new TypeScript errors** (verified with `tsc --noEmit`)
 - All components now **100% aligned**: every registry option produces correct render output
 
@@ -69,22 +93,22 @@ Complete overhaul of button ecosystem following `docs/BUTTONS-COMPONENTS-MASTER-
 
 ### Files Modified (4 files total across sessions)
 
-| File | Changes |
-|------|---------|
-| `renders.tsx` | Phase 1: CSS var fixes + ring variant. Phase 2: 5 new components. Phase 3: SocialLinks V2 (15 platforms). Phase 4.1: iconName + BUTTON_ICONS map. **Final:** BadgeRender V2 (pulse/href/dismiss/iconName/animateIn), ButtonRender (gradientVia/ripple/glow/fontSize), CTARender composition (6 variants refactored to use ButtonRender) |
-| `core-components.ts` | Button: ring variant + iconName field. SocialLinks: full overhaul (15 platforms, variant, brandColors, etc). 5 new registrations (ButtonGroup, Link, Chip, Breadcrumb, Pagination) |
-| `converter.ts` | 17 new typeMap entries for 5 new components + AI aliases |
-| `component-metadata.ts` | 6 new entries: Link, ButtonGroup, Chip, Breadcrumb, Pagination, Badge (with AI descriptions, keywords, usageGuidelines) |
+| File                    | Changes                                                                                                                                                                                                                                                                                                                                 |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `renders.tsx`           | Phase 1: CSS var fixes + ring variant. Phase 2: 5 new components. Phase 3: SocialLinks V2 (15 platforms). Phase 4.1: iconName + BUTTON_ICONS map. **Final:** BadgeRender V2 (pulse/href/dismiss/iconName/animateIn), ButtonRender (gradientVia/ripple/glow/fontSize), CTARender composition (6 variants refactored to use ButtonRender) |
+| `core-components.ts`    | Button: ring variant + iconName field. SocialLinks: full overhaul (15 platforms, variant, brandColors, etc). 5 new registrations (ButtonGroup, Link, Chip, Breadcrumb, Pagination)                                                                                                                                                      |
+| `converter.ts`          | 17 new typeMap entries for 5 new components + AI aliases                                                                                                                                                                                                                                                                                |
+| `component-metadata.ts` | 6 new entries: Link, ButtonGroup, Chip, Breadcrumb, Pagination, Badge (with AI descriptions, keywords, usageGuidelines)                                                                                                                                                                                                                 |
 
 ### New Components
 
-| Component | Array | Variants | Key Features |
-|-----------|-------|----------|--------------|
-| Link | navigationComponents | default/underline/subtle/nav/button/muted | Animated underlines, showExternalIcon |
-| ButtonGroup | buttonComponents | connected/separated/toggle | acceptsChildren, shared radius |
-| Chip | uiComponents | filled/outline/subtle | Selected/disabled states, avatar, removable |
-| Breadcrumb | navigationComponents | default/contained/pills | 4 separators, maxItems truncation, showHome |
-| Pagination | interactiveComponents | default/simple/compact/minimal | siblingsCount, showFirstLast/PrevNext |
+| Component   | Array                 | Variants                                  | Key Features                                |
+| ----------- | --------------------- | ----------------------------------------- | ------------------------------------------- |
+| Link        | navigationComponents  | default/underline/subtle/nav/button/muted | Animated underlines, showExternalIcon       |
+| ButtonGroup | buttonComponents      | connected/separated/toggle                | acceptsChildren, shared radius              |
+| Chip        | uiComponents          | filled/outline/subtle                     | Selected/disabled states, avatar, removable |
+| Breadcrumb  | navigationComponents  | default/contained/pills                   | 4 separators, maxItems truncation, showHome |
+| Pagination  | interactiveComponents | default/simple/compact/minimal            | siblingsCount, showFirstLast/PrevNext       |
 
 ### Build Status
 

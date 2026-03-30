@@ -937,3 +937,72 @@ Generate complete component configurations for this page. Every prop should be i
 Apply the design tokens consistently across all components for a cohesive look.
 Generate compelling, business-specific content — not generic placeholder text.`;
 }
+
+// =============================================================================
+// INDUSTRY-SPECIFIC MEDIA RULES (Phase 5.2)
+// =============================================================================
+
+/**
+ * Industry-specific media component defaults.
+ * The AI uses these as guidance when generating media-heavy components.
+ */
+export const INDUSTRY_MEDIA_STYLES: Record<string, {
+  gallery?: Record<string, any>;
+  carousel?: Record<string, any>;
+  socialProof?: Record<string, any>;
+  map?: Record<string, any>;
+  imageStyle?: Record<string, any>;
+  trustBadges?: Record<string, any>;
+  stats?: Record<string, any>;
+  logoCloud?: Record<string, any>;
+  comparisonTable?: Record<string, any>;
+  beforeAfter?: Record<string, any>;
+  timeline?: Record<string, any>;
+  rule: string;
+}> = {
+  restaurant: {
+    gallery: { variant: "masonry", hoverEffect: "zoom", aspectRatio: "square", columns: 3 },
+    carousel: { transition: "fade", autoplay: true, interval: 4000 },
+    socialProof: { variant: "stars", platform: "Google Reviews" },
+    rule: "Warm, appetising image treatment with masonry food gallery",
+  },
+  realestate: {
+    gallery: { variant: "grid", lightbox: true, columns: 4, showFilter: true },
+    carousel: { transition: "slide", showArrows: true, aspectRatio: "wide" },
+    map: { showMarker: true, showDirectionsLink: true, mapStyle: "silver" },
+    rule: "Property-focused galleries with filtering and large lightbox",
+  },
+  healthcare: {
+    imageStyle: { borderRadius: "lg", shadow: "md" },
+    trustBadges: { grayscale: true, size: "md" },
+    socialProof: { variant: "score", platform: "Google Reviews" },
+    rule: "Professional, clean image treatment with strong trust signals",
+  },
+  creative: {
+    gallery: { variant: "masonry", hoverEffect: "fade", lightbox: true },
+    carousel: { transition: "crossfade", overlay: true },
+    rule: "Masonry galleries showcasing portfolio work with elegant transitions",
+  },
+  ecommerce: {
+    gallery: { variant: "grid", columns: 4, showFilter: true, hoverEffect: "zoom" },
+    carousel: { transition: "slide", showDots: true },
+    comparisonTable: { variant: "cards", stickyHeader: true },
+    rule: "Product grids with quick filtering and comparison tables",
+  },
+  saas: {
+    stats: { variant: "cards", animateNumbers: true },
+    logoCloud: { variant: "marquee", grayscale: true },
+    comparisonTable: { variant: "simple", stickyHeader: true },
+    rule: "Stats counters, logo cloud social proof, feature comparison",
+  },
+  construction: {
+    beforeAfter: { orientation: "horizontal", handleStyle: "arrows" },
+    gallery: { variant: "grid", columns: 3, lightbox: true },
+    rule: "Before/after sliders for project transformations",
+  },
+  nonprofit: {
+    stats: { variant: "row", animateNumbers: true, valueSize: "3xl" },
+    timeline: { variant: "vertical", animateOnScroll: true },
+    rule: "Impact statistics and organisational timeline",
+  },
+};

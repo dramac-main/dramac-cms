@@ -458,6 +458,23 @@ function convertComponentToStudio(
     VideoBlock: "Video",
     VideoSection: "Video",
     VideoPlayer: "Video",
+    // Timeline
+    TimelineBlock: "Timeline",
+    TimelineSection: "Timeline",
+    TimelineComponent: "Timeline",
+    // Before/After (Image Comparison)
+    BeforeAfterBlock: "BeforeAfter",
+    BeforeAfterSection: "BeforeAfter",
+    ImageComparisonBlock: "BeforeAfter",
+    ImageComparison: "BeforeAfter",
+    CompareImages: "BeforeAfter",
+    // Icon
+    IconBlock: "Icon",
+    IconSection: "Icon",
+    IconDisplay: "Icon",
+    // Avatar
+    AvatarBlock: "Avatar",
+    AvatarSection: "Avatar",
     // Contact
     ContactBlock: "ContactForm",
     ContactSection: "ContactForm",
@@ -543,6 +560,27 @@ function convertComponentToStudio(
     AnnouncementBar: "AnnouncementBar",
     SocialLinks: "SocialLinks",
     CodeBlock: "CodeBlock",
+    Timeline: "Timeline",
+    BeforeAfter: "BeforeAfter",
+    Icon: "Icon",
+    Avatar: "Avatar",
+    Audio: "Audio",
+    AudioBlock: "Audio",
+    AudioSection: "Audio",
+    AudioPlayer: "Audio",
+    MusicPlayer: "Audio",
+    PodcastPlayer: "Audio",
+    Embed: "Embed",
+    EmbedBlock: "Embed",
+    EmbedSection: "Embed",
+    IframeBlock: "Embed",
+    IframeEmbed: "Embed",
+    ExternalEmbed: "Embed",
+    AvatarGroup: "AvatarGroup",
+    AvatarGroupBlock: "AvatarGroup",
+    AvatarGroupSection: "AvatarGroup",
+    AvatarStack: "AvatarGroup",
+    UserGroup: "AvatarGroup",
     // Typography — new components
     Label: "Label",
     LabelText: "Label",
@@ -579,6 +617,7 @@ function convertComponentToStudio(
     Tag: "Chip",
     SelectableTag: "Chip",
     NavBreadcrumb: "Breadcrumb",
+    Breadcrumb: "Breadcrumb",
     BreadcrumbTrail: "Breadcrumb",
     BreadcrumbNav: "Breadcrumb",
     PageBreadcrumb: "Breadcrumb",
@@ -692,7 +731,8 @@ function convertComponentToStudio(
     FilterSidebar: "EcommerceFilterSidebar",
     ProductFilters: "EcommerceFilterSidebar",
     EcommerceFilterSidebar: "EcommerceFilterSidebar",
-    Breadcrumb: "EcommerceBreadcrumb",
+    // Note: "Breadcrumb" maps to navigation Breadcrumb via earlier entry.
+    // Use "EcommerceBreadcrumb" for the ecommerce-specific breadcrumb.
     Breadcrumbs: "EcommerceBreadcrumb",
     EcommerceBreadcrumb: "EcommerceBreadcrumb",
     ProductSort: "EcommerceProductSort",
@@ -713,6 +753,12 @@ function convertComponentToStudio(
     ProductDetailBlock: "ProductDetailBlock",
     CategoryHero: "CategoryHeroBlock",
     CategoryHeroBlock: "CategoryHeroBlock",
+    BlogPreview: "BlogPreview",
+    BlogGrid: "BlogPreview",
+    BlogCards: "BlogPreview",
+    BlogList: "BlogPreview",
+    LatestPosts: "BlogPreview",
+    RecentPosts: "BlogPreview",
   };
 
   const studioType = typeMap[genComponent.type] || genComponent.type;
@@ -824,6 +870,7 @@ function convertComponentToStudio(
     "Pagination",
     "Button",
     "Badge",
+    "BlogPreview",
   ]);
 
   if (!KNOWN_REGISTRY_TYPES.has(resolvedType)) {

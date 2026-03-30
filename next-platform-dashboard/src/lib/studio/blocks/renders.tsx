@@ -5500,6 +5500,11 @@ export interface ImageProps {
   priority?: boolean;
   placeholder?: "blur" | "empty" | "skeleton";
   blurDataURL?: string;
+  placeholderColor?: string;
+
+  // Responsive source set
+  srcSet?: string;
+  sizes?: string;
 
   // Animation
   animateOnLoad?: boolean;
@@ -5599,6 +5604,11 @@ export function ImageRender({
   // Loading
   loading = "lazy",
   placeholder = "empty",
+  placeholderColor,
+  blurDataURL,
+  srcSet,
+  sizes,
+  priority,
 
   // Animation
   animateOnLoad = false,
@@ -5624,6 +5634,13 @@ export function ImageRender({
 }: ImageProps) {
   const imageUrl = getImageUrl(src) || "/placeholder.svg";
   const imageAlt = alt || getImageAlt(src, "Image");
+
+  // Generate srcSet for Supabase images if not provided
+  const resolvedSrcSet = srcSet || (imageUrl.includes("supabase.co/storage")
+    ? [640, 960, 1280, 1920].map(w => `${imageUrl}?width=${w}&quality=80 ${w}w`).join(", ")
+    : undefined);
+  const resolvedSizes = sizes || (resolvedSrcSet ? "(max-width: 640px) 100vw, (max-width: 1024px) 75vw, 50vw" : undefined);
+  const resolvedLoading = priority ? "eager" as const : loading;
 
   // Width class
   const widthClass =
@@ -5814,9 +5831,12 @@ export function ImageRender({
     <img
       id={id}
       src={imageUrl}
+      srcSet={resolvedSrcSet}
+      sizes={resolvedSizes}
       alt={imageAlt}
       title={title}
-      loading={loading}
+      loading={resolvedLoading}
+      fetchPriority={priority ? "high" : undefined}
       className={`
         ${widthClass} ${aspectClass} ${fitClass} ${posClass} ${radiusClass}
         ${shadowClass} ${hoverShadowClass}
@@ -5827,7 +5847,12 @@ export function ImageRender({
       `
         .replace(/\s+/g, " ")
         .trim()}
-      style={imageStyles}
+      style={{
+        ...imageStyles,
+        backgroundColor: placeholder === "blur" && blurDataURL ? undefined : placeholderColor || undefined,
+        backgroundImage: placeholder === "blur" && blurDataURL ? `url(${blurDataURL})` : undefined,
+        backgroundSize: placeholder === "blur" && blurDataURL ? "cover" : undefined,
+      }}
     />
   );
 
@@ -6018,6 +6043,16 @@ export interface VideoProps {
   hideOnMobile?: boolean;
   mobileAspectRatio?: "video" | "square" | "4/3";
 
+  // Background mode (hero videos)
+  background?: boolean;
+  backgroundOverlay?: boolean;
+  backgroundOverlayOpacity?: number;
+
+  // Captions
+  captionsSrc?: string;
+  captionsLabel?: string;
+  captionsSrcLang?: string;
+
   // Accessibility
   ariaLabel?: string;
 
@@ -6094,6 +6129,16 @@ export function VideoRender({
 
   // Accessibility
   ariaLabel,
+
+  // Background mode
+  background = false,
+  backgroundOverlay = false,
+  backgroundOverlayOpacity = 0.4,
+
+  // Captions
+  captionsSrc,
+  captionsLabel = "Captions",
+  captionsSrcLang = "en",
 
   // Misc
   id,
@@ -6349,18 +6394,55 @@ export function VideoRender({
   }
   // Native video
   else {
+    const isBackground = background;
+    const videoRef = React.useRef<HTMLVideoElement>(null);
+
+    // Keyboard controls for native video
+    const handleKeyDown = React.useCallback((e: React.KeyboardEvent<HTMLVideoElement>) => {
+      const video = videoRef.current;
+      if (!video) return;
+      switch (e.key) {
+        case " ":
+        case "k":
+          e.preventDefault();
+          video.paused ? video.play() : video.pause();
+          break;
+        case "m":
+          video.muted = !video.muted;
+          break;
+        case "f":
+          if (document.fullscreenElement) {
+            document.exitFullscreen();
+          } else {
+            video.requestFullscreen?.();
+          }
+          break;
+        case "ArrowLeft":
+          e.preventDefault();
+          video.currentTime = Math.max(0, video.currentTime - 10);
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          video.currentTime = Math.min(video.duration, video.currentTime + 10);
+          break;
+      }
+    }, []);
+
     videoElement = (
       <video
+        ref={videoRef}
         id={id}
         src={src}
         poster={posterUrl}
-        autoPlay={autoplay}
-        muted={muted}
-        loop={loop}
-        controls={controls}
-        playsInline={playsinline}
+        autoPlay={isBackground ? true : autoplay}
+        muted={isBackground ? true : muted}
+        loop={isBackground ? true : loop}
+        controls={isBackground ? false : controls}
+        playsInline={isBackground ? true : playsinline}
         preload={preload}
-        className={`${widthClass} ${aspectClass} ${radiusClass} ${shadowClass} ${className}`}
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
+        className={`${widthClass} ${aspectClass} ${radiusClass} ${shadowClass} ${isBackground ? "absolute inset-0 w-full h-full object-cover" : ""} ${className}`}
         style={
           {
             ...videoStyles,
@@ -6368,14 +6450,23 @@ export function VideoRender({
           } as React.CSSProperties
         }
         aria-label={ariaLabel}
-      />
+      >
+        {captionsSrc && (
+          <track
+            kind="captions"
+            src={captionsSrc}
+            srcLang={captionsSrcLang}
+            label={captionsLabel}
+          />
+        )}
+      </video>
     );
   }
 
   // Container with optional overlays
   const wrappedVideo = (
     <div
-      className={`relative group ${radiusClass} overflow-hidden ${paddingClass}`}
+      className={`relative group ${radiusClass} overflow-hidden ${paddingClass} ${background ? "min-h-[300px]" : ""}`}
       style={containerStyles}
     >
       {/* Title bar */}
@@ -6390,6 +6481,17 @@ export function VideoRender({
 
       {/* Video */}
       {videoElement}
+
+      {/* Background overlay (for background video mode) */}
+      {background && backgroundOverlay && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundColor: "#000000",
+            opacity: backgroundOverlayOpacity,
+          }}
+        />
+      )}
 
       {/* Thumbnail overlay */}
       {showThumbnailOverlay && (
@@ -6432,12 +6534,22 @@ export function VideoRender({
 // MAP PROPS - Premium Map with 40+ properties
 // ============================================================================
 
+export interface MapMarker {
+  lat: number;
+  lng: number;
+  label?: string;
+  color?: string;
+}
+
 export interface MapProps {
   // Location
   address?: string;
   latitude?: number;
   longitude?: number;
   placeId?: string;
+
+  // Multiple markers
+  markers?: MapMarker[];
 
   // Provider
   provider?: "google" | "openstreetmap" | "mapbox";
@@ -6446,6 +6558,9 @@ export interface MapProps {
   // Map Settings
   zoom?: number;
   mapType?: "roadmap" | "satellite" | "hybrid" | "terrain";
+
+  // Auto dark mode
+  autoTheme?: boolean;
 
   // Sizing
   height?: number;
@@ -6535,12 +6650,18 @@ export function MapRender({
   latitude,
   longitude,
 
+  // Multiple markers
+  markers = [],
+
   // Provider
   provider = "google",
 
   // Map Settings
   zoom = 14,
   mapType = "roadmap",
+
+  // Auto Theme
+  autoTheme = false,
 
   // Sizing
   height = 300,
@@ -6658,18 +6779,34 @@ export function MapRender({
   }[padding];
 
   // Build Google Maps URL with options
+  // Resolve auto theme — if autoTheme is on, detect dark context and swap style
+  const resolvedMapStyle = React.useMemo(() => {
+    if (!autoTheme || mapStyle !== "default") return mapStyle;
+    // Server-side safe: default to "default"
+    if (typeof window === "undefined") return "default";
+    const isDark =
+      document.documentElement.getAttribute("data-theme") === "dark" ||
+      document.documentElement.classList.contains("dark") ||
+      window.matchMedia("(prefers-color-scheme: dark)").matches;
+    return isDark ? "dark" : "default";
+  }, [autoTheme, mapStyle]);
+
   const buildGoogleMapUrl = () => {
     const baseUrl = "https://maps.google.com/maps";
     const params = new URLSearchParams();
 
-    // Location
-    if (latitude && longitude) {
+    // Multi-marker: use first marker or primary location as center
+    if (markers.length > 0) {
+      params.set("q", `${markers[0].lat},${markers[0].lng}`);
+    } else if (latitude && longitude) {
       params.set("q", `${latitude},${longitude}`);
     } else {
       params.set("q", address);
     }
 
-    params.set("z", String(zoom));
+    // Auto-fit zoom for multiple markers
+    const effectiveZoom = markers.length > 1 ? Math.min(zoom, 12) : zoom;
+    params.set("z", String(effectiveZoom));
     params.set("output", "embed");
     params.set(
       "t",
@@ -6708,16 +6845,16 @@ export function MapRender({
   };
 
   // Map styles
+  const darkFilter = resolvedMapStyle === "dark" ? "invert(90%) hue-rotate(180deg)" : "";
   const mapStyles: React.CSSProperties = {
     height: aspectRatio === "auto" ? `${height}px` : undefined,
     borderColor: border ? borderColor : undefined,
     borderWidth: border ? `${borderWidth}px` : undefined,
     borderStyle: border ? "solid" : undefined,
-    filter: grayscale
-      ? "grayscale(100%)"
-      : saturation !== 100
-        ? `saturate(${saturation}%)`
-        : undefined,
+    filter: [
+      grayscale ? "grayscale(100%)" : saturation !== 100 ? `saturate(${saturation}%)` : "",
+      darkFilter,
+    ].filter(Boolean).join(" ") || undefined,
   };
 
   // Render directions link
@@ -6817,9 +6954,27 @@ export function MapRender({
 
       {/* Info window overlay */}
       {showInfoWindow && infoWindowTitle && (
-        <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-3 max-w-xs">
-          <h4 className="font-semibold text-gray-900">{infoWindowTitle}</h4>
-          <p className="text-sm text-gray-600 mt-1">{address}</p>
+        <div className="absolute top-4 left-4 rounded-lg shadow-lg p-3 max-w-xs" style={{ backgroundColor: 'var(--color-card, #ffffff)' }}>
+          <h4 className="font-semibold" style={{ color: 'var(--color-foreground, #111827)' }}>{infoWindowTitle}</h4>
+          <p className="text-sm mt-1" style={{ color: 'var(--color-muted-foreground, #6b7280)' }}>{address}</p>
+        </div>
+      )}
+
+      {/* Multi-marker labels overlay */}
+      {markers.length > 1 && (
+        <div className="absolute bottom-4 left-4 rounded-lg shadow-md p-2" style={{ backgroundColor: 'var(--color-card, #ffffff)' }}>
+          <div className="text-xs font-medium mb-1" style={{ color: 'var(--color-foreground, #111827)' }}>
+            {markers.length} locations
+          </div>
+          {markers.slice(0, 5).map((m, i) => (
+            <div key={i} className="flex items-center gap-1.5 text-xs py-0.5">
+              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: m.color || markerColor }} />
+              <span style={{ color: 'var(--color-muted-foreground, #6b7280)' }}>{m.label || `${m.lat.toFixed(4)}, ${m.lng.toFixed(4)}`}</span>
+            </div>
+          ))}
+          {markers.length > 5 && (
+            <div className="text-xs mt-0.5" style={{ color: 'var(--color-muted-foreground, #6b7280)' }}>+{markers.length - 5} more</div>
+          )}
         </div>
       )}
 
@@ -12031,6 +12186,1465 @@ export function StatsRender({
 }
 
 // ============================================================================
+// TIMELINE - Visual Timeline / Process Steps
+// ============================================================================
+
+export interface TimelineItem {
+  title?: string;
+  description?: string;
+  date?: string;
+  iconName?: string;
+  iconColor?: string;
+  image?: string | ImageValue;
+  badge?: string;
+  badgeColor?: string;
+}
+
+export interface TimelineProps {
+  items?: TimelineItem[];
+
+  // Header
+  title?: string;
+  subtitle?: string;
+  description?: string;
+
+  // Layout
+  variant?: "vertical" | "horizontal" | "alternating";
+  maxWidth?: "md" | "lg" | "xl" | "2xl" | "full";
+
+  // Line
+  lineColor?: string;
+  lineWidth?: number;
+  lineStyle?: "solid" | "dashed" | "dotted";
+
+  // Node
+  nodeSize?: "sm" | "md" | "lg";
+  nodeColor?: string;
+  nodeStyle?: "dot" | "ring" | "icon";
+
+  // Card
+  cardBackgroundColor?: string;
+  cardBorderColor?: string;
+  cardBorderRadius?: "none" | "sm" | "md" | "lg";
+  cardShadow?: "none" | "sm" | "md";
+
+  // Content colours
+  titleColor?: string;
+  descriptionColor?: string;
+  dateColor?: string;
+  headerTitleColor?: string;
+  headerSubtitleColor?: string;
+  headerDescriptionColor?: string;
+
+  // Background
+  backgroundColor?: string;
+
+  // Spacing
+  paddingY?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  paddingX?: "none" | "sm" | "md" | "lg" | "xl";
+  gap?: "sm" | "md" | "lg" | "xl";
+
+  // Animation
+  animateOnScroll?: boolean;
+
+  // Responsive
+  mobileVariant?: "vertical";
+
+  // Accessibility
+  ariaLabel?: string;
+
+  id?: string;
+  className?: string;
+}
+
+export function TimelineRender({
+  items = [],
+  title,
+  subtitle,
+  description,
+  variant = "vertical",
+  maxWidth = "xl",
+  lineColor,
+  lineWidth = 2,
+  lineStyle = "solid",
+  nodeSize = "md",
+  nodeColor,
+  nodeStyle = "dot",
+  cardBackgroundColor,
+  cardBorderColor,
+  cardBorderRadius = "lg",
+  cardShadow = "sm",
+  titleColor,
+  descriptionColor,
+  dateColor,
+  headerTitleColor,
+  headerSubtitleColor,
+  headerDescriptionColor,
+  backgroundColor,
+  paddingY = "lg",
+  paddingX = "md",
+  gap = "lg",
+  animateOnScroll = false,
+  mobileVariant: _mobileVariant = "vertical",
+  ariaLabel,
+  id,
+  className = "",
+}: TimelineProps) {
+  const resolvedLineColor = lineColor || "var(--color-border, #e5e7eb)";
+  const resolvedNodeColor = nodeColor || "var(--color-primary, #3b82f6)";
+  const resolvedCardBg = cardBackgroundColor || "var(--color-card, #ffffff)";
+  const resolvedCardBorder = cardBorderColor || "var(--color-border, #e5e7eb)";
+  const resolvedTitleColor = titleColor || "var(--color-foreground, #111827)";
+  const resolvedDescColor = descriptionColor || "var(--color-muted-foreground, #6b7280)";
+  const resolvedDateColor = dateColor || "var(--color-muted-foreground, #9ca3af)";
+  const resolvedHeaderTitle = headerTitleColor || "var(--color-foreground, #111827)";
+  const resolvedHeaderSubtitle = headerSubtitleColor || "var(--color-muted-foreground, #6b7280)";
+  const resolvedHeaderDesc = headerDescriptionColor || "var(--color-muted-foreground, #6b7280)";
+  const resolvedBg = backgroundColor || "var(--color-background, transparent)";
+
+  const paddingYClasses = paddingYMapUtil[paddingY] || "";
+  const paddingXClasses = paddingXMapUtil[paddingX] || "";
+  const maxWidthClasses = maxWidthMapUtil[maxWidth] || "max-w-7xl";
+
+  const nodeSizePx = { sm: 12, md: 16, lg: 24 }[nodeSize];
+  const gapClasses = { sm: "gap-6", md: "gap-8", lg: "gap-12", xl: "gap-16" }[gap];
+
+  const cardRadiusClasses = {
+    none: "rounded-none",
+    sm: "rounded",
+    md: "rounded-md",
+    lg: "rounded-lg",
+  }[cardBorderRadius];
+
+  const cardShadowClasses = {
+    none: "",
+    sm: "shadow-sm",
+    md: "shadow-md",
+  }[cardShadow];
+
+  const renderNode = (item: TimelineItem, index: number) => {
+    const color = item.iconColor || resolvedNodeColor;
+    const size = nodeSizePx;
+
+    if (nodeStyle === "ring") {
+      return (
+        <div
+          className="rounded-full flex-shrink-0"
+          style={{
+            width: size,
+            height: size,
+            border: `${lineWidth + 1}px solid ${color}`,
+            backgroundColor: resolvedBg === "transparent" ? "var(--color-background, #ffffff)" : resolvedBg,
+          }}
+          aria-hidden="true"
+        />
+      );
+    }
+
+    if (nodeStyle === "icon" && item.iconName) {
+      return (
+        <div
+          className="rounded-full flex items-center justify-center flex-shrink-0 text-white"
+          style={{
+            width: size + 8,
+            height: size + 8,
+            backgroundColor: color,
+            fontSize: size * 0.6,
+          }}
+          aria-hidden="true"
+        >
+          {item.iconName}
+        </div>
+      );
+    }
+
+    // Default: dot
+    return (
+      <div
+        className="rounded-full flex-shrink-0"
+        style={{
+          width: size,
+          height: size,
+          backgroundColor: color,
+        }}
+        aria-hidden="true"
+      />
+    );
+  };
+
+  const renderCard = (item: TimelineItem, index: number) => (
+    <div
+      className={`${cardRadiusClasses} ${cardShadowClasses} p-4 md:p-6`}
+      style={{
+        backgroundColor: resolvedCardBg,
+        borderWidth: "1px",
+        borderStyle: "solid",
+        borderColor: resolvedCardBorder,
+        ...(animateOnScroll
+          ? {
+              animationDelay: `${index * 150}ms`,
+              animationFillMode: "both",
+            }
+          : {}),
+      }}
+    >
+      {item.badge && (
+        <span
+          className="inline-block px-2 py-0.5 text-xs font-medium rounded-full mb-2"
+          style={{
+            backgroundColor: item.badgeColor || resolvedNodeColor,
+            color: "#ffffff",
+          }}
+        >
+          {item.badge}
+        </span>
+      )}
+      {item.date && (
+        <time
+          className="block text-xs md:text-sm mb-1"
+          style={{ color: resolvedDateColor }}
+        >
+          {item.date}
+        </time>
+      )}
+      {item.title && (
+        <h3
+          className="text-base md:text-lg font-semibold mb-1"
+          style={{ color: resolvedTitleColor }}
+        >
+          {item.title}
+        </h3>
+      )}
+      {item.description && (
+        <p
+          className="text-sm md:text-base"
+          style={{ color: resolvedDescColor }}
+        >
+          {item.description}
+        </p>
+      )}
+      {item.image && (
+        <img
+          src={getImageUrl(item.image)}
+          alt={item.title || `Timeline item ${index + 1}`}
+          className="mt-3 rounded w-full object-cover max-h-48"
+          loading="lazy"
+        />
+      )}
+    </div>
+  );
+
+  // Vertical layout
+  const renderVertical = () => (
+    <div className={`relative ${gapClasses} flex flex-col`}>
+      {/* Timeline line */}
+      <div
+        className="absolute left-2 md:left-3 top-0 bottom-0"
+        style={{
+          width: lineWidth,
+          backgroundColor: lineStyle === "solid" ? resolvedLineColor : undefined,
+          borderLeftWidth: lineStyle !== "solid" ? lineWidth : undefined,
+          borderLeftStyle: lineStyle !== "solid" ? lineStyle : undefined,
+          borderLeftColor: lineStyle !== "solid" ? resolvedLineColor : undefined,
+          marginLeft: (nodeSizePx - lineWidth) / 2,
+        }}
+        aria-hidden="true"
+      />
+
+      {items.map((item, i) => (
+        <div key={i} className="relative flex items-start gap-4 md:gap-6">
+          <div className="relative z-10 mt-1">{renderNode(item, i)}</div>
+          <div className="flex-1 min-w-0 pb-2">{renderCard(item, i)}</div>
+        </div>
+      ))}
+    </div>
+  );
+
+  // Horizontal layout
+  const renderHorizontal = () => (
+    <div className="relative">
+      {/* Timeline line */}
+      <div
+        className="absolute top-3 md:top-4 left-0 right-0"
+        style={{
+          height: lineWidth,
+          backgroundColor: lineStyle === "solid" ? resolvedLineColor : undefined,
+          borderTopWidth: lineStyle !== "solid" ? lineWidth : undefined,
+          borderTopStyle: lineStyle !== "solid" ? lineStyle : undefined,
+          borderTopColor: lineStyle !== "solid" ? resolvedLineColor : undefined,
+        }}
+        aria-hidden="true"
+      />
+
+      <div className={`grid grid-cols-2 md:grid-cols-${Math.min(items.length, 4)} ${gapClasses}`}>
+        {items.map((item, i) => (
+          <div key={i} className="relative flex flex-col items-center text-center">
+            <div className="relative z-10 mb-4">{renderNode(item, i)}</div>
+            {renderCard(item, i)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Alternating layout
+  const renderAlternating = () => (
+    <div className={`relative ${gapClasses} flex flex-col`}>
+      {/* Centre line (desktop) / left line (mobile) */}
+      <div
+        className="absolute left-2 md:left-1/2 top-0 bottom-0 md:-translate-x-1/2"
+        style={{
+          width: lineWidth,
+          backgroundColor: lineStyle === "solid" ? resolvedLineColor : undefined,
+          borderLeftWidth: lineStyle !== "solid" ? lineWidth : undefined,
+          borderLeftStyle: lineStyle !== "solid" ? lineStyle : undefined,
+          borderLeftColor: lineStyle !== "solid" ? resolvedLineColor : undefined,
+        }}
+        aria-hidden="true"
+      />
+
+      {items.map((item, i) => {
+        const isLeft = i % 2 === 0;
+        return (
+          <div
+            key={i}
+            className="relative flex items-start gap-4 md:gap-6"
+          >
+            {/* Mobile: standard left-aligned */}
+            <div className="md:hidden relative z-10 mt-1">{renderNode(item, i)}</div>
+            <div className="md:hidden flex-1 min-w-0 pb-2">{renderCard(item, i)}</div>
+
+            {/* Desktop: alternating */}
+            <div className="hidden md:flex w-full items-start">
+              {/* Left content */}
+              <div className={`w-[calc(50%-20px)] ${isLeft ? "" : "order-3"}`}>
+                {(isLeft ? true : false) && renderCard(item, i)}
+              </div>
+
+              {/* Centre node */}
+              <div className="relative z-10 flex-shrink-0 mx-2 order-2 mt-1">
+                {renderNode(item, i)}
+              </div>
+
+              {/* Right content */}
+              <div className={`w-[calc(50%-20px)] ${isLeft ? "order-3" : ""}`}>
+                {(isLeft ? false : true) && renderCard(item, i)}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  return (
+    <section
+      id={id}
+      className={`w-full ${paddingYClasses} ${paddingXClasses} ${className}`}
+      style={{ backgroundColor: resolvedBg }}
+      aria-label={ariaLabel || "Timeline"}
+      role="list"
+    >
+      <div className={`${maxWidthClasses} mx-auto`}>
+        {/* Header */}
+        {(title || subtitle || description) && (
+          <div className="text-center mb-10 md:mb-14">
+            {subtitle && (
+              <p
+                className="text-sm font-semibold uppercase tracking-wider mb-2"
+                style={{ color: resolvedHeaderSubtitle }}
+              >
+                {subtitle}
+              </p>
+            )}
+            {title && (
+              <h2
+                className="text-2xl md:text-3xl lg:text-4xl font-bold mb-3"
+                style={{ color: resolvedHeaderTitle }}
+              >
+                {title}
+              </h2>
+            )}
+            {description && (
+              <p
+                className="text-base md:text-lg max-w-2xl mx-auto"
+                style={{ color: resolvedHeaderDesc }}
+              >
+                {description}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Timeline content */}
+        {variant === "horizontal"
+          ? renderHorizontal()
+          : variant === "alternating"
+            ? renderAlternating()
+            : renderVertical()}
+      </div>
+    </section>
+  );
+}
+
+// ============================================================================
+// BEFORE/AFTER - Image Comparison Slider
+// ============================================================================
+
+export interface BeforeAfterProps {
+  beforeImage?: string | ImageValue;
+  afterImage?: string | ImageValue;
+  beforeLabel?: string;
+  afterLabel?: string;
+
+  // Slider
+  initialPosition?: number;
+  orientation?: "horizontal" | "vertical";
+
+  // Handle
+  handleStyle?: "line" | "circle" | "arrows";
+  handleColor?: string;
+  handleSize?: "sm" | "md" | "lg";
+
+  // Display
+  showLabels?: boolean;
+  labelPosition?: "top" | "bottom" | "overlay";
+  aspectRatio?: "square" | "video" | "portrait" | "wide" | "auto";
+  borderRadius?: "none" | "sm" | "md" | "lg" | "xl";
+
+  // Caption
+  caption?: string;
+  captionColor?: string;
+
+  // Colours
+  labelBackgroundColor?: string;
+  labelTextColor?: string;
+
+  // Accessibility
+  ariaLabel?: string;
+
+  id?: string;
+  className?: string;
+}
+
+export function BeforeAfterRender({
+  beforeImage,
+  afterImage,
+  beforeLabel = "Before",
+  afterLabel = "After",
+  initialPosition = 50,
+  orientation = "horizontal",
+  handleStyle = "arrows",
+  handleColor,
+  handleSize = "md",
+  showLabels = true,
+  labelPosition = "overlay",
+  aspectRatio = "video",
+  borderRadius = "lg",
+  caption,
+  captionColor,
+  labelBackgroundColor,
+  labelTextColor,
+  ariaLabel,
+  id,
+  className = "",
+}: BeforeAfterProps) {
+  const [position, setPosition] = React.useState(initialPosition);
+  const [isDragging, setIsDragging] = React.useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  const resolvedHandleColor = handleColor || "var(--color-primary, #3b82f6)";
+  const resolvedLabelBg = labelBackgroundColor || "var(--color-background, rgba(0,0,0,0.6))";
+  const resolvedLabelText = labelTextColor || "var(--color-foreground, #ffffff)";
+  const resolvedCaptionColor = captionColor || "var(--color-muted-foreground, #6b7280)";
+
+  const isHorizontal = orientation === "horizontal";
+
+  const aspectRatioClasses = {
+    square: "aspect-square",
+    video: "aspect-video",
+    portrait: "aspect-[3/4]",
+    wide: "aspect-[21/9]",
+    auto: "",
+  }[aspectRatio];
+
+  const borderRadiusClasses = {
+    none: "rounded-none",
+    sm: "rounded",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+  }[borderRadius];
+
+  const handleSizePx = { sm: 32, md: 40, lg: 48 }[handleSize];
+
+  const updatePosition = React.useCallback(
+    (clientX: number, clientY: number) => {
+      const container = containerRef.current;
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      let pct: number;
+      if (isHorizontal) {
+        pct = ((clientX - rect.left) / rect.width) * 100;
+      } else {
+        pct = ((clientY - rect.top) / rect.height) * 100;
+      }
+      setPosition(Math.max(0, Math.min(100, pct)));
+    },
+    [isHorizontal],
+  );
+
+  React.useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMove = (e: MouseEvent | TouchEvent) => {
+      e.preventDefault();
+      const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+      const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+      updatePosition(clientX, clientY);
+    };
+
+    const handleUp = () => setIsDragging(false);
+
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", handleUp);
+    window.addEventListener("touchmove", handleMove, { passive: false });
+    window.addEventListener("touchend", handleUp);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", handleUp);
+      window.removeEventListener("touchmove", handleMove);
+      window.removeEventListener("touchend", handleUp);
+    };
+  }, [isDragging, updatePosition]);
+
+  // Keyboard support
+  const handleKeyDown = React.useCallback(
+    (e: React.KeyboardEvent) => {
+      const step = 5;
+      if (isHorizontal) {
+        if (e.key === "ArrowLeft") setPosition((p) => Math.max(0, p - step));
+        if (e.key === "ArrowRight") setPosition((p) => Math.min(100, p + step));
+      } else {
+        if (e.key === "ArrowUp") setPosition((p) => Math.max(0, p - step));
+        if (e.key === "ArrowDown") setPosition((p) => Math.min(100, p + step));
+      }
+    },
+    [isHorizontal],
+  );
+
+  const beforeSrc = beforeImage ? getImageUrl(beforeImage) : "";
+  const afterSrc = afterImage ? getImageUrl(afterImage) : "";
+
+  const clipPath = isHorizontal
+    ? `inset(0 ${100 - position}% 0 0)`
+    : `inset(0 0 ${100 - position}% 0)`;
+
+  const renderHandle = () => {
+    const commonStyle: React.CSSProperties = {
+      position: "absolute",
+      zIndex: 10,
+      ...(isHorizontal
+        ? { left: `${position}%`, top: 0, bottom: 0, transform: "translateX(-50%)" }
+        : { top: `${position}%`, left: 0, right: 0, transform: "translateY(-50%)" }),
+    };
+
+    return (
+      <div style={commonStyle}>
+        {/* Line */}
+        <div
+          style={{
+            position: "absolute",
+            backgroundColor: resolvedHandleColor,
+            ...(isHorizontal
+              ? { width: 2, top: 0, bottom: 0, left: "50%", transform: "translateX(-50%)" }
+              : { height: 2, left: 0, right: 0, top: "50%", transform: "translateY(-50%)" }),
+          }}
+        />
+
+        {/* Handle grip */}
+        <div
+          className="absolute flex items-center justify-center"
+          style={{
+            width: handleSizePx,
+            height: handleSizePx,
+            ...(isHorizontal
+              ? { top: "50%", left: "50%", transform: "translate(-50%, -50%)" }
+              : { top: "50%", left: "50%", transform: "translate(-50%, -50%)" }),
+            backgroundColor: resolvedHandleColor,
+            borderRadius: handleStyle === "line" ? 4 : "50%",
+            cursor: isHorizontal ? "ew-resize" : "ns-resize",
+            color: "#ffffff",
+            fontSize: handleSizePx * 0.45,
+          }}
+        >
+          {handleStyle === "arrows" && (isHorizontal ? "⟨ ⟩" : "⟨ ⟩")}
+          {handleStyle === "circle" && "●"}
+        </div>
+      </div>
+    );
+  };
+
+  const renderLabels = () => {
+    if (!showLabels) return null;
+
+    const labelStyle: React.CSSProperties = {
+      backgroundColor: resolvedLabelBg,
+      color: resolvedLabelText,
+    };
+
+    if (labelPosition === "overlay") {
+      return (
+        <>
+          <span
+            className="absolute z-5 top-3 left-3 px-2 py-1 text-xs font-medium rounded"
+            style={labelStyle}
+          >
+            {beforeLabel}
+          </span>
+          <span
+            className="absolute z-5 top-3 right-3 px-2 py-1 text-xs font-medium rounded"
+            style={labelStyle}
+          >
+            {afterLabel}
+          </span>
+        </>
+      );
+    }
+
+    const wrapperClass = labelPosition === "top" ? "mb-2" : "mt-2";
+    return (
+      <div className={`flex justify-between text-sm font-medium ${wrapperClass}`}>
+        <span style={{ color: resolvedLabelText }}>{beforeLabel}</span>
+        <span style={{ color: resolvedLabelText }}>{afterLabel}</span>
+      </div>
+    );
+  };
+
+  if (!beforeSrc || !afterSrc) {
+    return (
+      <div
+        id={id}
+        className={`${aspectRatioClasses} ${borderRadiusClasses} flex items-center justify-center ${className}`}
+        style={{ backgroundColor: "var(--color-muted, #f3f4f6)" }}
+      >
+        <p style={{ color: "var(--color-muted-foreground, #9ca3af)" }}>
+          Please add before and after images
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <figure id={id} className={className}>
+      {labelPosition === "top" && renderLabels()}
+
+      <div
+        ref={containerRef}
+        className={`relative overflow-hidden select-none ${aspectRatioClasses} ${borderRadiusClasses}`}
+        role="slider"
+        aria-label={ariaLabel || "Before and after comparison"}
+        aria-valuenow={Math.round(position)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
+        onMouseDown={(e) => {
+          setIsDragging(true);
+          updatePosition(e.clientX, e.clientY);
+        }}
+        onTouchStart={(e) => {
+          setIsDragging(true);
+          updatePosition(e.touches[0].clientX, e.touches[0].clientY);
+        }}
+        style={{ cursor: isDragging ? (isHorizontal ? "ew-resize" : "ns-resize") : "pointer" }}
+      >
+        {/* After image (full, behind) */}
+        <img
+          src={afterSrc}
+          alt={`After: ${afterLabel}`}
+          className="absolute inset-0 w-full h-full object-cover"
+          loading="lazy"
+          draggable={false}
+        />
+
+        {/* Before image (clipped) */}
+        <img
+          src={beforeSrc}
+          alt={`Before: ${beforeLabel}`}
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ clipPath }}
+          loading="lazy"
+          draggable={false}
+        />
+
+        {/* Handle */}
+        {renderHandle()}
+
+        {/* Labels */}
+        {labelPosition === "overlay" && renderLabels()}
+      </div>
+
+      {labelPosition === "bottom" && renderLabels()}
+
+      {caption && (
+        <figcaption
+          className="text-sm mt-2 text-center"
+          style={{ color: resolvedCaptionColor }}
+        >
+          {caption}
+        </figcaption>
+      )}
+    </figure>
+  );
+}
+
+// ============================================================================
+// ICON - SVG Icon Display
+// ============================================================================
+
+export interface IconProps {
+  name?: string;
+
+  // Size
+  size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+
+  // Colours
+  color?: string;
+  backgroundColor?: string;
+
+  // Background shape
+  backgroundShape?: "none" | "circle" | "rounded" | "square";
+  backgroundPadding?: "sm" | "md" | "lg";
+
+  // Stroke
+  strokeWidth?: number;
+
+  // Animation
+  animation?: "none" | "spin" | "pulse" | "bounce" | "float";
+
+  // Accessibility
+  ariaLabel?: string;
+  decorative?: boolean;
+
+  id?: string;
+  className?: string;
+}
+
+export function IconRender({
+  name = "Zap",
+  size = "md",
+  color,
+  backgroundColor,
+  backgroundShape = "none",
+  backgroundPadding = "md",
+  strokeWidth = 2,
+  animation = "none",
+  ariaLabel,
+  decorative = true,
+  id,
+  className = "",
+}: IconProps) {
+  const resolvedColor = color || "var(--color-foreground, currentColor)";
+  const resolvedBgColor = backgroundColor || "var(--color-primary, #3b82f6)";
+
+  const sizePx = {
+    xs: 16,
+    sm: 20,
+    md: 24,
+    lg: 32,
+    xl: 48,
+    "2xl": 64,
+    "3xl": 96,
+  }[size];
+
+  const paddingPx = {
+    sm: 6,
+    md: 10,
+    lg: 16,
+  }[backgroundPadding];
+
+  const animationClasses = {
+    none: "",
+    spin: "animate-spin",
+    pulse: "animate-pulse",
+    bounce: "animate-bounce",
+    float: "",
+  }[animation];
+
+  // Float animation via inline style since Tailwind doesn't have it
+  const floatStyle: React.CSSProperties =
+    animation === "float"
+      ? {
+          animation: "float 3s ease-in-out infinite",
+        }
+      : {};
+
+  const bgShapeClasses = {
+    none: "",
+    circle: "rounded-full",
+    rounded: "rounded-lg",
+    square: "rounded-none",
+  }[backgroundShape];
+
+  // Known Lucide icon map — render as SVG placeholder referencing the name
+  // In the actual platform, a Lucide resolver maps `name` → React component
+  // Here we render a generic SVG container with the icon name for the renderer
+  const renderIcon = () => (
+    <svg
+      width={sizePx}
+      height={sizePx}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={resolvedColor}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      role={decorative ? "presentation" : "img"}
+      aria-label={!decorative ? ariaLabel || name : undefined}
+      aria-hidden={decorative ? "true" : undefined}
+    >
+      {/* Fallback content — platform's Lucide resolver replaces this */}
+      <text
+        x="12"
+        y="12"
+        textAnchor="middle"
+        dominantBaseline="central"
+        fill={resolvedColor}
+        stroke="none"
+        fontSize="10"
+        fontFamily="sans-serif"
+      >
+        {(name || "?").charAt(0).toUpperCase()}
+      </text>
+    </svg>
+  );
+
+  if (backgroundShape === "none") {
+    return (
+      <span
+        id={id}
+        className={`inline-flex items-center justify-center ${animationClasses} ${className}`}
+        style={floatStyle}
+      >
+        {renderIcon()}
+      </span>
+    );
+  }
+
+  return (
+    <span
+      id={id}
+      className={`inline-flex items-center justify-center ${bgShapeClasses} ${animationClasses} ${className}`}
+      style={{
+        backgroundColor: resolvedBgColor,
+        padding: paddingPx,
+        ...floatStyle,
+      }}
+    >
+      {renderIcon()}
+    </span>
+  );
+}
+
+// ============================================================================
+// AUDIO - Audio Player with 3 variants (full, compact, minimal)
+// ============================================================================
+
+export interface AudioProps {
+  src?: string;
+  title?: string;
+  artist?: string;
+  cover?: string | ImageValue;
+
+  // Playback
+  autoplay?: boolean;
+  loop?: boolean;
+  preload?: "auto" | "metadata" | "none";
+
+  // Style
+  variant?: "full" | "compact" | "minimal";
+  accentColor?: string;
+  backgroundColor?: string;
+  textColor?: string;
+  waveformColor?: string;
+  waveformProgressColor?: string;
+
+  // Display
+  showWaveform?: boolean;
+  showDuration?: boolean;
+  showDownload?: boolean;
+  showSpeed?: boolean;
+
+  // Shape
+  borderRadius?: "none" | "sm" | "md" | "lg" | "xl";
+  shadow?: "none" | "sm" | "md" | "lg";
+
+  // Accessibility
+  ariaLabel?: string;
+
+  id?: string;
+  className?: string;
+}
+
+export function AudioRender({
+  src = "",
+  title = "Audio Track",
+  artist,
+  cover,
+  autoplay = false,
+  loop = false,
+  preload = "metadata",
+  variant = "full",
+  accentColor,
+  backgroundColor,
+  textColor,
+  waveformColor,
+  waveformProgressColor,
+  showWaveform = true,
+  showDuration = true,
+  showDownload = false,
+  showSpeed = false,
+  borderRadius = "lg",
+  shadow = "md",
+  ariaLabel,
+  id,
+  className = "",
+}: AudioProps) {
+  const [isPlaying, setIsPlaying] = React.useState(false);
+  const [currentTime, setCurrentTime] = React.useState(0);
+  const [duration, setDuration] = React.useState(0);
+  const [playbackRate, setPlaybackRate] = React.useState(1);
+  const audioRef = React.useRef<HTMLAudioElement>(null);
+
+  const resolvedAccent = accentColor || "var(--color-primary, #3b82f6)";
+  const resolvedBg = backgroundColor || "var(--color-card, #ffffff)";
+  const resolvedText = textColor || "var(--color-foreground, #111827)";
+  const resolvedWaveform = waveformColor || "var(--color-border, #e5e7eb)";
+  const resolvedWaveformProgress = waveformProgressColor || resolvedAccent;
+
+  const coverUrl = getImageUrl(cover) || undefined;
+
+  const radiusClass = { none: "rounded-none", sm: "rounded-sm", md: "rounded-md", lg: "rounded-lg", xl: "rounded-xl" }[borderRadius];
+  const shadowClass = { none: "", sm: "shadow-sm", md: "shadow-md", lg: "shadow-lg" }[shadow];
+
+  const formatTime = (t: number) => {
+    const mins = Math.floor(t / 60);
+    const secs = Math.floor(t % 60);
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const togglePlay = React.useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (audio.paused) {
+      audio.play();
+      setIsPlaying(true);
+    } else {
+      audio.pause();
+      setIsPlaying(false);
+    }
+  }, []);
+
+  const handleTimeUpdate = React.useCallback(() => {
+    if (audioRef.current) {
+      setCurrentTime(audioRef.current.currentTime);
+    }
+  }, []);
+
+  const handleLoadedMetadata = React.useCallback(() => {
+    if (audioRef.current) {
+      setDuration(audioRef.current.duration);
+    }
+  }, []);
+
+  const handleSeek = React.useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const audio = audioRef.current;
+    if (!audio || !duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    audio.currentTime = percent * duration;
+  }, [duration]);
+
+  const cycleSpeed = React.useCallback(() => {
+    const speeds = [0.75, 1, 1.25, 1.5, 2];
+    const nextIdx = (speeds.indexOf(playbackRate) + 1) % speeds.length;
+    const newRate = speeds[nextIdx];
+    setPlaybackRate(newRate);
+    if (audioRef.current) audioRef.current.playbackRate = newRate;
+  }, [playbackRate]);
+
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  // Play/Pause button SVG
+  const PlayPauseIcon = () => (
+    <svg viewBox="0 0 24 24" fill={resolvedAccent} className="w-full h-full">
+      {isPlaying ? (
+        <>
+          <rect x="6" y="4" width="4" height="16" rx="1" />
+          <rect x="14" y="4" width="4" height="16" rx="1" />
+        </>
+      ) : (
+        <path d="M8 5v14l11-7z" />
+      )}
+    </svg>
+  );
+
+  // Waveform bars (visual representation)
+  const renderWaveform = () => {
+    if (!showWaveform || variant === "minimal") return null;
+    const barCount = variant === "compact" ? 30 : 50;
+    return (
+      <div
+        className="flex items-end gap-[2px] h-12 cursor-pointer flex-1"
+        onClick={handleSeek}
+        role="slider"
+        aria-valuenow={Math.round(progress)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Audio progress"
+        tabIndex={0}
+      >
+        {Array.from({ length: barCount }, (_, i) => {
+          const barHeight = 20 + Math.sin(i * 0.5) * 30 + Math.random() * 20;
+          const isPlayed = (i / barCount) * 100 <= progress;
+          return (
+            <div
+              key={i}
+              className="flex-1 min-w-[2px] rounded-sm transition-colors"
+              style={{
+                height: `${barHeight}%`,
+                backgroundColor: isPlayed ? resolvedWaveformProgress : resolvedWaveform,
+              }}
+            />
+          );
+        })}
+      </div>
+    );
+  };
+
+  // Progress bar (for compact/minimal)
+  const renderProgressBar = () => (
+    <div
+      className="flex-1 h-1.5 rounded-full cursor-pointer"
+      style={{ backgroundColor: resolvedWaveform }}
+      onClick={handleSeek}
+      role="slider"
+      aria-valuenow={Math.round(progress)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label="Audio progress"
+      tabIndex={0}
+    >
+      <div
+        className="h-full rounded-full transition-all"
+        style={{ width: `${progress}%`, backgroundColor: resolvedAccent }}
+      />
+    </div>
+  );
+
+  if (!src) {
+    return (
+      <div
+        id={id}
+        className={`flex items-center justify-center p-8 ${radiusClass} ${shadowClass} ${className}`}
+        style={{ backgroundColor: resolvedBg, color: resolvedText }}
+      >
+        <p className="text-sm opacity-60">No audio source provided</p>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      id={id}
+      className={`${radiusClass} ${shadowClass} overflow-hidden ${className}`}
+      style={{ backgroundColor: resolvedBg }}
+      aria-label={ariaLabel || `Audio player: ${title}`}
+      role="region"
+    >
+      <audio
+        ref={audioRef}
+        src={src}
+        autoPlay={autoplay}
+        loop={loop}
+        preload={preload}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
+        onEnded={() => setIsPlaying(false)}
+      />
+
+      {variant === "full" && (
+        <div className="flex gap-4 p-4">
+          {/* Cover art */}
+          {coverUrl && (
+            <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden">
+              <img src={coverUrl} alt={`${title} cover`} className="w-full h-full object-cover" />
+            </div>
+          )}
+          <div className="flex-1 flex flex-col justify-between min-w-0">
+            {/* Title & artist */}
+            <div>
+              <h3 className="font-semibold text-sm truncate" style={{ color: resolvedText }}>{title}</h3>
+              {artist && <p className="text-xs opacity-60 truncate" style={{ color: resolvedText }}>{artist}</p>}
+            </div>
+            {/* Waveform */}
+            {showWaveform ? renderWaveform() : renderProgressBar()}
+            {/* Controls */}
+            <div className="flex items-center gap-3 mt-2">
+              <button onClick={togglePlay} className="w-8 h-8 flex-shrink-0" aria-label={isPlaying ? "Pause" : "Play"}>
+                <PlayPauseIcon />
+              </button>
+              {showDuration && (
+                <span className="text-xs tabular-nums" style={{ color: resolvedText }}>
+                  {formatTime(currentTime)} / {formatTime(duration)}
+                </span>
+              )}
+              {showSpeed && (
+                <button
+                  onClick={cycleSpeed}
+                  className="text-xs px-1.5 py-0.5 rounded font-medium"
+                  style={{ backgroundColor: resolvedAccent + "20", color: resolvedAccent }}
+                  aria-label={`Playback speed: ${playbackRate}x`}
+                >
+                  {playbackRate}x
+                </button>
+              )}
+              {showDownload && src && (
+                <a
+                  href={src}
+                  download
+                  className="ml-auto text-xs opacity-60 hover:opacity-100"
+                  style={{ color: resolvedText }}
+                  aria-label="Download audio"
+                >
+                  ⬇
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {variant === "compact" && (
+        <div className="flex items-center gap-3 p-3">
+          <button onClick={togglePlay} className="w-8 h-8 flex-shrink-0" aria-label={isPlaying ? "Pause" : "Play"}>
+            <PlayPauseIcon />
+          </button>
+          {showWaveform ? renderWaveform() : renderProgressBar()}
+          {showDuration && (
+            <span className="text-xs tabular-nums flex-shrink-0" style={{ color: resolvedText }}>
+              {formatTime(currentTime)} / {formatTime(duration)}
+            </span>
+          )}
+          {showSpeed && (
+            <button
+              onClick={cycleSpeed}
+              className="text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0"
+              style={{ backgroundColor: resolvedAccent + "20", color: resolvedAccent }}
+            >
+              {playbackRate}x
+            </button>
+          )}
+        </div>
+      )}
+
+      {variant === "minimal" && (
+        <div className="flex items-center gap-2 p-2">
+          <button onClick={togglePlay} className="w-6 h-6 flex-shrink-0" aria-label={isPlaying ? "Pause" : "Play"}>
+            <PlayPauseIcon />
+          </button>
+          {renderProgressBar()}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// EMBED - Secure iframe embed container
+// ============================================================================
+
+export interface EmbedProps {
+  src?: string;
+  title?: string;
+
+  // Size
+  aspectRatio?: "1:1" | "4:3" | "16:9" | "21:9" | "auto";
+  width?: string;
+  height?: string;
+  maxWidth?: string;
+
+  // Style
+  borderRadius?: "none" | "sm" | "md" | "lg" | "xl";
+  border?: boolean;
+  borderColor?: string;
+  shadow?: "none" | "sm" | "md" | "lg";
+  backgroundColor?: string;
+
+  // Loading
+  loading?: "lazy" | "eager";
+  showLoadingPlaceholder?: boolean;
+
+  // Security
+  sandbox?: string;
+  allow?: string;
+
+  // Caption
+  caption?: string;
+  captionAlign?: "left" | "center" | "right";
+  captionColor?: string;
+
+  // Accessibility
+  ariaLabel?: string;
+
+  id?: string;
+  className?: string;
+}
+
+export function EmbedRender({
+  src = "",
+  title = "Embedded content",
+  aspectRatio = "16:9",
+  width,
+  height,
+  maxWidth,
+  borderRadius = "lg",
+  border = false,
+  borderColor,
+  shadow = "sm",
+  backgroundColor,
+  loading = "lazy",
+  showLoadingPlaceholder = true,
+  sandbox = "allow-scripts allow-same-origin allow-forms allow-popups",
+  allow = "autoplay; encrypted-media",
+  caption,
+  captionAlign = "center",
+  captionColor,
+  ariaLabel,
+  id,
+  className = "",
+}: EmbedProps) {
+  const [isLoaded, setIsLoaded] = React.useState(false);
+
+  const resolvedBg = backgroundColor || "var(--color-muted, #f3f4f6)";
+  const resolvedBorderColor = borderColor || "var(--color-border, #e5e7eb)";
+  const resolvedCaptionColor = captionColor || "var(--color-muted-foreground, #6b7280)";
+
+  const radiusClass = { none: "rounded-none", sm: "rounded-sm", md: "rounded-md", lg: "rounded-lg", xl: "rounded-xl" }[borderRadius];
+  const shadowClass = { none: "", sm: "shadow-sm", md: "shadow-md", lg: "shadow-lg" }[shadow];
+
+  const aspectMap: Record<string, string> = {
+    "1:1": "1/1",
+    "4:3": "4/3",
+    "16:9": "16/9",
+    "21:9": "21/9",
+    auto: "auto",
+  };
+
+  const containerStyle: React.CSSProperties = {
+    maxWidth: maxWidth || undefined,
+    width: width || undefined,
+    backgroundColor: resolvedBg,
+    aspectRatio: height ? undefined : aspectMap[aspectRatio] || "16/9",
+    height: height || undefined,
+  };
+
+  if (!src) {
+    return (
+      <div
+        id={id}
+        className={`flex items-center justify-center p-8 ${radiusClass} ${shadowClass} ${className}`}
+        style={{ ...containerStyle, minHeight: "200px" }}
+      >
+        <p className="text-sm opacity-60" style={{ color: resolvedCaptionColor }}>No embed URL provided</p>
+      </div>
+    );
+  }
+
+  const iframeElement = (
+    <div
+      className={`relative overflow-hidden ${radiusClass} ${shadowClass} ${className}`}
+      style={containerStyle}
+    >
+      {/* Loading placeholder */}
+      {showLoadingPlaceholder && !isLoaded && (
+        <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: resolvedBg }}>
+          <svg className="animate-spin w-6 h-6 opacity-40" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+        </div>
+      )}
+      <iframe
+        id={id}
+        src={src}
+        title={title}
+        sandbox={sandbox}
+        allow={allow}
+        loading={loading}
+        onLoad={() => setIsLoaded(true)}
+        className="w-full h-full border-0"
+        style={{
+          borderWidth: border ? "1px" : undefined,
+          borderStyle: border ? "solid" : undefined,
+          borderColor: border ? resolvedBorderColor : undefined,
+          borderRadius: "inherit",
+        }}
+        aria-label={ariaLabel || title}
+      />
+    </div>
+  );
+
+  if (caption) {
+    return (
+      <figure>
+        {iframeElement}
+        <figcaption
+          className={`mt-2 text-sm text-${captionAlign}`}
+          style={{ color: resolvedCaptionColor }}
+        >
+          {caption}
+        </figcaption>
+      </figure>
+    );
+  }
+
+  return iframeElement;
+}
+
+// ============================================================================
+// AVATAR GROUP - Stacked avatar collection with overflow badge
+// ============================================================================
+
+export interface AvatarGroupItem {
+  src?: string | ImageValue;
+  alt?: string;
+  name?: string;
+  href?: string;
+}
+
+export interface AvatarGroupProps {
+  avatars?: AvatarGroupItem[];
+  max?: number;
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
+  overlap?: "sm" | "md" | "lg";
+  direction?: "left" | "right";
+  overflowStyle?: "count" | "hidden";
+  overflowColor?: string;
+  overflowTextColor?: string;
+  ringColor?: string;
+
+  id?: string;
+  className?: string;
+}
+
+export function AvatarGroupRender({
+  avatars = [],
+  max = 5,
+  size = "md",
+  overlap = "md",
+  direction = "left",
+  overflowStyle = "count",
+  overflowColor,
+  overflowTextColor,
+  ringColor,
+  id,
+  className = "",
+}: AvatarGroupProps) {
+  const sizeMap = { xs: 24, sm: 32, md: 40, lg: 48, xl: 56 };
+  const overlapMap = { sm: 8, md: 16, lg: 24 };
+  const fontSizeMap = { xs: "0.5rem", sm: "0.625rem", md: "0.75rem", lg: "0.875rem", xl: "1rem" };
+
+  const px = sizeMap[size] || 40;
+  const overlapPx = overlapMap[overlap] || 16;
+  const fontSize = fontSizeMap[size] || "0.75rem";
+
+  const resolvedRing = ringColor || "var(--color-background, #ffffff)";
+  const resolvedOverflowBg = overflowColor || "var(--color-muted, #e5e7eb)";
+  const resolvedOverflowText = overflowTextColor || "var(--color-muted-foreground, #6b7280)";
+
+  const visible = avatars.slice(0, max);
+  const overflowCount = avatars.length - max;
+
+  const renderAvatar = (item: AvatarGroupItem, idx: number) => {
+    const imgUrl = getImageUrl(item.src) || undefined;
+    const initials = (item.name || item.alt || "?").charAt(0).toUpperCase();
+    const ml = idx > 0 ? `-${overlapPx}px` : "0";
+    const zIndex = direction === "left" ? visible.length - idx : idx;
+
+    const avatarContent = (
+      <div
+        className="rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center"
+        style={{
+          width: px,
+          height: px,
+          marginLeft: ml,
+          zIndex,
+          border: `2px solid ${resolvedRing}`,
+          backgroundColor: imgUrl ? undefined : "var(--color-muted, #d1d5db)",
+          position: "relative",
+        }}
+        title={item.name || item.alt}
+      >
+        {imgUrl ? (
+          <img
+            src={imgUrl}
+            alt={item.alt || item.name || "Avatar"}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <span className="font-medium" style={{ fontSize, color: resolvedOverflowText }}>
+            {initials}
+          </span>
+        )}
+      </div>
+    );
+
+    if (item.href) {
+      return (
+        <a key={idx} href={item.href} className="focus:outline-none focus:ring-2 rounded-full" style={{ zIndex, marginLeft: ml }}>
+          {avatarContent}
+        </a>
+      );
+    }
+
+    return <React.Fragment key={idx}>{avatarContent}</React.Fragment>;
+  };
+
+  return (
+    <div
+      id={id}
+      className={`flex items-center ${className}`}
+      role="group"
+      aria-label={`Group of ${avatars.length} avatars`}
+    >
+      {visible.map(renderAvatar)}
+
+      {overflowCount > 0 && overflowStyle === "count" && (
+        <div
+          className="rounded-full flex-shrink-0 flex items-center justify-center font-medium"
+          style={{
+            width: px,
+            height: px,
+            marginLeft: `-${overlapPx}px`,
+            zIndex: 0,
+            border: `2px solid ${resolvedRing}`,
+            backgroundColor: resolvedOverflowBg,
+            color: resolvedOverflowText,
+            fontSize,
+          }}
+          aria-label={`${overflowCount} more`}
+        >
+          +{overflowCount}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
 // TEAM - Team Members Grid
 // ============================================================================
 
@@ -13392,6 +15006,25 @@ export interface GalleryProps {
   textColor?: string;
   accentColor?: string;
 
+  // Mixed media (Phase 5)
+  items?: Array<{
+    type?: "image" | "video";
+    image?: string | ImageValue;
+    videoSrc?: string;
+    alt?: string;
+    title?: string;
+    caption?: string;
+    category?: string;
+    link?: string;
+    linkTarget?: string;
+  }>;
+
+  // Virtualisation (Phase 5)
+  virtualise?: boolean;
+
+  // Infinite scroll (Phase 5)
+  infiniteScroll?: boolean;
+
   id?: string;
   className?: string;
 }
@@ -13524,31 +15157,97 @@ export function GalleryRender({
   textColor,
   accentColor = "",
 
+  // Mixed media (Phase 5)
+  items,
+
+  // Virtualisation (Phase 5)
+  virtualise = false,
+
+  // Infinite scroll (Phase 5)
+  infiniteScroll = false,
+
   id,
   className = "",
 }: GalleryProps) {
+  // Merge items (mixed media) with legacy images array
+  const mergedImages = React.useMemo(() => {
+    if (items && items.length > 0) {
+      return items.map((item) => ({
+        src: item.image,
+        alt: item.alt,
+        title: item.title,
+        caption: item.caption,
+        category: item.category,
+        link: item.link,
+        linkTarget: item.linkTarget,
+        _type: item.type || "image" as const,
+        _videoSrc: item.videoSrc,
+      }));
+    }
+    return images.map((img) => ({ ...img, _type: "image" as const, _videoSrc: undefined }));
+  }, [items, images]);
+
   // State for filtering and load more
   const [selectedCategory, setSelectedCategory] = React.useState<string | null>(
     null,
   );
   const [visibleCount, setVisibleCount] = React.useState(
-    enableLoadMore ? initialCount : images.length,
+    enableLoadMore ? initialCount : mergedImages.length,
   );
+
+  // Virtual scroll: IntersectionObserver for galleries > 50 items
+  const [visibleRange, setVisibleRange] = React.useState({ start: 0, end: virtualise ? 20 : Infinity });
+  const sentinelRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!virtualise || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisibleRange((prev) => ({ ...prev, end: Math.min(prev.end + 20, mergedImages.length) }));
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    if (sentinelRef.current) observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [virtualise, mergedImages.length]);
+
+  // Infinite scroll effect
+  React.useEffect(() => {
+    if (!infiniteScroll || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisibleCount((prev) => Math.min(prev + loadMoreCount, filteredImages.length));
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    if (sentinelRef.current) observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [infiniteScroll]);
 
   // Get unique categories
   const categories = [
-    ...new Set(images.map((img) => img.category).filter(Boolean)),
+    ...new Set(mergedImages.map((img) => img.category).filter(Boolean)),
   ] as string[];
 
   // Filter images
   const filteredImages = selectedCategory
-    ? images.filter((img) => img.category === selectedCategory)
-    : images;
+    ? mergedImages.filter((img) => img.category === selectedCategory)
+    : mergedImages;
 
-  // Visible images based on load more
-  const displayImages = enableLoadMore
-    ? filteredImages.slice(0, visibleCount)
-    : filteredImages;
+  // Visible images based on load more + virtualisation
+  const displayImages = (() => {
+    let result = enableLoadMore
+      ? filteredImages.slice(0, visibleCount)
+      : filteredImages;
+    if (virtualise) {
+      result = result.slice(visibleRange.start, visibleRange.end);
+    }
+    return result;
+  })();
 
   // Padding classes
   const paddingYClasses = {
@@ -13974,6 +15673,7 @@ export function GalleryRender({
         >
           {displayImages.map((image, i) => {
             const imageSrc = getImageUrl(image.src);
+            const isVideo = (image as any)._type === "video" && (image as any)._videoSrc;
             return (
               <div
                 key={i}
@@ -13988,12 +15688,25 @@ export function GalleryRender({
                     : undefined,
                 }}
               >
-                <img
-                  src={imageSrc || "/placeholder.svg"}
-                  alt={image.alt || `Gallery image ${i + 1}`}
-                  className={`w-full h-full object-cover ${aspectClasses} ${getHoverEffectClasses()}`}
-                  loading="lazy"
-                />
+                {isVideo ? (
+                  <video
+                    src={(image as any)._videoSrc}
+                    poster={imageSrc || undefined}
+                    className={`w-full h-full object-cover ${aspectClasses} ${getHoverEffectClasses()}`}
+                    muted
+                    loop
+                    playsInline
+                    onMouseEnter={(e) => (e.target as HTMLVideoElement).play()}
+                    onMouseLeave={(e) => { const v = e.target as HTMLVideoElement; v.pause(); v.currentTime = 0; }}
+                  />
+                ) : (
+                  <img
+                    src={imageSrc || "/placeholder.svg"}
+                    alt={image.alt || `Gallery image ${i + 1}`}
+                    className={`w-full h-full object-cover ${aspectClasses} ${getHoverEffectClasses()}`}
+                    loading="lazy"
+                  />
+                )}
 
                 {/* Overlay on hover */}
                 {(hoverEffect === "overlay" ||
@@ -14070,6 +15783,11 @@ export function GalleryRender({
             );
           })}
         </div>
+
+        {/* Virtual scroll / Infinite scroll sentinel */}
+        {(virtualise || infiniteScroll) && (
+          <div ref={sentinelRef} className="h-4" aria-hidden="true" />
+        )}
 
         {/* Load More */}
         {enableLoadMore &&
@@ -14167,52 +15885,105 @@ export interface NavbarProps {
     label?: string;
     text?: string;
     href?: string;
+    target?: "_self" | "_blank";
     icon?: string;
+    hasDropdown?: boolean;
+    dropdownLinks?: Array<{
+      label?: string;
+      href?: string;
+      description?: string;
+    }>;
   }>;
   linkAlignment?: "left" | "center" | "right";
-  linkSpacing?: "sm" | "md" | "lg";
+  linkSpacing?: "compact" | "normal" | "wide" | "sm" | "md" | "lg";
+  linkFontSize?: "sm" | "md" | "lg";
+  linkFontWeight?: "normal" | "medium" | "semibold" | "bold";
+  linkTextTransform?: "none" | "uppercase" | "capitalize";
+  linkHoverEffect?: "none" | "opacity" | "underline" | "color" | "background";
+  linkActiveIndicator?: "none" | "underline" | "dot" | "background";
+
+  // Backwards compat aliases (old render names)
   linkSize?: "sm" | "md" | "lg";
   linkWeight?: "normal" | "medium" | "semibold" | "bold";
   linkHoverStyle?: "opacity" | "underline" | "color";
 
-  // CTA Button
+  // Primary CTA
   ctaText?: string;
   ctaLink?: string;
-  ctaVariant?: "solid" | "outline" | "ghost";
+  ctaStyle?: "solid" | "outline" | "ghost" | "gradient";
   ctaColor?: string;
+  ctaTextColor?: string;
   ctaSize?: "sm" | "md" | "lg";
+  ctaBorderRadius?: "none" | "sm" | "md" | "lg" | "full";
+  ctaIcon?: "none" | "arrow" | "chevron";
+
+  // Backwards compat aliases
+  ctaVariant?: "solid" | "outline" | "ghost";
   ctaRadius?: "none" | "sm" | "md" | "lg" | "full";
   showCtaOnMobile?: boolean;
 
   // Secondary CTA
   secondaryCtaText?: string;
   secondaryCtaLink?: string;
+  secondaryCtaStyle?: "solid" | "outline" | "ghost" | "text";
   secondaryCtaVariant?: "solid" | "outline" | "ghost";
 
   // Layout
-  layout?: "standard" | "centered" | "split";
-  maxWidth?: "full" | "container" | "narrow";
-  height?: "sm" | "md" | "lg";
-  paddingX?: "sm" | "md" | "lg";
+  layout?: "standard" | "centered" | "split" | "minimal";
+  maxWidth?: "full" | "7xl" | "6xl" | "5xl" | "container" | "narrow";
+  height?: "sm" | "md" | "lg" | "xl";
+  paddingX?: "sm" | "md" | "lg" | "xl";
 
-  // Style
+  // Appearance
   backgroundColor?: string;
+  backgroundOpacity?: number;
   textColor?: string;
   borderBottom?: boolean;
   borderColor?: string;
-  shadow?: "none" | "sm" | "md" | "lg";
+  borderWidth?: number;
+  shadow?: "none" | "sm" | "md" | "lg" | "xl";
+  glassEffect?: boolean;
+  glassBlur?: number;
 
-  // Behavior
-  sticky?: boolean;
+  // Position & Behavior
+  position?: "relative" | "sticky" | "absolute" | "fixed";
+  sticky?: boolean; // backwards compat
+  stickyOffset?: number;
   transparent?: boolean;
-  blurBackground?: boolean;
   hideOnScroll?: boolean;
+  showOnScrollUp?: boolean;
+  transparentUntilScroll?: boolean;
+  scrollThreshold?: number;
+  blurBackground?: boolean;
 
   // Mobile Menu
   mobileBreakpoint?: "sm" | "md" | "lg";
-  mobileMenuPosition?: "left" | "right" | "full";
-  mobileMenuAnimation?: "slide" | "fade" | "scale";
-  showOverlay?: boolean;
+  mobileMenuStyle?: "fullscreen" | "slideRight" | "slideLeft" | "dropdown";
+  mobileMenuPosition?: "left" | "right" | "full"; // backwards compat
+  mobileMenuBackground?: string;
+  mobileMenuTextColor?: string;
+  mobileMenuAnimation?: "slide" | "fade" | "scale" | "none";
+  mobileMenuDuration?: number;
+  showMobileMenuOverlay?: boolean;
+  showOverlay?: boolean; // backwards compat
+  mobileMenuOverlayColor?: string;
+  mobileMenuOverlayOpacity?: number;
+  hamburgerSize?: number;
+  hamburgerColor?: string;
+  showCtaInMobileMenu?: boolean;
+  mobileMenuLinkSpacing?: "compact" | "normal" | "spacious";
+
+  // Scroll Progress
+  showScrollProgress?: boolean;
+  scrollProgressPosition?: "top" | "bottom";
+  scrollProgressHeight?: number;
+  scrollProgressColor?: string;
+  scrollProgressBackground?: string;
+  scrollProgressStyle?: "bar" | "line" | "gradient";
+
+  // Accessibility
+  ariaLabel?: string;
+  skipToContent?: string;
 
   id?: string;
   className?: string;
@@ -14220,51 +15991,119 @@ export interface NavbarProps {
   _isEditor?: boolean;
 }
 
-function NavbarWithMenu({
-  logo,
-  logoText = "Logo",
-  logoLink = "/",
-  logoHeight = 40,
-  logoPosition = "left",
-  links = [],
-  linkAlignment = "right",
-  linkSpacing = "md",
-  linkSize = "md",
-  linkWeight = "medium",
-  linkHoverStyle = "opacity",
-  ctaText,
-  ctaLink = "#",
-  ctaVariant = "solid",
-  ctaColor = "",
-  ctaSize = "md",
-  ctaRadius = "md",
-  showCtaOnMobile = true,
-  secondaryCtaText,
-  secondaryCtaLink = "#",
-  secondaryCtaVariant = "outline",
-  layout = "standard",
-  maxWidth = "container",
-  height = "md",
-  paddingX = "md",
-  backgroundColor = "#ffffff",
-  textColor = "#1f2937",
-  borderBottom = false,
-  borderColor = "#e5e7eb",
-  shadow = "sm",
-  sticky = true,
-  transparent = false,
-  blurBackground = false,
-  hideOnScroll = false,
-  mobileBreakpoint = "md",
-  mobileMenuPosition = "full",
-  mobileMenuAnimation = "slide",
-  showOverlay = true,
-  id,
-  className = "",
-  _breakpoint = "desktop",
-  _isEditor = false,
-}: NavbarProps) {
+function NavbarWithMenu(props: NavbarProps) {
+  const {
+    logo,
+    logoText = "Logo",
+    logoLink = "/",
+    logoHeight = 40,
+    logoPosition = "left",
+
+    links = [],
+    linkAlignment = "right",
+
+    ctaText,
+    ctaLink = "#",
+    ctaColor = "",
+    ctaTextColor = "#ffffff",
+    ctaSize = "md",
+    ctaIcon = "none",
+    showCtaOnMobile,
+
+    secondaryCtaText,
+    secondaryCtaLink = "#",
+
+    layout = "standard",
+    height = "md",
+    paddingX = "md",
+
+    backgroundColor = "#ffffff",
+    backgroundOpacity = 100,
+    textColor = "#1f2937",
+    borderBottom = false,
+    borderColor = "#e5e7eb",
+    borderWidth = 1,
+    shadow = "sm",
+    glassEffect = false,
+    glassBlur = 10,
+    transparent = false,
+    blurBackground = false,
+
+    stickyOffset = 0,
+    hideOnScroll = false,
+    showOnScrollUp = false,
+    transparentUntilScroll = false,
+    scrollThreshold = 100,
+
+    mobileBreakpoint = "md",
+    mobileMenuBackground,
+    mobileMenuTextColor,
+    mobileMenuAnimation = "slide",
+    mobileMenuDuration = 300,
+    mobileMenuOverlayColor = "#000000",
+    mobileMenuOverlayOpacity = 50,
+    hamburgerSize = 24,
+    hamburgerColor,
+
+    showScrollProgress = false,
+    scrollProgressPosition = "top",
+    scrollProgressHeight = 3,
+    scrollProgressColor,
+    scrollProgressBackground = "transparent",
+    scrollProgressStyle = "bar",
+
+    ariaLabel = "Main navigation",
+    skipToContent,
+
+    id,
+    className = "",
+    _breakpoint = "desktop",
+    _isEditor = false,
+  } = props;
+
+  // Resolve backwards-compatible aliases (prefer new registry names)
+  const resolvedFontSize = props.linkFontSize || props.linkSize || "md";
+  const resolvedFontWeight = props.linkFontWeight || props.linkWeight || "medium";
+  const resolvedHoverEffect = props.linkHoverEffect || props.linkHoverStyle || "opacity";
+  const resolvedLinkSpacing = props.linkSpacing || "normal";
+  const resolvedCtaStyle = props.ctaStyle || props.ctaVariant || "solid";
+  const resolvedCtaRadius = props.ctaBorderRadius || props.ctaRadius || "md";
+  const resolvedSecondaryStyle = props.secondaryCtaStyle || props.secondaryCtaVariant || "outline";
+  const resolvedShowOverlay = props.showMobileMenuOverlay ?? props.showOverlay ?? true;
+  const resolvedShowCtaInMobile = props.showCtaInMobileMenu ?? props.showCtaOnMobile ?? true;
+  const resolvedMobileMenuBg = mobileMenuBackground || backgroundColor;
+  const resolvedMobileMenuText = mobileMenuTextColor || textColor;
+  const resolvedMobileLinkSpacing = props.mobileMenuLinkSpacing || "normal";
+  const resolvedLinkTextTransform = props.linkTextTransform || "none";
+  const resolvedLinkActiveIndicator = props.linkActiveIndicator || "none";
+
+  // Resolve maxWidth (accept both old and new values)
+  const resolvedMaxWidth = (() => {
+    const mw = props.maxWidth || "7xl";
+    if (mw === "container") return "7xl";
+    if (mw === "narrow") return "5xl";
+    return mw;
+  })();
+
+  // Resolve position (accept both `position` field and `sticky` boolean)
+  const resolvedPosition = props.position || (props.sticky ? "sticky" : "relative");
+
+  // Resolve mobile menu style
+  const resolvedMobileMenuStyle = (() => {
+    if (props.mobileMenuStyle) return props.mobileMenuStyle;
+    if (props.mobileMenuPosition === "left") return "slideLeft";
+    if (props.mobileMenuPosition === "right") return "slideRight";
+    if (props.mobileMenuPosition === "full") return "fullscreen";
+    return "fullscreen";
+  })();
+
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [openDropdown, setOpenDropdown] = React.useState<number | null>(null);
+  const [scrollProgress, setScrollProgress] = React.useState(0);
+  const [isHidden, setIsHidden] = React.useState(false);
+  const [hasScrolled, setHasScrolled] = React.useState(false);
+  const lastScrollY = React.useRef(0);
+  const navRef = React.useRef<HTMLElement>(null);
 
   const logoUrl = getImageUrl(logo);
   const logoAlt = logoText || getImageAlt(logo, "Logo");
@@ -14274,255 +16113,532 @@ function NavbarWithMenu({
   const showMobileMenu = _isEditor ? isMobile : true;
   const showDesktopNav = _isEditor ? !isMobile : true;
 
+  // --- Scroll effects ---
+  React.useEffect(() => {
+    if (_isEditor) return;
+    if (!hideOnScroll && !showOnScrollUp && !transparentUntilScroll && !showScrollProgress) return;
+
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+
+      // Scroll progress
+      if (showScrollProgress) {
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        setScrollProgress(docHeight > 0 ? (currentY / docHeight) * 100 : 0);
+      }
+
+      // Has scrolled past threshold
+      setHasScrolled(currentY > scrollThreshold);
+
+      // Hide/show on scroll direction
+      if (hideOnScroll || showOnScrollUp) {
+        if (currentY > lastScrollY.current && currentY > 100) {
+          setIsHidden(true);
+        } else if (showOnScrollUp || currentY < lastScrollY.current) {
+          setIsHidden(false);
+        }
+      }
+
+      lastScrollY.current = currentY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [hideOnScroll, showOnScrollUp, transparentUntilScroll, showScrollProgress, scrollThreshold, _isEditor]);
+
+  // --- Escape key + body scroll lock for mobile menu ---
+  React.useEffect(() => {
+    if (!mobileMenuOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
+
+  // --- Click outside to close dropdown ---
+  React.useEffect(() => {
+    if (openDropdown === null) return;
+    const handleClick = () => setOpenDropdown(null);
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, [openDropdown]);
+
   // Style calculations
-  const heightClasses = { sm: "h-14", md: "h-16", lg: "h-20" }[height];
-  const paddingClasses = { sm: "px-4", md: "px-6", lg: "px-8" }[paddingX];
-  const maxWidthClasses = {
+  const heightClasses: Record<string, string> = { sm: "h-14", md: "h-16", lg: "h-20", xl: "h-24" };
+  const paddingClasses: Record<string, string> = { sm: "px-4", md: "px-6", lg: "px-8", xl: "px-12" };
+  const maxWidthClasses: Record<string, string> = {
     full: "max-w-none",
-    container: "max-w-7xl mx-auto",
-    narrow: "max-w-5xl mx-auto",
-  }[maxWidth];
-  const shadowClasses = {
-    none: "",
-    sm: "shadow-sm",
-    md: "shadow-md",
-    lg: "shadow-lg",
-  }[shadow];
-  const linkSpacingClass = { sm: "gap-4", md: "gap-6", lg: "gap-8" }[
-    linkSpacing
-  ];
-  const linkSizeClass = { sm: "text-sm", md: "text-base", lg: "text-lg" }[
-    linkSize
-  ];
-  const linkWeightClass = {
-    normal: "font-normal",
-    medium: "font-medium",
-    semibold: "font-semibold",
-    bold: "font-bold",
-  }[linkWeight];
-  const ctaSizeClasses = {
-    sm: "px-3 py-1.5 text-sm",
-    md: "px-4 py-2 text-base",
-    lg: "px-6 py-3 text-lg",
-  }[ctaSize];
-  const ctaRadiusClass = {
-    none: "rounded-none",
-    sm: "rounded-sm",
-    md: "rounded-md",
-    lg: "rounded-lg",
-    full: "rounded-full",
-  }[ctaRadius];
+    "7xl": "max-w-7xl mx-auto",
+    "6xl": "max-w-6xl mx-auto",
+    "5xl": "max-w-5xl mx-auto",
+  };
+  const shadowClasses: Record<string, string> = { none: "", sm: "shadow-sm", md: "shadow-md", lg: "shadow-lg", xl: "shadow-xl" };
+  const linkSpacingClass: Record<string, string> = { compact: "gap-3", sm: "gap-4", normal: "gap-6", md: "gap-6", wide: "gap-8", lg: "gap-8" };
+  const linkSizeClass: Record<string, string> = { sm: "text-sm", md: "text-base", lg: "text-lg" };
+  const linkWeightClass: Record<string, string> = { normal: "font-normal", medium: "font-medium", semibold: "font-semibold", bold: "font-bold" };
+  const textTransformClass: Record<string, string> = { none: "", uppercase: "uppercase tracking-wider", capitalize: "capitalize" };
+  const ctaSizeClasses: Record<string, string> = { sm: "px-3 py-1.5 text-sm", md: "px-4 py-2 text-base", lg: "px-6 py-3 text-lg" };
+  const ctaRadiusClass: Record<string, string> = { none: "rounded-none", sm: "rounded-sm", md: "rounded-md", lg: "rounded-lg", full: "rounded-full" };
+  const mobileLinkSpacingClass: Record<string, string> = { compact: "space-y-0", normal: "space-y-1", spacious: "space-y-3" };
 
   const linkHoverClass = {
+    none: "",
     opacity: "hover:opacity-70 transition-opacity",
     underline: "hover:underline underline-offset-4",
     color: "hover:opacity-80 transition-colors",
-  }[linkHoverStyle];
+    background: "hover:bg-black/5 rounded-md px-2 py-1 transition-colors",
+  }[resolvedHoverEffect] || "hover:opacity-70 transition-opacity";
+
+  // Background with opacity
+  const isTransparentNow = transparent || (transparentUntilScroll && !hasScrolled);
+  const bgOpacity = backgroundOpacity / 100;
+  const useGlass = glassEffect || blurBackground;
 
   const navBgStyle: React.CSSProperties = {
-    backgroundColor: transparent ? "transparent" : backgroundColor,
-    backdropFilter: blurBackground ? "blur(10px)" : undefined,
+    backgroundColor: isTransparentNow
+      ? "transparent"
+      : bgOpacity < 1
+        ? `${backgroundColor}${Math.round(bgOpacity * 255).toString(16).padStart(2, "0")}`
+        : backgroundColor,
+    backdropFilter: useGlass ? `blur(${glassBlur}px)` : undefined,
+    WebkitBackdropFilter: useGlass ? `blur(${glassBlur}px)` : undefined,
+    top: resolvedPosition === "sticky" || resolvedPosition === "fixed" ? stickyOffset : undefined,
+    borderColor,
+    borderBottomWidth: borderBottom ? borderWidth : 0,
   };
+
+  const positionClass = {
+    relative: "",
+    sticky: "sticky top-0",
+    absolute: "absolute top-0 left-0 right-0",
+    fixed: "fixed top-0 left-0 right-0",
+  }[resolvedPosition] || "";
+
+  const hiddenStyle: React.CSSProperties = isHidden
+    ? { transform: "translateY(-100%)", transition: `transform ${mobileMenuDuration}ms ease` }
+    : { transform: "translateY(0)", transition: `transform ${mobileMenuDuration}ms ease` };
+
+  // Breakpoint class for hiding/showing mobile nav
+  const bpHidden = { sm: "sm:hidden", md: "md:hidden", lg: "lg:hidden" }[mobileBreakpoint] || "md:hidden";
+  const bpFlex = { sm: "hidden sm:flex", md: "hidden md:flex", lg: "hidden lg:flex" }[mobileBreakpoint] || "hidden md:flex";
+
+  // CTA rendering helper
+  const renderCta = (
+    text: string,
+    link: string,
+    style: string,
+    color: string,
+    txtColor: string,
+    size: string,
+    radius: string,
+    icon?: string,
+    extraClass?: string,
+  ) => {
+    const iconEl =
+      icon === "arrow" ? (
+        <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+      ) : icon === "chevron" ? (
+        <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+      ) : null;
+
+    return (
+      <a
+        href={link}
+        className={`inline-flex items-center ${ctaSizeClasses[size] || ctaSizeClasses.md} ${ctaRadiusClass[radius] || ctaRadiusClass.md} font-medium transition-all
+          ${style === "solid" ? "hover:opacity-90" : ""}
+          ${style === "outline" ? "border-2 hover:bg-opacity-10" : ""}
+          ${style === "ghost" || style === "text" ? "hover:opacity-80" : ""}
+          ${style === "gradient" ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:opacity-90" : ""}
+          ${extraClass || ""}
+        `}
+        style={
+          style === "gradient"
+            ? {}
+            : {
+                backgroundColor: style === "solid" ? (color || "var(--primary, #3b82f6)") : "transparent",
+                borderColor: style === "outline" ? (color || "var(--primary, #3b82f6)") : undefined,
+                color: style === "solid" ? txtColor : (color || "var(--primary, #3b82f6)"),
+              }
+        }
+      >
+        {text}
+        {iconEl}
+      </a>
+    );
+  };
+
+  // Dropdown rendering
+  const renderDropdown = (
+    dropdownLinks: Array<{ label?: string; href?: string; description?: string }>,
+    parentIdx: number,
+  ) => (
+    <div
+      className="absolute top-full left-0 mt-1 min-w-[220px] bg-white rounded-lg shadow-xl border border-gray-100 py-2 z-50"
+      style={{ backgroundColor, borderColor }}
+      role="menu"
+      aria-orientation="vertical"
+    >
+      {dropdownLinks.map((dl, j) => (
+        <a
+          key={j}
+          href={dl.href || "#"}
+          className="block px-4 py-2.5 hover:bg-black/5 transition-colors"
+          style={{ color: textColor }}
+          role="menuitem"
+        >
+          <div className="text-sm font-medium">{dl.label || `Link ${j + 1}`}</div>
+          {dl.description && (
+            <div className="text-xs mt-0.5 opacity-60">{dl.description}</div>
+          )}
+        </a>
+      ))}
+    </div>
+  );
 
   return (
     <>
+      {/* Skip to Content */}
+      {skipToContent && (
+        <a
+          href={skipToContent}
+          className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-white focus:text-black focus:rounded-md focus:shadow-lg"
+        >
+          Skip to content
+        </a>
+      )}
+
       <nav
+        ref={navRef}
         id={id}
-        className={`w-full z-50 ${sticky ? "sticky top-0" : ""} ${shadowClasses} ${borderBottom ? "border-b" : ""} ${className}`}
-        style={{ ...navBgStyle, borderColor }}
+        className={`w-full z-50 ${positionClass} ${shadowClasses[shadow] || ""} ${borderBottom ? "border-b" : ""} ${className}`}
+        style={{ ...navBgStyle, ...hiddenStyle }}
+        role="navigation"
+        aria-label={ariaLabel}
       >
+        {/* Scroll Progress - Top */}
+        {showScrollProgress && scrollProgressPosition === "top" && (
+          <div
+            className="w-full"
+            style={{ height: scrollProgressHeight, backgroundColor: scrollProgressBackground }}
+          >
+            <div
+              className="h-full transition-all duration-150"
+              style={{
+                width: `${scrollProgress}%`,
+                background:
+                  scrollProgressStyle === "gradient"
+                    ? `linear-gradient(to right, ${scrollProgressColor || "var(--primary, #3b82f6)"}, ${scrollProgressColor ? scrollProgressColor + "80" : "#8b5cf6"})`
+                    : scrollProgressColor || "var(--primary, #3b82f6)",
+              }}
+            />
+          </div>
+        )}
+
         <div
-          className={`${heightClasses} ${paddingClasses} ${maxWidthClasses} flex items-center ${layout === "centered" ? "justify-center" : "justify-between"}`}
+          className={`${heightClasses[height] || heightClasses.md} ${paddingClasses[paddingX] || paddingClasses.md} ${maxWidthClasses[resolvedMaxWidth] || maxWidthClasses["7xl"]} flex items-center ${layout === "centered" ? "justify-center" : "justify-between"}`}
         >
           {/* Logo */}
-          {(layout === "standard" || layout === "split") && (
+          {(layout === "standard" || layout === "split" || layout === "minimal") && (
             <a href={logoLink} className="flex items-center gap-2 shrink-0">
-              {logoUrl && (
+              {logoUrl ? (
                 <img
                   src={logoUrl}
                   alt={logoAlt}
                   style={{ height: logoHeight }}
                   className="w-auto"
                 />
-              )}
-              {!logoUrl && (
-                <span
-                  className="text-xl font-bold"
-                  style={{ color: textColor }}
-                >
+              ) : (
+                <span className="text-xl font-bold" style={{ color: textColor }}>
                   {logoText}
                 </span>
               )}
             </a>
           )}
 
+          {/* Centered Layout Logo */}
+          {layout === "centered" && (
+            <a href={logoLink} className="flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
+              {logoUrl ? (
+                <img src={logoUrl} alt={logoAlt} style={{ height: logoHeight }} className="w-auto" />
+              ) : (
+                <span className="text-xl font-bold" style={{ color: textColor }}>{logoText}</span>
+              )}
+            </a>
+          )}
+
           {/* Desktop Navigation */}
-          {showDesktopNav && (
+          {showDesktopNav && layout !== "minimal" && (
             <div
-              className={`hidden md:flex items-center ${linkSpacingClass} ${linkAlignment === "center" ? "flex-1 justify-center" : linkAlignment === "right" ? "flex-1 justify-end" : ""}`}
+              className={`${bpFlex} items-center ${linkSpacingClass[resolvedLinkSpacing] || linkSpacingClass.normal} ${linkAlignment === "center" ? "flex-1 justify-center" : linkAlignment === "right" ? "flex-1 justify-end" : ""}`}
             >
-              {links.map((link, i) => (
-                <a
-                  key={i}
-                  href={link.href || "#"}
-                  className={`${linkSizeClass} ${linkWeightClass} ${linkHoverClass}`}
-                  style={{ color: textColor }}
-                >
-                  {link.label || link.text || `Link ${i + 1}`}
-                </a>
-              ))}
+              {links.map((link, i) => {
+                const hasDD = link.hasDropdown && link.dropdownLinks && link.dropdownLinks.length > 0;
+                return (
+                  <div key={i} className="relative">
+                    <a
+                      href={hasDD ? undefined : (link.href || "#")}
+                      target={link.target}
+                      rel={link.target === "_blank" ? "noopener noreferrer" : undefined}
+                      className={`${linkSizeClass[resolvedFontSize] || linkSizeClass.md} ${linkWeightClass[resolvedFontWeight] || linkWeightClass.medium} ${linkHoverClass} ${textTransformClass[resolvedLinkTextTransform] || ""} inline-flex items-center gap-1 cursor-pointer`}
+                      style={{ color: textColor }}
+                      role={hasDD ? "button" : undefined}
+                      aria-expanded={hasDD ? openDropdown === i : undefined}
+                      aria-haspopup={hasDD ? "true" : undefined}
+                      onClick={
+                        hasDD
+                          ? (e: React.MouseEvent) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setOpenDropdown(openDropdown === i ? null : i);
+                            }
+                          : undefined
+                      }
+                      onKeyDown={
+                        hasDD
+                          ? (e: React.KeyboardEvent) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                setOpenDropdown(openDropdown === i ? null : i);
+                              }
+                              if (e.key === "Escape") setOpenDropdown(null);
+                            }
+                          : undefined
+                      }
+                    >
+                      {link.label || link.text || `Link ${i + 1}`}
+                      {hasDD && (
+                        <svg
+                          className={`w-3.5 h-3.5 transition-transform ${openDropdown === i ? "rotate-180" : ""}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      )}
+                    </a>
+                    {hasDD && openDropdown === i && renderDropdown(link.dropdownLinks!, i)}
+                  </div>
+                );
+              })}
             </div>
           )}
 
           {/* CTA Buttons */}
           <div className="flex items-center gap-3">
             {secondaryCtaText && showDesktopNav && (
-              <a
-                href={secondaryCtaLink}
-                className={`hidden md:inline-flex items-center ${ctaSizeClasses} ${ctaRadiusClass} font-medium transition-all
-                  ${secondaryCtaVariant === "solid" ? "text-white" : ""}
-                  ${secondaryCtaVariant === "outline" ? "border-2" : ""}
-                  ${secondaryCtaVariant === "ghost" ? "hover:opacity-80" : ""}
-                `}
-                style={{
-                  backgroundColor:
-                    secondaryCtaVariant === "solid" ? ctaColor : "transparent",
-                  borderColor:
-                    secondaryCtaVariant === "outline" ? ctaColor : undefined,
-                  color: secondaryCtaVariant !== "solid" ? ctaColor : "#ffffff",
-                }}
-              >
-                {secondaryCtaText}
-              </a>
+              <span className={bpFlex}>
+                {renderCta(
+                  secondaryCtaText,
+                  secondaryCtaLink,
+                  resolvedSecondaryStyle,
+                  ctaColor,
+                  ctaTextColor,
+                  ctaSize,
+                  resolvedCtaRadius,
+                )}
+              </span>
             )}
 
             {ctaText && (
-              <a
-                href={ctaLink}
-                className={`${showCtaOnMobile ? "" : "hidden md:inline-flex"} ${showCtaOnMobile ? "inline-flex" : ""} items-center ${ctaSizeClasses} ${ctaRadiusClass} font-medium transition-all
-                  ${ctaVariant === "solid" ? "text-white hover:opacity-90" : ""}
-                  ${ctaVariant === "outline" ? "border-2 hover:bg-opacity-10" : ""}
-                  ${ctaVariant === "ghost" ? "hover:opacity-80" : ""}
-                `}
-                style={{
-                  backgroundColor:
-                    ctaVariant === "solid" ? ctaColor : "transparent",
-                  borderColor: ctaVariant === "outline" ? ctaColor : undefined,
-                  color: ctaVariant !== "solid" ? ctaColor : "#ffffff",
-                }}
-              >
-                {ctaText}
-              </a>
+              <span className={resolvedShowCtaInMobile ? "" : bpFlex}>
+                {renderCta(
+                  ctaText,
+                  ctaLink,
+                  resolvedCtaStyle,
+                  ctaColor,
+                  ctaTextColor,
+                  ctaSize,
+                  resolvedCtaRadius,
+                  ctaIcon,
+                )}
+              </span>
             )}
 
             {/* Hamburger Button */}
             {showMobileMenu && (
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2 rounded-lg hover:opacity-80 transition-colors"
-                aria-label="Toggle menu"
+                className={`${bpHidden} p-2 rounded-lg hover:opacity-80 transition-colors`}
+                aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
                 aria-expanded={mobileMenuOpen}
+                aria-controls="navbar-mobile-menu"
               >
                 {mobileMenuOpen ? (
                   <svg
-                    className="w-6 h-6"
+                    style={{ width: hamburgerSize, height: hamburgerSize, color: hamburgerColor || textColor }}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
-                    style={{ color: textColor }}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 ) : (
                   <svg
-                    className="w-6 h-6"
+                    style={{ width: hamburgerSize, height: hamburgerSize, color: hamburgerColor || textColor }}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
-                    style={{ color: textColor }}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 6h16M4 12h16M4 18h16"
-                    />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
                 )}
               </button>
             )}
           </div>
         </div>
+
+        {/* Scroll Progress - Bottom */}
+        {showScrollProgress && scrollProgressPosition === "bottom" && (
+          <div
+            className="w-full"
+            style={{ height: scrollProgressHeight, backgroundColor: scrollProgressBackground }}
+          >
+            <div
+              className="h-full transition-all duration-150"
+              style={{
+                width: `${scrollProgress}%`,
+                background:
+                  scrollProgressStyle === "gradient"
+                    ? `linear-gradient(to right, ${scrollProgressColor || "var(--primary, #3b82f6)"}, ${scrollProgressColor ? scrollProgressColor + "80" : "#8b5cf6"})`
+                    : scrollProgressColor || "var(--primary, #3b82f6)",
+              }}
+            />
+          </div>
+        )}
       </nav>
 
       {/* Mobile Menu Overlay */}
-      {mobileMenuOpen && showOverlay && (
+      {mobileMenuOpen && resolvedShowOverlay && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className={`fixed inset-0 z-40 ${bpHidden}`}
+          style={{
+            backgroundColor: mobileMenuOverlayColor,
+            opacity: mobileMenuOverlayOpacity / 100,
+          }}
           onClick={() => setMobileMenuOpen(false)}
+          aria-hidden="true"
         />
       )}
 
       {/* Mobile Menu Panel */}
       <div
-        className={`fixed top-[${parseInt(heightClasses.match(/\d+/)?.[0] || "16") * 4}px] ${mobileMenuPosition === "left" ? "left-0" : mobileMenuPosition === "right" ? "right-0" : "left-0 right-0"} bottom-0 z-50 md:hidden transform transition-transform duration-300 ease-in-out ${
-          mobileMenuOpen
-            ? "translate-x-0"
-            : mobileMenuPosition === "right"
-              ? "translate-x-full"
-              : "-translate-x-full"
+        id="navbar-mobile-menu"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Mobile menu"
+        className={`fixed z-50 ${bpHidden} transition-all overflow-hidden ${
+          resolvedMobileMenuStyle === "fullscreen"
+            ? "inset-0 top-14"
+            : resolvedMobileMenuStyle === "dropdown"
+              ? "left-0 right-0 top-14"
+              : resolvedMobileMenuStyle === "slideLeft"
+                ? "left-0 top-0 bottom-0 w-[320px] max-w-[85vw]"
+                : "right-0 top-0 bottom-0 w-[320px] max-w-[85vw]"
         }`}
         style={{
-          backgroundColor,
-          maxWidth: mobileMenuPosition === "full" ? "100%" : "320px",
+          backgroundColor: resolvedMobileMenuBg,
+          transitionDuration: `${mobileMenuDuration}ms`,
+          ...(mobileMenuOpen
+            ? { transform: "translateX(0) translateY(0)", opacity: 1, visibility: "visible" as const }
+            : resolvedMobileMenuStyle === "slideLeft"
+              ? { transform: "translateX(-100%)", opacity: 0, visibility: "hidden" as const }
+              : resolvedMobileMenuStyle === "slideRight"
+                ? { transform: "translateX(100%)", opacity: 0, visibility: "hidden" as const }
+                : resolvedMobileMenuStyle === "dropdown"
+                  ? { transform: "translateY(-10px)", opacity: 0, visibility: "hidden" as const }
+                  : { transform: "translateY(0)", opacity: 0, visibility: "hidden" as const }),
         }}
       >
-        <div className="h-full overflow-y-auto p-6 space-y-1">
-          {links.map((link, i) => (
-            <a
-              key={i}
-              href={link.href || "#"}
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-4 py-3 rounded-lg text-base font-medium hover:opacity-80 transition-colors"
-              style={{ color: textColor }}
-            >
-              {link.label || link.text || `Link ${i + 1}`}
-            </a>
-          ))}
+        <div className={`h-full overflow-y-auto p-6 ${mobileLinkSpacingClass[resolvedMobileLinkSpacing] || mobileLinkSpacingClass.normal}`}>
+          {links.map((link, i) => {
+            const hasDD = link.hasDropdown && link.dropdownLinks && link.dropdownLinks.length > 0;
+            return (
+              <div key={i}>
+                <a
+                  href={hasDD ? undefined : (link.href || "#")}
+                  onClick={() => {
+                    if (hasDD) {
+                      setOpenDropdown(openDropdown === i ? null : i);
+                    } else {
+                      setMobileMenuOpen(false);
+                    }
+                  }}
+                  className="flex items-center justify-between px-4 py-3 rounded-lg text-base font-medium hover:opacity-80 transition-colors cursor-pointer"
+                  style={{ color: resolvedMobileMenuText }}
+                >
+                  <span>{link.label || link.text || `Link ${i + 1}`}</span>
+                  {hasDD && (
+                    <svg
+                      className={`w-4 h-4 transition-transform ${openDropdown === i ? "rotate-180" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  )}
+                </a>
+                {hasDD && openDropdown === i && (
+                  <div className="ml-4 border-l-2 pl-4" style={{ borderColor: `${resolvedMobileMenuText}20` }}>
+                    {link.dropdownLinks!.map((dl, j) => (
+                      <a
+                        key={j}
+                        href={dl.href || "#"}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="block px-4 py-2.5 rounded-lg text-sm hover:opacity-80 transition-colors"
+                        style={{ color: resolvedMobileMenuText }}
+                      >
+                        {dl.label || `Link ${j + 1}`}
+                        {dl.description && (
+                          <span className="block text-xs opacity-60 mt-0.5">{dl.description}</span>
+                        )}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
 
-          {secondaryCtaText && (
-            <a
-              href={secondaryCtaLink}
-              onClick={() => setMobileMenuOpen(false)}
-              className={`block w-full px-4 py-3 mt-4 text-center rounded-lg font-medium transition-all ${
-                secondaryCtaVariant === "outline" ? "border-2" : ""
-              }`}
-              style={{
-                backgroundColor:
-                  secondaryCtaVariant === "solid" ? ctaColor : "transparent",
-                borderColor:
-                  secondaryCtaVariant === "outline" ? ctaColor : undefined,
-                color: secondaryCtaVariant === "solid" ? "#ffffff" : ctaColor,
-              }}
-            >
-              {secondaryCtaText}
-            </a>
-          )}
-
-          {!showCtaOnMobile && ctaText && (
-            <a
-              href={ctaLink}
-              onClick={() => setMobileMenuOpen(false)}
-              className="block w-full px-4 py-3 mt-4 text-center rounded-lg font-medium text-white transition-opacity hover:opacity-90"
-              style={{ backgroundColor: ctaColor }}
-            >
-              {ctaText}
-            </a>
+          {/* Mobile CTAs */}
+          {resolvedShowCtaInMobile && (
+            <div className="mt-6 space-y-3 px-4">
+              {secondaryCtaText && (
+                <a
+                  href={secondaryCtaLink}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`block w-full py-3 text-center rounded-lg font-medium transition-all ${resolvedSecondaryStyle === "outline" ? "border-2" : ""}`}
+                  style={{
+                    backgroundColor: resolvedSecondaryStyle === "solid" ? ctaColor : "transparent",
+                    borderColor: resolvedSecondaryStyle === "outline" ? ctaColor : undefined,
+                    color: resolvedSecondaryStyle === "solid" ? ctaTextColor : ctaColor,
+                  }}
+                >
+                  {secondaryCtaText}
+                </a>
+              )}
+              {ctaText && (
+                <a
+                  href={ctaLink}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block w-full py-3 text-center rounded-lg font-medium transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: ctaColor || "var(--primary, #3b82f6)", color: ctaTextColor }}
+                >
+                  {ctaText}
+                </a>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -14539,13 +16655,29 @@ export function NavbarRender(props: NavbarProps) {
 // ============================================================================
 
 export interface FooterProps {
+  // Branding
   logo?: string | ImageValue;
   logoText?: string;
+  logoHeight?: number;
+  companyName?: string;
   description?: string;
+  // Columns
   columns?: Array<{
     title?: string;
-    links?: Array<{ label?: string; href?: string }>;
+    links?: Array<{ label?: string; href?: string; isNew?: boolean }>;
   }>;
+  columnsLayout?: "2" | "3" | "4" | "auto";
+  // Newsletter
+  showNewsletter?: boolean;
+  newsletter?: boolean; // backwards compat
+  newsletterTitle?: string;
+  newsletterDescription?: string;
+  newsletterPlaceholder?: string;
+  newsletterButtonText?: string;
+  newsletterButtonColor?: string;
+  // Social
+  showSocialLinks?: boolean;
+  socialLinksTitle?: string;
   socialLinks?: Array<{
     platform?:
       | "facebook"
@@ -14553,215 +16685,477 @@ export interface FooterProps {
       | "instagram"
       | "linkedin"
       | "youtube"
-      | "github";
+      | "github"
+      | "tiktok"
+      | "pinterest";
     url?: string;
   }>;
+  socialIconSize?: "sm" | "md" | "lg";
+  socialIconStyle?: "default" | "filled" | "outline";
+  // Contact
+  showContactInfo?: boolean;
+  contactEmail?: string;
+  contactPhone?: string;
+  contactAddress?: string;
+  // App badges
+  showAppBadges?: boolean;
+  appStoreUrl?: string;
+  playStoreUrl?: string;
+  // Legal
   copyright?: string;
-  bottomLinks?: Array<{ label?: string; href?: string }>;
-  newsletter?: boolean;
-  newsletterTitle?: string;
-  newsletterPlaceholder?: string;
-  newsletterButtonText?: string;
+  legalLinks?: Array<{ label?: string; href?: string }>;
+  bottomLinks?: Array<{ label?: string; href?: string }>; // backwards compat
+  showMadeWith?: boolean;
+  madeWithText?: string;
+  // Layout
+  variant?: "standard" | "centered" | "simple" | "extended" | "columns";
+  maxWidth?: "full" | "7xl" | "6xl" | "5xl";
+  paddingTop?: string;
+  paddingBottom?: string;
+  paddingX?: "sm" | "md" | "lg" | "xl";
+  paddingY?: "sm" | "md" | "lg"; // backwards compat
+  // Appearance
   backgroundColor?: string;
   textColor?: string;
   accentColor?: string;
-  variant?: "simple" | "columns" | "centered";
-  paddingY?: "sm" | "md" | "lg";
+  linkColor?: string;
+  linkHoverColor?: string;
+  borderTop?: boolean;
+  borderColor?: string;
+  dividerColor?: string;
   id?: string;
   className?: string;
 }
 
-export function FooterRender({
-  logo,
-  logoText = "Company",
-  description,
-  columns = [],
-  socialLinks = [],
-  copyright = `© ${new Date().getFullYear()} Company. All rights reserved.`,
-  bottomLinks = [],
-  newsletter = false,
-  newsletterTitle = "Subscribe to our newsletter",
-  newsletterPlaceholder = "Enter your email",
-  newsletterButtonText = "Subscribe",
-  backgroundColor = "#111827",
-  textColor = "#ffffff",
-  linkColor = "#94a3b8",
-  linkHoverColor = "#ffffff",
-  accentColor = "",
-  variant = "columns",
-  paddingY = "lg",
-  id,
-  className = "",
-}: FooterProps & { linkColor?: string; linkHoverColor?: string }) {
-  // Normalize logo image
+export function FooterRender(props: FooterProps) {
+  const {
+    logo,
+    logoText,
+    logoHeight = 40,
+    description,
+    columns = [],
+    socialLinks = [],
+    copyright = `© ${new Date().getFullYear()} Company. All rights reserved.`,
+    socialIconSize = "md",
+    socialIconStyle = "default",
+    showContactInfo = false,
+    contactEmail,
+    contactPhone,
+    contactAddress,
+    showAppBadges = false,
+    appStoreUrl,
+    playStoreUrl,
+    showMadeWith = false,
+    madeWithText = "Made with ❤️",
+    maxWidth = "7xl",
+    paddingX = "md",
+    backgroundColor = "#111827",
+    textColor = "#f9fafb",
+    linkColor: linkColorProp = "#9ca3af",
+    linkHoverColor: linkHoverColorProp = "#ffffff",
+    borderTop = false,
+    borderColor = "#374151",
+    dividerColor = "#374151",
+    id,
+    className = "",
+  } = props;
+
+  // Backwards-compat aliases
+  const companyName = props.companyName || logoText || "Company";
+  const resolvedVariant = props.variant === "columns" ? "standard" : (props.variant || "standard");
+  const showNewsletter = props.showNewsletter ?? props.newsletter ?? false;
+  const newsletterTitle = props.newsletterTitle || "Stay Updated";
+  const newsletterDescription = props.newsletterDescription || "";
+  const newsletterPlaceholder = props.newsletterPlaceholder || "Enter your email";
+  const newsletterButtonText = props.newsletterButtonText || "Subscribe";
+  const newsletterButtonColor = props.newsletterButtonColor || props.accentColor || linkHoverColorProp;
+  const showSocialLinks = props.showSocialLinks ?? true;
+  const socialLinksTitle = props.socialLinksTitle || "";
+  const columnsLayout = props.columnsLayout || "auto";
+  const resolvedLegalLinks = props.legalLinks || props.bottomLinks || [];
+  const linkColor = linkColorProp;
+  const linkHoverColor = linkHoverColorProp;
+
+  // Padding
+  const paddingTopClass: Record<string, string> = {
+    none: "pt-0", xs: "pt-4", sm: "pt-8", md: "pt-12", lg: "pt-16", xl: "pt-20", "2xl": "pt-24",
+  };
+  const paddingBottomClass: Record<string, string> = {
+    none: "pb-0", xs: "pb-4", sm: "pb-8", md: "pb-12", lg: "pb-16", xl: "pb-20", "2xl": "pb-24",
+  };
+  const paddingYFallback: Record<string, [string, string]> = {
+    sm: ["sm", "sm"], md: ["md", "md"], lg: ["lg", "lg"],
+  };
+  const [ptKey, pbKey] = props.paddingTop
+    ? [props.paddingTop, props.paddingBottom || props.paddingTop]
+    : props.paddingY
+      ? paddingYFallback[props.paddingY] || ["lg", "lg"]
+      : ["xl", "lg"];
+  const ptClass = paddingTopClass[ptKey] || "pt-20";
+  const pbClass = paddingBottomClass[pbKey] || "pt-16";
+  const pxClass = { sm: "px-4", md: "px-6 lg:px-8", lg: "px-8 lg:px-12", xl: "px-12 lg:px-16" }[paddingX] || "px-6 lg:px-8";
+  const maxWClass = { full: "max-w-full", "7xl": "max-w-7xl", "6xl": "max-w-6xl", "5xl": "max-w-5xl" }[maxWidth] || "max-w-7xl";
+
+  // Logo
   const logoUrl = getImageUrl(logo);
 
-  const paddingClasses = {
-    sm: "py-8 md:py-12",
-    md: "py-12 md:py-16",
-    lg: "py-16 md:py-20",
-  }[paddingY];
+  // Social icon sizes
+  const iconSizeClass = { sm: "w-4 h-4", md: "w-5 h-5", lg: "w-6 h-6" }[socialIconSize] || "w-5 h-5";
 
   const SocialIcon = ({ platform }: { platform?: string }) => {
     const icons: Record<string, React.ReactNode> = {
-      facebook: (
-        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-      ),
-      twitter: (
-        <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
-      ),
-      instagram: (
-        <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z" />
-      ),
-      linkedin: (
-        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-      ),
-      youtube: (
-        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-      ),
-      github: (
-        <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
-      ),
+      facebook: <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />,
+      twitter: <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />,
+      instagram: <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z" />,
+      linkedin: <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />,
+      youtube: <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />,
+      github: <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />,
+      tiktok: <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />,
+      pinterest: <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12.017 24c6.624 0 11.99-5.367 11.99-11.988C24.007 5.367 18.641 0 12.017 0z" />,
     };
     return (
-      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+      <svg className={iconSizeClass} fill="currentColor" viewBox="0 0 24 24">
         {icons[platform || ""] || null}
       </svg>
     );
   };
 
-  return (
-    <footer
-      id={id}
-      className={`w-full ${paddingClasses} px-4 ${className}`}
-      style={{ backgroundColor }}
-    >
-      <div className="max-w-screen-xl mx-auto">
-        {variant === "columns" && columns.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-12">
-            <div className="col-span-2 md:col-span-1 lg:col-span-2">
-              {logoUrl && (
-                <img src={logoUrl} alt={logoText} className="h-8 mb-4" />
-              )}
-              {!logoUrl && (
-                <p
-                  className="text-xl font-bold mb-4"
-                  style={{ color: textColor }}
-                >
-                  {logoText}
-                </p>
-              )}
-              {description && (
-                <p
-                  className="text-sm opacity-75 mb-4 max-w-xs"
-                  style={{ color: textColor }}
-                >
-                  {description}
-                </p>
-              )}
-              {socialLinks.length > 0 && (
-                <div className="flex gap-4">
-                  {socialLinks.map((social, i) => (
-                    <a
-                      key={i}
-                      href={social.url || "#"}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="opacity-75 hover:opacity-100 transition-opacity"
-                      style={{ color: textColor }}
-                      aria-label={social.platform}
-                    >
-                      <SocialIcon platform={social.platform} />
-                    </a>
-                  ))}
-                </div>
-              )}
-            </div>
-            {columns.map((column, i) => (
-              <div key={i}>
-                <h3
-                  className="font-semibold mb-4 text-sm uppercase tracking-wider"
-                  style={{ color: textColor }}
-                >
-                  {column.title}
-                </h3>
-                <ul className="space-y-2">
-                  {(column.links || []).map((link, j) => (
-                    <li key={j}>
-                      <a
-                        href={link.href || "#"}
-                        className="text-sm transition-colors"
-                        style={{ color: linkColor }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.color = linkHoverColor;
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.color = linkColor;
-                        }}
-                      >
-                        {link.label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
+  // Social icon wrapper for filled/outline styles
+  const renderSocialIcon = (social: { platform?: string; url?: string }, i: number) => {
+    const baseStyle = socialIconStyle === "filled"
+      ? "p-2 rounded-full transition-colors"
+      : socialIconStyle === "outline"
+        ? "p-2 rounded-full border transition-colors"
+        : "transition-opacity opacity-75 hover:opacity-100";
+    const fillBg = socialIconStyle === "filled" ? `${textColor}15` : "transparent";
+    const borderStyle = socialIconStyle === "outline" ? `1px solid ${dividerColor}` : "none";
+    return (
+      <a
+        key={i}
+        href={social.url || "#"}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={baseStyle}
+        style={{ color: textColor, backgroundColor: fillBg, border: borderStyle }}
+        aria-label={social.platform}
+      >
+        <SocialIcon platform={social.platform} />
+      </a>
+    );
+  };
+
+  // Column grid classes
+  const columnGridClass = columnsLayout === "2"
+    ? "grid-cols-1 sm:grid-cols-2"
+    : columnsLayout === "3"
+      ? "grid-cols-2 sm:grid-cols-3"
+      : columnsLayout === "4"
+        ? "grid-cols-2 sm:grid-cols-4"
+        : `grid-cols-2 ${columns.length >= 4 ? "sm:grid-cols-4" : columns.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`;
+
+  // Link renderer helper
+  const renderLink = (link: { label?: string; href?: string; isNew?: boolean }, j: number) => (
+    <li key={j}>
+      <a
+        href={link.href || "#"}
+        className="text-sm transition-colors inline-flex items-center gap-1.5"
+        style={{ color: linkColor }}
+        onMouseEnter={(e) => { e.currentTarget.style.color = linkHoverColor; }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = linkColor; }}
+      >
+        {link.label}
+        {link.isNew && (
+          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: newsletterButtonColor, color: "#fff" }}>
+            NEW
+          </span>
         )}
-        {newsletter && (
-          <div
-            className="border-t pt-8 mb-8"
-            style={{ borderColor: `${textColor}15` }}
+      </a>
+    </li>
+  );
+
+  // Newsletter section
+  const renderNewsletter = () => {
+    if (!showNewsletter) return null;
+    return (
+      <div className="max-w-md">
+        <h3 className="font-semibold mb-2" style={{ color: textColor }}>{newsletterTitle}</h3>
+        {newsletterDescription && (
+          <p className="text-sm opacity-75 mb-4" style={{ color: textColor }}>{newsletterDescription}</p>
+        )}
+        <form className="flex flex-col sm:flex-row gap-2" onSubmit={(e) => e.preventDefault()}>
+          <input
+            type="email"
+            placeholder={newsletterPlaceholder}
+            className="flex-1 px-4 py-2.5 rounded-lg bg-white/10 border border-white/20 placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30"
+            style={{ color: textColor }}
+          />
+          <button
+            type="submit"
+            className="px-6 py-2.5 rounded-lg font-medium transition-opacity hover:opacity-90 whitespace-nowrap"
+            style={{ backgroundColor: newsletterButtonColor, color: isDarkBackground(newsletterButtonColor) ? "#ffffff" : "#000000" }}
           >
-            <div className="max-w-md">
-              <h3 className="font-semibold mb-4" style={{ color: textColor }}>
-                {newsletterTitle}
-              </h3>
-              <form className="flex flex-col sm:flex-row gap-2">
-                <input
-                  type="email"
-                  placeholder={newsletterPlaceholder}
-                  className="flex-1 px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30"
-                />
-                <button
-                  type="submit"
-                  className="px-6 py-2 rounded-lg font-medium transition-opacity hover:opacity-90 whitespace-nowrap"
-                  style={{ backgroundColor: accentColor, color: "#ffffff" }}
-                >
-                  {newsletterButtonText}
-                </button>
-              </form>
-            </div>
+            {newsletterButtonText}
+          </button>
+        </form>
+      </div>
+    );
+  };
+
+  // Contact info section
+  const renderContactInfo = () => {
+    if (!showContactInfo) return null;
+    return (
+      <div className="space-y-2">
+        {contactEmail && (
+          <a href={`mailto:${contactEmail}`} className="flex items-center gap-2 text-sm transition-colors" style={{ color: linkColor }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = linkHoverColor; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = linkColor; }}>
+            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            {contactEmail}
+          </a>
+        )}
+        {contactPhone && (
+          <a href={`tel:${contactPhone}`} className="flex items-center gap-2 text-sm transition-colors" style={{ color: linkColor }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = linkHoverColor; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = linkColor; }}>
+            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+            </svg>
+            {contactPhone}
+          </a>
+        )}
+        {contactAddress && (
+          <div className="flex items-start gap-2 text-sm" style={{ color: linkColor }}>
+            <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span>{contactAddress}</span>
           </div>
         )}
-        <div
-          className="border-t pt-8 flex flex-col md:flex-row items-center justify-between gap-4"
-          style={{ borderColor: `${textColor}15` }}
-        >
-          <p className="text-sm opacity-75" style={{ color: textColor }}>
-            {copyright}
-          </p>
-          {bottomLinks.length > 0 && (
-            <div className="flex flex-wrap gap-4 md:gap-6">
-              {bottomLinks.map((link, i) => (
-                <a
-                  key={i}
-                  href={link.href || "#"}
-                  className="text-sm transition-colors"
-                  style={{ color: linkColor }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = linkHoverColor;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = linkColor;
-                  }}
-                >
+      </div>
+    );
+  };
+
+  // App store badges
+  const renderAppBadges = () => {
+    if (!showAppBadges || (!appStoreUrl && !playStoreUrl)) return null;
+    return (
+      <div className="flex flex-wrap gap-3">
+        {appStoreUrl && (
+          <a href={appStoreUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border transition-opacity hover:opacity-80" style={{ borderColor: dividerColor, color: textColor }}>
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" /></svg>
+            <div className="text-left"><div className="text-[10px] opacity-75">Download on the</div><div className="text-sm font-semibold -mt-0.5">App Store</div></div>
+          </a>
+        )}
+        {playStoreUrl && (
+          <a href={playStoreUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border transition-opacity hover:opacity-80" style={{ borderColor: dividerColor, color: textColor }}>
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 01-.61-.92V2.734a1 1 0 01.609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.199l2.807 1.626a1 1 0 010 1.732l-2.808 1.626L15.206 12l2.492-2.492zM5.864 2.658L16.8 8.99l-2.302 2.302-8.634-8.634z" /></svg>
+            <div className="text-left"><div className="text-[10px] opacity-75">GET IT ON</div><div className="text-sm font-semibold -mt-0.5">Google Play</div></div>
+          </a>
+        )}
+      </div>
+    );
+  };
+
+  // Bottom bar with copyright, legal links, made-with
+  const renderBottomBar = () => (
+    <div
+      className="border-t pt-6 mt-8 flex flex-col md:flex-row items-center justify-between gap-4"
+      style={{ borderColor: dividerColor }}
+    >
+      <p className="text-sm opacity-75" style={{ color: textColor }}>{copyright}</p>
+      <div className="flex flex-wrap items-center gap-4 md:gap-6">
+        {resolvedLegalLinks.map((link, i) => (
+          <a
+            key={i}
+            href={link.href || "#"}
+            className="text-sm transition-colors"
+            style={{ color: linkColor }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = linkHoverColor; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = linkColor; }}
+          >
+            {link.label}
+          </a>
+        ))}
+        {showMadeWith && (
+          <span className="text-sm opacity-60" style={{ color: textColor }}>{madeWithText}</span>
+        )}
+      </div>
+    </div>
+  );
+
+  // === SIMPLE VARIANT ===
+  if (resolvedVariant === "simple") {
+    return (
+      <footer id={id} role="contentinfo" className={`w-full ${ptClass} ${pbClass} ${pxClass} ${className}`}
+        style={{ backgroundColor, ...(borderTop ? { borderTop: `1px solid ${borderColor}` } : {}) }}>
+        <div className={`${maxWClass} mx-auto flex flex-col items-center text-center gap-4`}>
+          {logoUrl
+            ? <img src={logoUrl} alt={companyName} style={{ height: logoHeight }} />
+            : <p className="text-lg font-bold" style={{ color: textColor }}>{companyName}</p>}
+          {description && <p className="text-sm opacity-75 max-w-md" style={{ color: textColor }}>{description}</p>}
+          {showSocialLinks && socialLinks.length > 0 && (
+            <div className="flex gap-3">{socialLinks.map(renderSocialIcon)}</div>
+          )}
+          <p className="text-sm opacity-75" style={{ color: textColor }}>{copyright}</p>
+          {resolvedLegalLinks.length > 0 && (
+            <div className="flex flex-wrap justify-center gap-4">
+              {resolvedLegalLinks.map((link, i) => (
+                <a key={i} href={link.href || "#"} className="text-sm transition-colors" style={{ color: linkColor }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = linkHoverColor; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = linkColor; }}>
                   {link.label}
                 </a>
               ))}
             </div>
           )}
         </div>
+      </footer>
+    );
+  }
+
+  // === CENTERED VARIANT ===
+  if (resolvedVariant === "centered") {
+    return (
+      <footer id={id} role="contentinfo" className={`w-full ${ptClass} ${pbClass} ${pxClass} ${className}`}
+        style={{ backgroundColor, ...(borderTop ? { borderTop: `1px solid ${borderColor}` } : {}) }}>
+        <div className={`${maxWClass} mx-auto flex flex-col items-center text-center gap-6`}>
+          {logoUrl
+            ? <img src={logoUrl} alt={companyName} style={{ height: logoHeight }} />
+            : <p className="text-xl font-bold" style={{ color: textColor }}>{companyName}</p>}
+          {description && <p className="text-sm opacity-75 max-w-lg" style={{ color: textColor }}>{description}</p>}
+          {/* Flat link list from all columns */}
+          {columns.length > 0 && (
+            <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2">
+              {columns.flatMap(col => col.links || []).map((link, i) => (
+                <a key={i} href={link.href || "#"} className="text-sm transition-colors" style={{ color: linkColor }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = linkHoverColor; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = linkColor; }}>
+                  {link.label}
+                </a>
+              ))}
+            </nav>
+          )}
+          {renderNewsletter()}
+          {showSocialLinks && socialLinks.length > 0 && (
+            <div className="flex flex-col items-center gap-2">
+              {socialLinksTitle && <p className="text-sm font-medium" style={{ color: textColor }}>{socialLinksTitle}</p>}
+              <div className="flex gap-3">{socialLinks.map(renderSocialIcon)}</div>
+            </div>
+          )}
+          {renderAppBadges()}
+          {renderBottomBar()}
+        </div>
+      </footer>
+    );
+  }
+
+  // === EXTENDED VARIANT (mega footer) ===
+  if (resolvedVariant === "extended") {
+    return (
+      <footer id={id} role="contentinfo" className={`w-full ${ptClass} ${pbClass} ${pxClass} ${className}`}
+        style={{ backgroundColor, ...(borderTop ? { borderTop: `1px solid ${borderColor}` } : {}) }}>
+        <div className={`${maxWClass} mx-auto`}>
+          {/* Top: newsletter full-width bar */}
+          {showNewsletter && (
+            <div className="border-b pb-8 mb-10" style={{ borderColor: dividerColor }}>
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold" style={{ color: textColor }}>{newsletterTitle}</h3>
+                  {newsletterDescription && <p className="text-sm opacity-75 mt-1" style={{ color: textColor }}>{newsletterDescription}</p>}
+                </div>
+                <form className="flex flex-col sm:flex-row gap-2 sm:min-w-[360px]" onSubmit={(e) => e.preventDefault()}>
+                  <input type="email" placeholder={newsletterPlaceholder}
+                    className="flex-1 px-4 py-2.5 rounded-lg bg-white/10 border border-white/20 placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30"
+                    style={{ color: textColor }} />
+                  <button type="submit" className="px-6 py-2.5 rounded-lg font-medium transition-opacity hover:opacity-90 whitespace-nowrap"
+                    style={{ backgroundColor: newsletterButtonColor, color: isDarkBackground(newsletterButtonColor) ? "#ffffff" : "#000000" }}>
+                    {newsletterButtonText}
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+          {/* Middle: brand + columns + contact */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-10">
+            {/* Brand column */}
+            <div className="lg:col-span-4 space-y-4">
+              {logoUrl
+                ? <img src={logoUrl} alt={companyName} style={{ height: logoHeight }} />
+                : <p className="text-xl font-bold" style={{ color: textColor }}>{companyName}</p>}
+              {description && <p className="text-sm opacity-75 max-w-xs" style={{ color: textColor }}>{description}</p>}
+              {renderContactInfo()}
+              {renderAppBadges()}
+            </div>
+            {/* Link columns */}
+            <div className={`lg:col-span-${showContactInfo || showAppBadges ? "5" : "8"} grid ${columnGridClass} gap-8`}>
+              {columns.map((column, i) => (
+                <div key={i}>
+                  <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider" style={{ color: textColor }}>{column.title}</h3>
+                  <ul className="space-y-2.5">{(column.links || []).map(renderLink)}</ul>
+                </div>
+              ))}
+            </div>
+            {/* Social column */}
+            {showSocialLinks && socialLinks.length > 0 && (
+              <div className="lg:col-span-3">
+                {socialLinksTitle && <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider" style={{ color: textColor }}>{socialLinksTitle}</h3>}
+                <div className="flex flex-wrap gap-3">{socialLinks.map(renderSocialIcon)}</div>
+              </div>
+            )}
+          </div>
+          {renderBottomBar()}
+        </div>
+      </footer>
+    );
+  }
+
+  // === STANDARD VARIANT (default) ===
+  return (
+    <footer id={id} role="contentinfo" className={`w-full ${ptClass} ${pbClass} ${pxClass} ${className}`}
+      style={{ backgroundColor, ...(borderTop ? { borderTop: `1px solid ${borderColor}` } : {}) }}>
+      <div className={`${maxWClass} mx-auto`}>
+        {columns.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-10">
+            {/* Brand sidebar */}
+            <div className="lg:col-span-4 space-y-4">
+              {logoUrl
+                ? <img src={logoUrl} alt={companyName} style={{ height: logoHeight }} />
+                : <p className="text-xl font-bold" style={{ color: textColor }}>{companyName}</p>}
+              {description && <p className="text-sm opacity-75 max-w-xs" style={{ color: textColor }}>{description}</p>}
+              {showSocialLinks && socialLinks.length > 0 && (
+                <div>
+                  {socialLinksTitle && <p className="text-sm font-medium mb-2" style={{ color: textColor }}>{socialLinksTitle}</p>}
+                  <div className="flex gap-3">{socialLinks.map(renderSocialIcon)}</div>
+                </div>
+              )}
+              {renderContactInfo()}
+            </div>
+            {/* Link columns */}
+            <div className={`lg:col-span-8 grid ${columnGridClass} gap-8`}>
+              {columns.map((column, i) => (
+                <div key={i}>
+                  <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider" style={{ color: textColor }}>{column.title}</h3>
+                  <ul className="space-y-2.5">{(column.links || []).map(renderLink)}</ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {/* Newsletter */}
+        {showNewsletter && (
+          <div className="border-t pt-8 mb-8" style={{ borderColor: dividerColor }}>
+            {renderNewsletter()}
+          </div>
+        )}
+        {/* App badges */}
+        {showAppBadges && (
+          <div className="mb-8">{renderAppBadges()}</div>
+        )}
+        {renderBottomBar()}
       </div>
     </footer>
   );
@@ -16534,37 +18928,73 @@ export function NewsletterRender({
 export interface CarouselItem {
   image?: string | ImageValue;
   title?: string;
+  subtitle?: string;
   description?: string;
   link?: string;
   buttonText?: string;
+  buttonStyle?: 'primary' | 'secondary' | 'outline';
+  tag?: string;
+  overlayColor?: string;
+  overlayOpacity?: number;
 }
 
 export interface CarouselProps {
+  // Header
   title?: string;
   subtitle?: string;
   badge?: string;
   badgeColor?: string;
   headerAlign?: "left" | "center" | "right";
+
+  // Items
   items?: CarouselItem[];
+
+  // Behaviour
   autoplay?: boolean;
   interval?: number;
   pauseOnHover?: boolean;
   loop?: boolean;
+  enableKeyboard?: boolean;
+  enableSwipe?: boolean;
+  lazyLoad?: boolean;
+
+  // Display
+  slidesToShow?: 1 | 2 | 3;
+  slidesToScroll?: number;
+  variant?: 'fullWidth' | 'cards' | 'thumbnail';
+  transition?: 'slide' | 'fade' | 'zoom';
+  transitionDuration?: number;
+  slideHeight?: 'auto' | 'sm' | 'md' | 'lg' | 'xl' | 'full';
+
+  // Navigation
   showDots?: boolean;
   dotColor?: string;
   activeDotColor?: string;
+  dotStyle?: 'circle' | 'bar' | 'number';
   showArrows?: boolean;
   arrowColor?: string;
+  arrowBackgroundColor?: string;
   arrowStyle?: "circle" | "square" | "minimal";
   showCounter?: boolean;
-  aspectRatio?: "video" | "square" | "wide" | "auto";
-  borderRadius?: "none" | "sm" | "md" | "lg" | "xl";
+  counterColor?: string;
+
+  // Content Overlay
+  contentPosition?: 'center' | 'bottom-left' | 'bottom-center' | 'top-left';
   overlay?: boolean;
   overlayOpacity?: number;
   textColor?: string;
+
+  // Styling
+  aspectRatio?: "video" | "square" | "wide" | "auto";
+  borderRadius?: "none" | "sm" | "md" | "lg" | "xl";
   backgroundColor?: string;
+  gap?: 'none' | 'sm' | 'md' | 'lg';
   paddingY?: "sm" | "md" | "lg" | "xl";
   paddingX?: "sm" | "md" | "lg" | "xl";
+
+  // Accessibility
+  ariaLabel?: string;
+
   id?: string;
   className?: string;
 }
@@ -16580,44 +19010,141 @@ export function CarouselRender({
   interval = 5000,
   pauseOnHover = true,
   loop = true,
+  enableKeyboard = true,
+  enableSwipe = true,
+  lazyLoad = true,
+  slidesToShow = 1,
+  slidesToScroll,
+  variant = 'fullWidth',
+  transition = 'slide',
+  transitionDuration = 500,
+  slideHeight = 'auto',
   showDots = true,
   dotColor,
   activeDotColor,
+  dotStyle = 'circle',
   showArrows = true,
   arrowColor,
+  arrowBackgroundColor,
   arrowStyle = "circle",
   showCounter = false,
-  aspectRatio = "video",
-  borderRadius = "lg",
+  counterColor,
+  contentPosition = 'center',
   overlay = true,
   overlayOpacity = 40,
   textColor = "#ffffff",
+  aspectRatio = "video",
+  borderRadius = "lg",
   backgroundColor,
+  gap = 'none',
   paddingY = "lg",
   paddingX = "md",
+  ariaLabel = "Image carousel",
   id,
   className = "",
 }: CarouselProps) {
   const dark = isDarkBackground(backgroundColor);
   const resolvedTextColor = textColor || "#ffffff";
   const resolvedBadgeColor = badgeColor || (dark ? "#e5a956" : "var(--brand-primary, #3b82f6)");
-  const resolvedHeaderText = dark ? "#f8fafc" : "#1f2937";
-  const resolvedDotColor = dotColor || "rgba(255,255,255,0.5)";
-  const resolvedActiveDotColor = activeDotColor || "rgba(255,255,255,1)";
-  const resolvedArrowBg = arrowColor || "rgba(255,255,255,0.8)";
+  const resolvedHeaderText = dark ? "#f8fafc" : "var(--color-foreground, #1f2937)";
+  const resolvedDotColor = dotColor || "var(--color-muted-foreground, rgba(255,255,255,0.5))";
+  const resolvedActiveDotColor = activeDotColor || "var(--color-foreground, rgba(255,255,255,1))";
+  const resolvedArrowBg = arrowBackgroundColor || "var(--color-background, rgba(255,255,255,0.8))";
+  const resolvedArrowColor = arrowColor || "var(--color-foreground, #111827)";
+  const resolvedCounterColor = counterColor || "#ffffff";
+  const resolvedSlidesToScroll = slidesToScroll || slidesToShow;
+
+  const [currentIndex, setCurrentIndex] = React.useState(0);
+  const [isPaused, setIsPaused] = React.useState(false);
+  const [touchStart, setTouchStart] = React.useState<number | null>(null);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  const totalSlides = items.length;
+  const maxIndex = Math.max(0, totalSlides - slidesToShow);
+
+  // Autoplay
+  React.useEffect(() => {
+    if (!autoplay || isPaused || totalSlides <= slidesToShow) return;
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => {
+        const next = prev + resolvedSlidesToScroll;
+        if (next > maxIndex) return loop ? 0 : prev;
+        return next;
+      });
+    }, interval);
+    return () => clearInterval(timer);
+  }, [autoplay, isPaused, interval, loop, maxIndex, resolvedSlidesToScroll, totalSlides, slidesToShow]);
+
+  const goTo = React.useCallback((index: number) => {
+    if (index < 0) {
+      setCurrentIndex(loop ? maxIndex : 0);
+    } else if (index > maxIndex) {
+      setCurrentIndex(loop ? 0 : maxIndex);
+    } else {
+      setCurrentIndex(index);
+    }
+  }, [loop, maxIndex]);
+
+  const goNext = React.useCallback(() => goTo(currentIndex + resolvedSlidesToScroll), [currentIndex, resolvedSlidesToScroll, goTo]);
+  const goPrev = React.useCallback(() => goTo(currentIndex - resolvedSlidesToScroll), [currentIndex, resolvedSlidesToScroll, goTo]);
+
+  // Keyboard navigation
+  React.useEffect(() => {
+    if (!enableKeyboard) return;
+    const el = containerRef.current;
+    if (!el) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') { e.preventDefault(); goPrev(); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); goNext(); }
+    };
+    el.addEventListener('keydown', handleKeyDown);
+    return () => el.removeEventListener('keydown', handleKeyDown);
+  }, [enableKeyboard, goNext, goPrev]);
+
+  // Touch handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!enableSwipe) return;
+    setTouchStart(e.touches[0].clientX);
+  };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!enableSwipe || touchStart === null) return;
+    const diff = touchStart - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) goNext();
+      else goPrev();
+    }
+    setTouchStart(null);
+  };
 
   const pyClasses = paddingYMapUtil[paddingY] || paddingYMapUtil.lg;
   const pxClasses = paddingXMapUtil[paddingX] || paddingXMapUtil.md;
 
-  const aspectClasses = {
+  const heightClasses = {
+    auto: "",
+    sm: "h-[300px] md:h-[400px]",
+    md: "h-[400px] md:h-[500px]",
+    lg: "h-[500px] md:h-[600px]",
+    xl: "h-[600px] md:h-[700px]",
+    full: "h-screen",
+  }[slideHeight];
+
+  const aspectClasses = slideHeight !== 'auto' ? '' : {
     video: "aspect-video",
     square: "aspect-square",
     wide: "aspect-[21/9]",
     auto: "",
   }[aspectRatio];
+
   const radiusClasses = borderRadiusMapUtil[borderRadius]?.mobile || "rounded-lg";
 
-  const arrowClasses = {
+  const gapClasses = {
+    none: "gap-0",
+    sm: "gap-2",
+    md: "gap-4",
+    lg: "gap-6",
+  }[gap];
+
+  const arrowShapeClasses = {
     circle: "p-2 rounded-full shadow-lg",
     square: "p-2 rounded-md shadow-lg",
     minimal: "p-1",
@@ -16629,7 +19156,61 @@ export function CarouselRender({
     right: "text-right",
   }[headerAlign];
 
+  const contentPositionClasses = {
+    center: "items-center justify-center text-center",
+    "bottom-left": "items-start justify-end text-left pb-8 pl-8",
+    "bottom-center": "items-center justify-end text-center pb-8",
+    "top-left": "items-start justify-start text-left pt-8 pl-8",
+  }[contentPosition];
+
   const hasHeader = title || subtitle || badge;
+
+  // Determine which slides should be loaded (for lazy loading)
+  const shouldLoadSlide = (index: number) => {
+    if (!lazyLoad) return true;
+    return Math.abs(index - currentIndex) <= slidesToShow;
+  };
+
+  // Slide width percentage
+  const slideWidthPercent = 100 / slidesToShow;
+
+  // Transition styles
+  const getSlideContainerStyle = (): React.CSSProperties => {
+    if (transition === 'fade') {
+      return { position: 'relative', width: '100%', height: '100%' };
+    }
+    return {
+      display: 'flex',
+      transform: `translateX(-${currentIndex * slideWidthPercent}%)`,
+      transition: `transform ${transitionDuration}ms ease-in-out`,
+    };
+  };
+
+  const getSlideStyle = (index: number): React.CSSProperties => {
+    if (transition === 'fade') {
+      return {
+        position: index === 0 ? 'relative' : 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        opacity: index === currentIndex ? 1 : 0,
+        transition: `opacity ${transitionDuration}ms ease-in-out`,
+        zIndex: index === currentIndex ? 1 : 0,
+      };
+    }
+    if (transition === 'zoom') {
+      return {
+        flex: `0 0 ${slideWidthPercent}%`,
+        transform: index === currentIndex ? 'scale(1)' : 'scale(0.9)',
+        opacity: index === currentIndex ? 1 : 0.5,
+        transition: `transform ${transitionDuration}ms ease-in-out, opacity ${transitionDuration}ms ease-in-out`,
+      };
+    }
+    return {
+      flex: `0 0 ${slideWidthPercent}%`,
+    };
+  };
 
   return (
     <section
@@ -16676,38 +19257,80 @@ export function CarouselRender({
 
         {/* Carousel */}
         <div
-          className={`relative overflow-hidden ${radiusClasses}`}
+          ref={containerRef}
+          className={`relative overflow-hidden ${radiusClasses} ${heightClasses} ${aspectClasses}`}
+          role="region"
+          aria-label={ariaLabel}
+          aria-roledescription="carousel"
+          tabIndex={enableKeyboard ? 0 : undefined}
+          onMouseEnter={pauseOnHover ? () => setIsPaused(true) : undefined}
+          onMouseLeave={pauseOnHover ? () => setIsPaused(false) : undefined}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
         >
           <div
-            className={`flex transition-transform duration-500 ${aspectClasses}`}
+            className={transition !== 'fade' ? `${gapClasses}` : ''}
+            style={getSlideContainerStyle()}
           >
             {items.map((item, i) => {
               const itemImageUrl = getImageUrl(item.image);
+              const loaded = shouldLoadSlide(i);
+              const itemOverlayColor = item.overlayColor || 'rgba(0,0,0,1)';
+              const itemOverlayOpacity = item.overlayOpacity != null ? item.overlayOpacity / 100 : overlayOpacity / 100;
+
               return (
-                <div key={i} className="flex-none w-full h-full relative">
-                  <img
-                    src={itemImageUrl || "/placeholder.svg"}
-                    alt={item.title || `Slide ${i + 1}`}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
+                <div
+                  key={i}
+                  className={`${variant === 'cards' ? radiusClasses + ' overflow-hidden' : ''} w-full h-full relative`}
+                  style={getSlideStyle(i)}
+                  role="group"
+                  aria-roledescription="slide"
+                  aria-label={`Slide ${i + 1} of ${totalSlides}`}
+                >
+                  {loaded ? (
+                    <img
+                      src={itemImageUrl || "/placeholder.svg"}
+                      alt={item.title || `Slide ${i + 1}`}
+                      className="w-full h-full object-cover"
+                      loading={i === 0 ? "eager" : "lazy"}
+                    />
+                  ) : (
+                    <div className="w-full h-full" style={{ backgroundColor: 'var(--color-muted, #e5e7eb)' }} />
+                  )}
                   {overlay && (
                     <div
                       className="absolute inset-0"
                       style={{
-                        backgroundColor: `rgba(0,0,0,${overlayOpacity / 100})`,
+                        backgroundColor: itemOverlayColor,
+                        opacity: itemOverlayOpacity,
                       }}
                     />
                   )}
-                  {(item.title || item.description) && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                  {item.tag && (
+                    <span
+                      className="absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-medium z-10"
+                      style={{ backgroundColor: 'rgba(0,0,0,0.5)', color: '#ffffff' }}
+                    >
+                      {item.tag}
+                    </span>
+                  )}
+                  {(item.title || item.description || item.subtitle) && (
+                    <div className={`absolute inset-0 flex flex-col ${contentPositionClasses} p-6 z-[2]`}>
                       {item.title && (
                         <h3
-                          className="text-xl md:text-3xl lg:text-4xl font-bold mb-2 md:mb-4"
+                          className="text-xl md:text-3xl lg:text-4xl font-bold mb-2 md:mb-3"
                           style={{ color: resolvedTextColor }}
                         >
                           {item.title}
                         </h3>
+                      )}
+                      {item.subtitle && (
+                        <p
+                          className="text-sm md:text-base font-medium mb-2 opacity-90"
+                          style={{ color: resolvedTextColor }}
+                        >
+                          {item.subtitle}
+                        </p>
                       )}
                       {item.description && (
                         <p
@@ -16720,11 +19343,14 @@ export function CarouselRender({
                       {item.link && item.buttonText && (
                         <a
                           href={item.link}
-                          className="px-6 py-2 rounded-lg font-medium hover:opacity-90 transition-colors"
-                          style={{
-                            backgroundColor: "rgba(255,255,255,0.95)",
-                            color: "#111827",
-                          }}
+                          className="inline-block px-6 py-2 rounded-lg font-medium hover:opacity-90 transition-colors"
+                          style={
+                            item.buttonStyle === 'outline'
+                              ? { border: '2px solid ' + resolvedTextColor, color: resolvedTextColor }
+                              : item.buttonStyle === 'secondary'
+                              ? { backgroundColor: 'rgba(255,255,255,0.2)', color: resolvedTextColor, backdropFilter: 'blur(4px)' }
+                              : { backgroundColor: "rgba(255,255,255,0.95)", color: "#111827" }
+                          }
                         >
                           {item.buttonText}
                         </a>
@@ -16737,12 +19363,13 @@ export function CarouselRender({
           </div>
 
           {/* Arrows */}
-          {showArrows && items.length > 1 && (
+          {showArrows && totalSlides > slidesToShow && (
             <>
               <button
-                className={`absolute left-4 top-1/2 -translate-y-1/2 ${arrowClasses} transition-colors`}
-                style={{ backgroundColor: resolvedArrowBg }}
+                className={`absolute left-4 top-1/2 -translate-y-1/2 ${arrowShapeClasses} transition-colors z-10`}
+                style={{ backgroundColor: resolvedArrowBg, color: resolvedArrowColor }}
                 aria-label="Previous slide"
+                onClick={goPrev}
               >
                 <svg
                   className="w-5 h-5"
@@ -16759,9 +19386,10 @@ export function CarouselRender({
                 </svg>
               </button>
               <button
-                className={`absolute right-4 top-1/2 -translate-y-1/2 ${arrowClasses} transition-colors`}
-                style={{ backgroundColor: resolvedArrowBg }}
+                className={`absolute right-4 top-1/2 -translate-y-1/2 ${arrowShapeClasses} transition-colors z-10`}
+                style={{ backgroundColor: resolvedArrowBg, color: resolvedArrowColor }}
                 aria-label="Next slide"
+                onClick={goNext}
               >
                 <svg
                   className="w-5 h-5"
@@ -16781,29 +19409,44 @@ export function CarouselRender({
           )}
 
           {/* Counter */}
-          {showCounter && items.length > 1 && (
+          {showCounter && totalSlides > 1 && (
             <div
-              className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-medium"
-              style={{ backgroundColor: "rgba(0,0,0,0.5)", color: "#ffffff" }}
+              className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-medium z-10"
+              style={{ backgroundColor: "rgba(0,0,0,0.5)", color: resolvedCounterColor }}
             >
-              1 / {items.length}
+              {currentIndex + 1} / {totalSlides}
             </div>
           )}
 
           {/* Dots */}
-          {showDots && items.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-              {items.map((_, i) => (
-                <button
-                  key={i}
-                  className="w-2.5 h-2.5 rounded-full transition-colors"
-                  style={{
-                    backgroundColor:
-                      i === 0 ? resolvedActiveDotColor : resolvedDotColor,
-                  }}
-                  aria-label={`Go to slide ${i + 1}`}
-                />
-              ))}
+          {showDots && totalSlides > slidesToShow && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10" role="tablist">
+              {Array.from({ length: Math.ceil(totalSlides / resolvedSlidesToScroll) }).map((_, i) => {
+                const isActive = Math.floor(currentIndex / resolvedSlidesToScroll) === i;
+                return (
+                  <button
+                    key={i}
+                    className={`transition-all ${
+                      dotStyle === 'bar'
+                        ? `h-1 rounded-full ${isActive ? 'w-6' : 'w-2.5'}`
+                        : dotStyle === 'number'
+                        ? 'w-6 h-6 rounded-full text-xs font-medium flex items-center justify-center'
+                        : 'w-2.5 h-2.5 rounded-full'
+                    }`}
+                    style={{
+                      backgroundColor: isActive ? resolvedActiveDotColor : resolvedDotColor,
+                      ...(dotStyle === 'number' && isActive ? { color: '#000000' } : {}),
+                      ...(dotStyle === 'number' && !isActive ? { color: '#ffffff' } : {}),
+                    }}
+                    role="tab"
+                    aria-selected={isActive}
+                    aria-label={`Go to slide ${i + 1}`}
+                    onClick={() => goTo(i * resolvedSlidesToScroll)}
+                  >
+                    {dotStyle === 'number' ? i + 1 : null}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
@@ -17440,15 +20083,20 @@ export function PricingRender({
 // ACCORDION - Expandable Content
 // ============================================================================
 
+export interface AccordionItem {
+  title?: string;
+  content?: string;
+  icon?: string;
+  defaultOpen?: boolean;
+}
+
 export interface AccordionProps {
-  items?: Array<{
-    title?: string;
-    content?: string;
-    icon?: string;
-    defaultOpen?: boolean;
-  }>;
+  items?: AccordionItem[];
   title?: string;
   subtitle?: string;
+  badge?: string;
+  badgeColor?: string;
+  headerAlign?: "left" | "center" | "right";
   variant?: "simple" | "bordered" | "separated" | "filled";
   allowMultiple?: boolean;
   iconPosition?: "left" | "right";
@@ -17460,6 +20108,9 @@ export interface AccordionProps {
   textColor?: string;
   titleColor?: string;
   subtitleColor?: string;
+  itemBorderRadius?: "none" | "sm" | "md" | "lg" | "xl";
+  paddingY?: "sm" | "md" | "lg" | "xl";
+  paddingX?: "sm" | "md" | "lg" | "xl";
   id?: string;
   className?: string;
 }
@@ -17474,6 +20125,9 @@ export function AccordionRender({
   items = [],
   title,
   subtitle,
+  badge,
+  badgeColor,
+  headerAlign = "center",
   variant = "bordered",
   allowMultiple = true,
   iconPosition = "right",
@@ -17485,16 +20139,34 @@ export function AccordionRender({
   textColor,
   titleColor,
   subtitleColor,
+  itemBorderRadius = "lg",
+  paddingY = "lg",
+  paddingX = "md",
   id,
   className = "",
 }: AccordionProps) {
-  const resolvedTitleColor = titleColor || accentColor || textColor;
-  const resolvedSubtitleColor = subtitleColor || textColor;
-  const resolvedIconColor = iconColor || accentColor || activeColor;
+  const dark = isDarkBackground(backgroundColor);
+  const resolvedTitleColor = titleColor || accentColor || textColor || (dark ? "#f8fafc" : "#1f2937");
+  const resolvedSubtitleColor = subtitleColor || textColor || (dark ? "#94a3b8" : "#6b7280");
+  const resolvedIconColor = iconColor || accentColor || activeColor || (dark ? "#e5a956" : "var(--brand-primary, #3b82f6)");
+  const resolvedTextColor = textColor || (dark ? "#e2e8f0" : "#374151");
+  const resolvedBorderColor = borderColor || (dark ? "#334155" : "#e5e7eb");
+  const resolvedBadgeColor = badgeColor || resolvedIconColor;
+  const resolvedFilledBg = dark ? "#1e293b" : "#f9fafb";
+
+  const pyClasses = paddingYMapUtil[paddingY] || paddingYMapUtil.lg;
+  const pxClasses = paddingXMapUtil[paddingX] || paddingXMapUtil.md;
+  const itemRadiusClasses = borderRadiusMapUtil[itemBorderRadius]?.mobile || "rounded-lg";
+
+  const alignClasses = {
+    left: "text-left",
+    center: "text-center",
+    right: "text-right",
+  }[headerAlign];
 
   const variantClasses = {
     simple: "",
-    bordered: "border rounded-lg overflow-hidden divide-y",
+    bordered: `border ${itemRadiusClasses} overflow-hidden divide-y`,
     separated: "space-y-3",
     filled: "space-y-2",
   }[variant];
@@ -17502,23 +20174,34 @@ export function AccordionRender({
   const itemClasses = {
     simple: "border-b last:border-b-0",
     bordered: "",
-    separated: "border rounded-lg overflow-hidden",
-    filled: "rounded-lg overflow-hidden",
+    separated: `border ${itemRadiusClasses} overflow-hidden`,
+    filled: `${itemRadiusClasses} overflow-hidden`,
   }[variant];
 
   return (
     <section
       id={id}
-      className={`py-16 md:py-20 px-4 sm:px-6 lg:px-8 ${className}`}
+      className={`w-full ${pyClasses} ${pxClasses} ${className}`}
       style={{ backgroundColor }}
     >
       <div className="max-w-4xl mx-auto">
-        {/* Section title & subtitle */}
-        {(title || subtitle) && (
-          <div className="mb-10 md:mb-12 text-center">
+        {/* Section Header */}
+        {(title || subtitle || badge) && (
+          <div className={`${alignClasses} mb-10 md:mb-12`}>
+            {badge && (
+              <span
+                className="inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm font-medium mb-4"
+                style={{
+                  backgroundColor: `${resolvedBadgeColor}20`,
+                  color: resolvedBadgeColor,
+                }}
+              >
+                {badge}
+              </span>
+            )}
             {title && (
               <h2
-                className="text-3xl md:text-4xl font-bold mb-4"
+                className="text-2xl md:text-3xl lg:text-4xl font-bold mb-3"
                 style={{ color: resolvedTitleColor }}
               >
                 {title}
@@ -17526,8 +20209,11 @@ export function AccordionRender({
             )}
             {subtitle && (
               <p
-                className="text-lg md:text-xl leading-relaxed max-w-3xl mx-auto"
-                style={{ color: resolvedSubtitleColor, opacity: 0.85 }}
+                className="text-base md:text-lg leading-relaxed max-w-3xl opacity-85"
+                style={{
+                  color: resolvedSubtitleColor,
+                  ...(headerAlign === "center" ? { margin: "0 auto" } : {}),
+                }}
               >
                 {subtitle}
               </p>
@@ -17535,19 +20221,25 @@ export function AccordionRender({
           </div>
         )}
         {/* Accordion items */}
-        <div className={variantClasses} style={{ borderColor }}>
+        <div className={variantClasses} style={{ borderColor: resolvedBorderColor }}>
           {items.map((item, i) => (
             <details
               key={i}
               open={item.defaultOpen || i === 0}
               className={`group ${itemClasses}`}
-              style={variant === "filled" ? { backgroundColor: "#f9fafb" } : {}}
+              style={{
+                ...(variant === "filled" ? { backgroundColor: resolvedFilledBg } : {}),
+                ...(variant === "separated" || variant === "simple" ? { borderColor: resolvedBorderColor } : {}),
+              }}
             >
               <summary
                 className={`p-4 md:p-5 cursor-pointer list-none flex items-center ${iconPosition === "left" ? "flex-row-reverse justify-end" : "justify-between"} gap-4 font-semibold text-base md:text-lg transition-colors hover:opacity-80`}
-                style={{ color: textColor }}
+                style={{ color: resolvedTextColor }}
               >
-                <span className="flex-1">{item.title}</span>
+                <span className="flex-1">
+                  {item.icon && <span className="mr-2">{item.icon}</span>}
+                  {item.title}
+                </span>
                 <svg
                   className="w-5 h-5 flex-shrink-0 transition-transform duration-200 group-open:rotate-180"
                   style={{ color: resolvedIconColor }}
@@ -17565,7 +20257,7 @@ export function AccordionRender({
               </summary>
               <div
                 className="px-4 md:px-5 pb-4 md:pb-5 text-sm md:text-base leading-relaxed"
-                style={{ color: textColor, opacity: 0.85 }}
+                style={{ color: resolvedTextColor, opacity: 0.85 }}
                 dangerouslySetInnerHTML={{
                   __html: contentToHtml(item.content || ""),
                 }}
@@ -17586,151 +20278,348 @@ export interface TabsProps {
     label?: string;
     content?: string;
     icon?: string;
+    badge?: string;
+    badgeColor?: string;
+    disabled?: boolean;
+    hidden?: boolean;
   }>;
   title?: string;
   subtitle?: string;
+  // Behavior
   defaultTab?: number;
-  variant?: "underline" | "pills" | "boxed";
-  size?: "sm" | "md" | "lg";
-  fullWidth?: boolean;
-  centered?: boolean;
+  keepAlive?: boolean;
+  lazyLoad?: boolean;
+  // Style
+  variant?: "underline" | "pills" | "boxed" | "enclosed" | "soft" | "minimal" | "lifted";
   backgroundColor?: string;
   activeColor?: string;
+  inactiveColor?: string;
+  activeBackgroundColor?: string;
+  hoverColor?: string;
+  // Backwards compat
   activeTabColor?: string;
   activeTabTextColor?: string;
   inactiveTabColor?: string;
   inactiveTabTextColor?: string;
   tabBorderColor?: string;
-  contentBackgroundColor?: string;
   accentColor?: string;
   textColor?: string;
   titleColor?: string;
   subtitleColor?: string;
+  // Size & Layout
+  size?: "sm" | "md" | "lg";
+  fullWidth?: boolean;
+  centered?: boolean;
+  gap?: "none" | "sm" | "md" | "lg";
+  tabsPosition?: "top" | "bottom" | "left" | "right";
+  // Border & Indicator
+  showBorder?: boolean;
+  borderColor?: string;
+  borderWidth?: "1" | "2";
+  borderRadius?: string;
+  indicatorStyle?: "underline" | "background" | "pill" | "none";
+  indicatorColor?: string;
+  indicatorHeight?: "1" | "2" | "3" | "4";
+  // Content
+  contentPadding?: string;
+  contentBackgroundColor?: string;
+  contentBorderRadius?: string;
+  contentMinHeight?: "auto" | "sm" | "md" | "lg";
+  // Animation
+  animationType?: "none" | "fade" | "slide" | "scale";
+  animationDuration?: number;
+  slideDirection?: "horizontal" | "vertical";
+  // Icons
+  showIcons?: boolean;
+  iconPosition?: "left" | "right" | "top";
+  iconSize?: "sm" | "md" | "lg";
+  // Badges
+  showBadges?: boolean;
+  badgeStyle?: "dot" | "count" | "text";
+  // Overflow
+  overflowBehavior?: "scroll" | "dropdown" | "wrap";
+  showScrollButtons?: boolean;
+  scrollButtonStyle?: "arrow" | "chevron";
+  // Responsive
+  mobileVariant?: "same" | "pills" | "dropdown";
+  collapseOnMobile?: boolean;
+  mobileDropdown?: boolean;
+  // Accessibility
+  ariaLabel?: string;
+  enableKeyboard?: boolean;
   id?: string;
   className?: string;
 }
 
-export function TabsRender({
-  tabs = [],
-  title,
-  subtitle,
-  defaultTab = 0,
-  variant = "underline",
-  size = "md",
-  fullWidth = false,
-  centered = true,
-  backgroundColor,
-  activeColor,
-  activeTabColor,
-  activeTabTextColor,
-  inactiveTabColor,
-  inactiveTabTextColor,
-  tabBorderColor,
-  contentBackgroundColor,
-  accentColor,
-  textColor,
-  titleColor,
-  subtitleColor,
-  id,
-  className = "",
-}: TabsProps) {
-  const [activeTab, setActiveTab] = React.useState(defaultTab);
-  const resolvedActiveTabBg =
-    activeTabColor ||
-    activeColor ||
-    accentColor ||
-    "var(--brand-primary, #3b82f6)";
-  const resolvedActiveTabText = activeTabTextColor || "#ffffff";
-  const resolvedInactiveTabBg = inactiveTabColor || "transparent";
-  const resolvedInactiveTabText =
-    inactiveTabTextColor || accentColor || textColor || "#6b7280";
-  const resolvedTitleColor = titleColor || textColor;
-  const resolvedSubtitleColor = subtitleColor || textColor;
-  const resolvedContentBg = contentBackgroundColor || undefined;
+export function TabsRender(props: TabsProps) {
+  const {
+    tabs: rawTabs = [],
+    title,
+    subtitle,
+    defaultTab = 0,
+    keepAlive = true,
+    size = "md",
+    fullWidth = false,
+    backgroundColor,
+    gap = "sm",
+    showBorder = false,
+    borderWidth = "1",
+    indicatorHeight = "2",
+    contentMinHeight = "auto",
+    animationType = "fade",
+    animationDuration = 200,
+    showIcons = false,
+    iconPosition = "left",
+    iconSize = "md",
+    showBadges = false,
+    badgeStyle = "count",
+    overflowBehavior = "scroll",
+    ariaLabel = "Tabs",
+    enableKeyboard = true,
+    id,
+    className = "",
+  } = props;
 
-  const sizeClasses = {
-    sm: "text-sm px-3 py-2",
-    md: "text-base px-5 py-2.5",
-    lg: "text-lg px-6 py-3",
-  }[size];
+  // Backwards-compat alias resolution
+  const variant = props.variant || "underline";
+  const tabsPosition = props.tabsPosition || "top";
+  const centered = props.centered ?? true;
+  const resolvedActiveColor = props.activeColor || props.activeTabTextColor || props.accentColor || "var(--brand-primary, #3b82f6)";
+  const resolvedActiveBg = props.activeBackgroundColor || props.activeTabColor || (variant === "underline" || variant === "minimal" ? "transparent" : resolvedActiveColor);
+  const resolvedActiveText = variant === "underline" || variant === "minimal" ? resolvedActiveColor : (props.activeTabTextColor || "#ffffff");
+  const resolvedInactiveColor = props.inactiveColor || props.inactiveTabTextColor || props.textColor || "#6b7280";
+  const resolvedInactiveBg = props.inactiveTabColor || "transparent";
+  const resolvedHoverColor = props.hoverColor || resolvedActiveColor;
+  const resolvedIndicatorColor = props.indicatorColor || resolvedActiveColor;
+  const resolvedBorderColor = props.borderColor || props.tabBorderColor || "#e5e7eb";
+  const resolvedContentBg = props.contentBackgroundColor || undefined;
+  const resolvedTitleColor = props.titleColor || props.textColor;
+  const resolvedSubtitleColor = props.subtitleColor || props.textColor;
+  const textColor = props.textColor;
+
+  // Filter hidden tabs
+  const tabs = rawTabs.filter(tab => !tab.hidden);
+
+  const [activeTab, setActiveTab] = React.useState(() => {
+    const idx = Math.min(defaultTab, tabs.length - 1);
+    return idx >= 0 ? idx : 0;
+  });
+  const [visitedTabs, setVisitedTabs] = React.useState<Set<number>>(() => new Set([activeTab]));
+  const tabListRef = React.useRef<HTMLDivElement>(null);
+  const tabRefs = React.useRef<(HTMLButtonElement | null)[]>([]);
+
+  const handleTabChange = (index: number) => {
+    if (tabs[index]?.disabled) return;
+    setActiveTab(index);
+    setVisitedTabs(prev => new Set(prev).add(index));
+  };
+
+  // Keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent, currentIndex: number) => {
+    if (!enableKeyboard) return;
+    const isVertical = tabsPosition === "left" || tabsPosition === "right";
+    const prevKey = isVertical ? "ArrowUp" : "ArrowLeft";
+    const nextKey = isVertical ? "ArrowDown" : "ArrowRight";
+    let targetIndex = -1;
+
+    if (e.key === prevKey) {
+      e.preventDefault();
+      for (let i = currentIndex - 1; i >= 0; i--) { if (!tabs[i]?.disabled) { targetIndex = i; break; } }
+      if (targetIndex === -1) { for (let i = tabs.length - 1; i > currentIndex; i--) { if (!tabs[i]?.disabled) { targetIndex = i; break; } } }
+    } else if (e.key === nextKey) {
+      e.preventDefault();
+      for (let i = currentIndex + 1; i < tabs.length; i++) { if (!tabs[i]?.disabled) { targetIndex = i; break; } }
+      if (targetIndex === -1) { for (let i = 0; i < currentIndex; i++) { if (!tabs[i]?.disabled) { targetIndex = i; break; } } }
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      for (let i = 0; i < tabs.length; i++) { if (!tabs[i]?.disabled) { targetIndex = i; break; } }
+    } else if (e.key === "End") {
+      e.preventDefault();
+      for (let i = tabs.length - 1; i >= 0; i--) { if (!tabs[i]?.disabled) { targetIndex = i; break; } }
+    }
+
+    if (targetIndex >= 0) {
+      handleTabChange(targetIndex);
+      tabRefs.current[targetIndex]?.focus();
+    }
+  };
+
+  // Size classes
+  const sizeClasses = { sm: "text-sm px-3 py-1.5", md: "text-sm px-4 py-2", lg: "text-base px-5 py-2.5" }[size] || "text-sm px-4 py-2";
+  const gapClass = { none: "gap-0", sm: "gap-1", md: "gap-2", lg: "gap-4" }[gap] || "gap-1";
+  const iconSizeClass = { sm: "text-sm", md: "text-base", lg: "text-lg" }[iconSize] || "text-base";
+  const contentPadClass: Record<string, string> = {
+    none: "p-0", xs: "p-2", sm: "p-4", md: "p-6", lg: "p-8", xl: "p-10", "2xl": "p-12",
+  };
+  const contentPad = contentPadClass[props.contentPadding || "md"] || "p-6";
+  const contentMinHClass = { auto: "", sm: "min-h-[150px]", md: "min-h-[250px]", lg: "min-h-[350px]" }[contentMinHeight] || "";
+  const contentRadiusClass: Record<string, string> = {
+    none: "rounded-none", sm: "rounded-sm", md: "rounded-md", lg: "rounded-lg", xl: "rounded-xl", full: "rounded-full",
+  };
+  const contentRadius = contentRadiusClass[props.contentBorderRadius || "none"] || "";
+  const tabRadiusClass: Record<string, string> = {
+    none: "", sm: "rounded-sm", md: "rounded-md", lg: "rounded-lg", xl: "rounded-xl", full: "rounded-full",
+  };
+
+  // Variant-specific tab styles
+  const getTabStyle = (isActive: boolean): React.CSSProperties => {
+    const base: React.CSSProperties = { transition: `all ${animationDuration}ms ease` };
+    switch (variant) {
+      case "pills":
+        return { ...base, backgroundColor: isActive ? resolvedActiveBg : resolvedInactiveBg, color: isActive ? resolvedActiveText : resolvedInactiveColor, borderRadius: "9999px" };
+      case "boxed":
+        return { ...base, backgroundColor: isActive ? resolvedActiveBg : resolvedInactiveBg, color: isActive ? resolvedActiveText : resolvedInactiveColor, border: `1px solid ${isActive ? resolvedActiveBg : resolvedBorderColor}`, borderRadius: tabRadiusClass[props.borderRadius || "md"] ? undefined : "0.375rem" };
+      case "enclosed":
+        return { ...base, backgroundColor: isActive ? (resolvedContentBg || "#ffffff") : "transparent", color: isActive ? resolvedActiveColor : resolvedInactiveColor, borderTop: `2px solid ${isActive ? resolvedIndicatorColor : "transparent"}`, borderLeft: `1px solid ${isActive ? resolvedBorderColor : "transparent"}`, borderRight: `1px solid ${isActive ? resolvedBorderColor : "transparent"}`, borderBottom: isActive ? `1px solid ${resolvedContentBg || "#ffffff"}` : `1px solid ${resolvedBorderColor}`, marginBottom: isActive ? "-1px" : "0", borderRadius: "0.375rem 0.375rem 0 0" };
+      case "soft":
+        return { ...base, backgroundColor: isActive ? `${resolvedActiveColor}15` : "transparent", color: isActive ? resolvedActiveColor : resolvedInactiveColor, borderRadius: "0.5rem" };
+      case "minimal":
+        return { ...base, backgroundColor: "transparent", color: isActive ? resolvedActiveColor : resolvedInactiveColor, fontWeight: isActive ? 600 : 400 };
+      case "lifted":
+        return { ...base, backgroundColor: isActive ? (resolvedContentBg || "#ffffff") : "transparent", color: isActive ? resolvedActiveColor : resolvedInactiveColor, boxShadow: isActive ? "0 -2px 8px rgba(0,0,0,0.08)" : "none", borderRadius: "0.5rem 0.5rem 0 0", transform: isActive ? "translateY(-2px)" : "none", zIndex: isActive ? 1 : 0 };
+      case "underline":
+      default:
+        return { ...base, backgroundColor: "transparent", color: isActive ? resolvedActiveColor : resolvedInactiveColor, borderBottom: `${indicatorHeight}px solid ${isActive ? resolvedIndicatorColor : "transparent"}` };
+    }
+  };
+
+  // Icon rendering
+  const renderIcon = (tab: typeof tabs[0]) => {
+    if (!showIcons || !tab.icon) return null;
+    return <span className={`${iconSizeClass} shrink-0`}>{tab.icon}</span>;
+  };
+
+  // Badge rendering
+  const renderBadge = (tab: typeof tabs[0]) => {
+    if (!showBadges || !tab.badge) return null;
+    const badgeColor = tab.badgeColor || resolvedActiveColor;
+    if (badgeStyle === "dot") {
+      return <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: badgeColor }} />;
+    }
+    return (
+      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0" style={{ backgroundColor: badgeColor, color: "#fff" }}>
+        {tab.badge}
+      </span>
+    );
+  };
+
+  // Content animation styles
+  const getContentAnimation = (): React.CSSProperties => {
+    if (animationType === "none") return {};
+    if (animationType === "fade") return { animation: `tabFadeIn ${animationDuration}ms ease` };
+    if (animationType === "scale") return { animation: `tabScaleIn ${animationDuration}ms ease` };
+    return {};
+  };
+
+  // Build tab button
+  const renderTabButton = (tab: typeof tabs[0], index: number) => {
+    const isActive = index === activeTab;
+    const tabId = `${id || "tabs"}-tab-${index}`;
+    const panelId = `${id || "tabs"}-panel-${index}`;
+    const isDisabled = !!tab.disabled;
+    const iconEl = renderIcon(tab);
+    const badgeEl = renderBadge(tab);
+    const isIconTop = iconPosition === "top" && showIcons && tab.icon;
+
+    return (
+      <button
+        key={index}
+        ref={(el) => { tabRefs.current[index] = el; }}
+        id={tabId}
+        role="tab"
+        aria-selected={isActive}
+        aria-controls={panelId}
+        aria-disabled={isDisabled || undefined}
+        tabIndex={isActive ? 0 : -1}
+        onClick={() => handleTabChange(index)}
+        onKeyDown={(e) => handleKeyDown(e, index)}
+        className={`${sizeClasses} ${fullWidth ? "flex-1" : ""} font-medium transition-all cursor-pointer whitespace-nowrap ${isIconTop ? "flex flex-col items-center gap-1" : "inline-flex items-center gap-1.5"} ${isDisabled ? "opacity-40 cursor-not-allowed" : ""}`}
+        style={getTabStyle(isActive)}
+        disabled={isDisabled}
+      >
+        {iconPosition === "left" && iconEl}
+        {isIconTop && iconEl}
+        <span>{tab.label}</span>
+        {iconPosition === "right" && iconEl}
+        {badgeEl}
+      </button>
+    );
+  };
+
+  const isVertical = tabsPosition === "left" || tabsPosition === "right";
+
+  // Tab list
+  const tabListEl = (
+    <div
+      ref={tabListRef}
+      role="tablist"
+      aria-label={ariaLabel}
+      aria-orientation={isVertical ? "vertical" : "horizontal"}
+      className={`flex ${isVertical ? "flex-col" : `flex-row ${overflowBehavior === "wrap" ? "flex-wrap" : "overflow-x-auto"}`} ${gapClass} ${!isVertical && centered ? "justify-center" : ""} ${!isVertical && fullWidth ? "w-full" : ""} ${isVertical ? "min-w-[140px]" : ""}`}
+      style={{
+        ...(showBorder && !isVertical && variant === "underline" ? { borderBottom: `${borderWidth}px solid ${resolvedBorderColor}` } : {}),
+        ...(showBorder && isVertical ? { [tabsPosition === "left" ? "borderRight" : "borderLeft"]: `${borderWidth}px solid ${resolvedBorderColor}` } : {}),
+      }}
+    >
+      {tabs.map(renderTabButton)}
+    </div>
+  );
+
+  // Tab panels
+  const panelEls = tabs.map((tab, index) => {
+    const isActive = index === activeTab;
+    const panelId = `${id || "tabs"}-panel-${index}`;
+    const tabId = `${id || "tabs"}-tab-${index}`;
+    const shouldRender = keepAlive ? visitedTabs.has(index) : isActive;
+    if (!shouldRender) return null;
+    return (
+      <div
+        key={index}
+        id={panelId}
+        role="tabpanel"
+        aria-labelledby={tabId}
+        tabIndex={0}
+        hidden={!isActive}
+        className={`${contentPad} ${contentMinHClass} ${contentRadius} text-base leading-relaxed focus:outline-none`}
+        style={{
+          color: textColor,
+          backgroundColor: resolvedContentBg,
+          ...(isActive ? getContentAnimation() : {}),
+        }}
+        dangerouslySetInnerHTML={tab.content ? { __html: contentToHtml(tab.content) } : undefined}
+      />
+    );
+  });
 
   return (
-    <section
-      id={id}
-      className={`py-16 md:py-20 px-4 sm:px-6 lg:px-8 ${className}`}
-      style={{ backgroundColor: backgroundColor || undefined }}
-    >
-      <div className="max-w-4xl mx-auto">
-        {/* Section title & subtitle */}
-        {(title || subtitle) && (
-          <div className="mb-10 md:mb-12 text-center">
-            {title && (
-              <h2
-                className="text-3xl md:text-4xl font-bold mb-4"
-                style={{ color: resolvedTitleColor }}
-              >
-                {title}
-              </h2>
-            )}
-            {subtitle && (
-              <p
-                className="text-lg md:text-xl leading-relaxed max-w-3xl mx-auto"
-                style={{ color: resolvedSubtitleColor, opacity: 0.85 }}
-              >
-                {subtitle}
-              </p>
-            )}
+    <>
+      {/* Keyframe animations injected via style tag */}
+      {animationType !== "none" && (
+        <style>{`
+          @keyframes tabFadeIn { from { opacity: 0; } to { opacity: 1; } }
+          @keyframes tabScaleIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+        `}</style>
+      )}
+      <section
+        id={id}
+        className={`py-8 px-4 sm:px-6 lg:px-8 ${className}`}
+        style={{ backgroundColor: backgroundColor || undefined }}
+      >
+        <div className="max-w-4xl mx-auto">
+          {(title || subtitle) && (
+            <div className="mb-8 text-center">
+              {title && <h2 className="text-3xl md:text-4xl font-bold mb-3" style={{ color: resolvedTitleColor }}>{title}</h2>}
+              {subtitle && <p className="text-lg leading-relaxed max-w-3xl mx-auto opacity-85" style={{ color: resolvedSubtitleColor }}>{subtitle}</p>}
+            </div>
+          )}
+          <div className={`${isVertical ? "flex gap-6" : ""} ${isVertical && tabsPosition === "right" ? "flex-row-reverse" : ""}`}>
+            {tabsPosition !== "bottom" && tabListEl}
+            <div className={`${isVertical ? "flex-1" : ""}`}>{panelEls}</div>
+            {tabsPosition === "bottom" && tabListEl}
           </div>
-        )}
-        {/* Tab buttons */}
-        <div
-          className={`flex flex-wrap gap-2 mb-0 ${fullWidth ? "w-full" : ""} ${centered ? "justify-center" : ""}`}
-          style={
-            tabBorderColor
-              ? {
-                  borderBottom: `2px solid ${tabBorderColor}`,
-                  paddingBottom: "0",
-                }
-              : undefined
-          }
-        >
-          {tabs.map((tab, i) => {
-            const isActive = i === activeTab;
-            return (
-              <button
-                key={i}
-                onClick={() => setActiveTab(i)}
-                className={`${sizeClasses} ${fullWidth ? "flex-1" : ""} font-medium rounded-t-lg transition-all duration-200 cursor-pointer border-b-2`}
-                style={{
-                  backgroundColor: isActive
-                    ? resolvedActiveTabBg
-                    : resolvedInactiveTabBg,
-                  color: isActive
-                    ? resolvedActiveTabText
-                    : resolvedInactiveTabText,
-                  borderBottomColor: isActive
-                    ? resolvedActiveTabBg
-                    : "transparent",
-                }}
-              >
-                {tab.icon && <span className="mr-2">{tab.icon}</span>}
-                {tab.label}
-              </button>
-            );
-          })}
         </div>
-        {/* Tab content */}
-        {tabs[activeTab]?.content && (
-          <div
-            className="p-6 md:p-8 rounded-b-lg text-base leading-relaxed"
-            style={{ color: textColor, backgroundColor: resolvedContentBg }}
-            dangerouslySetInnerHTML={{
-              __html: contentToHtml(tabs[activeTab].content || ""),
-            }}
-          />
-        )}
-      </div>
-    </section>
+      </section>
+    </>
   );
 }
 
@@ -18997,6 +21886,15 @@ export interface AvatarProps {
   border?: boolean;
   borderColor?: string;
   fallbackColor?: string;
+  // Link
+  href?: string;
+  target?: "_self" | "_blank";
+  // Tooltip
+  showTooltip?: boolean;
+  // Ring
+  ring?: boolean;
+  ringColor?: string;
+  ringWidth?: number;
   id?: string;
   className?: string;
 }
@@ -19012,6 +21910,12 @@ export function AvatarRender({
   border = false,
   borderColor = "#ffffff",
   fallbackColor = "#e5e7eb",
+  href,
+  target = "_self",
+  showTooltip = false,
+  ring = false,
+  ringColor,
+  ringWidth = 2,
   id,
   className = "",
 }: AvatarProps) {
@@ -19060,14 +21964,28 @@ export function AvatarRender({
         .slice(0, 2)
     : "";
 
-  return (
-    <div id={id} className={`relative inline-flex ${className}`}>
+  const resolvedRingColor = ringColor || "var(--color-primary, #3b82f6)";
+
+  // Merge ring + border: ring goes outside border
+  const combinedShadow = [
+    border ? `0 0 0 2px ${borderColor}` : "",
+    ring ? `0 0 0 ${(border ? 2 : 0) + ringWidth}px ${resolvedRingColor}` : "",
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  const avatarShadowStyle: React.CSSProperties = combinedShadow
+    ? { boxShadow: combinedShadow }
+    : {};
+
+  const avatarContent = (
+    <div id={id} className={`group relative inline-flex ${className}`}>
       {srcUrl ? (
         <img
           src={srcUrl}
           alt={srcAlt}
           className={`${sizeClasses} ${shapeClasses} object-cover`}
-          style={border ? { boxShadow: `0 0 0 2px ${borderColor}` } : undefined}
+          style={avatarShadowStyle}
           loading="lazy"
         />
       ) : (
@@ -19075,7 +21993,7 @@ export function AvatarRender({
           className={`${sizeClasses} ${shapeClasses} flex items-center justify-center font-medium`}
           style={{
             backgroundColor: fallbackColor,
-            ...(border ? { boxShadow: `0 0 0 2px ${borderColor}` } : {}),
+            ...avatarShadowStyle,
           }}
         >
           {initials}
@@ -19088,8 +22006,35 @@ export function AvatarRender({
           aria-label={status}
         />
       )}
+      {showTooltip && name && (
+        <span
+          className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-full mb-2 whitespace-nowrap rounded px-2 py-1 text-xs opacity-0 transition-opacity group-hover:opacity-100"
+          style={{
+            backgroundColor: "var(--color-foreground, #1f2937)",
+            color: "var(--color-background, #ffffff)",
+          }}
+          role="tooltip"
+        >
+          {name}
+        </span>
+      )}
     </div>
   );
+
+  if (href) {
+    return (
+      <a
+        href={href}
+        target={target}
+        rel={target === "_blank" ? "noopener noreferrer" : undefined}
+        className="inline-flex transition-opacity hover:opacity-80"
+      >
+        {avatarContent}
+      </a>
+    );
+  }
+
+  return avatarContent;
 }
 
 // ============================================================================
@@ -19533,11 +22478,16 @@ export interface AnnouncementBarProps {
   linkText?: string;
   dismissible?: boolean;
   position?: "top" | "bottom";
-  variant?: "default" | "success" | "warning" | "error" | "info" | "gradient";
+  variant?: "default" | "success" | "warning" | "error" | "info" | "gradient" | "custom";
   icon?: React.ReactNode;
   textAlign?: "left" | "center" | "right";
   size?: "sm" | "md" | "lg";
   sticky?: boolean;
+  backgroundColor?: string;
+  textColor?: string;
+  linkColor?: string;
+  backgroundGradient?: GradientConfig;
+  fontWeight?: "normal" | "medium" | "semibold" | "bold";
   id?: string;
   className?: string;
 }
@@ -19553,18 +22503,28 @@ export function AnnouncementBarRender({
   textAlign = "center",
   size = "md",
   sticky = true,
+  backgroundColor,
+  textColor,
+  linkColor,
+  backgroundGradient,
+  fontWeight = "normal",
   id,
   className = "",
 }: AnnouncementBarProps) {
-  const variantClasses = {
-    default: "bg-gray-900 text-white",
-    success: "bg-green-600 text-white",
-    warning: "bg-yellow-500 text-black",
-    error: "bg-red-600 text-white",
-    info: "bg-sky-600 text-white",
-    gradient:
-      "bg-gradient-to-r from-purple-600 via-pink-600 to-red-500 text-white",
-  }[variant];
+  const isCustom = variant === "custom" || backgroundColor;
+
+  const variantClasses = isCustom
+    ? ""
+    : {
+        default: "bg-gray-900 text-white",
+        success: "bg-green-600 text-white",
+        warning: "bg-yellow-500 text-black",
+        error: "bg-red-600 text-white",
+        info: "bg-sky-600 text-white",
+        gradient:
+          "bg-gradient-to-r from-purple-600 via-pink-600 to-red-500 text-white",
+        custom: "",
+      }[variant];
 
   const sizeClasses = {
     sm: "py-1.5 px-3 text-xs",
@@ -19578,13 +22538,31 @@ export function AnnouncementBarRender({
     right: "justify-end text-right",
   }[textAlign];
 
+  const weightClasses = {
+    normal: "font-normal",
+    medium: "font-medium",
+    semibold: "font-semibold",
+    bold: "font-bold",
+  }[fontWeight];
+
   const positionClasses = position === "top" ? "top-0" : "bottom-0";
   const stickyClasses = sticky ? `sticky ${positionClasses} z-50` : "";
+
+  const gradientCss = backgroundGradient ? buildGradientCSS(backgroundGradient) : undefined;
+
+  const dark = isCustom ? isDarkBackground(backgroundColor) : !["warning"].includes(variant);
+  const resolvedTextColor = textColor || (dark ? "#ffffff" : "#111827");
+  const resolvedLinkColor = linkColor || resolvedTextColor;
 
   return (
     <div
       id={id}
-      className={`w-full ${variantClasses} ${sizeClasses} ${stickyClasses} ${className}`}
+      className={`w-full ${variantClasses} ${sizeClasses} ${weightClasses} ${stickyClasses} ${className}`}
+      style={{
+        ...(isCustom && backgroundColor ? { backgroundColor } : {}),
+        ...(gradientCss ? { background: gradientCss } : {}),
+        color: isCustom ? resolvedTextColor : undefined,
+      }}
     >
       <div
         className={`max-w-7xl mx-auto flex items-center gap-2 md:gap-4 ${alignClasses}`}
@@ -19595,6 +22573,7 @@ export function AnnouncementBarRender({
           <a
             href={link}
             className="font-semibold underline underline-offset-2 hover:no-underline flex-shrink-0"
+            style={{ color: resolvedLinkColor }}
           >
             {linkText}
           </a>
@@ -19640,6 +22619,11 @@ export interface SocialProofProps {
   scoreBackgroundColor?: string;
   scoreTextColor?: string;
   mutedTextColor?: string;
+  // Schema.org (Phase 5)
+  enableSchema?: boolean;
+  schemaItemReviewed?: string;
+  // Animation (Phase 5)
+  animateOnScroll?: boolean;
   id?: string;
   className?: string;
 }
@@ -19659,6 +22643,9 @@ export function SocialProofRender({
   scoreBackgroundColor,
   scoreTextColor,
   mutedTextColor,
+  enableSchema = false,
+  schemaItemReviewed,
+  animateOnScroll = false,
   id,
   className = "",
 }: SocialProofProps) {
@@ -19671,6 +22658,29 @@ export function SocialProofRender({
   const resolvedScoreBg = scoreBackgroundColor || 'var(--color-success, #22c55e)';
   const resolvedScoreText = scoreTextColor || '#ffffff';
   const resolvedMutedText = mutedTextColor || 'var(--color-muted-foreground, #6b7280)';
+
+  // Schema.org JSON-LD for SEO
+  const schemaJsonLd = enableSchema ? (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "AggregateRating",
+          ...(schemaItemReviewed ? {
+            itemReviewed: {
+              "@type": "Organization",
+              name: schemaItemReviewed,
+            },
+          } : {}),
+          ratingValue: String(rating),
+          bestRating: String(maxRating),
+          worstRating: "1",
+          ratingCount: String(reviewCount),
+        }),
+      }}
+    />
+  ) : null;
 
   const sizeClasses = getResponsiveClasses(size, {
     sm: ["text-xs gap-1", "md:text-xs md:gap-1", "lg:text-xs lg:gap-1"],
@@ -19785,6 +22795,7 @@ export function SocialProofRender({
       id={id}
       className={`inline-flex flex-col items-center ${sizeClasses} ${className}`}
     >
+      {schemaJsonLd}
       {renderStars()}
       <div className="flex items-center gap-1 mt-1">
         <span className="font-semibold">{rating}</span>
@@ -19826,6 +22837,9 @@ export interface TrustBadgesProps {
   hoverEffect?: boolean;
   gap?: ResponsiveValue<"sm" | "md" | "lg">;
   alignment?: "start" | "center" | "end";
+  // Animation (Phase 5)
+  animateOnScroll?: boolean;
+  staggerDelay?: number;
   id?: string;
   className?: string;
 }
@@ -19845,6 +22859,8 @@ export function TrustBadgesRender({
   hoverEffect = true,
   gap = "md",
   alignment = "center",
+  animateOnScroll = false,
+  staggerDelay = 100,
   id,
   className = "",
 }: TrustBadgesProps) {
@@ -19890,6 +22906,13 @@ export function TrustBadgesRender({
         className={`${layoutClasses} ${typeof layout === "object" && layout.mobile === "grid" ? columnClasses : ""} ${gapClasses} ${alignClasses} items-center`}
       >
         {badges.map((badge, index) => {
+          const animStyle: React.CSSProperties = animateOnScroll
+            ? {
+                opacity: 0,
+                animation: "fadeInUp 0.5s ease-out forwards",
+                animationDelay: `${index * staggerDelay}ms`,
+              }
+            : {};
           const imageElement = (
             <img
               src={badge.image}
@@ -19906,11 +22929,12 @@ export function TrustBadgesRender({
               href={badge.link}
               target="_blank"
               rel="noopener noreferrer"
+              style={animStyle}
             >
               {imageElement}
             </a>
           ) : (
-            <div key={index}>{imageElement}</div>
+            <div key={index} style={animStyle}>{imageElement}</div>
           );
         })}
       </div>
@@ -19932,14 +22956,24 @@ export interface LogoCloudProps {
   logos?: LogoItem[];
   title?: string;
   subtitle?: string;
+  badge?: string;
+  badgeColor?: string;
+  headerAlign?: "left" | "center" | "right";
   columns?: ResponsiveValue<2 | 3 | 4 | 5 | 6>;
   grayscale?: boolean;
   hoverColor?: boolean;
   variant?: "simple" | "cards" | "marquee";
   gap?: ResponsiveValue<"sm" | "md" | "lg" | "xl">;
   logoHeight?: ResponsiveValue<"sm" | "md" | "lg">;
+  backgroundColor?: string;
   background?: string;
+  cardBackgroundColor?: string;
+  paddingY?: "sm" | "md" | "lg" | "xl";
+  paddingX?: "sm" | "md" | "lg" | "xl";
   padding?: ResponsiveValue<"none" | "sm" | "md" | "lg">;
+  // Marquee controls (Phase 5)
+  marqueeSpeed?: "slow" | "normal" | "fast";
+  pauseOnHover?: boolean;
   id?: string;
   className?: string;
 }
@@ -19955,17 +22989,45 @@ export function LogoCloudRender({
   ],
   title = "Trusted by leading companies",
   subtitle,
+  badge,
+  badgeColor,
+  headerAlign = "center",
   columns = { mobile: 2, tablet: 3, desktop: 6 },
   grayscale = true,
   hoverColor = true,
   variant = "simple",
   gap = "lg",
   logoHeight = "md",
+  backgroundColor,
   background,
-  padding = "lg",
+  cardBackgroundColor,
+  paddingY = "lg",
+  paddingX = "md",
+  padding,
+  marqueeSpeed = "normal",
+  pauseOnHover = true,
   id,
   className = "",
 }: LogoCloudProps) {
+  const dark = isDarkBackground(backgroundColor);
+  const resolvedTitleColor = dark ? "#94a3b8" : "#6b7280";
+  const resolvedSubtitleColor = dark ? "#64748b" : "#9ca3af";
+  const resolvedBadgeColor = badgeColor || (dark ? "#e5a956" : "var(--brand-primary, #3b82f6)");
+  const resolvedCardBg = cardBackgroundColor || (dark ? "#1e293b" : "#ffffff");
+
+  // Use new padding utils if paddingY/paddingX are specified; fall back to legacy responsive padding
+  const useLegacyPadding = !backgroundColor && padding;
+  const pyClasses = useLegacyPadding ? "" : (paddingYMapUtil[paddingY] || paddingYMapUtil.lg);
+  const pxClasses = useLegacyPadding ? "" : (paddingXMapUtil[paddingX] || paddingXMapUtil.md);
+  const legacyPaddingClasses = useLegacyPadding
+    ? getResponsiveClasses(padding!, {
+        none: ["p-0", "md:p-0", "lg:p-0"],
+        sm: ["py-6 px-4", "md:py-8 md:px-6", "lg:py-10 lg:px-8"],
+        md: ["py-10 px-4", "md:py-12 md:px-8", "lg:py-16 lg:px-12"],
+        lg: ["py-12 px-4", "md:py-16 md:px-8", "lg:py-20 lg:px-16"],
+      })
+    : "";
+
   const columnClasses = getResponsiveClasses(columns, {
     2: ["grid-cols-2", "md:grid-cols-2", "lg:grid-cols-2"],
     3: ["grid-cols-2", "md:grid-cols-3", "lg:grid-cols-3"],
@@ -19987,12 +23049,11 @@ export function LogoCloudRender({
     lg: ["h-10", "md:h-12", "lg:h-16"],
   });
 
-  const paddingClasses = getResponsiveClasses(padding, {
-    none: ["p-0", "md:p-0", "lg:p-0"],
-    sm: ["py-6 px-4", "md:py-8 md:px-6", "lg:py-10 lg:px-8"],
-    md: ["py-10 px-4", "md:py-12 md:px-8", "lg:py-16 lg:px-12"],
-    lg: ["py-12 px-4", "md:py-16 md:px-8", "lg:py-20 lg:px-16"],
-  });
+  const alignClasses = {
+    left: "text-left",
+    center: "text-center",
+    right: "text-right",
+  }[headerAlign];
 
   const renderLogo = (logo: LogoItem, index: number) => {
     const imgClasses = `${heightClasses} w-auto object-contain transition-all duration-300 ${
@@ -20005,7 +23066,10 @@ export function LogoCloudRender({
 
     if (variant === "cards") {
       const cardContent = (
-        <div className="flex items-center justify-center p-4 md:p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
+        <div
+          className="flex items-center justify-center p-4 md:p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+          style={{ backgroundColor: resolvedCardBg }}
+        >
           {img}
         </div>
       );
@@ -20040,52 +23104,77 @@ export function LogoCloudRender({
     );
   };
 
-  if (variant === "marquee") {
+  const renderHeader = () => {
+    if (!title && !subtitle && !badge) return null;
     return (
-      <div
-        id={id}
-        className={`${paddingClasses} ${background || ""} overflow-hidden ${className}`}
-      >
-        {(title || subtitle) && (
-          <div className="text-center mb-8 md:mb-12">
-            {title && (
-              <h3 className="text-sm md:text-base font-semibold text-gray-500 uppercase tracking-wide">
-                {title}
-              </h3>
-            )}
-            {subtitle && <p className="text-gray-400 mt-2">{subtitle}</p>}
-          </div>
+      <div className={`${alignClasses} mb-8 md:mb-12`}>
+        {badge && (
+          <span
+            className="inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm font-medium mb-4"
+            style={{
+              backgroundColor: `${resolvedBadgeColor}20`,
+              color: resolvedBadgeColor,
+            }}
+          >
+            {badge}
+          </span>
         )}
-        <div className="flex animate-marquee">
+        {title && (
+          <h3
+            className="text-sm md:text-base font-semibold uppercase tracking-wide"
+            style={{ color: resolvedTitleColor }}
+          >
+            {title}
+          </h3>
+        )}
+        {subtitle && (
+          <p className="mt-2" style={{ color: resolvedSubtitleColor }}>
+            {subtitle}
+          </p>
+        )}
+      </div>
+    );
+  };
+
+  if (variant === "marquee") {
+    const speedDuration = { slow: "40s", normal: "25s", fast: "15s" }[marqueeSpeed];
+    return (
+      <section
+        id={id}
+        className={`w-full ${pyClasses} ${pxClasses} ${legacyPaddingClasses} ${background || ""} overflow-hidden ${className}`}
+        style={{ backgroundColor: backgroundColor || undefined }}
+      >
+        {renderHeader()}
+        <div
+          className="flex animate-marquee"
+          style={{
+            animationDuration: speedDuration,
+            animationPlayState: "running",
+          }}
+          onMouseEnter={(e) => { if (pauseOnHover) (e.currentTarget.style.animationPlayState = "paused"); }}
+          onMouseLeave={(e) => { if (pauseOnHover) (e.currentTarget.style.animationPlayState = "running"); }}
+        >
           {[...logos, ...logos].map((logo, index) => (
             <div key={index} className="flex-shrink-0 mx-8 md:mx-12">
               {renderLogo(logo, index)}
             </div>
           ))}
         </div>
-      </div>
+      </section>
     );
   }
 
   return (
-    <div
+    <section
       id={id}
-      className={`${paddingClasses} ${background || ""} ${className}`}
+      className={`w-full ${pyClasses} ${pxClasses} ${legacyPaddingClasses} ${background || ""} ${className}`}
+      style={{ backgroundColor: backgroundColor || undefined }}
     >
-      {(title || subtitle) && (
-        <div className="text-center mb-8 md:mb-12">
-          {title && (
-            <h3 className="text-sm md:text-base font-semibold text-gray-500 uppercase tracking-wide">
-              {title}
-            </h3>
-          )}
-          {subtitle && <p className="text-gray-400 mt-2">{subtitle}</p>}
-        </div>
-      )}
+      {renderHeader()}
       <div className={`grid ${columnClasses} ${gapClasses} items-center`}>
         {logos.map((logo, index) => renderLogo(logo, index))}
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -20096,6 +23185,7 @@ export function LogoCloudRender({
 export interface ComparisonColumn {
   name: string;
   highlight?: boolean;
+  badge?: string;
   price?: string;
   priceSubtext?: string;
   ctaText?: string;
@@ -20124,6 +23214,7 @@ export interface ComparisonTableProps {
   titleColor?: string;
   subtitleColor?: string;
   featureTextColor?: string;
+  rowHoverColor?: string;
   stickyHeader?: boolean;
   stickyColumn?: boolean;
   mobileLayout?: 'scroll' | 'stack';
@@ -20157,6 +23248,7 @@ export function ComparisonTableRender({
   titleColor,
   subtitleColor,
   featureTextColor,
+  rowHoverColor,
   stickyHeader = true,
   stickyColumn = true,
   mobileLayout = 'scroll',
@@ -20173,6 +23265,7 @@ export function ComparisonTableRender({
   const resolvedTitleColor = titleColor || 'var(--color-foreground, #111827)';
   const resolvedSubtitleColor = subtitleColor || 'var(--color-muted-foreground, #6b7280)';
   const resolvedFeatureColor = featureTextColor || 'var(--color-foreground, #111827)';
+  const resolvedRowHover = rowHoverColor || 'var(--color-muted, rgba(0,0,0,0.03))';
 
   const renderValue = (value: boolean | string) => {
     if (typeof value === "boolean") {
@@ -20237,7 +23330,61 @@ export function ComparisonTableRender({
         </div>
       )}
 
-      <div className="overflow-x-auto -mx-4 md:mx-0">
+      {/* Mobile stacked layout */}
+      {mobileLayout === 'stack' && (
+        <div className="md:hidden flex flex-col gap-4">
+          {columns.map((col, colIndex) => (
+            <div
+              key={colIndex}
+              className="rounded-lg overflow-hidden"
+              style={{
+                border: col.highlight ? `2px solid ${resolvedHighlightBorder}` : `1px solid var(--color-border, #e5e7eb)`,
+                backgroundColor: col.highlight ? resolvedHighlightBg : 'var(--color-background, #ffffff)',
+              }}
+            >
+              <div className="p-4 text-center" style={{ backgroundColor: resolvedHeaderBg }}>
+                {col.badge && (
+                  <span
+                    className="inline-block text-xs font-semibold px-2 py-0.5 rounded-full mb-1"
+                    style={{ backgroundColor: resolvedHighlightBorder, color: '#ffffff' }}
+                  >
+                    {col.badge}
+                  </span>
+                )}
+                <div className="font-bold text-lg" style={{ color: resolvedFeatureColor }}>{col.name}</div>
+                {col.price && <div className="text-xl font-bold mt-1">{col.price}</div>}
+                {col.priceSubtext && <div className="text-xs" style={{ color: resolvedSubtitleColor }}>{col.priceSubtext}</div>}
+              </div>
+              <div className="divide-y" style={{ borderColor: 'var(--color-border, #e5e7eb)' }}>
+                {rows.map((row, rowIndex) => (
+                  <div key={rowIndex} className="flex items-center justify-between p-3">
+                    <span className="text-sm font-medium" style={{ color: resolvedFeatureColor }}>{row.feature}</span>
+                    <span className="text-sm">{renderValue(row.values[colIndex])}</span>
+                  </div>
+                ))}
+              </div>
+              {col.ctaText && (
+                <div className="p-4 text-center">
+                  <a
+                    href={col.ctaLink || '#'}
+                    className="inline-block w-full px-6 py-2 rounded-lg font-medium transition-colors text-center"
+                    style={
+                      col.ctaVariant === 'outline'
+                        ? { border: `2px solid ${resolvedHighlightBorder}`, color: resolvedHighlightBorder }
+                        : { backgroundColor: resolvedHighlightBorder, color: '#ffffff' }
+                    }
+                  >
+                    {col.ctaText}
+                  </a>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Table layout (default scroll mode, or desktop for stack mode) */}
+      <div className={`overflow-x-auto -mx-4 md:mx-0 ${mobileLayout === 'stack' ? 'hidden md:block' : ''}`}>
         <table className="w-full min-w-[600px]">
           <thead className={stickyHeader ? "sticky top-0 z-10" : ""}>
             <tr style={{ backgroundColor: resolvedHeaderBg }}>
@@ -20256,6 +23403,14 @@ export function ComparisonTableRender({
                     borderTop: `4px solid ${resolvedHighlightBorder}`,
                   } : undefined}
                 >
+                  {col.badge && (
+                    <span
+                      className="inline-block text-xs font-semibold px-2 py-0.5 rounded-full mb-1"
+                      style={{ backgroundColor: resolvedHighlightBorder, color: '#ffffff' }}
+                    >
+                      {col.badge}
+                    </span>
+                  )}
                   <div className="font-bold" style={{ color: resolvedFeatureColor }}>{col.name}</div>
                   {col.price && (
                     <div className="text-lg md:text-xl font-bold mt-1">
@@ -21102,5 +24257,439 @@ export function ScrollAnimateRender({
       <h3 className="text-xl font-bold mb-2">{title}</h3>
       <p className="text-sm text-gray-600">{description}</p>
     </div>
+  );
+}
+
+// ============================================================================
+// BLOG PREVIEW - Blog Post Cards
+// ============================================================================
+
+export interface BlogPost {
+  title?: string;
+  excerpt?: string;
+  image?: string | ImageValue;
+  author?: string;
+  authorAvatar?: string | ImageValue;
+  date?: string;
+  category?: string;
+  readTime?: string;
+  link?: string;
+}
+
+export interface BlogPreviewProps {
+  title?: string;
+  subtitle?: string;
+  badge?: string;
+  badgeColor?: string;
+  headerAlign?: "left" | "center" | "right";
+  posts?: BlogPost[];
+  variant?: "grid" | "list" | "featured" | "cards";
+  columns?: 2 | 3 | 4;
+  showAuthor?: boolean;
+  showDate?: boolean;
+  showCategory?: boolean;
+  showReadTime?: boolean;
+  showExcerpt?: boolean;
+  imageAspectRatio?: "video" | "square" | "wide";
+  imageRounded?: "none" | "sm" | "md" | "lg" | "xl";
+  cardBorderRadius?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  cardShadow?: "none" | "sm" | "md" | "lg";
+  cardBorderColor?: string;
+  backgroundColor?: string;
+  cardBackgroundColor?: string;
+  categoryColor?: string;
+  titleColor?: string;
+  excerptColor?: string;
+  metaColor?: string;
+  ctaText?: string;
+  ctaLink?: string;
+  ctaColor?: string;
+  paddingY?: "sm" | "md" | "lg" | "xl";
+  paddingX?: "sm" | "md" | "lg" | "xl";
+  id?: string;
+  className?: string;
+}
+
+export function BlogPreviewRender({
+  title = "Latest Posts",
+  subtitle,
+  badge,
+  badgeColor,
+  headerAlign = "center",
+  posts = [],
+  variant = "grid",
+  columns = 3,
+  showAuthor = true,
+  showDate = true,
+  showCategory = true,
+  showReadTime = false,
+  showExcerpt = true,
+  imageAspectRatio = "video",
+  imageRounded = "lg",
+  cardBorderRadius = "xl",
+  cardShadow = "md",
+  cardBorderColor,
+  backgroundColor,
+  cardBackgroundColor,
+  categoryColor,
+  titleColor,
+  excerptColor,
+  metaColor,
+  ctaText,
+  ctaLink,
+  ctaColor,
+  paddingY = "lg",
+  paddingX = "md",
+  id,
+  className = "",
+}: BlogPreviewProps) {
+  const dark = isDarkBackground(backgroundColor);
+  const resolvedTitleColor = titleColor || (dark ? "#f8fafc" : "#111827");
+  const resolvedExcerptColor = excerptColor || (dark ? "#94a3b8" : "#6b7280");
+  const resolvedMetaColor = metaColor || (dark ? "#64748b" : "#9ca3af");
+  const resolvedCategoryColor = categoryColor || (dark ? "#e5a956" : "var(--brand-primary, #3b82f6)");
+  const resolvedBadgeColor = badgeColor || resolvedCategoryColor;
+  const resolvedCardBg = cardBackgroundColor || (dark ? "#1e293b" : "#ffffff");
+  const resolvedCardBorder = cardBorderColor || (dark ? "#334155" : "#e5e7eb");
+  const resolvedCtaColor = ctaColor || resolvedCategoryColor;
+
+  const pyClasses = paddingYMapUtil[paddingY] || paddingYMapUtil.lg;
+  const pxClasses = paddingXMapUtil[paddingX] || paddingXMapUtil.md;
+  const cardRadiusClasses = borderRadiusMapUtil[cardBorderRadius]?.mobile || "rounded-xl";
+  const cardShadowClasses = (shadowMapUtil as Record<string, string>)[cardShadow] || "shadow-md";
+  const imageRadiusClasses = borderRadiusMapUtil[imageRounded]?.mobile || "rounded-lg";
+
+  const aspectClasses = {
+    video: "aspect-video",
+    square: "aspect-square",
+    wide: "aspect-[21/9]",
+  }[imageAspectRatio];
+
+  const colClasses = {
+    2: "md:grid-cols-2",
+    3: "md:grid-cols-2 lg:grid-cols-3",
+    4: "md:grid-cols-2 lg:grid-cols-4",
+  }[columns];
+
+  const alignClasses = {
+    left: "text-left",
+    center: "text-center",
+    right: "text-right",
+  }[headerAlign];
+
+  const renderPostCard = (post: BlogPost, index: number) => {
+    const imgUrl = getImageUrl(post.image);
+    const avatarUrl = getImageUrl(post.authorAvatar);
+
+    const card = (
+      <article
+        key={index}
+        className={`group overflow-hidden ${cardRadiusClasses} ${cardShadowClasses} hover:shadow-lg transition-shadow duration-300`}
+        style={{
+          backgroundColor: resolvedCardBg,
+          border: `1px solid ${resolvedCardBorder}`,
+        }}
+      >
+        {/* Image */}
+        {imgUrl && (
+          <div className={`${aspectClasses} overflow-hidden`}>
+            <img
+              src={imgUrl}
+              alt={post.title || "Blog post"}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              loading="lazy"
+            />
+          </div>
+        )}
+
+        {/* Content */}
+        <div className="p-5 md:p-6">
+          {/* Category */}
+          {showCategory && post.category && (
+            <span
+              className="inline-block text-xs font-semibold uppercase tracking-wide mb-2"
+              style={{ color: resolvedCategoryColor }}
+            >
+              {post.category}
+            </span>
+          )}
+
+          {/* Title */}
+          {post.title && (
+            <h3
+              className="text-lg md:text-xl font-bold mb-2 line-clamp-2 group-hover:opacity-80 transition-opacity"
+              style={{ color: resolvedTitleColor }}
+            >
+              {post.title}
+            </h3>
+          )}
+
+          {/* Excerpt */}
+          {showExcerpt && post.excerpt && (
+            <p
+              className="text-sm md:text-base mb-4 line-clamp-3"
+              style={{ color: resolvedExcerptColor }}
+            >
+              {post.excerpt}
+            </p>
+          )}
+
+          {/* Meta */}
+          <div className="flex items-center gap-3 text-sm" style={{ color: resolvedMetaColor }}>
+            {showAuthor && post.author && (
+              <div className="flex items-center gap-2">
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={post.author}
+                    className="w-6 h-6 rounded-full object-cover"
+                  />
+                ) : (
+                  <div
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium text-white"
+                    style={{ backgroundColor: resolvedCategoryColor }}
+                  >
+                    {post.author.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <span>{post.author}</span>
+              </div>
+            )}
+            {showDate && post.date && (
+              <>
+                {showAuthor && post.author && <span>·</span>}
+                <span>{post.date}</span>
+              </>
+            )}
+            {showReadTime && post.readTime && (
+              <>
+                <span>·</span>
+                <span>{post.readTime}</span>
+              </>
+            )}
+          </div>
+        </div>
+      </article>
+    );
+
+    if (post.link) {
+      return (
+        <a key={index} href={post.link} className="block no-underline">
+          {card}
+        </a>
+      );
+    }
+    return card;
+  };
+
+  const renderListPost = (post: BlogPost, index: number) => {
+    const imgUrl = getImageUrl(post.image);
+    const avatarUrl = getImageUrl(post.authorAvatar);
+
+    const item = (
+      <article
+        key={index}
+        className="group flex gap-5 md:gap-6 py-5 border-b last:border-b-0"
+        style={{ borderColor: resolvedCardBorder }}
+      >
+        {imgUrl && (
+          <div className={`flex-shrink-0 w-32 md:w-48 ${aspectClasses} ${imageRadiusClasses} overflow-hidden`}>
+            <img
+              src={imgUrl}
+              alt={post.title || "Blog post"}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              loading="lazy"
+            />
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          {showCategory && post.category && (
+            <span
+              className="inline-block text-xs font-semibold uppercase tracking-wide mb-1"
+              style={{ color: resolvedCategoryColor }}
+            >
+              {post.category}
+            </span>
+          )}
+          {post.title && (
+            <h3
+              className="text-base md:text-lg font-bold mb-1 line-clamp-2 group-hover:opacity-80 transition-opacity"
+              style={{ color: resolvedTitleColor }}
+            >
+              {post.title}
+            </h3>
+          )}
+          {showExcerpt && post.excerpt && (
+            <p
+              className="text-sm mb-2 line-clamp-2 hidden md:block"
+              style={{ color: resolvedExcerptColor }}
+            >
+              {post.excerpt}
+            </p>
+          )}
+          <div className="flex items-center gap-2 text-xs md:text-sm" style={{ color: resolvedMetaColor }}>
+            {showAuthor && post.author && (
+              <div className="flex items-center gap-1.5">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt={post.author} className="w-5 h-5 rounded-full object-cover" />
+                ) : null}
+                <span>{post.author}</span>
+              </div>
+            )}
+            {showDate && post.date && (
+              <>
+                {showAuthor && post.author && <span>·</span>}
+                <span>{post.date}</span>
+              </>
+            )}
+            {showReadTime && post.readTime && (
+              <>
+                <span>·</span>
+                <span>{post.readTime}</span>
+              </>
+            )}
+          </div>
+        </div>
+      </article>
+    );
+
+    if (post.link) {
+      return (
+        <a key={index} href={post.link} className="block no-underline">
+          {item}
+        </a>
+      );
+    }
+    return item;
+  };
+
+  const renderFeatured = () => {
+    if (posts.length === 0) return null;
+    const [featured, ...rest] = posts;
+    const featuredImgUrl = getImageUrl(featured.image);
+
+    return (
+      <div className="grid lg:grid-cols-2 gap-8">
+        {/* Featured Post */}
+        <article className={`group overflow-hidden ${cardRadiusClasses} ${cardShadowClasses}`} style={{ backgroundColor: resolvedCardBg, border: `1px solid ${resolvedCardBorder}` }}>
+          {featuredImgUrl && (
+            <div className="aspect-[4/3] overflow-hidden">
+              <img
+                src={featuredImgUrl}
+                alt={featured.title || "Featured post"}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                loading="lazy"
+              />
+            </div>
+          )}
+          <div className="p-6 md:p-8">
+            {showCategory && featured.category && (
+              <span className="inline-block text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: resolvedCategoryColor }}>
+                {featured.category}
+              </span>
+            )}
+            {featured.title && (
+              <h3 className="text-xl md:text-2xl font-bold mb-3" style={{ color: resolvedTitleColor }}>
+                {featured.title}
+              </h3>
+            )}
+            {showExcerpt && featured.excerpt && (
+              <p className="text-base mb-4 line-clamp-3" style={{ color: resolvedExcerptColor }}>
+                {featured.excerpt}
+              </p>
+            )}
+            <div className="flex items-center gap-3 text-sm" style={{ color: resolvedMetaColor }}>
+              {showAuthor && featured.author && <span>{featured.author}</span>}
+              {showDate && featured.date && (
+                <>
+                  {showAuthor && featured.author && <span>·</span>}
+                  <span>{featured.date}</span>
+                </>
+              )}
+            </div>
+          </div>
+        </article>
+
+        {/* Side Posts */}
+        <div className="space-y-4">
+          {rest.slice(0, 3).map((post, i) => renderListPost(post, i))}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <section
+      id={id}
+      className={`w-full ${pyClasses} ${pxClasses} ${className}`}
+      style={{ backgroundColor: backgroundColor || undefined }}
+    >
+      <div className="max-w-screen-xl mx-auto">
+        {/* Header */}
+        {(title || subtitle || badge) && (
+          <div className={`${alignClasses} mb-10 md:mb-14`}>
+            {badge && (
+              <span
+                className="inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm font-medium mb-4"
+                style={{
+                  backgroundColor: `${resolvedBadgeColor}20`,
+                  color: resolvedBadgeColor,
+                }}
+              >
+                {badge}
+              </span>
+            )}
+            {title && (
+              <h2
+                className="text-2xl md:text-3xl lg:text-4xl font-bold mb-3"
+                style={{ color: resolvedTitleColor }}
+              >
+                {title}
+              </h2>
+            )}
+            {subtitle && (
+              <p
+                className="text-base md:text-lg opacity-80 max-w-2xl"
+                style={{
+                  color: resolvedExcerptColor,
+                  ...(headerAlign === "center" ? { margin: "0 auto" } : {}),
+                }}
+              >
+                {subtitle}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Posts */}
+        {variant === "featured" ? (
+          renderFeatured()
+        ) : variant === "list" ? (
+          <div className="max-w-3xl mx-auto divide-y" style={{ borderColor: resolvedCardBorder }}>
+            {posts.map((post, i) => renderListPost(post, i))}
+          </div>
+        ) : (
+          <div className={`grid gap-6 md:gap-8 ${colClasses}`}>
+            {posts.map((post, i) => renderPostCard(post, i))}
+          </div>
+        )}
+
+        {/* CTA */}
+        {ctaText && (
+          <div className={`${headerAlign === "center" ? "text-center" : alignClasses} mt-10 md:mt-14`}>
+            <a
+              href={ctaLink || "#"}
+              className="inline-flex items-center gap-2 text-base font-semibold hover:opacity-80 transition-opacity"
+              style={{ color: resolvedCtaColor }}
+            >
+              {ctaText}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }

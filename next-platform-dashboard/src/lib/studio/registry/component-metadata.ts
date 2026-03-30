@@ -482,6 +482,30 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     },
   },
   {
+    type: "Accordion",
+    label: "Accordion",
+    category: "sections",
+    description: "Expandable content accordion with multiple variants",
+    acceptsChildren: false,
+    keywords: ["accordion", "expand", "collapse", "faq", "toggle", "details"],
+    ai: {
+      description: "Expandable accordion section with bordered, filled, separated, and minimal variants. Supports badge, section header, dark mode, and custom padding.",
+      usageGuidelines: "Use for FAQ sections, expandable content, or any collapsible information blocks",
+    },
+  },
+  {
+    type: "Pricing",
+    label: "Pricing",
+    category: "sections",
+    description: "Pricing plans with billing toggle and feature comparison",
+    acceptsChildren: false,
+    keywords: ["pricing", "plans", "subscription", "billing", "tiers", "packages"],
+    ai: {
+      description: "Pricing section with monthly/yearly billing toggle, plan cards with feature lists, highlighted recommended plan, and guarantee badge. Supports dark mode.",
+      usageGuidelines: "Use to display pricing tiers, subscription plans, or service packages with clear comparison",
+    },
+  },
+  {
     type: "Stats",
     label: "Statistics",
     category: "sections",
@@ -556,6 +580,21 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     ai: {
       description: "Row of social media icon links",
       usageGuidelines: "Use in footer or contact sections",
+    },
+  },
+  {
+    type: "Tabs",
+    label: "Tabs",
+    category: "interactive",
+    description: "Tabbed content panels with multiple layout variants",
+    acceptsChildren: false,
+    keywords: ["tabs", "tab panel", "tabbed content", "tab navigation", "tab bar", "tab group"],
+    ai: {
+      description:
+        "Tabbed content organizer with 7 variants (underline, pills, boxed, enclosed, soft, minimal, lifted), vertical/horizontal layout, ARIA tablist pattern, keyboard navigation, and optional icons/badges per tab.",
+      usageGuidelines:
+        "Use for organizing related content into switchable panels. Provide tabs array with label and content. Set variant to match page style. Supports up to 8 tabs.",
+      suggestedWith: ["Section", "Card", "Heading"],
     },
   },
 
@@ -899,7 +938,7 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
   {
     type: "Link",
     label: "Link",
-    category: "buttons",
+    category: "navigation",
     description: "Styled link with underline animations and external icon",
     acceptsChildren: false,
     keywords: ["link", "anchor", "hyperlink", "text link", "nav link", "inline link"],
@@ -944,7 +983,7 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
   {
     type: "Breadcrumb",
     label: "Breadcrumb",
-    category: "buttons",
+    category: "navigation",
     description: "Navigation breadcrumb trail showing page hierarchy",
     acceptsChildren: false,
     keywords: ["breadcrumb", "navigation", "path", "trail", "hierarchy", "page path"],
@@ -959,7 +998,7 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
   {
     type: "Pagination",
     label: "Pagination",
-    category: "buttons",
+    category: "interactive",
     description: "Page navigation with numbered buttons and prev/next controls",
     acceptsChildren: false,
     keywords: ["pagination", "pager", "page numbers", "page nav", "page navigation"],
@@ -984,6 +1023,168 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
       usageGuidelines:
         "Use for status indicators, category labels, notification counts, and feature tags. Add dot=true for status dots, pulse=true for attention. Use href to make clickable.",
       suggestedWith: ["Text", "Heading", "Card"],
+    },
+  },
+  {
+    type: "BlogPreview",
+    label: "Blog Preview",
+    category: "sections",
+    description: "Display blog posts in grid, list, featured, or card layouts",
+    acceptsChildren: false,
+    keywords: ["blog", "posts", "articles", "news", "content", "feed", "preview", "recent"],
+    ai: {
+      description:
+        "Blog post preview section with 4 variants (grid, list, featured, cards), configurable columns (2-4), post cards with image, category, title, excerpt, author avatar, date, and read time. Supports section header with badge, CTA link, and dark-mode-aware colors.",
+      usageGuidelines:
+        "Use to showcase recent blog posts, news articles, or content updates. Use variant=featured for a hero-style layout with one large post and side list. Use variant=list for text-heavy layouts.",
+      suggestedWith: ["Hero", "Newsletter", "CTA"],
+    },
+  },
+  {
+    type: "Timeline",
+    label: "Timeline",
+    category: "sections",
+    description:
+      "Display chronological events, milestones, or step-by-step processes",
+    acceptsChildren: false,
+    keywords: [
+      "timeline",
+      "history",
+      "milestones",
+      "events",
+      "chronological",
+      "steps",
+      "process",
+      "roadmap",
+    ],
+    ai: {
+      description:
+        "A timeline section for displaying chronological events with vertical, horizontal, or alternating layouts. Each item has title, description, date, optional icon, image, and badge. Customizable line style, node style, and card appearance. Supports scroll animation.",
+      usageGuidelines:
+        "Use for company history, project milestones, step-by-step guides, or event timelines. Use variant=alternating for balanced layouts, horizontal for compact overviews. Keep items to 4-8 for readability.",
+      suggestedWith: ["Hero", "Stats", "Team", "CTA"],
+    },
+  },
+  {
+    type: "BeforeAfter",
+    label: "Before & After",
+    category: "media",
+    description:
+      "Interactive image comparison slider showing before and after states",
+    acceptsChildren: false,
+    keywords: [
+      "before",
+      "after",
+      "comparison",
+      "slider",
+      "image",
+      "compare",
+      "transformation",
+      "progress",
+    ],
+    ai: {
+      description:
+        "An interactive before/after image comparison component with a draggable slider. Supports horizontal and vertical orientations, customizable handle style (line, circle, arrows), labels, and keyboard/touch accessibility. Uses clip-path for GPU-accelerated rendering.",
+      usageGuidelines:
+        "Use for showing transformations, renovations, design changes, photo editing results, or product improvements. Always provide descriptive alt text for both images. Set initialPosition to 50 for balanced start.",
+      suggestedWith: ["Gallery", "Image", "CTA", "Features"],
+    },
+  },
+  {
+    type: "Icon",
+    label: "Icon",
+    category: "media",
+    description: "Display decorative or functional icons with optional backgrounds and animations",
+    acceptsChildren: false,
+    keywords: [
+      "icon",
+      "symbol",
+      "graphic",
+      "decorative",
+      "lucide",
+      "svg",
+    ],
+    ai: {
+      description:
+        "A standalone icon component supporting Lucide icons with configurable size (xs-3xl), color, background shapes (circle, rounded, square), and animations (spin, pulse, bounce, float). Can be decorative or accessible with aria labels.",
+      usageGuidelines:
+        "Use as visual accents in feature lists, section dividers, or standalone decorative elements. Set decorative=true for purely visual icons. Use backgroundShape for emphasis.",
+      suggestedWith: ["Features", "Text", "Heading"],
+    },
+  },
+
+  // Audio Player
+  {
+    type: "Audio",
+    label: "Audio Player",
+    category: "media",
+    description: "Audio player with waveform visualisation, cover art, and playback speed control",
+    acceptsChildren: false,
+    keywords: [
+      "audio",
+      "player",
+      "music",
+      "podcast",
+      "sound",
+      "waveform",
+      "track",
+    ],
+    ai: {
+      description:
+        "An audio player component with three variants (full with cover art and waveform, compact inline bar, minimal play/progress). Supports waveform visualisation, playback speed cycling, download button, and full colour theming via CSS variables.",
+      usageGuidelines:
+        "Use full variant for podcasts or music with cover art. Use compact for inline players in blog posts. Use minimal for subtle ambient audio. Pair with text content for context.",
+      suggestedWith: ["Text", "Image", "Card"],
+    },
+  },
+
+  // Embed
+  {
+    type: "Embed",
+    label: "Embed",
+    category: "media",
+    description: "Secure responsive iframe embed for videos, maps, or external content",
+    acceptsChildren: false,
+    keywords: [
+      "embed",
+      "iframe",
+      "video",
+      "map",
+      "external",
+      "youtube",
+      "vimeo",
+    ],
+    ai: {
+      description:
+        "A secure iframe wrapper with configurable aspect ratio (1:1, 4:3, 16:9, 21:9), loading placeholder, sandbox/allow security attributes, and optional caption via figure/figcaption. Supports lazy loading.",
+      usageGuidelines:
+        "Use for embedding YouTube videos, Google Maps, Spotify playlists, or any external widget. Set appropriate sandbox permissions. Use caption to describe the embedded content.",
+      suggestedWith: ["Text", "Heading", "CTA"],
+    },
+  },
+
+  // Avatar Group
+  {
+    type: "AvatarGroup",
+    label: "Avatar Group",
+    category: "media",
+    description: "Stacked overlapping avatar collection with overflow count badge",
+    acceptsChildren: false,
+    keywords: [
+      "avatar",
+      "group",
+      "stack",
+      "team",
+      "users",
+      "faces",
+      "people",
+    ],
+    ai: {
+      description:
+        "A horizontal stack of overlapping circular avatars with a +N overflow badge. Configurable size (xs-xl), overlap amount, stack direction, ring colour, and fallback initials when no image provided.",
+      usageGuidelines:
+        "Use to show team members, active users, or contributors without taking full space. Pair with text showing total count. Use max to limit visible avatars.",
+      suggestedWith: ["Text", "Stats", "Card", "SocialProof"],
     },
   },
 ];

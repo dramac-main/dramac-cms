@@ -1,31 +1,67 @@
 # Active Context
 
-## Current Focus: Navigation Components Master Plan — v1.1 VERIFIED ✅
+## Current Focus: Forms Components Master Plan — v1.0 COMPLETE ✅
 
-### Status: NAVIGATION-COMPONENTS-MASTER-PLAN.md v1.1 — all line numbers verified against source, Breadcrumb converter conflict documented.
+### Status: FORMS-COMPONENTS-MASTER-PLAN.md v1.0 — complete with verified line numbers, critical submission gaps documented, "Out of the Gate" architecture specified.
+
+### What Was Done (Latest Session)
+
+**Created `FORMS-COMPONENTS-MASTER-PLAN.md` v1.0 — the 7th master plan document:**
+
+Comprehensive plan covering all 4 form components (Form, FormField, ContactForm, Newsletter) with full submission pipeline analysis, critical bug documentation, and "Out of the Gate" architecture.
+
+**Key findings:**
+
+1. **Newsletter is completely non-functional** — uses HTML `<form action="#" method="POST">`, no JS handler, no `/api/forms/submit` integration, no honeypot, no success state. Needs complete rewrite.
+
+2. **ContactForm `emailTo` prop is decorative** — sends `_emailTo` in data but API never reads it. Only `form_settings.notify_emails` is checked, which defaults to `[]` for new sites. No email notifications on new sites.
+
+3. **Newsletter registry has 3 BREAKING field name mismatches** — `submitText` (render expects `buttonText`), `layout` (render expects `variant`), `subtitle` (render expects `description`). Props silently lost.
+
+4. **23 of 30 ContactForm render props have no registry field** — all styling props (colours, border radius, shadow, padding) and label customisation props are missing from the registry.
+
+5. **Form and FormField not in KNOWN_REGISTRY_TYPES** — AI converter cannot generate these components.
+
+**Document structure (15 sections + 3 appendices):**
+- Section 0: Implementation Blueprint with verified line numbers, file map, props pipeline, DO/DON'T rules
+- Section 1: Current State Audit with submission pipeline status matrix
+- Section 8: "Out of the Gate" Submission Architecture — 3-layer email fallback, auto-provisioning form_settings, Newsletter rewrite spec, Form generic integration
+- Sections 4-7: Per-component deep dives with registry↔render disconnect tables
+- Sections 9-11: Validation, accessibility, dark mode
+- Section 14: 5-phase implementation plan
+- Appendices: Infrastructure map, DB schema, CRM module integration
+
+**Verified line numbers for all 4 components across 3 files:**
+
+| Component | Interface | Export | Registry `defineComponent(` | Registry `type:` | Metadata `type:` |
+|-----------|-----------|--------|---------------------------|-----------------|-----------------|
+| Form | L15892 | L15973 | L12513 | L12514 | L581 |
+| FormField | L16296 | L16426 | L12951 | L12952 | L593 |
+| ContactForm | L16887 | L16917 | L13330 | L13331 | L604 |
+| Newsletter | L17225 | L17241 | L13376 | L13377 | L616 |
 
 ### What Was Done (Latest Session)
 
-**Critical verification pass of NAVIGATION-COMPONENTS-MASTER-PLAN.md:**
+**Fixed duplicate sidebar entries + 17 TypeScript errors (commit `730f9dab`):**
 
-1. **All renders.tsx line numbers verified** — found ALL were wrong (code added since research, lines shifted +126 to +542). Corrected everywhere in the document.
-2. **Breadcrumb converter conflict discovered** — `Breadcrumb: "EcommerceBreadcrumb"` at L695 overrides any nav Breadcrumb mapping. Navigation aliases still work. Updated all references.
-3. **core-components.ts Footer** — defineComponent start corrected from L11402 to L11403.
-4. **layout-utils.ts paddingYMap** — corrected from L121 to L120.
-5. **Comparison with Sections v2.0 gold standard** — confirmed document follows same Section 0 Implementation Blueprint pattern.
+1. **Root cause of 3 Buttons in sidebar**: `premium-components.ts` registered 6 duplicate components (`button`, `section`, `container`, `heading`, `text`, `image`) with lowercase types alongside PascalCase core ones. Case-sensitive Map stored both.
 
-**Corrected Line Number Reference (verified via grep):**
+2. **Fix**: Removed `registerPremiumComponents()` call from `initializeRegistry()` in index.ts. Added `TYPE_ALIASES` static map and `resolveType()` method in `component-registry.ts` for backward compatibility (maps lowercase types to PascalCase equivalents).
 
-| Component | Props Interface | Render Function | Registry defineComponent |
-|-----------|----------------|-----------------|--------------------------|
-| Navbar | L14151 | L14527 (export), L14217 (NavbarWithMenu) | L10737 |
-| Footer | L14535 | L14568 | L11403 |
-| Tabs | L17591 | L17620 | L16798 |
-| Link | L18052 | L18088 | L12034 |
-| Breadcrumb | L18451 | L18477 | L12161 |
-| Pagination | L18654 | L18689 | L17626 |
+3. **Added Button and Badge to KNOWN_REGISTRY_TYPES** in converter.ts — they were missing from the validation Set.
 
-### What Was Done (Latest Session)
+4. **Fixed 17 TypeScript errors in renders.tsx** (from parallel session's code):
+   - 13 errors: Widened `ClassMapValue` type to accept plain `string` (in both layout-utils.ts and renders.tsx), updated `getClassFromMapping` to handle string case
+   - 3 errors: Fixed `borderRadiusMapUtil as Record<string, string>` unsafe casts → use `.mobile` property
+   - 1 error: Fixed undefined `resolvedFontSize` in LinkRender → replaced with `fontSize` prop
+
+5. **Included parallel session's component enhancements**: HeroRender, PricingRender, CountdownRender, GalleryRender, ContactFormRender, NewsletterRender, AvatarRender, MapRender (1605 lines of verified clean changes)
+
+### Build Status
+- TypeScript: 17 remaining errors (all pre-existing baseline, down from 34)
+- Commit: `730f9dab` pushed to main
+
+### What Was Done (Prior Session)
 
 **Full 7-layer verification audit of all 9 button/interactive components:**
 1. Confirmed all 9 render functions exist in renders.tsx
@@ -63,7 +99,7 @@
 | MEDIA-COMPONENTS-MASTER-PLAN.md | ✅ COMPLETE (awaiting implementation) |
 | SECTIONS-COMPONENTS-MASTER-PLAN.md | ✅ v2.0 COMPLETE (implementation-ready) |
 | NAVIGATION-COMPONENTS-MASTER-PLAN.md | ✅ v1.1 VERIFIED (all line numbers corrected, Breadcrumb converter conflict documented) |
-| Forms & Inputs (future) | ❌ Not started |
+| FORMS-COMPONENTS-MASTER-PLAN.md | ✅ v1.0 COMPLETE (submission gaps documented, "Out of the Gate" architecture specified) |
 | GridItem | removed dead `backgroundColor`/`padding` fields |
 | ScrollSectionItem | removed dead `contentAlign`/`verticalAlign`, added `snapAlign` |
 | ShapeDivider | added `width`/`animated` fields |
