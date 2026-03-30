@@ -16886,6 +16886,7 @@ export function FooterRender(props: FooterProps) {
           <input
             type="email"
             placeholder={newsletterPlaceholder}
+            aria-label={newsletterPlaceholder}
             className="flex-1 px-4 py-2.5 rounded-lg bg-white/10 border border-white/20 placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30"
             style={{ color: textColor }}
           />
@@ -17068,7 +17069,7 @@ export function FooterRender(props: FooterProps) {
                   {newsletterDescription && <p className="text-sm opacity-75 mt-1" style={{ color: textColor }}>{newsletterDescription}</p>}
                 </div>
                 <form className="flex flex-col sm:flex-row gap-2 sm:min-w-[360px]" onSubmit={(e) => e.preventDefault()}>
-                  <input type="email" placeholder={newsletterPlaceholder}
+                  <input type="email" placeholder={newsletterPlaceholder} aria-label={newsletterPlaceholder}
                     className="flex-1 px-4 py-2.5 rounded-lg bg-white/10 border border-white/20 placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30"
                     style={{ color: textColor }} />
                   <button type="submit" className="px-6 py-2.5 rounded-lg font-medium transition-opacity hover:opacity-90 whitespace-nowrap"
@@ -17091,14 +17092,14 @@ export function FooterRender(props: FooterProps) {
               {renderAppBadges()}
             </div>
             {/* Link columns */}
-            <div className={`lg:col-span-${showContactInfo || showAppBadges ? "5" : "8"} grid ${columnGridClass} gap-8`}>
+            <nav aria-label="Footer navigation" className={`lg:col-span-${showContactInfo || showAppBadges ? "5" : "8"} grid ${columnGridClass} gap-8`}>
               {columns.map((column, i) => (
                 <div key={i}>
                   <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider" style={{ color: textColor }}>{column.title}</h3>
                   <ul className="space-y-2.5">{(column.links || []).map(renderLink)}</ul>
                 </div>
               ))}
-            </div>
+            </nav>
             {/* Social column */}
             {showSocialLinks && socialLinks.length > 0 && (
               <div className="lg:col-span-3">
@@ -17135,14 +17136,14 @@ export function FooterRender(props: FooterProps) {
               {renderContactInfo()}
             </div>
             {/* Link columns */}
-            <div className={`lg:col-span-8 grid ${columnGridClass} gap-8`}>
+            <nav aria-label="Footer navigation" className={`lg:col-span-8 grid ${columnGridClass} gap-8`}>
               {columns.map((column, i) => (
                 <div key={i}>
                   <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider" style={{ color: textColor }}>{column.title}</h3>
                   <ul className="space-y-2.5">{(column.links || []).map(renderLink)}</ul>
                 </div>
               ))}
-            </div>
+            </nav>
           </div>
         )}
         {/* Newsletter */}
