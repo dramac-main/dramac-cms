@@ -613,6 +613,7 @@ export interface GradientConfig {
  * Builds a CSS gradient string from a GradientConfig.
  */
 export function buildGradientCSS(gradient: GradientConfig): string {
+  if (!gradient?.stops?.length) return "";
   const stops = gradient.stops
     .map((s) => `${s.color} ${s.position}%`)
     .join(", ");
