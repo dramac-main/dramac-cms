@@ -327,6 +327,10 @@ function detectSpam(data: Record<string, unknown>): boolean {
 
 /**
  * Send email notifications for new submissions
+ * Uses a 3-layer fallback chain:
+ *   1. form_settings.notify_emails (explicit configuration)
+ *   2. data._emailTo (ContactForm emailTo prop)
+ *   3. Site owner's email (from sites → users table)
  */
 async function sendNotifications(
   supabase: SupabaseAdmin,
@@ -334,17 +338,54 @@ async function sendNotifications(
   settings: Record<string, unknown>,
   agencyId?: string,
 ): Promise<void> {
-  const emails = settings.notify_emails as string[];
-  if (!emails || emails.length === 0) {
+  let emails = (settings.notify_emails as string[]) || [];
+
+  // Layer 1: form_settings.notify_emails
+  if (emails.length === 0) {
+    // Layer 2: _emailTo from form data (ContactForm emailTo prop)
+    const formData = submission.data as Record<string, unknown>;
+    if (formData?._emailTo && typeof formData._emailTo === "string") {
+      emails = [formData._emailTo];
+    }
+  }
+
+  if (emails.length === 0) {
+    // Layer 3: Site owner's email
+    const siteId = submission.site_id as string;
+    if (siteId) {
+      const { data: siteData } = await supabase
+        .from("sites")
+        .select("user_id")
+        .eq("id", siteId)
+        .single();
+
+      if (siteData?.user_id) {
+        const { data: userData } = await supabase
+          .from("users")
+          .select("email")
+          .eq("id", siteData.user_id)
+          .single();
+
+        if (userData?.email) {
+          emails = [userData.email];
+        }
+      }
+    }
+  }
+
+  if (emails.length === 0) {
+    console.log("[FormSubmit] No notification recipients found for submission:", submission.id);
     return;
   }
 
   // Format submission data for email
   const formData = submission.data as Record<string, unknown>;
-  const formattedFields = Object.entries(formData).map(([key, value]) => ({
-    label: key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
-    value: String(value ?? ""),
-  }));
+  const formattedFields = Object.entries(formData)
+    .filter(([key]) => !key.startsWith("_"))
+    .map(([key, value]) => ({
+      label: key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+      value: String(value ?? ""),
+    }));
 
   const formName = (settings.form_name as string) || "Contact Form";
   const siteName = (settings.site_name as string) || "";

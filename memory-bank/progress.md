@@ -5,7 +5,66 @@
 
 ---
 
-## Latest Update: Forms Components Master Plan — v1.0 COMPLETE ✅
+## Latest Update: Forms Components Master Plan — IMPLEMENTATION COMPLETE ✅
+
+### What Was Done
+
+Implemented the entire FORMS-COMPONENTS-MASTER-PLAN.md — all 5 phases across 5 files, zero new TS errors.
+
+**All 5 Critical Bugs Fixed:**
+1. ~~Newsletter completely non-functional~~ → Full fetch submission pipeline with honeypot, success/error states, ARIA
+2. ~~ContactForm `emailTo` is decorative~~ → API 3-layer email fallback chain (form_settings → _emailTo → site owner)
+3. ~~Newsletter registry has 3 BREAKING field name mismatches~~ → submitText→buttonText, layout→variant, subtitle→description
+4. ~~23 ContactForm render props missing from registry~~ → Expanded from 7 to 24 fields with fieldGroups
+5. ~~FormField has no typeMap aliases~~ → Added FormFieldBlock, InputField, FormInput
+
+**Additional Enhancements:**
+- Form generic component gets opt-in platform submission (`enablePlatformSubmission` prop)
+- ARIA accessibility added to Form, FormField, and ContactForm (aria-required, aria-invalid, aria-describedby, role="alert", role="status", aria-busy)
+- Dark mode colour fixes for Form success/error messages (inline styles instead of hardcoded Tailwind)
+- Component metadata updated with richer keywords/descriptions
+- Newsletter gets "card" variant option
+
+**Files Modified:** renders.tsx, core-components.ts, route.ts, converter.ts, component-metadata.ts
+
+---
+
+## Previous Update: Content Components Master Plan — v1.0 COMPLETE ✅
+
+### What Was Done
+
+Created `CONTENT-COMPONENTS-MASTER-PLAN.md` v1.0 — the 8th master plan document in the component documentation series. Covers all 8 content components (RichText, Quote, CodeBlock, Label, List, DisplayText, DividerText, StatNumber) with full registry/render alignment, converter alias verification, and implementation plan.
+
+**Critical Issues Documented:**
+1. **CodeBlock: 30% registry coverage** — 7 render props have no registry fields (theme, title, showCopyButton, showLanguage, highlightLines, maxHeight, wrap)
+2. **Category mismatch** — 7 of 8 use `category: "typography"` in core-components.ts vs `category: "content"` in metadata
+3. **RichText prose dark mode** — Tailwind `prose` class invisible on dark backgrounds
+4. **No CodeBlock converter normalizer** — AI-generated CodeBlock props pass through unnormalized
+5. **DividerText missing `role="separator"`** — accessibility gap
+6. **StatNumber missing `aria-label`** — accessibility gap
+
+**Overall Content Category Health:**
+- 7 of 8 components have 91-100% registry coverage (best category so far)
+- All 8 in KNOWN_REGISTRY_TYPES (100% converter integration)
+- 32 total converter aliases across 8 components (all verified)
+- 7 of 8 have normalizeProps handlers (CodeBlock sole outlier)
+- CodeBlock is the one problem child — fix specification included in document
+
+**Document:** `next-platform-dashboard/docs/CONTENT-COMPONENTS-MASTER-PLAN.md`
+
+---
+
+## Previous Update: Forms Components Master Plan — v1.1 VERIFIED → NOW IMPLEMENTED ✅
+
+### What Was Done
+
+Document created (v1.0) and verified (v1.1), then **fully implemented** in subsequent session (see Latest Update above).
+
+**All 5 Critical Bugs: FIXED ✅**
+
+---
+
+## Previous Update: Forms Components Master Plan — v1.0 COMPLETE ✅
 
 ### What Was Done
 

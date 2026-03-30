@@ -1,54 +1,51 @@
 # Active Context
 
-## Current Focus: Forms Components Master Plan — v1.0 COMPLETE ✅
+## Current Focus: Forms Components Master Plan — IMPLEMENTATION COMPLETE ✅
 
-### Status: FORMS-COMPONENTS-MASTER-PLAN.md v1.0 — complete with verified line numbers, critical submission gaps documented, "Out of the Gate" architecture specified.
+### Status: All 5 phases of the Forms Components Master Plan fully implemented. Zero new TypeScript errors introduced. All 4 form components (Form, FormField, ContactForm, Newsletter) upgraded with submission pipelines, registry alignment, ARIA accessibility, dark mode support, and converter aliases.
 
-### What Was Done (Latest Session)
+### What Was Done (Latest Session — Forms Implementation)
 
-**Created `FORMS-COMPONENTS-MASTER-PLAN.md` v1.0 — the 7th master plan document:**
+**Implemented the entire FORMS-COMPONENTS-MASTER-PLAN.md across 5 files:**
 
-Comprehensive plan covering all 4 form components (Form, FormField, ContactForm, Newsletter) with full submission pipeline analysis, critical bug documentation, and "Out of the Gate" architecture.
+#### Phase 1: Critical Fixes
+1. **Newsletter render complete rewrite** (`renders.tsx`) — Replaced dead `<form action="#" method="POST">` with full fetch-based submission pipeline: `useState` state machine (idle/submitting/success/error), `handleSubmit` with `fetch("/api/forms/submit")`, honeypot spam field, success/error/loading UI, ARIA attributes (`role="alert"`, `role="status"`, `aria-required`, `aria-busy`, `sr-only` labels), new `siteId` prop, `borderRadius` prop. Removed `action` prop entirely.
 
-**Key findings:**
+2. **API email fallback chain** (`route.ts`) — Rewrote `sendNotifications` with 3-layer cascade: (1) `form_settings.notify_emails` → (2) `data._emailTo` from ContactForm `emailTo` prop → (3) site owner's email via `sites` → `users` table join. Also filters `_` prefixed internal fields from email formatting.
 
-1. **Newsletter is completely non-functional** — uses HTML `<form action="#" method="POST">`, no JS handler, no `/api/forms/submit` integration, no honeypot, no success state. Needs complete rewrite.
+#### Phase 2: Registry Alignment
+3. **Newsletter registry** (`core-components.ts`) — Fixed 3 BREAKING field name mismatches (`submitText`→`buttonText`, `layout`→`variant`, `subtitle`→`description`). Added fieldGroups array (content, layout, appearance, inputStyling). Added 9 new fields: `size`, `backgroundColor`, `buttonColor`, `buttonTextColor`, `textColor`, `borderRadius`, `inputBackgroundColor`, `inputBorderColor`, `inputTextColor`. Added "card" variant. Expanded `ai.canModify` from 4 to 10 fields.
 
-2. **ContactForm `emailTo` prop is decorative** — sends `_emailTo` in data but API never reads it. Only `form_settings.notify_emails` is checked, which defaults to `[]` for new sites. No email notifications on new sites.
+4. **ContactForm registry** (`core-components.ts`) — Expanded from 7 fields to 24 fields. Added fieldGroups (content, fieldLabels, visibility, appearance, colorOverrides). Added: `nameLabel`, `emailLabel`, `phoneLabel`, `subjectLabel`, `messageLabel`, `backgroundColor`, `borderRadius`, `shadow`, `padding`, `buttonColor`, `buttonTextColor`, `textColor`, `inputBackgroundColor`, `inputBorderColor`, `inputTextColor`, `labelColor`. Fixed `showPhone` default from `true` to `false` (matching render). Expanded `ai.canModify` from 4 to 14 fields.
 
-3. **Newsletter registry has 3 BREAKING field name mismatches** — `submitText` (render expects `buttonText`), `layout` (render expects `variant`), `subtitle` (render expects `description`). Props silently lost.
+5. **fieldGroups format fix** — Both ContactForm and Newsletter fieldGroups were using object format `{ content: { label, fields } }` instead of required array format `[{ id, label, icon, fields }]`. Fixed to match FieldGroup interface.
 
-4. **23 of 30 ContactForm render props have no registry field** — all styling props (colours, border radius, shadow, padding) and label customisation props are missing from the registry.
+#### Phase 3: Converter & Metadata
+6. **FormField converter aliases** (`converter.ts`) — Added 3 typeMap aliases: `FormFieldBlock`, `InputField`, `FormInput` → "FormField".
 
-5. **Form and FormField not in KNOWN_REGISTRY_TYPES** — AI converter cannot generate these components.
+7. **Component metadata** (`component-metadata.ts`) — Updated descriptions for all 4 form components with richer keywords and usage guidelines.
 
-**Document structure (15 sections + 3 appendices):**
-- Section 0: Implementation Blueprint with verified line numbers, file map, props pipeline, DO/DON'T rules
-- Section 1: Current State Audit with submission pipeline status matrix
-- Section 8: "Out of the Gate" Submission Architecture — 3-layer email fallback, auto-provisioning form_settings, Newsletter rewrite spec, Form generic integration
-- Sections 4-7: Per-component deep dives with registry↔render disconnect tables
-- Sections 9-11: Validation, accessibility, dark mode
-- Section 14: 5-phase implementation plan
-- Appendices: Infrastructure map, DB schema, CRM module integration
+#### Phase 4: Form Platform Submission
+8. **Form generic platform submission** (`renders.tsx`) — Added `siteId`, `formId`, `enablePlatformSubmission` props to FormProps interface and FormRender. When `enablePlatformSubmission` is true: injects honeypot field, overrides onSubmit with fetch handler, manages platformStatus state machine, uses resolved values for success/error/loading states.
 
-**Verified line numbers for all 4 components across 3 files:**
+#### Phase 5: ARIA & Dark Mode
+9. **ARIA accessibility** — Added to:
+   - FormRender: `role="status" aria-live="polite"` on success, `role="alert"` on error, `aria-busy` on submit button
+   - ContactFormRender: `role="status" aria-live="polite"` on success state, `role="alert"` on error, `aria-busy` on submit button
+   - FormFieldRender: `aria-required`, `aria-invalid`, `aria-describedby` (linking to error/help/success messages via `{fieldId}-error`, `{fieldId}-help`, `{fieldId}-success` IDs) spread across all input types (text, textarea, select, checkbox, radio)
 
-| Component | Interface | Export | Registry `defineComponent(` | Registry `type:` | Metadata `type:` |
-|-----------|-----------|--------|---------------------------|-----------------|-----------------|
-| Form | L15892 | L15973 | L12513 | L12514 | L581 |
-| FormField | L16296 | L16426 | L12951 | L12952 | L593 |
-| ContactForm | L16887 | L16917 | L13330 | L13331 | L604 |
-| Newsletter | L17225 | L17241 | L13376 | L13377 | L616 |
+10. **Dark mode colour fixes** — Form success/error messages now use inline `style={{}}` with conditional dark-aware colours instead of hardcoded `bg-green-50 text-green-700` / `bg-red-50 text-red-700`.
 
-### What Was Done (Latest Session)
+### Files Modified
+- `src/lib/studio/blocks/renders.tsx` — Newsletter rewrite, Form platform submission, ARIA on all 3 renderers, dark mode fixes
+- `src/lib/studio/registry/core-components.ts` — Newsletter + ContactForm registry expansions, fieldGroups format fix
+- `src/app/api/forms/submit/route.ts` — 3-layer email fallback chain
+- `src/lib/ai/website-designer/converter.ts` — FormField aliases
+- `src/lib/studio/registry/component-metadata.ts` — Updated descriptions/keywords
 
-**Fixed duplicate sidebar entries + 17 TypeScript errors (commit `730f9dab`):**
-
-1. **Root cause of 3 Buttons in sidebar**: `premium-components.ts` registered 6 duplicate components (`button`, `section`, `container`, `heading`, `text`, `image`) with lowercase types alongside PascalCase core ones. Case-sensitive Map stored both.
-
-2. **Fix**: Removed `registerPremiumComponents()` call from `initializeRegistry()` in index.ts. Added `TYPE_ALIASES` static map and `resolveType()` method in `component-registry.ts` for backward compatibility (maps lowercase types to PascalCase equivalents).
-
-3. **Added Button and Badge to KNOWN_REGISTRY_TYPES** in converter.ts — they were missing from the validation Set.
+### TypeScript Status
+- 16 pre-existing errors (converter.ts toResponsive, business-notifications.ts quotes table) — unchanged
+- **Zero new errors introduced** by all forms changes
 
 4. **Fixed 17 TypeScript errors in renders.tsx** (from parallel session's code):
    - 13 errors: Widened `ClassMapValue` type to accept plain `string` (in both layout-utils.ts and renders.tsx), updated `getClassFromMapping` to handle string case
@@ -99,7 +96,7 @@ Comprehensive plan covering all 4 form components (Form, FormField, ContactForm,
 | MEDIA-COMPONENTS-MASTER-PLAN.md | ✅ COMPLETE (awaiting implementation) |
 | SECTIONS-COMPONENTS-MASTER-PLAN.md | ✅ v2.0 COMPLETE (implementation-ready) |
 | NAVIGATION-COMPONENTS-MASTER-PLAN.md | ✅ v1.1 VERIFIED (all line numbers corrected, Breadcrumb converter conflict documented) |
-| FORMS-COMPONENTS-MASTER-PLAN.md | ✅ v1.0 COMPLETE (submission gaps documented, "Out of the Gate" architecture specified) |
+| FORMS-COMPONENTS-MASTER-PLAN.md | ✅ v1.1 VERIFIED (all line numbers re-verified, factual errors corrected, ready for AI agent) |
 | GridItem | removed dead `backgroundColor`/`padding` fields |
 | ScrollSectionItem | removed dead `contentAlign`/`verticalAlign`, added `snapAlign` |
 | ShapeDivider | added `width`/`animated` fields |

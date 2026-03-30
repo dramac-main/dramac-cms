@@ -489,8 +489,10 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     acceptsChildren: false,
     keywords: ["accordion", "expand", "collapse", "faq", "toggle", "details"],
     ai: {
-      description: "Expandable accordion section with bordered, filled, separated, and minimal variants. Supports badge, section header, dark mode, and custom padding.",
-      usageGuidelines: "Use for FAQ sections, expandable content, or any collapsible information blocks",
+      description:
+        "Expandable accordion section with bordered, filled, separated, and minimal variants. Supports badge, section header, dark mode, and custom padding.",
+      usageGuidelines:
+        "Use for FAQ sections, expandable content, or any collapsible information blocks",
     },
   },
   {
@@ -499,10 +501,19 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     category: "sections",
     description: "Pricing plans with billing toggle and feature comparison",
     acceptsChildren: false,
-    keywords: ["pricing", "plans", "subscription", "billing", "tiers", "packages"],
+    keywords: [
+      "pricing",
+      "plans",
+      "subscription",
+      "billing",
+      "tiers",
+      "packages",
+    ],
     ai: {
-      description: "Pricing section with monthly/yearly billing toggle, plan cards with feature lists, highlighted recommended plan, and guarantee badge. Supports dark mode.",
-      usageGuidelines: "Use to display pricing tiers, subscription plans, or service packages with clear comparison",
+      description:
+        "Pricing section with monthly/yearly billing toggle, plan cards with feature lists, highlighted recommended plan, and guarantee badge. Supports dark mode.",
+      usageGuidelines:
+        "Use to display pricing tiers, subscription plans, or service packages with clear comparison",
     },
   },
   {
@@ -588,7 +599,14 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     category: "interactive",
     description: "Tabbed content panels with multiple layout variants",
     acceptsChildren: false,
-    keywords: ["tabs", "tab panel", "tabbed content", "tab navigation", "tab bar", "tab group"],
+    keywords: [
+      "tabs",
+      "tab panel",
+      "tabbed content",
+      "tab navigation",
+      "tab bar",
+      "tab group",
+    ],
     ai: {
       description:
         "Tabbed content organizer with 7 variants (underline, pills, boxed, enclosed, soft, minimal, lifted), vertical/horizontal layout, ARIA tablist pattern, keyboard navigation, and optional icons/badges per tab.",
@@ -605,47 +623,89 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     type: "Form",
     label: "Form",
     category: "forms",
-    description: "Form container",
+    description:
+      "Premium form container with submission pipeline, validation states, and flexible layouts",
     acceptsChildren: true,
-    keywords: ["form", "input", "submit"],
+    keywords: ["form", "input", "submit", "container", "layout", "grid"],
     ai: {
-      description: "Form wrapper with submit handling",
-      usageGuidelines: "Use with FormField children",
+      description:
+        "Form wrapper with built-in submit button, success/error states, optional platform submission via /api/forms/submit, animations, and 5 layout modes (vertical, horizontal, inline, grid-2, grid-3).",
+      usageGuidelines:
+        "Use with FormField children. Enable enablePlatformSubmission to store submissions in the platform. Set layout to grid-2 for side-by-side fields.",
+      suggestedWith: ["FormField"],
     },
   },
   {
     type: "FormField",
     label: "Form Field",
     category: "forms",
-    description: "Form input field",
+    description:
+      "Versatile form input supporting text, email, textarea, select, checkbox, radio, password, file, and more",
     acceptsChildren: false,
-    keywords: ["input", "field", "text", "email"],
+    keywords: [
+      "input",
+      "field",
+      "text",
+      "email",
+      "textarea",
+      "select",
+      "checkbox",
+      "radio",
+      "password",
+      "file",
+      "form input",
+    ],
     ai: {
-      description: "Individual form input (text, email, textarea, etc.)",
+      description:
+        "Individual form input with 12+ types, 4 variants (default, filled, underline, ghost), icons, prefix/suffix, character counter, password toggle, clear button, and full colour customisation. ARIA-compliant with aria-required, aria-invalid, and aria-describedby.",
+      usageGuidelines:
+        "Place inside a Form component. Set type for the input kind. Use variant to match the form's visual style.",
+      suggestedWith: ["Form"],
     },
   },
   {
     type: "ContactForm",
     label: "Contact Form",
     category: "forms",
-    description: "Pre-built contact form",
+    description:
+      "Pre-built contact form with name, email, phone, subject, and message fields",
     acceptsChildren: false,
-    keywords: ["contact", "form", "email", "message"],
+    keywords: [
+      "contact",
+      "form",
+      "email",
+      "message",
+      "enquiry",
+      "inquiry",
+      "get in touch",
+    ],
     ai: {
-      description: "Complete contact form with name, email, and message fields",
-      usageGuidelines: "Use on contact pages",
+      description:
+        "Complete contact form with fetch-based submission to /api/forms/submit, honeypot spam protection, success/error states, customisable field labels, full colour theming, and dark-mode aware styling.",
+      usageGuidelines:
+        "Use on contact pages. Set emailTo to override notification recipient. Toggle showPhone and showSubject for optional fields.",
     },
   },
   {
     type: "Newsletter",
     label: "Newsletter Signup",
     category: "forms",
-    description: "Email newsletter form",
+    description:
+      "Email newsletter signup form with inline, stacked, and card layouts",
     acceptsChildren: false,
-    keywords: ["newsletter", "email", "signup", "subscribe"],
+    keywords: [
+      "newsletter",
+      "email",
+      "signup",
+      "subscribe",
+      "mailing list",
+      "opt-in",
+    ],
     ai: {
-      description: "Email subscription form for newsletters",
-      usageGuidelines: "Use in footer or as standalone CTA",
+      description:
+        "Email subscription form with fetch-based submission to /api/forms/submit, honeypot spam protection, 3 variants (inline, stacked, card), 3 sizes, success/error states, and full colour customisation.",
+      usageGuidelines:
+        "Use in footer, hero section, or as standalone CTA. Set variant to card for emphasis, inline for compact placement.",
     },
   },
 
@@ -690,23 +750,28 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     type: "Label",
     label: "Label",
     category: "content",
-    description: "Small utility text for tags, badges, categories, and overlines",
+    description:
+      "Small utility text for tags, badges, categories, and overlines",
     acceptsChildren: false,
     keywords: ["label", "tag", "badge", "pill", "overline", "category"],
     ai: {
-      description: "Small utility text element with 7 variants: default, badge, overline, tag, pill, outline, subtle",
-      usageGuidelines: "Use above headings as overlines, as category tags, or as status badges",
+      description:
+        "Small utility text element with 7 variants: default, badge, overline, tag, pill, outline, subtle",
+      usageGuidelines:
+        "Use above headings as overlines, as category tags, or as status badges",
     },
   },
   {
     type: "List",
     label: "List",
     category: "content",
-    description: "Styled list with bullet, numbered, check, arrow, and dash variants",
+    description:
+      "Styled list with bullet, numbered, check, arrow, and dash variants",
     acceptsChildren: false,
     keywords: ["list", "bullet", "numbered", "checklist", "items"],
     ai: {
-      description: "Styled list component with 7 marker variants and multi-column support",
+      description:
+        "Styled list component with 7 marker variants and multi-column support",
       usageGuidelines: "Use for feature lists, benefits, steps, and checklists",
     },
   },
@@ -718,8 +783,10 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     acceptsChildren: false,
     keywords: ["display", "hero text", "large text", "decorative", "title"],
     ai: {
-      description: "Extra-large decorative text for hero sections with gradient and shadow support",
-      usageGuidelines: "Use for dramatic hero headings, landing page titles, and splash text. Typically 4xl-9xl size.",
+      description:
+        "Extra-large decorative text for hero sections with gradient and shadow support",
+      usageGuidelines:
+        "Use for dramatic hero headings, landing page titles, and splash text. Typically 4xl-9xl size.",
     },
   },
   {
@@ -730,8 +797,10 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     acceptsChildren: false,
     keywords: ["divider", "separator", "section break", "ornament"],
     ai: {
-      description: "Text element with decorative lines in 5 variants: line-sides, line-through, dots, gradient, ornament",
-      usageGuidelines: "Use as section separators, visual breaks between content areas",
+      description:
+        "Text element with decorative lines in 5 variants: line-sides, line-through, dots, gradient, ornament",
+      usageGuidelines:
+        "Use as section separators, visual breaks between content areas",
     },
   },
   {
@@ -742,8 +811,10 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     acceptsChildren: false,
     keywords: ["stat", "number", "metric", "counter", "statistic"],
     ai: {
-      description: "Large statistic display with value, prefix, suffix, and label using tabular-nums for aligned numbers",
-      usageGuidelines: "Use for key metrics, achievements, and data points. Combine multiple in a row for stats sections.",
+      description:
+        "Large statistic display with value, prefix, suffix, and label using tabular-nums for aligned numbers",
+      usageGuidelines:
+        "Use for key metrics, achievements, and data points. Combine multiple in a row for stats sections.",
     },
   },
 
@@ -941,7 +1012,14 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     category: "navigation",
     description: "Styled link with underline animations and external icon",
     acceptsChildren: false,
-    keywords: ["link", "anchor", "hyperlink", "text link", "nav link", "inline link"],
+    keywords: [
+      "link",
+      "anchor",
+      "hyperlink",
+      "text link",
+      "nav link",
+      "inline link",
+    ],
     ai: {
       description:
         "Styled inline or navigation link with 6 variants (default, underline, hover-underline, subtle, bold, nav), external link auto-detection, and CSS variable theming",
@@ -954,9 +1032,16 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     type: "ButtonGroup",
     label: "Button Group",
     category: "buttons",
-    description: "Groups multiple buttons together with connected or separated layouts",
+    description:
+      "Groups multiple buttons together with connected or separated layouts",
     acceptsChildren: false,
-    keywords: ["button group", "button row", "action bar", "toolbar", "button set"],
+    keywords: [
+      "button group",
+      "button row",
+      "action bar",
+      "toolbar",
+      "button set",
+    ],
     ai: {
       description:
         "Groups 2-5 buttons with connected, separated, or toggle variants. Supports horizontal/vertical direction and shared border radius.",
@@ -986,7 +1071,14 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     category: "navigation",
     description: "Navigation breadcrumb trail showing page hierarchy",
     acceptsChildren: false,
-    keywords: ["breadcrumb", "navigation", "path", "trail", "hierarchy", "page path"],
+    keywords: [
+      "breadcrumb",
+      "navigation",
+      "path",
+      "trail",
+      "hierarchy",
+      "page path",
+    ],
     ai: {
       description:
         "Breadcrumb navigation with 5 separator types (/, >, →, •, chevron), 3 variants (default, contained, pills), maxItems truncation with ellipsis, and home icon support.",
@@ -1001,7 +1093,13 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     category: "interactive",
     description: "Page navigation with numbered buttons and prev/next controls",
     acceptsChildren: false,
-    keywords: ["pagination", "pager", "page numbers", "page nav", "page navigation"],
+    keywords: [
+      "pagination",
+      "pager",
+      "page numbers",
+      "page nav",
+      "page navigation",
+    ],
     ai: {
       description:
         "Pagination control with 4 variants (default, simple, minimal, dots), 3 shapes (rounded, pill, square), smart sibling/boundary algorithm, and first/last/prev/next buttons.",
@@ -1014,7 +1112,8 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     type: "Badge",
     label: "Badge",
     category: "buttons",
-    description: "Small status indicator or label with optional link and dismiss",
+    description:
+      "Small status indicator or label with optional link and dismiss",
     acceptsChildren: false,
     keywords: ["badge", "tag", "label", "status", "indicator", "pill"],
     ai: {
@@ -1031,7 +1130,16 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     category: "sections",
     description: "Display blog posts in grid, list, featured, or card layouts",
     acceptsChildren: false,
-    keywords: ["blog", "posts", "articles", "news", "content", "feed", "preview", "recent"],
+    keywords: [
+      "blog",
+      "posts",
+      "articles",
+      "news",
+      "content",
+      "feed",
+      "preview",
+      "recent",
+    ],
     ai: {
       description:
         "Blog post preview section with 4 variants (grid, list, featured, cards), configurable columns (2-4), post cards with image, category, title, excerpt, author avatar, date, and read time. Supports section header with badge, CTA link, and dark-mode-aware colors.",
@@ -1094,16 +1202,10 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     type: "Icon",
     label: "Icon",
     category: "media",
-    description: "Display decorative or functional icons with optional backgrounds and animations",
+    description:
+      "Display decorative or functional icons with optional backgrounds and animations",
     acceptsChildren: false,
-    keywords: [
-      "icon",
-      "symbol",
-      "graphic",
-      "decorative",
-      "lucide",
-      "svg",
-    ],
+    keywords: ["icon", "symbol", "graphic", "decorative", "lucide", "svg"],
     ai: {
       description:
         "A standalone icon component supporting Lucide icons with configurable size (xs-3xl), color, background shapes (circle, rounded, square), and animations (spin, pulse, bounce, float). Can be decorative or accessible with aria labels.",
@@ -1118,7 +1220,8 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     type: "Audio",
     label: "Audio Player",
     category: "media",
-    description: "Audio player with waveform visualisation, cover art, and playback speed control",
+    description:
+      "Audio player with waveform visualisation, cover art, and playback speed control",
     acceptsChildren: false,
     keywords: [
       "audio",
@@ -1143,7 +1246,8 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     type: "Embed",
     label: "Embed",
     category: "media",
-    description: "Secure responsive iframe embed for videos, maps, or external content",
+    description:
+      "Secure responsive iframe embed for videos, maps, or external content",
     acceptsChildren: false,
     keywords: [
       "embed",
@@ -1168,17 +1272,10 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     type: "AvatarGroup",
     label: "Avatar Group",
     category: "media",
-    description: "Stacked overlapping avatar collection with overflow count badge",
+    description:
+      "Stacked overlapping avatar collection with overflow count badge",
     acceptsChildren: false,
-    keywords: [
-      "avatar",
-      "group",
-      "stack",
-      "team",
-      "users",
-      "faces",
-      "people",
-    ],
+    keywords: ["avatar", "group", "stack", "team", "users", "faces", "people"],
     ai: {
       description:
         "A horizontal stack of overlapping circular avatars with a +N overflow badge. Configurable size (xs-xl), overlap amount, stack direction, ring colour, and fallback initials when no image provided.",

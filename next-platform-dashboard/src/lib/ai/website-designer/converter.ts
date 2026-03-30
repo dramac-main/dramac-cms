@@ -199,7 +199,7 @@ function fixLink(
   }
 
   // Normalize the href
-  let normalizedHref = href.toLowerCase().trim();
+  const normalizedHref = href.toLowerCase().trim();
 
   // If it's already a valid-looking path
   if (normalizedHref.startsWith("/")) {
@@ -493,6 +493,9 @@ function convertComponentToStudio(
     // Form
     FormBlock: "Form",
     FormSection: "Form",
+    FormFieldBlock: "FormField",
+    InputField: "FormField",
+    FormInput: "FormField",
     // Misc content
     ContentSection: "RichText",
     Content: "RichText",
@@ -1658,7 +1661,17 @@ function transformPropsForStudio(
     const items = props.items || props.listItems || [];
     return {
       ...props,
-      items: Array.isArray(items) ? items.map((i: unknown) => typeof i === "string" ? i : String((i as Record<string, unknown>)?.text || (i as Record<string, unknown>)?.content || i)) : [],
+      items: Array.isArray(items)
+        ? items.map((i: unknown) =>
+            typeof i === "string"
+              ? i
+              : String(
+                  (i as Record<string, unknown>)?.text ||
+                    (i as Record<string, unknown>)?.content ||
+                    i,
+                ),
+          )
+        : [],
       variant: props.variant || props.style || props.listStyle || "bullet",
       spacing: props.spacing || "normal",
       columns: props.columns ? Number(props.columns) : undefined,
@@ -2168,15 +2181,19 @@ function transformPropsForStudio(
   if (type === "Link") {
     return {
       ...props,
-      text: props.text || props.label || props.linkText || props.content || "Link",
-      href: fixLink(String(props.href || props.url || props.link || ""), String(props.text || props.label || "Link")),
+      text:
+        props.text || props.label || props.linkText || props.content || "Link",
+      href: fixLink(
+        String(props.href || props.url || props.link || ""),
+        String(props.text || props.label || "Link"),
+      ),
       target: props.target || "_self",
       variant: props.variant || props.style || "default",
       color: props.color || props.textColor || undefined,
       fontSize: props.fontSize || undefined,
       fontWeight: props.fontWeight || undefined,
       underlineAnimation: props.underlineAnimation || "slide",
-      showExternalIcon: props.showExternalIcon ?? (props.target === "_blank"),
+      showExternalIcon: props.showExternalIcon ?? props.target === "_blank",
       iconName: props.iconName || props.icon || undefined,
       iconPosition: props.iconPosition || "left",
     };
@@ -2186,7 +2203,8 @@ function transformPropsForStudio(
   if (type === "ButtonGroup") {
     return {
       ...props,
-      direction: props.direction || props.layout || props.orientation || "horizontal",
+      direction:
+        props.direction || props.layout || props.orientation || "horizontal",
       variant: props.variant || props.style || "separated",
       size: props.size || "md",
       gap: props.gap || props.spacing || "sm",
@@ -2208,7 +2226,8 @@ function transformPropsForStudio(
       rounded: props.rounded ?? "full",
       avatar: props.avatar || props.image || props.icon || undefined,
       selectedColor: props.selectedColor || props.activeColor || undefined,
-      selectedTextColor: props.selectedTextColor || props.activeTextColor || undefined,
+      selectedTextColor:
+        props.selectedTextColor || props.activeTextColor || undefined,
     };
   }
 
@@ -2216,7 +2235,11 @@ function transformPropsForStudio(
   if (type === "Breadcrumb") {
     const rawItems = props.items || props.links || props.breadcrumbs || [];
     const separatorMap: Record<string, string> = {
-      slash: "/", chevron: "chevron", arrow: "→", dot: "•", gt: ">",
+      slash: "/",
+      chevron: "chevron",
+      arrow: "→",
+      dot: "•",
+      gt: ">",
     };
     const rawSep = String(props.separator || "/");
     return {
@@ -2245,7 +2268,9 @@ function transformPropsForStudio(
     return {
       ...props,
       currentPage: Number(props.currentPage || props.page || 1),
-      totalPages: Number(props.totalPages || props.pages || props.pageCount || 10),
+      totalPages: Number(
+        props.totalPages || props.pages || props.pageCount || 10,
+      ),
       variant: props.variant || props.style || "default",
       size: props.size || "md",
       shape: props.shape || "rounded",

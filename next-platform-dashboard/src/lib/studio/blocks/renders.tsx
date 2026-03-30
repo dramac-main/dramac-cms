@@ -3185,11 +3185,36 @@ const HEADING_DEFAULTS: Record<
   number,
   { size: string; lineHeight: string; letterSpacing: string; weight: number }
 > = {
-  1: { size: "3rem", lineHeight: "1.1", letterSpacing: "-0.025em", weight: 800 },
-  2: { size: "2.25rem", lineHeight: "1.2", letterSpacing: "-0.02em", weight: 700 },
-  3: { size: "1.875rem", lineHeight: "1.25", letterSpacing: "-0.015em", weight: 700 },
-  4: { size: "1.5rem", lineHeight: "1.3", letterSpacing: "-0.01em", weight: 600 },
-  5: { size: "1.25rem", lineHeight: "1.4", letterSpacing: "-0.005em", weight: 600 },
+  1: {
+    size: "3rem",
+    lineHeight: "1.1",
+    letterSpacing: "-0.025em",
+    weight: 800,
+  },
+  2: {
+    size: "2.25rem",
+    lineHeight: "1.2",
+    letterSpacing: "-0.02em",
+    weight: 700,
+  },
+  3: {
+    size: "1.875rem",
+    lineHeight: "1.25",
+    letterSpacing: "-0.015em",
+    weight: 700,
+  },
+  4: {
+    size: "1.5rem",
+    lineHeight: "1.3",
+    letterSpacing: "-0.01em",
+    weight: 600,
+  },
+  5: {
+    size: "1.25rem",
+    lineHeight: "1.4",
+    letterSpacing: "-0.005em",
+    weight: 600,
+  },
   6: { size: "1.125rem", lineHeight: "1.4", letterSpacing: "0em", weight: 600 },
 };
 
@@ -3260,7 +3285,8 @@ export function HeadingRender({
   // Resolve font weight — accept numeric or named values
   const resolvedWeight = (() => {
     if (typeof fontWeight === "number") return fontWeight;
-    if (fontWeight && /^\d+$/.test(String(fontWeight))) return Number(fontWeight);
+    if (fontWeight && /^\d+$/.test(String(fontWeight)))
+      return Number(fontWeight);
     const namedWeights: Record<string, number> = {
       light: 300,
       normal: 400,
@@ -3269,7 +3295,9 @@ export function HeadingRender({
       bold: 700,
       extrabold: 800,
     };
-    return fontWeight ? namedWeights[fontWeight] || defaults.weight : defaults.weight;
+    return fontWeight
+      ? namedWeights[fontWeight] || defaults.weight
+      : defaults.weight;
   })();
 
   // Resolve textTransform — backwards compat with `uppercase` boolean
@@ -3281,9 +3309,11 @@ export function HeadingRender({
   const style: React.CSSProperties = {
     fontFamily: fontFamily || `var(--font-heading, inherit)`,
     fontSize: fontSize || `var(--type-${headingVar}, ${defaults.size})`,
-    lineHeight: lineHeight || `var(--leading-${headingVar}, ${defaults.lineHeight})`,
+    lineHeight:
+      lineHeight || `var(--leading-${headingVar}, ${defaults.lineHeight})`,
     letterSpacing:
-      letterSpacing || `var(--tracking-${headingVar}, ${defaults.letterSpacing})`,
+      letterSpacing ||
+      `var(--tracking-${headingVar}, ${defaults.letterSpacing})`,
     fontWeight: resolvedWeight,
     fontStyle: fontStyle !== "normal" ? fontStyle : undefined,
     textTransform: resolvedTransform !== "none" ? resolvedTransform : undefined,
@@ -3588,13 +3618,28 @@ function markdownToHtml(text: string): string {
   let html = text;
 
   // Headings: #### h4, ### h3, ## h2, # h1 (must be at start of line)
-  html = html.replace(/^####\s+(.+)$/gm, '<h4 class="text-lg font-semibold mt-6 mb-2">$1</h4>');
-  html = html.replace(/^###\s+(.+)$/gm, '<h3 class="text-xl font-semibold mt-6 mb-3">$1</h3>');
-  html = html.replace(/^##\s+(.+)$/gm, '<h2 class="text-2xl font-bold mt-8 mb-4">$1</h2>');
-  html = html.replace(/^#\s+(.+)$/gm, '<h1 class="text-3xl font-bold mt-8 mb-4">$1</h1>');
+  html = html.replace(
+    /^####\s+(.+)$/gm,
+    '<h4 class="text-lg font-semibold mt-6 mb-2">$1</h4>',
+  );
+  html = html.replace(
+    /^###\s+(.+)$/gm,
+    '<h3 class="text-xl font-semibold mt-6 mb-3">$1</h3>',
+  );
+  html = html.replace(
+    /^##\s+(.+)$/gm,
+    '<h2 class="text-2xl font-bold mt-8 mb-4">$1</h2>',
+  );
+  html = html.replace(
+    /^#\s+(.+)$/gm,
+    '<h1 class="text-3xl font-bold mt-8 mb-4">$1</h1>',
+  );
 
   // Horizontal rules: --- or *** or ___
-  html = html.replace(/^(?:---|\*\*\*|___)\s*$/gm, '<hr class="my-6 border-current opacity-20" />');
+  html = html.replace(
+    /^(?:---|\*\*\*|___)\s*$/gm,
+    '<hr class="my-6 border-current opacity-20" />',
+  );
 
   // Bold: **text** or __text__
   html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
@@ -3720,8 +3765,7 @@ export function RichTextRender({
                 className="font-bold leading-tight mb-4"
                 style={{
                   color: resolvedTitleColor || undefined,
-                  fontFamily:
-                    titleFontFamily || `var(--font-heading, inherit)`,
+                  fontFamily: titleFontFamily || `var(--font-heading, inherit)`,
                   fontSize:
                     titleFontSize ||
                     `var(--type-${titleLevel}, var(--type-4xl, 2.25rem))`,
@@ -3976,7 +4020,9 @@ export function QuoteRender({
           {text}
         </p>
         {author && (
-          <footer className={`mt-6 ${sizeStyles.author} flex items-center gap-4`}>
+          <footer
+            className={`mt-6 ${sizeStyles.author} flex items-center gap-4`}
+          >
             {authorImageUrl && (
               <img
                 src={authorImageUrl}
@@ -3987,7 +4033,9 @@ export function QuoteRender({
             <div>
               <div
                 className="w-8 h-0.5 mb-2 rounded-full"
-                style={{ backgroundColor: borderColor || textColor || undefined }}
+                style={{
+                  backgroundColor: borderColor || textColor || undefined,
+                }}
               />
               <cite
                 className="not-italic font-semibold block"
@@ -4057,7 +4105,9 @@ export function QuoteRender({
           &ldquo;{text}&rdquo;
         </p>
         {author && (
-          <footer className={`mt-6 ${sizeStyles.author} flex flex-col items-center gap-3`}>
+          <footer
+            className={`mt-6 ${sizeStyles.author} flex flex-col items-center gap-3`}
+          >
             {authorImageUrl && (
               <img
                 src={authorImageUrl}
@@ -4328,28 +4378,19 @@ export function ListRender({
         );
       case "arrow":
         return (
-          <span
-            className="mr-3 shrink-0"
-            style={{ color: resolvedIconColor }}
-          >
+          <span className="mr-3 shrink-0" style={{ color: resolvedIconColor }}>
             →
           </span>
         );
       case "dash":
         return (
-          <span
-            className="mr-3 shrink-0"
-            style={{ color: resolvedIconColor }}
-          >
+          <span className="mr-3 shrink-0" style={{ color: resolvedIconColor }}>
             —
           </span>
         );
       case "icon":
         return (
-          <span
-            className="mr-3 shrink-0"
-            style={{ color: resolvedIconColor }}
-          >
+          <span className="mr-3 shrink-0" style={{ color: resolvedIconColor }}>
             •
           </span>
         );
@@ -4369,9 +4410,7 @@ export function ListRender({
   const listStyle: React.CSSProperties = {
     color: color || undefined,
     fontFamily: fontFamily || `var(--font-body, inherit)`,
-    fontSize: fontSize
-      ? `var(--type-${fontSize}, ${fontSize})`
-      : undefined,
+    fontSize: fontSize ? `var(--type-${fontSize}, ${fontSize})` : undefined,
     lineHeight: lineHeight || undefined,
   };
 
@@ -4543,12 +4582,18 @@ export function DividerTextRender({
       >
         <div
           className="flex-1 h-px"
-          style={{ backgroundColor: resolvedLineColor || "currentColor", opacity: 0.2 }}
+          style={{
+            backgroundColor: resolvedLineColor || "currentColor",
+            opacity: 0.2,
+          }}
         />
         <span style={textStyle}>{text}</span>
         <div
           className="flex-1 h-px"
-          style={{ backgroundColor: resolvedLineColor || "currentColor", opacity: 0.2 }}
+          style={{
+            backgroundColor: resolvedLineColor || "currentColor",
+            opacity: 0.2,
+          }}
         />
       </div>
     );
@@ -4560,13 +4605,13 @@ export function DividerTextRender({
         id={id}
         className={`relative text-center ${spacingMap[spacing]} ${className}`}
       >
-        <div
-          className="absolute inset-0 flex items-center"
-          aria-hidden="true"
-        >
+        <div className="absolute inset-0 flex items-center" aria-hidden="true">
           <div
             className="w-full h-px"
-            style={{ backgroundColor: resolvedLineColor || "currentColor", opacity: 0.2 }}
+            style={{
+              backgroundColor: resolvedLineColor || "currentColor",
+              opacity: 0.2,
+            }}
           />
         </div>
         <span
@@ -4636,11 +4681,15 @@ export function DividerTextRender({
         id={id}
         className={`flex items-center justify-center gap-4 ${spacingMap[spacing]} ${className}`}
       >
-        <span style={{ color: resolvedLineColor || "currentColor", opacity: 0.4 }}>
+        <span
+          style={{ color: resolvedLineColor || "currentColor", opacity: 0.4 }}
+        >
           ✦
         </span>
         <span style={textStyle}>{text}</span>
-        <span style={{ color: resolvedLineColor || "currentColor", opacity: 0.4 }}>
+        <span
+          style={{ color: resolvedLineColor || "currentColor", opacity: 0.4 }}
+        >
           ✦
         </span>
       </div>
@@ -4655,12 +4704,18 @@ export function DividerTextRender({
     >
       <div
         className="flex-1 h-px"
-        style={{ backgroundColor: resolvedLineColor || "currentColor", opacity: 0.2 }}
+        style={{
+          backgroundColor: resolvedLineColor || "currentColor",
+          opacity: 0.2,
+        }}
       />
       <span style={textStyle}>{text}</span>
       <div
         className="flex-1 h-px"
-        style={{ backgroundColor: resolvedLineColor || "currentColor", opacity: 0.2 }}
+        style={{
+          backgroundColor: resolvedLineColor || "currentColor",
+          opacity: 0.2,
+        }}
       />
     </div>
   );
@@ -4762,7 +4817,10 @@ export function StatNumberRender({
 // ============================================================================
 
 // Pre-bundled icon map for the `iconName` string prop (avoids full Lucide bundle)
-const BUTTON_ICONS: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
+const BUTTON_ICONS: Record<
+  string,
+  React.ComponentType<{ className?: string; style?: React.CSSProperties }>
+> = {
   "arrow-right": ArrowRight,
   "arrow-left": ArrowLeft,
   check: Check,
@@ -4864,7 +4922,14 @@ export interface ButtonProps {
   letterSpacing?: "normal" | "wide" | "wider" | "widest";
 
   // Animation & Effects
-  hoverEffect?: "none" | "lift" | "scale" | "pulse" | "shine" | "ripple" | "glow";
+  hoverEffect?:
+    | "none"
+    | "lift"
+    | "scale"
+    | "pulse"
+    | "shine"
+    | "ripple"
+    | "glow";
   transitionDuration?: "fast" | "normal" | "slow";
   animateOnLoad?: boolean;
   loadingAnimation?: "spinner" | "dots" | "pulse";
@@ -5022,12 +5087,9 @@ export function ButtonRender({
     ghost:
       "bg-transparent hover:opacity-80 active:opacity-70 border-transparent",
     link: "bg-transparent hover:underline border-transparent p-0",
-    destructive:
-      "hover:opacity-90 active:opacity-80 border-transparent",
-    success:
-      "hover:opacity-90 active:opacity-80 border-transparent",
-    warning:
-      "hover:opacity-90 active:opacity-80 border-transparent",
+    destructive: "hover:opacity-90 active:opacity-80 border-transparent",
+    success: "hover:opacity-90 active:opacity-80 border-transparent",
+    warning: "hover:opacity-90 active:opacity-80 border-transparent",
     ring: "bg-transparent border-2 hover:opacity-80 active:opacity-70",
     gradient: "",
   }[variant];
@@ -5192,23 +5254,17 @@ export function ButtonRender({
   } else if (variant === "destructive") {
     customStyles.backgroundColor =
       backgroundColor || "var(--destructive, #dc2626)";
-    customStyles.color =
-      textColor || "var(--destructive-foreground, #ffffff)";
+    customStyles.color = textColor || "var(--destructive-foreground, #ffffff)";
   } else if (variant === "success") {
-    customStyles.backgroundColor =
-      backgroundColor || "var(--success, #16a34a)";
-    customStyles.color =
-      textColor || "var(--success-foreground, #ffffff)";
+    customStyles.backgroundColor = backgroundColor || "var(--success, #16a34a)";
+    customStyles.color = textColor || "var(--success-foreground, #ffffff)";
   } else if (variant === "warning") {
-    customStyles.backgroundColor =
-      backgroundColor || "var(--warning, #d97706)";
-    customStyles.color =
-      textColor || "var(--warning-foreground, #ffffff)";
+    customStyles.backgroundColor = backgroundColor || "var(--warning, #d97706)";
+    customStyles.color = textColor || "var(--warning-foreground, #ffffff)";
   } else if (variant === "ring") {
     customStyles.borderColor =
       borderColor || backgroundColor || "var(--primary, #3b82f6)";
-    customStyles.color =
-      textColor || "var(--primary, #3b82f6)";
+    customStyles.color = textColor || "var(--primary, #3b82f6)";
   } else {
     if (backgroundColor) customStyles.backgroundColor = backgroundColor;
     if (textColor) customStyles.color = textColor;
@@ -5328,7 +5384,10 @@ export function ButtonRender({
 
       {/* Ripple effect overlay — CSS-only radial pulse on hover */}
       {hoverEffect === "ripple" && (
-        <span className="absolute inset-0 rounded-[inherit] pointer-events-none opacity-0 group-hover:opacity-100 group-hover:animate-ping bg-current/10" style={{ animationDuration: "600ms", animationIterationCount: "1" }} />
+        <span
+          className="absolute inset-0 rounded-[inherit] pointer-events-none opacity-0 group-hover:opacity-100 group-hover:animate-ping bg-current/10"
+          style={{ animationDuration: "600ms", animationIterationCount: "1" }}
+        />
       )}
 
       {/* Badge */}
@@ -5391,7 +5450,10 @@ export function ButtonRender({
         {buttonElement}
         <span
           className={`absolute ${tooltipPositionClasses} px-2 py-1 text-xs rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50`}
-          style={{ backgroundColor: "var(--foreground, #111827)", color: "var(--background, #ffffff)" }}
+          style={{
+            backgroundColor: "var(--foreground, #111827)",
+            color: "var(--background, #ffffff)",
+          }}
         >
           {tooltip}
         </span>
@@ -5636,11 +5698,19 @@ export function ImageRender({
   const imageAlt = alt || getImageAlt(src, "Image");
 
   // Generate srcSet for Supabase images if not provided
-  const resolvedSrcSet = srcSet || (imageUrl.includes("supabase.co/storage")
-    ? [640, 960, 1280, 1920].map(w => `${imageUrl}?width=${w}&quality=80 ${w}w`).join(", ")
-    : undefined);
-  const resolvedSizes = sizes || (resolvedSrcSet ? "(max-width: 640px) 100vw, (max-width: 1024px) 75vw, 50vw" : undefined);
-  const resolvedLoading = priority ? "eager" as const : loading;
+  const resolvedSrcSet =
+    srcSet ||
+    (imageUrl.includes("supabase.co/storage")
+      ? [640, 960, 1280, 1920]
+          .map((w) => `${imageUrl}?width=${w}&quality=80 ${w}w`)
+          .join(", ")
+      : undefined);
+  const resolvedSizes =
+    sizes ||
+    (resolvedSrcSet
+      ? "(max-width: 640px) 100vw, (max-width: 1024px) 75vw, 50vw"
+      : undefined);
+  const resolvedLoading = priority ? ("eager" as const) : loading;
 
   // Width class
   const widthClass =
@@ -5849,9 +5919,16 @@ export function ImageRender({
         .trim()}
       style={{
         ...imageStyles,
-        backgroundColor: placeholder === "blur" && blurDataURL ? undefined : placeholderColor || undefined,
-        backgroundImage: placeholder === "blur" && blurDataURL ? `url(${blurDataURL})` : undefined,
-        backgroundSize: placeholder === "blur" && blurDataURL ? "cover" : undefined,
+        backgroundColor:
+          placeholder === "blur" && blurDataURL
+            ? undefined
+            : placeholderColor || undefined,
+        backgroundImage:
+          placeholder === "blur" && blurDataURL
+            ? `url(${blurDataURL})`
+            : undefined,
+        backgroundSize:
+          placeholder === "blur" && blurDataURL ? "cover" : undefined,
       }}
     />
   );
@@ -6398,35 +6475,41 @@ export function VideoRender({
     const videoRef = React.useRef<HTMLVideoElement>(null);
 
     // Keyboard controls for native video
-    const handleKeyDown = React.useCallback((e: React.KeyboardEvent<HTMLVideoElement>) => {
-      const video = videoRef.current;
-      if (!video) return;
-      switch (e.key) {
-        case " ":
-        case "k":
-          e.preventDefault();
-          video.paused ? video.play() : video.pause();
-          break;
-        case "m":
-          video.muted = !video.muted;
-          break;
-        case "f":
-          if (document.fullscreenElement) {
-            document.exitFullscreen();
-          } else {
-            video.requestFullscreen?.();
-          }
-          break;
-        case "ArrowLeft":
-          e.preventDefault();
-          video.currentTime = Math.max(0, video.currentTime - 10);
-          break;
-        case "ArrowRight":
-          e.preventDefault();
-          video.currentTime = Math.min(video.duration, video.currentTime + 10);
-          break;
-      }
-    }, []);
+    const handleKeyDown = React.useCallback(
+      (e: React.KeyboardEvent<HTMLVideoElement>) => {
+        const video = videoRef.current;
+        if (!video) return;
+        switch (e.key) {
+          case " ":
+          case "k":
+            e.preventDefault();
+            video.paused ? video.play() : video.pause();
+            break;
+          case "m":
+            video.muted = !video.muted;
+            break;
+          case "f":
+            if (document.fullscreenElement) {
+              document.exitFullscreen();
+            } else {
+              video.requestFullscreen?.();
+            }
+            break;
+          case "ArrowLeft":
+            e.preventDefault();
+            video.currentTime = Math.max(0, video.currentTime - 10);
+            break;
+          case "ArrowRight":
+            e.preventDefault();
+            video.currentTime = Math.min(
+              video.duration,
+              video.currentTime + 10,
+            );
+            break;
+        }
+      },
+      [],
+    );
 
     videoElement = (
       <video
@@ -6845,16 +6928,24 @@ export function MapRender({
   };
 
   // Map styles
-  const darkFilter = resolvedMapStyle === "dark" ? "invert(90%) hue-rotate(180deg)" : "";
+  const darkFilter =
+    resolvedMapStyle === "dark" ? "invert(90%) hue-rotate(180deg)" : "";
   const mapStyles: React.CSSProperties = {
     height: aspectRatio === "auto" ? `${height}px` : undefined,
     borderColor: border ? borderColor : undefined,
     borderWidth: border ? `${borderWidth}px` : undefined,
     borderStyle: border ? "solid" : undefined,
-    filter: [
-      grayscale ? "grayscale(100%)" : saturation !== 100 ? `saturate(${saturation}%)` : "",
-      darkFilter,
-    ].filter(Boolean).join(" ") || undefined,
+    filter:
+      [
+        grayscale
+          ? "grayscale(100%)"
+          : saturation !== 100
+            ? `saturate(${saturation}%)`
+            : "",
+        darkFilter,
+      ]
+        .filter(Boolean)
+        .join(" ") || undefined,
   };
 
   // Render directions link
@@ -6954,26 +7045,55 @@ export function MapRender({
 
       {/* Info window overlay */}
       {showInfoWindow && infoWindowTitle && (
-        <div className="absolute top-4 left-4 rounded-lg shadow-lg p-3 max-w-xs" style={{ backgroundColor: 'var(--color-card, #ffffff)' }}>
-          <h4 className="font-semibold" style={{ color: 'var(--color-foreground, #111827)' }}>{infoWindowTitle}</h4>
-          <p className="text-sm mt-1" style={{ color: 'var(--color-muted-foreground, #6b7280)' }}>{address}</p>
+        <div
+          className="absolute top-4 left-4 rounded-lg shadow-lg p-3 max-w-xs"
+          style={{ backgroundColor: "var(--color-card, #ffffff)" }}
+        >
+          <h4
+            className="font-semibold"
+            style={{ color: "var(--color-foreground, #111827)" }}
+          >
+            {infoWindowTitle}
+          </h4>
+          <p
+            className="text-sm mt-1"
+            style={{ color: "var(--color-muted-foreground, #6b7280)" }}
+          >
+            {address}
+          </p>
         </div>
       )}
 
       {/* Multi-marker labels overlay */}
       {markers.length > 1 && (
-        <div className="absolute bottom-4 left-4 rounded-lg shadow-md p-2" style={{ backgroundColor: 'var(--color-card, #ffffff)' }}>
-          <div className="text-xs font-medium mb-1" style={{ color: 'var(--color-foreground, #111827)' }}>
+        <div
+          className="absolute bottom-4 left-4 rounded-lg shadow-md p-2"
+          style={{ backgroundColor: "var(--color-card, #ffffff)" }}
+        >
+          <div
+            className="text-xs font-medium mb-1"
+            style={{ color: "var(--color-foreground, #111827)" }}
+          >
             {markers.length} locations
           </div>
           {markers.slice(0, 5).map((m, i) => (
             <div key={i} className="flex items-center gap-1.5 text-xs py-0.5">
-              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: m.color || markerColor }} />
-              <span style={{ color: 'var(--color-muted-foreground, #6b7280)' }}>{m.label || `${m.lat.toFixed(4)}, ${m.lng.toFixed(4)}`}</span>
+              <span
+                className="w-2 h-2 rounded-full flex-shrink-0"
+                style={{ backgroundColor: m.color || markerColor }}
+              />
+              <span style={{ color: "var(--color-muted-foreground, #6b7280)" }}>
+                {m.label || `${m.lat.toFixed(4)}, ${m.lng.toFixed(4)}`}
+              </span>
             </div>
           ))}
           {markers.length > 5 && (
-            <div className="text-xs mt-0.5" style={{ color: 'var(--color-muted-foreground, #6b7280)' }}>+{markers.length - 5} more</div>
+            <div
+              className="text-xs mt-0.5"
+              style={{ color: "var(--color-muted-foreground, #6b7280)" }}
+            >
+              +{markers.length - 5} more
+            </div>
           )}
         </div>
       )}
@@ -7177,8 +7297,10 @@ export function HeroRender({
     full: "rounded-full",
   }[primaryButtonRadius];
 
-  const resolvedBtnColor = primaryButtonColor || (dark ? "#e5a956" : "var(--brand-primary, #3b82f6)");
-  const resolvedSecondaryColor = secondaryButtonColor || textColor || (dark ? "#ffffff" : "#374151");
+  const resolvedBtnColor =
+    primaryButtonColor || (dark ? "#e5a956" : "var(--brand-primary, #3b82f6)");
+  const resolvedSecondaryColor =
+    secondaryButtonColor || textColor || (dark ? "#ffffff" : "#374151");
 
   const animationClasses = animateOnLoad
     ? {
@@ -7189,7 +7311,7 @@ export function HeroRender({
       }[animationType] || ""
     : "";
 
-  // Build background styles 
+  // Build background styles
   const backgroundStyles: React.CSSProperties = {};
   if (backgroundGradient) {
     backgroundStyles.backgroundImage = buildGradientCSS(backgroundGradient);
@@ -7209,13 +7331,20 @@ export function HeroRender({
     waves: `url("data:image/svg+xml,%3Csvg width='100' height='20' viewBox='0 0 100 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 10c25 0 25-10 50-10s25 10 50 10' stroke='%23${dark ? "ffffff" : "000000"}' stroke-width='0.5' fill='none'/%3E%3C/svg%3E")`,
   };
 
-  // Badge rendering 
+  // Badge rendering
   const renderBadge = (centerSelf?: boolean) => {
     if (!badge) return null;
     const badgeStyles: React.CSSProperties =
       badgeStyle === "outline"
-        ? { borderColor: badgeColor || resolvedBtnColor, color: badgeColor || resolvedBtnColor, backgroundColor: "transparent" }
-        : { backgroundColor: badgeColor || resolvedBtnColor, color: badgeTextColor };
+        ? {
+            borderColor: badgeColor || resolvedBtnColor,
+            color: badgeColor || resolvedBtnColor,
+            backgroundColor: "transparent",
+          }
+        : {
+            backgroundColor: badgeColor || resolvedBtnColor,
+            color: badgeTextColor,
+          };
     return (
       <span
         className={`inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm font-medium mb-4 md:mb-6 ${centerSelf ? "self-center" : "self-start"} ${badgeStyle === "outline" ? "border" : ""}`}
@@ -7226,14 +7355,26 @@ export function HeroRender({
     );
   };
 
-  // Scroll indicator 
+  // Scroll indicator
   const renderScrollIndicator = () => {
     if (!showScrollIndicator) return null;
-    const indicatorColor = scrollIndicatorColor || textColor || (dark ? "#ffffff" : "#374151");
+    const indicatorColor =
+      scrollIndicatorColor || textColor || (dark ? "#ffffff" : "#374151");
     return (
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 animate-bounce z-10">
-        <svg className="w-6 h-6" style={{ color: indicatorColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+        <svg
+          className="w-6 h-6"
+          style={{ color: indicatorColor }}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 14l-7 7m0 0l-7-7m7 7V3"
+          />
         </svg>
       </div>
     );
@@ -7245,7 +7386,10 @@ export function HeroRender({
       {(bgImageUrl || backgroundGradient) && backgroundOverlay && (
         <div
           className="absolute inset-0"
-          style={{ backgroundColor: backgroundOverlayColor, opacity: backgroundOverlayOpacity / 100 }}
+          style={{
+            backgroundColor: backgroundOverlayColor,
+            opacity: backgroundOverlayOpacity / 100,
+          }}
           aria-hidden="true"
         />
       )}
@@ -7300,7 +7444,10 @@ export function HeroRender({
             <a
               href={primaryButtonLink}
               className={`inline-flex items-center justify-center px-6 py-3 md:px-8 md:py-4 text-base md:text-lg font-medium ${buttonRadiusClasses} hover:opacity-90 transition-all shadow-lg hover:shadow-xl`}
-              style={{ backgroundColor: resolvedBtnColor, color: primaryButtonTextColor }}
+              style={{
+                backgroundColor: resolvedBtnColor,
+                color: primaryButtonTextColor,
+              }}
             >
               {primaryButtonText}
             </a>
@@ -7362,7 +7509,10 @@ export function HeroRender({
               <a
                 href={primaryButtonLink}
                 className={`inline-flex items-center justify-center px-6 py-3 text-base font-medium ${buttonRadiusClasses} hover:opacity-90 transition-all shadow-lg`}
-                style={{ backgroundColor: resolvedBtnColor, color: primaryButtonTextColor }}
+                style={{
+                  backgroundColor: resolvedBtnColor,
+                  color: primaryButtonTextColor,
+                }}
               >
                 {primaryButtonText}
               </a>
@@ -7420,7 +7570,10 @@ export function HeroRender({
         {backgroundOverlay && (
           <div
             className="absolute inset-0"
-            style={{ backgroundColor: backgroundOverlayColor, opacity: backgroundOverlayOpacity / 100 }}
+            style={{
+              backgroundColor: backgroundOverlayColor,
+              opacity: backgroundOverlayOpacity / 100,
+            }}
             aria-hidden="true"
           />
         )}
@@ -7454,7 +7607,10 @@ export function HeroRender({
             <a
               href={primaryButtonLink}
               className={`inline-flex items-center justify-center px-8 py-4 text-lg font-medium ${buttonRadiusClasses} hover:opacity-90 transition-all shadow-lg`}
-              style={{ backgroundColor: resolvedBtnColor, color: primaryButtonTextColor }}
+              style={{
+                backgroundColor: resolvedBtnColor,
+                color: primaryButtonTextColor,
+              }}
             >
               {primaryButtonText}
             </a>
@@ -7505,7 +7661,10 @@ export function HeroRender({
           <a
             href={primaryButtonLink}
             className={`inline-flex items-center justify-center px-8 py-4 text-lg font-medium ${buttonRadiusClasses} hover:opacity-90 transition-all shadow-lg`}
-            style={{ backgroundColor: resolvedBtnColor, color: primaryButtonTextColor }}
+            style={{
+              backgroundColor: resolvedBtnColor,
+              color: primaryButtonTextColor,
+            }}
           >
             {primaryButtonText}
           </a>
@@ -9092,26 +9251,33 @@ export function CTARender({
     backgroundColor: resolvedButtonColor,
     textColor: resolvedButtonTextColor,
     borderRadius: buttonRadius as ButtonProps["borderRadius"],
-    shadow: (buttonShadow === "glow" ? "lg" : buttonShadow) as ButtonProps["shadow"],
+    shadow: (buttonShadow === "glow"
+      ? "lg"
+      : buttonShadow) as ButtonProps["shadow"],
     hoverEffect: buttonHoverEffect as ButtonProps["hoverEffect"],
     iconName: buttonIcon !== "none" ? buttonIcon : undefined,
     iconPosition: buttonIconPosition as ButtonProps["iconPosition"],
     fullWidth: false,
     className: mobileButtonFullWidth ? "w-full md:w-auto" : "",
     ...(buttonStyle === "gradient"
-      ? { gradientFrom: buttonGradientFrom, gradientTo: buttonGradientTo, gradientDirection: "to-br" as const }
+      ? {
+          gradientFrom: buttonGradientFrom,
+          gradientTo: buttonGradientTo,
+          gradientDirection: "to-br" as const,
+        }
       : {}),
-    ...(buttonStyle === "3d"
-      ? { shadow: "lg" as const }
+    ...(buttonStyle === "3d" ? { shadow: "lg" as const } : {}),
+    ...(buttonShadow === "glow"
+      ? { glowOnHover: true, glowColor: resolvedButtonColor }
       : {}),
-    ...(buttonShadow === "glow" ? { glowOnHover: true, glowColor: resolvedButtonColor } : {}),
   };
 
   // Secondary button styling — composed via ButtonRender
   const secondaryButtonVariant: ButtonProps["variant"] = (() => {
     if (secondaryButtonStyle === "solid") return "secondary";
     if (secondaryButtonStyle === "ghost") return "ghost";
-    if (secondaryButtonStyle === "text" || secondaryButtonStyle === "link") return "link";
+    if (secondaryButtonStyle === "text" || secondaryButtonStyle === "link")
+      return "link";
     return "outline";
   })();
 
@@ -9131,11 +9297,15 @@ export function CTARender({
 
   // Reusable: render primary CTA button
   const renderPrimaryButton = () =>
-    buttonText ? <ButtonRender {...(primaryButtonRenderProps as ButtonProps)} /> : null;
+    buttonText ? (
+      <ButtonRender {...(primaryButtonRenderProps as ButtonProps)} />
+    ) : null;
 
   // Reusable: render secondary CTA button
   const renderSecondaryButton = () =>
-    secondaryButtonText ? <ButtonRender {...(secondaryButtonRenderProps as ButtonProps)} /> : null;
+    secondaryButtonText ? (
+      <ButtonRender {...(secondaryButtonRenderProps as ButtonProps)} />
+    ) : null;
 
   // Hide on mobile check
   if (hideOnMobile && _breakpoint === "mobile" && _isEditor) {
@@ -9297,9 +9467,7 @@ export function CTARender({
               {title}
             </p>
           </div>
-          <div className="flex gap-3">
-            {renderPrimaryButton()}
-          </div>
+          <div className="flex gap-3">{renderPrimaryButton()}</div>
         </div>
       </section>
     );
@@ -12295,11 +12463,16 @@ export function TimelineRender({
   const resolvedCardBg = cardBackgroundColor || "var(--color-card, #ffffff)";
   const resolvedCardBorder = cardBorderColor || "var(--color-border, #e5e7eb)";
   const resolvedTitleColor = titleColor || "var(--color-foreground, #111827)";
-  const resolvedDescColor = descriptionColor || "var(--color-muted-foreground, #6b7280)";
-  const resolvedDateColor = dateColor || "var(--color-muted-foreground, #9ca3af)";
-  const resolvedHeaderTitle = headerTitleColor || "var(--color-foreground, #111827)";
-  const resolvedHeaderSubtitle = headerSubtitleColor || "var(--color-muted-foreground, #6b7280)";
-  const resolvedHeaderDesc = headerDescriptionColor || "var(--color-muted-foreground, #6b7280)";
+  const resolvedDescColor =
+    descriptionColor || "var(--color-muted-foreground, #6b7280)";
+  const resolvedDateColor =
+    dateColor || "var(--color-muted-foreground, #9ca3af)";
+  const resolvedHeaderTitle =
+    headerTitleColor || "var(--color-foreground, #111827)";
+  const resolvedHeaderSubtitle =
+    headerSubtitleColor || "var(--color-muted-foreground, #6b7280)";
+  const resolvedHeaderDesc =
+    headerDescriptionColor || "var(--color-muted-foreground, #6b7280)";
   const resolvedBg = backgroundColor || "var(--color-background, transparent)";
 
   const paddingYClasses = paddingYMapUtil[paddingY] || "";
@@ -12307,7 +12480,9 @@ export function TimelineRender({
   const maxWidthClasses = maxWidthMapUtil[maxWidth] || "max-w-7xl";
 
   const nodeSizePx = { sm: 12, md: 16, lg: 24 }[nodeSize];
-  const gapClasses = { sm: "gap-6", md: "gap-8", lg: "gap-12", xl: "gap-16" }[gap];
+  const gapClasses = { sm: "gap-6", md: "gap-8", lg: "gap-12", xl: "gap-16" }[
+    gap
+  ];
 
   const cardRadiusClasses = {
     none: "rounded-none",
@@ -12334,7 +12509,10 @@ export function TimelineRender({
             width: size,
             height: size,
             border: `${lineWidth + 1}px solid ${color}`,
-            backgroundColor: resolvedBg === "transparent" ? "var(--color-background, #ffffff)" : resolvedBg,
+            backgroundColor:
+              resolvedBg === "transparent"
+                ? "var(--color-background, #ffffff)"
+                : resolvedBg,
           }}
           aria-hidden="true"
         />
@@ -12442,10 +12620,12 @@ export function TimelineRender({
         className="absolute left-2 md:left-3 top-0 bottom-0"
         style={{
           width: lineWidth,
-          backgroundColor: lineStyle === "solid" ? resolvedLineColor : undefined,
+          backgroundColor:
+            lineStyle === "solid" ? resolvedLineColor : undefined,
           borderLeftWidth: lineStyle !== "solid" ? lineWidth : undefined,
           borderLeftStyle: lineStyle !== "solid" ? lineStyle : undefined,
-          borderLeftColor: lineStyle !== "solid" ? resolvedLineColor : undefined,
+          borderLeftColor:
+            lineStyle !== "solid" ? resolvedLineColor : undefined,
           marginLeft: (nodeSizePx - lineWidth) / 2,
         }}
         aria-hidden="true"
@@ -12468,7 +12648,8 @@ export function TimelineRender({
         className="absolute top-3 md:top-4 left-0 right-0"
         style={{
           height: lineWidth,
-          backgroundColor: lineStyle === "solid" ? resolvedLineColor : undefined,
+          backgroundColor:
+            lineStyle === "solid" ? resolvedLineColor : undefined,
           borderTopWidth: lineStyle !== "solid" ? lineWidth : undefined,
           borderTopStyle: lineStyle !== "solid" ? lineStyle : undefined,
           borderTopColor: lineStyle !== "solid" ? resolvedLineColor : undefined,
@@ -12476,9 +12657,14 @@ export function TimelineRender({
         aria-hidden="true"
       />
 
-      <div className={`grid grid-cols-2 md:grid-cols-${Math.min(items.length, 4)} ${gapClasses}`}>
+      <div
+        className={`grid grid-cols-2 md:grid-cols-${Math.min(items.length, 4)} ${gapClasses}`}
+      >
         {items.map((item, i) => (
-          <div key={i} className="relative flex flex-col items-center text-center">
+          <div
+            key={i}
+            className="relative flex flex-col items-center text-center"
+          >
             <div className="relative z-10 mb-4">{renderNode(item, i)}</div>
             {renderCard(item, i)}
           </div>
@@ -12495,10 +12681,12 @@ export function TimelineRender({
         className="absolute left-2 md:left-1/2 top-0 bottom-0 md:-translate-x-1/2"
         style={{
           width: lineWidth,
-          backgroundColor: lineStyle === "solid" ? resolvedLineColor : undefined,
+          backgroundColor:
+            lineStyle === "solid" ? resolvedLineColor : undefined,
           borderLeftWidth: lineStyle !== "solid" ? lineWidth : undefined,
           borderLeftStyle: lineStyle !== "solid" ? lineStyle : undefined,
-          borderLeftColor: lineStyle !== "solid" ? resolvedLineColor : undefined,
+          borderLeftColor:
+            lineStyle !== "solid" ? resolvedLineColor : undefined,
         }}
         aria-hidden="true"
       />
@@ -12506,13 +12694,14 @@ export function TimelineRender({
       {items.map((item, i) => {
         const isLeft = i % 2 === 0;
         return (
-          <div
-            key={i}
-            className="relative flex items-start gap-4 md:gap-6"
-          >
+          <div key={i} className="relative flex items-start gap-4 md:gap-6">
             {/* Mobile: standard left-aligned */}
-            <div className="md:hidden relative z-10 mt-1">{renderNode(item, i)}</div>
-            <div className="md:hidden flex-1 min-w-0 pb-2">{renderCard(item, i)}</div>
+            <div className="md:hidden relative z-10 mt-1">
+              {renderNode(item, i)}
+            </div>
+            <div className="md:hidden flex-1 min-w-0 pb-2">
+              {renderCard(item, i)}
+            </div>
 
             {/* Desktop: alternating */}
             <div className="hidden md:flex w-full items-start">
@@ -12654,9 +12843,12 @@ export function BeforeAfterRender({
   const containerRef = React.useRef<HTMLDivElement>(null);
 
   const resolvedHandleColor = handleColor || "var(--color-primary, #3b82f6)";
-  const resolvedLabelBg = labelBackgroundColor || "var(--color-background, rgba(0,0,0,0.6))";
-  const resolvedLabelText = labelTextColor || "var(--color-foreground, #ffffff)";
-  const resolvedCaptionColor = captionColor || "var(--color-muted-foreground, #6b7280)";
+  const resolvedLabelBg =
+    labelBackgroundColor || "var(--color-background, rgba(0,0,0,0.6))";
+  const resolvedLabelText =
+    labelTextColor || "var(--color-foreground, #ffffff)";
+  const resolvedCaptionColor =
+    captionColor || "var(--color-muted-foreground, #6b7280)";
 
   const isHorizontal = orientation === "horizontal";
 
@@ -12746,8 +12938,18 @@ export function BeforeAfterRender({
       position: "absolute",
       zIndex: 10,
       ...(isHorizontal
-        ? { left: `${position}%`, top: 0, bottom: 0, transform: "translateX(-50%)" }
-        : { top: `${position}%`, left: 0, right: 0, transform: "translateY(-50%)" }),
+        ? {
+            left: `${position}%`,
+            top: 0,
+            bottom: 0,
+            transform: "translateX(-50%)",
+          }
+        : {
+            top: `${position}%`,
+            left: 0,
+            right: 0,
+            transform: "translateY(-50%)",
+          }),
     };
 
     return (
@@ -12758,8 +12960,20 @@ export function BeforeAfterRender({
             position: "absolute",
             backgroundColor: resolvedHandleColor,
             ...(isHorizontal
-              ? { width: 2, top: 0, bottom: 0, left: "50%", transform: "translateX(-50%)" }
-              : { height: 2, left: 0, right: 0, top: "50%", transform: "translateY(-50%)" }),
+              ? {
+                  width: 2,
+                  top: 0,
+                  bottom: 0,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                }
+              : {
+                  height: 2,
+                  left: 0,
+                  right: 0,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                }),
           }}
         />
 
@@ -12771,7 +12985,11 @@ export function BeforeAfterRender({
             height: handleSizePx,
             ...(isHorizontal
               ? { top: "50%", left: "50%", transform: "translate(-50%, -50%)" }
-              : { top: "50%", left: "50%", transform: "translate(-50%, -50%)" }),
+              : {
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                }),
             backgroundColor: resolvedHandleColor,
             borderRadius: handleStyle === "line" ? 4 : "50%",
             cursor: isHorizontal ? "ew-resize" : "ns-resize",
@@ -12815,7 +13033,9 @@ export function BeforeAfterRender({
 
     const wrapperClass = labelPosition === "top" ? "mb-2" : "mt-2";
     return (
-      <div className={`flex justify-between text-sm font-medium ${wrapperClass}`}>
+      <div
+        className={`flex justify-between text-sm font-medium ${wrapperClass}`}
+      >
         <span style={{ color: resolvedLabelText }}>{beforeLabel}</span>
         <span style={{ color: resolvedLabelText }}>{afterLabel}</span>
       </div>
@@ -12858,7 +13078,13 @@ export function BeforeAfterRender({
           setIsDragging(true);
           updatePosition(e.touches[0].clientX, e.touches[0].clientY);
         }}
-        style={{ cursor: isDragging ? (isHorizontal ? "ew-resize" : "ns-resize") : "pointer" }}
+        style={{
+          cursor: isDragging
+            ? isHorizontal
+              ? "ew-resize"
+              : "ns-resize"
+            : "pointer",
+        }}
       >
         {/* After image (full, behind) */}
         <img
@@ -13126,8 +13352,19 @@ export function AudioRender({
 
   const coverUrl = getImageUrl(cover) || undefined;
 
-  const radiusClass = { none: "rounded-none", sm: "rounded-sm", md: "rounded-md", lg: "rounded-lg", xl: "rounded-xl" }[borderRadius];
-  const shadowClass = { none: "", sm: "shadow-sm", md: "shadow-md", lg: "shadow-lg" }[shadow];
+  const radiusClass = {
+    none: "rounded-none",
+    sm: "rounded-sm",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+  }[borderRadius];
+  const shadowClass = {
+    none: "",
+    sm: "shadow-sm",
+    md: "shadow-md",
+    lg: "shadow-lg",
+  }[shadow];
 
   const formatTime = (t: number) => {
     const mins = Math.floor(t / 60);
@@ -13159,13 +13396,19 @@ export function AudioRender({
     }
   }, []);
 
-  const handleSeek = React.useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const audio = audioRef.current;
-    if (!audio || !duration) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    audio.currentTime = percent * duration;
-  }, [duration]);
+  const handleSeek = React.useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const audio = audioRef.current;
+      if (!audio || !duration) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const percent = Math.max(
+        0,
+        Math.min(1, (e.clientX - rect.left) / rect.width),
+      );
+      audio.currentTime = percent * duration;
+    },
+    [duration],
+  );
 
   const cycleSpeed = React.useCallback(() => {
     const speeds = [0.75, 1, 1.25, 1.5, 2];
@@ -13215,7 +13458,9 @@ export function AudioRender({
               className="flex-1 min-w-[2px] rounded-sm transition-colors"
               style={{
                 height: `${barHeight}%`,
-                backgroundColor: isPlayed ? resolvedWaveformProgress : resolvedWaveform,
+                backgroundColor: isPlayed
+                  ? resolvedWaveformProgress
+                  : resolvedWaveform,
               }}
             />
           );
@@ -13280,24 +13525,47 @@ export function AudioRender({
           {/* Cover art */}
           {coverUrl && (
             <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden">
-              <img src={coverUrl} alt={`${title} cover`} className="w-full h-full object-cover" />
+              <img
+                src={coverUrl}
+                alt={`${title} cover`}
+                className="w-full h-full object-cover"
+              />
             </div>
           )}
           <div className="flex-1 flex flex-col justify-between min-w-0">
             {/* Title & artist */}
             <div>
-              <h3 className="font-semibold text-sm truncate" style={{ color: resolvedText }}>{title}</h3>
-              {artist && <p className="text-xs opacity-60 truncate" style={{ color: resolvedText }}>{artist}</p>}
+              <h3
+                className="font-semibold text-sm truncate"
+                style={{ color: resolvedText }}
+              >
+                {title}
+              </h3>
+              {artist && (
+                <p
+                  className="text-xs opacity-60 truncate"
+                  style={{ color: resolvedText }}
+                >
+                  {artist}
+                </p>
+              )}
             </div>
             {/* Waveform */}
             {showWaveform ? renderWaveform() : renderProgressBar()}
             {/* Controls */}
             <div className="flex items-center gap-3 mt-2">
-              <button onClick={togglePlay} className="w-8 h-8 flex-shrink-0" aria-label={isPlaying ? "Pause" : "Play"}>
+              <button
+                onClick={togglePlay}
+                className="w-8 h-8 flex-shrink-0"
+                aria-label={isPlaying ? "Pause" : "Play"}
+              >
                 <PlayPauseIcon />
               </button>
               {showDuration && (
-                <span className="text-xs tabular-nums" style={{ color: resolvedText }}>
+                <span
+                  className="text-xs tabular-nums"
+                  style={{ color: resolvedText }}
+                >
                   {formatTime(currentTime)} / {formatTime(duration)}
                 </span>
               )}
@@ -13305,7 +13573,10 @@ export function AudioRender({
                 <button
                   onClick={cycleSpeed}
                   className="text-xs px-1.5 py-0.5 rounded font-medium"
-                  style={{ backgroundColor: resolvedAccent + "20", color: resolvedAccent }}
+                  style={{
+                    backgroundColor: resolvedAccent + "20",
+                    color: resolvedAccent,
+                  }}
                   aria-label={`Playback speed: ${playbackRate}x`}
                 >
                   {playbackRate}x
@@ -13329,12 +13600,19 @@ export function AudioRender({
 
       {variant === "compact" && (
         <div className="flex items-center gap-3 p-3">
-          <button onClick={togglePlay} className="w-8 h-8 flex-shrink-0" aria-label={isPlaying ? "Pause" : "Play"}>
+          <button
+            onClick={togglePlay}
+            className="w-8 h-8 flex-shrink-0"
+            aria-label={isPlaying ? "Pause" : "Play"}
+          >
             <PlayPauseIcon />
           </button>
           {showWaveform ? renderWaveform() : renderProgressBar()}
           {showDuration && (
-            <span className="text-xs tabular-nums flex-shrink-0" style={{ color: resolvedText }}>
+            <span
+              className="text-xs tabular-nums flex-shrink-0"
+              style={{ color: resolvedText }}
+            >
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
           )}
@@ -13342,7 +13620,10 @@ export function AudioRender({
             <button
               onClick={cycleSpeed}
               className="text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0"
-              style={{ backgroundColor: resolvedAccent + "20", color: resolvedAccent }}
+              style={{
+                backgroundColor: resolvedAccent + "20",
+                color: resolvedAccent,
+              }}
             >
               {playbackRate}x
             </button>
@@ -13352,7 +13633,11 @@ export function AudioRender({
 
       {variant === "minimal" && (
         <div className="flex items-center gap-2 p-2">
-          <button onClick={togglePlay} className="w-6 h-6 flex-shrink-0" aria-label={isPlaying ? "Pause" : "Play"}>
+          <button
+            onClick={togglePlay}
+            className="w-6 h-6 flex-shrink-0"
+            aria-label={isPlaying ? "Pause" : "Play"}
+          >
             <PlayPauseIcon />
           </button>
           {renderProgressBar()}
@@ -13430,10 +13715,22 @@ export function EmbedRender({
 
   const resolvedBg = backgroundColor || "var(--color-muted, #f3f4f6)";
   const resolvedBorderColor = borderColor || "var(--color-border, #e5e7eb)";
-  const resolvedCaptionColor = captionColor || "var(--color-muted-foreground, #6b7280)";
+  const resolvedCaptionColor =
+    captionColor || "var(--color-muted-foreground, #6b7280)";
 
-  const radiusClass = { none: "rounded-none", sm: "rounded-sm", md: "rounded-md", lg: "rounded-lg", xl: "rounded-xl" }[borderRadius];
-  const shadowClass = { none: "", sm: "shadow-sm", md: "shadow-md", lg: "shadow-lg" }[shadow];
+  const radiusClass = {
+    none: "rounded-none",
+    sm: "rounded-sm",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+  }[borderRadius];
+  const shadowClass = {
+    none: "",
+    sm: "shadow-sm",
+    md: "shadow-md",
+    lg: "shadow-lg",
+  }[shadow];
 
   const aspectMap: Record<string, string> = {
     "1:1": "1/1",
@@ -13458,7 +13755,12 @@ export function EmbedRender({
         className={`flex items-center justify-center p-8 ${radiusClass} ${shadowClass} ${className}`}
         style={{ ...containerStyle, minHeight: "200px" }}
       >
-        <p className="text-sm opacity-60" style={{ color: resolvedCaptionColor }}>No embed URL provided</p>
+        <p
+          className="text-sm opacity-60"
+          style={{ color: resolvedCaptionColor }}
+        >
+          No embed URL provided
+        </p>
       </div>
     );
   }
@@ -13470,10 +13772,28 @@ export function EmbedRender({
     >
       {/* Loading placeholder */}
       {showLoadingPlaceholder && !isLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: resolvedBg }}>
-          <svg className="animate-spin w-6 h-6 opacity-40" viewBox="0 0 24 24" fill="none">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+        <div
+          className="absolute inset-0 flex items-center justify-center"
+          style={{ backgroundColor: resolvedBg }}
+        >
+          <svg
+            className="animate-spin w-6 h-6 opacity-40"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+            />
           </svg>
         </div>
       )}
@@ -13555,7 +13875,13 @@ export function AvatarGroupRender({
 }: AvatarGroupProps) {
   const sizeMap = { xs: 24, sm: 32, md: 40, lg: 48, xl: 56 };
   const overlapMap = { sm: 8, md: 16, lg: 24 };
-  const fontSizeMap = { xs: "0.5rem", sm: "0.625rem", md: "0.75rem", lg: "0.875rem", xl: "1rem" };
+  const fontSizeMap = {
+    xs: "0.5rem",
+    sm: "0.625rem",
+    md: "0.75rem",
+    lg: "0.875rem",
+    xl: "1rem",
+  };
 
   const px = sizeMap[size] || 40;
   const overlapPx = overlapMap[overlap] || 16;
@@ -13563,7 +13889,8 @@ export function AvatarGroupRender({
 
   const resolvedRing = ringColor || "var(--color-background, #ffffff)";
   const resolvedOverflowBg = overflowColor || "var(--color-muted, #e5e7eb)";
-  const resolvedOverflowText = overflowTextColor || "var(--color-muted-foreground, #6b7280)";
+  const resolvedOverflowText =
+    overflowTextColor || "var(--color-muted-foreground, #6b7280)";
 
   const visible = avatars.slice(0, max);
   const overflowCount = avatars.length - max;
@@ -13595,7 +13922,10 @@ export function AvatarGroupRender({
             className="w-full h-full object-cover"
           />
         ) : (
-          <span className="font-medium" style={{ fontSize, color: resolvedOverflowText }}>
+          <span
+            className="font-medium"
+            style={{ fontSize, color: resolvedOverflowText }}
+          >
             {initials}
           </span>
         )}
@@ -13604,7 +13934,12 @@ export function AvatarGroupRender({
 
     if (item.href) {
       return (
-        <a key={idx} href={item.href} className="focus:outline-none focus:ring-2 rounded-full" style={{ zIndex, marginLeft: ml }}>
+        <a
+          key={idx}
+          href={item.href}
+          className="focus:outline-none focus:ring-2 rounded-full"
+          style={{ zIndex, marginLeft: ml }}
+        >
           {avatarContent}
         </a>
       );
@@ -15180,11 +15515,15 @@ export function GalleryRender({
         category: item.category,
         link: item.link,
         linkTarget: item.linkTarget,
-        _type: item.type || "image" as const,
+        _type: item.type || ("image" as const),
         _videoSrc: item.videoSrc,
       }));
     }
-    return images.map((img) => ({ ...img, _type: "image" as const, _videoSrc: undefined }));
+    return images.map((img) => ({
+      ...img,
+      _type: "image" as const,
+      _videoSrc: undefined,
+    }));
   }, [items, images]);
 
   // State for filtering and load more
@@ -15196,7 +15535,10 @@ export function GalleryRender({
   );
 
   // Virtual scroll: IntersectionObserver for galleries > 50 items
-  const [visibleRange, setVisibleRange] = React.useState({ start: 0, end: virtualise ? 20 : Infinity });
+  const [visibleRange, setVisibleRange] = React.useState({
+    start: 0,
+    end: virtualise ? 20 : Infinity,
+  });
   const sentinelRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -15204,10 +15546,13 @@ export function GalleryRender({
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
-          setVisibleRange((prev) => ({ ...prev, end: Math.min(prev.end + 20, mergedImages.length) }));
+          setVisibleRange((prev) => ({
+            ...prev,
+            end: Math.min(prev.end + 20, mergedImages.length),
+          }));
         }
       },
-      { rootMargin: "200px" }
+      { rootMargin: "200px" },
     );
     if (sentinelRef.current) observer.observe(sentinelRef.current);
     return () => observer.disconnect();
@@ -15219,10 +15564,12 @@ export function GalleryRender({
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
-          setVisibleCount((prev) => Math.min(prev + loadMoreCount, filteredImages.length));
+          setVisibleCount((prev) =>
+            Math.min(prev + loadMoreCount, filteredImages.length),
+          );
         }
       },
-      { rootMargin: "200px" }
+      { rootMargin: "200px" },
     );
     if (sentinelRef.current) observer.observe(sentinelRef.current);
     return () => observer.disconnect();
@@ -15386,7 +15733,8 @@ export function GalleryRender({
     const style: React.CSSProperties = {};
 
     if (backgroundStyle === "solid") {
-      style.backgroundColor = backgroundColor || 'var(--color-background, #ffffff)';
+      style.backgroundColor =
+        backgroundColor || "var(--color-background, #ffffff)";
     } else if (backgroundStyle === "gradient") {
       const direction = {
         "to-r": "to right",
@@ -15396,8 +15744,8 @@ export function GalleryRender({
         "to-br": "to bottom right",
         "to-bl": "to bottom left",
       }[backgroundGradientDirection];
-      const from = backgroundGradientFrom || 'var(--color-background, #ffffff)';
-      const to = backgroundGradientTo || 'var(--color-muted, #f3f4f6)';
+      const from = backgroundGradientFrom || "var(--color-background, #ffffff)";
+      const to = backgroundGradientTo || "var(--color-muted, #f3f4f6)";
       style.background = `linear-gradient(${direction}, ${from}, ${to})`;
     } else if (backgroundStyle === "image" && backgroundImage) {
       style.backgroundImage = `url(${getImageUrl(backgroundImage)})`;
@@ -15673,7 +16021,8 @@ export function GalleryRender({
         >
           {displayImages.map((image, i) => {
             const imageSrc = getImageUrl(image.src);
-            const isVideo = (image as any)._type === "video" && (image as any)._videoSrc;
+            const isVideo =
+              (image as any)._type === "video" && (image as any)._videoSrc;
             return (
               <div
                 key={i}
@@ -15697,7 +16046,11 @@ export function GalleryRender({
                     loop
                     playsInline
                     onMouseEnter={(e) => (e.target as HTMLVideoElement).play()}
-                    onMouseLeave={(e) => { const v = e.target as HTMLVideoElement; v.pause(); v.currentTime = 0; }}
+                    onMouseLeave={(e) => {
+                      const v = e.target as HTMLVideoElement;
+                      v.pause();
+                      v.currentTime = 0;
+                    }}
                   />
                 ) : (
                   <img
@@ -16063,14 +16416,19 @@ function NavbarWithMenu(props: NavbarProps) {
 
   // Resolve backwards-compatible aliases (prefer new registry names)
   const resolvedFontSize = props.linkFontSize || props.linkSize || "md";
-  const resolvedFontWeight = props.linkFontWeight || props.linkWeight || "medium";
-  const resolvedHoverEffect = props.linkHoverEffect || props.linkHoverStyle || "opacity";
+  const resolvedFontWeight =
+    props.linkFontWeight || props.linkWeight || "medium";
+  const resolvedHoverEffect =
+    props.linkHoverEffect || props.linkHoverStyle || "opacity";
   const resolvedLinkSpacing = props.linkSpacing || "normal";
   const resolvedCtaStyle = props.ctaStyle || props.ctaVariant || "solid";
   const resolvedCtaRadius = props.ctaBorderRadius || props.ctaRadius || "md";
-  const resolvedSecondaryStyle = props.secondaryCtaStyle || props.secondaryCtaVariant || "outline";
-  const resolvedShowOverlay = props.showMobileMenuOverlay ?? props.showOverlay ?? true;
-  const resolvedShowCtaInMobile = props.showCtaInMobileMenu ?? props.showCtaOnMobile ?? true;
+  const resolvedSecondaryStyle =
+    props.secondaryCtaStyle || props.secondaryCtaVariant || "outline";
+  const resolvedShowOverlay =
+    props.showMobileMenuOverlay ?? props.showOverlay ?? true;
+  const resolvedShowCtaInMobile =
+    props.showCtaInMobileMenu ?? props.showCtaOnMobile ?? true;
   const resolvedMobileMenuBg = mobileMenuBackground || backgroundColor;
   const resolvedMobileMenuText = mobileMenuTextColor || textColor;
   const resolvedMobileLinkSpacing = props.mobileMenuLinkSpacing || "normal";
@@ -16086,7 +16444,8 @@ function NavbarWithMenu(props: NavbarProps) {
   })();
 
   // Resolve position (accept both `position` field and `sticky` boolean)
-  const resolvedPosition = props.position || (props.sticky ? "sticky" : "relative");
+  const resolvedPosition =
+    props.position || (props.sticky ? "sticky" : "relative");
 
   // Resolve mobile menu style
   const resolvedMobileMenuStyle = (() => {
@@ -16116,14 +16475,21 @@ function NavbarWithMenu(props: NavbarProps) {
   // --- Scroll effects ---
   React.useEffect(() => {
     if (_isEditor) return;
-    if (!hideOnScroll && !showOnScrollUp && !transparentUntilScroll && !showScrollProgress) return;
+    if (
+      !hideOnScroll &&
+      !showOnScrollUp &&
+      !transparentUntilScroll &&
+      !showScrollProgress
+    )
+      return;
 
     const handleScroll = () => {
       const currentY = window.scrollY;
 
       // Scroll progress
       if (showScrollProgress) {
-        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const docHeight =
+          document.documentElement.scrollHeight - window.innerHeight;
         setScrollProgress(docHeight > 0 ? (currentY / docHeight) * 100 : 0);
       }
 
@@ -16144,7 +16510,14 @@ function NavbarWithMenu(props: NavbarProps) {
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [hideOnScroll, showOnScrollUp, transparentUntilScroll, showScrollProgress, scrollThreshold, _isEditor]);
+  }, [
+    hideOnScroll,
+    showOnScrollUp,
+    transparentUntilScroll,
+    showScrollProgress,
+    scrollThreshold,
+    _isEditor,
+  ]);
 
   // --- Escape key + body scroll lock for mobile menu ---
   React.useEffect(() => {
@@ -16174,33 +16547,85 @@ function NavbarWithMenu(props: NavbarProps) {
   }, [openDropdown]);
 
   // Style calculations
-  const heightClasses: Record<string, string> = { sm: "h-14", md: "h-16", lg: "h-20", xl: "h-24" };
-  const paddingClasses: Record<string, string> = { sm: "px-4", md: "px-6", lg: "px-8", xl: "px-12" };
+  const heightClasses: Record<string, string> = {
+    sm: "h-14",
+    md: "h-16",
+    lg: "h-20",
+    xl: "h-24",
+  };
+  const paddingClasses: Record<string, string> = {
+    sm: "px-4",
+    md: "px-6",
+    lg: "px-8",
+    xl: "px-12",
+  };
   const maxWidthClasses: Record<string, string> = {
     full: "max-w-none",
     "7xl": "max-w-7xl mx-auto",
     "6xl": "max-w-6xl mx-auto",
     "5xl": "max-w-5xl mx-auto",
   };
-  const shadowClasses: Record<string, string> = { none: "", sm: "shadow-sm", md: "shadow-md", lg: "shadow-lg", xl: "shadow-xl" };
-  const linkSpacingClass: Record<string, string> = { compact: "gap-3", sm: "gap-4", normal: "gap-6", md: "gap-6", wide: "gap-8", lg: "gap-8" };
-  const linkSizeClass: Record<string, string> = { sm: "text-sm", md: "text-base", lg: "text-lg" };
-  const linkWeightClass: Record<string, string> = { normal: "font-normal", medium: "font-medium", semibold: "font-semibold", bold: "font-bold" };
-  const textTransformClass: Record<string, string> = { none: "", uppercase: "uppercase tracking-wider", capitalize: "capitalize" };
-  const ctaSizeClasses: Record<string, string> = { sm: "px-3 py-1.5 text-sm", md: "px-4 py-2 text-base", lg: "px-6 py-3 text-lg" };
-  const ctaRadiusClass: Record<string, string> = { none: "rounded-none", sm: "rounded-sm", md: "rounded-md", lg: "rounded-lg", full: "rounded-full" };
-  const mobileLinkSpacingClass: Record<string, string> = { compact: "space-y-0", normal: "space-y-1", spacious: "space-y-3" };
-
-  const linkHoverClass = {
+  const shadowClasses: Record<string, string> = {
     none: "",
-    opacity: "hover:opacity-70 transition-opacity",
-    underline: "hover:underline underline-offset-4",
-    color: "hover:opacity-80 transition-colors",
-    background: "hover:bg-black/5 rounded-md px-2 py-1 transition-colors",
-  }[resolvedHoverEffect] || "hover:opacity-70 transition-opacity";
+    sm: "shadow-sm",
+    md: "shadow-md",
+    lg: "shadow-lg",
+    xl: "shadow-xl",
+  };
+  const linkSpacingClass: Record<string, string> = {
+    compact: "gap-3",
+    sm: "gap-4",
+    normal: "gap-6",
+    md: "gap-6",
+    wide: "gap-8",
+    lg: "gap-8",
+  };
+  const linkSizeClass: Record<string, string> = {
+    sm: "text-sm",
+    md: "text-base",
+    lg: "text-lg",
+  };
+  const linkWeightClass: Record<string, string> = {
+    normal: "font-normal",
+    medium: "font-medium",
+    semibold: "font-semibold",
+    bold: "font-bold",
+  };
+  const textTransformClass: Record<string, string> = {
+    none: "",
+    uppercase: "uppercase tracking-wider",
+    capitalize: "capitalize",
+  };
+  const ctaSizeClasses: Record<string, string> = {
+    sm: "px-3 py-1.5 text-sm",
+    md: "px-4 py-2 text-base",
+    lg: "px-6 py-3 text-lg",
+  };
+  const ctaRadiusClass: Record<string, string> = {
+    none: "rounded-none",
+    sm: "rounded-sm",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    full: "rounded-full",
+  };
+  const mobileLinkSpacingClass: Record<string, string> = {
+    compact: "space-y-0",
+    normal: "space-y-1",
+    spacious: "space-y-3",
+  };
+
+  const linkHoverClass =
+    {
+      none: "",
+      opacity: "hover:opacity-70 transition-opacity",
+      underline: "hover:underline underline-offset-4",
+      color: "hover:opacity-80 transition-colors",
+      background: "hover:bg-black/5 rounded-md px-2 py-1 transition-colors",
+    }[resolvedHoverEffect] || "hover:opacity-70 transition-opacity";
 
   // Background with opacity
-  const isTransparentNow = transparent || (transparentUntilScroll && !hasScrolled);
+  const isTransparentNow =
+    transparent || (transparentUntilScroll && !hasScrolled);
   const bgOpacity = backgroundOpacity / 100;
   const useGlass = glassEffect || blurBackground;
 
@@ -16208,29 +16633,46 @@ function NavbarWithMenu(props: NavbarProps) {
     backgroundColor: isTransparentNow
       ? "transparent"
       : bgOpacity < 1
-        ? `${backgroundColor}${Math.round(bgOpacity * 255).toString(16).padStart(2, "0")}`
+        ? `${backgroundColor}${Math.round(bgOpacity * 255)
+            .toString(16)
+            .padStart(2, "0")}`
         : backgroundColor,
     backdropFilter: useGlass ? `blur(${glassBlur}px)` : undefined,
     WebkitBackdropFilter: useGlass ? `blur(${glassBlur}px)` : undefined,
-    top: resolvedPosition === "sticky" || resolvedPosition === "fixed" ? stickyOffset : undefined,
+    top:
+      resolvedPosition === "sticky" || resolvedPosition === "fixed"
+        ? stickyOffset
+        : undefined,
     borderColor,
     borderBottomWidth: borderBottom ? borderWidth : 0,
   };
 
-  const positionClass = {
-    relative: "",
-    sticky: "sticky top-0",
-    absolute: "absolute top-0 left-0 right-0",
-    fixed: "fixed top-0 left-0 right-0",
-  }[resolvedPosition] || "";
+  const positionClass =
+    {
+      relative: "",
+      sticky: "sticky top-0",
+      absolute: "absolute top-0 left-0 right-0",
+      fixed: "fixed top-0 left-0 right-0",
+    }[resolvedPosition] || "";
 
   const hiddenStyle: React.CSSProperties = isHidden
-    ? { transform: "translateY(-100%)", transition: `transform ${mobileMenuDuration}ms ease` }
-    : { transform: "translateY(0)", transition: `transform ${mobileMenuDuration}ms ease` };
+    ? {
+        transform: "translateY(-100%)",
+        transition: `transform ${mobileMenuDuration}ms ease`,
+      }
+    : {
+        transform: "translateY(0)",
+        transition: `transform ${mobileMenuDuration}ms ease`,
+      };
 
   // Breakpoint class for hiding/showing mobile nav
-  const bpHidden = { sm: "sm:hidden", md: "md:hidden", lg: "lg:hidden" }[mobileBreakpoint] || "md:hidden";
-  const bpFlex = { sm: "hidden sm:flex", md: "hidden md:flex", lg: "hidden lg:flex" }[mobileBreakpoint] || "hidden md:flex";
+  const bpHidden =
+    { sm: "sm:hidden", md: "md:hidden", lg: "lg:hidden" }[mobileBreakpoint] ||
+    "md:hidden";
+  const bpFlex =
+    { sm: "hidden sm:flex", md: "hidden md:flex", lg: "hidden lg:flex" }[
+      mobileBreakpoint
+    ] || "hidden md:flex";
 
   // CTA rendering helper
   const renderCta = (
@@ -16246,9 +16688,33 @@ function NavbarWithMenu(props: NavbarProps) {
   ) => {
     const iconEl =
       icon === "arrow" ? (
-        <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+        <svg
+          className="w-4 h-4 ml-1"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M17 8l4 4m0 0l-4 4m4-4H3"
+          />
+        </svg>
       ) : icon === "chevron" ? (
-        <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+        <svg
+          className="w-4 h-4 ml-1"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 5l7 7-7 7"
+          />
+        </svg>
       ) : null;
 
     return (
@@ -16265,9 +16731,18 @@ function NavbarWithMenu(props: NavbarProps) {
           style === "gradient"
             ? {}
             : {
-                backgroundColor: style === "solid" ? (color || "var(--primary, #3b82f6)") : "transparent",
-                borderColor: style === "outline" ? (color || "var(--primary, #3b82f6)") : undefined,
-                color: style === "solid" ? txtColor : (color || "var(--primary, #3b82f6)"),
+                backgroundColor:
+                  style === "solid"
+                    ? color || "var(--primary, #3b82f6)"
+                    : "transparent",
+                borderColor:
+                  style === "outline"
+                    ? color || "var(--primary, #3b82f6)"
+                    : undefined,
+                color:
+                  style === "solid"
+                    ? txtColor
+                    : color || "var(--primary, #3b82f6)",
               }
         }
       >
@@ -16279,7 +16754,11 @@ function NavbarWithMenu(props: NavbarProps) {
 
   // Dropdown rendering
   const renderDropdown = (
-    dropdownLinks: Array<{ label?: string; href?: string; description?: string }>,
+    dropdownLinks: Array<{
+      label?: string;
+      href?: string;
+      description?: string;
+    }>,
     parentIdx: number,
   ) => (
     <div
@@ -16296,7 +16775,9 @@ function NavbarWithMenu(props: NavbarProps) {
           style={{ color: textColor }}
           role="menuitem"
         >
-          <div className="text-sm font-medium">{dl.label || `Link ${j + 1}`}</div>
+          <div className="text-sm font-medium">
+            {dl.label || `Link ${j + 1}`}
+          </div>
           {dl.description && (
             <div className="text-xs mt-0.5 opacity-60">{dl.description}</div>
           )}
@@ -16329,7 +16810,10 @@ function NavbarWithMenu(props: NavbarProps) {
         {showScrollProgress && scrollProgressPosition === "top" && (
           <div
             className="w-full"
-            style={{ height: scrollProgressHeight, backgroundColor: scrollProgressBackground }}
+            style={{
+              height: scrollProgressHeight,
+              backgroundColor: scrollProgressBackground,
+            }}
           >
             <div
               className="h-full transition-all duration-150"
@@ -16348,7 +16832,9 @@ function NavbarWithMenu(props: NavbarProps) {
           className={`${heightClasses[height] || heightClasses.md} ${paddingClasses[paddingX] || paddingClasses.md} ${maxWidthClasses[resolvedMaxWidth] || maxWidthClasses["7xl"]} flex items-center ${layout === "centered" ? "justify-center" : "justify-between"}`}
         >
           {/* Logo */}
-          {(layout === "standard" || layout === "split" || layout === "minimal") && (
+          {(layout === "standard" ||
+            layout === "split" ||
+            layout === "minimal") && (
             <a href={logoLink} className="flex items-center gap-2 shrink-0">
               {logoUrl ? (
                 <img
@@ -16358,7 +16844,10 @@ function NavbarWithMenu(props: NavbarProps) {
                   className="w-auto"
                 />
               ) : (
-                <span className="text-xl font-bold" style={{ color: textColor }}>
+                <span
+                  className="text-xl font-bold"
+                  style={{ color: textColor }}
+                >
                   {logoText}
                 </span>
               )}
@@ -16367,11 +16856,24 @@ function NavbarWithMenu(props: NavbarProps) {
 
           {/* Centered Layout Logo */}
           {layout === "centered" && (
-            <a href={logoLink} className="flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
+            <a
+              href={logoLink}
+              className="flex items-center gap-2 absolute left-1/2 -translate-x-1/2"
+            >
               {logoUrl ? (
-                <img src={logoUrl} alt={logoAlt} style={{ height: logoHeight }} className="w-auto" />
+                <img
+                  src={logoUrl}
+                  alt={logoAlt}
+                  style={{ height: logoHeight }}
+                  className="w-auto"
+                />
               ) : (
-                <span className="text-xl font-bold" style={{ color: textColor }}>{logoText}</span>
+                <span
+                  className="text-xl font-bold"
+                  style={{ color: textColor }}
+                >
+                  {logoText}
+                </span>
               )}
             </a>
           )}
@@ -16382,13 +16884,20 @@ function NavbarWithMenu(props: NavbarProps) {
               className={`${bpFlex} items-center ${linkSpacingClass[resolvedLinkSpacing] || linkSpacingClass.normal} ${linkAlignment === "center" ? "flex-1 justify-center" : linkAlignment === "right" ? "flex-1 justify-end" : ""}`}
             >
               {links.map((link, i) => {
-                const hasDD = link.hasDropdown && link.dropdownLinks && link.dropdownLinks.length > 0;
+                const hasDD =
+                  link.hasDropdown &&
+                  link.dropdownLinks &&
+                  link.dropdownLinks.length > 0;
                 return (
                   <div key={i} className="relative">
                     <a
-                      href={hasDD ? undefined : (link.href || "#")}
+                      href={hasDD ? undefined : link.href || "#"}
                       target={link.target}
-                      rel={link.target === "_blank" ? "noopener noreferrer" : undefined}
+                      rel={
+                        link.target === "_blank"
+                          ? "noopener noreferrer"
+                          : undefined
+                      }
                       className={`${linkSizeClass[resolvedFontSize] || linkSizeClass.md} ${linkWeightClass[resolvedFontWeight] || linkWeightClass.medium} ${linkHoverClass} ${textTransformClass[resolvedLinkTextTransform] || ""} inline-flex items-center gap-1 cursor-pointer`}
                       style={{ color: textColor }}
                       role={hasDD ? "button" : undefined}
@@ -16423,11 +16932,18 @@ function NavbarWithMenu(props: NavbarProps) {
                           stroke="currentColor"
                           viewBox="0 0 24 24"
                         >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
                         </svg>
                       )}
                     </a>
-                    {hasDD && openDropdown === i && renderDropdown(link.dropdownLinks!, i)}
+                    {hasDD &&
+                      openDropdown === i &&
+                      renderDropdown(link.dropdownLinks!, i)}
                   </div>
                 );
               })}
@@ -16476,21 +16992,39 @@ function NavbarWithMenu(props: NavbarProps) {
               >
                 {mobileMenuOpen ? (
                   <svg
-                    style={{ width: hamburgerSize, height: hamburgerSize, color: hamburgerColor || textColor }}
+                    style={{
+                      width: hamburgerSize,
+                      height: hamburgerSize,
+                      color: hamburgerColor || textColor,
+                    }}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 ) : (
                   <svg
-                    style={{ width: hamburgerSize, height: hamburgerSize, color: hamburgerColor || textColor }}
+                    style={{
+                      width: hamburgerSize,
+                      height: hamburgerSize,
+                      color: hamburgerColor || textColor,
+                    }}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
                   </svg>
                 )}
               </button>
@@ -16502,7 +17036,10 @@ function NavbarWithMenu(props: NavbarProps) {
         {showScrollProgress && scrollProgressPosition === "bottom" && (
           <div
             className="w-full"
-            style={{ height: scrollProgressHeight, backgroundColor: scrollProgressBackground }}
+            style={{
+              height: scrollProgressHeight,
+              backgroundColor: scrollProgressBackground,
+            }}
           >
             <div
               className="h-full transition-all duration-150"
@@ -16550,23 +17087,48 @@ function NavbarWithMenu(props: NavbarProps) {
           backgroundColor: resolvedMobileMenuBg,
           transitionDuration: `${mobileMenuDuration}ms`,
           ...(mobileMenuOpen
-            ? { transform: "translateX(0) translateY(0)", opacity: 1, visibility: "visible" as const }
+            ? {
+                transform: "translateX(0) translateY(0)",
+                opacity: 1,
+                visibility: "visible" as const,
+              }
             : resolvedMobileMenuStyle === "slideLeft"
-              ? { transform: "translateX(-100%)", opacity: 0, visibility: "hidden" as const }
+              ? {
+                  transform: "translateX(-100%)",
+                  opacity: 0,
+                  visibility: "hidden" as const,
+                }
               : resolvedMobileMenuStyle === "slideRight"
-                ? { transform: "translateX(100%)", opacity: 0, visibility: "hidden" as const }
+                ? {
+                    transform: "translateX(100%)",
+                    opacity: 0,
+                    visibility: "hidden" as const,
+                  }
                 : resolvedMobileMenuStyle === "dropdown"
-                  ? { transform: "translateY(-10px)", opacity: 0, visibility: "hidden" as const }
-                  : { transform: "translateY(0)", opacity: 0, visibility: "hidden" as const }),
+                  ? {
+                      transform: "translateY(-10px)",
+                      opacity: 0,
+                      visibility: "hidden" as const,
+                    }
+                  : {
+                      transform: "translateY(0)",
+                      opacity: 0,
+                      visibility: "hidden" as const,
+                    }),
         }}
       >
-        <div className={`h-full overflow-y-auto p-6 ${mobileLinkSpacingClass[resolvedMobileLinkSpacing] || mobileLinkSpacingClass.normal}`}>
+        <div
+          className={`h-full overflow-y-auto p-6 ${mobileLinkSpacingClass[resolvedMobileLinkSpacing] || mobileLinkSpacingClass.normal}`}
+        >
           {links.map((link, i) => {
-            const hasDD = link.hasDropdown && link.dropdownLinks && link.dropdownLinks.length > 0;
+            const hasDD =
+              link.hasDropdown &&
+              link.dropdownLinks &&
+              link.dropdownLinks.length > 0;
             return (
               <div key={i}>
                 <a
-                  href={hasDD ? undefined : (link.href || "#")}
+                  href={hasDD ? undefined : link.href || "#"}
                   onClick={() => {
                     if (hasDD) {
                       setOpenDropdown(openDropdown === i ? null : i);
@@ -16585,12 +17147,20 @@ function NavbarWithMenu(props: NavbarProps) {
                       stroke="currentColor"
                       viewBox="0 0 24 24"
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
                     </svg>
                   )}
                 </a>
                 {hasDD && openDropdown === i && (
-                  <div className="ml-4 border-l-2 pl-4" style={{ borderColor: `${resolvedMobileMenuText}20` }}>
+                  <div
+                    className="ml-4 border-l-2 pl-4"
+                    style={{ borderColor: `${resolvedMobileMenuText}20` }}
+                  >
                     {link.dropdownLinks!.map((dl, j) => (
                       <a
                         key={j}
@@ -16601,7 +17171,9 @@ function NavbarWithMenu(props: NavbarProps) {
                       >
                         {dl.label || `Link ${j + 1}`}
                         {dl.description && (
-                          <span className="block text-xs opacity-60 mt-0.5">{dl.description}</span>
+                          <span className="block text-xs opacity-60 mt-0.5">
+                            {dl.description}
+                          </span>
                         )}
                       </a>
                     ))}
@@ -16620,9 +17192,18 @@ function NavbarWithMenu(props: NavbarProps) {
                   onClick={() => setMobileMenuOpen(false)}
                   className={`block w-full py-3 text-center rounded-lg font-medium transition-all ${resolvedSecondaryStyle === "outline" ? "border-2" : ""}`}
                   style={{
-                    backgroundColor: resolvedSecondaryStyle === "solid" ? ctaColor : "transparent",
-                    borderColor: resolvedSecondaryStyle === "outline" ? ctaColor : undefined,
-                    color: resolvedSecondaryStyle === "solid" ? ctaTextColor : ctaColor,
+                    backgroundColor:
+                      resolvedSecondaryStyle === "solid"
+                        ? ctaColor
+                        : "transparent",
+                    borderColor:
+                      resolvedSecondaryStyle === "outline"
+                        ? ctaColor
+                        : undefined,
+                    color:
+                      resolvedSecondaryStyle === "solid"
+                        ? ctaTextColor
+                        : ctaColor,
                   }}
                 >
                   {secondaryCtaText}
@@ -16633,7 +17214,10 @@ function NavbarWithMenu(props: NavbarProps) {
                   href={ctaLink}
                   onClick={() => setMobileMenuOpen(false)}
                   className="block w-full py-3 text-center rounded-lg font-medium transition-opacity hover:opacity-90"
-                  style={{ backgroundColor: ctaColor || "var(--primary, #3b82f6)", color: ctaTextColor }}
+                  style={{
+                    backgroundColor: ctaColor || "var(--primary, #3b82f6)",
+                    color: ctaTextColor,
+                  }}
                 >
                   {ctaText}
                 </a>
@@ -16762,13 +17346,16 @@ export function FooterRender(props: FooterProps) {
 
   // Backwards-compat aliases
   const companyName = props.companyName || logoText || "Company";
-  const resolvedVariant = props.variant === "columns" ? "standard" : (props.variant || "standard");
+  const resolvedVariant =
+    props.variant === "columns" ? "standard" : props.variant || "standard";
   const showNewsletter = props.showNewsletter ?? props.newsletter ?? false;
   const newsletterTitle = props.newsletterTitle || "Stay Updated";
   const newsletterDescription = props.newsletterDescription || "";
-  const newsletterPlaceholder = props.newsletterPlaceholder || "Enter your email";
+  const newsletterPlaceholder =
+    props.newsletterPlaceholder || "Enter your email";
   const newsletterButtonText = props.newsletterButtonText || "Subscribe";
-  const newsletterButtonColor = props.newsletterButtonColor || props.accentColor || linkHoverColorProp;
+  const newsletterButtonColor =
+    props.newsletterButtonColor || props.accentColor || linkHoverColorProp;
   const showSocialLinks = props.showSocialLinks ?? true;
   const socialLinksTitle = props.socialLinksTitle || "";
   const columnsLayout = props.columnsLayout || "auto";
@@ -16778,13 +17365,27 @@ export function FooterRender(props: FooterProps) {
 
   // Padding
   const paddingTopClass: Record<string, string> = {
-    none: "pt-0", xs: "pt-4", sm: "pt-8", md: "pt-12", lg: "pt-16", xl: "pt-20", "2xl": "pt-24",
+    none: "pt-0",
+    xs: "pt-4",
+    sm: "pt-8",
+    md: "pt-12",
+    lg: "pt-16",
+    xl: "pt-20",
+    "2xl": "pt-24",
   };
   const paddingBottomClass: Record<string, string> = {
-    none: "pb-0", xs: "pb-4", sm: "pb-8", md: "pb-12", lg: "pb-16", xl: "pb-20", "2xl": "pb-24",
+    none: "pb-0",
+    xs: "pb-4",
+    sm: "pb-8",
+    md: "pb-12",
+    lg: "pb-16",
+    xl: "pb-20",
+    "2xl": "pb-24",
   };
   const paddingYFallback: Record<string, [string, string]> = {
-    sm: ["sm", "sm"], md: ["md", "md"], lg: ["lg", "lg"],
+    sm: ["sm", "sm"],
+    md: ["md", "md"],
+    lg: ["lg", "lg"],
   };
   const [ptKey, pbKey] = props.paddingTop
     ? [props.paddingTop, props.paddingBottom || props.paddingTop]
@@ -16793,25 +17394,55 @@ export function FooterRender(props: FooterProps) {
       : ["xl", "lg"];
   const ptClass = paddingTopClass[ptKey] || "pt-20";
   const pbClass = paddingBottomClass[pbKey] || "pt-16";
-  const pxClass = { sm: "px-4", md: "px-6 lg:px-8", lg: "px-8 lg:px-12", xl: "px-12 lg:px-16" }[paddingX] || "px-6 lg:px-8";
-  const maxWClass = { full: "max-w-full", "7xl": "max-w-7xl", "6xl": "max-w-6xl", "5xl": "max-w-5xl" }[maxWidth] || "max-w-7xl";
+  const pxClass =
+    {
+      sm: "px-4",
+      md: "px-6 lg:px-8",
+      lg: "px-8 lg:px-12",
+      xl: "px-12 lg:px-16",
+    }[paddingX] || "px-6 lg:px-8";
+  const maxWClass =
+    {
+      full: "max-w-full",
+      "7xl": "max-w-7xl",
+      "6xl": "max-w-6xl",
+      "5xl": "max-w-5xl",
+    }[maxWidth] || "max-w-7xl";
 
   // Logo
   const logoUrl = getImageUrl(logo);
 
   // Social icon sizes
-  const iconSizeClass = { sm: "w-4 h-4", md: "w-5 h-5", lg: "w-6 h-6" }[socialIconSize] || "w-5 h-5";
+  const iconSizeClass =
+    { sm: "w-4 h-4", md: "w-5 h-5", lg: "w-6 h-6" }[socialIconSize] ||
+    "w-5 h-5";
 
   const SocialIcon = ({ platform }: { platform?: string }) => {
     const icons: Record<string, React.ReactNode> = {
-      facebook: <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />,
-      twitter: <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />,
-      instagram: <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z" />,
-      linkedin: <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />,
-      youtube: <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />,
-      github: <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />,
-      tiktok: <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />,
-      pinterest: <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12.017 24c6.624 0 11.99-5.367 11.99-11.988C24.007 5.367 18.641 0 12.017 0z" />,
+      facebook: (
+        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+      ),
+      twitter: (
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+      ),
+      instagram: (
+        <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z" />
+      ),
+      linkedin: (
+        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+      ),
+      youtube: (
+        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+      ),
+      github: (
+        <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+      ),
+      tiktok: (
+        <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
+      ),
+      pinterest: (
+        <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12.017 24c6.624 0 11.99-5.367 11.99-11.988C24.007 5.367 18.641 0 12.017 0z" />
+      ),
     };
     return (
       <svg className={iconSizeClass} fill="currentColor" viewBox="0 0 24 24">
@@ -16821,14 +17452,20 @@ export function FooterRender(props: FooterProps) {
   };
 
   // Social icon wrapper for filled/outline styles
-  const renderSocialIcon = (social: { platform?: string; url?: string }, i: number) => {
-    const baseStyle = socialIconStyle === "filled"
-      ? "p-2 rounded-full transition-colors"
-      : socialIconStyle === "outline"
-        ? "p-2 rounded-full border transition-colors"
-        : "transition-opacity opacity-75 hover:opacity-100";
-    const fillBg = socialIconStyle === "filled" ? `${textColor}15` : "transparent";
-    const borderStyle = socialIconStyle === "outline" ? `1px solid ${dividerColor}` : "none";
+  const renderSocialIcon = (
+    social: { platform?: string; url?: string },
+    i: number,
+  ) => {
+    const baseStyle =
+      socialIconStyle === "filled"
+        ? "p-2 rounded-full transition-colors"
+        : socialIconStyle === "outline"
+          ? "p-2 rounded-full border transition-colors"
+          : "transition-opacity opacity-75 hover:opacity-100";
+    const fillBg =
+      socialIconStyle === "filled" ? `${textColor}15` : "transparent";
+    const borderStyle =
+      socialIconStyle === "outline" ? `1px solid ${dividerColor}` : "none";
     return (
       <a
         key={i}
@@ -16836,7 +17473,11 @@ export function FooterRender(props: FooterProps) {
         target="_blank"
         rel="noopener noreferrer"
         className={baseStyle}
-        style={{ color: textColor, backgroundColor: fillBg, border: borderStyle }}
+        style={{
+          color: textColor,
+          backgroundColor: fillBg,
+          border: borderStyle,
+        }}
         aria-label={social.platform}
       >
         <SocialIcon platform={social.platform} />
@@ -16845,27 +17486,38 @@ export function FooterRender(props: FooterProps) {
   };
 
   // Column grid classes
-  const columnGridClass = columnsLayout === "2"
-    ? "grid-cols-1 sm:grid-cols-2"
-    : columnsLayout === "3"
-      ? "grid-cols-2 sm:grid-cols-3"
-      : columnsLayout === "4"
-        ? "grid-cols-2 sm:grid-cols-4"
-        : `grid-cols-2 ${columns.length >= 4 ? "sm:grid-cols-4" : columns.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`;
+  const columnGridClass =
+    columnsLayout === "2"
+      ? "grid-cols-1 sm:grid-cols-2"
+      : columnsLayout === "3"
+        ? "grid-cols-2 sm:grid-cols-3"
+        : columnsLayout === "4"
+          ? "grid-cols-2 sm:grid-cols-4"
+          : `grid-cols-2 ${columns.length >= 4 ? "sm:grid-cols-4" : columns.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`;
 
   // Link renderer helper
-  const renderLink = (link: { label?: string; href?: string; isNew?: boolean }, j: number) => (
+  const renderLink = (
+    link: { label?: string; href?: string; isNew?: boolean },
+    j: number,
+  ) => (
     <li key={j}>
       <a
         href={link.href || "#"}
         className="text-sm transition-colors inline-flex items-center gap-1.5"
         style={{ color: linkColor }}
-        onMouseEnter={(e) => { e.currentTarget.style.color = linkHoverColor; }}
-        onMouseLeave={(e) => { e.currentTarget.style.color = linkColor; }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.color = linkHoverColor;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.color = linkColor;
+        }}
       >
         {link.label}
         {link.isNew && (
-          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: newsletterButtonColor, color: "#fff" }}>
+          <span
+            className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+            style={{ backgroundColor: newsletterButtonColor, color: "#fff" }}
+          >
             NEW
           </span>
         )}
@@ -16878,11 +17530,18 @@ export function FooterRender(props: FooterProps) {
     if (!showNewsletter) return null;
     return (
       <div className="max-w-md">
-        <h3 className="font-semibold mb-2" style={{ color: textColor }}>{newsletterTitle}</h3>
+        <h3 className="font-semibold mb-2" style={{ color: textColor }}>
+          {newsletterTitle}
+        </h3>
         {newsletterDescription && (
-          <p className="text-sm opacity-75 mb-4" style={{ color: textColor }}>{newsletterDescription}</p>
+          <p className="text-sm opacity-75 mb-4" style={{ color: textColor }}>
+            {newsletterDescription}
+          </p>
         )}
-        <form className="flex flex-col sm:flex-row gap-2" onSubmit={(e) => e.preventDefault()}>
+        <form
+          className="flex flex-col sm:flex-row gap-2"
+          onSubmit={(e) => e.preventDefault()}
+        >
           <input
             type="email"
             placeholder={newsletterPlaceholder}
@@ -16893,7 +17552,12 @@ export function FooterRender(props: FooterProps) {
           <button
             type="submit"
             className="px-6 py-2.5 rounded-lg font-medium transition-opacity hover:opacity-90 whitespace-nowrap"
-            style={{ backgroundColor: newsletterButtonColor, color: isDarkBackground(newsletterButtonColor) ? "#ffffff" : "#000000" }}
+            style={{
+              backgroundColor: newsletterButtonColor,
+              color: isDarkBackground(newsletterButtonColor)
+                ? "#ffffff"
+                : "#000000",
+            }}
           >
             {newsletterButtonText}
           </button>
@@ -16908,30 +17572,83 @@ export function FooterRender(props: FooterProps) {
     return (
       <div className="space-y-2">
         {contactEmail && (
-          <a href={`mailto:${contactEmail}`} className="flex items-center gap-2 text-sm transition-colors" style={{ color: linkColor }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = linkHoverColor; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = linkColor; }}>
-            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          <a
+            href={`mailto:${contactEmail}`}
+            className="flex items-center gap-2 text-sm transition-colors"
+            style={{ color: linkColor }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = linkHoverColor;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = linkColor;
+            }}
+          >
+            <svg
+              className="w-4 h-4 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              />
             </svg>
             {contactEmail}
           </a>
         )}
         {contactPhone && (
-          <a href={`tel:${contactPhone}`} className="flex items-center gap-2 text-sm transition-colors" style={{ color: linkColor }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = linkHoverColor; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = linkColor; }}>
-            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+          <a
+            href={`tel:${contactPhone}`}
+            className="flex items-center gap-2 text-sm transition-colors"
+            style={{ color: linkColor }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = linkHoverColor;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = linkColor;
+            }}
+          >
+            <svg
+              className="w-4 h-4 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+              />
             </svg>
             {contactPhone}
           </a>
         )}
         {contactAddress && (
-          <div className="flex items-start gap-2 text-sm" style={{ color: linkColor }}>
-            <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          <div
+            className="flex items-start gap-2 text-sm"
+            style={{ color: linkColor }}
+          >
+            <svg
+              className="w-4 h-4 shrink-0 mt-0.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+              />
             </svg>
             <span>{contactAddress}</span>
           </div>
@@ -16946,15 +17663,37 @@ export function FooterRender(props: FooterProps) {
     return (
       <div className="flex flex-wrap gap-3">
         {appStoreUrl && (
-          <a href={appStoreUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border transition-opacity hover:opacity-80" style={{ borderColor: dividerColor, color: textColor }}>
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" /></svg>
-            <div className="text-left"><div className="text-[10px] opacity-75">Download on the</div><div className="text-sm font-semibold -mt-0.5">App Store</div></div>
+          <a
+            href={appStoreUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border transition-opacity hover:opacity-80"
+            style={{ borderColor: dividerColor, color: textColor }}
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+            </svg>
+            <div className="text-left">
+              <div className="text-[10px] opacity-75">Download on the</div>
+              <div className="text-sm font-semibold -mt-0.5">App Store</div>
+            </div>
           </a>
         )}
         {playStoreUrl && (
-          <a href={playStoreUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border transition-opacity hover:opacity-80" style={{ borderColor: dividerColor, color: textColor }}>
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 01-.61-.92V2.734a1 1 0 01.609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.199l2.807 1.626a1 1 0 010 1.732l-2.808 1.626L15.206 12l2.492-2.492zM5.864 2.658L16.8 8.99l-2.302 2.302-8.634-8.634z" /></svg>
-            <div className="text-left"><div className="text-[10px] opacity-75">GET IT ON</div><div className="text-sm font-semibold -mt-0.5">Google Play</div></div>
+          <a
+            href={playStoreUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border transition-opacity hover:opacity-80"
+            style={{ borderColor: dividerColor, color: textColor }}
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 01-.61-.92V2.734a1 1 0 01.609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.199l2.807 1.626a1 1 0 010 1.732l-2.808 1.626L15.206 12l2.492-2.492zM5.864 2.658L16.8 8.99l-2.302 2.302-8.634-8.634z" />
+            </svg>
+            <div className="text-left">
+              <div className="text-[10px] opacity-75">GET IT ON</div>
+              <div className="text-sm font-semibold -mt-0.5">Google Play</div>
+            </div>
           </a>
         )}
       </div>
@@ -16967,7 +17706,9 @@ export function FooterRender(props: FooterProps) {
       className="border-t pt-6 mt-8 flex flex-col md:flex-row items-center justify-between gap-4"
       style={{ borderColor: dividerColor }}
     >
-      <p className="text-sm opacity-75" style={{ color: textColor }}>{copyright}</p>
+      <p className="text-sm opacity-75" style={{ color: textColor }}>
+        {copyright}
+      </p>
       <div className="flex flex-wrap items-center gap-4 md:gap-6">
         {resolvedLegalLinks.map((link, i) => (
           <a
@@ -16975,14 +17716,20 @@ export function FooterRender(props: FooterProps) {
             href={link.href || "#"}
             className="text-sm transition-colors"
             style={{ color: linkColor }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = linkHoverColor; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = linkColor; }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = linkHoverColor;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = linkColor;
+            }}
           >
             {link.label}
           </a>
         ))}
         {showMadeWith && (
-          <span className="text-sm opacity-60" style={{ color: textColor }}>{madeWithText}</span>
+          <span className="text-sm opacity-60" style={{ color: textColor }}>
+            {madeWithText}
+          </span>
         )}
       </div>
     </div>
@@ -16991,23 +17738,60 @@ export function FooterRender(props: FooterProps) {
   // === SIMPLE VARIANT ===
   if (resolvedVariant === "simple") {
     return (
-      <footer id={id} role="contentinfo" className={`w-full ${ptClass} ${pbClass} ${pxClass} ${className}`}
-        style={{ backgroundColor, ...(borderTop ? { borderTop: `1px solid ${borderColor}` } : {}) }}>
-        <div className={`${maxWClass} mx-auto flex flex-col items-center text-center gap-4`}>
-          {logoUrl
-            ? <img src={logoUrl} alt={companyName} style={{ height: logoHeight }} />
-            : <p className="text-lg font-bold" style={{ color: textColor }}>{companyName}</p>}
-          {description && <p className="text-sm opacity-75 max-w-md" style={{ color: textColor }}>{description}</p>}
-          {showSocialLinks && socialLinks.length > 0 && (
-            <div className="flex gap-3">{socialLinks.map(renderSocialIcon)}</div>
+      <footer
+        id={id}
+        role="contentinfo"
+        className={`w-full ${ptClass} ${pbClass} ${pxClass} ${className}`}
+        style={{
+          backgroundColor,
+          ...(borderTop ? { borderTop: `1px solid ${borderColor}` } : {}),
+        }}
+      >
+        <div
+          className={`${maxWClass} mx-auto flex flex-col items-center text-center gap-4`}
+        >
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt={companyName}
+              style={{ height: logoHeight }}
+            />
+          ) : (
+            <p className="text-lg font-bold" style={{ color: textColor }}>
+              {companyName}
+            </p>
           )}
-          <p className="text-sm opacity-75" style={{ color: textColor }}>{copyright}</p>
+          {description && (
+            <p
+              className="text-sm opacity-75 max-w-md"
+              style={{ color: textColor }}
+            >
+              {description}
+            </p>
+          )}
+          {showSocialLinks && socialLinks.length > 0 && (
+            <div className="flex gap-3">
+              {socialLinks.map(renderSocialIcon)}
+            </div>
+          )}
+          <p className="text-sm opacity-75" style={{ color: textColor }}>
+            {copyright}
+          </p>
           {resolvedLegalLinks.length > 0 && (
             <div className="flex flex-wrap justify-center gap-4">
               {resolvedLegalLinks.map((link, i) => (
-                <a key={i} href={link.href || "#"} className="text-sm transition-colors" style={{ color: linkColor }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = linkHoverColor; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = linkColor; }}>
+                <a
+                  key={i}
+                  href={link.href || "#"}
+                  className="text-sm transition-colors"
+                  style={{ color: linkColor }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = linkHoverColor;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = linkColor;
+                  }}
+                >
                   {link.label}
                 </a>
               ))}
@@ -17021,30 +17805,71 @@ export function FooterRender(props: FooterProps) {
   // === CENTERED VARIANT ===
   if (resolvedVariant === "centered") {
     return (
-      <footer id={id} role="contentinfo" className={`w-full ${ptClass} ${pbClass} ${pxClass} ${className}`}
-        style={{ backgroundColor, ...(borderTop ? { borderTop: `1px solid ${borderColor}` } : {}) }}>
-        <div className={`${maxWClass} mx-auto flex flex-col items-center text-center gap-6`}>
-          {logoUrl
-            ? <img src={logoUrl} alt={companyName} style={{ height: logoHeight }} />
-            : <p className="text-xl font-bold" style={{ color: textColor }}>{companyName}</p>}
-          {description && <p className="text-sm opacity-75 max-w-lg" style={{ color: textColor }}>{description}</p>}
+      <footer
+        id={id}
+        role="contentinfo"
+        className={`w-full ${ptClass} ${pbClass} ${pxClass} ${className}`}
+        style={{
+          backgroundColor,
+          ...(borderTop ? { borderTop: `1px solid ${borderColor}` } : {}),
+        }}
+      >
+        <div
+          className={`${maxWClass} mx-auto flex flex-col items-center text-center gap-6`}
+        >
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt={companyName}
+              style={{ height: logoHeight }}
+            />
+          ) : (
+            <p className="text-xl font-bold" style={{ color: textColor }}>
+              {companyName}
+            </p>
+          )}
+          {description && (
+            <p
+              className="text-sm opacity-75 max-w-lg"
+              style={{ color: textColor }}
+            >
+              {description}
+            </p>
+          )}
           {/* Flat link list from all columns */}
           {columns.length > 0 && (
             <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2">
-              {columns.flatMap(col => col.links || []).map((link, i) => (
-                <a key={i} href={link.href || "#"} className="text-sm transition-colors" style={{ color: linkColor }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = linkHoverColor; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = linkColor; }}>
-                  {link.label}
-                </a>
-              ))}
+              {columns
+                .flatMap((col) => col.links || [])
+                .map((link, i) => (
+                  <a
+                    key={i}
+                    href={link.href || "#"}
+                    className="text-sm transition-colors"
+                    style={{ color: linkColor }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = linkHoverColor;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = linkColor;
+                    }}
+                  >
+                    {link.label}
+                  </a>
+                ))}
             </nav>
           )}
           {renderNewsletter()}
           {showSocialLinks && socialLinks.length > 0 && (
             <div className="flex flex-col items-center gap-2">
-              {socialLinksTitle && <p className="text-sm font-medium" style={{ color: textColor }}>{socialLinksTitle}</p>}
-              <div className="flex gap-3">{socialLinks.map(renderSocialIcon)}</div>
+              {socialLinksTitle && (
+                <p className="text-sm font-medium" style={{ color: textColor }}>
+                  {socialLinksTitle}
+                </p>
+              )}
+              <div className="flex gap-3">
+                {socialLinks.map(renderSocialIcon)}
+              </div>
             </div>
           )}
           {renderAppBadges()}
@@ -17057,23 +17882,60 @@ export function FooterRender(props: FooterProps) {
   // === EXTENDED VARIANT (mega footer) ===
   if (resolvedVariant === "extended") {
     return (
-      <footer id={id} role="contentinfo" className={`w-full ${ptClass} ${pbClass} ${pxClass} ${className}`}
-        style={{ backgroundColor, ...(borderTop ? { borderTop: `1px solid ${borderColor}` } : {}) }}>
+      <footer
+        id={id}
+        role="contentinfo"
+        className={`w-full ${ptClass} ${pbClass} ${pxClass} ${className}`}
+        style={{
+          backgroundColor,
+          ...(borderTop ? { borderTop: `1px solid ${borderColor}` } : {}),
+        }}
+      >
         <div className={`${maxWClass} mx-auto`}>
           {/* Top: newsletter full-width bar */}
           {showNewsletter && (
-            <div className="border-b pb-8 mb-10" style={{ borderColor: dividerColor }}>
+            <div
+              className="border-b pb-8 mb-10"
+              style={{ borderColor: dividerColor }}
+            >
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                 <div>
-                  <h3 className="text-lg font-semibold" style={{ color: textColor }}>{newsletterTitle}</h3>
-                  {newsletterDescription && <p className="text-sm opacity-75 mt-1" style={{ color: textColor }}>{newsletterDescription}</p>}
+                  <h3
+                    className="text-lg font-semibold"
+                    style={{ color: textColor }}
+                  >
+                    {newsletterTitle}
+                  </h3>
+                  {newsletterDescription && (
+                    <p
+                      className="text-sm opacity-75 mt-1"
+                      style={{ color: textColor }}
+                    >
+                      {newsletterDescription}
+                    </p>
+                  )}
                 </div>
-                <form className="flex flex-col sm:flex-row gap-2 sm:min-w-[360px]" onSubmit={(e) => e.preventDefault()}>
-                  <input type="email" placeholder={newsletterPlaceholder} aria-label={newsletterPlaceholder}
+                <form
+                  className="flex flex-col sm:flex-row gap-2 sm:min-w-[360px]"
+                  onSubmit={(e) => e.preventDefault()}
+                >
+                  <input
+                    type="email"
+                    placeholder={newsletterPlaceholder}
+                    aria-label={newsletterPlaceholder}
                     className="flex-1 px-4 py-2.5 rounded-lg bg-white/10 border border-white/20 placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30"
-                    style={{ color: textColor }} />
-                  <button type="submit" className="px-6 py-2.5 rounded-lg font-medium transition-opacity hover:opacity-90 whitespace-nowrap"
-                    style={{ backgroundColor: newsletterButtonColor, color: isDarkBackground(newsletterButtonColor) ? "#ffffff" : "#000000" }}>
+                    style={{ color: textColor }}
+                  />
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 rounded-lg font-medium transition-opacity hover:opacity-90 whitespace-nowrap"
+                    style={{
+                      backgroundColor: newsletterButtonColor,
+                      color: isDarkBackground(newsletterButtonColor)
+                        ? "#ffffff"
+                        : "#000000",
+                    }}
+                  >
                     {newsletterButtonText}
                   </button>
                 </form>
@@ -17084,27 +17946,61 @@ export function FooterRender(props: FooterProps) {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-10">
             {/* Brand column */}
             <div className="lg:col-span-4 space-y-4">
-              {logoUrl
-                ? <img src={logoUrl} alt={companyName} style={{ height: logoHeight }} />
-                : <p className="text-xl font-bold" style={{ color: textColor }}>{companyName}</p>}
-              {description && <p className="text-sm opacity-75 max-w-xs" style={{ color: textColor }}>{description}</p>}
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt={companyName}
+                  style={{ height: logoHeight }}
+                />
+              ) : (
+                <p className="text-xl font-bold" style={{ color: textColor }}>
+                  {companyName}
+                </p>
+              )}
+              {description && (
+                <p
+                  className="text-sm opacity-75 max-w-xs"
+                  style={{ color: textColor }}
+                >
+                  {description}
+                </p>
+              )}
               {renderContactInfo()}
               {renderAppBadges()}
             </div>
             {/* Link columns */}
-            <nav aria-label="Footer navigation" className={`lg:col-span-${showContactInfo || showAppBadges ? "5" : "8"} grid ${columnGridClass} gap-8`}>
+            <nav
+              aria-label="Footer navigation"
+              className={`lg:col-span-${showContactInfo || showAppBadges ? "5" : "8"} grid ${columnGridClass} gap-8`}
+            >
               {columns.map((column, i) => (
                 <div key={i}>
-                  <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider" style={{ color: textColor }}>{column.title}</h3>
-                  <ul className="space-y-2.5">{(column.links || []).map(renderLink)}</ul>
+                  <h3
+                    className="font-semibold mb-4 text-sm uppercase tracking-wider"
+                    style={{ color: textColor }}
+                  >
+                    {column.title}
+                  </h3>
+                  <ul className="space-y-2.5">
+                    {(column.links || []).map(renderLink)}
+                  </ul>
                 </div>
               ))}
             </nav>
             {/* Social column */}
             {showSocialLinks && socialLinks.length > 0 && (
               <div className="lg:col-span-3">
-                {socialLinksTitle && <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider" style={{ color: textColor }}>{socialLinksTitle}</h3>}
-                <div className="flex flex-wrap gap-3">{socialLinks.map(renderSocialIcon)}</div>
+                {socialLinksTitle && (
+                  <h3
+                    className="font-semibold mb-4 text-sm uppercase tracking-wider"
+                    style={{ color: textColor }}
+                  >
+                    {socialLinksTitle}
+                  </h3>
+                )}
+                <div className="flex flex-wrap gap-3">
+                  {socialLinks.map(renderSocialIcon)}
+                </div>
               </div>
             )}
           </div>
@@ -17116,31 +18012,72 @@ export function FooterRender(props: FooterProps) {
 
   // === STANDARD VARIANT (default) ===
   return (
-    <footer id={id} role="contentinfo" className={`w-full ${ptClass} ${pbClass} ${pxClass} ${className}`}
-      style={{ backgroundColor, ...(borderTop ? { borderTop: `1px solid ${borderColor}` } : {}) }}>
+    <footer
+      id={id}
+      role="contentinfo"
+      className={`w-full ${ptClass} ${pbClass} ${pxClass} ${className}`}
+      style={{
+        backgroundColor,
+        ...(borderTop ? { borderTop: `1px solid ${borderColor}` } : {}),
+      }}
+    >
       <div className={`${maxWClass} mx-auto`}>
         {columns.length > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-10">
             {/* Brand sidebar */}
             <div className="lg:col-span-4 space-y-4">
-              {logoUrl
-                ? <img src={logoUrl} alt={companyName} style={{ height: logoHeight }} />
-                : <p className="text-xl font-bold" style={{ color: textColor }}>{companyName}</p>}
-              {description && <p className="text-sm opacity-75 max-w-xs" style={{ color: textColor }}>{description}</p>}
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt={companyName}
+                  style={{ height: logoHeight }}
+                />
+              ) : (
+                <p className="text-xl font-bold" style={{ color: textColor }}>
+                  {companyName}
+                </p>
+              )}
+              {description && (
+                <p
+                  className="text-sm opacity-75 max-w-xs"
+                  style={{ color: textColor }}
+                >
+                  {description}
+                </p>
+              )}
               {showSocialLinks && socialLinks.length > 0 && (
                 <div>
-                  {socialLinksTitle && <p className="text-sm font-medium mb-2" style={{ color: textColor }}>{socialLinksTitle}</p>}
-                  <div className="flex gap-3">{socialLinks.map(renderSocialIcon)}</div>
+                  {socialLinksTitle && (
+                    <p
+                      className="text-sm font-medium mb-2"
+                      style={{ color: textColor }}
+                    >
+                      {socialLinksTitle}
+                    </p>
+                  )}
+                  <div className="flex gap-3">
+                    {socialLinks.map(renderSocialIcon)}
+                  </div>
                 </div>
               )}
               {renderContactInfo()}
             </div>
             {/* Link columns */}
-            <nav aria-label="Footer navigation" className={`lg:col-span-8 grid ${columnGridClass} gap-8`}>
+            <nav
+              aria-label="Footer navigation"
+              className={`lg:col-span-8 grid ${columnGridClass} gap-8`}
+            >
               {columns.map((column, i) => (
                 <div key={i}>
-                  <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider" style={{ color: textColor }}>{column.title}</h3>
-                  <ul className="space-y-2.5">{(column.links || []).map(renderLink)}</ul>
+                  <h3
+                    className="font-semibold mb-4 text-sm uppercase tracking-wider"
+                    style={{ color: textColor }}
+                  >
+                    {column.title}
+                  </h3>
+                  <ul className="space-y-2.5">
+                    {(column.links || []).map(renderLink)}
+                  </ul>
                 </div>
               ))}
             </nav>
@@ -17148,14 +18085,15 @@ export function FooterRender(props: FooterProps) {
         )}
         {/* Newsletter */}
         {showNewsletter && (
-          <div className="border-t pt-8 mb-8" style={{ borderColor: dividerColor }}>
+          <div
+            className="border-t pt-8 mb-8"
+            style={{ borderColor: dividerColor }}
+          >
             {renderNewsletter()}
           </div>
         )}
         {/* App badges */}
-        {showAppBadges && (
-          <div className="mb-8">{renderAppBadges()}</div>
-        )}
+        {showAppBadges && <div className="mb-8">{renderAppBadges()}</div>}
         {renderBottomBar()}
       </div>
     </footer>
@@ -17407,9 +18345,7 @@ export function SocialLinksRender({
               <path d={platform.path} />
             </svg>
             {(showLabels || variant === "text") && (
-              <span className={textSize}>
-                {link.label || platform.label}
-              </span>
+              <span className={textSize}>{link.label || platform.label}</span>
             )}
           </a>
         );
@@ -17500,6 +18436,11 @@ export interface FormProps {
   id?: string;
   className?: string;
   onSubmit?: (e: React.FormEvent) => void;
+
+  // Platform submission
+  siteId?: string;
+  formId?: string;
+  enablePlatformSubmission?: boolean;
 }
 
 export function FormRender({
@@ -17578,7 +18519,87 @@ export function FormRender({
   id,
   className = "",
   onSubmit,
+
+  // Platform submission
+  siteId,
+  formId,
+  enablePlatformSubmission = false,
 }: FormProps) {
+  const [platformStatus, setPlatformStatus] = React.useState<
+    "idle" | "submitting" | "success" | "error"
+  >("idle");
+  const [platformError, setPlatformError] = React.useState("");
+  const formRef = React.useRef<HTMLFormElement>(null);
+
+  const handlePlatformSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (platformStatus === "submitting") return;
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    // Honeypot check
+    if (formData.get("_honeypot")) {
+      setPlatformStatus("success");
+      return;
+    }
+
+    const data: Record<string, string> = {};
+    formData.forEach((value, key) => {
+      if (!key.startsWith("_")) {
+        data[key] = String(value);
+      }
+    });
+
+    setPlatformStatus("submitting");
+    setPlatformError("");
+
+    try {
+      const res = await fetch("/api/forms/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          siteId,
+          formId: formId || "form",
+          data,
+          honeypot: formData.get("_honeypot") || "",
+        }),
+      });
+      const result = await res.json();
+
+      if (!res.ok || !result.success) {
+        setPlatformError(
+          result.error || "Something went wrong. Please try again.",
+        );
+        setPlatformStatus("error");
+        return;
+      }
+
+      setPlatformStatus("success");
+      formRef.current?.reset();
+    } catch {
+      setPlatformError(
+        "Network error. Please check your connection and try again.",
+      );
+      setPlatformStatus("error");
+    }
+  };
+
+  const resolvedOnSubmit = enablePlatformSubmission
+    ? handlePlatformSubmit
+    : onSubmit;
+  const resolvedIsLoading = enablePlatformSubmission
+    ? platformStatus === "submitting"
+    : isLoading;
+  const resolvedSuccessMessage =
+    enablePlatformSubmission && platformStatus === "success"
+      ? successMessage || "Submitted successfully!"
+      : successMessage;
+  const resolvedErrorMessage =
+    enablePlatformSubmission && platformStatus === "error"
+      ? platformError
+      : errorMessage;
+
   // Gap classes
   const gapClasses = {
     xs: "gap-2",
@@ -17694,9 +18715,10 @@ export function FormRender({
 
   return (
     <form
+      ref={formRef}
       id={id}
-      action={action}
-      method={method}
+      action={enablePlatformSubmission ? undefined : action}
+      method={enablePlatformSubmission ? undefined : method}
       encType={enctype}
       noValidate={novalidate}
       autoComplete={autocomplete}
@@ -17708,8 +18730,25 @@ export function FormRender({
         .replace(/\s+/g, " ")
         .trim()}
       style={{ backgroundColor, ...borderStyles }}
-      onSubmit={onSubmit}
+      onSubmit={resolvedOnSubmit}
     >
+      {/* Honeypot field for platform submission */}
+      {enablePlatformSubmission && (
+        <input
+          type="text"
+          name="_honeypot"
+          tabIndex={-1}
+          autoComplete="off"
+          style={{
+            position: "absolute",
+            left: "-9999px",
+            opacity: 0,
+            height: 0,
+            width: 0,
+          }}
+          aria-hidden="true"
+        />
+      )}
       {/* Header */}
       {showHeader && (title || description) && (
         <div
@@ -17741,22 +18780,27 @@ export function FormRender({
       {children}
 
       {/* Success Message */}
-      {successMessage && (
+      {resolvedSuccessMessage && (
         <div
-          className={`${layout === "horizontal" || layout.startsWith("grid") ? "col-span-full" : ""} p-4 bg-green-50 text-green-700 rounded-lg flex items-center gap-2`}
+          role="status"
+          aria-live="polite"
+          className={`${layout === "horizontal" || layout.startsWith("grid") ? "col-span-full" : ""} p-4 rounded-lg flex items-center gap-2`}
+          style={{ backgroundColor: "#f0fdf4", color: "#15803d" }}
         >
           {showSuccessIcon && <span>✓</span>}
-          {successMessage}
+          {resolvedSuccessMessage}
         </div>
       )}
 
       {/* Error Message */}
-      {errorMessage && (
+      {resolvedErrorMessage && (
         <div
-          className={`${layout === "horizontal" || layout.startsWith("grid") ? "col-span-full" : ""} p-4 bg-red-50 text-red-700 rounded-lg flex items-center gap-2`}
+          role="alert"
+          className={`${layout === "horizontal" || layout.startsWith("grid") ? "col-span-full" : ""} p-4 rounded-lg flex items-center gap-2`}
+          style={{ backgroundColor: "#fef2f2", color: "#b91c1c" }}
         >
           {showErrorIcon && <span>✕</span>}
-          {errorMessage}
+          {resolvedErrorMessage}
         </div>
       )}
 
@@ -17769,7 +18813,7 @@ export function FormRender({
             <button
               type="reset"
               className="px-4 py-2 opacity-70 hover:opacity-100 transition-opacity"
-              disabled={disabled || isLoading}
+              disabled={disabled || resolvedIsLoading}
             >
               {resetText}
             </button>
@@ -17788,9 +18832,10 @@ export function FormRender({
                       }
                     : { borderColor: submitColor, color: submitColor }
               }
-              disabled={disabled || isLoading}
+              disabled={disabled || resolvedIsLoading}
+              aria-busy={resolvedIsLoading}
             >
-              {isLoading ? (
+              {resolvedIsLoading ? (
                 <span className="flex items-center gap-2">
                   <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
                     <circle
@@ -18157,6 +19202,16 @@ export function FormFieldRender({
 
   const fieldId = id || name;
   const inputType = type === "password" && showPassword ? "text" : type;
+  const helpId = helpText ? `${fieldId}-help` : undefined;
+  const errorId = error ? `${fieldId}-error` : undefined;
+  const successId = success ? `${fieldId}-success` : undefined;
+  const describedBy =
+    [errorId, successId, helpId].filter(Boolean).join(" ") || undefined;
+  const ariaProps = {
+    "aria-required": required || undefined,
+    "aria-invalid": error ? (true as const) : undefined,
+    "aria-describedby": describedBy,
+  };
 
   // Handle change with char count
   const handleChange = (
@@ -18197,6 +19252,7 @@ export function FormFieldRender({
           className={baseClasses}
           style={{ ...commonStyles, resize }}
           onChange={handleChange}
+          {...ariaProps}
           {...inputFocusHandlers}
         />
       );
@@ -18214,6 +19270,7 @@ export function FormFieldRender({
           className={baseClasses}
           style={commonStyles}
           onChange={handleChange}
+          {...ariaProps}
           {...inputFocusHandlers}
         >
           {placeholder && (
@@ -18285,6 +19342,7 @@ export function FormFieldRender({
         className={baseClasses}
         style={commonStyles}
         onChange={handleChange}
+        {...ariaProps}
         {...inputFocusHandlers}
       />
     );
@@ -18296,9 +19354,15 @@ export function FormFieldRender({
       <div className={`${className} ${containerClassName}`}>
         {renderInput()}
         {helpText && !error && (
-          <p className="mt-1 text-xs text-gray-500">{helpText}</p>
+          <p id={helpId} className="mt-1 text-xs text-gray-500">
+            {helpText}
+          </p>
         )}
-        {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+        {error && (
+          <p id={errorId} role="alert" className="mt-1 text-xs text-red-600">
+            {error}
+          </p>
+        )}
       </div>
     );
   }
@@ -18392,11 +19456,19 @@ export function FormFieldRender({
       <div className="flex justify-between mt-1.5">
         <div>
           {helpText && !error && !success && (
-            <p className="text-sm opacity-60">{helpText}</p>
+            <p id={helpId} className="text-sm opacity-60">
+              {helpText}
+            </p>
           )}
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && (
+            <p id={errorId} role="alert" className="text-sm text-red-600">
+              {error}
+            </p>
+          )}
           {success && !error && (
-            <p className="text-sm text-green-600">{success}</p>
+            <p id={successId} className="text-sm text-green-600">
+              {success}
+            </p>
           )}
         </div>
 
@@ -18572,6 +19644,8 @@ export function ContactFormRender({
     return (
       <div
         id={id}
+        role="status"
+        aria-live="polite"
         className={`max-w-lg mx-auto ${paddingClasses} ${radiusClasses} ${shadowClasses} ${className}`}
         style={{ backgroundColor }}
       >
@@ -18635,6 +19709,7 @@ export function ContactFormRender({
       )}
       {status === "error" && errorMessage && (
         <div
+          role="alert"
           className="mb-4 p-3 rounded-lg text-sm"
           style={{
             backgroundColor: "#fef2f2",
@@ -18735,6 +19810,7 @@ export function ContactFormRender({
         <button
           type="submit"
           disabled={status === "submitting"}
+          aria-busy={status === "submitting"}
           className="w-full px-6 py-3 font-medium rounded-lg transition-all duration-200 hover:opacity-90 focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
           style={{
             backgroundColor: resolvedButtonColor,
@@ -18762,10 +19838,16 @@ export interface NewsletterProps {
   variant?: "inline" | "stacked" | "card";
   backgroundColor?: string;
   buttonColor?: string;
+  buttonTextColor?: string;
   textColor?: string;
+  inputBackgroundColor?: string;
+  inputBorderColor?: string;
+  inputTextColor?: string;
   size?: "sm" | "md" | "lg";
   successMessage?: string;
-  action?: string;
+  errorMessage?: string;
+  borderRadius?: "none" | "sm" | "md" | "lg" | "xl";
+  siteId?: string;
   id?: string;
   className?: string;
 }
@@ -18778,30 +19860,163 @@ export function NewsletterRender({
   variant = "inline",
   backgroundColor,
   buttonColor = "",
+  buttonTextColor = "#ffffff",
   textColor,
+  inputBackgroundColor,
+  inputBorderColor: inputBorderColorProp,
+  inputTextColor: inputTextColorProp,
   size = "md",
-  successMessage,
-  action = "#",
+  successMessage = "Thanks for subscribing!",
+  errorMessage: errorMessageProp,
+  borderRadius = "lg",
+  siteId,
   id,
   className = "",
 }: NewsletterProps) {
+  const [status, setStatus] = React.useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [errorMsg, setErrorMsg] = React.useState("");
+
   const sizeClasses = { sm: "text-sm", md: "text-base", lg: "text-lg" }[size];
   const inputSizeClasses = {
     sm: "px-3 py-2",
     md: "px-4 py-2.5",
     lg: "px-5 py-3",
   }[size];
+  const radiusClasses = {
+    none: "rounded-none",
+    sm: "rounded-sm",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+  }[borderRadius];
 
   const bgDark = isDarkBackground(backgroundColor);
 
   const resolvedTextColor = textColor || (bgDark ? "#f8fafc" : "#1f2937");
-  const inputBorderColor = bgDark
-    ? "rgba(255,255,255,0.2)"
-    : `${buttonColor}30`;
-  const inputTextColor = bgDark ? "#f8fafc" : "#1f2937";
-  const placeholderStyle = bgDark
-    ? "placeholder-white/50"
-    : "placeholder-gray-400";
+  const resolvedInputBorder =
+    inputBorderColorProp ||
+    (bgDark ? "rgba(255,255,255,0.2)" : `${buttonColor || "#d1d5db"}30`);
+  const resolvedInputText =
+    inputTextColorProp || (bgDark ? "#f8fafc" : "#1f2937");
+  const resolvedInputBg =
+    inputBackgroundColor || (bgDark ? "rgba(255,255,255,0.08)" : "transparent");
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (status === "loading") return;
+
+    const formData = new FormData(e.currentTarget);
+
+    // Honeypot check — bots fill it, real users can't see it
+    if (formData.get("_honeypot")) {
+      setStatus("success");
+      return;
+    }
+
+    setStatus("loading");
+    setErrorMsg("");
+
+    try {
+      const res = await fetch("/api/forms/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          siteId,
+          formId: "newsletter",
+          data: { email: formData.get("email") },
+          honeypot: formData.get("_honeypot") || "",
+        }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok || !result.success) {
+        setErrorMsg(
+          result.error ||
+            errorMessageProp ||
+            "Something went wrong. Please try again.",
+        );
+        setStatus("error");
+        return;
+      }
+
+      setStatus("success");
+    } catch {
+      setErrorMsg("Network error. Please try again.");
+      setStatus("error");
+    }
+  };
+
+  const emailInputId = `newsletter-email-${id || "default"}`;
+
+  // Honeypot field — hidden from real users, bots fill it
+  const honeypotField = (
+    <input
+      type="text"
+      name="_honeypot"
+      tabIndex={-1}
+      autoComplete="off"
+      style={{
+        position: "absolute",
+        left: "-9999px",
+        opacity: 0,
+        height: 0,
+        width: 0,
+      }}
+      aria-hidden="true"
+    />
+  );
+
+  // Success state
+  if (status === "success") {
+    return (
+      <section
+        id={id}
+        className={`w-full py-12 md:py-16 px-4 ${className}`}
+        style={{ backgroundColor: backgroundColor || undefined }}
+      >
+        <div className="max-w-2xl mx-auto text-center">
+          <div
+            className="inline-flex items-center justify-center w-12 h-12 rounded-full mb-4"
+            style={{ backgroundColor: `${buttonColor || "#22c55e"}20` }}
+          >
+            <svg
+              className="w-6 h-6"
+              style={{ color: buttonColor || "#22c55e" }}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          </div>
+          <p
+            className={`${sizeClasses} font-medium`}
+            style={{ color: resolvedTextColor }}
+            role="status"
+            aria-live="polite"
+          >
+            {successMessage}
+          </p>
+          <button
+            type="button"
+            onClick={() => setStatus("idle")}
+            className="mt-3 text-sm underline opacity-70 hover:opacity-100 transition-opacity"
+            style={{ color: resolvedTextColor }}
+          >
+            Subscribe another email
+          </button>
+        </div>
+      </section>
+    );
+  }
 
   if (variant === "card") {
     return (
@@ -18812,7 +20027,7 @@ export function NewsletterRender({
       >
         <div className="max-w-2xl mx-auto">
           <div
-            className="p-8 md:p-10 rounded-2xl shadow-lg text-center"
+            className={`p-8 md:p-10 ${radiusClasses === "rounded-lg" ? "rounded-2xl" : radiusClasses} shadow-lg text-center`}
             style={{
               backgroundColor: bgDark ? "rgba(255,255,255,0.05)" : "#ffffff",
               border: bgDark
@@ -18832,31 +20047,49 @@ export function NewsletterRender({
             >
               {description}
             </p>
+            {status === "error" && errorMsg && (
+              <div
+                className="mb-4 p-3 rounded-lg text-sm"
+                role="alert"
+                style={{
+                  backgroundColor: "#fef2f2",
+                  color: "#991b1b",
+                  border: "1px solid #fecaca",
+                }}
+              >
+                {errorMsg}
+              </div>
+            )}
             <form
-              action={action}
-              method="POST"
+              onSubmit={handleSubmit}
               className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
             >
+              {honeypotField}
+              <label htmlFor={emailInputId} className="sr-only">
+                Email address
+              </label>
               <input
+                id={emailInputId}
                 type="email"
                 name="email"
                 placeholder={placeholder}
                 required
-                className={`flex-1 ${inputSizeClasses} border rounded-lg focus:ring-2 focus:outline-none ${placeholderStyle}`}
+                aria-required="true"
+                className={`flex-1 ${inputSizeClasses} border ${radiusClasses} focus:ring-2 focus:outline-none`}
                 style={{
-                  borderColor: inputBorderColor,
-                  backgroundColor: bgDark
-                    ? "rgba(255,255,255,0.08)"
-                    : "transparent",
-                  color: inputTextColor,
+                  borderColor: resolvedInputBorder,
+                  backgroundColor: resolvedInputBg,
+                  color: resolvedInputText,
                 }}
               />
               <button
                 type="submit"
-                className={`${inputSizeClasses} px-6 font-medium text-white rounded-lg transition-opacity hover:opacity-90 whitespace-nowrap`}
-                style={{ backgroundColor: buttonColor }}
+                disabled={status === "loading"}
+                aria-busy={status === "loading"}
+                className={`${inputSizeClasses} px-6 font-medium ${radiusClasses} transition-opacity hover:opacity-90 whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed`}
+                style={{ backgroundColor: buttonColor, color: buttonTextColor }}
               >
-                {buttonText}
+                {status === "loading" ? "Subscribing..." : buttonText}
               </button>
             </form>
           </div>
@@ -18865,7 +20098,7 @@ export function NewsletterRender({
     );
   }
 
-  // Inline/stacked variant — ALWAYS wrapped in a proper section container
+  // Inline/stacked variant
   return (
     <section
       id={id}
@@ -18891,31 +20124,49 @@ export function NewsletterRender({
             {description}
           </p>
         )}
+        {status === "error" && errorMsg && (
+          <div
+            className="mb-4 p-3 rounded-lg text-sm"
+            role="alert"
+            style={{
+              backgroundColor: "#fef2f2",
+              color: "#991b1b",
+              border: "1px solid #fecaca",
+            }}
+          >
+            {errorMsg}
+          </div>
+        )}
         <form
-          action={action}
-          method="POST"
+          onSubmit={handleSubmit}
           className={`flex ${variant === "stacked" ? "flex-col max-w-md mx-auto" : "flex-col sm:flex-row"} gap-3`}
         >
+          {honeypotField}
+          <label htmlFor={`${emailInputId}-alt`} className="sr-only">
+            Email address
+          </label>
           <input
+            id={`${emailInputId}-alt`}
             type="email"
             name="email"
             placeholder={placeholder}
             required
-            className={`flex-1 ${inputSizeClasses} border rounded-lg focus:ring-2 focus:outline-none ${placeholderStyle}`}
+            aria-required="true"
+            className={`flex-1 ${inputSizeClasses} border ${radiusClasses} focus:ring-2 focus:outline-none`}
             style={{
-              borderColor: inputBorderColor,
-              backgroundColor: bgDark
-                ? "rgba(255,255,255,0.08)"
-                : "transparent",
-              color: inputTextColor,
+              borderColor: resolvedInputBorder,
+              backgroundColor: resolvedInputBg,
+              color: resolvedInputText,
             }}
           />
           <button
             type="submit"
-            className={`${inputSizeClasses} px-6 font-medium text-white rounded-lg transition-opacity hover:opacity-90 whitespace-nowrap`}
-            style={{ backgroundColor: buttonColor }}
+            disabled={status === "loading"}
+            aria-busy={status === "loading"}
+            className={`${inputSizeClasses} px-6 font-medium ${radiusClasses} transition-opacity hover:opacity-90 whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed`}
+            style={{ backgroundColor: buttonColor, color: buttonTextColor }}
           >
-            {buttonText}
+            {status === "loading" ? "Subscribing..." : buttonText}
           </button>
         </form>
       </div>
@@ -18933,7 +20184,7 @@ export interface CarouselItem {
   description?: string;
   link?: string;
   buttonText?: string;
-  buttonStyle?: 'primary' | 'secondary' | 'outline';
+  buttonStyle?: "primary" | "secondary" | "outline";
   tag?: string;
   overlayColor?: string;
   overlayOpacity?: number;
@@ -18962,16 +20213,16 @@ export interface CarouselProps {
   // Display
   slidesToShow?: 1 | 2 | 3;
   slidesToScroll?: number;
-  variant?: 'fullWidth' | 'cards' | 'thumbnail';
-  transition?: 'slide' | 'fade' | 'zoom';
+  variant?: "fullWidth" | "cards" | "thumbnail";
+  transition?: "slide" | "fade" | "zoom";
   transitionDuration?: number;
-  slideHeight?: 'auto' | 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  slideHeight?: "auto" | "sm" | "md" | "lg" | "xl" | "full";
 
   // Navigation
   showDots?: boolean;
   dotColor?: string;
   activeDotColor?: string;
-  dotStyle?: 'circle' | 'bar' | 'number';
+  dotStyle?: "circle" | "bar" | "number";
   showArrows?: boolean;
   arrowColor?: string;
   arrowBackgroundColor?: string;
@@ -18980,7 +20231,7 @@ export interface CarouselProps {
   counterColor?: string;
 
   // Content Overlay
-  contentPosition?: 'center' | 'bottom-left' | 'bottom-center' | 'top-left';
+  contentPosition?: "center" | "bottom-left" | "bottom-center" | "top-left";
   overlay?: boolean;
   overlayOpacity?: number;
   textColor?: string;
@@ -18989,7 +20240,7 @@ export interface CarouselProps {
   aspectRatio?: "video" | "square" | "wide" | "auto";
   borderRadius?: "none" | "sm" | "md" | "lg" | "xl";
   backgroundColor?: string;
-  gap?: 'none' | 'sm' | 'md' | 'lg';
+  gap?: "none" | "sm" | "md" | "lg";
   paddingY?: "sm" | "md" | "lg" | "xl";
   paddingX?: "sm" | "md" | "lg" | "xl";
 
@@ -19016,28 +20267,28 @@ export function CarouselRender({
   lazyLoad = true,
   slidesToShow = 1,
   slidesToScroll,
-  variant = 'fullWidth',
-  transition = 'slide',
+  variant = "fullWidth",
+  transition = "slide",
   transitionDuration = 500,
-  slideHeight = 'auto',
+  slideHeight = "auto",
   showDots = true,
   dotColor,
   activeDotColor,
-  dotStyle = 'circle',
+  dotStyle = "circle",
   showArrows = true,
   arrowColor,
   arrowBackgroundColor,
   arrowStyle = "circle",
   showCounter = false,
   counterColor,
-  contentPosition = 'center',
+  contentPosition = "center",
   overlay = true,
   overlayOpacity = 40,
   textColor = "#ffffff",
   aspectRatio = "video",
   borderRadius = "lg",
   backgroundColor,
-  gap = 'none',
+  gap = "none",
   paddingY = "lg",
   paddingX = "md",
   ariaLabel = "Image carousel",
@@ -19046,11 +20297,17 @@ export function CarouselRender({
 }: CarouselProps) {
   const dark = isDarkBackground(backgroundColor);
   const resolvedTextColor = textColor || "#ffffff";
-  const resolvedBadgeColor = badgeColor || (dark ? "#e5a956" : "var(--brand-primary, #3b82f6)");
-  const resolvedHeaderText = dark ? "#f8fafc" : "var(--color-foreground, #1f2937)";
-  const resolvedDotColor = dotColor || "var(--color-muted-foreground, rgba(255,255,255,0.5))";
-  const resolvedActiveDotColor = activeDotColor || "var(--color-foreground, rgba(255,255,255,1))";
-  const resolvedArrowBg = arrowBackgroundColor || "var(--color-background, rgba(255,255,255,0.8))";
+  const resolvedBadgeColor =
+    badgeColor || (dark ? "#e5a956" : "var(--brand-primary, #3b82f6)");
+  const resolvedHeaderText = dark
+    ? "#f8fafc"
+    : "var(--color-foreground, #1f2937)";
+  const resolvedDotColor =
+    dotColor || "var(--color-muted-foreground, rgba(255,255,255,0.5))";
+  const resolvedActiveDotColor =
+    activeDotColor || "var(--color-foreground, rgba(255,255,255,1))";
+  const resolvedArrowBg =
+    arrowBackgroundColor || "var(--color-background, rgba(255,255,255,0.8))";
   const resolvedArrowColor = arrowColor || "var(--color-foreground, #111827)";
   const resolvedCounterColor = counterColor || "#ffffff";
   const resolvedSlidesToScroll = slidesToScroll || slidesToShow;
@@ -19074,20 +20331,38 @@ export function CarouselRender({
       });
     }, interval);
     return () => clearInterval(timer);
-  }, [autoplay, isPaused, interval, loop, maxIndex, resolvedSlidesToScroll, totalSlides, slidesToShow]);
+  }, [
+    autoplay,
+    isPaused,
+    interval,
+    loop,
+    maxIndex,
+    resolvedSlidesToScroll,
+    totalSlides,
+    slidesToShow,
+  ]);
 
-  const goTo = React.useCallback((index: number) => {
-    if (index < 0) {
-      setCurrentIndex(loop ? maxIndex : 0);
-    } else if (index > maxIndex) {
-      setCurrentIndex(loop ? 0 : maxIndex);
-    } else {
-      setCurrentIndex(index);
-    }
-  }, [loop, maxIndex]);
+  const goTo = React.useCallback(
+    (index: number) => {
+      if (index < 0) {
+        setCurrentIndex(loop ? maxIndex : 0);
+      } else if (index > maxIndex) {
+        setCurrentIndex(loop ? 0 : maxIndex);
+      } else {
+        setCurrentIndex(index);
+      }
+    },
+    [loop, maxIndex],
+  );
 
-  const goNext = React.useCallback(() => goTo(currentIndex + resolvedSlidesToScroll), [currentIndex, resolvedSlidesToScroll, goTo]);
-  const goPrev = React.useCallback(() => goTo(currentIndex - resolvedSlidesToScroll), [currentIndex, resolvedSlidesToScroll, goTo]);
+  const goNext = React.useCallback(
+    () => goTo(currentIndex + resolvedSlidesToScroll),
+    [currentIndex, resolvedSlidesToScroll, goTo],
+  );
+  const goPrev = React.useCallback(
+    () => goTo(currentIndex - resolvedSlidesToScroll),
+    [currentIndex, resolvedSlidesToScroll, goTo],
+  );
 
   // Keyboard navigation
   React.useEffect(() => {
@@ -19095,11 +20370,17 @@ export function CarouselRender({
     const el = containerRef.current;
     if (!el) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') { e.preventDefault(); goPrev(); }
-      if (e.key === 'ArrowRight') { e.preventDefault(); goNext(); }
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        goPrev();
+      }
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        goNext();
+      }
     };
-    el.addEventListener('keydown', handleKeyDown);
-    return () => el.removeEventListener('keydown', handleKeyDown);
+    el.addEventListener("keydown", handleKeyDown);
+    return () => el.removeEventListener("keydown", handleKeyDown);
   }, [enableKeyboard, goNext, goPrev]);
 
   // Touch handlers
@@ -19129,14 +20410,18 @@ export function CarouselRender({
     full: "h-screen",
   }[slideHeight];
 
-  const aspectClasses = slideHeight !== 'auto' ? '' : {
-    video: "aspect-video",
-    square: "aspect-square",
-    wide: "aspect-[21/9]",
-    auto: "",
-  }[aspectRatio];
+  const aspectClasses =
+    slideHeight !== "auto"
+      ? ""
+      : {
+          video: "aspect-video",
+          square: "aspect-square",
+          wide: "aspect-[21/9]",
+          auto: "",
+        }[aspectRatio];
 
-  const radiusClasses = borderRadiusMapUtil[borderRadius]?.mobile || "rounded-lg";
+  const radiusClasses =
+    borderRadiusMapUtil[borderRadius]?.mobile || "rounded-lg";
 
   const gapClasses = {
     none: "gap-0",
@@ -19177,33 +20462,33 @@ export function CarouselRender({
 
   // Transition styles
   const getSlideContainerStyle = (): React.CSSProperties => {
-    if (transition === 'fade') {
-      return { position: 'relative', width: '100%', height: '100%' };
+    if (transition === "fade") {
+      return { position: "relative", width: "100%", height: "100%" };
     }
     return {
-      display: 'flex',
+      display: "flex",
       transform: `translateX(-${currentIndex * slideWidthPercent}%)`,
       transition: `transform ${transitionDuration}ms ease-in-out`,
     };
   };
 
   const getSlideStyle = (index: number): React.CSSProperties => {
-    if (transition === 'fade') {
+    if (transition === "fade") {
       return {
-        position: index === 0 ? 'relative' : 'absolute',
+        position: index === 0 ? "relative" : "absolute",
         top: 0,
         left: 0,
-        width: '100%',
-        height: '100%',
+        width: "100%",
+        height: "100%",
         opacity: index === currentIndex ? 1 : 0,
         transition: `opacity ${transitionDuration}ms ease-in-out`,
         zIndex: index === currentIndex ? 1 : 0,
       };
     }
-    if (transition === 'zoom') {
+    if (transition === "zoom") {
       return {
         flex: `0 0 ${slideWidthPercent}%`,
-        transform: index === currentIndex ? 'scale(1)' : 'scale(0.9)',
+        transform: index === currentIndex ? "scale(1)" : "scale(0.9)",
         opacity: index === currentIndex ? 1 : 0.5,
         transition: `transform ${transitionDuration}ms ease-in-out, opacity ${transitionDuration}ms ease-in-out`,
       };
@@ -19270,19 +20555,22 @@ export function CarouselRender({
           onTouchEnd={handleTouchEnd}
         >
           <div
-            className={transition !== 'fade' ? `${gapClasses}` : ''}
+            className={transition !== "fade" ? `${gapClasses}` : ""}
             style={getSlideContainerStyle()}
           >
             {items.map((item, i) => {
               const itemImageUrl = getImageUrl(item.image);
               const loaded = shouldLoadSlide(i);
-              const itemOverlayColor = item.overlayColor || 'rgba(0,0,0,1)';
-              const itemOverlayOpacity = item.overlayOpacity != null ? item.overlayOpacity / 100 : overlayOpacity / 100;
+              const itemOverlayColor = item.overlayColor || "rgba(0,0,0,1)";
+              const itemOverlayOpacity =
+                item.overlayOpacity != null
+                  ? item.overlayOpacity / 100
+                  : overlayOpacity / 100;
 
               return (
                 <div
                   key={i}
-                  className={`${variant === 'cards' ? radiusClasses + ' overflow-hidden' : ''} w-full h-full relative`}
+                  className={`${variant === "cards" ? radiusClasses + " overflow-hidden" : ""} w-full h-full relative`}
                   style={getSlideStyle(i)}
                   role="group"
                   aria-roledescription="slide"
@@ -19296,7 +20584,10 @@ export function CarouselRender({
                       loading={i === 0 ? "eager" : "lazy"}
                     />
                   ) : (
-                    <div className="w-full h-full" style={{ backgroundColor: 'var(--color-muted, #e5e7eb)' }} />
+                    <div
+                      className="w-full h-full"
+                      style={{ backgroundColor: "var(--color-muted, #e5e7eb)" }}
+                    />
                   )}
                   {overlay && (
                     <div
@@ -19310,13 +20601,18 @@ export function CarouselRender({
                   {item.tag && (
                     <span
                       className="absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-medium z-10"
-                      style={{ backgroundColor: 'rgba(0,0,0,0.5)', color: '#ffffff' }}
+                      style={{
+                        backgroundColor: "rgba(0,0,0,0.5)",
+                        color: "#ffffff",
+                      }}
                     >
                       {item.tag}
                     </span>
                   )}
                   {(item.title || item.description || item.subtitle) && (
-                    <div className={`absolute inset-0 flex flex-col ${contentPositionClasses} p-6 z-[2]`}>
+                    <div
+                      className={`absolute inset-0 flex flex-col ${contentPositionClasses} p-6 z-[2]`}
+                    >
                       {item.title && (
                         <h3
                           className="text-xl md:text-3xl lg:text-4xl font-bold mb-2 md:mb-3"
@@ -19346,11 +20642,21 @@ export function CarouselRender({
                           href={item.link}
                           className="inline-block px-6 py-2 rounded-lg font-medium hover:opacity-90 transition-colors"
                           style={
-                            item.buttonStyle === 'outline'
-                              ? { border: '2px solid ' + resolvedTextColor, color: resolvedTextColor }
-                              : item.buttonStyle === 'secondary'
-                              ? { backgroundColor: 'rgba(255,255,255,0.2)', color: resolvedTextColor, backdropFilter: 'blur(4px)' }
-                              : { backgroundColor: "rgba(255,255,255,0.95)", color: "#111827" }
+                            item.buttonStyle === "outline"
+                              ? {
+                                  border: "2px solid " + resolvedTextColor,
+                                  color: resolvedTextColor,
+                                }
+                              : item.buttonStyle === "secondary"
+                                ? {
+                                    backgroundColor: "rgba(255,255,255,0.2)",
+                                    color: resolvedTextColor,
+                                    backdropFilter: "blur(4px)",
+                                  }
+                                : {
+                                    backgroundColor: "rgba(255,255,255,0.95)",
+                                    color: "#111827",
+                                  }
                           }
                         >
                           {item.buttonText}
@@ -19368,7 +20674,10 @@ export function CarouselRender({
             <>
               <button
                 className={`absolute left-4 top-1/2 -translate-y-1/2 ${arrowShapeClasses} transition-colors z-10`}
-                style={{ backgroundColor: resolvedArrowBg, color: resolvedArrowColor }}
+                style={{
+                  backgroundColor: resolvedArrowBg,
+                  color: resolvedArrowColor,
+                }}
                 aria-label="Previous slide"
                 onClick={goPrev}
               >
@@ -19388,7 +20697,10 @@ export function CarouselRender({
               </button>
               <button
                 className={`absolute right-4 top-1/2 -translate-y-1/2 ${arrowShapeClasses} transition-colors z-10`}
-                style={{ backgroundColor: resolvedArrowBg, color: resolvedArrowColor }}
+                style={{
+                  backgroundColor: resolvedArrowBg,
+                  color: resolvedArrowColor,
+                }}
                 aria-label="Next slide"
                 onClick={goNext}
               >
@@ -19413,7 +20725,10 @@ export function CarouselRender({
           {showCounter && totalSlides > 1 && (
             <div
               className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-medium z-10"
-              style={{ backgroundColor: "rgba(0,0,0,0.5)", color: resolvedCounterColor }}
+              style={{
+                backgroundColor: "rgba(0,0,0,0.5)",
+                color: resolvedCounterColor,
+              }}
             >
               {currentIndex + 1} / {totalSlides}
             </div>
@@ -19421,30 +20736,42 @@ export function CarouselRender({
 
           {/* Dots */}
           {showDots && totalSlides > slidesToShow && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10" role="tablist">
-              {Array.from({ length: Math.ceil(totalSlides / resolvedSlidesToScroll) }).map((_, i) => {
-                const isActive = Math.floor(currentIndex / resolvedSlidesToScroll) === i;
+            <div
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10"
+              role="tablist"
+            >
+              {Array.from({
+                length: Math.ceil(totalSlides / resolvedSlidesToScroll),
+              }).map((_, i) => {
+                const isActive =
+                  Math.floor(currentIndex / resolvedSlidesToScroll) === i;
                 return (
                   <button
                     key={i}
                     className={`transition-all ${
-                      dotStyle === 'bar'
-                        ? `h-1 rounded-full ${isActive ? 'w-6' : 'w-2.5'}`
-                        : dotStyle === 'number'
-                        ? 'w-6 h-6 rounded-full text-xs font-medium flex items-center justify-center'
-                        : 'w-2.5 h-2.5 rounded-full'
+                      dotStyle === "bar"
+                        ? `h-1 rounded-full ${isActive ? "w-6" : "w-2.5"}`
+                        : dotStyle === "number"
+                          ? "w-6 h-6 rounded-full text-xs font-medium flex items-center justify-center"
+                          : "w-2.5 h-2.5 rounded-full"
                     }`}
                     style={{
-                      backgroundColor: isActive ? resolvedActiveDotColor : resolvedDotColor,
-                      ...(dotStyle === 'number' && isActive ? { color: '#000000' } : {}),
-                      ...(dotStyle === 'number' && !isActive ? { color: '#ffffff' } : {}),
+                      backgroundColor: isActive
+                        ? resolvedActiveDotColor
+                        : resolvedDotColor,
+                      ...(dotStyle === "number" && isActive
+                        ? { color: "#000000" }
+                        : {}),
+                      ...(dotStyle === "number" && !isActive
+                        ? { color: "#ffffff" }
+                        : {}),
                     }}
                     role="tab"
                     aria-selected={isActive}
                     aria-label={`Go to slide ${i + 1}`}
                     onClick={() => goTo(i * resolvedSlidesToScroll)}
                   >
-                    {dotStyle === 'number' ? i + 1 : null}
+                    {dotStyle === "number" ? i + 1 : null}
                   </button>
                 );
               })}
@@ -19539,13 +20866,15 @@ export function CountdownRender({
   const resolvedLabelColor = labelColor || (dark ? "#94a3b8" : "#6b7280");
   const resolvedCardBg = cardBackgroundColor || (dark ? "#1e293b" : "#f3f4f6");
   const resolvedSepColor = separatorColor || (dark ? "#475569" : "#d1d5db");
-  const resolvedCtaColor = ctaColor || accentColor || "var(--brand-primary, #3b82f6)";
+  const resolvedCtaColor =
+    ctaColor || accentColor || "var(--brand-primary, #3b82f6)";
   const resolvedBadgeColor = badgeColor || accentColor || resolvedCtaColor;
 
   const pyClasses = paddingYMapUtil[paddingY] || paddingYMapUtil.lg;
   const pxClasses = paddingXMapUtil[paddingX] || paddingXMapUtil.md;
 
-  const cardRadiusClasses = borderRadiusMapUtil[cardBorderRadius]?.mobile || "rounded-xl";
+  const cardRadiusClasses =
+    borderRadiusMapUtil[cardBorderRadius]?.mobile || "rounded-xl";
 
   const alignClasses = {
     left: "text-left",
@@ -19780,7 +21109,9 @@ export function PricingRender({
   id,
   className = "",
 }: PricingProps) {
-  const [billing, setBilling] = React.useState<"monthly" | "yearly">(defaultBilling);
+  const [billing, setBilling] = React.useState<"monthly" | "yearly">(
+    defaultBilling,
+  );
 
   const dark = isDarkBackground(backgroundColor);
   const resolvedTextColor = textColor || (dark ? "#f8fafc" : "#1f2937");
@@ -19806,7 +21137,8 @@ export function PricingRender({
     lg: "gap-8 md:gap-10",
   }[gap];
 
-  const radiusClasses = borderRadiusMapUtil[cardBorderRadius]?.mobile || "rounded-xl";
+  const radiusClasses =
+    borderRadiusMapUtil[cardBorderRadius]?.mobile || "rounded-xl";
   const shadowClasses = shadowMapUtil[cardShadow] || "";
 
   const alignClasses = {
@@ -19837,12 +21169,16 @@ export function PricingRender({
     >
       <div className="max-w-screen-xl mx-auto">
         {/* Header */}
-        <div className={`${alignClasses} mb-12 md:mb-16 ${headerAlign === "center" ? "max-w-3xl mx-auto" : ""}`}>
+        <div
+          className={`${alignClasses} mb-12 md:mb-16 ${headerAlign === "center" ? "max-w-3xl mx-auto" : ""}`}
+        >
           {badge && (
             <span
               className="inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm font-medium mb-4"
               style={{
-                backgroundColor: badgeColor ? `${badgeColor}20` : `${popularBorderColor}20`,
+                backgroundColor: badgeColor
+                  ? `${badgeColor}20`
+                  : `${popularBorderColor}20`,
                 color: badgeColor || popularBorderColor || resolvedTextColor,
               }}
             >
@@ -19887,12 +21223,17 @@ export function PricingRender({
             </span>
             <button
               type="button"
-              onClick={() => setBilling(billing === "monthly" ? "yearly" : "monthly")}
+              onClick={() =>
+                setBilling(billing === "monthly" ? "yearly" : "monthly")
+              }
               className="relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
               style={{
-                backgroundColor: billing === "yearly"
-                  ? (popularBorderColor || "var(--brand-primary, #3b82f6)")
-                  : (dark ? "#475569" : "#d1d5db"),
+                backgroundColor:
+                  billing === "yearly"
+                    ? popularBorderColor || "var(--brand-primary, #3b82f6)"
+                    : dark
+                      ? "#475569"
+                      : "#d1d5db",
               }}
               aria-label="Toggle billing period"
             >
@@ -19921,9 +21262,7 @@ export function PricingRender({
         )}
 
         {/* Plan Cards */}
-        <div
-          className={`grid grid-cols-1 ${colClasses} ${gapClasses} mx-auto`}
-        >
+        <div className={`grid grid-cols-1 ${colClasses} ${gapClasses} mx-auto`}>
           {plans.map((plan, i) => {
             const currentPrice = getPlanPrice(plan);
             const currentPeriod = getPlanPeriod(plan);
@@ -19989,7 +21328,9 @@ export function PricingRender({
                 <ul className="space-y-3 mb-8">
                   {(Array.isArray(plan.features) ? plan.features : []).map(
                     (
-                      feature: string | { text?: string; label?: string; included?: boolean },
+                      feature:
+                        | string
+                        | { text?: string; label?: string; included?: boolean },
                       j: number,
                     ) => {
                       const featureText =
@@ -19997,7 +21338,8 @@ export function PricingRender({
                           ? feature
                           : feature?.text || feature?.label || "";
                       const featureIncluded =
-                        typeof feature === "object" && feature?.included === false
+                        typeof feature === "object" &&
+                        feature?.included === false
                           ? false
                           : true;
                       if (!featureText) return null;
@@ -20009,7 +21351,13 @@ export function PricingRender({
                         >
                           <svg
                             className={`w-5 h-5 flex-shrink-0 mt-0.5`}
-                            style={{ color: featureIncluded ? resolvedCheckColor : (dark ? "#475569" : "#d1d5db") }}
+                            style={{
+                              color: featureIncluded
+                                ? resolvedCheckColor
+                                : dark
+                                  ? "#475569"
+                                  : "#d1d5db",
+                            }}
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -20040,16 +21388,26 @@ export function PricingRender({
                   href={plan.buttonLink || "#"}
                   className={`block w-full py-3 text-center font-medium rounded-lg transition-all ${
                     isPopular || buttonStyle === "filled"
-                      ? (isPopular ? "text-white hover:opacity-90" : "border-2 hover:opacity-80")
+                      ? isPopular
+                        ? "text-white hover:opacity-90"
+                        : "border-2 hover:opacity-80"
                       : "border-2 hover:opacity-80"
                   }`}
                   style={
                     isPopular
-                      ? { backgroundColor: popularBorderColor, color: "#ffffff" }
+                      ? {
+                          backgroundColor: popularBorderColor,
+                          color: "#ffffff",
+                        }
                       : buttonStyle === "filled"
-                        ? { backgroundColor: popularBorderColor || resolvedTextColor, color: dark ? "#0f172a" : "#ffffff" }
+                        ? {
+                            backgroundColor:
+                              popularBorderColor || resolvedTextColor,
+                            color: dark ? "#0f172a" : "#ffffff",
+                          }
                         : {
-                            borderColor: popularBorderColor || resolvedTextColor,
+                            borderColor:
+                              popularBorderColor || resolvedTextColor,
                             color: popularBorderColor || resolvedTextColor,
                           }
                   }
@@ -20068,8 +21426,18 @@ export function PricingRender({
               className="inline-flex items-center gap-2 text-sm opacity-70"
               style={{ color: resolvedTextColor }}
             >
-              <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              <svg
+                className="w-5 h-5 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                />
               </svg>
               {guaranteeText}
             </p>
@@ -20147,9 +21515,15 @@ export function AccordionRender({
   className = "",
 }: AccordionProps) {
   const dark = isDarkBackground(backgroundColor);
-  const resolvedTitleColor = titleColor || accentColor || textColor || (dark ? "#f8fafc" : "#1f2937");
-  const resolvedSubtitleColor = subtitleColor || textColor || (dark ? "#94a3b8" : "#6b7280");
-  const resolvedIconColor = iconColor || accentColor || activeColor || (dark ? "#e5a956" : "var(--brand-primary, #3b82f6)");
+  const resolvedTitleColor =
+    titleColor || accentColor || textColor || (dark ? "#f8fafc" : "#1f2937");
+  const resolvedSubtitleColor =
+    subtitleColor || textColor || (dark ? "#94a3b8" : "#6b7280");
+  const resolvedIconColor =
+    iconColor ||
+    accentColor ||
+    activeColor ||
+    (dark ? "#e5a956" : "var(--brand-primary, #3b82f6)");
   const resolvedTextColor = textColor || (dark ? "#e2e8f0" : "#374151");
   const resolvedBorderColor = borderColor || (dark ? "#334155" : "#e5e7eb");
   const resolvedBadgeColor = badgeColor || resolvedIconColor;
@@ -20157,7 +21531,8 @@ export function AccordionRender({
 
   const pyClasses = paddingYMapUtil[paddingY] || paddingYMapUtil.lg;
   const pxClasses = paddingXMapUtil[paddingX] || paddingXMapUtil.md;
-  const itemRadiusClasses = borderRadiusMapUtil[itemBorderRadius]?.mobile || "rounded-lg";
+  const itemRadiusClasses =
+    borderRadiusMapUtil[itemBorderRadius]?.mobile || "rounded-lg";
 
   const alignClasses = {
     left: "text-left",
@@ -20222,15 +21597,22 @@ export function AccordionRender({
           </div>
         )}
         {/* Accordion items */}
-        <div className={variantClasses} style={{ borderColor: resolvedBorderColor }}>
+        <div
+          className={variantClasses}
+          style={{ borderColor: resolvedBorderColor }}
+        >
           {items.map((item, i) => (
             <details
               key={i}
               open={item.defaultOpen || i === 0}
               className={`group ${itemClasses}`}
               style={{
-                ...(variant === "filled" ? { backgroundColor: resolvedFilledBg } : {}),
-                ...(variant === "separated" || variant === "simple" ? { borderColor: resolvedBorderColor } : {}),
+                ...(variant === "filled"
+                  ? { backgroundColor: resolvedFilledBg }
+                  : {}),
+                ...(variant === "separated" || variant === "simple"
+                  ? { borderColor: resolvedBorderColor }
+                  : {}),
               }}
             >
               <summary
@@ -20291,7 +21673,14 @@ export interface TabsProps {
   keepAlive?: boolean;
   lazyLoad?: boolean;
   // Style
-  variant?: "underline" | "pills" | "boxed" | "enclosed" | "soft" | "minimal" | "lifted";
+  variant?:
+    | "underline"
+    | "pills"
+    | "boxed"
+    | "enclosed"
+    | "soft"
+    | "minimal"
+    | "lifted";
   backgroundColor?: string;
   activeColor?: string;
   inactiveColor?: string;
@@ -20385,34 +21774,53 @@ export function TabsRender(props: TabsProps) {
   const variant = props.variant || "underline";
   const tabsPosition = props.tabsPosition || "top";
   const centered = props.centered ?? true;
-  const resolvedActiveColor = props.activeColor || props.activeTabTextColor || props.accentColor || "var(--brand-primary, #3b82f6)";
-  const resolvedActiveBg = props.activeBackgroundColor || props.activeTabColor || (variant === "underline" || variant === "minimal" ? "transparent" : resolvedActiveColor);
-  const resolvedActiveText = variant === "underline" || variant === "minimal" ? resolvedActiveColor : (props.activeTabTextColor || "#ffffff");
-  const resolvedInactiveColor = props.inactiveColor || props.inactiveTabTextColor || props.textColor || "#6b7280";
+  const resolvedActiveColor =
+    props.activeColor ||
+    props.activeTabTextColor ||
+    props.accentColor ||
+    "var(--brand-primary, #3b82f6)";
+  const resolvedActiveBg =
+    props.activeBackgroundColor ||
+    props.activeTabColor ||
+    (variant === "underline" || variant === "minimal"
+      ? "transparent"
+      : resolvedActiveColor);
+  const resolvedActiveText =
+    variant === "underline" || variant === "minimal"
+      ? resolvedActiveColor
+      : props.activeTabTextColor || "#ffffff";
+  const resolvedInactiveColor =
+    props.inactiveColor ||
+    props.inactiveTabTextColor ||
+    props.textColor ||
+    "#6b7280";
   const resolvedInactiveBg = props.inactiveTabColor || "transparent";
   const resolvedHoverColor = props.hoverColor || resolvedActiveColor;
   const resolvedIndicatorColor = props.indicatorColor || resolvedActiveColor;
-  const resolvedBorderColor = props.borderColor || props.tabBorderColor || "#e5e7eb";
+  const resolvedBorderColor =
+    props.borderColor || props.tabBorderColor || "#e5e7eb";
   const resolvedContentBg = props.contentBackgroundColor || undefined;
   const resolvedTitleColor = props.titleColor || props.textColor;
   const resolvedSubtitleColor = props.subtitleColor || props.textColor;
   const textColor = props.textColor;
 
   // Filter hidden tabs
-  const tabs = rawTabs.filter(tab => !tab.hidden);
+  const tabs = rawTabs.filter((tab) => !tab.hidden);
 
   const [activeTab, setActiveTab] = React.useState(() => {
     const idx = Math.min(defaultTab, tabs.length - 1);
     return idx >= 0 ? idx : 0;
   });
-  const [visitedTabs, setVisitedTabs] = React.useState<Set<number>>(() => new Set([activeTab]));
+  const [visitedTabs, setVisitedTabs] = React.useState<Set<number>>(
+    () => new Set([activeTab]),
+  );
   const tabListRef = React.useRef<HTMLDivElement>(null);
   const tabRefs = React.useRef<(HTMLButtonElement | null)[]>([]);
 
   const handleTabChange = (index: number) => {
     if (tabs[index]?.disabled) return;
     setActiveTab(index);
-    setVisitedTabs(prev => new Set(prev).add(index));
+    setVisitedTabs((prev) => new Set(prev).add(index));
   };
 
   // Keyboard navigation
@@ -20425,18 +21833,52 @@ export function TabsRender(props: TabsProps) {
 
     if (e.key === prevKey) {
       e.preventDefault();
-      for (let i = currentIndex - 1; i >= 0; i--) { if (!tabs[i]?.disabled) { targetIndex = i; break; } }
-      if (targetIndex === -1) { for (let i = tabs.length - 1; i > currentIndex; i--) { if (!tabs[i]?.disabled) { targetIndex = i; break; } } }
+      for (let i = currentIndex - 1; i >= 0; i--) {
+        if (!tabs[i]?.disabled) {
+          targetIndex = i;
+          break;
+        }
+      }
+      if (targetIndex === -1) {
+        for (let i = tabs.length - 1; i > currentIndex; i--) {
+          if (!tabs[i]?.disabled) {
+            targetIndex = i;
+            break;
+          }
+        }
+      }
     } else if (e.key === nextKey) {
       e.preventDefault();
-      for (let i = currentIndex + 1; i < tabs.length; i++) { if (!tabs[i]?.disabled) { targetIndex = i; break; } }
-      if (targetIndex === -1) { for (let i = 0; i < currentIndex; i++) { if (!tabs[i]?.disabled) { targetIndex = i; break; } } }
+      for (let i = currentIndex + 1; i < tabs.length; i++) {
+        if (!tabs[i]?.disabled) {
+          targetIndex = i;
+          break;
+        }
+      }
+      if (targetIndex === -1) {
+        for (let i = 0; i < currentIndex; i++) {
+          if (!tabs[i]?.disabled) {
+            targetIndex = i;
+            break;
+          }
+        }
+      }
     } else if (e.key === "Home") {
       e.preventDefault();
-      for (let i = 0; i < tabs.length; i++) { if (!tabs[i]?.disabled) { targetIndex = i; break; } }
+      for (let i = 0; i < tabs.length; i++) {
+        if (!tabs[i]?.disabled) {
+          targetIndex = i;
+          break;
+        }
+      }
     } else if (e.key === "End") {
       e.preventDefault();
-      for (let i = tabs.length - 1; i >= 0; i--) { if (!tabs[i]?.disabled) { targetIndex = i; break; } }
+      for (let i = tabs.length - 1; i >= 0; i--) {
+        if (!tabs[i]?.disabled) {
+          targetIndex = i;
+          break;
+        }
+      }
     }
 
     if (targetIndex >= 0) {
@@ -20446,59 +21888,150 @@ export function TabsRender(props: TabsProps) {
   };
 
   // Size classes
-  const sizeClasses = { sm: "text-sm px-3 py-1.5", md: "text-sm px-4 py-2", lg: "text-base px-5 py-2.5" }[size] || "text-sm px-4 py-2";
-  const gapClass = { none: "gap-0", sm: "gap-1", md: "gap-2", lg: "gap-4" }[gap] || "gap-1";
-  const iconSizeClass = { sm: "text-sm", md: "text-base", lg: "text-lg" }[iconSize] || "text-base";
+  const sizeClasses =
+    {
+      sm: "text-sm px-3 py-1.5",
+      md: "text-sm px-4 py-2",
+      lg: "text-base px-5 py-2.5",
+    }[size] || "text-sm px-4 py-2";
+  const gapClass =
+    { none: "gap-0", sm: "gap-1", md: "gap-2", lg: "gap-4" }[gap] || "gap-1";
+  const iconSizeClass =
+    { sm: "text-sm", md: "text-base", lg: "text-lg" }[iconSize] || "text-base";
   const contentPadClass: Record<string, string> = {
-    none: "p-0", xs: "p-2", sm: "p-4", md: "p-6", lg: "p-8", xl: "p-10", "2xl": "p-12",
+    none: "p-0",
+    xs: "p-2",
+    sm: "p-4",
+    md: "p-6",
+    lg: "p-8",
+    xl: "p-10",
+    "2xl": "p-12",
   };
   const contentPad = contentPadClass[props.contentPadding || "md"] || "p-6";
-  const contentMinHClass = { auto: "", sm: "min-h-[150px]", md: "min-h-[250px]", lg: "min-h-[350px]" }[contentMinHeight] || "";
+  const contentMinHClass =
+    { auto: "", sm: "min-h-[150px]", md: "min-h-[250px]", lg: "min-h-[350px]" }[
+      contentMinHeight
+    ] || "";
   const contentRadiusClass: Record<string, string> = {
-    none: "rounded-none", sm: "rounded-sm", md: "rounded-md", lg: "rounded-lg", xl: "rounded-xl", full: "rounded-full",
+    none: "rounded-none",
+    sm: "rounded-sm",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+    full: "rounded-full",
   };
-  const contentRadius = contentRadiusClass[props.contentBorderRadius || "none"] || "";
+  const contentRadius =
+    contentRadiusClass[props.contentBorderRadius || "none"] || "";
   const tabRadiusClass: Record<string, string> = {
-    none: "", sm: "rounded-sm", md: "rounded-md", lg: "rounded-lg", xl: "rounded-xl", full: "rounded-full",
+    none: "",
+    sm: "rounded-sm",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+    full: "rounded-full",
   };
 
   // Variant-specific tab styles
   const getTabStyle = (isActive: boolean): React.CSSProperties => {
-    const base: React.CSSProperties = { transition: `all ${animationDuration}ms ease` };
+    const base: React.CSSProperties = {
+      transition: `all ${animationDuration}ms ease`,
+    };
     switch (variant) {
       case "pills":
-        return { ...base, backgroundColor: isActive ? resolvedActiveBg : resolvedInactiveBg, color: isActive ? resolvedActiveText : resolvedInactiveColor, borderRadius: "9999px" };
+        return {
+          ...base,
+          backgroundColor: isActive ? resolvedActiveBg : resolvedInactiveBg,
+          color: isActive ? resolvedActiveText : resolvedInactiveColor,
+          borderRadius: "9999px",
+        };
       case "boxed":
-        return { ...base, backgroundColor: isActive ? resolvedActiveBg : resolvedInactiveBg, color: isActive ? resolvedActiveText : resolvedInactiveColor, border: `1px solid ${isActive ? resolvedActiveBg : resolvedBorderColor}`, borderRadius: tabRadiusClass[props.borderRadius || "md"] ? undefined : "0.375rem" };
+        return {
+          ...base,
+          backgroundColor: isActive ? resolvedActiveBg : resolvedInactiveBg,
+          color: isActive ? resolvedActiveText : resolvedInactiveColor,
+          border: `1px solid ${isActive ? resolvedActiveBg : resolvedBorderColor}`,
+          borderRadius: tabRadiusClass[props.borderRadius || "md"]
+            ? undefined
+            : "0.375rem",
+        };
       case "enclosed":
-        return { ...base, backgroundColor: isActive ? (resolvedContentBg || "#ffffff") : "transparent", color: isActive ? resolvedActiveColor : resolvedInactiveColor, borderTop: `2px solid ${isActive ? resolvedIndicatorColor : "transparent"}`, borderLeft: `1px solid ${isActive ? resolvedBorderColor : "transparent"}`, borderRight: `1px solid ${isActive ? resolvedBorderColor : "transparent"}`, borderBottom: isActive ? `1px solid ${resolvedContentBg || "#ffffff"}` : `1px solid ${resolvedBorderColor}`, marginBottom: isActive ? "-1px" : "0", borderRadius: "0.375rem 0.375rem 0 0" };
+        return {
+          ...base,
+          backgroundColor: isActive
+            ? resolvedContentBg || "#ffffff"
+            : "transparent",
+          color: isActive ? resolvedActiveColor : resolvedInactiveColor,
+          borderTop: `2px solid ${isActive ? resolvedIndicatorColor : "transparent"}`,
+          borderLeft: `1px solid ${isActive ? resolvedBorderColor : "transparent"}`,
+          borderRight: `1px solid ${isActive ? resolvedBorderColor : "transparent"}`,
+          borderBottom: isActive
+            ? `1px solid ${resolvedContentBg || "#ffffff"}`
+            : `1px solid ${resolvedBorderColor}`,
+          marginBottom: isActive ? "-1px" : "0",
+          borderRadius: "0.375rem 0.375rem 0 0",
+        };
       case "soft":
-        return { ...base, backgroundColor: isActive ? `${resolvedActiveColor}15` : "transparent", color: isActive ? resolvedActiveColor : resolvedInactiveColor, borderRadius: "0.5rem" };
+        return {
+          ...base,
+          backgroundColor: isActive
+            ? `${resolvedActiveColor}15`
+            : "transparent",
+          color: isActive ? resolvedActiveColor : resolvedInactiveColor,
+          borderRadius: "0.5rem",
+        };
       case "minimal":
-        return { ...base, backgroundColor: "transparent", color: isActive ? resolvedActiveColor : resolvedInactiveColor, fontWeight: isActive ? 600 : 400 };
+        return {
+          ...base,
+          backgroundColor: "transparent",
+          color: isActive ? resolvedActiveColor : resolvedInactiveColor,
+          fontWeight: isActive ? 600 : 400,
+        };
       case "lifted":
-        return { ...base, backgroundColor: isActive ? (resolvedContentBg || "#ffffff") : "transparent", color: isActive ? resolvedActiveColor : resolvedInactiveColor, boxShadow: isActive ? "0 -2px 8px rgba(0,0,0,0.08)" : "none", borderRadius: "0.5rem 0.5rem 0 0", transform: isActive ? "translateY(-2px)" : "none", zIndex: isActive ? 1 : 0 };
+        return {
+          ...base,
+          backgroundColor: isActive
+            ? resolvedContentBg || "#ffffff"
+            : "transparent",
+          color: isActive ? resolvedActiveColor : resolvedInactiveColor,
+          boxShadow: isActive ? "0 -2px 8px rgba(0,0,0,0.08)" : "none",
+          borderRadius: "0.5rem 0.5rem 0 0",
+          transform: isActive ? "translateY(-2px)" : "none",
+          zIndex: isActive ? 1 : 0,
+        };
       case "underline":
       default:
-        return { ...base, backgroundColor: "transparent", color: isActive ? resolvedActiveColor : resolvedInactiveColor, borderBottom: `${indicatorHeight}px solid ${isActive ? resolvedIndicatorColor : "transparent"}` };
+        return {
+          ...base,
+          backgroundColor: "transparent",
+          color: isActive ? resolvedActiveColor : resolvedInactiveColor,
+          borderBottom: `${indicatorHeight}px solid ${isActive ? resolvedIndicatorColor : "transparent"}`,
+        };
     }
   };
 
   // Icon rendering
-  const renderIcon = (tab: typeof tabs[0]) => {
+  const renderIcon = (tab: (typeof tabs)[0]) => {
     if (!showIcons || !tab.icon) return null;
     return <span className={`${iconSizeClass} shrink-0`}>{tab.icon}</span>;
   };
 
   // Badge rendering
-  const renderBadge = (tab: typeof tabs[0]) => {
+  const renderBadge = (tab: (typeof tabs)[0]) => {
     if (!showBadges || !tab.badge) return null;
     const badgeColor = tab.badgeColor || resolvedActiveColor;
     if (badgeStyle === "dot") {
-      return <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: badgeColor }} />;
+      return (
+        <span
+          className="w-2 h-2 rounded-full shrink-0"
+          style={{ backgroundColor: badgeColor }}
+        />
+      );
     }
     return (
-      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0" style={{ backgroundColor: badgeColor, color: "#fff" }}>
+      <span
+        className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0"
+        style={{ backgroundColor: badgeColor, color: "#fff" }}
+      >
         {tab.badge}
       </span>
     );
@@ -20507,13 +22040,15 @@ export function TabsRender(props: TabsProps) {
   // Content animation styles
   const getContentAnimation = (): React.CSSProperties => {
     if (animationType === "none") return {};
-    if (animationType === "fade") return { animation: `tabFadeIn ${animationDuration}ms ease` };
-    if (animationType === "scale") return { animation: `tabScaleIn ${animationDuration}ms ease` };
+    if (animationType === "fade")
+      return { animation: `tabFadeIn ${animationDuration}ms ease` };
+    if (animationType === "scale")
+      return { animation: `tabScaleIn ${animationDuration}ms ease` };
     return {};
   };
 
   // Build tab button
-  const renderTabButton = (tab: typeof tabs[0], index: number) => {
+  const renderTabButton = (tab: (typeof tabs)[0], index: number) => {
     const isActive = index === activeTab;
     const tabId = `${id || "tabs"}-tab-${index}`;
     const panelId = `${id || "tabs"}-panel-${index}`;
@@ -20525,7 +22060,9 @@ export function TabsRender(props: TabsProps) {
     return (
       <button
         key={index}
-        ref={(el) => { tabRefs.current[index] = el; }}
+        ref={(el) => {
+          tabRefs.current[index] = el;
+        }}
         id={tabId}
         role="tab"
         aria-selected={isActive}
@@ -20558,8 +22095,15 @@ export function TabsRender(props: TabsProps) {
       aria-orientation={isVertical ? "vertical" : "horizontal"}
       className={`flex ${isVertical ? "flex-col" : `flex-row ${overflowBehavior === "wrap" ? "flex-wrap" : "overflow-x-auto"}`} ${gapClass} ${!isVertical && centered ? "justify-center" : ""} ${!isVertical && fullWidth ? "w-full" : ""} ${isVertical ? "min-w-[140px]" : ""}`}
       style={{
-        ...(showBorder && !isVertical && variant === "underline" ? { borderBottom: `${borderWidth}px solid ${resolvedBorderColor}` } : {}),
-        ...(showBorder && isVertical ? { [tabsPosition === "left" ? "borderRight" : "borderLeft"]: `${borderWidth}px solid ${resolvedBorderColor}` } : {}),
+        ...(showBorder && !isVertical && variant === "underline"
+          ? { borderBottom: `${borderWidth}px solid ${resolvedBorderColor}` }
+          : {}),
+        ...(showBorder && isVertical
+          ? {
+              [tabsPosition === "left" ? "borderRight" : "borderLeft"]:
+                `${borderWidth}px solid ${resolvedBorderColor}`,
+            }
+          : {}),
       }}
     >
       {tabs.map(renderTabButton)}
@@ -20587,7 +22131,9 @@ export function TabsRender(props: TabsProps) {
           backgroundColor: resolvedContentBg,
           ...(isActive ? getContentAnimation() : {}),
         }}
-        dangerouslySetInnerHTML={tab.content ? { __html: contentToHtml(tab.content) } : undefined}
+        dangerouslySetInnerHTML={
+          tab.content ? { __html: contentToHtml(tab.content) } : undefined
+        }
       />
     );
   });
@@ -20609,11 +22155,27 @@ export function TabsRender(props: TabsProps) {
         <div className="max-w-4xl mx-auto">
           {(title || subtitle) && (
             <div className="mb-8 text-center">
-              {title && <h2 className="text-3xl md:text-4xl font-bold mb-3" style={{ color: resolvedTitleColor }}>{title}</h2>}
-              {subtitle && <p className="text-lg leading-relaxed max-w-3xl mx-auto opacity-85" style={{ color: resolvedSubtitleColor }}>{subtitle}</p>}
+              {title && (
+                <h2
+                  className="text-3xl md:text-4xl font-bold mb-3"
+                  style={{ color: resolvedTitleColor }}
+                >
+                  {title}
+                </h2>
+              )}
+              {subtitle && (
+                <p
+                  className="text-lg leading-relaxed max-w-3xl mx-auto opacity-85"
+                  style={{ color: resolvedSubtitleColor }}
+                >
+                  {subtitle}
+                </p>
+              )}
             </div>
           )}
-          <div className={`${isVertical ? "flex gap-6" : ""} ${isVertical && tabsPosition === "right" ? "flex-row-reverse" : ""}`}>
+          <div
+            className={`${isVertical ? "flex gap-6" : ""} ${isVertical && tabsPosition === "right" ? "flex-row-reverse" : ""}`}
+          >
             {tabsPosition !== "bottom" && tabListEl}
             <div className={`${isVertical ? "flex-1" : ""}`}>{panelEls}</div>
             {tabsPosition === "bottom" && tabListEl}
@@ -20723,7 +22285,14 @@ export function ModalRender({
 
 export interface BadgeProps {
   text?: string;
-  variant?: "default" | "primary" | "success" | "warning" | "error" | "info" | "outline";
+  variant?:
+    | "default"
+    | "primary"
+    | "success"
+    | "warning"
+    | "error"
+    | "info"
+    | "outline";
   size?: "xs" | "sm" | "md" | "lg";
   rounded?: "default" | "full";
   outline?: boolean;
@@ -20750,7 +22319,10 @@ export interface BadgeProps {
 }
 
 // Pre-bundled icon subset for badge iconName resolution
-const BADGE_ICONS: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
+const BADGE_ICONS: Record<
+  string,
+  React.ComponentType<{ className?: string; style?: React.CSSProperties }>
+> = {
   check: Check,
   x: X,
   star: Star,
@@ -20834,7 +22406,8 @@ export function BadgeRender({
     error: {
       bg: "color-mix(in srgb, var(--destructive, #dc2626) 15%, transparent)",
       text: "var(--destructive, #991b1b)",
-      border: "color-mix(in srgb, var(--destructive, #dc2626) 40%, transparent)",
+      border:
+        "color-mix(in srgb, var(--destructive, #dc2626) 40%, transparent)",
     },
     info: {
       bg: "color-mix(in srgb, var(--info, #0ea5e9) 15%, transparent)",
@@ -20899,7 +22472,7 @@ export function BadgeRender({
   const sharedStyle: React.CSSProperties = {
     backgroundColor: backgroundColor || (isOutline ? "transparent" : styles.bg),
     color: textColor || styles.text,
-    borderColor: isOutline ? (borderColorProp || styles.border) : undefined,
+    borderColor: isOutline ? borderColorProp || styles.border : undefined,
   };
 
   if (href) {
@@ -20918,11 +22491,7 @@ export function BadgeRender({
   }
 
   return (
-    <span
-      id={id}
-      className={sharedClasses}
-      style={sharedStyle}
-    >
+    <span id={id} className={sharedClasses} style={sharedStyle}>
       {content}
     </span>
   );
@@ -21128,8 +22697,7 @@ export function ButtonGroupRender({
   id,
   className = "",
 }: ButtonGroupProps) {
-  const directionClass =
-    direction === "horizontal" ? "flex-row" : "flex-col";
+  const directionClass = direction === "horizontal" ? "flex-row" : "flex-col";
 
   const gapClass = {
     none: "gap-0",
@@ -21397,7 +22965,9 @@ export function BreadcrumbRender({
     dot: "•",
     chevron: (
       <svg
-        className={size === "sm" ? "w-3 h-3" : size === "lg" ? "w-5 h-5" : "w-4 h-4"}
+        className={
+          size === "sm" ? "w-3 h-3" : size === "lg" ? "w-5 h-5" : "w-4 h-4"
+        }
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -21419,11 +22989,7 @@ export function BreadcrumbRender({
     const boundary = Math.floor(maxItems / 2);
     const start = items.slice(0, boundary);
     const end = items.slice(-boundary);
-    displayItems = [
-      ...start,
-      { label: "…", href: undefined },
-      ...end,
-    ];
+    displayItems = [...start, { label: "…", href: undefined }, ...end];
   }
 
   const containerClasses =
@@ -21458,7 +23024,13 @@ export function BreadcrumbRender({
                 aria-label="Home"
               >
                 <svg
-                  className={size === "sm" ? "w-3 h-3" : size === "lg" ? "w-5 h-5" : "w-4 h-4"}
+                  className={
+                    size === "sm"
+                      ? "w-3 h-3"
+                      : size === "lg"
+                        ? "w-5 h-5"
+                        : "w-4 h-4"
+                  }
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -21685,10 +23257,7 @@ export function PaginationRender({
           >
             {prevLabel}
           </button>
-          <span
-            className="text-sm tabular-nums"
-            style={{ color: btnColor }}
-          >
+          <span className="text-sm tabular-nums" style={{ color: btnColor }}>
             {currentPage} / {totalPages}
           </span>
           <button
@@ -21715,7 +23284,11 @@ export function PaginationRender({
         <div className="inline-flex items-center gap-1">
           {pages.map((page, idx) =>
             page === "..." ? (
-              <span key={`e-${idx}`} className="px-1" style={{ color: btnColor }}>
+              <span
+                key={`e-${idx}`}
+                className="px-1"
+                style={{ color: btnColor }}
+              >
                 …
               </span>
             ) : (
@@ -21744,24 +23317,20 @@ export function PaginationRender({
     return (
       <nav id={id} aria-label={ariaLabel} className={className}>
         <div className="inline-flex items-center gap-2">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-            (page) => (
-              <button
-                key={page}
-                type="button"
-                onClick={() => handlePageClick(page)}
-                aria-label={`Page ${page}`}
-                aria-current={page === currentPage ? "page" : undefined}
-                className={`${page === currentPage ? "w-3 h-3" : "w-2 h-2"} rounded-full transition-all hover:opacity-80`}
-                style={{
-                  backgroundColor:
-                    page === currentPage
-                      ? acColor
-                      : "var(--border, #d1d5db)",
-                }}
-              />
-            ),
-          )}
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              type="button"
+              onClick={() => handlePageClick(page)}
+              aria-label={`Page ${page}`}
+              aria-current={page === currentPage ? "page" : undefined}
+              className={`${page === currentPage ? "w-3 h-3" : "w-2 h-2"} rounded-full transition-all hover:opacity-80`}
+              style={{
+                backgroundColor:
+                  page === currentPage ? acColor : "var(--border, #d1d5db)",
+              }}
+            />
+          ))}
         </div>
       </nav>
     );
@@ -21769,23 +23338,67 @@ export function PaginationRender({
 
   // Default variant: full pagination
   const chevronLeft = (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+    <svg
+      className="w-4 h-4"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M15 19l-7-7 7-7"
+      />
     </svg>
   );
   const chevronRight = (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+    <svg
+      className="w-4 h-4"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M9 5l7 7-7 7"
+      />
     </svg>
   );
   const chevronsLeft = (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+    <svg
+      className="w-4 h-4"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+      />
     </svg>
   );
   const chevronsRight = (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+    <svg
+      className="w-4 h-4"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M13 5l7 7-7 7M5 5l7 7-7 7"
+      />
     </svg>
   );
 
@@ -21833,8 +23446,7 @@ export function PaginationRender({
               aria-current={page === currentPage ? "page" : undefined}
               className={`${sizeClasses} ${shapeClass} inline-flex items-center justify-center transition-all hover:opacity-80`}
               style={{
-                backgroundColor:
-                  page === currentPage ? acColor : "transparent",
+                backgroundColor: page === currentPage ? acColor : "transparent",
                 color: page === currentPage ? acTextColor : btnColor,
                 fontWeight: page === currentPage ? 600 : 400,
               }}
@@ -22003,7 +23615,10 @@ export function AvatarRender({
       {status && (
         <span
           className={`absolute ${statusPositionClasses} ${statusSizeClasses} rounded-full`}
-          style={{ backgroundColor: statusColors[status], boxShadow: `0 0 0 2px ${borderColor}` }}
+          style={{
+            backgroundColor: statusColors[status],
+            boxShadow: `0 0 0 2px ${borderColor}`,
+          }}
           aria-label={status}
         />
       )}
@@ -22479,7 +24094,14 @@ export interface AnnouncementBarProps {
   linkText?: string;
   dismissible?: boolean;
   position?: "top" | "bottom";
-  variant?: "default" | "success" | "warning" | "error" | "info" | "gradient" | "custom";
+  variant?:
+    | "default"
+    | "success"
+    | "warning"
+    | "error"
+    | "info"
+    | "gradient"
+    | "custom";
   icon?: React.ReactNode;
   textAlign?: "left" | "center" | "right";
   size?: "sm" | "md" | "lg";
@@ -22549,9 +24171,13 @@ export function AnnouncementBarRender({
   const positionClasses = position === "top" ? "top-0" : "bottom-0";
   const stickyClasses = sticky ? `sticky ${positionClasses} z-50` : "";
 
-  const gradientCss = backgroundGradient ? buildGradientCSS(backgroundGradient) : undefined;
+  const gradientCss = backgroundGradient
+    ? buildGradientCSS(backgroundGradient)
+    : undefined;
 
-  const dark = isCustom ? isDarkBackground(backgroundColor) : !["warning"].includes(variant);
+  const dark = isCustom
+    ? isDarkBackground(backgroundColor)
+    : !["warning"].includes(variant);
   const resolvedTextColor = textColor || (dark ? "#ffffff" : "#111827");
   const resolvedLinkColor = linkColor || resolvedTextColor;
 
@@ -22654,11 +24280,14 @@ export function SocialProofRender({
   const platformLogoUrl = getImageUrl(platformLogo);
 
   // Resolve colours with CSS variable fallbacks
-  const resolvedStarColor = starColor || 'var(--color-star, #facc15)';
-  const resolvedEmptyStarColor = emptyStarColor || 'var(--color-star-empty, #d1d5db)';
-  const resolvedScoreBg = scoreBackgroundColor || 'var(--color-success, #22c55e)';
-  const resolvedScoreText = scoreTextColor || '#ffffff';
-  const resolvedMutedText = mutedTextColor || 'var(--color-muted-foreground, #6b7280)';
+  const resolvedStarColor = starColor || "var(--color-star, #facc15)";
+  const resolvedEmptyStarColor =
+    emptyStarColor || "var(--color-star-empty, #d1d5db)";
+  const resolvedScoreBg =
+    scoreBackgroundColor || "var(--color-success, #22c55e)";
+  const resolvedScoreText = scoreTextColor || "#ffffff";
+  const resolvedMutedText =
+    mutedTextColor || "var(--color-muted-foreground, #6b7280)";
 
   // Schema.org JSON-LD for SEO
   const schemaJsonLd = enableSchema ? (
@@ -22668,12 +24297,14 @@ export function SocialProofRender({
         __html: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "AggregateRating",
-          ...(schemaItemReviewed ? {
-            itemReviewed: {
-              "@type": "Organization",
-              name: schemaItemReviewed,
-            },
-          } : {}),
+          ...(schemaItemReviewed
+            ? {
+                itemReviewed: {
+                  "@type": "Organization",
+                  name: schemaItemReviewed,
+                },
+              }
+            : {}),
           ratingValue: String(rating),
           bestRating: String(maxRating),
           worstRating: "1",
@@ -22715,7 +24346,11 @@ export function SocialProofRender({
         </svg>
       ))}
       {hasHalfStar && (
-        <svg className={`${starSize}`} style={{ color: resolvedStarColor }} viewBox="0 0 20 20">
+        <svg
+          className={`${starSize}`}
+          style={{ color: resolvedStarColor }}
+          viewBox="0 0 20 20"
+        >
           <defs>
             <linearGradient id="halfStar">
               <stop offset="50%" stopColor="currentColor" />
@@ -22784,7 +24419,9 @@ export function SocialProofRender({
             </div>
           )}
           {showPlatform && (
-            <div className="text-xs" style={{ color: resolvedMutedText }}>{platform}</div>
+            <div className="text-xs" style={{ color: resolvedMutedText }}>
+              {platform}
+            </div>
           )}
         </div>
       </div>
@@ -22807,7 +24444,10 @@ export function SocialProofRender({
         )}
       </div>
       {showPlatform && (
-        <div className="flex items-center gap-1 text-xs mt-1" style={{ color: resolvedMutedText }}>
+        <div
+          className="flex items-center gap-1 text-xs mt-1"
+          style={{ color: resolvedMutedText }}
+        >
           {platformLogoUrl && (
             <img src={platformLogoUrl} alt={platform} className="w-4 h-4" />
           )}
@@ -22935,7 +24575,9 @@ export function TrustBadgesRender({
               {imageElement}
             </a>
           ) : (
-            <div key={index} style={animStyle}>{imageElement}</div>
+            <div key={index} style={animStyle}>
+              {imageElement}
+            </div>
           );
         })}
       </div>
@@ -23013,13 +24655,18 @@ export function LogoCloudRender({
   const dark = isDarkBackground(backgroundColor);
   const resolvedTitleColor = dark ? "#94a3b8" : "#6b7280";
   const resolvedSubtitleColor = dark ? "#64748b" : "#9ca3af";
-  const resolvedBadgeColor = badgeColor || (dark ? "#e5a956" : "var(--brand-primary, #3b82f6)");
+  const resolvedBadgeColor =
+    badgeColor || (dark ? "#e5a956" : "var(--brand-primary, #3b82f6)");
   const resolvedCardBg = cardBackgroundColor || (dark ? "#1e293b" : "#ffffff");
 
   // Use new padding utils if paddingY/paddingX are specified; fall back to legacy responsive padding
   const useLegacyPadding = !backgroundColor && padding;
-  const pyClasses = useLegacyPadding ? "" : (paddingYMapUtil[paddingY] || paddingYMapUtil.lg);
-  const pxClasses = useLegacyPadding ? "" : (paddingXMapUtil[paddingX] || paddingXMapUtil.md);
+  const pyClasses = useLegacyPadding
+    ? ""
+    : paddingYMapUtil[paddingY] || paddingYMapUtil.lg;
+  const pxClasses = useLegacyPadding
+    ? ""
+    : paddingXMapUtil[paddingX] || paddingXMapUtil.md;
   const legacyPaddingClasses = useLegacyPadding
     ? getResponsiveClasses(padding!, {
         none: ["p-0", "md:p-0", "lg:p-0"],
@@ -23138,7 +24785,9 @@ export function LogoCloudRender({
   };
 
   if (variant === "marquee") {
-    const speedDuration = { slow: "40s", normal: "25s", fast: "15s" }[marqueeSpeed];
+    const speedDuration = { slow: "40s", normal: "25s", fast: "15s" }[
+      marqueeSpeed
+    ];
     return (
       <section
         id={id}
@@ -23152,8 +24801,14 @@ export function LogoCloudRender({
             animationDuration: speedDuration,
             animationPlayState: "running",
           }}
-          onMouseEnter={(e) => { if (pauseOnHover) (e.currentTarget.style.animationPlayState = "paused"); }}
-          onMouseLeave={(e) => { if (pauseOnHover) (e.currentTarget.style.animationPlayState = "running"); }}
+          onMouseEnter={(e) => {
+            if (pauseOnHover)
+              e.currentTarget.style.animationPlayState = "paused";
+          }}
+          onMouseLeave={(e) => {
+            if (pauseOnHover)
+              e.currentTarget.style.animationPlayState = "running";
+          }}
         >
           {[...logos, ...logos].map((logo, index) => (
             <div key={index} className="flex-shrink-0 mx-8 md:mx-12">
@@ -23191,7 +24846,7 @@ export interface ComparisonColumn {
   priceSubtext?: string;
   ctaText?: string;
   ctaLink?: string;
-  ctaVariant?: 'primary' | 'outline';
+  ctaVariant?: "primary" | "outline";
 }
 
 export interface ComparisonRow {
@@ -23218,7 +24873,7 @@ export interface ComparisonTableProps {
   rowHoverColor?: string;
   stickyHeader?: boolean;
   stickyColumn?: boolean;
-  mobileLayout?: 'scroll' | 'stack';
+  mobileLayout?: "scroll" | "stack";
   id?: string;
   className?: string;
   // Legacy support
@@ -23252,21 +24907,28 @@ export function ComparisonTableRender({
   rowHoverColor,
   stickyHeader = true,
   stickyColumn = true,
-  mobileLayout = 'scroll',
+  mobileLayout = "scroll",
   id,
   className = "",
   highlightColor,
 }: ComparisonTableProps) {
   // Resolve colours with CSS variable fallbacks
-  const resolvedHighlightBg = highlightBackgroundColor || 'var(--color-highlight-bg, rgba(14,165,233,0.08))';
-  const resolvedHighlightBorder = highlightBorderColor || 'var(--color-highlight-border, #0ea5e9)';
-  const resolvedCheckColor = checkColor || 'var(--color-check, #22c55e)';
-  const resolvedCrossColor = crossColor || 'var(--color-cross, #9ca3af)';
-  const resolvedHeaderBg = headerBackgroundColor || 'var(--color-muted, #f9fafb)';
-  const resolvedTitleColor = titleColor || 'var(--color-foreground, #111827)';
-  const resolvedSubtitleColor = subtitleColor || 'var(--color-muted-foreground, #6b7280)';
-  const resolvedFeatureColor = featureTextColor || 'var(--color-foreground, #111827)';
-  const resolvedRowHover = rowHoverColor || 'var(--color-muted, rgba(0,0,0,0.03))';
+  const resolvedHighlightBg =
+    highlightBackgroundColor ||
+    "var(--color-highlight-bg, rgba(14,165,233,0.08))";
+  const resolvedHighlightBorder =
+    highlightBorderColor || "var(--color-highlight-border, #0ea5e9)";
+  const resolvedCheckColor = checkColor || "var(--color-check, #22c55e)";
+  const resolvedCrossColor = crossColor || "var(--color-cross, #9ca3af)";
+  const resolvedHeaderBg =
+    headerBackgroundColor || "var(--color-muted, #f9fafb)";
+  const resolvedTitleColor = titleColor || "var(--color-foreground, #111827)";
+  const resolvedSubtitleColor =
+    subtitleColor || "var(--color-muted-foreground, #6b7280)";
+  const resolvedFeatureColor =
+    featureTextColor || "var(--color-foreground, #111827)";
+  const resolvedRowHover =
+    rowHoverColor || "var(--color-muted, rgba(0,0,0,0.03))";
 
   const renderValue = (value: boolean | string) => {
     if (typeof value === "boolean") {
@@ -23323,56 +24985,106 @@ export function ComparisonTableRender({
       {(title || subtitle) && (
         <div className="text-center mb-8 md:mb-12">
           {title && (
-            <h2 className="text-2xl md:text-3xl font-bold" style={{ color: resolvedTitleColor }}>
+            <h2
+              className="text-2xl md:text-3xl font-bold"
+              style={{ color: resolvedTitleColor }}
+            >
               {title}
             </h2>
           )}
-          {subtitle && <p className="mt-2" style={{ color: resolvedSubtitleColor }}>{subtitle}</p>}
+          {subtitle && (
+            <p className="mt-2" style={{ color: resolvedSubtitleColor }}>
+              {subtitle}
+            </p>
+          )}
         </div>
       )}
 
       {/* Mobile stacked layout */}
-      {mobileLayout === 'stack' && (
+      {mobileLayout === "stack" && (
         <div className="md:hidden flex flex-col gap-4">
           {columns.map((col, colIndex) => (
             <div
               key={colIndex}
               className="rounded-lg overflow-hidden"
               style={{
-                border: col.highlight ? `2px solid ${resolvedHighlightBorder}` : `1px solid var(--color-border, #e5e7eb)`,
-                backgroundColor: col.highlight ? resolvedHighlightBg : 'var(--color-background, #ffffff)',
+                border: col.highlight
+                  ? `2px solid ${resolvedHighlightBorder}`
+                  : `1px solid var(--color-border, #e5e7eb)`,
+                backgroundColor: col.highlight
+                  ? resolvedHighlightBg
+                  : "var(--color-background, #ffffff)",
               }}
             >
-              <div className="p-4 text-center" style={{ backgroundColor: resolvedHeaderBg }}>
+              <div
+                className="p-4 text-center"
+                style={{ backgroundColor: resolvedHeaderBg }}
+              >
                 {col.badge && (
                   <span
                     className="inline-block text-xs font-semibold px-2 py-0.5 rounded-full mb-1"
-                    style={{ backgroundColor: resolvedHighlightBorder, color: '#ffffff' }}
+                    style={{
+                      backgroundColor: resolvedHighlightBorder,
+                      color: "#ffffff",
+                    }}
                   >
                     {col.badge}
                   </span>
                 )}
-                <div className="font-bold text-lg" style={{ color: resolvedFeatureColor }}>{col.name}</div>
-                {col.price && <div className="text-xl font-bold mt-1">{col.price}</div>}
-                {col.priceSubtext && <div className="text-xs" style={{ color: resolvedSubtitleColor }}>{col.priceSubtext}</div>}
+                <div
+                  className="font-bold text-lg"
+                  style={{ color: resolvedFeatureColor }}
+                >
+                  {col.name}
+                </div>
+                {col.price && (
+                  <div className="text-xl font-bold mt-1">{col.price}</div>
+                )}
+                {col.priceSubtext && (
+                  <div
+                    className="text-xs"
+                    style={{ color: resolvedSubtitleColor }}
+                  >
+                    {col.priceSubtext}
+                  </div>
+                )}
               </div>
-              <div className="divide-y" style={{ borderColor: 'var(--color-border, #e5e7eb)' }}>
+              <div
+                className="divide-y"
+                style={{ borderColor: "var(--color-border, #e5e7eb)" }}
+              >
                 {rows.map((row, rowIndex) => (
-                  <div key={rowIndex} className="flex items-center justify-between p-3">
-                    <span className="text-sm font-medium" style={{ color: resolvedFeatureColor }}>{row.feature}</span>
-                    <span className="text-sm">{renderValue(row.values[colIndex])}</span>
+                  <div
+                    key={rowIndex}
+                    className="flex items-center justify-between p-3"
+                  >
+                    <span
+                      className="text-sm font-medium"
+                      style={{ color: resolvedFeatureColor }}
+                    >
+                      {row.feature}
+                    </span>
+                    <span className="text-sm">
+                      {renderValue(row.values[colIndex])}
+                    </span>
                   </div>
                 ))}
               </div>
               {col.ctaText && (
                 <div className="p-4 text-center">
                   <a
-                    href={col.ctaLink || '#'}
+                    href={col.ctaLink || "#"}
                     className="inline-block w-full px-6 py-2 rounded-lg font-medium transition-colors text-center"
                     style={
-                      col.ctaVariant === 'outline'
-                        ? { border: `2px solid ${resolvedHighlightBorder}`, color: resolvedHighlightBorder }
-                        : { backgroundColor: resolvedHighlightBorder, color: '#ffffff' }
+                      col.ctaVariant === "outline"
+                        ? {
+                            border: `2px solid ${resolvedHighlightBorder}`,
+                            color: resolvedHighlightBorder,
+                          }
+                        : {
+                            backgroundColor: resolvedHighlightBorder,
+                            color: "#ffffff",
+                          }
                     }
                   >
                     {col.ctaText}
@@ -23385,13 +25097,18 @@ export function ComparisonTableRender({
       )}
 
       {/* Table layout (default scroll mode, or desktop for stack mode) */}
-      <div className={`overflow-x-auto -mx-4 md:mx-0 ${mobileLayout === 'stack' ? 'hidden md:block' : ''}`}>
+      <div
+        className={`overflow-x-auto -mx-4 md:mx-0 ${mobileLayout === "stack" ? "hidden md:block" : ""}`}
+      >
         <table className="w-full min-w-[600px]">
           <thead className={stickyHeader ? "sticky top-0 z-10" : ""}>
             <tr style={{ backgroundColor: resolvedHeaderBg }}>
               <th
                 className={`text-left p-3 md:p-4 font-semibold ${stickyColumn ? "sticky left-0 z-20" : ""}`}
-                style={{ color: resolvedFeatureColor, backgroundColor: resolvedHeaderBg }}
+                style={{
+                  color: resolvedFeatureColor,
+                  backgroundColor: resolvedHeaderBg,
+                }}
               >
                 Features
               </th>
@@ -23399,27 +25116,42 @@ export function ComparisonTableRender({
                 <th
                   key={index}
                   className="text-center p-3 md:p-4"
-                  style={col.highlight ? {
-                    backgroundColor: resolvedHighlightBg,
-                    borderTop: `4px solid ${resolvedHighlightBorder}`,
-                  } : undefined}
+                  style={
+                    col.highlight
+                      ? {
+                          backgroundColor: resolvedHighlightBg,
+                          borderTop: `4px solid ${resolvedHighlightBorder}`,
+                        }
+                      : undefined
+                  }
                 >
                   {col.badge && (
                     <span
                       className="inline-block text-xs font-semibold px-2 py-0.5 rounded-full mb-1"
-                      style={{ backgroundColor: resolvedHighlightBorder, color: '#ffffff' }}
+                      style={{
+                        backgroundColor: resolvedHighlightBorder,
+                        color: "#ffffff",
+                      }}
                     >
                       {col.badge}
                     </span>
                   )}
-                  <div className="font-bold" style={{ color: resolvedFeatureColor }}>{col.name}</div>
+                  <div
+                    className="font-bold"
+                    style={{ color: resolvedFeatureColor }}
+                  >
+                    {col.name}
+                  </div>
                   {col.price && (
                     <div className="text-lg md:text-xl font-bold mt-1">
                       {col.price}
                     </div>
                   )}
                   {col.priceSubtext && (
-                    <div className="text-xs" style={{ color: resolvedSubtitleColor }}>
+                    <div
+                      className="text-xs"
+                      style={{ color: resolvedSubtitleColor }}
+                    >
                       {col.priceSubtext}
                     </div>
                   )}
@@ -23435,7 +25167,10 @@ export function ComparisonTableRender({
                     <td
                       colSpan={columns.length + 1}
                       className="p-3 md:p-4 font-bold text-sm uppercase tracking-wide"
-                      style={{ color: resolvedSubtitleColor, backgroundColor: resolvedHeaderBg }}
+                      style={{
+                        color: resolvedSubtitleColor,
+                        backgroundColor: resolvedHeaderBg,
+                      }}
                     >
                       {group.group}
                     </td>
@@ -23445,9 +25180,7 @@ export function ComparisonTableRender({
                   <tr
                     key={rowIndex}
                     className={
-                      variant === "striped" && rowIndex % 2 === 1
-                        ? ""
-                        : ""
+                      variant === "striped" && rowIndex % 2 === 1 ? "" : ""
                     }
                     style={
                       variant === "striped" && rowIndex % 2 === 1
@@ -23457,7 +25190,10 @@ export function ComparisonTableRender({
                   >
                     <td
                       className={`p-3 md:p-4 font-medium border-b ${stickyColumn ? "sticky left-0 z-10" : ""}`}
-                      style={{ color: resolvedFeatureColor, backgroundColor: 'var(--color-background, #ffffff)' }}
+                      style={{
+                        color: resolvedFeatureColor,
+                        backgroundColor: "var(--color-background, #ffffff)",
+                      }}
                     >
                       <span className="flex items-center gap-1">
                         {row.feature}
@@ -23488,7 +25224,11 @@ export function ComparisonTableRender({
                       <td
                         key={colIndex}
                         className="p-3 md:p-4 text-center border-b"
-                        style={columns[colIndex]?.highlight ? { backgroundColor: resolvedHighlightBg } : undefined}
+                        style={
+                          columns[colIndex]?.highlight
+                            ? { backgroundColor: resolvedHighlightBg }
+                            : undefined
+                        }
                       >
                         {renderValue(value)}
                       </td>
@@ -23499,7 +25239,7 @@ export function ComparisonTableRender({
             ))}
           </tbody>
           {/* CTA Row */}
-          {columns.some(c => c.ctaText) && (
+          {columns.some((c) => c.ctaText) && (
             <tfoot>
               <tr>
                 <td className="p-3 md:p-4"></td>
@@ -23507,12 +25247,18 @@ export function ComparisonTableRender({
                   <td key={index} className="p-3 md:p-4 text-center">
                     {col.ctaText && (
                       <a
-                        href={col.ctaLink || '#'}
+                        href={col.ctaLink || "#"}
                         className="inline-block px-6 py-2 rounded-lg font-medium transition-colors"
                         style={
-                          col.ctaVariant === 'outline'
-                            ? { border: `2px solid ${resolvedHighlightBorder}`, color: resolvedHighlightBorder }
-                            : { backgroundColor: resolvedHighlightBorder, color: '#ffffff' }
+                          col.ctaVariant === "outline"
+                            ? {
+                                border: `2px solid ${resolvedHighlightBorder}`,
+                                color: resolvedHighlightBorder,
+                              }
+                            : {
+                                backgroundColor: resolvedHighlightBorder,
+                                color: "#ffffff",
+                              }
                         }
                       >
                         {col.ctaText}
@@ -24348,7 +26094,8 @@ export function BlogPreviewRender({
   const resolvedTitleColor = titleColor || (dark ? "#f8fafc" : "#111827");
   const resolvedExcerptColor = excerptColor || (dark ? "#94a3b8" : "#6b7280");
   const resolvedMetaColor = metaColor || (dark ? "#64748b" : "#9ca3af");
-  const resolvedCategoryColor = categoryColor || (dark ? "#e5a956" : "var(--brand-primary, #3b82f6)");
+  const resolvedCategoryColor =
+    categoryColor || (dark ? "#e5a956" : "var(--brand-primary, #3b82f6)");
   const resolvedBadgeColor = badgeColor || resolvedCategoryColor;
   const resolvedCardBg = cardBackgroundColor || (dark ? "#1e293b" : "#ffffff");
   const resolvedCardBorder = cardBorderColor || (dark ? "#334155" : "#e5e7eb");
@@ -24356,9 +26103,12 @@ export function BlogPreviewRender({
 
   const pyClasses = paddingYMapUtil[paddingY] || paddingYMapUtil.lg;
   const pxClasses = paddingXMapUtil[paddingX] || paddingXMapUtil.md;
-  const cardRadiusClasses = borderRadiusMapUtil[cardBorderRadius]?.mobile || "rounded-xl";
-  const cardShadowClasses = (shadowMapUtil as Record<string, string>)[cardShadow] || "shadow-md";
-  const imageRadiusClasses = borderRadiusMapUtil[imageRounded]?.mobile || "rounded-lg";
+  const cardRadiusClasses =
+    borderRadiusMapUtil[cardBorderRadius]?.mobile || "rounded-xl";
+  const cardShadowClasses =
+    (shadowMapUtil as Record<string, string>)[cardShadow] || "shadow-md";
+  const imageRadiusClasses =
+    borderRadiusMapUtil[imageRounded]?.mobile || "rounded-lg";
 
   const aspectClasses = {
     video: "aspect-video",
@@ -24436,7 +26186,10 @@ export function BlogPreviewRender({
           )}
 
           {/* Meta */}
-          <div className="flex items-center gap-3 text-sm" style={{ color: resolvedMetaColor }}>
+          <div
+            className="flex items-center gap-3 text-sm"
+            style={{ color: resolvedMetaColor }}
+          >
             {showAuthor && post.author && (
               <div className="flex items-center gap-2">
                 {avatarUrl ? (
@@ -24494,7 +26247,9 @@ export function BlogPreviewRender({
         style={{ borderColor: resolvedCardBorder }}
       >
         {imgUrl && (
-          <div className={`flex-shrink-0 w-32 md:w-48 ${aspectClasses} ${imageRadiusClasses} overflow-hidden`}>
+          <div
+            className={`flex-shrink-0 w-32 md:w-48 ${aspectClasses} ${imageRadiusClasses} overflow-hidden`}
+          >
             <img
               src={imgUrl}
               alt={post.title || "Blog post"}
@@ -24528,11 +26283,18 @@ export function BlogPreviewRender({
               {post.excerpt}
             </p>
           )}
-          <div className="flex items-center gap-2 text-xs md:text-sm" style={{ color: resolvedMetaColor }}>
+          <div
+            className="flex items-center gap-2 text-xs md:text-sm"
+            style={{ color: resolvedMetaColor }}
+          >
             {showAuthor && post.author && (
               <div className="flex items-center gap-1.5">
                 {avatarUrl ? (
-                  <img src={avatarUrl} alt={post.author} className="w-5 h-5 rounded-full object-cover" />
+                  <img
+                    src={avatarUrl}
+                    alt={post.author}
+                    className="w-5 h-5 rounded-full object-cover"
+                  />
                 ) : null}
                 <span>{post.author}</span>
               </div>
@@ -24572,7 +26334,13 @@ export function BlogPreviewRender({
     return (
       <div className="grid lg:grid-cols-2 gap-8">
         {/* Featured Post */}
-        <article className={`group overflow-hidden ${cardRadiusClasses} ${cardShadowClasses}`} style={{ backgroundColor: resolvedCardBg, border: `1px solid ${resolvedCardBorder}` }}>
+        <article
+          className={`group overflow-hidden ${cardRadiusClasses} ${cardShadowClasses}`}
+          style={{
+            backgroundColor: resolvedCardBg,
+            border: `1px solid ${resolvedCardBorder}`,
+          }}
+        >
           {featuredImgUrl && (
             <div className="aspect-[4/3] overflow-hidden">
               <img
@@ -24585,21 +26353,33 @@ export function BlogPreviewRender({
           )}
           <div className="p-6 md:p-8">
             {showCategory && featured.category && (
-              <span className="inline-block text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: resolvedCategoryColor }}>
+              <span
+                className="inline-block text-xs font-semibold uppercase tracking-wide mb-3"
+                style={{ color: resolvedCategoryColor }}
+              >
                 {featured.category}
               </span>
             )}
             {featured.title && (
-              <h3 className="text-xl md:text-2xl font-bold mb-3" style={{ color: resolvedTitleColor }}>
+              <h3
+                className="text-xl md:text-2xl font-bold mb-3"
+                style={{ color: resolvedTitleColor }}
+              >
                 {featured.title}
               </h3>
             )}
             {showExcerpt && featured.excerpt && (
-              <p className="text-base mb-4 line-clamp-3" style={{ color: resolvedExcerptColor }}>
+              <p
+                className="text-base mb-4 line-clamp-3"
+                style={{ color: resolvedExcerptColor }}
+              >
                 {featured.excerpt}
               </p>
             )}
-            <div className="flex items-center gap-3 text-sm" style={{ color: resolvedMetaColor }}>
+            <div
+              className="flex items-center gap-3 text-sm"
+              style={{ color: resolvedMetaColor }}
+            >
               {showAuthor && featured.author && <span>{featured.author}</span>}
               {showDate && featured.date && (
                 <>
@@ -24666,7 +26446,10 @@ export function BlogPreviewRender({
         {variant === "featured" ? (
           renderFeatured()
         ) : variant === "list" ? (
-          <div className="max-w-3xl mx-auto divide-y" style={{ borderColor: resolvedCardBorder }}>
+          <div
+            className="max-w-3xl mx-auto divide-y"
+            style={{ borderColor: resolvedCardBorder }}
+          >
             {posts.map((post, i) => renderListPost(post, i))}
           </div>
         ) : (
@@ -24677,15 +26460,27 @@ export function BlogPreviewRender({
 
         {/* CTA */}
         {ctaText && (
-          <div className={`${headerAlign === "center" ? "text-center" : alignClasses} mt-10 md:mt-14`}>
+          <div
+            className={`${headerAlign === "center" ? "text-center" : alignClasses} mt-10 md:mt-14`}
+          >
             <a
               href={ctaLink || "#"}
               className="inline-flex items-center gap-2 text-base font-semibold hover:opacity-80 transition-opacity"
               style={{ color: resolvedCtaColor }}
             >
               {ctaText}
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </a>
           </div>
