@@ -39,13 +39,13 @@ When sections work together as a system rather than isolated blocks, the AI Desi
 
 ### 0.1 Critical File Map
 
-| File | Path | Purpose | Key Locations |
-|------|------|---------|--------------|
-| **Render Functions** | `src/lib/studio/blocks/renders.tsx` | All 17 section render functions live here | Hero L6837, Features L7243, CTA L8132, Newsletter L16480 |
-| **Shared Utilities** | `src/lib/studio/blocks/layout-utils.ts` | ALL shared class maps, dark-mode utilities, responsive helpers, shape dividers, gradient builder | `paddingYMap` L121, `isDarkBackground()` L454, `getDarkAwareDefaults()` L542, `shapeDividerPaths` L597 |
-| **Converter typeMap** | `src/lib/ai/website-designer/converter.ts` | Maps AI-generated type names → registry types | `typeMap` at L361, `KNOWN_REGISTRY_TYPES` at L728 |
-| **Component Registry** | `src/lib/studio/registry/core-components.ts` | `defineComponent()` calls with field definitions | Newsletter at L13153, Features at L4342 |
-| **Component Metadata** | `src/lib/studio/registry/component-metadata.ts` | Labels, categories, keywords, AI descriptions | `ComponentMetadata` interface + `COMPONENT_METADATA` array |
+| File                   | Path                                            | Purpose                                                                                          | Key Locations                                                                                          |
+| ---------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| **Render Functions**   | `src/lib/studio/blocks/renders.tsx`             | All 17 section render functions live here                                                        | Hero L6837, Features L7243, CTA L8132, Newsletter L16480                                               |
+| **Shared Utilities**   | `src/lib/studio/blocks/layout-utils.ts`         | ALL shared class maps, dark-mode utilities, responsive helpers, shape dividers, gradient builder | `paddingYMap` L121, `isDarkBackground()` L454, `getDarkAwareDefaults()` L542, `shapeDividerPaths` L597 |
+| **Converter typeMap**  | `src/lib/ai/website-designer/converter.ts`      | Maps AI-generated type names → registry types                                                    | `typeMap` at L361, `KNOWN_REGISTRY_TYPES` at L728                                                      |
+| **Component Registry** | `src/lib/studio/registry/core-components.ts`    | `defineComponent()` calls with field definitions                                                 | Newsletter at L13153, Features at L4342                                                                |
+| **Component Metadata** | `src/lib/studio/registry/component-metadata.ts` | Labels, categories, keywords, AI descriptions                                                    | `ComponentMetadata` interface + `COMPONENT_METADATA` array                                             |
 
 ### 0.2 The Props Pipeline (How Data Flows)
 
@@ -66,23 +66,24 @@ AI Designer generates JSON → converter.ts typeMap resolves type name
 ```typescript
 // Import from: "@/lib/studio/blocks/layout-utils"
 import {
-  getResponsiveClasses,    // Resolves responsive props to Tailwind classes
-  paddingYMap,              // "none"|"xs"|"sm"|"md"|"lg"|"xl" → py-* / sm:py-* / lg:py-*
-  paddingXMap,              // "none"|"xs"|"sm"|"md"|"lg" → px-* / sm:px-* / lg:px-*
-  gapMap,                   // "none"|"xs"|"sm"|"md"|"lg"|"xl" → gap-* / sm:gap-* / lg:gap-*
-  maxWidthMap,              // "xs".."7xl"|"full"|"none"|"screen-*" → max-w-*
-  shadowMap,                // "none"|"sm"|"md"|"lg"|"xl"|"2xl"|"inner" → shadow-*
-  borderRadiusMap,          // "none"|"sm"|"md"|"lg"|"xl"|"2xl"|"3xl"|"full" → rounded-* (responsive)
-  paddingMap,               // All-around padding (responsive)
-  marginYMap,               // Vertical margin (responsive)
-  alignItemsMap,            // "start"|"center"|"end"|"stretch"|"baseline" → items-*
-  contentAlignMap,          // "left"|"center"|"right" → items-* text-*
-  verticalAlignMap,         // "top"|"center"|"bottom" → justify-*
-  widthFractionMap,         // "full"|"3/4"|"2/3"|"1/2"|"1/3"|"1/4" → w-*
+  getResponsiveClasses, // Resolves responsive props to Tailwind classes
+  paddingYMap, // "none"|"xs"|"sm"|"md"|"lg"|"xl" → py-* / sm:py-* / lg:py-*
+  paddingXMap, // "none"|"xs"|"sm"|"md"|"lg" → px-* / sm:px-* / lg:px-*
+  gapMap, // "none"|"xs"|"sm"|"md"|"lg"|"xl" → gap-* / sm:gap-* / lg:gap-*
+  maxWidthMap, // "xs".."7xl"|"full"|"none"|"screen-*" → max-w-*
+  shadowMap, // "none"|"sm"|"md"|"lg"|"xl"|"2xl"|"inner" → shadow-*
+  borderRadiusMap, // "none"|"sm"|"md"|"lg"|"xl"|"2xl"|"3xl"|"full" → rounded-* (responsive)
+  paddingMap, // All-around padding (responsive)
+  marginYMap, // Vertical margin (responsive)
+  alignItemsMap, // "start"|"center"|"end"|"stretch"|"baseline" → items-*
+  contentAlignMap, // "left"|"center"|"right" → items-* text-*
+  verticalAlignMap, // "top"|"center"|"bottom" → justify-*
+  widthFractionMap, // "full"|"3/4"|"2/3"|"1/2"|"1/3"|"1/4" → w-*
 } from "@/lib/studio/blocks/layout-utils";
 ```
 
 **Usage pattern:**
+
 ```typescript
 // ✅ CORRECT — use getResponsiveClasses with imported maps
 const pyClasses = getResponsiveClasses(paddingY, paddingYMap);
@@ -98,14 +99,15 @@ const paddingYClasses = { sm: "py-8 md:py-12", ... }; // DO NOT DO THIS
 ```typescript
 // Import from: "@/lib/studio/blocks/layout-utils"
 import {
-  isDarkBackground,       // (hex?: string) => boolean — ITU-R BT.601 luminance, threshold 0.45
-  getDarkAwareDefaults,   // (isDarkBg: boolean) => { borderColor, textColor, mutedTextColor, dividerColor, overlayBg, particleColor, patternColor, glowOpacity }
-  resolveShadow,          // (shadow, isDarkBg) => CSS box-shadow string (glow on dark, "" on light)
-  resolveGlassmorphism,   // (isDarkBg) => { background, backdropFilter, WebkitBackdropFilter, border }
+  isDarkBackground, // (hex?: string) => boolean — ITU-R BT.601 luminance, threshold 0.45
+  getDarkAwareDefaults, // (isDarkBg: boolean) => { borderColor, textColor, mutedTextColor, dividerColor, overlayBg, particleColor, patternColor, glowOpacity }
+  resolveShadow, // (shadow, isDarkBg) => CSS box-shadow string (glow on dark, "" on light)
+  resolveGlassmorphism, // (isDarkBg) => { background, backdropFilter, WebkitBackdropFilter, border }
 } from "@/lib/studio/blocks/layout-utils";
 ```
 
 **Usage pattern:**
+
 ```typescript
 // ✅ CORRECT — detect dark bg, get adaptive defaults
 const darkBg = isDarkBackground(backgroundColor);
@@ -120,8 +122,8 @@ const resolvedBorderColor = borderColor || darkDefaults.borderColor;
 ```typescript
 // Import from: "@/lib/studio/blocks/layout-utils"
 import {
-  shapeDividerPaths,  // Record<string, string> — 11 SVG path strings
-  buildGradientCSS,   // (GradientConfig) => CSS gradient string
+  shapeDividerPaths, // Record<string, string> — 11 SVG path strings
+  buildGradientCSS, // (GradientConfig) => CSS gradient string
 } from "@/lib/studio/blocks/layout-utils";
 
 // Available shapes: wave, wave-smooth, curve, triangle, tilt, arrow,
@@ -132,7 +134,7 @@ import {
 
 ```typescript
 import {
-  getVisibilityClasses,  // ({ hideOnMobile?, hideOnTablet?, hideOnDesktop? }) => class string
+  getVisibilityClasses, // ({ hideOnMobile?, hideOnTablet?, hideOnDesktop? }) => class string
 } from "@/lib/studio/blocks/layout-utils";
 ```
 
@@ -180,22 +182,29 @@ export function MySectionRender({
 
   // 4) Return JSX
   return (
-    <section className={`relative ${pyClasses} ${pxClasses}`} style={sectionStyle}>
+    <section
+      className={`relative ${pyClasses} ${pxClasses}`}
+      style={sectionStyle}
+    >
       <div className={`${maxWClass} mx-auto`}>
         {/* Section header */}
         {(title || subtitle || description || badge) && (
-          <div className={`mb-12 ${headerAlign === "center" ? "text-center" : headerAlign === "right" ? "text-right" : "text-left"}`}>
+          <div
+            className={`mb-12 ${headerAlign === "center" ? "text-center" : headerAlign === "right" ? "text-right" : "text-left"}`}
+          >
             {badge && <span className="...">{badge}</span>}
-            {subtitle && <p style={{ color: darkDefaults.mutedTextColor }}>...</p>}
+            {subtitle && (
+              <p style={{ color: darkDefaults.mutedTextColor }}>...</p>
+            )}
             {title && <h2 className="text-3xl font-bold">...</h2>}
-            {description && <p style={{ color: darkDefaults.mutedTextColor }}>...</p>}
+            {description && (
+              <p style={{ color: darkDefaults.mutedTextColor }}>...</p>
+            )}
           </div>
         )}
 
         {/* Section body — variant-specific content */}
-        <div>
-          {/* Render items/content based on variant */}
-        </div>
+        <div>{/* Render items/content based on variant */}</div>
       </div>
     </section>
   );
@@ -208,12 +217,12 @@ When registering a component in `core-components.ts`, use `defineComponent()` wi
 
 ```typescript
 defineComponent({
-  type: "MySection",           // Must match KNOWN_REGISTRY_TYPES entry
-  label: "My Section",         // Editor display name
-  description: "Short desc",   // Tooltip description
-  category: "sections",        // Category: "sections" | "forms" | "trust" | "navigation" | etc.
-  icon: "LayoutGrid",          // Lucide icon name
-  render: MySectionRender,     // The render function from renders.tsx
+  type: "MySection", // Must match KNOWN_REGISTRY_TYPES entry
+  label: "My Section", // Editor display name
+  description: "Short desc", // Tooltip description
+  category: "sections", // Category: "sections" | "forms" | "trust" | "navigation" | etc.
+  icon: "LayoutGrid", // Lucide icon name
+  render: MySectionRender, // The render function from renders.tsx
   fields: {
     // TEXT — single-line string input
     title: { type: "text", label: "Title", defaultValue: "Hello" },
@@ -237,7 +246,13 @@ defineComponent({
     },
 
     // NUMBER — numeric input with min/max
-    columns: { type: "number", label: "Columns", min: 1, max: 6, defaultValue: 3 },
+    columns: {
+      type: "number",
+      label: "Columns",
+      min: 1,
+      max: 6,
+      defaultValue: 3,
+    },
 
     // TOGGLE — boolean switch
     showBorder: { type: "toggle", label: "Show Border", defaultValue: false },
@@ -296,6 +311,7 @@ Every component MUST also be registered in `component-metadata.ts`:
 ### 0.7 Converter Registration (2 Steps)
 
 **Step 1:** Add aliases to `typeMap` in `converter.ts` (~L361):
+
 ```typescript
 const typeMap: Record<string, string> = {
   // ... existing entries ...
@@ -307,6 +323,7 @@ const typeMap: Record<string, string> = {
 ```
 
 **Step 2:** Add type name to `KNOWN_REGISTRY_TYPES` set in `converter.ts` (~L728):
+
 ```typescript
 const KNOWN_REGISTRY_TYPES = new Set([
   // ... existing entries ...
@@ -368,45 +385,45 @@ FILE 4: src/lib/ai/website-designer/converter.ts
 
 ### All 17 Section Components
 
-| # | Component | Location | Props | Variants | Quality | Key Strengths |
-|---|-----------|----------|-------|----------|---------|---------------|
-| 1 | **HeroRender** | `renders.tsx` L6837 | 22 | 5 (centered/split/fullscreen/minimal/video) | ✅ Strong | Video support, badge, dual buttons, image position, content alignment |
-| 2 | **FeaturesRender** | `renders.tsx` L7243 | 70+ | 10 (cards/minimal/centered/icons-left/icons-top/alternating/bento/list/timeline/masonry) | ✅ Excellent | Most variant-rich section, 4 icon types, CTA built-in, decorator system |
-| 3 | **CTARender** | `renders.tsx` L8132 | 80+ | 10 (centered/left/right/split/splitReverse/banner/floating/minimal/gradient/glass) | ✅ Excellent | Largest prop surface, trust badges, countdown timer, glass effects, 6 background patterns |
-| 4 | **TestimonialsRender** | `renders.tsx` L9450 | 60+ | 10 (cards/minimal/quote/carousel/masonry/slider/grid/featured/bubble/timeline) | ✅ Strong | Carousel settings, rating system (4 styles), quote styling, company logos, video URLs |
-| 5 | **FAQRender** | `renders.tsx` L10154 | 150+ | 10 (accordion/cards/two-column/minimal/tabs/timeline/bubble/modern/grid/floating) | ✅ Excellent | Most props of any section, Schema.org SEO, categories + search, helpful voting, contact CTA |
-| 6 | **StatsRender** | `renders.tsx` L11269 | 80+ | 10 (simple/cards/bordered/icons/minimal/gradient/glass/outline/split/circular) | ✅ Excellent | Counter animation (3 easing types), trend indicators, divider styles, icon backgrounds |
-| 7 | **TeamRender** | `renders.tsx` L12173 | 120+ | 10 (cards/minimal/detailed/grid/list/magazine/overlap/circular/modern/hover-reveal) | ✅ Excellent | Second-largest prop count, 7 social platforms, skills/location, department filtering, leadership highlighting |
-| 8 | **GalleryRender** | `renders.tsx` L13356 | 90+ | 8 (grid/masonry/carousel/justified/spotlight/collage/pinterest/slider) | ✅ Strong | Lightbox, filtering, load-more/pagination, 9 hover effects, caption system |
-| 9 | **NavbarRender** | `renders.tsx` L14272 | 28 | 3 (standard/centered/split) | ⚠️ Good | Sticky, transparent, blur, hide-on-scroll, dual CTAs, mobile menu with 3 animations |
-| 10 | **FooterRender** | `renders.tsx` L14656 | 18 | 3 (simple/columns/centered) | ⚠️ Basic | Newsletter built-in, 6 social platforms, bottom links, copyright |
-| 11 | **NewsletterRender** | `renders.tsx` L16480 | 14 | 3 (inline/stacked/card) | ⚠️ Basic | Dark-background-aware input styling, auto colour detection |
-| 12 | **ContactFormRender** | `renders.tsx` L16139 | 25 | 1 | ⚠️ Limited | Honeypot spam protection, dark-aware styling, form submission with status states |
-| 13 | **PricingRender** | `renders.tsx` L16965 | 16 | 3 (cards/comparison/simple) | ⚠️ Limited | Popular plan highlighting, feature lists (string + object formats), responsive columns |
-| 14 | **AccordionRender** | `renders.tsx` L17194 | 17 | 4 (simple/bordered/separated/filled) | ⚠️ Decent | HTML `<details>` for native accessibility, markdown-to-HTML conversion, icon position |
-| 15 | **CarouselRender** | `renders.tsx` L16683 | 12 | 1 | ⚠️ Basic | Arrow/dot navigation, overlay, aspect ratio options |
-| 16 | **CountdownRender** | `renders.tsx` L16859 | 15 | 3 (simple/cards/circles) | ⚠️ Basic | Live countdown, customisable labels, size options |
-| 17 | **FormRender** | `renders.tsx` L15225 | 40+ | 5 layouts (vertical/horizontal/inline/grid-2/grid-3) | ✅ Good | Submit/reset buttons, loading states, success/error feedback, dividers, animation |
+| #   | Component              | Location             | Props | Variants                                                                                 | Quality      | Key Strengths                                                                                                 |
+| --- | ---------------------- | -------------------- | ----- | ---------------------------------------------------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------- |
+| 1   | **HeroRender**         | `renders.tsx` L6837  | 22    | 5 (centered/split/fullscreen/minimal/video)                                              | ✅ Strong    | Video support, badge, dual buttons, image position, content alignment                                         |
+| 2   | **FeaturesRender**     | `renders.tsx` L7243  | 70+   | 10 (cards/minimal/centered/icons-left/icons-top/alternating/bento/list/timeline/masonry) | ✅ Excellent | Most variant-rich section, 4 icon types, CTA built-in, decorator system                                       |
+| 3   | **CTARender**          | `renders.tsx` L8132  | 80+   | 10 (centered/left/right/split/splitReverse/banner/floating/minimal/gradient/glass)       | ✅ Excellent | Largest prop surface, trust badges, countdown timer, glass effects, 6 background patterns                     |
+| 4   | **TestimonialsRender** | `renders.tsx` L9450  | 60+   | 10 (cards/minimal/quote/carousel/masonry/slider/grid/featured/bubble/timeline)           | ✅ Strong    | Carousel settings, rating system (4 styles), quote styling, company logos, video URLs                         |
+| 5   | **FAQRender**          | `renders.tsx` L10154 | 150+  | 10 (accordion/cards/two-column/minimal/tabs/timeline/bubble/modern/grid/floating)        | ✅ Excellent | Most props of any section, Schema.org SEO, categories + search, helpful voting, contact CTA                   |
+| 6   | **StatsRender**        | `renders.tsx` L11269 | 80+   | 10 (simple/cards/bordered/icons/minimal/gradient/glass/outline/split/circular)           | ✅ Excellent | Counter animation (3 easing types), trend indicators, divider styles, icon backgrounds                        |
+| 7   | **TeamRender**         | `renders.tsx` L12173 | 120+  | 10 (cards/minimal/detailed/grid/list/magazine/overlap/circular/modern/hover-reveal)      | ✅ Excellent | Second-largest prop count, 7 social platforms, skills/location, department filtering, leadership highlighting |
+| 8   | **GalleryRender**      | `renders.tsx` L13356 | 90+   | 8 (grid/masonry/carousel/justified/spotlight/collage/pinterest/slider)                   | ✅ Strong    | Lightbox, filtering, load-more/pagination, 9 hover effects, caption system                                    |
+| 9   | **NavbarRender**       | `renders.tsx` L14272 | 28    | 3 (standard/centered/split)                                                              | ⚠️ Good      | Sticky, transparent, blur, hide-on-scroll, dual CTAs, mobile menu with 3 animations                           |
+| 10  | **FooterRender**       | `renders.tsx` L14656 | 18    | 3 (simple/columns/centered)                                                              | ⚠️ Basic     | Newsletter built-in, 6 social platforms, bottom links, copyright                                              |
+| 11  | **NewsletterRender**   | `renders.tsx` L16480 | 14    | 3 (inline/stacked/card)                                                                  | ⚠️ Basic     | Dark-background-aware input styling, auto colour detection                                                    |
+| 12  | **ContactFormRender**  | `renders.tsx` L16139 | 25    | 1                                                                                        | ⚠️ Limited   | Honeypot spam protection, dark-aware styling, form submission with status states                              |
+| 13  | **PricingRender**      | `renders.tsx` L16965 | 16    | 3 (cards/comparison/simple)                                                              | ⚠️ Limited   | Popular plan highlighting, feature lists (string + object formats), responsive columns                        |
+| 14  | **AccordionRender**    | `renders.tsx` L17194 | 17    | 4 (simple/bordered/separated/filled)                                                     | ⚠️ Decent    | HTML `<details>` for native accessibility, markdown-to-HTML conversion, icon position                         |
+| 15  | **CarouselRender**     | `renders.tsx` L16683 | 12    | 1                                                                                        | ⚠️ Basic     | Arrow/dot navigation, overlay, aspect ratio options                                                           |
+| 16  | **CountdownRender**    | `renders.tsx` L16859 | 15    | 3 (simple/cards/circles)                                                                 | ⚠️ Basic     | Live countdown, customisable labels, size options                                                             |
+| 17  | **FormRender**         | `renders.tsx` L15225 | 40+   | 5 layouts (vertical/horizontal/inline/grid-2/grid-3)                                     | ✅ Good      | Submit/reset buttons, loading states, success/error feedback, dividers, animation                             |
 
 ### Quality Tier Summary
 
-| Tier | Components | Total Props | Status |
-|------|-----------|-------------|--------|
-| **Tier A — Excellent** (70+ props, 10 variants, full animation/responsive) | Features, CTA, FAQ, Stats, Team | 500+ | Production-ready, minor defaults only |
-| **Tier B — Strong** (20-90 props, 5-10 variants) | Hero, Testimonials, Gallery, Form | 220+ | Production-ready, some enhancement opportunities |
-| **Tier C — Basic** (12-28 props, 1-4 variants) | Navbar, Footer, Newsletter, ContactForm, Pricing, Accordion, Carousel, Countdown | 145+ | Functional but underpowered compared to Tier A |
+| Tier                                                                       | Components                                                                       | Total Props | Status                                           |
+| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ----------- | ------------------------------------------------ |
+| **Tier A — Excellent** (70+ props, 10 variants, full animation/responsive) | Features, CTA, FAQ, Stats, Team                                                  | 500+        | Production-ready, minor defaults only            |
+| **Tier B — Strong** (20-90 props, 5-10 variants)                           | Hero, Testimonials, Gallery, Form                                                | 220+        | Production-ready, some enhancement opportunities |
+| **Tier C — Basic** (12-28 props, 1-4 variants)                             | Navbar, Footer, Newsletter, ContactForm, Pricing, Accordion, Carousel, Countdown | 145+        | Functional but underpowered compared to Tier A   |
 
 ### Hardcoded Colour Defaults (7 Issues — All Non-Blocking)
 
-| # | Component | Default | Value | Impact | Fix Priority |
-|---|-----------|---------|-------|--------|-------------|
-| 1 | Navbar | `backgroundColor` | `#ffffff` | Light-only default, overridable | Low — prop exists |
-| 2 | Navbar | `textColor` | `#1f2937` | Dark text assumes light bg | Low — prop exists |
-| 3 | Navbar | `borderColor` | `#e5e7eb` | Light-only border colour | Low — prop exists |
-| 4 | Footer | `backgroundColor` | `#111827` | Dark default, overridable | Low — prop exists |
-| 5 | Footer | `textColor` | `#ffffff` | White text assumes dark bg | Low — prop exists |
-| 6 | Features | `badgeTextColor` | `#ffffff` | White badge text default | Low — prop exists |
-| 7 | CTA | `textColor` | `#ffffff` | Contrast-aware default | Low — smart default |
+| #   | Component | Default           | Value     | Impact                          | Fix Priority        |
+| --- | --------- | ----------------- | --------- | ------------------------------- | ------------------- |
+| 1   | Navbar    | `backgroundColor` | `#ffffff` | Light-only default, overridable | Low — prop exists   |
+| 2   | Navbar    | `textColor`       | `#1f2937` | Dark text assumes light bg      | Low — prop exists   |
+| 3   | Navbar    | `borderColor`     | `#e5e7eb` | Light-only border colour        | Low — prop exists   |
+| 4   | Footer    | `backgroundColor` | `#111827` | Dark default, overridable       | Low — prop exists   |
+| 5   | Footer    | `textColor`       | `#ffffff` | White text assumes dark bg      | Low — prop exists   |
+| 6   | Features  | `badgeTextColor`  | `#ffffff` | White badge text default        | Low — prop exists   |
+| 7   | CTA       | `textColor`       | `#ffffff` | Contrast-aware default          | Low — smart default |
 
 > **Key Finding:** Unlike Buttons (hardcoded Tailwind classes) and Media (hardcoded colours without override props), every section default is **overridable via its corresponding prop**. The AI converter already sets these correctly per-site. The only improvement is changing defaults from hex values to CSS custom properties for automatic dark mode adaptation.
 
@@ -416,25 +433,25 @@ FILE 4: src/lib/ai/website-designer/converter.ts
 converter.ts typeMap → core-components.ts fields → renders.tsx props
 ```
 
-| Component | Converter Aliases | Registry Fields | Render Props | Alignment |
-|-----------|------------------|-----------------|-------------|-----------|
-| Hero | `HeroSection`, `Hero`, `HeroBanner` | 22+ fields | 22 props | ✅ Aligned |
-| Features | `FeaturesSection`, `Features`, `KeyFeatures`, `Benefits`, `Services` | 70+ fields | 70+ props | ✅ Aligned |
-| CTA | `CTABlock`, `CTASection`, `BookNow`, `Reservation` | 80+ fields | 80+ props | ✅ Aligned |
-| Testimonials | `TestimonialsSection`, `Testimonials`, `Reviews` | 60+ fields | 60+ props | ✅ Aligned |
-| FAQ | `FAQSection`, `FAQ`, `FrequentlyAskedQuestions` | 150+ fields | 150+ props | ✅ Aligned |
-| Stats | `StatsSection`, `Stats`, `Numbers`, `Counters` | 80+ fields | 80+ props | ✅ Aligned |
-| Team | `TeamSection`, `Team`, `OurTeam`, `Staff` | 120+ fields | 120+ props | ✅ Aligned |
-| Gallery | `GallerySection`, `Gallery`, `Portfolio`, `ImageGrid` | 90+ fields | 90+ props | ✅ Aligned |
-| Navbar | `Navbar`, `Navigation`, `Header` | 28 fields | 28 props | ✅ Aligned |
-| Footer | `Footer`, `SiteFooter` | 18 fields | 18 props | ✅ Aligned |
-| Newsletter | `Newsletter`, `NewsletterSection` | 14 fields | 14 props | ✅ Aligned |
-| ContactForm | `ContactForm`, `ContactSection` | 25 fields | 25 props | ✅ Aligned |
-| Pricing | `PricingSection`, `Pricing`, `Plans` | 16 fields | 16 props | ✅ Aligned |
-| Accordion | `Accordion`, `AccordionSection` | 17 fields | 17 props | ✅ Aligned |
-| Carousel | `Carousel`, `ImageCarousel` | 12 fields | 12 props | ✅ Aligned |
-| Countdown | `Countdown`, `CountdownTimer` | 15 fields | 15 props | ✅ Aligned |
-| Form | `Form`, `FormSection` | 40+ fields | 40+ props | ✅ Aligned |
+| Component    | Converter Aliases                                                    | Registry Fields | Render Props | Alignment  |
+| ------------ | -------------------------------------------------------------------- | --------------- | ------------ | ---------- |
+| Hero         | `HeroSection`, `Hero`, `HeroBanner`                                  | 22+ fields      | 22 props     | ✅ Aligned |
+| Features     | `FeaturesSection`, `Features`, `KeyFeatures`, `Benefits`, `Services` | 70+ fields      | 70+ props    | ✅ Aligned |
+| CTA          | `CTABlock`, `CTASection`, `BookNow`, `Reservation`                   | 80+ fields      | 80+ props    | ✅ Aligned |
+| Testimonials | `TestimonialsSection`, `Testimonials`, `Reviews`                     | 60+ fields      | 60+ props    | ✅ Aligned |
+| FAQ          | `FAQSection`, `FAQ`, `FrequentlyAskedQuestions`                      | 150+ fields     | 150+ props   | ✅ Aligned |
+| Stats        | `StatsSection`, `Stats`, `Numbers`, `Counters`                       | 80+ fields      | 80+ props    | ✅ Aligned |
+| Team         | `TeamSection`, `Team`, `OurTeam`, `Staff`                            | 120+ fields     | 120+ props   | ✅ Aligned |
+| Gallery      | `GallerySection`, `Gallery`, `Portfolio`, `ImageGrid`                | 90+ fields      | 90+ props    | ✅ Aligned |
+| Navbar       | `Navbar`, `Navigation`, `Header`                                     | 28 fields       | 28 props     | ✅ Aligned |
+| Footer       | `Footer`, `SiteFooter`                                               | 18 fields       | 18 props     | ✅ Aligned |
+| Newsletter   | `Newsletter`, `NewsletterSection`                                    | 14 fields       | 14 props     | ✅ Aligned |
+| ContactForm  | `ContactForm`, `ContactSection`                                      | 25 fields       | 25 props     | ✅ Aligned |
+| Pricing      | `PricingSection`, `Pricing`, `Plans`                                 | 16 fields       | 16 props     | ✅ Aligned |
+| Accordion    | `Accordion`, `AccordionSection`                                      | 17 fields       | 17 props     | ✅ Aligned |
+| Carousel     | `Carousel`, `ImageCarousel`                                          | 12 fields       | 12 props     | ✅ Aligned |
+| Countdown    | `Countdown`, `CountdownTimer`                                        | 15 fields       | 15 props     | ✅ Aligned |
+| Form         | `Form`, `FormSection`                                                | 40+ fields      | 40+ props    | ✅ Aligned |
 
 ---
 
@@ -442,31 +459,31 @@ converter.ts typeMap → core-components.ts fields → renders.tsx props
 
 ### How World-Class Platforms Handle Sections
 
-| Feature | Framer | Webflow | Squarespace | Wix | DRAMAC Current | Gap |
-|---------|--------|---------|-------------|-----|----------------|-----|
-| Section types | ~25 | ~30 | ~20 | ~35 | 17 | ⚠️ Missing 8-10 types |
-| Variants per section | 3-5 avg | 4-8 avg | 2-4 avg | 5-10 avg | 1-10 (avg 5.6) | ✅ Good for Tier A, weak for Tier C |
-| Section transitions | Shape dividers, parallax | Wave/angle/curve dividers | Minimal | Strips, shape dividers | ❌ None | 🔴 Missing |
-| Page composition rules | AI-suggested flow | DnD with templates | Template-locked | AI-suggested | ❌ No ordering intelligence | 🔴 Missing |
-| Schema.org integration | Manual | Via plugins | Limited | Partial | FAQ only | ⚠️ Needs expansion |
-| Section spacing system | Design tokens | Custom CSS | Fixed presets | Adjustable | Tailwind classes per-section | ⚠️ Inconsistent naming |
-| Dark/light section alternation | Auto | Manual | Template-based | Auto | Manual via props | ⚠️ Could be automatic |
-| Responsive preview | 3 breakpoints | Full responsive | 2 breakpoints | Full responsive | 3 breakpoints (mobile/tablet/desktop) | ✅ Good |
+| Feature                        | Framer                   | Webflow                   | Squarespace     | Wix                    | DRAMAC Current                        | Gap                                 |
+| ------------------------------ | ------------------------ | ------------------------- | --------------- | ---------------------- | ------------------------------------- | ----------------------------------- |
+| Section types                  | ~25                      | ~30                       | ~20             | ~35                    | 17                                    | ⚠️ Missing 8-10 types               |
+| Variants per section           | 3-5 avg                  | 4-8 avg                   | 2-4 avg         | 5-10 avg               | 1-10 (avg 5.6)                        | ✅ Good for Tier A, weak for Tier C |
+| Section transitions            | Shape dividers, parallax | Wave/angle/curve dividers | Minimal         | Strips, shape dividers | ❌ None                               | 🔴 Missing                          |
+| Page composition rules         | AI-suggested flow        | DnD with templates        | Template-locked | AI-suggested           | ❌ No ordering intelligence           | 🔴 Missing                          |
+| Schema.org integration         | Manual                   | Via plugins               | Limited         | Partial                | FAQ only                              | ⚠️ Needs expansion                  |
+| Section spacing system         | Design tokens            | Custom CSS                | Fixed presets   | Adjustable             | Tailwind classes per-section          | ⚠️ Inconsistent naming              |
+| Dark/light section alternation | Auto                     | Manual                    | Template-based  | Auto                   | Manual via props                      | ⚠️ Could be automatic               |
+| Responsive preview             | 3 breakpoints            | Full responsive           | 2 breakpoints   | Full responsive        | 3 breakpoints (mobile/tablet/desktop) | ✅ Good                             |
 
 ### Missing Section Types vs. Competitors
 
-| Section Type | Framer | Webflow | Squarespace | Wix | DRAMAC | Priority |
-|-------------|--------|---------|-------------|-----|--------|----------|
-| **Logo Cloud / Client Bar** | ✅ | ✅ | ✅ | ✅ | ❌ | 🔴 High |
-| **Blog / Article Preview** | ✅ | ✅ | ✅ | ✅ | ❌ | 🔴 High |
-| **Banner / Announcement Bar** | ✅ | ✅ | ✅ | ✅ | ❌ | 🔴 High |
-| **Comparison Table** | ✅ | ✅ | ❌ | ✅ | ❌ | ⚠️ Medium |
-| **Timeline / History** | ✅ | ✅ | ❌ | ✅ | ❌ (variant in Features/FAQ) | ⚠️ Medium |
-| **Process / How It Works** | ✅ | ✅ | ✅ | ✅ | ❌ (variant in Features) | ⚠️ Medium |
-| **Map / Location** | ❌ | ✅ | ✅ | ✅ | ❌ | ⚠️ Medium |
-| **Content / Rich Text** | ✅ | ✅ | ✅ | ✅ | ❌ | 🔴 High |
-| **404 / Error Page** | ✅ | ✅ | ✅ | ✅ | ❌ | ⚠️ Low |
-| **Breadcrumb Section** | ❌ | ✅ | ❌ | ❌ | ❌ | ⚠️ Low |
+| Section Type                  | Framer | Webflow | Squarespace | Wix | DRAMAC                       | Priority  |
+| ----------------------------- | ------ | ------- | ----------- | --- | ---------------------------- | --------- |
+| **Logo Cloud / Client Bar**   | ✅     | ✅      | ✅          | ✅  | ❌                           | 🔴 High   |
+| **Blog / Article Preview**    | ✅     | ✅      | ✅          | ✅  | ❌                           | 🔴 High   |
+| **Banner / Announcement Bar** | ✅     | ✅      | ✅          | ✅  | ❌                           | 🔴 High   |
+| **Comparison Table**          | ✅     | ✅      | ❌          | ✅  | ❌                           | ⚠️ Medium |
+| **Timeline / History**        | ✅     | ✅      | ❌          | ✅  | ❌ (variant in Features/FAQ) | ⚠️ Medium |
+| **Process / How It Works**    | ✅     | ✅      | ✅          | ✅  | ❌ (variant in Features)     | ⚠️ Medium |
+| **Map / Location**            | ❌     | ✅      | ✅          | ✅  | ❌                           | ⚠️ Medium |
+| **Content / Rich Text**       | ✅     | ✅      | ✅          | ✅  | ❌                           | 🔴 High   |
+| **404 / Error Page**          | ✅     | ✅      | ✅          | ✅  | ❌                           | ⚠️ Low    |
+| **Breadcrumb Section**        | ❌     | ✅      | ❌          | ❌  | ❌                           | ⚠️ Low    |
 
 ---
 
@@ -540,25 +557,25 @@ badgeTextColor?: string;
 
 **Current Compliance:**
 
-| Component | Has Standard Header | Missing Props | Action |
-|-----------|-------------------|---------------|--------|
-| Features | ✅ Full | — | None |
-| CTA | ⚠️ Partial | `titleFont`, `subtitleColor`, `badgeIcon` different | Align naming |
-| FAQ | ✅ Full | — | None |
-| Stats | ✅ Full | — | None |
-| Team | ✅ Full | — | None |
-| Gallery | ✅ Full | — | None |
-| Testimonials | ⚠️ Partial | No `badge`, no `badgeIcon`, no `headerAlign`, no `titleFont` | Add missing |
-| Hero | ⚠️ Different pattern | Different naming (badgeText vs badge) | Align with alias |
-| Navbar | N/A — Navigation, not content | — | Skip |
-| Footer | N/A — Structural | — | Skip |
-| Newsletter | ⚠️ Minimal | No badge, no headerAlign, no titleSize/Color | Add missing |
-| ContactForm | ⚠️ Minimal | No badge, no headerAlign, no titleSize | Add missing |
-| Pricing | ⚠️ Minimal | No badge, no headerAlign, no titleFont | Add missing |
-| Accordion | ⚠️ Partial | No badge, different naming | Add missing |
-| Carousel | ❌ None | No header at all | Add header |
-| Countdown | ⚠️ Minimal | No badge, no headerAlign | Add missing |
-| Form | ⚠️ Partial | No badge, different naming | Align |
+| Component    | Has Standard Header           | Missing Props                                                | Action           |
+| ------------ | ----------------------------- | ------------------------------------------------------------ | ---------------- |
+| Features     | ✅ Full                       | —                                                            | None             |
+| CTA          | ⚠️ Partial                    | `titleFont`, `subtitleColor`, `badgeIcon` different          | Align naming     |
+| FAQ          | ✅ Full                       | —                                                            | None             |
+| Stats        | ✅ Full                       | —                                                            | None             |
+| Team         | ✅ Full                       | —                                                            | None             |
+| Gallery      | ✅ Full                       | —                                                            | None             |
+| Testimonials | ⚠️ Partial                    | No `badge`, no `badgeIcon`, no `headerAlign`, no `titleFont` | Add missing      |
+| Hero         | ⚠️ Different pattern          | Different naming (badgeText vs badge)                        | Align with alias |
+| Navbar       | N/A — Navigation, not content | —                                                            | Skip             |
+| Footer       | N/A — Structural              | —                                                            | Skip             |
+| Newsletter   | ⚠️ Minimal                    | No badge, no headerAlign, no titleSize/Color                 | Add missing      |
+| ContactForm  | ⚠️ Minimal                    | No badge, no headerAlign, no titleSize                       | Add missing      |
+| Pricing      | ⚠️ Minimal                    | No badge, no headerAlign, no titleFont                       | Add missing      |
+| Accordion    | ⚠️ Partial                    | No badge, different naming                                   | Add missing      |
+| Carousel     | ❌ None                       | No header at all                                             | Add header       |
+| Countdown    | ⚠️ Minimal                    | No badge, no headerAlign                                     | Add missing      |
+| Form         | ⚠️ Partial                    | No badge, different naming                                   | Align            |
 
 ### 3.3 Standard Section Sizing Props
 
@@ -575,7 +592,11 @@ maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "full";
 
 ```typescript
 // ✅ CORRECT — import from layout-utils.ts (already 3-breakpoint responsive)
-import { getResponsiveClasses, paddingYMap, paddingXMap } from "@/lib/studio/blocks/layout-utils";
+import {
+  getResponsiveClasses,
+  paddingYMap,
+  paddingXMap,
+} from "@/lib/studio/blocks/layout-utils";
 
 const pyClasses = getResponsiveClasses(paddingY, paddingYMap);
 // paddingYMap keys: "none" | "xs" | "sm" | "md" | "lg" | "xl"
@@ -604,25 +625,25 @@ backgroundOverlayOpacity?: number;
 
 **Current Compliance:**
 
-| Component | Has Standard Background | Missing | Action |
-|-----------|------------------------|---------|--------|
-| Features | ✅ Full | — | None |
-| CTA | ⚠️ Different naming | Uses separate props not grouped under `backgroundStyle` | Alias |
-| FAQ | ✅ Full | — | None |
-| Stats | ✅ Full | — | None |
-| Team | ✅ Full | — | None |
-| Gallery | ✅ Full | — | None |
-| Testimonials | ⚠️ Slightly different | Uses `backgroundGradient` boolean instead of `backgroundStyle` | Migrate |
-| Hero | ⚠️ Simple | Only `backgroundColor` | Add full background system |
-| Navbar | ⚠️ Simple | Only `backgroundColor` | Keep simple (intentional) |
-| Footer | ⚠️ Simple | Only `backgroundColor` | Add gradient option |
-| Newsletter | ⚠️ Simple | Only `backgroundColor` | Add gradient option |
-| ContactForm | ⚠️ Simple | Only `backgroundColor` | Keep simple (intentional) |
-| Pricing | ⚠️ Simple | Only `backgroundColor` | Add background system |
-| Accordion | ⚠️ Simple | Only `backgroundColor` | Add background system |
-| Carousel | ❌ None | No background props | Add section wrapper |
-| Countdown | ⚠️ Simple | Only `backgroundColor` | Add background system |
-| Form | ⚠️ Simple | Only `backgroundColor` | Keep simple (form container) |
+| Component    | Has Standard Background | Missing                                                        | Action                       |
+| ------------ | ----------------------- | -------------------------------------------------------------- | ---------------------------- |
+| Features     | ✅ Full                 | —                                                              | None                         |
+| CTA          | ⚠️ Different naming     | Uses separate props not grouped under `backgroundStyle`        | Alias                        |
+| FAQ          | ✅ Full                 | —                                                              | None                         |
+| Stats        | ✅ Full                 | —                                                              | None                         |
+| Team         | ✅ Full                 | —                                                              | None                         |
+| Gallery      | ✅ Full                 | —                                                              | None                         |
+| Testimonials | ⚠️ Slightly different   | Uses `backgroundGradient` boolean instead of `backgroundStyle` | Migrate                      |
+| Hero         | ⚠️ Simple               | Only `backgroundColor`                                         | Add full background system   |
+| Navbar       | ⚠️ Simple               | Only `backgroundColor`                                         | Keep simple (intentional)    |
+| Footer       | ⚠️ Simple               | Only `backgroundColor`                                         | Add gradient option          |
+| Newsletter   | ⚠️ Simple               | Only `backgroundColor`                                         | Add gradient option          |
+| ContactForm  | ⚠️ Simple               | Only `backgroundColor`                                         | Keep simple (intentional)    |
+| Pricing      | ⚠️ Simple               | Only `backgroundColor`                                         | Add background system        |
+| Accordion    | ⚠️ Simple               | Only `backgroundColor`                                         | Add background system        |
+| Carousel     | ❌ None                 | No background props                                            | Add section wrapper          |
+| Countdown    | ⚠️ Simple               | Only `backgroundColor`                                         | Add background system        |
+| Form         | ⚠️ Simple               | Only `backgroundColor`                                         | Keep simple (form container) |
 
 ### 3.5 Standard Animation Props
 
@@ -652,6 +673,7 @@ hideDescriptionOnMobile?: boolean;
 **Current State:** 22 props, 5 variants — the simplest of the major sections, yet the most important for first impressions.
 
 **Interface (from source):**
+
 ```typescript
 export interface HeroProps {
   variant?: "centered" | "split" | "fullscreen" | "minimal" | "video";
@@ -682,18 +704,19 @@ export interface HeroProps {
 
 **Enhancement Opportunities:**
 
-| Enhancement | Current | Target | Priority |
-|------------|---------|--------|----------|
-| Background system | `backgroundColor` only | Full gradient/pattern/image/overlay system | 🔴 High |
-| Animation | None | `animateOnScroll`, title typewriter, counter, fade reveal | 🔴 High |
-| Additional variants | 5 | 8 (add `gradient`, `glass`, `parallax`) | ⚠️ Medium |
-| Standard header props | Partial (`badgeText` not `badge`) | Align to standard naming | ⚠️ Medium |
-| Decorative elements | None | Dot/circle/blur decorators (same as other sections) | ⚠️ Medium |
-| Trust badges | None | Logo bar below hero (common pattern) | ⚠️ Medium |
-| `paddingY` values | Missing `none` and `2xl` | Add `none` and `2xl` to match standard | Low |
-| Typed text effect | None | Rotating words in title (e.g., "Build _websites_ / _apps_ / _brands_") | ⚠️ Medium |
+| Enhancement           | Current                           | Target                                                                 | Priority  |
+| --------------------- | --------------------------------- | ---------------------------------------------------------------------- | --------- |
+| Background system     | `backgroundColor` only            | Full gradient/pattern/image/overlay system                             | 🔴 High   |
+| Animation             | None                              | `animateOnScroll`, title typewriter, counter, fade reveal              | 🔴 High   |
+| Additional variants   | 5                                 | 8 (add `gradient`, `glass`, `parallax`)                                | ⚠️ Medium |
+| Standard header props | Partial (`badgeText` not `badge`) | Align to standard naming                                               | ⚠️ Medium |
+| Decorative elements   | None                              | Dot/circle/blur decorators (same as other sections)                    | ⚠️ Medium |
+| Trust badges          | None                              | Logo bar below hero (common pattern)                                   | ⚠️ Medium |
+| `paddingY` values     | Missing `none` and `2xl`          | Add `none` and `2xl` to match standard                                 | Low       |
+| Typed text effect     | None                              | Rotating words in title (e.g., "Build _websites_ / _apps_ / _brands_") | ⚠️ Medium |
 
 **Proposed Enhanced Interface Additions:**
+
 ```typescript
 // ADD to HeroProps
 // Background system (standard)
@@ -728,6 +751,7 @@ trustBarLogos?: Array<{ image: string | ImageValue; alt?: string }>;
 **Current State:** 70+ props, 10 variants — the most versatile section component, already near world-class.
 
 **Key Strengths (keep as-is):**
+
 - 10 layout variants including `bento` and `masonry`
 - 4 icon types (emoji/icon/image/number) with shape/size/position/background
 - Card hover effects (lift/scale/glow/border)
@@ -738,18 +762,19 @@ trustBarLogos?: Array<{ image: string | ImageValue; alt?: string }>;
 
 **Enhancement Opportunities:**
 
-| Enhancement | Priority |
-|------------|----------|
-| Feature item links (each feature as a clickable card) | ⚠️ Medium |
-| Feature item badges (e.g., "New", "Popular", "Beta") | ⚠️ Medium |
-| Feature comparison mode (side-by-side before/after) | Low |
-| Feature item expandable descriptions (click to read more) | Low |
+| Enhancement                                               | Priority  |
+| --------------------------------------------------------- | --------- |
+| Feature item links (each feature as a clickable card)     | ⚠️ Medium |
+| Feature item badges (e.g., "New", "Popular", "Beta")      | ⚠️ Medium |
+| Feature comparison mode (side-by-side before/after)       | Low       |
+| Feature item expandable descriptions (click to read more) | Low       |
 
 ### 4.3 CTARender — The Conversion Engine
 
 **Current State:** 80+ props, 10 variants — the most prop-rich section after FAQ.
 
 **Key Strengths (keep as-is):**
+
 - 10 layout variants including `glass` and `floating`
 - Primary button with 17 props (colour, gradient, icon, shadow, hover effects, animation)
 - 6 background patterns (dots/grid/diagonal/waves/circuit)
@@ -759,12 +784,12 @@ trustBarLogos?: Array<{ image: string | ImageValue; alt?: string }>;
 
 **Enhancement Opportunities:**
 
-| Enhancement | Priority |
-|------------|----------|
-| Compose `ButtonRender` instead of duplicating button logic | ⚠️ Medium (see Buttons Master Plan) |
-| Exit-intent variant (shown when user moves to leave) | Low |
-| A/B test variant toggle (show variant A or B based on config) | Low |
-| Urgency indicators (limited stock, expiring offer) | ⚠️ Medium |
+| Enhancement                                                   | Priority                            |
+| ------------------------------------------------------------- | ----------------------------------- |
+| Compose `ButtonRender` instead of duplicating button logic    | ⚠️ Medium (see Buttons Master Plan) |
+| Exit-intent variant (shown when user moves to leave)          | Low                                 |
+| A/B test variant toggle (show variant A or B based on config) | Low                                 |
+| Urgency indicators (limited stock, expiring offer)            | ⚠️ Medium                           |
 
 ---
 
@@ -775,6 +800,7 @@ trustBarLogos?: Array<{ image: string | ImageValue; alt?: string }>;
 **Current State:** 60+ props, 10 variants — comprehensive social proof.
 
 **Key Strengths:**
+
 - 10 layout variants (cards, carousel, masonry, bubble, timeline, featured)
 - Full avatar system (size/shape/border/position)
 - Rating system with 4 styles (stars/hearts/numeric/thumbs)
@@ -785,18 +811,19 @@ trustBarLogos?: Array<{ image: string | ImageValue; alt?: string }>;
 
 **Enhancement Opportunities:**
 
-| Enhancement | Current | Target | Priority |
-|------------|---------|--------|----------|
-| Standard header props | Missing `badge`, `badgeIcon`, `headerAlign`, `titleFont` | Add full standard header | ⚠️ Medium |
-| Video testimonials | `videoUrl` in data but no player | Embed video player for video testimonials | ⚠️ Medium |
-| Schema.org Review markup | None | `Review`, `AggregateRating` structured data | ⚠️ Medium |
-| Source platform badges | None | "Google Review", "Trustpilot", "Yelp" source indicators | Low |
+| Enhancement              | Current                                                  | Target                                                  | Priority  |
+| ------------------------ | -------------------------------------------------------- | ------------------------------------------------------- | --------- |
+| Standard header props    | Missing `badge`, `badgeIcon`, `headerAlign`, `titleFont` | Add full standard header                                | ⚠️ Medium |
+| Video testimonials       | `videoUrl` in data but no player                         | Embed video player for video testimonials               | ⚠️ Medium |
+| Schema.org Review markup | None                                                     | `Review`, `AggregateRating` structured data             | ⚠️ Medium |
+| Source platform badges   | None                                                     | "Google Review", "Trustpilot", "Yelp" source indicators | Low       |
 
 ### 5.2 FAQRender — The Prop King
 
 **Current State:** 150+ props, 10 variants — the most feature-rich section in the entire system.
 
 **Key Strengths:**
+
 - Schema.org SEO support (FAQPage / HowTo / QAPage)
 - Category filtering with 4 styles (pills/buttons/underline/minimal)
 - Search functionality
@@ -807,16 +834,17 @@ trustBarLogos?: Array<{ image: string | ImageValue; alt?: string }>;
 
 **Assessment:** This component is **feature-complete**. No significant enhancements needed. The only improvements are:
 
-| Enhancement | Priority |
-|------------|----------|
+| Enhancement                                                       | Priority         |
+| ----------------------------------------------------------------- | ---------------- |
 | Ensure Schema.org output is valid (test with Google Rich Results) | Low (validation) |
-| Add `enableSearch` as default true when items > 10 | Low (UX polish) |
+| Add `enableSearch` as default true when items > 10                | Low (UX polish)  |
 
 ### 5.3 StatsRender
 
 **Current State:** 80+ props, 10 variants — strong counter/metrics section.
 
 **Key Strengths:**
+
 - Counter animation with 3 easing types (linear/easeOut/easeInOut)
 - Trend indicators (up/down/neutral)
 - Divider styles (solid/dashed/dotted/gradient)
@@ -824,17 +852,18 @@ trustBarLogos?: Array<{ image: string | ImageValue; alt?: string }>;
 
 **Enhancement Opportunities:**
 
-| Enhancement | Priority |
-|------------|----------|
+| Enhancement                                                                                                | Priority  |
+| ---------------------------------------------------------------------------------------------------------- | --------- |
 | Animated number counting actually implemented (currently props exist but animation may need Framer Motion) | ⚠️ Medium |
-| Progress bar variant (percentage-based stats) | Low |
-| Comparison mode (this year vs last year) | Low |
+| Progress bar variant (percentage-based stats)                                                              | Low       |
+| Comparison mode (this year vs last year)                                                                   | Low       |
 
 ### 5.4 TeamRender — The People Showcase
 
 **Current State:** 120+ props, 10 variants — comprehensive team section.
 
 **Key Strengths:**
+
 - 7 social platforms (LinkedIn, Twitter, Instagram, GitHub, Website, Email, Phone)
 - Skills display (tags/pills/list)
 - Department filtering (pills/dropdown/tabs)
@@ -845,10 +874,10 @@ trustBarLogos?: Array<{ image: string | ImageValue; alt?: string }>;
 
 **Assessment:** Near-complete. Only minor gaps:
 
-| Enhancement | Priority |
-|------------|----------|
-| Add TikTok, YouTube social platforms | Low |
-| Team member detail modal (click to expand) | Low |
+| Enhancement                                | Priority |
+| ------------------------------------------ | -------- |
+| Add TikTok, YouTube social platforms       | Low      |
+| Team member detail modal (click to expand) | Low      |
 
 ---
 
@@ -859,6 +888,7 @@ trustBarLogos?: Array<{ image: string | ImageValue; alt?: string }>;
 **Current State:** 28 props, 3 variants — functional navigation.
 
 **Key Strengths:**
+
 - Sticky + transparent + blur background combination
 - Hide on scroll behaviour
 - Dual CTA buttons (primary + secondary)
@@ -867,20 +897,21 @@ trustBarLogos?: Array<{ image: string | ImageValue; alt?: string }>;
 
 **Enhancement Opportunities:**
 
-| Enhancement | Current | Target | Priority |
-|------------|---------|--------|----------|
-| Mega menu / dropdown support | No dropdowns | Dropdown sub-menus with optional mega menu | 🔴 High |
-| Active link highlighting | None | Current page indicator | ⚠️ Medium |
-| Search integration | None | Optional search icon/bar | ⚠️ Medium |
-| Dark mode toggle | None | Optional dark/light mode switch | Low |
-| Notification badge on CTA | None | Badge count on CTA button | Low |
-| Additional variants | 3 | 5 (add `minimal`, `sidebar`) | ⚠️ Medium |
+| Enhancement                  | Current      | Target                                     | Priority  |
+| ---------------------------- | ------------ | ------------------------------------------ | --------- |
+| Mega menu / dropdown support | No dropdowns | Dropdown sub-menus with optional mega menu | 🔴 High   |
+| Active link highlighting     | None         | Current page indicator                     | ⚠️ Medium |
+| Search integration           | None         | Optional search icon/bar                   | ⚠️ Medium |
+| Dark mode toggle             | None         | Optional dark/light mode switch            | Low       |
+| Notification badge on CTA    | None         | Badge count on CTA button                  | Low       |
+| Additional variants          | 3            | 5 (add `minimal`, `sidebar`)               | ⚠️ Medium |
 
 ### 6.2 FooterRender
 
 **Current State:** 18 props, 3 variants — the most basic Tier A-eligible section.
 
 **Key Strengths:**
+
 - Column-based link groups
 - 6 social platforms
 - Built-in newsletter
@@ -888,15 +919,15 @@ trustBarLogos?: Array<{ image: string | ImageValue; alt?: string }>;
 
 **Enhancement Opportunities:**
 
-| Enhancement | Current | Target | Priority |
-|------------|---------|--------|----------|
+| Enhancement           | Current                    | Target                                      | Priority  |
+| --------------------- | -------------------------- | ------------------------------------------- | --------- |
 | Standard sizing props | Only `paddingY` (3 values) | Full paddingY/paddingX with standard values | ⚠️ Medium |
-| Background system | `backgroundColor` only | Add gradient support | ⚠️ Medium |
-| Contact info section | None | Phone, email, address | ⚠️ Medium |
-| Payment badges | None | Visa/MC/Amex/PayPal icons | Low |
-| App store links | None | iOS/Android download buttons | Low |
-| Additional variants | 3 | 5 (add `minimal`, `modern`) | ⚠️ Medium |
-| Back-to-top button | None | Optional floating scroll-to-top | Low |
+| Background system     | `backgroundColor` only     | Add gradient support                        | ⚠️ Medium |
+| Contact info section  | None                       | Phone, email, address                       | ⚠️ Medium |
+| Payment badges        | None                       | Visa/MC/Amex/PayPal icons                   | Low       |
+| App store links       | None                       | iOS/Android download buttons                | Low       |
+| Additional variants   | 3                          | 5 (add `minimal`, `modern`)                 | ⚠️ Medium |
+| Back-to-top button    | None                       | Optional floating scroll-to-top             | Low       |
 
 ### 6.3 NewsletterRender
 
@@ -904,33 +935,34 @@ trustBarLogos?: Array<{ image: string | ImageValue; alt?: string }>;
 
 **Enhancement Opportunities:**
 
-| Enhancement | Priority |
-|------------|----------|
+| Enhancement                                           | Priority  |
+| ----------------------------------------------------- | --------- |
 | Standard header props (badge, headerAlign, titleSize) | ⚠️ Medium |
-| Standard sizing props (paddingY with full range) | ⚠️ Medium |
-| Background system (gradient/pattern) | ⚠️ Medium |
-| Privacy notice text (GDPR compliance) | ⚠️ Medium |
-| Success state animation | Low |
-| Double opt-in indicator text | Low |
+| Standard sizing props (paddingY with full range)      | ⚠️ Medium |
+| Background system (gradient/pattern)                  | ⚠️ Medium |
+| Privacy notice text (GDPR compliance)                 | ⚠️ Medium |
+| Success state animation                               | Low       |
+| Double opt-in indicator text                          | Low       |
 
 ### 6.4 ContactFormRender
 
 **Current State:** 25 props, 1 variant — functional form.
 
 **Key Strengths:**
+
 - Honeypot spam protection
 - Dark-aware input styling (auto-detects bg darkness)
 - Form submission with status states (idle/submitting/success/error)
 
 **Enhancement Opportunities:**
 
-| Enhancement | Current | Target | Priority |
-|------------|---------|--------|----------|
-| Variants | 1 | 3 (card/side-by-side/minimal) | ⚠️ Medium |
-| Standard header props | Partial | Full standard header with badge, titleSize | ⚠️ Medium |
-| Additional fields | Name, email, phone, subject, message | Add company, select dropdown, file upload | ⚠️ Medium |
-| Map integration | None | Optional map alongside form | Low |
-| reCAPTCHA/Turnstile | Honeypot only | Add Cloudflare Turnstile option | ⚠️ Medium |
+| Enhancement           | Current                              | Target                                     | Priority  |
+| --------------------- | ------------------------------------ | ------------------------------------------ | --------- |
+| Variants              | 1                                    | 3 (card/side-by-side/minimal)              | ⚠️ Medium |
+| Standard header props | Partial                              | Full standard header with badge, titleSize | ⚠️ Medium |
+| Additional fields     | Name, email, phone, subject, message | Add company, select dropdown, file upload  | ⚠️ Medium |
+| Map integration       | None                                 | Optional map alongside form                | Low       |
+| reCAPTCHA/Turnstile   | Honeypot only                        | Add Cloudflare Turnstile option            | ⚠️ Medium |
 
 ---
 
@@ -942,16 +974,16 @@ trustBarLogos?: Array<{ image: string | ImageValue; alt?: string }>;
 
 **Enhancement Opportunities:**
 
-| Enhancement | Current | Target | Priority |
-|------------|---------|--------|----------|
-| Standard header props | Partial (title/subtitle/description only) | Full standard header with badge, headerAlign | ⚠️ Medium |
-| Standard background system | `backgroundColor` only | Full gradient/pattern system | ⚠️ Medium |
-| Toggle (monthly/annual) | None | Price period toggle with savings display | 🔴 High |
-| Feature comparison table | `comparison` variant exists but basic | Full feature matrix with checkmarks/crosses | ⚠️ Medium |
-| Currency formatting | Plain text | Locale-aware currency display | Low |
-| Animation | None | Standard animateOnScroll/stagger | ⚠️ Medium |
-| Card hover effects | Basic shadow only | Standard cardHoverEffect system | Low |
-| Enterprise/custom plan CTA | None | "Contact Sales" option for enterprise tier | ⚠️ Medium |
+| Enhancement                | Current                                   | Target                                       | Priority  |
+| -------------------------- | ----------------------------------------- | -------------------------------------------- | --------- |
+| Standard header props      | Partial (title/subtitle/description only) | Full standard header with badge, headerAlign | ⚠️ Medium |
+| Standard background system | `backgroundColor` only                    | Full gradient/pattern system                 | ⚠️ Medium |
+| Toggle (monthly/annual)    | None                                      | Price period toggle with savings display     | 🔴 High   |
+| Feature comparison table   | `comparison` variant exists but basic     | Full feature matrix with checkmarks/crosses  | ⚠️ Medium |
+| Currency formatting        | Plain text                                | Locale-aware currency display                | Low       |
+| Animation                  | None                                      | Standard animateOnScroll/stagger             | ⚠️ Medium |
+| Card hover effects         | Basic shadow only                         | Standard cardHoverEffect system              | Low       |
+| Enterprise/custom plan CTA | None                                      | "Contact Sales" option for enterprise tier   | ⚠️ Medium |
 
 ### 7.2 AccordionRender
 
@@ -961,13 +993,13 @@ trustBarLogos?: Array<{ image: string | ImageValue; alt?: string }>;
 
 **Enhancement Opportunities:**
 
-| Enhancement | Priority |
-|------------|----------|
+| Enhancement                                                      | Priority  |
+| ---------------------------------------------------------------- | --------- |
 | Standard header props (badge, headerAlign, titleSize, titleFont) | ⚠️ Medium |
-| Standard background system | ⚠️ Medium |
-| Standard animation props | ⚠️ Medium |
-| Nested accordions (sub-items) | Low |
-| Side-by-side icon/image + content layout | Low |
+| Standard background system                                       | ⚠️ Medium |
+| Standard animation props                                         | ⚠️ Medium |
+| Nested accordions (sub-items)                                    | Low       |
+| Side-by-side icon/image + content layout                         | Low       |
 
 ### 7.3 CarouselRender
 
@@ -976,6 +1008,7 @@ trustBarLogos?: Array<{ image: string | ImageValue; alt?: string }>;
 > **Note:** This component is also covered in the **Media Components Master Plan** which proposes expanding it from 12 → 45+ props. The Media plan takes priority for Carousel implementation details. This section covers the section-level wrapper concerns only.
 
 **Section-Level Needs:**
+
 - Wrap in standard `<section>` container with header, padding, background
 - Currently renders as a bare `<div>` — no section structure
 - Add standard header props (title, subtitle, badge)
@@ -988,19 +1021,20 @@ trustBarLogos?: Array<{ image: string | ImageValue; alt?: string }>;
 
 **Enhancement Opportunities:**
 
-| Enhancement | Priority |
-|------------|----------|
-| Standard header props (badge, headerAlign, badgeStyle) | ⚠️ Medium |
-| Standard background system | ⚠️ Medium |
+| Enhancement                                                | Priority  |
+| ---------------------------------------------------------- | --------- |
+| Standard header props (badge, headerAlign, badgeStyle)     | ⚠️ Medium |
+| Standard background system                                 | ⚠️ Medium |
 | Expiry action (show different content when countdown ends) | ⚠️ Medium |
-| CTA button (below countdown) | ⚠️ Medium |
-| Animated digit transitions (flip animation) | Low |
+| CTA button (below countdown)                               | ⚠️ Medium |
+| Animated digit transitions (flip animation)                | Low       |
 
 ### 7.5 FormRender
 
 **Current State:** 40+ props, 5 layouts — form container.
 
 **Key Strengths:**
+
 - 5 layout modes (vertical/horizontal/inline/grid-2/grid-3)
 - Submit + reset buttons with full styling
 - Loading + disabled states
@@ -1018,6 +1052,7 @@ trustBarLogos?: Array<{ image: string | ImageValue; alt?: string }>;
 **Purpose:** Display client/partner/press logos in a horizontal scrolling or grid layout. This is one of the most common trust-building sections on B2B and SaaS websites.
 
 **Proposed Interface:**
+
 ```typescript
 export interface LogoCloudProps {
   // Standard Header
@@ -1084,6 +1119,7 @@ export interface LogoCloudProps {
 **Purpose:** Top-of-page announcement bar for promotions, alerts, or important notices. Sticky, dismissible, with optional CTA.
 
 **Proposed Interface:**
+
 ```typescript
 export interface BannerProps {
   // Content
@@ -1129,6 +1165,7 @@ export interface BannerProps {
 **Purpose:** Generic rich-text content section for long-form content, about pages, policy pages, and blog content. This is the most versatile missing section — every website needs at least one content block.
 
 **Proposed Interface:**
+
 ```typescript
 export interface ContentProps {
   // Standard Header
@@ -1155,7 +1192,13 @@ export interface ContentProps {
   imageShadow?: "none" | "sm" | "md" | "lg";
 
   // Layout
-  variant?: "simple" | "two-column" | "image-left" | "image-right" | "card" | "feature";
+  variant?:
+    | "simple"
+    | "two-column"
+    | "image-left"
+    | "image-right"
+    | "card"
+    | "feature";
   columns?: 1 | 2;
 
   // CTA
@@ -1189,6 +1232,7 @@ export interface ContentProps {
 **Purpose:** Display recent blog posts / articles in grid or list format as a section. Common on homepages and landing pages.
 
 **Proposed Interface:**
+
 ```typescript
 export interface BlogPreviewProps {
   // Standard Header
@@ -1266,6 +1310,7 @@ export interface BlogPreviewProps {
 **Purpose:** Side-by-side feature comparison table for pricing, products, or services.
 
 **Proposed Interface (abbreviated):**
+
 ```typescript
 export interface ComparisonTableProps {
   title?: string;
@@ -1313,6 +1358,7 @@ export interface ComparisonTableProps {
 **Purpose:** Embedded map section for location-based businesses (restaurants, shops, offices).
 
 **Proposed Interface (abbreviated):**
+
 ```typescript
 export interface MapProps {
   title?: string;
@@ -1355,14 +1401,14 @@ export interface MapProps {
 
 ### 8.7 Additional Future Sections (Lower Priority)
 
-| Section | Purpose | Est. Props | Priority |
-|---------|---------|-----------|----------|
-| **ProcessRender** | Step-by-step process (currently Features timeline variant) | ~30 | Low (variant exists) |
-| **TimelineRender** | History/milestones (currently FAQ timeline variant) | ~30 | Low (variant exists) |
-| **ErrorPageRender** | 404/500 error pages | ~15 | Low |
-| **BreadcrumbRender** | Page breadcrumb navigation | ~10 | Low |
-| **DividerSectionRender** | Decorative divider between sections | ~15 | Low |
-| **VideoSectionRender** | Full-width video background/embed | ~25 | ⚠️ Medium |
+| Section                  | Purpose                                                    | Est. Props | Priority             |
+| ------------------------ | ---------------------------------------------------------- | ---------- | -------------------- |
+| **ProcessRender**        | Step-by-step process (currently Features timeline variant) | ~30        | Low (variant exists) |
+| **TimelineRender**       | History/milestones (currently FAQ timeline variant)        | ~30        | Low (variant exists) |
+| **ErrorPageRender**      | 404/500 error pages                                        | ~15        | Low                  |
+| **BreadcrumbRender**     | Page breadcrumb navigation                                 | ~10        | Low                  |
+| **DividerSectionRender** | Decorative divider between sections                        | ~15        | Low                  |
+| **VideoSectionRender**   | Full-width video background/embed                          | ~25        | ⚠️ Medium            |
 
 ---
 
@@ -1372,15 +1418,15 @@ export interface MapProps {
 
 All section components MUST follow these naming rules:
 
-| Category | Pattern | Example | Anti-Pattern |
-|----------|---------|---------|--------------|
-| Colours | `[element]Color` | `titleColor`, `cardBackgroundColor` | `titleCol`, `bgColor` |
-| Sizes | `[element]Size` with `"sm" \| "md" \| "lg"` | `titleSize`, `iconSize` | `titleScale`, `iconDim` |
-| Toggles | `show[Feature]` | `showAvatar`, `showBio` | `hasAvatar`, `bioVisible` |
-| Positions | `[element]Position` | `iconPosition`, `captionPosition` | `iconPlace`, `captionAt` |
-| Hover | `[element]HoverEffect` / `[element]HoverColor` | `cardHoverEffect`, `cardHoverShadow` | `hoverCard`, `cardOnHover` |
-| Spacing | `paddingY` / `paddingX` / `gap` / `sectionGap` | `paddingY="lg"` | `verticalPadding`, `yPad` |
-| Borders | `[element]Border` (boolean), `[element]BorderColor`, `[element]BorderRadius` | `cardBorder`, `cardBorderColor` | `hasBorder`, `borderStyle` |
+| Category  | Pattern                                                                      | Example                              | Anti-Pattern               |
+| --------- | ---------------------------------------------------------------------------- | ------------------------------------ | -------------------------- |
+| Colours   | `[element]Color`                                                             | `titleColor`, `cardBackgroundColor`  | `titleCol`, `bgColor`      |
+| Sizes     | `[element]Size` with `"sm" \| "md" \| "lg"`                                  | `titleSize`, `iconSize`              | `titleScale`, `iconDim`    |
+| Toggles   | `show[Feature]`                                                              | `showAvatar`, `showBio`              | `hasAvatar`, `bioVisible`  |
+| Positions | `[element]Position`                                                          | `iconPosition`, `captionPosition`    | `iconPlace`, `captionAt`   |
+| Hover     | `[element]HoverEffect` / `[element]HoverColor`                               | `cardHoverEffect`, `cardHoverShadow` | `hoverCard`, `cardOnHover` |
+| Spacing   | `paddingY` / `paddingX` / `gap` / `sectionGap`                               | `paddingY="lg"`                      | `verticalPadding`, `yPad`  |
+| Borders   | `[element]Border` (boolean), `[element]BorderColor`, `[element]BorderRadius` | `cardBorder`, `cardBorderColor`      | `hasBorder`, `borderStyle` |
 
 ### 9.2 Value Union Standardisation
 
@@ -1390,7 +1436,7 @@ All sizing/spacing values MUST use these exact unions:
 // Padding Y (vertical)
 type PaddingY = "none" | "sm" | "md" | "lg" | "xl" | "2xl";
 
-// Padding X (horizontal)  
+// Padding X (horizontal)
 type PaddingX = "none" | "sm" | "md" | "lg" | "xl";
 
 // Max Width
@@ -1417,12 +1463,12 @@ type TitleSize = "sm" | "md" | "lg" | "xl" | "2xl";
 // ✅ CORRECT — import from layout-utils.ts
 import {
   getResponsiveClasses,
-  paddingYMap,    // Responsive 3-breakpoint: { mobile: "py-*", tablet: "sm:py-*", desktop: "lg:py-*" }
-  paddingXMap,    // Responsive 3-breakpoint
-  maxWidthMap,    // Flat: "xs".."7xl" | "full" | "none" | "screen-*" → "max-w-*"
-  gapMap,         // Responsive 3-breakpoint
-  shadowMap,      // Flat: "none"|"sm"|"md"|"lg"|"xl"|"2xl"|"inner" → "shadow-*"
-  borderRadiusMap // Responsive 3-breakpoint
+  paddingYMap, // Responsive 3-breakpoint: { mobile: "py-*", tablet: "sm:py-*", desktop: "lg:py-*" }
+  paddingXMap, // Responsive 3-breakpoint
+  maxWidthMap, // Flat: "xs".."7xl" | "full" | "none" | "screen-*" → "max-w-*"
+  gapMap, // Responsive 3-breakpoint
+  shadowMap, // Flat: "none"|"sm"|"md"|"lg"|"xl"|"2xl"|"inner" → "shadow-*"
+  borderRadiusMap, // Responsive 3-breakpoint
 } from "@/lib/studio/blocks/layout-utils";
 
 // Usage:
@@ -1434,34 +1480,34 @@ const shadowClass = shadowMap[shadow as string] || "";
 
 **Available map keys in `layout-utils.ts`:**
 
-| Map | Keys | Responsive? |
-|-----|------|------------|
-| `paddingYMap` | none, xs, sm, md, lg, xl | ✅ 3-breakpoint |
-| `paddingXMap` | none, xs, sm, md, lg | ✅ 3-breakpoint |
-| `paddingMap` | none, xs, sm, md, lg, xl | ✅ 3-breakpoint |
-| `gapMap` | none, xs, sm, md, lg, xl | ✅ 3-breakpoint |
-| `marginYMap` | none, xs, sm, md, lg, xl | ✅ 3-breakpoint |
-| `borderRadiusMap` | none, sm, md, lg, xl, 2xl, 3xl, full | ✅ 3-breakpoint |
-| `maxWidthMap` | xs..7xl, full, none, screen-sm..2xl, prose | ❌ Flat |
-| `shadowMap` | none, sm, md, lg, xl, 2xl, inner | ❌ Flat |
-| `hoverShadowMap` | none, sm, md, lg, xl, 2xl | ❌ Flat |
-| `widthFractionMap` | full, 3/4, 2/3, 1/2, 1/3, 1/4 | ❌ Flat |
-| `alignItemsMap` | start, center, end, stretch, baseline | ❌ Flat |
-| `contentAlignMap` | left, center, right | ❌ Flat |
-| `verticalAlignMap` | top, center, bottom | ❌ Flat |
+| Map                | Keys                                       | Responsive?     |
+| ------------------ | ------------------------------------------ | --------------- |
+| `paddingYMap`      | none, xs, sm, md, lg, xl                   | ✅ 3-breakpoint |
+| `paddingXMap`      | none, xs, sm, md, lg                       | ✅ 3-breakpoint |
+| `paddingMap`       | none, xs, sm, md, lg, xl                   | ✅ 3-breakpoint |
+| `gapMap`           | none, xs, sm, md, lg, xl                   | ✅ 3-breakpoint |
+| `marginYMap`       | none, xs, sm, md, lg, xl                   | ✅ 3-breakpoint |
+| `borderRadiusMap`  | none, sm, md, lg, xl, 2xl, 3xl, full       | ✅ 3-breakpoint |
+| `maxWidthMap`      | xs..7xl, full, none, screen-sm..2xl, prose | ❌ Flat         |
+| `shadowMap`        | none, sm, md, lg, xl, 2xl, inner           | ❌ Flat         |
+| `hoverShadowMap`   | none, sm, md, lg, xl, 2xl                  | ❌ Flat         |
+| `widthFractionMap` | full, 3/4, 2/3, 1/2, 1/3, 1/4              | ❌ Flat         |
+| `alignItemsMap`    | start, center, end, stretch, baseline      | ❌ Flat         |
+| `contentAlignMap`  | left, center, right                        | ❌ Flat         |
+| `verticalAlignMap` | top, center, bottom                        | ❌ Flat         |
 
 ### 9.4 Current Inconsistencies to Resolve
 
-| Component | Issue | Current | Standard | Priority |
-|-----------|-------|---------|----------|----------|
-| Hero | `paddingY` missing `none` and `2xl` | `"sm" \| "md" \| "lg" \| "xl"` | `"none" \| "sm" \| "md" \| "lg" \| "xl" \| "2xl"` | Low |
-| Hero | `badgeText` instead of `badge` | `badgeText` | `badge` (add alias) | ⚠️ Medium |
-| Testimonials | `backgroundColor` is flat prop | Direct prop | `backgroundStyle` system | ⚠️ Medium |
-| Testimonials | Header uses different naming | `titleSize`/`titleColor` ✅ but no `badge`/`headerAlign` | Standard header | ⚠️ Medium |
-| Footer | `paddingY` only 3 values | `"sm" \| "md" \| "lg"` | Standard 6 values | Low |
-| Pricing | `paddingY` only 4 values | `"sm" \| "md" \| "lg" \| "xl"` | Standard 6 values | Low |
-| Carousel | No section wrapper | Bare `<div>` | Standard `<section>` wrapper | ⚠️ Medium |
-| Newsletter | `size` prop covers everything | `size="sm" \| "md" \| "lg"` | Standard individual props | Low |
+| Component    | Issue                               | Current                                                  | Standard                                          | Priority  |
+| ------------ | ----------------------------------- | -------------------------------------------------------- | ------------------------------------------------- | --------- |
+| Hero         | `paddingY` missing `none` and `2xl` | `"sm" \| "md" \| "lg" \| "xl"`                           | `"none" \| "sm" \| "md" \| "lg" \| "xl" \| "2xl"` | Low       |
+| Hero         | `badgeText` instead of `badge`      | `badgeText`                                              | `badge` (add alias)                               | ⚠️ Medium |
+| Testimonials | `backgroundColor` is flat prop      | Direct prop                                              | `backgroundStyle` system                          | ⚠️ Medium |
+| Testimonials | Header uses different naming        | `titleSize`/`titleColor` ✅ but no `badge`/`headerAlign` | Standard header                                   | ⚠️ Medium |
+| Footer       | `paddingY` only 3 values            | `"sm" \| "md" \| "lg"`                                   | Standard 6 values                                 | Low       |
+| Pricing      | `paddingY` only 4 values            | `"sm" \| "md" \| "lg" \| "xl"`                           | Standard 6 values                                 | Low       |
+| Carousel     | No section wrapper                  | Bare `<div>`                                             | Standard `<section>` wrapper                      | ⚠️ Medium |
+| Newsletter   | `size` prop covers everything       | `size="sm" \| "md" \| "lg"`                              | Standard individual props                         | Low       |
 
 ---
 
@@ -1582,25 +1628,37 @@ Footer:         paddingY="lg" (standard structural section)
 
 **Available shapes in `shapeDividerPaths`:**
 
-| Shape | Description |
-|-------|-------------|
-| `wave` | Classic sine wave |
-| `wave-smooth` | Gentler, wider wave |
-| `curve` | Large quadratic bezier arc |
-| `triangle` | Single centered triangle peak |
-| `tilt` | Diagonal line from bottom-left to top-right |
-| `arrow` | Pointed arrow peak (like triangle but joins at base) |
-| `zigzag` | Repeating zigzag teeth |
-| `clouds` | Multiple overlapping circular bumps |
-| `mountains` | Irregular jagged mountain peaks |
-| `drops` | Repeating droplet/scallop shapes |
-| `pyramids` | Repeating equilateral triangles |
+| Shape         | Description                                          |
+| ------------- | ---------------------------------------------------- |
+| `wave`        | Classic sine wave                                    |
+| `wave-smooth` | Gentler, wider wave                                  |
+| `curve`       | Large quadratic bezier arc                           |
+| `triangle`    | Single centered triangle peak                        |
+| `tilt`        | Diagonal line from bottom-left to top-right          |
+| `arrow`       | Pointed arrow peak (like triangle but joins at base) |
+| `zigzag`      | Repeating zigzag teeth                               |
+| `clouds`      | Multiple overlapping circular bumps                  |
+| `mountains`   | Irregular jagged mountain peaks                      |
+| `drops`       | Repeating droplet/scallop shapes                     |
+| `pyramids`    | Repeating equilateral triangles                      |
 
 **Section divider props interface:**
 
 ```typescript
 export interface SectionDividerProps {
-  shape?: "wave" | "wave-smooth" | "curve" | "triangle" | "tilt" | "arrow" | "zigzag" | "clouds" | "mountains" | "drops" | "pyramids" | "none";
+  shape?:
+    | "wave"
+    | "wave-smooth"
+    | "curve"
+    | "triangle"
+    | "tilt"
+    | "arrow"
+    | "zigzag"
+    | "clouds"
+    | "mountains"
+    | "drops"
+    | "pyramids"
+    | "none";
   position?: "top" | "bottom";
   color?: string; // Matches next section's background
   height?: "sm" | "md" | "lg";
@@ -1641,24 +1699,24 @@ scrollSnapAlign?: "start" | "center" | "none";
 
 ### 12.1 Current Schema.org Support
 
-| Component | Schema Type | Status |
-|-----------|------------|--------|
-| FAQ | `FAQPage`, `HowTo`, `QAPage` | ✅ Implemented |
-| All others | — | ❌ None |
+| Component  | Schema Type                  | Status         |
+| ---------- | ---------------------------- | -------------- |
+| FAQ        | `FAQPage`, `HowTo`, `QAPage` | ✅ Implemented |
+| All others | —                            | ❌ None        |
 
 ### 12.2 Planned Schema.org Expansion
 
-| Component | Schema Type | Priority | SEO Impact |
-|-----------|------------|----------|------------|
-| **FAQ** | `FAQPage` | ✅ Done | Rich results (expandable Q&A in Google) |
-| **Pricing** | `Product`, `Offer` | 🔴 High | Rich product snippets with prices |
-| **Testimonials** | `Review`, `AggregateRating` | 🔴 High | Star ratings in search results |
-| **ContactForm** | `ContactPoint`, `LocalBusiness` | ⚠️ Medium | Local business information |
-| **Team** | `Person`, `Organization` | ⚠️ Medium | People/knowledge panel |
-| **Map** (new) | `Place`, `LocalBusiness` | ⚠️ Medium | Local SEO map pack |
-| **BlogPreview** (new) | `BlogPosting`, `Article` | ⚠️ Medium | Article rich results |
-| **Navbar** | `SiteNavigationElement` | Low | Navigation breadcrumb |
-| **Footer** | `Organization` | Low | Organization details |
+| Component             | Schema Type                     | Priority  | SEO Impact                              |
+| --------------------- | ------------------------------- | --------- | --------------------------------------- |
+| **FAQ**               | `FAQPage`                       | ✅ Done   | Rich results (expandable Q&A in Google) |
+| **Pricing**           | `Product`, `Offer`              | 🔴 High   | Rich product snippets with prices       |
+| **Testimonials**      | `Review`, `AggregateRating`     | 🔴 High   | Star ratings in search results          |
+| **ContactForm**       | `ContactPoint`, `LocalBusiness` | ⚠️ Medium | Local business information              |
+| **Team**              | `Person`, `Organization`        | ⚠️ Medium | People/knowledge panel                  |
+| **Map** (new)         | `Place`, `LocalBusiness`        | ⚠️ Medium | Local SEO map pack                      |
+| **BlogPreview** (new) | `BlogPosting`, `Article`        | ⚠️ Medium | Article rich results                    |
+| **Navbar**            | `SiteNavigationElement`         | Low       | Navigation breadcrumb                   |
+| **Footer**            | `Organization`                  | Low       | Organization details                    |
 
 **Implementation:** Each section renders a `<script type="application/ld+json">` block when `enableSchema` is true:
 
@@ -1682,11 +1740,11 @@ All 17 section components use **inline styles** for colours (via `backgroundColo
 
 ### 13.2 Recommended Improvements
 
-| Improvement | Current | Target | Priority |
-|------------|---------|--------|----------|
-| Default colours use CSS vars | `backgroundColor="#ffffff"` | `backgroundColor="var(--section-bg, #ffffff)"` | ⚠️ Medium |
-| Dark-aware smart defaults | Static hex defaults | `isDark()` utility (ContactForm/Newsletter already have this) | ⚠️ Medium |
-| Colour contrast validation | None | Warn in editor when text/bg contrast < 4.5:1 | Low |
+| Improvement                  | Current                     | Target                                                        | Priority  |
+| ---------------------------- | --------------------------- | ------------------------------------------------------------- | --------- |
+| Default colours use CSS vars | `backgroundColor="#ffffff"` | `backgroundColor="var(--section-bg, #ffffff)"`                | ⚠️ Medium |
+| Dark-aware smart defaults    | Static hex defaults         | `isDark()` utility (ContactForm/Newsletter already have this) | ⚠️ Medium |
+| Colour contrast validation   | None                        | Warn in editor when text/bg contrast < 4.5:1                  | Low       |
 
 ### 13.3 Dark-Aware Utilities — ALREADY EXIST in `layout-utils.ts`
 
@@ -1694,27 +1752,32 @@ All 17 section components use **inline styles** for colours (via `backgroundColo
 
 **Existing utilities in `layout-utils.ts`:**
 
-| Utility | Line | Signature | Returns |
-|---------|------|-----------|---------|
-| `isDarkBackground()` | L454 | `(hex?: string) => boolean` | Uses ITU-R BT.601 luminance formula. Threshold: `luminance <= 0.45`. Handles 3/6-digit hex, returns `false` for transparent/non-hex. |
-| `getDarkAwareDefaults()` | L542 | `(isDarkBg: boolean) => object` | `{ borderColor, textColor, mutedTextColor, dividerColor, overlayBg, particleColor, patternColor, glowOpacity }` |
-| `resolveShadow()` | L484 | `(shadow, isDarkBg) => string` | On dark: CSS box-shadow with white glow. On light: empty string (use Tailwind shadow-* classes). |
-| `resolveGlassmorphism()` | L517 | `(isDarkBg) => object` | `{ background, backdropFilter, WebkitBackdropFilter, border }` — adaptive for dark/light. |
+| Utility                  | Line | Signature                       | Returns                                                                                                                              |
+| ------------------------ | ---- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `isDarkBackground()`     | L454 | `(hex?: string) => boolean`     | Uses ITU-R BT.601 luminance formula. Threshold: `luminance <= 0.45`. Handles 3/6-digit hex, returns `false` for transparent/non-hex. |
+| `getDarkAwareDefaults()` | L542 | `(isDarkBg: boolean) => object` | `{ borderColor, textColor, mutedTextColor, dividerColor, overlayBg, particleColor, patternColor, glowOpacity }`                      |
+| `resolveShadow()`        | L484 | `(shadow, isDarkBg) => string`  | On dark: CSS box-shadow with white glow. On light: empty string (use Tailwind shadow-\* classes).                                    |
+| `resolveGlassmorphism()` | L517 | `(isDarkBg) => object`          | `{ background, backdropFilter, WebkitBackdropFilter, border }` — adaptive for dark/light.                                            |
 
 **The canonical pattern for ALL section components:**
 
 ```typescript
-import { isDarkBackground, getDarkAwareDefaults, resolveShadow, resolveGlassmorphism } from "@/lib/studio/blocks/layout-utils";
+import {
+  isDarkBackground,
+  getDarkAwareDefaults,
+  resolveShadow,
+  resolveGlassmorphism,
+} from "@/lib/studio/blocks/layout-utils";
 
 // Inside the render function:
 const darkBg = isDarkBackground(backgroundColor);
 const darkDefaults = getDarkAwareDefaults(darkBg);
 
 // Resolve colours with smart fallbacks
-const resolvedTextColor = textColor || darkDefaults.textColor;           // "#f8fafc" on dark, "#0f172a" on light
+const resolvedTextColor = textColor || darkDefaults.textColor; // "#f8fafc" on dark, "#0f172a" on light
 const resolvedSubtitleColor = subtitleColor || darkDefaults.mutedTextColor; // "#9ca3af" on dark, "#6b7280" on light
-const resolvedBorderColor = borderColor || darkDefaults.borderColor;     // "rgba(255,255,255,0.1)" on dark, "#e5e7eb" on light
-const resolvedDividerColor = dividerColor || darkDefaults.dividerColor;  // "rgba(255,255,255,0.15)" on dark, "#e5e7eb" on light
+const resolvedBorderColor = borderColor || darkDefaults.borderColor; // "rgba(255,255,255,0.1)" on dark, "#e5e7eb" on light
+const resolvedDividerColor = dividerColor || darkDefaults.dividerColor; // "rgba(255,255,255,0.15)" on dark, "#e5e7eb" on light
 
 // For card shadows (glow on dark backgrounds)
 const cardShadowStyle = resolveShadow(shadow || "md", darkBg);
@@ -1731,25 +1794,25 @@ const glassStyle = resolveGlassmorphism(darkBg);
 
 ### 14.1 Current Animation Support
 
-| Component | animateOnScroll | animationType Options | Stagger | Framer Motion |
-|-----------|----------------|----------------------|---------|---------------|
-| Features | ✅ | fade, slide-up, slide-in, zoom, stagger, flip | ✅ staggerDelay | ✅ |
-| CTA | ✅ | fadeIn, slideUp, slideLeft, zoom, bounce, pulse, typewriter | ❌ | ✅ |
-| Testimonials | ✅ | fadeIn, slideUp, slideIn, zoom, stagger | ✅ staggerDelay | ✅ |
-| FAQ | ✅ | fade, slide-up, slide-left, slide-right, scale, stagger | ✅ staggerDelay | ✅ |
-| Stats | ✅ | fade, slide-up, slide-left, slide-right, scale, stagger | ✅ staggerDelay | ✅ |
-| Team | ✅ | fade, slide-up, slide-left, slide-right, scale, stagger | ✅ staggerDelay | ✅ |
-| Gallery | ✅ | fade, slide-up, scale, stagger, flip | ✅ staggerDelay | ✅ |
-| Hero | ❌ | — | — | ❌ |
-| Navbar | ❌ | — | — | ❌ |
-| Footer | ❌ | — | — | ❌ |
-| Newsletter | ❌ | — | — | ❌ |
-| ContactForm | ❌ | — | — | ❌ |
-| Pricing | ❌ | — | — | ❌ |
-| Accordion | ❌ | — | — | ❌ |
-| Carousel | ❌ | — | — | ❌ |
-| Countdown | ❌ | — | — | ❌ |
-| Form | ✅ | fade, slide, scale | ❌ | ❌ (CSS only) |
+| Component    | animateOnScroll | animationType Options                                       | Stagger         | Framer Motion |
+| ------------ | --------------- | ----------------------------------------------------------- | --------------- | ------------- |
+| Features     | ✅              | fade, slide-up, slide-in, zoom, stagger, flip               | ✅ staggerDelay | ✅            |
+| CTA          | ✅              | fadeIn, slideUp, slideLeft, zoom, bounce, pulse, typewriter | ❌              | ✅            |
+| Testimonials | ✅              | fadeIn, slideUp, slideIn, zoom, stagger                     | ✅ staggerDelay | ✅            |
+| FAQ          | ✅              | fade, slide-up, slide-left, slide-right, scale, stagger     | ✅ staggerDelay | ✅            |
+| Stats        | ✅              | fade, slide-up, slide-left, slide-right, scale, stagger     | ✅ staggerDelay | ✅            |
+| Team         | ✅              | fade, slide-up, slide-left, slide-right, scale, stagger     | ✅ staggerDelay | ✅            |
+| Gallery      | ✅              | fade, slide-up, scale, stagger, flip                        | ✅ staggerDelay | ✅            |
+| Hero         | ❌              | —                                                           | —               | ❌            |
+| Navbar       | ❌              | —                                                           | —               | ❌            |
+| Footer       | ❌              | —                                                           | —               | ❌            |
+| Newsletter   | ❌              | —                                                           | —               | ❌            |
+| ContactForm  | ❌              | —                                                           | —               | ❌            |
+| Pricing      | ❌              | —                                                           | —               | ❌            |
+| Accordion    | ❌              | —                                                           | —               | ❌            |
+| Carousel     | ❌              | —                                                           | —               | ❌            |
+| Countdown    | ❌              | —                                                           | —               | ❌            |
+| Form         | ✅              | fade, slide, scale                                          | ❌              | ❌ (CSS only) |
 
 ### 14.2 Animation Standardisation
 
@@ -1765,15 +1828,15 @@ animationDuration?: "fast" | "normal" | "slow";
 
 **Priority for adding animation:**
 
-| Component | Current | Priority to Add |
-|-----------|---------|----------------|
-| Hero | None | 🔴 High (hero animations are high-impact) |
-| Pricing | None | ⚠️ Medium |
-| Accordion | None | Low |
-| Newsletter | None | Low |
-| ContactForm | None | Low |
-| Navbar | None | Low (navigation should be instant) |
-| Footer | None | Skip (footer is structural) |
+| Component   | Current | Priority to Add                           |
+| ----------- | ------- | ----------------------------------------- |
+| Hero        | None    | 🔴 High (hero animations are high-impact) |
+| Pricing     | None    | ⚠️ Medium                                 |
+| Accordion   | None    | Low                                       |
+| Newsletter  | None    | Low                                       |
+| ContactForm | None    | Low                                       |
+| Navbar      | None    | Low (navigation should be instant)        |
+| Footer      | None    | Skip (footer is structural)               |
 
 ### 14.3 Performance Guidelines
 
@@ -1882,9 +1945,9 @@ const typeMap: Record<string, string> = {
 const KNOWN_REGISTRY_TYPES = new Set([
   // ... existing entries (Hero, Features, CTA, etc.) ...
   // Add new section types:
-  "AnnouncementBar",    // Already present
-  "BlogPreview",        // NEW
-  "ComparisonTable",    // Already present
+  "AnnouncementBar", // Already present
+  "BlogPreview", // NEW
+  "ComparisonTable", // Already present
   // LogoCloud, RichText, Map already present
 ]);
 ```
@@ -1964,14 +2027,14 @@ defineComponent({
 
 **Scope:** Standardise existing 17 components without adding features.
 
-| Task | Components | Effort |
-|------|-----------|--------|
-| Add standard `paddingY` values (`none`, `2xl`) to Hero, Footer, Pricing | 3 | Small |
-| Add `badge`/`badgeIcon` alias to Hero (`badgeText` → `badge` alias) | 1 | Tiny |
-| Add standard header props to Newsletter, ContactForm, Pricing, Accordion, Countdown | 5 | Medium |
-| Add standard background system to Testimonials, Pricing, Accordion, Countdown | 4 | Medium |
-| Wrap CarouselRender in standard `<section>` container with header | 1 | Small |
-| Extract `isDarkBackground()` utility from ContactForm/Newsletter into shared module | — | Small |
+| Task                                                                                | Components | Effort |
+| ----------------------------------------------------------------------------------- | ---------- | ------ |
+| Add standard `paddingY` values (`none`, `2xl`) to Hero, Footer, Pricing             | 3          | Small  |
+| Add `badge`/`badgeIcon` alias to Hero (`badgeText` → `badge` alias)                 | 1          | Tiny   |
+| Add standard header props to Newsletter, ContactForm, Pricing, Accordion, Countdown | 5          | Medium |
+| Add standard background system to Testimonials, Pricing, Accordion, Countdown       | 4          | Medium |
+| Wrap CarouselRender in standard `<section>` container with header                   | 1          | Small  |
+| Extract `isDarkBackground()` utility from ContactForm/Newsletter into shared module | —          | Small  |
 
 > **Note:** `isDarkBackground()` and `getDarkAwareDefaults()` already exist in `layout-utils.ts`. This task means migrating ContactForm/Newsletter to use the shared utility instead of their inline `parseInt(hex...) < 100` checks.
 
@@ -1979,45 +2042,45 @@ defineComponent({
 
 ### Phase 2 — New High-Priority Sections (Priority: 🔴 High)
 
-| Task | New Component | Est. Props | Effort |
-|------|--------------|-----------|--------|
-| Build LogoCloudRender | LogoCloud | 35 | Medium |
-| Build BannerRender | Banner | 25 | Small |
-| Build ContentRender | Content | 40 | Medium |
-| Build BlogPreviewRender | BlogPreview | 50 | Medium |
-| Register all in converter.ts, core-components.ts, component-metadata.ts | — | — | Medium |
+| Task                                                                    | New Component | Est. Props | Effort |
+| ----------------------------------------------------------------------- | ------------- | ---------- | ------ |
+| Build LogoCloudRender                                                   | LogoCloud     | 35         | Medium |
+| Build BannerRender                                                      | Banner        | 25         | Small  |
+| Build ContentRender                                                     | Content       | 40         | Medium |
+| Build BlogPreviewRender                                                 | BlogPreview   | 50         | Medium |
+| Register all in converter.ts, core-components.ts, component-metadata.ts | —             | —          | Medium |
 
 ### Phase 3 — Hero Enhancement (Priority: 🔴 High)
 
-| Task | Effort |
-|------|--------|
+| Task                                                                      | Effort |
+| ------------------------------------------------------------------------- | ------ |
 | Add full background system (gradient/pattern/image/overlay) to HeroRender | Medium |
-| Add animation support (Framer Motion entrance animations) | Medium |
-| Add decorative elements (dots/circles/blur) | Small |
-| Add trust bar (logo cloud below hero content) | Small |
-| Add 3 new variants (gradient, glass, parallax) | Medium |
+| Add animation support (Framer Motion entrance animations)                 | Medium |
+| Add decorative elements (dots/circles/blur)                               | Small  |
+| Add trust bar (logo cloud below hero content)                             | Small  |
+| Add 3 new variants (gradient, glass, parallax)                            | Medium |
 
 ### Phase 4 — Tier C Enhancement (Priority: ⚠️ Medium)
 
-| Task | Components | Effort |
-|------|-----------|--------|
-| Add animation to Pricing, Countdown | 2 | Small |
-| Expand Navbar with dropdown/mega-menu support | 1 | Large |
-| Expand Footer with contact info, payment badges, more variants | 1 | Medium |
-| Expand Newsletter with GDPR notice, background system | 1 | Small |
-| Expand ContactForm with variants, additional fields | 1 | Medium |
-| Add monthly/annual toggle to Pricing | 1 | Medium |
+| Task                                                           | Components | Effort |
+| -------------------------------------------------------------- | ---------- | ------ |
+| Add animation to Pricing, Countdown                            | 2          | Small  |
+| Expand Navbar with dropdown/mega-menu support                  | 1          | Large  |
+| Expand Footer with contact info, payment badges, more variants | 1          | Medium |
+| Expand Newsletter with GDPR notice, background system          | 1          | Small  |
+| Expand ContactForm with variants, additional fields            | 1          | Medium |
+| Add monthly/annual toggle to Pricing                           | 1          | Medium |
 
 ### Phase 5 — Advanced Features (Priority: Low)
 
-| Task | Effort |
-|------|--------|
-| Build ComparisonTableRender | Medium |
-| Build MapRender | Medium |
+| Task                                              | Effort |
+| ------------------------------------------------- | ------ |
+| Build ComparisonTableRender                       | Medium |
+| Build MapRender                                   | Medium |
 | Implement section divider system (shape dividers) | Medium |
-| Add Schema.org to Pricing, Testimonials, Team | Medium |
-| Implement AI page composition rules in converter | Large |
-| Build colour flow automation in converter | Large |
+| Add Schema.org to Pricing, Testimonials, Team     | Medium |
+| Implement AI page composition rules in converter  | Large  |
+| Build colour flow automation in converter         | Large  |
 
 ---
 
@@ -2076,39 +2139,39 @@ REGISTRY:
 
 ## Appendix A — Section Component Size Rankings
 
-| Rank | Component | Props | Variants | Lines (est.) | Complexity |
-|------|-----------|-------|----------|-------------|------------|
-| 1 | FAQ | 150+ | 10 | ~800 | 🔴 Very High |
-| 2 | Team | 120+ | 10 | ~700 | 🔴 High |
-| 3 | Gallery | 90+ | 8 | ~600 | 🔴 High |
-| 4 | CTA | 80+ | 10 | ~500 | 🔴 High |
-| 5 | Stats | 80+ | 10 | ~500 | 🔴 High |
-| 6 | Features | 70+ | 10 | ~500 | 🔴 High |
-| 7 | Testimonials | 60+ | 10 | ~500 | ⚠️ Medium-High |
-| 8 | Form | 40+ | 5 | ~300 | ⚠️ Medium |
-| 9 | Navbar | 28 | 3 | ~300 | ⚠️ Medium |
-| 10 | ContactForm | 25 | 1 | ~200 | ⚠️ Medium |
-| 11 | Hero | 22 | 5 | ~150 | ⚠️ Medium |
-| 12 | Footer | 18 | 3 | ~250 | ⚠️ Medium |
-| 13 | Accordion | 17 | 4 | ~150 | Low |
-| 14 | Pricing | 16 | 3 | ~200 | Low |
-| 15 | Countdown | 15 | 3 | ~100 | Low |
-| 16 | Newsletter | 14 | 3 | ~120 | Low |
-| 17 | Carousel | 12 | 1 | ~100 | Low |
+| Rank | Component    | Props | Variants | Lines (est.) | Complexity     |
+| ---- | ------------ | ----- | -------- | ------------ | -------------- |
+| 1    | FAQ          | 150+  | 10       | ~800         | 🔴 Very High   |
+| 2    | Team         | 120+  | 10       | ~700         | 🔴 High        |
+| 3    | Gallery      | 90+   | 8        | ~600         | 🔴 High        |
+| 4    | CTA          | 80+   | 10       | ~500         | 🔴 High        |
+| 5    | Stats        | 80+   | 10       | ~500         | 🔴 High        |
+| 6    | Features     | 70+   | 10       | ~500         | 🔴 High        |
+| 7    | Testimonials | 60+   | 10       | ~500         | ⚠️ Medium-High |
+| 8    | Form         | 40+   | 5        | ~300         | ⚠️ Medium      |
+| 9    | Navbar       | 28    | 3        | ~300         | ⚠️ Medium      |
+| 10   | ContactForm  | 25    | 1        | ~200         | ⚠️ Medium      |
+| 11   | Hero         | 22    | 5        | ~150         | ⚠️ Medium      |
+| 12   | Footer       | 18    | 3        | ~250         | ⚠️ Medium      |
+| 13   | Accordion    | 17    | 4        | ~150         | Low            |
+| 14   | Pricing      | 16    | 3        | ~200         | Low            |
+| 15   | Countdown    | 15    | 3        | ~100         | Low            |
+| 16   | Newsletter   | 14    | 3        | ~120         | Low            |
+| 17   | Carousel     | 12    | 1        | ~100         | Low            |
 
 ## Appendix B — Cross-Reference to Other Master Plans
 
-| Master Plan | Sections Covered | Relationship |
-|------------|------------------|-------------|
-| **Layout Components** | SpacerRender, ContainerRender, GridRender, ColumnsRender | Layout wraps sections; sections use internal layout |
-| **Typography Components** | HeadingRender, ParagraphRender, BlockquoteRender | Typography used inside section headers and content |
-| **Buttons Components** | ButtonRender, BadgeRender | CTA composes ButtonRender; badges used in section headers |
-| **Media Components** | ImageRender, VideoRender, CarouselRender, GalleryRender | CarouselRender + GalleryRender are BOTH section and media components. Media plan handles the core render; this plan handles the section wrapper. |
-| **Forms & Inputs** (future) | FormRender, InputRender, SelectRender | FormRender is a section container; inputs are a separate domain |
+| Master Plan                 | Sections Covered                                         | Relationship                                                                                                                                     |
+| --------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Layout Components**       | SpacerRender, ContainerRender, GridRender, ColumnsRender | Layout wraps sections; sections use internal layout                                                                                              |
+| **Typography Components**   | HeadingRender, ParagraphRender, BlockquoteRender         | Typography used inside section headers and content                                                                                               |
+| **Buttons Components**      | ButtonRender, BadgeRender                                | CTA composes ButtonRender; badges used in section headers                                                                                        |
+| **Media Components**        | ImageRender, VideoRender, CarouselRender, GalleryRender  | CarouselRender + GalleryRender are BOTH section and media components. Media plan handles the core render; this plan handles the section wrapper. |
+| **Forms & Inputs** (future) | FormRender, InputRender, SelectRender                    | FormRender is a section container; inputs are a separate domain                                                                                  |
 
 ---
 
-*Document version: 2.0 — Implementation-Ready*  
-*Created: Session 11 | Updated: Session 12 (added Section 0 Blueprint, fixed layout-utils.ts references)*  
-*Covers: 17 existing section components + 6 proposed new sections*  
-*Total existing props: 800+ | Total existing variants: 75+ | Total converter aliases: 150+*
+_Document version: 2.0 — Implementation-Ready_  
+_Created: Session 11 | Updated: Session 12 (added Section 0 Blueprint, fixed layout-utils.ts references)_  
+_Covers: 17 existing section components + 6 proposed new sections_  
+_Total existing props: 800+ | Total existing variants: 75+ | Total converter aliases: 150+_

@@ -3708,7 +3708,7 @@ export function RichTextRender({
   showDivider = false,
   dividerColor,
   highlightColor,
-  proseSize = "base",
+  proseSize = "lg",
   maxWidth = "4xl",
   titleLevel = "h2",
   titleFontFamily,
@@ -3807,7 +3807,7 @@ export function RichTextRender({
         >
           {/* Main content */}
           <div
-            className={`${proseSizeClass} max-w-none prose-headings:font-bold prose-p:leading-relaxed prose-strong:font-semibold`}
+            className={`${proseSizeClass} max-w-none prose-headings:font-bold prose-p:leading-relaxed prose-strong:font-semibold [&_*]:!text-inherit`}
             style={{
               color: resolvedTextColor || undefined,
               fontFamily: bodyFontFamily || `var(--font-body, inherit)`,
@@ -4140,8 +4140,8 @@ export function QuoteRender({
       style={{ fontFamily: resolvedFontFamily }}
     >
       <p
-        className={`${sizeStyles.text} ${fontStyle === "italic" ? "italic" : ""} font-serif leading-relaxed`}
-        style={{ color: textColor || undefined }}
+        className={`${sizeStyles.text} ${fontStyle === "italic" ? "italic" : ""} leading-relaxed`}
+        style={{ color: textColor || undefined, fontFamily: resolvedFontFamily }}
       >
         &ldquo;{text}&rdquo;
       </p>
@@ -4578,6 +4578,7 @@ export function DividerTextRender({
     return (
       <div
         id={id}
+        role="separator"
         className={`flex items-center gap-4 ${spacingMap[spacing]} ${className}`}
       >
         <div
@@ -4603,6 +4604,7 @@ export function DividerTextRender({
     return (
       <div
         id={id}
+        role="separator"
         className={`relative text-center ${spacingMap[spacing]} ${className}`}
       >
         <div className="absolute inset-0 flex items-center" aria-hidden="true">
@@ -4631,6 +4633,7 @@ export function DividerTextRender({
     return (
       <div
         id={id}
+        role="separator"
         className={`flex items-center justify-center gap-3 ${spacingMap[spacing]} ${className}`}
       >
         <span
@@ -4654,6 +4657,7 @@ export function DividerTextRender({
     return (
       <div
         id={id}
+        role="separator"
         className={`flex items-center gap-4 ${spacingMap[spacing]} ${className}`}
       >
         <div
@@ -4679,6 +4683,7 @@ export function DividerTextRender({
     return (
       <div
         id={id}
+        role="separator"
         className={`flex items-center justify-center gap-4 ${spacingMap[spacing]} ${className}`}
       >
         <span
@@ -4700,6 +4705,7 @@ export function DividerTextRender({
   return (
     <div
       id={id}
+      role="separator"
       className={`flex items-center gap-4 ${spacingMap[spacing]} ${className}`}
     >
       <div
@@ -4777,6 +4783,7 @@ export function StatNumberRender({
   return (
     <div
       id={id}
+      aria-label={`${prefix}${value}${suffix} ${label}`}
       className={`${alignClass} ${isInline ? "flex items-baseline gap-3" : ""} ${className}`.trim()}
     >
       <div
@@ -25368,7 +25375,10 @@ export function CodeBlockRender({
               </span>
             )}
             {showCopyButton && (
-              <button className="text-xs px-2 py-1 rounded hover:bg-white/10 transition-colors">
+              <button
+                className="text-xs px-2 py-1 rounded hover:bg-white/10 transition-colors"
+                aria-label={`Copy ${language} code to clipboard`}
+              >
                 Copy
               </button>
             )}

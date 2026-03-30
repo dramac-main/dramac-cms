@@ -32,34 +32,34 @@ Media components are the **visual backbone of every website**. A site's credibil
 
 ### Existing Media Components (11 total)
 
-| Component | Location | Lines | Props | Quality | Key Issues |
-|-----------|----------|-------|-------|---------|------------|
-| **ImageRender** | `renders.tsx` L5416-5700+ | ~284 | 50+ | ✅ Strong | Explicit TypeScript interface exported. Filters, overlays, frames, badges, hover effects. Good inline style usage. |
-| **VideoRender** | `renders.tsx` L5913-6200+ | ~287 | 50+ | ✅ Strong | YouTube/Vimeo/file/embed support. Custom play buttons, title bar. Privacy-enhanced mode. |
-| **MapRender** | `renders.tsx` L6416-6700+ | ~284 | 40+ | ✅ Solid | Google Maps & OpenStreetMap. 6 styles, markers, directions link. Loading placeholder. |
-| **GalleryRender** | `renders.tsx` L13425-13700+ | ~275 | 60+ | ✅ Strong | Grid/masonry/carousel, filtering, lightbox, load more, hover effects. The most feature-rich media component. |
-| **CarouselRender** | `renders.tsx` L16413-16800 | ~387 | ~12 | ⚠️ Basic | Only ~12 props. No transition effects, no pause on hover, no swipe gestures, no lazy slide loading. Very limited compared to Gallery. |
-| **AvatarRender** | `renders.tsx` L17377-17700 | ~323 | 9 | ⚠️ Limited | 6 sizes, 3 shapes, status indicators, fallback initials. But: status colours are **hardcoded** Tailwind (text-green-500, text-red-500). No avatar groups. No link support. |
-| **SocialProofRender** | `renders.tsx` L18012-18181 | ~169 | 12 | ⚠️ Limited | Star ratings in 3 variants. Star colour uses **hardcoded `text-yellow-400`**. No custom star icons. No animation. |
-| **TrustBadgesRender** | `renders.tsx` L18181-18295 | ~114 | 10 | ✅ Solid | Image badges, row/grid layout, grayscale toggle, hover effect. Properly structured `{ image, alt, link }`. |
-| **LogoCloudRender** | `renders.tsx` L18295-18472 | ~177 | 13 | ✅ Solid | 3 variants (simple/cards/marquee). Responsive columns. Grayscale with hover-to-colour. |
-| **ComparisonTableRender** | `renders.tsx` L18472-18600+ | ~128 | 12 | ⚠️ Limited | Feature comparison. BUT: highlight colour uses **hardcoded `bg-sky-50 border-sky-500`**. Check/cross colours hardcoded as `text-green-500`/`text-gray-300`. |
-| **FormRender** | `renders.tsx` L~15100 | — | — | 📎 Out of Scope | Forms will be covered in a separate master plan (Forms & Inputs). |
+| Component                 | Location                    | Lines | Props | Quality         | Key Issues                                                                                                                                                                 |
+| ------------------------- | --------------------------- | ----- | ----- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ImageRender**           | `renders.tsx` L5416-5700+   | ~284  | 50+   | ✅ Strong       | Explicit TypeScript interface exported. Filters, overlays, frames, badges, hover effects. Good inline style usage.                                                         |
+| **VideoRender**           | `renders.tsx` L5913-6200+   | ~287  | 50+   | ✅ Strong       | YouTube/Vimeo/file/embed support. Custom play buttons, title bar. Privacy-enhanced mode.                                                                                   |
+| **MapRender**             | `renders.tsx` L6416-6700+   | ~284  | 40+   | ✅ Solid        | Google Maps & OpenStreetMap. 6 styles, markers, directions link. Loading placeholder.                                                                                      |
+| **GalleryRender**         | `renders.tsx` L13425-13700+ | ~275  | 60+   | ✅ Strong       | Grid/masonry/carousel, filtering, lightbox, load more, hover effects. The most feature-rich media component.                                                               |
+| **CarouselRender**        | `renders.tsx` L16413-16800  | ~387  | ~12   | ⚠️ Basic        | Only ~12 props. No transition effects, no pause on hover, no swipe gestures, no lazy slide loading. Very limited compared to Gallery.                                      |
+| **AvatarRender**          | `renders.tsx` L17377-17700  | ~323  | 9     | ⚠️ Limited      | 6 sizes, 3 shapes, status indicators, fallback initials. But: status colours are **hardcoded** Tailwind (text-green-500, text-red-500). No avatar groups. No link support. |
+| **SocialProofRender**     | `renders.tsx` L18012-18181  | ~169  | 12    | ⚠️ Limited      | Star ratings in 3 variants. Star colour uses **hardcoded `text-yellow-400`**. No custom star icons. No animation.                                                          |
+| **TrustBadgesRender**     | `renders.tsx` L18181-18295  | ~114  | 10    | ✅ Solid        | Image badges, row/grid layout, grayscale toggle, hover effect. Properly structured `{ image, alt, link }`.                                                                 |
+| **LogoCloudRender**       | `renders.tsx` L18295-18472  | ~177  | 13    | ✅ Solid        | 3 variants (simple/cards/marquee). Responsive columns. Grayscale with hover-to-colour.                                                                                     |
+| **ComparisonTableRender** | `renders.tsx` L18472-18600+ | ~128  | 12    | ⚠️ Limited      | Feature comparison. BUT: highlight colour uses **hardcoded `bg-sky-50 border-sky-500`**. Check/cross colours hardcoded as `text-green-500`/`text-gray-300`.                |
+| **FormRender**            | `renders.tsx` L~15100       | —     | —     | 📎 Out of Scope | Forms will be covered in a separate master plan (Forms & Inputs).                                                                                                          |
 
 ### Critical Issues Found
 
-| # | Issue | Severity | Component(s) | Impact |
-|---|-------|----------|---------------|--------|
-| 1 | **Hardcoded highlight in ComparisonTable** | 🔴 Critical | ComparisonTable | `bg-sky-50 border-sky-500` breaks dark mode and fails to match brand colours |
-| 2 | **Hardcoded star colour** | 🔴 Critical | SocialProof | `text-yellow-400` not theme-aware; invisible on yellow backgrounds |
-| 3 | **Hardcoded check/cross colours** | ⚠️ Medium | ComparisonTable | `text-green-500` / `text-gray-300` break in dark mode |
-| 4 | **Hardcoded avatar status colours** | ⚠️ Medium | Avatar | `text-green-500`, `text-red-500`, etc. via Tailwind classes |
-| 5 | **Carousel is too basic** | ⚠️ Medium | Carousel | ~12 props vs. Gallery's 60+. No transition effects, no swipe, no lazy loading |
-| 6 | **No audio component** | ⚠️ Medium | — | No AudioRender for podcasts, music, or audio samples |
-| 7 | **No icon/illustration component** | ⚠️ Low | — | No way to render SVG icons or Lottie animations from AI |
-| 8 | **No before/after image slider** | ⚠️ Low | — | Common pattern for renovations, cosmetics, design work — not supported |
-| 9 | **Gallery background default `#ffffff`** | ⚠️ Medium | Gallery | Default `backgroundColor: "#ffffff"` breaks dark mode |
-| 10 | **No testimonial media component** | ⚠️ Low | — | Testimonials are in a separate plan, but media for testimonial avatars/videos is fragmented |
+| #   | Issue                                      | Severity    | Component(s)    | Impact                                                                                      |
+| --- | ------------------------------------------ | ----------- | --------------- | ------------------------------------------------------------------------------------------- |
+| 1   | **Hardcoded highlight in ComparisonTable** | 🔴 Critical | ComparisonTable | `bg-sky-50 border-sky-500` breaks dark mode and fails to match brand colours                |
+| 2   | **Hardcoded star colour**                  | 🔴 Critical | SocialProof     | `text-yellow-400` not theme-aware; invisible on yellow backgrounds                          |
+| 3   | **Hardcoded check/cross colours**          | ⚠️ Medium   | ComparisonTable | `text-green-500` / `text-gray-300` break in dark mode                                       |
+| 4   | **Hardcoded avatar status colours**        | ⚠️ Medium   | Avatar          | `text-green-500`, `text-red-500`, etc. via Tailwind classes                                 |
+| 5   | **Carousel is too basic**                  | ⚠️ Medium   | Carousel        | ~12 props vs. Gallery's 60+. No transition effects, no swipe, no lazy loading               |
+| 6   | **No audio component**                     | ⚠️ Medium   | —               | No AudioRender for podcasts, music, or audio samples                                        |
+| 7   | **No icon/illustration component**         | ⚠️ Low      | —               | No way to render SVG icons or Lottie animations from AI                                     |
+| 8   | **No before/after image slider**           | ⚠️ Low      | —               | Common pattern for renovations, cosmetics, design work — not supported                      |
+| 9   | **Gallery background default `#ffffff`**   | ⚠️ Medium   | Gallery         | Default `backgroundColor: "#ffffff"` breaks dark mode                                       |
+| 10  | **No testimonial media component**         | ⚠️ Low      | —               | Testimonials are in a separate plan, but media for testimonial avatars/videos is fragmented |
 
 ### Prop Pipeline Verification
 
@@ -67,18 +67,18 @@ Media components are the **visual backbone of every website**. A site's credibil
 converter.ts typeMap → core-components.ts fields → renders.tsx props
 ```
 
-| Component | Converter Aliases | Registry | Render | Aligned? |
-|-----------|------------------|----------|--------|----------|
-| Image | `ImageBlock`, `ImageSection` | ~45 fields | 50+ props | ✅ |
-| Video | `VideoBlock`, `VideoSection`, `VideoPlayer` | ~35 fields | 50+ props | ✅ |
-| Map | `MapBlock`, `MapSection`, `LocationMap` | ~35 fields | 40+ props | ✅ |
-| Gallery | `GalleryBlock` | ~60+ fields | 60+ props | ✅ |
-| Carousel | `CarouselBlock`, `CarouselSection` | ~10 fields | ~12 props | ✅ (but too few) |
-| Avatar | (not in typeMap) | — | 9 props | ⚠️ Not in converter |
-| SocialProof | `SocialProofBlock`, `SocialProofSection` | — | 12 props | ✅ |
-| TrustBadges | `TrustBadgesBlock`, `TrustBadgesSection`, `Badges`, `Accreditations`, `Certifications` | — | 10 props | ✅ |
-| LogoCloud | `LogoCloudBlock`, `LogoCloudSection`, `PartnerLogos`, `Partners`, `TrustedBy` | — | 13 props | ✅ |
-| ComparisonTable | `ComparisonBlock`, `ComparisonSection`, `ComparisonTableBlock` | — | 12 props | ✅ |
+| Component       | Converter Aliases                                                                      | Registry    | Render    | Aligned?            |
+| --------------- | -------------------------------------------------------------------------------------- | ----------- | --------- | ------------------- |
+| Image           | `ImageBlock`, `ImageSection`                                                           | ~45 fields  | 50+ props | ✅                  |
+| Video           | `VideoBlock`, `VideoSection`, `VideoPlayer`                                            | ~35 fields  | 50+ props | ✅                  |
+| Map             | `MapBlock`, `MapSection`, `LocationMap`                                                | ~35 fields  | 40+ props | ✅                  |
+| Gallery         | `GalleryBlock`                                                                         | ~60+ fields | 60+ props | ✅                  |
+| Carousel        | `CarouselBlock`, `CarouselSection`                                                     | ~10 fields  | ~12 props | ✅ (but too few)    |
+| Avatar          | (not in typeMap)                                                                       | —           | 9 props   | ⚠️ Not in converter |
+| SocialProof     | `SocialProofBlock`, `SocialProofSection`                                               | —           | 12 props  | ✅                  |
+| TrustBadges     | `TrustBadgesBlock`, `TrustBadgesSection`, `Badges`, `Accreditations`, `Certifications` | —           | 10 props  | ✅                  |
+| LogoCloud       | `LogoCloudBlock`, `LogoCloudSection`, `PartnerLogos`, `Partners`, `TrustedBy`          | —           | 13 props  | ✅                  |
+| ComparisonTable | `ComparisonBlock`, `ComparisonSection`, `ComparisonTableBlock`                         | —           | 12 props  | ✅                  |
 
 ---
 
@@ -86,24 +86,24 @@ converter.ts typeMap → core-components.ts fields → renders.tsx props
 
 ### How World-Class Platforms Handle Media
 
-| Feature | Squarespace | Webflow | Framer | Wix | DRAMAC Current | Gap |
-|---------|-------------|---------|--------|-----|----------------|-----|
-| Image optimisation API | ✅ CDN-resized | ✅ Responsive | ✅ Next/Image | ✅ CDN | ⚠️ Basic `<img>` | 🔴 No srcSet/sizes |
-| Image hover effects | 5 | 8 | 10+ | 4 | 5 (zoom/rotate/brightness/blur) | ✅ Good |
-| Image frames/borders | 3 | 5 | 4 | 3 | 4 (simple/polaroid/shadow-box/rounded) | ✅ Good |
-| Video background | ✅ | ✅ | ✅ | ✅ | ❌ | 🔴 Missing |
-| Video lazy loading | ✅ | ✅ | ✅ | ✅ | ✅ (via poster image) | ✅ Good |
-| Gallery masonry | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ Good |
-| Gallery filtering | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ Good |
-| Gallery lightbox | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ Good |
-| Carousel swipe | ✅ | ✅ | ✅ | ✅ | ❌ | 🔴 Missing |
-| Carousel transitions | 5+ | 3 | 5+ | 4 | 1 (slide only) | 🔴 Limited |
-| Before/after slider | ✅ | ✅ | ❌ | ✅ | ❌ | 🔴 Missing |
-| Audio player | ❌ | ❌ | ❌ | ✅ | ❌ | ⚠️ Nice-to-have |
-| Map dark mode style | ✅ | ❌ | ❌ | ✅ | ✅ (6 styles) | ✅ Ahead |
-| Logo cloud marquee | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ Good |
-| Avatar groups | ✅ | ❌ | ✅ | ❌ | ❌ | 🔴 Missing |
-| Comparison table | ❌ | ✅ | ❌ | ✅ | ✅ | ✅ Good |
+| Feature                | Squarespace    | Webflow       | Framer        | Wix    | DRAMAC Current                         | Gap                |
+| ---------------------- | -------------- | ------------- | ------------- | ------ | -------------------------------------- | ------------------ |
+| Image optimisation API | ✅ CDN-resized | ✅ Responsive | ✅ Next/Image | ✅ CDN | ⚠️ Basic `<img>`                       | 🔴 No srcSet/sizes |
+| Image hover effects    | 5              | 8             | 10+           | 4      | 5 (zoom/rotate/brightness/blur)        | ✅ Good            |
+| Image frames/borders   | 3              | 5             | 4             | 3      | 4 (simple/polaroid/shadow-box/rounded) | ✅ Good            |
+| Video background       | ✅             | ✅            | ✅            | ✅     | ❌                                     | 🔴 Missing         |
+| Video lazy loading     | ✅             | ✅            | ✅            | ✅     | ✅ (via poster image)                  | ✅ Good            |
+| Gallery masonry        | ✅             | ✅            | ✅            | ✅     | ✅                                     | ✅ Good            |
+| Gallery filtering      | ✅             | ✅            | ❌            | ✅     | ✅                                     | ✅ Good            |
+| Gallery lightbox       | ✅             | ✅            | ✅            | ✅     | ✅                                     | ✅ Good            |
+| Carousel swipe         | ✅             | ✅            | ✅            | ✅     | ❌                                     | 🔴 Missing         |
+| Carousel transitions   | 5+             | 3             | 5+            | 4      | 1 (slide only)                         | 🔴 Limited         |
+| Before/after slider    | ✅             | ✅            | ❌            | ✅     | ❌                                     | 🔴 Missing         |
+| Audio player           | ❌             | ❌            | ❌            | ✅     | ❌                                     | ⚠️ Nice-to-have    |
+| Map dark mode style    | ✅             | ❌            | ❌            | ✅     | ✅ (6 styles)                          | ✅ Ahead           |
+| Logo cloud marquee     | ✅             | ✅            | ✅            | ✅     | ✅                                     | ✅ Good            |
+| Avatar groups          | ✅             | ❌            | ✅            | ❌     | ❌                                     | 🔴 Missing         |
+| Comparison table       | ❌             | ✅            | ❌            | ✅     | ✅                                     | ✅ Good            |
 
 ### Key Takeaways
 
@@ -156,8 +156,10 @@ const ref = useRef<HTMLDivElement>(null);
 
 useEffect(() => {
   const observer = new IntersectionObserver(
-    ([entry]) => { if (entry.isIntersecting) setIsVisible(true); },
-    { rootMargin: '200px' }  // Start loading 200px before viewport
+    ([entry]) => {
+      if (entry.isIntersecting) setIsVisible(true);
+    },
+    { rootMargin: "200px" }, // Start loading 200px before viewport
   );
   if (ref.current) observer.observe(ref.current);
   return () => observer.disconnect();
@@ -175,21 +177,24 @@ Every media component follows this container structure:
   style={{
     backgroundColor,
     borderRadius: RADIUS_MAP[borderRadius],
-    overflow: 'hidden',  // Clips children to border-radius
+    overflow: "hidden", // Clips children to border-radius
   }}
 >
   {/* Media content */}
   {children}
-  
+
   {/* Optional overlay */}
   {overlay && (
-    <div style={{
-      position: 'absolute', inset: 0,
-      backgroundColor: overlayColor,
-      opacity: overlayOpacity,
-    }} />
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        backgroundColor: overlayColor,
+        opacity: overlayOpacity,
+      }}
+    />
   )}
-  
+
   {/* Optional caption */}
   {caption && <figcaption>...</figcaption>}
 </div>
@@ -202,7 +207,7 @@ Every media component follows this container structure:
 --media-radius: var(--radius, 0.5rem);
 --media-border-color: var(--color-border, #e5e7eb);
 --media-caption-color: var(--color-muted-foreground, #6b7280);
---media-overlay-color: var(--color-overlay, rgba(0,0,0,0.5));
+--media-overlay-color: var(--color-overlay, rgba(0, 0, 0, 0.5));
 --media-placeholder-color: var(--color-muted, #f3f4f6);
 
 /* Star/rating colours */
@@ -238,13 +243,8 @@ Every media component follows this container structure:
 </section>
 
 <!-- Carousel: <section> with live region -->
-<section
-  aria-label="Image carousel"
-  aria-roledescription="carousel"
->
-  <div aria-live="polite" aria-atomic="true">
-    Slide {current} of {total}
-  </div>
+<section aria-label="Image carousel" aria-roledescription="carousel">
+  <div aria-live="polite" aria-atomic="true">Slide {current} of {total}</div>
 </section>
 ```
 
@@ -255,35 +255,36 @@ Every media component follows this container structure:
 ### 4.1 ImageRender V2
 
 #### Current State
+
 ImageRender is already one of the strongest components with an explicit TypeScript interface exported. Minimal changes needed.
 
 #### Changes
 
-| Change | Before | After | Reason |
-|--------|--------|-------|--------|
-| **Add srcSet generation** | Single `src` | `srcSet` + `sizes` attributes | Responsive images, bandwidth savings |
-| **Add `priority` prop** | Only `loading: "lazy"/"eager"` | `priority: boolean` → sets eager + fetchpriority="high" | Above-the-fold images need priority |
-| **Add `placeholder` prop** | None | `placeholder: "blur" \| "color" \| "none"` | Prevents layout shift during load |
-| **Add `blurDataURL`** | None | Low-res base64 blur placeholder | Smooth loading experience |
-| **Wrap in `<figure>`** | `<div>` wrapper | `<figure>` when caption present | Semantic HTML |
+| Change                     | Before                         | After                                                   | Reason                               |
+| -------------------------- | ------------------------------ | ------------------------------------------------------- | ------------------------------------ |
+| **Add srcSet generation**  | Single `src`                   | `srcSet` + `sizes` attributes                           | Responsive images, bandwidth savings |
+| **Add `priority` prop**    | Only `loading: "lazy"/"eager"` | `priority: boolean` → sets eager + fetchpriority="high" | Above-the-fold images need priority  |
+| **Add `placeholder` prop** | None                           | `placeholder: "blur" \| "color" \| "none"`              | Prevents layout shift during load    |
+| **Add `blurDataURL`**      | None                           | Low-res base64 blur placeholder                         | Smooth loading experience            |
+| **Wrap in `<figure>`**     | `<div>` wrapper                | `<figure>` when caption present                         | Semantic HTML                        |
 
 #### ImagePropsV2 Additions
 
 ```typescript
 interface ImagePropsV2 extends ImageProps {
   // Responsive
-  srcSet?: string;             // Custom srcSet override
-  sizes?: string;              // Responsive sizes hint
-  priority?: boolean;          // Above-the-fold image → eager load + fetchpriority="high"
-  
+  srcSet?: string; // Custom srcSet override
+  sizes?: string; // Responsive sizes hint
+  priority?: boolean; // Above-the-fold image → eager load + fetchpriority="high"
+
   // Placeholder
-  placeholder?: 'blur' | 'color' | 'none';
-  blurDataURL?: string;        // Base64 blurred thumbnail
-  placeholderColor?: string;   // Background while loading
-  
+  placeholder?: "blur" | "color" | "none";
+  blurDataURL?: string; // Base64 blurred thumbnail
+  placeholderColor?: string; // Background while loading
+
   // Object fit (already exists but formalise)
-  objectFit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
-  objectPosition?: string;     // "center", "top", "50% 25%"
+  objectFit?: "cover" | "contain" | "fill" | "none" | "scale-down";
+  objectPosition?: string; // "center", "top", "50% 25%"
 }
 ```
 
@@ -291,37 +292,37 @@ interface ImagePropsV2 extends ImageProps {
 
 #### Changes
 
-| Change | Before | After | Reason |
-|--------|--------|-------|--------|
-| **Add background mode** | None | `background?: boolean` — muted, autoplay, loop, no controls | Hero background videos |
-| **Add poster optimisation** | Basic poster image | `posterSrcSet` for responsive poster | Fast poster display |
-| **Add keyboard controls** | None (relies on browser) | Custom keyboard: Space=play/pause, M=mute, F=fullscreen | Accessibility |
-| **Add loading skeleton** | None | Shimmer placeholder before video loads | Visual polish |
-| **Add captions track** | None | `captionsSrc?: string` + `captionsLabel?: string` | Accessibility — WCAG 1.2.2 |
+| Change                      | Before                   | After                                                       | Reason                     |
+| --------------------------- | ------------------------ | ----------------------------------------------------------- | -------------------------- |
+| **Add background mode**     | None                     | `background?: boolean` — muted, autoplay, loop, no controls | Hero background videos     |
+| **Add poster optimisation** | Basic poster image       | `posterSrcSet` for responsive poster                        | Fast poster display        |
+| **Add keyboard controls**   | None (relies on browser) | Custom keyboard: Space=play/pause, M=mute, F=fullscreen     | Accessibility              |
+| **Add loading skeleton**    | None                     | Shimmer placeholder before video loads                      | Visual polish              |
+| **Add captions track**      | None                     | `captionsSrc?: string` + `captionsLabel?: string`           | Accessibility — WCAG 1.2.2 |
 
 #### VideoPropsV2 Additions
 
 ```typescript
 interface VideoPropsV2 extends VideoProps {
   // Background mode (hero videos)
-  background?: boolean;          // Muted, autoplay, loop, no controls, full-bleed
-  backgroundOverlay?: boolean;   // Dark overlay for text readability
+  background?: boolean; // Muted, autoplay, loop, no controls, full-bleed
+  backgroundOverlay?: boolean; // Dark overlay for text readability
   backgroundOverlayOpacity?: number;
-  
+
   // Poster
-  posterSrcSet?: string;         // Responsive poster image
-  
+  posterSrcSet?: string; // Responsive poster image
+
   // Loading
-  showSkeleton?: boolean;        // Shimmer loading state
-  
+  showSkeleton?: boolean; // Shimmer loading state
+
   // Captions
-  captionsSrc?: string;          // WebVTT captions file URL
-  captionsLabel?: string;        // Track language label
-  captionsSrcLang?: string;      // Language code (en, es, fr)
-  
+  captionsSrc?: string; // WebVTT captions file URL
+  captionsLabel?: string; // Track language label
+  captionsSrcLang?: string; // Language code (en, es, fr)
+
   // Chapters (for longer videos)
   chapters?: Array<{
-    time: number;               // Seconds
+    time: number; // Seconds
     label: string;
   }>;
 }
@@ -331,12 +332,12 @@ interface VideoPropsV2 extends VideoProps {
 
 #### Changes
 
-| Change | Before | After | Reason |
-|--------|--------|-------|--------|
-| **Fix grayscale/saturation application** | Applied via CSS filter | Applied via native map API styles | Better quality on Google Maps |
-| **Add dark mode auto-detection** | Manual `mapStyle` selection | Auto-selects "dark"/"night" when site theme is dark | Dark mode consistency |
-| **Add multiple markers** | Single marker | `markers?: MapMarker[]` | Multi-location businesses |
-| **Add custom marker icon** | Default Google marker | `markerIcon?: string` (URL to custom pin SVG) | Brand consistency |
+| Change                                   | Before                      | After                                               | Reason                        |
+| ---------------------------------------- | --------------------------- | --------------------------------------------------- | ----------------------------- |
+| **Fix grayscale/saturation application** | Applied via CSS filter      | Applied via native map API styles                   | Better quality on Google Maps |
+| **Add dark mode auto-detection**         | Manual `mapStyle` selection | Auto-selects "dark"/"night" when site theme is dark | Dark mode consistency         |
+| **Add multiple markers**                 | Single marker               | `markers?: MapMarker[]`                             | Multi-location businesses     |
+| **Add custom marker icon**               | Default Google marker       | `markerIcon?: string` (URL to custom pin SVG)       | Brand consistency             |
 
 #### MapPropsV2 Additions
 
@@ -346,20 +347,20 @@ interface MapMarker {
   lng: number;
   label?: string;
   color?: string;
-  icon?: string;            // Custom marker icon URL
+  icon?: string; // Custom marker icon URL
   infoWindowContent?: string;
 }
 
 interface MapPropsV2 extends MapProps {
   // Multiple markers
   markers?: MapMarker[];
-  
+
   // Custom marker
-  markerIcon?: string;      // URL to custom SVG/PNG marker icon
-  
+  markerIcon?: string; // URL to custom SVG/PNG marker icon
+
   // Auto dark mode
-  autoTheme?: boolean;      // Auto-switch to dark map style when site is dark mode
-  
+  autoTheme?: boolean; // Auto-switch to dark map style when site is dark mode
+
   // Static map fallback
   staticFallback?: boolean; // Render static image for print / low bandwidth
 }
@@ -368,24 +369,25 @@ interface MapPropsV2 extends MapProps {
 ### 4.4 GalleryRender V2
 
 #### Current State
+
 Already the strongest media component with 60+ props. Minimal changes needed.
 
 #### Changes
 
-| Change | Before | After | Reason |
-|--------|--------|-------|--------|
-| **Fix default background** | `backgroundColor: "#ffffff"` | `backgroundColor: "var(--color-background, #ffffff)"` | Dark mode |
-| **Add virtual scrolling** | Renders all images at once | Virtualise for galleries > 50 images | Performance |
-| **Add drag-to-reorder** | None | `reorderable?: boolean` (admin only) | CMS editor feature |
-| **Add video items** | Images only | `GalleryItem` union: image ∣ video | Mixed media galleries |
+| Change                     | Before                       | After                                                 | Reason                |
+| -------------------------- | ---------------------------- | ----------------------------------------------------- | --------------------- |
+| **Fix default background** | `backgroundColor: "#ffffff"` | `backgroundColor: "var(--color-background, #ffffff)"` | Dark mode             |
+| **Add virtual scrolling**  | Renders all images at once   | Virtualise for galleries > 50 images                  | Performance           |
+| **Add drag-to-reorder**    | None                         | `reorderable?: boolean` (admin only)                  | CMS editor feature    |
+| **Add video items**        | Images only                  | `GalleryItem` union: image ∣ video                    | Mixed media galleries |
 
 #### GalleryPropsV2 Additions
 
 ```typescript
 interface GalleryItem {
-  type?: 'image' | 'video';
+  type?: "image" | "video";
   image?: string | ImageValue;
-  videoSrc?: string;             // For video items
+  videoSrc?: string; // For video items
   alt?: string;
   title?: string;
   caption?: string;
@@ -395,19 +397,19 @@ interface GalleryItem {
 
 interface GalleryPropsV2 extends GalleryProps {
   // Mixed media
-  items?: GalleryItem[];          // Replaces or supplements `images`
-  
+  items?: GalleryItem[]; // Replaces or supplements `images`
+
   // Virtualisation
-  virtualise?: boolean;           // For galleries > 50 items
-  
+  virtualise?: boolean; // For galleries > 50 items
+
   // Image optimisation
-  imageSizes?: string;            // Custom srcSet sizes hint
-  
+  imageSizes?: string; // Custom srcSet sizes hint
+
   // Infinite scroll (alternative to load more button)
   infiniteScroll?: boolean;
-  
+
   // Background fix
-  backgroundColor?: string;       // Default: 'var(--color-background, #ffffff)'
+  backgroundColor?: string; // Default: 'var(--color-background, #ffffff)'
 }
 ```
 
@@ -417,17 +419,17 @@ interface GalleryPropsV2 extends GalleryProps {
 
 #### Changes
 
-| Change | Before | After | Reason |
-|--------|--------|-------|--------|
-| **Add transition effects** | Slide only | `transition: "slide" \| "fade" \| "zoom" \| "flip" \| "crossfade"` | Visual variety |
-| **Add swipe/touch support** | None | Touch gesture handler for mobile swipe left/right | Mobile-essential |
-| **Add pause on hover** | None | `pauseOnHover?: boolean` | UX — let users read content |
-| **Add lazy slide loading** | All slides render on mount | Only current + adjacent slides render | Performance |
-| **Add keyboard navigation** | None | ← → arrows change slides, Enter activates CTA | Accessibility |
-| **Add progress indicator** | None | `showProgress: "bar" \| "fraction" \| "none"` | Time awareness |
-| **Add per-slide content** | Limited (title/description/CTA) | Rich content per slide with layout control | Content flexibility |
-| **Add auto-height** | Fixed aspect ratio | `autoHeight?: boolean` — adjusts to tallest slide's content | Variable content |
-| **Add loop mode** | Always loops | `loop?: boolean` — can stop at last slide | UX choice |
+| Change                      | Before                          | After                                                              | Reason                      |
+| --------------------------- | ------------------------------- | ------------------------------------------------------------------ | --------------------------- |
+| **Add transition effects**  | Slide only                      | `transition: "slide" \| "fade" \| "zoom" \| "flip" \| "crossfade"` | Visual variety              |
+| **Add swipe/touch support** | None                            | Touch gesture handler for mobile swipe left/right                  | Mobile-essential            |
+| **Add pause on hover**      | None                            | `pauseOnHover?: boolean`                                           | UX — let users read content |
+| **Add lazy slide loading**  | All slides render on mount      | Only current + adjacent slides render                              | Performance                 |
+| **Add keyboard navigation** | None                            | ← → arrows change slides, Enter activates CTA                      | Accessibility               |
+| **Add progress indicator**  | None                            | `showProgress: "bar" \| "fraction" \| "none"`                      | Time awareness              |
+| **Add per-slide content**   | Limited (title/description/CTA) | Rich content per slide with layout control                         | Content flexibility         |
+| **Add auto-height**         | Fixed aspect ratio              | `autoHeight?: boolean` — adjusts to tallest slide's content        | Variable content            |
+| **Add loop mode**           | Always loops                    | `loop?: boolean` — can stop at last slide                          | UX choice                   |
 
 #### CarouselPropsV2
 
@@ -438,17 +440,17 @@ interface CarouselSlide {
   description?: string;
   link?: string;
   buttonText?: string;
-  buttonVariant?: 'primary' | 'secondary' | 'outline' | 'ghost';
-  
+  buttonVariant?: "primary" | "secondary" | "outline" | "ghost";
+
   // Rich content
   subtitle?: string;
   badge?: string;
-  align?: 'left' | 'center' | 'right';
-  
+  align?: "left" | "center" | "right";
+
   // Per-slide overlay
   overlayOpacity?: number;
   overlayColor?: string;
-  
+
   // Per-slide colours
   titleColor?: string;
   descriptionColor?: string;
@@ -456,63 +458,63 @@ interface CarouselSlide {
 
 interface CarouselPropsV2 {
   slides?: CarouselSlide[];
-  
+
   // Playback
   autoplay?: boolean;
-  interval?: number;              // Default: 5000ms
-  pauseOnHover?: boolean;         // Default: true
-  loop?: boolean;                 // Default: true
-  startIndex?: number;            // Default: 0
-  
+  interval?: number; // Default: 5000ms
+  pauseOnHover?: boolean; // Default: true
+  loop?: boolean; // Default: true
+  startIndex?: number; // Default: 0
+
   // Transition
-  transition?: 'slide' | 'fade' | 'zoom' | 'flip' | 'crossfade';
-  transitionDuration?: number;    // Default: 500ms
-  transitionEasing?: string;      // Default: 'ease-in-out'
-  
+  transition?: "slide" | "fade" | "zoom" | "flip" | "crossfade";
+  transitionDuration?: number; // Default: 500ms
+  transitionEasing?: string; // Default: 'ease-in-out'
+
   // Navigation
-  showDots?: boolean;             // Default: true
-  showArrows?: boolean;           // Default: true
-  showProgress?: 'bar' | 'fraction' | 'none';
-  arrowStyle?: 'circle' | 'square' | 'minimal';
-  arrowPosition?: 'inside' | 'outside' | 'bottom';
-  dotStyle?: 'circle' | 'line' | 'dash';
-  dotPosition?: 'inside' | 'outside';
-  
+  showDots?: boolean; // Default: true
+  showArrows?: boolean; // Default: true
+  showProgress?: "bar" | "fraction" | "none";
+  arrowStyle?: "circle" | "square" | "minimal";
+  arrowPosition?: "inside" | "outside" | "bottom";
+  dotStyle?: "circle" | "line" | "dash";
+  dotPosition?: "inside" | "outside";
+
   // Sizes
-  aspectRatio?: 'video' | 'square' | 'wide' | 'ultrawide' | 'auto';
-  borderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  height?: string;                // Custom CSS height
+  aspectRatio?: "video" | "square" | "wide" | "ultrawide" | "auto";
+  borderRadius?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  height?: string; // Custom CSS height
   maxHeight?: string;
-  
+
   // Overlay (global)
   overlay?: boolean;
   overlayColor?: string;
   overlayOpacity?: number;
-  overlayGradient?: boolean;      // Bottom-to-top gradient (for text readability)
-  
+  overlayGradient?: boolean; // Bottom-to-top gradient (for text readability)
+
   // Colours
   arrowColor?: string;
   arrowBackgroundColor?: string;
   dotColor?: string;
   dotActiveColor?: string;
   textColor?: string;
-  
+
   // Content layout
-  contentPosition?: 'bottom-left' | 'bottom-center' | 'center' | 'top-left';
-  contentMaxWidth?: string;       // Default: '600px'
+  contentPosition?: "bottom-left" | "bottom-center" | "center" | "top-left";
+  contentMaxWidth?: string; // Default: '600px'
   contentPadding?: string;
-  
+
   // Touch
-  swipeable?: boolean;            // Default: true
-  swipeThreshold?: number;        // Default: 50 (px)
-  
+  swipeable?: boolean; // Default: true
+  swipeThreshold?: number; // Default: 50 (px)
+
   // Performance
-  lazySlides?: boolean;           // Only render visible + adjacent
-  
+  lazySlides?: boolean; // Only render visible + adjacent
+
   // Accessibility
-  ariaLabel?: string;             // Default: 'Image carousel'
-  autoplayLabel?: string;         // Default: 'Pause/Play carousel'
-  
+  ariaLabel?: string; // Default: 'Image carousel'
+  autoplayLabel?: string; // Default: 'Pause/Play carousel'
+
   id?: string;
   className?: string;
 }
@@ -522,13 +524,13 @@ interface CarouselPropsV2 {
 
 #### Changes
 
-| Change | Before | After | Reason |
-|--------|--------|-------|--------|
-| **Fix hardcoded status colours** | `text-green-500`, `text-red-500` Tailwind classes | Inline styles with CSS variables | Dark mode |
-| **Add link support** | None | `href?: string` — avatar links to profile | Common pattern |
-| **Add avatar groups** | Single avatar only | `AvatarGroupRender` — stacked overlapping avatars | "5 people liked this" |
-| **Add ring/border colour** | `borderColor: "#ffffff"` | `borderColor: "var(--color-background, #ffffff)"` | Dark mode — ring should match background |
-| **Add tooltip name** | None | Hover tooltip showing person's name | UX polish |
+| Change                           | Before                                            | After                                             | Reason                                   |
+| -------------------------------- | ------------------------------------------------- | ------------------------------------------------- | ---------------------------------------- |
+| **Fix hardcoded status colours** | `text-green-500`, `text-red-500` Tailwind classes | Inline styles with CSS variables                  | Dark mode                                |
+| **Add link support**             | None                                              | `href?: string` — avatar links to profile         | Common pattern                           |
+| **Add avatar groups**            | Single avatar only                                | `AvatarGroupRender` — stacked overlapping avatars | "5 people liked this"                    |
+| **Add ring/border colour**       | `borderColor: "#ffffff"`                          | `borderColor: "var(--color-background, #ffffff)"` | Dark mode — ring should match background |
+| **Add tooltip name**             | None                                              | Hover tooltip showing person's name               | UX polish                                |
 
 #### AvatarPropsV2
 
@@ -536,18 +538,18 @@ interface CarouselPropsV2 {
 interface AvatarPropsV2 extends AvatarProps {
   // Link
   href?: string;
-  target?: '_self' | '_blank';
-  
+  target?: "_self" | "_blank";
+
   // Tooltip
-  showTooltip?: boolean;          // Shows name on hover
-  
+  showTooltip?: boolean; // Shows name on hover
+
   // Status colours via CSS variables
   // (internal change — no new prop, just fix implementation)
-  
+
   // Ring
-  ring?: boolean;                 // Show ring around avatar
-  ringColor?: string;             // Default: 'var(--color-primary)'
-  ringWidth?: number;             // Default: 2
+  ring?: boolean; // Show ring around avatar
+  ringColor?: string; // Default: 'var(--color-primary)'
+  ringWidth?: number; // Default: 2
 }
 ```
 
@@ -561,21 +563,21 @@ interface AvatarGroupProps {
     name?: string;
     href?: string;
   }>;
-  
+
   // Display
-  max?: number;                   // Max visible avatars, rest shows "+N"
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-  overlap?: 'sm' | 'md' | 'lg';  // Overlap amount
-  direction?: 'left' | 'right';  // Stack direction
-  
+  max?: number; // Max visible avatars, rest shows "+N"
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
+  overlap?: "sm" | "md" | "lg"; // Overlap amount
+  direction?: "left" | "right"; // Stack direction
+
   // Overflow
-  overflowStyle?: 'count' | 'hidden';
-  overflowColor?: string;        // "+3" badge background colour
+  overflowStyle?: "count" | "hidden";
+  overflowColor?: string; // "+3" badge background colour
   overflowTextColor?: string;
-  
+
   // Ring
-  ringColor?: string;             // Default: 'var(--color-background)' — matches page bg
-  
+  ringColor?: string; // Default: 'var(--color-background)' — matches page bg
+
   id?: string;
   className?: string;
 }
@@ -585,35 +587,35 @@ interface AvatarGroupProps {
 
 #### Changes
 
-| Change | Before | After | Reason |
-|--------|--------|-------|--------|
-| **Fix hardcoded star colour** | `text-yellow-400` | `style={{ color: starColor \|\| 'var(--color-star, #f59e0b)' }}` | Dark mode + theming |
-| **Add animation** | None | Stars fill in sequence on scroll (staggered animation) | Visual polish |
-| **Add custom rating source** | `platform` string only | `platformIcon?: string` — Lucide icon or image | More flexible |
-| **Add schema.org** | None | JSON-LD `AggregateRating` structured data | SEO |
+| Change                        | Before                 | After                                                            | Reason              |
+| ----------------------------- | ---------------------- | ---------------------------------------------------------------- | ------------------- |
+| **Fix hardcoded star colour** | `text-yellow-400`      | `style={{ color: starColor \|\| 'var(--color-star, #f59e0b)' }}` | Dark mode + theming |
+| **Add animation**             | None                   | Stars fill in sequence on scroll (staggered animation)           | Visual polish       |
+| **Add custom rating source**  | `platform` string only | `platformIcon?: string` — Lucide icon or image                   | More flexible       |
+| **Add schema.org**            | None                   | JSON-LD `AggregateRating` structured data                        | SEO                 |
 
 #### SocialProofPropsV2
 
 ```typescript
-interface SocialProofPropsV2 extends Omit<SocialProofProps, 'starColor'> {
+interface SocialProofPropsV2 extends Omit<SocialProofProps, "starColor"> {
   // Stars
-  starColor?: string;              // Inline style, not Tailwind class. Default: 'var(--color-star, #f59e0b)'
-  emptyStarColor?: string;         // Default: 'var(--color-star-empty, #e5e7eb)'
-  starSize?: 'sm' | 'md' | 'lg';  // Default: 'md'
-  
+  starColor?: string; // Inline style, not Tailwind class. Default: 'var(--color-star, #f59e0b)'
+  emptyStarColor?: string; // Default: 'var(--color-star-empty, #e5e7eb)'
+  starSize?: "sm" | "md" | "lg"; // Default: 'md'
+
   // Display
-  showPercentage?: boolean;        // Show "96%" instead of "4.8/5"
-  
+  showPercentage?: boolean; // Show "96%" instead of "4.8/5"
+
   // Animation
-  animateOnScroll?: boolean;       // Stars fill in sequence when visible
-  
+  animateOnScroll?: boolean; // Stars fill in sequence when visible
+
   // Platform
-  platformIcon?: string;           // Lucide icon name or image URL
-  
+  platformIcon?: string; // Lucide icon name or image URL
+
   // Schema.org
-  enableSchema?: boolean;          // Outputs JSON-LD AggregateRating
-  schemaItemReviewed?: string;     // Business name for structured data
-  
+  enableSchema?: boolean; // Outputs JSON-LD AggregateRating
+  schemaItemReviewed?: string; // Business name for structured data
+
   // Colours
   textColor?: string;
   backgroundColor?: string;
@@ -624,14 +626,14 @@ interface SocialProofPropsV2 extends Omit<SocialProofProps, 'starColor'> {
 
 #### Changes
 
-| Change | Before | After | Reason |
-|--------|--------|-------|--------|
-| **Fix hardcoded highlight** | `bg-sky-50 border-sky-500` | CSS variable inline styles | Dark mode + brand alignment |
-| **Fix hardcoded check/cross** | `text-green-500` / `text-gray-300` | CSS variables | Dark mode |
-| **Add CTA row** | None | Bottom row with "Choose Plan" buttons per column | Conversion |
-| **Add row grouping** | Flat rows only | `rows` can have `group?: string` for section headers | Organise large tables |
-| **Add tooltip on features** | `tooltip` prop exists but unclear implementation | Proper hover tooltip with arrow | Explain complex features |
-| **Add responsive collapse** | Table forced on mobile | Collapse to stacked cards on mobile | Mobile readability |
+| Change                        | Before                                           | After                                                | Reason                      |
+| ----------------------------- | ------------------------------------------------ | ---------------------------------------------------- | --------------------------- |
+| **Fix hardcoded highlight**   | `bg-sky-50 border-sky-500`                       | CSS variable inline styles                           | Dark mode + brand alignment |
+| **Fix hardcoded check/cross** | `text-green-500` / `text-gray-300`               | CSS variables                                        | Dark mode                   |
+| **Add CTA row**               | None                                             | Bottom row with "Choose Plan" buttons per column     | Conversion                  |
+| **Add row grouping**          | Flat rows only                                   | `rows` can have `group?: string` for section headers | Organise large tables       |
+| **Add tooltip on features**   | `tooltip` prop exists but unclear implementation | Proper hover tooltip with arrow                      | Explain complex features    |
+| **Add responsive collapse**   | Table forced on mobile                           | Collapse to stacked cards on mobile                  | Mobile readability          |
 
 #### ComparisonTablePropsV2
 
@@ -639,18 +641,18 @@ interface SocialProofPropsV2 extends Omit<SocialProofProps, 'starColor'> {
 interface ComparisonColumnV2 {
   name: string;
   highlight?: boolean;
-  badge?: string;                  // "Most Popular", "Best Value"
+  badge?: string; // "Most Popular", "Best Value"
   price?: string;
   priceSubtext?: string;
-  ctaText?: string;                // "Choose Plan"
+  ctaText?: string; // "Choose Plan"
   ctaLink?: string;
-  ctaVariant?: 'primary' | 'outline';
+  ctaVariant?: "primary" | "outline";
 }
 
 interface ComparisonRowV2 {
   feature: string;
   tooltip?: string;
-  group?: string;                  // Section header: "Features", "Support", "Security"
+  group?: string; // Section header: "Features", "Support", "Security"
   values: (boolean | string)[];
 }
 
@@ -659,26 +661,26 @@ interface ComparisonTablePropsV2 {
   rows?: ComparisonRowV2[];
   title?: string;
   subtitle?: string;
-  
-  variant?: 'simple' | 'cards' | 'striped';
-  
+
+  variant?: "simple" | "cards" | "striped";
+
   // Colours — CSS variables, not hardcoded
-  highlightBackgroundColor?: string;  // Default: 'var(--color-highlight-bg)'
-  highlightBorderColor?: string;      // Default: 'var(--color-highlight-border)'
-  checkColor?: string;                // Default: 'var(--color-check, #22c55e)'
-  crossColor?: string;                // Default: 'var(--color-cross, #9ca3af)'
+  highlightBackgroundColor?: string; // Default: 'var(--color-highlight-bg)'
+  highlightBorderColor?: string; // Default: 'var(--color-highlight-border)'
+  checkColor?: string; // Default: 'var(--color-check, #22c55e)'
+  crossColor?: string; // Default: 'var(--color-cross, #9ca3af)'
   headerBackgroundColor?: string;
   rowHoverColor?: string;
-  
+
   stickyHeader?: boolean;
   stickyColumn?: boolean;
-  
+
   // Responsive
-  mobileLayout?: 'scroll' | 'stack';  // Default: 'scroll'
-  
+  mobileLayout?: "scroll" | "stack"; // Default: 'scroll'
+
   // Accessibility
   ariaLabel?: string;
-  
+
   id?: string;
   className?: string;
 }
@@ -688,20 +690,20 @@ interface ComparisonTablePropsV2 {
 
 #### Changes (Minor)
 
-| Change | Before | After | Reason |
-|--------|--------|-------|--------|
-| **Add tooltip company name** | None | Hover tooltip shows `alt` text | Accessibility + UX |
-| **Add marquee speed control** | Fixed speed | `marqueeSpeed?: 'slow' \| 'normal' \| 'fast'` | Design flexibility |
-| **Add pause marquee on hover** | None | `pauseOnHover?: boolean` | UX |
+| Change                         | Before      | After                                         | Reason             |
+| ------------------------------ | ----------- | --------------------------------------------- | ------------------ |
+| **Add tooltip company name**   | None        | Hover tooltip shows `alt` text                | Accessibility + UX |
+| **Add marquee speed control**  | Fixed speed | `marqueeSpeed?: 'slow' \| 'normal' \| 'fast'` | Design flexibility |
+| **Add pause marquee on hover** | None        | `pauseOnHover?: boolean`                      | UX                 |
 
 ### 4.10 TrustBadgesRender V2
 
 #### Changes (Minor — already well-built)
 
-| Change | Before | After | Reason |
-|--------|--------|-------|--------|
+| Change                       | Before         | After                                                                 | Reason                                            |
+| ---------------------------- | -------------- | --------------------------------------------------------------------- | ------------------------------------------------- |
 | **Add built-in badge icons** | Image URL only | `iconName?: string` (Lucide) + `text?: string` — render without image | AI can generate trust badges without image assets |
-| **Add animation** | None | `animateOnScroll?: boolean` — staggered fade-in | Polish |
+| **Add animation**            | None           | `animateOnScroll?: boolean` — staggered fade-in                       | Polish                                            |
 
 ---
 
@@ -715,36 +717,37 @@ interface ComparisonTablePropsV2 {
 interface BeforeAfterProps {
   beforeImage?: string | ImageValue;
   afterImage?: string | ImageValue;
-  beforeLabel?: string;           // Default: "Before"
-  afterLabel?: string;            // Default: "After"
-  
+  beforeLabel?: string; // Default: "Before"
+  afterLabel?: string; // Default: "After"
+
   // Slider
-  initialPosition?: number;       // Default: 50 (percent)
-  orientation?: 'horizontal' | 'vertical';
-  
+  initialPosition?: number; // Default: 50 (percent)
+  orientation?: "horizontal" | "vertical";
+
   // Handle
-  handleStyle?: 'line' | 'circle' | 'arrows';
-  handleColor?: string;           // Default: 'var(--color-primary)'
-  handleSize?: 'sm' | 'md' | 'lg';
-  
+  handleStyle?: "line" | "circle" | "arrows";
+  handleColor?: string; // Default: 'var(--color-primary)'
+  handleSize?: "sm" | "md" | "lg";
+
   // Display
-  showLabels?: boolean;           // Default: true
-  labelPosition?: 'top' | 'bottom' | 'overlay';
-  aspectRatio?: 'square' | 'video' | 'portrait' | 'wide' | 'auto';
-  borderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  
+  showLabels?: boolean; // Default: true
+  labelPosition?: "top" | "bottom" | "overlay";
+  aspectRatio?: "square" | "video" | "portrait" | "wide" | "auto";
+  borderRadius?: "none" | "sm" | "md" | "lg" | "xl";
+
   // Caption
   caption?: string;
-  
+
   // Accessibility
-  ariaLabel?: string;             // Default: "Before and after comparison"
-  
+  ariaLabel?: string; // Default: "Before and after comparison"
+
   id?: string;
   className?: string;
 }
 ```
 
 **Implementation Notes:**
+
 - Uses `pointer-events` for mouse + touch drag
 - Uses `clip-path: inset()` for clean image clipping (GPU-accelerated)
 - Keyboard accessible: ← → arrows move divider in 5% increments
@@ -756,42 +759,42 @@ interface BeforeAfterProps {
 
 ```typescript
 interface AudioProps {
-  src?: string;                   // Audio file URL
-  title?: string;                 // Track/episode title
-  artist?: string;                // Artist/host name
-  cover?: string | ImageValue;    // Album art / episode cover
-  
+  src?: string; // Audio file URL
+  title?: string; // Track/episode title
+  artist?: string; // Artist/host name
+  cover?: string | ImageValue; // Album art / episode cover
+
   // Playback
-  autoplay?: boolean;             // Default: false
+  autoplay?: boolean; // Default: false
   loop?: boolean;
-  preload?: 'auto' | 'metadata' | 'none';
-  
+  preload?: "auto" | "metadata" | "none";
+
   // Style
-  variant?: 'full' | 'compact' | 'minimal';
+  variant?: "full" | "compact" | "minimal";
   // full: Cover art + waveform + controls + title
   // compact: Inline bar with play/pause + progress + time
   // minimal: Play button + progress bar only
-  
+
   // Colours
-  accentColor?: string;           // Progress bar, play button. Default: 'var(--color-primary)'
+  accentColor?: string; // Progress bar, play button. Default: 'var(--color-primary)'
   backgroundColor?: string;
   textColor?: string;
-  waveformColor?: string;         // Waveform bars colour
+  waveformColor?: string; // Waveform bars colour
   waveformProgressColor?: string; // Played portion colour
-  
+
   // Display
-  showWaveform?: boolean;         // Default: true (for "full" variant)
-  showDuration?: boolean;         // Default: true
-  showDownload?: boolean;         // Download button
-  showSpeed?: boolean;            // Playback speed control
-  
+  showWaveform?: boolean; // Default: true (for "full" variant)
+  showDuration?: boolean; // Default: true
+  showDownload?: boolean; // Download button
+  showSpeed?: boolean; // Playback speed control
+
   // Shape
-  borderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  shadow?: 'none' | 'sm' | 'md' | 'lg';
-  
+  borderRadius?: "none" | "sm" | "md" | "lg" | "xl";
+  shadow?: "none" | "sm" | "md" | "lg";
+
   // Accessibility
   ariaLabel?: string;
-  
+
   id?: string;
   className?: string;
 }
@@ -803,30 +806,30 @@ interface AudioProps {
 
 ```typescript
 interface IconProps {
-  name?: string;                  // Lucide icon name: "shield", "zap", "heart"
-  
+  name?: string; // Lucide icon name: "shield", "zap", "heart"
+
   // Size
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+  size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
   // xs: 16px, sm: 20px, md: 24px, lg: 32px, xl: 48px, 2xl: 64px, 3xl: 96px
-  
+
   // Colours
-  color?: string;                 // Default: 'currentColor'
-  backgroundColor?: string;       // Background circle/square behind icon
-  
+  color?: string; // Default: 'currentColor'
+  backgroundColor?: string; // Background circle/square behind icon
+
   // Background shape
-  backgroundShape?: 'none' | 'circle' | 'rounded' | 'square';
-  backgroundPadding?: 'sm' | 'md' | 'lg';
-  
+  backgroundShape?: "none" | "circle" | "rounded" | "square";
+  backgroundPadding?: "sm" | "md" | "lg";
+
   // Stroke
-  strokeWidth?: number;           // Default: 2
-  
+  strokeWidth?: number; // Default: 2
+
   // Animation
-  animation?: 'none' | 'spin' | 'pulse' | 'bounce' | 'float';
-  
+  animation?: "none" | "spin" | "pulse" | "bounce" | "float";
+
   // Accessibility
-  ariaLabel?: string;             // Required if icon conveys meaning
-  decorative?: boolean;           // If true, sets aria-hidden="true"
-  
+  ariaLabel?: string; // Required if icon conveys meaning
+  decorative?: boolean; // If true, sets aria-hidden="true"
+
   id?: string;
   className?: string;
 }
@@ -841,51 +844,51 @@ interface TimelineItem {
   title: string;
   description?: string;
   date?: string;
-  iconName?: string;              // Lucide icon for this step
+  iconName?: string; // Lucide icon for this step
   iconColor?: string;
   image?: string | ImageValue;
-  badge?: string;                 // "Current", "Completed", "Upcoming"
+  badge?: string; // "Current", "Completed", "Upcoming"
 }
 
 interface TimelineProps {
   items?: TimelineItem[];
-  
+
   // Layout
-  variant?: 'vertical' | 'horizontal' | 'alternating';
+  variant?: "vertical" | "horizontal" | "alternating";
   // vertical: Items stacked, timeline line on left
   // horizontal: Items in a row, timeline line on top
   // alternating: Items alternate left/right of centre line
-  
+
   // Line
-  lineColor?: string;             // Default: 'var(--color-border)'
-  lineWidth?: number;             // Default: 2
-  lineStyle?: 'solid' | 'dashed' | 'dotted';
-  
+  lineColor?: string; // Default: 'var(--color-border)'
+  lineWidth?: number; // Default: 2
+  lineStyle?: "solid" | "dashed" | "dotted";
+
   // Node (dots on the timeline)
-  nodeSize?: 'sm' | 'md' | 'lg';
-  nodeColor?: string;             // Default: 'var(--color-primary)'
-  nodeStyle?: 'dot' | 'ring' | 'icon';
-  
+  nodeSize?: "sm" | "md" | "lg";
+  nodeColor?: string; // Default: 'var(--color-primary)'
+  nodeStyle?: "dot" | "ring" | "icon";
+
   // Card (content beside each node)
   cardBackgroundColor?: string;
   cardBorderColor?: string;
-  cardBorderRadius?: 'none' | 'sm' | 'md' | 'lg';
-  cardShadow?: 'none' | 'sm' | 'md';
-  
+  cardBorderRadius?: "none" | "sm" | "md" | "lg";
+  cardShadow?: "none" | "sm" | "md";
+
   // Content
   titleColor?: string;
   descriptionColor?: string;
   dateColor?: string;
-  
+
   // Animation
-  animateOnScroll?: boolean;      // Items fade in as user scrolls
-  
+  animateOnScroll?: boolean; // Items fade in as user scrolls
+
   // Responsive
-  mobileVariant?: 'vertical';     // Alternating collapses to vertical on mobile
-  
+  mobileVariant?: "vertical"; // Alternating collapses to vertical on mobile
+
   // Accessibility
-  ariaLabel?: string;             // Default: 'Timeline'
-  
+  ariaLabel?: string; // Default: 'Timeline'
+
   id?: string;
   className?: string;
 }
@@ -899,46 +902,46 @@ interface TimelineProps {
 interface StatItem {
   value: number | string;
   label: string;
-  prefix?: string;                // "$", "£", "#"
-  suffix?: string;                // "+", "%", "k", "M"
+  prefix?: string; // "$", "£", "#"
+  suffix?: string; // "+", "%", "k", "M"
   iconName?: string;
   description?: string;
 }
 
 interface StatsProps {
   stats?: StatItem[];
-  
+
   // Layout
-  variant?: 'row' | 'grid' | 'cards' | 'minimal';
+  variant?: "row" | "grid" | "cards" | "minimal";
   columns?: 2 | 3 | 4 | 5 | 6;
-  alignment?: 'left' | 'center' | 'right';
-  
+  alignment?: "left" | "center" | "right";
+
   // Animation
-  animateNumbers?: boolean;       // Count up animation on scroll
-  animationDuration?: number;     // Default: 2000ms
-  
+  animateNumbers?: boolean; // Count up animation on scroll
+  animationDuration?: number; // Default: 2000ms
+
   // Colours
-  valueColor?: string;            // Default: 'var(--color-primary)'
-  labelColor?: string;            // Default: 'var(--color-muted-foreground)'
+  valueColor?: string; // Default: 'var(--color-primary)'
+  labelColor?: string; // Default: 'var(--color-muted-foreground)'
   iconColor?: string;
   backgroundColor?: string;
-  cardBackgroundColor?: string;   // For "cards" variant
-  
+  cardBackgroundColor?: string; // For "cards" variant
+
   // Typography
-  valueSize?: 'md' | 'lg' | 'xl' | '2xl' | '3xl';
-  valueWeight?: 'semibold' | 'bold' | 'extrabold';
-  
+  valueSize?: "md" | "lg" | "xl" | "2xl" | "3xl";
+  valueWeight?: "semibold" | "bold" | "extrabold";
+
   // Divider
-  showDivider?: boolean;          // Vertical divider between stats (for "row" variant)
+  showDivider?: boolean; // Vertical divider between stats (for "row" variant)
   dividerColor?: string;
-  
+
   // Section
   title?: string;
   subtitle?: string;
-  
+
   // Accessibility
   ariaLabel?: string;
-  
+
   id?: string;
   className?: string;
 }
@@ -950,37 +953,37 @@ interface StatsProps {
 
 ```typescript
 interface EmbedProps {
-  src?: string;                   // Embed URL
-  title?: string;                 // Required for accessibility
-  
+  src?: string; // Embed URL
+  title?: string; // Required for accessibility
+
   // Size
-  aspectRatio?: '1:1' | '4:3' | '16:9' | '21:9' | 'auto';
-  width?: string;                 // CSS width
-  height?: string;                // CSS height
+  aspectRatio?: "1:1" | "4:3" | "16:9" | "21:9" | "auto";
+  width?: string; // CSS width
+  height?: string; // CSS height
   maxWidth?: string;
-  
+
   // Style
-  borderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  borderRadius?: "none" | "sm" | "md" | "lg" | "xl";
   border?: boolean;
   borderColor?: string;
-  shadow?: 'none' | 'sm' | 'md' | 'lg';
-  backgroundColor?: string;       // Loading background
-  
+  shadow?: "none" | "sm" | "md" | "lg";
+  backgroundColor?: string; // Loading background
+
   // Loading
-  loading?: 'lazy' | 'eager';
+  loading?: "lazy" | "eager";
   showLoadingPlaceholder?: boolean;
-  
+
   // Security
-  sandbox?: string;               // iframe sandbox attribute
-  allow?: string;                 // iframe allow attribute (camera, microphone, etc.)
-  
+  sandbox?: string; // iframe sandbox attribute
+  allow?: string; // iframe allow attribute (camera, microphone, etc.)
+
   // Caption
   caption?: string;
-  captionAlign?: 'left' | 'center' | 'right';
-  
+  captionAlign?: "left" | "center" | "right";
+
   // Accessibility
   ariaLabel?: string;
-  
+
   id?: string;
   className?: string;
 }
@@ -995,22 +998,20 @@ interface EmbedProps {
 ```typescript
 function generateSrcSet(src: string, widths: number[]): string {
   // If Supabase Storage, use transformation API
-  if (src.includes('supabase.co/storage')) {
-    return widths
-      .map(w => `${src}?width=${w}&quality=80 ${w}w`)
-      .join(', ');
+  if (src.includes("supabase.co/storage")) {
+    return widths.map((w) => `${src}?width=${w}&quality=80 ${w}w`).join(", ");
   }
-  
+
   // If external URL, return original only
   return src;
 }
 
 // Default widths for different contexts
 const IMAGE_WIDTHS = {
-  hero: [640, 960, 1280, 1920, 2560],     // Full-width hero
-  card: [320, 480, 640, 960],               // Card images
-  thumbnail: [160, 320, 480],               // Gallery thumbnails
-  avatar: [64, 128, 256],                   // Avatar images
+  hero: [640, 960, 1280, 1920, 2560], // Full-width hero
+  card: [320, 480, 640, 960], // Card images
+  thumbnail: [160, 320, 480], // Gallery thumbnails
+  avatar: [64, 128, 256], // Avatar images
 };
 ```
 
@@ -1023,27 +1024,27 @@ async function generateBlurPlaceholder(imageUrl: string): Promise<string> {
   const tinyUrl = `${imageUrl}?width=10&quality=30`;
   const response = await fetch(tinyUrl);
   const buffer = await response.arrayBuffer();
-  const base64 = Buffer.from(buffer).toString('base64');
+  const base64 = Buffer.from(buffer).toString("base64");
   return `data:image/jpeg;base64,${base64}`;
 }
 ```
 
 ### 6.3 Lazy Loading Strategy
 
-| Image Context | Loading Strategy | Reason |
-|---------------|-----------------|--------|
-| Hero / Above-fold | `loading="eager"` + `fetchpriority="high"` | LCP optimisation |
-| First gallery row | `loading="eager"` | Visible on load |
-| Below-fold images | `loading="lazy"` | Save bandwidth |
-| Background images | CSS `background-image` with `content-visibility: auto` | Skip until visible |
-| Carousel slides | Load current + next slide only | Minimal memory usage |
+| Image Context     | Loading Strategy                                       | Reason               |
+| ----------------- | ------------------------------------------------------ | -------------------- |
+| Hero / Above-fold | `loading="eager"` + `fetchpriority="high"`             | LCP optimisation     |
+| First gallery row | `loading="eager"`                                      | Visible on load      |
+| Below-fold images | `loading="lazy"`                                       | Save bandwidth       |
+| Background images | CSS `background-image` with `content-visibility: auto` | Skip until visible   |
+| Carousel slides   | Load current + next slide only                         | Minimal memory usage |
 
 ### 6.4 Image Error Handling
 
 ```typescript
 function ImageWithFallback({ src, alt, fallback, ...props }) {
   const [error, setError] = useState(false);
-  
+
   return (
     <img
       src={error ? (fallback || '/placeholder-image.svg') : src}
@@ -1061,27 +1062,27 @@ function ImageWithFallback({ src, alt, fallback, ...props }) {
 
 ### 7.1 Entrance Animations for Media
 
-| Animation | CSS | Use When |
-|-----------|-----|----------|
-| `fade` | `opacity: 0 → 1` | Default — safe everywhere |
-| `fade-up` | `opacity: 0, translateY(20px) → 1, 0` | Gallery items, cards |
-| `fade-scale` | `opacity: 0, scale(0.95) → 1, 1` | Images, avatars |
-| `slide-left` | `translateX(-30px), opacity: 0 → 0, 1` | Alternating timeline items |
-| `slide-right` | `translateX(30px), opacity: 0 → 0, 1` | Alternating timeline items |
-| `stagger` | Each item delayed by `index * staggerDelay` | Gallery grids, stat counters |
+| Animation     | CSS                                         | Use When                     |
+| ------------- | ------------------------------------------- | ---------------------------- |
+| `fade`        | `opacity: 0 → 1`                            | Default — safe everywhere    |
+| `fade-up`     | `opacity: 0, translateY(20px) → 1, 0`       | Gallery items, cards         |
+| `fade-scale`  | `opacity: 0, scale(0.95) → 1, 1`            | Images, avatars              |
+| `slide-left`  | `translateX(-30px), opacity: 0 → 0, 1`      | Alternating timeline items   |
+| `slide-right` | `translateX(30px), opacity: 0 → 0, 1`       | Alternating timeline items   |
+| `stagger`     | Each item delayed by `index * staggerDelay` | Gallery grids, stat counters |
 
 ### 7.2 Hover Effects for Images
 
-| Effect | CSS | GPU Accelerated |
-|--------|-----|----------------|
-| `zoom` | `transform: scale(1.05)` within overflow:hidden container | ✅ |
-| `zoom-out` | `transform: scale(1.1) → scale(1)` | ✅ |
-| `grayscale` | `filter: grayscale(1) → grayscale(0)` | ✅ |
-| `blur` | `filter: blur(4px) → blur(0)` | ✅ |
-| `fade` | `opacity: 0.7 → 1` | ✅ |
-| `lift` | `translateY(0) → translateY(-4px)` + shadow | ✅ |
-| `tilt` | 3D perspective tilt following cursor position | ⚠️ JS required |
-| `ken-burns` | Slow zoom + pan (for carousels/galleries) | ✅ |
+| Effect      | CSS                                                       | GPU Accelerated |
+| ----------- | --------------------------------------------------------- | --------------- |
+| `zoom`      | `transform: scale(1.05)` within overflow:hidden container | ✅              |
+| `zoom-out`  | `transform: scale(1.1) → scale(1)`                        | ✅              |
+| `grayscale` | `filter: grayscale(1) → grayscale(0)`                     | ✅              |
+| `blur`      | `filter: blur(4px) → blur(0)`                             | ✅              |
+| `fade`      | `opacity: 0.7 → 1`                                        | ✅              |
+| `lift`      | `translateY(0) → translateY(-4px)` + shadow               | ✅              |
+| `tilt`      | 3D perspective tilt following cursor position             | ⚠️ JS required  |
+| `ken-burns` | Slow zoom + pan (for carousels/galleries)                 | ✅              |
 
 ### 7.3 Gallery Transition Effects
 
@@ -1095,7 +1096,9 @@ function ImageWithFallback({ src, alt, fallback, ...props }) {
 
 /* Filter category change — items animate grid position */
 .gallery-item {
-  transition: transform 400ms ease, opacity 300ms ease;
+  transition:
+    transform 400ms ease,
+    opacity 300ms ease;
 }
 
 .gallery-item--entering {
@@ -1107,8 +1110,14 @@ function ImageWithFallback({ src, alt, fallback, ...props }) {
 }
 
 @keyframes fadeScale {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 ```
 
@@ -1116,23 +1125,47 @@ function ImageWithFallback({ src, alt, fallback, ...props }) {
 
 ```css
 /* Slide */
-.carousel-track { transition: transform var(--duration) var(--easing); }
+.carousel-track {
+  transition: transform var(--duration) var(--easing);
+}
 
 /* Fade */
-.carousel-slide { 
+.carousel-slide {
   transition: opacity var(--duration) var(--easing);
-  position: absolute; inset: 0;
+  position: absolute;
+  inset: 0;
 }
-.carousel-slide--active { opacity: 1; z-index: 1; }
-.carousel-slide--inactive { opacity: 0; z-index: 0; }
+.carousel-slide--active {
+  opacity: 1;
+  z-index: 1;
+}
+.carousel-slide--inactive {
+  opacity: 0;
+  z-index: 0;
+}
 
 /* Zoom */
-.carousel-slide--entering { animation: zoomIn var(--duration); }
-@keyframes zoomIn { from { transform: scale(1.1); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.carousel-slide--entering {
+  animation: zoomIn var(--duration);
+}
+@keyframes zoomIn {
+  from {
+    transform: scale(1.1);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
 
 /* Crossfade (overlap during transition) */
-.carousel-slide--outgoing { opacity: 1 → 0; }
-.carousel-slide--incoming { opacity: 0 → 1; }
+.carousel-slide--outgoing {
+  opacity: 1 → 0;
+}
+.carousel-slide--incoming {
+  opacity: 0 → 1;
+}
 ```
 
 ### 7.5 Reduced Motion
@@ -1148,15 +1181,21 @@ function ImageWithFallback({ src, alt, fallback, ...props }) {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }
-  
+
   /* Disable marquee scroll */
-  .logo-marquee { animation: none !important; }
-  
+  .logo-marquee {
+    animation: none !important;
+  }
+
   /* Disable Ken Burns */
-  .ken-burns { animation: none !important; }
-  
+  .ken-burns {
+    animation: none !important;
+  }
+
   /* Stats: show final number immediately */
-  .stat-value { /* counter animation skipped */ }
+  .stat-value {
+    /* counter animation skipped */
+  }
 }
 ```
 
@@ -1166,10 +1205,10 @@ function ImageWithFallback({ src, alt, fallback, ...props }) {
 
 ### 8.1 Image Accessibility
 
-| Criterion | Requirement | Enforcement |
-|-----------|-------------|-------------|
+| Criterion                  | Requirement                   | Enforcement                                                                       |
+| -------------------------- | ----------------------------- | --------------------------------------------------------------------------------- |
 | **1.1.1** Non-text Content | Every `<img>` must have `alt` | Renderer falls back to `alt=""` for decorative, enforces `alt` for content images |
-| **1.4.5** Images of Text | Don't use images for text | AI Designer generates real text overlays, not text-in-images |
+| **1.4.5** Images of Text   | Don't use images for text     | AI Designer generates real text overlays, not text-in-images                      |
 
 ```typescript
 // ✅ Alt text enforcement
@@ -1182,23 +1221,33 @@ function ImageWithFallback({ src, alt, fallback, ...props }) {
 
 ### 8.2 Video Accessibility
 
-| Criterion | Requirement | Enforcement |
-|-----------|-------------|-------------|
-| **1.2.1** Prerecorded Audio-only | Provide transcript | `transcript` prop support |
-| **1.2.2** Captions | Synchronised captions | `captionsSrc` prop for WebVTT |
-| **1.2.5** Audio Description | Describe visual-only info | `audioDescriptionSrc` prop |
-| **2.1.1** Keyboard | Full keyboard control | Custom keyboard handlers |
+| Criterion                        | Requirement               | Enforcement                   |
+| -------------------------------- | ------------------------- | ----------------------------- |
+| **1.2.1** Prerecorded Audio-only | Provide transcript        | `transcript` prop support     |
+| **1.2.2** Captions               | Synchronised captions     | `captionsSrc` prop for WebVTT |
+| **1.2.5** Audio Description      | Describe visual-only info | `audioDescriptionSrc` prop    |
+| **2.1.1** Keyboard               | Full keyboard control     | Custom keyboard handlers      |
 
 ```typescript
 // ✅ Video keyboard controls
 const handleKeyDown = (e: KeyboardEvent) => {
   switch (e.key) {
-    case ' ':
-    case 'k': togglePlayPause(); break;
-    case 'm': toggleMute(); break;
-    case 'f': toggleFullscreen(); break;
-    case 'ArrowLeft': seekBackward(10); break;
-    case 'ArrowRight': seekForward(10); break;
+    case " ":
+    case "k":
+      togglePlayPause();
+      break;
+    case "m":
+      toggleMute();
+      break;
+    case "f":
+      toggleFullscreen();
+      break;
+    case "ArrowLeft":
+      seekBackward(10);
+      break;
+    case "ArrowRight":
+      seekForward(10);
+      break;
   }
 };
 ```
@@ -1215,20 +1264,20 @@ const handleKeyDown = (e: KeyboardEvent) => {
   <div aria-live="polite" aria-atomic="true" className="sr-only">
     Showing slide {current} of {total}: {currentSlide.title}
   </div>
-  
+
   <!-- Navigation buttons -->
   <button aria-label="Previous slide" aria-controls="carousel-track">
   <button aria-label="Next slide" aria-controls="carousel-track">
-  
+
   <!-- Pause/play for autoplay -->
   <button aria-label={autoplay ? 'Pause carousel' : 'Play carousel'}>
-  
+
   <!-- Track -->
   <div id="carousel-track" role="group" aria-roledescription="slide">
     <!-- Each slide -->
     <div role="group" aria-roledescription="slide" aria-label="{title}">
   </div>
-  
+
   <!-- Dots -->
   <div role="tablist" aria-label="Carousel slides">
     <button role="tab" aria-selected={i === current} aria-label={`Slide ${i + 1}`}>
@@ -1307,30 +1356,34 @@ const handleKeyDown = (e: KeyboardEvent) => {
   --media-placeholder-color: #1e293b;
   --media-border-color: #374151;
   --media-caption-color: #94a3b8;
-  
+
   /* Gallery */
-  --color-background: #0f172a;        /* Gallery bg inherits this */
+  --color-background: #0f172a; /* Gallery bg inherits this */
   --gallery-filter-active: var(--color-primary);
   --gallery-filter-inactive: #64748b;
-  
+
   /* Comparison Table */
-  --color-highlight-bg: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  --color-highlight-bg: color-mix(
+    in srgb,
+    var(--color-primary) 12%,
+    transparent
+  );
   --color-highlight-border: var(--color-primary);
   --color-check: #4ade80;
   --color-cross: #4b5563;
-  
+
   /* Star rating */
   --color-star: #fbbf24;
   --color-star-empty: #374151;
-  
+
   /* Avatar */
   --avatar-fallback-bg: #374151;
-  --avatar-ring-color: #0f172a;       /* Match dark background */
-  
+  --avatar-ring-color: #0f172a; /* Match dark background */
+
   /* Timeline */
   --timeline-line-color: #374151;
   --timeline-node-color: var(--color-primary);
-  
+
   /* Stats */
   --stat-value-color: var(--color-primary);
   --stat-label-color: #94a3b8;
@@ -1355,10 +1408,11 @@ style={{
 // When autoTheme is enabled, detect dark mode and switch map style
 useEffect(() => {
   if (!autoTheme) return;
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark' 
-              || window.matchMedia('(prefers-color-scheme: dark)').matches;
-  if (isDark && mapStyle === 'default') {
-    setEffectiveMapStyle('dark');
+  const isDark =
+    document.documentElement.getAttribute("data-theme") === "dark" ||
+    window.matchMedia("(prefers-color-scheme: dark)").matches;
+  if (isDark && mapStyle === "default") {
+    setEffectiveMapStyle("dark");
   }
 }, [autoTheme, mapStyle]);
 ```
@@ -1368,13 +1422,14 @@ useEffect(() => {
 ```typescript
 // Arrow and dot colours should adapt to theme
 const arrowDefaults = {
-  backgroundColor: arrowBackgroundColor || 'var(--color-muted, rgba(0,0,0,0.5))',
-  color: arrowColor || 'var(--color-foreground, #ffffff)',
+  backgroundColor:
+    arrowBackgroundColor || "var(--color-muted, rgba(0,0,0,0.5))",
+  color: arrowColor || "var(--color-foreground, #ffffff)",
 };
 
 const dotDefaults = {
-  backgroundColor: dotColor || 'var(--color-muted, rgba(255,255,255,0.5))',
-  activeBackgroundColor: dotActiveColor || 'var(--color-primary, #ffffff)',
+  backgroundColor: dotColor || "var(--color-muted, rgba(255,255,255,0.5))",
+  activeBackgroundColor: dotActiveColor || "var(--color-primary, #ffffff)",
 };
 ```
 
@@ -1386,22 +1441,22 @@ const dotDefaults = {
 
 ```typescript
 const BREAKPOINTS = {
-  mobile: 0,       // 0–639px
-  tablet: 640,     // 640–1023px
-  desktop: 1024,   // 1024–1535px
-  wide: 1536,      // 1536px+
+  mobile: 0, // 0–639px
+  tablet: 640, // 640–1023px
+  desktop: 1024, // 1024–1535px
+  wide: 1536, // 1536px+
 };
 ```
 
 ### 10.2 Image Responsive Sizing
 
-| Context | Mobile | Tablet | Desktop | `sizes` Attribute |
-|---------|--------|--------|---------|-------------------|
-| Hero full-width | 100vw | 100vw | 100vw | `100vw` |
-| Gallery 3-col | 50vw | 33vw | 33vw | `(max-width: 640px) 50vw, 33vw` |
-| Gallery 4-col | 50vw | 25vw | 25vw | `(max-width: 640px) 50vw, 25vw` |
-| Card image | 100vw | 50vw | 33vw | `(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw` |
-| Avatar | 48px | 48px | 48px | `48px` |
+| Context         | Mobile | Tablet | Desktop | `sizes` Attribute                                          |
+| --------------- | ------ | ------ | ------- | ---------------------------------------------------------- |
+| Hero full-width | 100vw  | 100vw  | 100vw   | `100vw`                                                    |
+| Gallery 3-col   | 50vw   | 33vw   | 33vw    | `(max-width: 640px) 50vw, 33vw`                            |
+| Gallery 4-col   | 50vw   | 25vw   | 25vw    | `(max-width: 640px) 50vw, 25vw`                            |
+| Card image      | 100vw  | 50vw   | 33vw    | `(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw` |
+| Avatar          | 48px   | 48px   | 48px    | `48px`                                                     |
 
 ### 10.3 Gallery Mobile Behaviour
 
@@ -1410,7 +1465,7 @@ const BREAKPOINTS = {
 const getColumns = (variant, columns, mobileColumns, tabletColumns) => {
   if (isMobile) return mobileColumns || Math.min(columns, 2);
   if (isTablet) return tabletColumns || Math.min(columns, 3);
-  return columns;  // Desktop: use specified columns
+  return columns; // Desktop: use specified columns
 };
 
 // Gallery filter on mobile
@@ -1464,48 +1519,58 @@ const handleTouchEnd = (e) => {
 ```typescript
 const AI_MEDIA_RULES = {
   heroSection: {
-    media: 'Image or Video (background)',
-    imageProps: { priority: true, aspectRatio: 'wide', overlay: true },
-    videoProps: { background: true, backgroundOverlay: true, muted: true, autoplay: true },
-    rule: 'Hero MUST have visual media — image or background video',
+    media: "Image or Video (background)",
+    imageProps: { priority: true, aspectRatio: "wide", overlay: true },
+    videoProps: {
+      background: true,
+      backgroundOverlay: true,
+      muted: true,
+      autoplay: true,
+    },
+    rule: "Hero MUST have visual media — image or background video",
   },
-  
+
   portfolioPage: {
-    media: 'Gallery with filtering',
-    galleryProps: { variant: 'masonry', showFilter: true, lightbox: true, hoverEffect: 'zoom' },
-    rule: 'Portfolio pages use masonry gallery with category filtering',
+    media: "Gallery with filtering",
+    galleryProps: {
+      variant: "masonry",
+      showFilter: true,
+      lightbox: true,
+      hoverEffect: "zoom",
+    },
+    rule: "Portfolio pages use masonry gallery with category filtering",
   },
-  
+
   aboutPage: {
-    media: 'Timeline + Team avatars + Stats',
-    rule: 'About pages combine timeline (company history), avatar group (team), and stats (achievements)',
+    media: "Timeline + Team avatars + Stats",
+    rule: "About pages combine timeline (company history), avatar group (team), and stats (achievements)",
   },
-  
+
   contactPage: {
-    media: 'Map + Social Links',
+    media: "Map + Social Links",
     mapProps: { showDirectionsLink: true, showInfoWindow: true },
-    rule: 'Contact pages need interactive map with directions',
+    rule: "Contact pages need interactive map with directions",
   },
-  
+
   pricingPage: {
-    media: 'ComparisonTable',
-    tableProps: { stickyHeader: true, mobileLayout: 'stack' },
-    rule: 'Pricing pages use comparison table with CTA row',
+    media: "ComparisonTable",
+    tableProps: { stickyHeader: true, mobileLayout: "stack" },
+    rule: "Pricing pages use comparison table with CTA row",
   },
-  
+
   trustSection: {
-    media: 'LogoCloud OR TrustBadges + SocialProof',
-    rule: 'Trust sections combine logo clouds with social proof ratings',
+    media: "LogoCloud OR TrustBadges + SocialProof",
+    rule: "Trust sections combine logo clouds with social proof ratings",
   },
-  
+
   processSection: {
-    media: 'Timeline (horizontal) or Stats',
+    media: "Timeline (horizontal) or Stats",
     rule: '"How it works" sections use horizontal timeline or numbered stats',
   },
-  
+
   beforeAfterSection: {
-    media: 'BeforeAfter slider',
-    rule: 'Renovation, cosmetic, and design sites use before/after comparisons',
+    media: "BeforeAfter slider",
+    rule: "Renovation, cosmetic, and design sites use before/after comparisons",
   },
 };
 ```
@@ -1515,56 +1580,66 @@ const AI_MEDIA_RULES = {
 ```typescript
 const INDUSTRY_MEDIA_STYLES = {
   restaurant: {
-    gallery: { variant: 'masonry', hoverEffect: 'zoom', aspectRatio: 'square', columns: 3 },
-    carousel: { transition: 'fade', autoplay: true, interval: 4000 },
-    socialProof: { variant: 'stars', platform: 'Google Reviews' },
-    rule: 'Warm, appetising image treatment with masonry food gallery',
+    gallery: {
+      variant: "masonry",
+      hoverEffect: "zoom",
+      aspectRatio: "square",
+      columns: 3,
+    },
+    carousel: { transition: "fade", autoplay: true, interval: 4000 },
+    socialProof: { variant: "stars", platform: "Google Reviews" },
+    rule: "Warm, appetising image treatment with masonry food gallery",
   },
-  
+
   realestate: {
-    gallery: { variant: 'grid', lightbox: true, columns: 4, showFilter: true },
-    carousel: { transition: 'slide', showArrows: true, aspectRatio: 'wide' },
-    map: { showMarker: true, showDirectionsLink: true, mapStyle: 'silver' },
-    rule: 'Property-focused galleries with filtering and large lightbox',
+    gallery: { variant: "grid", lightbox: true, columns: 4, showFilter: true },
+    carousel: { transition: "slide", showArrows: true, aspectRatio: "wide" },
+    map: { showMarker: true, showDirectionsLink: true, mapStyle: "silver" },
+    rule: "Property-focused galleries with filtering and large lightbox",
   },
-  
+
   healthcare: {
-    imageStyle: { borderRadius: 'lg', shadow: 'md' },
-    trustBadges: { grayscale: true, size: 'md' },
-    socialProof: { variant: 'score', platform: 'Google Reviews' },
-    rule: 'Professional, clean image treatment with strong trust signals',
+    imageStyle: { borderRadius: "lg", shadow: "md" },
+    trustBadges: { grayscale: true, size: "md" },
+    socialProof: { variant: "score", platform: "Google Reviews" },
+    rule: "Professional, clean image treatment with strong trust signals",
   },
-  
+
   creative: {
-    gallery: { variant: 'masonry', hoverEffect: 'fade', lightbox: true },
-    carousel: { transition: 'crossfade', overlay: true },
-    rule: 'Masonry galleries showcasing portfolio work with elegant transitions',
+    gallery: { variant: "masonry", hoverEffect: "fade", lightbox: true },
+    carousel: { transition: "crossfade", overlay: true },
+    rule: "Masonry galleries showcasing portfolio work with elegant transitions",
   },
-  
+
   ecommerce: {
-    gallery: { variant: 'grid', columns: 4, showFilter: true, hoverEffect: 'zoom' },
-    carousel: { transition: 'slide', showDots: true },
-    comparisonTable: { variant: 'cards', stickyHeader: true },
-    rule: 'Product grids with quick filtering and comparison tables',
+    gallery: {
+      variant: "grid",
+      columns: 4,
+      showFilter: true,
+      hoverEffect: "zoom",
+    },
+    carousel: { transition: "slide", showDots: true },
+    comparisonTable: { variant: "cards", stickyHeader: true },
+    rule: "Product grids with quick filtering and comparison tables",
   },
-  
+
   saas: {
-    stats: { variant: 'cards', animateNumbers: true },
-    logoCloud: { variant: 'marquee', grayscale: true },
-    comparisonTable: { variant: 'simple', stickyHeader: true },
-    rule: 'Stats counters, logo cloud social proof, feature comparison',
+    stats: { variant: "cards", animateNumbers: true },
+    logoCloud: { variant: "marquee", grayscale: true },
+    comparisonTable: { variant: "simple", stickyHeader: true },
+    rule: "Stats counters, logo cloud social proof, feature comparison",
   },
-  
+
   construction: {
-    beforeAfter: { orientation: 'horizontal', handleStyle: 'arrows' },
-    gallery: { variant: 'grid', columns: 3, lightbox: true },
-    rule: 'Before/after sliders for project transformations',
+    beforeAfter: { orientation: "horizontal", handleStyle: "arrows" },
+    gallery: { variant: "grid", columns: 3, lightbox: true },
+    rule: "Before/after sliders for project transformations",
   },
-  
+
   nonprofit: {
-    stats: { variant: 'row', animateNumbers: true, valueSize: '3xl' },
-    timeline: { variant: 'vertical', animateOnScroll: true },
-    rule: 'Impact statistics and organisational timeline',
+    stats: { variant: "row", animateNumbers: true, valueSize: "3xl" },
+    timeline: { variant: "vertical", animateOnScroll: true },
+    rule: "Impact statistics and organisational timeline",
   },
 };
 ```
@@ -1575,53 +1650,59 @@ const INDUSTRY_MEDIA_STYLES = {
 function scoreMediaQuality(page: GeneratedPage): number {
   let score = 100;
   const issues: string[] = [];
-  
+
   // Rule: Every image must have meaningful alt text
-  page.allImages.forEach(img => {
-    if (!img.alt || img.alt === '' || img.alt === 'image') {
+  page.allImages.forEach((img) => {
+    if (!img.alt || img.alt === "" || img.alt === "image") {
       score -= 5;
-      issues.push(`Image missing meaningful alt text: "${img.alt || 'none'}"`);
+      issues.push(`Image missing meaningful alt text: "${img.alt || "none"}"`);
     }
   });
-  
+
   // Rule: Hero must have visual media
-  if (page.heroSection && !page.heroSection.hasImage && !page.heroSection.hasVideo) {
+  if (
+    page.heroSection &&
+    !page.heroSection.hasImage &&
+    !page.heroSection.hasVideo
+  ) {
     score -= 15;
-    issues.push('Hero section has no visual media');
+    issues.push("Hero section has no visual media");
   }
-  
+
   // Rule: Above-fold images should use priority loading
-  page.aboveFoldImages.forEach(img => {
-    if (img.loading !== 'eager' && !img.priority) {
+  page.aboveFoldImages.forEach((img) => {
+    if (img.loading !== "eager" && !img.priority) {
       score -= 5;
-      issues.push('Above-fold image not using priority/eager loading');
+      issues.push("Above-fold image not using priority/eager loading");
     }
   });
-  
+
   // Rule: Videos should have poster images
-  page.allVideos.forEach(video => {
+  page.allVideos.forEach((video) => {
     if (!video.poster && !video.thumbnail) {
       score -= 10;
-      issues.push('Video missing poster/thumbnail image');
+      issues.push("Video missing poster/thumbnail image");
     }
   });
-  
+
   // Rule: Galleries should have consistent image count
-  page.allGalleries.forEach(gallery => {
+  page.allGalleries.forEach((gallery) => {
     if (gallery.images.length < 4) {
       score -= 10;
-      issues.push(`Gallery has only ${gallery.images.length} images — need at least 4`);
+      issues.push(
+        `Gallery has only ${gallery.images.length} images — need at least 4`,
+      );
     }
   });
-  
+
   // Rule: Maps must have address context
-  page.allMaps.forEach(map => {
+  page.allMaps.forEach((map) => {
     if (!map.address && !map.lat) {
       score -= 10;
-      issues.push('Map has no address or coordinates');
+      issues.push("Map has no address or coordinates");
     }
   });
-  
+
   return { score: Math.max(0, score), issues };
 }
 ```
@@ -1632,84 +1713,84 @@ function scoreMediaQuality(page: GeneratedPage): number {
 // converter.ts typeMap additions for media
 const mediaTypeMap = {
   // Existing
-  ImageBlock: 'Image',
-  ImageSection: 'Image',
-  VideoBlock: 'Video',
-  VideoSection: 'Video',
-  VideoPlayer: 'Video',
-  MapBlock: 'Map',
-  MapSection: 'Map',
-  LocationMap: 'Map',
-  GalleryBlock: 'Gallery',
-  CarouselBlock: 'Carousel',
-  CarouselSection: 'Carousel',
-  ComparisonBlock: 'ComparisonTable',
-  ComparisonSection: 'ComparisonTable',
-  ComparisonTableBlock: 'ComparisonTable',
-  LogoCloudBlock: 'LogoCloud',
-  LogoCloudSection: 'LogoCloud',
-  PartnerLogos: 'LogoCloud',
-  Partners: 'LogoCloud',
-  TrustedBy: 'LogoCloud',
-  TrustBadgesBlock: 'TrustBadges',
-  TrustBadgesSection: 'TrustBadges',
-  Badges: 'TrustBadges',
-  Accreditations: 'TrustBadges',
-  Certifications: 'TrustBadges',
-  SocialProofBlock: 'SocialProof',
-  SocialProofSection: 'SocialProof',
-  
+  ImageBlock: "Image",
+  ImageSection: "Image",
+  VideoBlock: "Video",
+  VideoSection: "Video",
+  VideoPlayer: "Video",
+  MapBlock: "Map",
+  MapSection: "Map",
+  LocationMap: "Map",
+  GalleryBlock: "Gallery",
+  CarouselBlock: "Carousel",
+  CarouselSection: "Carousel",
+  ComparisonBlock: "ComparisonTable",
+  ComparisonSection: "ComparisonTable",
+  ComparisonTableBlock: "ComparisonTable",
+  LogoCloudBlock: "LogoCloud",
+  LogoCloudSection: "LogoCloud",
+  PartnerLogos: "LogoCloud",
+  Partners: "LogoCloud",
+  TrustedBy: "LogoCloud",
+  TrustBadgesBlock: "TrustBadges",
+  TrustBadgesSection: "TrustBadges",
+  Badges: "TrustBadges",
+  Accreditations: "TrustBadges",
+  Certifications: "TrustBadges",
+  SocialProofBlock: "SocialProof",
+  SocialProofSection: "SocialProof",
+
   // NEW — BeforeAfter
-  BeforeAfter: 'BeforeAfter',
-  BeforeAfterBlock: 'BeforeAfter',
-  BeforeAfterSlider: 'BeforeAfter',
-  ComparisonSlider: 'BeforeAfter',
-  ImageComparison: 'BeforeAfter',
-  
+  BeforeAfter: "BeforeAfter",
+  BeforeAfterBlock: "BeforeAfter",
+  BeforeAfterSlider: "BeforeAfter",
+  ComparisonSlider: "BeforeAfter",
+  ImageComparison: "BeforeAfter",
+
   // NEW — Audio
-  Audio: 'Audio',
-  AudioPlayer: 'Audio',
-  AudioBlock: 'Audio',
-  PodcastPlayer: 'Audio',
-  MusicPlayer: 'Audio',
-  
+  Audio: "Audio",
+  AudioPlayer: "Audio",
+  AudioBlock: "Audio",
+  PodcastPlayer: "Audio",
+  MusicPlayer: "Audio",
+
   // NEW — Icon
-  Icon: 'Icon',
-  IconBlock: 'Icon',
-  Illustration: 'Icon',
-  
+  Icon: "Icon",
+  IconBlock: "Icon",
+  Illustration: "Icon",
+
   // NEW — Timeline
-  Timeline: 'Timeline',
-  TimelineBlock: 'Timeline',
-  TimelineSection: 'Timeline',
-  ProcessSteps: 'Timeline',
-  History: 'Timeline',
-  Milestones: 'Timeline',
-  
+  Timeline: "Timeline",
+  TimelineBlock: "Timeline",
+  TimelineSection: "Timeline",
+  ProcessSteps: "Timeline",
+  History: "Timeline",
+  Milestones: "Timeline",
+
   // NEW — Stats
-  Stats: 'Stats',
-  StatsBlock: 'Stats',
-  StatsSection: 'Stats',
-  Counters: 'Stats',
-  Numbers: 'Stats',
-  Achievements: 'Stats',
-  ImpactNumbers: 'Stats',
-  
+  Stats: "Stats",
+  StatsBlock: "Stats",
+  StatsSection: "Stats",
+  Counters: "Stats",
+  Numbers: "Stats",
+  Achievements: "Stats",
+  ImpactNumbers: "Stats",
+
   // NEW — Embed
-  Embed: 'Embed',
-  EmbedBlock: 'Embed',
-  IFrame: 'Embed',
-  ExternalEmbed: 'Embed',
-  
+  Embed: "Embed",
+  EmbedBlock: "Embed",
+  IFrame: "Embed",
+  ExternalEmbed: "Embed",
+
   // NEW — AvatarGroup
-  AvatarGroup: 'AvatarGroup',
-  TeamAvatars: 'AvatarGroup',
-  UserAvatars: 'AvatarGroup',
-  
+  AvatarGroup: "AvatarGroup",
+  TeamAvatars: "AvatarGroup",
+  UserAvatars: "AvatarGroup",
+
   // Avatar (add to converter — currently missing)
-  Avatar: 'Avatar',
-  ProfileImage: 'Avatar',
-  UserAvatar: 'Avatar',
+  Avatar: "Avatar",
+  ProfileImage: "Avatar",
+  UserAvatar: "Avatar",
 };
 ```
 
@@ -1819,138 +1900,176 @@ const mediaTypeMap = {
 
 ### 12.2 New Component Registrations
 
-| Component | Type Key | Category | Priority |
-|-----------|----------|----------|----------|
-| BeforeAfter | `BeforeAfter` | media | Phase 2 |
-| Audio | `Audio` | media | Phase 3 |
-| Icon | `Icon` | media | Phase 2 |
-| Timeline | `Timeline` | sections | Phase 2 |
-| Stats | `Stats` | sections | Phase 2 |
-| Embed | `Embed` | media | Phase 3 |
-| AvatarGroup | `AvatarGroup` | media | Phase 3 |
+| Component   | Type Key      | Category | Priority |
+| ----------- | ------------- | -------- | -------- |
+| BeforeAfter | `BeforeAfter` | media    | Phase 2  |
+| Audio       | `Audio`       | media    | Phase 3  |
+| Icon        | `Icon`        | media    | Phase 2  |
+| Timeline    | `Timeline`    | sections | Phase 2  |
+| Stats       | `Stats`       | sections | Phase 2  |
+| Embed       | `Embed`       | media    | Phase 3  |
+| AvatarGroup | `AvatarGroup` | media    | Phase 3  |
 
 ### 12.3 Component Metadata Enhancements
 
 ```typescript
 const MEDIA_METADATA = {
   Image: {
-    description: 'Responsive image with filters, overlays, frames, badges, hover effects, and caption support.',
-    category: 'media',
-    keywords: ['image', 'photo', 'picture', 'img', 'graphic'],
-    usageGuidelines: 'Always include meaningful alt text. Use priority loading for above-fold images.',
-    pairsWellWith: ['Gallery', 'Section', 'Card'],
+    description:
+      "Responsive image with filters, overlays, frames, badges, hover effects, and caption support.",
+    category: "media",
+    keywords: ["image", "photo", "picture", "img", "graphic"],
+    usageGuidelines:
+      "Always include meaningful alt text. Use priority loading for above-fold images.",
+    pairsWellWith: ["Gallery", "Section", "Card"],
   },
   Video: {
-    description: 'Video player supporting YouTube, Vimeo, direct files, and embed codes. Background mode for heroes.',
-    category: 'media',
-    keywords: ['video', 'youtube', 'vimeo', 'embed', 'player'],
-    usageGuidelines: 'Always include poster image. Use background mode for hero sections. Add captions for accessibility.',
-    pairsWellWith: ['Section', 'Hero'],
+    description:
+      "Video player supporting YouTube, Vimeo, direct files, and embed codes. Background mode for heroes.",
+    category: "media",
+    keywords: ["video", "youtube", "vimeo", "embed", "player"],
+    usageGuidelines:
+      "Always include poster image. Use background mode for hero sections. Add captions for accessibility.",
+    pairsWellWith: ["Section", "Hero"],
   },
   Map: {
-    description: 'Interactive map with Google Maps and OpenStreetMap support. Markers, styles, and directions.',
-    category: 'media',
-    keywords: ['map', 'location', 'google maps', 'address', 'directions'],
-    usageGuidelines: 'Use on contact pages. Enable directions link. Choose dark map style for dark themes.',
-    pairsWellWith: ['Section', 'ContactInfo'],
+    description:
+      "Interactive map with Google Maps and OpenStreetMap support. Markers, styles, and directions.",
+    category: "media",
+    keywords: ["map", "location", "google maps", "address", "directions"],
+    usageGuidelines:
+      "Use on contact pages. Enable directions link. Choose dark map style for dark themes.",
+    pairsWellWith: ["Section", "ContactInfo"],
   },
   Gallery: {
-    description: 'Image gallery with grid/masonry/carousel layouts, category filtering, lightbox, and load more.',
-    category: 'sections',
-    keywords: ['gallery', 'images', 'photos', 'portfolio', 'masonry', 'grid'],
-    usageGuidelines: 'Use masonry for portfolios, grid for products. Enable filtering for 10+ categorised images.',
-    pairsWellWith: ['Section', 'CTA'],
+    description:
+      "Image gallery with grid/masonry/carousel layouts, category filtering, lightbox, and load more.",
+    category: "sections",
+    keywords: ["gallery", "images", "photos", "portfolio", "masonry", "grid"],
+    usageGuidelines:
+      "Use masonry for portfolios, grid for products. Enable filtering for 10+ categorised images.",
+    pairsWellWith: ["Section", "CTA"],
   },
   Carousel: {
-    description: 'Image/content carousel with 5 transition effects, touch swipe, autoplay, and rich slide content.',
-    category: 'media',
-    keywords: ['carousel', 'slider', 'slideshow', 'banner'],
-    usageGuidelines: 'Use for hero rotations, testimonials, and featured content. Enable swipe on mobile.',
-    pairsWellWith: ['Hero', 'Section'],
+    description:
+      "Image/content carousel with 5 transition effects, touch swipe, autoplay, and rich slide content.",
+    category: "media",
+    keywords: ["carousel", "slider", "slideshow", "banner"],
+    usageGuidelines:
+      "Use for hero rotations, testimonials, and featured content. Enable swipe on mobile.",
+    pairsWellWith: ["Hero", "Section"],
   },
   Avatar: {
-    description: 'User avatar with status indicator, fallback initials, multiple shapes and sizes.',
-    category: 'media',
-    keywords: ['avatar', 'profile', 'user', 'photo'],
-    usageGuidelines: 'Use in team sections, testimonials, and user profiles.',
-    pairsWellWith: ['AvatarGroup', 'Card', 'Testimonial'],
+    description:
+      "User avatar with status indicator, fallback initials, multiple shapes and sizes.",
+    category: "media",
+    keywords: ["avatar", "profile", "user", "photo"],
+    usageGuidelines: "Use in team sections, testimonials, and user profiles.",
+    pairsWellWith: ["AvatarGroup", "Card", "Testimonial"],
   },
   AvatarGroup: {
     description: 'Stacked overlapping avatars with "+N more" overflow counter.',
-    category: 'media',
-    keywords: ['avatar group', 'team', 'users', 'people', 'stack'],
-    usageGuidelines: 'Use to show multiple people (team members, users, contributors). Limit visible to 3-5.',
-    pairsWellWith: ['Avatar', 'Stats', 'Section'],
+    category: "media",
+    keywords: ["avatar group", "team", "users", "people", "stack"],
+    usageGuidelines:
+      "Use to show multiple people (team members, users, contributors). Limit visible to 3-5.",
+    pairsWellWith: ["Avatar", "Stats", "Section"],
   },
   SocialProof: {
-    description: 'Star rating display with platform logo and review count. Stars/compact/score variants.',
-    category: 'media',
-    keywords: ['rating', 'stars', 'reviews', 'social proof', 'testimonial'],
-    usageGuidelines: 'Place near CTAs for conversion. Use "stars" for prominent, "compact" for inline.',
-    pairsWellWith: ['CTA', 'TrustBadges', 'Section'],
+    description:
+      "Star rating display with platform logo and review count. Stars/compact/score variants.",
+    category: "media",
+    keywords: ["rating", "stars", "reviews", "social proof", "testimonial"],
+    usageGuidelines:
+      'Place near CTAs for conversion. Use "stars" for prominent, "compact" for inline.',
+    pairsWellWith: ["CTA", "TrustBadges", "Section"],
   },
   TrustBadges: {
-    description: 'Trust signal badges (SSL, guarantees, certifications) in row or grid layout.',
-    category: 'media',
-    keywords: ['trust', 'badges', 'certifications', 'security', 'guarantee'],
-    usageGuidelines: 'Place below CTAs, in footer, or near checkout. Use grayscale for subtlety.',
-    pairsWellWith: ['CTA', 'SocialProof', 'Footer'],
+    description:
+      "Trust signal badges (SSL, guarantees, certifications) in row or grid layout.",
+    category: "media",
+    keywords: ["trust", "badges", "certifications", "security", "guarantee"],
+    usageGuidelines:
+      "Place below CTAs, in footer, or near checkout. Use grayscale for subtlety.",
+    pairsWellWith: ["CTA", "SocialProof", "Footer"],
   },
   LogoCloud: {
-    description: 'Client/partner logo display with grayscale hover, cards, and infinite marquee variants.',
-    category: 'sections',
-    keywords: ['logos', 'clients', 'partners', 'trusted by', 'companies'],
-    usageGuidelines: 'Place after features section. Use marquee for many logos. Grayscale for professional look.',
-    pairsWellWith: ['Section', 'SocialProof'],
+    description:
+      "Client/partner logo display with grayscale hover, cards, and infinite marquee variants.",
+    category: "sections",
+    keywords: ["logos", "clients", "partners", "trusted by", "companies"],
+    usageGuidelines:
+      "Place after features section. Use marquee for many logos. Grayscale for professional look.",
+    pairsWellWith: ["Section", "SocialProof"],
   },
   ComparisonTable: {
-    description: 'Feature comparison table with highlighted column, sticky headers, and CTA row.',
-    category: 'sections',
-    keywords: ['comparison', 'table', 'pricing', 'features', 'plans'],
-    usageGuidelines: 'Use on pricing pages. Highlight recommended plan. Add CTA row for conversion.',
-    pairsWellWith: ['Section', 'CTA'],
+    description:
+      "Feature comparison table with highlighted column, sticky headers, and CTA row.",
+    category: "sections",
+    keywords: ["comparison", "table", "pricing", "features", "plans"],
+    usageGuidelines:
+      "Use on pricing pages. Highlight recommended plan. Add CTA row for conversion.",
+    pairsWellWith: ["Section", "CTA"],
   },
   BeforeAfter: {
-    description: 'Draggable image comparison slider showing before and after states.',
-    category: 'media',
-    keywords: ['before after', 'comparison', 'slider', 'transform', 'renovation'],
-    usageGuidelines: 'Use for renovation, cosmetic, design, and editing showcases. Ensure both images have same dimensions.',
-    pairsWellWith: ['Gallery', 'Section'],
+    description:
+      "Draggable image comparison slider showing before and after states.",
+    category: "media",
+    keywords: [
+      "before after",
+      "comparison",
+      "slider",
+      "transform",
+      "renovation",
+    ],
+    usageGuidelines:
+      "Use for renovation, cosmetic, design, and editing showcases. Ensure both images have same dimensions.",
+    pairsWellWith: ["Gallery", "Section"],
   },
   Audio: {
-    description: 'Styled audio player with waveform, progress bar, and playback controls.',
-    category: 'media',
-    keywords: ['audio', 'music', 'podcast', 'sound', 'player'],
-    usageGuidelines: 'Use for podcasts, music samples, and voice messages. Include cover art for "full" variant.',
-    pairsWellWith: ['Section', 'Card'],
+    description:
+      "Styled audio player with waveform, progress bar, and playback controls.",
+    category: "media",
+    keywords: ["audio", "music", "podcast", "sound", "player"],
+    usageGuidelines:
+      'Use for podcasts, music samples, and voice messages. Include cover art for "full" variant.',
+    pairsWellWith: ["Section", "Card"],
   },
   Icon: {
-    description: 'SVG icon from Lucide library with background shape, colour, and animation.',
-    category: 'media',
-    keywords: ['icon', 'svg', 'illustration', 'symbol'],
-    usageGuidelines: 'Use for feature highlights, step indicators, and decorative elements. Set decorative=true if purely visual.',
-    pairsWellWith: ['Text', 'Card', 'Grid'],
+    description:
+      "SVG icon from Lucide library with background shape, colour, and animation.",
+    category: "media",
+    keywords: ["icon", "svg", "illustration", "symbol"],
+    usageGuidelines:
+      "Use for feature highlights, step indicators, and decorative elements. Set decorative=true if purely visual.",
+    pairsWellWith: ["Text", "Card", "Grid"],
   },
   Timeline: {
-    description: 'Visual timeline for chronological events, process steps, and milestones.',
-    category: 'sections',
-    keywords: ['timeline', 'process', 'steps', 'history', 'milestones'],
-    usageGuidelines: 'Use on about pages for history, and on service pages for process steps. Use horizontal for "how it works".',
-    pairsWellWith: ['Section', 'Stats'],
+    description:
+      "Visual timeline for chronological events, process steps, and milestones.",
+    category: "sections",
+    keywords: ["timeline", "process", "steps", "history", "milestones"],
+    usageGuidelines:
+      'Use on about pages for history, and on service pages for process steps. Use horizontal for "how it works".',
+    pairsWellWith: ["Section", "Stats"],
   },
   Stats: {
-    description: 'Animated statistics counters with prefix/suffix, icons, and multiple layout options.',
-    category: 'sections',
-    keywords: ['stats', 'numbers', 'counters', 'achievements', 'metrics'],
-    usageGuidelines: 'Use for impact numbers, company stats, and achievements. Enable animateNumbers for scroll effect.',
-    pairsWellWith: ['Section', 'Timeline'],
+    description:
+      "Animated statistics counters with prefix/suffix, icons, and multiple layout options.",
+    category: "sections",
+    keywords: ["stats", "numbers", "counters", "achievements", "metrics"],
+    usageGuidelines:
+      "Use for impact numbers, company stats, and achievements. Enable animateNumbers for scroll effect.",
+    pairsWellWith: ["Section", "Timeline"],
   },
   Embed: {
-    description: 'Generic iframe embed for third-party content (Calendly, Spotify, Figma, etc.).',
-    category: 'media',
-    keywords: ['embed', 'iframe', 'external', 'widget', 'calendly', 'spotify'],
-    usageGuidelines: 'Use for booking widgets, external forms, and media embeds. Always set title for accessibility.',
-    pairsWellWith: ['Section'],
+    description:
+      "Generic iframe embed for third-party content (Calendly, Spotify, Figma, etc.).",
+    category: "media",
+    keywords: ["embed", "iframe", "external", "widget", "calendly", "spotify"],
+    usageGuidelines:
+      "Use for booking widgets, external forms, and media embeds. Always set title for accessibility.",
+    pairsWellWith: ["Section"],
   },
 };
 ```
@@ -1961,63 +2080,63 @@ const MEDIA_METADATA = {
 
 ### 13.1 Image Loading Performance
 
-| Metric | Target | Strategy |
-|--------|--------|----------|
-| LCP (Largest Contentful Paint) | < 2.5s | `priority` + `fetchpriority="high"` on hero images |
-| CLS (Cumulative Layout Shift) | 0 | Always specify `width` + `height` or `aspect-ratio` |
-| Bandwidth savings | 30-50% | srcSet with responsive widths |
-| First gallery image | < 1s | Eager load first row, lazy load rest |
+| Metric                         | Target | Strategy                                            |
+| ------------------------------ | ------ | --------------------------------------------------- |
+| LCP (Largest Contentful Paint) | < 2.5s | `priority` + `fetchpriority="high"` on hero images  |
+| CLS (Cumulative Layout Shift)  | 0      | Always specify `width` + `height` or `aspect-ratio` |
+| Bandwidth savings              | 30-50% | srcSet with responsive widths                       |
+| First gallery image            | < 1s   | Eager load first row, lazy load rest                |
 
 ### 13.2 Video Loading Performance
 
-| Strategy | Implementation |
-|----------|---------------|
-| Poster-first | Always show poster image; load video on play/intersection |
-| Facade pattern | For YouTube: show thumbnail + play button, load iframe on click |
-| Background video | Preload poster → lazy-load video → crossfade on canplaythrough |
-| Preconnect | `<link rel="preconnect" href="https://www.youtube.com">` for YouTube embeds |
+| Strategy         | Implementation                                                              |
+| ---------------- | --------------------------------------------------------------------------- |
+| Poster-first     | Always show poster image; load video on play/intersection                   |
+| Facade pattern   | For YouTube: show thumbnail + play button, load iframe on click             |
+| Background video | Preload poster → lazy-load video → crossfade on canplaythrough              |
+| Preconnect       | `<link rel="preconnect" href="https://www.youtube.com">` for YouTube embeds |
 
 ### 13.3 Carousel Performance
 
-| Strategy | Implementation |
-|----------|---------------|
-| Lazy slide loading | Only render `current - 1`, `current`, `current + 1` |
-| Image preloading | Preload next slide's image when current slide displays |
-| CSS transitions | Use CSS transform/opacity — avoid JavaScript animation |
-| Will-change | Apply `will-change: transform` only during transition |
+| Strategy           | Implementation                                         |
+| ------------------ | ------------------------------------------------------ |
+| Lazy slide loading | Only render `current - 1`, `current`, `current + 1`    |
+| Image preloading   | Preload next slide's image when current slide displays |
+| CSS transitions    | Use CSS transform/opacity — avoid JavaScript animation |
+| Will-change        | Apply `will-change: transform` only during transition  |
 
 ### 13.4 Gallery Performance
 
-| Strategy | Implementation |
-|----------|---------------|
-| Virtual scrolling | For galleries > 50 items, only render visible items |
-| Intersection Observer | Each image uses IO for lazy loading |
-| Low-quality placeholder | Show blurred thumbnails → sharp on load |
-| Grid layout | CSS Grid for minimal layout reflow |
-| Filter animation | Use CSS `transform` + `opacity` for filter transitions |
+| Strategy                | Implementation                                         |
+| ----------------------- | ------------------------------------------------------ |
+| Virtual scrolling       | For galleries > 50 items, only render visible items    |
+| Intersection Observer   | Each image uses IO for lazy loading                    |
+| Low-quality placeholder | Show blurred thumbnails → sharp on load                |
+| Grid layout             | CSS Grid for minimal layout reflow                     |
+| Filter animation        | Use CSS `transform` + `opacity` for filter transitions |
 
 ### 13.5 Bundle Size Targets
 
-| Component | Current Est. | Target | Notes |
-|-----------|-------------|--------|-------|
-| ImageRender | ~6KB | ~7KB | +srcSet generation |
-| VideoRender | ~8KB | ~10KB | +background mode, keyboard controls |
-| MapRender | ~5KB | ~6KB | +multi-marker, auto theme |
-| GalleryRender | ~15KB | ~16KB | Minimal change |
-| CarouselRender | ~4KB | ~12KB | Major overhaul — transitions, swipe, lazy |
-| AvatarRender | ~3KB | ~4KB | +link, tooltip, group |
-| SocialProofRender | ~2KB | ~3KB | +animation, schema |
-| TrustBadgesRender | ~2KB | ~2KB | Minimal change |
-| LogoCloudRender | ~3KB | ~3KB | Minimal change |
-| ComparisonTableRender | ~4KB | ~6KB | +CTA row, responsive stack |
-| BeforeAfterRender | — | ~5KB | New |
-| AudioRender | — | ~8KB | New (waveform rendering) |
-| IconRender | — | ~2KB | New |
-| TimelineRender | — | ~6KB | New |
-| StatsRender | — | ~5KB | New |
-| EmbedRender | — | ~2KB | New |
-| AvatarGroupRender | — | ~3KB | New |
-| **Total** | ~52KB | ~100KB | +48KB for 7 new + overhauls |
+| Component             | Current Est. | Target | Notes                                     |
+| --------------------- | ------------ | ------ | ----------------------------------------- |
+| ImageRender           | ~6KB         | ~7KB   | +srcSet generation                        |
+| VideoRender           | ~8KB         | ~10KB  | +background mode, keyboard controls       |
+| MapRender             | ~5KB         | ~6KB   | +multi-marker, auto theme                 |
+| GalleryRender         | ~15KB        | ~16KB  | Minimal change                            |
+| CarouselRender        | ~4KB         | ~12KB  | Major overhaul — transitions, swipe, lazy |
+| AvatarRender          | ~3KB         | ~4KB   | +link, tooltip, group                     |
+| SocialProofRender     | ~2KB         | ~3KB   | +animation, schema                        |
+| TrustBadgesRender     | ~2KB         | ~2KB   | Minimal change                            |
+| LogoCloudRender       | ~3KB         | ~3KB   | Minimal change                            |
+| ComparisonTableRender | ~4KB         | ~6KB   | +CTA row, responsive stack                |
+| BeforeAfterRender     | —            | ~5KB   | New                                       |
+| AudioRender           | —            | ~8KB   | New (waveform rendering)                  |
+| IconRender            | —            | ~2KB   | New                                       |
+| TimelineRender        | —            | ~6KB   | New                                       |
+| StatsRender           | —            | ~5KB   | New                                       |
+| EmbedRender           | —            | ~2KB   | New                                       |
+| AvatarGroupRender     | —            | ~3KB   | New                                       |
+| **Total**             | ~52KB        | ~100KB | +48KB for 7 new + overhauls               |
 
 ---
 
@@ -2027,16 +2146,17 @@ const MEDIA_METADATA = {
 
 **Goal:** Fix all hardcoded colours — dark mode breaks.
 
-| Step | Task | File | Priority |
-|------|------|------|----------|
-| 1.1 | Fix ComparisonTable hardcoded `bg-sky-50 border-sky-500` → CSS variables | `renders.tsx` | 🔴 Critical |
-| 1.2 | Fix ComparisonTable `text-green-500` / `text-gray-300` check/cross | `renders.tsx` | 🔴 Critical |
-| 1.3 | Fix SocialProof `text-yellow-400` star colour → inline style | `renders.tsx` | 🔴 Critical |
-| 1.4 | Fix Avatar hardcoded status colours → inline styles | `renders.tsx` | ⚠️ Medium |
-| 1.5 | Fix Gallery default `backgroundColor: "#ffffff"` → CSS variable | `renders.tsx` | ⚠️ Medium |
-| 1.6 | Add media CSS variable tokens to renderer.tsx | `renderer.tsx` | ⚠️ Medium |
+| Step | Task                                                                     | File           | Priority    |
+| ---- | ------------------------------------------------------------------------ | -------------- | ----------- |
+| 1.1  | Fix ComparisonTable hardcoded `bg-sky-50 border-sky-500` → CSS variables | `renders.tsx`  | 🔴 Critical |
+| 1.2  | Fix ComparisonTable `text-green-500` / `text-gray-300` check/cross       | `renders.tsx`  | 🔴 Critical |
+| 1.3  | Fix SocialProof `text-yellow-400` star colour → inline style             | `renders.tsx`  | 🔴 Critical |
+| 1.4  | Fix Avatar hardcoded status colours → inline styles                      | `renders.tsx`  | ⚠️ Medium   |
+| 1.5  | Fix Gallery default `backgroundColor: "#ffffff"` → CSS variable          | `renders.tsx`  | ⚠️ Medium   |
+| 1.6  | Add media CSS variable tokens to renderer.tsx                            | `renderer.tsx` | ⚠️ Medium   |
 
 **Completion Criteria:**
+
 - All media components render correctly in dark mode
 - Zero hardcoded colour values
 - `npx tsc --noEmit` passes with 0 new errors
@@ -2045,18 +2165,19 @@ const MEDIA_METADATA = {
 
 **Goal:** Major carousel upgrade + build Timeline, Stats, BeforeAfter, Icon.
 
-| Step | Task | File |
-|------|------|------|
-| 2.1 | Carousel V2 — 5 transitions, swipe, lazy loading, rich content | `renders.tsx` |
-| 2.2 | Implement TimelineRender (vertical/horizontal/alternating) | `renders.tsx` |
-| 2.3 | Implement StatsRender with animated counters | `renders.tsx` |
-| 2.4 | Implement BeforeAfterRender with drag slider | `renders.tsx` |
-| 2.5 | Implement IconRender with Lucide resolution | `renders.tsx` |
-| 2.6 | Register all 5 components in core-components.ts | `core-components.ts` |
-| 2.7 | Add converter mappings for all 5 | `converter.ts` |
-| 2.8 | Add metadata for all 5 | `component-metadata.ts` |
+| Step | Task                                                           | File                    |
+| ---- | -------------------------------------------------------------- | ----------------------- |
+| 2.1  | Carousel V2 — 5 transitions, swipe, lazy loading, rich content | `renders.tsx`           |
+| 2.2  | Implement TimelineRender (vertical/horizontal/alternating)     | `renders.tsx`           |
+| 2.3  | Implement StatsRender with animated counters                   | `renders.tsx`           |
+| 2.4  | Implement BeforeAfterRender with drag slider                   | `renders.tsx`           |
+| 2.5  | Implement IconRender with Lucide resolution                    | `renders.tsx`           |
+| 2.6  | Register all 5 components in core-components.ts                | `core-components.ts`    |
+| 2.7  | Add converter mappings for all 5                               | `converter.ts`          |
+| 2.8  | Add metadata for all 5                                         | `component-metadata.ts` |
 
 **Completion Criteria:**
+
 - Carousel has 5 transitions + swipe + keyboard + lazy slides
 - All 4 new components render correctly
 - All registered + mapped + metadata added
@@ -2066,20 +2187,21 @@ const MEDIA_METADATA = {
 
 **Goal:** Add responsive images, video backgrounds, audio player, embed container.
 
-| Step | Task | File |
-|------|------|------|
-| 3.1 | Add srcSet + sizes to ImageRender | `renders.tsx` |
-| 3.2 | Add priority loading + blur placeholder to ImageRender | `renders.tsx` |
-| 3.3 | Add background mode to VideoRender | `renders.tsx` |
-| 3.4 | Add keyboard controls to VideoRender | `renders.tsx` |
-| 3.5 | Add captions track support to VideoRender | `renders.tsx` |
-| 3.6 | Implement AudioRender (3 variants) | `renders.tsx` |
-| 3.7 | Implement EmbedRender | `renders.tsx` |
-| 3.8 | Implement AvatarGroupRender | `renders.tsx` |
-| 3.9 | Register Audio, Embed, AvatarGroup | `core-components.ts` |
-| 3.10 | Add converter mappings + metadata | `converter.ts`, `component-metadata.ts` |
+| Step | Task                                                   | File                                    |
+| ---- | ------------------------------------------------------ | --------------------------------------- |
+| 3.1  | Add srcSet + sizes to ImageRender                      | `renders.tsx`                           |
+| 3.2  | Add priority loading + blur placeholder to ImageRender | `renders.tsx`                           |
+| 3.3  | Add background mode to VideoRender                     | `renders.tsx`                           |
+| 3.4  | Add keyboard controls to VideoRender                   | `renders.tsx`                           |
+| 3.5  | Add captions track support to VideoRender              | `renders.tsx`                           |
+| 3.6  | Implement AudioRender (3 variants)                     | `renders.tsx`                           |
+| 3.7  | Implement EmbedRender                                  | `renders.tsx`                           |
+| 3.8  | Implement AvatarGroupRender                            | `renders.tsx`                           |
+| 3.9  | Register Audio, Embed, AvatarGroup                     | `core-components.ts`                    |
+| 3.10 | Add converter mappings + metadata                      | `converter.ts`, `component-metadata.ts` |
 
 **Completion Criteria:**
+
 - Images serve responsive srcSet
 - Videos support background mode + keyboard + captions
 - Audio player renders with waveform
@@ -2089,17 +2211,18 @@ const MEDIA_METADATA = {
 
 **Goal:** Add CTA row to comparison table, multi-marker maps, avatar V2.
 
-| Step | Task | File |
-|------|------|------|
-| 4.1 | Add CTA row to ComparisonTableRender | `renders.tsx` |
-| 4.2 | Add row grouping to ComparisonTable | `renders.tsx` |
-| 4.3 | Add mobile stacked layout to ComparisonTable | `renders.tsx` |
-| 4.4 | Add multiple markers to MapRender | `renders.tsx` |
-| 4.5 | Add auto-theme dark mode to MapRender | `renders.tsx` |
-| 4.6 | Add link + tooltip to AvatarRender | `renders.tsx` |
-| 4.7 | Update registries for all changes | `core-components.ts` |
+| Step | Task                                         | File                 |
+| ---- | -------------------------------------------- | -------------------- |
+| 4.1  | Add CTA row to ComparisonTableRender         | `renders.tsx`        |
+| 4.2  | Add row grouping to ComparisonTable          | `renders.tsx`        |
+| 4.3  | Add mobile stacked layout to ComparisonTable | `renders.tsx`        |
+| 4.4  | Add multiple markers to MapRender            | `renders.tsx`        |
+| 4.5  | Add auto-theme dark mode to MapRender        | `renders.tsx`        |
+| 4.6  | Add link + tooltip to AvatarRender           | `renders.tsx`        |
+| 4.7  | Update registries for all changes            | `core-components.ts` |
 
 **Completion Criteria:**
+
 - Comparison table has CTA buttons per plan
 - Maps support multiple locations
 - `npx tsc --noEmit` passes
@@ -2108,19 +2231,20 @@ const MEDIA_METADATA = {
 
 **Goal:** AI media quality scoring, gallery virtual scroll, minor component polish.
 
-| Step | Task | File |
-|------|------|------|
-| 5.1 | Add media quality scoring to AI pipeline | AI quality file |
-| 5.2 | Add industry-specific media rules to AI prompt | `prompts.ts` |
-| 5.3 | Add virtual scrolling to GalleryRender (50+ items) | `renders.tsx` |
-| 5.4 | Add mixed media (video items) to Gallery | `renders.tsx` |
-| 5.5 | Add marquee speed/pause to LogoCloud | `renders.tsx` |
-| 5.6 | Add schema.org structured data to SocialProof | `renders.tsx` |
-| 5.7 | Add animated entrance to TrustBadges | `renders.tsx` |
-| 5.8 | Validate all components in dark mode | Manual |
-| 5.9 | Accessibility audit on all media components | Manual |
+| Step | Task                                               | File            |
+| ---- | -------------------------------------------------- | --------------- |
+| 5.1  | Add media quality scoring to AI pipeline           | AI quality file |
+| 5.2  | Add industry-specific media rules to AI prompt     | `prompts.ts`    |
+| 5.3  | Add virtual scrolling to GalleryRender (50+ items) | `renders.tsx`   |
+| 5.4  | Add mixed media (video items) to Gallery           | `renders.tsx`   |
+| 5.5  | Add marquee speed/pause to LogoCloud               | `renders.tsx`   |
+| 5.6  | Add schema.org structured data to SocialProof      | `renders.tsx`   |
+| 5.7  | Add animated entrance to TrustBadges               | `renders.tsx`   |
+| 5.8  | Validate all components in dark mode               | Manual          |
+| 5.9  | Accessibility audit on all media components        | Manual          |
 
 **Completion Criteria:**
+
 - AI generates contextually appropriate media
 - All components pass dark mode visual inspection
 - All media meets WCAG 2.1 AA
@@ -2132,95 +2256,96 @@ const MEDIA_METADATA = {
 
 ### 15.1 Unit Tests
 
-| Test | Component | Assertions |
-|------|-----------|------------|
-| srcSet generation | Image | Generates correct srcSet string for Supabase URLs |
-| Priority loading | Image | `priority=true` → `loading="eager"` + `fetchpriority="high"` |
-| Aspect ratios | Image, Gallery | Correct CSS aspect-ratio applied |
-| Video facade | Video | YouTube thumbnail shown, iframe loads on click |
-| Background video | Video | Muted, autoplay, loop, no controls |
-| Carousel transitions | Carousel | All 5 transitions animate correctly |
-| Carousel swipe | Carousel | Left swipe → next, right swipe → previous |
-| Carousel keyboard | Carousel | ← → changes slides, Enter activates CTA |
-| Carousel lazy | Carousel | Only current ± 1 slides in DOM |
-| Gallery filtering | Gallery | Category click filters visible images |
-| Gallery lightbox | Gallery | Image click opens lightbox, Escape closes |
-| Map multi-marker | Map | Multiple markers rendered at correct positions |
-| Map auto-theme | Map | Dark theme → dark map style auto-applied |
-| ComparisonTable highlight | ComparisonTable | Uses CSS variable, not hardcoded class |
-| ComparisonTable CTA | ComparisonTable | CTA row renders buttons per column |
-| Star colour | SocialProof | Uses inline style, not `text-yellow-400` |
-| Avatar status colours | Avatar | Uses inline styles, not Tailwind classes |
-| Avatar group overflow | AvatarGroup | `max=3` + 5 avatars → shows "+2" |
-| Before/after drag | BeforeAfter | Mouse drag moves slider position |
-| Before/after keyboard | BeforeAfter | ← → keys move slider by 5% |
-| Audio playback | Audio | Play/pause toggle works |
-| Stats animation | Stats | Numbers count up on scroll |
-| Timeline ordered | Timeline | Items render in correct chronological order |
-| Icon resolution | Icon | `name="shield"` renders Shield SVG |
+| Test                      | Component       | Assertions                                                   |
+| ------------------------- | --------------- | ------------------------------------------------------------ |
+| srcSet generation         | Image           | Generates correct srcSet string for Supabase URLs            |
+| Priority loading          | Image           | `priority=true` → `loading="eager"` + `fetchpriority="high"` |
+| Aspect ratios             | Image, Gallery  | Correct CSS aspect-ratio applied                             |
+| Video facade              | Video           | YouTube thumbnail shown, iframe loads on click               |
+| Background video          | Video           | Muted, autoplay, loop, no controls                           |
+| Carousel transitions      | Carousel        | All 5 transitions animate correctly                          |
+| Carousel swipe            | Carousel        | Left swipe → next, right swipe → previous                    |
+| Carousel keyboard         | Carousel        | ← → changes slides, Enter activates CTA                      |
+| Carousel lazy             | Carousel        | Only current ± 1 slides in DOM                               |
+| Gallery filtering         | Gallery         | Category click filters visible images                        |
+| Gallery lightbox          | Gallery         | Image click opens lightbox, Escape closes                    |
+| Map multi-marker          | Map             | Multiple markers rendered at correct positions               |
+| Map auto-theme            | Map             | Dark theme → dark map style auto-applied                     |
+| ComparisonTable highlight | ComparisonTable | Uses CSS variable, not hardcoded class                       |
+| ComparisonTable CTA       | ComparisonTable | CTA row renders buttons per column                           |
+| Star colour               | SocialProof     | Uses inline style, not `text-yellow-400`                     |
+| Avatar status colours     | Avatar          | Uses inline styles, not Tailwind classes                     |
+| Avatar group overflow     | AvatarGroup     | `max=3` + 5 avatars → shows "+2"                             |
+| Before/after drag         | BeforeAfter     | Mouse drag moves slider position                             |
+| Before/after keyboard     | BeforeAfter     | ← → keys move slider by 5%                                   |
+| Audio playback            | Audio           | Play/pause toggle works                                      |
+| Stats animation           | Stats           | Numbers count up on scroll                                   |
+| Timeline ordered          | Timeline        | Items render in correct chronological order                  |
+| Icon resolution           | Icon            | `name="shield"` renders Shield SVG                           |
 
 ### 15.2 Visual Regression Tests
 
-| Test | Description | Breakpoints |
-|------|-------------|-------------|
-| Image all frames | 4 frame styles × 3 aspect ratios | Desktop, Mobile |
-| Image hover effects | All 5 effects | Desktop |
-| Gallery grid vs masonry | Side-by-side comparison | Desktop, Tablet, Mobile |
-| Gallery filter transition | Category switch animation | Desktop |
-| Carousel all transitions | slide/fade/zoom/flip/crossfade | Desktop, Mobile |
-| Carousel navigation | Dots, arrows, progress bar | Desktop |
-| Map all 6 styles | Default through aubergine | Desktop |
-| ComparisonTable variants | simple/cards/striped × light/dark | Desktop, Mobile |
-| ComparisonTable mobile stack | Stacked card layout on mobile | Mobile |
-| Logo cloud marquee | Infinite scroll animation | Desktop |
-| Before/after slider | Various positions (20%, 50%, 80%) | Desktop, Mobile |
-| Audio all variants | full/compact/minimal | Desktop |
-| Timeline vertical/horizontal | Both orientations | Desktop, Mobile |
-| Stats with animation | Number count-up sequence | Desktop |
-| Dark mode all components | Every media component in dark mode | Desktop |
+| Test                         | Description                        | Breakpoints             |
+| ---------------------------- | ---------------------------------- | ----------------------- |
+| Image all frames             | 4 frame styles × 3 aspect ratios   | Desktop, Mobile         |
+| Image hover effects          | All 5 effects                      | Desktop                 |
+| Gallery grid vs masonry      | Side-by-side comparison            | Desktop, Tablet, Mobile |
+| Gallery filter transition    | Category switch animation          | Desktop                 |
+| Carousel all transitions     | slide/fade/zoom/flip/crossfade     | Desktop, Mobile         |
+| Carousel navigation          | Dots, arrows, progress bar         | Desktop                 |
+| Map all 6 styles             | Default through aubergine          | Desktop                 |
+| ComparisonTable variants     | simple/cards/striped × light/dark  | Desktop, Mobile         |
+| ComparisonTable mobile stack | Stacked card layout on mobile      | Mobile                  |
+| Logo cloud marquee           | Infinite scroll animation          | Desktop                 |
+| Before/after slider          | Various positions (20%, 50%, 80%)  | Desktop, Mobile         |
+| Audio all variants           | full/compact/minimal               | Desktop                 |
+| Timeline vertical/horizontal | Both orientations                  | Desktop, Mobile         |
+| Stats with animation         | Number count-up sequence           | Desktop                 |
+| Dark mode all components     | Every media component in dark mode | Desktop                 |
 
 ### 15.3 Accessibility Tests
 
-| Test | Tool | Expected Result |
-|------|------|-----------------|
-| Image alt text | axe-core | All content images have meaningful alt text |
-| Video captions | Manual | Captions display when track provided |
-| Carousel ARIA | NVDA/VoiceOver | Announces "Slide X of Y", controls work |
-| Carousel pause button | Keyboard | Space/Enter toggles autoplay pause |
-| Gallery lightbox focus | Manual | Focus trapped in lightbox, Escape closes |
-| Map iframe title | axe-core | `<iframe>` has descriptive `title` attribute |
-| Before/after slider | Keyboard | ← → keys control slider position |
-| Colour contrast | axe-core | All text ≥ 4.5:1 on backgrounds |
-| Reduced motion | Manual | All animations disabled when `prefers-reduced-motion` |
-| Touch targets | Manual | All interactive elements ≥ 44×44px |
+| Test                   | Tool           | Expected Result                                       |
+| ---------------------- | -------------- | ----------------------------------------------------- |
+| Image alt text         | axe-core       | All content images have meaningful alt text           |
+| Video captions         | Manual         | Captions display when track provided                  |
+| Carousel ARIA          | NVDA/VoiceOver | Announces "Slide X of Y", controls work               |
+| Carousel pause button  | Keyboard       | Space/Enter toggles autoplay pause                    |
+| Gallery lightbox focus | Manual         | Focus trapped in lightbox, Escape closes              |
+| Map iframe title       | axe-core       | `<iframe>` has descriptive `title` attribute          |
+| Before/after slider    | Keyboard       | ← → keys control slider position                      |
+| Colour contrast        | axe-core       | All text ≥ 4.5:1 on backgrounds                       |
+| Reduced motion         | Manual         | All animations disabled when `prefers-reduced-motion` |
+| Touch targets          | Manual         | All interactive elements ≥ 44×44px                    |
 
 ### 15.4 Performance Tests
 
-| Metric | Target | Component | How to Measure |
-|--------|--------|-----------|---------------|
-| LCP | < 2.5s | Hero image | Lighthouse |
-| CLS | 0 | All images | Lighthouse |
-| FID | < 100ms | Carousel swipe | Lighthouse |
-| Image bytes saved | > 30% | Image srcSet | Network tab comparison |
-| Carousel transition FPS | 60fps | Carousel | Chrome DevTools FPS meter |
-| Gallery filter FPS | 60fps | Gallery filter | Chrome DevTools |
-| Stats count-up FPS | 60fps | Stats animation | Chrome DevTools |
-| Time to first paint | < 500ms | All components | Performance.now() |
+| Metric                  | Target  | Component       | How to Measure            |
+| ----------------------- | ------- | --------------- | ------------------------- |
+| LCP                     | < 2.5s  | Hero image      | Lighthouse                |
+| CLS                     | 0       | All images      | Lighthouse                |
+| FID                     | < 100ms | Carousel swipe  | Lighthouse                |
+| Image bytes saved       | > 30%   | Image srcSet    | Network tab comparison    |
+| Carousel transition FPS | 60fps   | Carousel        | Chrome DevTools FPS meter |
+| Gallery filter FPS      | 60fps   | Gallery filter  | Chrome DevTools           |
+| Stats count-up FPS      | 60fps   | Stats animation | Chrome DevTools           |
+| Time to first paint     | < 500ms | All components  | Performance.now()         |
 
 ### 15.5 Cross-Browser Tests
 
-| Browser | Versions | Focus |
-|---------|----------|-------|
-| Chrome | Latest + Latest-1 | Baseline |
-| Firefox | Latest | `srcSet`/`sizes`, CSS Grid masonry |
-| Safari | Latest + iOS Safari | Touch swipe, `aspect-ratio`, lazy loading |
-| Edge | Latest | Baseline |
+| Browser | Versions            | Focus                                     |
+| ------- | ------------------- | ----------------------------------------- |
+| Chrome  | Latest + Latest-1   | Baseline                                  |
+| Firefox | Latest              | `srcSet`/`sizes`, CSS Grid masonry        |
+| Safari  | Latest + iOS Safari | Touch swipe, `aspect-ratio`, lazy loading |
+| Edge    | Latest              | Baseline                                  |
 
 ---
 
 ## Key Rules Summary
 
 ### Image Rules
+
 1. **Always specify `alt` text** — empty string only for decorative images
 2. **Always specify `width` + `height`** or `aspect-ratio` — prevents CLS
 3. **Hero images use `priority`** — `loading="eager"` + `fetchpriority="high"`
@@ -2228,34 +2353,40 @@ const MEDIA_METADATA = {
 5. **Blur placeholder** for loading experience on large images
 
 ### Video Rules
+
 6. **Always include poster image** — browsers show poster before loading video
 7. **Background videos are muted** — browsers block autoplay with sound
 8. **YouTube facade pattern** — show thumbnail, load iframe on click, saves bandwidth
 9. **Captions track** for accessibility (WCAG 1.2.2)
 
 ### Gallery Rules
+
 10. **Minimum 4 images** — fewer looks incomplete
 11. **Use `overflow: hidden`** on image containers — prevents hover zoom overflow
 12. **Category filter transition** uses CSS transform + opacity only (GPU)
 13. **Load more in batches of 6-12** — don't overwhelm
 
 ### Carousel Rules
+
 14. **Touch swipe essential** — no carousel without mobile swipe
 15. **Pause on hover by default** — users need time to read content
 16. **Lazy load slides** — only current ± 1 in DOM
 17. **ARIA carousel semantics** — `aria-roledescription="carousel"`, live region
 
 ### Map Rules
+
 18. **Auto-theme in dark mode** — switch to "dark" map style automatically
 19. **Directions link** for business locations
 20. **Descriptive `<iframe>` title** — accessibility requirement
 
 ### Colour Rules
+
 21. **NEVER hardcode Tailwind colour classes** — all colours via inline styles
 22. **CSS variables with fallbacks** — `var(--color-check, #22c55e)`
 23. **`color-mix()` for tinted backgrounds** — consistent brand-tinted badges
 
 ### AI Rules
+
 24. **Industry-appropriate media choices** — architecture=masonry, restaurant=food gallery, saas=stats
 25. **Alt text is specific** — "Modern restaurant interior with warm lighting" not "image"
 26. **Above-fold media uses priority loading**
@@ -2263,6 +2394,6 @@ const MEDIA_METADATA = {
 
 ---
 
-*This document serves as the complete overhaul specification for DRAMAC CMS media components. Every modification must be verified against this plan.*
+_This document serves as the complete overhaul specification for DRAMAC CMS media components. Every modification must be verified against this plan._
 
-*Version: 1.0 — March 2026*
+_Version: 1.0 — March 2026_

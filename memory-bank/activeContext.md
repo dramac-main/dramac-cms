@@ -24,6 +24,7 @@
 5. **Independent verification** — Sub-agent grep-searched for ALL old line numbers (20 patterns) and confirmed zero stale references remain.
 
 ### Master Plan Document Status (8 of 8 complete)
+
 1. LAYOUT ✅
 2. TYPOGRAPHY ✅
 3. BUTTONS ✅
@@ -38,11 +39,13 @@
 **Implemented the entire FORMS-COMPONENTS-MASTER-PLAN.md across 5 files:**
 
 #### Phase 1: Critical Fixes
+
 1. **Newsletter render complete rewrite** (`renders.tsx`) — Replaced dead `<form action="#" method="POST">` with full fetch-based submission pipeline: `useState` state machine (idle/submitting/success/error), `handleSubmit` with `fetch("/api/forms/submit")`, honeypot spam field, success/error/loading UI, ARIA attributes (`role="alert"`, `role="status"`, `aria-required`, `aria-busy`, `sr-only` labels), new `siteId` prop, `borderRadius` prop. Removed `action` prop entirely.
 
 2. **API email fallback chain** (`route.ts`) — Rewrote `sendNotifications` with 3-layer cascade: (1) `form_settings.notify_emails` → (2) `data._emailTo` from ContactForm `emailTo` prop → (3) site owner's email via `sites` → `users` table join. Also filters `_` prefixed internal fields from email formatting.
 
 #### Phase 2: Registry Alignment
+
 3. **Newsletter registry** (`core-components.ts`) — Fixed 3 BREAKING field name mismatches (`submitText`→`buttonText`, `layout`→`variant`, `subtitle`→`description`). Added fieldGroups array (content, layout, appearance, inputStyling). Added 9 new fields: `size`, `backgroundColor`, `buttonColor`, `buttonTextColor`, `textColor`, `borderRadius`, `inputBackgroundColor`, `inputBorderColor`, `inputTextColor`. Added "card" variant. Expanded `ai.canModify` from 4 to 10 fields.
 
 4. **ContactForm registry** (`core-components.ts`) — Expanded from 7 fields to 24 fields. Added fieldGroups (content, fieldLabels, visibility, appearance, colorOverrides). Added: `nameLabel`, `emailLabel`, `phoneLabel`, `subjectLabel`, `messageLabel`, `backgroundColor`, `borderRadius`, `shadow`, `padding`, `buttonColor`, `buttonTextColor`, `textColor`, `inputBackgroundColor`, `inputBorderColor`, `inputTextColor`, `labelColor`. Fixed `showPhone` default from `true` to `false` (matching render). Expanded `ai.canModify` from 4 to 14 fields.
@@ -50,14 +53,17 @@
 5. **fieldGroups format fix** — Both ContactForm and Newsletter fieldGroups were using object format `{ content: { label, fields } }` instead of required array format `[{ id, label, icon, fields }]`. Fixed to match FieldGroup interface.
 
 #### Phase 3: Converter & Metadata
+
 6. **FormField converter aliases** (`converter.ts`) — Added 3 typeMap aliases: `FormFieldBlock`, `InputField`, `FormInput` → "FormField".
 
 7. **Component metadata** (`component-metadata.ts`) — Updated descriptions for all 4 form components with richer keywords and usage guidelines.
 
 #### Phase 4: Form Platform Submission
+
 8. **Form generic platform submission** (`renders.tsx`) — Added `siteId`, `formId`, `enablePlatformSubmission` props to FormProps interface and FormRender. When `enablePlatformSubmission` is true: injects honeypot field, overrides onSubmit with fetch handler, manages platformStatus state machine, uses resolved values for success/error/loading states.
 
 #### Phase 5: ARIA & Dark Mode
+
 9. **ARIA accessibility** — Added to:
    - FormRender: `role="status" aria-live="polite"` on success, `role="alert"` on error, `aria-busy` on submit button
    - ContactFormRender: `role="status" aria-live="polite"` on success state, `role="alert"` on error, `aria-busy` on submit button
@@ -66,6 +72,7 @@
 10. **Dark mode colour fixes** — Form success/error messages now use inline `style={{}}` with conditional dark-aware colours instead of hardcoded `bg-green-50 text-green-700` / `bg-red-50 text-red-700`.
 
 ### Files Modified
+
 - `src/lib/studio/blocks/renders.tsx` — Newsletter rewrite, Form platform submission, ARIA on all 3 renderers, dark mode fixes
 - `src/lib/studio/registry/core-components.ts` — Newsletter + ContactForm registry expansions, fieldGroups format fix
 - `src/app/api/forms/submit/route.ts` — 3-layer email fallback chain
@@ -73,6 +80,7 @@
 - `src/lib/studio/registry/component-metadata.ts` — Updated descriptions/keywords
 
 ### TypeScript Status
+
 - 16 pre-existing errors (converter.ts toResponsive, business-notifications.ts quotes table) — unchanged
 - **Zero new errors introduced** by all forms changes
 
@@ -84,12 +92,14 @@
 5. **Included parallel session's component enhancements**: HeroRender, PricingRender, CountdownRender, GalleryRender, ContactFormRender, NewsletterRender, AvatarRender, MapRender (1605 lines of verified clean changes)
 
 ### Build Status
+
 - TypeScript: 17 remaining errors (all pre-existing baseline, down from 34)
 - Commit: `730f9dab` pushed to main
 
 ### What Was Done (Prior Session)
 
 **Full 7-layer verification audit of all 9 button/interactive components:**
+
 1. Confirmed all 9 render functions exist in renders.tsx
 2. Confirmed all 9 registered in core-components.ts with render functions
 3. Confirmed all 17 converter.ts typeMap entries
@@ -113,22 +123,24 @@
 6. **Badge** (biggest fix): Trimmed registry from 50+ fields (13 field groups) to ~17 fields (4 field groups) matching actual render. Removed: gradient, glass, shadow, glow, typography, hover effects, counter, responsive, custom border, removable, onClick handler groups. Fixed variant options (removed secondary/custom, added outline). Fixed size options (removed xl). Fixed rounded options (kept only default/full).
 
 ### Build Status
+
 - TypeScript: No new errors introduced (verified with `tsc --noEmit`)
 - Commit: `e27189cb` pushed to main
 
 ### Master Plan Document Progress
-| Document | Status |
-|----------|--------|
-| LAYOUT-COMPONENTS-MASTER-PLAN.md | ✅ COMPLETE + IMPLEMENTED |
-| TYPOGRAPHY-COMPONENTS-MASTER-PLAN.md | ✅ COMPLETE + IMPLEMENTED |
-| BUTTONS-COMPONENTS-MASTER-PLAN.md | ✅ COMPLETE + IMPLEMENTED |
-| MEDIA-COMPONENTS-MASTER-PLAN.md | ✅ COMPLETE (awaiting implementation) |
-| SECTIONS-COMPONENTS-MASTER-PLAN.md | ✅ v2.0 COMPLETE (implementation-ready) |
-| NAVIGATION-COMPONENTS-MASTER-PLAN.md | ✅ v1.1 VERIFIED (all line numbers corrected, Breadcrumb converter conflict documented) |
-| FORMS-COMPONENTS-MASTER-PLAN.md | ✅ v1.1 VERIFIED (all line numbers re-verified, factual errors corrected, ready for AI agent) |
-| GridItem | removed dead `backgroundColor`/`padding` fields |
-| ScrollSectionItem | removed dead `contentAlign`/`verticalAlign`, added `snapAlign` |
-| ShapeDivider | added `width`/`animated` fields |
+
+| Document                             | Status                                                                                        |
+| ------------------------------------ | --------------------------------------------------------------------------------------------- |
+| LAYOUT-COMPONENTS-MASTER-PLAN.md     | ✅ COMPLETE + IMPLEMENTED                                                                     |
+| TYPOGRAPHY-COMPONENTS-MASTER-PLAN.md | ✅ COMPLETE + IMPLEMENTED                                                                     |
+| BUTTONS-COMPONENTS-MASTER-PLAN.md    | ✅ COMPLETE + IMPLEMENTED                                                                     |
+| MEDIA-COMPONENTS-MASTER-PLAN.md      | ✅ COMPLETE (awaiting implementation)                                                         |
+| SECTIONS-COMPONENTS-MASTER-PLAN.md   | ✅ v2.0 COMPLETE (implementation-ready)                                                       |
+| NAVIGATION-COMPONENTS-MASTER-PLAN.md | ✅ v1.1 VERIFIED (all line numbers corrected, Breadcrumb converter conflict documented)       |
+| FORMS-COMPONENTS-MASTER-PLAN.md      | ✅ v1.1 VERIFIED (all line numbers re-verified, factual errors corrected, ready for AI agent) |
+| GridItem                             | removed dead `backgroundColor`/`padding` fields                                               |
+| ScrollSectionItem                    | removed dead `contentAlign`/`verticalAlign`, added `snapAlign`                                |
+| ShapeDivider                         | added `width`/`animated` fields                                                               |
 
 ### Key Architecture Insight
 

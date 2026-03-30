@@ -12,13 +12,15 @@
 Implemented the entire FORMS-COMPONENTS-MASTER-PLAN.md — all 5 phases across 5 files, zero new TS errors.
 
 **All 5 Critical Bugs Fixed:**
+
 1. ~~Newsletter completely non-functional~~ → Full fetch submission pipeline with honeypot, success/error states, ARIA
-2. ~~ContactForm `emailTo` is decorative~~ → API 3-layer email fallback chain (form_settings → _emailTo → site owner)
+2. ~~ContactForm `emailTo` is decorative~~ → API 3-layer email fallback chain (form_settings → \_emailTo → site owner)
 3. ~~Newsletter registry has 3 BREAKING field name mismatches~~ → submitText→buttonText, layout→variant, subtitle→description
 4. ~~23 ContactForm render props missing from registry~~ → Expanded from 7 to 24 fields with fieldGroups
 5. ~~FormField has no typeMap aliases~~ → Added FormFieldBlock, InputField, FormInput
 
 **Additional Enhancements:**
+
 - Form generic component gets opt-in platform submission (`enablePlatformSubmission` prop)
 - ARIA accessibility added to Form, FormField, and ContactForm (aria-required, aria-invalid, aria-describedby, role="alert", role="status", aria-busy)
 - Dark mode colour fixes for Form success/error messages (inline styles instead of hardcoded Tailwind)
@@ -36,12 +38,14 @@ Implemented the entire FORMS-COMPONENTS-MASTER-PLAN.md — all 5 phases across 5
 Updated `CONTENT-COMPONENTS-MASTER-PLAN.md` from v1.0 to v2.0. All line numbers re-verified against source after Forms implementation shifted core-components.ts (+630–717 lines), component-metadata.ts (+42 lines), and CodeBlock in renders.tsx (+59 lines). converter.ts unchanged.
 
 **v2.0 Changes:**
+
 1. **Added Section 0 — Implementation Blueprint** — Modeled after Forms/Navigation/Sections master plans. Contains File Map, Exact Line Numbers (all 4 source files), Props Pipeline, Render Skeleton Pattern, defineComponent() Field Type Reference, Build Checklist, DO/DON'T Rules. This is the "AI agent quick reference" section that makes the document implementation-ready.
 2. **Fixed all stale line numbers** — 50+ line references corrected across Sections 1.1, 1.3, 4.1–4.8, 10.1, and 11. Every reference independently grep-verified.
 3. **Updated TOC** — Added Section 0 link.
 4. **Updated footer** — Version 2.0 with verification date and drift explanation.
 
 **Critical Issues Still Outstanding (unchanged from v1.0):**
+
 1. CodeBlock: 30% registry coverage (7 render props unregistered)
 2. Category mismatch: 7 of 8 use "typography" instead of "content"
 3. RichText prose dark mode broken
@@ -70,6 +74,7 @@ Document created (v1.0) and verified (v1.1), then **fully implemented** in subse
 Created `FORMS-COMPONENTS-MASTER-PLAN.md` v1.0 — the 7th master plan document in the component documentation series. Covers all 4 form components (Form, FormField, ContactForm, Newsletter) with full submission pipeline analysis and "Out of the Gate" architecture.
 
 **Critical Bugs Documented:**
+
 1. **Newsletter completely non-functional** — `<form action="#" method="POST">`, no JS handler, no API integration
 2. **ContactForm `emailTo` is decorative** — `_emailTo` sent in data but API ignores it; `form_settings.notify_emails` defaults to `[]`
 3. **Newsletter registry has 3 BREAKING field name mismatches** — submitText/layout/subtitle don't match render prop names
@@ -77,7 +82,8 @@ Created `FORMS-COMPONENTS-MASTER-PLAN.md` v1.0 — the 7th master plan document 
 5. **Form + FormField not in KNOWN_REGISTRY_TYPES** — AI cannot generate them
 
 **"Out of the Gate" Architecture Specified:**
-- 3-layer email fallback: form_settings → _emailTo → site owner email
+
+- 3-layer email fallback: form_settings → \_emailTo → site owner email
 - Auto-provision form_settings on site creation with owner's email
 - Newsletter rewrite to use fetch + /api/forms/submit (matching ContactForm pattern)
 - Form generic platform submission opt-in via `enablePlatformSubmission` prop

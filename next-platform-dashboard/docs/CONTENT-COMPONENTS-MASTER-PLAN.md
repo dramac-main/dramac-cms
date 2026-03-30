@@ -32,44 +32,44 @@ Content components are the **substance of every website**. They carry the messag
 
 ### 0.1 File Map
 
-| File | Path | Purpose |
-|------|------|---------|
-| **renders.tsx** | `src/lib/studio/blocks/renders.tsx` | Render functions for all 8 content components |
-| **core-components.ts** | `src/lib/studio/registry/core-components.ts` | `defineComponent()` registrations with fields, defaultProps, AI hints |
-| **component-metadata.ts** | `src/lib/studio/registry/component-metadata.ts` | AI discovery metadata (keywords, usageGuidelines, category) |
-| **converter.ts** | `src/lib/ai/website-designer/converter.ts` | `typeMap` aliases + `KNOWN_REGISTRY_TYPES` + `normalizeComponentProps()` handlers |
-| **renderer.tsx** | `src/lib/studio/engine/renderer.tsx` | Dispatches render functions, injects props via `{...injectedProps}` |
-| **layout-utils.ts** | `src/lib/studio/blocks/layout-utils.ts` | Shared sizing/spacing utility maps (`getResponsiveClasses`, etc.) |
+| File                      | Path                                            | Purpose                                                                           |
+| ------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------------- |
+| **renders.tsx**           | `src/lib/studio/blocks/renders.tsx`             | Render functions for all 8 content components                                     |
+| **core-components.ts**    | `src/lib/studio/registry/core-components.ts`    | `defineComponent()` registrations with fields, defaultProps, AI hints             |
+| **component-metadata.ts** | `src/lib/studio/registry/component-metadata.ts` | AI discovery metadata (keywords, usageGuidelines, category)                       |
+| **converter.ts**          | `src/lib/ai/website-designer/converter.ts`      | `typeMap` aliases + `KNOWN_REGISTRY_TYPES` + `normalizeComponentProps()` handlers |
+| **renderer.tsx**          | `src/lib/studio/engine/renderer.tsx`            | Dispatches render functions, injects props via `{...injectedProps}`               |
+| **layout-utils.ts**       | `src/lib/studio/blocks/layout-utils.ts`         | Shared sizing/spacing utility maps (`getResponsiveClasses`, etc.)                 |
 
 ### 0.2 Exact Line Numbers (Verified via grep — 2026-07)
 
 #### renders.tsx
 
-| Component | Interface Start | Export Function | Props Count |
-|-----------|----------------|-----------------|-------------|
-| **RichText** | L3575 (`export interface RichTextProps`) | L3694 (`export function RichTextRender`) | 24 |
-| **Quote** | L3858 (`export interface QuoteProps`) | L3880 (`export function QuoteRender`) | 13 |
-| **CodeBlock** | L25282 (`export interface CodeBlockProps`) | L25297 (`export function CodeBlockRender`) | 12 |
-| **Label** | L4164 (`export interface LabelProps`) | L4187 (`export function LabelRender`) | 12 |
-| **List** | L4308 (`export interface ListProps`) | L4329 (`export function ListRender`) | 10 |
-| **DisplayText** | L4439 (`export interface DisplayTextProps`) | L4461 (`export function DisplayTextRender`) | 17 |
-| **DividerText** | L4529 (`export interface DividerTextProps`) | L4544 (`export function DividerTextRender`) | 12 |
-| **StatNumber** | L4728 (`export interface StatNumberProps`) | L4745 (`export function StatNumberRender`) | 14 |
+| Component       | Interface Start                             | Export Function                             | Props Count |
+| --------------- | ------------------------------------------- | ------------------------------------------- | ----------- |
+| **RichText**    | L3575 (`export interface RichTextProps`)    | L3694 (`export function RichTextRender`)    | 24          |
+| **Quote**       | L3858 (`export interface QuoteProps`)       | L3880 (`export function QuoteRender`)       | 13          |
+| **CodeBlock**   | L25282 (`export interface CodeBlockProps`)  | L25297 (`export function CodeBlockRender`)  | 12          |
+| **Label**       | L4164 (`export interface LabelProps`)       | L4187 (`export function LabelRender`)       | 12          |
+| **List**        | L4308 (`export interface ListProps`)        | L4329 (`export function ListRender`)        | 10          |
+| **DisplayText** | L4439 (`export interface DisplayTextProps`) | L4461 (`export function DisplayTextRender`) | 17          |
+| **DividerText** | L4529 (`export interface DividerTextProps`) | L4544 (`export function DividerTextRender`) | 12          |
+| **StatNumber**  | L4728 (`export interface StatNumberProps`)  | L4745 (`export function StatNumberRender`)  | 14          |
 
 > 7 of 8 components sit in a contiguous block (L3575–L4845). CodeBlock is an outlier at L25282, separated by ~20,500 lines.
 
 #### core-components.ts
 
-| Component | `defineComponent({` | `type:` line | Category | Fields | defaultProps |
-|-----------|---------------------|-------------|----------|--------|-------------|
-| **RichText** | L14368 | L14369 | typography | 21 | L14510 |
-| **Quote** | L14535 | L14536 | typography | 11 | L14620 |
-| **CodeBlock** | L14645 | L14646 | content | 3 ⚠️ | L14673 |
-| **Label** | L14684 | L14685 | typography | 10 | L14758 |
-| **List** | L14772 | L14773 | typography | 8 | L14846 |
-| **DisplayText** | L14866 | L14867 | typography | 16 | L15008 |
-| **DividerText** | L15030 | L15031 | typography | 10 | L15105 |
-| **StatNumber** | L15119 | L15120 | typography | 12 | L15180 |
+| Component       | `defineComponent({` | `type:` line | Category   | Fields | defaultProps |
+| --------------- | ------------------- | ------------ | ---------- | ------ | ------------ |
+| **RichText**    | L14368              | L14369       | typography | 21     | L14510       |
+| **Quote**       | L14535              | L14536       | typography | 11     | L14620       |
+| **CodeBlock**   | L14645              | L14646       | content    | 3 ⚠️   | L14673       |
+| **Label**       | L14684              | L14685       | typography | 10     | L14758       |
+| **List**        | L14772              | L14773       | typography | 8      | L14846       |
+| **DisplayText** | L14866              | L14867       | typography | 16     | L15008       |
+| **DividerText** | L15030              | L15031       | typography | 10     | L15105       |
+| **StatNumber**  | L15119              | L15120       | typography | 12     | L15180       |
 
 > ⚠️ CodeBlock has only 3 registered fields out of 10 render props (30% coverage). See Section 4.3 for the full fix specification.
 >
@@ -77,24 +77,24 @@ Content components are the **substance of every website**. They carry the messag
 
 #### component-metadata.ts
 
-| Component | `type:` line | Category |
-|-----------|-------------|----------|
-| **RichText** | L716 | content |
-| **Quote** | L727 | content |
-| **CodeBlock** | L738 | content |
-| **Label** | L750 | content |
-| **List** | L765 | content |
-| **DisplayText** | L779 | content |
-| **DividerText** | L793 | content |
-| **StatNumber** | L807 | content |
+| Component       | `type:` line | Category |
+| --------------- | ------------ | -------- |
+| **RichText**    | L716         | content  |
+| **Quote**       | L727         | content  |
+| **CodeBlock**   | L738         | content  |
+| **Label**       | L750         | content  |
+| **List**        | L765         | content  |
+| **DisplayText** | L779         | content  |
+| **DividerText** | L793         | content  |
+| **StatNumber**  | L807         | content  |
 
 #### converter.ts
 
-| Data | Lines | Status |
-|------|-------|--------|
-| typeMap aliases (32 total) | L370–L607 | ✅ All 8 components have aliases |
-| KNOWN_REGISTRY_TYPES | L792–L801 (RichText L792, Quote L793, CodeBlock L794, Label L797, List L798, DisplayText L799, DividerText L800, StatNumber L801) | ✅ All 8 present |
-| Normalizer handlers | RichText L1572, Label L1645, List L1660, DisplayText L1684, DividerText L1704, StatNumber L1717, Quote L2166 | ⚠️ CodeBlock has NO normalizer |
+| Data                       | Lines                                                                                                                             | Status                           |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| typeMap aliases (32 total) | L370–L607                                                                                                                         | ✅ All 8 components have aliases |
+| KNOWN_REGISTRY_TYPES       | L792–L801 (RichText L792, Quote L793, CodeBlock L794, Label L797, List L798, DisplayText L799, DividerText L800, StatNumber L801) | ✅ All 8 present                 |
+| Normalizer handlers        | RichText L1572, Label L1645, List L1660, DisplayText L1684, DividerText L1704, StatNumber L1717, Quote L2166                      | ⚠️ CodeBlock has NO normalizer   |
 
 ### 0.3 Props Pipeline
 
@@ -155,6 +155,7 @@ export function [Component]Render({
 ```
 
 **Key patterns:**
+
 - ALL colours via `style={{}}` — NEVER Tailwind colour classes
 - CSS variables as fallbacks: `var(--font-heading, inherit)`
 - Colour chains terminate with `|| undefined` → inherits from parent/theme
@@ -162,17 +163,17 @@ export function [Component]Render({
 
 ### 0.5 defineComponent() Field Type Reference
 
-| Field Type | UI Element | Use For | Example |
-|-----------|-----------|---------|---------|
-| `text` | Text input | Short strings | `title`, `prefix`, `suffix` |
-| `textarea` | Multi-line input | Longer text | `text` (Quote), `pullQuote` |
-| `richtext` | Rich text editor | HTML/markdown content | `content` (RichText) |
-| `code` | Code editor | Source code | `code` (CodeBlock) |
-| `select` | Dropdown | Constrained choices | `variant`, `size`, `layout` |
-| `toggle` | Boolean switch | On/off features | `showLineNumbers`, `gradient` |
-| `color` | Colour picker | Any colour prop | `textColor`, `backgroundColor` |
-| `image` | Image picker | Images/avatars | `authorImage` (Quote) |
-| `array` | List editor | String arrays | `items` (List) |
+| Field Type | UI Element       | Use For               | Example                        |
+| ---------- | ---------------- | --------------------- | ------------------------------ |
+| `text`     | Text input       | Short strings         | `title`, `prefix`, `suffix`    |
+| `textarea` | Multi-line input | Longer text           | `text` (Quote), `pullQuote`    |
+| `richtext` | Rich text editor | HTML/markdown content | `content` (RichText)           |
+| `code`     | Code editor      | Source code           | `code` (CodeBlock)             |
+| `select`   | Dropdown         | Constrained choices   | `variant`, `size`, `layout`    |
+| `toggle`   | Boolean switch   | On/off features       | `showLineNumbers`, `gradient`  |
+| `color`    | Colour picker    | Any colour prop       | `textColor`, `backgroundColor` |
+| `image`    | Image picker     | Images/avatars        | `authorImage` (Quote)          |
+| `array`    | List editor      | String arrays         | `items` (List)                 |
 
 ### 0.6 Build Checklist — Use for EVERY Change
 
@@ -194,19 +195,19 @@ export function [Component]Render({
 
 ### 0.7 DO / DON'T Rules
 
-| ✅ DO | ❌ DON'T |
-|-------|---------|
-| Use `style={{}}` for ALL colours | Use Tailwind colour classes (bg-red-600, text-blue-500) |
-| Use CSS variables with fallbacks: `var(--font-body, inherit)` | Hardcode hex/rgb values without CSS variable wrapper |
+| ✅ DO                                                                 | ❌ DON'T                                                        |
+| --------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Use `style={{}}` for ALL colours                                      | Use Tailwind colour classes (bg-red-600, text-blue-500)         |
+| Use CSS variables with fallbacks: `var(--font-body, inherit)`         | Hardcode hex/rgb values without CSS variable wrapper            |
 | Terminate colour chains with `... or undefined` to enable inheritance | Hardcode a colour as the final fallback (e.g., `... or "#000"`) |
-| Match field names in registry EXACTLY to prop names in render | Use `text` in registry and `content` in render |
-| Use semantic HTML (blockquote, ul/ol, pre/code, role="heading") | Use bare `<div>` for everything |
-| Add converter normalizer for EVERY component | Skip normalizer — AI-generated props pass through unnormalized |
-| Use `font-variant-numeric: tabular-nums` for number displays | Use proportional-width digits for stats |
-| Use `text-wrap: balance` for display/hero text | Let long hero text create orphan words |
-| Put ALL render functions in `renders.tsx` only | Create separate files for individual renders |
-| Use `getResponsiveClasses()` from `layout-utils.ts` | Reimplement responsive logic in each component |
-| Set `category: "content"` for all 8 content components | Leave the 7 that currently say `"typography"` |
+| Match field names in registry EXACTLY to prop names in render         | Use `text` in registry and `content` in render                  |
+| Use semantic HTML (blockquote, ul/ol, pre/code, role="heading")       | Use bare `<div>` for everything                                 |
+| Add converter normalizer for EVERY component                          | Skip normalizer — AI-generated props pass through unnormalized  |
+| Use `font-variant-numeric: tabular-nums` for number displays          | Use proportional-width digits for stats                         |
+| Use `text-wrap: balance` for display/hero text                        | Let long hero text create orphan words                          |
+| Put ALL render functions in `renders.tsx` only                        | Create separate files for individual renders                    |
+| Use `getResponsiveClasses()` from `layout-utils.ts`                   | Reimplement responsive logic in each component                  |
+| Set `category: "content"` for all 8 content components                | Leave the 7 that currently say `"typography"`                   |
 
 ---
 
@@ -214,44 +215,44 @@ export function [Component]Render({
 
 ### 1.1 Content Components Inventory (8 total)
 
-| # | Component | renders.tsx Interface | renders.tsx Export | Props | Quality | Key Strength |
-|---|-----------|---------------------|-------------------|-------|---------|--------------|
-| 1 | **RichText** | L3575 | L3694 | 24 | ✅ Strong | Full layout system (centered/left/two-column/wide), 10 colour props, pull quotes, markdown-to-HTML utility |
-| 2 | **Quote** | L3858 | L3880 | 13 | ✅ Strong | 6 polished variants (simple/bordered/card/modern/pullquote/testimonial), author images, per-size responsive styles |
-| 3 | **CodeBlock** | L25282 | L25297 | 12 | ⚠️ Under-registered | 4 themes, line numbers, copy button, highlight lines. BUT only 3 of 10 props registered in registry |
-| 4 | **Label** | L4164 | L4187 | 12 | ✅ Strong | 7 variants (default/badge/overline/tag/pill/outline/subtle), text transform, letter spacing |
-| 5 | **List** | L4308 | L4329 | 10 | ✅ Strong | 7 marker variants, multi-column support (1/2/3), semantic `<ol>`/`<ul>` |
-| 6 | **DisplayText** | L4439 | L4461 | 17 | ✅ Excellent | Gradient text, `text-wrap: balance`, `role="heading"`, custom font sizing |
-| 7 | **DividerText** | L4529 | L4544 | 12 | ✅ Strong | 5 decorative variants (line-through/line-sides/dots/gradient/ornament) |
-| 8 | **StatNumber** | L4728 | L4745 | 14 | ✅ Strong | Tabular-nums, prefix/suffix, stacked/inline layouts |
+| #   | Component       | renders.tsx Interface | renders.tsx Export | Props | Quality             | Key Strength                                                                                                       |
+| --- | --------------- | --------------------- | ------------------ | ----- | ------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| 1   | **RichText**    | L3575                 | L3694              | 24    | ✅ Strong           | Full layout system (centered/left/two-column/wide), 10 colour props, pull quotes, markdown-to-HTML utility         |
+| 2   | **Quote**       | L3858                 | L3880              | 13    | ✅ Strong           | 6 polished variants (simple/bordered/card/modern/pullquote/testimonial), author images, per-size responsive styles |
+| 3   | **CodeBlock**   | L25282                | L25297             | 12    | ⚠️ Under-registered | 4 themes, line numbers, copy button, highlight lines. BUT only 3 of 10 props registered in registry                |
+| 4   | **Label**       | L4164                 | L4187              | 12    | ✅ Strong           | 7 variants (default/badge/overline/tag/pill/outline/subtle), text transform, letter spacing                        |
+| 5   | **List**        | L4308                 | L4329              | 10    | ✅ Strong           | 7 marker variants, multi-column support (1/2/3), semantic `<ol>`/`<ul>`                                            |
+| 6   | **DisplayText** | L4439                 | L4461              | 17    | ✅ Excellent        | Gradient text, `text-wrap: balance`, `role="heading"`, custom font sizing                                          |
+| 7   | **DividerText** | L4529                 | L4544              | 12    | ✅ Strong           | 5 decorative variants (line-through/line-sides/dots/gradient/ornament)                                             |
+| 8   | **StatNumber**  | L4728                 | L4745              | 14    | ✅ Strong           | Tabular-nums, prefix/suffix, stacked/inline layouts                                                                |
 
 > **Note:** 7 of 8 components sit in a contiguous block (L3575–L4845). CodeBlock is an outlier at L25282, separated by ~20,500 lines.
 
 ### 1.2 Critical Issues Found
 
-| # | Issue | Severity | Component(s) | Impact |
-|---|-------|----------|---------------|--------|
-| 1 | **CodeBlock: 7 render props have NO registry fields** | 🔴 Critical | CodeBlock | AI/editor UI can only control 3 of 10 props (code, language, showLineNumbers). Theme, title, copy button, highlight lines, max height, wrap, showLanguage — all invisible to users. |
-| 2 | **Category mismatch: registry vs metadata** | ⚠️ Medium | RichText, Quote, Label, List, DisplayText, DividerText, StatNumber | core-components.ts says `category: "typography"` for 7 components; component-metadata.ts says `category: "content"` for all 8. Palette UI may show components in wrong section. |
-| 3 | **RichText `prose` class breaks in dark mode** | ⚠️ Medium | RichText | Tailwind `prose` applies light-theme text colours. Without `dark:prose-invert` or equivalent, content becomes invisible on dark backgrounds. |
-| 4 | **CodeBlock uses hardcoded Tailwind/hex colours** | ⚠️ Low | CodeBlock | Theme colours (`bg-gray-900`, `bg-[#0d1117]`) are hardcoded per variant — expected for code themes but not CSS-variable-aware. |
-| 5 | **No CodeBlock converter normalizer** | ⚠️ Medium | CodeBlock | No `if (type === "CodeBlock")` handler in converter.ts — AI-generated CodeBlock props pass through unnormalized. |
-| 6 | **RichText `color` prop has no registry field** | ⚠️ Low | RichText | Render accepts `color` as fallback for `textColor`, but no registry field exposes it. Minor since `textColor` is registered. |
-| 7 | **DividerText missing `role="separator"`** | ⚠️ Low | DividerText | Renders `<div>` without semantic role — screen readers don't identify it as a visual break. |
-| 8 | **StatNumber missing semantic structure** | ⚠️ Low | StatNumber | `<div>` only — no `role`, no structured data. Could benefit from `aria-label` combining value + label. |
+| #   | Issue                                                 | Severity    | Component(s)                                                       | Impact                                                                                                                                                                              |
+| --- | ----------------------------------------------------- | ----------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **CodeBlock: 7 render props have NO registry fields** | 🔴 Critical | CodeBlock                                                          | AI/editor UI can only control 3 of 10 props (code, language, showLineNumbers). Theme, title, copy button, highlight lines, max height, wrap, showLanguage — all invisible to users. |
+| 2   | **Category mismatch: registry vs metadata**           | ⚠️ Medium   | RichText, Quote, Label, List, DisplayText, DividerText, StatNumber | core-components.ts says `category: "typography"` for 7 components; component-metadata.ts says `category: "content"` for all 8. Palette UI may show components in wrong section.     |
+| 3   | **RichText `prose` class breaks in dark mode**        | ⚠️ Medium   | RichText                                                           | Tailwind `prose` applies light-theme text colours. Without `dark:prose-invert` or equivalent, content becomes invisible on dark backgrounds.                                        |
+| 4   | **CodeBlock uses hardcoded Tailwind/hex colours**     | ⚠️ Low      | CodeBlock                                                          | Theme colours (`bg-gray-900`, `bg-[#0d1117]`) are hardcoded per variant — expected for code themes but not CSS-variable-aware.                                                      |
+| 5   | **No CodeBlock converter normalizer**                 | ⚠️ Medium   | CodeBlock                                                          | No `if (type === "CodeBlock")` handler in converter.ts — AI-generated CodeBlock props pass through unnormalized.                                                                    |
+| 6   | **RichText `color` prop has no registry field**       | ⚠️ Low      | RichText                                                           | Render accepts `color` as fallback for `textColor`, but no registry field exposes it. Minor since `textColor` is registered.                                                        |
+| 7   | **DividerText missing `role="separator"`**            | ⚠️ Low      | DividerText                                                        | Renders `<div>` without semantic role — screen readers don't identify it as a visual break.                                                                                         |
+| 8   | **StatNumber missing semantic structure**             | ⚠️ Low      | StatNumber                                                         | `<div>` only — no `role`, no structured data. Could benefit from `aria-label` combining value + label.                                                                              |
 
 ### 1.3 Registry Category Discrepancy Detail
 
-| Component | `core-components.ts` category | `component-metadata.ts` category | Consistent? |
-|-----------|------------------------------|----------------------------------|-------------|
-| RichText | `typography` (L14373) | `content` (L716) | ❌ |
-| Quote | `typography` (L14540) | `content` (L727) | ❌ |
-| CodeBlock | `content` (L14649) | `content` (L738) | ✅ |
-| Label | `typography` (L14689) | `content` (L750) | ❌ |
-| List | `typography` (L14777) | `content` (L765) | ❌ |
-| DisplayText | `typography` (L14871) | `content` (L779) | ❌ |
-| DividerText | `typography` (L15034) | `content` (L793) | ❌ |
-| StatNumber | `typography` (L15124) | `content` (L807) | ❌ |
+| Component   | `core-components.ts` category | `component-metadata.ts` category | Consistent? |
+| ----------- | ----------------------------- | -------------------------------- | ----------- |
+| RichText    | `typography` (L14373)         | `content` (L716)                 | ❌          |
+| Quote       | `typography` (L14540)         | `content` (L727)                 | ❌          |
+| CodeBlock   | `content` (L14649)            | `content` (L738)                 | ✅          |
+| Label       | `typography` (L14689)         | `content` (L750)                 | ❌          |
+| List        | `typography` (L14777)         | `content` (L765)                 | ❌          |
+| DisplayText | `typography` (L14871)         | `content` (L779)                 | ❌          |
+| DividerText | `typography` (L15034)         | `content` (L793)                 | ❌          |
+| StatNumber  | `typography` (L15124)         | `content` (L807)                 | ❌          |
 
 **Recommendation:** Align on `content` for all 8. component-metadata.ts has the correct grouping. The 7 "typography" labels in core-components.ts should be updated to `content`.
 
@@ -262,57 +263,57 @@ converter.ts typeMap alias → converter.ts normalizeProps → core-components.t
                                                            (via {...injectedProps})
 ```
 
-| Component | Converter Aliases | Normalizer? | Registry Fields | Render Props* | Coverage | Gaps |
-|-----------|------------------|-------------|-----------------|--------------|----------|------|
-| RichText | 6 aliases | ✅ L1572 | 21 fields | 22 | 95% | `color` render-only |
-| Quote | 4 aliases | ✅ L2166 | 11 fields | 11 | 100% | None |
-| CodeBlock | 2 aliases | ❌ None | 3 fields | 10 | **30%** | 7 props unregistered |
-| Label | 5 aliases | ✅ L1645 | 10 fields | 11 | 91% | `children` (React internal) |
-| List | 5 aliases | ✅ L1660 | 8 fields | 8 | 100% | None |
-| DisplayText | 3 aliases | ✅ L1684 | 16 fields | 16 | 100% | None |
-| DividerText | 3 aliases | ✅ L1704 | 10 fields | 10 | 100% | None |
-| StatNumber | 4 aliases | ✅ L1717 | 12 fields | 12 | 100% | None |
+| Component   | Converter Aliases | Normalizer? | Registry Fields | Render Props\* | Coverage | Gaps                        |
+| ----------- | ----------------- | ----------- | --------------- | -------------- | -------- | --------------------------- |
+| RichText    | 6 aliases         | ✅ L1572    | 21 fields       | 22             | 95%      | `color` render-only         |
+| Quote       | 4 aliases         | ✅ L2166    | 11 fields       | 11             | 100%     | None                        |
+| CodeBlock   | 2 aliases         | ❌ None     | 3 fields        | 10             | **30%**  | 7 props unregistered        |
+| Label       | 5 aliases         | ✅ L1645    | 10 fields       | 11             | 91%      | `children` (React internal) |
+| List        | 5 aliases         | ✅ L1660    | 8 fields        | 8              | 100%     | None                        |
+| DisplayText | 3 aliases         | ✅ L1684    | 16 fields       | 16             | 100%     | None                        |
+| DividerText | 3 aliases         | ✅ L1704    | 10 fields       | 10             | 100%     | None                        |
+| StatNumber  | 4 aliases         | ✅ L1717    | 12 fields       | 12             | 100%     | None                        |
 
-*\* Excluding `id` and `className` which are universal.*
+_\* Excluding `id` and `className` which are universal._
 
 **Overall:** 7 of 8 components have excellent alignment (91–100%). CodeBlock at 30% is the sole critical outlier.
 
 ### 1.5 Converter Alias Map (32 aliases total, all grep-verified)
 
-| Alias | Maps To | converter.ts Line |
-|-------|---------|-------------------|
-| ContentBlock | RichText | L370 |
-| ContentSection | RichText | L500 |
-| Content | RichText | L501 |
-| MarkdownBlock | RichText | L502 |
-| Markdown | RichText | L503 |
-| RichText | RichText | L545 |
-| QuoteBlock | Quote | L387 |
-| QuoteSection | Quote | L489 |
-| Blockquote | Quote | L490 |
-| Quote | Quote | L557 |
-| CodeBlockSection | CodeBlock | L492 |
-| CodeBlock | CodeBlock | L565 |
-| Label | Label | L588 |
-| LabelText | Label | L589 |
-| TagLabel | Label | L590 |
-| BadgeLabel | Label | L591 |
-| Overline | Label | L592 |
-| List | List | L593 |
-| ListBlock | List | L594 |
-| BulletList | List | L595 |
-| CheckList | List | L596 |
-| NumberedList | List | L597 |
-| DisplayText | DisplayText | L598 |
-| DisplayHeading | DisplayText | L599 |
-| HeroText | DisplayText | L600 |
-| DividerText | DividerText | L601 |
-| TextDivider | DividerText | L602 |
-| LineDividerText | DividerText | L603 |
-| StatNumber | StatNumber | L604 |
-| StatBlock | StatNumber | L605 |
-| MetricNumber | StatNumber | L606 |
-| CounterStat | StatNumber | L607 |
+| Alias            | Maps To     | converter.ts Line |
+| ---------------- | ----------- | ----------------- |
+| ContentBlock     | RichText    | L370              |
+| ContentSection   | RichText    | L500              |
+| Content          | RichText    | L501              |
+| MarkdownBlock    | RichText    | L502              |
+| Markdown         | RichText    | L503              |
+| RichText         | RichText    | L545              |
+| QuoteBlock       | Quote       | L387              |
+| QuoteSection     | Quote       | L489              |
+| Blockquote       | Quote       | L490              |
+| Quote            | Quote       | L557              |
+| CodeBlockSection | CodeBlock   | L492              |
+| CodeBlock        | CodeBlock   | L565              |
+| Label            | Label       | L588              |
+| LabelText        | Label       | L589              |
+| TagLabel         | Label       | L590              |
+| BadgeLabel       | Label       | L591              |
+| Overline         | Label       | L592              |
+| List             | List        | L593              |
+| ListBlock        | List        | L594              |
+| BulletList       | List        | L595              |
+| CheckList        | List        | L596              |
+| NumberedList     | List        | L597              |
+| DisplayText      | DisplayText | L598              |
+| DisplayHeading   | DisplayText | L599              |
+| HeroText         | DisplayText | L600              |
+| DividerText      | DividerText | L601              |
+| TextDivider      | DividerText | L602              |
+| LineDividerText  | DividerText | L603              |
+| StatNumber       | StatNumber  | L604              |
+| StatBlock        | StatNumber  | L605              |
+| MetricNumber     | StatNumber  | L606              |
+| CounterStat      | StatNumber  | L607              |
 
 All 8 components are confirmed in **KNOWN_REGISTRY_TYPES** (converter.ts L792–L801).
 
@@ -322,24 +323,24 @@ All 8 components are confirmed in **KNOWN_REGISTRY_TYPES** (converter.ts L792–
 
 ### 2.1 How World-Class Platforms Handle Content Components
 
-| Feature | Medium | Notion | Webflow | Framer | DRAMAC Current | Gap |
-|---------|--------|--------|---------|--------|----------------|-----|
-| Rich text with markdown | ✅ Full WYSIWYG | ✅ Block-based | ✅ Rich text field | ✅ Rich text | ✅ markdownToHtml | ✅ Good |
-| Two-column content | ❌ | ✅ Column blocks | ✅ Layout grid | ✅ Stacks | ✅ layout="two-column" | ✅ Ahead |
-| Pull quotes | ✅ Inline | ❌ | ✅ Rich text block | ❌ | ✅ pullQuote prop | ✅ Ahead |
-| Quote variants | 1 (blockquote) | 1 (callout) | 2 (blockquote/pullquote) | 1 | **6 variants** | ✅ Far ahead |
-| Code block themes | 1 (dark) | 1 (dark) | ❌ | ❌ | **4 themes** | ✅ Far ahead |
-| Line highlighting | ❌ | ❌ | ❌ | ❌ | ✅ highlightLines | ✅ Unique |
-| Syntax highlighting | ✅ Prism | ✅ Prism | ❌ | ❌ | ⚠️ Display-only (no tokeniser) | 🔴 Gap |
-| Display text / hero text | ❌ | ❌ | ✅ Display class | ✅ Large heading | ✅ Gradient + text-wrap | ✅ Good |
-| Gradient text | ❌ | ❌ | ✅ CSS | ✅ | ✅ | ✅ Good |
-| Label/overline variants | ❌ | ❌ | 2 | 1 | **7 variants** | ✅ Far ahead |
-| Styled lists | ✅ Basic | ✅ Basic | ✅ 3 styles | ✅ 2 styles | **7 variants + columns** | ✅ Far ahead |
-| Section dividers with text | ❌ | ❌ | 1 (basic HR) | 1 | **5 ornamental variants** | ✅ Far ahead |
-| Stat/metric display | ❌ | ❌ | ✅ Counter | ✅ Number | ✅ Tabular-nums | ✅ Good |
-| Dark mode aware | ✅ | ✅ | ✅ | ✅ | ⚠️ Partial (prose breaks) | 🔴 Fix |
-| Code block registry coverage | N/A | N/A | ✅ Full | ✅ Full | **30%** | 🔴 Fix |
-| Real syntax tokenisation | ✅ | ✅ | ❌ | ❌ | ❌ | ⬜ Future |
+| Feature                      | Medium          | Notion           | Webflow                  | Framer           | DRAMAC Current                 | Gap          |
+| ---------------------------- | --------------- | ---------------- | ------------------------ | ---------------- | ------------------------------ | ------------ |
+| Rich text with markdown      | ✅ Full WYSIWYG | ✅ Block-based   | ✅ Rich text field       | ✅ Rich text     | ✅ markdownToHtml              | ✅ Good      |
+| Two-column content           | ❌              | ✅ Column blocks | ✅ Layout grid           | ✅ Stacks        | ✅ layout="two-column"         | ✅ Ahead     |
+| Pull quotes                  | ✅ Inline       | ❌               | ✅ Rich text block       | ❌               | ✅ pullQuote prop              | ✅ Ahead     |
+| Quote variants               | 1 (blockquote)  | 1 (callout)      | 2 (blockquote/pullquote) | 1                | **6 variants**                 | ✅ Far ahead |
+| Code block themes            | 1 (dark)        | 1 (dark)         | ❌                       | ❌               | **4 themes**                   | ✅ Far ahead |
+| Line highlighting            | ❌              | ❌               | ❌                       | ❌               | ✅ highlightLines              | ✅ Unique    |
+| Syntax highlighting          | ✅ Prism        | ✅ Prism         | ❌                       | ❌               | ⚠️ Display-only (no tokeniser) | 🔴 Gap       |
+| Display text / hero text     | ❌              | ❌               | ✅ Display class         | ✅ Large heading | ✅ Gradient + text-wrap        | ✅ Good      |
+| Gradient text                | ❌              | ❌               | ✅ CSS                   | ✅               | ✅                             | ✅ Good      |
+| Label/overline variants      | ❌              | ❌               | 2                        | 1                | **7 variants**                 | ✅ Far ahead |
+| Styled lists                 | ✅ Basic        | ✅ Basic         | ✅ 3 styles              | ✅ 2 styles      | **7 variants + columns**       | ✅ Far ahead |
+| Section dividers with text   | ❌              | ❌               | 1 (basic HR)             | 1                | **5 ornamental variants**      | ✅ Far ahead |
+| Stat/metric display          | ❌              | ❌               | ✅ Counter               | ✅ Number        | ✅ Tabular-nums                | ✅ Good      |
+| Dark mode aware              | ✅              | ✅               | ✅                       | ✅               | ⚠️ Partial (prose breaks)      | 🔴 Fix       |
+| Code block registry coverage | N/A             | N/A              | ✅ Full                  | ✅ Full          | **30%**                        | 🔴 Fix       |
+| Real syntax tokenisation     | ✅              | ✅               | ❌                       | ❌               | ❌                             | ⬜ Future    |
 
 ### 2.2 Key Takeaways
 
@@ -373,18 +374,18 @@ All content components follow a consistent pattern for font inheritance:
 
 ```typescript
 // Font family — inherits from brand settings when empty
-fontFamily: fontFamily || `var(--font-body, inherit)`    // Body text
-fontFamily: fontFamily || `var(--font-heading, inherit)`  // Headings/display
+fontFamily: fontFamily || `var(--font-body, inherit)`; // Body text
+fontFamily: fontFamily || `var(--font-heading, inherit)`; // Headings/display
 
 // Font size — uses design token scale
-fontSize: fontSize || `var(--type-sm, 0.875rem)`          // Size from token
-fontSize: fontSize || `var(--type-5xl, 3rem)`              // Large display
+fontSize: fontSize || `var(--type-sm, 0.875rem)`; // Size from token
+fontSize: fontSize || `var(--type-5xl, 3rem)`; // Large display
 
 // Line height — uses token scale
-lineHeight: `var(--leading-${titleLevel}, 1.2)`            // Heading level
+lineHeight: `var(--leading-${titleLevel}, 1.2)`; // Heading level
 
 // Letter spacing — uses token scale
-letterSpacing: `var(--tracking-${titleLevel}, -0.02em)`    // Heading level
+letterSpacing: `var(--tracking-${titleLevel}, -0.02em)`; // Heading level
 ```
 
 **Used by:** RichText (heading), Quote (body), Label (body), List (body), DisplayText (heading), DividerText (body), StatNumber (heading for value, body for label).
@@ -395,9 +396,10 @@ Content components use a cascading colour resolution pattern:
 
 ```typescript
 // RichText example — most complex colour chain:
-const resolvedTextColor = textColor || color || undefined;          // Step 1: explicit → fallback → inherit
-const resolvedTitleColor = titleColor || accentColor || resolvedTextColor;  // Step 2: specific → accent → text
-const resolvedPullQuoteColor = pullQuoteColor || accentColor || resolvedTitleColor;  // Step 3: deep chain
+const resolvedTextColor = textColor || color || undefined; // Step 1: explicit → fallback → inherit
+const resolvedTitleColor = titleColor || accentColor || resolvedTextColor; // Step 2: specific → accent → text
+const resolvedPullQuoteColor =
+  pullQuoteColor || accentColor || resolvedTitleColor; // Step 3: deep chain
 ```
 
 **Rule:** The final fallback is always `undefined`, which lets CSS variables and inherited styles take over. **Never hardcode** a colour as the final fallback.
@@ -414,16 +416,16 @@ converter.ts normalizes AI output →  stored as { type, props }  →  core-comp
 
 ### 3.5 Semantic HTML by Default
 
-| Component | Required Semantic Element | Current | Status |
-|-----------|-------------------------|---------|--------|
-| RichText | `<section>` + `<hN>` + `<blockquote>` | ✅ All present | ✅ |
-| Quote | `<blockquote>` + `<footer>` + `<cite>` | ✅ All present | ✅ |
-| CodeBlock | `<pre>` + `<code>` | ✅ All present | ✅ |
-| Label | `<span>` (appropriate for inline text) | ✅ Correct | ✅ |
-| List | `<ul>` / `<ol>` + `<li>` | ✅ Semantic | ✅ |
-| DisplayText | `<div role="heading" aria-level={1}>` | ✅ ARIA heading | ✅ |
-| DividerText | `<div>` (should be `role="separator"`) | ⚠️ Missing role | ⚠️ Fix |
-| StatNumber | `<div>` (needs `aria-label`) | ⚠️ No semantic label | ⚠️ Fix |
+| Component   | Required Semantic Element              | Current              | Status |
+| ----------- | -------------------------------------- | -------------------- | ------ |
+| RichText    | `<section>` + `<hN>` + `<blockquote>`  | ✅ All present       | ✅     |
+| Quote       | `<blockquote>` + `<footer>` + `<cite>` | ✅ All present       | ✅     |
+| CodeBlock   | `<pre>` + `<code>`                     | ✅ All present       | ✅     |
+| Label       | `<span>` (appropriate for inline text) | ✅ Correct           | ✅     |
+| List        | `<ul>` / `<ol>` + `<li>`               | ✅ Semantic          | ✅     |
+| DisplayText | `<div role="heading" aria-level={1}>`  | ✅ ARIA heading      | ✅     |
+| DividerText | `<div>` (should be `role="separator"`) | ⚠️ Missing role      | ⚠️ Fix |
+| StatNumber  | `<div>` (needs `aria-label`)           | ⚠️ No semantic label | ⚠️ Fix |
 
 ---
 
@@ -441,10 +443,10 @@ converter.ts normalizes AI output →  stored as { type, props }  →  core-comp
 ```typescript
 interface RichTextProps {
   // Content
-  content?: string;           // Markdown/HTML content (richtext field)
-  title?: string;             // Section title
-  subtitle?: string;          // Section subtitle
-  pullQuote?: string;         // Sidebar blockquote
+  content?: string; // Markdown/HTML content (richtext field)
+  title?: string; // Section title
+  subtitle?: string; // Section subtitle
+  pullQuote?: string; // Sidebar blockquote
 
   // Layout
   layout?: "centered" | "left" | "two-column" | "wide";
@@ -455,20 +457,20 @@ interface RichTextProps {
   titleLevel?: "h1" | "h2" | "h3" | "h4";
   titleFontFamily?: string;
   bodyFontFamily?: string;
-  titleFontSize?: string;     // CSS value: "2.5rem" or "clamp(...)"
+  titleFontSize?: string; // CSS value: "2.5rem" or "clamp(...)"
 
   // Colours (10 props)
-  color?: string;             // Generic text fallback
-  textColor?: string;         // Body text
-  titleColor?: string;        // Title specific
-  subtitleColor?: string;     // Subtitle specific
-  accentColor?: string;       // Links + accents
-  pullQuoteColor?: string;    // Pull quote text
-  backgroundColor?: string;   // Section background
+  color?: string; // Generic text fallback
+  textColor?: string; // Body text
+  titleColor?: string; // Title specific
+  subtitleColor?: string; // Subtitle specific
+  accentColor?: string; // Links + accents
+  pullQuoteColor?: string; // Pull quote text
+  backgroundColor?: string; // Section background
   cardBackgroundColor?: string; // Pull quote card background
-  showDivider?: boolean;      // Title underline
-  dividerColor?: string;      // Divider line colour
-  highlightColor?: string;    // Highlight accent
+  showDivider?: boolean; // Title underline
+  dividerColor?: string; // Divider line colour
+  highlightColor?: string; // Highlight accent
 
   id?: string;
   className?: string;
@@ -478,6 +480,7 @@ interface RichTextProps {
 #### Shared Utility: markdownToHtml()
 
 Defined between the interface (L3575) and the export (L3694), this utility converts markdown syntax to HTML. It handles:
+
 - Headings (`#` through `######`)
 - Bold (`**text**`), Italic (`*text*`)
 - Inline code (`` `code` ``)
@@ -490,12 +493,12 @@ Defined between the interface (L3575) and the export (L3694), this utility conve
 
 #### Layout System
 
-| Layout | Behaviour | Use Case |
-|--------|-----------|----------|
-| `centered` | Text-centered, auto-margins, `text-center` on title area | Default — blog posts, about pages |
-| `left` | Left-aligned, no centering | Documentation, technical content |
-| `two-column` | CSS grid `md:grid-cols-2` — content left, pull quote right | Editorial, magazine style |
-| `wide` | Same as centered but wider max-width | Landing pages |
+| Layout       | Behaviour                                                  | Use Case                          |
+| ------------ | ---------------------------------------------------------- | --------------------------------- |
+| `centered`   | Text-centered, auto-margins, `text-center` on title area   | Default — blog posts, about pages |
+| `left`       | Left-aligned, no centering                                 | Documentation, technical content  |
+| `two-column` | CSS grid `md:grid-cols-2` — content left, pull quote right | Editorial, magazine style         |
+| `wide`       | Same as centered but wider max-width                       | Landing pages                     |
 
 #### Colour Resolution Chain
 
@@ -511,12 +514,12 @@ Every chain terminates with `|| undefined` — inherits from CSS when no explici
 
 #### Registry Field Groups
 
-| Group | Icon | Fields | Default Expanded |
-|-------|------|--------|-----------------|
-| Content | FileText | content, title, subtitle, pullQuote | ✅ Yes |
-| Typography | ALargeSmall | titleLevel, proseSize, titleFontFamily, bodyFontFamily, titleFontSize | No |
-| Colors | Palette | backgroundColor, textColor, titleColor, subtitleColor, accentColor, pullQuoteColor, highlightColor, cardBackgroundColor | No |
-| Layout | Layout | layout, maxWidth, showDivider, dividerColor | No |
+| Group      | Icon        | Fields                                                                                                                  | Default Expanded |
+| ---------- | ----------- | ----------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| Content    | FileText    | content, title, subtitle, pullQuote                                                                                     | ✅ Yes           |
+| Typography | ALargeSmall | titleLevel, proseSize, titleFontFamily, bodyFontFamily, titleFontSize                                                   | No               |
+| Colors     | Palette     | backgroundColor, textColor, titleColor, subtitleColor, accentColor, pullQuoteColor, highlightColor, cardBackgroundColor | No               |
+| Layout     | Layout      | layout, maxWidth, showDivider, dividerColor                                                                             | No               |
 
 #### AI canModify
 
@@ -524,12 +527,12 @@ Every chain terminates with `|| undefined` — inherits from CSS when no explici
 
 #### Issues & Fixes
 
-| # | Issue | Fix | Priority |
-|---|-------|-----|----------|
-| 1 | `prose` class breaks in dark mode — text invisible on dark backgrounds | Add conditional `dark:prose-invert` or use inline colour on the prose wrapper | 🔴 Critical |
-| 2 | `color` prop in render has no registry field | Add `color` field to registry OR remove from render (prefer removal — `textColor` covers the use case) | ⚠️ Low |
-| 3 | `dangerouslySetInnerHTML` — safe because `markdownToHtml()` is a controlled allowlist parser, but should be documented | No code change — document the safety model | ⚠️ Low |
-| 4 | `proseSize` registry default is `"lg"`, render default is `"base"` | Align to `"lg"` in render to match registry | ⚠️ Low |
+| #   | Issue                                                                                                                  | Fix                                                                                                    | Priority    |
+| --- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ----------- |
+| 1   | `prose` class breaks in dark mode — text invisible on dark backgrounds                                                 | Add conditional `dark:prose-invert` or use inline colour on the prose wrapper                          | 🔴 Critical |
+| 2   | `color` prop in render has no registry field                                                                           | Add `color` field to registry OR remove from render (prefer removal — `textColor` covers the use case) | ⚠️ Low      |
+| 3   | `dangerouslySetInnerHTML` — safe because `markdownToHtml()` is a controlled allowlist parser, but should be documented | No code change — document the safety model                                                             | ⚠️ Low      |
+| 4   | `proseSize` registry default is `"lg"`, render default is `"base"`                                                     | Align to `"lg"` in render to match registry                                                            | ⚠️ Low      |
 
 ---
 
@@ -544,16 +547,22 @@ Every chain terminates with `|| undefined` — inherits from CSS when no explici
 
 ```typescript
 interface QuoteProps {
-  text?: string;              // Quote text
-  author?: string;            // Author name
-  authorTitle?: string;       // Author role/source
-  authorImage?: string | ImageValue;  // Author avatar
-  borderColor?: string;       // Border/accent colour
-  backgroundColor?: string;   // Card/section background
-  textColor?: string;         // Quote text colour
-  variant?: "simple" | "bordered" | "card" | "modern" | "pullquote" | "testimonial";
+  text?: string; // Quote text
+  author?: string; // Author name
+  authorTitle?: string; // Author role/source
+  authorImage?: string | ImageValue; // Author avatar
+  borderColor?: string; // Border/accent colour
+  backgroundColor?: string; // Card/section background
+  textColor?: string; // Quote text colour
+  variant?:
+    | "simple"
+    | "bordered"
+    | "card"
+    | "modern"
+    | "pullquote"
+    | "testimonial";
   size?: "sm" | "md" | "lg";
-  fontFamily?: string;        // Quote font
+  fontFamily?: string; // Quote font
   fontStyle?: "normal" | "italic";
   id?: string;
   className?: string;
@@ -562,26 +571,27 @@ interface QuoteProps {
 
 #### 6 Variants Deep Dive
 
-| Variant | Visual Treatment | Semantic Elements | Unique Features |
-|---------|-----------------|-------------------|-----------------|
-| **simple** | Plain text with `font-serif` | `<blockquote>` `<footer>` | Minimal — text + attribution only |
-| **bordered** | Left border (`border-l-4`) | `<blockquote>` + `<footer>` | Classic editorial blockquote |
-| **card** | Rounded card with shadow + SVG quote mark | `<blockquote>` centered | Quote mark SVG, centered layout |
-| **modern** | Large decorative `"` mark (6rem, opacity-10) | `<blockquote>` + custom footer | Decorative separator line in footer |
-| **pullquote** | Top + bottom border (`border-y-2`), centered | `<blockquote>` with `<footer>` | `font-medium` text weight |
-| **testimonial** | Rounded card + 5-star SVG rating | `<blockquote>` centered | Star rating (5 stars, uses borderColor) |
+| Variant         | Visual Treatment                             | Semantic Elements              | Unique Features                         |
+| --------------- | -------------------------------------------- | ------------------------------ | --------------------------------------- |
+| **simple**      | Plain text with `font-serif`                 | `<blockquote>` `<footer>`      | Minimal — text + attribution only       |
+| **bordered**    | Left border (`border-l-4`)                   | `<blockquote>` + `<footer>`    | Classic editorial blockquote            |
+| **card**        | Rounded card with shadow + SVG quote mark    | `<blockquote>` centered        | Quote mark SVG, centered layout         |
+| **modern**      | Large decorative `"` mark (6rem, opacity-10) | `<blockquote>` + custom footer | Decorative separator line in footer     |
+| **pullquote**   | Top + bottom border (`border-y-2`), centered | `<blockquote>` with `<footer>` | `font-medium` text weight               |
+| **testimonial** | Rounded card + 5-star SVG rating             | `<blockquote>` centered        | Star rating (5 stars, uses borderColor) |
 
 #### Size System
 
-| Size | Text Class | Author Class | Padding | Avatar |
-|------|-----------|-------------|---------|--------|
-| `sm` | `text-base md:text-lg` | `text-sm` | `p-4 md:p-6` | `w-8 h-8` |
-| `md` | `text-lg md:text-xl lg:text-2xl` | `text-sm md:text-base` | `p-6 md:p-8` | `w-10 h-10` |
+| Size | Text Class                        | Author Class           | Padding       | Avatar      |
+| ---- | --------------------------------- | ---------------------- | ------------- | ----------- |
+| `sm` | `text-base md:text-lg`            | `text-sm`              | `p-4 md:p-6`  | `w-8 h-8`   |
+| `md` | `text-lg md:text-xl lg:text-2xl`  | `text-sm md:text-base` | `p-6 md:p-8`  | `w-10 h-10` |
 | `lg` | `text-xl md:text-2xl lg:text-3xl` | `text-base md:text-lg` | `p-8 md:p-10` | `w-12 h-12` |
 
 #### Shared Helper: renderAuthor()
 
 Defined inline within QuoteRender, shared across all 6 variants (4 use the shared function, 2 — modern and simple — have custom footer rendering):
+
 - Renders author name with optional image
 - Accepts `centered` parameter for card/pullquote/testimonial variants
 - Uses `<footer>`, `<cite>` (with `not-italic` to override parent), and `<span>` for title
@@ -591,22 +601,26 @@ Defined inline within QuoteRender, shared across all 6 variants (4 use the share
 
 ```typescript
 // Key normalisations:
-text: props.text || props.quote || props.content || ""
-author: props.author || props.attribution || ""
-authorTitle: props.authorTitle || props.source || props.role || props.company || ""
-authorImage: props.authorImage || props.avatar || props.image || ""
-variant: props.variant || props.style || "bordered"
+text: props.text || props.quote || props.content || "";
+author: props.author || props.attribution || "";
+authorTitle: props.authorTitle ||
+  props.source ||
+  props.role ||
+  props.company ||
+  "";
+authorImage: props.authorImage || props.avatar || props.image || "";
+variant: props.variant || props.style || "bordered";
 ```
 
 Note: Normalizer sets `variant` default to `"bordered"` while render defaults to `"bordered"` ✅ consistent.
 
 #### Issues & Fixes
 
-| # | Issue | Fix | Priority |
-|---|-------|-----|----------|
-| 1 | Simple variant uses `font-serif` hardcoded — other variants use `var(--font-body, inherit)` | Use `resolvedFontFamily` for simple variant too | ⚠️ Low |
-| 2 | Testimonial star rating always renders 5 stars — no prop to control rating count | Consider adding `rating?: number` prop (optional, future) | ⬜ Future |
-| 3 | Card variant `shadow-lg` may look off on dark backgrounds | No fix needed — shadow on dark bg is a design choice | ⬜ No action |
+| #   | Issue                                                                                       | Fix                                                       | Priority     |
+| --- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ------------ |
+| 1   | Simple variant uses `font-serif` hardcoded — other variants use `var(--font-body, inherit)` | Use `resolvedFontFamily` for simple variant too           | ⚠️ Low       |
+| 2   | Testimonial star rating always renders 5 stars — no prop to control rating count            | Consider adding `rating?: number` prop (optional, future) | ⬜ Future    |
+| 3   | Card variant `shadow-lg` may look off on dark backgrounds                                   | No fix needed — shadow on dark bg is a design choice      | ⬜ No action |
 
 ---
 
@@ -623,16 +637,16 @@ Note: Normalizer sets `variant` default to `"bordered"` while render defaults to
 
 ```typescript
 interface CodeBlockProps {
-  code?: string;              // Source code to display
-  language?: string;          // Language label: "javascript", "python", etc.
-  showLineNumbers?: boolean;  // Show line numbers gutter
-  showCopyButton?: boolean;   // Show "Copy" button in header
-  showLanguage?: boolean;     // Show language label in header
-  title?: string;             // Optional title in header (e.g. filename)
+  code?: string; // Source code to display
+  language?: string; // Language label: "javascript", "python", etc.
+  showLineNumbers?: boolean; // Show line numbers gutter
+  showCopyButton?: boolean; // Show "Copy" button in header
+  showLanguage?: boolean; // Show language label in header
+  title?: string; // Optional title in header (e.g. filename)
   theme?: "dark" | "light" | "github" | "monokai";
-  highlightLines?: number[];  // Line numbers to highlight (yellow bg)
+  highlightLines?: number[]; // Line numbers to highlight (yellow bg)
   maxHeight?: "sm" | "md" | "lg" | "xl" | "none";
-  wrap?: boolean;             // Word wrap (whitespace-pre-wrap)
+  wrap?: boolean; // Word wrap (whitespace-pre-wrap)
   id?: string;
   className?: string;
 }
@@ -640,24 +654,24 @@ interface CodeBlockProps {
 
 #### 4 Theme Colour Maps
 
-| Theme | Background | Text | Header BG | Header Border | Line Numbers |
-|-------|-----------|------|-----------|--------------|-------------|
-| **dark** | `bg-gray-900` | `text-gray-100` | `bg-gray-800` | `border-gray-700` | `text-gray-500` |
-| **light** | `bg-gray-50 border` | `text-gray-900` | `bg-gray-100` | `border-gray-200` | `text-gray-400` |
-| **github** | `bg-[#0d1117]` | `text-[#c9d1d9]` | `bg-[#161b22]` | `border-[#30363d]` | `text-[#484f58]` |
-| **monokai** | `bg-[#272822]` | `text-[#f8f8f2]` | `bg-[#1e1f1c]` | `border-[#3e3d32]` | `text-[#90908a]` |
+| Theme       | Background          | Text             | Header BG      | Header Border      | Line Numbers     |
+| ----------- | ------------------- | ---------------- | -------------- | ------------------ | ---------------- |
+| **dark**    | `bg-gray-900`       | `text-gray-100`  | `bg-gray-800`  | `border-gray-700`  | `text-gray-500`  |
+| **light**   | `bg-gray-50 border` | `text-gray-900`  | `bg-gray-100`  | `border-gray-200`  | `text-gray-400`  |
+| **github**  | `bg-[#0d1117]`      | `text-[#c9d1d9]` | `bg-[#161b22]` | `border-[#30363d]` | `text-[#484f58]` |
+| **monokai** | `bg-[#272822]`      | `text-[#f8f8f2]` | `bg-[#1e1f1c]` | `border-[#3e3d32]` | `text-[#90908a]` |
 
 #### Max Height Responsive System
 
 Uses `getResponsiveClasses()` utility:
 
-| Size | Mobile | Tablet | Desktop |
-|------|--------|--------|---------|
-| `sm` | `max-h-48` | `md:max-h-48` | `lg:max-h-48` |
-| `md` | `max-h-64` | `md:max-h-72` | `lg:max-h-80` |
-| `lg` | `max-h-80` | `md:max-h-96` | `lg:max-h-[500px]` |
-| `xl` | `max-h-96` | `md:max-h-[500px]` | `lg:max-h-[700px]` |
-| `none` | Unrestricted | Unrestricted | Unrestricted |
+| Size   | Mobile       | Tablet             | Desktop            |
+| ------ | ------------ | ------------------ | ------------------ |
+| `sm`   | `max-h-48`   | `md:max-h-48`      | `lg:max-h-48`      |
+| `md`   | `max-h-64`   | `md:max-h-72`      | `lg:max-h-80`      |
+| `lg`   | `max-h-80`   | `md:max-h-96`      | `lg:max-h-[500px]` |
+| `xl`   | `max-h-96`   | `md:max-h-[500px]` | `lg:max-h-[700px]` |
+| `none` | Unrestricted | Unrestricted       | Unrestricted       |
 
 #### Header Features
 
@@ -672,18 +686,18 @@ Lines specified in `highlightLines[]` receive `bg-yellow-500/20` with negative m
 
 #### Registry vs Render — The Gap
 
-| Prop | In Registry? | In Render? | Impact |
-|------|-------------|-----------|--------|
-| `code` | ✅ L14646 (type: "code") | ✅ | Editor can set code |
-| `language` | ✅ L14646 (select, 6 options) | ✅ | Editor can pick language |
-| `showLineNumbers` | ✅ L14646 (toggle) | ✅ | Editor can toggle |
-| `showCopyButton` | ❌ | ✅ (default: true) | Cannot disable copy button from UI |
-| `showLanguage` | ❌ | ✅ (default: true) | Cannot hide language label from UI |
-| `title` | ❌ | ✅ | Cannot set title/filename from UI |
-| `theme` | ❌ | ✅ (default: "dark") | **Cannot change theme from UI** — locked to dark |
-| `highlightLines` | ❌ | ✅ (default: []) | Cannot highlight lines from UI |
-| `maxHeight` | ❌ | ✅ (default: "lg") | Cannot control height from UI |
-| `wrap` | ❌ | ✅ (default: false) | Cannot toggle wrap from UI |
+| Prop              | In Registry?                  | In Render?           | Impact                                           |
+| ----------------- | ----------------------------- | -------------------- | ------------------------------------------------ |
+| `code`            | ✅ L14646 (type: "code")      | ✅                   | Editor can set code                              |
+| `language`        | ✅ L14646 (select, 6 options) | ✅                   | Editor can pick language                         |
+| `showLineNumbers` | ✅ L14646 (toggle)            | ✅                   | Editor can toggle                                |
+| `showCopyButton`  | ❌                            | ✅ (default: true)   | Cannot disable copy button from UI               |
+| `showLanguage`    | ❌                            | ✅ (default: true)   | Cannot hide language label from UI               |
+| `title`           | ❌                            | ✅                   | Cannot set title/filename from UI                |
+| `theme`           | ❌                            | ✅ (default: "dark") | **Cannot change theme from UI** — locked to dark |
+| `highlightLines`  | ❌                            | ✅ (default: [])     | Cannot highlight lines from UI                   |
+| `maxHeight`       | ❌                            | ✅ (default: "lg")   | Cannot control height from UI                    |
+| `wrap`            | ❌                            | ✅ (default: false)  | Cannot toggle wrap from UI                       |
 
 #### Required Registry Enhancement
 
@@ -799,17 +813,24 @@ if (type === "CodeBlock") {
 
 ```typescript
 interface LabelProps {
-  text?: string;              // Label text content
-  children?: ReactNode;       // React children (overrides text)
-  variant?: "default" | "badge" | "overline" | "tag" | "pill" | "outline" | "subtle";
-  color?: string;             // Text colour
-  backgroundColor?: string;   // Background (badge/tag/pill/subtle)
-  borderColor?: string;       // Border (outline variant)
+  text?: string; // Label text content
+  children?: ReactNode; // React children (overrides text)
+  variant?:
+    | "default"
+    | "badge"
+    | "overline"
+    | "tag"
+    | "pill"
+    | "outline"
+    | "subtle";
+  color?: string; // Text colour
+  backgroundColor?: string; // Background (badge/tag/pill/subtle)
+  borderColor?: string; // Border (outline variant)
   size?: "xs" | "sm" | "md";
   fontWeight?: string | number; // Default: 600 (semibold)
   textTransform?: "none" | "uppercase" | "lowercase" | "capitalize";
-  letterSpacing?: string;     // Default: "0.05em"
-  fontFamily?: string;        // Font family
+  letterSpacing?: string; // Default: "0.05em"
+  fontFamily?: string; // Font family
   id?: string;
   className?: string;
 }
@@ -817,29 +838,29 @@ interface LabelProps {
 
 #### 7 Variants Visual Comparison
 
-| Variant | HTML Output | Visual Treatment | Padding | Use Case |
-|---------|------------|-----------------|---------|----------|
-| **default** | `<span>` | Plain text, styled weight/transform | None | Generic utility text |
-| **badge** | `<span>` | Background + `rounded-md` | `px-N py-N` | Status indicators, counts |
-| **overline** | `<span>` `display: block` | Block element + `mb-2` | None | Above headings as section label |
-| **tag** | `<span>` | Background + `rounded` (smaller) | `px-N py-N` | Category labels |
-| **pill** | `<span>` | Background + `rounded-full` | `px-N py-N` | Rounded status tag |
-| **outline** | `<span>` | Border + `rounded-md`, no fill | `px-N py-N` | Subtle bordered tag |
-| **subtle** | `<span>` | `opacity-70`, no background | None | De-emphasised text |
+| Variant      | HTML Output               | Visual Treatment                    | Padding     | Use Case                        |
+| ------------ | ------------------------- | ----------------------------------- | ----------- | ------------------------------- |
+| **default**  | `<span>`                  | Plain text, styled weight/transform | None        | Generic utility text            |
+| **badge**    | `<span>`                  | Background + `rounded-md`           | `px-N py-N` | Status indicators, counts       |
+| **overline** | `<span>` `display: block` | Block element + `mb-2`              | None        | Above headings as section label |
+| **tag**      | `<span>`                  | Background + `rounded` (smaller)    | `px-N py-N` | Category labels                 |
+| **pill**     | `<span>`                  | Background + `rounded-full`         | `px-N py-N` | Rounded status tag              |
+| **outline**  | `<span>`                  | Border + `rounded-md`, no fill      | `px-N py-N` | Subtle bordered tag             |
+| **subtle**   | `<span>`                  | `opacity-70`, no background         | None        | De-emphasised text              |
 
 #### Size Scale
 
-| Size | Text Class | Padding |
-|------|-----------|---------|
+| Size | Text Class               | Padding         |
+| ---- | ------------------------ | --------------- |
 | `xs` | `text-[0.625rem]` (10px) | `px-1.5 py-0.5` |
-| `sm` | `text-xs` (12px) | `px-2 py-1` |
-| `md` | `text-sm` (14px) | `px-3 py-1.5` |
+| `sm` | `text-xs` (12px)         | `px-2 py-1`     |
+| `md` | `text-sm` (14px)         | `px-3 py-1.5`   |
 
 #### Issues & Fixes
 
-| # | Issue | Fix | Priority |
-|---|-------|-----|----------|
-| 1 | None — this component is clean and well-aligned | — | — |
+| #   | Issue                                           | Fix | Priority |
+| --- | ----------------------------------------------- | --- | -------- |
+| 1   | None — this component is clean and well-aligned | —   | —        |
 
 ---
 
@@ -854,14 +875,21 @@ interface LabelProps {
 
 ```typescript
 interface ListProps {
-  items?: string[];           // Array of text items
-  variant?: "bullet" | "numbered" | "check" | "arrow" | "dash" | "icon" | "none";
+  items?: string[]; // Array of text items
+  variant?:
+    | "bullet"
+    | "numbered"
+    | "check"
+    | "arrow"
+    | "dash"
+    | "icon"
+    | "none";
   spacing?: "tight" | "normal" | "relaxed";
-  columns?: number | string;  // 1, 2, or 3 (CSS grid)
-  color?: string;             // Text colour
-  iconColor?: string;         // Marker/icon colour
-  fontSize?: string;          // "sm" | "base" | "lg"
-  fontFamily?: string;        // Font family
+  columns?: number | string; // 1, 2, or 3 (CSS grid)
+  color?: string; // Text colour
+  iconColor?: string; // Marker/icon colour
+  fontSize?: string; // "sm" | "base" | "lg"
+  fontFamily?: string; // Font family
   id?: string;
   className?: string;
 }
@@ -869,15 +897,15 @@ interface ListProps {
 
 #### 7 Marker Variants
 
-| Variant | Marker Character | HTML Element | Behaviour |
-|---------|-----------------|-------------|-----------|
-| **bullet** | `•` (Unicode) | `<ul>` + `<li>` | Default unordered list |
-| **numbered** | Sequential number | `<ol>` + `<li>` | Index-based (`index + 1 + "."`) |
-| **check** | SVG checkmark (green) | `<ul>` + `<li>` | Check mark icon — `getMarker()` returns SVG |
-| **arrow** | `→` (Unicode) | `<ul>` + `<li>` | Right arrow prefix |
-| **dash** | `—` (em-dash) | `<ul>` + `<li>` | Em-dash prefix |
-| **icon** | `★` (Unicode star) | `<ul>` + `<li>` | Star character |
-| **none** | No marker | `<ul>` + `<li>` | Clean text list |
+| Variant      | Marker Character      | HTML Element    | Behaviour                                   |
+| ------------ | --------------------- | --------------- | ------------------------------------------- |
+| **bullet**   | `•` (Unicode)         | `<ul>` + `<li>` | Default unordered list                      |
+| **numbered** | Sequential number     | `<ol>` + `<li>` | Index-based (`index + 1 + "."`)             |
+| **check**    | SVG checkmark (green) | `<ul>` + `<li>` | Check mark icon — `getMarker()` returns SVG |
+| **arrow**    | `→` (Unicode)         | `<ul>` + `<li>` | Right arrow prefix                          |
+| **dash**     | `—` (em-dash)         | `<ul>` + `<li>` | Em-dash prefix                              |
+| **icon**     | `★` (Unicode star)    | `<ul>` + `<li>` | Star character                              |
+| **none**     | No marker             | `<ul>` + `<li>` | Clean text list                             |
 
 #### getMarker() Helper
 
@@ -885,40 +913,49 @@ Returns the appropriate marker for each variant. The `check` variant returns an 
 
 ```tsx
 <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L7 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+  <path
+    fillRule="evenodd"
+    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L7 12.586l7.293-7.293a1 1 0 011.414 0z"
+    clipRule="evenodd"
+  />
 </svg>
 ```
 
 #### Multi-Column Layout
 
 `columns` prop maps to CSS grid:
+
 - `1` → Single column (default)
 - `2` → `grid grid-cols-1 sm:grid-cols-2`
 - `3` → `grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3`
 
 #### Spacing Scale
 
-| Value | Gap Class |
-|-------|----------|
-| `tight` | `gap-1` |
-| `normal` | `gap-2` |
-| `relaxed` | `gap-4` |
+| Value     | Gap Class |
+| --------- | --------- |
+| `tight`   | `gap-1`   |
+| `normal`  | `gap-2`   |
+| `relaxed` | `gap-4`   |
 
 #### Converter Normalizer (L1660)
 
 ```typescript
 // Key normalisations:
-items: Array.isArray(items) ? items.map(i => typeof i === "string" ? i : String(i?.text || i?.content || i)) : []
-variant: props.variant || props.style || props.listStyle || "bullet"
-columns: props.columns ? Number(props.columns) : undefined
-iconColor: props.iconColor || props.markerColor || undefined
+items: Array.isArray(items)
+  ? items.map((i) =>
+      typeof i === "string" ? i : String(i?.text || i?.content || i),
+    )
+  : [];
+variant: props.variant || props.style || props.listStyle || "bullet";
+columns: props.columns ? Number(props.columns) : undefined;
+iconColor: props.iconColor || props.markerColor || undefined;
 ```
 
 #### Issues & Fixes
 
-| # | Issue | Fix | Priority |
-|---|-------|-----|----------|
-| 1 | Check mark SVG `fill="currentColor"` inherits parent colour, but `iconColor` is applied only to the `<span>` wrapper, not the SVG directly | Ensure SVG inherits from `iconColor` via the span's `color` style | ⚠️ Low |
+| #   | Issue                                                                                                                                      | Fix                                                               | Priority |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- | -------- |
+| 1   | Check mark SVG `fill="currentColor"` inherits parent colour, but `iconColor` is applied only to the `<span>` wrapper, not the SVG directly | Ensure SVG inherits from `iconColor` via the span's `color` style | ⚠️ Low   |
 
 ---
 
@@ -933,22 +970,22 @@ iconColor: props.iconColor || props.markerColor || undefined
 
 ```typescript
 interface DisplayTextProps {
-  text?: string;              // Display text content
-  fontSize?: string;          // CSS value: "8rem", "clamp(4rem, 10vw, 10rem)"
+  text?: string; // Display text content
+  fontSize?: string; // CSS value: "8rem", "clamp(4rem, 10vw, 10rem)"
   fontWeight?: string | number; // Default: 900
-  fontFamily?: string;        // Font family
-  color?: string;             // Text colour
+  fontFamily?: string; // Font family
+  color?: string; // Text colour
   align?: "left" | "center" | "right";
-  letterSpacing?: string;     // Default: "-0.04em"
-  lineHeight?: string;        // Default: "1.1"
+  letterSpacing?: string; // Default: "-0.04em"
+  lineHeight?: string; // Default: "1.1"
   textTransform?: "none" | "uppercase";
-  gradient?: boolean;         // Enable gradient text
-  gradientFrom?: string;      // Start colour
-  gradientTo?: string;        // End colour
+  gradient?: boolean; // Enable gradient text
+  gradientFrom?: string; // Start colour
+  gradientTo?: string; // End colour
   gradientDirection?: string; // "to right", "to bottom", "to bottom right"
-  textShadow?: string;        // CSS text-shadow
+  textShadow?: string; // CSS text-shadow
   textWrap?: "balance" | "pretty" | "wrap" | "nowrap";
-  maxWidth?: string;          // CSS max-width
+  maxWidth?: string; // CSS max-width
   id?: string;
   className?: string;
 }
@@ -970,6 +1007,7 @@ style={{
 #### Modern text-wrap Support
 
 Uses CSS `text-wrap` property for balanced/pretty line breaking:
+
 - `balance` — Distributes text evenly across lines (default)
 - `pretty` — Avoids orphan words on last line
 - `wrap` — Standard wrapping
@@ -987,19 +1025,19 @@ Uses ARIA `role="heading"` with `aria-level={1}` — correctly identifies the di
 
 #### Registry Field Groups
 
-| Group | Icon | Fields | Default Expanded |
-|-------|------|--------|-----------------|
-| Content | Type | text, align, color | ✅ Yes |
-| Typography | ALargeSmall | fontFamily, fontSize, fontWeight, lineHeight, letterSpacing, textTransform | No |
-| Gradient | Sparkles | gradient, gradientFrom, gradientTo, gradientDirection | No |
-| Advanced | Settings | textShadow, textWrap, maxWidth | No |
+| Group      | Icon        | Fields                                                                     | Default Expanded |
+| ---------- | ----------- | -------------------------------------------------------------------------- | ---------------- |
+| Content    | Type        | text, align, color                                                         | ✅ Yes           |
+| Typography | ALargeSmall | fontFamily, fontSize, fontWeight, lineHeight, letterSpacing, textTransform | No               |
+| Gradient   | Sparkles    | gradient, gradientFrom, gradientTo, gradientDirection                      | No               |
+| Advanced   | Settings    | textShadow, textWrap, maxWidth                                             | No               |
 
 #### Issues & Fixes
 
-| # | Issue | Fix | Priority |
-|---|-------|-----|----------|
-| 1 | `aria-level` hardcoded to `1` — should be configurable or match context | Consider adding `ariaLevel` prop (optional, future) | ⬜ Future |
-| 2 | Default `textWrap` in render is not explicitly set (falls through to no textWrap style) while registry says `"balance"` — but converter normalizer sets `"balance"` | Align render default to `"balance"` for safety | ⚠️ Low |
+| #   | Issue                                                                                                                                                               | Fix                                                 | Priority  |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- | --------- |
+| 1   | `aria-level` hardcoded to `1` — should be configurable or match context                                                                                             | Consider adding `ariaLevel` prop (optional, future) | ⬜ Future |
+| 2   | Default `textWrap` in render is not explicitly set (falls through to no textWrap style) while registry says `"balance"` — but converter normalizer sets `"balance"` | Align render default to `"balance"` for safety      | ⚠️ Low    |
 
 ---
 
@@ -1014,15 +1052,15 @@ Uses ARIA `role="heading"` with `aria-level={1}` — correctly identifies the di
 
 ```typescript
 interface DividerTextProps {
-  text?: string;              // Divider text content
+  text?: string; // Divider text content
   variant?: "line-through" | "line-sides" | "dots" | "gradient" | "ornament";
   spacing?: "sm" | "md" | "lg";
-  color?: string;             // Text colour
-  lineColor?: string;         // Line/decoration colour
-  fontSize?: string;          // CSS font size
+  color?: string; // Text colour
+  lineColor?: string; // Line/decoration colour
+  fontSize?: string; // CSS font size
   fontWeight?: string | number;
   textTransform?: "uppercase" | "none" | "capitalize";
-  letterSpacing?: string;     // Default: "0.1em"
+  letterSpacing?: string; // Default: "0.1em"
   fontFamily?: string;
   id?: string;
   className?: string;
@@ -1031,37 +1069,37 @@ interface DividerTextProps {
 
 #### 5 Variants Deep Dive
 
-| Variant | Visual Treatment | Implementation |
-|---------|-----------------|----------------|
-| **line-through** | Single horizontal line with text overlaid, text has background to "cut" through line | Relative container + absolute line + relative text with bg-inherit |
-| **line-sides** | Lines on both sides of centred text | Flexbox: `<span>` line + text + `<span>` line, each `flex-1 h-px` |
-| **dots** | Three dots (`· · ·`) centred between lines | Flex lines + centered `•  •  •` text |
-| **gradient** | Gradient fade lines on both sides | Lines use `linear-gradient(to right, transparent, lineColor, transparent)` |
-| **ornament** | Decorative symbols surrounding text | Unicode ornaments: `✦  ·  text  ·  ✦` pattern |
+| Variant          | Visual Treatment                                                                     | Implementation                                                             |
+| ---------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| **line-through** | Single horizontal line with text overlaid, text has background to "cut" through line | Relative container + absolute line + relative text with bg-inherit         |
+| **line-sides**   | Lines on both sides of centred text                                                  | Flexbox: `<span>` line + text + `<span>` line, each `flex-1 h-px`          |
+| **dots**         | Three dots (`· · ·`) centred between lines                                           | Flex lines + centered `•  •  •` text                                       |
+| **gradient**     | Gradient fade lines on both sides                                                    | Lines use `linear-gradient(to right, transparent, lineColor, transparent)` |
+| **ornament**     | Decorative symbols surrounding text                                                  | Unicode ornaments: `✦  ·  text  ·  ✦` pattern                              |
 
 #### Spacing Scale
 
 | Value | Margin Class |
-|-------|-------------|
-| `sm` | `my-4` |
-| `md` | `my-8` |
-| `lg` | `my-12` |
+| ----- | ------------ |
+| `sm`  | `my-4`       |
+| `md`  | `my-8`       |
+| `lg`  | `my-12`      |
 
 #### Converter Normalizer (L1704)
 
 ```typescript
-text: props.text || props.label || props.content || "Section"
-variant: props.variant || props.style || "line-sides"
-lineColor: props.lineColor || props.borderColor || undefined  // Accepts borderColor as alias
-textTransform: props.textTransform || "uppercase"
+text: props.text || props.label || props.content || "Section";
+variant: props.variant || props.style || "line-sides";
+lineColor: props.lineColor || props.borderColor || undefined; // Accepts borderColor as alias
+textTransform: props.textTransform || "uppercase";
 ```
 
 #### Issues & Fixes
 
-| # | Issue | Fix | Priority |
-|---|-------|-----|----------|
-| 1 | No `role="separator"` on wrapper `<div>` | Add `role="separator"` to outer element | ⚠️ Medium |
-| 2 | Ornament variant uses hardcoded Unicode symbols — could offer customisation | Future: Add `ornamentSymbol` prop | ⬜ Future |
+| #   | Issue                                                                       | Fix                                     | Priority  |
+| --- | --------------------------------------------------------------------------- | --------------------------------------- | --------- |
+| 1   | No `role="separator"` on wrapper `<div>`                                    | Add `role="separator"` to outer element | ⚠️ Medium |
+| 2   | Ornament variant uses hardcoded Unicode symbols — could offer customisation | Future: Add `ornamentSymbol` prop       | ⬜ Future |
 
 ---
 
@@ -1076,15 +1114,15 @@ textTransform: props.textTransform || "uppercase"
 
 ```typescript
 interface StatNumberProps {
-  value?: string;             // The number/stat value: "100", "$2.5M"
-  label?: string;             // Description: "Customers", "Revenue"
-  prefix?: string;            // Before value: "$", "+", ">"
-  suffix?: string;            // After value: "+", "%", "K"
-  color?: string;             // Value colour
-  labelColor?: string;        // Label colour
-  valueSize?: string;         // CSS font size for value
-  labelSize?: string;         // CSS font size for label
-  fontFamily?: string;        // Font family (value uses heading, label uses body)
+  value?: string; // The number/stat value: "100", "$2.5M"
+  label?: string; // Description: "Customers", "Revenue"
+  prefix?: string; // Before value: "$", "+", ">"
+  suffix?: string; // After value: "+", "%", "K"
+  color?: string; // Value colour
+  labelColor?: string; // Label colour
+  valueSize?: string; // CSS font size for value
+  labelSize?: string; // CSS font size for label
+  fontFamily?: string; // Font family (value uses heading, label uses body)
   fontWeight?: string | number; // Value weight (default: 800)
   align?: "left" | "center" | "right";
   layout?: "stacked" | "inline";
@@ -1095,10 +1133,10 @@ interface StatNumberProps {
 
 #### Layout Modes
 
-| Layout | Behaviour | Use Case |
-|--------|-----------|----------|
-| **stacked** | Value on top, label below (`mb-1` gap) | Default — stats grids, hero metrics |
-| **inline** | Value and label side-by-side (`flex items-baseline gap-3`) | Compact dashboard-style display |
+| Layout      | Behaviour                                                  | Use Case                            |
+| ----------- | ---------------------------------------------------------- | ----------------------------------- |
+| **stacked** | Value on top, label below (`mb-1` gap)                     | Default — stats grids, hero metrics |
+| **inline**  | Value and label side-by-side (`flex items-baseline gap-3`) | Compact dashboard-style display     |
 
 #### Typography Defaults
 
@@ -1124,21 +1162,21 @@ opacity: labelColor ? 1 : 0.7,      // Fade when no explicit colour
 #### Converter Normalizer (L1717)
 
 ```typescript
-value: props.value || props.number || props.stat || "100"   // Accepts number/stat aliases
-prefix: props.prefix || ""
-suffix: props.suffix || ""
-label: props.label || props.title || props.description || "Statistic"
-color: props.color || props.valueColor || undefined          // Accepts valueColor alias
-align: props.align || props.alignment || "center"
-layout: props.layout || "stacked"
+value: props.value || props.number || props.stat || "100"; // Accepts number/stat aliases
+prefix: props.prefix || "";
+suffix: props.suffix || "";
+label: props.label || props.title || props.description || "Statistic";
+color: props.color || props.valueColor || undefined; // Accepts valueColor alias
+align: props.align || props.alignment || "center";
+layout: props.layout || "stacked";
 ```
 
 #### Issues & Fixes
 
-| # | Issue | Fix | Priority |
-|---|-------|-----|----------|
-| 1 | No `aria-label` combining prefix + value + suffix + label | Add `aria-label={`${prefix}${value}${suffix} ${label}`}` to wrapper | ⚠️ Medium |
-| 2 | No animation support (counter animation is a common pattern) | Future: Add `animate?: boolean` with countUp effect via Framer Motion | ⬜ Future |
+| #   | Issue                                                        | Fix                                                                   | Priority  |
+| --- | ------------------------------------------------------------ | --------------------------------------------------------------------- | --------- |
+| 1   | No `aria-label` combining prefix + value + suffix + label    | Add `aria-label={`${prefix}${value}${suffix} ${label}`}` to wrapper   | ⚠️ Medium |
+| 2   | No animation support (counter animation is a common pattern) | Future: Add `animate?: boolean` with countUp effect via Framer Motion | ⬜ Future |
 
 ---
 
@@ -1150,28 +1188,29 @@ Defined in `renders.tsx` between L3575 (after `RichTextProps` interface) and L36
 
 ### 5.2 What It Converts
 
-| Markdown | HTML Output |
-|----------|-------------|
-| `# Heading` → `######` | `<h1>` → `<h6>` |
-| `**bold**` | `<strong>` |
-| `*italic*` | `<em>` |
-| `` `code` `` | `<code>` |
-| `[text](url)` | `<a href="url">text</a>` |
-| `- item` | `<ul><li>` |
-| `1. item` | `<ol><li>` |
-| Double newline | `<p>` break |
+| Markdown               | HTML Output              |
+| ---------------------- | ------------------------ |
+| `# Heading` → `######` | `<h1>` → `<h6>`          |
+| `**bold**`             | `<strong>`               |
+| `*italic*`             | `<em>`                   |
+| `` `code` ``           | `<code>`                 |
+| `[text](url)`          | `<a href="url">text</a>` |
+| `- item`               | `<ul><li>`               |
+| `1. item`              | `<ol><li>`               |
+| Double newline         | `<p>` break              |
 
 ### 5.3 Consumers
 
-| Component | Category | Usage |
-|-----------|----------|-------|
-| RichText | Content | Main body `content` prop |
-| Accordion | Interactive | Item content rendering |
-| Tabs | Interactive | Tab content rendering |
+| Component | Category    | Usage                    |
+| --------- | ----------- | ------------------------ |
+| RichText  | Content     | Main body `content` prop |
+| Accordion | Interactive | Item content rendering   |
+| Tabs      | Interactive | Tab content rendering    |
 
 ### 5.4 Security Model
 
 `markdownToHtml()` is an allowlist-based parser — it only converts recognised patterns to HTML. It does **not** pass through arbitrary HTML from user input. The output is used in `dangerouslySetInnerHTML`, which is safe because:
+
 1. The parser only produces known-safe HTML tags (`<h1>`-`<h6>`, `<strong>`, `<em>`, `<code>`, `<a>`, `<ul>`, `<ol>`, `<li>`, `<p>`)
 2. Link URLs are not sanitised (CMS content is trusted) — but if user-facing input is ever supported, URL sanitisation should be added
 
@@ -1193,28 +1232,30 @@ These are acceptable for a CMS — the `content` field is a richtext editor, not
 
 ### 6.1 Component-by-Component Dark Mode Status
 
-| Component | Dark Mode Safe? | Issue | Fix Required |
-|-----------|----------------|-------|-------------|
-| **RichText** | ⚠️ Partial | Tailwind `prose` class defaults to light-theme colours | 🔴 Critical — add dark prose handling |
-| **Quote** | ✅ Safe | All colours via inline styles with `|| undefined` | ✅ No fix needed |
-| **CodeBlock** | ⚠️ Per-theme | Hardcoded theme colours — intentional design | ⬜ Acceptable |
-| **Label** | ✅ Safe | All colours via inline styles | ✅ No fix needed |
-| **List** | ✅ Safe | All colours via inline styles | ✅ No fix needed |
-| **DisplayText** | ✅ Safe | All colours via inline styles | ✅ No fix needed |
-| **DividerText** | ✅ Safe | All colours via inline styles | ✅ No fix needed |
-| **StatNumber** | ✅ Safe | All colours via inline styles | ✅ No fix needed |
+| Component       | Dark Mode Safe? | Issue                                                  | Fix Required                          |
+| --------------- | --------------- | ------------------------------------------------------ | ------------------------------------- | ---------- | ---------------- |
+| **RichText**    | ⚠️ Partial      | Tailwind `prose` class defaults to light-theme colours | 🔴 Critical — add dark prose handling |
+| **Quote**       | ✅ Safe         | All colours via inline styles with `                   |                                       | undefined` | ✅ No fix needed |
+| **CodeBlock**   | ⚠️ Per-theme    | Hardcoded theme colours — intentional design           | ⬜ Acceptable                         |
+| **Label**       | ✅ Safe         | All colours via inline styles                          | ✅ No fix needed                      |
+| **List**        | ✅ Safe         | All colours via inline styles                          | ✅ No fix needed                      |
+| **DisplayText** | ✅ Safe         | All colours via inline styles                          | ✅ No fix needed                      |
+| **DividerText** | ✅ Safe         | All colours via inline styles                          | ✅ No fix needed                      |
+| **StatNumber**  | ✅ Safe         | All colours via inline styles                          | ✅ No fix needed                      |
 
 ### 6.2 RichText Prose Dark Mode Fix
 
 The `prose` class from Tailwind CSS applies default colours for headings, paragraphs, links, and code. In dark mode, these default colours are dark-on-light and become invisible on dark backgrounds.
 
 **Current code:**
+
 ```tsx
 <div className={`${proseSizeClass} max-w-none prose-headings:font-bold prose-p:leading-relaxed ...`}
      style={{ color: resolvedTextColor || undefined }}>
 ```
 
 **Fix:**
+
 ```tsx
 <div className={`${proseSizeClass} max-w-none
      prose-headings:font-bold prose-p:leading-relaxed
@@ -1231,8 +1272,8 @@ CodeBlock uses self-contained themes — the `dark` and `github` themes work nat
 ```typescript
 // AI rule: CodeBlock theme should match page background
 const codeBlockThemeForMode = {
-  light: "light",     // Use light theme on light backgrounds
-  dark: "dark",       // Use dark/github/monokai on dark backgrounds
+  light: "light", // Use light theme on light backgrounds
+  dark: "dark", // Use dark/github/monokai on dark backgrounds
 };
 ```
 
@@ -1258,16 +1299,16 @@ This ensures zero-effort dark mode — if no explicit colour is set, components 
 
 ### 7.1 Current Accessibility Status
 
-| Component | Semantic HTML | ARIA | Keyboard | Contrast | Status |
-|-----------|--------------|------|----------|----------|--------|
-| **RichText** | ✅ `<section>`, `<hN>`, `<blockquote>` | ✅ Via heading level | N/A (non-interactive) | ✅ Inherits | ✅ Good |
-| **Quote** | ✅ `<blockquote>`, `<footer>`, `<cite>` | ✅ Semantic | N/A (non-interactive) | ✅ Inherits | ✅ Good |
-| **CodeBlock** | ✅ `<pre>`, `<code>` | ⚠️ No `aria-label` on copy button | ⚠️ Copy button has no accessible name | Depends on theme | ⚠️ Fix |
-| **Label** | ✅ `<span>` (correct for inline) | N/A | N/A | ✅ Inherits | ✅ Good |
-| **List** | ✅ `<ul>`/`<ol>`, `<li>` | ✅ Semantic | N/A | ✅ Inherits | ✅ Good |
-| **DisplayText** | ✅ `role="heading" aria-level={1}` | ✅ ARIA heading | N/A | ✅ Inherits | ✅ Excellent |
-| **DividerText** | ⚠️ `<div>` (should be separator) | ❌ Missing `role="separator"` | N/A | ✅ Inherits | ⚠️ Fix |
-| **StatNumber** | ⚠️ `<div>` only | ❌ No `aria-label` | N/A | ✅ Inherits | ⚠️ Fix |
+| Component       | Semantic HTML                           | ARIA                              | Keyboard                              | Contrast         | Status       |
+| --------------- | --------------------------------------- | --------------------------------- | ------------------------------------- | ---------------- | ------------ |
+| **RichText**    | ✅ `<section>`, `<hN>`, `<blockquote>`  | ✅ Via heading level              | N/A (non-interactive)                 | ✅ Inherits      | ✅ Good      |
+| **Quote**       | ✅ `<blockquote>`, `<footer>`, `<cite>` | ✅ Semantic                       | N/A (non-interactive)                 | ✅ Inherits      | ✅ Good      |
+| **CodeBlock**   | ✅ `<pre>`, `<code>`                    | ⚠️ No `aria-label` on copy button | ⚠️ Copy button has no accessible name | Depends on theme | ⚠️ Fix       |
+| **Label**       | ✅ `<span>` (correct for inline)        | N/A                               | N/A                                   | ✅ Inherits      | ✅ Good      |
+| **List**        | ✅ `<ul>`/`<ol>`, `<li>`                | ✅ Semantic                       | N/A                                   | ✅ Inherits      | ✅ Good      |
+| **DisplayText** | ✅ `role="heading" aria-level={1}`      | ✅ ARIA heading                   | N/A                                   | ✅ Inherits      | ✅ Excellent |
+| **DividerText** | ⚠️ `<div>` (should be separator)        | ❌ Missing `role="separator"`     | N/A                                   | ✅ Inherits      | ⚠️ Fix       |
+| **StatNumber**  | ⚠️ `<div>` only                         | ❌ No `aria-label`                | N/A                                   | ✅ Inherits      | ⚠️ Fix       |
 
 ### 7.2 Required Accessibility Fixes
 
@@ -1310,15 +1351,15 @@ This ensures zero-effort dark mode — if no explicit colour is set, components 
 
 ### 7.3 WCAG Criteria Coverage
 
-| Criterion | Requirement | Content Component Coverage |
-|-----------|-------------|---------------------------|
+| Criterion                      | Requirement                        | Content Component Coverage                           |
+| ------------------------------ | ---------------------------------- | ---------------------------------------------------- |
 | **1.3.1** Info & Relationships | Semantic structure conveys meaning | ✅ Blockquote, lists, headings all use semantic HTML |
-| **1.4.3** Contrast (min) | 4.5:1 for text | ✅ All colours inherit or use explicit tokens |
-| **1.4.4** Resize Text | Text scales to 200% without loss | ✅ All use relative units (rem, em) |
-| **2.4.6** Headings & Labels | Headings describe content | ✅ RichText uses configurable heading levels |
-| **3.1.1** Language | Page language set | N/A — component level |
-| **4.1.1** Parsing | Valid HTML | ✅ All components produce valid HTML |
-| **4.1.2** Name, Role, Value | Components have accessible names | ⚠️ DividerText and StatNumber need fixes |
+| **1.4.3** Contrast (min)       | 4.5:1 for text                     | ✅ All colours inherit or use explicit tokens        |
+| **1.4.4** Resize Text          | Text scales to 200% without loss   | ✅ All use relative units (rem, em)                  |
+| **2.4.6** Headings & Labels    | Headings describe content          | ✅ RichText uses configurable heading levels         |
+| **3.1.1** Language             | Page language set                  | N/A — component level                                |
+| **4.1.1** Parsing              | Valid HTML                         | ✅ All components produce valid HTML                 |
+| **4.1.2** Name, Role, Value    | Components have accessible names   | ⚠️ DividerText and StatNumber need fixes             |
 
 ---
 
@@ -1326,32 +1367,32 @@ This ensures zero-effort dark mode — if no explicit colour is set, components 
 
 ### 8.1 Font Family Tokens
 
-| Token | Default | Used By |
-|-------|---------|---------|
-| `--font-heading` | System sans-serif | RichText title, DisplayText, StatNumber value |
-| `--font-body` | System sans-serif | RichText body, Quote, Label, List, DividerText, StatNumber label |
+| Token            | Default           | Used By                                                          |
+| ---------------- | ----------------- | ---------------------------------------------------------------- |
+| `--font-heading` | System sans-serif | RichText title, DisplayText, StatNumber value                    |
+| `--font-body`    | System sans-serif | RichText body, Quote, Label, List, DividerText, StatNumber label |
 
 ### 8.2 Type Scale Tokens
 
-| Token | Default | Used By |
-|-------|---------|---------|
-| `--type-sm` | `0.875rem` | StatNumber label, Label sizing |
-| `--type-base` | `1rem` | List base font size |
-| `--type-lg` | `1.125rem` | List large font size |
-| `--type-4xl` | `2.25rem` | RichText title fallback |
-| `--type-5xl` | `3rem` | StatNumber value |
-| `--type-9xl` | `8rem` | DisplayText default |
+| Token         | Default    | Used By                        |
+| ------------- | ---------- | ------------------------------ |
+| `--type-sm`   | `0.875rem` | StatNumber label, Label sizing |
+| `--type-base` | `1rem`     | List base font size            |
+| `--type-lg`   | `1.125rem` | List large font size           |
+| `--type-4xl`  | `2.25rem`  | RichText title fallback        |
+| `--type-5xl`  | `3rem`     | StatNumber value               |
+| `--type-9xl`  | `8rem`     | DisplayText default            |
 
 ### 8.3 Leading (Line Height) Tokens
 
-| Token | Used By |
-|-------|---------|
+| Token                                 | Used By                 |
+| ------------------------------------- | ----------------------- |
 | `--leading-h1` through `--leading-h4` | RichText title elements |
 
 ### 8.4 Tracking (Letter Spacing) Tokens
 
-| Token | Used By |
-|-------|---------|
+| Token                                   | Used By                 |
+| --------------------------------------- | ----------------------- |
 | `--tracking-h1` through `--tracking-h4` | RichText title elements |
 
 ### 8.5 How Tokens Flow
@@ -1382,7 +1423,12 @@ const AI_CONTENT_RULES = {
   },
 
   blogPost: {
-    richText: { layout: "left", proseSize: "lg", maxWidth: "prose", showDivider: true },
+    richText: {
+      layout: "left",
+      proseSize: "lg",
+      maxWidth: "prose",
+      showDivider: true,
+    },
     rule: "Blog posts use left-aligned prose with narrow max-width for comfortable reading",
   },
 
@@ -1408,7 +1454,11 @@ const AI_CONTENT_RULES = {
   },
 
   featureList: {
-    list: { variant: "check", iconColor: "var(--color-success, #16a34a)", columns: "2" },
+    list: {
+      variant: "check",
+      iconColor: "var(--color-success, #16a34a)",
+      columns: "2",
+    },
     rule: "Feature lists use checkmarks in green with 2 columns for scanning",
   },
 
@@ -1465,7 +1515,10 @@ const INDUSTRY_CONTENT_STYLES = {
     style: "Gradient display text, card quotes, gradient dividers",
   },
   restaurant: {
-    richText: { layout: "centered", titleFontFamily: "'Playfair Display', serif" },
+    richText: {
+      layout: "centered",
+      titleFontFamily: "'Playfair Display', serif",
+    },
     dividerText: { variant: "ornament" },
     quote: { variant: "simple", fontStyle: "italic" },
     style: "Serif titles, ornamental dividers, classic italic quotes",
@@ -1476,7 +1529,10 @@ const INDUSTRY_CONTENT_STYLES = {
 ### 9.3 AI Quality Scoring for Content
 
 ```typescript
-function scoreContentQuality(page: GeneratedPage): { score: number; issues: string[] } {
+function scoreContentQuality(page: GeneratedPage): {
+  score: number;
+  issues: string[];
+} {
   let score = 100;
   const issues: string[] = [];
 
@@ -1487,18 +1543,28 @@ function scoreContentQuality(page: GeneratedPage): { score: number; issues: stri
   }
 
   // Rule: Stats section should use StatNumber, not plain text
-  page.sections.forEach(section => {
-    if (section.title?.toLowerCase().includes("stat") && !section.hasComponent("StatNumber")) {
+  page.sections.forEach((section) => {
+    if (
+      section.title?.toLowerCase().includes("stat") &&
+      !section.hasComponent("StatNumber")
+    ) {
       score -= 10;
-      issues.push(`Section "${section.title}" discusses statistics but doesn't use StatNumber component`);
+      issues.push(
+        `Section "${section.title}" discusses statistics but doesn't use StatNumber component`,
+      );
     }
   });
 
   // Rule: Feature lists should use List with check/arrow, not bullet
-  page.getComponents("List").forEach(list => {
-    if (list.props.variant === "bullet" && page.isFeatureSection(list.parentSection)) {
+  page.getComponents("List").forEach((list) => {
+    if (
+      list.props.variant === "bullet" &&
+      page.isFeatureSection(list.parentSection)
+    ) {
       score -= 5;
-      issues.push("Feature list should use 'check' or 'arrow' variant, not 'bullet'");
+      issues.push(
+        "Feature list should use 'check' or 'arrow' variant, not 'bullet'",
+      );
     }
   });
 
@@ -1509,10 +1575,12 @@ function scoreContentQuality(page: GeneratedPage): { score: number; issues: stri
   }
 
   // Rule: DisplayText should only appear in hero/splash contexts
-  page.getComponents("DisplayText").forEach(dt => {
+  page.getComponents("DisplayText").forEach((dt) => {
     if (!page.isHeroSection(dt.parentSection)) {
       score -= 5;
-      issues.push("DisplayText used outside hero section — consider using Heading instead");
+      issues.push(
+        "DisplayText used outside hero section — consider using Heading instead",
+      );
     }
   });
 
@@ -1543,187 +1611,187 @@ function scoreContentQuality(page: GeneratedPage): { score: number; issues: stri
 
 #### RichText — core-components.ts L14368
 
-| Field | Type | Default | Registry | Render | Aligned |
-|-------|------|---------|----------|--------|---------|
-| content | richtext | `<p>Start typing...</p>` | ✅ L14368 | ✅ L3694 | ✅ |
-| title | text | — | ✅ | ✅ | ✅ |
-| subtitle | text | — | ✅ | ✅ | ✅ |
-| pullQuote | textarea | — | ✅ | ✅ | ✅ |
-| layout | select | "centered" | ✅ | ✅ | ✅ |
-| titleLevel | select | "h2" | ✅ | ✅ | ✅ |
-| proseSize | select | "lg" (registry) / "base" (render) | ✅ | ✅ | ⚠️ Default mismatch |
-| titleFontFamily | select | "" | ✅ | ✅ | ✅ |
-| bodyFontFamily | select | "" | ✅ | ✅ | ✅ |
-| titleFontSize | text | — | ✅ | ✅ | ✅ |
-| backgroundColor | color | — | ✅ | ✅ | ✅ |
-| textColor | color | — | ✅ | ✅ | ✅ |
-| titleColor | color | — | ✅ | ✅ | ✅ |
-| subtitleColor | color | — | ✅ | ✅ | ✅ |
-| accentColor | color | — | ✅ | ✅ | ✅ |
-| pullQuoteColor | color | — | ✅ | ✅ | ✅ |
-| highlightColor | color | — | ✅ | ✅ | ✅ |
-| cardBackgroundColor | color | — | ✅ | ✅ | ✅ |
-| showDivider | toggle | false | ✅ | ✅ | ✅ |
-| dividerColor | color | — | ✅ | ✅ | ✅ |
-| maxWidth | select | "4xl" | ✅ | ✅ | ✅ |
-| color | — | — | ❌ Not registered | ✅ L3694 | ⚠️ Render-only fallback |
+| Field               | Type     | Default                           | Registry          | Render   | Aligned                 |
+| ------------------- | -------- | --------------------------------- | ----------------- | -------- | ----------------------- |
+| content             | richtext | `<p>Start typing...</p>`          | ✅ L14368         | ✅ L3694 | ✅                      |
+| title               | text     | —                                 | ✅                | ✅       | ✅                      |
+| subtitle            | text     | —                                 | ✅                | ✅       | ✅                      |
+| pullQuote           | textarea | —                                 | ✅                | ✅       | ✅                      |
+| layout              | select   | "centered"                        | ✅                | ✅       | ✅                      |
+| titleLevel          | select   | "h2"                              | ✅                | ✅       | ✅                      |
+| proseSize           | select   | "lg" (registry) / "base" (render) | ✅                | ✅       | ⚠️ Default mismatch     |
+| titleFontFamily     | select   | ""                                | ✅                | ✅       | ✅                      |
+| bodyFontFamily      | select   | ""                                | ✅                | ✅       | ✅                      |
+| titleFontSize       | text     | —                                 | ✅                | ✅       | ✅                      |
+| backgroundColor     | color    | —                                 | ✅                | ✅       | ✅                      |
+| textColor           | color    | —                                 | ✅                | ✅       | ✅                      |
+| titleColor          | color    | —                                 | ✅                | ✅       | ✅                      |
+| subtitleColor       | color    | —                                 | ✅                | ✅       | ✅                      |
+| accentColor         | color    | —                                 | ✅                | ✅       | ✅                      |
+| pullQuoteColor      | color    | —                                 | ✅                | ✅       | ✅                      |
+| highlightColor      | color    | —                                 | ✅                | ✅       | ✅                      |
+| cardBackgroundColor | color    | —                                 | ✅                | ✅       | ✅                      |
+| showDivider         | toggle   | false                             | ✅                | ✅       | ✅                      |
+| dividerColor        | color    | —                                 | ✅                | ✅       | ✅                      |
+| maxWidth            | select   | "4xl"                             | ✅                | ✅       | ✅                      |
+| color               | —        | —                                 | ❌ Not registered | ✅ L3694 | ⚠️ Render-only fallback |
 
 **Gaps:** 1 minor (proseSize default mismatch), 1 non-blocking (`color` render-only fallback)
 
 #### Quote — core-components.ts L14535
 
-| Field | Type | Default | Registry | Render | Aligned |
-|-------|------|---------|----------|--------|---------|
-| text | textarea | "This is a quote." | ✅ L14535 | ✅ L3880 | ✅ |
-| author | text | — | ✅ | ✅ | ✅ |
-| authorTitle | text | — | ✅ | ✅ | ✅ |
-| authorImage | image | — | ✅ | ✅ | ✅ |
-| variant | select | "simple" | ✅ | ✅ | ✅ |
-| size | select | "md" | ✅ | ✅ | ✅ |
-| textColor | color | — | ✅ | ✅ | ✅ |
-| backgroundColor | color | — | ✅ | ✅ | ✅ |
-| borderColor | color | — | ✅ | ✅ | ✅ |
-| fontFamily | select | "" | ✅ | ✅ | ✅ |
-| fontStyle | select | "italic" | ✅ | ✅ | ✅ |
+| Field           | Type     | Default            | Registry  | Render   | Aligned |
+| --------------- | -------- | ------------------ | --------- | -------- | ------- |
+| text            | textarea | "This is a quote." | ✅ L14535 | ✅ L3880 | ✅      |
+| author          | text     | —                  | ✅        | ✅       | ✅      |
+| authorTitle     | text     | —                  | ✅        | ✅       | ✅      |
+| authorImage     | image    | —                  | ✅        | ✅       | ✅      |
+| variant         | select   | "simple"           | ✅        | ✅       | ✅      |
+| size            | select   | "md"               | ✅        | ✅       | ✅      |
+| textColor       | color    | —                  | ✅        | ✅       | ✅      |
+| backgroundColor | color    | —                  | ✅        | ✅       | ✅      |
+| borderColor     | color    | —                  | ✅        | ✅       | ✅      |
+| fontFamily      | select   | ""                 | ✅        | ✅       | ✅      |
+| fontStyle       | select   | "italic"           | ✅        | ✅       | ✅      |
 
 **Gaps:** None. 100% aligned. ✅
 
 #### CodeBlock — core-components.ts L14645
 
-| Field | Type | Default | Registry | Render | Aligned |
-|-------|------|---------|----------|--------|---------|
-| code | code | `// Your code here` | ✅ L14645 | ✅ L25297 | ✅ |
-| language | select | "javascript" | ✅ | ✅ | ✅ |
-| showLineNumbers | toggle | true | ✅ | ✅ | ✅ |
-| showCopyButton | — | true (render) | ❌ | ✅ | 🔴 Missing |
-| showLanguage | — | true (render) | ❌ | ✅ | 🔴 Missing |
-| title | — | — | ❌ | ✅ | 🔴 Missing |
-| theme | — | "dark" (render) | ❌ | ✅ | 🔴 Missing |
-| highlightLines | — | [] (render) | ❌ | ✅ | 🔴 Missing |
-| maxHeight | — | "lg" (render) | ❌ | ✅ | 🔴 Missing |
-| wrap | — | false (render) | ❌ | ✅ | 🔴 Missing |
+| Field           | Type   | Default             | Registry  | Render    | Aligned    |
+| --------------- | ------ | ------------------- | --------- | --------- | ---------- |
+| code            | code   | `// Your code here` | ✅ L14645 | ✅ L25297 | ✅         |
+| language        | select | "javascript"        | ✅        | ✅        | ✅         |
+| showLineNumbers | toggle | true                | ✅        | ✅        | ✅         |
+| showCopyButton  | —      | true (render)       | ❌        | ✅        | 🔴 Missing |
+| showLanguage    | —      | true (render)       | ❌        | ✅        | 🔴 Missing |
+| title           | —      | —                   | ❌        | ✅        | 🔴 Missing |
+| theme           | —      | "dark" (render)     | ❌        | ✅        | 🔴 Missing |
+| highlightLines  | —      | [] (render)         | ❌        | ✅        | 🔴 Missing |
+| maxHeight       | —      | "lg" (render)       | ❌        | ✅        | 🔴 Missing |
+| wrap            | —      | false (render)      | ❌        | ✅        | 🔴 Missing |
 
 **Gaps:** 7 render props with ZERO registry coverage. See Section 4.3 for full fix specification.
 
 #### Label — core-components.ts L14684
 
-| Field | Type | Default | Aligned |
-|-------|------|---------|---------|
-| text | text | "Label" | ✅ |
-| variant | select | "default" | ✅ |
-| size | select | "sm" | ✅ |
-| color | color | — | ✅ |
-| backgroundColor | color | — | ✅ |
-| borderColor | color | — | ✅ |
-| fontWeight | select | "600" | ✅ |
-| textTransform | select | "uppercase" | ✅ |
-| letterSpacing | text | — | ✅ |
-| fontFamily | select | "" | ✅ |
+| Field           | Type   | Default     | Aligned |
+| --------------- | ------ | ----------- | ------- |
+| text            | text   | "Label"     | ✅      |
+| variant         | select | "default"   | ✅      |
+| size            | select | "sm"        | ✅      |
+| color           | color  | —           | ✅      |
+| backgroundColor | color  | —           | ✅      |
+| borderColor     | color  | —           | ✅      |
+| fontWeight      | select | "600"       | ✅      |
+| textTransform   | select | "uppercase" | ✅      |
+| letterSpacing   | text   | —           | ✅      |
+| fontFamily      | select | ""          | ✅      |
 
 **Gaps:** None. 100% aligned. ✅
 
 #### List — core-components.ts L14772
 
-| Field | Type | Default | Aligned |
-|-------|------|---------|---------|
-| items | array | ["First item", "Second item", "Third item"] | ✅ |
-| variant | select | "bullet" | ✅ |
-| spacing | select | "normal" | ✅ |
-| columns | select | "1" | ✅ |
-| color | color | — | ✅ |
-| iconColor | color | — | ✅ |
-| fontSize | select | "base" | ✅ |
-| fontFamily | select | "" | ✅ |
+| Field      | Type   | Default                                     | Aligned |
+| ---------- | ------ | ------------------------------------------- | ------- |
+| items      | array  | ["First item", "Second item", "Third item"] | ✅      |
+| variant    | select | "bullet"                                    | ✅      |
+| spacing    | select | "normal"                                    | ✅      |
+| columns    | select | "1"                                         | ✅      |
+| color      | color  | —                                           | ✅      |
+| iconColor  | color  | —                                           | ✅      |
+| fontSize   | select | "base"                                      | ✅      |
+| fontFamily | select | ""                                          | ✅      |
 
 **Gaps:** None. 100% aligned. ✅
 
 #### DisplayText — core-components.ts L14866
 
-| Field | Type | Default | Aligned |
-|-------|------|---------|---------|
-| text | textarea | "Display" | ✅ |
-| fontSize | text | — | ✅ |
-| fontWeight | select | "900" | ✅ |
-| fontFamily | select | "" | ✅ |
-| color | color | — | ✅ |
-| align | select | "center" | ✅ |
-| letterSpacing | text | — | ✅ |
-| lineHeight | text | — | ✅ |
-| textTransform | select | "none" | ✅ |
-| gradient | toggle | false | ✅ |
-| gradientFrom | color | — | ✅ |
-| gradientTo | color | — | ✅ |
-| gradientDirection | select | "to right" | ✅ |
-| textShadow | text | — | ✅ |
-| textWrap | select | "balance" | ✅ |
-| maxWidth | text | — | ✅ |
+| Field             | Type     | Default    | Aligned |
+| ----------------- | -------- | ---------- | ------- |
+| text              | textarea | "Display"  | ✅      |
+| fontSize          | text     | —          | ✅      |
+| fontWeight        | select   | "900"      | ✅      |
+| fontFamily        | select   | ""         | ✅      |
+| color             | color    | —          | ✅      |
+| align             | select   | "center"   | ✅      |
+| letterSpacing     | text     | —          | ✅      |
+| lineHeight        | text     | —          | ✅      |
+| textTransform     | select   | "none"     | ✅      |
+| gradient          | toggle   | false      | ✅      |
+| gradientFrom      | color    | —          | ✅      |
+| gradientTo        | color    | —          | ✅      |
+| gradientDirection | select   | "to right" | ✅      |
+| textShadow        | text     | —          | ✅      |
+| textWrap          | select   | "balance"  | ✅      |
+| maxWidth          | text     | —          | ✅      |
 
 **Gaps:** None. 100% aligned. ✅
 
 #### DividerText — core-components.ts L15030
 
-| Field | Type | Default | Aligned |
-|-------|------|---------|---------|
-| text | text | "Section" | ✅ |
-| variant | select | "line-sides" | ✅ |
-| spacing | select | "md" | ✅ |
-| color | color | — | ✅ |
-| lineColor | color | — | ✅ |
-| fontSize | text | — | ✅ |
-| fontWeight | select | "600" | ✅ |
-| textTransform | select | "uppercase" | ✅ |
-| letterSpacing | text | — | ✅ |
-| fontFamily | select | "" | ✅ |
+| Field         | Type   | Default      | Aligned |
+| ------------- | ------ | ------------ | ------- |
+| text          | text   | "Section"    | ✅      |
+| variant       | select | "line-sides" | ✅      |
+| spacing       | select | "md"         | ✅      |
+| color         | color  | —            | ✅      |
+| lineColor     | color  | —            | ✅      |
+| fontSize      | text   | —            | ✅      |
+| fontWeight    | select | "600"        | ✅      |
+| textTransform | select | "uppercase"  | ✅      |
+| letterSpacing | text   | —            | ✅      |
+| fontFamily    | select | ""           | ✅      |
 
 **Gaps:** None. 100% aligned. ✅
 
 #### StatNumber — core-components.ts L15119
 
-| Field | Type | Default | Aligned |
-|-------|------|---------|---------|
-| value | text | "100" | ✅ |
-| prefix | text | — | ✅ |
-| suffix | text | "+" | ✅ |
-| label | text | "Statistic" | ✅ |
-| color | color | — | ✅ |
-| labelColor | color | — | ✅ |
-| valueSize | text | — | ✅ |
-| labelSize | text | — | ✅ |
-| fontFamily | select | "" | ✅ |
-| fontWeight | select | "800" | ✅ |
-| align | select | "center" | ✅ |
-| layout | select | "stacked" | ✅ |
+| Field      | Type   | Default     | Aligned |
+| ---------- | ------ | ----------- | ------- |
+| value      | text   | "100"       | ✅      |
+| prefix     | text   | —           | ✅      |
+| suffix     | text   | "+"         | ✅      |
+| label      | text   | "Statistic" | ✅      |
+| color      | color  | —           | ✅      |
+| labelColor | color  | —           | ✅      |
+| valueSize  | text   | —           | ✅      |
+| labelSize  | text   | —           | ✅      |
+| fontFamily | select | ""          | ✅      |
+| fontWeight | select | "800"       | ✅      |
+| align      | select | "center"    | ✅      |
+| layout     | select | "stacked"   | ✅      |
 
 **Gaps:** None. 100% aligned. ✅
 
 ### 10.2 Alignment Summary
 
-| Component | Registry Fields | Render Props | Coverage | Status |
-|-----------|----------------|-------------|----------|--------|
-| RichText | 21 | 22 | 95% | ⚠️ 1 minor gap |
-| Quote | 11 | 11 | 100% | ✅ Perfect |
-| CodeBlock | 3 | 10 | **30%** | 🔴 7 gaps — fix in Phase 1 |
-| Label | 10 | 11 | 100% | ✅ Perfect (children is React internal) |
-| List | 8 | 8 | 100% | ✅ Perfect |
-| DisplayText | 16 | 16 | 100% | ✅ Perfect |
-| DividerText | 10 | 10 | 100% | ✅ Perfect |
-| StatNumber | 12 | 12 | 100% | ✅ Perfect |
-| **TOTAL** | **91** | **100** | **91%** | Fix CodeBlock → 98%+ |
+| Component   | Registry Fields | Render Props | Coverage | Status                                  |
+| ----------- | --------------- | ------------ | -------- | --------------------------------------- |
+| RichText    | 21              | 22           | 95%      | ⚠️ 1 minor gap                          |
+| Quote       | 11              | 11           | 100%     | ✅ Perfect                              |
+| CodeBlock   | 3               | 10           | **30%**  | 🔴 7 gaps — fix in Phase 1              |
+| Label       | 10              | 11           | 100%     | ✅ Perfect (children is React internal) |
+| List        | 8               | 8            | 100%     | ✅ Perfect                              |
+| DisplayText | 16              | 16           | 100%     | ✅ Perfect                              |
+| DividerText | 10              | 10           | 100%     | ✅ Perfect                              |
+| StatNumber  | 12              | 12           | 100%     | ✅ Perfect                              |
+| **TOTAL**   | **91**          | **100**      | **91%**  | Fix CodeBlock → 98%+                    |
 
 ### 10.3 KNOWN_REGISTRY_TYPES Verification
 
 All 8 content components confirmed present in `converter.ts` KNOWN_REGISTRY_TYPES array:
 
-| Component | Line |
-|-----------|------|
-| RichText | L792 |
-| Quote | L793 |
-| CodeBlock | L794 |
-| Label | L797 |
-| List | L798 |
+| Component   | Line |
+| ----------- | ---- |
+| RichText    | L792 |
+| Quote       | L793 |
+| CodeBlock   | L794 |
+| Label       | L797 |
+| List        | L798 |
 | DisplayText | L799 |
 | DividerText | L800 |
-| StatNumber | L801 |
+| StatNumber  | L801 |
 
 ---
 
@@ -1733,17 +1801,18 @@ All 8 content components confirmed present in `converter.ts` KNOWN_REGISTRY_TYPE
 
 **Goal:** Fix the two critical issues — CodeBlock's 30% registry coverage and RichText prose dark mode.
 
-| Step | Task | File | Priority |
-|------|------|------|----------|
-| 1.1 | Add 7 missing fields to CodeBlock registry (theme, title, showCopyButton, showLanguage, highlightLines, maxHeight, wrap) | `core-components.ts` L14645 | 🔴 Critical |
-| 1.2 | Add field groups to CodeBlock registry (Content, Appearance, Features) | `core-components.ts` | 🔴 Critical |
-| 1.3 | Update CodeBlock AI config (canModify, suggestions) | `core-components.ts` | 🔴 Critical |
-| 1.4 | Add CodeBlock converter normalizer | `converter.ts` | 🔴 Critical |
-| 1.5 | Fix RichText `prose` dark mode — add inherited colour cascade to prose wrapper | `renders.tsx` L3694 | 🔴 Critical |
-| 1.6 | Align RichText `proseSize` default: render says "base", registry says "lg" | `renders.tsx` L3694 | ⚠️ Medium |
-| 1.7 | Fix category mismatch: change 7 `category: "typography"` to `category: "content"` in core-components.ts | `core-components.ts` L14373, L14540, L14689, L14777, L14871, L15034, L15124 | ⚠️ Medium |
+| Step | Task                                                                                                                     | File                                                                        | Priority    |
+| ---- | ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- | ----------- |
+| 1.1  | Add 7 missing fields to CodeBlock registry (theme, title, showCopyButton, showLanguage, highlightLines, maxHeight, wrap) | `core-components.ts` L14645                                                 | 🔴 Critical |
+| 1.2  | Add field groups to CodeBlock registry (Content, Appearance, Features)                                                   | `core-components.ts`                                                        | 🔴 Critical |
+| 1.3  | Update CodeBlock AI config (canModify, suggestions)                                                                      | `core-components.ts`                                                        | 🔴 Critical |
+| 1.4  | Add CodeBlock converter normalizer                                                                                       | `converter.ts`                                                              | 🔴 Critical |
+| 1.5  | Fix RichText `prose` dark mode — add inherited colour cascade to prose wrapper                                           | `renders.tsx` L3694                                                         | 🔴 Critical |
+| 1.6  | Align RichText `proseSize` default: render says "base", registry says "lg"                                               | `renders.tsx` L3694                                                         | ⚠️ Medium   |
+| 1.7  | Fix category mismatch: change 7 `category: "typography"` to `category: "content"` in core-components.ts                  | `core-components.ts` L14373, L14540, L14689, L14777, L14871, L15034, L15124 | ⚠️ Medium   |
 
 **Completion Criteria:**
+
 - CodeBlock has 10/10 render props registered (was 3/10)
 - CodeBlock has converter normalizer handling `code`, `language`, `theme`, etc.
 - RichText content is visible on dark backgrounds
@@ -1754,14 +1823,15 @@ All 8 content components confirmed present in `converter.ts` KNOWN_REGISTRY_TYPE
 
 **Goal:** Add semantic roles and ARIA attributes to components that need them.
 
-| Step | Task | File | Priority |
-|------|------|------|----------|
-| 2.1 | Add `role="separator"` to DividerText wrapper | `renders.tsx` L4544 | ⚠️ Medium |
-| 2.2 | Add composite `aria-label` to StatNumber | `renders.tsx` L4745 | ⚠️ Medium |
-| 2.3 | Add `aria-label` to CodeBlock copy button | `renders.tsx` L25297 | ⚠️ Medium |
-| 2.4 | Fix Quote simple variant font — use `resolvedFontFamily` instead of hardcoded `font-serif` | `renders.tsx` L3880 | ⚠️ Low |
+| Step | Task                                                                                       | File                 | Priority  |
+| ---- | ------------------------------------------------------------------------------------------ | -------------------- | --------- |
+| 2.1  | Add `role="separator"` to DividerText wrapper                                              | `renders.tsx` L4544  | ⚠️ Medium |
+| 2.2  | Add composite `aria-label` to StatNumber                                                   | `renders.tsx` L4745  | ⚠️ Medium |
+| 2.3  | Add `aria-label` to CodeBlock copy button                                                  | `renders.tsx` L25297 | ⚠️ Medium |
+| 2.4  | Fix Quote simple variant font — use `resolvedFontFamily` instead of hardcoded `font-serif` | `renders.tsx` L3880  | ⚠️ Low    |
 
 **Completion Criteria:**
+
 - DividerText announces as separator to screen readers
 - StatNumber announces complete stat value to screen readers
 - CodeBlock copy button has accessible name
@@ -1772,15 +1842,16 @@ All 8 content components confirmed present in `converter.ts` KNOWN_REGISTRY_TYPE
 
 **Goal:** Enhance AI Designer's content component intelligence and add minor improvements.
 
-| Step | Task | File | Priority |
-|------|------|------|----------|
-| 3.1 | Add content component selection rules to AI Designer prompt | AI prompt files | ⚠️ Medium |
-| 3.2 | Add industry-specific content styling rules | AI prompt files | ⚠️ Medium |
-| 3.3 | Add content quality scoring function | Quality scoring file | ⚠️ Medium |
-| 3.4 | Expand CodeBlock language options (add: Bash, Ruby, Go, Rust, SQL, PHP, Java, C#, Markdown, YAML) | `core-components.ts` L14645 | ⚠️ Low |
-| 3.5 | Update component-metadata.ts AI descriptions and usageGuidelines for richer AI context | `component-metadata.ts` L716–L807 | ⚠️ Low |
+| Step | Task                                                                                              | File                              | Priority  |
+| ---- | ------------------------------------------------------------------------------------------------- | --------------------------------- | --------- |
+| 3.1  | Add content component selection rules to AI Designer prompt                                       | AI prompt files                   | ⚠️ Medium |
+| 3.2  | Add industry-specific content styling rules                                                       | AI prompt files                   | ⚠️ Medium |
+| 3.3  | Add content quality scoring function                                                              | Quality scoring file              | ⚠️ Medium |
+| 3.4  | Expand CodeBlock language options (add: Bash, Ruby, Go, Rust, SQL, PHP, Java, C#, Markdown, YAML) | `core-components.ts` L14645       | ⚠️ Low    |
+| 3.5  | Update component-metadata.ts AI descriptions and usageGuidelines for richer AI context            | `component-metadata.ts` L716–L807 | ⚠️ Low    |
 
 **Completion Criteria:**
+
 - AI Designer selects contextually appropriate content components
 - AI Designer applies industry-specific styling
 - CodeBlock supports 16+ languages
@@ -1790,15 +1861,15 @@ All 8 content components confirmed present in `converter.ts` KNOWN_REGISTRY_TYPE
 
 **Goal:** Non-blocking improvements for future iterations.
 
-| Step | Task | Priority |
-|------|------|----------|
-| 4.1 | Add `rating` prop to Quote testimonial variant (1-5 stars) | ⬜ Future |
-| 4.2 | Add counter animation to StatNumber via Framer Motion | ⬜ Future |
-| 4.3 | Add `ariaLevel` prop to DisplayText (configurable heading level) | ⬜ Future |
-| 4.4 | Add `ornamentSymbol` prop to DividerText ornament variant | ⬜ Future |
-| 4.5 | Add syntax tokenisation to CodeBlock (Prism/Shiki integration) | ⬜ Future |
-| 4.6 | Add table support to markdownToHtml() | ⬜ Future |
-| 4.7 | Add CodeBlock theme colours to CSS variables for full theme-awareness | ⬜ Future |
+| Step | Task                                                                  | Priority  |
+| ---- | --------------------------------------------------------------------- | --------- |
+| 4.1  | Add `rating` prop to Quote testimonial variant (1-5 stars)            | ⬜ Future |
+| 4.2  | Add counter animation to StatNumber via Framer Motion                 | ⬜ Future |
+| 4.3  | Add `ariaLevel` prop to DisplayText (configurable heading level)      | ⬜ Future |
+| 4.4  | Add `ornamentSymbol` prop to DividerText ornament variant             | ⬜ Future |
+| 4.5  | Add syntax tokenisation to CodeBlock (Prism/Shiki integration)        | ⬜ Future |
+| 4.6  | Add table support to markdownToHtml()                                 | ⬜ Future |
+| 4.7  | Add CodeBlock theme colours to CSS variables for full theme-awareness | ⬜ Future |
 
 ---
 
@@ -1806,78 +1877,80 @@ All 8 content components confirmed present in `converter.ts` KNOWN_REGISTRY_TYPE
 
 ### 12.1 Unit Tests
 
-| Test | Component | Assertions |
-|------|-----------|------------|
-| Renders all 4 layouts | RichText | centered/left/two-column/wide produce correct CSS classes |
-| markdownToHtml renders headings | RichText | `# Title` → `<h1>Title</h1>` |
-| markdownToHtml renders lists | RichText | `- item` → `<ul><li>` |
-| Renders all 6 variants | Quote | Each variant renders correct semantic elements |
-| Author image normalised | Quote | `string` and `ImageValue` both render `<img>` |
-| Renders all 4 themes | CodeBlock | Each theme applies correct Tailwind/hex classes |
-| Line highlighting | CodeBlock | Lines in `highlightLines` get `bg-yellow-500/20` class |
-| Copy button rendering | CodeBlock | `showCopyButton=true` → button present; `false` → absent |
-| Renders all 7 variants | Label | Each variant renders correct classes and structure |
-| Renders all 7 marker types | List | Correct marker for each variant; check renders SVG |
-| Multi-column layout | List | `columns=2` → grid-cols-2 class; `columns=3` → grid-cols-3 |
-| Semantic ol vs ul | List | `numbered` → `<ol>`, all others → `<ul>` |
-| Gradient text rendering | DisplayText | `gradient=true` → background-clip and text-fill-color |
-| ARIA heading role | DisplayText | `role="heading"` and `aria-level` present |
-| Renders all 5 variants | DividerText | Each variant produces distinct visual treatment |
-| Tabular-nums applied | StatNumber | `font-variant-numeric: tabular-nums` in style |
-| Stacked vs inline layout | StatNumber | Stacked renders vertically; inline uses flexbox |
-| Prefix and suffix display | StatNumber | `$100+` renders prefix, value, suffix in order |
+| Test                            | Component   | Assertions                                                 |
+| ------------------------------- | ----------- | ---------------------------------------------------------- |
+| Renders all 4 layouts           | RichText    | centered/left/two-column/wide produce correct CSS classes  |
+| markdownToHtml renders headings | RichText    | `# Title` → `<h1>Title</h1>`                               |
+| markdownToHtml renders lists    | RichText    | `- item` → `<ul><li>`                                      |
+| Renders all 6 variants          | Quote       | Each variant renders correct semantic elements             |
+| Author image normalised         | Quote       | `string` and `ImageValue` both render `<img>`              |
+| Renders all 4 themes            | CodeBlock   | Each theme applies correct Tailwind/hex classes            |
+| Line highlighting               | CodeBlock   | Lines in `highlightLines` get `bg-yellow-500/20` class     |
+| Copy button rendering           | CodeBlock   | `showCopyButton=true` → button present; `false` → absent   |
+| Renders all 7 variants          | Label       | Each variant renders correct classes and structure         |
+| Renders all 7 marker types      | List        | Correct marker for each variant; check renders SVG         |
+| Multi-column layout             | List        | `columns=2` → grid-cols-2 class; `columns=3` → grid-cols-3 |
+| Semantic ol vs ul               | List        | `numbered` → `<ol>`, all others → `<ul>`                   |
+| Gradient text rendering         | DisplayText | `gradient=true` → background-clip and text-fill-color      |
+| ARIA heading role               | DisplayText | `role="heading"` and `aria-level` present                  |
+| Renders all 5 variants          | DividerText | Each variant produces distinct visual treatment            |
+| Tabular-nums applied            | StatNumber  | `font-variant-numeric: tabular-nums` in style              |
+| Stacked vs inline layout        | StatNumber  | Stacked renders vertically; inline uses flexbox            |
+| Prefix and suffix display       | StatNumber  | `$100+` renders prefix, value, suffix in order             |
 
 ### 12.2 Visual Regression Tests
 
-| Test | Description | Breakpoints |
-|------|-------------|-------------|
-| RichText 4 layouts | centered, left, two-column, wide | Desktop, Tablet, Mobile |
-| RichText dark mode prose | Content visible on dark background | Desktop |
-| Quote 6 variants × 3 sizes | All 18 combinations | Desktop |
-| Quote with/without author image | Avatar display states | Desktop |
-| CodeBlock 4 themes | dark, light, github, monokai | Desktop |
-| CodeBlock line highlighting | Highlighted vs non-highlighted lines | Desktop |
-| Label 7 variants × 3 sizes | All 21 combinations | Desktop |
-| List 7 variants × 3 columns | All variant/column combinations | Desktop, Mobile |
-| DisplayText gradient | With and without gradient enabled | Desktop |
-| DisplayText text-wrap balance | Single line vs multi-line wrap | Desktop |
-| DividerText 5 variants | All ornamental styles | Desktop |
-| StatNumber stacked vs inline | Both layouts with prefix/suffix | Desktop |
+| Test                            | Description                          | Breakpoints             |
+| ------------------------------- | ------------------------------------ | ----------------------- |
+| RichText 4 layouts              | centered, left, two-column, wide     | Desktop, Tablet, Mobile |
+| RichText dark mode prose        | Content visible on dark background   | Desktop                 |
+| Quote 6 variants × 3 sizes      | All 18 combinations                  | Desktop                 |
+| Quote with/without author image | Avatar display states                | Desktop                 |
+| CodeBlock 4 themes              | dark, light, github, monokai         | Desktop                 |
+| CodeBlock line highlighting     | Highlighted vs non-highlighted lines | Desktop                 |
+| Label 7 variants × 3 sizes      | All 21 combinations                  | Desktop                 |
+| List 7 variants × 3 columns     | All variant/column combinations      | Desktop, Mobile         |
+| DisplayText gradient            | With and without gradient enabled    | Desktop                 |
+| DisplayText text-wrap balance   | Single line vs multi-line wrap       | Desktop                 |
+| DividerText 5 variants          | All ornamental styles                | Desktop                 |
+| StatNumber stacked vs inline    | Both layouts with prefix/suffix      | Desktop                 |
 
 ### 12.3 Accessibility Tests
 
-| Test | Tool | Expected Result |
-|------|------|-----------------|
-| Heading hierarchy | axe-core | RichText headings follow logical order |
-| Blockquote semantics | axe-core | Quote uses `<blockquote>`, `<cite>` |
-| List semantics | axe-core | `<ol>` and `<ul>` correctly annotated |
-| DisplayText heading role | Manual | Screen reader announces as heading |
-| DividerText separator role | Manual | Screen reader announces as separator |
-| StatNumber composite label | Manual | Screen reader announces `$100+ Revenue` as complete phrase |
-| CodeBlock copy button | Manual | Button has accessible name in screen reader |
-| Colour contrast | axe-core | All text meets 4.5:1 minimum |
+| Test                       | Tool     | Expected Result                                            |
+| -------------------------- | -------- | ---------------------------------------------------------- |
+| Heading hierarchy          | axe-core | RichText headings follow logical order                     |
+| Blockquote semantics       | axe-core | Quote uses `<blockquote>`, `<cite>`                        |
+| List semantics             | axe-core | `<ol>` and `<ul>` correctly annotated                      |
+| DisplayText heading role   | Manual   | Screen reader announces as heading                         |
+| DividerText separator role | Manual   | Screen reader announces as separator                       |
+| StatNumber composite label | Manual   | Screen reader announces `$100+ Revenue` as complete phrase |
+| CodeBlock copy button      | Manual   | Button has accessible name in screen reader                |
+| Colour contrast            | axe-core | All text meets 4.5:1 minimum                               |
 
 ### 12.4 Registry Integration Tests
 
-| Test | Description | Expected Result |
-|------|-------------|-----------------|
-| CodeBlock 10 fields | All 10 props appear in editor UI | ✅ All editable |
-| CodeBlock theme select | Theme dropdown shows 4 options | ✅ dark/light/github/monokai |
-| CodeBlock converter | AI generates `{ type: "CodeSnippet", ... }` | ✅ Resolves to CodeBlock |
-| Category consistency | All 8 components appear under "Content" category | ✅ None under "Typography" |
-| Converter aliases | All 32 typeMap aliases resolve correctly | ✅ All route to correct component |
+| Test                   | Description                                      | Expected Result                   |
+| ---------------------- | ------------------------------------------------ | --------------------------------- |
+| CodeBlock 10 fields    | All 10 props appear in editor UI                 | ✅ All editable                   |
+| CodeBlock theme select | Theme dropdown shows 4 options                   | ✅ dark/light/github/monokai      |
+| CodeBlock converter    | AI generates `{ type: "CodeSnippet", ... }`      | ✅ Resolves to CodeBlock          |
+| Category consistency   | All 8 components appear under "Content" category | ✅ None under "Typography"        |
+| Converter aliases      | All 32 typeMap aliases resolve correctly         | ✅ All route to correct component |
 
 ---
 
 ## Key Rules Summary
 
 ### Content Rules
+
 1. **All colours via inline styles** — CSS variables as fallback, `undefined` for inheritance, NEVER hardcoded Tailwind colour classes
 2. **Font family always uses CSS variable fallback** — `var(--font-body, inherit)` for body, `var(--font-heading, inherit)` for headings
 3. **Registry fields must match render prop names exactly** — no intermediate mapping, props pass through via `{...injectedProps}`
 4. **Every component needs a converter normalizer** — handles AI alias props and establishes sensible defaults
 
 ### Specific Component Rules
+
 5. **RichText** — `prose` class needs dark mode handling; `markdownToHtml()` is allowlist-based (safe for `dangerouslySetInnerHTML`)
 6. **Quote** — All 6 variants must use `resolvedFontFamily`, not hardcoded `font-serif`
 7. **CodeBlock** — MUST register all 10 props; MUST add converter normalizer; theme colours are self-contained (hardcoded by design)
@@ -1888,6 +1961,7 @@ All 8 content components confirmed present in `converter.ts` KNOWN_REGISTRY_TYPE
 12. **StatNumber** — `fontVariantNumeric: "tabular-nums"` — never remove this; MUST add composite `aria-label`
 
 ### AI Integration Rules
+
 13. **DisplayText is for heroes only** — never use as a general heading replacement
 14. **Feature lists use `check` or `arrow` variant** — not plain `bullet`
 15. **CodeBlock theme matches page background** — `github`/`dark`/`monokai` for dark pages, `light` for light pages
@@ -1895,10 +1969,11 @@ All 8 content components confirmed present in `converter.ts` KNOWN_REGISTRY_TYPE
 17. **Label `overline` goes above headings** — serves as section category identifier
 
 ### Category Rule
+
 18. **All 8 components must use `category: "content"`** — fix the 7 that currently say `"typography"` in core-components.ts
 
 ---
 
-*Document Version: 2.0*
-*Components Covered: 8 (RichText, Quote, CodeBlock, Label, List, DisplayText, DividerText, StatNumber)*
-*All line numbers grep-verified against source — 2026-07. Updated after Forms implementation shifted core-components.ts (+630–717 lines), component-metadata.ts (+42 lines), and CodeBlock in renders.tsx (+59 lines). converter.ts unchanged.*
+_Document Version: 2.0_
+_Components Covered: 8 (RichText, Quote, CodeBlock, Label, List, DisplayText, DividerText, StatNumber)_
+_All line numbers grep-verified against source — 2026-07. Updated after Forms implementation shifted core-components.ts (+630–717 lines), component-metadata.ts (+42 lines), and CodeBlock in renders.tsx (+59 lines). converter.ts unchanged._

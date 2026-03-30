@@ -716,34 +716,73 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     type: "RichText",
     label: "Rich Text",
     category: "content",
-    description: "Rich text content block",
+    description:
+      "Rich text content section with title, subtitle, layout options, pull quotes, and full typography controls",
     acceptsChildren: false,
-    keywords: ["rich text", "html", "content", "wysiwyg"],
+    keywords: [
+      "rich text",
+      "html",
+      "content",
+      "wysiwyg",
+      "article",
+      "blog",
+      "prose",
+      "markdown",
+      "body text",
+      "long-form",
+    ],
     ai: {
-      description: "Rich text block supporting formatted content",
+      description:
+        "Rich text content section with 4 layouts (centered, left, two-column, wide), pull quotes, section titles, and full colour/typography control. Converts markdown to HTML automatically.",
+      usageGuidelines:
+        "Use for blog posts (layout: left, maxWidth: prose), about pages (layout: centered, proseSize: lg), and editorial content (layout: two-column with pullQuote). Not for short labels or headings — use Heading or DisplayText instead.",
     },
   },
   {
     type: "Quote",
     label: "Quote",
     category: "content",
-    description: "Blockquote with attribution",
+    description:
+      "Blockquote with 6 variants: simple, bordered, card, modern, pullquote, testimonial",
     acceptsChildren: false,
-    keywords: ["quote", "blockquote", "citation"],
+    keywords: [
+      "quote",
+      "blockquote",
+      "citation",
+      "testimonial",
+      "review",
+      "pullquote",
+      "attribution",
+    ],
     ai: {
-      description: "Styled blockquote with optional attribution",
+      description:
+        "Styled blockquote with 6 variants (simple, bordered, card, modern, pullquote, testimonial), author name/image, and 3 size options",
+      usageGuidelines:
+        "Use testimonial variant with author image for social proof sections. Use pullquote for editorial emphasis in articles. Use bordered as a general-purpose blockquote. Use modern for decorative large quotes.",
     },
   },
   {
     type: "CodeBlock",
     label: "Code Block",
     category: "content",
-    description: "Syntax highlighted code",
+    description:
+      "Syntax highlighted code block with 4 themes, line numbers, copy button, and line highlighting",
     acceptsChildren: false,
-    keywords: ["code", "snippet", "programming"],
+    keywords: [
+      "code",
+      "snippet",
+      "programming",
+      "syntax",
+      "terminal",
+      "pre",
+      "source code",
+      "developer",
+    ],
     ai: {
-      description: "Code block with syntax highlighting",
-      usageGuidelines: "Use for technical content and documentation",
+      description:
+        "Code block with 4 syntax themes (dark, light, github, monokai), line numbers, copy button, line highlighting, word wrap, and responsive max height. Supports 16 languages.",
+      usageGuidelines:
+        "Use for technical documentation, tutorials, and API examples. Match theme to page background: github/dark/monokai for dark pages, light for light pages. Add title for filename display. Use highlightLines to draw attention to key lines.",
     },
   },
   {
@@ -753,12 +792,21 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     description:
       "Small utility text for tags, badges, categories, and overlines",
     acceptsChildren: false,
-    keywords: ["label", "tag", "badge", "pill", "overline", "category"],
+    keywords: [
+      "label",
+      "tag",
+      "badge",
+      "pill",
+      "overline",
+      "category",
+      "status",
+      "chip",
+    ],
     ai: {
       description:
-        "Small utility text element with 7 variants: default, badge, overline, tag, pill, outline, subtle",
+        "Small utility text element with 7 variants: default, badge, overline, tag, pill, outline, subtle. Supports 3 sizes (xs, sm, md) with text transform and letter spacing control.",
       usageGuidelines:
-        "Use above headings as overlines, as category tags, or as status badges",
+        "Use overline variant above headings as section category labels. Use badge/pill for status indicators. Use tag for content categories. Use outline for subtle bordered tags.",
     },
   },
   {
@@ -766,55 +814,92 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     label: "List",
     category: "content",
     description:
-      "Styled list with bullet, numbered, check, arrow, and dash variants",
+      "Styled list with bullet, numbered, check, arrow, dash, icon, and none variants",
     acceptsChildren: false,
-    keywords: ["list", "bullet", "numbered", "checklist", "items"],
+    keywords: [
+      "list",
+      "bullet",
+      "numbered",
+      "checklist",
+      "items",
+      "features",
+      "benefits",
+      "steps",
+    ],
     ai: {
       description:
-        "Styled list component with 7 marker variants and multi-column support",
-      usageGuidelines: "Use for feature lists, benefits, steps, and checklists",
+        "Styled list component with 7 marker variants (bullet, numbered, check, arrow, dash, icon, none) and multi-column support (1-3 columns). Uses semantic ol/ul.",
+      usageGuidelines:
+        "Use check variant with green iconColor for feature/benefit lists. Use numbered for step-by-step guides. Use arrow for navigation-style lists. Use columns: 2 or 3 for compact feature grids.",
     },
   },
   {
     type: "DisplayText",
     label: "Display Text",
     category: "content",
-    description: "Large decorative display text for hero sections",
+    description:
+      "Large decorative display text for hero sections with gradient and shadow support",
     acceptsChildren: false,
-    keywords: ["display", "hero text", "large text", "decorative", "title"],
+    keywords: [
+      "display",
+      "hero text",
+      "large text",
+      "decorative",
+      "title",
+      "splash",
+      "gradient text",
+    ],
     ai: {
       description:
-        "Extra-large decorative text for hero sections with gradient and shadow support",
+        "Extra-large decorative text for hero sections with gradient text, text-wrap: balance, text-shadow, and custom font sizing. Uses role=heading for accessibility.",
       usageGuidelines:
-        "Use for dramatic hero headings, landing page titles, and splash text. Typically 4xl-9xl size.",
+        "Use ONLY in hero sections or splash contexts for dramatic impact. Not a replacement for Heading component. Enable gradient for eye-catching colourful text. Use textWrap: balance for even line distribution.",
     },
   },
   {
     type: "DividerText",
     label: "Divider Text",
     category: "content",
-    description: "Text with decorative divider lines",
+    description:
+      "Text with decorative divider lines in 5 ornamental variants",
     acceptsChildren: false,
-    keywords: ["divider", "separator", "section break", "ornament"],
+    keywords: [
+      "divider",
+      "separator",
+      "section break",
+      "ornament",
+      "line",
+      "decoration",
+    ],
     ai: {
       description:
-        "Text element with decorative lines in 5 variants: line-sides, line-through, dots, gradient, ornament",
+        "Text element with decorative lines in 5 variants: line-sides, line-through, dots, gradient, ornament. Includes spacing control and text styling.",
       usageGuidelines:
-        "Use as section separators, visual breaks between content areas",
+        "Use line-sides for modern sections, ornament for luxury/editorial sites, gradient for creative pages, dots for minimal designs. Place between content sections as visual breaks.",
     },
   },
   {
     type: "StatNumber",
     label: "Stat Number",
     category: "content",
-    description: "Large statistics/metrics display",
+    description:
+      "Large statistics/metrics display with prefix, suffix, and label",
     acceptsChildren: false,
-    keywords: ["stat", "number", "metric", "counter", "statistic"],
+    keywords: [
+      "stat",
+      "number",
+      "metric",
+      "counter",
+      "statistic",
+      "achievement",
+      "data point",
+      "KPI",
+    ],
     ai: {
       description:
-        "Large statistic display with value, prefix, suffix, and label using tabular-nums for aligned numbers",
+        "Large statistic display with value, prefix ($, +), suffix (%, K, +), and descriptive label. Uses tabular-nums for aligned digits. Supports stacked and inline layouts.",
       usageGuidelines:
-        "Use for key metrics, achievements, and data points. Combine multiple in a row for stats sections.",
+        "Use for key metrics, achievements, and data points. Always include a descriptive label (e.g. 'Customers' not 'Statistic'). Use prefix for currency symbols, suffix for units. Combine multiple in a row/grid for stats sections.",
     },
   },
 
