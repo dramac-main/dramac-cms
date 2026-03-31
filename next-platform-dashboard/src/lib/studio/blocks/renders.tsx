@@ -25042,40 +25042,257 @@ export function TooltipRender({
 
 export interface TypewriterProps {
   texts?: string[];
+  prefix?: string;
+  suffix?: string;
+  // Timing
   typingSpeed?: number;
   deletingSpeed?: number;
   pauseDuration?: number;
+  startDelay?: number;
+  delayBetweenTexts?: number;
+  // Behavior
   loop?: boolean;
-  cursor?: boolean;
+  loopCount?: number;
+  deleteOnComplete?: boolean;
+  shuffleTexts?: boolean;
+  startTypingOnView?: boolean;
+  // Cursor
+  showCursor?: boolean;
+  cursor?: boolean; // backward compat alias
   cursorChar?: string;
-  textSize?: ResponsiveValue<
-    "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl"
-  >;
+  cursorColor?: string;
+  cursorBlinkSpeed?: "slow" | "normal" | "fast";
+  cursorStyle?: "bar" | "block" | "underscore";
+  hideCursorOnComplete?: boolean;
+  // Typography
+  fontSize?: string;
+  textSize?: ResponsiveValue<"xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl">;
+  fontWeight?: "normal" | "medium" | "semibold" | "bold" | "extrabold";
+  fontFamily?: string;
+  letterSpacing?: string;
   textColor?: string;
-  fontWeight?: "normal" | "medium" | "semibold" | "bold";
-  prefix?: string;
-  suffix?: string;
+  highlightColor?: string;
+  // Animations
+  typingAnimation?: "default" | "smooth" | "mechanical" | "bounce";
+  deleteAnimation?: "default" | "fade" | "collapse";
+  errorEffect?: boolean;
+  errorProbability?: number;
+  // Layout
+  multiline?: boolean;
+  lineHeight?: string;
+  textAlign?: "left" | "center" | "right";
+  minHeight?: string;
+  // Container styling
+  backgroundColor?: string;
+  padding?: string;
+  borderRadius?: string;
+  // Responsive
+  hideOnMobile?: boolean;
+  mobileFontSize?: string;
+  // Accessibility
+  ariaLabel?: string;
+  reduceMotion?: boolean;
   id?: string;
   className?: string;
 }
 
 export function TypewriterRender({
   texts = ["Hello World", "Welcome", "Start Typing"],
+  prefix = "",
+  suffix = "",
   typingSpeed = 100,
   deletingSpeed = 50,
   pauseDuration = 2000,
+  startDelay = 0,
+  delayBetweenTexts = 500,
   loop = true,
+  loopCount,
+  deleteOnComplete = true,
+  shuffleTexts = false,
+  startTypingOnView = false,
+  showCursor,
   cursor = true,
   cursorChar = "|",
+  cursorColor = "",
+  cursorBlinkSpeed = "normal",
+  cursorStyle = "bar",
+  hideCursorOnComplete = false,
+  fontSize = "",
   textSize = "2xl",
-  textColor = "",
   fontWeight = "bold",
-  prefix = "",
-  suffix = "",
+  fontFamily = "",
+  letterSpacing = "",
+  textColor = "",
+  highlightColor = "",
+  typingAnimation = "default",
+  deleteAnimation = "default",
+  errorEffect = false,
+  errorProbability = 0.05,
+  multiline = false,
+  lineHeight = "",
+  textAlign = "left",
+  minHeight = "",
+  backgroundColor = "",
+  padding = "",
+  borderRadius = "",
+  hideOnMobile = false,
+  mobileFontSize = "",
+  ariaLabel = "",
+  reduceMotion = false,
   id,
   className = "",
 }: TypewriterProps) {
-  const sizeClasses = getResponsiveClasses(textSize, {
+  const showCursorResolved = showCursor ?? cursor;
+  const prefersReducedMotion = typeof window !== "undefined"
+    ? window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches
+    : false;
+  const shouldAnimate = !reduceMotion && !prefersReducedMotion;
+
+  // Typing state machine
+  const [displayText, setDisplayText] = React.useState("");
+  const [textIndex, setTextIndex] = React.useState(0);
+  const [charIndex, setCharIndex] = React.useState(0);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [isComplete, setIsComplete] = React.useState(false);
+  const [isStarted, setIsStarted] = React.useState(!startTypingOnView && startDelay === 0);
+  const [loopsCompleted, setLoopsCompleted] = React.useState(0);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const timerRef = React.useRef<ReturnType<typeof setTimeout>>(null);
+
+  // Get ordered text list
+  const textList = React.useMemo(() => {
+    if (!texts || texts.length === 0) return ["Type something..."];
+    if (shuffleTexts) {
+      const arr = [...texts];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+    return texts;
+  }, [texts, shuffleTexts]);
+
+  // Start delay
+  React.useEffect(() => {
+    if (startDelay > 0 && !startTypingOnView) {
+      const timer = setTimeout(() => setIsStarted(true), startDelay);
+      return () => clearTimeout(timer);
+    }
+  }, [startDelay, startTypingOnView]);
+
+  // Scroll-into-view trigger
+  React.useEffect(() => {
+    if (!startTypingOnView || !containerRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          if (startDelay > 0) {
+            setTimeout(() => setIsStarted(true), startDelay);
+          } else {
+            setIsStarted(true);
+          }
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.3 }
+    );
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [startTypingOnView, startDelay]);
+
+  // Main typing engine
+  React.useEffect(() => {
+    if (!shouldAnimate || !isStarted || isComplete) {
+      if (!shouldAnimate) setDisplayText(textList[0] || "");
+      return;
+    }
+
+    const currentText = textList[textIndex] || "";
+
+    if (!isDeleting) {
+      // Typing phase
+      if (charIndex < currentText.length) {
+        let delay = typingSpeed;
+        // Animation variants
+        if (typingAnimation === "mechanical") delay = typingSpeed + Math.random() * typingSpeed * 0.5;
+        if (typingAnimation === "bounce") delay = typingSpeed * (0.5 + Math.random() * 1);
+
+        // Error effect — occasionally type wrong character then fix
+        if (errorEffect && Math.random() < errorProbability && charIndex > 0) {
+          const wrongChar = String.fromCharCode(97 + Math.floor(Math.random() * 26));
+          setDisplayText(currentText.slice(0, charIndex) + wrongChar);
+          timerRef.current = setTimeout(() => {
+            setDisplayText(currentText.slice(0, charIndex + 1));
+            setCharIndex((c) => c + 1);
+          }, delay * 2);
+          return;
+        }
+
+        timerRef.current = setTimeout(() => {
+          setDisplayText(currentText.slice(0, charIndex + 1));
+          setCharIndex((c) => c + 1);
+        }, delay);
+      } else {
+        // Finished typing current text
+        const isLast = textIndex === textList.length - 1;
+        const shouldLoop = loop && (loopCount === undefined || loopsCompleted < loopCount);
+
+        if (isLast && !shouldLoop && !deleteOnComplete) {
+          setIsComplete(true);
+          return;
+        }
+
+        timerRef.current = setTimeout(() => {
+          if (deleteOnComplete || !isLast || shouldLoop) {
+            setIsDeleting(true);
+          } else {
+            setIsComplete(true);
+          }
+        }, pauseDuration);
+      }
+    } else {
+      // Deleting phase
+      if (charIndex > 0) {
+        let delay = deletingSpeed;
+        if (deleteAnimation === "fade") delay = deletingSpeed * 0.5;
+        if (deleteAnimation === "collapse") delay = deletingSpeed * 0.3;
+
+        timerRef.current = setTimeout(() => {
+          setDisplayText(currentText.slice(0, charIndex - 1));
+          setCharIndex((c) => c - 1);
+        }, delay);
+      } else {
+        // Finished deleting, move to next text
+        setIsDeleting(false);
+        const nextIndex = (textIndex + 1) % textList.length;
+        if (nextIndex === 0) {
+          setLoopsCompleted((l) => l + 1);
+          if (loopCount !== undefined && loopsCompleted + 1 >= loopCount) {
+            setIsComplete(true);
+            return;
+          }
+        }
+        timerRef.current = setTimeout(() => {
+          setTextIndex(nextIndex);
+          setCharIndex(0);
+          setDisplayText("");
+        }, delayBetweenTexts);
+      }
+    }
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [
+    shouldAnimate, isStarted, isComplete, charIndex, isDeleting, textIndex,
+    textList, typingSpeed, deletingSpeed, pauseDuration, delayBetweenTexts,
+    loop, loopCount, loopsCompleted, deleteOnComplete, typingAnimation,
+    deleteAnimation, errorEffect, errorProbability,
+  ]);
+
+  // Size classes
+  const sizeClasses = fontSize ? "" : getResponsiveClasses(textSize, {
     xs: ["text-xs", "md:text-xs", "lg:text-xs"],
     sm: ["text-sm", "md:text-sm", "lg:text-sm"],
     base: ["text-base", "md:text-base", "lg:text-base"],
@@ -25087,30 +25304,74 @@ export function TypewriterRender({
     "5xl": ["text-4xl", "md:text-5xl", "lg:text-5xl"],
   });
 
-  const weightClasses = {
+  const weightClasses: Record<string, string> = {
     normal: "font-normal",
     medium: "font-medium",
     semibold: "font-semibold",
     bold: "font-bold",
-  }[fontWeight];
+    extrabold: "font-extrabold",
+  };
 
-  // In production, this would use React state and useEffect for animation
-  // For SSR/preview, we show the first text
-  const displayText = texts[0] || "Type something...";
+  const cursorBlinkClasses: Record<string, string> = {
+    slow: "animate-pulse",
+    normal: "animate-[blink_1s_step-end_infinite]",
+    fast: "animate-[blink_0.5s_step-end_infinite]",
+  };
+
+  const cursorStyleChar =
+    cursorStyle === "block" ? "█" :
+    cursorStyle === "underscore" ? "_" :
+    cursorChar;
+
+  const containerStyle: React.CSSProperties = {
+    ...(backgroundColor ? { backgroundColor } : {}),
+    ...(padding ? { padding } : {}),
+    ...(borderRadius ? { borderRadius } : {}),
+    ...(minHeight ? { minHeight } : {}),
+    ...(textAlign ? { textAlign } : {}),
+    ...(fontFamily ? { fontFamily } : {}),
+    ...(fontSize ? { fontSize } : {}),
+    ...(letterSpacing ? { letterSpacing } : {}),
+    ...(lineHeight ? { lineHeight } : {}),
+  };
+
+  const textStyle: React.CSSProperties = {
+    color: textColor || "var(--color-foreground, #111827)",
+    ...(highlightColor ? { backgroundColor: highlightColor, padding: "0 0.2em", borderRadius: "0.15em" } : {}),
+  };
+
+  const showCursorNow = showCursorResolved && !(isComplete && hideCursorOnComplete);
+
+  // Fallback for SSR / reduced motion
+  const finalText = shouldAnimate ? displayText : (textList[0] || "");
 
   return (
-    <span
+    <div
+      ref={containerRef}
       id={id}
-      className={`inline-flex items-center ${sizeClasses} ${weightClasses} ${className}`}
-      style={{ color: textColor || "var(--color-foreground, #111827)" }}
+      className={`${multiline ? "block" : "inline-flex items-center"} ${sizeClasses} ${weightClasses[fontWeight] || "font-bold"} ${hideOnMobile ? "hidden md:inline-flex" : ""} ${className}`}
+      style={containerStyle}
+      aria-label={ariaLabel || `Typewriter: ${textList.join(", ")}`}
+      role="status"
       aria-live="polite"
       aria-atomic="true"
     >
       {prefix && <span className="mr-1">{prefix}</span>}
-      <span className="typewriter-text">{displayText}</span>
-      {cursor && <span className="animate-pulse ml-0.5" aria-hidden="true">{cursorChar}</span>}
+      <span className="typewriter-text" style={textStyle}>{finalText}</span>
+      {showCursorNow && (
+        <span
+          className={`ml-0.5 ${cursorBlinkClasses[cursorBlinkSpeed] || cursorBlinkClasses.normal}`}
+          style={{ color: cursorColor || textColor || "var(--color-foreground)" }}
+          aria-hidden="true"
+        >
+          {cursorStyleChar}
+        </span>
+      )}
       {suffix && <span className="ml-1">{suffix}</span>}
-    </span>
+      {mobileFontSize && (
+        <style>{`@media (max-width: 768px) { #${id || "typewriter"} .typewriter-text { font-size: ${mobileFontSize} !important; } }`}</style>
+      )}
+    </div>
   );
 }
 
@@ -25121,13 +25382,57 @@ export function TypewriterRender({
 export interface ParallaxProps {
   children?: React.ReactNode;
   backgroundImage?: string | ImageValue;
-  backgroundPosition?: "center" | "top" | "bottom";
+  backgroundVideo?: string;
+  backgroundPosition?: "center" | "top" | "bottom" | "left" | "right";
+  backgroundSize?: "cover" | "contain" | "auto";
+  backgroundRepeat?: "no-repeat" | "repeat" | "repeat-x" | "repeat-y";
   speed?: number;
+  direction?: "up" | "down" | "left" | "right";
+  maxOffset?: number;
+  easing?: "linear" | "ease" | "ease-in" | "ease-out";
+  disabled?: boolean;
+  // Overlay
   overlay?: boolean;
+  showOverlay?: boolean; // alias
   overlayColor?: string;
   overlayOpacity?: number;
-  minHeight?: ResponsiveValue<"sm" | "md" | "lg" | "xl" | "screen" | "auto">;
+  overlayGradient?: boolean;
+  overlayGradientDirection?: "to-bottom" | "to-top" | "to-left" | "to-right" | "radial";
+  // Height
+  height?: string;
+  minHeight?: ResponsiveValue<"sm" | "md" | "lg" | "xl" | "screen" | "auto"> | string;
+  maxHeight?: string;
+  fullScreen?: boolean;
+  // Content
+  contentPosition?: "top" | "center" | "bottom";
   contentAlignment?: "start" | "center" | "end";
+  contentAlign?: "left" | "center" | "right"; // alias
+  contentMaxWidth?: string;
+  contentPadding?: string;
+  // Layers
+  layers?: Array<{ image?: string; speed?: number; opacity?: number; zIndex?: number }>;
+  // Effects
+  blur?: number;
+  scale?: number;
+  rotate?: number;
+  opacity?: number;
+  fadeOnScroll?: boolean;
+  // Border/shadow
+  borderRadius?: string;
+  shadow?: string;
+  showBorder?: boolean;
+  borderColor?: string;
+  // Animations
+  animateOnMount?: boolean;
+  animationType?: "fade" | "scale" | "slide" | "blur";
+  animationDuration?: number;
+  // Mobile
+  disableOnMobile?: boolean;
+  mobileHeight?: string;
+  mobileFallbackImage?: string | ImageValue;
+  // Accessibility
+  ariaLabel?: string;
+  reducedMotion?: boolean;
   id?: string;
   className?: string;
 }
@@ -25135,67 +25440,274 @@ export interface ParallaxProps {
 export function ParallaxRender({
   children,
   backgroundImage = "/placeholder.jpg",
+  backgroundVideo = "",
   backgroundPosition = "center",
+  backgroundSize = "cover",
+  backgroundRepeat = "no-repeat",
   speed = 0.5,
-  overlay = true,
+  direction = "up",
+  maxOffset = 200,
+  easing = "linear",
+  disabled = false,
+  overlay,
+  showOverlay,
   overlayColor = "#000000",
   overlayOpacity = 50,
+  overlayGradient = false,
+  overlayGradientDirection = "to-bottom",
+  height = "",
   minHeight = "lg",
+  maxHeight = "",
+  fullScreen = false,
+  contentPosition = "center",
   contentAlignment = "center",
+  contentAlign,
+  contentMaxWidth = "",
+  contentPadding = "",
+  layers = [],
+  blur: blurAmount = 0,
+  scale: scaleAmount = 1,
+  rotate: rotateAmount = 0,
+  opacity: bgOpacity = 100,
+  fadeOnScroll = false,
+  borderRadius = "",
+  shadow = "",
+  showBorder = false,
+  borderColor = "",
+  animateOnMount = false,
+  animationType = "fade",
+  animationDuration = 600,
+  disableOnMobile = false,
+  mobileHeight = "",
+  mobileFallbackImage,
+  ariaLabel = "",
+  reducedMotion = false,
   id,
   className = "",
 }: ParallaxProps) {
-  // Normalize image value
   const bgImageUrl = getImageUrl(backgroundImage) || "/placeholder.jpg";
+  const mobileFallbackUrl = mobileFallbackImage ? getImageUrl(mobileFallbackImage) : "";
+  const showOverlayResolved = showOverlay ?? overlay ?? true;
+  const contentAlignResolved = contentAlign || contentAlignment;
 
-  const heightClasses = getResponsiveClasses(minHeight, {
-    sm: ["min-h-[200px]", "md:min-h-[250px]", "lg:min-h-[300px]"],
-    md: ["min-h-[300px]", "md:min-h-[400px]", "lg:min-h-[500px]"],
-    lg: ["min-h-[400px]", "md:min-h-[500px]", "lg:min-h-[600px]"],
-    xl: ["min-h-[500px]", "md:min-h-[600px]", "lg:min-h-[800px]"],
-    screen: ["min-h-screen", "md:min-h-screen", "lg:min-h-screen"],
-    auto: ["min-h-auto", "md:min-h-auto", "lg:min-h-auto"],
-  });
+  const prefersReducedMotion = typeof window !== "undefined"
+    ? window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches
+    : false;
+  const shouldAnimate = !disabled && !reducedMotion && !prefersReducedMotion;
 
-  const alignmentClasses = {
+  // Parallax scroll tracking
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const bgRef = React.useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = React.useState(false);
+  const [scrollFade, setScrollFade] = React.useState(1);
+
+  React.useEffect(() => {
+    if (animateOnMount) {
+      const timer = setTimeout(() => setMounted(true), 50);
+      return () => clearTimeout(timer);
+    } else {
+      setMounted(true);
+    }
+  }, [animateOnMount]);
+
+  // Parallax scroll effect
+  React.useEffect(() => {
+    if (!shouldAnimate || !containerRef.current || !bgRef.current) return;
+
+    let rafId: number;
+    const handleScroll = () => {
+      rafId = requestAnimationFrame(() => {
+        const container = containerRef.current;
+        const bg = bgRef.current;
+        if (!container || !bg) return;
+
+        const rect = container.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const scrollProgress = (viewportHeight - rect.top) / (viewportHeight + rect.height);
+
+        // Calculate parallax offset clamped to maxOffset
+        const clampedProgress = Math.max(0, Math.min(1, scrollProgress));
+        const offset = (clampedProgress - 0.5) * 2 * maxOffset * speed;
+
+        let tx = 0, ty = 0;
+        if (direction === "up" || direction === "down") {
+          ty = direction === "up" ? -offset : offset;
+        } else {
+          tx = direction === "left" ? -offset : offset;
+        }
+
+        const transforms: string[] = [];
+        if (tx !== 0 || ty !== 0) transforms.push(`translate3d(${tx}px, ${ty}px, 0)`);
+        if (scaleAmount !== 1) transforms.push(`scale(${scaleAmount})`);
+        if (rotateAmount !== 0) transforms.push(`rotate(${rotateAmount}deg)`);
+
+        bg.style.transform = transforms.join(" ") || "none";
+        bg.style.transition = easing === "linear" ? "none" : `transform 0.1s ${easing}`;
+
+        // Fade on scroll
+        if (fadeOnScroll) {
+          const fadeVal = 1 - clampedProgress * 0.7;
+          setScrollFade(Math.max(0.3, fadeVal));
+        }
+      });
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, [shouldAnimate, speed, direction, maxOffset, easing, scaleAmount, rotateAmount, fadeOnScroll]);
+
+  // Height classes
+  const heightClasses = fullScreen
+    ? "min-h-screen"
+    : typeof minHeight === "string" && !["sm", "md", "lg", "xl", "screen", "auto"].includes(minHeight)
+    ? ""
+    : getResponsiveClasses(minHeight as ResponsiveValue<"sm" | "md" | "lg" | "xl" | "screen" | "auto">, {
+        sm: ["min-h-[200px]", "md:min-h-[250px]", "lg:min-h-[300px]"],
+        md: ["min-h-[300px]", "md:min-h-[400px]", "lg:min-h-[500px]"],
+        lg: ["min-h-[400px]", "md:min-h-[500px]", "lg:min-h-[600px]"],
+        xl: ["min-h-[500px]", "md:min-h-[600px]", "lg:min-h-[800px]"],
+        screen: ["min-h-screen", "md:min-h-screen", "lg:min-h-screen"],
+        auto: ["min-h-auto", "md:min-h-auto", "lg:min-h-auto"],
+      });
+
+  const alignmentMap: Record<string, string> = {
     start: "items-start justify-start",
     center: "items-center justify-center",
     end: "items-end justify-end",
-  }[contentAlignment];
+    left: "items-start justify-start",
+    right: "items-end justify-end",
+  };
 
-  const positionClasses = {
-    center: "bg-center",
-    top: "bg-top",
-    bottom: "bg-bottom",
-  }[backgroundPosition];
+  const positionMap: Record<string, string> = {
+    top: "items-start",
+    center: "items-center",
+    bottom: "items-end",
+  };
+
+  // Overlay gradient
+  const overlayGradientStyle: React.CSSProperties = overlayGradient ? (() => {
+    const dir = overlayGradientDirection === "radial"
+      ? ""
+      : overlayGradientDirection === "to-bottom" ? "to bottom"
+      : overlayGradientDirection === "to-top" ? "to top"
+      : overlayGradientDirection === "to-left" ? "to left"
+      : "to right";
+    const color = overlayColor || "#000000";
+    const op = (overlayOpacity || 50) / 100;
+    if (overlayGradientDirection === "radial") {
+      return { background: `radial-gradient(circle, ${color}00 0%, ${color} 100%)`, opacity: op };
+    }
+    return { background: `linear-gradient(${dir}, ${color}00 0%, ${color} 100%)`, opacity: op };
+  })() : { backgroundColor: overlayColor, opacity: (overlayOpacity || 50) / 100 };
+
+  // Mount animation
+  const mountStyle: React.CSSProperties = animateOnMount ? {
+    transition: `all ${animationDuration}ms ease-out`,
+    opacity: mounted ? 1 : (animationType === "fade" || animationType === "blur" ? 0 : 1),
+    transform: mounted ? "none" : animationType === "scale" ? "scale(0.95)" : animationType === "slide" ? "translateY(20px)" : "none",
+    filter: mounted ? "none" : animationType === "blur" ? "blur(10px)" : "none",
+  } : {};
+
+  // Container style
+  const containerStyle: React.CSSProperties = {
+    ...mountStyle,
+    ...(height ? { height } : {}),
+    ...(typeof minHeight === "string" && !["sm", "md", "lg", "xl", "screen", "auto"].includes(minHeight) ? { minHeight } : {}),
+    ...(maxHeight ? { maxHeight } : {}),
+    ...(borderRadius ? { borderRadius } : {}),
+    ...(shadow ? { boxShadow: shadow } : {}),
+    ...(showBorder ? { border: `1px solid ${borderColor || "var(--color-border)"}` } : {}),
+  };
+
+  // Background style
+  const bgStyle: React.CSSProperties = {
+    backgroundImage: `url(${bgImageUrl})`,
+    backgroundPosition,
+    backgroundSize,
+    backgroundRepeat,
+    ...(blurAmount > 0 ? { filter: `blur(${blurAmount}px)` } : {}),
+    opacity: (bgOpacity / 100) * scrollFade,
+    // Extend bg for parallax movement
+    top: shouldAnimate ? `-${maxOffset}px` : "0",
+    bottom: shouldAnimate ? `-${maxOffset}px` : "0",
+    left: shouldAnimate ? (direction === "left" || direction === "right" ? `-${maxOffset}px` : "0") : "0",
+    right: shouldAnimate ? (direction === "left" || direction === "right" ? `-${maxOffset}px` : "0") : "0",
+  };
 
   return (
     <div
+      ref={containerRef}
       id={id}
-      className={`relative overflow-hidden ${heightClasses} ${className}`}
-      style={{
-        backgroundImage: `url(${bgImageUrl})`,
-        backgroundAttachment: "fixed",
-        backgroundSize: "cover",
-      }}
+      className={`relative overflow-hidden ${heightClasses} ${disableOnMobile ? "hidden md:block" : ""} ${className}`}
+      style={containerStyle}
+      role={ariaLabel ? "region" : undefined}
+      aria-label={ariaLabel || undefined}
     >
-      <div
-        className={`absolute inset-0 ${positionClasses} bg-cover bg-fixed`}
-      />
-      {overlay && (
+      {/* Main background */}
+      {backgroundVideo ? (
+        <video
+          className="absolute inset-0 w-full h-full object-cover"
+          src={backgroundVideo}
+          autoPlay
+          muted
+          loop
+          playsInline
+          style={{ opacity: (bgOpacity / 100) * scrollFade }}
+        />
+      ) : (
         <div
-          className="absolute inset-0"
-          style={{
-            backgroundColor: overlayColor,
-            opacity: overlayOpacity / 100,
-          }}
+          ref={bgRef}
+          className="absolute will-change-transform"
+          style={bgStyle}
         />
       )}
+
+      {/* Layers */}
+      {Array.isArray(layers) && layers.map((layer, i) => {
+        const layerUrl = layer.image ? getImageUrl(layer.image) : "";
+        if (!layerUrl) return null;
+        return (
+          <div
+            key={i}
+            className="absolute inset-0 will-change-transform"
+            style={{
+              backgroundImage: `url(${layerUrl})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              opacity: layer.opacity ?? 0.5,
+              zIndex: layer.zIndex ?? i + 1,
+            }}
+          />
+        );
+      })}
+
+      {/* Overlay */}
+      {showOverlayResolved && (
+        <div className="absolute inset-0" style={overlayGradientStyle} />
+      )}
+
+      {/* Content */}
       <div
-        className={`relative z-10 flex ${alignmentClasses} w-full h-full p-4 md:p-8 lg:p-12`}
+        className={`relative z-10 flex flex-col ${positionMap[contentPosition] || "items-center"} ${alignmentMap[contentAlignResolved] || "items-center justify-center"} w-full h-full`}
+        style={{
+          padding: contentPadding || "1rem 2rem",
+          ...(contentMaxWidth ? { maxWidth: contentMaxWidth, margin: "0 auto" } : {}),
+        }}
       >
         {children}
       </div>
+
+      {/* Mobile fallback */}
+      {mobileFallbackUrl && (
+        <style>{`@media (max-width: 768px) { #${id || "parallax"} { background-image: url(${mobileFallbackUrl}) !important; } }`}</style>
+      )}
+      {mobileHeight && (
+        <style>{`@media (max-width: 768px) { #${id || "parallax"} { min-height: ${mobileHeight} !important; } }`}</style>
+      )}
     </div>
   );
 }

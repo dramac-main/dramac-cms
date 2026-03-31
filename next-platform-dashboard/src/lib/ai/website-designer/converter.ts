@@ -2166,6 +2166,48 @@ function transformPropsForStudio(
     };
   }
 
+  // Typewriter — normalize text/speed/cursor/style props
+  if (type === "Typewriter") {
+    const rawTexts = props.texts || props.text || props.words || props.phrases;
+    return {
+      ...props,
+      texts: Array.isArray(rawTexts) ? rawTexts : rawTexts ? [String(rawTexts)] : undefined,
+      typingSpeed: Number(props.typingSpeed || props.speed || props.typeSpeed || 100),
+      deletingSpeed: Number(props.deletingSpeed || props.deleteSpeed || 50),
+      pauseDuration: Number(props.pauseDuration || props.pause || props.wait || 2000),
+      startDelay: Number(props.startDelay || 0),
+      delayBetweenTexts: Number(props.delayBetweenTexts || props.delayBetween || 500),
+      loop: !!(props.loop ?? props.repeat ?? true),
+      showCursor: !!(props.showCursor ?? props.cursor ?? true),
+      cursorChar: props.cursorChar || props.cursorCharacter || "|",
+      cursorStyle: props.cursorStyle || "bar",
+      fontSize: props.fontSize || props.size || "",
+      textColor: props.textColor || props.color || "",
+      fontWeight: props.fontWeight || props.weight || "bold",
+    };
+  }
+
+  // Parallax — normalize background/overlay/content props
+  if (type === "Parallax") {
+    return {
+      ...props,
+      backgroundImage: props.backgroundImage || props.image || props.bgImage || props.src || "",
+      backgroundVideo: props.backgroundVideo || props.video || "",
+      speed: Number(props.speed || 0.5),
+      direction: props.direction || "up",
+      maxOffset: Number(props.maxOffset || props.offset || 200),
+      overlay: !!(props.overlay ?? props.showOverlay ?? true),
+      overlayColor: props.overlayColor || props.overlayBg || "#000000",
+      overlayOpacity: Number(props.overlayOpacity ?? 50),
+      height: props.height || "",
+      fullScreen: !!(props.fullScreen ?? props.fullscreen ?? false),
+      contentPosition: props.contentPosition || props.contentAlign || "center",
+      contentMaxWidth: props.contentMaxWidth || props.maxWidth || "",
+      contentPadding: props.contentPadding || props.padding || "",
+      disableOnMobile: !!(props.disableOnMobile ?? false),
+    };
+  }
+
   // Gallery component
   if (type === "Gallery") {
     const images = props.images || props.items || props.gallery || [];

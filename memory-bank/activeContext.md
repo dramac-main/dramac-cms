@@ -1,37 +1,42 @@
 # Active Context
 
-## Current Focus: 3D & Effects Components — FULL IMPLEMENTATION COMPLETE ✅
+## Current Focus: 3D & Effects Components — ALL 12 COMPONENTS FULLY IMPLEMENTED ✅
 
-### What Was Done (Latest Session)
+### What Was Done (Latest Session — Phase 2: Typewriter + Parallax Full Expansion)
 
-Implemented the **3D-EFFECTS-COMPONENTS-MASTER-PLAN.md** P0 priority: render gap closure for all 5 premium components where 50-71 registry fields produced no visual output. Also added CursorEffect trail variant, Typewriter accessibility, and converter.ts AI integration.
+Closed the remaining render gaps for Typewriter and Parallax — the last 2 of 12 components that were still stubs. Added normalizers and enhanced metadata for both.
 
-#### Render Function Expansions (renders.tsx)
+#### TypewriterRender — COMPLETE REWRITE
+- Was: 45-line stub showing first text statically, 11 of 38 registry fields consumed (71% gap)
+- Now: Full typing state machine (~170 lines). Typing/deleting/pausing cycle, configurable speeds (typingSpeed/deletingSpeed/pauseDuration/startDelay/delayBetweenTexts), loop control (loop/loopCount), text options (deleteOnComplete/shuffleTexts), 3 cursor styles (bar/block/underscore) with colour/blink-speed/hide-on-complete, typography (fontSize/fontWeight/fontFamily/letterSpacing/lineHeight/textColor/highlightColor), container styling (backgroundColor/padding/borderRadius/textAlign/minHeight), error effect simulation, scroll-into-view trigger (IntersectionObserver), responsive (hideOnMobile/mobileFontSize), accessibility (ariaLabel, role="status", aria-live="polite", aria-atomic, prefers-reduced-motion)
 
-1. **CardFlip3DRender** — Expanded ~15 → 66 fields. Per-face gradients, 4 flip directions, spring easing, start-flipped/disable-flip, custom dimensions, aspect ratios, per-face text color/opacity, borders per face, hover glow/scale, reflection, buttons on front/back/both, flip indicators in 4 positions, mount animations, mobile-specific, keyboard (Enter/Space), ARIA, prefers-reduced-motion.
+#### ParallaxRender — COMPLETE REWRITE
+- Was: 50-line stub using background-attachment:fixed, 10 of 31 registry fields consumed (68% gap)
+- Now: Real scroll-based parallax (~180 lines). requestAnimationFrame + scroll listener, transform3d-based movement in 4 directions (up/down/left/right), configurable speed/maxOffset/easing, video background support (<video autoplay muted loop>), multi-layer array rendering, overlay with solid colour or gradient (linear/radial), fadeOnScroll opacity, mount animations (fade/scale/slide/blur), content positioning/alignment/maxWidth/padding, border/shadow/borderRadius, mobile fallback (disableOnMobile/mobileHeight/mobileFallbackImage), accessibility (role="region", aria-label, reducedMotion), proper cleanup of scroll listener + RAF
 
-2. **TiltCardRender** — Expanded ~12 → 55 fields. Subtitle, icon, badge, gradients with direction map, perspective/speed/easing, axis constraint, glare (maxOpacity/color/position/reverse), shadowOnHover, border fields, shine sweep, float, gyroscope placeholder, button with variants, mount animation, responsive, accessibility.
+#### Converter.ts — Typewriter + Parallax Normalizers Added
+- Typewriter normalizer: texts/text/words/phrases aliasing, speed aliases (typingSpeed/speed/typeSpeed), cursor props, font/colour aliases
+- Parallax normalizer: backgroundImage/image/bgImage/src aliasing, overlay aliases, content position/padding/maxWidth
 
-3. **GlassCardRender** — Expanded ~10 → 53 fields. 7 presets (frosted/crystal added), full backdrop-filter controls, noise texture overlay (SVG), gradient background, border gradient/glow, custom shadow with inner shadow, hover effects, shimmer/float animations, responsive, mount animation, accessibility.
+#### Component Metadata — Typewriter + Parallax Enhanced
+- Typewriter: 13 keywords, rich AI description covering state machine/timing/cursor/typography/scroll-trigger/accessibility, suggestedWith: Heading/Hero/Section/GlassCard, usage guidelines
+- Parallax: 14 keywords, rich AI description covering transform-based parallax/video/layers/overlays/effects/mobile/a11y, suggestedWith: Heading/CTA/GlassCard/ScrollAnimate, usage guidelines
 
-4. **ParticleBackgroundRender** — Expanded ~8 → 60 fields. Canvas-based with shapes (circle/square/triangle/star), size/opacity variation, multi-color palette, directional movement with gravity/wind/bounce, advanced connections, mouse interactivity (hover/click modes), background gradient, fullscreen, effects (twinkle/trail/pulsate/glow), spawn system, FPS limiting, pauseOnBlur, reducedOnMobile, proper cleanup.
+### Previous Session: 5 Premium Components + CursorEffect + Converter Integration
 
-5. **ScrollAnimateRender** — Expanded ~10 → 49 fields. 17 animation types, custom easing with spring/bounce, triggerMargin/Position, stagger children, scroll progress animations, parallax integration, counter animation, responsive mobile variants, reducedMotionAnimation, richContent, children passthrough.
-
-#### Additional Fixes
-
-6. **CursorEffectRender** — Added "trail" variant (diminishing trail dots, configurable intensity). Now supports: spotlight, glow, magnetic, tilt, trail, none.
-
-7. **TypewriterRender** — Added `aria-live="polite"`, `aria-atomic="true"`, cursor `aria-hidden="true"`.
-
-#### Converter.ts AI Integration
-
-8. Fixed TiltCard alias (was → `Tilt3DContainer`, now → `TiltCard`). Added `TiltCardBlock` alias. Added `TiltCard` to `KNOWN_REGISTRY_TYPES`. Added normalizers for all 5 premium components.
+1. **CardFlip3DRender** — Expanded ~15 → 66 fields
+2. **TiltCardRender** — Expanded ~12 → 55 fields
+3. **GlassCardRender** — Expanded ~10 → 53 fields
+4. **ParticleBackgroundRender** — Expanded ~8 → 60 fields
+5. **ScrollAnimateRender** — Expanded ~10 → 49 fields
+6. **CursorEffectRender** — Added "trail" variant
+7. **Converter.ts** — TiltCard alias fix, KNOWN_REGISTRY_TYPES, 5 premium normalizers
 
 ### Files Modified
 
-- `src/lib/studio/blocks/renders.tsx` — 5 premium render expansions, CursorEffect trail, Typewriter A11y
-- `src/lib/ai/website-designer/converter.ts` — TiltCard alias fix, KNOWN_REGISTRY_TYPES, 5 new normalizers
+- `src/lib/studio/blocks/renders.tsx` — 5 premium render expansions, CursorEffect trail, Typewriter full rewrite, Parallax full rewrite
+- `src/lib/ai/website-designer/converter.ts` — TiltCard alias fix, KNOWN_REGISTRY_TYPES, 7 normalizers (5 premium + Typewriter + Parallax)
+- `src/lib/studio/registry/component-metadata.ts` — Typewriter + Parallax metadata enhanced
 
 ### TypeScript Status
 
@@ -60,8 +65,6 @@ Implemented the **3D-EFFECTS-COMPONENTS-MASTER-PLAN.md** P0 priority: render gap
 - P1: Three.js / @react-three/fiber / @react-three/drei components (installed but unused ~1.6MB)
 - P1: @splinetool/react-spline implementation (installed but unused)
 - P1: LottiePlayer real implementation (currently placeholder with gradient fallback)
-- P2: Registry definition alignment for 3D/Effects components (field names in core-components.ts matching render props)
-- P2: Component metadata for 3D/Effects components in component-metadata.ts
 
 ---
 

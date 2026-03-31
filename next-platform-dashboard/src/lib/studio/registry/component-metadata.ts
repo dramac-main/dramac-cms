@@ -932,23 +932,61 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     type: "Typewriter",
     label: "Typewriter",
     category: "interactive",
-    description: "Animated typewriter text",
+    description:
+      "Animated typewriter text effect with typing/deleting cycle, multiple phrases, cursor customisation, and scroll-triggered start",
     acceptsChildren: false,
-    keywords: ["typewriter", "animation", "typing"],
+    keywords: [
+      "typewriter",
+      "typing",
+      "animation",
+      "text",
+      "animated",
+      "cursor",
+      "hero",
+      "headline",
+      "rotating",
+      "phrases",
+      "loop",
+      "delete",
+      "effect",
+    ],
     ai: {
-      description: "Animated typing effect for text",
-      usageGuidelines: "Use sparingly in hero sections",
+      description:
+        "A text component that types out and deletes an array of phrases in a loop, simulating a real typewriter. Configurable typing/deleting speed, pause duration, start delay, loop count, cursor style (bar/block/underscore), cursor colour, blink speed, hide-on-complete. Typography: font size, weight, family, letter spacing, text colour, highlight colour. Animations: mechanical/bounce/smooth typing, fade/collapse deleting, optional error simulation. Layout: multiline, line-height, text-align, min-height, container background/padding/border-radius. Responsive: hide on mobile, mobile font size. Accessibility: aria-label, reduced motion fallback (shows first text statically). Scroll trigger: startTypingOnView with IntersectionObserver.",
+      suggestedWith: ["Heading", "Hero", "Section", "GlassCard"],
+      usageGuidelines:
+        "Use in hero sections or headers to cycle through product benefits, taglines, or greetings. Keep to 3-5 short phrases for best impact. Enable startTypingOnView for below-the-fold placement. Use highlight colour sparingly for emphasis.",
     },
   },
   {
     type: "Parallax",
     label: "Parallax Section",
     category: "interactive",
-    description: "Parallax scrolling section",
+    description:
+      "Parallax scrolling background section with real transform-based movement, video support, multi-layer depth, overlay gradients, and scroll-fade effects",
     acceptsChildren: true,
-    keywords: ["parallax", "scroll", "effect"],
+    keywords: [
+      "parallax",
+      "scroll",
+      "background",
+      "section",
+      "hero",
+      "image",
+      "video",
+      "depth",
+      "layers",
+      "overlay",
+      "gradient",
+      "immersive",
+      "cinematic",
+      "storytelling",
+    ],
     ai: {
-      description: "Section with parallax background scrolling effect",
+      description:
+        "A section with a background image or video that scrolls at a different speed than the content, creating a depth effect. Uses real transform-based parallax (not background-attachment: fixed). Configurable speed, direction (up/down/left/right), max offset, easing. Supports video backgrounds (autoplay/muted/loop), multi-layer depth with independent speeds, overlay with solid colour or gradient (linear/radial). Effects: blur, scale, rotate, opacity, fade-on-scroll. Sizing: height, min/max height, fullscreen. Content: position (top/center/bottom), alignment, max-width, padding. Styling: border-radius, shadow, border. Animations: mount animation (fade/scale/slide/blur). Mobile: disable on mobile, mobile height, fallback image. Accessibility: aria-label, reduced motion (disables parallax movement).",
+      suggestedWith: ["Heading", "CTA", "GlassCard", "ScrollAnimate"],
+      usageGuidelines:
+        "Use for hero sections, landing page headers, or section dividers that need visual depth. Keep speed between 0.3-0.7 for subtle effect. Use overlay for text contrast over images. Enable disableOnMobile for performance on low-end devices. Pair with GlassCard children for a premium frosted-over-parallax effect.",
     },
   },
 
