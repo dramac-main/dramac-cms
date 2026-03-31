@@ -21207,11 +21207,11 @@ const marketingComponents: ComponentDefinition[] = [
         label: "Content",
         icon: "Type",
         fields: [
-          "text",
-          "link",
+          "message",
+          "linkUrl",
           "linkText",
           "linkTarget",
-          "icon",
+          "iconName",
           "iconPosition",
           "badge",
           "badgeColor",
@@ -21331,12 +21331,12 @@ const marketingComponents: ComponentDefinition[] = [
     ],
     fields: {
       // === Content ===
-      text: {
+      message: {
         type: "text",
         label: "Announcement Text",
         defaultValue: "🎉 Special offer! Get 20% off with code SAVE20",
       },
-      link: { type: "link", label: "Link URL" },
+      linkUrl: { type: "link", label: "Link URL" },
       linkText: {
         type: "text",
         label: "Link Text",
@@ -21351,7 +21351,7 @@ const marketingComponents: ComponentDefinition[] = [
         ],
         defaultValue: "_self",
       },
-      icon: { type: "text", label: "Icon (emoji)", defaultValue: "" },
+      iconName: { type: "text", label: "Icon (emoji)", defaultValue: "" },
       iconPosition: {
         type: "select",
         label: "Icon Position",
@@ -21720,7 +21720,7 @@ const marketingComponents: ComponentDefinition[] = [
       role: { type: "text", label: "Role", defaultValue: "banner" },
     },
     defaultProps: {
-      text: "🎉 Special offer! Get 20% off with code SAVE20",
+      message: "🎉 Special offer! Get 20% off with code SAVE20",
       linkText: "Shop Now →",
       backgroundColor: "",
       textColor: "#ffffff",
@@ -21733,8 +21733,8 @@ const marketingComponents: ComponentDefinition[] = [
       description:
         "A premium announcement bar with countdown timers, animations, marquee scrolling, and extensive styling options",
       canModify: [
-        "text",
-        "link",
+        "message",
+        "linkUrl",
         "linkText",
         "backgroundColor",
         "textColor",
@@ -21767,7 +21767,7 @@ const marketingComponents: ComponentDefinition[] = [
         label: "Content",
         icon: "Type",
         fields: [
-          "text",
+          "mode",
           "count",
           "countSuffix",
           "countPrefix",
@@ -21783,7 +21783,7 @@ const marketingComponents: ComponentDefinition[] = [
         fields: [
           "showAvatars",
           "avatars",
-          "avatarCount",
+          "maxVisible",
           "avatarSize",
           "avatarBorder",
           "avatarBorderColor",
@@ -21800,10 +21800,18 @@ const marketingComponents: ComponentDefinition[] = [
         fields: [
           "showRating",
           "rating",
-          "ratingMax",
+          "maxRating",
+          "reviewCount",
+          "platform",
+          "platformLogo",
+          "showCount",
+          "showPlatform",
           "ratingStyle",
           "ratingColor",
           "ratingEmptyColor",
+          "scoreBackgroundColor",
+          "scoreTextColor",
+          "mutedTextColor",
           "ratingSize",
           "showRatingText",
           "ratingText",
@@ -21905,6 +21913,13 @@ const marketingComponents: ComponentDefinition[] = [
         defaultExpanded: false,
       },
       {
+        id: "schema",
+        label: "Schema.org / SEO",
+        icon: "Search",
+        fields: ["schemaType", "schemaName"],
+        defaultExpanded: false,
+      },
+      {
         id: "accessibility",
         label: "Accessibility",
         icon: "Eye",
@@ -21913,12 +21928,17 @@ const marketingComponents: ComponentDefinition[] = [
       },
     ],
     fields: {
-      // === Content ===
-      text: {
-        type: "text",
-        label: "Text",
-        defaultValue: "Trusted by thousands of customers worldwide",
+      // === Mode ===
+      mode: {
+        type: "select",
+        label: "Display Mode",
+        options: [
+          { label: "Star Rating", value: "rating" },
+          { label: "Customer Count", value: "count" },
+        ],
+        defaultValue: "rating",
       },
+      // === Content ===
       count: { type: "number", label: "Count", defaultValue: 10000 },
       countSuffix: { type: "text", label: "Count Suffix", defaultValue: "+" },
       countPrefix: { type: "text", label: "Count Prefix", defaultValue: "" },
@@ -21942,12 +21962,12 @@ const marketingComponents: ComponentDefinition[] = [
           name: { type: "text", label: "Name" },
         },
       },
-      avatarCount: {
+      maxVisible: {
         type: "number",
         label: "Avatars to Show",
         min: 1,
         max: 10,
-        defaultValue: 5,
+        defaultValue: 4,
       },
       avatarSize: {
         type: "select",
@@ -21996,7 +22016,7 @@ const marketingComponents: ComponentDefinition[] = [
         step: 0.1,
         defaultValue: 4.9,
       },
-      ratingMax: {
+      maxRating: {
         type: "number",
         label: "Rating Max",
         min: 5,
@@ -22034,6 +22054,34 @@ const marketingComponents: ComponentDefinition[] = [
         ],
         defaultValue: "md",
       },
+      // === Rating Mode: Extra Fields ===
+      reviewCount: {
+        type: "number",
+        label: "Review Count",
+        defaultValue: 1250,
+      },
+      platform: {
+        type: "text",
+        label: "Platform Name",
+        defaultValue: "Google Reviews",
+      },
+      platformLogo: { type: "image", label: "Platform Logo" },
+      showCount: {
+        type: "toggle",
+        label: "Show Review Count",
+        defaultValue: true,
+      },
+      showPlatform: {
+        type: "toggle",
+        label: "Show Platform Name",
+        defaultValue: true,
+      },
+      scoreBackgroundColor: {
+        type: "color",
+        label: "Score Background",
+      },
+      scoreTextColor: { type: "color", label: "Score Text Color" },
+      mutedTextColor: { type: "color", label: "Muted Text Color" },
       showRatingText: {
         type: "toggle",
         label: "Show Rating Text",
@@ -22078,16 +22126,14 @@ const marketingComponents: ComponentDefinition[] = [
       // === Layout ===
       variant: {
         type: "select",
-        label: "Variant",
+        label: "Rating Variant",
         options: [
-          { label: "Inline", value: "inline" },
-          { label: "Stacked", value: "stacked" },
-          { label: "Card", value: "card" },
-          { label: "Minimal", value: "minimal" },
-          { label: "Floating", value: "floating" },
-          { label: "Banner", value: "banner" },
+          { label: "Stars", value: "stars" },
+          { label: "Score Badge", value: "score" },
+          { label: "Compact", value: "compact" },
+          { label: "Detailed", value: "detailed" },
         ],
-        defaultValue: "inline",
+        defaultValue: "stars",
       },
       alignment: {
         type: "select",
@@ -22327,16 +22373,22 @@ const marketingComponents: ComponentDefinition[] = [
         label: "Compact on Mobile",
         defaultValue: true,
       },
-      // === Schema.org (Phase 5) ===
-      enableSchema: {
-        type: "toggle",
-        label: "Enable Schema.org",
-        description: "Add AggregateRating structured data for SEO",
-        defaultValue: false,
+      // === Schema.org ===
+      schemaType: {
+        type: "select",
+        label: "Schema.org Type",
+        description: "Add structured data for SEO",
+        options: [
+          { label: "Disabled", value: "false" },
+          { label: "Aggregate Rating", value: "AggregateRating" },
+          { label: "Product", value: "Product" },
+          { label: "Local Business", value: "LocalBusiness" },
+        ],
+        defaultValue: "false",
       },
-      schemaItemReviewed: {
+      schemaName: {
         type: "text",
-        label: "Schema Item Reviewed",
+        label: "Schema Business Name",
         description: "Business name for structured data",
       },
       // === Accessibility ===
@@ -22347,37 +22399,40 @@ const marketingComponents: ComponentDefinition[] = [
       },
     },
     defaultProps: {
-      text: "Trusted by thousands of customers worldwide",
+      mode: "count",
       count: 10000,
       countSuffix: "+",
       label: "happy customers",
       showAvatars: true,
-      avatarCount: 5,
+      maxVisible: 4,
       avatarSize: "md",
-      variant: "inline",
+      variant: "stars",
       alignment: "center",
       animateCount: true,
-      animationDuration: 2000,
+      rating: 4.8,
+      maxRating: 5,
+      reviewCount: 1250,
+      platform: "Google Reviews",
     },
     ai: {
       description:
         "Premium social proof with animated counters, avatar stacks, star ratings, live updates, and multiple variants",
       canModify: [
-        "text",
+        "mode",
         "count",
         "countSuffix",
         "label",
         "showAvatars",
-        "showRating",
         "rating",
+        "reviewCount",
+        "platform",
         "variant",
-        "liveCounter",
       ],
       suggestions: [
+        "Switch to rating mode",
         "Add star rating",
-        "Enable live counter",
         "Show verified badge",
-        "Use card variant",
+        "Use score variant",
         "Add custom avatars",
       ],
     },
@@ -22417,7 +22472,7 @@ const marketingComponents: ComponentDefinition[] = [
         id: "layout",
         label: "Layout",
         icon: "Layout",
-        fields: ["variant", "alignment", "columns", "gap", "maxWidth"],
+        fields: ["variant", "layout", "alignment", "columns", "size", "grayscale", "gap", "maxWidth"],
         defaultExpanded: false,
       },
       {
@@ -22563,6 +22618,7 @@ const marketingComponents: ComponentDefinition[] = [
           text: { type: "text", label: "Text" },
           description: { type: "text", label: "Description/Tooltip" },
           image: { type: "image", label: "Custom Image" },
+          alt: { type: "text", label: "Image Alt Text" },
           link: { type: "link", label: "Link URL" },
           featured: { type: "toggle", label: "Featured" },
           badgeColor: { type: "color", label: "Custom Color" },
@@ -22573,15 +22629,12 @@ const marketingComponents: ComponentDefinition[] = [
         type: "select",
         label: "Variant",
         options: [
-          { label: "Inline", value: "inline" },
-          { label: "Grid", value: "grid" },
+          { label: "Default", value: "default" },
+          { label: "Pills", value: "pills" },
           { label: "Cards", value: "cards" },
           { label: "Minimal", value: "minimal" },
-          { label: "Stacked", value: "stacked" },
-          { label: "Pills", value: "pills" },
-          { label: "Icons Only", value: "icons-only" },
         ],
-        defaultValue: "inline",
+        defaultValue: "default",
       },
       alignment: {
         type: "select",
@@ -22612,6 +22665,30 @@ const marketingComponents: ComponentDefinition[] = [
           { label: "XL", value: "xl" },
         ],
         defaultValue: "md",
+      },
+      layout: {
+        type: "select",
+        label: "Layout Direction",
+        options: [
+          { label: "Row", value: "row" },
+          { label: "Grid", value: "grid" },
+        ],
+        defaultValue: "row",
+      },
+      size: {
+        type: "select",
+        label: "Badge Size",
+        options: [
+          { label: "Small", value: "sm" },
+          { label: "Medium", value: "md" },
+          { label: "Large", value: "lg" },
+        ],
+        defaultValue: "md",
+      },
+      grayscale: {
+        type: "toggle",
+        label: "Grayscale Images",
+        defaultValue: false,
       },
       maxWidth: {
         type: "select",
@@ -22736,17 +22813,9 @@ const marketingComponents: ComponentDefinition[] = [
       },
       // === Hover Effects ===
       hoverEffect: {
-        type: "select",
+        type: "toggle",
         label: "Hover Effect",
-        options: [
-          { label: "None", value: "none" },
-          { label: "Scale", value: "scale" },
-          { label: "Lift", value: "lift" },
-          { label: "Glow", value: "glow" },
-          { label: "Shake", value: "shake" },
-          { label: "Color", value: "color" },
-        ],
-        defaultValue: "lift",
+        defaultValue: true,
       },
       hoverScale: {
         type: "number",
@@ -22966,10 +23035,10 @@ const marketingComponents: ComponentDefinition[] = [
         { icon: "🚚", text: "Free Shipping" },
         { icon: "🏆", text: "Award Winning" },
       ],
-      variant: "inline",
+      variant: "default",
       alignment: "center",
       badgeSize: "md",
-      hoverEffect: "lift",
+      hoverEffect: true,
       animateOnScroll: true,
       staggerAnimation: true,
     },
@@ -23057,8 +23126,8 @@ const marketingComponents: ComponentDefinition[] = [
           "logoSize",
           "logoHeight",
           "logoMaxWidth",
-          "logoGrayscale",
-          "logoGrayscaleHover",
+          "grayscale",
+          "hoverColor",
           "logoOpacity",
           "logoOpacityHover",
           "logoFilter",
@@ -23264,15 +23333,11 @@ const marketingComponents: ComponentDefinition[] = [
         type: "select",
         label: "Layout Variant",
         options: [
-          { label: "Grid", value: "grid" },
-          { label: "Inline", value: "inline" },
-          { label: "Carousel", value: "carousel" },
-          { label: "Infinite Scroll", value: "infinite" },
+          { label: "Simple Grid", value: "simple" },
+          { label: "Cards", value: "cards" },
           { label: "Marquee", value: "marquee" },
-          { label: "Stacked", value: "stacked" },
-          { label: "Scattered", value: "scattered" },
         ],
-        defaultValue: "inline",
+        defaultValue: "simple",
       },
       columns: {
         type: "select",
@@ -23355,12 +23420,12 @@ const marketingComponents: ComponentDefinition[] = [
         max: 300,
         defaultValue: 150,
       },
-      logoGrayscale: {
+      grayscale: {
         type: "toggle",
         label: "All Logos Grayscale",
         defaultValue: true,
       },
-      logoGrayscaleHover: {
+      hoverColor: {
         type: "toggle",
         label: "Color on Hover",
         defaultValue: true,
@@ -23713,9 +23778,9 @@ const marketingComponents: ComponentDefinition[] = [
     },
     defaultProps: {
       title: "Trusted by Industry Leaders",
-      variant: "inline",
-      logoGrayscale: true,
-      logoGrayscaleHover: true,
+      variant: "simple",
+      grayscale: true,
+      hoverColor: true,
       logoOpacity: 0.7,
       logoOpacityHover: 1,
       hoverEffect: "scale",
@@ -23730,7 +23795,7 @@ const marketingComponents: ComponentDefinition[] = [
         "title",
         "logos",
         "variant",
-        "logoGrayscale",
+        "grayscale",
         "hoverEffect",
         "backgroundColor",
         "animationType",
@@ -23796,7 +23861,7 @@ const marketingComponents: ComponentDefinition[] = [
         label: "Header Row Style",
         icon: "LayoutGrid",
         fields: [
-          "headerBackgroundColor",
+          "headerBackground",
           "headerTextColor",
           "headerFontSize",
           "headerFontWeight",
@@ -23939,7 +24004,7 @@ const marketingComponents: ComponentDefinition[] = [
         label: "Responsive",
         icon: "Smartphone",
         fields: [
-          "mobileLayout",
+          "mobileStack",
           "hideOnMobile",
           "scrollOnMobile",
           "compactOnMobile",
@@ -23999,7 +24064,7 @@ const marketingComponents: ComponentDefinition[] = [
         type: "array",
         label: "Features",
         itemFields: {
-          feature: { type: "text", label: "Feature Name" },
+          label: { type: "text", label: "Feature Name" },
           description: { type: "text", label: "Feature Description/Tooltip" },
           category: { type: "text", label: "Category" },
           values: {
@@ -24014,13 +24079,11 @@ const marketingComponents: ComponentDefinition[] = [
         type: "select",
         label: "Variant",
         options: [
-          { label: "Default", value: "default" },
+          { label: "Simple", value: "simple" },
           { label: "Cards", value: "cards" },
-          { label: "Minimal", value: "minimal" },
-          { label: "Bordered", value: "bordered" },
           { label: "Striped", value: "striped" },
         ],
-        defaultValue: "default",
+        defaultValue: "simple",
       },
       maxWidth: {
         type: "select",
@@ -24045,7 +24108,7 @@ const marketingComponents: ComponentDefinition[] = [
         defaultValue: false,
       },
       // === Header Row Style ===
-      headerBackgroundColor: {
+      headerBackground: {
         type: "color",
         label: "Header Background",
         defaultValue: "#f9fafb",
@@ -24428,15 +24491,10 @@ const marketingComponents: ComponentDefinition[] = [
         defaultValue: 0,
       },
       // === Responsive ===
-      mobileLayout: {
-        type: "select",
-        label: "Mobile Layout",
-        options: [
-          { label: "Scroll", value: "scroll" },
-          { label: "Stack", value: "stack" },
-          { label: "Cards", value: "cards" },
-        ],
-        defaultValue: "scroll",
+      mobileStack: {
+        type: "toggle",
+        label: "Stack on Mobile",
+        defaultValue: false,
       },
       hideOnMobile: {
         type: "toggle",
@@ -24467,7 +24525,7 @@ const marketingComponents: ComponentDefinition[] = [
     },
     defaultProps: {
       title: "Compare Plans",
-      variant: "default",
+      variant: "simple",
       showIcons: true,
       showCtaRow: true,
       ctaButtonText: "Get Started",
@@ -24493,11 +24551,11 @@ const marketingComponents: ComponentDefinition[] = [
         },
       ],
       rows: [
-        { feature: "Users", values: "1,5,Unlimited" },
-        { feature: "Storage", values: "10GB,50GB,500GB" },
-        { feature: "Support", values: "Email,Priority,24/7 Phone" },
-        { feature: "Analytics", values: "no,yes,yes" },
-        { feature: "Custom Domain", values: "no,yes,yes" },
+        { label: "Users", values: ["1", "5", "Unlimited"] },
+        { label: "Storage", values: ["10GB", "50GB", "500GB"] },
+        { label: "Support", values: ["Email", "Priority", "24/7 Phone"] },
+        { label: "Analytics", values: [false, true, true] },
+        { label: "Custom Domain", values: [false, true, true] },
       ],
     },
     ai: {

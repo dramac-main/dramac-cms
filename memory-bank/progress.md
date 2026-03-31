@@ -1,51 +1,119 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: March 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅ + **LIVE CHAT RUNTIME FIXES (AI auto-response + file uploads)** ✅ + **PER-ORDER CONVERSATION ISOLATION** ✅ + **PER-ORDER CHAT HARDENING AUDIT (10 bugs fixed, 0 TS errors)** ✅ + **CATEGORIES PAGE + DARK MODE POLISH** ✅ + **LIVE CHAT OVERHAUL + ECOMMERCE FIXES** ✅ + **CANVAS IFRAME RENDERING FIDELITY FIXES** ✅ + **TYPOGRAPHY COMPONENTS OVERHAUL (4 enhanced + 5 new, CSS var type scale)** ✅ + **BUTTON COMPONENTS MASTER PLAN (Phases 1-5: renders, registrations, converter, metadata, CTARender composition)** ✅
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅ + **LIVE CHAT RUNTIME FIXES (AI auto-response + file uploads)** ✅ + **PER-ORDER CONVERSATION ISOLATION** ✅ + **PER-ORDER CHAT HARDENING AUDIT (10 bugs fixed, 0 TS errors)** ✅ + **CATEGORIES PAGE + DARK MODE POLISH** ✅ + **LIVE CHAT OVERHAUL + ECOMMERCE FIXES** ✅ + **CANVAS IFRAME RENDERING FIDELITY FIXES** ✅ + **TYPOGRAPHY COMPONENTS OVERHAUL (4 enhanced + 5 new, CSS var type scale)** ✅ + **BUTTON COMPONENTS MASTER PLAN (Phases 1-5: renders, registrations, converter, metadata, CTARender composition)** ✅ + **MARKETING COMPONENTS — FULL IMPLEMENTATION + REGISTRY ALIGNMENT (5 components, all paths)** ✅
 
 ---
 
-## Latest Update: Marketing Components Master Plan — v1.0 COMPLETE ✅
+## Latest Update: Marketing Components — REGISTRY ALIGNMENT COMPLETE ✅
 
 ### What Was Done
 
-Created `MARKETING-COMPONENTS-MASTER-PLAN.md` — the 10th master plan document. Comprehensive deep audit of all 5 marketing components (AnnouncementBar, SocialProof, TrustBadges, LogoCloud, ComparisonTable) across 4 source files (renders.tsx, core-components.ts, component-metadata.ts, converter.ts).
+Fixed critical registry-render field name mismatches in ALL 5 marketing components (AnnouncementBar, SocialProof, TrustBadges, LogoCloud, ComparisonTable). The studio manual editing path bypasses normalizers, so registry field names MUST match render prop names exactly. All 5 registrations in `core-components.ts` updated with correct field names, field types, variant options, and defaultProps. Added backward-compatible `normalizedRows` helper in ComparisonTable render. TypeScript verified clean (0 new errors).
 
-**Document Structure (17 sections, 1718 lines):**
+**Full marketing implementation stack now complete:**
+- ✅ Render functions (all 5) — new features, accessibility, robustness
+- ✅ Normalizers (3 new + 2 enhanced in converter.ts) — AI path
+- ✅ Registry definitions (all 5 in core-components.ts) — Studio manual path
+- ✅ Component metadata (all 5 in component-metadata.ts) — AI discovery
+- ✅ TypeScript clean
 
-- Section 0: Implementation Blueprint — file map, exact line numbers, props pipeline, render patterns, shared utils
-- Section 1: Current State Audit — inventory tables, 12 critical issues
-- Section 2: Industry Benchmark — comparison with Webflow/Framer/Squarespace/WordPress
-- Sections 3-7: Per-component deep dives (AnnouncementBar, SocialProof, TrustBadges, LogoCloud, ComparisonTable)
-- Section 8: Dark mode & accessibility audit
-- Section 9: CSS variable compliance
-- Section 10: AI integration patterns
-- Sections 11-12: Component interactions & shared patterns
-- Section 13: Registry & converter alignment matrix
-- Section 14: 6-phase implementation roadmap
-- Section 15: Testing & quality gates
-- Section 16: AI Agent Guard Rails
+---
 
-**12 Critical Issues Documented:**
+## Previous Update: E-Commerce Components Master Plan — COMPLETE ✅
 
-- P0: AnnouncementBar `closable` vs `dismissible` mismatch — dismiss button ignores registry config
-- P0: AnnouncementBar variant values completely different between registry and render
-- P0: SocialProof registry and render are DIFFERENT components (count+avatars vs stars+reviews)
-- P0: ComparisonTable `highlight` vs `highlighted` — column highlighting never activates
-- P1: ComparisonTable 3 more field mismatches (priceSubtext/priceNote, tooltip/description, group/category)
-- P1: TrustBadges badge array fields don't align (render vs registry)
-- P1: SocialProof, AnnouncementBar, ComparisonTable missing normalizers
-- SocialProof missing `usageGuidelines` in component-metadata.ts
+### What Was Done
 
-**Normalizer Status:**
+Created the **E-Commerce Components Master Plan** document (`docs/ECOMMERCE-COMPONENTS-MASTER-PLAN.md`, v1.1) — the 10th and final master plan in the documentation series.
 
-- LogoCloud ✅ (comprehensive: URL validation, responsive columns, \_\_convertedToFeatures fallback)
-- TrustBadges ✅ (emoji/URL separation, shield default)
-- AnnouncementBar ❌ (needs normalizer)
-- SocialProof ❌ (needs normalizer)
-- ComparisonTable ❌ (needs normalizer)
+**Document contents (20 sections):**
 
-**Document:** `next-platform-dashboard/docs/MARKETING-COMPONENTS-MASTER-PLAN.md` (v1.0)
+- Section 0: Implementation Blueprint with file map, all 23 component tables, props pipeline, custom fields, auto-pages, critical constants
+- Sections 1-3: Current state audit, module-based architecture (vs core), component pipeline
+- Sections 4-10: Deep dives on all 7 component categories (product display, cart, checkout, navigation, quotation, reviews, dynamic pages)
+- Sections 11-12: Brand colour pipeline gap (P0), dark mode & theming strategy
+- Section 13: AI Designer integration (typeMap, KNOWN_REGISTRY_TYPES, MODULE_TYPES, metadata gaps)
+- Sections 14-15: Mobile components, data hooks & context system
+- Section 16: Registry/definition alignment audit (10 mismatches found)
+- Section 17: Hardcoded colour inventory
+- Sections 18-19: Implementation phases, testing & quality gates
+- **Section 20.0: AI Designer Quick Reference** — consolidated studio fields for ALL 23 components, verified against source
+- Section 20.1-20.7: Implementation guard rails
+
+**8 corrections applied during verification:**
+
+1. Component count: 25 → 23
+2. ProductCard `variant`: added "compact"
+3. FeaturedProducts `displayMode`: carousel/grid → carousel/scroll/hero-grid
+4. ProductDetail `stickyAddToCart` default: false → true
+5. CategoriesPage `columns`: number → select "2"/"3"/"4"
+6. ReviewForm: added requireEmail studio field
+7. ReviewList: added showDistribution + pageSize studio fields
+8. KNOWN_REGISTRY_TYPES count: 22 → 21
+
+**Key findings documented:**
+
+- P0: StorefrontContext exposes NO brand colours — all 67 storefront files use hardcoded Tailwind
+- 2 types missing from KNOWN_REGISTRY_TYPES + MODULE_TYPES: EcommerceOrderTracking, EcommerceCategoriesPage
+- 19 components missing AI metadata in component-metadata.ts
+- 8 Definition→Render field mismatches (silently ignored fields)
+
+### All 10 Master Plan Documents Complete
+
+| #   | Document                                | Status                |
+| --- | --------------------------------------- | --------------------- |
+| 1   | LAYOUT-COMPONENTS-MASTER-PLAN.md        | ✅                    |
+| 2   | TYPOGRAPHY-COMPONENTS-MASTER-PLAN.md    | ✅                    |
+| 3   | BUTTONS-COMPONENTS-MASTER-PLAN.md       | ✅                    |
+| 4   | MEDIA-COMPONENTS-MASTER-PLAN.md         | ✅                    |
+| 5   | SECTIONS-COMPONENTS-MASTER-PLAN.md      | ✅ v2.0               |
+| 6   | NAVIGATION-COMPONENTS-MASTER-PLAN.md    | ✅ v1.1               |
+| 7   | FORMS-COMPONENTS-MASTER-PLAN.md         | ✅ v1.1 → IMPLEMENTED |
+| 8   | CONTENT-COMPONENTS-MASTER-PLAN.md       | ✅ v2.0 → IMPLEMENTED |
+| 9   | INTERACTIVE-COMPONENTS-MASTER-PLAN.md   | ✅ v1.0               |
+| 10  | **ECOMMERCE-COMPONENTS-MASTER-PLAN.md** | **✅ v1.1**           |
+
+---
+
+## Previous Update: Marketing Components — FULLY IMPLEMENTED ✅
+
+### What Was Done
+
+Implemented the complete MARKETING-COMPONENTS-MASTER-PLAN.md across all 5 components in 4 files. Zero new TypeScript errors.
+
+**Phase 1 — Prop Renames & Interface Expansion:**
+
+- ComparisonTable: 8 props renamed (highlight→highlighted, priceSubtext→priceNote, feature→label, tooltip→description, group→category, stickyColumn→stickyFirstColumn, mobileLayout→mobileStack, headerBackgroundColor→headerBackground)
+- AnnouncementBar: 4 props renamed (text→message, link→linkUrl, dismissible→closable, icon→iconName) + accessibility (role="banner", aria-labels)
+- SocialProof: Major expansion — 4 renames + dual-mode architecture (rating/count). New SocialProofAvatar interface. Count mode has avatar stack, formatted count, badge. Schema type now enum instead of boolean.
+- TrustBadges: Expanded badge interface (icon, text, description, featured, badgeColor). Added variant prop (default/pills/cards/minimal). Icon+text rendering when no image.
+
+**Phase 2 — Normalizers:**
+
+- 3 new normalizers in converter.ts: AnnouncementBar, SocialProof (auto-detects mode, maps legacy props), ComparisonTable (boolean mobileStack conversion)
+- TrustBadges normalizer enhanced (alt, badgeColor fields)
+- LogoCloud normalizer fix (variant "grid"→"simple" alias)
+
+**Phase 3 — Metadata:**
+
+- All 5 component-metadata.ts entries updated with richer descriptions, expanded keywords, and missing usageGuidelines
+
+**Phase 4 — Accessibility:**
+
+- ComparisonTable: role="region", aria-label, scope="col"
+- SocialProof: aria-label on all rating variants, aria-hidden on decorative stars
+- TrustBadges: role="list" + role="listitem"
+
+**All 12 Critical Issues from Master Plan RESOLVED:**
+
+- ✅ P0: AnnouncementBar closable/dismissible mismatch — fixed
+- ✅ P0: AnnouncementBar variant misalignment — normalizer handles
+- ✅ P0: SocialProof different components — dual mode bridges both
+- ✅ P0: ComparisonTable highlight/highlighted — renamed
+- ✅ P1: ComparisonTable 3 field mismatches — all renamed
+- ✅ P1: TrustBadges badge array — interface expanded
+- ✅ P1: Missing normalizers — all 3 created
+- ✅ SocialProof missing usageGuidelines — added
 
 ---
 

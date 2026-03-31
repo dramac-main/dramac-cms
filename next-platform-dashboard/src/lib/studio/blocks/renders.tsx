@@ -24943,7 +24943,14 @@ export interface TooltipProps {
   children?: React.ReactNode;
   text?: string;
   position?: "top" | "bottom" | "left" | "right";
-  variant?: "dark" | "light" | "primary" | "success" | "warning" | "error" | "custom";
+  variant?:
+    | "dark"
+    | "light"
+    | "primary"
+    | "success"
+    | "warning"
+    | "error"
+    | "custom";
   customBackgroundColor?: string;
   customTextColor?: string;
   delay?: number;
@@ -24969,14 +24976,24 @@ export function TooltipRender({
     right: "left-full top-1/2 -translate-y-1/2 ml-2",
   }[position];
 
-  const variantStyles: Record<string, { bg: string; text: string; extra?: string }> = {
+  const variantStyles: Record<
+    string,
+    { bg: string; text: string; extra?: string }
+  > = {
     dark: { bg: "#111827", text: "#ffffff" },
-    light: { bg: "#ffffff", text: "#111827", extra: "border border-gray-200 shadow-lg" },
+    light: {
+      bg: "#ffffff",
+      text: "#111827",
+      extra: "border border-gray-200 shadow-lg",
+    },
     primary: { bg: "#2563eb", text: "#ffffff" },
     success: { bg: "#16a34a", text: "#ffffff" },
     warning: { bg: "#d97706", text: "#ffffff" },
     error: { bg: "#dc2626", text: "#ffffff" },
-    custom: { bg: customBackgroundColor || "#111827", text: customTextColor || "#ffffff" },
+    custom: {
+      bg: customBackgroundColor || "#111827",
+      text: customTextColor || "#ffffff",
+    },
   };
 
   const styles = variantStyles[variant] || variantStyles.dark;
@@ -25141,7 +25158,10 @@ export function ParallaxRender({
       {overlay && (
         <div
           className="absolute inset-0"
-          style={{ backgroundColor: overlayColor, opacity: overlayOpacity / 100 }}
+          style={{
+            backgroundColor: overlayColor,
+            opacity: overlayOpacity / 100,
+          }}
         />
       )}
       <div
@@ -25158,10 +25178,10 @@ export function ParallaxRender({
 // ============================================================================
 
 export interface AnnouncementBarProps {
-  text?: string;
-  link?: string;
+  message?: string;
+  linkUrl?: string;
   linkText?: string;
-  dismissible?: boolean;
+  closable?: boolean;
   position?: "top" | "bottom";
   variant?:
     | "default"
@@ -25175,7 +25195,7 @@ export interface AnnouncementBarProps {
     | "error"
     | "info"
     | "custom";
-  icon?: React.ReactNode;
+  iconName?: React.ReactNode;
   textAlign?: "left" | "center" | "right";
   size?: "sm" | "md" | "lg";
   sticky?: boolean;
@@ -25189,13 +25209,13 @@ export interface AnnouncementBarProps {
 }
 
 export function AnnouncementBarRender({
-  text = "📢 Big announcement! Check out our latest updates.",
-  link,
+  message = "📢 Big announcement! Check out our latest updates.",
+  linkUrl,
   linkText = "Learn more →",
-  dismissible = true,
+  closable = true,
   position = "top",
   variant = "default",
-  icon,
+  iconName,
   textAlign = "center",
   size = "md",
   sticky = true,
@@ -25254,7 +25274,7 @@ export function AnnouncementBarRender({
       ? "linear-gradient(to right, #9333ea, #ec4899, #ef4444)"
       : undefined;
 
-  const resolvedBg = isCustom ? (backgroundColor || colors.bg) : colors.bg;
+  const resolvedBg = isCustom ? backgroundColor || colors.bg : colors.bg;
   const dark = isCustom
     ? isDarkBackground(backgroundColor)
     : !["warning", "outlined", "minimal"].includes(variant);
@@ -25274,6 +25294,8 @@ export function AnnouncementBarRender({
   return (
     <div
       id={id}
+      role="banner"
+      aria-label="Announcement"
       className={`w-full ${sizeClasses} ${weightClasses} ${stickyClasses} ${className}`}
       style={{
         backgroundColor: gradientCss ? undefined : resolvedBg,
@@ -25285,19 +25307,22 @@ export function AnnouncementBarRender({
       <div
         className={`max-w-7xl mx-auto flex items-center gap-2 md:gap-4 ${alignClasses}`}
       >
-        {icon && <span className="flex-shrink-0">{icon}</span>}
-        <span className="flex-1 md:flex-none">{text}</span>
-        {link && (
+        {iconName && <span className="flex-shrink-0">{iconName}</span>}
+        <span className="flex-1 md:flex-none">{message}</span>
+        {linkUrl && (
           <a
-            href={link}
+            href={linkUrl}
             className="font-semibold underline underline-offset-2 hover:no-underline flex-shrink-0"
             style={{ color: resolvedLinkColor }}
           >
             {linkText}
           </a>
         )}
-        {dismissible && (
-          <button className="ml-2 md:ml-4 p-1 rounded hover:bg-white/20 transition-colors flex-shrink-0">
+        {closable && (
+          <button
+            className="ml-2 md:ml-4 p-1 rounded hover:bg-white/20 transition-colors flex-shrink-0"
+            aria-label="Close announcement"
+          >
             <svg
               className="w-4 h-4"
               fill="none"
@@ -25322,7 +25347,15 @@ export function AnnouncementBarRender({
 // SOCIAL PROOF - Rating & Review Display
 // ============================================================================
 
+export interface SocialProofAvatar {
+  image: string;
+  alt?: string;
+  name?: string;
+}
+
 export interface SocialProofProps {
+  mode?: "rating" | "count";
+  // Rating mode props
   rating?: number;
   maxRating?: number;
   reviewCount?: number;
@@ -25332,21 +25365,33 @@ export interface SocialProofProps {
   size?: ResponsiveValue<"sm" | "md" | "lg">;
   showCount?: boolean;
   showPlatform?: boolean;
-  starColor?: string;
-  emptyStarColor?: string;
+  ratingColor?: string;
+  ratingEmptyColor?: string;
   scoreBackgroundColor?: string;
   scoreTextColor?: string;
   mutedTextColor?: string;
-  // Schema.org (Phase 5)
-  enableSchema?: boolean;
-  schemaItemReviewed?: string;
-  // Animation (Phase 5)
+  // Count mode props
+  count?: number;
+  countSuffix?: string;
+  label?: string;
+  showAvatars?: boolean;
+  avatars?: SocialProofAvatar[];
+  maxVisible?: number;
+  showBadge?: boolean;
+  badgeText?: string;
+  badgeColor?: string;
+  animateCount?: boolean;
+  // Schema.org
+  schemaType?: "AggregateRating" | "Product" | "LocalBusiness" | false;
+  schemaName?: string;
+  // Animation
   animateOnScroll?: boolean;
   id?: string;
   className?: string;
 }
 
 export function SocialProofRender({
+  mode = "rating",
   rating = 4.8,
   maxRating = 5,
   reviewCount = 1250,
@@ -25356,13 +25401,23 @@ export function SocialProofRender({
   size = "md",
   showCount = true,
   showPlatform = true,
-  starColor,
-  emptyStarColor,
+  ratingColor,
+  ratingEmptyColor,
   scoreBackgroundColor,
   scoreTextColor,
   mutedTextColor,
-  enableSchema = false,
-  schemaItemReviewed,
+  count = 2500,
+  countSuffix = "+",
+  label = "happy customers",
+  showAvatars = true,
+  avatars = [],
+  maxVisible = 4,
+  showBadge = false,
+  badgeText = "Verified",
+  badgeColor,
+  animateCount = false,
+  schemaType = false,
+  schemaName,
   animateOnScroll = false,
   id,
   className = "",
@@ -25371,28 +25426,29 @@ export function SocialProofRender({
   const platformLogoUrl = getImageUrl(platformLogo);
 
   // Resolve colours with CSS variable fallbacks
-  const resolvedStarColor = starColor || "var(--color-star, #facc15)";
-  const resolvedEmptyStarColor =
-    emptyStarColor || "var(--color-star-empty, #d1d5db)";
+  const resolvedRatingColor = ratingColor || "var(--color-star, #facc15)";
+  const resolvedRatingEmptyColor =
+    ratingEmptyColor || "var(--color-star-empty, #d1d5db)";
   const resolvedScoreBg =
     scoreBackgroundColor || "var(--color-success, #22c55e)";
   const resolvedScoreText = scoreTextColor || "#ffffff";
   const resolvedMutedText =
     mutedTextColor || "var(--color-muted-foreground, #6b7280)";
+  const resolvedBadgeColor = badgeColor || "var(--color-success, #22c55e)";
 
   // Schema.org JSON-LD for SEO
-  const schemaJsonLd = enableSchema ? (
+  const schemaJsonLd = schemaType ? (
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{
         __html: JSON.stringify({
           "@context": "https://schema.org",
-          "@type": "AggregateRating",
-          ...(schemaItemReviewed
+          "@type": schemaType,
+          ...(schemaName
             ? {
                 itemReviewed: {
                   "@type": "Organization",
-                  name: schemaItemReviewed,
+                  name: schemaName,
                 },
               }
             : {}),
@@ -25425,12 +25481,12 @@ export function SocialProofRender({
   const emptyStars = maxRating - fullStars - (hasHalfStar ? 1 : 0);
 
   const renderStars = () => (
-    <div className="flex items-center">
+    <div className="flex items-center" aria-hidden="true">
       {[...Array(fullStars)].map((_, i) => (
         <svg
           key={`full-${i}`}
           className={`${starSize} fill-current`}
-          style={{ color: resolvedStarColor }}
+          style={{ color: resolvedRatingColor }}
           viewBox="0 0 20 20"
         >
           <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
@@ -25439,13 +25495,13 @@ export function SocialProofRender({
       {hasHalfStar && (
         <svg
           className={`${starSize}`}
-          style={{ color: resolvedStarColor }}
+          style={{ color: resolvedRatingColor }}
           viewBox="0 0 20 20"
         >
           <defs>
             <linearGradient id="halfStar">
               <stop offset="50%" stopColor="currentColor" />
-              <stop offset="50%" stopColor={resolvedEmptyStarColor} />
+              <stop offset="50%" stopColor={resolvedRatingEmptyColor} />
             </linearGradient>
           </defs>
           <path
@@ -25458,7 +25514,7 @@ export function SocialProofRender({
         <svg
           key={`empty-${i}`}
           className={`${starSize} fill-current`}
-          style={{ color: resolvedEmptyStarColor }}
+          style={{ color: resolvedRatingEmptyColor }}
           viewBox="0 0 20 20"
         >
           <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
@@ -25467,15 +25523,77 @@ export function SocialProofRender({
     </div>
   );
 
+  // ── Count mode ──────────────────────────────────────────────────────
+  if (mode === "count") {
+    const visibleAvatars = avatars.slice(0, maxVisible);
+    const overflowCount = Math.max(0, avatars.length - maxVisible);
+    const formattedCount =
+      count >= 1000
+        ? `${(count / 1000).toFixed(count % 1000 === 0 ? 0 : 1)}k`
+        : String(count);
+
+    return (
+      <div
+        id={id}
+        role="status"
+        aria-label={`${count.toLocaleString()}${countSuffix} ${label}`}
+        className={`inline-flex items-center ${sizeClasses} ${className}`}
+      >
+        {schemaJsonLd}
+        {showAvatars && visibleAvatars.length > 0 && (
+          <div className="flex items-center -space-x-2 mr-3">
+            {visibleAvatars.map((avatar, i) => (
+              <img
+                key={i}
+                src={getImageUrl(avatar.image) || ""}
+                alt={avatar.alt || avatar.name || `User ${i + 1}`}
+                className="w-8 h-8 rounded-full border-2 border-white object-cover"
+              />
+            ))}
+            {overflowCount > 0 && (
+              <div
+                className="w-8 h-8 rounded-full border-2 border-white flex items-center justify-center text-xs font-medium"
+                style={{ backgroundColor: resolvedMutedText, color: "#ffffff" }}
+              >
+                +{overflowCount}
+              </div>
+            )}
+          </div>
+        )}
+        <div className="flex flex-col">
+          <span className="font-bold text-lg leading-tight">
+            {formattedCount}
+            {countSuffix}
+          </span>
+          {label && (
+            <span className="text-sm" style={{ color: resolvedMutedText }}>
+              {label}
+            </span>
+          )}
+        </div>
+        {showBadge && badgeText && (
+          <span
+            className="ml-3 px-2 py-0.5 rounded-full text-xs font-medium text-white"
+            style={{ backgroundColor: resolvedBadgeColor }}
+          >
+            {badgeText}
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  // ── Rating mode variants ───────────────────────────────────────────
   if (variant === "compact") {
     return (
       <div
         id={id}
+        aria-label={`Rated ${rating} out of ${maxRating}`}
         className={`inline-flex items-center ${sizeClasses} ${className}`}
       >
         <svg
           className={`${starSize} fill-current`}
-          style={{ color: resolvedStarColor }}
+          style={{ color: resolvedRatingColor }}
           viewBox="0 0 20 20"
         >
           <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
@@ -25494,6 +25612,7 @@ export function SocialProofRender({
     return (
       <div
         id={id}
+        aria-label={`Rated ${rating} out of ${maxRating}`}
         className={`inline-flex items-center ${sizeClasses} ${className}`}
       >
         <div
@@ -25522,6 +25641,7 @@ export function SocialProofRender({
   return (
     <div
       id={id}
+      aria-label={`Rated ${rating} out of ${maxRating}`}
       className={`inline-flex flex-col items-center ${sizeClasses} ${className}`}
     >
       {schemaJsonLd}
@@ -25554,14 +25674,20 @@ export function SocialProofRender({
 // ============================================================================
 
 export interface TrustBadge {
-  image: string;
-  alt: string;
+  image?: string;
+  icon?: string;
+  text?: string;
+  description?: string;
+  alt?: string;
   link?: string;
+  featured?: boolean;
+  badgeColor?: string;
 }
 
 export interface TrustBadgesProps {
   badges?: TrustBadge[];
   title?: string;
+  variant?: "default" | "pills" | "cards" | "minimal";
   layout?: ResponsiveValue<"row" | "grid">;
   columns?: ResponsiveValue<2 | 3 | 4 | 5 | 6>;
   size?: ResponsiveValue<"sm" | "md" | "lg">;
@@ -25569,7 +25695,7 @@ export interface TrustBadgesProps {
   hoverEffect?: boolean;
   gap?: ResponsiveValue<"sm" | "md" | "lg">;
   alignment?: "start" | "center" | "end";
-  // Animation (Phase 5)
+  // Animation
   animateOnScroll?: boolean;
   staggerDelay?: number;
   id?: string;
@@ -25578,12 +25704,21 @@ export interface TrustBadgesProps {
 
 export function TrustBadgesRender({
   badges = [
-    { image: "/badges/ssl.svg", alt: "SSL Secure" },
-    { image: "/badges/money-back.svg", alt: "Money Back Guarantee" },
-    { image: "/badges/verified.svg", alt: "Verified Business" },
-    { image: "/badges/support.svg", alt: "24/7 Support" },
+    { image: "/badges/ssl.svg", alt: "SSL Secure", text: "SSL Secure" },
+    {
+      image: "/badges/money-back.svg",
+      alt: "Money Back Guarantee",
+      text: "Money Back",
+    },
+    {
+      image: "/badges/verified.svg",
+      alt: "Verified Business",
+      text: "Verified",
+    },
+    { image: "/badges/support.svg", alt: "24/7 Support", text: "24/7 Support" },
   ],
   title,
+  variant = "default",
   layout = "row",
   columns = 4,
   size = "md",
@@ -25628,7 +25763,12 @@ export function TrustBadgesRender({
   }[alignment];
 
   return (
-    <div id={id} className={className}>
+    <div
+      id={id}
+      className={className}
+      role="list"
+      aria-label={title || "Trust badges"}
+    >
       {title && (
         <p
           className="text-xs md:text-sm text-center mb-4"
@@ -25648,14 +25788,73 @@ export function TrustBadgesRender({
                 animationDelay: `${index * staggerDelay}ms`,
               }
             : {};
-          const imageElement = (
+          const featuredStyle: React.CSSProperties = badge.featured
+            ? {
+                borderColor:
+                  badge.badgeColor || "var(--color-primary, #3b82f6)",
+                borderWidth: "2px",
+              }
+            : {};
+
+          // Determine badge content: image-based or icon+text
+          const hasImage = badge.image && badge.image.length > 0;
+          const badgeContent = hasImage ? (
             <img
               src={badge.image}
-              alt={badge.alt}
+              alt={badge.alt || badge.text || ""}
               className={`${sizeClasses} w-auto object-contain transition-all duration-300 ${
                 grayscale ? "grayscale hover:grayscale-0" : ""
               } ${hoverEffect ? "hover:scale-110 hover:opacity-100 opacity-70" : ""}`}
             />
+          ) : (
+            <div
+              className={`flex items-center gap-2 transition-all duration-300 ${
+                hoverEffect
+                  ? "hover:scale-105 hover:opacity-100 opacity-80"
+                  : ""
+              }`}
+            >
+              {badge.icon && (
+                <span className="text-lg" role="img" aria-hidden="true">
+                  {badge.icon}
+                </span>
+              )}
+              <div className="flex flex-col">
+                {badge.text && (
+                  <span className="text-sm font-medium leading-tight">
+                    {badge.text}
+                  </span>
+                )}
+                {badge.description && (
+                  <span
+                    className="text-xs"
+                    style={{ color: "var(--color-muted-foreground, #6b7280)" }}
+                  >
+                    {badge.description}
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+
+          // Variant wrappers
+          const variantClasses = {
+            default: "",
+            pills:
+              "px-3 py-1.5 rounded-full border border-gray-200 bg-white/50 backdrop-blur-sm",
+            cards:
+              "px-4 py-3 rounded-lg border border-gray-200 bg-white shadow-sm",
+            minimal: "",
+          }[variant];
+
+          const wrappedContent = (
+            <div
+              role="listitem"
+              className={`inline-flex items-center ${variantClasses}`}
+              style={{ ...animStyle, ...featuredStyle }}
+            >
+              {badgeContent}
+            </div>
           );
 
           return badge.link ? (
@@ -25664,14 +25863,11 @@ export function TrustBadgesRender({
               href={badge.link}
               target="_blank"
               rel="noopener noreferrer"
-              style={animStyle}
             >
-              {imageElement}
+              {wrappedContent}
             </a>
           ) : (
-            <div key={index} style={animStyle}>
-              {imageElement}
-            </div>
+            <div key={index}>{wrappedContent}</div>
           );
         })}
       </div>
@@ -25934,19 +26130,19 @@ export function LogoCloudRender({
 
 export interface ComparisonColumn {
   name: string;
-  highlight?: boolean;
+  highlighted?: boolean;
   badge?: string;
   price?: string;
-  priceSubtext?: string;
+  priceNote?: string;
   ctaText?: string;
   ctaLink?: string;
   ctaVariant?: "primary" | "outline";
 }
 
 export interface ComparisonRow {
-  feature: string;
-  tooltip?: string;
-  group?: string;
+  label: string;
+  description?: string;
+  category?: string;
   values: (boolean | string)[];
 }
 
@@ -25960,14 +26156,14 @@ export interface ComparisonTableProps {
   highlightBorderColor?: string;
   checkColor?: string;
   crossColor?: string;
-  headerBackgroundColor?: string;
+  headerBackground?: string;
   titleColor?: string;
   subtitleColor?: string;
   featureTextColor?: string;
   rowHoverColor?: string;
   stickyHeader?: boolean;
-  stickyColumn?: boolean;
-  mobileLayout?: "scroll" | "stack";
+  stickyFirstColumn?: boolean;
+  mobileStack?: boolean;
   id?: string;
   className?: string;
   // Legacy support
@@ -25977,15 +26173,15 @@ export interface ComparisonTableProps {
 export function ComparisonTableRender({
   columns = [
     { name: "Basic", price: "$9/mo" },
-    { name: "Pro", price: "$29/mo", highlight: true },
+    { name: "Pro", price: "$29/mo", highlighted: true },
     { name: "Enterprise", price: "$99/mo" },
   ],
   rows = [
-    { feature: "Users", values: ["1", "5", "Unlimited"] },
-    { feature: "Storage", values: ["5GB", "50GB", "500GB"] },
-    { feature: "API Access", values: [false, true, true] },
-    { feature: "Priority Support", values: [false, false, true] },
-    { feature: "Custom Domain", values: [false, true, true] },
+    { label: "Users", values: ["1", "5", "Unlimited"] },
+    { label: "Storage", values: ["5GB", "50GB", "500GB"] },
+    { label: "API Access", values: [false, true, true] },
+    { label: "Priority Support", values: [false, false, true] },
+    { label: "Custom Domain", values: [false, true, true] },
   ],
   title,
   subtitle,
@@ -25994,14 +26190,14 @@ export function ComparisonTableRender({
   highlightBorderColor,
   checkColor,
   crossColor,
-  headerBackgroundColor,
+  headerBackground,
   titleColor,
   subtitleColor,
   featureTextColor,
   rowHoverColor,
   stickyHeader = true,
-  stickyColumn = true,
-  mobileLayout = "scroll",
+  stickyFirstColumn = true,
+  mobileStack = false,
   id,
   className = "",
   highlightColor,
@@ -26014,8 +26210,7 @@ export function ComparisonTableRender({
     highlightBorderColor || "var(--color-highlight-border, #0ea5e9)";
   const resolvedCheckColor = checkColor || "var(--color-check, #22c55e)";
   const resolvedCrossColor = crossColor || "var(--color-cross, #9ca3af)";
-  const resolvedHeaderBg =
-    headerBackgroundColor || "var(--color-muted, #f9fafb)";
+  const resolvedHeaderBg = headerBackground || "var(--color-muted, #f9fafb)";
   const resolvedTitleColor = titleColor || "var(--color-foreground, #111827)";
   const resolvedSubtitleColor =
     subtitleColor || "var(--color-muted-foreground, #6b7280)";
@@ -26061,13 +26256,31 @@ export function ComparisonTableRender({
     return <span className="text-sm md:text-base">{value}</span>;
   };
 
-  // Group rows by group label
-  const groupedRows: { group?: string; rows: ComparisonRow[] }[] = [];
-  let currentGroup: { group?: string; rows: ComparisonRow[] } = { rows: [] };
-  rows.forEach((row) => {
-    if (row.group && row.group !== currentGroup.group) {
+  // Normalize rows: handle legacy "feature" field and comma-separated string values
+  const normalizedRows = rows.map((row: any) => ({
+    ...row,
+    label: row.label || row.feature || "",
+    values: Array.isArray(row.values)
+      ? row.values
+      : typeof row.values === "string"
+        ? row.values.split(",").map((v: string) => {
+            const t = v.trim().toLowerCase();
+            return t === "yes" || t === "true"
+              ? true
+              : t === "no" || t === "false"
+                ? false
+                : v.trim();
+          })
+        : [],
+  }));
+
+  // Group rows by category label
+  const groupedRows: { category?: string; rows: ComparisonRow[] }[] = [];
+  let currentGroup: { category?: string; rows: ComparisonRow[] } = { rows: [] };
+  normalizedRows.forEach((row) => {
+    if (row.category && row.category !== currentGroup.category) {
       if (currentGroup.rows.length > 0) groupedRows.push(currentGroup);
-      currentGroup = { group: row.group, rows: [row] };
+      currentGroup = { category: row.category, rows: [row] };
     } else {
       currentGroup.rows.push(row);
     }
@@ -26075,7 +26288,12 @@ export function ComparisonTableRender({
   if (currentGroup.rows.length > 0) groupedRows.push(currentGroup);
 
   return (
-    <div id={id} className={className}>
+    <div
+      id={id}
+      role="region"
+      aria-label={title || "Feature comparison"}
+      className={className}
+    >
       {(title || subtitle) && (
         <div className="text-center mb-8 md:mb-12">
           {title && (
@@ -26095,17 +26313,17 @@ export function ComparisonTableRender({
       )}
 
       {/* Mobile stacked layout */}
-      {mobileLayout === "stack" && (
+      {mobileStack && (
         <div className="md:hidden flex flex-col gap-4">
           {columns.map((col, colIndex) => (
             <div
               key={colIndex}
               className="rounded-lg overflow-hidden"
               style={{
-                border: col.highlight
+                border: col.highlighted
                   ? `2px solid ${resolvedHighlightBorder}`
                   : `1px solid var(--color-border, #e5e7eb)`,
-                backgroundColor: col.highlight
+                backgroundColor: col.highlighted
                   ? resolvedHighlightBg
                   : "var(--color-background, #ffffff)",
               }}
@@ -26134,12 +26352,12 @@ export function ComparisonTableRender({
                 {col.price && (
                   <div className="text-xl font-bold mt-1">{col.price}</div>
                 )}
-                {col.priceSubtext && (
+                {col.priceNote && (
                   <div
                     className="text-xs"
                     style={{ color: resolvedSubtitleColor }}
                   >
-                    {col.priceSubtext}
+                    {col.priceNote}
                   </div>
                 )}
               </div>
@@ -26156,7 +26374,7 @@ export function ComparisonTableRender({
                       className="text-sm font-medium"
                       style={{ color: resolvedFeatureColor }}
                     >
-                      {row.feature}
+                      {row.label}
                     </span>
                     <span className="text-sm">
                       {renderValue(row.values[colIndex])}
@@ -26192,13 +26410,14 @@ export function ComparisonTableRender({
 
       {/* Table layout (default scroll mode, or desktop for stack mode) */}
       <div
-        className={`overflow-x-auto -mx-4 md:mx-0 ${mobileLayout === "stack" ? "hidden md:block" : ""}`}
+        className={`overflow-x-auto -mx-4 md:mx-0 ${mobileStack ? "hidden md:block" : ""}`}
       >
-        <table className="w-full min-w-[600px]">
+        <table className="w-full min-w-[600px]" role="table">
           <thead className={stickyHeader ? "sticky top-0 z-10" : ""}>
             <tr style={{ backgroundColor: resolvedHeaderBg }}>
               <th
-                className={`text-left p-3 md:p-4 font-semibold ${stickyColumn ? "sticky left-0 z-20" : ""}`}
+                scope="col"
+                className={`text-left p-3 md:p-4 font-semibold ${stickyFirstColumn ? "sticky left-0 z-20" : ""}`}
                 style={{
                   color: resolvedFeatureColor,
                   backgroundColor: resolvedHeaderBg,
@@ -26209,9 +26428,10 @@ export function ComparisonTableRender({
               {columns.map((col, index) => (
                 <th
                   key={index}
+                  scope="col"
                   className="text-center p-3 md:p-4"
                   style={
-                    col.highlight
+                    col.highlighted
                       ? {
                           backgroundColor: resolvedHighlightBg,
                           borderTop: `4px solid ${resolvedHighlightBorder}`,
@@ -26241,12 +26461,12 @@ export function ComparisonTableRender({
                       {col.price}
                     </div>
                   )}
-                  {col.priceSubtext && (
+                  {col.priceNote && (
                     <div
                       className="text-xs"
                       style={{ color: resolvedSubtitleColor }}
                     >
-                      {col.priceSubtext}
+                      {col.priceNote}
                     </div>
                   )}
                 </th>
@@ -26256,7 +26476,7 @@ export function ComparisonTableRender({
           <tbody>
             {groupedRows.map((group, gIdx) => (
               <React.Fragment key={gIdx}>
-                {group.group && (
+                {group.category && (
                   <tr>
                     <td
                       colSpan={columns.length + 1}
@@ -26266,7 +26486,7 @@ export function ComparisonTableRender({
                         backgroundColor: resolvedHeaderBg,
                       }}
                     >
-                      {group.group}
+                      {group.category}
                     </td>
                   </tr>
                 )}
@@ -26283,19 +26503,19 @@ export function ComparisonTableRender({
                     }
                   >
                     <td
-                      className={`p-3 md:p-4 font-medium border-b ${stickyColumn ? "sticky left-0 z-10" : ""}`}
+                      className={`p-3 md:p-4 font-medium border-b ${stickyFirstColumn ? "sticky left-0 z-10" : ""}`}
                       style={{
                         color: resolvedFeatureColor,
                         backgroundColor: "var(--color-background, #ffffff)",
                       }}
                     >
                       <span className="flex items-center gap-1">
-                        {row.feature}
-                        {row.tooltip && (
+                        {row.label}
+                        {row.description && (
                           <span
                             className="cursor-help"
                             style={{ color: resolvedCrossColor }}
-                            title={row.tooltip}
+                            title={row.description}
                           >
                             <svg
                               className="w-4 h-4"
@@ -26319,7 +26539,7 @@ export function ComparisonTableRender({
                         key={colIndex}
                         className="p-3 md:p-4 text-center border-b"
                         style={
-                          columns[colIndex]?.highlight
+                          columns[colIndex]?.highlighted
                             ? { backgroundColor: resolvedHighlightBg }
                             : undefined
                         }
@@ -26605,7 +26825,12 @@ export function CardFlip3DRender({
             backgroundPosition: "center",
           }}
         >
-          {frontImageUrl && <div className="absolute inset-0" style={{ backgroundColor: "rgba(0,0,0,0.3)" }} />}
+          {frontImageUrl && (
+            <div
+              className="absolute inset-0"
+              style={{ backgroundColor: "rgba(0,0,0,0.3)" }}
+            />
+          )}
           <div className="relative z-10 text-center">
             <h3 className="text-xl font-bold mb-2">{frontTitle}</h3>
             <p className="text-sm opacity-80">{frontDescription}</p>
@@ -26624,7 +26849,12 @@ export function CardFlip3DRender({
             backgroundPosition: "center",
           }}
         >
-          {backImageUrl && <div className="absolute inset-0" style={{ backgroundColor: "rgba(0,0,0,0.3)" }} />}
+          {backImageUrl && (
+            <div
+              className="absolute inset-0"
+              style={{ backgroundColor: "rgba(0,0,0,0.3)" }}
+            />
+          )}
           <div className="relative z-10 text-center">
             <h3 className="text-xl font-bold mb-2">{backTitle}</h3>
             <p className="text-sm opacity-80">{backDescription}</p>
@@ -26730,7 +26960,12 @@ export function TiltCardRender({
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
-      {bgImageUrl && <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${overlayOpacity})` }} />}
+      {bgImageUrl && (
+        <div
+          className="absolute inset-0"
+          style={{ backgroundColor: `rgba(0,0,0,${overlayOpacity})` }}
+        />
+      )}
       {glare && (
         <div
           className="absolute inset-0 pointer-events-none"

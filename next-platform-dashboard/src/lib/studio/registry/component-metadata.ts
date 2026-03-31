@@ -959,59 +959,94 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
     type: "AnnouncementBar",
     label: "Announcement Bar",
     category: "marketing",
-    description: "Top page announcement",
+    description:
+      "Top page announcement banner with optional link and close button",
     acceptsChildren: false,
-    keywords: ["announcement", "banner", "promo", "alert"],
+    keywords: ["announcement", "banner", "promo", "alert", "notice", "bar"],
     ai: {
-      description: "Top-of-page announcement banner",
-      usageGuidelines: "Use for promotions, alerts, or important announcements",
+      description:
+        "Dismissible top-of-page announcement banner with icon, message, and optional link. Supports info, success, warning, error, and promo variants.",
+      usageGuidelines:
+        "Use for site-wide promotions, shipping notices, sale alerts, or important announcements. Place at the very top of the page.",
     },
   },
   {
     type: "SocialProof",
     label: "Social Proof",
     category: "marketing",
-    description: "User/customer count display",
+    description: "Rating display or customer count with avatar stack",
     acceptsChildren: false,
-    keywords: ["social proof", "users", "customers", "trust"],
+    keywords: [
+      "social proof",
+      "users",
+      "customers",
+      "trust",
+      "rating",
+      "stars",
+      "reviews",
+      "count",
+    ],
     ai: {
-      description: "Display customer/user counts for credibility",
+      description:
+        "Dual-mode social proof: 'rating' mode shows star ratings with review count and platform attribution; 'count' mode shows customer/user counts with avatar stacks and badges. Supports Schema.org markup for SEO.",
+      usageGuidelines:
+        "Use rating mode near testimonials or product sections. Use count mode in hero sections or above-the-fold to build trust. Combine with TrustBadges for maximum credibility.",
     },
   },
   {
     type: "TrustBadges",
     label: "Trust Badges",
     category: "marketing",
-    description: "Trust and security badges",
+    description: "Trust indicators with images, icons, or text badges",
     acceptsChildren: false,
-    keywords: ["trust", "badges", "security", "certifications"],
+    keywords: [
+      "trust",
+      "badges",
+      "security",
+      "certifications",
+      "verified",
+      "guarantee",
+    ],
     ai: {
-      description: "Row of trust/security badges",
-      usageGuidelines: "Use near forms and checkout areas",
+      description:
+        "Row or grid of trust/security badges. Supports image-based badges and icon+text badges. Variants: default (images), pills (rounded bordered), cards (elevated), minimal (clean text).",
+      usageGuidelines:
+        "Use near forms, checkout areas, and pricing sections. Place below CTAs to reduce friction. Featured badges get highlighted borders.",
     },
   },
   {
     type: "LogoCloud",
     label: "Logo Cloud",
     category: "marketing",
-    description: "Client/partner logos grid",
+    description: "Client/partner logos grid with optional marquee scroll",
     acceptsChildren: false,
-    keywords: ["logos", "clients", "partners", "brands"],
+    keywords: [
+      "logos",
+      "clients",
+      "partners",
+      "brands",
+      "trusted by",
+      "marquee",
+    ],
     ai: {
-      description: "Grid of client/partner logos",
-      usageGuidelines: "Use for social proof - 'Trusted by...'",
+      description:
+        "Grid or marquee of client/partner logos with optional header badge. Variants: simple (grid), cards (elevated), marquee (auto-scrolling). Supports grayscale with hover color restore.",
+      usageGuidelines:
+        "Use for 'Trusted by...' social proof sections. Place below hero or above footer. Use marquee variant when you have 6+ logos.",
     },
   },
   {
     type: "ComparisonTable",
     label: "Comparison Table",
     category: "marketing",
-    description: "Feature comparison table",
+    description: "Feature comparison table with column highlighting",
     acceptsChildren: false,
-    keywords: ["comparison", "table", "pricing", "features"],
+    keywords: ["comparison", "table", "pricing", "features", "plans", "versus"],
     ai: {
-      description: "Table comparing features across options",
-      usageGuidelines: "Use for pricing pages and product comparisons",
+      description:
+        "Responsive feature comparison table with column highlighting, category grouping, sticky headers/columns, and mobile stacking. Variants: simple, cards, striped.",
+      usageGuidelines:
+        "Use for pricing pages and product comparisons. Highlight the recommended plan column. Group features by category for clarity. Enable stickyFirstColumn for wide tables.",
     },
   },
 

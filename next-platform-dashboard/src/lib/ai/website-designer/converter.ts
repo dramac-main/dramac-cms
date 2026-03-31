@@ -2197,6 +2197,9 @@ function transformPropsForStudio(
       hoverColor: props.hoverColor ?? !(props.logoGrayscaleHover ?? false),
       // CRITICAL: Render expects 'background' NOT 'backgroundColor'
       background: props.background || props.backgroundColor || "",
+      // Normalize variant aliases: "grid" → "simple"
+      variant:
+        (props.variant === "grid" ? "simple" : props.variant) || "simple",
     };
   }
 
@@ -2227,14 +2230,119 @@ function transformPropsForStudio(
               icon: isRealImageUrl ? "🛡️" : image || "🛡️",
               text,
               description: String(b.description || b.tooltip || ""),
+              alt: String(b.alt || text),
               image: isRealImageUrl ? image : "", // Only pass real URLs
               link: b.link || b.href || "",
               featured: b.featured || false,
+              badgeColor: b.badgeColor || b.color || "",
             };
           })
         : [],
       // Use 'pills' variant when no real images — looks better than broken images
       variant: props.variant || props.layout || "pills",
+    };
+  }
+
+  // AnnouncementBar component
+  if (type === "AnnouncementBar") {
+    return {
+      ...props,
+      message:
+        props.message ||
+        props.text ||
+        props.content ||
+        props.announcement ||
+        "Welcome! Check out our latest offers.",
+      linkUrl: props.linkUrl || props.link || props.url || props.href || "",
+      linkText:
+        props.linkText || props.ctaText || props.buttonText || "Learn more",
+      closable: props.closable ?? props.dismissible ?? true,
+      iconName: props.iconName || props.icon || "",
+      variant: props.variant || "info",
+      position: props.position || "top",
+      backgroundColor:
+        props.backgroundColor || props.background || props.bgColor || "",
+      textColor: props.textColor || props.color || "",
+    };
+  }
+
+  // SocialProof component
+  if (type === "SocialProof") {
+    const mode = props.mode || (props.count != null ? "count" : "rating");
+    const avatars = props.avatars || props.users || props.people || [];
+    return {
+      ...props,
+      mode,
+      // Rating mode
+      rating: Number(props.rating || props.stars || props.score || 4.8),
+      maxRating: Number(props.maxRating || props.maxStars || 5),
+      reviewCount: Number(
+        props.reviewCount || props.reviews || props.totalReviews || 1250,
+      ),
+      platform: props.platform || props.source || "Google Reviews",
+      ratingColor: props.ratingColor || props.starColor || "",
+      ratingEmptyColor: props.ratingEmptyColor || props.emptyStarColor || "",
+      // Count mode
+      count: Number(props.count || props.total || props.number || 2500),
+      countSuffix: props.countSuffix || props.suffix || "+",
+      label:
+        props.label || props.subtitle || props.description || "happy customers",
+      showAvatars:
+        props.showAvatars ?? (Array.isArray(avatars) && avatars.length > 0),
+      avatars: Array.isArray(avatars)
+        ? avatars.map((a: Record<string, unknown>, i: number) => ({
+            image: a.image || a.src || a.avatar || a.url || "",
+            alt: a.alt || a.name || `User ${i + 1}`,
+            name: a.name || "",
+          }))
+        : [],
+      // Schema
+      schemaType:
+        props.schemaType || (props.enableSchema ? "AggregateRating" : false),
+      schemaName:
+        props.schemaName ||
+        props.schemaItemReviewed ||
+        props.businessName ||
+        "",
+      variant: props.variant || "stars",
+    };
+  }
+
+  // ComparisonTable component
+  if (type === "ComparisonTable") {
+    const columns = props.columns || props.plans || props.options || [];
+    const rows = props.rows || props.features || [];
+    return {
+      ...props,
+      title: props.title || props.headline || "",
+      subtitle: props.subtitle || props.description || "",
+      variant: props.variant || "simple",
+      columns: Array.isArray(columns)
+        ? columns.map((col: Record<string, unknown>, i: number) => ({
+            name: col.name || col.title || col.label || `Plan ${i + 1}`,
+            highlighted:
+              col.highlighted ?? col.highlight ?? col.recommended ?? false,
+            priceNote: col.priceNote || col.priceSubtext || col.price || "",
+          }))
+        : [],
+      rows: Array.isArray(rows)
+        ? rows.map((row: Record<string, unknown>) => ({
+            label: row.label || row.feature || row.name || row.title || "",
+            description: row.description || row.tooltip || "",
+            category: row.category || row.group || "",
+            values: row.values || row.support || [],
+          }))
+        : [],
+      stickyFirstColumn: props.stickyFirstColumn ?? props.stickyColumn ?? true,
+      mobileStack:
+        props.mobileStack != null
+          ? Boolean(props.mobileStack)
+          : props.mobileLayout === "stacked",
+      headerBackground:
+        props.headerBackground ||
+        props.headerBackgroundColor ||
+        props.headerBg ||
+        "",
     };
   }
 

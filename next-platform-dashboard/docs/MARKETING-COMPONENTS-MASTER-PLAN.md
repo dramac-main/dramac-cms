@@ -38,60 +38,60 @@ Marketing components are the **conversion engine of every website**. They create
 
 ### 0.1 File Map
 
-| File                      | Path                                            | Purpose                                                                           |
-| ------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------------- |
-| **renders.tsx**           | `src/lib/studio/blocks/renders.tsx`             | Render functions for all 5 marketing components                                   |
-| **core-components.ts**    | `src/lib/studio/registry/core-components.ts`    | `defineComponent()` registrations with fields, defaultProps, AI hints             |
-| **component-metadata.ts** | `src/lib/studio/registry/component-metadata.ts` | AI discovery metadata (keywords, usageGuidelines, category)                       |
-| **converter.ts**          | `src/lib/ai/website-designer/converter.ts`      | `typeMap` aliases + `KNOWN_REGISTRY_TYPES` + `transformPropsForStudio()` handlers |
+| File                      | Path                                            | Purpose                                                                                                                     |
+| ------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| **renders.tsx**           | `src/lib/studio/blocks/renders.tsx`             | Render functions for all 5 marketing components                                                                             |
+| **core-components.ts**    | `src/lib/studio/registry/core-components.ts`    | `defineComponent()` registrations with fields, defaultProps, AI hints                                                       |
+| **component-metadata.ts** | `src/lib/studio/registry/component-metadata.ts` | AI discovery metadata (keywords, usageGuidelines, category)                                                                 |
+| **converter.ts**          | `src/lib/ai/website-designer/converter.ts`      | `typeMap` aliases + `KNOWN_REGISTRY_TYPES` + `transformPropsForStudio()` handlers                                           |
 | **renderer.tsx**          | `src/lib/studio/engine/renderer.tsx`            | Dispatches render functions via `componentRegistry.get(type)`, injects `{...component.props, siteId}` + brand colours/fonts |
-| **layout-utils.ts**       | `src/lib/studio/blocks/layout-utils.ts`         | Shared sizing/spacing utility maps (`getResponsiveClasses`, `isDarkBackground`, etc.) |
+| **layout-utils.ts**       | `src/lib/studio/blocks/layout-utils.ts`         | Shared sizing/spacing utility maps (`getResponsiveClasses`, `isDarkBackground`, etc.)                                       |
 
 ### 0.2 Exact Line Numbers (Verified via codebase audit — 2026-07)
 
 #### renders.tsx — All 5 Marketing Components
 
-| #  | Component           | Interface Start | Export Function | Props Count | Variants                                                     |
-| -- | ------------------- | --------------- | --------------- | ----------- | ------------------------------------------------------------ |
-| 1  | **AnnouncementBar** | L24875          | L24902          | 17          | default, success, warning, error, info, gradient, custom (7) |
-| 2  | **SocialProof**     | L25018          | L25042          | 19          | stars, score, compact, detailed (4)                          |
-| 3  | **TrustBadges**     | L25255          | L25272          | 13          | row, grid (2 layouts)                                        |
-| 4  | **LogoCloud**       | L25382          | L25408          | 22          | simple, cards, marquee (3)                                   |
-| 5  | **ComparisonTable** | L25643          | L25667          | 20          | simple, cards, striped (3)                                   |
+| #   | Component           | Interface Start | Export Function | Props Count | Variants                                                                                          |
+| --- | ------------------- | --------------- | --------------- | ----------- | ------------------------------------------------------------------------------------------------- |
+| 1   | **AnnouncementBar** | L25160          | L25191          | 17          | default, gradient, glass, outlined, minimal, animated, success, warning, error, info, custom (11) |
+| 2   | **SocialProof**     | L25325          | L25349          | 19          | stars, score, compact, detailed (4)                                                               |
+| 3   | **TrustBadges**     | L25562          | L25579          | 13          | row, grid (2 layouts)                                                                             |
+| 4   | **LogoCloud**       | L25692          | L25718          | 22          | simple, cards, marquee (3)                                                                        |
+| 5   | **ComparisonTable** | L25953          | L25977          | 20          | simple, cards, striped (3)                                                                        |
 
-> **Nested element:** `TrustBadgesElement` at L9144 is a nested function inside CTARender — NOT the standalone TrustBadgesRender. The standalone export is at L25272.
+> **Nested element:** `TrustBadgesElement` at L9147 is a nested function inside CTARender — NOT the standalone TrustBadgesRender. The standalone export is at L25579.
 
-> **Sub-interfaces:** `TrustBadge` at L25249, `LogoItem` at L25376, `ComparisonColumn` at L25625, `ComparisonRow` at L25636 are helper types used by TrustBadges, LogoCloud, and ComparisonTable respectively.
+> **Sub-interfaces:** `TrustBadge` at L25556, `LogoItem` at L25686, `ComparisonColumn` at L25935, `ComparisonRow` at L25946 are helper types used by TrustBadges, LogoCloud, and ComparisonTable respectively.
 
 #### core-components.ts — All 5 Marketing Registrations
 
-| #  | Component           | `type:` Line | Category  | Fields | fieldGroups | defaultProps |
-| -- | ------------------- | ------------ | --------- | ------ | ----------- | ------------ |
-| 1  | **AnnouncementBar** | L21197       | marketing | 50+    | 10 groups   | ✅           |
-| 2  | **SocialProof**     | L21757       | marketing | 50+    | 12 groups   | ✅           |
-| 3  | **TrustBadges**     | L22387       | marketing | 50+    | 12 groups   | ✅           |
-| 4  | **LogoCloud**       | L22999       | marketing | 60+    | 15 groups   | ✅           |
-| 5  | **ComparisonTable** | L23750       | marketing | 70+    | 17 groups   | ✅           |
+| #   | Component           | `type:` Line | Category  | Fields | fieldGroups | defaultProps |
+| --- | ------------------- | ------------ | --------- | ------ | ----------- | ------------ |
+| 1   | **AnnouncementBar** | L21197       | marketing | 50+    | 10 groups   | ✅           |
+| 2   | **SocialProof**     | L21757       | marketing | 50+    | 12 groups   | ✅           |
+| 3   | **TrustBadges**     | L22387       | marketing | 50+    | 12 groups   | ✅           |
+| 4   | **LogoCloud**       | L22999       | marketing | 60+    | 15 groups   | ✅           |
+| 5   | **ComparisonTable** | L23750       | marketing | 70+    | 17 groups   | ✅           |
 
 #### component-metadata.ts — All 5 Have Entries
 
-| #  | Component           | `type:` Line | Keywords                                          |
-| -- | ------------------- | ------------ | ------------------------------------------------- |
-| 1  | **AnnouncementBar** | L959         | announcement, banner, promo, alert                |
-| 2  | **SocialProof**     | L971         | social proof, users, customers, trust             |
-| 3  | **TrustBadges**     | L982         | trust, badges, security, certifications           |
-| 4  | **LogoCloud**       | L994         | logos, clients, partners, brands                  |
-| 5  | **ComparisonTable** | L1006        | comparison, table, pricing, features              |
+| #   | Component           | `type:` Line | Keywords                                |
+| --- | ------------------- | ------------ | --------------------------------------- |
+| 1   | **AnnouncementBar** | L959         | announcement, banner, promo, alert      |
+| 2   | **SocialProof**     | L971         | social proof, users, customers, trust   |
+| 3   | **TrustBadges**     | L982         | trust, badges, security, certifications |
+| 4   | **LogoCloud**       | L994         | logos, clients, partners, brands        |
+| 5   | **ComparisonTable** | L1006        | comparison, table, pricing, features    |
 
 #### converter.ts — Alias & Normalizer Map
 
-| #  | Component           | typeMap Aliases                                                                                   | KNOWN_REGISTRY | Normalizer    | Status       |
-| -- | ------------------- | ------------------------------------------------------------------------------------------------- | -------------- | ------------- | ------------ |
-| 1  | **AnnouncementBar** | AnnouncementBlock L446, AnnouncementBarBlock L447, Banner L448, BannerBlock L449                  | L823 ✅        | ❌ None       | ⚠️ No norm   |
-| 2  | **SocialProof**     | SocialProofBlock L426, SocialProofSection L427                                                    | L821 ✅        | ❌ None       | ⚠️ No norm   |
-| 3  | **TrustBadges**     | TrustBadgesBlock L419, TrustBadgesSection L420, Badges L421, Accreditations L422, Credentials L423, Certifications L424 | L820 ✅ | L2204 ✅ | ✅ Complete |
-| 4  | **LogoCloud**       | LogoCloudBlock L414, LogoCloudSection L415, PartnerLogos L416, Partners L417, TrustedBy L418      | L819 ✅        | L2131 ✅      | ✅ Complete  |
-| 5  | **ComparisonTable** | ComparisonBlock L442, ComparisonSection L443, ComparisonTableBlock L444                           | L822 ✅        | ❌ None       | ⚠️ No norm   |
+| #   | Component           | typeMap Aliases                                                                                                         | KNOWN_REGISTRY | Normalizer | Status      |
+| --- | ------------------- | ----------------------------------------------------------------------------------------------------------------------- | -------------- | ---------- | ----------- |
+| 1   | **AnnouncementBar** | AnnouncementBlock L446, AnnouncementBarBlock L447, Banner L448, BannerBlock L449                                        | L823 ✅        | ❌ None    | ⚠️ No norm  |
+| 2   | **SocialProof**     | SocialProofBlock L426, SocialProofSection L427                                                                          | L821 ✅        | ❌ None    | ⚠️ No norm  |
+| 3   | **TrustBadges**     | TrustBadgesBlock L419, TrustBadgesSection L420, Badges L421, Accreditations L422, Credentials L423, Certifications L424 | L820 ✅        | L2204 ✅   | ✅ Complete |
+| 4   | **LogoCloud**       | LogoCloudBlock L414, LogoCloudSection L415, PartnerLogos L416, Partners L417, TrustedBy L418                            | L819 ✅        | L2131 ✅   | ✅ Complete |
+| 5   | **ComparisonTable** | ComparisonBlock L442, ComparisonSection L443, ComparisonTableBlock L444                                                 | L822 ✅        | ❌ None    | ⚠️ No norm  |
 
 ### 0.3 Props Pipeline
 
@@ -118,6 +118,7 @@ Render function receives props via destructuring
 ```
 
 **Critical rules:**
+
 - Render function parameter names MUST match registry field names EXACTLY. There is NO mapping layer.
 - If registry says `closable` and render expects `dismissible`, the prop is silently lost. **This affects AnnouncementBar** — registry uses `closable`, render uses `dismissible`.
 - If registry says `highlighted` and render expects `highlight`, the prop is silently lost. **This affects ComparisonTable** — registry columns use `highlighted`, render uses `highlight`.
@@ -133,7 +134,10 @@ Render function receives props via destructuring
 All 5 marketing components follow **Pattern A: Static HTML (SSR-safe, no JS)**:
 
 ```tsx
-export function ComponentRender({ variant = "default", ...props }: ComponentProps) {
+export function ComponentRender({
+  variant = "default",
+  ...props
+}: ComponentProps) {
   // Pure HTML — no useState, no useEffect
   // Variant selection via object map or conditional classes
   // All colours applied via style={{}} with resolved values
@@ -164,16 +168,16 @@ export function ComponentRender({ variant = "default", ...props }: ComponentProp
 
 ### 0.6 DO / DON'T Rules
 
-| ✅ DO                                                                      | ❌ DON'T                                                                |
-| -------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Use `style={{}}` for ALL colours                                           | Use Tailwind colour classes (bg-red-600, text-blue-500)                 |
-| Use `isDarkBackground()` for dark mode detection                           | Hardcode dark/light colour assumptions                                  |
-| Use `getResponsiveClasses()` for breakpoint-aware values                   | Write manual breakpoint media queries                                   |
-| Match render prop names to registry field names EXACTLY                    | Assume a mapping layer exists — it does NOT                             |
-| Add `role`, `aria-label`, `aria-live` for marketing banners                | Skip accessibility on "decorative" marketing elements                   |
-| Use CSS variables with fallbacks: `var(--brand-primary, #3b82f6)`          | Hardcode brand colours                                                  |
-| Test with `npx tsc --noEmit` after every change                           | Assume TypeScript will catch runtime prop mismatches                    |
-| Add converter normalizer for every component                               | Rely on AI generating exact field names                                 |
+| ✅ DO                                                             | ❌ DON'T                                                |
+| ----------------------------------------------------------------- | ------------------------------------------------------- |
+| Use `style={{}}` for ALL colours                                  | Use Tailwind colour classes (bg-red-600, text-blue-500) |
+| Use `isDarkBackground()` for dark mode detection                  | Hardcode dark/light colour assumptions                  |
+| Use `getResponsiveClasses()` for breakpoint-aware values          | Write manual breakpoint media queries                   |
+| Match render prop names to registry field names EXACTLY           | Assume a mapping layer exists — it does NOT             |
+| Add `role`, `aria-label`, `aria-live` for marketing banners       | Skip accessibility on "decorative" marketing elements   |
+| Use CSS variables with fallbacks: `var(--brand-primary, #3b82f6)` | Hardcode brand colours                                  |
+| Test with `npx tsc --noEmit` after every change                   | Assume TypeScript will catch runtime prop mismatches    |
+| Add converter normalizer for every component                      | Rely on AI generating exact field names                 |
 
 ---
 
@@ -181,13 +185,13 @@ export function ComponentRender({ variant = "default", ...props }: ComponentProp
 
 ### 1.1 Component Inventory
 
-| #  | Component           | Category  | renders.tsx | core-components.ts | metadata.ts | converter aliases | Normalizer | Health  |
-| -- | ------------------- | --------- | ----------- | ------------------ | ----------- | ----------------- | ---------- | ------- |
-| 1  | AnnouncementBar     | marketing | ✅ L24875   | ✅ L21197          | ✅ L959     | 4 aliases         | ❌ Missing | 🔴 40% |
-| 2  | SocialProof         | marketing | ✅ L25018   | ✅ L21757          | ✅ L971     | 2 aliases         | ❌ Missing | 🔴 20% |
-| 3  | TrustBadges         | marketing | ✅ L25255   | ✅ L22387          | ✅ L982     | 6 aliases         | ✅ L2204   | 🟡 55% |
-| 4  | LogoCloud           | marketing | ✅ L25382   | ✅ L22999          | ✅ L994     | 5 aliases         | ✅ L2131   | 🟡 65% |
-| 5  | ComparisonTable     | marketing | ✅ L25643   | ✅ L23750          | ✅ L1006    | 3 aliases         | ❌ Missing | 🔴 35% |
+| #   | Component       | Category  | renders.tsx | core-components.ts | metadata.ts | converter aliases | Normalizer | Health |
+| --- | --------------- | --------- | ----------- | ------------------ | ----------- | ----------------- | ---------- | ------ |
+| 1   | AnnouncementBar | marketing | ✅ L25160   | ✅ L21197          | ✅ L959     | 4 aliases         | ❌ Missing | 🔴 40% |
+| 2   | SocialProof     | marketing | ✅ L25325   | ✅ L21757          | ✅ L971     | 2 aliases         | ❌ Missing | 🔴 20% |
+| 3   | TrustBadges     | marketing | ✅ L25562   | ✅ L22387          | ✅ L982     | 6 aliases         | ✅ L2204   | 🟡 55% |
+| 4   | LogoCloud       | marketing | ✅ L25692   | ✅ L22999          | ✅ L994     | 5 aliases         | ✅ L2131   | 🟡 65% |
+| 5   | ComparisonTable | marketing | ✅ L25953   | ✅ L23750          | ✅ L1006    | 3 aliases         | ❌ Missing | 🔴 35% |
 
 **Overall Marketing Category Health: 43% — WORST of all 10 component categories.**
 
@@ -195,37 +199,38 @@ export function ComponentRender({ variant = "default", ...props }: ComponentProp
 
 #### 🔴 Severity 1 — SILENTLY BROKEN (props lost, user sees nothing)
 
-| #  | Component       | Issue                                           | Impact                                               |
-| -- | --------------- | ----------------------------------------------- | ---------------------------------------------------- |
-| 1  | AnnouncementBar | `closable` (registry) ≠ `dismissible` (render)  | Dismiss button never renders — users cannot close bar |
-| 2  | SocialProof     | Entire registry design ≠ render design          | ~80% of registry fields have no render equivalents    |
-| 3  | ComparisonTable | `highlighted` ≠ `highlight`                     | Column highlight styling never applied                |
-| 4  | ComparisonTable | `priceNote` ≠ `priceSubtext`                    | Price subtitle text never renders                     |
-| 5  | ComparisonTable | `description` ≠ `tooltip`                       | Row tooltips never render                             |
-| 6  | ComparisonTable | `category` ≠ `group`                            | Row grouping never works                              |
+| #   | Component       | Issue                                          | Impact                                                |
+| --- | --------------- | ---------------------------------------------- | ----------------------------------------------------- |
+| 1   | AnnouncementBar | `closable` (registry) ≠ `dismissible` (render) | Dismiss button never renders — users cannot close bar |
+| 2   | SocialProof     | Entire registry design ≠ render design         | ~80% of registry fields have no render equivalents    |
+| 3   | ComparisonTable | `highlighted` ≠ `highlight`                    | Column highlight styling never applied                |
+| 4   | ComparisonTable | `priceNote` ≠ `priceSubtext`                   | Price subtitle text never renders                     |
+| 5   | ComparisonTable | `description` ≠ `tooltip`                      | Row tooltips never render                             |
+| 6   | ComparisonTable | `category` ≠ `group`                           | Row grouping never works                              |
 
 #### 🟠 Severity 2 — PARTIAL BREAKAGE (feature degraded)
 
-| #  | Component       | Issue                                                    | Impact                                               |
-| -- | --------------- | -------------------------------------------------------- | ---------------------------------------------------- |
-| 7  | AnnouncementBar | Variant mismatch — registry: glass/outlined/minimal/animated; render: success/warning/error/info/custom | Only "default" and "gradient" work — user picks "glass" but gets "default" |
-| 8  | TrustBadges     | Badges array: render expects `{image, alt, link}`, registry provides `{icon, text, description, image, link, featured, badgeColor}` | icon, text, description, featured, badgeColor are all silently ignored |
-| 9  | LogoCloud       | Render variant "simple" vs registry variant "inline"     | Name mismatch — minor, but AI must know the mapping   |
-| 10 | SocialProof     | "detailed" variant declared in render type but NOT implemented | Selecting "detailed" shows nothing                    |
+| #   | Component       | Issue                                                                                                                                                                                                  | Impact                                                                 |
+| --- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| 7   | AnnouncementBar | Variant: render supports all 6 registry variants (default, gradient, glass, outlined, minimal, animated) + 5 semantic variants (success, warning, error, info, custom) — **variant alignment is GOOD** | Registry variants work ✅; semantic variants are render-only extras    |
+| 8   | TrustBadges     | Badges array: render expects `{image, alt, link}`, registry provides `{icon, text, description, image, link, featured, badgeColor}`                                                                    | icon, text, description, featured, badgeColor are all silently ignored |
+| 9   | LogoCloud       | Render variant "simple" vs registry variant "inline"                                                                                                                                                   | Name mismatch — minor, but AI must know the mapping                    |
+| 10  | SocialProof     | "detailed" variant declared in render type but NOT implemented                                                                                                                                         | Selecting "detailed" shows nothing                                     |
 
 #### 🟡 Severity 3 — FEATURE GAPS (registry defines it, render doesn't support it)
 
-| #  | Component       | Missing in Render                                                            |
-| -- | --------------- | ---------------------------------------------------------------------------- |
-| 11 | AnnouncementBar | countdown timer, animation, border controls, responsive overrides            |
-| 12 | SocialProof     | avatars array, live counter, animated count-up, badges, card styling         |
-| 13 | TrustBadges     | tooltip display, icon rendering, stacked/pills/icons-only variants           |
-| 14 | LogoCloud       | carousel/infinite/stacked/scattered variants, tooltip display                |
-| 15 | ComparisonTable | bordered/minimal variants, footnote support, CTA buttons in columns          |
+| #   | Component       | Missing in Render                                                    |
+| --- | --------------- | -------------------------------------------------------------------- |
+| 11  | AnnouncementBar | countdown timer, animation, border controls, responsive overrides    |
+| 12  | SocialProof     | avatars array, live counter, animated count-up, badges, card styling |
+| 13  | TrustBadges     | tooltip display, icon rendering, stacked/pills/icons-only variants   |
+| 14  | LogoCloud       | carousel/infinite/stacked/scattered variants, tooltip display        |
+| 15  | ComparisonTable | bordered/minimal variants, footnote support, CTA buttons in columns  |
 
 ### 1.3 Category Consistency Check
 
 All 5 marketing components correctly use:
+
 - `category: "marketing"` in metadata ✅
 - `category: "marketing"` in registry `defineComponent()` ✅
 - All 5 in `KNOWN_REGISTRY_TYPES` set ✅
@@ -235,13 +240,13 @@ All 5 marketing components correctly use:
 
 ### 1.4 Render Props vs Registry Fields Coverage
 
-| Component       | Render Props | Registry Fields | Coverage | Gap   |
-| --------------- | ------------ | --------------- | -------- | ----- |
-| AnnouncementBar | 17           | 50+             | ~35%     | 33+   |
-| SocialProof     | 19           | 50+             | ~20%     | 31+   |
-| TrustBadges     | 13           | 50+             | ~25%     | 37+   |
-| LogoCloud       | 22           | 60+             | ~35%     | 38+   |
-| ComparisonTable | 20           | 70+             | ~28%     | 50+   |
+| Component       | Render Props | Registry Fields | Coverage | Gap |
+| --------------- | ------------ | --------------- | -------- | --- |
+| AnnouncementBar | 17           | 50+             | ~35%     | 33+ |
+| SocialProof     | 19           | 50+             | ~20%     | 31+ |
+| TrustBadges     | 13           | 50+             | ~25%     | 37+ |
+| LogoCloud       | 22           | 60+             | ~35%     | 38+ |
+| ComparisonTable | 20           | 70+             | ~28%     | 50+ |
 
 > **Interpretation:** Registries were designed aspirationally with rich field sets. Renders were built pragmatically with minimal props. The gap must be closed **from the render side** — extend renders to consume more registry fields. Do NOT remove fields from registries; they represent the target feature set.
 
@@ -251,13 +256,13 @@ All 5 marketing components correctly use:
 
 ### 2.1 What Best-in-Class Marketing Components Look Like
 
-| Component Type      | Industry Standard                                                                                              | Our Status                            |
-| ------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| Announcement Bar    | Dismissible, countdown timer, smart scheduling, A/B variants, sticky with scroll-aware behaviour               | Basic dismiss broken, no timer/scheduling |
-| Social Proof        | Real-time counters, avatar stacks, platform logos (G2, Trustpilot), animated number tickers, Schema.org markup | Schema.org present ✅, everything else missing or mismatched |
-| Trust Badges        | Icon + text + tooltip, responsive grid/row, featured badge highlighting, hover effects, grayscale toggle        | Grayscale + stagger animation ✅, icon/text/tooltip lost from props |
-| Logo Cloud          | Marquee with pause, responsive grid, grayscale-to-colour hover, tooltip on logos, lazy-load images             | Marquee ✅, grayscale ✅, responsive ✅ — best implemented of the 5 |
-| Comparison Table    | Sticky header, mobile-responsive, row grouping, tooltips, highlight recommended column, CTA buttons            | Sticky ✅, mobile stack ✅, grouping/tooltips broken by field mismatches |
+| Component Type   | Industry Standard                                                                                              | Our Status                                                               |
+| ---------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Announcement Bar | Dismissible, countdown timer, smart scheduling, A/B variants, sticky with scroll-aware behaviour               | Basic dismiss broken, no timer/scheduling                                |
+| Social Proof     | Real-time counters, avatar stacks, platform logos (G2, Trustpilot), animated number tickers, Schema.org markup | Schema.org present ✅, everything else missing or mismatched             |
+| Trust Badges     | Icon + text + tooltip, responsive grid/row, featured badge highlighting, hover effects, grayscale toggle       | Grayscale + stagger animation ✅, icon/text/tooltip lost from props      |
+| Logo Cloud       | Marquee with pause, responsive grid, grayscale-to-colour hover, tooltip on logos, lazy-load images             | Marquee ✅, grayscale ✅, responsive ✅ — best implemented of the 5      |
+| Comparison Table | Sticky header, mobile-responsive, row grouping, tooltips, highlight recommended column, CTA buttons            | Sticky ✅, mobile stack ✅, grouping/tooltips broken by field mismatches |
 
 ### 2.2 Competitive Gaps
 
@@ -321,13 +326,13 @@ All 5 marketing components correctly use:
 
 ### 3.2 Shared Utilities Used by Marketing Components
 
-| Utility                  | File             | Used By                          | Purpose                                            |
-| ------------------------ | ---------------- | -------------------------------- | -------------------------------------------------- |
-| `isDarkBackground()`     | layout-utils.ts  | AnnouncementBar, LogoCloud       | Detects dark bg → returns boolean for text contrast |
-| `getResponsiveClasses()` | layout-utils.ts  | SocialProof, TrustBadges         | Maps "sm"/"md"/"lg" → Tailwind spacing classes     |
-| CSS variable injection   | renderer.tsx     | All 5                            | `--brand-primary`, `--brand-secondary`, etc.       |
-| Brand colour injection   | renderer.tsx     | All 5                            | `injectBrandColors()` merges into props            |
-| Brand font injection     | renderer.tsx     | All 5                            | `injectBrandFonts()` merges into props             |
+| Utility                  | File            | Used By                    | Purpose                                             |
+| ------------------------ | --------------- | -------------------------- | --------------------------------------------------- |
+| `isDarkBackground()`     | layout-utils.ts | AnnouncementBar, LogoCloud | Detects dark bg → returns boolean for text contrast |
+| `getResponsiveClasses()` | layout-utils.ts | SocialProof, TrustBadges   | Maps "sm"/"md"/"lg" → Tailwind spacing classes      |
+| CSS variable injection   | renderer.tsx    | All 5                      | `--brand-primary`, `--brand-secondary`, etc.        |
+| Brand colour injection   | renderer.tsx    | All 5                      | `injectBrandColors()` merges into props             |
+| Brand font injection     | renderer.tsx    | All 5                      | `injectBrandFonts()` merges into props              |
 
 ### 3.3 Colour Handling Pattern
 
@@ -368,40 +373,44 @@ None of these components accept children (`acceptsChildren: false`). They are al
 
 ### 4.1 Current Render Implementation
 
-**File:** `renders.tsx` L24875–L25017  
+**File:** `renders.tsx` L25160–L25324  
 **Export:** `AnnouncementBarRender(props: AnnouncementBarProps)`
 
 #### Props Interface (17 props)
 
-| Prop                | Type                                                                       | Default       | Used In Render |
-| ------------------- | -------------------------------------------------------------------------- | ------------- | -------------- |
-| `text`              | string                                                                     | "📢 Big announcement! Check out our latest updates." | ✅ Main text   |
-| `link`              | string                                                                     | —             | ✅ CTA href    |
-| `linkText`          | string                                                                     | "Learn more →"| ✅ CTA link    |
-| `dismissible`       | boolean                                                                    | true          | ✅ Close button |
-| `position`          | "top" \| "bottom"                                                          | "top"         | ✅ Position    |
-| `variant`           | "default" \| "success" \| "warning" \| "error" \| "info" \| "gradient" \| "custom" | "default"  | ✅ Style switch |
-| `icon`              | React.ReactNode                                                           | —             | ✅ Emoji/icon  |
-| `textAlign`         | "left" \| "center" \| "right"                                              | "center"      | ✅ Alignment   |
-| `size`              | "sm" \| "md" \| "lg"                                                       | "md"          | ✅ Padding/font |
-| `sticky`            | boolean                                                                    | true          | ✅ Sticky top  |
-| `backgroundColor`   | string                                                                     | —             | ✅ BG colour   |
-| `textColor`         | string                                                                     | —             | ✅ Text colour |
-| `linkColor`         | string                                                                     | —             | ✅ Link colour |
-| `backgroundGradient`| GradientConfig                                                             | —             | ✅ Gradient    |
-| `fontWeight`        | "normal" \| "medium" \| "semibold" \| "bold"                               | "normal"      | ✅ Typography  |
-| `id`                | string                                                                     | —             | ✅ HTML id     |
-| `className`         | string                                                                     | ""            | ✅ CSS class   |
+| Prop                 | Type                                                                                                                                   | Default                                              | Used In Render  |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | --------------- |
+| `text`               | string                                                                                                                                 | "📢 Big announcement! Check out our latest updates." | ✅ Main text    |
+| `link`               | string                                                                                                                                 | —                                                    | ✅ CTA href     |
+| `linkText`           | string                                                                                                                                 | "Learn more →"                                       | ✅ CTA link     |
+| `dismissible`        | boolean                                                                                                                                | true                                                 | ✅ Close button |
+| `position`           | "top" \| "bottom"                                                                                                                      | "top"                                                | ✅ Position     |
+| `variant`            | "default" \| "gradient" \| "glass" \| "outlined" \| "minimal" \| "animated" \| "success" \| "warning" \| "error" \| "info" \| "custom" | "default"                                            | ✅ Style switch |
+| `icon`               | React.ReactNode                                                                                                                        | —                                                    | ✅ Emoji/icon   |
+| `textAlign`          | "left" \| "center" \| "right"                                                                                                          | "center"                                             | ✅ Alignment    |
+| `size`               | "sm" \| "md" \| "lg"                                                                                                                   | "md"                                                 | ✅ Padding/font |
+| `sticky`             | boolean                                                                                                                                | true                                                 | ✅ Sticky top   |
+| `backgroundColor`    | string                                                                                                                                 | —                                                    | ✅ BG colour    |
+| `textColor`          | string                                                                                                                                 | —                                                    | ✅ Text colour  |
+| `linkColor`          | string                                                                                                                                 | —                                                    | ✅ Link colour  |
+| `backgroundGradient` | GradientConfig                                                                                                                         | —                                                    | ✅ Gradient     |
+| `fontWeight`         | "normal" \| "medium" \| "semibold" \| "bold"                                                                                           | "normal"                                             | ✅ Typography   |
+| `id`                 | string                                                                                                                                 | —                                                    | ✅ HTML id      |
+| `className`          | string                                                                                                                                 | ""                                                   | ✅ CSS class    |
 
 #### Variant Styling
 
 ```
 variant === "default"  → bg: var(--brand-primary, #3b82f6), text: white
+variant === "gradient" → bg: linear-gradient(angle, gradientFrom, gradientTo)
+variant === "glass"    → bg: rgba(255,255,255,0.15), text: white, backdropFilter: blur(12px)
+variant === "outlined" → bg: transparent, text: #111827, border: 1px solid #e5e7eb
+variant === "minimal"  → bg: transparent, text: #111827
+variant === "animated" → bg: #111827, text: white
 variant === "success"  → bg: #059669, text: white
 variant === "warning"  → bg: #d97706, text: white
 variant === "error"    → bg: #dc2626, text: white
 variant === "info"     → bg: #0891b2, text: white
-variant === "gradient" → bg: linear-gradient(angle, gradientFrom, gradientTo)
 variant === "custom"   → bg: background prop, text: textColor prop
 ```
 
@@ -418,37 +427,37 @@ variant === "custom"   → bg: background prop, text: textColor prop
 **File:** `core-components.ts` L21197–L21756  
 **Variants (6):** default, gradient, glass, outlined, minimal, animated
 
+> **Note:** The render function supports ALL 6 registry variants PLUS 5 semantic colour variants (success, warning, error, info, custom) = **11 total variants** in render.
+
 #### Field Groups (10)
 
-| Group          | Key Fields                                                                              |
-| -------------- | --------------------------------------------------------------------------------------- |
-| content        | message, linkText, linkUrl, icon, secondaryMessage, secondaryLinkText, secondaryLinkUrl |
-| countdown      | showCountdown, countdownDate, countdownLabel, countdownStyle                            |
-| style          | background, textColor, linkColor, gradientFrom, gradientTo, gradientAngle, glassBlur    |
-| typography     | fontSize, fontWeight, fontFamily, textAlign, letterSpacing, textTransform               |
-| animation      | animation, animationDuration, animationDelay, pulseEffect                               |
-| behavior       | **closable**, sticky, autoHide, autoHideDelay, showOnScroll                             |
-| border         | borderColor, borderWidth, borderRadius, borderStyle                                     |
-| spacing        | paddingX, paddingY, marginBottom                                                        |
-| responsive     | mobileSize, mobileHideLink, mobileHideIcon                                             |
-| accessibility  | ariaLabel, role                                                                          |
+| Group         | Key Fields                                                                              |
+| ------------- | --------------------------------------------------------------------------------------- |
+| content       | message, linkText, linkUrl, icon, secondaryMessage, secondaryLinkText, secondaryLinkUrl |
+| countdown     | showCountdown, countdownDate, countdownLabel, countdownStyle                            |
+| style         | background, textColor, linkColor, gradientFrom, gradientTo, gradientAngle, glassBlur    |
+| typography    | fontSize, fontWeight, fontFamily, textAlign, letterSpacing, textTransform               |
+| animation     | animation, animationDuration, animationDelay, pulseEffect                               |
+| behavior      | **closable**, sticky, autoHide, autoHideDelay, showOnScroll                             |
+| border        | borderColor, borderWidth, borderRadius, borderStyle                                     |
+| spacing       | paddingX, paddingY, marginBottom                                                        |
+| responsive    | mobileSize, mobileHideLink, mobileHideIcon                                              |
+| accessibility | ariaLabel, role                                                                         |
 
 ### 4.3 Field Mismatches
 
-| Registry Field Name | Render Prop Name | Status                                    |
-| ------------------- | ---------------- | ----------------------------------------- |
-| `closable`          | `dismissible`    | 🔴 BREAKING — dismiss button never renders |
-| `glass` (variant)   | —                | 🟡 Not implemented in render              |
-| `outlined` (variant)| —                | 🟡 Not implemented in render              |
-| `minimal` (variant) | —                | 🟡 Not implemented in render              |
-| `animated` (variant)| —                | 🟡 Not implemented in render              |
-| `showCountdown`     | —                | 🟡 No countdown logic in render           |
-| `autoHide`          | —                | 🟡 No auto-hide logic in render           |
-| `showOnScroll`      | —                | 🟡 No scroll-aware logic in render        |
-| `secondaryMessage`  | —                | 🟡 Not rendered                           |
-| `animation`         | —                | 🟡 No animation logic in render           |
-| `pulseEffect`       | —                | 🟡 No pulse logic in render               |
-| `glassBlur`         | —                | 🟡 Not applied in render                  |
+| Registry Field Name | Render Prop Name | Status                                                                                           |
+| ------------------- | ---------------- | ------------------------------------------------------------------------------------------------ |
+| `closable`          | `dismissible`    | 🔴 BREAKING — dismiss button never renders                                                       |
+| `message`           | `text`           | 🔴 BREAKING — announcement text doesn't render                                                   |
+| `linkUrl`           | `link`           | 🔴 BREAKING — link URL from registry is lost                                                     |
+| `showCountdown`     | —                | 🟡 No countdown logic in render                                                                  |
+| `autoHide`          | —                | 🟡 No auto-hide logic in render                                                                  |
+| `showOnScroll`      | —                | 🟡 No scroll-aware logic in render                                                               |
+| `secondaryMessage`  | —                | 🟡 Not rendered                                                                                  |
+| `animation`         | —                | 🟡 No animation logic in render                                                                  |
+| `pulseEffect`       | —                | 🟡 No pulse logic in render                                                                      |
+| `glassBlur`         | —                | 🟡 Render uses hardcoded `blur(12px)` for glass variant; registry `glassBlur` value not consumed |
 
 ### 4.4 Converter Aliases
 
@@ -464,11 +473,12 @@ typeMap: Banner → AnnouncementBar        (L448)
 ### 4.5 Recommended Fixes (Priority Order)
 
 1. **CRITICAL:** Rename `dismissible` → `closable` in render function (or add normalizer mapping `closable → dismissible`)
-2. **CRITICAL:** Add `glass`, `outlined`, `minimal`, `animated` variant cases to render function
+2. **CRITICAL:** Rename `text` → `message` and `link` → `linkUrl` in render function (or add normalizer mappings)
 3. **HIGH:** Add converter normalizer mapping `closable → closable` (identity) + `dismissible → closable` (backward compat)
 4. **MEDIUM:** Implement countdown timer display (static countdown for SSR, client hydration for live countdown)
 5. **MEDIUM:** Add aria-label and role="banner" for accessibility
-6. **LOW:** Implement autoHide, showOnScroll, animation, pulseEffect (all require client-side JS)
+6. **MEDIUM:** Wire up `glassBlur` prop to replace hardcoded `blur(12px)` in glass variant
+7. **LOW:** Implement autoHide, showOnScroll, animation, pulseEffect (all require client-side JS)
 
 ---
 
@@ -478,37 +488,38 @@ typeMap: Banner → AnnouncementBar        (L448)
 
 ### 5.1 Current Render Implementation
 
-**File:** `renders.tsx` L25018–L25248  
+**File:** `renders.tsx` L25325–L25555  
 **Export:** `SocialProofRender(props: SocialProofProps)`
 
 #### Props Interface (19 props)
 
-| Prop                  | Type                                          | Default           | Used In Render |
-| --------------------- | --------------------------------------------- | ----------------- | -------------- |
-| `rating`              | number                                        | 4.8               | ✅ Star render |
-| `maxRating`           | number                                        | 5                 | ✅ Star count  |
-| `reviewCount`         | number                                        | 1250              | ✅ Count text  |
-| `platform`            | string                                        | "Google Reviews"  | ✅ Label       |
-| `platformLogo`        | string \| ImageValue                          | —                 | ✅ Logo image  |
-| `variant`             | "stars" \| "score" \| "compact" \| "detailed" | "stars"           | ✅ Switch      |
-| `size`                | ResponsiveValue<"sm" \| "md" \| "lg">         | "md"              | ✅ Size class  |
-| `showCount`           | boolean                                       | —                 | ✅ Count toggle |
-| `showPlatform`        | boolean                                       | —                 | ✅ Platform toggle |
-| `starColor`           | string                                        | —                 | ✅ Star fill   |
-| `emptyStarColor`      | string                                        | —                 | ✅ Star empty  |
-| `scoreBackgroundColor`| string                                        | —                 | ✅ Score badge BG |
-| `scoreTextColor`      | string                                        | —                 | ✅ Score text  |
-| `mutedTextColor`      | string                                        | —                 | ✅ Muted text  |
-| `enableSchema`        | boolean                                       | —                 | ✅ JSON-LD     |
-| `schemaItemReviewed`  | string                                        | —                 | ✅ JSON-LD item |
-| `animateOnScroll`     | boolean                                       | —                 | ✅ Animation   |
-| `id`                  | string                                        | —                 | ✅ HTML id     |
-| `className`           | string                                        | —                 | ✅ CSS class   |
+| Prop                   | Type                                          | Default          | Used In Render     |
+| ---------------------- | --------------------------------------------- | ---------------- | ------------------ |
+| `rating`               | number                                        | 4.8              | ✅ Star render     |
+| `maxRating`            | number                                        | 5                | ✅ Star count      |
+| `reviewCount`          | number                                        | 1250             | ✅ Count text      |
+| `platform`             | string                                        | "Google Reviews" | ✅ Label           |
+| `platformLogo`         | string \| ImageValue                          | —                | ✅ Logo image      |
+| `variant`              | "stars" \| "score" \| "compact" \| "detailed" | "stars"          | ✅ Switch          |
+| `size`                 | ResponsiveValue<"sm" \| "md" \| "lg">         | "md"             | ✅ Size class      |
+| `showCount`            | boolean                                       | —                | ✅ Count toggle    |
+| `showPlatform`         | boolean                                       | —                | ✅ Platform toggle |
+| `starColor`            | string                                        | —                | ✅ Star fill       |
+| `emptyStarColor`       | string                                        | —                | ✅ Star empty      |
+| `scoreBackgroundColor` | string                                        | —                | ✅ Score badge BG  |
+| `scoreTextColor`       | string                                        | —                | ✅ Score text      |
+| `mutedTextColor`       | string                                        | —                | ✅ Muted text      |
+| `enableSchema`         | boolean                                       | —                | ✅ JSON-LD         |
+| `schemaItemReviewed`   | string                                        | —                | ✅ JSON-LD item    |
+| `animateOnScroll`      | boolean                                       | —                | ✅ Animation       |
+| `id`                   | string                                        | —                | ✅ HTML id         |
+| `className`            | string                                        | —                | ✅ CSS class       |
 
 #### What the Render Actually Does
 
 The render is a **rating/review display widget**:
-- "stars" variant → renders N filled stars + empty stars using SVG with `starColor`/`starEmptyColor`
+
+- "stars" variant → renders N filled stars + empty stars using SVG with `starColor`/`emptyStarColor`
 - "score" variant → renders a large numeric score badge (e.g., "4.5/5") with an accent colour background
 - "compact" variant → renders a single-line "★ 4.5 (123 reviews)" format
 - "detailed" variant → declared in type union but **NOT IMPLEMENTED** — falls through to default
@@ -523,20 +534,20 @@ The render is a **rating/review display widget**:
 
 #### Field Groups (12)
 
-| Group          | Key Fields                                                                        |
-| -------------- | --------------------------------------------------------------------------------- |
-| content        | **count**, **countSuffix**, **label**, description                                |
-| avatars        | **showAvatars**, **avatars** (array: image, alt, name), **maxVisible**, overlap    |
-| rating         | showRating, rating, maxRating, starColor, starEmptyColor, ratingLabel             |
-| counter        | **animateCount**, **countDuration**, **countStart**, **showPlus**                  |
-| layout         | alignment, direction, gap, reverseOrder                                           |
-| style          | background, textColor, accentColor, borderColor, borderWidth, borderRadius        |
-| typography     | fontSize, fontWeight, fontFamily, countFontSize, labelFontSize                    |
-| card           | cardBackground, cardShadow, cardPadding, cardBorderRadius                         |
-| badges         | **showBadge**, **badgeText**, **badgeColor**, **badgePosition**                    |
-| animation      | animation, animationDuration, animationDelay, hoverScale                          |
-| responsive     | mobileLayout, mobileHideAvatars, mobileCountSize                                 |
-| accessibility  | ariaLabel, role                                                                    |
+| Group         | Key Fields                                                                        |
+| ------------- | --------------------------------------------------------------------------------- |
+| content       | **count**, **countSuffix**, **label**, description                                |
+| avatars       | **showAvatars**, **avatars** (array: image, alt, name), **maxVisible**, overlap   |
+| rating        | showRating, rating, maxRating, **ratingColor**, **ratingEmptyColor**, ratingLabel |
+| counter       | **animateCount**, **countDuration**, **countStart**, **showPlus**                 |
+| layout        | alignment, direction, gap, reverseOrder                                           |
+| style         | background, textColor, accentColor, borderColor, borderWidth, borderRadius        |
+| typography    | fontSize, fontWeight, fontFamily, countFontSize, labelFontSize                    |
+| card          | cardBackground, cardShadow, cardPadding, cardBorderRadius                         |
+| badges        | **showBadge**, **badgeText**, **badgeColor**, **badgePosition**                   |
+| animation     | animation, animationDuration, animationDelay, hoverScale                          |
+| responsive    | mobileLayout, mobileHideAvatars, mobileCountSize                                  |
+| accessibility | ariaLabel, role                                                                   |
 
 ### 5.3 The Fundamental Mismatch
 
@@ -564,36 +575,36 @@ The render function implements a **rating/review display** ("4.5 stars on Google
 
 ### 5.4 Field Mismatch Table
 
-| Registry Field    | Render Equivalent    | Status                             |
-| ----------------- | -------------------- | ---------------------------------- |
-| `count`           | —                    | 🔴 Not in render                   |
-| `countSuffix`     | —                    | 🔴 Not in render                   |
-| `label`           | —                    | 🔴 Not in render                   |
-| `showAvatars`     | —                    | 🔴 Not in render                   |
-| `avatars`         | —                    | 🔴 Not in render (array type)      |
-| `animateCount`    | —                    | 🔴 Not in render                   |
-| `showBadge`       | —                    | 🔴 Not in render                   |
-| `badgeText`       | —                    | 🔴 Not in render                   |
-| `rating`          | `rating`             | ✅ Match                           |
-| `maxRating`       | `maxRating`          | ✅ Match                           |
-| `starColor`       | `starColor`          | ✅ Match                           |
-| `starEmptyColor`  | `starEmptyColor`     | ✅ Match                           |
-| —                 | `reviewCount`        | 🟡 Only in render, not in registry |
-| —                 | `platform`           | 🟡 Only in render, not in registry |
-| —                 | `platformLogo`       | 🟡 Only in render, not in registry |
-| —                 | `schemaType`         | 🟡 Only in render, not in registry |
-| —                 | `schemaName`         | 🟡 Only in render, not in registry |
+| Registry Field   | Render Equivalent    | Status                                                                       |
+| ---------------- | -------------------- | ---------------------------------------------------------------------------- |
+| `count`          | —                    | 🔴 Not in render                                                             |
+| `countSuffix`    | —                    | 🔴 Not in render                                                             |
+| `label`          | —                    | 🔴 Not in render                                                             |
+| `showAvatars`    | —                    | 🔴 Not in render                                                             |
+| `avatars`        | —                    | 🔴 Not in render (array type)                                                |
+| `animateCount`   | —                    | 🔴 Not in render                                                             |
+| `showBadge`      | —                    | 🔴 Not in render                                                             |
+| `badgeText`      | —                    | 🔴 Not in render                                                             |
+| `rating`         | `rating`             | ✅ Match                                                                     |
+| `maxRating`      | `maxRating`          | ✅ Match                                                                     |
+| `starColor`      | `starColor`          | 🟠 Registry uses `ratingColor`, render uses `starColor` — mismatch           |
+| `starEmptyColor` | `emptyStarColor`     | 🟠 Registry uses `ratingEmptyColor`, render uses `emptyStarColor` — mismatch |
+| —                | `reviewCount`        | 🟡 Only in render, not in registry                                           |
+| —                | `platform`           | 🟡 Only in render, not in registry                                           |
+| —                | `platformLogo`       | 🟡 Only in render, not in registry                                           |
+| —                | `enableSchema`       | 🟡 Only in render, not in registry                                           |
+| —                | `schemaItemReviewed` | 🟡 Only in render, not in registry                                           |
 
 **Variant mismatch:**
 
-| Registry Variant | Render Variant | Overlap |
-| ---------------- | -------------- | ------- |
-| inline           | compact        | Partial (similar layout) |
-| stacked          | stars          | Partial (similar layout) |
-| card             | score          | Partial (card-like)      |
-| minimal          | —              | ❌ Not implemented       |
-| floating         | —              | ❌ Not implemented       |
-| banner           | —              | ❌ Not implemented       |
+| Registry Variant | Render Variant | Overlap                   |
+| ---------------- | -------------- | ------------------------- |
+| inline           | compact        | Partial (similar layout)  |
+| stacked          | stars          | Partial (similar layout)  |
+| card             | score          | Partial (card-like)       |
+| minimal          | —              | ❌ Not implemented        |
+| floating         | —              | ❌ Not implemented        |
+| banner           | —              | ❌ Not implemented        |
 | —                | detailed       | ❌ Declared but not built |
 
 ### 5.5 Converter Aliases
@@ -622,39 +633,41 @@ typeMap: SocialProofBlock → SocialProof    (L426)
 
 ### 6.1 Current Render Implementation
 
-**File:** `renders.tsx` L24498–L24609  
+**File:** `renders.tsx` L25562–L25685  
 **Export:** `TrustBadgesRender(props: TrustBadgesProps)`
 
-> **Important:** There is also a `TrustBadgesElement` at L9144 inside `CTARender`. That is a NESTED sub-component for CTA blocks — NOT the standalone marketing component. This section documents the standalone export at L24516.
+> **Important:** There is also a `TrustBadgesElement` at L9147 inside `CTARender`. That is a NESTED sub-component for CTA blocks — NOT the standalone marketing component. This section documents the standalone export at L25579.
 
-#### Props Interface (14 props)
+#### Props Interface (13 props)
 
-| Prop              | Type                  | Default   | Used In Render |
-| ----------------- | --------------------- | --------- | -------------- |
-| `badges`          | Array<{image, alt, link}> | []    | ✅ Badge list  |
-| `layout`          | "row" \| "grid"       | "row"     | ✅ Flex/grid   |
-| `columns`         | number                | 4         | ✅ Grid cols   |
-| `gap`             | number                | 16        | ✅ Gap px      |
-| `size`            | "sm" \| "md" \| "lg"  | "md"      | ✅ Badge size  |
-| `grayscale`       | boolean               | false     | ✅ CSS filter  |
-| `hoverColor`      | boolean               | true      | ✅ Hover effect|
-| `title`           | string                | —         | ✅ Section heading |
-| `subtitle`        | string                | —         | ✅ Sub heading |
-| `background`      | string                | —         | ✅ BG colour   |
-| `textColor`       | string                | —         | ✅ Text colour |
-| `borderRadius`    | number                | —         | ✅ Badge radius|
-| `staggerAnimation`| boolean               | false     | ✅ Inline style delay |
-| `maxWidth`        | string                | —         | ✅ Container width |
+| Prop              | Type                                  | Default    | Used In Render     |
+| ----------------- | ------------------------------------- | ---------- | ------------------ |
+| `badges`          | TrustBadge[] ({image, alt, link?})    | 4 defaults | ✅ Badge list      |
+| `title`           | string                                | —          | ✅ Section heading |
+| `layout`          | ResponsiveValue<"row" \| "grid">      | "row"      | ✅ Flex/grid       |
+| `columns`         | ResponsiveValue<2\|3\|4\|5\|6>        | 4          | ✅ Grid cols       |
+| `size`            | ResponsiveValue<"sm" \| "md" \| "lg"> | "md"       | ✅ Badge size      |
+| `grayscale`       | boolean                               | false      | ✅ CSS filter      |
+| `hoverEffect`     | boolean                               | true       | ✅ Hover effect    |
+| `gap`             | ResponsiveValue<"sm" \| "md" \| "lg"> | "md"       | ✅ Gap size        |
+| `alignment`       | "start" \| "center" \| "end"          | "center"   | ✅ Flex align      |
+| `animateOnScroll` | boolean                               | false      | ✅ Scroll anim     |
+| `staggerDelay`    | number                                | 100        | ✅ Stagger ms      |
+| `id`              | string                                | —          | ✅ HTML id         |
+| `className`       | string                                | ""         | ✅ CSS class       |
 
 #### Key Render Behaviours
 
-- `layout === "row"` → flex row with wrapping
-- `layout === "grid"` → CSS grid with `columns` count
+- `layout === "row"` → flex row with wrapping (responsive via `getResponsiveClasses`)
+- `layout === "grid"` → CSS grid with `columns` count (responsive)
 - `grayscale` → `filter: grayscale(100%)` on badge images
-- `hoverColor` + `grayscale` → removes grayscale on hover (`filter: grayscale(0)`)
-- `staggerAnimation` → each badge gets `animationDelay: ${index * 0.1}s` inline style
+- `hoverEffect` + `grayscale` → removes grayscale on hover (`filter: grayscale(0)`)
+- `animateOnScroll` → fade-in animation triggered on scroll visibility
+- `staggerDelay` → each badge gets delay of `index * staggerDelay` ms for staggered entrance
 - Badge structure: `<a href={link}><img src={image} alt={alt} /></a>` or just `<img>` without link
-- Size maps: sm = 40px, md = 60px, lg = 80px
+- `alignment` → flex justify alignment (start, center, end)
+- Size maps via `getResponsiveClasses`: sm, md, lg badge dimensions
+- Gap maps via `getResponsiveClasses`: sm, md, lg spacing between badges
 
 ### 6.2 Registry Definition
 
@@ -663,49 +676,51 @@ typeMap: SocialProofBlock → SocialProof    (L426)
 
 #### Field Groups (12)
 
-| Group          | Key Fields                                                                          |
-| -------------- | ----------------------------------------------------------------------------------- |
-| header         | title, subtitle, titleColor, subtitleColor, titleSize, titleWeight                  |
-| badges         | **badges** (array: **icon**, **text**, **description**, image, link, **featured**, **badgeColor**) |
-| layout         | layout, columns, gap, alignment, reverseOrder                                       |
-| badgeStyle     | badgeBackground, badgeBorderColor, badgeBorderWidth, badgeBorderRadius, badgeShadow |
-| iconStyle      | **iconSize**, **iconColor**, **iconBackground**, **iconBorderRadius**               |
-| hover          | hoverEffect, hoverScale, hoverShadow, hoverBorderColor, grayscale, hoverColor      |
-| background     | background, backgroundImage, backgroundOverlay, backgroundBlur                      |
-| spacing        | paddingX, paddingY, badgePadding, maxWidth                                          |
-| animation      | staggerAnimation, animationType, animationDuration, animationDelay                  |
-| tooltip        | **showTooltip**, **tooltipPosition**, **tooltipBackground**, **tooltipColor**       |
-| responsive     | mobileColumns, mobileLayout, mobileSize, mobileBadgeSize                           |
-| accessibility  | ariaLabel, role, badgeAriaLabel                                                      |
+| Group         | Key Fields                                                                                         |
+| ------------- | -------------------------------------------------------------------------------------------------- |
+| header        | title, subtitle, titleColor, subtitleColor, titleSize, titleWeight                                 |
+| badges        | **badges** (array: **icon**, **text**, **description**, image, link, **featured**, **badgeColor**) |
+| layout        | layout, columns, gap, alignment, reverseOrder                                                      |
+| badgeStyle    | badgeBackground, badgeBorderColor, badgeBorderWidth, badgeBorderRadius, badgeShadow                |
+| iconStyle     | **iconSize**, **iconColor**, **iconBackground**, **iconBorderRadius**                              |
+| hover         | hoverEffect, hoverScale, hoverShadow, hoverBorderColor, grayscale, hoverColor                      |
+| background    | background, backgroundImage, backgroundOverlay, backgroundBlur                                     |
+| spacing       | paddingX, paddingY, badgePadding, maxWidth                                                         |
+| animation     | staggerAnimation, animationType, animationDuration, animationDelay                                 |
+| tooltip       | **showTooltip**, **tooltipPosition**, **tooltipBackground**, **tooltipColor**                      |
+| responsive    | mobileColumns, mobileLayout, mobileSize, mobileBadgeSize                                           |
+| accessibility | ariaLabel, role, badgeAriaLabel                                                                    |
 
 ### 6.3 Field Mismatch Table
 
-| Registry Field (badges array) | Render Prop (badges array) | Status                          |
-| ----------------------------- | -------------------------- | ------------------------------- |
-| `image`                       | `image`                    | ✅ Match                        |
-| `link`                        | `link`                     | ✅ Match                        |
-| `icon`                        | —                          | 🟠 Silently ignored by render   |
-| `text`                        | —                          | 🟠 Silently ignored by render   |
-| `description`                 | —                          | 🟠 Silently ignored by render   |
-| `featured`                    | —                          | 🟠 Silently ignored by render   |
-| `badgeColor`                  | —                          | 🟠 Silently ignored by render   |
+| Registry Field (badges array) | Render Prop (badges array) | Status                                                                                |
+| ----------------------------- | -------------------------- | ------------------------------------------------------------------------------------- |
+| `image`                       | `image`                    | ✅ Match                                                                              |
+| `link`                        | `link`                     | ✅ Match                                                                              |
+| `icon`                        | —                          | 🟠 Silently ignored by render                                                         |
+| `text`                        | —                          | 🟠 Silently ignored by render                                                         |
+| `description`                 | —                          | 🟠 Silently ignored by render                                                         |
+| `featured`                    | —                          | 🟠 Silently ignored by render                                                         |
+| `badgeColor`                  | —                          | 🟠 Silently ignored by render                                                         |
 | —                             | `alt`                      | 🟡 Only in render, not in registry — render uses `alt` but registry doesn't define it |
 
 **Top-level field mismatches:**
 
-| Registry Field   | Render Prop | Status                                |
-| ---------------- | ----------- | ------------------------------------- |
-| `showTooltip`    | —           | 🟡 Not in render                      |
-| `iconSize`       | —           | 🟡 Not in render                      |
-| `iconColor`      | —           | 🟡 Not in render                      |
-| `hoverEffect`    | —           | 🟡 Not in render                      |
-| `hoverScale`     | —           | 🟡 Not in render                      |
-| `badgeShadow`    | —           | 🟡 Not in render                      |
-| `variant`        | `layout`    | 🟠 Different field names and different value sets |
+| Registry Field | Render Prop   | Status                                                            |
+| -------------- | ------------- | ----------------------------------------------------------------- |
+| `hoverColor`   | —             | 🟡 Render uses `hoverEffect` instead — name mismatch              |
+| `hoverEffect`  | `hoverEffect` | ✅ Match (but registry ALSO has `hoverColor` — duplicated intent) |
+| `showTooltip`  | —             | 🟡 Not in render                                                  |
+| `iconSize`     | —             | 🟡 Not in render                                                  |
+| `iconColor`    | —             | 🟡 Not in render                                                  |
+| `hoverScale`   | —             | 🟡 Not in render                                                  |
+| `badgeShadow`  | —             | 🟡 Not in render                                                  |
+| `subtitle`     | —             | 🟡 Registry defines it, render doesn't consume it                 |
+| `variant`      | `layout`      | 🟠 Different field names and different value sets                 |
 
 ### 6.4 Converter Normalizer (EXISTS ✅)
 
-**File:** `converter.ts` L2161–L2193
+**File:** `converter.ts` L2204–L2236
 
 ```
 TrustBadges normalizer:
@@ -746,37 +761,35 @@ typeMap: TrustBadgesBlock → TrustBadges       (L419)
 
 ### 7.1 Current Render Implementation
 
-**File:** `renders.tsx` L24625–L24860  
+**File:** `renders.tsx` L25692–L25934  
 **Export:** `LogoCloudRender(props: LogoCloudProps)`
 
-#### Props Interface (24 props)
+#### Props Interface (22 props)
 
-| Prop              | Type                              | Default    | Used In Render |
-| ----------------- | --------------------------------- | ---------- | -------------- |
-| `variant`         | "simple" \| "cards" \| "marquee" | "simple"   | ✅ Layout switch |
-| `logos`           | Array<{src, alt, url, width, height}> | []     | ✅ Logo list   |
-| `columns`         | number                            | 4          | ✅ Grid cols   |
-| `gap`             | number                            | 32         | ✅ Gap px      |
-| `logoHeight`      | number                            | 48         | ✅ Img height  |
-| `grayscale`       | boolean                           | false      | ✅ CSS filter  |
-| `hoverColor`      | boolean                           | true       | ✅ Hover effect|
-| `title`           | string                            | —          | ✅ Section heading |
-| `subtitle`        | string                            | —          | ✅ Sub heading |
-| `badge`           | string                            | —          | ✅ Header badge |
-| `background`      | string                            | —          | ✅ BG colour   |
-| `textColor`       | string                            | —          | ✅ Text colour |
-| `cardBackground`  | string                            | —          | ✅ Card BG     |
-| `cardBorderColor` | string                            | —          | ✅ Card border |
-| `cardBorderRadius`| number                            | —          | ✅ Card radius |
-| `cardShadow`      | boolean                           | false      | ✅ Card shadow |
-| `borderRadius`    | number                            | —          | ✅ Logo radius |
-| `maxWidth`        | string                            | —          | ✅ Container   |
-| `marqueeSpeed`    | number                            | 30         | ✅ Animation   |
-| `marqueeDirection`| "left" \| "right"                 | "left"     | ✅ Scroll dir  |
-| `pauseOnHover`    | boolean                           | true       | ✅ Hover pause |
-| `paddingX`        | number                            | —          | ✅ Spacing     |
-| `paddingY`        | number                            | —          | ✅ Spacing     |
-| `legacyPadding`   | boolean                           | false      | ✅ Compat      |
+| Prop                  | Type                                      | Default                        | Used In Render      |
+| --------------------- | ----------------------------------------- | ------------------------------ | ------------------- |
+| `logos`               | LogoItem[] ({image, alt, link?})          | 6 defaults                     | ✅ Logo list        |
+| `title`               | string                                    | "Trusted by leading companies" | ✅ Section heading  |
+| `subtitle`            | string                                    | —                              | ✅ Sub heading      |
+| `badge`               | string                                    | —                              | ✅ Header badge     |
+| `badgeColor`          | string                                    | —                              | ✅ Badge tint       |
+| `headerAlign`         | "left" \| "center" \| "right"             | "center"                       | ✅ Header alignment |
+| `columns`             | ResponsiveValue<2\|3\|4\|5\|6>            | {mobile:2,tablet:3,desktop:6}  | ✅ Grid cols        |
+| `grayscale`           | boolean                                   | true                           | ✅ CSS filter       |
+| `hoverColor`          | boolean                                   | true                           | ✅ Hover effect     |
+| `variant`             | "simple" \| "cards" \| "marquee"          | "simple"                       | ✅ Layout switch    |
+| `gap`                 | ResponsiveValue<"sm"\|"md"\|"lg"\|"xl">   | "lg"                           | ✅ Gap size         |
+| `logoHeight`          | ResponsiveValue<"sm"\|"md"\|"lg">         | "md"                           | ✅ Img height       |
+| `backgroundColor`     | string                                    | —                              | ✅ BG colour        |
+| `background`          | string                                    | —                              | ✅ BG (alias)       |
+| `cardBackgroundColor` | string                                    | —                              | ✅ Card BG          |
+| `paddingY`            | "sm" \| "md" \| "lg" \| "xl"              | —                              | ✅ Vert spacing     |
+| `paddingX`            | "sm" \| "md" \| "lg" \| "xl"              | —                              | ✅ Horiz spacing    |
+| `padding`             | ResponsiveValue<"none"\|"sm"\|"md"\|"lg"> | —                              | ✅ All-side pad     |
+| `marqueeSpeed`        | "slow" \| "normal" \| "fast"              | —                              | ✅ Animation        |
+| `pauseOnHover`        | boolean                                   | true                           | ✅ Hover pause      |
+| `id`                  | string                                    | —                              | ✅ HTML id          |
+| `className`           | string                                    | ""                             | ✅ CSS class        |
 
 #### Variant Details
 
@@ -785,19 +798,20 @@ typeMap: TrustBadgesBlock → TrustBadges       (L419)
 **"cards":** Each logo wrapped in a card with background, border, shadow, and border-radius. Grid layout with same responsive columns.
 
 **"marquee":** CSS animation-based horizontal scroll:
+
 - Duplicates logos array for seamless loop
-- `animation: marquee ${duration}s linear infinite`
-- `marqueeDirection === "right"` → `animation-direction: reverse`
+- `marqueeSpeed` controls speed: "slow", "normal", or "fast"
 - `pauseOnHover` → `animation-play-state: paused` on `:hover`
 
-**Header section:** All 3 variants render `badge` → `title` → `subtitle` above the logo grid when present.
+**Header section:** All 3 variants render `badge` (with `badgeColor`) → `title` → `subtitle` above the logo grid when present. `headerAlign` controls alignment.
 
 #### Key Render Behaviours
 
-- `isDarkBackground()` → adjusts text colours for contrast
-- Legacy padding support via `legacyPadding` prop
-- Logos with `url` → wrapped in `<a>`, logos without → plain `<img>`
-- Logo `width`/`height` applied to `<img>` for layout stability
+- `isDarkBackground()` → adjusts text colours for contrast (uses `backgroundColor` or `background`)
+- Logos with `link` → wrapped in `<a>`, logos without → plain `<img>`
+- `columns`, `gap`, `logoHeight` all use `getResponsiveClasses()` for breakpoint-aware sizing
+- `padding`, `paddingX`, `paddingY` all use size token maps (sm/md/lg/xl → rem values)
+- LogoItem uses `{image, alt, link?}` — NOT `{src, alt, url, width, height}`
 
 ### 7.2 Registry Definition
 
@@ -806,45 +820,45 @@ typeMap: TrustBadgesBlock → TrustBadges       (L419)
 
 #### Field Groups (15)
 
-| Group          | Key Fields                                                                          |
-| -------------- | ----------------------------------------------------------------------------------- |
-| header         | title, subtitle, badge, headerAlignment, titleColor, subtitleColor, badgeColor      |
-| logos          | logos (array: src, alt, url, width, height, **tooltip**, **grayscale**), maxLogos   |
-| layout         | columns, gap, alignment, verticalAlignment, itemSpacing                             |
-| marquee        | marqueeSpeed, marqueeDirection, pauseOnHover, marqueeGap, marqueeRows              |
-| logoStyle      | logoHeight, logoPadding, logoBackground, logoBorderColor, logoBorderRadius          |
-| card           | cardBackground, cardBorderColor, cardBorderRadius, cardShadow, cardPadding          |
-| hover          | hoverEffect, hoverScale, hoverShadow, hoverBorderColor, grayscale, hoverColor      |
-| background     | background, backgroundImage, backgroundOverlay, backgroundGradient                  |
-| divider        | **showDivider**, **dividerColor**, **dividerStyle**                                 |
-| counter        | **showCount**, **countLabel**, **countColor**                                       |
-| filter         | **filterByCategory**, **categories**                                                |
-| spacing        | paddingX, paddingY, maxWidth, containerWidth                                        |
-| animation      | staggerAnimation, animationType, animationDuration, animationDelay                  |
-| responsive     | mobileColumns, mobileLogoHeight, mobileHideSubtitle, mobileMarqueeSpeed            |
-| accessibility  | ariaLabel, role, logoAriaLabel                                                       |
+| Group         | Key Fields                                                                        |
+| ------------- | --------------------------------------------------------------------------------- |
+| header        | title, subtitle, badge, headerAlignment, titleColor, subtitleColor, badgeColor    |
+| logos         | logos (array: src, alt, url, width, height, **tooltip**, **grayscale**), maxLogos |
+| layout        | columns, gap, alignment, verticalAlignment, itemSpacing                           |
+| marquee       | marqueeSpeed, marqueeDirection, pauseOnHover, marqueeGap, marqueeRows             |
+| logoStyle     | logoHeight, logoPadding, logoBackground, logoBorderColor, logoBorderRadius        |
+| card          | cardBackground, cardBorderColor, cardBorderRadius, cardShadow, cardPadding        |
+| hover         | hoverEffect, hoverScale, hoverShadow, hoverBorderColor, grayscale, hoverColor     |
+| background    | background, backgroundImage, backgroundOverlay, backgroundGradient                |
+| divider       | **showDivider**, **dividerColor**, **dividerStyle**                               |
+| counter       | **showCount**, **countLabel**, **countColor**                                     |
+| filter        | **filterByCategory**, **categories**                                              |
+| spacing       | paddingX, paddingY, maxWidth, containerWidth                                      |
+| animation     | staggerAnimation, animationType, animationDuration, animationDelay                |
+| responsive    | mobileColumns, mobileLogoHeight, mobileHideSubtitle, mobileMarqueeSpeed           |
+| accessibility | ariaLabel, role, logoAriaLabel                                                    |
 
 ### 7.3 Field Mismatch Table
 
-| Registry Field       | Render Prop         | Status                          |
-| -------------------- | ------------------- | ------------------------------- |
-| `variant: "grid"`    | `variant: "simple"` | 🟠 Name mismatch (same concept)|
-| `variant: "inline"`  | —                   | 🟡 Not implemented              |
-| `variant: "carousel"`| —                   | 🟡 Not implemented              |
-| `variant: "infinite"`| —                   | 🟡 Not implemented              |
-| `variant: "stacked"` | —                   | 🟡 Not implemented              |
-| `variant: "scattered"`| —                  | 🟡 Not implemented              |
-| `logo.tooltip`       | —                   | 🟡 Not consumed by render       |
-| `logo.grayscale`     | —                   | 🟡 Per-logo control not implemented (only global grayscale) |
-| `showDivider`        | —                   | 🟡 Not in render                |
-| `showCount`          | —                   | 🟡 Not in render                |
-| `filterByCategory`   | —                   | 🟡 Not in render                |
-| `hoverScale`         | —                   | 🟡 Not in render                |
-| `marqueeRows`        | —                   | 🟡 Not in render (single row only) |
+| Registry Field         | Render Prop         | Status                                                      |
+| ---------------------- | ------------------- | ----------------------------------------------------------- |
+| `variant: "grid"`      | `variant: "simple"` | 🟠 Name mismatch (same concept)                             |
+| `variant: "inline"`    | —                   | 🟡 Not implemented                                          |
+| `variant: "carousel"`  | —                   | 🟡 Not implemented                                          |
+| `variant: "infinite"`  | —                   | 🟡 Not implemented                                          |
+| `variant: "stacked"`   | —                   | 🟡 Not implemented                                          |
+| `variant: "scattered"` | —                   | 🟡 Not implemented                                          |
+| `logo.tooltip`         | —                   | 🟡 Not consumed by render                                   |
+| `logo.grayscale`       | —                   | 🟡 Per-logo control not implemented (only global grayscale) |
+| `showDivider`          | —                   | 🟡 Not in render                                            |
+| `showCount`            | —                   | 🟡 Not in render                                            |
+| `filterByCategory`     | —                   | 🟡 Not in render                                            |
+| `hoverScale`           | —                   | 🟡 Not in render                                            |
+| `marqueeRows`          | —                   | 🟡 Not in render (single row only)                          |
 
 ### 7.4 Converter Normalizer (EXISTS ✅)
 
-**File:** `converter.ts` L2082–L2159
+**File:** `converter.ts` L2131–L2203
 
 ```
 LogoCloud normalizer:
@@ -883,59 +897,87 @@ typeMap: LogoCloudBlock → LogoCloud       (L414)
 
 ### 8.1 Current Render Implementation
 
-**File:** `renders.tsx` L24869–L25301  
+**File:** `renders.tsx` L25935–L26370  
 **Export:** `ComparisonTableRender(props: ComparisonTableProps)`
 
-#### Props Interface (18 props)
+#### Sub-interfaces
 
-| Prop                | Type                                     | Default    | Used In Render |
-| ------------------- | ---------------------------------------- | ---------- | -------------- |
-| `variant`           | "simple" \| "cards" \| "striped"         | "simple"   | ✅ Layout switch |
-| `columns`           | Array<{name, **highlight**, price, priceLabel, **priceSubtext**, buttonText, buttonLink}> | [] | ✅ Headers |
-| `rows`              | Array<{label, **tooltip**, **group**, values: (boolean\|string)[]}> | [] | ✅ Data rows |
-| `title`             | string                                   | —          | ✅ Table heading |
-| `subtitle`          | string                                   | —          | ✅ Sub heading |
-| `stickyHeader`      | boolean                                  | false      | ✅ Sticky      |
-| `stickyFirstColumn` | boolean                                  | false      | ✅ Sticky col  |
-| `mobileStack`       | boolean                                  | true       | ✅ Mobile view |
-| `background`        | string                                   | —          | ✅ BG colour   |
-| `textColor`         | string                                   | —          | ✅ Text colour |
-| `headerBackground`  | string                                   | —          | ✅ Header BG   |
-| `headerTextColor`   | string                                   | —          | ✅ Header text |
-| `highlightColor`    | string                                   | —          | ✅ Highlight BG|
-| `borderColor`       | string                                   | —          | ✅ Table border|
-| `checkColor`        | string                                   | "#059669"  | ✅ SVG check   |
-| `crossColor`        | string                                   | "#dc2626"  | ✅ SVG cross   |
-| `stripeColor`       | string                                   | —          | ✅ Odd rows    |
-| `maxWidth`          | string                                   | —          | ✅ Container   |
+**ComparisonColumn** (L25935):
+
+```
+{ name: string; highlight?: boolean; badge?: string; price?: string; priceSubtext?: string; ctaText?: string; ctaLink?: string; ctaVariant?: "primary" | "outline"; }
+```
+
+**ComparisonRow** (L25946):
+
+```
+{ feature: string; tooltip?: string; group?: string; values: (boolean | string)[]; }
+```
+
+#### Props Interface (20 props)
+
+| Prop                       | Type                             | Default                                            | Used In Render                       |
+| -------------------------- | -------------------------------- | -------------------------------------------------- | ------------------------------------ |
+| `columns`                  | ComparisonColumn[]               | 3 default cols                                     | ✅ Headers + CTA row                 |
+| `rows`                     | ComparisonRow[]                  | 5 default rows                                     | ✅ Data rows                         |
+| `title`                    | string                           | —                                                  | ✅ Table heading                     |
+| `subtitle`                 | string                           | —                                                  | ✅ Sub heading                       |
+| `variant`                  | "simple" \| "cards" \| "striped" | "simple"                                           | ✅ Layout switch                     |
+| `highlightBackgroundColor` | string                           | `var(--color-highlight-bg, rgba(14,165,233,0.08))` | ✅ Highlight col BG                  |
+| `highlightBorderColor`     | string                           | `var(--color-highlight-border, #0ea5e9)`           | ✅ Highlight col border + CTA colour |
+| `checkColor`               | string                           | `var(--color-check, #22c55e)`                      | ✅ SVG check                         |
+| `crossColor`               | string                           | `var(--color-cross, #9ca3af)`                      | ✅ SVG cross                         |
+| `headerBackgroundColor`    | string                           | `var(--color-muted, #f9fafb)`                      | ✅ Header row BG                     |
+| `titleColor`               | string                           | `var(--color-foreground, #111827)`                 | ✅ Title text                        |
+| `subtitleColor`            | string                           | `var(--color-muted-foreground, #6b7280)`           | ✅ Subtitle text                     |
+| `featureTextColor`         | string                           | `var(--color-foreground, #111827)`                 | ✅ Feature label text                |
+| `rowHoverColor`            | string                           | `var(--color-muted, rgba(0,0,0,0.03))`             | ✅ Row hover BG                      |
+| `stickyHeader`             | boolean                          | true                                               | ✅ Sticky header row                 |
+| `stickyColumn`             | boolean                          | true                                               | ✅ Sticky first col                  |
+| `mobileLayout`             | "scroll" \| "stack"              | "scroll"                                           | ✅ Mobile view mode                  |
+| `id`                       | string                           | —                                                  | ✅ Container id                      |
+| `className`                | string                           | ""                                                 | ✅ Container class                   |
+| `highlightColor`           | string (legacy)                  | —                                                  | ⚠️ Legacy support                    |
 
 #### What the Render Actually Does
 
+**Colour resolution:** All colour props resolve through CSS variable fallbacks (e.g., `highlightBackgroundColor || "var(--color-highlight-bg, rgba(14,165,233,0.08))"`).
+
 **Table rendering:**
+
 - Generates a `<table>` element with responsive behaviour
-- Header row: renders `columns` array with name, price, priceLabel, priceSubtext, buttonText/buttonLink
+- Header row: renders `columns` array with name, badge, price, priceSubtext
+- Highlight columns: `column.highlight === true` → applies `highlightBackgroundColor` to header + all cells in that column, `highlightBorderColor` as top/bottom border
+- Column badges: `column.badge` → rendered as pill above column name (e.g., "Most Popular")
+- CTA row: if ANY column has `ctaText` → renders a `<tfoot>` row with CTA buttons; `ctaVariant: "outline"` → border style, default → filled style using `highlightBorderColor`
 - Data rows: renders `rows` array, maps each `values[i]` to the corresponding column
-- Boolean values → SVG check (✓) or cross (✗) with `checkColor`/`crossColor`
+- Boolean values → SVG check (✓) with `checkColor` or cross (✗) with `crossColor`
 - String values → rendered as text
 
 **Row grouping:**
+
 - `rows` with `group` property → inserts a group header row spanning all columns
 - Groups are separated visually with a darker background
 
 **Tooltip:**
-- `rows` with `tooltip` → added as `title` attribute on the row label cell
+
+- `rows` with `tooltip` → info icon (ℹ) rendered next to feature text, wrapped in a tooltip span
 
 **Sticky behaviour:**
-- `stickyHeader` → `position: sticky; top: 0` on header row
-- `stickyFirstColumn` → `position: sticky; left: 0` on first column cells
 
-**Mobile stack:**
-- `mobileStack` → at narrow viewports, each column becomes a card with its own row values listed vertically
+- `stickyHeader` → `position: sticky; top: 0; z-index: 10` on header row
+- `stickyColumn` → `position: sticky; left: 0; z-index: 5` on first column cells
+
+**Mobile layout:**
+
+- `mobileLayout: "stack"` → at `md:hidden` breakpoint, each column becomes a card with its feature values listed vertically (hidden on desktop)
+- `mobileLayout: "scroll"` (default) → table scrolls horizontally on mobile
 
 **Variant styling:**
+
 - "simple" → Clean table with minimal borders
-- "cards" → Each column rendered as a separate card with shadow
-- "striped" → Alternating row background with `stripeColor`
+- "cards" → Each column rendered as a separate card with shadow and rounded corners
+- "striped" → Alternating row background with semi-transparent colour
 
 ### 8.2 Registry Definition
 
@@ -944,48 +986,51 @@ typeMap: LogoCloudBlock → LogoCloud       (L414)
 
 #### Field Groups (17)
 
-| Group          | Key Fields                                                                            |
-| -------------- | ------------------------------------------------------------------------------------- |
-| header         | title, subtitle, titleColor, subtitleColor, titleSize, headerAlignment                |
-| columns        | columns (array: name, **highlighted**, price, priceLabel, **priceNote**, buttonText, buttonLink, **ctaText**, **ctaLink**, **ctaColor**, **columnColor**, **featureList**) |
-| rows           | rows (array: label, **description**, **category**, values, **icon**, **helpText**)    |
-| highlights     | highlightColor, highlightBorderColor, highlightBadgeText, highlightBadgeColor         |
-| booleans       | checkColor, crossColor, checkIcon, crossIcon, booleanSize                             |
-| sticky         | stickyHeader, stickyFirstColumn, stickyBackground, stickyZIndex                       |
-| mobile         | mobileStack, mobileCardStyle, mobileBreakpoint, mobileShowAll                        |
-| style          | background, textColor, headerBackground, headerTextColor, borderColor, stripeColor    |
-| typography     | fontSize, headerFontSize, fontWeight, fontFamily, cellFontSize                        |
-| card           | cardBackground, cardBorderColor, cardBorderRadius, cardShadow, cardPadding            |
-| footnote       | **showFootnote**, **footnoteText**, **footnoteColor**, **footnoteSize**               |
-| badge          | **showBadge**, **badgeText**, **badgeColor**, **badgePosition**                       |
-| divider        | **showRowDivider**, **dividerColor**, **dividerStyle**                                |
-| filter         | **showFilter**, **filterCategories**, **activeFilter**                                |
-| animation      | animation, animationDuration, hoverHighlight, hoverScale                              |
-| responsive     | responsiveBreakpoint, mobileColumns, tabletColumns                                    |
-| accessibility  | ariaLabel, role, captionText, captionPosition                                          |
+| Group         | Key Fields                                                                                                                                                                 |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| header        | title, subtitle, titleColor, subtitleColor, titleSize, headerAlignment                                                                                                     |
+| columns       | columns (array: name, **highlighted**, price, priceLabel, **priceNote**, buttonText, buttonLink, **ctaText**, **ctaLink**, **ctaColor**, **columnColor**, **featureList**) |
+| rows          | rows (array: label, **description**, **category**, values, **icon**, **helpText**)                                                                                         |
+| highlights    | highlightColor, highlightBorderColor, highlightBadgeText, highlightBadgeColor                                                                                              |
+| booleans      | checkColor, crossColor, checkIcon, crossIcon, booleanSize                                                                                                                  |
+| sticky        | stickyHeader, stickyFirstColumn, stickyBackground, stickyZIndex                                                                                                            |
+| mobile        | mobileStack, mobileCardStyle, mobileBreakpoint, mobileShowAll                                                                                                              |
+| style         | background, textColor, headerBackground, headerTextColor, borderColor, stripeColor                                                                                         |
+| typography    | fontSize, headerFontSize, fontWeight, fontFamily, cellFontSize                                                                                                             |
+| card          | cardBackground, cardBorderColor, cardBorderRadius, cardShadow, cardPadding                                                                                                 |
+| footnote      | **showFootnote**, **footnoteText**, **footnoteColor**, **footnoteSize**                                                                                                    |
+| badge         | **showBadge**, **badgeText**, **badgeColor**, **badgePosition**                                                                                                            |
+| divider       | **showRowDivider**, **dividerColor**, **dividerStyle**                                                                                                                     |
+| filter        | **showFilter**, **filterCategories**, **activeFilter**                                                                                                                     |
+| animation     | animation, animationDuration, hoverHighlight, hoverScale                                                                                                                   |
+| responsive    | responsiveBreakpoint, mobileColumns, tabletColumns                                                                                                                         |
+| accessibility | ariaLabel, role, captionText, captionPosition                                                                                                                              |
 
 ### 8.3 Field Mismatch Table (BREAKING)
 
-| Registry Field (columns array) | Render Prop (columns array) | Status                             |
-| ------------------------------ | --------------------------- | ---------------------------------- |
-| `highlighted`                  | `highlight`                 | 🔴 BREAKING — highlight never applied |
-| `priceNote`                    | `priceSubtext`              | 🔴 BREAKING — price subtitle never shows |
-| `ctaText`                      | —                           | 🟡 Not in render                   |
-| `ctaLink`                      | —                           | 🟡 Not in render                   |
-| `ctaColor`                     | —                           | 🟡 Not in render                   |
-| `columnColor`                  | —                           | 🟡 Not in render                   |
-| `featureList`                  | —                           | 🟡 Not in render                   |
+| Registry Field (columns array) | Render Prop (columns array) | Status                                                               |
+| ------------------------------ | --------------------------- | -------------------------------------------------------------------- |
+| `highlighted`                  | `highlight`                 | 🔴 BREAKING — highlight never applied                                |
+| `priceNote`                    | `priceSubtext`              | 🔴 BREAKING — price subtitle never shows                             |
+| `ctaText`                      | `ctaText`                   | ✅ Match (render has CTA row in `<tfoot>`)                           |
+| `ctaLink`                      | `ctaLink`                   | ✅ Match                                                             |
+| `ctaColor`                     | —                           | 🟡 Not in render (render uses `highlightBorderColor` for CTA colour) |
+| `columnColor`                  | —                           | 🟡 Not in render                                                     |
+| `featureList`                  | —                           | 🟡 Not in render                                                     |
+| —                              | `badge`                     | 🟡 Render-only (pill above column name)                              |
+| —                              | `ctaVariant`                | 🟡 Render-only ("primary" \| "outline")                              |
 
-| Registry Field (rows array) | Render Prop (rows array) | Status                                |
-| --------------------------- | ------------------------ | ------------------------------------- |
-| `description`               | `tooltip`                | 🔴 BREAKING — tooltips never show     |
+| Registry Field (rows array) | Render Prop (rows array) | Status                                 |
+| --------------------------- | ------------------------ | -------------------------------------- |
+| `label`                     | `feature`                | 🔴 BREAKING — feature text never shows |
+| `description`               | `tooltip`                | 🔴 BREAKING — tooltips never show      |
 | `category`                  | `group`                  | 🔴 BREAKING — row grouping never works |
-| `icon`                      | —                        | 🟡 Not in render                      |
-| `helpText`                  | —                        | 🟡 Not in render                      |
+| `icon`                      | —                        | 🟡 Not in render                       |
+| `helpText`                  | —                        | 🟡 Not in render                       |
 
 | Registry Variant | Render Variant | Status                          |
 | ---------------- | -------------- | ------------------------------- |
-| `default`        | `simple`       | 🟠 Name mismatch (same concept)|
+| `default`        | `simple`       | 🟠 Name mismatch (same concept) |
 | `cards`          | `cards`        | ✅ Match                        |
 | `minimal`        | —              | 🟡 Not implemented              |
 | `bordered`       | —              | 🟡 Not implemented              |
@@ -1006,14 +1051,21 @@ typeMap: ComparisonBlock → ComparisonTable       (L442)
 1. **CRITICAL:** Add converter normalizer mapping:
    - `columns[].highlighted → columns[].highlight`
    - `columns[].priceNote → columns[].priceSubtext`
+   - `rows[].label → rows[].feature`
    - `rows[].description → rows[].tooltip`
    - `rows[].category → rows[].group`
    - `variant: "default" → variant: "simple"`
 2. **CRITICAL:** Alternatively, rename render props to match registry names (preferred — reduces converter complexity)
-3. **HIGH:** Add `ctaText`/`ctaLink` rendering in column headers (CTA buttons in comparison columns)
+3. **HIGH:** Add top-level prop mapping in normalizer:
+   - `background` → (not needed, render uses `highlightBackgroundColor`/`headerBackgroundColor` granularly)
+   - `stickyFirstColumn` → `stickyColumn`
+   - `mobileStack` → `mobileLayout: "stack"`
+   - `headerBackground` → `headerBackgroundColor`
+   - `headerTextColor` → (no equivalent — render uses `titleColor`/`subtitleColor`)
+   - `highlightColor` → `highlightBackgroundColor` (render has legacy support for `highlightColor`)
 4. **HIGH:** Implement `bordered` variant (useful for dense comparison tables)
 5. **MEDIUM:** Add `showFootnote`, `footnoteText` rendering below table
-6. **MEDIUM:** Add `showBadge` rendering on highlighted column (e.g., "Most Popular")
+6. **MEDIUM:** Add `showBadge` rendering on highlighted column (e.g., "Most Popular") — NOTE: render already has `badge` on ComparisonColumn, but registry needs to wire it
 7. **LOW:** Implement `showFilter` for category-based row filtering
 
 ---
@@ -1022,19 +1074,20 @@ typeMap: ComparisonBlock → ComparisonTable       (L442)
 
 ### 9.1 Current Dark Mode Support
 
-| Component       | Uses `isDarkBackground()` | CSS Variable Fallbacks | Hardcoded Colours | Dark Mode Status |
-| --------------- | ------------------------- | ---------------------- | ----------------- | ---------------- |
-| AnnouncementBar | ✅ Yes (link contrast)    | ✅ `var(--brand-primary, #3b82f6)` | 5 variant colours (success, warning, error, info + gradient) | 🟡 Partial |
-| SocialProof     | ❌ No                     | ✅ `var(--brand-text, ...)` | `#fbbf24` star, `#d1d5db` empty star | 🟠 Weak |
-| TrustBadges     | ❌ No                     | ❌ None found           | No hardcoded colours | 🟡 Relies on props |
-| LogoCloud       | ✅ Yes (text contrast)    | ✅ `var(--brand-primary, ...)` | No hardcoded colours | ✅ Good |
-| ComparisonTable | ❌ No                     | ✅ `var(--brand-primary, ...)` | `#059669` check, `#dc2626` cross | 🟡 Partial |
+| Component       | Uses `isDarkBackground()`                     | CSS Variable Fallbacks                                                                               | Hardcoded Colours                                                                                                     | Dark Mode Status   |
+| --------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| AnnouncementBar | ✅ Yes (text contrast via `isCustom` variant) | ❌ None — uses inline `variantColorMap`                                                              | 11 variant colour sets (success, warning, error, info, gradient, glass, outlined, minimal, animated, default, custom) | 🟡 Partial         |
+| SocialProof     | ❌ No                                         | ✅ `var(--color-star, #facc15)`, `var(--color-muted-foreground, ...)`                                | `#facc15` star, `#d1d5db` empty star, `#22c55e` score BG                                                              | 🟠 Weak            |
+| TrustBadges     | ❌ No                                         | ❌ None found                                                                                        | No hardcoded colours (relies on props + grayscale)                                                                    | 🟡 Relies on props |
+| LogoCloud       | ✅ Yes (text + badge contrast)                | ✅ `var(--brand-primary, #3b82f6)` for badge                                                         | Dark: `#94a3b8` title, `#1e293b` card BG; Light: `#6b7280` title, `#ffffff` card BG                                   | ✅ Good            |
+| ComparisonTable | ❌ No                                         | ✅ `var(--color-highlight-bg, ...)`, `var(--color-check, ...)`, `var(--color-foreground, ...)`, etc. | `#22c55e` check (via var), `#9ca3af` cross (via var)                                                                  | 🟡 Partial         |
 
 ### 9.2 Colour Application Rules
 
 All marketing components correctly use `style={{}}` for colours. None use Tailwind colour classes. This is the correct pattern and must be maintained.
 
 **Colour resolution order:**
+
 1. Explicit prop value (user-set colour)
 2. CSS variable with fallback: `var(--brand-primary, #3b82f6)`
 3. Component-level hardcoded defaults (e.g., star colours)
@@ -1052,17 +1105,18 @@ All marketing components correctly use `style={{}}` for colours. None use Tailwi
 
 ### 10.1 Current Accessibility Status
 
-| Component       | `role` | `aria-label` | `aria-live` | Keyboard Nav | Screen Reader | Status |
-| --------------- | ------ | ------------ | ----------- | ------------ | ------------- | ------ |
-| AnnouncementBar | ❌     | ❌           | ❌          | ❌ Dismiss   | ❌            | 🔴 Poor |
-| SocialProof     | ❌     | ❌           | N/A         | N/A          | ✅ JSON-LD    | 🟡 Partial |
-| TrustBadges     | ❌     | ❌           | N/A         | ❌ Badge links | ❌          | 🔴 Poor |
-| LogoCloud       | ❌     | ❌           | N/A         | ❌ Logo links | ❌           | 🔴 Poor |
-| ComparisonTable | ❌     | ❌           | N/A         | N/A          | ❌ No caption | 🔴 Poor |
+| Component       | `role` | `aria-label` | `aria-live` | Keyboard Nav   | Screen Reader | Status     |
+| --------------- | ------ | ------------ | ----------- | -------------- | ------------- | ---------- |
+| AnnouncementBar | ❌     | ❌           | ❌          | ❌ Dismiss     | ❌            | 🔴 Poor    |
+| SocialProof     | ❌     | ❌           | N/A         | N/A            | ✅ JSON-LD    | 🟡 Partial |
+| TrustBadges     | ❌     | ❌           | N/A         | ❌ Badge links | ❌            | 🔴 Poor    |
+| LogoCloud       | ❌     | ❌           | N/A         | ❌ Logo links  | ❌            | 🔴 Poor    |
+| ComparisonTable | ❌     | ❌           | N/A         | N/A            | ❌ No caption | 🔴 Poor    |
 
 ### 10.2 Required Accessibility Fixes
 
 **AnnouncementBar:**
+
 - Add `role="banner"` or `role="alert"` based on variant
 - Add `aria-label="Announcement"` or user-provided label
 - Add `aria-live="polite"` for dynamic content
@@ -1070,21 +1124,25 @@ All marketing components correctly use `style={{}}` for colours. None use Tailwi
 - Dismiss button needs keyboard focus (`tabIndex={0}`, `onKeyDown` for Enter/Space)
 
 **SocialProof:**
+
 - Add `role="status"` for rating display
 - Star rendering needs `aria-label="Rated {rating} out of {maxRating}"`
 - Schema.org JSON-LD is good for SEO ✅ — but visible elements still need ARIA
 
 **TrustBadges:**
+
 - Add `role="list"` on badge container, `role="listitem"` on each badge
 - Badge links need descriptive `aria-label` (not just image alt)
 - Add keyboard focus indicators on linked badges
 
 **LogoCloud:**
+
 - Add `role="list"` on logo container, `role="listitem"` on each logo
 - Marquee: add `aria-label="Partner logos"` and consider reduced-motion preference
 - Logo links need `aria-label` combining company name + "Visit website"
 
 **ComparisonTable:**
+
 - Add `<caption>` element with table title for screen readers
 - Add `scope="col"` on header cells, `scope="row"` on row labels
 - Boolean check/cross icons need `aria-label="Included"` / `aria-label="Not included"`
@@ -1096,12 +1154,12 @@ All marketing components correctly use `style={{}}` for colours. None use Tailwi
 
 ### 11.1 CSS Variables Used by Marketing Components
 
-| Variable                  | Used By                          | Fallback    | Purpose              |
-| ------------------------- | -------------------------------- | ----------- | -------------------- |
-| `--brand-primary`         | AnnouncementBar, LogoCloud, ComparisonTable | `#3b82f6`  | Primary brand colour |
-| `--brand-secondary`       | —                                | `#6366f1`   | Available but unused |
-| `--brand-text`            | SocialProof                      | `#111827`   | Text colour          |
-| `--brand-background`      | —                                | `#ffffff`   | Available but unused |
+| Variable             | Used By                                     | Fallback  | Purpose              |
+| -------------------- | ------------------------------------------- | --------- | -------------------- |
+| `--brand-primary`    | AnnouncementBar, LogoCloud, ComparisonTable | `#3b82f6` | Primary brand colour |
+| `--brand-secondary`  | —                                           | `#6366f1` | Available but unused |
+| `--brand-text`       | SocialProof                                 | `#111827` | Text colour          |
+| `--brand-background` | —                                           | `#ffffff` | Available but unused |
 
 ### 11.2 Brand Injection Flow
 
@@ -1119,18 +1177,27 @@ All 5 marketing components receive these injected props automatically. However, 
 
 ### 11.3 Component-Level CSS Variables
 
-**ComparisonTable** is the only marketing component that defines its own CSS variables inline:
+**ComparisonTable** resolves all colour props through CSS variable fallbacks at render time:
 
 ```tsx
-style={{
-  '--check-color': checkColor || '#059669',
-  '--cross-color': crossColor || '#dc2626',
-  '--stripe-color': stripeColor || 'rgba(0,0,0,0.02)',
-  '--highlight-color': highlightColor || 'rgba(59,130,246,0.05)',
-}}
+const resolvedHighlightBg =
+  highlightBackgroundColor ||
+  "var(--color-highlight-bg, rgba(14,165,233,0.08))";
+const resolvedHighlightBorder =
+  highlightBorderColor || "var(--color-highlight-border, #0ea5e9)";
+const resolvedCheckColor = checkColor || "var(--color-check, #22c55e)";
+const resolvedCrossColor = crossColor || "var(--color-cross, #9ca3af)";
+const resolvedHeaderBg = headerBackgroundColor || "var(--color-muted, #f9fafb)";
+const resolvedTitleColor = titleColor || "var(--color-foreground, #111827)";
+const resolvedSubtitleColor =
+  subtitleColor || "var(--color-muted-foreground, #6b7280)";
+const resolvedFeatureColor =
+  featureTextColor || "var(--color-foreground, #111827)";
+const resolvedRowHover =
+  rowHoverColor || "var(--color-muted, rgba(0,0,0,0.03))";
 ```
 
-This is a good pattern and should be adopted by other marketing components for their repeated colour values.
+These resolved values are applied via inline `style={{}}`, NOT as custom CSS properties on the element. This pattern is good for SSR and should be adopted by other marketing components.
 
 ---
 
@@ -1138,13 +1205,13 @@ This is a good pattern and should be adopted by other marketing components for t
 
 ### 12.1 AI Discovery (component-metadata.ts)
 
-| Component       | Keywords                                      | `usageGuidelines`         | `acceptsChildren` |
-| --------------- | --------------------------------------------- | ------------------------- | ------------------ |
-| AnnouncementBar | announcement, banner, promo, alert            | ✅ Present                | false              |
-| SocialProof     | social proof, users, customers, trust         | ❌ **Missing**            | false              |
-| TrustBadges     | trust, badges, security, certifications       | ✅ Present                | false              |
-| LogoCloud       | logos, clients, partners, brands              | ✅ Present                | false              |
-| ComparisonTable | comparison, table, pricing, features          | ✅ Present                | false              |
+| Component       | Keywords                                | `usageGuidelines` | `acceptsChildren` |
+| --------------- | --------------------------------------- | ----------------- | ----------------- |
+| AnnouncementBar | announcement, banner, promo, alert      | ✅ Present        | false             |
+| SocialProof     | social proof, users, customers, trust   | ❌ **Missing**    | false             |
+| TrustBadges     | trust, badges, security, certifications | ✅ Present        | false             |
+| LogoCloud       | logos, clients, partners, brands        | ✅ Present        | false             |
+| ComparisonTable | comparison, table, pricing, features    | ✅ Present        | false             |
 
 **Action:** Add `usageGuidelines` to SocialProof metadata.
 
@@ -1165,6 +1232,7 @@ All 5 marketing components have `ai.canModify` lists in their registry definitio
 The converter's `transformPropsForStudio()` function is the AI's safety net. When the AI generates non-standard prop names, the normalizer corrects them.
 
 **Current normalizer coverage:**
+
 - LogoCloud: ✅ Comprehensive (URL validation, prop mapping, fallback component)
 - TrustBadges: ✅ Partial (emoji/URL separation, shield default)
 - AnnouncementBar: ❌ None
@@ -1183,43 +1251,43 @@ The 3 missing normalizers mean AI-generated content for these components goes th
 
 #### Field Name Mismatches
 
-| Registry Field  | Render Prop    | Impact                                      | Fix                                       |
-| --------------- | -------------- | ------------------------------------------- | ----------------------------------------- |
-| `closable`      | `dismissible`  | Close button never responds to registry     | Rename render prop to `closable`          |
-| `iconName`      | `icon`         | Icons from registry don't display            | Rename render prop to `iconName`          |
-| `linkUrl`       | `link`         | Link URL from registry is never used         | Rename render prop to `linkUrl`           |
-| `message`       | `text`         | Announcement text doesn't render             | Rename render prop to `message`           |
+| Registry Field | Render Prop   | Impact                                  | Fix                              |
+| -------------- | ------------- | --------------------------------------- | -------------------------------- |
+| `closable`     | `dismissible` | Close button never responds to registry | Rename render prop to `closable` |
+| `iconName`     | `icon`        | Icons from registry don't display       | Rename render prop to `iconName` |
+| `linkUrl`      | `link`        | Link URL from registry is never used    | Rename render prop to `linkUrl`  |
+| `message`      | `text`        | Announcement text doesn't render        | Rename render prop to `message`  |
 
 #### Variant Mismatches
 
-| Registry Variants                                    | Render Variants                                            |
-| ---------------------------------------------------- | ---------------------------------------------------------- |
-| default, gradient, glass, outlined, minimal, animated | default, success, warning, error, info, gradient, custom  |
+| Registry Variants                                     | Render Variants                                                                              |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| default, gradient, glass, outlined, minimal, animated | default, gradient, glass, outlined, minimal, animated, success, warning, error, info, custom |
 
-**Fix strategy:** The registry variants represent *visual styles* (glass=frosted, outlined=border-only, minimal=text-only, animated=marquee). The render variants represent *semantic types* (success=green, warning=yellow, error=red). These serve different purposes. **Keep both** — add registry variants to the render function AND keep semantic variants as colour presets within each visual style.
+**Status:** ✅ All 6 registry variants are now present in the render. The render additionally has 5 semantic variants (success, warning, error, info, custom) that are NOT in the registry. **Registry → render flow works.** Consider adding the 5 semantic variants to the registry for completeness.
 
 #### Missing from Render (Registry Has, Render Ignores)
 
-| Registry Field             | Purpose                                  | Priority |
-| -------------------------- | ---------------------------------------- | -------- |
-| `countdown`                | Target date for countdown display        | P1       |
-| `countdownLabel`           | Text before countdown                    | P1       |
-| `showCountdownDays/Hours/Min/Sec` | Toggle countdown segments        | P2       |
-| `marquee`                  | Enable scrolling text mode               | P1       |
-| `marqueeSpeed`             | Scroll speed                             | P2       |
-| `secondaryAction`          | Second CTA button                        | P2       |
-| `autoHide`                 | Automatically dismiss after N seconds    | P2       |
-| `cookieDuration`           | Remember dismissal (days)                | P1       |
-| `animateOnLoad`            | Entrance animation                       | P2       |
-| `borderRadius`             | Configurable rounding                    | P3       |
-| `boxShadow`                | Shadow style                             | P3       |
+| Registry Field                    | Purpose                               | Priority |
+| --------------------------------- | ------------------------------------- | -------- |
+| `countdown`                       | Target date for countdown display     | P1       |
+| `countdownLabel`                  | Text before countdown                 | P1       |
+| `showCountdownDays/Hours/Min/Sec` | Toggle countdown segments             | P2       |
+| `marquee`                         | Enable scrolling text mode            | P1       |
+| `marqueeSpeed`                    | Scroll speed                          | P2       |
+| `secondaryAction`                 | Second CTA button                     | P2       |
+| `autoHide`                        | Automatically dismiss after N seconds | P2       |
+| `cookieDuration`                  | Remember dismissal (days)             | P1       |
+| `animateOnLoad`                   | Entrance animation                    | P2       |
+| `borderRadius`                    | Configurable rounding                 | P3       |
+| `boxShadow`                       | Shadow style                          | P3       |
 
 #### Normalizer Required
 
 ```
 AnnouncementBar normalizer in transformPropsForStudio():
   - Map "text"/"content"/"headline" → "message"
-  - Map "url"/"href"/"clickUrl" → "linkUrl"  
+  - Map "url"/"href"/"clickUrl" → "linkUrl"
   - Map "dismissible"/"hideable" → "closable"
   - Validate countdown date format (ISO 8601)
   - Default variant → "default" if invalid value supplied
@@ -1232,29 +1300,41 @@ AnnouncementBar normalizer in transformPropsForStudio():
 
 #### Current State Comparison
 
-| Aspect        | Registry (core-components.ts L21757)                        | Render (renders.tsx L24261)                              |
-| ------------- | ----------------------------------------------------------- | -------------------------------------------------------- |
-| **Purpose**   | "1,500+ customers trust us" with avatar stack               | "4.8/5 from 2,000 reviews on Trustpilot" with stars     |
-| **Key props** | count, countSuffix, label, avatarImages, badge, badgeIcon   | rating, maxRating, reviewCount, platform, platformLogo   |
-| **Variants**  | inline, stacked, card, minimal, floating, banner            | stars, score, compact, detailed                          |
-| **Display**   | Number + text + avatar cluster + optional badge             | Star icons + score text + platform branding              |
-| **Schema**    | None                                                        | AggregateRating JSON-LD                                  |
+| Aspect        | Registry (core-components.ts L21757)                      | Render (renders.tsx L25325)                            |
+| ------------- | --------------------------------------------------------- | ------------------------------------------------------ |
+| **Purpose**   | "1,500+ customers trust us" with avatar stack             | "4.8/5 from 2,000 reviews on Trustpilot" with stars    |
+| **Key props** | count, countSuffix, label, avatarImages, badge, badgeIcon | rating, maxRating, reviewCount, platform, platformLogo |
+| **Variants**  | inline, stacked, card, minimal, floating, banner          | stars, score, compact, detailed                        |
+| **Display**   | Number + text + avatar cluster + optional badge           | Star icons + score text + platform branding            |
+| **Schema**    | None                                                      | AggregateRating JSON-LD                                |
+
+#### Additional Field Name Mismatches (Rating Mode)
+
+| Registry Field     | Render Prop          | Impact                                  |
+| ------------------ | -------------------- | --------------------------------------- |
+| `ratingColor`      | `starColor`          | 🔴 BREAKING — star colour prop ignored  |
+| `ratingEmptyColor` | `emptyStarColor`     | 🔴 BREAKING — empty star colour ignored |
+| `schemaType`       | `enableSchema`       | 🔴 BREAKING — schema toggle ignored     |
+| `schemaName`       | `schemaItemReviewed` | 🔴 BREAKING — schema name not passed    |
 
 #### Fix Strategy: Unified SocialProof Component
 
 Both use cases are valid. The render should support BOTH modes:
 
 **Mode 1: Count Display** (matches registry)
+
 ```
 "1,500+ customers trust us" [avatar] [avatar] [avatar] +50
 ```
 
 **Mode 2: Rating Display** (matches current render)
+
 ```
 ★★★★½  4.8/5 · 2,000 reviews on Trustpilot
 ```
 
 **Implementation approach:**
+
 1. Add a `mode` field to registry: `"count"` or `"rating"` (default: `"count"`)
 2. Keep ALL existing registry fields (count, countSuffix, label, avatars)
 3. Add rating-specific fields (rating, maxRating, reviewCount, platform, platformLogo, enableSchema)
@@ -1279,45 +1359,46 @@ SocialProof normalizer in transformPropsForStudio():
 
 #### Badge Array Mismatch
 
-| Field       | Registry Badge Item                                       | Render Badge Item            |
-| ----------- | --------------------------------------------------------- | ---------------------------- |
-| `icon`      | ✅ (text string, e.g., "🛡️")                             | ❌ Not consumed              |
-| `text`      | ✅ (label text)                                           | ❌ Not consumed              |
-| `description`| ✅ (longer text)                                          | ❌ Not consumed              |
-| `image`     | ✅ (image URL)                                            | ✅ Consumed                  |
-| `alt`       | ❌ Not in registry                                        | ✅ Consumed                  |
-| `link`      | ✅ (click URL)                                            | ✅ Consumed                  |
-| `featured`  | ✅ (boolean highlight)                                    | ❌ Not consumed              |
-| `badgeColor`| ✅ (individual badge tint)                                | ❌ Not consumed              |
+| Field         | Registry Badge Item          | Render Badge Item |
+| ------------- | ---------------------------- | ----------------- |
+| `icon`        | ✅ (text string, e.g., "🛡️") | ❌ Not consumed   |
+| `text`        | ✅ (label text)              | ❌ Not consumed   |
+| `description` | ✅ (longer text)             | ❌ Not consumed   |
+| `image`       | ✅ (image URL)               | ✅ Consumed       |
+| `alt`         | ❌ Not in registry           | ✅ Consumed       |
+| `link`        | ✅ (click URL)               | ✅ Consumed       |
+| `featured`    | ✅ (boolean highlight)       | ❌ Not consumed   |
+| `badgeColor`  | ✅ (individual badge tint)   | ❌ Not consumed   |
 
 **Fix:** Expand render to accept ALL registry fields. When `image` is present, render as image badge. When only `icon` + `text` is present, render as icon+text badge. This makes TrustBadges work for both image-based badges (SSL seals, certification logos) and text-based badges (custom icons + labels).
 
 #### Variant Gap
 
-| Registry Variants                                          | Render Layouts         |
-| ---------------------------------------------------------- | ---------------------- |
-| inline, grid, cards, minimal, stacked, pills, icons-only  | row, grid              |
+| Registry Variants                                        | Render Layouts |
+| -------------------------------------------------------- | -------------- |
+| inline, grid, cards, minimal, stacked, pills, icons-only | row, grid      |
 
 **Fix:** Map render `layout` prop to accept all variant names. `row` = `inline`. `grid` = `grid`. Add rendering for `cards`, `pills`, `icons-only`, `minimal`, and `stacked`.
 
 #### Normalizer Enhancement
 
-The existing normalizer at L2161 handles emoji/URL separation. Enhancements needed:
+The existing normalizer at L2204 handles emoji/URL separation. Enhancements needed:
+
 ```
 Enhanced TrustBadges normalizer:
   - Existing: separate emoji icons from real image URLs ✅
   - Existing: default shield emoji 🛡️ when no icon/image ✅
   - Add: map "name"/"label"/"title" → "text" per badge
-  - Add: map "tooltip"/"detail" → "description" per badge  
+  - Add: map "tooltip"/"detail" → "description" per badge
   - Add: ensure "alt" field exists (fall back to "text" or "icon")
   - Add: validate badge URLs (reject non-https in production)
 ```
 
 ### 13.4 LogoCloud Alignment
 
-LogoCloud has the **best alignment** of all 5 marketing components. Its normalizer at L2082 is comprehensive.
+LogoCloud has the **best alignment** of all 5 marketing components. Its normalizer at L2131 is comprehensive.
 
-#### Current Normalizer Capabilities (L2082–L2159)
+#### Current Normalizer Capabilities (L2131–L2203)
 
 1. **Image URL validation** — filters out non-URL strings, keeps only valid image URLs
 2. **Responsive columns mapping** — maps number to responsive layout string
@@ -1327,25 +1408,40 @@ LogoCloud has the **best alignment** of all 5 marketing components. Its normaliz
 
 #### Minor Improvements Needed
 
-| Issue                                     | Fix                                              | Priority |
-| ----------------------------------------- | ------------------------------------------------ | -------- |
-| `badge` prop not normalised               | Map "tag"/"chip"/"label" → "badge"               | P3       |
-| `marqueeSpeed` units not validated         | Clamp to 10–120 (seconds), default 30            | P3       |
-| No alt text fallback for logos             | Generate from filename if missing                 | P2       |
-| `variant` "carousel" → "marquee" mapping  | Registry says "carousel", consider normalising    | P3       |
+| Issue                                    | Fix                                            | Priority |
+| ---------------------------------------- | ---------------------------------------------- | -------- |
+| `badge` prop not normalised              | Map "tag"/"chip"/"label" → "badge"             | P3       |
+| `marqueeSpeed` units not validated       | Clamp to 10–120 (seconds), default 30          | P3       |
+| No alt text fallback for logos           | Generate from filename if missing              | P2       |
+| `variant` "carousel" → "marquee" mapping | Registry says "carousel", consider normalising | P3       |
 
 ### 13.5 ComparisonTable Alignment
 
-#### 4 Field Name Mismatches (All Breaking)
+#### 5 Field Name Mismatches (All Breaking)
 
-| #  | Location    | Registry Name  | Render Name    | Impact                           | Fix                        |
-| -- | ----------- | -------------- | -------------- | -------------------------------- | -------------------------- |
-| 1  | column item | `highlighted`  | `highlight`    | "Most Popular" never activates   | Rename render → `highlighted` |
-| 2  | column item | `priceNote`    | `priceSubtext` | Price footnote never renders     | Rename render → `priceNote`   |
-| 3  | row item    | `description`  | `tooltip`      | Row tooltips never appear        | Rename render → `description` |
-| 4  | row item    | `category`     | `group`        | Row grouping never works         | Rename render → `category`    |
+| #   | Location    | Registry Name | Render Name    | Impact                         | Fix                           |
+| --- | ----------- | ------------- | -------------- | ------------------------------ | ----------------------------- |
+| 1   | column item | `highlighted` | `highlight`    | "Most Popular" never activates | Rename render → `highlighted` |
+| 2   | column item | `priceNote`   | `priceSubtext` | Price footnote never renders   | Rename render → `priceNote`   |
+| 3   | row item    | `label`       | `feature`      | Row feature text never shows   | Rename render → `label`       |
+| 4   | row item    | `description` | `tooltip`      | Row tooltips never appear      | Rename render → `description` |
+| 5   | row item    | `category`    | `group`        | Row grouping never works       | Rename render → `category`    |
 
-> These 4 fixes are trivial — rename the destructured prop names in the render function. No logic changes needed.
+> These 5 fixes are trivial — rename the destructured prop names in the render function. No logic changes needed.
+
+#### Top-Level Prop Mismatches
+
+| #   | Registry Name       | Render Name                | Impact                                                                          |
+| --- | ------------------- | -------------------------- | ------------------------------------------------------------------------------- |
+| 1   | `stickyFirstColumn` | `stickyColumn`             | 🔴 BREAKING — sticky column not applied                                         |
+| 2   | `mobileStack`       | `mobileLayout: "stack"`    | 🔴 BREAKING — mobile layout ignored                                             |
+| 3   | `headerBackground`  | `headerBackgroundColor`    | 🔴 BREAKING — header BG not applied                                             |
+| 4   | `highlightColor`    | `highlightBackgroundColor` | 🟡 Legacy support exists in render                                              |
+| 5   | `background`        | —                          | 🟡 No equivalent (render has granular colour props)                             |
+| 6   | `textColor`         | —                          | 🟡 No equivalent (render has `titleColor`, `subtitleColor`, `featureTextColor`) |
+| 7   | `headerTextColor`   | —                          | 🟡 No equivalent in render                                                      |
+| 8   | `borderColor`       | —                          | 🟡 Not in render                                                                |
+| 9   | `stripeColor`       | —                          | 🟡 Not in render                                                                |
 
 #### Normalizer Required
 
@@ -1367,13 +1463,13 @@ ComparisonTable normalizer in transformPropsForStudio():
 
 ### 13.6 Alignment Summary
 
-| Component       | Field Fixes | Variant Fixes | Normalizer Needed | Effort  |
-| --------------- | ----------- | ------------- | ----------------- | ------- |
-| AnnouncementBar | 4 renames   | Merge sets    | ✅ Write new      | Medium  |
-| SocialProof     | Full rewrite| Full rewrite  | ✅ Write new      | Large   |
-| TrustBadges     | 4 additions | 5 additions   | ✅ Enhance L2161  | Medium  |
-| LogoCloud       | 0           | 0             | ✅ Minor L2082    | Small   |
-| ComparisonTable | 4 renames   | 0             | ✅ Write new      | Medium  |
+| Component       | Field Fixes             | Variant Fixes       | Normalizer Needed | Effort |
+| --------------- | ----------------------- | ------------------- | ----------------- | ------ |
+| AnnouncementBar | 4 renames               | ✅ Variants aligned | ✅ Write new      | Medium |
+| SocialProof     | Full rewrite            | Full rewrite        | ✅ Write new      | Large  |
+| TrustBadges     | 4 additions             | 5 additions         | ✅ Enhance L2204  | Medium |
+| LogoCloud       | 0                       | 0                   | ✅ Minor L2131    | Small  |
+| ComparisonTable | 5 renames + 3 top-level | 1 name mismatch     | ✅ Write new      | Medium |
 
 ---
 
@@ -1383,13 +1479,16 @@ ComparisonTable normalizer in transformPropsForStudio():
 
 > **Goal:** Stop silent data loss. Every prop the AI sets must reach the render function.
 
-| Task                                              | Component       | Files Changed          | Estimated Lines |
-| ------------------------------------------------- | --------------- | ---------------------- | --------------- |
-| Rename `dismissible` → `closable` in render       | AnnouncementBar | renders.tsx            | ~3              |
-| Rename `text` → `message`, `link` → `linkUrl`     | AnnouncementBar | renders.tsx            | ~5              |
-| Rename `highlight` → `highlighted` etc. (4 props)  | ComparisonTable | renders.tsx            | ~8              |
-| Add `mode` prop + count display to SocialProof    | SocialProof     | renders.tsx            | ~80             |
-| Add missing registry fields to SocialProof        | SocialProof     | core-components.ts     | ~30             |
+| Task                                                                                                                                             | Component       | Files Changed      | Estimated Lines |
+| ------------------------------------------------------------------------------------------------------------------------------------------------ | --------------- | ------------------ | --------------- |
+| Rename `dismissible` → `closable` in render                                                                                                      | AnnouncementBar | renders.tsx        | ~3              |
+| Rename `text` → `message`, `link` → `linkUrl`                                                                                                    | AnnouncementBar | renders.tsx        | ~5              |
+| Rename `highlight` → `highlighted`, `priceSubtext` → `priceNote`, `feature` → `label`, `tooltip` → `description`, `group` → `category` (5 props) | ComparisonTable | renders.tsx        | ~12             |
+| Rename `stickyColumn` → `stickyFirstColumn`, refactor `mobileLayout` → `mobileStack`                                                             | ComparisonTable | renders.tsx        | ~10             |
+| Rename `starColor` → `ratingColor`, `emptyStarColor` → `ratingEmptyColor`                                                                        | SocialProof     | renders.tsx        | ~4              |
+| Rename `enableSchema` → `schemaType`, `schemaItemReviewed` → `schemaName`                                                                        | SocialProof     | renders.tsx        | ~4              |
+| Add `mode` prop + count display to SocialProof                                                                                                   | SocialProof     | renders.tsx        | ~80             |
+| Add missing registry fields to SocialProof                                                                                                       | SocialProof     | core-components.ts | ~30             |
 
 **Validation:** After Phase 1, each component's render function props match its registry field names.
 
@@ -1397,13 +1496,13 @@ ComparisonTable normalizer in transformPropsForStudio():
 
 > **Goal:** AI-generated content is normalised before storage. Misspelled, aliases, and variant prop names are corrected.
 
-| Task                                              | Component       | Files Changed          | Estimated Lines |
-| ------------------------------------------------- | --------------- | ---------------------- | --------------- |
-| Write AnnouncementBar normalizer                   | AnnouncementBar | converter.ts           | ~35             |
-| Write SocialProof normalizer                       | SocialProof     | converter.ts           | ~45             |
-| Write ComparisonTable normalizer                   | ComparisonTable | converter.ts           | ~50             |
-| Enhance TrustBadges normalizer                     | TrustBadges     | converter.ts           | ~15             |
-| Minor LogoCloud normalizer improvements             | LogoCloud       | converter.ts           | ~10             |
+| Task                                    | Component       | Files Changed | Estimated Lines |
+| --------------------------------------- | --------------- | ------------- | --------------- |
+| Write AnnouncementBar normalizer        | AnnouncementBar | converter.ts  | ~35             |
+| Write SocialProof normalizer            | SocialProof     | converter.ts  | ~45             |
+| Write ComparisonTable normalizer        | ComparisonTable | converter.ts  | ~50             |
+| Enhance TrustBadges normalizer          | TrustBadges     | converter.ts  | ~15             |
+| Minor LogoCloud normalizer improvements | LogoCloud       | converter.ts  | ~10             |
 
 **Validation:** After Phase 2, AI can generate any reasonable prop name variant and it maps correctly.
 
@@ -1411,14 +1510,14 @@ ComparisonTable normalizer in transformPropsForStudio():
 
 > **Goal:** Render functions support ALL registered variants and features.
 
-| Task                                              | Component       | Files Changed          | Estimated Lines |
-| ------------------------------------------------- | --------------- | ---------------------- | --------------- |
-| Add glass/outlined/minimal/animated variants       | AnnouncementBar | renders.tsx            | ~60             |
-| Add countdown display                              | AnnouncementBar | renders.tsx            | ~40             |
-| Add marquee scrolling mode                         | AnnouncementBar | renders.tsx            | ~30             |
-| Expand badge item fields (icon, text, description) | TrustBadges     | renders.tsx            | ~40             |
-| Add cards/pills/icons-only/minimal/stacked variants| TrustBadges     | renders.tsx            | ~80             |
-| Add inline/stacked/card/floating/banner variants   | SocialProof     | renders.tsx            | ~60             |
+| Task                                                       | Component       | Files Changed | Estimated Lines |
+| ---------------------------------------------------------- | --------------- | ------------- | --------------- |
+| ✅ ~~Add glass/outlined/minimal/animated variants~~ (DONE) | AnnouncementBar | renders.tsx   | ✅ Complete     |
+| Add countdown display                                      | AnnouncementBar | renders.tsx   | ~40             |
+| Add marquee scrolling mode                                 | AnnouncementBar | renders.tsx   | ~30             |
+| Expand badge item fields (icon, text, description)         | TrustBadges     | renders.tsx   | ~40             |
+| Add cards/pills/icons-only/minimal/stacked variants        | TrustBadges     | renders.tsx   | ~80             |
+| Add inline/stacked/card/floating/banner variants           | SocialProof     | renders.tsx   | ~60             |
 
 **Validation:** Every registry variant renders a visually distinct output.
 
@@ -1426,14 +1525,15 @@ ComparisonTable normalizer in transformPropsForStudio():
 
 > **Goal:** AI Designer places marketing components intelligently.
 
-| Task                                              | Component       | Files Changed              | Estimated Lines |
-| ------------------------------------------------- | --------------- | -------------------------- | --------------- |
-| Add `usageGuidelines` to SocialProof               | SocialProof     | component-metadata.ts      | ~3              |
-| Add `suggestedWith` relationships for all 5        | All             | component-metadata.ts      | ~15             |
-| Expand keywords (8+ per component)                 | All             | component-metadata.ts      | ~10             |
-| Add `suggestedPlacement` hints                     | All             | component-metadata.ts      | ~10             |
+| Task                                        | Component   | Files Changed         | Estimated Lines |
+| ------------------------------------------- | ----------- | --------------------- | --------------- |
+| Add `usageGuidelines` to SocialProof        | SocialProof | component-metadata.ts | ~3              |
+| Add `suggestedWith` relationships for all 5 | All         | component-metadata.ts | ~15             |
+| Expand keywords (8+ per component)          | All         | component-metadata.ts | ~10             |
+| Add `suggestedPlacement` hints              | All         | component-metadata.ts | ~10             |
 
 **Suggested `suggestedWith` relationships:**
+
 ```
 AnnouncementBar → [ ] (standalone, always at top of page)
 SocialProof     → ["CTA", "Hero", "Pricing"]
@@ -1446,15 +1546,15 @@ ComparisonTable → ["Pricing", "CTA", "FAQ"]
 
 > **Goal:** All 5 components pass WCAG AA contrast in both light and dark modes.
 
-| Task                                               | Component       | Files Changed          |
-| -------------------------------------------------- | --------------- | ---------------------- |
-| Add `isDarkBackground()` to SocialProof             | SocialProof     | renders.tsx            |
-| Add `isDarkBackground()` to ComparisonTable         | ComparisonTable | renders.tsx            |
-| Add `isDarkBackground()` to TrustBadges             | TrustBadges     | renders.tsx            |
-| Add `aria-label` to AnnouncementBar close button    | AnnouncementBar | renders.tsx            |
-| Add `role="table"` to ComparisonTable               | ComparisonTable | renders.tsx            |
-| Add `role="img"` to star SVGs in SocialProof        | SocialProof     | renders.tsx            |
-| Add keyboard navigation for dismiss/close actions   | AnnouncementBar | renders.tsx            |
+| Task                                              | Component       | Files Changed |
+| ------------------------------------------------- | --------------- | ------------- |
+| Add `isDarkBackground()` to SocialProof           | SocialProof     | renders.tsx   |
+| Add `isDarkBackground()` to ComparisonTable       | ComparisonTable | renders.tsx   |
+| Add `isDarkBackground()` to TrustBadges           | TrustBadges     | renders.tsx   |
+| Add `aria-label` to AnnouncementBar close button  | AnnouncementBar | renders.tsx   |
+| Add `role="table"` to ComparisonTable             | ComparisonTable | renders.tsx   |
+| Add `role="img"` to star SVGs in SocialProof      | SocialProof     | renders.tsx   |
+| Add keyboard navigation for dismiss/close actions | AnnouncementBar | renders.tsx   |
 
 ---
 
@@ -1463,9 +1563,11 @@ ComparisonTable → ["Pricing", "CTA", "FAQ"]
 ### 15.1 TypeScript Compilation
 
 After EVERY change to any of the 4 source files:
+
 ```bash
 cd next-platform-dashboard && npx tsc --noEmit
 ```
+
 Zero new errors. If the baseline has existing errors, ensure the count does NOT increase.
 
 ### 15.2 Visual Testing Matrix
@@ -1473,53 +1575,58 @@ Zero new errors. If the baseline has existing errors, ensure the count does NOT 
 Test each component with these configurations:
 
 #### AnnouncementBar
-| Test Case                  | Props                                               | Expected                              |
-| -------------------------- | --------------------------------------------------- | ------------------------------------- |
-| Default banner             | `message: "Sale ends today!"`                        | Blue bar, white text                  |
-| Gradient variant           | `variant: "gradient", backgroundGradient: "..."`     | Gradient background                   |
-| With link                  | `message: "...", linkText: "Shop now", linkUrl: "#"` | Text + underlined link                |
-| Dismissible                | `closable: true`                                     | X button visible, removes bar on click|
-| Sticky                     | `sticky: true`                                       | Stays fixed at top on scroll          |
-| Dark background            | `backgroundColor: "#1a1a1a"`                         | Auto light text via isDarkBackground()|
+
+| Test Case        | Props                                                | Expected                               |
+| ---------------- | ---------------------------------------------------- | -------------------------------------- |
+| Default banner   | `message: "Sale ends today!"`                        | Blue bar, white text                   |
+| Gradient variant | `variant: "gradient", backgroundGradient: "..."`     | Gradient background                    |
+| With link        | `message: "...", linkText: "Shop now", linkUrl: "#"` | Text + underlined link                 |
+| Dismissible      | `closable: true`                                     | X button visible, removes bar on click |
+| Sticky           | `sticky: true`                                       | Stays fixed at top on scroll           |
+| Dark background  | `backgroundColor: "#1a1a1a"`                         | Auto light text via isDarkBackground() |
 
 #### SocialProof
-| Test Case                  | Props                                               | Expected                              |
-| -------------------------- | --------------------------------------------------- | ------------------------------------- |
-| Count mode                 | `mode: "count", count: 1500, countSuffix: "+"…`     | "1,500+ customers trust us" + avatars |
-| Rating mode                | `mode: "rating", rating: 4.8, reviewCount: 2000`    | Stars + score + review count          |
-| With platform              | `mode: "rating", platform: "Trustpilot"`             | Platform logo + branded colours       |
-| Schema enabled             | `enableSchema: true, rating: 4.8`                    | JSON-LD script tag in head            |
-| Compact variant            | `variant: "compact"`                                 | Single-line inline display            |
+
+| Test Case       | Props                                            | Expected                              |
+| --------------- | ------------------------------------------------ | ------------------------------------- |
+| Count mode      | `mode: "count", count: 1500, countSuffix: "+"…`  | "1,500+ customers trust us" + avatars |
+| Rating mode     | `mode: "rating", rating: 4.8, reviewCount: 2000` | Stars + score + review count          |
+| With platform   | `mode: "rating", platform: "Trustpilot"`         | Platform logo + branded colours       |
+| Schema enabled  | `enableSchema: true, rating: 4.8`                | JSON-LD script tag in head            |
+| Compact variant | `variant: "compact"`                             | Single-line inline display            |
 
 #### TrustBadges
-| Test Case                  | Props                                               | Expected                              |
-| -------------------------- | --------------------------------------------------- | ------------------------------------- |
-| Image badges               | `badges: [{image: "ssl.png", alt: "SSL"}]`           | Badge images in grid                  |
-| Icon+text badges           | `badges: [{icon: "🛡️", text: "Secure"}]`            | Emoji + label                         |
-| Grid layout                | `layout: "grid", columns: 4`                         | 4-column grid                         |
-| Grayscale                  | `grayscale: true`                                    | Greyed badges, colour on hover        |
-| Row layout                 | `layout: "row"`                                      | Horizontal flex                       |
+
+| Test Case        | Props                                      | Expected                       |
+| ---------------- | ------------------------------------------ | ------------------------------ |
+| Image badges     | `badges: [{image: "ssl.png", alt: "SSL"}]` | Badge images in grid           |
+| Icon+text badges | `badges: [{icon: "🛡️", text: "Secure"}]`   | Emoji + label                  |
+| Grid layout      | `layout: "grid", columns: 4`               | 4-column grid                  |
+| Grayscale        | `grayscale: true`                          | Greyed badges, colour on hover |
+| Row layout       | `layout: "row"`                            | Horizontal flex                |
 
 #### LogoCloud
-| Test Case                  | Props                                               | Expected                              |
-| -------------------------- | --------------------------------------------------- | ------------------------------------- |
-| Simple grid                | `variant: "simple", columns: 4`                      | Logo grid, no cards                   |
-| Cards variant              | `variant: "cards"`                                   | Each logo in a card                   |
-| Marquee                    | `variant: "marquee", marqueeSpeed: 30`               | Infinite scrolling logos              |
-| Marquee pause              | Hover over marquee                                   | Animation pauses                      |
-| Grayscale + hover colour   | `grayscale: true, hoverColor: true`                  | Grey logos, colour on hover           |
-| With badge                 | `badge: "Trusted by 500+ companies"`                 | Badge pill above title                |
+
+| Test Case                | Props                                      | Expected                    |
+| ------------------------ | ------------------------------------------ | --------------------------- |
+| Simple grid              | `variant: "simple", columns: 4`            | Logo grid, no cards         |
+| Cards variant            | `variant: "cards"`                         | Each logo in a card         |
+| Marquee                  | `variant: "marquee", marqueeSpeed: "fast"` | Infinite scrolling logos    |
+| Marquee pause            | Hover over marquee                         | Animation pauses            |
+| Grayscale + hover colour | `grayscale: true, hoverColor: true`        | Grey logos, colour on hover |
+| With badge               | `badge: "Trusted by 500+ companies"`       | Badge pill above title      |
 
 #### ComparisonTable
-| Test Case                  | Props                                               | Expected                              |
-| -------------------------- | --------------------------------------------------- | ------------------------------------- |
-| Simple table               | `variant: "simple", columns: [...], rows: [...]`     | Basic table                           |
-| Highlighted column         | `columns: [{highlighted: true, ...}]`                | Column has highlight background       |
-| Row grouping               | `rows: [{category: "Security", ...}]`                | Group header row spanning all columns |
-| Sticky header              | `stickyHeader: true`                                 | Header stays fixed on scroll          |
-| Boolean values             | `rows: [{values: [true, false, true]}]`              | ✓ check / ✗ cross SVG icons          |
-| Mobile stack               | Viewport < 768px                                     | Table → card stack layout             |
-| Striped variant            | `variant: "striped"`                                 | Alternating row backgrounds           |
+
+| Test Case          | Props                                            | Expected                              |
+| ------------------ | ------------------------------------------------ | ------------------------------------- |
+| Simple table       | `variant: "simple", columns: [...], rows: [...]` | Basic table                           |
+| Highlighted column | `columns: [{highlighted: true, ...}]`            | Column has highlight background       |
+| Row grouping       | `rows: [{category: "Security", ...}]`            | Group header row spanning all columns |
+| Sticky header      | `stickyHeader: true`                             | Header stays fixed on scroll          |
+| Boolean values     | `rows: [{values: [true, false, true]}]`          | ✓ check / ✗ cross SVG icons           |
+| Mobile stack       | Viewport < 768px                                 | Table → card stack layout             |
+| Striped variant    | `variant: "striped"`                             | Alternating row backgrounds           |
 
 ### 15.3 Converter Testing
 
@@ -1530,8 +1637,8 @@ For each normalizer, test with intentionally malformed AI output:
 transformPropsForStudio("AnnouncementBar", {
   text: "Big Sale!",
   url: "/shop",
-  dismissible: true,  // Should map to "closable"
-  style: "gradient"   // Should map to "variant"
+  dismissible: true, // Should map to "closable"
+  style: "gradient", // Should map to "variant"
 });
 // Expected: { message: "Big Sale!", linkUrl: "/shop", closable: true, variant: "gradient" }
 
@@ -1539,14 +1646,14 @@ transformPropsForStudio("AnnouncementBar", {
 transformPropsForStudio("SocialProof", {
   stars: 4.5,
   reviews: 1000,
-  source: "Google"
+  source: "Google",
 });
 // Expected: { mode: "rating", rating: 4.5, reviewCount: 1000, platform: "Google" }
 
 // ComparisonTable — AI sends mismatched column fields
 transformPropsForStudio("ComparisonTable", {
   columns: [{ name: "Basic", highlight: true, priceSubtext: "/mo" }],
-  rows: [{ label: "SSL", tooltip: "Included", group: "Security" }]
+  rows: [{ label: "SSL", tooltip: "Included", group: "Security" }],
 });
 // Expected: columns[0].highlighted = true, columns[0].priceNote = "/mo"
 //           rows[0].description = "Included", rows[0].category = "Security"
@@ -1582,6 +1689,7 @@ After completing each phase, verify ALL previously working features still functi
 2. **NEVER use Tailwind colour classes.** All colours go through `style={{}}`. This is because Tailwind purges dynamic class names at build time. `bg-${colour}-600` will NEVER work.
 
 3. **ALWAYS use `isDarkBackground()` for auto dark/light text.** Import from the same file. Pattern:
+
    ```tsx
    const dark = isDarkBackground(backgroundColor);
    const textColour = textColor || (dark ? "#ffffff" : "#1f2937");
@@ -1598,6 +1706,7 @@ After completing each phase, verify ALL previously working features still functi
 ### 16.2 File-Specific Rules
 
 #### renders.tsx Rules
+
 ```
 DO:
   ✅ Destructure props with defaults: { message = "", variant = "default", ...props }
@@ -1608,12 +1717,13 @@ DO:
 
 DON'T:
   ❌ Import React hooks (useState, useEffect) in marketing components
-  ❌ Use template literal Tailwind classes: `bg-${color}-500` 
+  ❌ Use template literal Tailwind classes: `bg-${color}-500`
   ❌ Access window/document (SSR will break)
   ❌ Use dangerouslySetInnerHTML for user content (only for Schema.org JSON-LD)
 ```
 
 #### core-components.ts Rules
+
 ```
 DO:
   ✅ Use defineComponent() with type, label, category, fields, fieldGroups, defaultProps, ai
@@ -1629,6 +1739,7 @@ DON'T:
 ```
 
 #### converter.ts Rules
+
 ```
 DO:
   ✅ Add typeMap aliases for common AI-generated type names
@@ -1647,50 +1758,57 @@ DON'T:
 ### 16.3 Component-Specific Guard Rails
 
 #### AnnouncementBar
+
 - The dismiss button has NO state management. Currently it just renders a close icon. To make it functional, you need either: (a) a client component wrapper with `useState`, or (b) CSS-only `:target` or `<details>` hack.
 - The `isDarkBackground()` call determines white vs dark text. Don't override with hardcoded colours.
 - Gradient backgrounds use `buildGradientCSS()` — don't manually write `linear-gradient()`.
 
 #### SocialProof
+
 - The Schema.org JSON-LD uses `dangerouslySetInnerHTML`. This is intentional and correct for `<script type="application/ld+json">`. Do NOT refactor this to use React props.
 - Star rendering uses half-star SVG clipping. Test with values like 4.3, 4.5, 4.7 to ensure partial stars render correctly.
 - The `platform` prop expects known platform names. Unknown platforms should render without a logo (not crash).
 
 #### TrustBadges
-- Two implementations exist: (1) `TrustBadgesElement` nested inside CTA render at ~L9144, and (2) standalone `TrustBadgesRender` at L24498. Only modify the standalone version. The CTA-embedded version is a simplified inline display.
+
+- Two implementations exist: (1) `TrustBadgesElement` nested inside CTA render at L9147, and (2) standalone `TrustBadgesRender` at L25579. Only modify the standalone version. The CTA-embedded version is a simplified inline display.
 - The normalizer separates emojis from image URLs. An emoji like 🛡️ → `icon` field. A URL like `https://example.com/badge.svg` → `image` field. Don't break this logic.
 
 #### LogoCloud
+
 - The `__convertedToFeatures` fallback is the ONLY fail-safe in the entire marketing component set. If AI sends text items instead of logo URLs, the normalizer converts the component to `Features` type. Do NOT remove this.
-- `marqueeSpeed` is in seconds for one full loop. Lower = faster. Validate range 10–120.
+- `marqueeSpeed` is a string enum (`"slow"` | `"normal"` | `"fast"`), NOT a number. The render maps these to CSS animation durations.
 - `pauseOnHover` uses CSS `animation-play-state: paused` on hover. This is pure CSS, no JS.
 
 #### ComparisonTable
+
 - The table uses `<table>` semantic HTML, not CSS grid. This is correct for accessibility — screen readers understand table structure.
 - Boolean cell values render as SVG check/cross icons. The `checkColor` and `crossColor` props control their colours via `style={{}}`.
-- Row grouping uses `colspan` spanning all columns. The group header text comes from the `category` field (not `group` — this is one of the 4 renames needed).
-- Mobile stack layout (`mobileLayout: "stack"`) switches from `<table>` to stacked `<div>` cards below a breakpoint. Both views must render the same data.
+- Row grouping uses `colspan` spanning all columns. The group header text comes from the `group` field in the render (registry calls it `category` — this is one of the 5 renames needed).
+- Mobile layout (`mobileLayout: "stack"`) switches from `<table>` to stacked `<div>` cards at `md:hidden` breakpoint. `mobileLayout: "scroll"` (default) lets the table scroll horizontally.
 
 ### 16.4 Implementation Order
 
 ```
 MUST DO FIRST (before any feature work):
-1. Rename the 4 ComparisonTable props (highlight→highlighted, etc.)
-2. Rename the 4 AnnouncementBar props (dismissible→closable, etc.)
-3. Add mode prop to SocialProof for count+rating dual mode
+1. Rename the 5 ComparisonTable sub-interface props (highlight→highlighted, priceSubtext→priceNote, feature→label, tooltip→description, group→category)
+2. Rename the 3 ComparisonTable top-level props (stickyColumn→stickyFirstColumn, mobileLayout→mobileStack, headerBackgroundColor→headerBackground)
+3. Rename the 4 AnnouncementBar props (dismissible→closable, text→message, link→linkUrl, icon→iconName)
+4. Rename the 4 SocialProof props (starColor→ratingColor, emptyStarColor→ratingEmptyColor, enableSchema→schemaType, schemaItemReviewed→schemaName)
+5. Add mode prop to SocialProof for count+rating dual mode
 
 THEN (safety net):
-4. Write AnnouncementBar normalizer
-5. Write SocialProof normalizer  
-6. Write ComparisonTable normalizer
-7. Enhance TrustBadges normalizer
+6. Write AnnouncementBar normalizer
+7. Write SocialProof normalizer
+8. Write ComparisonTable normalizer
+9. Enhance TrustBadges normalizer (L2204)
 
 THEN (feature parity):
-8. Add missing AnnouncementBar variants (glass, outlined, minimal, animated)
-9. Add missing TrustBadges variants (cards, pills, icons-only, etc.)
-10. Add missing SocialProof variants (inline, stacked, card, etc.)
-11. Add countdown display to AnnouncementBar
-12. Expand TrustBadges badge item rendering (icon + text + description)
+10. ✅ ~~Add missing AnnouncementBar variants (glass, outlined, minimal, animated)~~ DONE
+11. Add missing TrustBadges variants (cards, pills, icons-only, etc.)
+12. Add missing SocialProof variants (inline, stacked, card, etc.)
+13. Add countdown display to AnnouncementBar
+14. Expand TrustBadges badge item rendering (icon + text + description)
 
 FINALLY (polish):
 13. Add usageGuidelines to SocialProof metadata
@@ -1704,9 +1822,9 @@ FINALLY (polish):
 
 These work correctly and must NOT be modified:
 
-- LogoCloud normalizer L2082–L2159 (it's comprehensive, just minor additions)
+- LogoCloud normalizer L2131–L2203 (it's comprehensive, just minor additions)
 - LogoCloud `__convertedToFeatures` fallback pattern
-- TrustBadges normalizer L2161–L2193 (emoji/URL separation logic)
+- TrustBadges normalizer L2204–L2236 (emoji/URL separation logic)
 - SocialProof Schema.org JSON-LD rendering pattern
 - ComparisonTable `<table>` semantic structure
 - ComparisonTable mobile stack detection logic
@@ -1716,4 +1834,4 @@ These work correctly and must NOT be modified:
 
 ---
 
-*End of MARKETING COMPONENTS MASTER PLAN v1.0 — March 2026*
+_End of MARKETING COMPONENTS MASTER PLAN v1.0 — March 2026_

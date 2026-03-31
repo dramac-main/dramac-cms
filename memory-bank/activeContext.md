@@ -1,43 +1,86 @@
 # Active Context
 
-## Current Focus: Interactive Components Master Plan — VERIFIED & ENHANCED ✅
+## Current Focus: Marketing Components — REGISTRY ALIGNED & COMPLETE ✅
 
-### Status: `INTERACTIVE-COMPONENTS-MASTER-PLAN.md` v1.1 — verified against live codebase, all inaccuracies fixed, Section 17 (Critical Guard Rails) added.
+### What Was Done (Latest Session — Registry Alignment)
 
-### What Was Done (Latest Session — Interactive Components Verification & Enhancement)
+**Critical gap discovered and fixed: Registry definitions (core-components.ts) had field names that didn't match render function prop names. This broke the manual Studio editing path (registry → Supabase → render, which bypasses normalizers).**
 
-**Verified v1.0 against live codebase and upgraded to v1.1 with corrections:**
+#### Registry Fixes Applied to All 5 Marketing Components:
 
-#### Verification Process
+1. **AnnouncementBar** — Renamed registry fields: `text`→`message`, `link`→`linkUrl`, `icon`→`iconName`. Updated fieldGroups, defaultProps, and ai.canModify.
 
-- Ran comprehensive sub-agent audit comparing document against all 4 source files
-- Checked every typeMap alias, KNOWN_REGISTRY_TYPES entry, normalizer line, render prop count
-- Cross-referenced Section 0.2 and Section 14.1 tables against fresh converter.ts extraction
+2. **SocialProof** (largest change) — Added `mode` field ("rating"/"count"). Renamed: `ratingMax`→`maxRating`, `avatarCount`→`maxVisible`, `enableSchema`→`schemaType` (toggle→select with AggregateRating/Product/LocalBusiness/false options), `schemaItemReviewed`→`schemaName`. Added 9 missing fields: `reviewCount`, `platform`, `platformLogo`, `showCount`, `showPlatform`, `scoreBackgroundColor`, `scoreTextColor`, `mutedTextColor`. Fixed variant options from inline/stacked/card/minimal/floating/banner → stars/score/compact/detailed. Added new "Schema.org / SEO" fieldGroup. Updated defaultProps and ai.canModify.
 
-#### Fixes Applied (v1.0 → v1.1)
+3. **TrustBadges** — Changed `hoverEffect` from select (6 string options) to toggle (boolean). Fixed variant options from inline/grid/cards/minimal/stacked/pills/icons-only → default/pills/cards/minimal. Added `layout`, `size`, `grayscale` fields. Added `alt` to badges itemFields. Updated defaultProps.
 
-1. **14 converter alias rows updated** — Added ~25 omitted typeMap aliases across BeforeAfter, Animate, Tilt3DContainer, ShapeDivider, CursorEffect, Testimonials, TrustBadges, LogoCloud, ComparisonTable, AnnouncementBar, BlogPreview, Audio, Embed, AvatarGroup
-2. **BlogPreview added to KNOWN_REGISTRY_TYPES missing list** — Was absent from both the set AND the document's "missing" count
-3. **KNOWN_REGISTRY count fixed** — 5 (not 4) components missing: BeforeAfter, Audio, Embed, AvatarGroup, BlogPreview
-4. **Countdown variant name mismatch flagged** — Render uses `"simple"`, registry sends `"default"` — silent rendering bug
-5. **Carousel defaultProps compounds slides/items bug** — Registry `defaultProps.slides = []` + render reads `items` = double failure point
-6. **Function name corrected** — `normalizeComponentProps()` → `transformPropsForStudio()` (actual function name at L1028)
-7. **Brand injection documented** — renderer.tsx injects brand colours + fonts via `injectBrandColors()` / `injectBrandFonts()` into ALL component props
-8. **LogoCloud `__convertedToFeatures` fallback warning** — Normalizer silently converts to Features-shaped props when no valid logo URLs
-9. **Section 17 added** — CRITICAL FOR AI AGENT: Implementation Guard Rails (6 subsections covering silent data loss bugs, render props truth, colour rules, file size warning, normalizer function, renderer dispatch)
-10. **Phase 1 updated** — Added BlogPreview KNOWN_REG and Countdown variant fix as critical tasks
+4. **LogoCloud** — Renamed: `logoGrayscale`→`grayscale`, `logoGrayscaleHover`→`hoverColor`. Fixed variant options from grid/inline/carousel/infinite/marquee/stacked/scattered → simple/cards/marquee. Updated fieldGroups, defaultProps, and ai.canModify.
 
-#### Key Findings
+5. **ComparisonTable** — Renamed rows itemField `feature`→`label`. Renamed `headerBackgroundColor`→`headerBackground`. Changed `mobileLayout` (select) → `mobileStack` (toggle). Fixed variant options: default/cards/minimal/bordered/striped → simple/cards/striped. Updated defaultProps rows from `{feature: "...", values: "comma,string"}` → `{label: "...", values: ["array", "format"]}`. Added backward-compatible string→array parsing in render function.
 
-- **8 components missing from component-metadata.ts** (Modal, Progress, Alert, CardFlip3D, TiltCard, GlassCard, ParticleBackground, ScrollAnimate)
-- **6 components completely absent from converter.ts** (Progress, Alert, CardFlip3D, GlassCard, ParticleBackground, ScrollAnimate)
-- **4 components missing from KNOWN_REGISTRY_TYPES** (BeforeAfter, Audio, Embed, AvatarGroup)
-- **9 components have no converter normalizer**
-- **Carousel critical bug:** Registry uses `slides`, render uses `items` — data never arrives
-- **Modal/Progress/Alert:** Massive render-registry gaps (13-20% of registry fields implemented)
-- **Zero Framer Motion usage** across all 31 components — all CSS animations
-- **Tabs is best-in-class** (~95% coverage, 7 variants, full ARIA keyboard nav)
-- **BeforeAfter is perfectly aligned** (18 registry fields = 20 render props)
+#### Additional Render Fix:
+
+- **ComparisonTable** (`renders.tsx`) — Added `normalizedRows` helper that handles legacy `feature` field and comma-separated string values, converting them to arrays for robust rendering from both AI and studio paths.
+
+### Files Modified (This Session)
+
+- `src/lib/studio/registry/core-components.ts` — All 5 marketing registrations updated
+- `src/lib/studio/blocks/renders.tsx` — ComparisonTable normalizedRows helper added
+
+### TypeScript Status
+
+- Zero new errors from registry changes
+- Pre-existing errors in converter.ts (toResponsive L1602, animation L1979) unchanged
+
+### Pipeline Now Complete (Both Paths):
+
+- **AI Designer Path**: AI → converter.ts normalizer → Supabase → render ✅
+- **Studio Manual Path**: Registry → Supabase → render ✅ (field names now match)
+
+### Previous Focus: E-Commerce Components Master Plan — COMPLETE ✅
+
+### What Was Done (Marketing Session)
+
+**Implemented comprehensive upgrades to all 5 marketing components following MARKETING-COMPONENTS-MASTER-PLAN.md:**
+
+#### Phase 1: Prop Renames & Interface Expansion
+
+1. **ComparisonTable** (`renders.tsx`) — Renamed 8 props: `highlight`→`highlighted`, `priceSubtext`→`priceNote`, `feature`→`label`, `tooltip`→`description`, `group`→`category`, `stickyColumn`→`stickyFirstColumn`, `mobileLayout`→`mobileStack` (boolean), `headerBackgroundColor`→`headerBackground`. Updated all body references including groupedRows logic, mobile stacked layout, table cells, sticky columns.
+
+2. **AnnouncementBar** (`renders.tsx`) — Renamed 4 props: `text`→`message`, `link`→`linkUrl`, `dismissible`→`closable`, `icon`→`iconName`. Added `role="banner"`, `aria-label="Announcement"` on container, `aria-label="Close announcement"` on dismiss button.
+
+3. **SocialProof** (`renders.tsx`) — Major expansion: renamed `starColor`→`ratingColor`, `emptyStarColor`→`ratingEmptyColor`, `enableSchema`→`schemaType`, `schemaItemReviewed`→`schemaName`. Added dual-mode architecture: `mode: "rating" | "count"`. New `SocialProofAvatar` interface. Count mode renders avatar stack with overflow counter, formatted count (k suffix), label, and optional verified badge. Schema type now supports "AggregateRating" | "Product" | "LocalBusiness" | false.
+
+4. **TrustBadges** (`renders.tsx`) — Expanded `TrustBadge` interface with `icon`, `text`, `description`, `featured`, `badgeColor`, made `image` and `alt` optional. Added `variant: "default" | "pills" | "cards" | "minimal"`. Rendering now supports icon+text badges when no image present. Featured badges get highlighted borders. Added `role="list"` + `role="listitem"` for accessibility.
+
+#### Phase 2: Normalizers
+
+5. **3 new normalizers** (`converter.ts`) — Created for AnnouncementBar (message/link/variant mapping), SocialProof (auto-detects mode from props, maps starColor→ratingColor, enableSchema→schemaType, processes avatars array), ComparisonTable (maps highlight→highlighted, feature→label, stickyColumn→stickyFirstColumn, mobileLayout→mobileStack with proper boolean conversion).
+
+6. **TrustBadges normalizer enhanced** — Added `alt` and `badgeColor` field mappings.
+
+7. **LogoCloud normalizer fix** — Added variant alias: `"grid"` → `"simple"`.
+
+#### Phase 3: Metadata & AI Enhancement
+
+8. **All 5 component-metadata entries updated** — Enhanced descriptions, expanded keywords, added missing `usageGuidelines` for SocialProof. All entries now include variant lists, prop highlights, and placement recommendations.
+
+#### Phase 4: Accessibility
+
+9. **ComparisonTable** — Added `role="region"`, `aria-label`, `scope="col"` on table headers.
+10. **SocialProof** — Added `aria-label` with rating info on all 3 rating variants, `aria-hidden="true"` on decorative star SVGs. Count mode already had `role="status"` + `aria-label`.
+11. **TrustBadges** — `role="list"` on container, `role="listitem"` on each badge.
+
+### Files Modified
+
+- `src/lib/studio/blocks/renders.tsx` — All 5 render functions updated
+- `src/lib/ai/website-designer/converter.ts` — 3 new normalizers, 2 enhanced
+- `src/lib/studio/registry/component-metadata.ts` — All 5 marketing entries enhanced
+
+### TypeScript Status
+
+- Zero new errors introduced by marketing changes
+- Pre-existing errors in converter.ts (toResponsive L1602, animation L1979) unchanged
 
 ### Master Plan Document Status (9 of 9 complete)
 
