@@ -3109,6 +3109,31 @@ export function CursorEffectRender({
     }
   }
 
+  if (type === "trail" && isHovering) {
+    const trailCount = Math.round(5 * intensity);
+    effectOverlay = (
+      <>
+        {Array.from({ length: trailCount }, (_, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full pointer-events-none"
+            style={{
+              left: mousePos.x - 4,
+              top: mousePos.y - 4,
+              width: 8 - i,
+              height: 8 - i,
+              backgroundColor: color,
+              opacity: (1 - i / trailCount) * intensity,
+              transition: `all ${0.05 + i * 0.05}s ease-out`,
+              transform: `translate(${-i * 2}px, ${-i * 2}px)`,
+            }}
+            aria-hidden="true"
+          />
+        ))}
+      </>
+    );
+  }
+
   return (
     <div
       ref={containerRef}
@@ -25078,10 +25103,12 @@ export function TypewriterRender({
       id={id}
       className={`inline-flex items-center ${sizeClasses} ${weightClasses} ${className}`}
       style={{ color: textColor || "var(--color-foreground, #111827)" }}
+      aria-live="polite"
+      aria-atomic="true"
     >
       {prefix && <span className="mr-1">{prefix}</span>}
       <span className="typewriter-text">{displayText}</span>
-      {cursor && <span className="animate-pulse ml-0.5">{cursorChar}</span>}
+      {cursor && <span className="animate-pulse ml-0.5" aria-hidden="true">{cursorChar}</span>}
       {suffix && <span className="ml-1">{suffix}</span>}
     </span>
   );
@@ -26731,14 +26758,65 @@ export interface CardFlip3DProps {
   frontImage?: string | ImageValue;
   backImage?: string | ImageValue;
   frontTitle?: string;
+  frontSubtitle?: string;
   frontDescription?: string;
+  frontGradient?: boolean;
+  frontGradientFrom?: string;
+  frontGradientTo?: string;
+  frontIcon?: string;
+  frontBadge?: string;
   backTitle?: string;
+  backSubtitle?: string;
   backDescription?: string;
-  flipOn?: "hover" | "click";
-  width?: ResponsiveValue<"sm" | "md" | "lg" | "xl" | "full">;
-  height?: ResponsiveValue<"sm" | "md" | "lg" | "xl">;
+  backGradient?: boolean;
+  backGradientFrom?: string;
+  backGradientTo?: string;
+  flipOn?: "hover" | "click" | "both" | "manual";
+  flipDirection?: "horizontal" | "vertical" | "diagonal";
+  flipDuration?: number;
+  flipEasing?: "ease" | "ease-in-out" | "linear" | "spring";
+  startFlipped?: boolean;
+  disableFlip?: boolean;
+  width?: ResponsiveValue<"sm" | "md" | "lg" | "xl" | "full" | "custom">;
+  height?: ResponsiveValue<"sm" | "md" | "lg" | "xl" | "custom">;
+  customWidth?: string;
+  customHeight?: string;
+  aspectRatio?: "none" | "1/1" | "4/3" | "16/9" | "3/4";
   borderRadius?: ResponsiveValue<"none" | "sm" | "md" | "lg" | "xl" | "2xl">;
   shadow?: "none" | "sm" | "md" | "lg" | "xl";
+  frontTextColor?: string;
+  backTextColor?: string;
+  frontOpacity?: number;
+  backOpacity?: number;
+  showBorder?: boolean;
+  frontBorderColor?: string;
+  backBorderColor?: string;
+  borderWidth?: string;
+  borderStyle?: "solid" | "dashed" | "dotted";
+  hoverGlow?: boolean;
+  glowColor?: string;
+  glowIntensity?: "low" | "medium" | "high";
+  hoverScale?: number;
+  reflectionEffect?: boolean;
+  depthEffect?: boolean;
+  showButton?: boolean;
+  buttonText?: string;
+  buttonLink?: string;
+  buttonPosition?: "front" | "back" | "both";
+  buttonVariant?: "primary" | "secondary" | "outline" | "ghost";
+  showFlipIndicator?: boolean;
+  indicatorPosition?: "top-right" | "top-left" | "bottom-right" | "bottom-left";
+  indicatorText?: string;
+  indicatorStyle?: "icon" | "text" | "dot";
+  animateOnMount?: boolean;
+  mountAnimation?: "fade" | "scale" | "slide";
+  hoverPause?: boolean;
+  hideOnMobile?: boolean;
+  mobileFlipOn?: "click" | "tap";
+  mobileWidth?: "sm" | "md" | "lg" | "full";
+  ariaLabel?: string;
+  ariaDescription?: string;
+  reducedMotion?: boolean;
   id?: string;
   className?: string;
   children?: React.ReactNode;
@@ -26750,114 +26828,300 @@ export function CardFlip3DRender({
   frontImage,
   backImage,
   frontTitle = "Front Side",
+  frontSubtitle,
   frontDescription = "Hover to flip",
+  frontGradient = false,
+  frontGradientFrom = "",
+  frontGradientTo = "#ec4899",
+  frontIcon,
+  frontBadge,
   backTitle = "Back Side",
+  backSubtitle,
   backDescription = "Amazing content here",
+  backGradient = false,
+  backGradientFrom = "#ec4899",
+  backGradientTo = "",
+  backContent: backContentText,
   flipOn = "hover",
+  flipDirection = "horizontal",
+  flipDuration = 600,
+  flipEasing = "ease-in-out",
+  startFlipped = false,
+  disableFlip = false,
   width = "md",
   height = "md",
+  customWidth,
+  customHeight,
+  aspectRatio = "none",
   borderRadius = "lg",
   shadow = "lg",
+  frontTextColor = "#ffffff",
+  backTextColor = "#ffffff",
+  frontOpacity = 1,
+  backOpacity = 1,
+  showBorder = false,
+  frontBorderColor,
+  backBorderColor,
+  borderWidth = "2",
+  borderStyle = "solid",
+  hoverGlow = false,
+  glowColor = "",
+  glowIntensity = "medium",
+  hoverScale = 1,
+  reflectionEffect = false,
+  depthEffect = true,
+  showButton = false,
+  buttonText = "Learn More",
+  buttonLink,
+  buttonPosition = "back",
+  buttonVariant = "primary",
+  showFlipIndicator = true,
+  indicatorPosition = "top-right",
+  indicatorText,
+  indicatorStyle = "icon",
+  animateOnMount = false,
+  mountAnimation = "fade",
+  hoverPause = false,
+  hideOnMobile = false,
+  mobileFlipOn = "click",
+  mobileWidth = "full",
+  ariaLabel,
+  ariaDescription,
+  reducedMotion = true,
   id,
   className = "",
 }: CardFlip3DProps) {
-  const [isFlipped, setIsFlipped] = React.useState(false);
+  const [isFlipped, setIsFlipped] = React.useState(startFlipped);
+  const [isMounted, setIsMounted] = React.useState(!animateOnMount);
+  const [prefersReducedMotion, setPrefersReducedMotion] = React.useState(false);
 
-  // Normalize image values
+  React.useEffect(() => {
+    if (reducedMotion) {
+      const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+      setPrefersReducedMotion(mq.matches);
+    }
+    if (animateOnMount) {
+      const t = setTimeout(() => setIsMounted(true), 50);
+      return () => clearTimeout(t);
+    }
+  }, [reducedMotion, animateOnMount]);
+
   const frontImageUrl = getImageUrl(frontImage);
   const backImageUrl = getImageUrl(backImage);
 
   const widthMap: Record<string, string> = {
-    sm: "w-48",
-    md: "w-64",
-    lg: "w-80",
-    xl: "w-96",
-    full: "w-full",
+    sm: "w-48", md: "w-64", lg: "w-80", xl: "w-96", full: "w-full", custom: "",
   };
-
   const heightMap: Record<string, string> = {
-    sm: "h-48",
-    md: "h-64",
-    lg: "h-80",
-    xl: "h-96",
+    sm: "h-48", md: "h-64", lg: "h-80", xl: "h-96", custom: "",
   };
-
   const shadowMap: Record<string, string> = {
-    none: "",
-    sm: "shadow-sm",
-    md: "shadow-md",
-    lg: "shadow-lg",
-    xl: "shadow-xl",
+    none: "", sm: "shadow-sm", md: "shadow-md", lg: "shadow-lg", xl: "shadow-xl",
+  };
+  const aspectMap: Record<string, string> = {
+    none: "", "1/1": "aspect-square", "4/3": "aspect-4/3", "16/9": "aspect-video", "3/4": "aspect-3/4",
+  };
+  const glowIntensityMap: Record<string, string> = {
+    low: "0 0 15px", medium: "0 0 30px", high: "0 0 50px",
+  };
+  const borderWidthMap: Record<string, string> = {
+    "1": "1px", "2": "2px", "3": "3px", "4": "4px",
   };
 
-  const widthClass =
-    widthMap[typeof width === "string" ? width : width?.desktop || "md"];
-  const heightClass =
-    heightMap[typeof height === "string" ? height : height?.desktop || "md"];
+  const widthVal = typeof width === "string" ? width : width?.desktop || "md";
+  const heightVal = typeof height === "string" ? height : height?.desktop || "md";
+  const widthClass = widthVal === "custom" && customWidth ? "" : widthMap[widthVal] || "w-64";
+  const heightClass = heightVal === "custom" && customHeight ? "" : heightMap[heightVal] || "h-64";
   const radiusClasses = getResponsiveClasses(borderRadius, borderRadiusMap);
+  const aspectClass = aspectMap[aspectRatio] || "";
+  const actualDuration = prefersReducedMotion ? 0 : flipDuration;
+  const easingValue = flipEasing === "spring" ? "cubic-bezier(0.34, 1.56, 0.64, 1)" : flipEasing;
+
+  // Flip transform based on direction
+  const getFlipTransform = (flipped: boolean) => {
+    if (!flipped) return "none";
+    switch (flipDirection) {
+      case "vertical": return "rotateX(180deg)";
+      case "diagonal": return "rotateX(180deg) rotateY(180deg)";
+      default: return "rotateY(180deg)";
+    }
+  };
+
+  // Flip handlers
+  const handleMouseEnter = () => {
+    if (disableFlip || prefersReducedMotion) return;
+    if (flipOn === "hover" || flipOn === "both") setIsFlipped(true);
+  };
+  const handleMouseLeave = () => {
+    if (disableFlip) return;
+    if (flipOn === "hover" || flipOn === "both") setIsFlipped(false);
+  };
+  const handleClick = () => {
+    if (disableFlip) return;
+    if (flipOn === "click" || flipOn === "both") setIsFlipped(!isFlipped);
+  };
+
+  // Build face background styles
+  const buildFaceBackground = (
+    image: string | undefined, bgColor: string, gradient: boolean,
+    gradFrom: string, gradTo: string
+  ): React.CSSProperties => {
+    if (image) return { backgroundImage: `url(${image})`, backgroundSize: "cover", backgroundPosition: "center" };
+    if (gradient && gradFrom && gradTo) return { background: `linear-gradient(135deg, ${gradFrom}, ${gradTo})` };
+    return { backgroundColor: bgColor || "var(--color-primary, #6366f1)" };
+  };
+
+  // Back face rotation offset for backface-visibility
+  const getBackFaceTransform = () => {
+    switch (flipDirection) {
+      case "vertical": return "rotateX(180deg)";
+      case "diagonal": return "rotateX(180deg) rotateY(180deg)";
+      default: return "rotateY(180deg)";
+    }
+  };
+
+  // Button component
+  const renderButton = (side: "front" | "back") => {
+    if (!showButton || (buttonPosition !== side && buttonPosition !== "both")) return null;
+    const variantClasses: Record<string, string> = {
+      primary: "bg-white text-gray-900 hover:bg-gray-100",
+      secondary: "bg-white/20 text-white hover:bg-white/30",
+      outline: "border border-white text-white hover:bg-white/10",
+      ghost: "text-white hover:bg-white/10",
+    };
+    return (
+      <a
+        href={buttonLink || "#"}
+        className={`mt-3 inline-block px-4 py-2 rounded-lg text-sm font-medium transition-colors ${variantClasses[buttonVariant] || variantClasses.primary}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {buttonText}
+      </a>
+    );
+  };
+
+  // Flip indicator
+  const renderIndicator = () => {
+    if (!showFlipIndicator || disableFlip) return null;
+    const posMap: Record<string, string> = {
+      "top-right": "top-2 right-2", "top-left": "top-2 left-2",
+      "bottom-right": "bottom-2 right-2", "bottom-left": "bottom-2 left-2",
+    };
+    return (
+      <div className={`absolute ${posMap[indicatorPosition] || "top-2 right-2"} z-20 text-white/70`} aria-hidden="true">
+        {indicatorStyle === "dot" && <div className="w-2 h-2 rounded-full bg-current animate-pulse" />}
+        {indicatorStyle === "text" && <span className="text-xs">{indicatorText || "Flip"}</span>}
+        {indicatorStyle === "icon" && (
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+          </svg>
+        )}
+      </div>
+    );
+  };
+
+  // Mount animation style
+  const mountStyle: React.CSSProperties = animateOnMount ? {
+    opacity: isMounted ? 1 : 0,
+    transform: isMounted ? "none" : mountAnimation === "scale" ? "scale(0.9)" : mountAnimation === "slide" ? "translateY(20px)" : "none",
+    transition: `opacity 0.5s ease-out, transform 0.5s ease-out`,
+  } : {};
+
+  // Hover glow + scale container style
+  const containerStyle: React.CSSProperties = {
+    perspective: "1000px",
+    ...(customWidth && widthVal === "custom" ? { width: customWidth } : {}),
+    ...(customHeight && heightVal === "custom" ? { height: customHeight } : {}),
+    ...mountStyle,
+  };
+
+  // Shared face border
+  const buildBorderStyle = (faceColor?: string): React.CSSProperties => {
+    if (!showBorder) return {};
+    return {
+      border: `${borderWidthMap[borderWidth] || "2px"} ${borderStyle} ${faceColor || "rgba(255,255,255,0.3)"}`,
+    };
+  };
 
   return (
     <div
       id={id}
-      className={`relative cursor-pointer ${widthClass} ${heightClass} ${className}`}
-      style={{ perspective: "1000px" }}
-      onMouseEnter={() => flipOn === "hover" && setIsFlipped(true)}
-      onMouseLeave={() => flipOn === "hover" && setIsFlipped(false)}
-      onClick={() => flipOn === "click" && setIsFlipped(!isFlipped)}
+      className={`relative cursor-pointer ${widthClass} ${heightClass} ${aspectClass} ${hideOnMobile ? "hidden md:block" : ""} ${className}`}
+      style={containerStyle}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onClick={handleClick}
+      role="button"
+      tabIndex={0}
+      aria-label={ariaLabel || `${frontTitle} - flip card`}
+      aria-description={ariaDescription}
+      aria-pressed={isFlipped}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleClick(); } }}
     >
+      {/* Hover glow */}
+      {hoverGlow && (
+        <div
+          className="absolute -inset-1 rounded-inherit opacity-0 hover:opacity-100 transition-opacity pointer-events-none z-0"
+          style={{ boxShadow: `${glowIntensityMap[glowIntensity] || "0 0 30px"} ${glowColor || "var(--color-primary, #6366f1)"}`, borderRadius: "inherit" }}
+          aria-hidden="true"
+        />
+      )}
       <div
-        className={`relative w-full h-full transition-transform duration-500 ${shadowMap[shadow]}`}
+        className={`relative w-full h-full ${shadowMap[shadow] || ""}`}
         style={{
           transformStyle: "preserve-3d",
-          transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
+          transform: `${getFlipTransform(isFlipped)}${hoverScale > 1 ? ` scale(${isFlipped ? hoverScale : 1})` : ""}`,
+          transition: prefersReducedMotion ? "none" : `transform ${actualDuration}ms ${easingValue}`,
         }}
       >
         {/* Front Face */}
         <div
-          className={`absolute inset-0 w-full h-full ${radiusClasses} overflow-hidden flex flex-col items-center justify-center text-white p-6`}
+          className={`absolute inset-0 w-full h-full ${radiusClasses} overflow-hidden flex flex-col items-center justify-center p-6`}
           style={{
             backfaceVisibility: "hidden",
-            backgroundColor: frontImageUrl ? undefined : frontBackgroundColor,
-            backgroundImage: frontImageUrl
-              ? `url(${frontImageUrl})`
-              : undefined,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
+            color: frontTextColor,
+            opacity: frontOpacity,
+            ...buildFaceBackground(frontImageUrl, frontBackgroundColor, frontGradient, frontGradientFrom, frontGradientTo),
+            ...buildBorderStyle(frontBorderColor),
           }}
         >
-          {frontImageUrl && (
-            <div
-              className="absolute inset-0"
-              style={{ backgroundColor: "rgba(0,0,0,0.3)" }}
-            />
+          {frontImageUrl && <div className="absolute inset-0 bg-black/30" aria-hidden="true" />}
+          {reflectionEffect && (
+            <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" aria-hidden="true" />
           )}
+          {renderIndicator()}
           <div className="relative z-10 text-center">
-            <h3 className="text-xl font-bold mb-2">{frontTitle}</h3>
+            {frontIcon && <div className="text-3xl mb-2">{frontIcon}</div>}
+            {frontBadge && <span className="inline-block px-2 py-0.5 rounded-full bg-white/20 text-xs font-medium mb-2">{frontBadge}</span>}
+            <h3 className="text-xl font-bold mb-1">{frontTitle}</h3>
+            {frontSubtitle && <p className="text-sm font-medium opacity-90 mb-1">{frontSubtitle}</p>}
             <p className="text-sm opacity-80">{frontDescription}</p>
+            {renderButton("front")}
           </div>
         </div>
 
         {/* Back Face */}
         <div
-          className={`absolute inset-0 w-full h-full ${radiusClasses} overflow-hidden flex flex-col items-center justify-center text-white p-6`}
+          className={`absolute inset-0 w-full h-full ${radiusClasses} overflow-hidden flex flex-col items-center justify-center p-6`}
           style={{
             backfaceVisibility: "hidden",
-            transform: "rotateY(180deg)",
-            backgroundColor: backImageUrl ? undefined : backBackgroundColor,
-            backgroundImage: backImageUrl ? `url(${backImageUrl})` : undefined,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
+            transform: getBackFaceTransform(),
+            color: backTextColor,
+            opacity: backOpacity,
+            ...buildFaceBackground(backImageUrl, backBackgroundColor, backGradient, backGradientFrom, backGradientTo),
+            ...buildBorderStyle(backBorderColor),
           }}
         >
-          {backImageUrl && (
-            <div
-              className="absolute inset-0"
-              style={{ backgroundColor: "rgba(0,0,0,0.3)" }}
-            />
+          {backImageUrl && <div className="absolute inset-0 bg-black/30" aria-hidden="true" />}
+          {reflectionEffect && (
+            <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" aria-hidden="true" />
           )}
           <div className="relative z-10 text-center">
-            <h3 className="text-xl font-bold mb-2">{backTitle}</h3>
+            <h3 className="text-xl font-bold mb-1">{backTitle}</h3>
+            {backSubtitle && <p className="text-sm font-medium opacity-90 mb-1">{backSubtitle}</p>}
             <p className="text-sm opacity-80">{backDescription}</p>
+            {backContentText && <p className="text-sm mt-2 opacity-90">{backContentText}</p>}
+            {renderButton("back")}
           </div>
         </div>
       </div>
@@ -26872,111 +27136,319 @@ export function CardFlip3DRender({
 export interface TiltCardProps {
   children?: React.ReactNode;
   title?: string;
+  subtitle?: string;
   description?: string;
+  icon?: string;
+  badge?: string;
+  badgeColor?: string;
   backgroundColor?: string;
   backgroundImage?: string | ImageValue;
+  backgroundGradient?: boolean;
+  gradientFrom?: string;
+  gradientTo?: string;
+  gradientDirection?: string;
+  overlay?: boolean;
+  overlayOpacity?: number;
   textColor?: string;
   maxRotation?: number;
+  perspective?: number;
+  speed?: number;
   scale?: number;
+  easing?: "ease" | "ease-out" | "linear";
+  axis?: "both" | "x" | "y";
+  disabled?: boolean;
   glare?: boolean;
-  overlayOpacity?: number;
+  glareMaxOpacity?: number;
+  glareColor?: string;
+  glarePosition?: "all" | "top" | "bottom";
+  glareReverse?: boolean;
   padding?: ResponsiveValue<"none" | "xs" | "sm" | "md" | "lg">;
   borderRadius?: ResponsiveValue<"none" | "sm" | "md" | "lg" | "xl" | "2xl">;
   shadow?: "none" | "sm" | "md" | "lg" | "xl";
+  shadowOnHover?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  showBorder?: boolean;
+  borderColor?: string;
+  borderWidth?: string;
+  borderGlow?: boolean;
+  shine?: boolean;
+  shineColor?: string;
+  floatEffect?: boolean;
+  floatIntensity?: "subtle" | "medium" | "strong";
+  gyroscope?: boolean;
+  showButton?: boolean;
+  buttonText?: string;
+  buttonLink?: string;
+  buttonVariant?: "primary" | "secondary" | "outline" | "ghost";
+  buttonPosition?: "bottom" | "top" | "center";
+  showIcon?: boolean;
+  iconPosition?: "top" | "center" | "bottom";
+  iconSize?: "sm" | "md" | "lg" | "xl";
+  iconColor?: string;
+  iconBackgroundColor?: string;
+  animateOnMount?: boolean;
+  mountAnimation?: "fade" | "scale" | "slide";
+  animationDuration?: number;
+  hideOnMobile?: boolean;
+  disableOnMobile?: boolean;
+  mobileScale?: number;
+  ariaLabel?: string;
+  reducedMotion?: boolean;
   id?: string;
   className?: string;
 }
 
 export function TiltCardRender({
   title = "Tilt Card",
+  subtitle,
   description = "Hover to see 3D tilt effect",
+  icon,
+  badge,
+  badgeColor = "",
   backgroundColor = "#1f2937",
   backgroundImage,
+  backgroundGradient = false,
+  gradientFrom = "",
+  gradientTo = "#ec4899",
+  gradientDirection = "to-br",
+  overlay = false,
+  overlayOpacity = 0.3,
   textColor = "#ffffff",
   maxRotation = 15,
+  perspective = 1000,
+  speed = 500,
   scale = 1.05,
+  easing = "ease-out",
+  axis = "both",
+  disabled = false,
   glare = true,
-  overlayOpacity = 0.3,
+  glareMaxOpacity = 0.35,
+  glareColor = "#ffffff",
+  glarePosition = "all",
+  glareReverse = false,
   padding = "lg",
   borderRadius = "xl",
   shadow = "xl",
+  shadowOnHover = "2xl",
+  showBorder = false,
+  borderColor = "#ffffff20",
+  borderWidth = "1",
+  borderGlow = false,
+  shine = false,
+  shineColor = "#ffffff40",
+  floatEffect = false,
+  floatIntensity = "subtle",
+  gyroscope = false,
+  showButton = false,
+  buttonText = "Learn More",
+  buttonLink,
+  buttonVariant = "primary",
+  buttonPosition = "bottom",
+  showIcon = false,
+  iconPosition = "top",
+  iconSize = "lg",
+  iconColor,
+  iconBackgroundColor,
+  animateOnMount = true,
+  mountAnimation = "fade",
+  animationDuration = 300,
+  hideOnMobile = false,
+  disableOnMobile = true,
+  mobileScale = 1,
+  ariaLabel,
+  reducedMotion = true,
   id,
   className = "",
 }: TiltCardProps) {
   const cardRef = React.useRef<HTMLDivElement>(null);
-  const [transform, setTransform] = React.useState(
-    "rotateX(0deg) rotateY(0deg)",
-  );
-  const [glarePosition, setGlarePosition] = React.useState({ x: 50, y: 50 });
+  const [transform, setTransform] = React.useState("none");
+  const [glarePos, setGlarePos] = React.useState({ x: 50, y: 50 });
+  const [isMounted, setIsMounted] = React.useState(!animateOnMount);
+  const [isHovering, setIsHovering] = React.useState(false);
+  const isTouch = React.useRef(false);
+  const prefersReduced = React.useRef(false);
 
-  // Normalize image value
+  React.useEffect(() => {
+    isTouch.current = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    if (reducedMotion) {
+      prefersReduced.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    }
+    if (animateOnMount) {
+      const t = setTimeout(() => setIsMounted(true), 50);
+      return () => clearTimeout(t);
+    }
+  }, [reducedMotion, animateOnMount]);
+
   const bgImageUrl = getImageUrl(backgroundImage);
-
   const paddingClasses = getResponsiveClasses(padding, paddingYMap);
   const radiusClasses = getResponsiveClasses(borderRadius, borderRadiusMap);
 
   const shadowMap: Record<string, string> = {
-    none: "",
-    sm: "shadow-sm",
-    md: "shadow-md",
-    lg: "shadow-lg",
-    xl: "shadow-xl",
+    none: "", sm: "shadow-sm", md: "shadow-md", lg: "shadow-lg", xl: "shadow-xl", "2xl": "shadow-2xl",
   };
 
+  const iconSizeMap: Record<string, string> = { sm: "text-xl", md: "text-2xl", lg: "text-3xl", xl: "text-4xl" };
+  const borderWidthMap: Record<string, string> = { "1": "1px", "2": "2px", "3": "3px", "4": "4px" };
+  const floatMap: Record<string, string> = { subtle: "3px", medium: "6px", strong: "10px" };
+  const gradientMap: Record<string, string> = {
+    "to-r": "to right", "to-l": "to left", "to-t": "to top", "to-b": "to bottom",
+    "to-br": "to bottom right", "to-bl": "to bottom left", "to-tr": "to top right", "to-tl": "to top left",
+  };
+
+  const effectivelyDisabled = disabled || (disableOnMobile && isTouch.current) || prefersReduced.current;
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current) return;
+    if (effectivelyDisabled || !cardRef.current) return;
     const rect = cardRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    const rotateX = ((y - centerY) / centerY) * -maxRotation;
-    const rotateY = ((x - centerX) / centerX) * maxRotation;
-    setTransform(
-      `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${scale})`,
-    );
-    setGlarePosition({ x: (x / rect.width) * 100, y: (y / rect.height) * 100 });
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+    const rotX = axis !== "x" ? ((y - cy) / cy) * -maxRotation : 0;
+    const rotY = axis !== "y" ? ((x - cx) / cx) * maxRotation : 0;
+    setTransform(`perspective(${perspective}px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale(${scale})`);
+    const gx = glareReverse ? 100 - (x / rect.width) * 100 : (x / rect.width) * 100;
+    const gy = glareReverse ? 100 - (y / rect.height) * 100 : (y / rect.height) * 100;
+    setGlarePos({ x: gx, y: gy });
   };
 
   const handleMouseLeave = () => {
-    setTransform("perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)");
+    setTransform("none");
+    setIsHovering(false);
+  };
+
+  // Background style
+  const bgStyle: React.CSSProperties = bgImageUrl
+    ? { backgroundImage: `url(${bgImageUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
+    : backgroundGradient && gradientFrom && gradientTo
+      ? { background: `linear-gradient(${gradientMap[gradientDirection] || "to bottom right"}, ${gradientFrom}, ${gradientTo})` }
+      : { backgroundColor };
+
+  // Border style
+  const borderStyle: React.CSSProperties = showBorder ? {
+    border: `${borderWidthMap[borderWidth] || "1px"} solid ${borderColor}`,
+    ...(borderGlow ? { boxShadow: `0 0 15px ${borderColor}` } : {}),
+  } : {};
+
+  // Mount animation
+  const mountStyle: React.CSSProperties = animateOnMount ? {
+    opacity: isMounted ? 1 : 0,
+    transform: isMounted ? transform : mountAnimation === "scale" ? "scale(0.9)" : mountAnimation === "slide" ? "translateY(20px)" : "none",
+    transition: `opacity ${animationDuration}ms ease-out, transform ${speed}ms ${easing}`,
+  } : {};
+
+  // Float animation
+  const floatClass = floatEffect && !prefersReduced.current ? "animate-bounce" : "";
+
+  // Button rendering
+  const renderButton = () => {
+    if (!showButton) return null;
+    const variants: Record<string, string> = {
+      primary: "bg-white text-gray-900 hover:bg-gray-100",
+      secondary: "bg-white/20 text-white hover:bg-white/30",
+      outline: "border border-white text-white hover:bg-white/10",
+      ghost: "text-white hover:bg-white/10",
+    };
+    return (
+      <a
+        href={buttonLink || "#"}
+        className={`inline-block px-4 py-2 rounded-lg text-sm font-medium transition-colors ${variants[buttonVariant] || variants.primary}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {buttonText}
+      </a>
+    );
+  };
+
+  // Icon rendering
+  const renderIcon = () => {
+    if (!showIcon || !icon) return null;
+    return (
+      <div
+        className={`${iconSizeMap[iconSize] || "text-3xl"} mb-2 ${iconBackgroundColor ? "inline-flex items-center justify-center w-12 h-12 rounded-xl" : ""}`}
+        style={{ color: iconColor || textColor, backgroundColor: iconBackgroundColor || undefined }}
+      >
+        {icon}
+      </div>
+    );
   };
 
   return (
     <div
       id={id}
       ref={cardRef}
-      className={`relative overflow-hidden ${radiusClasses} ${shadowMap[shadow]} ${paddingClasses} ${className}`}
+      className={`relative overflow-hidden ${radiusClasses} ${shadowMap[shadow] || ""} ${paddingClasses} ${floatClass} ${hideOnMobile ? "hidden md:block" : ""} ${className}`}
       style={{
-        backgroundColor: bgImageUrl ? undefined : backgroundColor,
-        backgroundImage: bgImageUrl ? `url(${bgImageUrl})` : undefined,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
+        ...bgStyle,
+        ...borderStyle,
         color: textColor,
-        transform,
-        transition: "transform 0.1s ease-out",
+        transform: effectivelyDisabled ? "none" : transform,
+        transition: `transform ${speed}ms ${easing}, box-shadow 0.3s ease`,
         transformStyle: "preserve-3d",
+        ...mountStyle,
+        ...(isHovering && shadowOnHover ? {} : {}),
       }}
       onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={handleMouseLeave}
+      role="article"
+      aria-label={ariaLabel || title}
     >
-      {bgImageUrl && (
-        <div
-          className="absolute inset-0"
-          style={{ backgroundColor: `rgba(0,0,0,${overlayOpacity})` }}
-        />
+      {/* Image overlay */}
+      {(bgImageUrl || overlay) && (
+        <div className="absolute inset-0 pointer-events-none" style={{ backgroundColor: `rgba(0,0,0,${overlayOpacity})` }} aria-hidden="true" />
       )}
-      {glare && (
+
+      {/* Glare effect */}
+      {glare && !effectivelyDisabled && (
         <div
-          className="absolute inset-0 pointer-events-none"
+          className="absolute inset-0 pointer-events-none z-20"
           style={{
-            background: `radial-gradient(circle at ${glarePosition.x}% ${glarePosition.y}%, rgba(255,255,255,0.3), transparent 50%)`,
+            background: glarePosition === "top"
+              ? `linear-gradient(to bottom, rgba(${glareColor === "#ffffff" ? "255,255,255" : "255,255,255"},${isHovering ? glareMaxOpacity : 0}), transparent 50%)`
+              : glarePosition === "bottom"
+                ? `linear-gradient(to top, rgba(${glareColor === "#ffffff" ? "255,255,255" : "255,255,255"},${isHovering ? glareMaxOpacity : 0}), transparent 50%)`
+                : `radial-gradient(circle at ${glarePos.x}% ${glarePos.y}%, rgba(255,255,255,${isHovering ? glareMaxOpacity : 0}), transparent 50%)`,
+            transition: `opacity ${speed}ms ${easing}`,
           }}
+          aria-hidden="true"
         />
       )}
+
+      {/* Shine sweep */}
+      {shine && !prefersReduced.current && (
+        <div
+          className="absolute inset-0 pointer-events-none z-20 overflow-hidden"
+          aria-hidden="true"
+        >
+          <div
+            className="absolute -inset-full"
+            style={{
+              background: `linear-gradient(90deg, transparent, ${shineColor}, transparent)`,
+              animation: "shine-sweep 3s ease-in-out infinite",
+            }}
+          />
+        </div>
+      )}
+
+      {/* Content */}
       <div className="relative z-10">
-        <h3 className="text-xl font-bold mb-2">{title}</h3>
+        {iconPosition === "top" && renderIcon()}
+        {badge && (
+          <span
+            className="inline-block px-2 py-0.5 rounded-full text-xs font-medium mb-2"
+            style={{ backgroundColor: badgeColor || "rgba(255,255,255,0.2)", color: textColor }}
+          >
+            {badge}
+          </span>
+        )}
+        <h3 className="text-xl font-bold mb-1">{title}</h3>
+        {subtitle && <p className="text-sm font-medium opacity-90 mb-1">{subtitle}</p>}
         <p className="text-sm opacity-80">{description}</p>
+        {iconPosition === "center" && renderIcon()}
+        {buttonPosition === "top" && renderButton()}
+        {buttonPosition !== "top" && buttonPosition !== "bottom" && renderButton()}
+        {iconPosition === "bottom" && renderIcon()}
+        {buttonPosition === "bottom" && <div className="mt-3">{renderButton()}</div>}
       </div>
     </div>
   );
@@ -26989,65 +27461,279 @@ export function TiltCardRender({
 export interface GlassCardProps {
   children?: React.ReactNode;
   title?: string;
+  subtitle?: string;
   description?: string;
-  preset?: "light" | "dark" | "colored" | "subtle" | "heavy";
+  icon?: string;
+  badge?: string;
+  preset?: "light" | "dark" | "colored" | "subtle" | "heavy" | "frosted" | "crystal";
   blur?: number;
+  saturation?: number;
+  brightness?: number;
+  contrast?: number;
+  noise?: boolean;
   tint?: string;
+  tintOpacity?: number;
+  backgroundGradient?: boolean;
+  gradientFrom?: string;
+  gradientTo?: string;
+  gradientAngle?: number;
+  showBorder?: boolean;
   borderOpacity?: number;
+  borderColor?: string;
+  borderWidth?: string;
+  borderGradient?: boolean;
+  borderGlowColor?: string;
+  shadow?: "none" | "sm" | "md" | "lg" | "xl";
+  shadowColor?: string;
+  shadowBlur?: number;
+  innerShadow?: boolean;
+  textColor?: string;
+  headingColor?: string;
   padding?: ResponsiveValue<"none" | "xs" | "sm" | "md" | "lg">;
   borderRadius?: ResponsiveValue<"none" | "sm" | "md" | "lg" | "xl" | "2xl">;
-  textColor?: string;
+  minHeight?: "auto" | "sm" | "md" | "lg";
+  showButton?: boolean;
+  buttonText?: string;
+  buttonLink?: string;
+  buttonVariant?: "glass" | "solid" | "outline";
+  showIcon?: boolean;
+  iconSize?: "sm" | "md" | "lg" | "xl";
+  iconColor?: string;
+  iconBackgroundColor?: string;
+  iconBackgroundBlur?: boolean;
+  hoverScale?: number;
+  hoverBlur?: number;
+  hoverBrightness?: number;
+  hoverBorderGlow?: boolean;
+  animateOnMount?: boolean;
+  mountAnimation?: "fade" | "scale" | "blur";
+  shimmerEffect?: boolean;
+  floatEffect?: boolean;
+  hideOnMobile?: boolean;
+  mobileBlur?: number;
+  mobilePadding?: "same" | "smaller";
+  ariaLabel?: string;
+  reducedMotion?: boolean;
   id?: string;
   className?: string;
 }
 
 export function GlassCardRender({
   title = "Glass Card",
+  subtitle,
   description = "Beautiful frosted glass effect",
+  icon,
+  badge,
   preset = "light",
   blur = 10,
+  saturation = 100,
+  brightness = 100,
+  contrast = 100,
+  noise = false,
   tint,
+  tintOpacity = 0.3,
+  backgroundGradient = false,
+  gradientFrom = "#ffffff30",
+  gradientTo = "#ffffff10",
+  gradientAngle = 135,
+  showBorder = true,
   borderOpacity = 0.2,
+  borderColor = "#ffffff",
+  borderWidth = "1",
+  borderGradient = false,
+  borderGlowColor,
+  shadow = "lg",
+  shadowColor = "#00000020",
+  shadowBlur = 20,
+  innerShadow = false,
+  textColor = "#ffffff",
+  headingColor,
   padding = "lg",
   borderRadius = "xl",
-  textColor = "#ffffff",
+  minHeight = "auto",
+  showButton = false,
+  buttonText = "Learn More",
+  buttonLink,
+  buttonVariant = "glass",
+  showIcon = false,
+  iconSize = "lg",
+  iconColor,
+  iconBackgroundColor = "#ffffff20",
+  iconBackgroundBlur = true,
+  hoverScale = 1.02,
+  hoverBlur = 2,
+  hoverBrightness = 105,
+  hoverBorderGlow = false,
+  animateOnMount = true,
+  mountAnimation = "fade",
+  shimmerEffect = false,
+  floatEffect = false,
+  hideOnMobile = false,
+  mobileBlur = 5,
+  mobilePadding = "same",
+  ariaLabel,
+  reducedMotion = true,
   id,
   className = "",
 }: GlassCardProps) {
-  const presets = {
+  const [isHovering, setIsHovering] = React.useState(false);
+  const [isMounted, setIsMounted] = React.useState(!animateOnMount);
+  const isMobile = React.useRef(false);
+  const prefersReduced = React.useRef(false);
+
+  React.useEffect(() => {
+    isMobile.current = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    if (reducedMotion) {
+      prefersReduced.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    }
+    if (animateOnMount) {
+      const t = setTimeout(() => setIsMounted(true), 50);
+      return () => clearTimeout(t);
+    }
+  }, [reducedMotion, animateOnMount]);
+
+  const presets: Record<string, { blur: number; bg: string; border: number }> = {
     light: { blur: 10, bg: "rgba(255,255,255,0.25)", border: 0.2 },
     dark: { blur: 12, bg: "rgba(0,0,0,0.3)", border: 0.1 },
     colored: { blur: 15, bg: "rgba(99,102,241,0.2)", border: 0.3 },
     subtle: { blur: 5, bg: "rgba(255,255,255,0.1)", border: 0 },
     heavy: { blur: 25, bg: "rgba(255,255,255,0.4)", border: 0.4 },
+    frosted: { blur: 20, bg: "rgba(255,255,255,0.15)", border: 0.15 },
+    crystal: { blur: 30, bg: "rgba(255,255,255,0.1)", border: 0.3 },
   };
 
-  const config = presets[preset];
-  const actualBlur = blur || config.blur;
+  const config = presets[preset] || presets.light;
+  const actualBlur = isMobile.current ? mobileBlur : (blur || config.blur);
+  const baseBlur = isHovering ? actualBlur + hoverBlur : actualBlur;
   const actualTint = tint || config.bg;
   const actualBorderOpacity = borderOpacity ?? config.border;
+  const actualSat = isHovering ? saturation + 20 : saturation;
+  const actualBright = isHovering ? hoverBrightness : brightness;
 
   const paddingClasses = getResponsiveClasses(padding, paddingYMap);
   const radiusClasses = getResponsiveClasses(borderRadius, borderRadiusMap);
+  const minHeightMap: Record<string, string> = { auto: "", sm: "min-h-[8rem]", md: "min-h-[12rem]", lg: "min-h-[16rem]" };
+  const iconSizeMap: Record<string, string> = { sm: "text-xl", md: "text-2xl", lg: "text-3xl", xl: "text-4xl" };
+  const shadowMap: Record<string, string> = { none: "none", sm: `0 2px 8px ${shadowColor}`, md: `0 4px 15px ${shadowColor}`, lg: `0 10px ${shadowBlur}px ${shadowColor}`, xl: `0 20px 40px ${shadowColor}` };
+
+  const backdropVal = `blur(${baseBlur}px) saturate(${actualSat}%) brightness(${actualBright}%) contrast(${contrast}%)`;
+
+  // Background
+  const bgStyle = backgroundGradient && gradientFrom && gradientTo
+    ? `linear-gradient(${gradientAngle}deg, ${gradientFrom}, ${gradientTo})`
+    : actualTint;
+
+  // Border
+  const borderStyle: React.CSSProperties = showBorder ? {
+    border: borderGradient
+      ? undefined
+      : `${borderWidth === "2" ? "2px" : "1px"} solid rgba(${borderColor === "#ffffff" ? "255,255,255" : "255,255,255"},${actualBorderOpacity})`,
+    ...(borderGradient ? { borderImage: `linear-gradient(${gradientAngle}deg, rgba(255,255,255,${actualBorderOpacity}), rgba(255,255,255,0)) 1` } : {}),
+  } : {};
+
+  // Shadow
+  const boxShadows: string[] = [];
+  if (shadow !== "none") boxShadows.push(shadowMap[shadow] || shadowMap.lg);
+  if (innerShadow) boxShadows.push("inset 0 2px 4px rgba(255,255,255,0.1)");
+  if ((isHovering && hoverBorderGlow) || borderGlowColor) {
+    boxShadows.push(`0 0 20px ${borderGlowColor || "rgba(255,255,255,0.3)"}`);
+  }
+
+  // Mount animation
+  const mountStyle: React.CSSProperties = animateOnMount ? {
+    opacity: isMounted ? 1 : 0,
+    transform: isMounted
+      ? (isHovering ? `scale(${hoverScale})` : "none")
+      : mountAnimation === "scale" ? "scale(0.95)" : "none",
+    filter: isMounted ? undefined : mountAnimation === "blur" ? "blur(10px)" : undefined,
+    transition: "opacity 0.4s ease-out, transform 0.3s ease-out, filter 0.4s ease-out, backdrop-filter 0.3s ease",
+  } : {
+    transform: isHovering ? `scale(${hoverScale})` : "none",
+    transition: "transform 0.3s ease, backdrop-filter 0.3s ease",
+  };
+
+  const renderButton = () => {
+    if (!showButton) return null;
+    const variants: Record<string, string> = {
+      glass: "bg-white/10 backdrop-blur-sm text-white border border-white/20 hover:bg-white/20",
+      solid: "bg-white text-gray-900 hover:bg-gray-100",
+      outline: "border border-white/40 text-white hover:bg-white/10",
+    };
+    return (
+      <a
+        href={buttonLink || "#"}
+        className={`inline-block px-4 py-2 rounded-lg text-sm font-medium transition-colors mt-3 ${variants[buttonVariant] || variants.glass}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {buttonText}
+      </a>
+    );
+  };
+
+  const renderIcon = () => {
+    if (!showIcon || !icon) return null;
+    return (
+      <div
+        className={`${iconSizeMap[iconSize] || "text-3xl"} mb-3 inline-flex items-center justify-center w-12 h-12 rounded-xl`}
+        style={{
+          color: iconColor || textColor,
+          backgroundColor: iconBackgroundColor || undefined,
+          ...(iconBackgroundBlur ? { backdropFilter: "blur(8px)" } : {}),
+        }}
+      >
+        {icon}
+      </div>
+    );
+  };
 
   return (
     <div
       id={id}
-      className={`${paddingClasses} ${radiusClasses} ${className}`}
+      className={`relative overflow-hidden ${paddingClasses} ${radiusClasses} ${minHeightMap[minHeight] || ""} ${hideOnMobile ? "hidden md:block" : ""} ${mobilePadding === "smaller" ? "max-md:p-3" : ""} ${floatEffect && !prefersReduced.current ? "animate-bounce" : ""} ${className}`}
       style={{
-        backgroundColor: actualTint,
-        backdropFilter: `blur(${actualBlur}px) saturate(120%)`,
-        WebkitBackdropFilter: `blur(${actualBlur}px) saturate(120%)`,
-        border:
-          actualBorderOpacity > 0
-            ? `1px solid rgba(255,255,255,${actualBorderOpacity})`
-            : undefined,
-        boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+        background: bgStyle,
+        backdropFilter: backdropVal,
+        WebkitBackdropFilter: backdropVal,
+        ...borderStyle,
+        boxShadow: boxShadows.length > 0 ? boxShadows.join(", ") : undefined,
         color: textColor,
+        ...mountStyle,
       }}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+      role="article"
+      aria-label={ariaLabel || title}
     >
-      <h3 className="text-xl font-bold mb-2">{title}</h3>
-      <p className="text-sm opacity-80">{description}</p>
+      {/* Noise texture overlay */}
+      {noise && (
+        <div
+          className="absolute inset-0 pointer-events-none opacity-[0.03] z-0"
+          style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")", backgroundRepeat: "repeat" }}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Shimmer sweep */}
+      {shimmerEffect && !prefersReduced.current && (
+        <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden" aria-hidden="true">
+          <div
+            className="absolute -inset-full"
+            style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)", animation: "shine-sweep 3s ease-in-out infinite" }}
+          />
+        </div>
+      )}
+
+      {/* Content */}
+      <div className="relative z-10">
+        {renderIcon()}
+        {badge && (
+          <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium mb-2 bg-white/10 backdrop-blur-sm">{badge}</span>
+        )}
+        <h3 className="text-xl font-bold mb-1" style={{ color: headingColor || textColor }}>{title}</h3>
+        {subtitle && <p className="text-sm font-medium opacity-90 mb-1">{subtitle}</p>}
+        <p className="text-sm opacity-80">{description}</p>
+        {renderButton()}
+      </div>
     </div>
   );
 }
@@ -27058,13 +27744,66 @@ export function GlassCardRender({
 
 export interface ParticleBackgroundProps {
   particleCount?: number;
-  particleColor?: string;
+  particleShape?: "circle" | "square" | "triangle" | "star" | "polygon" | "image";
   particleSize?: number;
+  particleSizeVariation?: number;
+  particleOpacity?: number;
+  particleOpacityVariation?: number;
+  particleColor?: string;
+  multiColor?: boolean;
+  colorPalette?: string;
+  colorMode?: "single" | "random" | "gradient";
+  colorTransition?: boolean;
   speed?: number;
+  direction?: "none" | "up" | "down" | "left" | "right" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  randomDirection?: boolean;
+  bounce?: boolean;
+  gravity?: number;
+  wind?: number;
+  windDirection?: number;
   connected?: boolean;
   connectionDistance?: number;
+  connectionOpacity?: number;
+  connectionColor?: string;
+  connectionWidth?: number;
+  connectionCurved?: boolean;
+  interactivity?: boolean;
+  hoverMode?: "none" | "repulse" | "attract" | "grab" | "bubble";
+  hoverDistance?: number;
+  clickMode?: "none" | "push" | "remove" | "repulse" | "bubble";
+  clickParticleCount?: number;
+  repulseDistance?: number;
+  attractDistance?: number;
   backgroundColor?: string;
-  height?: ResponsiveValue<"sm" | "md" | "lg" | "xl" | "screen">;
+  backgroundGradient?: boolean;
+  gradientFrom?: string;
+  gradientTo?: string;
+  gradientDirection?: "to-b" | "to-r" | "to-br" | "radial";
+  backgroundImage?: string | ImageValue;
+  backgroundOpacity?: number;
+  height?: ResponsiveValue<"sm" | "md" | "lg" | "xl" | "screen" | "custom">;
+  fullScreen?: boolean;
+  minHeight?: string;
+  maxHeight?: string;
+  twinkle?: boolean;
+  twinkleFrequency?: number;
+  trail?: boolean;
+  trailLength?: number;
+  pulsate?: boolean;
+  glow?: boolean;
+  glowIntensity?: number;
+  spawnRate?: number;
+  spawnPosition?: "random" | "bottom" | "top" | "center";
+  lifetime?: number;
+  fadeIn?: boolean;
+  fadeOut?: boolean;
+  fps?: number;
+  pauseOnBlur?: boolean;
+  reducedOnMobile?: boolean;
+  mobileParticleCount?: number;
+  ariaLabel?: string;
+  reducedMotion?: boolean;
+  pauseOnReducedMotion?: boolean;
   children?: React.ReactNode;
   id?: string;
   className?: string;
@@ -27072,46 +27811,115 @@ export interface ParticleBackgroundProps {
 
 export function ParticleBackgroundRender({
   particleCount = 50,
-  particleColor = "",
+  particleShape = "circle",
   particleSize = 4,
+  particleSizeVariation = 2,
+  particleOpacity = 0.8,
+  particleOpacityVariation = 0.2,
+  particleColor = "",
+  multiColor = false,
+  colorPalette,
+  colorMode = "single",
+  colorTransition = false,
   speed = 1,
+  direction = "none",
+  randomDirection = true,
+  bounce = true,
+  gravity = 0,
+  wind = 0,
+  windDirection = 0,
   connected = true,
   connectionDistance = 150,
+  connectionOpacity = 0.4,
+  connectionColor,
+  connectionWidth = 1,
+  connectionCurved = false,
+  interactivity = true,
+  hoverMode = "repulse",
+  hoverDistance = 100,
+  clickMode = "push",
+  clickParticleCount = 4,
+  repulseDistance = 100,
+  attractDistance = 100,
   backgroundColor = "#0f172a",
+  backgroundGradient = false,
+  gradientFrom = "#0f172a",
+  gradientTo = "#1e1b4b",
+  gradientDirection = "to-b",
+  backgroundImage,
+  backgroundOpacity = 1,
   height = "md",
+  fullScreen = false,
+  minHeight,
+  maxHeight,
+  twinkle = false,
+  twinkleFrequency = 0.5,
+  trail = false,
+  trailLength = 5,
+  pulsate = false,
+  glow = false,
+  glowIntensity = 5,
+  spawnRate = 0,
+  spawnPosition = "random",
+  lifetime = 0,
+  fadeIn = false,
+  fadeOut = false,
+  fps = 60,
+  pauseOnBlur = true,
+  reducedOnMobile = true,
+  mobileParticleCount = 25,
+  ariaLabel = "Animated particle background",
+  reducedMotion = true,
+  pauseOnReducedMotion = true,
   children,
   id,
   className = "",
 }: ParticleBackgroundProps) {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const animationRef = React.useRef<number | undefined>(undefined);
+  const mouseRef = React.useRef<{ x: number; y: number; active: boolean }>({ x: 0, y: 0, active: false });
   const particlesRef = React.useRef<
     Array<{
-      x: number;
-      y: number;
-      size: number;
-      speedX: number;
-      speedY: number;
-      opacity: number;
+      x: number; y: number; size: number; speedX: number; speedY: number;
+      opacity: number; color: string; age: number; maxAge: number;
+      baseOpacity: number; twinklePhase: number; pulsatePhase: number;
     }>
   >([]);
 
-  const heightMap: Record<string, string> = {
-    sm: "h-48",
-    md: "h-64",
-    lg: "h-96",
-    xl: "h-[32rem]",
-    screen: "h-screen",
-  };
+  const bgImageUrl = getImageUrl(backgroundImage);
 
-  const heightClass =
-    heightMap[typeof height === "string" ? height : height?.desktop || "md"];
+  const heightMap: Record<string, string> = {
+    sm: "h-48", md: "h-64", lg: "h-96", xl: "h-[32rem]", screen: "h-screen", custom: "",
+  };
+  const heightClass = fullScreen ? "h-screen" : heightMap[typeof height === "string" ? height : height?.desktop || "md"];
+
+  // Parse color palette
+  const paletteColors = React.useMemo(() => {
+    if (multiColor && colorPalette) {
+      return colorPalette.split(",").map((c: string) => c.trim()).filter(Boolean);
+    }
+    return [particleColor || "#ffffff"];
+  }, [multiColor, colorPalette, particleColor]);
+
+  // Direction vectors
+  const dirVectors: Record<string, { x: number; y: number }> = {
+    none: { x: 0, y: 0 }, up: { x: 0, y: -1 }, down: { x: 0, y: 1 },
+    left: { x: -1, y: 0 }, right: { x: 1, y: 0 },
+    "top-left": { x: -0.7, y: -0.7 }, "top-right": { x: 0.7, y: -0.7 },
+    "bottom-left": { x: -0.7, y: 0.7 }, "bottom-right": { x: 0.7, y: 0.7 },
+  };
 
   React.useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
+    // Check reduced motion
+    if (reducedMotion && pauseOnReducedMotion && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const isMobile = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    const count = (reducedOnMobile && isMobile) ? mobileParticleCount : particleCount;
 
     const resize = () => {
       canvas.width = canvas.offsetWidth;
@@ -27120,78 +27928,274 @@ export function ParticleBackgroundRender({
     resize();
     window.addEventListener("resize", resize);
 
-    particlesRef.current = Array.from({ length: particleCount }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      size: Math.random() * particleSize + 1,
-      speedX: (Math.random() - 0.5) * speed,
-      speedY: (Math.random() - 0.5) * speed,
-      opacity: Math.random() * 0.6 + 0.2,
-    }));
+    // Pause on blur
+    let paused = false;
+    const handleBlur = () => { if (pauseOnBlur) paused = true; };
+    const handleFocus = () => { paused = false; };
+    window.addEventListener("blur", handleBlur);
+    window.addEventListener("focus", handleFocus);
 
-    const animate = () => {
+    // Mouse interactivity
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!interactivity || !canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top, active: true };
+    };
+    const handleMouseLeave = () => { mouseRef.current.active = false; };
+    const handleClick = (e: MouseEvent) => {
+      if (!interactivity || clickMode === "none" || !canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      if (clickMode === "push") {
+        for (let i = 0; i < clickParticleCount; i++) {
+          createParticle(mx + (Math.random() - 0.5) * 20, my + (Math.random() - 0.5) * 20);
+        }
+      } else if (clickMode === "remove") {
+        particlesRef.current.splice(0, Math.min(clickParticleCount, particlesRef.current.length));
+      }
+    };
+    canvas.addEventListener("mousemove", handleMouseMove);
+    canvas.addEventListener("mouseleave", handleMouseLeave);
+    canvas.addEventListener("click", handleClick);
+
+    const dir = dirVectors[direction] || dirVectors.none;
+
+    function createParticle(x?: number, y?: number): typeof particlesRef.current[0] {
+      const cw = canvas!.width;
+      const ch = canvas!.height;
+      let px = x ?? Math.random() * cw;
+      let py = y ?? Math.random() * ch;
+      if (!x && spawnPosition !== "random") {
+        if (spawnPosition === "bottom") py = ch;
+        else if (spawnPosition === "top") py = 0;
+        else if (spawnPosition === "center") { px = cw / 2 + (Math.random() - 0.5) * cw * 0.3; py = ch / 2 + (Math.random() - 0.5) * ch * 0.3; }
+      }
+      const colorIdx = colorMode === "random" ? Math.floor(Math.random() * paletteColors.length) : 0;
+      return {
+        x: px, y: py,
+        size: Math.random() * particleSizeVariation + particleSize * 0.5,
+        speedX: randomDirection ? (Math.random() - 0.5) * speed + dir.x * speed : dir.x * speed,
+        speedY: randomDirection ? (Math.random() - 0.5) * speed + dir.y * speed : dir.y * speed,
+        opacity: particleOpacity + (Math.random() - 0.5) * particleOpacityVariation,
+        baseOpacity: particleOpacity + (Math.random() - 0.5) * particleOpacityVariation,
+        color: paletteColors[colorIdx],
+        age: 0, maxAge: lifetime > 0 ? lifetime * 60 + Math.random() * 60 : 0,
+        twinklePhase: Math.random() * Math.PI * 2,
+        pulsatePhase: Math.random() * Math.PI * 2,
+      };
+    }
+
+    particlesRef.current = Array.from({ length: count }, () => createParticle());
+
+    let lastSpawn = 0;
+    const frameInterval = 1000 / fps;
+    let lastFrame = 0;
+
+    const animate = (timestamp: number) => {
       if (!canvas || !ctx) return;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (paused) { animationRef.current = requestAnimationFrame(animate); return; }
 
-      particlesRef.current.forEach((particle, i) => {
-        particle.x += particle.speedX;
-        particle.y += particle.speedY;
-        if (particle.x < 0) particle.x = canvas.width;
-        if (particle.x > canvas.width) particle.x = 0;
-        if (particle.y < 0) particle.y = canvas.height;
-        if (particle.y > canvas.height) particle.y = 0;
+      // FPS limiting
+      if (timestamp - lastFrame < frameInterval) { animationRef.current = requestAnimationFrame(animate); return; }
+      lastFrame = timestamp;
+
+      // Trail effect: don't fully clear
+      if (trail) {
+        ctx.fillStyle = `rgba(0,0,0,${1 / trailLength})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+
+      // Spawn new particles
+      if (spawnRate > 0 && timestamp - lastSpawn > (1000 / spawnRate)) {
+        particlesRef.current.push(createParticle());
+        lastSpawn = timestamp;
+      }
+
+      const windRad = (windDirection * Math.PI) / 180;
+      const windX = wind * Math.cos(windRad);
+      const windY = wind * Math.sin(windRad);
+
+      particlesRef.current = particlesRef.current.filter((p) => {
+        // Age / lifetime
+        if (p.maxAge > 0) {
+          p.age++;
+          if (p.age > p.maxAge) return false;
+          if (fadeIn && p.age < 30) p.opacity = p.baseOpacity * (p.age / 30);
+          else if (fadeOut && p.age > p.maxAge - 30) p.opacity = p.baseOpacity * ((p.maxAge - p.age) / 30);
+        }
+
+        // Movement
+        p.speedY += gravity * 0.01;
+        p.x += p.speedX + windX;
+        p.y += p.speedY + windY;
+
+        // Bounce or wrap
+        if (bounce) {
+          if (p.x <= 0 || p.x >= canvas.width) p.speedX *= -1;
+          if (p.y <= 0 || p.y >= canvas.height) p.speedY *= -1;
+          p.x = Math.max(0, Math.min(canvas.width, p.x));
+          p.y = Math.max(0, Math.min(canvas.height, p.y));
+        } else {
+          if (p.x < -10) p.x = canvas.width + 10;
+          if (p.x > canvas.width + 10) p.x = -10;
+          if (p.y < -10) p.y = canvas.height + 10;
+          if (p.y > canvas.height + 10) p.y = -10;
+        }
+
+        // Twinkle
+        if (twinkle) {
+          p.twinklePhase += twinkleFrequency * 0.05;
+          p.opacity = p.baseOpacity * (0.5 + 0.5 * Math.sin(p.twinklePhase));
+        }
+
+        // Pulsate
+        let drawSize = p.size;
+        if (pulsate) {
+          p.pulsatePhase += 0.03;
+          drawSize = p.size * (0.8 + 0.4 * Math.sin(p.pulsatePhase));
+        }
+
+        // Mouse interactivity
+        if (interactivity && mouseRef.current.active && hoverMode !== "none") {
+          const dx = p.x - mouseRef.current.x;
+          const dy = p.y - mouseRef.current.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (hoverMode === "repulse" && dist < repulseDistance) {
+            const force = (repulseDistance - dist) / repulseDistance;
+            p.x += (dx / dist) * force * 3;
+            p.y += (dy / dist) * force * 3;
+          } else if (hoverMode === "attract" && dist < attractDistance) {
+            const force = (attractDistance - dist) / attractDistance;
+            p.x -= (dx / dist) * force * 2;
+            p.y -= (dy / dist) * force * 2;
+          }
+        }
+
+        // Draw particle
+        ctx.globalAlpha = Math.max(0, Math.min(1, p.opacity));
+        ctx.fillStyle = p.color;
+
+        if (glow) {
+          ctx.shadowColor = p.color;
+          ctx.shadowBlur = glowIntensity;
+        } else {
+          ctx.shadowBlur = 0;
+        }
 
         ctx.beginPath();
-        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-        ctx.fillStyle = particleColor;
-        ctx.globalAlpha = particle.opacity;
-        ctx.fill();
+        if (particleShape === "square") {
+          ctx.fillRect(p.x - drawSize / 2, p.y - drawSize / 2, drawSize, drawSize);
+        } else if (particleShape === "triangle") {
+          ctx.moveTo(p.x, p.y - drawSize);
+          ctx.lineTo(p.x - drawSize, p.y + drawSize);
+          ctx.lineTo(p.x + drawSize, p.y + drawSize);
+          ctx.closePath();
+          ctx.fill();
+        } else if (particleShape === "star") {
+          for (let k = 0; k < 5; k++) {
+            const angle = (k * 4 * Math.PI) / 5 - Math.PI / 2;
+            const method = k === 0 ? "moveTo" : "lineTo";
+            ctx[method](p.x + Math.cos(angle) * drawSize, p.y + Math.sin(angle) * drawSize);
+          }
+          ctx.closePath();
+          ctx.fill();
+        } else {
+          ctx.arc(p.x, p.y, drawSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
 
-        if (connected) {
+        return true;
+      });
+
+      // Connections
+      if (connected) {
+        ctx.shadowBlur = 0;
+        const connColor = connectionColor || particleColor || "#ffffff";
+        ctx.lineWidth = connectionWidth;
+        particlesRef.current.forEach((p, i) => {
           for (let j = i + 1; j < particlesRef.current.length; j++) {
             const other = particlesRef.current[j];
-            const dx = particle.x - other.x;
-            const dy = particle.y - other.y;
+            const dx = p.x - other.x;
+            const dy = p.y - other.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
             if (distance < connectionDistance) {
               ctx.beginPath();
-              ctx.moveTo(particle.x, particle.y);
-              ctx.lineTo(other.x, other.y);
-              ctx.strokeStyle = particleColor;
-              ctx.globalAlpha = (1 - distance / connectionDistance) * 0.3;
+              ctx.strokeStyle = connColor;
+              ctx.globalAlpha = (1 - distance / connectionDistance) * connectionOpacity;
+              if (connectionCurved) {
+                const midX = (p.x + other.x) / 2;
+                const midY = (p.y + other.y) / 2 - distance * 0.1;
+                ctx.moveTo(p.x, p.y);
+                ctx.quadraticCurveTo(midX, midY, other.x, other.y);
+              } else {
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(other.x, other.y);
+              }
               ctx.stroke();
             }
           }
-        }
-      });
+        });
+      }
 
       animationRef.current = requestAnimationFrame(animate);
     };
 
-    animate();
+    animationRef.current = requestAnimationFrame(animate);
 
     return () => {
       window.removeEventListener("resize", resize);
+      window.removeEventListener("blur", handleBlur);
+      window.removeEventListener("focus", handleFocus);
+      canvas.removeEventListener("mousemove", handleMouseMove);
+      canvas.removeEventListener("mouseleave", handleMouseLeave);
+      canvas.removeEventListener("click", handleClick);
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
   }, [
-    particleCount,
-    particleColor,
-    particleSize,
-    speed,
-    connected,
-    connectionDistance,
+    particleCount, particleShape, particleSize, particleSizeVariation, particleOpacity, particleOpacityVariation,
+    particleColor, multiColor, colorPalette, colorMode, colorTransition, speed, direction, randomDirection, bounce,
+    gravity, wind, windDirection, connected, connectionDistance, connectionOpacity, connectionColor, connectionWidth,
+    connectionCurved, interactivity, hoverMode, hoverDistance, clickMode, clickParticleCount, repulseDistance,
+    attractDistance, twinkle, twinkleFrequency, trail, trailLength, pulsate, glow, glowIntensity,
+    spawnRate, spawnPosition, lifetime, fadeIn, fadeOut, fps, pauseOnBlur, reducedOnMobile, mobileParticleCount,
+    reducedMotion, pauseOnReducedMotion, paletteColors,
   ]);
+
+  // Background style
+  const bgStyle: React.CSSProperties = backgroundGradient
+    ? {
+        background: gradientDirection === "radial"
+          ? `radial-gradient(circle, ${gradientFrom}, ${gradientTo})`
+          : `linear-gradient(${gradientDirection === "to-b" ? "to bottom" : gradientDirection === "to-r" ? "to right" : "to bottom right"}, ${gradientFrom}, ${gradientTo})`,
+        opacity: backgroundOpacity,
+      }
+    : { backgroundColor, opacity: backgroundOpacity };
 
   return (
     <div
       id={id}
       className={`relative overflow-hidden ${heightClass} ${className}`}
-      style={{ backgroundColor }}
+      style={{
+        ...bgStyle,
+        ...(minHeight ? { minHeight } : {}),
+        ...(maxHeight ? { maxHeight } : {}),
+      }}
+      role="presentation"
+      aria-label={ariaLabel}
     >
+      {bgImageUrl && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ backgroundImage: `url(${bgImageUrl})`, backgroundSize: "cover", backgroundPosition: "center", opacity: backgroundOpacity }}
+          aria-hidden="true"
+        />
+      )}
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 w-full h-full pointer-events-none"
+        className={`absolute inset-0 w-full h-full ${interactivity ? "" : "pointer-events-none"}`}
       />
       {children && (
         <div className="relative z-10 flex items-center justify-center h-full">
@@ -27208,140 +28212,350 @@ export function ParticleBackgroundRender({
 
 export interface ScrollAnimateProps {
   children?: React.ReactNode;
-  animation?:
-    | "fade-up"
-    | "fade-down"
-    | "fade-left"
-    | "fade-right"
-    | "zoom-in"
-    | "zoom-out"
-    | "flip-up"
-    | "flip-left"
-    | "bounce-in"
-    | "rotate-in";
-  delay?: number;
-  duration?: number;
-  threshold?: number;
-  once?: boolean;
   title?: string;
+  subtitle?: string;
   description?: string;
+  richContent?: string;
+  animation?:
+    | "fade-up" | "fade-down" | "fade-left" | "fade-right"
+    | "zoom-in" | "zoom-out"
+    | "flip-up" | "flip-down" | "flip-left" | "flip-right"
+    | "bounce-in" | "rotate-in"
+    | "slide-up" | "slide-down" | "scale-up" | "reveal" | "custom";
+  customAnimation?: string;
+  duration?: number;
+  delay?: number;
+  easing?: "ease" | "ease-in" | "ease-out" | "ease-in-out" | "linear" | "spring" | "bounce";
+  threshold?: number;
+  triggerOnce?: boolean;
+  triggerMargin?: string;
+  triggerPosition?: "top" | "center" | "bottom";
+  stagger?: boolean;
+  staggerDelay?: number;
+  staggerDirection?: "forward" | "reverse" | "center";
+  staggerFrom?: "first" | "last" | "center" | "random";
+  translateX?: number;
+  translateY?: number;
+  scale?: number;
+  rotate?: number;
+  skew?: number;
   backgroundColor?: string;
+  textColor?: string;
   padding?: ResponsiveValue<"none" | "xs" | "sm" | "md" | "lg">;
+  borderRadius?: ResponsiveValue<"none" | "sm" | "md" | "lg" | "xl" | "2xl">;
+  shadow?: "none" | "sm" | "md" | "lg" | "xl";
+  progressBased?: boolean;
+  progressStart?: number;
+  progressEnd?: number;
+  progressProperty?: "opacity" | "scale" | "translateY" | "rotate";
+  parallax?: boolean;
+  parallaxSpeed?: number;
+  parallaxDirection?: "vertical" | "horizontal";
+  blur?: number;
+  opacity?: number;
+  scaleStart?: number;
+  rotateStart?: number;
+  showCounter?: boolean;
+  counterStart?: number;
+  counterEnd?: number;
+  counterDuration?: number;
+  counterSuffix?: string;
+  hideOnMobile?: boolean;
+  mobileAnimation?: "same" | "fade" | "none";
+  reducedMotionAnimation?: "fade" | "none";
+  ariaLabel?: string;
+  reducedMotion?: boolean;
   id?: string;
   className?: string;
 }
 
 export function ScrollAnimateRender({
   animation = "fade-up",
+  customAnimation,
   delay = 0,
   duration = 600,
+  easing = "ease-out",
   threshold = 0.1,
-  once = true,
+  triggerOnce = true,
+  triggerMargin,
+  triggerPosition = "bottom",
+  stagger = false,
+  staggerDelay = 100,
+  staggerDirection = "forward",
+  staggerFrom = "first",
+  translateX = 0,
+  translateY = 50,
+  scale = 1,
+  rotate = 0,
+  skew = 0,
   title = "Scroll Animation",
+  subtitle,
   description = "This content animates when you scroll",
+  richContent,
   backgroundColor = "#f8fafc",
+  textColor,
   padding = "lg",
+  borderRadius = "none",
+  shadow = "none",
+  progressBased = false,
+  progressStart = 0,
+  progressEnd = 1,
+  progressProperty = "opacity",
+  parallax = false,
+  parallaxSpeed = 0.3,
+  parallaxDirection = "vertical",
+  blur = 0,
+  opacity = 0,
+  scaleStart = 1,
+  rotateStart = 0,
+  showCounter = false,
+  counterStart = 0,
+  counterEnd = 100,
+  counterDuration = 2000,
+  counterSuffix,
+  hideOnMobile = false,
+  mobileAnimation = "same",
+  reducedMotionAnimation = "fade",
+  ariaLabel,
+  reducedMotion = true,
+  children,
   id,
   className = "",
 }: ScrollAnimateProps) {
   const ref = React.useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = React.useState(false);
   const [hasAnimated, setHasAnimated] = React.useState(false);
+  const [scrollProgress, setScrollProgress] = React.useState(0);
+  const [counterValue, setCounterValue] = React.useState(counterStart);
+  const prefersReduced = React.useRef(false);
+  const isMobile = React.useRef(false);
+
+  React.useEffect(() => {
+    isMobile.current = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    if (reducedMotion) {
+      prefersReduced.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    }
+  }, [reducedMotion]);
 
   const paddingClasses = getResponsiveClasses(padding, paddingYMap);
+  const radiusClasses = getResponsiveClasses(borderRadius, borderRadiusMap);
+  const shadowMap: Record<string, string> = { none: "", sm: "shadow-sm", md: "shadow-md", lg: "shadow-lg", xl: "shadow-xl" };
 
-  const animations: Record<
-    string,
-    { initial: React.CSSProperties; animate: React.CSSProperties }
-  > = {
+  const easingMap: Record<string, string> = {
+    ease: "ease", "ease-in": "ease-in", "ease-out": "ease-out", "ease-in-out": "ease-in-out",
+    linear: "linear", spring: "cubic-bezier(0.175, 0.885, 0.32, 1.275)", bounce: "cubic-bezier(0.68, -0.55, 0.265, 1.55)",
+  };
+
+  // Build animation configs including new types
+  const animations: Record<string, { initial: React.CSSProperties; animate: React.CSSProperties }> = {
     "fade-up": {
-      initial: { opacity: 0, transform: "translateY(40px)" },
+      initial: { opacity: opacity, transform: `translateY(${translateY}px)` },
       animate: { opacity: 1, transform: "translateY(0)" },
     },
     "fade-down": {
-      initial: { opacity: 0, transform: "translateY(-40px)" },
+      initial: { opacity: opacity, transform: `translateY(-${translateY}px)` },
       animate: { opacity: 1, transform: "translateY(0)" },
     },
     "fade-left": {
-      initial: { opacity: 0, transform: "translateX(40px)" },
+      initial: { opacity: opacity, transform: `translateX(${translateX || 40}px)` },
       animate: { opacity: 1, transform: "translateX(0)" },
     },
     "fade-right": {
-      initial: { opacity: 0, transform: "translateX(-40px)" },
+      initial: { opacity: opacity, transform: `translateX(-${translateX || 40}px)` },
       animate: { opacity: 1, transform: "translateX(0)" },
     },
     "zoom-in": {
-      initial: { opacity: 0, transform: "scale(0.8)" },
+      initial: { opacity: opacity, transform: `scale(${scaleStart || 0.8})` },
       animate: { opacity: 1, transform: "scale(1)" },
     },
     "zoom-out": {
-      initial: { opacity: 0, transform: "scale(1.2)" },
+      initial: { opacity: opacity, transform: "scale(1.2)" },
       animate: { opacity: 1, transform: "scale(1)" },
     },
     "flip-up": {
-      initial: { opacity: 0, transform: "perspective(1000px) rotateX(-90deg)" },
+      initial: { opacity: opacity, transform: `perspective(1000px) rotateX(${rotateStart || -90}deg)` },
+      animate: { opacity: 1, transform: "perspective(1000px) rotateX(0)" },
+    },
+    "flip-down": {
+      initial: { opacity: opacity, transform: `perspective(1000px) rotateX(${rotateStart || 90}deg)` },
       animate: { opacity: 1, transform: "perspective(1000px) rotateX(0)" },
     },
     "flip-left": {
-      initial: { opacity: 0, transform: "perspective(1000px) rotateY(90deg)" },
+      initial: { opacity: opacity, transform: `perspective(1000px) rotateY(${rotateStart || 90}deg)` },
+      animate: { opacity: 1, transform: "perspective(1000px) rotateY(0)" },
+    },
+    "flip-right": {
+      initial: { opacity: opacity, transform: `perspective(1000px) rotateY(${rotateStart || -90}deg)` },
       animate: { opacity: 1, transform: "perspective(1000px) rotateY(0)" },
     },
     "bounce-in": {
-      initial: { opacity: 0, transform: "scale(0.3)" },
+      initial: { opacity: opacity, transform: "scale(0.3)" },
       animate: { opacity: 1, transform: "scale(1)" },
     },
     "rotate-in": {
-      initial: { opacity: 0, transform: "rotate(-180deg) scale(0)" },
+      initial: { opacity: opacity, transform: `rotate(${rotateStart || -180}deg) scale(${scaleStart || 0})` },
       animate: { opacity: 1, transform: "rotate(0) scale(1)" },
+    },
+    "slide-up": {
+      initial: { transform: `translateY(${translateY || 100}px)` },
+      animate: { transform: "translateY(0)" },
+    },
+    "slide-down": {
+      initial: { transform: `translateY(-${translateY || 100}px)` },
+      animate: { transform: "translateY(0)" },
+    },
+    "scale-up": {
+      initial: { opacity: opacity, transform: `scale(${scaleStart || 0.5})` },
+      animate: { opacity: 1, transform: `scale(${scale})` },
+    },
+    reveal: {
+      initial: { clipPath: "inset(0 0 100% 0)" },
+      animate: { clipPath: "inset(0 0 0% 0)" },
+    },
+    custom: customAnimation ? {
+      initial: { opacity: opacity, transform: customAnimation },
+      animate: { opacity: 1, transform: "none" },
+    } : {
+      initial: { opacity: opacity },
+      animate: { opacity: 1 },
     },
   };
 
-  const config = animations[animation];
+  // Pick effective animation for mobile/reduced motion
+  let effectiveAnimation = animation;
+  if (prefersReduced.current) {
+    effectiveAnimation = reducedMotionAnimation === "fade" ? "fade-up" : "fade-up";
+  } else if (isMobile.current && mobileAnimation !== "same") {
+    effectiveAnimation = mobileAnimation === "fade" ? "fade-up" : "fade-up";
+  }
 
+  const config = animations[effectiveAnimation] || animations["fade-up"];
+
+  // Add blur to initial state
+  const initialWithBlur: React.CSSProperties = {
+    ...config.initial,
+    ...(blur > 0 ? { filter: `blur(${blur}px)` } : {}),
+    ...(skew !== 0 ? { transform: `${config.initial.transform || ""} skew(${skew}deg)` } : {}),
+  };
+  const animateWithBlur: React.CSSProperties = {
+    ...config.animate,
+    ...(blur > 0 ? { filter: "blur(0px)" } : {}),
+    ...(skew !== 0 ? { transform: `${config.animate.transform || ""} skew(0deg)` } : {}),
+  };
+
+  // Intersection observer
   React.useEffect(() => {
     const element = ref.current;
     if (!element) return;
+
+    // Reduced motion: none means show immediately
+    if (prefersReduced.current && reducedMotionAnimation === "none") {
+      setIsVisible(true);
+      setHasAnimated(true);
+      return;
+    }
+
+    const rootMargin = triggerMargin || (triggerPosition === "top" ? "-20% 0px 0px 0px" : triggerPosition === "center" ? "-40% 0px -40% 0px" : "0px");
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsVisible(true);
-          if (once) {
+          if (triggerOnce) {
             setHasAnimated(true);
             observer.disconnect();
           }
-        } else if (!once) {
+        } else if (!triggerOnce) {
           setIsVisible(false);
         }
       },
-      { threshold },
+      { threshold, rootMargin },
     );
 
     observer.observe(element);
     return () => observer.disconnect();
-  }, [threshold, once]);
+  }, [threshold, triggerOnce, triggerMargin, triggerPosition, reducedMotionAnimation]);
 
-  const shouldAnimate = isVisible && (!once || !hasAnimated);
+  // Scroll progress tracking
+  React.useEffect(() => {
+    if (!progressBased && !parallax) return;
+    const element = ref.current;
+    if (!element) return;
+
+    const handleScroll = () => {
+      const rect = element.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      const progress = Math.max(0, Math.min(1, 1 - (rect.top / windowHeight)));
+      setScrollProgress(progress);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [progressBased, parallax]);
+
+  // Counter animation
+  React.useEffect(() => {
+    if (!showCounter || !isVisible) return;
+    const start = performance.now();
+    const animate = (now: number) => {
+      const elapsed = now - start;
+      const progress = Math.min(1, elapsed / counterDuration);
+      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      setCounterValue(Math.round(counterStart + (counterEnd - counterStart) * eased));
+      if (progress < 1) requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
+  }, [showCounter, isVisible, counterStart, counterEnd, counterDuration]);
+
+  const shouldAnimate = isVisible && (!triggerOnce || !hasAnimated);
+
+  // Progress-based styles
+  const progressStyle: React.CSSProperties = progressBased ? (() => {
+    const p = Math.max(progressStart, Math.min(progressEnd, scrollProgress));
+    const norm = (p - progressStart) / (progressEnd - progressStart);
+    if (progressProperty === "opacity") return { opacity: norm };
+    if (progressProperty === "scale") return { transform: `scale(${0.5 + norm * 0.5})` };
+    if (progressProperty === "translateY") return { transform: `translateY(${(1 - norm) * 100}px)` };
+    if (progressProperty === "rotate") return { transform: `rotate(${(1 - norm) * 180}deg)` };
+    return {};
+  })() : {};
+
+  // Parallax style
+  const parallaxStyle: React.CSSProperties = parallax ? {
+    transform: parallaxDirection === "horizontal"
+      ? `translateX(${scrollProgress * parallaxSpeed * 100}px)`
+      : `translateY(${scrollProgress * parallaxSpeed * -100}px)`,
+  } : {};
 
   return (
     <div
       id={id}
       ref={ref}
-      className={`${paddingClasses} rounded-lg ${className}`}
+      className={`${paddingClasses} ${radiusClasses} ${shadowMap[shadow] || ""} ${hideOnMobile ? "hidden md:block" : ""} ${className}`}
       style={{
         backgroundColor,
-        ...config.initial,
-        ...(shouldAnimate ? config.animate : {}),
-        transition: `all ${duration}ms ease-out ${delay}ms`,
+        ...(textColor ? { color: textColor } : {}),
+        ...(progressBased ? progressStyle : {
+          ...initialWithBlur,
+          ...(shouldAnimate ? animateWithBlur : {}),
+          transition: prefersReduced.current && reducedMotionAnimation === "none" ? "none" : `all ${duration}ms ${easingMap[easing] || "ease-out"} ${delay}ms`,
+        }),
+        ...parallaxStyle,
       }}
+      role={ariaLabel ? "region" : undefined}
+      aria-label={ariaLabel}
     >
       <h3 className="text-xl font-bold mb-2">{title}</h3>
-      <p
-        className="text-sm"
-        style={{ color: "var(--color-muted-foreground, #4b5563)" }}
-      >
+      {subtitle && <p className="text-sm font-medium opacity-90 mb-1">{subtitle}</p>}
+      <p className="text-sm" style={{ color: textColor || "var(--color-muted-foreground, #4b5563)" }}>
         {description}
       </p>
+      {richContent && <div className="mt-2 text-sm" dangerouslySetInnerHTML={{ __html: richContent }} />}
+      {showCounter && isVisible && (
+        <div className="mt-3 text-3xl font-bold">{counterValue}{counterSuffix}</div>
+      )}
+      {children}
     </div>
   );
 }

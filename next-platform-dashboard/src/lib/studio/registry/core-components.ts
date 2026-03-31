@@ -22472,7 +22472,16 @@ const marketingComponents: ComponentDefinition[] = [
         id: "layout",
         label: "Layout",
         icon: "Layout",
-        fields: ["variant", "layout", "alignment", "columns", "size", "grayscale", "gap", "maxWidth"],
+        fields: [
+          "variant",
+          "layout",
+          "alignment",
+          "columns",
+          "size",
+          "grayscale",
+          "gap",
+          "maxWidth",
+        ],
         defaultExpanded: false,
       },
       {

@@ -683,7 +683,8 @@ function convertComponentToStudio(
     MotionWrapper: "Animate",
     Tilt3DContainer: "Tilt3DContainer",
     Tilt3DContainerBlock: "Tilt3DContainer",
-    TiltCard: "Tilt3DContainer",
+    TiltCard: "TiltCard",
+    TiltCardBlock: "TiltCard",
     Tilt3D: "Tilt3DContainer",
     ShapeDivider: "ShapeDivider",
     ShapeDividerBlock: "ShapeDivider",
@@ -924,6 +925,7 @@ function convertComponentToStudio(
     "Progress",
     "Alert",
     "CardFlip3D",
+    "TiltCard",
     "GlassCard",
     "ParticleBackground",
     "ScrollAnimate",
@@ -2094,6 +2096,73 @@ function transformPropsForStudio(
         props.intensity || props.size ? Number(props.size) / 40 : 0.5,
       ),
       color: props.color || props.cursorColor || "rgba(255,255,255,0.15)",
+    };
+  }
+
+  // CardFlip3D — normalize flip/rotation/gradient props
+  if (type === "CardFlip3D") {
+    return {
+      ...props,
+      frontTitle: props.frontTitle || props.title || "Front",
+      backTitle: props.backTitle || "Back",
+      flipDirection: props.flipDirection || props.direction || "horizontal",
+      flipDuration: Number(props.flipDuration || props.duration || 600),
+      flipEasing: props.flipEasing || props.easing || "ease-in-out",
+      frontBackgroundColor: props.frontBackgroundColor || props.frontColor || props.backgroundColor || "#6366f1",
+      backBackgroundColor: props.backBackgroundColor || props.backColor || "#ec4899",
+      flipOnClick: props.flipOnClick ?? props.clickToFlip ?? true,
+      flipOnHover: props.flipOnHover ?? props.hoverToFlip ?? false,
+    };
+  }
+
+  // TiltCard — normalize tilt/glare/effect props
+  if (type === "TiltCard") {
+    return {
+      ...props,
+      maxRotation: Number(props.maxRotation || props.maxTilt || props.tiltAngle || 15),
+      perspective: Number(props.perspective || 1000),
+      speed: Number(props.speed || 500),
+      scale: Number(props.scale || 1.05),
+      glare: !!(props.glare ?? props.enableGlare ?? true),
+      glareMaxOpacity: Number(props.glareMaxOpacity || 0.35),
+    };
+  }
+
+  // GlassCard — normalize blur/glass/effect props
+  if (type === "GlassCard") {
+    return {
+      ...props,
+      preset: props.preset || props.glassPreset || "light",
+      blur: Number(props.blur || props.blurAmount || 10),
+      saturation: Number(props.saturation || 100),
+      brightness: Number(props.brightness || 100),
+      tintOpacity: Number(props.tintOpacity || props.opacity || 0.3),
+    };
+  }
+
+  // ParticleBackground — normalize particle/connection props
+  if (type === "ParticleBackground") {
+    return {
+      ...props,
+      particleCount: Number(props.particleCount || props.count || 50),
+      particleColor: props.particleColor || props.color || "",
+      particleSize: Number(props.particleSize || props.size || 4),
+      speed: Number(props.speed || 1),
+      connected: !!(props.connected ?? props.connections ?? true),
+      connectionDistance: Number(props.connectionDistance || 150),
+    };
+  }
+
+  // ScrollAnimate — normalize animation/trigger props
+  if (type === "ScrollAnimate") {
+    return {
+      ...props,
+      animation: props.animation || props.animationType || "fade-up",
+      duration: Number(props.duration || 600),
+      delay: Number(props.delay || 0),
+      easing: props.easing || "ease-out",
+      triggerOnce: !!(props.triggerOnce ?? props.once ?? true),
+      threshold: Number(props.threshold || 0.1),
     };
   }
 
