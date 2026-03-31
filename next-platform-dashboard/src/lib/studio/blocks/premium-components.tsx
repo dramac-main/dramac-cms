@@ -17,6 +17,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { getImageUrl, type ImageValue } from "@/lib/studio/utils/image-helpers";
 import { NavCartBadge } from "@/modules/ecommerce/studio/components/NavCartBadge";
+import { isDarkBackground, isEffectivelyDark, resolveContrastColor } from "@/lib/studio/blocks/layout-utils";
 
 // ============================================================================
 // SHARED TYPES & UTILITIES
@@ -520,7 +521,9 @@ export function PremiumNavbarRender({
 
   // Normalized values
   const logoUrl = getImageUrl(logo);
-  const effectiveHamburgerColor = hamburgerColor || textColor;
+  const navDark = isDarkBackground(backgroundColor);
+  const resolvedTextColor = resolveContrastColor(textColor || (navDark ? "#f8fafc" : "#1f2937"), navDark);
+  const effectiveHamburgerColor = hamburgerColor || resolvedTextColor;
   const isMobileView = _isEditor ? _breakpoint === "mobile" : false;
 
   // Style maps
@@ -716,7 +719,7 @@ export function PremiumNavbarRender({
               ) : (
                 <span
                   className="text-xl font-bold tracking-tight"
-                  style={{ color: textColor }}
+                  style={{ color: resolvedTextColor }}
                 >
                   {logoText}
                 </span>
@@ -765,7 +768,7 @@ export function PremiumNavbarRender({
                     target={link.target || "_self"}
                     className={`inline-flex items-center gap-1 ${linkFontSizeClasses[linkFontSize]} ${linkWeightClasses[linkFontWeight]} ${getLinkHoverClass()} ${activeClass}`}
                     style={{
-                      color: textColor,
+                      color: resolvedTextColor,
                       textTransform: linkTextTransform,
                     }}
                     onMouseEnter={() => link.hasDropdown && setOpenDropdown(i)}
@@ -822,7 +825,7 @@ export function PremiumNavbarRender({
                   key={item.id}
                   href={item.href}
                   className="relative p-2 rounded-lg transition-colors hover:opacity-70"
-                  style={{ color: textColor }}
+                  style={{ color: resolvedTextColor }}
                   aria-label={item.ariaLabel || item.label}
                   title={item.label}
                 >
@@ -855,7 +858,7 @@ export function PremiumNavbarRender({
               <a
                 href={secondaryCtaLink}
                 className={`${ctaSizeClasses[ctaSize]} ${ctaRadiusClasses[ctaBorderRadius]} font-medium transition-all hover:opacity-80`}
-                style={getCtaStyles(secondaryCtaStyle, ctaColor, textColor)}
+                style={getCtaStyles(secondaryCtaStyle, ctaColor, resolvedTextColor || "")}
               >
                 {secondaryCtaText}
               </a>
@@ -1774,13 +1777,19 @@ export function PremiumHeroRender({
     right: "text-right items-end",
   };
 
+  // Contrast resolution
+  const heroDark = isEffectivelyDark(backgroundColor, bgImageUrl, backgroundOverlay, backgroundOverlayColor, backgroundOverlayOpacity);
+  const resolvedTitleColor = resolveContrastColor(titleColor || (heroDark ? "#ffffff" : "#1f2937"), heroDark);
+  const resolvedSubtitleColor = resolveContrastColor(subtitleColor || (resolvedTitleColor ? `${resolvedTitleColor}dd` : undefined), heroDark);
+  const resolvedDescColor = resolveContrastColor(descriptionColor || resolvedTitleColor, heroDark);
+
   // Get button styles
   const getButtonStyles = (
     style: string,
     bgColor: string,
     textColor: string,
   ): React.CSSProperties => {
-    const fallbackText = bgColor || titleColor || "currentColor";
+    const fallbackText = bgColor || resolvedTitleColor || "currentColor";
     switch (style) {
       case "solid":
         return { backgroundColor: bgColor, color: textColor };
@@ -1888,7 +1897,7 @@ export function PremiumHeroRender({
 
               <h1
                 className={`${titleSizeClasses[titleSize]} ${titleWeightClasses[titleWeight]} leading-tight mb-4 md:mb-6`}
-                style={{ color: titleColor }}
+                style={{ color: resolvedTitleColor }}
               >
                 {title}
               </h1>
@@ -1897,9 +1906,7 @@ export function PremiumHeroRender({
                 <p
                   className={`${subtitleSizeClasses[subtitleSize]} font-medium mb-2 md:mb-4`}
                   style={{
-                    color:
-                      subtitleColor ||
-                      (titleColor ? `${titleColor}dd` : undefined),
+                    color: resolvedSubtitleColor,
                   }}
                 >
                   {subtitle}
@@ -1909,7 +1916,7 @@ export function PremiumHeroRender({
               {description && (
                 <p
                   className={`${descSizeClasses[descriptionSize]} ${descMaxWidthClasses[descriptionMaxWidth]} mb-6 md:mb-8 opacity-80 leading-relaxed`}
-                  style={{ color: descriptionColor || titleColor }}
+                  style={{ color: resolvedDescColor }}
                 >
                   {description}
                 </p>
@@ -1959,7 +1966,7 @@ export function PremiumHeroRender({
                     style={getButtonStyles(
                       secondaryButtonStyle,
                       secondaryButtonColor || primaryButtonColor,
-                      titleColor || "currentColor",
+                      resolvedTitleColor || "currentColor",
                     )}
                   >
                     {secondaryButtonText}
@@ -2036,7 +2043,7 @@ export function PremiumHeroRender({
 
             <h1
               className={`${titleSizeClasses[titleSize]} ${titleWeightClasses[titleWeight]} leading-tight mb-4 md:mb-6`}
-              style={{ color: titleColor || "inherit" }}
+              style={{ color: resolvedTitleColor || "inherit" }}
             >
               {title}
             </h1>
@@ -2044,7 +2051,7 @@ export function PremiumHeroRender({
             {description && (
               <p
                 className={`${descSizeClasses[descriptionSize]} ${descMaxWidthClasses[descriptionMaxWidth]} mb-6 md:mb-8 opacity-90 leading-relaxed`}
-                style={{ color: descriptionColor || "inherit" }}
+                style={{ color: resolvedDescColor || "inherit" }}
               >
                 {description}
               </p>
@@ -2173,9 +2180,9 @@ export function PremiumHeroRender({
             opacity: patternOpacity / 100,
             backgroundImage:
               patternType === "dots"
-                ? `radial-gradient(circle, ${titleColor || "#000"} 1px, transparent 1px)`
+                ? `radial-gradient(circle, ${resolvedTitleColor || "#000"} 1px, transparent 1px)`
                 : patternType === "grid"
-                  ? `linear-gradient(${titleColor || "#000"}22 1px, transparent 1px), linear-gradient(90deg, ${titleColor || "#000"}22 1px, transparent 1px)`
+                  ? `linear-gradient(${resolvedTitleColor || "#000"}22 1px, transparent 1px), linear-gradient(90deg, ${resolvedTitleColor || "#000"}22 1px, transparent 1px)`
                   : undefined,
             backgroundSize: patternType === "dots" ? "20px 20px" : "40px 40px",
           }}
@@ -2214,7 +2221,7 @@ export function PremiumHeroRender({
 
           <h1
             className={`${titleSizeClasses[titleSize]} ${titleWeightClasses[titleWeight]} leading-tight mb-4 md:mb-6`}
-            style={{ color: titleColor }}
+            style={{ color: resolvedTitleColor }}
           >
             {title}
           </h1>
@@ -2223,8 +2230,7 @@ export function PremiumHeroRender({
             <p
               className={`${subtitleSizeClasses[subtitleSize]} font-medium mb-2 md:mb-4`}
               style={{
-                color:
-                  subtitleColor || (titleColor ? `${titleColor}dd` : undefined),
+                color: resolvedSubtitleColor,
               }}
             >
               {subtitle}
@@ -2234,7 +2240,7 @@ export function PremiumHeroRender({
           {description && (
             <p
               className={`${descSizeClasses[descriptionSize]} ${descMaxWidthClasses[descriptionMaxWidth]} mb-6 md:mb-8 opacity-80 leading-relaxed`}
-              style={{ color: descriptionColor || titleColor }}
+              style={{ color: resolvedDescColor }}
             >
               {description}
             </p>
@@ -2284,7 +2290,7 @@ export function PremiumHeroRender({
                 style={getButtonStyles(
                   secondaryButtonStyle,
                   secondaryButtonColor || primaryButtonColor,
-                  titleColor || "currentColor",
+                  resolvedTitleColor || "currentColor",
                 )}
               >
                 {secondaryButtonText}
@@ -2528,7 +2534,10 @@ export function PremiumFooterRender({
   _isEditor = false,
 }: PremiumFooterProps) {
   const logoUrl = getImageUrl(logo);
-
+  const footerDark = isDarkBackground(backgroundColor);
+  const resolvedTextColor = resolveContrastColor(textColor, footerDark);
+  const resolvedLinkColor = resolveContrastColor(linkColor, footerDark);
+  const resolvedLinkHoverColor = resolveContrastColor(linkHoverColor, footerDark);
   // Style maps
   const paddingTopClasses: Record<string, string> = {
     sm: "pt-8",
@@ -2600,12 +2609,12 @@ export function PremiumFooterRender({
                 : ""
           }`}
           style={{
-            color: socialColor || linkColor,
+            color: socialColor || resolvedLinkColor,
             borderColor:
-              socialStyle === "outline" ? socialColor || linkColor : undefined,
+              socialStyle === "outline" ? socialColor || resolvedLinkColor : undefined,
             backgroundColor:
               socialStyle === "filled"
-                ? `${socialColor || linkColor}20`
+                ? `${socialColor || resolvedLinkColor}20`
                 : undefined,
           }}
           aria-label={social.label || social.platform}
@@ -2621,11 +2630,11 @@ export function PremiumFooterRender({
 
   const renderNewsletter = (isCompact = false) => (
     <div className={isCompact ? "" : "max-w-md"}>
-      <h3 className="font-semibold text-base mb-2" style={{ color: textColor }}>
+      <h3 className="font-semibold text-base mb-2" style={{ color: resolvedTextColor }}>
         {newsletterTitle}
       </h3>
       {!isCompact && newsletterDescription && (
-        <p className="text-sm mb-4" style={{ color: linkColor }}>
+        <p className="text-sm mb-4" style={{ color: resolvedLinkColor }}>
           {newsletterDescription}
         </p>
       )}
@@ -2634,12 +2643,12 @@ export function PremiumFooterRender({
           type="email"
           placeholder={newsletterPlaceholder}
           className="flex-1 px-4 py-2.5 rounded-lg bg-current/5 border border-current/10 placeholder:opacity-40 focus:outline-none focus:ring-2 focus:ring-current/20 transition-all text-sm"
-          style={{ color: textColor }}
+          style={{ color: resolvedTextColor }}
         />
         <button
           type="submit"
           className="px-5 py-2.5 rounded-lg font-medium text-sm transition-all hover:opacity-90 hover:shadow-lg shrink-0"
-          style={{ backgroundColor: newsletterButtonColor, color: textColor }}
+          style={{ backgroundColor: newsletterButtonColor, color: resolvedTextColor }}
         >
           {newsletterButtonText}
         </button>
@@ -2677,7 +2686,7 @@ export function PremiumFooterRender({
               ) : (
                 <span
                   className="text-xl font-bold"
-                  style={{ color: textColor }}
+                  style={{ color: resolvedTextColor }}
                 >
                   {logoText}
                 </span>
@@ -2687,7 +2696,7 @@ export function PremiumFooterRender({
             {tagline && (
               <p
                 className="text-sm font-medium mb-2"
-                style={{ color: textColor }}
+                style={{ color: resolvedTextColor }}
               >
                 {tagline}
               </p>
@@ -2696,7 +2705,7 @@ export function PremiumFooterRender({
             {description && (
               <p
                 className={`text-sm mb-6 ${descMaxWidthClasses[descriptionMaxWidth]}`}
-                style={{ color: linkColor }}
+                style={{ color: resolvedLinkColor }}
               >
                 {description}
               </p>
@@ -2709,7 +2718,7 @@ export function PremiumFooterRender({
                   <a
                     href={`mailto:${email}`}
                     className="flex items-center gap-2 text-sm transition-colors hover:opacity-80"
-                    style={{ color: linkColor }}
+                    style={{ color: resolvedLinkColor }}
                   >
                     <svg
                       className="w-4 h-4"
@@ -2731,7 +2740,7 @@ export function PremiumFooterRender({
                   <a
                     href={`tel:${phone.replace(/\s/g, "")}`}
                     className="flex items-center gap-2 text-sm transition-colors hover:opacity-80"
-                    style={{ color: linkColor }}
+                    style={{ color: resolvedLinkColor }}
                   >
                     <svg
                       className="w-4 h-4"
@@ -2752,7 +2761,7 @@ export function PremiumFooterRender({
                 {address && (
                   <p
                     className="flex items-start gap-2 text-sm"
-                    style={{ color: linkColor }}
+                    style={{ color: resolvedLinkColor }}
                   >
                     <svg
                       className="w-4 h-4 mt-0.5 shrink-0"
@@ -2790,7 +2799,7 @@ export function PremiumFooterRender({
             <div key={i}>
               <h3
                 className="text-sm font-semibold uppercase tracking-wider mb-4"
-                style={{ color: textColor }}
+                style={{ color: resolvedTextColor }}
               >
                 {column.title}
               </h3>
@@ -2802,12 +2811,12 @@ export function PremiumFooterRender({
                       target={link.isExternal ? "_blank" : "_self"}
                       rel={link.isExternal ? "noopener noreferrer" : undefined}
                       className="inline-flex items-center gap-1.5 text-sm transition-colors"
-                      style={{ color: linkColor }}
+                      style={{ color: resolvedLinkColor }}
                       onMouseEnter={(e) =>
-                        (e.currentTarget.style.color = linkHoverColor)
+                        (e.currentTarget.style.color = resolvedLinkHoverColor || "")
                       }
                       onMouseLeave={(e) =>
-                        (e.currentTarget.style.color = linkColor)
+                        (e.currentTarget.style.color = resolvedLinkColor || "")
                       }
                     >
                       {link.label}
@@ -2905,7 +2914,7 @@ export function PremiumFooterRender({
               : undefined,
           }}
         >
-          <p className="text-sm" style={{ color: linkColor }}>
+          <p className="text-sm" style={{ color: resolvedLinkColor }}>
             {copyright}
           </p>
 
@@ -2918,12 +2927,12 @@ export function PremiumFooterRender({
                     key={i}
                     href={link.href || "#"}
                     className="text-sm transition-colors"
-                    style={{ color: linkColor }}
+                    style={{ color: resolvedLinkColor }}
                     onMouseEnter={(e) =>
-                      (e.currentTarget.style.color = linkHoverColor)
+                      (e.currentTarget.style.color = resolvedLinkHoverColor || "")
                     }
                     onMouseLeave={(e) =>
-                      (e.currentTarget.style.color = linkColor)
+                      (e.currentTarget.style.color = resolvedLinkColor || "")
                     }
                   >
                     {link.label}

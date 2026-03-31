@@ -3965,6 +3965,8 @@ export function QuoteRender({
   }[size];
 
   const resolvedFontFamily = fontFamily || `var(--font-body, inherit)`;
+  const dark = isDarkBackground(backgroundColor);
+  const resolvedTextColor = resolveContrastColor(textColor || (dark ? "#f8fafc" : "#1f2937"), dark);
 
   // Author footer — shared across variants
   const renderAuthor = (centered = false) =>
@@ -3982,7 +3984,7 @@ export function QuoteRender({
         <div className={centered ? "text-center" : ""}>
           <cite
             className="not-italic font-semibold block"
-            style={{ color: textColor || undefined }}
+            style={{ color: resolvedTextColor }}
           >
             {centered ? author : `— ${author}`}
           </cite>
@@ -4006,7 +4008,7 @@ export function QuoteRender({
       >
         <p
           className={`${sizeStyles.text} ${fontStyle === "italic" ? "italic" : ""} leading-relaxed`}
-          style={{ color: textColor || undefined }}
+          style={{ color: resolvedTextColor }}
         >
           &ldquo;{text}&rdquo;
         </p>
@@ -4034,7 +4036,7 @@ export function QuoteRender({
         </svg>
         <p
           className={`${sizeStyles.text} leading-relaxed`}
-          style={{ color: textColor || undefined }}
+          style={{ color: resolvedTextColor }}
         >
           {text}
         </p>
@@ -4056,14 +4058,14 @@ export function QuoteRender({
         {/* Large decorative quote mark */}
         <span
           className="absolute top-0 left-4 text-[6rem] leading-none opacity-10 font-serif pointer-events-none select-none"
-          style={{ color: borderColor || textColor || undefined }}
+          style={{ color: borderColor || resolvedTextColor }}
           aria-hidden="true"
         >
           &ldquo;
         </span>
         <p
           className={`${sizeStyles.text} ${fontStyle === "italic" ? "italic" : ""} leading-relaxed relative z-10 pt-10`}
-          style={{ color: textColor || undefined }}
+          style={{ color: resolvedTextColor }}
         >
           {text}
         </p>
@@ -4082,12 +4084,12 @@ export function QuoteRender({
               <div
                 className="w-8 h-0.5 mb-2 rounded-full"
                 style={{
-                  backgroundColor: borderColor || textColor || undefined,
+                  backgroundColor: borderColor || resolvedTextColor,
                 }}
               />
               <cite
                 className="not-italic font-semibold block"
-                style={{ color: textColor || undefined }}
+                style={{ color: resolvedTextColor }}
               >
                 {author}
               </cite>
@@ -4113,7 +4115,7 @@ export function QuoteRender({
       >
         <p
           className={`${sizeStyles.text} ${fontStyle === "italic" ? "italic" : ""} font-medium leading-relaxed`}
-          style={{ color: textColor || undefined }}
+          style={{ color: resolvedTextColor }}
         >
           &ldquo;{text}&rdquo;
         </p>
@@ -4148,7 +4150,7 @@ export function QuoteRender({
         </div>
         <p
           className={`${sizeStyles.text} leading-relaxed`}
-          style={{ color: textColor || undefined }}
+          style={{ color: resolvedTextColor }}
         >
           &ldquo;{text}&rdquo;
         </p>
@@ -4166,7 +4168,7 @@ export function QuoteRender({
             <div className="text-center">
               <cite
                 className="not-italic font-semibold block"
-                style={{ color: textColor || undefined }}
+                style={{ color: resolvedTextColor }}
               >
                 {author}
               </cite>
@@ -4190,7 +4192,7 @@ export function QuoteRender({
       <p
         className={`${sizeStyles.text} ${fontStyle === "italic" ? "italic" : ""} leading-relaxed`}
         style={{
-          color: textColor || undefined,
+          color: resolvedTextColor,
           fontFamily: resolvedFontFamily,
         }}
       >
@@ -7446,7 +7448,7 @@ export function HeroRender({
   const renderScrollIndicator = () => {
     if (!showScrollIndicator) return null;
     const indicatorColor =
-      scrollIndicatorColor || textColor || (dark ? "#ffffff" : "#374151");
+      scrollIndicatorColor || resolvedTextColor || (effectivelyDark ? "#ffffff" : "#374151");
     return (
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 animate-bounce z-10">
         <svg
@@ -7672,21 +7674,21 @@ export function HeroRender({
           {renderBadge(contentAlign === "center")}
           <h1
             className={`${titleSizeClasses} font-bold mb-6 leading-tight`}
-            style={{ color: textColor || "#ffffff" }}
+            style={{ color: resolvedTextColor || "#ffffff" }}
           >
             {title}
           </h1>
           {subtitle && (
             <p
               className="text-lg md:text-xl lg:text-2xl font-medium mb-4 opacity-90"
-              style={{ color: textColor || "#ffffff" }}
+              style={{ color: resolvedTextColor || "#ffffff" }}
             >
               {subtitle}
             </p>
           )}
           <p
             className={`text-lg md:text-xl lg:text-2xl mb-8 opacity-90 ${descMaxWidthClasses}`}
-            style={{ color: textColor || "#ffffff" }}
+            style={{ color: resolvedTextColor || "#ffffff" }}
           >
             {description}
           </p>
@@ -7706,8 +7708,8 @@ export function HeroRender({
                 href={secondaryButtonLink}
                 className={`inline-flex items-center justify-center px-8 py-4 text-lg font-medium border-2 ${buttonRadiusClasses} hover:opacity-80 transition-all`}
                 style={{
-                  borderColor: textColor || "#ffffff",
-                  color: textColor || "#ffffff",
+                  borderColor: resolvedSecondaryColor,
+                  color: resolvedSecondaryColor,
                 }}
               >
                 {secondaryButtonText}
@@ -7734,13 +7736,13 @@ export function HeroRender({
         {renderBadge(contentAlign === "center")}
         <h1
           className={`${titleSizeClasses} font-bold mb-6 leading-tight`}
-          style={{ color: textColor || "#ffffff" }}
+          style={{ color: resolvedTextColor || "#ffffff" }}
         >
           {title}
         </h1>
         <p
           className={`text-lg md:text-xl lg:text-2xl mb-8 opacity-90 ${descMaxWidthClasses}`}
-          style={{ color: textColor || "#ffffff" }}
+          style={{ color: resolvedTextColor || "#ffffff" }}
         >
           {description}
         </p>
@@ -7760,8 +7762,8 @@ export function HeroRender({
               href={secondaryButtonLink}
               className={`inline-flex items-center justify-center px-8 py-4 text-lg font-medium border-2 ${buttonRadiusClasses} hover:opacity-80 transition-all`}
               style={{
-                borderColor: textColor || "#ffffff",
-                color: textColor || "#ffffff",
+                borderColor: resolvedSecondaryColor,
+                color: resolvedSecondaryColor,
               }}
             >
               {secondaryButtonText}
@@ -8537,7 +8539,7 @@ export function FeaturesRender({
           {subtitle && (
             <p
               className="text-sm md:text-base font-semibold uppercase tracking-wider mb-2"
-              style={{ color: subtitleColor || accentColor }}
+              style={{ color: resolveContrastColor(subtitleColor || accentColor, effectivelyDark) }}
             >
               {subtitle}
             </p>
@@ -8547,7 +8549,7 @@ export function FeaturesRender({
           <h2
             className={`${titleSizeClasses} font-bold mb-4`}
             style={{
-              color: titleColor || textColor,
+              color: titleColor ? resolveContrastColor(titleColor, effectivelyDark) : resolvedTextColor,
               fontFamily: titleFont || undefined,
             }}
           >
@@ -8558,7 +8560,7 @@ export function FeaturesRender({
           {description && (
             <p
               className={`text-base md:text-lg max-w-2xl ${headerAlign === "center" ? "mx-auto" : ""} opacity-80`}
-              style={{ color: descriptionColor || textColor }}
+              style={{ color: resolveContrastColor(descriptionColor || textColor, effectivelyDark) }}
             >
               {description}
             </p>
@@ -9274,7 +9276,7 @@ export function CTARender({
             {item.text && (
               <span
                 className="text-sm font-medium"
-                style={{ color: textColor }}
+                style={{ color: resolvedTextColor }}
               >
                 {item.text}
               </span>
@@ -9590,7 +9592,7 @@ export function CTARender({
         <div className="max-w-screen-xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             {badge && <BadgeElement />}
-            <p className="font-medium" style={{ color: textColor }}>
+            <p className="font-medium" style={{ color: resolvedTextColor }}>
               {title}
             </p>
           </div>
@@ -11049,7 +11051,7 @@ export function FAQRender({
     if (!showIcon) return null;
 
     const iconClass = `${iconSizeClasses} flex-shrink-0 transition-transform ${iconRotation && isOpen ? "rotate-180" : ""} ${animationSpeedClasses}`;
-    const color = iconColor || textColor || "#6b7280";
+    const color = iconColor || resolvedTextColor || "#6b7280";
 
     if (expandedIcon && collapsedIcon) {
       return (
@@ -11244,18 +11246,18 @@ export function FAQRender({
         className="flex items-center gap-3 mt-4 pt-4 border-t"
         style={{ borderColor: dividerColor }}
       >
-        <span className="text-sm opacity-70" style={{ color: textColor }}>
+        <span className="text-sm opacity-70" style={{ color: resolvedTextColor }}>
           {helpfulText}
         </span>
         <button
           className="px-3 py-1 text-sm rounded border hover:opacity-80 transition-colors"
-          style={{ borderColor: dividerColor, color: textColor }}
+          style={{ borderColor: dividerColor, color: resolvedTextColor }}
         >
           {helpfulYesText}
         </button>
         <button
           className="px-3 py-1 text-sm rounded border hover:opacity-80 transition-colors"
-          style={{ borderColor: dividerColor, color: textColor }}
+          style={{ borderColor: dividerColor, color: resolvedTextColor }}
         >
           {helpfulNoText}
         </button>
@@ -11385,7 +11387,7 @@ export function FAQRender({
           {description && (
             <p
               className={`text-base md:text-lg max-w-2xl ${headerAlign === "center" ? "mx-auto" : ""} opacity-80 ${hideDescriptionOnMobile ? "hidden md:block" : ""}`}
-              style={{ color: descriptionColor || textColor }}
+              style={{ color: descriptionColor || resolvedTextColor }}
             >
               {description}
             </p>
@@ -11928,9 +11930,9 @@ export function StatsRender({
 
   const columnClasses = {
     2: `${mobileColsClass} md:grid-cols-2`,
-    3: `${mobileColsClass} md:grid-cols-3`,
-    4: `${mobileColsClass} md:grid-cols-4`,
-    5: `${mobileColsClass} md:grid-cols-5`,
+    3: `${mobileColsClass} md:grid-cols-2 lg:grid-cols-3`,
+    4: `${mobileColsClass} md:grid-cols-2 lg:grid-cols-4`,
+    5: `${mobileColsClass} md:grid-cols-3 lg:grid-cols-5`,
     6: `${mobileColsClass} md:grid-cols-3 lg:grid-cols-6`,
   }[columns];
 
@@ -15091,7 +15093,7 @@ export function TeamRender({
                 className="px-4 py-2 text-sm font-medium rounded-full transition-all hover:opacity-80"
                 style={{
                   backgroundColor: cardBackgroundColor,
-                  color: textColor,
+                  color: resolvedTextColor,
                 }}
               >
                 {dept}
@@ -15169,7 +15171,7 @@ export function TeamRender({
               <h3
                 className={`${nameSizeClasses} ${nameFontWeightClasses} mb-1`}
                 style={{
-                  color: nameColor || textColor,
+                  color: nameColor || resolvedTextColor,
                   fontFamily: nameFont || undefined,
                 }}
               >
@@ -15180,7 +15182,7 @@ export function TeamRender({
               <p
                 className={`${roleSizeClasses} ${roleStyle === "uppercase" ? "uppercase tracking-wider" : ""} ${roleStyle === "badge" ? "px-2 py-0.5 rounded-full" : ""} opacity-75 mb-1`}
                 style={{
-                  color: roleColor || textColor,
+                  color: roleColor || resolvedTextColor,
                   backgroundColor:
                     roleStyle === "badge" ? `${accentColor}20` : undefined,
                 }}
@@ -15192,7 +15194,7 @@ export function TeamRender({
               {showDepartment && member.department && (
                 <p
                   className="text-xs opacity-60 mb-2"
-                  style={{ color: departmentColor || textColor }}
+                  style={{ color: departmentColor || resolvedTextColor }}
                 >
                   {member.department}
                 </p>
@@ -15202,7 +15204,7 @@ export function TeamRender({
               {showLocation && member.location && (
                 <p
                   className="text-xs opacity-60 mb-2 flex items-center gap-1"
-                  style={{ color: locationColor || textColor }}
+                  style={{ color: locationColor || resolvedTextColor }}
                 >
                   {locationIcon && (
                     <svg
@@ -16594,7 +16596,6 @@ function NavbarWithMenu(props: NavbarProps) {
   const resolvedShowCtaInMobile =
     props.showCtaInMobileMenu ?? props.showCtaOnMobile ?? true;
   const resolvedMobileMenuBg = mobileMenuBackground || backgroundColor;
-  const resolvedMobileMenuText = mobileMenuTextColor || textColor;
   const resolvedMobileLinkSpacing = props.mobileMenuLinkSpacing || "normal";
   const resolvedLinkTextTransform = props.linkTextTransform || "none";
   const resolvedLinkActiveIndicator = props.linkActiveIndicator || "none";
@@ -16630,6 +16631,11 @@ function NavbarWithMenu(props: NavbarProps) {
 
   const logoUrl = getImageUrl(logo);
   const logoAlt = logoText || getImageAlt(logo, "Logo");
+
+  // Contrast-safe text color
+  const navDark = isDarkBackground(backgroundColor);
+  const resolvedTextColor = resolveContrastColor(textColor || (navDark ? "#f8fafc" : "#1f2937"), navDark);
+  const resolvedMobileMenuText = mobileMenuTextColor || resolvedTextColor;
 
   // Responsive behavior
   const isMobile = _isEditor ? _breakpoint === "mobile" : false;
@@ -16936,7 +16942,7 @@ function NavbarWithMenu(props: NavbarProps) {
           key={j}
           href={dl.href || "#"}
           className="block px-4 py-2.5 hover:bg-black/5 transition-colors"
-          style={{ color: textColor }}
+          style={{ color: resolvedTextColor }}
           role="menuitem"
         >
           <div className="text-sm font-medium">
@@ -17010,7 +17016,7 @@ function NavbarWithMenu(props: NavbarProps) {
               ) : (
                 <span
                   className="text-xl font-bold"
-                  style={{ color: textColor }}
+                  style={{ color: resolvedTextColor }}
                 >
                   {logoText}
                 </span>
@@ -17034,7 +17040,7 @@ function NavbarWithMenu(props: NavbarProps) {
               ) : (
                 <span
                   className="text-xl font-bold"
-                  style={{ color: textColor }}
+                  style={{ color: resolvedTextColor }}
                 >
                   {logoText}
                 </span>
@@ -17063,7 +17069,7 @@ function NavbarWithMenu(props: NavbarProps) {
                           : undefined
                       }
                       className={`${linkSizeClass[resolvedFontSize] || linkSizeClass.md} ${linkWeightClass[resolvedFontWeight] || linkWeightClass.medium} ${linkHoverClass} ${textTransformClass[resolvedLinkTextTransform] || ""} inline-flex items-center gap-1 cursor-pointer`}
-                      style={{ color: textColor }}
+                      style={{ color: resolvedTextColor }}
                       role={hasDD ? "button" : undefined}
                       aria-expanded={hasDD ? openDropdown === i : undefined}
                       aria-haspopup={hasDD ? "true" : undefined}
@@ -17159,7 +17165,7 @@ function NavbarWithMenu(props: NavbarProps) {
                     style={{
                       width: hamburgerSize,
                       height: hamburgerSize,
-                      color: hamburgerColor || textColor,
+                      color: hamburgerColor || resolvedTextColor,
                     }}
                     fill="none"
                     stroke="currentColor"
@@ -17177,7 +17183,7 @@ function NavbarWithMenu(props: NavbarProps) {
                     style={{
                       width: hamburgerSize,
                       height: hamburgerSize,
-                      color: hamburgerColor || textColor,
+                      color: hamburgerColor || resolvedTextColor,
                     }}
                     fill="none"
                     stroke="currentColor"
@@ -17527,6 +17533,9 @@ export function FooterRender(props: FooterProps) {
 
   // Contrast-aware link colors: adjust defaults when background changes
   const bgIsDark = isDarkBackground(backgroundColor);
+  // Resolve textColor against footer background: brand injection may replace
+  // light textColor (e.g. "#f9fafb") with dark foreground → invisible on dark footer
+  const resolvedTextColor = resolveContrastColor(textColor, bgIsDark);
   const linkColor = (() => {
     // Default gray — adjust for background
     if (linkColorProp === "#9ca3af")
@@ -17643,7 +17652,7 @@ export function FooterRender(props: FooterProps) {
           ? "p-2 rounded-full border transition-colors"
           : "transition-opacity opacity-75 hover:opacity-100";
     const fillBg =
-      socialIconStyle === "filled" ? `${textColor}15` : "transparent";
+      socialIconStyle === "filled" ? `${resolvedTextColor}15` : "transparent";
     const borderStyle =
       socialIconStyle === "outline" ? `1px solid ${dividerColor}` : "none";
     return (
@@ -17654,7 +17663,7 @@ export function FooterRender(props: FooterProps) {
         rel="noopener noreferrer"
         className={baseStyle}
         style={{
-          color: textColor,
+          color: resolvedTextColor,
           backgroundColor: fillBg,
           border: borderStyle,
         }}
@@ -17710,11 +17719,11 @@ export function FooterRender(props: FooterProps) {
     if (!showNewsletter) return null;
     return (
       <div className="max-w-md">
-        <h3 className="font-semibold mb-2" style={{ color: textColor }}>
+        <h3 className="font-semibold mb-2" style={{ color: resolvedTextColor }}>
           {newsletterTitle}
         </h3>
         {newsletterDescription && (
-          <p className="text-sm opacity-75 mb-4" style={{ color: textColor }}>
+          <p className="text-sm opacity-75 mb-4" style={{ color: resolvedTextColor }}>
             {newsletterDescription}
           </p>
         )}
@@ -17727,7 +17736,7 @@ export function FooterRender(props: FooterProps) {
             placeholder={newsletterPlaceholder}
             aria-label={newsletterPlaceholder}
             className="flex-1 px-4 py-2.5 rounded-lg bg-white/10 border border-white/20 placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30"
-            style={{ color: textColor }}
+            style={{ color: resolvedTextColor }}
           />
           <button
             type="submit"
@@ -17848,7 +17857,7 @@ export function FooterRender(props: FooterProps) {
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border transition-opacity hover:opacity-80"
-            style={{ borderColor: dividerColor, color: textColor }}
+            style={{ borderColor: dividerColor, color: resolvedTextColor }}
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
               <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
@@ -17865,7 +17874,7 @@ export function FooterRender(props: FooterProps) {
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border transition-opacity hover:opacity-80"
-            style={{ borderColor: dividerColor, color: textColor }}
+            style={{ borderColor: dividerColor, color: resolvedTextColor }}
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
               <path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 01-.61-.92V2.734a1 1 0 01.609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.199l2.807 1.626a1 1 0 010 1.732l-2.808 1.626L15.206 12l2.492-2.492zM5.864 2.658L16.8 8.99l-2.302 2.302-8.634-8.634z" />
@@ -17886,7 +17895,7 @@ export function FooterRender(props: FooterProps) {
       className="border-t pt-6 mt-8 flex flex-col md:flex-row items-center justify-between gap-4"
       style={{ borderColor: dividerColor }}
     >
-      <p className="text-sm opacity-75" style={{ color: textColor }}>
+      <p className="text-sm opacity-75" style={{ color: resolvedTextColor }}>
         {copyright}
       </p>
       <div className="flex flex-wrap items-center gap-4 md:gap-6">
@@ -17907,7 +17916,7 @@ export function FooterRender(props: FooterProps) {
           </a>
         ))}
         {showMadeWith && (
-          <span className="text-sm opacity-60" style={{ color: textColor }}>
+          <span className="text-sm opacity-60" style={{ color: resolvedTextColor }}>
             {madeWithText}
           </span>
         )}
@@ -17937,14 +17946,14 @@ export function FooterRender(props: FooterProps) {
               style={{ height: logoHeight }}
             />
           ) : (
-            <p className="text-lg font-bold" style={{ color: textColor }}>
+            <p className="text-lg font-bold" style={{ color: resolvedTextColor }}>
               {companyName}
             </p>
           )}
           {description && (
             <p
               className="text-sm opacity-75 max-w-md"
-              style={{ color: textColor }}
+              style={{ color: resolvedTextColor }}
             >
               {description}
             </p>
@@ -17954,7 +17963,7 @@ export function FooterRender(props: FooterProps) {
               {socialLinks.map(renderSocialIcon)}
             </div>
           )}
-          <p className="text-sm opacity-75" style={{ color: textColor }}>
+          <p className="text-sm opacity-75" style={{ color: resolvedTextColor }}>
             {copyright}
           </p>
           {resolvedLegalLinks.length > 0 && (
@@ -18004,14 +18013,14 @@ export function FooterRender(props: FooterProps) {
               style={{ height: logoHeight }}
             />
           ) : (
-            <p className="text-xl font-bold" style={{ color: textColor }}>
+            <p className="text-xl font-bold" style={{ color: resolvedTextColor }}>
               {companyName}
             </p>
           )}
           {description && (
             <p
               className="text-sm opacity-75 max-w-lg"
-              style={{ color: textColor }}
+              style={{ color: resolvedTextColor }}
             >
               {description}
             </p>
@@ -18043,7 +18052,7 @@ export function FooterRender(props: FooterProps) {
           {showSocialLinks && socialLinks.length > 0 && (
             <div className="flex flex-col items-center gap-2">
               {socialLinksTitle && (
-                <p className="text-sm font-medium" style={{ color: textColor }}>
+                <p className="text-sm font-medium" style={{ color: resolvedTextColor }}>
                   {socialLinksTitle}
                 </p>
               )}
@@ -18082,14 +18091,14 @@ export function FooterRender(props: FooterProps) {
                 <div>
                   <h3
                     className="text-lg font-semibold"
-                    style={{ color: textColor }}
+                    style={{ color: resolvedTextColor }}
                   >
                     {newsletterTitle}
                   </h3>
                   {newsletterDescription && (
                     <p
                       className="text-sm opacity-75 mt-1"
-                      style={{ color: textColor }}
+                      style={{ color: resolvedTextColor }}
                     >
                       {newsletterDescription}
                     </p>
@@ -18104,7 +18113,7 @@ export function FooterRender(props: FooterProps) {
                     placeholder={newsletterPlaceholder}
                     aria-label={newsletterPlaceholder}
                     className="flex-1 px-4 py-2.5 rounded-lg bg-white/10 border border-white/20 placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30"
-                    style={{ color: textColor }}
+                    style={{ color: resolvedTextColor }}
                   />
                   <button
                     type="submit"
@@ -18133,14 +18142,14 @@ export function FooterRender(props: FooterProps) {
                   style={{ height: logoHeight }}
                 />
               ) : (
-                <p className="text-xl font-bold" style={{ color: textColor }}>
+                <p className="text-xl font-bold" style={{ color: resolvedTextColor }}>
                   {companyName}
                 </p>
               )}
               {description && (
                 <p
                   className="text-sm opacity-75 max-w-xs"
-                  style={{ color: textColor }}
+                  style={{ color: resolvedTextColor }}
                 >
                   {description}
                 </p>
@@ -18157,7 +18166,7 @@ export function FooterRender(props: FooterProps) {
                 <div key={i}>
                   <h3
                     className="font-semibold mb-4 text-sm uppercase tracking-wider"
-                    style={{ color: textColor }}
+                    style={{ color: resolvedTextColor }}
                   >
                     {column.title}
                   </h3>
@@ -18173,7 +18182,7 @@ export function FooterRender(props: FooterProps) {
                 {socialLinksTitle && (
                   <h3
                     className="font-semibold mb-4 text-sm uppercase tracking-wider"
-                    style={{ color: textColor }}
+                    style={{ color: resolvedTextColor }}
                   >
                     {socialLinksTitle}
                   </h3>
@@ -18213,14 +18222,14 @@ export function FooterRender(props: FooterProps) {
                   style={{ height: logoHeight }}
                 />
               ) : (
-                <p className="text-xl font-bold" style={{ color: textColor }}>
+                <p className="text-xl font-bold" style={{ color: resolvedTextColor }}>
                   {companyName}
                 </p>
               )}
               {description && (
                 <p
                   className="text-sm opacity-75 max-w-xs"
-                  style={{ color: textColor }}
+                  style={{ color: resolvedTextColor }}
                 >
                   {description}
                 </p>
@@ -18230,7 +18239,7 @@ export function FooterRender(props: FooterProps) {
                   {socialLinksTitle && (
                     <p
                       className="text-sm font-medium mb-2"
-                      style={{ color: textColor }}
+                      style={{ color: resolvedTextColor }}
                     >
                       {socialLinksTitle}
                     </p>
@@ -18251,7 +18260,7 @@ export function FooterRender(props: FooterProps) {
                 <div key={i}>
                   <h3
                     className="font-semibold mb-4 text-sm uppercase tracking-wider"
-                    style={{ color: textColor }}
+                    style={{ color: resolvedTextColor }}
                   >
                     {column.title}
                   </h3>
@@ -19758,7 +19767,7 @@ export function ContactFormRender({
   const isDark = isDarkBackground(backgroundColor);
   const resolvedButtonColor =
     buttonColor || (isDark ? "#e5a956" : "var(--brand-primary, #3b82f6)");
-  const resolvedTextColor = textColor || (isDark ? "#f9fafb" : "#1f2937");
+  const resolvedTextColor = resolveContrastColor(textColor || (isDark ? "#f9fafb" : "#1f2937"), isDark);
   const resolvedSubtitleColor = isDark ? "#9ca3af" : "#6b7280";
   const resolvedInputBg =
     inputBackgroundColor || (isDark ? "#374151" : "#ffffff");
@@ -20078,7 +20087,7 @@ export function NewsletterRender({
 
   const bgDark = isDarkBackground(backgroundColor);
 
-  const resolvedTextColor = textColor || (bgDark ? "#f8fafc" : "#1f2937");
+  const resolvedTextColor = resolveContrastColor(textColor || (bgDark ? "#f8fafc" : "#1f2937"), bgDark);
   const resolvedInputBorder =
     inputBorderColorProp ||
     (bgDark ? "rgba(255,255,255,0.2)" : `${buttonColor || "#d1d5db"}30`);
@@ -20480,7 +20489,7 @@ export function CarouselRender({
   className = "",
 }: CarouselProps) {
   const dark = isDarkBackground(backgroundColor);
-  const resolvedTextColor = textColor || "#ffffff";
+  const resolvedTextColor = resolveContrastColor(textColor || "#ffffff", true);
   const resolvedBadgeColor =
     badgeColor || (dark ? "#e5a956" : "var(--brand-primary, #3b82f6)");
   const resolvedHeaderText = dark
@@ -21045,7 +21054,7 @@ export function CountdownRender({
   className = "",
 }: CountdownProps) {
   const dark = isDarkBackground(backgroundColor);
-  const resolvedTextColor = textColor || (dark ? "#f8fafc" : "#1f2937");
+  const resolvedTextColor = resolveContrastColor(textColor || (dark ? "#f8fafc" : "#1f2937"), dark);
   const resolvedNumberColor = numberColor || accentColor || resolvedTextColor;
   const resolvedLabelColor = labelColor || (dark ? "#94a3b8" : "#6b7280");
   const resolvedCardBg = cardBackgroundColor || (dark ? "#1e293b" : "#f3f4f6");
@@ -21298,7 +21307,7 @@ export function PricingRender({
   );
 
   const dark = isDarkBackground(backgroundColor);
-  const resolvedTextColor = textColor || (dark ? "#f8fafc" : "#1f2937");
+  const resolvedTextColor = resolveContrastColor(textColor || (dark ? "#f8fafc" : "#1f2937"), dark);
   const resolvedPriceColor = priceColor || resolvedTextColor;
   const resolvedPeriodColor = periodColor || (dark ? "#94a3b8" : "#6b7280");
   const resolvedCardBg = cardBackgroundColor || (dark ? "#1e293b" : "#ffffff");
@@ -21708,7 +21717,7 @@ export function AccordionRender({
     accentColor ||
     activeColor ||
     (dark ? "#e5a956" : "var(--brand-primary, #3b82f6)");
-  const resolvedTextColor = textColor || (dark ? "#e2e8f0" : "#374151");
+  const resolvedTextColor = resolveContrastColor(textColor || (dark ? "#e2e8f0" : "#374151"), dark);
   const resolvedBorderColor = borderColor || (dark ? "#334155" : "#e5e7eb");
   const resolvedBadgeColor = badgeColor || resolvedIconColor;
   const resolvedFilledBg = dark ? "#1e293b" : "#f9fafb";
@@ -21984,9 +21993,11 @@ export function TabsRender(props: TabsProps) {
   const resolvedBorderColor =
     props.borderColor || props.tabBorderColor || "#e5e7eb";
   const resolvedContentBg = props.contentBackgroundColor || undefined;
-  const resolvedTitleColor = props.titleColor || props.textColor;
-  const resolvedSubtitleColor = props.subtitleColor || props.textColor;
+  const tabsDark = isDarkBackground(backgroundColor);
+  const resolvedTitleColor = resolveContrastColor(props.titleColor || props.textColor || (tabsDark ? "#f8fafc" : "#1f2937"), tabsDark);
+  const resolvedSubtitleColor = resolveContrastColor(props.subtitleColor || props.textColor || (tabsDark ? "#94a3b8" : "#6b7280"), tabsDark);
   const textColor = props.textColor;
+  const resolvedTextColor = resolveContrastColor(textColor || (tabsDark ? "#f8fafc" : "#1f2937"), tabsDark);
 
   // Filter hidden tabs
   const tabs = rawTabs.filter((tab) => !tab.hidden);
@@ -22311,7 +22322,7 @@ export function TabsRender(props: TabsProps) {
         hidden={!isActive}
         className={`${contentPad} ${contentMinHClass} ${contentRadius} text-base leading-relaxed focus:outline-none`}
         style={{
-          color: textColor,
+          color: resolvedTextColor,
           backgroundColor: resolvedContentBg,
           ...(isActive ? getContentAnimation() : {}),
         }}
@@ -25510,7 +25521,7 @@ export function TypewriterRender({
   };
 
   const textStyle: React.CSSProperties = {
-    color: textColor || "var(--color-foreground, #111827)",
+    color: resolveContrastColor(textColor || "var(--color-foreground, #111827)", isDarkBackground(backgroundColor)),
     ...(highlightColor
       ? {
           backgroundColor: highlightColor,
@@ -25545,7 +25556,7 @@ export function TypewriterRender({
         <span
           className={`ml-0.5 ${cursorBlinkClasses[cursorBlinkSpeed] || cursorBlinkClasses.normal}`}
           style={{
-            color: cursorColor || textColor || "var(--color-foreground)",
+            color: cursorColor || textStyle.color || "var(--color-foreground)",
           }}
           aria-hidden="true"
         >
@@ -26080,7 +26091,7 @@ export function AnnouncementBarRender({
   const dark = isCustom
     ? isDarkBackground(backgroundColor)
     : !["warning", "outlined", "minimal"].includes(variant);
-  const resolvedTextColor = textColor || (dark ? "#ffffff" : "#111827");
+  const resolvedTextColor = resolveContrastColor(textColor || (dark ? "#ffffff" : "#111827"), dark);
   const resolvedLinkColor = linkColor || resolvedTextColor;
 
   // Variant-specific extra styles
@@ -28576,6 +28587,9 @@ export function GlassCardRender({
     };
 
   const config = presets[preset] || presets.light;
+  // Glass cards are typically on dark backgrounds; resolve contrast
+  const glassIsDark = ["dark", "heavy", "frosted", "crystal", "colored"].includes(preset);
+  const resolvedTextColor = resolveContrastColor(textColor || "#ffffff", glassIsDark);
   const actualBlur = isMobile.current ? mobileBlur : blur || config.blur;
   const baseBlur = isHovering ? actualBlur + hoverBlur : actualBlur;
   const actualTint = tint || config.bg;
@@ -28684,7 +28698,7 @@ export function GlassCardRender({
       <div
         className={`${iconSizeMap[iconSize] || "text-3xl"} mb-3 inline-flex items-center justify-center w-12 h-12 rounded-xl`}
         style={{
-          color: iconColor || textColor,
+          color: iconColor || resolvedTextColor,
           backgroundColor: iconBackgroundColor || undefined,
           ...(iconBackgroundBlur ? { backdropFilter: "blur(8px)" } : {}),
         }}
@@ -28704,7 +28718,7 @@ export function GlassCardRender({
         WebkitBackdropFilter: backdropVal,
         ...borderStyle,
         boxShadow: boxShadows.length > 0 ? boxShadows.join(", ") : undefined,
-        color: textColor,
+        color: resolvedTextColor,
         ...mountStyle,
       }}
       onMouseEnter={() => setIsHovering(true)}
@@ -28752,7 +28766,7 @@ export function GlassCardRender({
         )}
         <h3
           className="text-xl font-bold mb-1"
-          style={{ color: headingColor || textColor }}
+          style={{ color: headingColor || resolvedTextColor }}
         >
           {title}
         </h3>
@@ -29537,6 +29551,8 @@ export function ScrollAnimateRender({
 
   const paddingClasses = getResponsiveClasses(padding, paddingYMap);
   const radiusClasses = getResponsiveClasses(borderRadius, borderRadiusMap);
+  const scrollDark = isDarkBackground(backgroundColor);
+  const resolvedTextColor = resolveContrastColor(textColor || (scrollDark ? "#f8fafc" : "#1f2937"), scrollDark);
   const shadowMap: Record<string, string> = {
     none: "",
     sm: "shadow-sm",
@@ -29800,7 +29816,7 @@ export function ScrollAnimateRender({
       className={`${paddingClasses} ${radiusClasses} ${shadowMap[shadow] || ""} ${hideOnMobile ? "hidden md:block" : ""} ${className}`}
       style={{
         backgroundColor,
-        ...(textColor ? { color: textColor } : {}),
+        ...(resolvedTextColor ? { color: resolvedTextColor } : {}),
         ...(progressBased
           ? progressStyle
           : {
@@ -29822,7 +29838,7 @@ export function ScrollAnimateRender({
       )}
       <p
         className="text-sm"
-        style={{ color: textColor || "var(--color-muted-foreground, #4b5563)" }}
+        style={{ color: resolvedTextColor || "var(--color-muted-foreground, #4b5563)" }}
       >
         {description}
       </p>
