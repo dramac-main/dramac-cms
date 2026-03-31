@@ -1,33 +1,69 @@
 # Active Context
 
-## Current Focus: Marketing Components — REGISTRY ALIGNED & COMPLETE ✅
+## Current Focus: E-Commerce Components Overhaul — COMPLETE ✅
 
-### What Was Done (Latest Session — Registry Alignment)
+### What Was Done (Latest Session)
 
-**Critical gap discovered and fixed: Registry definitions (core-components.ts) had field names that didn't match render function prop names. This broke the manual Studio editing path (registry → Supabase → render, which bypasses normalizers).**
+Implemented the E-Commerce Components Master Plan overhaul across 3 phases (Phase order reorganized for efficiency):
 
-#### Registry Fixes Applied to All 5 Marketing Components:
+#### Phase 3: Converter & Metadata (Completed First)
 
-1. **AnnouncementBar** — Renamed registry fields: `text`→`message`, `link`→`linkUrl`, `icon`→`iconName`. Updated fieldGroups, defaultProps, and ai.canModify.
+1. **converter.ts** — Added 2 missing typeMap aliases: `OrderTracking` → `EcommerceOrderTracking`, `CategoriesPage` → `EcommerceCategoriesPage`. Added both types to `KNOWN_REGISTRY_TYPES` and `MODULE_TYPES` containment normalizer.
 
-2. **SocialProof** (largest change) — Added `mode` field ("rating"/"count"). Renamed: `ratingMax`→`maxRating`, `avatarCount`→`maxVisible`, `enableSchema`→`schemaType` (toggle→select with AggregateRating/Product/LocalBusiness/false options), `schemaItemReviewed`→`schemaName`. Added 9 missing fields: `reviewCount`, `platform`, `platformLogo`, `showCount`, `showPlatform`, `scoreBackgroundColor`, `scoreTextColor`, `mutedTextColor`. Fixed variant options from inline/stacked/card/minimal/floating/banner → stars/score/compact/detailed. Added new "Schema.org / SEO" fieldGroup. Updated defaultProps and ai.canModify.
+2. **component-metadata.ts** — Replaced 6 stale legacy e-commerce entries with 23 comprehensive entries covering all e-commerce components. Each entry now has rich descriptions, expanded keywords, `suggestedWith` arrays, and detailed `usageGuidelines` organized by category (Product Display, Cart, Checkout, Navigation & Discovery, Quotations, Reviews, Dynamic Pages).
 
-3. **TrustBadges** — Changed `hoverEffect` from select (6 string options) to toggle (boolean). Fixed variant options from inline/grid/cards/minimal/stacked/pills/icons-only → default/pills/cards/minimal. Added `layout`, `size`, `grayscale` fields. Added `alt` to badges itemFields. Updated defaultProps.
+#### Phase 2: Definition-Render Alignment (10 Field Mismatches Fixed)
 
-4. **LogoCloud** — Renamed: `logoGrayscale`→`grayscale`, `logoGrayscaleHover`→`hoverColor`. Fixed variant options from grid/inline/carousel/infinite/marquee/stacked/scattered → simple/cards/marquee. Updated fieldGroups, defaultProps, and ai.canModify.
+3. **studio/index.ts** — Fixed all 6 component definitions with mismatched fields:
 
-5. **ComparisonTable** — Renamed rows itemField `feature`→`label`. Renamed `headerBackgroundColor`→`headerBackground`. Changed `mobileLayout` (select) → `mobileStack` (toggle). Fixed variant options: default/cards/minimal/bordered/striped → simple/cards/striped. Updated defaultProps rows from `{feature: "...", values: "comma,string"}` → `{label: "...", values: ["array", "format"]}`. Added backward-compatible string→array parsing in render function.
+   - **CartPage**: Replaced 3 phantom fields (`showContinueShopping`, `showDiscountInput`, `checkoutUrl`) with 6 fields matching actual render props (`title`, `checkoutHref`, `checkoutText`, `shopLink`, `shopLinkText`, `showClearCart`)
+   - **CartDrawer**: Renamed `position` → `side` (matches render prop), added `checkoutHref` and `shopLink` fields
+   - **MiniCart**: Replaced `position` (wrong values) + `showItemCount` (ignored) with `align` (start/center/end matching Radix Popover), `maxItems`, `cartHref`, `checkoutHref`
+   - **CheckoutPage**: Replaced 2 ignored fields (`enableGuestCheckout`, `showOrderSummary`) with actual render props (`cartHref`, `successHref`)
+   - **OrderTracking**: Replaced ignored `showRecentOrder` with actual `shopLink` prop
+   - **ProductSort**: Renamed `defaultSort` → `value` (matches render prop), expanded from 4 sort options to 8 (added `featured`, `name-desc`, `rating`, `best-selling`), added `showLabel` and `label` fields
 
-#### Additional Render Fix:
+#### Phase 1 & 4: Brand Colours & Dark Mode (No Changes Needed)
 
-- **ComparisonTable** (`renders.tsx`) — Added `normalizedRows` helper that handles legacy `feature` field and comma-separated string values, converting them to arrays for robust rendering from both AI and studio paths.
+4. **Discovery**: All 67+ e-commerce component files **already use the design token system** (`bg-primary`, `text-foreground`, `bg-muted`, `border-border`, etc.). The master plan's assumption that they had hardcoded colors was incorrect — the components were built correctly from the start. Only 4 hardcoded colors remain, all intentional payment card brand colors (VISA blue, Mastercard red, AMEX blue, Discover orange).
 
-### Files Modified (This Session)
+5. **Dark mode**: All components use CSS variables exclusively (no `dark:` prefixes), which automatically adapt to dark mode via `globals.css` theme definitions.
 
-- `src/lib/studio/registry/core-components.ts` — All 5 marketing registrations updated
-- `src/lib/studio/blocks/renders.tsx` — ComparisonTable normalizedRows helper added
+### Files Modified
+
+- `src/lib/ai/website-designer/converter.ts` — 2 typeMap aliases, 2 KNOWN_REGISTRY_TYPES, 2 MODULE_TYPES
+- `src/lib/studio/registry/component-metadata.ts` — 23 entries replacing 6 stale ones
+- `src/modules/ecommerce/studio/index.ts` — 6 definition blocks completely rewritten
 
 ### TypeScript Status
+
+- Zero new errors from e-commerce changes
+- Pre-existing errors in converter.ts (toResponsive L1608, animation L1985) unchanged
+
+### Key Discovery: Brand Color Pipeline Already Complete
+
+The platform has a fully functional brand color pipeline:
+- `brand-colors.ts` generates `BrandColorPalette` (40+ derived colors)
+- `renderer.tsx` injects CSS variables onto `.studio-renderer` div
+- `brand-variables.css` provides HSL fallback vars
+- `globals.css` provides oklch tokens with dark mode overrides
+- Tailwind v4 natively supports `bg-primary`, `text-primary-foreground`, etc.
+- E-commerce components correctly USE these variables — no migration needed
+
+### Master Plan Document Status (11 of 11 complete)
+
+1. LAYOUT ✅
+2. TYPOGRAPHY ✅
+3. BUTTONS ✅
+4. MEDIA ✅
+5. SECTIONS ✅ v2.0
+6. NAVIGATION ✅ v1.1
+7. FORMS ✅ v1.1 → IMPLEMENTED
+8. CONTENT ✅ v2.0 → IMPLEMENTED
+9. INTERACTIVE ✅ v1.0
+10. MARKETING ✅ → IMPLEMENTED + REGISTRY ALIGNED
+11. 3D & EFFECTS ✅
+12. ECOMMERCE ✅ → IMPLEMENTED
 
 - Zero new errors from registry changes
 - Pre-existing errors in converter.ts (toResponsive L1602, animation L1979) unchanged

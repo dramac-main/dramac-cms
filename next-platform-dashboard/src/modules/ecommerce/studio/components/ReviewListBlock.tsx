@@ -361,20 +361,6 @@ export const reviewListDefinition = {
   description: "Display product reviews with ratings, sort, and helpful votes",
   category: "ecommerce" as const,
   icon: "MessageSquare",
-  fields: {
-    showDistribution: {
-      type: "toggle" as const,
-      label: "Show Rating Distribution",
-      defaultValue: true,
-    },
-    pageSize: {
-      type: "number" as const,
-      label: "Reviews Per Page",
-      defaultValue: 10,
-    },
-  },
-  defaultProps: {
-    showDistribution: true,
-    pageSize: 10,
-  },
+  fields: {},
+  defaultProps: {},
 };

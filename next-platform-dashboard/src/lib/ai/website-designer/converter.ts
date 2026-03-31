@@ -756,6 +756,10 @@ function convertComponentToStudio(
     ProductDetailBlock: "ProductDetailBlock",
     CategoryHero: "CategoryHeroBlock",
     CategoryHeroBlock: "CategoryHeroBlock",
+    OrderTracking: "EcommerceOrderTracking",
+    EcommerceOrderTracking: "EcommerceOrderTracking",
+    CategoriesPage: "EcommerceCategoriesPage",
+    EcommerceCategoriesPage: "EcommerceCategoriesPage",
     BlogPreview: "BlogPreview",
     BlogGrid: "BlogPreview",
     BlogCards: "BlogPreview",
@@ -876,7 +880,7 @@ function convertComponentToStudio(
     "BookingForm",
     "BookingEmbed",
     "BookingStaffGrid",
-    // Module types — ecommerce (ALL 22 components)
+    // Module types — ecommerce (ALL 23 components)
     "EcommerceProductGrid",
     "EcommerceProductCard",
     "EcommerceProductCatalog",
@@ -898,6 +902,8 @@ function convertComponentToStudio(
     "EcommerceReviewList",
     "ProductDetailBlock",
     "CategoryHeroBlock",
+    "EcommerceOrderTracking",
+    "EcommerceCategoriesPage",
     "Link",
     "ButtonGroup",
     "Chip",
@@ -2481,7 +2487,7 @@ function transformPropsForStudio(
     "BookingForm",
     "BookingEmbed",
     "BookingStaffGrid",
-    // E-commerce module — all 22
+    // E-commerce module — all 23
     "EcommerceProductGrid",
     "EcommerceProductCard",
     "EcommerceProductCatalog",
@@ -2503,6 +2509,8 @@ function transformPropsForStudio(
     "EcommerceReviewList",
     "ProductDetailBlock",
     "CategoryHeroBlock",
+    "EcommerceOrderTracking",
+    "EcommerceCategoriesPage",
   ];
 
   if (MODULE_TYPES.includes(type)) {

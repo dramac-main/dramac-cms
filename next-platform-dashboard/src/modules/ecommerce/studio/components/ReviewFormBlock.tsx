@@ -297,14 +297,6 @@ export const reviewFormDefinition = {
   description: "Form for customers to submit product reviews with star ratings",
   category: "ecommerce" as const,
   icon: "MessageSquarePlus",
-  fields: {
-    requireEmail: {
-      type: "toggle" as const,
-      label: "Require Email",
-      defaultValue: false,
-    },
-  },
-  defaultProps: {
-    requireEmail: false,
-  },
+  fields: {},
+  defaultProps: {},
 };

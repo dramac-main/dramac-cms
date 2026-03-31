@@ -1051,74 +1051,583 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
   },
 
   // ==========================================================================
-  // E-COMMERCE
+  // E-COMMERCE — Product Display
   // ==========================================================================
   {
-    type: "ProductGrid",
+    type: "EcommerceProductGrid",
     label: "Product Grid",
     category: "ecommerce",
-    description: "Grid of products",
+    description:
+      "Responsive grid of product cards with configurable columns, source filtering, and card variants",
     acceptsChildren: false,
-    keywords: ["products", "shop", "store", "catalog"],
+    keywords: [
+      "products",
+      "shop",
+      "store",
+      "catalog",
+      "grid",
+      "product list",
+      "merchandise",
+    ],
     ai: {
-      description: "Responsive grid of product cards",
-      usageGuidelines: "Use on shop/store pages",
+      description:
+        "Responsive product grid with configurable columns (1–6), product source (featured/new/sale/category/manual), and card variants (card/minimal). Connects to live product data via siteId.",
+      usageGuidelines:
+        "Use on shop landing pages and category pages. Set source='featured' for homepage, source='category' with categoryId for category pages. Pair with SearchBar and FilterSidebar for full shop experience.",
+      suggestedWith: [
+        "EcommerceSearchBar",
+        "EcommerceFilterSidebar",
+        "EcommerceProductSort",
+        "EcommerceBreadcrumb",
+      ],
     },
   },
   {
-    type: "ProductCard",
+    type: "EcommerceProductCard",
     label: "Product Card",
     category: "ecommerce",
-    description: "Single product card",
+    description:
+      "Individual product card with image, price, rating, add-to-cart, and quick view",
     acceptsChildren: false,
-    keywords: ["product", "item", "card"],
+    keywords: [
+      "product",
+      "item",
+      "card",
+      "shop",
+      "buy",
+      "add to cart",
+      "product tile",
+    ],
     ai: {
-      description: "Individual product card with image, price, and CTA",
+      description:
+        "Product card with image, price, star rating, add-to-cart button, wishlist toggle, quick view, sale/stock badges. Variants: card, horizontal, minimal, compact. Hover effects: zoom, slide, fade, none.",
+      usageGuidelines:
+        "Use inside ProductGrid or standalone to feature a specific product. Set productId via the product selector field. Enable showQuickView for catalog browsing.",
     },
   },
   {
-    type: "ProductCategories",
-    label: "Product Categories",
+    type: "EcommerceProductCatalog",
+    label: "Product Catalog",
     category: "ecommerce",
-    description: "Category cards grid",
+    description:
+      "Full-featured product catalog with built-in filtering, sorting, search, and pagination",
     acceptsChildren: false,
-    keywords: ["categories", "collections", "departments"],
+    keywords: [
+      "catalog",
+      "products",
+      "shop",
+      "store",
+      "filter",
+      "sort",
+      "search",
+      "paginate",
+    ],
     ai: {
-      description: "Grid of product category cards",
+      description:
+        "Enhanced product grid with built-in price/category/brand filters, sort dropdown, search bar, pagination, and grid/list view toggle. All-in-one shop page component.",
+      usageGuidelines:
+        "Use as the primary shop page component. Includes everything needed for product browsing — no need to add separate SearchBar, FilterSidebar, or ProductSort components alongside it.",
     },
   },
   {
-    type: "CartSummary",
-    label: "Cart Summary",
-    category: "ecommerce",
-    description: "Shopping cart summary",
-    acceptsChildren: false,
-    keywords: ["cart", "basket", "checkout", "summary"],
-    ai: {
-      description: "Shopping cart summary component",
-    },
-  },
-  {
-    type: "FeaturedProducts",
+    type: "EcommerceFeaturedProducts",
     label: "Featured Products",
     category: "ecommerce",
-    description: "Featured products section",
+    description:
+      "Showcase section for featured, new, bestselling, or sale products with carousel, scroll, or hero-grid layouts",
     acceptsChildren: false,
-    keywords: ["featured", "popular", "bestsellers"],
+    keywords: [
+      "featured",
+      "popular",
+      "bestsellers",
+      "new arrivals",
+      "sale",
+      "products",
+      "carousel",
+      "showcase",
+    ],
     ai: {
-      description: "Showcase of featured/popular products",
+      description:
+        "Product showcase section with heading, subtitle, and view-all link. Display modes: carousel (swipeable with arrows/dots), scroll (horizontal scrollable row), hero-grid (featured layout). Sources: featured, new, bestselling, sale, category.",
+      usageGuidelines:
+        "Use on homepage for 'Featured Products', 'New Arrivals', 'On Sale' sections. Use carousel mode for 4+ products, hero-grid for 3–5 hero products. Set autoPlay for hands-free browsing.",
+      suggestedWith: ["Hero", "EcommerceProductCatalog"],
+    },
+  },
+
+  // ==========================================================================
+  // E-COMMERCE — Cart
+  // ==========================================================================
+  {
+    type: "EcommerceCartPage",
+    label: "Shopping Cart",
+    category: "ecommerce",
+    description:
+      "Full shopping cart page with item management, quantity controls, discount codes, and checkout button",
+    acceptsChildren: false,
+    keywords: [
+      "cart",
+      "basket",
+      "shopping cart",
+      "cart page",
+      "checkout",
+      "items",
+    ],
+    ai: {
+      description:
+        "Full-page shopping cart with item cards (quantity controls, remove), empty state, discount code input, subtotal/tax/total summary, and checkout button. Supports quotation mode redirect.",
+      usageGuidelines:
+        "Use on the /cart page. This is a full-page component — one per page. Pair with EcommerceBreadcrumb above it.",
+      suggestedWith: ["EcommerceBreadcrumb"],
     },
   },
   {
-    type: "CartIcon",
-    label: "Cart Icon",
+    type: "EcommerceCartDrawer",
+    label: "Cart Drawer",
     category: "ecommerce",
-    description: "Shopping cart icon with count",
+    description:
+      "Slide-out cart drawer with item preview and quick checkout access",
     acceptsChildren: false,
-    keywords: ["cart", "icon", "basket"],
+    keywords: [
+      "cart",
+      "drawer",
+      "slide out",
+      "side panel",
+      "mini cart",
+      "basket",
+    ],
     ai: {
-      description: "Cart icon button with item count badge",
-      usageGuidelines: "Use in navigation header",
+      description:
+        "Slide-out drawer showing cart items, totals, and checkout button. Triggered by a cart icon with badge count. Slides from left or right.",
+      usageGuidelines:
+        "Use in site headers/navigation for always-accessible cart preview. Prefer over MiniCart when you want a larger cart preview.",
+    },
+  },
+  {
+    type: "EcommerceMiniCart",
+    label: "Mini Cart",
+    category: "ecommerce",
+    description:
+      "Compact popover cart preview with item count badge and quick checkout",
+    acceptsChildren: false,
+    keywords: [
+      "cart",
+      "mini",
+      "popover",
+      "basket",
+      "icon",
+      "badge",
+      "cart summary",
+    ],
+    ai: {
+      description:
+        "Compact cart popover showing recent items (max 3), subtotal, and links to full cart and checkout. Triggered by cart icon button with item count badge.",
+      usageGuidelines:
+        "Use in navigation headers for quick cart access. Prefer over CartDrawer when space is limited. Shows max 3 items with link to full cart.",
+    },
+  },
+
+  // ==========================================================================
+  // E-COMMERCE — Checkout
+  // ==========================================================================
+  {
+    type: "EcommerceCheckoutPage",
+    label: "Checkout Page",
+    category: "ecommerce",
+    description:
+      "Multi-step checkout flow with shipping, payment, and order review",
+    acceptsChildren: false,
+    keywords: [
+      "checkout",
+      "payment",
+      "order",
+      "purchase",
+      "buy",
+      "shipping",
+      "billing",
+    ],
+    ai: {
+      description:
+        "Multi-step checkout: Step 1 (Information — email, phone, shipping address, shipping method), Step 2 (Payment — payment method, billing address, order notes), Step 3 (Review — confirm & pay). Supports guest checkout and mobile-optimised layout.",
+      usageGuidelines:
+        "Use on the /checkout page. Full-page component. Do not combine with other product/cart components on the same page.",
+    },
+  },
+  {
+    type: "EcommerceOrderConfirmation",
+    label: "Order Confirmation",
+    category: "ecommerce",
+    description:
+      "Order success page with order details, payment proof upload, and continue shopping link",
+    acceptsChildren: false,
+    keywords: [
+      "order",
+      "confirmation",
+      "success",
+      "thank you",
+      "receipt",
+      "purchase complete",
+    ],
+    ai: {
+      description:
+        "Order confirmation page showing order number, items, totals, shipping address, and payment status. Supports payment proof upload for bank transfers. Auto-loads order from URL param ?orderId=.",
+      usageGuidelines:
+        "Use on the /order-confirmation page. Reads orderId from URL search params automatically.",
+    },
+  },
+  {
+    type: "EcommerceOrderTracking",
+    label: "Order Tracking",
+    category: "ecommerce",
+    description:
+      "Order lookup and tracking page with email and order number search",
+    acceptsChildren: false,
+    keywords: [
+      "order",
+      "tracking",
+      "status",
+      "lookup",
+      "find order",
+      "shipment",
+    ],
+    ai: {
+      description:
+        "Order tracking page with email + order number lookup form. Shows order status timeline, shipping details, and item list. Checks localStorage for recent order ID.",
+      usageGuidelines:
+        "Use on the /order-tracking page. Full-page component for post-purchase order status checks.",
+    },
+  },
+
+  // ==========================================================================
+  // E-COMMERCE — Navigation & Discovery
+  // ==========================================================================
+  {
+    type: "EcommerceCategoryNav",
+    label: "Category Navigation",
+    category: "ecommerce",
+    description:
+      "Product category navigation with tree, grid, list, cards, and dropdown variants",
+    acceptsChildren: false,
+    keywords: [
+      "categories",
+      "collections",
+      "departments",
+      "navigation",
+      "category menu",
+      "shop nav",
+    ],
+    ai: {
+      description:
+        "Category navigation supporting tree (expandable hierarchy), grid (image cards), list (simple links), cards (styled cards), and dropdown variants. Shows product counts, images, and subcategories.",
+      usageGuidelines:
+        "Use on shop pages as sidebar or section navigation. Tree variant for deep hierarchies, grid for visual browsing, dropdown for compact headers.",
+      suggestedWith: [
+        "EcommerceProductGrid",
+        "EcommerceProductCatalog",
+        "EcommerceBreadcrumb",
+      ],
+    },
+  },
+  {
+    type: "EcommerceSearchBar",
+    label: "Product Search",
+    category: "ecommerce",
+    description:
+      "Product search input with live autocomplete, recent searches, and trending terms",
+    acceptsChildren: false,
+    keywords: [
+      "search",
+      "find",
+      "product search",
+      "autocomplete",
+      "search bar",
+      "lookup",
+    ],
+    ai: {
+      description:
+        "Product search bar with live autocomplete suggestions, recent search history, and trending search terms. Debounced input with configurable min search length.",
+      usageGuidelines:
+        "Use at the top of shop pages or in site headers. Set placeholder text to match your store's products.",
+      suggestedWith: [
+        "EcommerceProductGrid",
+        "EcommerceFilterSidebar",
+        "EcommerceProductSort",
+      ],
+    },
+  },
+  {
+    type: "EcommerceFilterSidebar",
+    label: "Product Filters",
+    category: "ecommerce",
+    description:
+      "Collapsible filter sidebar with price range, category, brand, stock, and rating filters",
+    acceptsChildren: false,
+    keywords: [
+      "filter",
+      "sidebar",
+      "price range",
+      "category filter",
+      "brand",
+      "facets",
+      "refine",
+    ],
+    ai: {
+      description:
+        "Filter sidebar with collapsible sections: price range slider, category checkboxes, brand checkboxes, stock availability toggle, rating filter, on-sale toggle.",
+      usageGuidelines:
+        "Use alongside ProductGrid or ProductCatalog on category/shop pages. Place in a sidebar layout. Enable collapsible sections for compact display.",
+      suggestedWith: [
+        "EcommerceProductGrid",
+        "EcommerceProductSort",
+        "EcommerceSearchBar",
+      ],
+    },
+  },
+  {
+    type: "EcommerceBreadcrumb",
+    label: "Breadcrumb Navigation",
+    category: "ecommerce",
+    description:
+      "Breadcrumb trail for e-commerce pages with auto-generation from URL path",
+    acceptsChildren: false,
+    keywords: [
+      "breadcrumb",
+      "navigation",
+      "trail",
+      "path",
+      "hierarchy",
+      "back",
+    ],
+    ai: {
+      description:
+        "Breadcrumb navigation with auto-generation from URL path, configurable separators (chevron/slash/arrow), and optional Home link. Supports manual item override.",
+      usageGuidelines:
+        "Use at the top of product detail, category, cart, and checkout pages. Enable autoGenerate for automatic breadcrumb trail.",
+      suggestedWith: [
+        "EcommerceProductCatalog",
+        "EcommerceCartPage",
+        "ProductDetailBlock",
+      ],
+    },
+  },
+  {
+    type: "EcommerceProductSort",
+    label: "Product Sort",
+    category: "ecommerce",
+    description:
+      "Sort dropdown for product listings with newest, price, and name options",
+    acceptsChildren: false,
+    keywords: ["sort", "order by", "sort by", "product sort", "arrange"],
+    ai: {
+      description:
+        "Product sort control with select, dropdown, or button variants. Options: newest, price low-to-high, price high-to-low, name A-Z.",
+      usageGuidelines:
+        "Use above product grids alongside search and result counts. Pair with ProductGrid or ProductCatalog.",
+      suggestedWith: ["EcommerceProductGrid", "EcommerceSearchBar"],
+    },
+  },
+
+  // ==========================================================================
+  // E-COMMERCE — Quotations
+  // ==========================================================================
+  {
+    type: "EcommerceQuoteRequest",
+    label: "Quote Request Form",
+    category: "ecommerce",
+    description:
+      "B2B quote request form with product selection, customer details, and pricing breakdown",
+    acceptsChildren: false,
+    keywords: [
+      "quote",
+      "request",
+      "B2B",
+      "quotation",
+      "rfq",
+      "estimate",
+      "proposal",
+    ],
+    ai: {
+      description:
+        "Quote request form with customer info (name, email, phone, company), product item builder, quantity inputs, notes field, and pricing breakdown. Auto-adds product from URL param ?product=ID.",
+      usageGuidelines:
+        "Use on quote request pages for B2B stores. Enable quotation mode in e-commerce settings to redirect product pages to this form instead of cart.",
+    },
+  },
+  {
+    type: "EcommerceQuoteList",
+    label: "Quote List",
+    category: "ecommerce",
+    description:
+      "List of customer quotations with status filtering and card/list/table layouts",
+    acceptsChildren: false,
+    keywords: [
+      "quotes",
+      "quotations",
+      "B2B",
+      "proposals",
+      "estimates",
+      "quote history",
+    ],
+    ai: {
+      description:
+        "Customer quote list with status filter dropdown, card/list/table variants, pagination, and empty state. Shows quote number, date, status badge, and total.",
+      usageGuidelines:
+        "Use on the /quotes page for customers to view their quotation history. Link to QuoteDetail for individual quote views.",
+      suggestedWith: ["EcommerceQuoteDetail"],
+    },
+  },
+  {
+    type: "EcommerceQuoteDetail",
+    label: "Quote Detail",
+    category: "ecommerce",
+    description:
+      "Detailed quotation view with items, pricing, accept/reject actions, and PDF download",
+    acceptsChildren: false,
+    keywords: [
+      "quote",
+      "detail",
+      "quotation",
+      "proposal",
+      "accept",
+      "reject",
+      "B2B",
+    ],
+    ai: {
+      description:
+        "Quote detail page showing items, pricing breakdown, customer info, activity log, and action buttons (accept/reject/counter). Supports print and PDF download. Auto-loads from URL params.",
+      usageGuidelines:
+        "Use on quote detail pages. Reads quoteId from URL params automatically. Enable actions for customer acceptance workflow.",
+    },
+  },
+
+  // ==========================================================================
+  // E-COMMERCE — Reviews
+  // ==========================================================================
+  {
+    type: "EcommerceReviewForm",
+    label: "Review Form",
+    category: "ecommerce",
+    description:
+      "Product review submission form with star rating, title, body, and customer info",
+    acceptsChildren: false,
+    keywords: [
+      "review",
+      "rating",
+      "feedback",
+      "stars",
+      "testimonial",
+      "comment",
+    ],
+    ai: {
+      description:
+        "Product review form with interactive 5-star rating, review title, body text, customer name, and optional email. Shows success state after submission.",
+      usageGuidelines:
+        "Use on product detail pages below product info, or on a dedicated review submission page. Pair with ReviewList to show existing reviews.",
+      suggestedWith: ["EcommerceReviewList", "ProductDetailBlock"],
+    },
+  },
+  {
+    type: "EcommerceReviewList",
+    label: "Review List",
+    category: "ecommerce",
+    description:
+      "Product reviews display with rating distribution, sorting, and helpful voting",
+    acceptsChildren: false,
+    keywords: [
+      "reviews",
+      "ratings",
+      "testimonials",
+      "feedback",
+      "stars",
+      "customer reviews",
+    ],
+    ai: {
+      description:
+        "Product review list with rating distribution bar chart, sort options (newest/oldest/highest/lowest/helpful), verified purchase badges, helpful voting, admin responses, and load-more pagination.",
+      usageGuidelines:
+        "Use on product detail pages to show customer reviews. Enable showDistribution for the star breakdown chart. Set pageSize for pagination.",
+      suggestedWith: ["EcommerceReviewForm", "ProductDetailBlock"],
+    },
+  },
+
+  // ==========================================================================
+  // E-COMMERCE — Dynamic Pages
+  // ==========================================================================
+  {
+    type: "ProductDetailBlock",
+    label: "Product Detail",
+    category: "ecommerce",
+    description:
+      "Full product detail page with gallery, variants, add-to-cart, reviews, and specifications",
+    acceptsChildren: false,
+    keywords: [
+      "product",
+      "detail",
+      "product page",
+      "gallery",
+      "variants",
+      "add to cart",
+      "pdp",
+    ],
+    ai: {
+      description:
+        "Complete product detail page with image gallery (zoom), variant selector, quantity input, add-to-cart/wishlist buttons, tabbed content (details/specifications/reviews), sticky add-to-cart bar, and quotation mode support.",
+      usageGuidelines:
+        "Use on /product/[slug] pages. Reads product slug from URL path automatically. Full-page component — pair with Breadcrumb above and FeaturedProducts below for related products.",
+      suggestedWith: [
+        "EcommerceBreadcrumb",
+        "EcommerceFeaturedProducts",
+        "EcommerceReviewList",
+      ],
+    },
+  },
+  {
+    type: "CategoryHeroBlock",
+    label: "Category Hero",
+    category: "ecommerce",
+    description:
+      "Hero banner for category pages with background image, overlay, and product count",
+    acceptsChildren: false,
+    keywords: [
+      "category",
+      "hero",
+      "banner",
+      "collection",
+      "department",
+      "header",
+    ],
+    ai: {
+      description:
+        "Category hero banner with background image, configurable overlay opacity, category name, description, and product count. Reads category slug from URL path.",
+      usageGuidelines:
+        "Use at the top of /category/[slug] pages. Pair with Breadcrumb and ProductCatalog below.",
+      suggestedWith: [
+        "EcommerceBreadcrumb",
+        "EcommerceProductCatalog",
+        "EcommerceFilterSidebar",
+      ],
+    },
+  },
+  {
+    type: "EcommerceCategoriesPage",
+    label: "Categories Page",
+    category: "ecommerce",
+    description:
+      "Browse-all-categories page with search, grid/list layouts, and subcategory display",
+    acceptsChildren: false,
+    keywords: [
+      "categories",
+      "collections",
+      "departments",
+      "browse",
+      "all categories",
+      "shop by category",
+    ],
+    ai: {
+      description:
+        "Full categories browsing page with search input, grid or list layout, subcategory display, product counts, category images, and descriptions. Configurable column count (2/3/4).",
+      usageGuidelines:
+        "Use on the /categories page. Full-page component for browsing all product categories. Grid layout with 3 columns works best for most stores.",
     },
   },
 

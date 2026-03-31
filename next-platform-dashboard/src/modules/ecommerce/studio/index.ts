@@ -161,26 +161,44 @@ const cartPageDefinition: Omit<ComponentDefinition, "render"> = {
   category: "ecommerce",
   icon: "ShoppingCart",
   fields: {
-    showContinueShopping: {
-      type: "toggle",
-      label: "Show Continue Shopping",
-      defaultValue: true,
+    title: {
+      type: "text",
+      label: "Cart Title",
+      defaultValue: "Shopping Cart",
     },
-    showDiscountInput: {
-      type: "toggle",
-      label: "Show Discount Code Input",
-      defaultValue: true,
-    },
-    checkoutUrl: {
+    checkoutHref: {
       type: "text",
       label: "Checkout URL",
       defaultValue: "/checkout",
     },
+    checkoutText: {
+      type: "text",
+      label: "Checkout Button Text",
+      defaultValue: "Proceed to Checkout",
+    },
+    shopLink: {
+      type: "text",
+      label: "Continue Shopping URL",
+      defaultValue: "/shop",
+    },
+    shopLinkText: {
+      type: "text",
+      label: "Continue Shopping Text",
+      defaultValue: "Continue Shopping",
+    },
+    showClearCart: {
+      type: "toggle",
+      label: "Show Clear Cart Button",
+      defaultValue: false,
+    },
   },
   defaultProps: {
-    showContinueShopping: true,
-    showDiscountInput: true,
-    checkoutUrl: "/checkout",
+    title: "Shopping Cart",
+    checkoutHref: "/checkout",
+    checkoutText: "Proceed to Checkout",
+    shopLink: "/shop",
+    shopLinkText: "Continue Shopping",
+    showClearCart: false,
   },
 };
 
@@ -191,17 +209,27 @@ const cartDrawerDefinition: Omit<ComponentDefinition, "render"> = {
   category: "ecommerce",
   icon: "ShoppingCart",
   fields: {
-    position: {
+    side: {
       type: "select",
-      label: "Position",
+      label: "Slide-in Side",
       options: [
         { label: "Right", value: "right" },
         { label: "Left", value: "left" },
       ],
       defaultValue: "right",
     },
+    checkoutHref: {
+      type: "text",
+      label: "Checkout URL",
+      defaultValue: "/checkout",
+    },
+    shopLink: {
+      type: "text",
+      label: "Continue Shopping URL",
+      defaultValue: "/shop",
+    },
   },
-  defaultProps: { position: "right" },
+  defaultProps: { side: "right", checkoutHref: "/checkout", shopLink: "/shop" },
 };
 
 const miniCartDefinition: Omit<ComponentDefinition, "render"> = {
@@ -211,22 +239,33 @@ const miniCartDefinition: Omit<ComponentDefinition, "render"> = {
   category: "ecommerce",
   icon: "ShoppingBag",
   fields: {
-    position: {
+    align: {
       type: "select",
-      label: "Position",
+      label: "Popover Alignment",
       options: [
-        { label: "Top Right", value: "top-right" },
-        { label: "Bottom Right", value: "bottom-right" },
+        { label: "Start", value: "start" },
+        { label: "Center", value: "center" },
+        { label: "End", value: "end" },
       ],
-      defaultValue: "top-right",
+      defaultValue: "end",
     },
-    showItemCount: {
-      type: "toggle",
-      label: "Show Item Count",
-      defaultValue: true,
+    maxItems: {
+      type: "number",
+      label: "Max Visible Items",
+      defaultValue: 5,
+    },
+    cartHref: {
+      type: "text",
+      label: "View Cart URL",
+      defaultValue: "/cart",
+    },
+    checkoutHref: {
+      type: "text",
+      label: "Checkout URL",
+      defaultValue: "/checkout",
     },
   },
-  defaultProps: { position: "top-right", showItemCount: true },
+  defaultProps: { align: "end", maxItems: 5, cartHref: "/cart", checkoutHref: "/checkout" },
 };
 
 const checkoutPageDefinition: Omit<ComponentDefinition, "render"> = {
@@ -236,18 +275,18 @@ const checkoutPageDefinition: Omit<ComponentDefinition, "render"> = {
   category: "ecommerce",
   icon: "CreditCard",
   fields: {
-    enableGuestCheckout: {
-      type: "toggle",
-      label: "Enable Guest Checkout",
-      defaultValue: true,
+    cartHref: {
+      type: "text",
+      label: "Back to Cart URL",
+      defaultValue: "/cart",
     },
-    showOrderSummary: {
-      type: "toggle",
-      label: "Show Order Summary",
-      defaultValue: true,
+    successHref: {
+      type: "text",
+      label: "Success Page URL",
+      defaultValue: "/order-confirmation",
     },
   },
-  defaultProps: { enableGuestCheckout: true, showOrderSummary: true },
+  defaultProps: { cartHref: "/cart", successHref: "/order-confirmation" },
 };
 
 const orderConfirmationDefinition: Omit<ComponentDefinition, "render"> = {
@@ -257,13 +296,18 @@ const orderConfirmationDefinition: Omit<ComponentDefinition, "render"> = {
   category: "ecommerce",
   icon: "CheckCircle",
   fields: {
-    showContinueShopping: {
-      type: "toggle",
-      label: "Show Continue Shopping",
-      defaultValue: true,
+    shopLink: {
+      type: "text",
+      label: "Continue Shopping URL",
+      defaultValue: "/shop",
+    },
+    trackingLink: {
+      type: "text",
+      label: "Order Tracking URL",
+      defaultValue: "/order-tracking",
     },
   },
-  defaultProps: { showContinueShopping: true },
+  defaultProps: { shopLink: "/shop", trackingLink: "/order-tracking" },
 };
 
 const orderTrackingDefinition: Omit<ComponentDefinition, "render"> = {
@@ -273,13 +317,13 @@ const orderTrackingDefinition: Omit<ComponentDefinition, "render"> = {
   category: "ecommerce",
   icon: "Search",
   fields: {
-    showRecentOrder: {
-      type: "toggle",
-      label: "Show Recent Order Link",
-      defaultValue: true,
+    shopLink: {
+      type: "text",
+      label: "Continue Shopping URL",
+      defaultValue: "/shop",
     },
   },
-  defaultProps: { showRecentOrder: true },
+  defaultProps: { shopLink: "/shop" },
 };
 
 const categoryNavDefinition: Omit<ComponentDefinition, "render"> = {
@@ -361,32 +405,44 @@ const filterSidebarDefinition: Omit<ComponentDefinition, "render"> = {
   category: "ecommerce",
   icon: "SlidersHorizontal",
   fields: {
-    showPriceFilter: {
+    showPriceRange: {
       type: "toggle",
       label: "Show Price Filter",
       defaultValue: true,
     },
-    showCategoryFilter: {
+    showCategories: {
       type: "toggle",
       label: "Show Category Filter",
       defaultValue: true,
     },
-    showStockFilter: {
+    showAvailability: {
       type: "toggle",
       label: "Show Stock Filter",
       defaultValue: true,
+    },
+    showRating: {
+      type: "toggle",
+      label: "Show Rating Filter",
+      defaultValue: false,
     },
     collapsible: {
       type: "toggle",
       label: "Collapsible Sections",
       defaultValue: true,
     },
+    defaultExpanded: {
+      type: "toggle",
+      label: "Expanded by Default",
+      defaultValue: true,
+    },
   },
   defaultProps: {
-    showPriceFilter: true,
-    showCategoryFilter: true,
-    showStockFilter: true,
+    showPriceRange: true,
+    showCategories: true,
+    showAvailability: true,
+    showRating: false,
     collapsible: true,
+    defaultExpanded: true,
   },
 };
 
@@ -419,19 +475,33 @@ const productSortDefinition: Omit<ComponentDefinition, "render"> = {
   category: "ecommerce",
   icon: "ArrowUpDown",
   fields: {
-    defaultSort: {
+    value: {
       type: "select",
       label: "Default Sort",
       options: [
+        { label: "Featured", value: "featured" },
         { label: "Newest", value: "newest" },
         { label: "Price: Low to High", value: "price-asc" },
         { label: "Price: High to Low", value: "price-desc" },
-        { label: "Name A-Z", value: "name-asc" },
+        { label: "Name: A to Z", value: "name-asc" },
+        { label: "Name: Z to A", value: "name-desc" },
+        { label: "Highest Rated", value: "rating" },
+        { label: "Best Selling", value: "best-selling" },
       ],
-      defaultValue: "newest",
+      defaultValue: "featured",
+    },
+    showLabel: {
+      type: "toggle",
+      label: "Show Sort Label",
+      defaultValue: true,
+    },
+    label: {
+      type: "text",
+      label: "Sort Label Text",
+      defaultValue: "Sort by",
     },
   },
-  defaultProps: { defaultSort: "newest" },
+  defaultProps: { value: "featured", showLabel: true, label: "Sort by" },
 };
 
 const quoteRequestDefinition: Omit<ComponentDefinition, "render"> = {
@@ -441,18 +511,56 @@ const quoteRequestDefinition: Omit<ComponentDefinition, "render"> = {
   category: "ecommerce",
   icon: "FileText",
   fields: {
-    showNotes: {
-      type: "toggle",
-      label: "Show Notes Field",
-      defaultValue: true,
+    variant: {
+      type: "select",
+      label: "Layout",
+      options: [
+        { label: "Default", value: "default" },
+        { label: "Compact", value: "compact" },
+        { label: "Sidebar", value: "sidebar" },
+      ],
+      defaultValue: "default",
+    },
+    title: {
+      type: "text",
+      label: "Form Title",
+      defaultValue: "Request a Quote",
+    },
+    description: {
+      type: "text",
+      label: "Form Description",
+      defaultValue: "",
     },
     requirePhone: {
       type: "toggle",
       label: "Require Phone Number",
       defaultValue: false,
     },
+    requireCompany: {
+      type: "toggle",
+      label: "Require Company Name",
+      defaultValue: false,
+    },
+    showItems: {
+      type: "toggle",
+      label: "Show Cart Items",
+      defaultValue: true,
+    },
+    showPricing: {
+      type: "toggle",
+      label: "Show Pricing",
+      defaultValue: true,
+    },
   },
-  defaultProps: { showNotes: true, requirePhone: false },
+  defaultProps: {
+    variant: "default",
+    title: "Request a Quote",
+    description: "",
+    requirePhone: false,
+    requireCompany: false,
+    showItems: true,
+    showPricing: true,
+  },
 };
 
 const quoteListDefinition: Omit<ComponentDefinition, "render"> = {
@@ -466,14 +574,46 @@ const quoteListDefinition: Omit<ComponentDefinition, "render"> = {
       type: "select",
       label: "Layout",
       options: [
-        { label: "Cards", value: "card" },
+        { label: "Cards", value: "cards" },
         { label: "List", value: "list" },
         { label: "Table", value: "table" },
       ],
-      defaultValue: "card",
+      defaultValue: "list",
+    },
+    showStatusFilter: {
+      type: "toggle",
+      label: "Show Status Filter",
+      defaultValue: true,
+    },
+    showEmptyState: {
+      type: "toggle",
+      label: "Show Empty State",
+      defaultValue: true,
+    },
+    title: {
+      type: "text",
+      label: "List Title",
+      defaultValue: "My Quotes",
+    },
+    emptyMessage: {
+      type: "text",
+      label: "Empty State Message",
+      defaultValue: "No quotes yet",
+    },
+    maxItems: {
+      type: "number",
+      label: "Max Visible Quotes",
+      defaultValue: 10,
     },
   },
-  defaultProps: { variant: "card" },
+  defaultProps: {
+    variant: "list",
+    showStatusFilter: true,
+    showEmptyState: true,
+    title: "My Quotes",
+    emptyMessage: "No quotes yet",
+    maxItems: 10,
+  },
 };
 
 const quoteDetailDefinition: Omit<ComponentDefinition, "render"> = {
@@ -482,8 +622,51 @@ const quoteDetailDefinition: Omit<ComponentDefinition, "render"> = {
   description: "Detailed view of a single quote with items and actions",
   category: "ecommerce",
   icon: "FileText",
-  fields: {},
-  defaultProps: {},
+  fields: {
+    variant: {
+      type: "select",
+      label: "Layout",
+      options: [
+        { label: "Default", value: "default" },
+        { label: "Compact", value: "compact" },
+        { label: "Print", value: "print" },
+      ],
+      defaultValue: "default",
+    },
+    showBackButton: {
+      type: "toggle",
+      label: "Show Back Button",
+      defaultValue: true,
+    },
+    backUrl: {
+      type: "text",
+      label: "Back URL",
+      defaultValue: "/quotes",
+    },
+    showCustomerInfo: {
+      type: "toggle",
+      label: "Show Customer Info",
+      defaultValue: true,
+    },
+    showActivity: {
+      type: "toggle",
+      label: "Show Activity Log",
+      defaultValue: true,
+    },
+    enableActions: {
+      type: "toggle",
+      label: "Enable Quote Actions",
+      defaultValue: true,
+    },
+  },
+  defaultProps: {
+    variant: "default",
+    showBackButton: true,
+    backUrl: "/quotes",
+    showCustomerInfo: true,
+    showActivity: true,
+    enableActions: true,
+  },
 };
 
 // =============================================================================

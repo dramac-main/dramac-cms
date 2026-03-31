@@ -1,11 +1,77 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: March 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅ + **LIVE CHAT RUNTIME FIXES (AI auto-response + file uploads)** ✅ + **PER-ORDER CONVERSATION ISOLATION** ✅ + **PER-ORDER CHAT HARDENING AUDIT (10 bugs fixed, 0 TS errors)** ✅ + **CATEGORIES PAGE + DARK MODE POLISH** ✅ + **LIVE CHAT OVERHAUL + ECOMMERCE FIXES** ✅ + **CANVAS IFRAME RENDERING FIDELITY FIXES** ✅ + **TYPOGRAPHY COMPONENTS OVERHAUL (4 enhanced + 5 new, CSS var type scale)** ✅ + **BUTTON COMPONENTS MASTER PLAN (Phases 1-5: renders, registrations, converter, metadata, CTARender composition)** ✅ + **MARKETING COMPONENTS — FULL IMPLEMENTATION + REGISTRY ALIGNMENT (5 components, all paths)** ✅
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅ + **LIVE CHAT RUNTIME FIXES (AI auto-response + file uploads)** ✅ + **PER-ORDER CONVERSATION ISOLATION** ✅ + **PER-ORDER CHAT HARDENING AUDIT (10 bugs fixed, 0 TS errors)** ✅ + **CATEGORIES PAGE + DARK MODE POLISH** ✅ + **LIVE CHAT OVERHAUL + ECOMMERCE FIXES** ✅ + **CANVAS IFRAME RENDERING FIDELITY FIXES** ✅ + **TYPOGRAPHY COMPONENTS OVERHAUL (4 enhanced + 5 new, CSS var type scale)** ✅ + **BUTTON COMPONENTS MASTER PLAN (Phases 1-5: renders, registrations, converter, metadata, CTARender composition)** ✅ + **MARKETING COMPONENTS — FULL IMPLEMENTATION + REGISTRY ALIGNMENT (5 components, all paths)** ✅ + **ECOMMERCE COMPONENTS OVERHAUL — CONVERTER, METADATA, DEFINITION ALIGNMENT (3 files, 23 metadata entries, 6 definitions fixed)** ✅
 
 ---
 
-## Latest Update: Marketing Components — REGISTRY ALIGNMENT COMPLETE ✅
+## Latest Update: E-Commerce Components Overhaul — COMPLETE ✅
+
+### What Was Done
+
+Implemented the E-Commerce Components Master Plan across 3 files:
+
+**Phase 3 — Converter & Metadata:**
+- `converter.ts`: Added `OrderTracking` → `EcommerceOrderTracking` and `CategoriesPage` → `EcommerceCategoriesPage` aliases to typeMap, KNOWN_REGISTRY_TYPES, and MODULE_TYPES
+- `component-metadata.ts`: Replaced 6 stale entries with 23 comprehensive entries (rich descriptions, keywords, suggestedWith, usageGuidelines)
+
+**Phase 2 — Definition-Render Alignment (10 mismatches fixed):**
+- CartPage: `checkoutUrl` → `checkoutHref` + 5 new fields matching render props
+- CartDrawer: `position` → `side` + 2 new fields
+- MiniCart: `position` → `align` (with correct values), removed phantom `showItemCount`, added 3 real fields
+- CheckoutPage: replaced 2 phantom toggle fields with actual `cartHref` + `successHref`
+- OrderTracking: replaced phantom `showRecentOrder` with actual `shopLink`
+- ProductSort: `defaultSort` → `value`, expanded from 4 to 8 sort options, added `showLabel` + `label`
+
+**Phase 1 & 4 — Brand Colours & Dark Mode (No Changes Needed):**
+- All 67+ e-commerce components already use design tokens (`bg-primary`, `text-foreground`, etc.)
+- Only payment card brand colors remain hardcoded (intentional)
+- Zero `dark:` prefixes — CSS variables handle dark mode automatically
+
+### Key Discovery
+The brand color pipeline is fully operational: `brand-colors.ts` → `renderer.tsx` CSS variable injection → Tailwind v4 token classes. E-commerce components were built correctly from the start.
+
+---
+
+## Previous Update: 3D & Effects Components Master Plan — COMPLETE ✅
+
+### What Was Done
+
+Created the **3D & Effects Components Master Plan** document (`docs/3D-EFFECTS-COMPONENTS-MASTER-PLAN.md`, v1.0) — the 11th master plan in the documentation series.
+
+**Document contents (21 sections):**
+
+- Section 0: Implementation Blueprint — file map (17 files), component inventory (12 components), 9 supporting effect systems, props pipeline, NPM packages, demo route
+- Section 1: Current State Audit — 12/12 registered, 10 critical issues (P1-P3), render vs registry field gap (45-52 unused fields per premium component)
+- Section 2: Industry Benchmark — vs Webflow/Framer/Squarespace/Elementor (16 features compared)
+- Section 3: Architecture Principles — 3-layer architecture (component→render→effect system), 8 performance rules, GPU-accelerated-only mandate
+- Section 4: 3D Card Components — CardFlip3D (60 fields, 12 groups), TiltCard (55 fields, 10 groups), GlassCard (55 fields, 12 groups)
+- Section 5: Background & Ambience — ParticleBackground (60 fields, 11 groups, canvas-based), Parallax (multi-layer)
+- Section 6: Scroll & Animation — Animate (nested entrance/loop/scroll/stagger), ScrollAnimate (55 fields, 10 animations), ScrollSection, StickyContainer
+- Section 7: Text Effects — Typewriter (typing state machine)
+- Section 8: Cursor & Interaction — CursorEffect (4 types), Tilt3DContainer
+- Sections 10-12: Supporting effect systems (hooks, advanced fields, animation presets, brand config)
+- Sections 13-14: Dark mode & accessibility (100% prefers-reduced-motion compliance)
+- Section 15-16: AI Designer integration (no aliases, no normalizers), registry/converter alignment
+- Section 17: Gap analysis — 5 installed-but-unused packages (~1.7MB), 14 missing components, 21 missing render features
+- Section 18: 6 implementation phases (P0: render gap closure → P3: cursor expansion)
+- Section 19: Testing & quality gates (10 per-component tests, 5 performance benchmarks)
+- Section 20: AI Quick Reference — all 12 components' complete field lists
+- Section 21: 10 implementation guard rails
+
+**Key findings documented:**
+
+- P1: Three.js, @react-three/fiber, @react-three/drei (~1.6MB) installed with ZERO component usage
+- P1: @splinetool/react-spline installed with ZERO implementation
+- P1: LottiePlayer is placeholder only (animated gradient fallback, no real Lottie)
+- P0: 5 premium components have 55-65 registry fields each but renders only use 10-15
+- No typeMap aliases for any effects components
+- No normalizers for any effects components
+- Category split across 3 categories (3d, layout, interactive)
+
+---
+
+## Previous Update: Marketing Components — REGISTRY ALIGNMENT COMPLETE ✅
 
 ### What Was Done
 
@@ -58,20 +124,21 @@ Created the **E-Commerce Components Master Plan** document (`docs/ECOMMERCE-COMP
 - 19 components missing AI metadata in component-metadata.ts
 - 8 Definition→Render field mismatches (silently ignored fields)
 
-### All 10 Master Plan Documents Complete
+### All 11 Master Plan Documents Complete
 
-| #   | Document                                | Status                |
-| --- | --------------------------------------- | --------------------- |
-| 1   | LAYOUT-COMPONENTS-MASTER-PLAN.md        | ✅                    |
-| 2   | TYPOGRAPHY-COMPONENTS-MASTER-PLAN.md    | ✅                    |
-| 3   | BUTTONS-COMPONENTS-MASTER-PLAN.md       | ✅                    |
-| 4   | MEDIA-COMPONENTS-MASTER-PLAN.md         | ✅                    |
-| 5   | SECTIONS-COMPONENTS-MASTER-PLAN.md      | ✅ v2.0               |
-| 6   | NAVIGATION-COMPONENTS-MASTER-PLAN.md    | ✅ v1.1               |
-| 7   | FORMS-COMPONENTS-MASTER-PLAN.md         | ✅ v1.1 → IMPLEMENTED |
-| 8   | CONTENT-COMPONENTS-MASTER-PLAN.md       | ✅ v2.0 → IMPLEMENTED |
-| 9   | INTERACTIVE-COMPONENTS-MASTER-PLAN.md   | ✅ v1.0               |
-| 10  | **ECOMMERCE-COMPONENTS-MASTER-PLAN.md** | **✅ v1.1**           |
+| #   | Document                                    | Status                |
+| --- | ------------------------------------------- | --------------------- |
+| 1   | LAYOUT-COMPONENTS-MASTER-PLAN.md            | ✅                    |
+| 2   | TYPOGRAPHY-COMPONENTS-MASTER-PLAN.md        | ✅                    |
+| 3   | BUTTONS-COMPONENTS-MASTER-PLAN.md           | ✅                    |
+| 4   | MEDIA-COMPONENTS-MASTER-PLAN.md             | ✅                    |
+| 5   | SECTIONS-COMPONENTS-MASTER-PLAN.md          | ✅ v2.0               |
+| 6   | NAVIGATION-COMPONENTS-MASTER-PLAN.md        | ✅ v1.1               |
+| 7   | FORMS-COMPONENTS-MASTER-PLAN.md             | ✅ v1.1 → IMPLEMENTED |
+| 8   | CONTENT-COMPONENTS-MASTER-PLAN.md           | ✅ v2.0 → IMPLEMENTED |
+| 9   | INTERACTIVE-COMPONENTS-MASTER-PLAN.md       | ✅ v1.0               |
+| 10  | ECOMMERCE-COMPONENTS-MASTER-PLAN.md         | ✅ v1.1               |
+| 11  | **3D-EFFECTS-COMPONENTS-MASTER-PLAN.md**    | **✅ v1.0**           |
 
 ---
 
