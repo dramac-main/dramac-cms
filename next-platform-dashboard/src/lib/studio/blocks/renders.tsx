@@ -421,7 +421,12 @@ export function SectionRender({
       ? darkDefaults.borderColor
       : borderColor;
   }
-  if (hasExplicitText) sectionStyle.color = textColor;
+  if (hasExplicitText) {
+    // If there's a bg image and the text color is dark, it would be invisible → force white
+    sectionStyle.color =
+      bgImageUrl && isDarkBackground(textColor!) ? "#ffffff" : textColor;
+  } else if (hasExplicitBg && darkBg) sectionStyle.color = "#f9fafb";
+  else if (bgImageUrl) sectionStyle.color = "#ffffff";
 
   // Shape divider renderer
   const renderShapeDivider = (
@@ -3528,11 +3533,21 @@ export function TextRender({
   const truncateClass = (() => {
     if (!truncate) return "";
     if (truncate === true || truncate === 1) return "truncate";
-    return `line-clamp-${truncate}`;
+    const clampMap: Record<number, string> = {
+      2: "line-clamp-2",
+      3: "line-clamp-3",
+      4: "line-clamp-4",
+      5: "line-clamp-5",
+      6: "line-clamp-6",
+    };
+    return clampMap[truncate as number] || "line-clamp-3";
   })();
 
   // Column classes
-  const columnClass = columns && columns > 1 ? `columns-${columns} gap-8` : "";
+  const columnClass =
+    columns && columns > 1
+      ? `${({ 2: "columns-2", 3: "columns-3" } as Record<number, string>)[columns] || "columns-2"} gap-8`
+      : "";
 
   // Drop cap styles
   const dropCapCSS = dropCap
@@ -4373,7 +4388,10 @@ export function ListRender({
     relaxed: "space-y-4",
   }[spacing];
 
-  const columnClass = columns > 1 ? `grid grid-cols-${columns} gap-x-8` : "";
+  const columnClass =
+    columns > 1
+      ? `grid ${({ 2: "grid-cols-2", 3: "grid-cols-3" } as Record<number, string>)[columns] || "grid-cols-2"} gap-x-8`
+      : "";
 
   const resolvedIconColor = iconColor || color || undefined;
 
@@ -7269,6 +7287,19 @@ export function HeroRender({
   const heroImageUrl = getImageUrl(image);
   const heroImageAlt = imageAlt || getImageAlt(image, "Hero image");
   const dark = isDarkBackground(backgroundColor);
+  const hasBackgroundImage = !!bgImageUrl;
+  // When there's a background image (always darkened by overlay), treat as effectively dark
+  const effectivelyDark = dark || hasBackgroundImage;
+
+  // Dark-aware text color: force light text when bg image makes section visually dark.
+  // Brand injection may set textColor to a dark foreground — override when invisible.
+  const resolvedTextColor = (() => {
+    if (textColor) {
+      if (hasBackgroundImage && isDarkBackground(textColor)) return "#ffffff";
+      return textColor;
+    }
+    return effectivelyDark ? "#ffffff" : undefined;
+  })();
 
   const pyClasses = paddingYMapUtil[paddingY] || paddingYMapUtil.lg;
   const pxClasses = paddingXMapUtil[paddingX] || paddingXMapUtil.md;
@@ -7333,9 +7364,24 @@ export function HeroRender({
   }[primaryButtonRadius];
 
   const resolvedBtnColor =
-    primaryButtonColor || (dark ? "#e5a956" : "var(--brand-primary, #3b82f6)");
-  const resolvedSecondaryColor =
-    secondaryButtonColor || textColor || (dark ? "#ffffff" : "#374151");
+    primaryButtonColor && primaryButtonColor !== "transparent"
+      ? primaryButtonColor
+      : effectivelyDark
+        ? "#e5a956"
+        : "var(--brand-primary, #3b82f6)";
+  const resolvedSecondaryColor = (() => {
+    // "transparent" is never valid for text/border color
+    const sec =
+      secondaryButtonColor === "transparent"
+        ? undefined
+        : secondaryButtonColor;
+    if (sec) {
+      // If bg image and the color is dark, it would be invisible → force white
+      if (hasBackgroundImage && isDarkBackground(sec)) return "#ffffff";
+      return sec;
+    }
+    return resolvedTextColor || (effectivelyDark ? "#ffffff" : "#374151");
+  })();
 
   const animationClasses = animateOnLoad
     ? {
@@ -7457,21 +7503,21 @@ export function HeroRender({
           {renderBadge(contentAlign === "center")}
           <h1
             className={`${titleSizeClasses} font-bold mb-4 md:mb-6 leading-tight`}
-            style={{ color: textColor }}
+            style={{ color: resolvedTextColor }}
           >
             {title}
           </h1>
           {subtitle && (
             <p
               className="text-lg md:text-xl lg:text-2xl font-medium mb-2 md:mb-4 opacity-90"
-              style={{ color: textColor }}
+              style={{ color: resolvedTextColor }}
             >
               {subtitle}
             </p>
           )}
           <p
             className={`text-base md:text-lg lg:text-xl ${descMaxWidthClasses} mb-6 md:mb-8 opacity-80 leading-relaxed`}
-            style={{ color: textColor }}
+            style={{ color: resolvedTextColor }}
           >
             {description}
           </p>
@@ -7522,21 +7568,21 @@ export function HeroRender({
             {renderBadge(false)}
             <h1
               className={`${titleSizeClasses} font-bold mb-4 md:mb-6 leading-tight`}
-              style={{ color: textColor }}
+              style={{ color: resolvedTextColor }}
             >
               {title}
             </h1>
             {subtitle && (
               <p
                 className="text-lg md:text-xl font-medium mb-2 opacity-90"
-                style={{ color: textColor }}
+                style={{ color: resolvedTextColor }}
               >
                 {subtitle}
               </p>
             )}
             <p
               className="text-base md:text-lg mb-6 md:mb-8 opacity-80 leading-relaxed"
-              style={{ color: textColor }}
+              style={{ color: resolvedTextColor }}
             >
               {description}
             </p>
@@ -8056,12 +8102,17 @@ export function FeaturesRender({
     full: "max-w-full",
   }[maxWidth];
 
-  // Column classes
+  // Column classes — use static lookup so Tailwind JIT can detect them
+  const mobileColsClass =
+    ({ 1: "grid-cols-1", 2: "grid-cols-2" } as Record<number, string>)[
+      mobileColumns
+    ] || "grid-cols-1";
+
   const columnClasses = {
-    2: `grid-cols-${mobileColumns} md:grid-cols-2`,
-    3: `grid-cols-${mobileColumns} md:grid-cols-2 lg:grid-cols-3`,
-    4: `grid-cols-${mobileColumns} md:grid-cols-2 lg:grid-cols-4`,
-    5: `grid-cols-${mobileColumns} md:grid-cols-3 lg:grid-cols-5`,
+    2: `${mobileColsClass} md:grid-cols-2`,
+    3: `${mobileColsClass} md:grid-cols-2 lg:grid-cols-3`,
+    4: `${mobileColsClass} md:grid-cols-2 lg:grid-cols-4`,
+    5: `${mobileColsClass} md:grid-cols-3 lg:grid-cols-5`,
   }[columns];
 
   // Title size classes
@@ -8948,7 +8999,15 @@ export function CTARender({
   // The AI generates both buttonColor and primaryButtonColor naming conventions.
   // We accept both and compute contrast-safe defaults when neither is set.
   // ==========================================================================
+
+  // Normalize image values early — needed for background-aware color resolution
+  const bgImageUrl = getImageUrl(backgroundImage);
+  const ctaImageUrl = getImageUrl(image);
+  const hasBackgroundImage = !!bgImageUrl;
+
   const bgIsLight = (() => {
+    // Background image with overlay always reads as dark (not light)
+    if (hasBackgroundImage) return false;
     const bg = String(backgroundColor || "#ffffff");
     if (bg === "transparent" || !bg.startsWith("#") || bg.length < 4)
       return false;
@@ -8976,9 +9035,18 @@ export function CTARender({
     primaryButtonTextColor ||
     (bgIsLight ? "#ffffff" : "#0f172a");
 
-  // Normalize image values
-  const bgImageUrl = getImageUrl(backgroundImage);
-  const ctaImageUrl = getImageUrl(image);
+  // Auto-resolve textColor for contrast when default conflicts with background.
+  // When a background image is present (overlaid), force light text if the
+  // brand-injected textColor would be invisible on the dark image.
+  const resolvedTextColor = (() => {
+    if (hasBackgroundImage) {
+      if (!textColor || isDarkBackground(textColor)) return "#ffffff";
+      return textColor;
+    }
+    if (textColor === "#ffffff" && bgIsLight) return "#0f172a";
+    if (textColor === "#000000" && !bgIsLight) return "#ffffff";
+    return textColor;
+  })();
 
   // Size classes
   const titleSizeClasses = {
@@ -9011,6 +9079,26 @@ export function CTARender({
     xl: "max-w-2xl",
     full: "max-w-none",
   }[descriptionMaxWidth];
+
+  // Subtitle size/weight class maps (avoids dynamic interpolation for Tailwind scanner)
+  const subtitleSizeClass =
+    (
+      {
+        xs: "text-xs",
+        sm: "text-sm",
+        md: "text-base",
+        base: "text-base",
+        lg: "text-lg",
+      } as Record<string, string>
+    )[subtitleSize] || "text-sm";
+  const subtitleWeightClass =
+    (
+      {
+        normal: "font-normal",
+        medium: "font-medium",
+        semibold: "font-semibold",
+      } as Record<string, string>
+    )[subtitleWeight] || "font-normal";
 
   const paddingYClasses = {
     none: "py-0",
@@ -9321,8 +9409,19 @@ export function CTARender({
     href: secondaryButtonLink,
     variant: secondaryButtonVariant,
     size: (secondaryButtonSize || buttonSize) as ButtonProps["size"],
-    backgroundColor: secondaryButtonColor || textColor,
-    textColor: secondaryButtonTextColor || secondaryButtonColor || textColor,
+    backgroundColor: (() => {
+      const c = secondaryButtonColor || resolvedTextColor;
+      if (c === "transparent") return resolvedTextColor;
+      if (hasBackgroundImage && c && isDarkBackground(c)) return "#ffffff";
+      return c;
+    })(),
+    textColor: (() => {
+      const c =
+        secondaryButtonTextColor || secondaryButtonColor || resolvedTextColor;
+      if (c === "transparent") return resolvedTextColor;
+      if (hasBackgroundImage && c && isDarkBackground(c)) return "#ffffff";
+      return c;
+    })(),
     borderRadius: secondaryButtonRadius as ButtonProps["borderRadius"],
     iconName: secondaryButtonIcon !== "none" ? secondaryButtonIcon : undefined,
     iconPosition: "right",
@@ -9380,22 +9479,22 @@ export function CTARender({
               {badgePosition === "top" && <BadgeElement />}
               {subtitle && (
                 <p
-                  className={`text-${subtitleSize} font-${subtitleWeight} uppercase tracking-wider mb-2`}
-                  style={{ color: subtitleColor || textColor }}
+                  className={`${subtitleSizeClass} ${subtitleWeightClass} uppercase tracking-wider mb-2`}
+                  style={{ color: subtitleColor || resolvedTextColor }}
                 >
                   {subtitle}
                 </p>
               )}
               <h2
                 className={`${titleSizeClasses} ${titleWeightClasses} mb-4`}
-                style={{ color: titleColor || textColor }}
+                style={{ color: titleColor || resolvedTextColor }}
               >
                 {title}
               </h2>
               {description && (
                 <p
                   className={`${descriptionSizeClasses} ${descriptionMaxWidthClasses} mb-6 opacity-90`}
-                  style={{ color: descriptionColor || textColor }}
+                  style={{ color: descriptionColor || resolvedTextColor }}
                 >
                   {description}
                 </p>
@@ -9454,22 +9553,22 @@ export function CTARender({
             {badgePosition === "top" && <BadgeElement />}
             {subtitle && (
               <p
-                className={`text-${subtitleSize} font-${subtitleWeight} uppercase tracking-wider mb-2`}
-                style={{ color: subtitleColor || textColor }}
+                className={`${subtitleSizeClass} ${subtitleWeightClass} uppercase tracking-wider mb-2`}
+                style={{ color: subtitleColor || resolvedTextColor }}
               >
                 {subtitle}
               </p>
             )}
             <h2
               className={`${titleSizeClasses} ${titleWeightClasses} mb-4`}
-              style={{ color: titleColor || textColor }}
+              style={{ color: titleColor || resolvedTextColor }}
             >
               {title}
             </h2>
             {description && (
               <p
                 className={`${descriptionSizeClasses} ${descriptionMaxWidthClasses} mb-8 opacity-90 mx-auto`}
-                style={{ color: descriptionColor || textColor }}
+                style={{ color: descriptionColor || resolvedTextColor }}
               >
                 {description}
               </p>
@@ -9536,22 +9635,22 @@ export function CTARender({
               {badgePosition === "top" && <BadgeElement />}
               {subtitle && (
                 <p
-                  className={`text-${subtitleSize} font-${subtitleWeight} uppercase tracking-wider mb-2`}
-                  style={{ color: subtitleColor || textColor }}
+                  className={`${subtitleSizeClass} ${subtitleWeightClass} uppercase tracking-wider mb-2`}
+                  style={{ color: subtitleColor || resolvedTextColor }}
                 >
                   {subtitle}
                 </p>
               )}
               <h2
                 className={`${titleSizeClasses} ${titleWeightClasses} mb-4`}
-                style={{ color: titleColor || textColor }}
+                style={{ color: titleColor || resolvedTextColor }}
               >
                 {title}
               </h2>
               {description && (
                 <p
                   className={`${descriptionSizeClasses} ${descriptionMaxWidthClasses} mb-8 opacity-90 mx-auto`}
-                  style={{ color: descriptionColor || textColor }}
+                  style={{ color: descriptionColor || resolvedTextColor }}
                 >
                   {description}
                 </p>
@@ -9597,22 +9696,22 @@ export function CTARender({
           {badgePosition === "top" && <BadgeElement />}
           {subtitle && (
             <p
-              className={`text-${subtitleSize} font-${subtitleWeight} uppercase tracking-wider mb-2`}
-              style={{ color: subtitleColor || textColor }}
+              className={`${subtitleSizeClass} ${subtitleWeightClass} uppercase tracking-wider mb-2`}
+              style={{ color: subtitleColor || resolvedTextColor }}
             >
               {subtitle}
             </p>
           )}
           <h2
             className={`${titleSizeClasses} ${titleWeightClasses} mb-4 ${contentWidthClasses}`}
-            style={{ color: titleColor || textColor }}
+            style={{ color: titleColor || resolvedTextColor }}
           >
             {title}
           </h2>
           {description && (
             <p
               className={`${descriptionSizeClasses} ${descriptionMaxWidthClasses} mb-8 opacity-90`}
-              style={{ color: descriptionColor || textColor }}
+              style={{ color: descriptionColor || resolvedTextColor }}
             >
               {description}
             </p>
@@ -9653,22 +9752,22 @@ export function CTARender({
         {badgePosition === "top" && <BadgeElement />}
         {subtitle && (
           <p
-            className={`text-${subtitleSize} font-${subtitleWeight} uppercase tracking-wider mb-2`}
-            style={{ color: subtitleColor || textColor }}
+            className={`${subtitleSizeClass} ${subtitleWeightClass} uppercase tracking-wider mb-2`}
+            style={{ color: subtitleColor || resolvedTextColor }}
           >
             {subtitle}
           </p>
         )}
         <h2
           className={`${titleSizeClasses} ${titleWeightClasses} mb-4 md:mb-6`}
-          style={{ color: titleColor || textColor }}
+          style={{ color: titleColor || resolvedTextColor }}
         >
           {title}
         </h2>
         {description && (
           <p
             className={`${descriptionSizeClasses} ${descriptionMaxWidthClasses} mb-6 md:mb-8 opacity-90 mx-auto`}
-            style={{ color: descriptionColor || textColor }}
+            style={{ color: descriptionColor || resolvedTextColor }}
           >
             {description}
           </p>
@@ -11818,13 +11917,21 @@ export function StatsRender({
     full: "max-w-full",
   }[maxWidth];
 
-  // Column classes
+  // Column classes — use static lookup so Tailwind JIT can detect them
+  const mobileColsClass =
+    (
+      { 1: "grid-cols-1", 2: "grid-cols-2", 3: "grid-cols-3" } as Record<
+        number,
+        string
+      >
+    )[mobileColumns] || "grid-cols-2";
+
   const columnClasses = {
-    2: `grid-cols-${mobileColumns} md:grid-cols-2`,
-    3: `grid-cols-${mobileColumns} md:grid-cols-3`,
-    4: `grid-cols-${mobileColumns} md:grid-cols-4`,
-    5: `grid-cols-${mobileColumns} md:grid-cols-5`,
-    6: `grid-cols-${mobileColumns} md:grid-cols-3 lg:grid-cols-6`,
+    2: `${mobileColsClass} md:grid-cols-2`,
+    3: `${mobileColsClass} md:grid-cols-3`,
+    4: `${mobileColsClass} md:grid-cols-4`,
+    5: `${mobileColsClass} md:grid-cols-5`,
+    6: `${mobileColsClass} md:grid-cols-3 lg:grid-cols-6`,
   }[columns];
 
   // Title size classes
@@ -12693,7 +12800,7 @@ export function TimelineRender({
       />
 
       <div
-        className={`grid grid-cols-2 md:grid-cols-${Math.min(items.length, 4)} ${gapClasses}`}
+        className={`grid grid-cols-2 ${({ 1: "md:grid-cols-1", 2: "md:grid-cols-2", 3: "md:grid-cols-3", 4: "md:grid-cols-4" } as Record<number, string>)[Math.min(items.length, 4)] || "md:grid-cols-4"} ${gapClasses}`}
       >
         {items.map((item, i) => (
           <div
@@ -14414,13 +14521,18 @@ export function TeamRender({
     full: "max-w-full",
   }[maxWidth];
 
-  // Column classes
+  // Column classes — use static lookup so Tailwind JIT can detect them
+  const mobileColsClass =
+    ({ 1: "grid-cols-1", 2: "grid-cols-2" } as Record<number, string>)[
+      mobileColumns
+    ] || "grid-cols-1";
+
   const columnClasses = {
-    2: `grid-cols-${mobileColumns} md:grid-cols-2`,
-    3: `grid-cols-${mobileColumns} md:grid-cols-3`,
-    4: `grid-cols-${mobileColumns} md:grid-cols-2 lg:grid-cols-4`,
-    5: `grid-cols-${mobileColumns} md:grid-cols-3 lg:grid-cols-5`,
-    6: `grid-cols-${mobileColumns} md:grid-cols-3 lg:grid-cols-6`,
+    2: `${mobileColsClass} md:grid-cols-2`,
+    3: `${mobileColsClass} md:grid-cols-3`,
+    4: `${mobileColsClass} md:grid-cols-2 lg:grid-cols-4`,
+    5: `${mobileColsClass} md:grid-cols-3 lg:grid-cols-5`,
+    6: `${mobileColsClass} md:grid-cols-3 lg:grid-cols-6`,
   }[columns];
 
   // Title size classes
@@ -15658,13 +15770,18 @@ export function GalleryRender({
     full: "max-w-full",
   }[maxWidth];
 
-  // Column classes
+  // Column classes — use static lookup so Tailwind JIT can detect them
+  const mobileColsClass =
+    ({ 1: "grid-cols-1", 2: "grid-cols-2" } as Record<number, string>)[
+      mobileColumns
+    ] || "grid-cols-1";
+
   const columnClasses = {
-    2: `grid-cols-${mobileColumns} md:grid-cols-2`,
-    3: `grid-cols-${mobileColumns} md:grid-cols-3`,
-    4: `grid-cols-${mobileColumns} md:grid-cols-2 lg:grid-cols-4`,
-    5: `grid-cols-${mobileColumns} md:grid-cols-3 lg:grid-cols-5`,
-    6: `grid-cols-${mobileColumns} md:grid-cols-3 lg:grid-cols-6`,
+    2: `${mobileColsClass} md:grid-cols-2`,
+    3: `${mobileColsClass} md:grid-cols-3`,
+    4: `${mobileColsClass} md:grid-cols-2 lg:grid-cols-4`,
+    5: `${mobileColsClass} md:grid-cols-3 lg:grid-cols-5`,
+    6: `${mobileColsClass} md:grid-cols-3 lg:grid-cols-6`,
   }[columns];
 
   // Title size classes
@@ -17395,8 +17512,24 @@ export function FooterRender(props: FooterProps) {
   const socialLinksTitle = props.socialLinksTitle || "";
   const columnsLayout = props.columnsLayout || "auto";
   const resolvedLegalLinks = props.legalLinks || props.bottomLinks || [];
-  const linkColor = linkColorProp;
-  const linkHoverColor = linkHoverColorProp;
+
+  // Contrast-aware link colors: adjust defaults when background changes
+  const bgIsDark = isDarkBackground(backgroundColor);
+  const linkColor = (() => {
+    // Default gray — adjust for background
+    if (linkColorProp === "#9ca3af")
+      return bgIsDark ? "#9ca3af" : "#4b5563";
+    // Brand-injected link color: ensure it contrasts with footer bg
+    if (bgIsDark && isDarkBackground(linkColorProp)) return "#9ca3af";
+    if (!bgIsDark && !isDarkBackground(linkColorProp)) return "#4b5563";
+    return linkColorProp;
+  })();
+  const linkHoverColor =
+    linkHoverColorProp === "#ffffff"
+      ? bgIsDark
+        ? "#ffffff"
+        : "#111827"
+      : linkHoverColorProp;
 
   // Padding
   const paddingTopClass: Record<string, string> = {
@@ -18006,7 +18139,7 @@ export function FooterRender(props: FooterProps) {
             {/* Link columns */}
             <nav
               aria-label="Footer navigation"
-              className={`lg:col-span-${showContactInfo || showAppBadges ? "5" : "8"} grid ${columnGridClass} gap-8`}
+              className={`${showContactInfo || showAppBadges ? "lg:col-span-5" : "lg:col-span-8"} grid ${columnGridClass} gap-8`}
             >
               {columns.map((column, i) => (
                 <div key={i}>
@@ -25066,7 +25199,9 @@ export interface TypewriterProps {
   hideCursorOnComplete?: boolean;
   // Typography
   fontSize?: string;
-  textSize?: ResponsiveValue<"xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl">;
+  textSize?: ResponsiveValue<
+    "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl"
+  >;
   fontWeight?: "normal" | "medium" | "semibold" | "bold" | "extrabold";
   fontFamily?: string;
   letterSpacing?: string;
@@ -25143,9 +25278,10 @@ export function TypewriterRender({
   className = "",
 }: TypewriterProps) {
   const showCursorResolved = showCursor ?? cursor;
-  const prefersReducedMotion = typeof window !== "undefined"
-    ? window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches
-    : false;
+  const prefersReducedMotion =
+    typeof window !== "undefined"
+      ? window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches
+      : false;
   const shouldAnimate = !reduceMotion && !prefersReducedMotion;
 
   // Typing state machine
@@ -25154,7 +25290,9 @@ export function TypewriterRender({
   const [charIndex, setCharIndex] = React.useState(0);
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [isComplete, setIsComplete] = React.useState(false);
-  const [isStarted, setIsStarted] = React.useState(!startTypingOnView && startDelay === 0);
+  const [isStarted, setIsStarted] = React.useState(
+    !startTypingOnView && startDelay === 0,
+  );
   const [loopsCompleted, setLoopsCompleted] = React.useState(0);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const timerRef = React.useRef<ReturnType<typeof setTimeout>>(null);
@@ -25195,7 +25333,7 @@ export function TypewriterRender({
           observer.disconnect();
         }
       },
-      { threshold: 0.3 }
+      { threshold: 0.3 },
     );
     observer.observe(containerRef.current);
     return () => observer.disconnect();
@@ -25215,12 +25353,16 @@ export function TypewriterRender({
       if (charIndex < currentText.length) {
         let delay = typingSpeed;
         // Animation variants
-        if (typingAnimation === "mechanical") delay = typingSpeed + Math.random() * typingSpeed * 0.5;
-        if (typingAnimation === "bounce") delay = typingSpeed * (0.5 + Math.random() * 1);
+        if (typingAnimation === "mechanical")
+          delay = typingSpeed + Math.random() * typingSpeed * 0.5;
+        if (typingAnimation === "bounce")
+          delay = typingSpeed * (0.5 + Math.random() * 1);
 
         // Error effect — occasionally type wrong character then fix
         if (errorEffect && Math.random() < errorProbability && charIndex > 0) {
-          const wrongChar = String.fromCharCode(97 + Math.floor(Math.random() * 26));
+          const wrongChar = String.fromCharCode(
+            97 + Math.floor(Math.random() * 26),
+          );
           setDisplayText(currentText.slice(0, charIndex) + wrongChar);
           timerRef.current = setTimeout(() => {
             setDisplayText(currentText.slice(0, charIndex + 1));
@@ -25236,7 +25378,8 @@ export function TypewriterRender({
       } else {
         // Finished typing current text
         const isLast = textIndex === textList.length - 1;
-        const shouldLoop = loop && (loopCount === undefined || loopsCompleted < loopCount);
+        const shouldLoop =
+          loop && (loopCount === undefined || loopsCompleted < loopCount);
 
         if (isLast && !shouldLoop && !deleteOnComplete) {
           setIsComplete(true);
@@ -25285,24 +25428,41 @@ export function TypewriterRender({
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [
-    shouldAnimate, isStarted, isComplete, charIndex, isDeleting, textIndex,
-    textList, typingSpeed, deletingSpeed, pauseDuration, delayBetweenTexts,
-    loop, loopCount, loopsCompleted, deleteOnComplete, typingAnimation,
-    deleteAnimation, errorEffect, errorProbability,
+    shouldAnimate,
+    isStarted,
+    isComplete,
+    charIndex,
+    isDeleting,
+    textIndex,
+    textList,
+    typingSpeed,
+    deletingSpeed,
+    pauseDuration,
+    delayBetweenTexts,
+    loop,
+    loopCount,
+    loopsCompleted,
+    deleteOnComplete,
+    typingAnimation,
+    deleteAnimation,
+    errorEffect,
+    errorProbability,
   ]);
 
   // Size classes
-  const sizeClasses = fontSize ? "" : getResponsiveClasses(textSize, {
-    xs: ["text-xs", "md:text-xs", "lg:text-xs"],
-    sm: ["text-sm", "md:text-sm", "lg:text-sm"],
-    base: ["text-base", "md:text-base", "lg:text-base"],
-    lg: ["text-lg", "md:text-lg", "lg:text-lg"],
-    xl: ["text-xl", "md:text-xl", "lg:text-xl"],
-    "2xl": ["text-xl", "md:text-2xl", "lg:text-2xl"],
-    "3xl": ["text-2xl", "md:text-3xl", "lg:text-3xl"],
-    "4xl": ["text-3xl", "md:text-4xl", "lg:text-4xl"],
-    "5xl": ["text-4xl", "md:text-5xl", "lg:text-5xl"],
-  });
+  const sizeClasses = fontSize
+    ? ""
+    : getResponsiveClasses(textSize, {
+        xs: ["text-xs", "md:text-xs", "lg:text-xs"],
+        sm: ["text-sm", "md:text-sm", "lg:text-sm"],
+        base: ["text-base", "md:text-base", "lg:text-base"],
+        lg: ["text-lg", "md:text-lg", "lg:text-lg"],
+        xl: ["text-xl", "md:text-xl", "lg:text-xl"],
+        "2xl": ["text-xl", "md:text-2xl", "lg:text-2xl"],
+        "3xl": ["text-2xl", "md:text-3xl", "lg:text-3xl"],
+        "4xl": ["text-3xl", "md:text-4xl", "lg:text-4xl"],
+        "5xl": ["text-4xl", "md:text-5xl", "lg:text-5xl"],
+      });
 
   const weightClasses: Record<string, string> = {
     normal: "font-normal",
@@ -25319,9 +25479,11 @@ export function TypewriterRender({
   };
 
   const cursorStyleChar =
-    cursorStyle === "block" ? "█" :
-    cursorStyle === "underscore" ? "_" :
-    cursorChar;
+    cursorStyle === "block"
+      ? "█"
+      : cursorStyle === "underscore"
+        ? "_"
+        : cursorChar;
 
   const containerStyle: React.CSSProperties = {
     ...(backgroundColor ? { backgroundColor } : {}),
@@ -25337,13 +25499,20 @@ export function TypewriterRender({
 
   const textStyle: React.CSSProperties = {
     color: textColor || "var(--color-foreground, #111827)",
-    ...(highlightColor ? { backgroundColor: highlightColor, padding: "0 0.2em", borderRadius: "0.15em" } : {}),
+    ...(highlightColor
+      ? {
+          backgroundColor: highlightColor,
+          padding: "0 0.2em",
+          borderRadius: "0.15em",
+        }
+      : {}),
   };
 
-  const showCursorNow = showCursorResolved && !(isComplete && hideCursorOnComplete);
+  const showCursorNow =
+    showCursorResolved && !(isComplete && hideCursorOnComplete);
 
   // Fallback for SSR / reduced motion
-  const finalText = shouldAnimate ? displayText : (textList[0] || "");
+  const finalText = shouldAnimate ? displayText : textList[0] || "";
 
   return (
     <div
@@ -25357,11 +25526,15 @@ export function TypewriterRender({
       aria-atomic="true"
     >
       {prefix && <span className="mr-1">{prefix}</span>}
-      <span className="typewriter-text" style={textStyle}>{finalText}</span>
+      <span className="typewriter-text" style={textStyle}>
+        {finalText}
+      </span>
       {showCursorNow && (
         <span
           className={`ml-0.5 ${cursorBlinkClasses[cursorBlinkSpeed] || cursorBlinkClasses.normal}`}
-          style={{ color: cursorColor || textColor || "var(--color-foreground)" }}
+          style={{
+            color: cursorColor || textColor || "var(--color-foreground)",
+          }}
           aria-hidden="true"
         >
           {cursorStyleChar}
@@ -25397,10 +25570,17 @@ export interface ParallaxProps {
   overlayColor?: string;
   overlayOpacity?: number;
   overlayGradient?: boolean;
-  overlayGradientDirection?: "to-bottom" | "to-top" | "to-left" | "to-right" | "radial";
+  overlayGradientDirection?:
+    | "to-bottom"
+    | "to-top"
+    | "to-left"
+    | "to-right"
+    | "radial";
   // Height
   height?: string;
-  minHeight?: ResponsiveValue<"sm" | "md" | "lg" | "xl" | "screen" | "auto"> | string;
+  minHeight?:
+    | ResponsiveValue<"sm" | "md" | "lg" | "xl" | "screen" | "auto">
+    | string;
   maxHeight?: string;
   fullScreen?: boolean;
   // Content
@@ -25410,7 +25590,12 @@ export interface ParallaxProps {
   contentMaxWidth?: string;
   contentPadding?: string;
   // Layers
-  layers?: Array<{ image?: string; speed?: number; opacity?: number; zIndex?: number }>;
+  layers?: Array<{
+    image?: string;
+    speed?: number;
+    opacity?: number;
+    zIndex?: number;
+  }>;
   // Effects
   blur?: number;
   scale?: number;
@@ -25486,13 +25671,16 @@ export function ParallaxRender({
   className = "",
 }: ParallaxProps) {
   const bgImageUrl = getImageUrl(backgroundImage) || "/placeholder.jpg";
-  const mobileFallbackUrl = mobileFallbackImage ? getImageUrl(mobileFallbackImage) : "";
+  const mobileFallbackUrl = mobileFallbackImage
+    ? getImageUrl(mobileFallbackImage)
+    : "";
   const showOverlayResolved = showOverlay ?? overlay ?? true;
   const contentAlignResolved = contentAlign || contentAlignment;
 
-  const prefersReducedMotion = typeof window !== "undefined"
-    ? window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches
-    : false;
+  const prefersReducedMotion =
+    typeof window !== "undefined"
+      ? window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches
+      : false;
   const shouldAnimate = !disabled && !reducedMotion && !prefersReducedMotion;
 
   // Parallax scroll tracking
@@ -25523,13 +25711,15 @@ export function ParallaxRender({
 
         const rect = container.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
-        const scrollProgress = (viewportHeight - rect.top) / (viewportHeight + rect.height);
+        const scrollProgress =
+          (viewportHeight - rect.top) / (viewportHeight + rect.height);
 
         // Calculate parallax offset clamped to maxOffset
         const clampedProgress = Math.max(0, Math.min(1, scrollProgress));
         const offset = (clampedProgress - 0.5) * 2 * maxOffset * speed;
 
-        let tx = 0, ty = 0;
+        let tx = 0,
+          ty = 0;
         if (direction === "up" || direction === "down") {
           ty = direction === "up" ? -offset : offset;
         } else {
@@ -25537,12 +25727,14 @@ export function ParallaxRender({
         }
 
         const transforms: string[] = [];
-        if (tx !== 0 || ty !== 0) transforms.push(`translate3d(${tx}px, ${ty}px, 0)`);
+        if (tx !== 0 || ty !== 0)
+          transforms.push(`translate3d(${tx}px, ${ty}px, 0)`);
         if (scaleAmount !== 1) transforms.push(`scale(${scaleAmount})`);
         if (rotateAmount !== 0) transforms.push(`rotate(${rotateAmount}deg)`);
 
         bg.style.transform = transforms.join(" ") || "none";
-        bg.style.transition = easing === "linear" ? "none" : `transform 0.1s ${easing}`;
+        bg.style.transition =
+          easing === "linear" ? "none" : `transform 0.1s ${easing}`;
 
         // Fade on scroll
         if (fadeOnScroll) {
@@ -25558,21 +25750,36 @@ export function ParallaxRender({
       window.removeEventListener("scroll", handleScroll);
       if (rafId) cancelAnimationFrame(rafId);
     };
-  }, [shouldAnimate, speed, direction, maxOffset, easing, scaleAmount, rotateAmount, fadeOnScroll]);
+  }, [
+    shouldAnimate,
+    speed,
+    direction,
+    maxOffset,
+    easing,
+    scaleAmount,
+    rotateAmount,
+    fadeOnScroll,
+  ]);
 
   // Height classes
   const heightClasses = fullScreen
     ? "min-h-screen"
-    : typeof minHeight === "string" && !["sm", "md", "lg", "xl", "screen", "auto"].includes(minHeight)
-    ? ""
-    : getResponsiveClasses(minHeight as ResponsiveValue<"sm" | "md" | "lg" | "xl" | "screen" | "auto">, {
-        sm: ["min-h-[200px]", "md:min-h-[250px]", "lg:min-h-[300px]"],
-        md: ["min-h-[300px]", "md:min-h-[400px]", "lg:min-h-[500px]"],
-        lg: ["min-h-[400px]", "md:min-h-[500px]", "lg:min-h-[600px]"],
-        xl: ["min-h-[500px]", "md:min-h-[600px]", "lg:min-h-[800px]"],
-        screen: ["min-h-screen", "md:min-h-screen", "lg:min-h-screen"],
-        auto: ["min-h-auto", "md:min-h-auto", "lg:min-h-auto"],
-      });
+    : typeof minHeight === "string" &&
+        !["sm", "md", "lg", "xl", "screen", "auto"].includes(minHeight)
+      ? ""
+      : getResponsiveClasses(
+          minHeight as ResponsiveValue<
+            "sm" | "md" | "lg" | "xl" | "screen" | "auto"
+          >,
+          {
+            sm: ["min-h-[200px]", "md:min-h-[250px]", "lg:min-h-[300px]"],
+            md: ["min-h-[300px]", "md:min-h-[400px]", "lg:min-h-[500px]"],
+            lg: ["min-h-[400px]", "md:min-h-[500px]", "lg:min-h-[600px]"],
+            xl: ["min-h-[500px]", "md:min-h-[600px]", "lg:min-h-[800px]"],
+            screen: ["min-h-screen", "md:min-h-screen", "lg:min-h-screen"],
+            auto: ["min-h-auto", "md:min-h-auto", "lg:min-h-auto"],
+          },
+        );
 
   const alignmentMap: Record<string, string> = {
     start: "items-start justify-start",
@@ -25589,38 +25796,71 @@ export function ParallaxRender({
   };
 
   // Overlay gradient
-  const overlayGradientStyle: React.CSSProperties = overlayGradient ? (() => {
-    const dir = overlayGradientDirection === "radial"
-      ? ""
-      : overlayGradientDirection === "to-bottom" ? "to bottom"
-      : overlayGradientDirection === "to-top" ? "to top"
-      : overlayGradientDirection === "to-left" ? "to left"
-      : "to right";
-    const color = overlayColor || "#000000";
-    const op = (overlayOpacity || 50) / 100;
-    if (overlayGradientDirection === "radial") {
-      return { background: `radial-gradient(circle, ${color}00 0%, ${color} 100%)`, opacity: op };
-    }
-    return { background: `linear-gradient(${dir}, ${color}00 0%, ${color} 100%)`, opacity: op };
-  })() : { backgroundColor: overlayColor, opacity: (overlayOpacity || 50) / 100 };
+  const overlayGradientStyle: React.CSSProperties = overlayGradient
+    ? (() => {
+        const dir =
+          overlayGradientDirection === "radial"
+            ? ""
+            : overlayGradientDirection === "to-bottom"
+              ? "to bottom"
+              : overlayGradientDirection === "to-top"
+                ? "to top"
+                : overlayGradientDirection === "to-left"
+                  ? "to left"
+                  : "to right";
+        const color = overlayColor || "#000000";
+        const op = (overlayOpacity || 50) / 100;
+        if (overlayGradientDirection === "radial") {
+          return {
+            background: `radial-gradient(circle, ${color}00 0%, ${color} 100%)`,
+            opacity: op,
+          };
+        }
+        return {
+          background: `linear-gradient(${dir}, ${color}00 0%, ${color} 100%)`,
+          opacity: op,
+        };
+      })()
+    : { backgroundColor: overlayColor, opacity: (overlayOpacity || 50) / 100 };
 
   // Mount animation
-  const mountStyle: React.CSSProperties = animateOnMount ? {
-    transition: `all ${animationDuration}ms ease-out`,
-    opacity: mounted ? 1 : (animationType === "fade" || animationType === "blur" ? 0 : 1),
-    transform: mounted ? "none" : animationType === "scale" ? "scale(0.95)" : animationType === "slide" ? "translateY(20px)" : "none",
-    filter: mounted ? "none" : animationType === "blur" ? "blur(10px)" : "none",
-  } : {};
+  const mountStyle: React.CSSProperties = animateOnMount
+    ? {
+        transition: `all ${animationDuration}ms ease-out`,
+        opacity: mounted
+          ? 1
+          : animationType === "fade" || animationType === "blur"
+            ? 0
+            : 1,
+        transform: mounted
+          ? "none"
+          : animationType === "scale"
+            ? "scale(0.95)"
+            : animationType === "slide"
+              ? "translateY(20px)"
+              : "none",
+        filter: mounted
+          ? "none"
+          : animationType === "blur"
+            ? "blur(10px)"
+            : "none",
+      }
+    : {};
 
   // Container style
   const containerStyle: React.CSSProperties = {
     ...mountStyle,
     ...(height ? { height } : {}),
-    ...(typeof minHeight === "string" && !["sm", "md", "lg", "xl", "screen", "auto"].includes(minHeight) ? { minHeight } : {}),
+    ...(typeof minHeight === "string" &&
+    !["sm", "md", "lg", "xl", "screen", "auto"].includes(minHeight)
+      ? { minHeight }
+      : {}),
     ...(maxHeight ? { maxHeight } : {}),
     ...(borderRadius ? { borderRadius } : {}),
     ...(shadow ? { boxShadow: shadow } : {}),
-    ...(showBorder ? { border: `1px solid ${borderColor || "var(--color-border)"}` } : {}),
+    ...(showBorder
+      ? { border: `1px solid ${borderColor || "var(--color-border)"}` }
+      : {}),
   };
 
   // Background style
@@ -25634,8 +25874,16 @@ export function ParallaxRender({
     // Extend bg for parallax movement
     top: shouldAnimate ? `-${maxOffset}px` : "0",
     bottom: shouldAnimate ? `-${maxOffset}px` : "0",
-    left: shouldAnimate ? (direction === "left" || direction === "right" ? `-${maxOffset}px` : "0") : "0",
-    right: shouldAnimate ? (direction === "left" || direction === "right" ? `-${maxOffset}px` : "0") : "0",
+    left: shouldAnimate
+      ? direction === "left" || direction === "right"
+        ? `-${maxOffset}px`
+        : "0"
+      : "0",
+    right: shouldAnimate
+      ? direction === "left" || direction === "right"
+        ? `-${maxOffset}px`
+        : "0"
+      : "0",
   };
 
   return (
@@ -25667,23 +25915,24 @@ export function ParallaxRender({
       )}
 
       {/* Layers */}
-      {Array.isArray(layers) && layers.map((layer, i) => {
-        const layerUrl = layer.image ? getImageUrl(layer.image) : "";
-        if (!layerUrl) return null;
-        return (
-          <div
-            key={i}
-            className="absolute inset-0 will-change-transform"
-            style={{
-              backgroundImage: `url(${layerUrl})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              opacity: layer.opacity ?? 0.5,
-              zIndex: layer.zIndex ?? i + 1,
-            }}
-          />
-        );
-      })}
+      {Array.isArray(layers) &&
+        layers.map((layer, i) => {
+          const layerUrl = layer.image ? getImageUrl(layer.image) : "";
+          if (!layerUrl) return null;
+          return (
+            <div
+              key={i}
+              className="absolute inset-0 will-change-transform"
+              style={{
+                backgroundImage: `url(${layerUrl})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                opacity: layer.opacity ?? 0.5,
+                zIndex: layer.zIndex ?? i + 1,
+              }}
+            />
+          );
+        })}
 
       {/* Overlay */}
       {showOverlayResolved && (
@@ -25695,7 +25944,9 @@ export function ParallaxRender({
         className={`relative z-10 flex flex-col ${positionMap[contentPosition] || "items-center"} ${alignmentMap[contentAlignResolved] || "items-center justify-center"} w-full h-full`}
         style={{
           padding: contentPadding || "1rem 2rem",
-          ...(contentMaxWidth ? { maxWidth: contentMaxWidth, margin: "0 auto" } : {}),
+          ...(contentMaxWidth
+            ? { maxWidth: contentMaxWidth, margin: "0 auto" }
+            : {}),
         }}
       >
         {children}
@@ -27422,40 +27673,71 @@ export function CardFlip3DRender({
   const backImageUrl = getImageUrl(backImage);
 
   const widthMap: Record<string, string> = {
-    sm: "w-48", md: "w-64", lg: "w-80", xl: "w-96", full: "w-full", custom: "",
+    sm: "w-48",
+    md: "w-64",
+    lg: "w-80",
+    xl: "w-96",
+    full: "w-full",
+    custom: "",
   };
   const heightMap: Record<string, string> = {
-    sm: "h-48", md: "h-64", lg: "h-80", xl: "h-96", custom: "",
+    sm: "h-48",
+    md: "h-64",
+    lg: "h-80",
+    xl: "h-96",
+    custom: "",
   };
   const shadowMap: Record<string, string> = {
-    none: "", sm: "shadow-sm", md: "shadow-md", lg: "shadow-lg", xl: "shadow-xl",
+    none: "",
+    sm: "shadow-sm",
+    md: "shadow-md",
+    lg: "shadow-lg",
+    xl: "shadow-xl",
   };
   const aspectMap: Record<string, string> = {
-    none: "", "1/1": "aspect-square", "4/3": "aspect-4/3", "16/9": "aspect-video", "3/4": "aspect-3/4",
+    none: "",
+    "1/1": "aspect-square",
+    "4/3": "aspect-4/3",
+    "16/9": "aspect-video",
+    "3/4": "aspect-3/4",
   };
   const glowIntensityMap: Record<string, string> = {
-    low: "0 0 15px", medium: "0 0 30px", high: "0 0 50px",
+    low: "0 0 15px",
+    medium: "0 0 30px",
+    high: "0 0 50px",
   };
   const borderWidthMap: Record<string, string> = {
-    "1": "1px", "2": "2px", "3": "3px", "4": "4px",
+    "1": "1px",
+    "2": "2px",
+    "3": "3px",
+    "4": "4px",
   };
 
   const widthVal = typeof width === "string" ? width : width?.desktop || "md";
-  const heightVal = typeof height === "string" ? height : height?.desktop || "md";
-  const widthClass = widthVal === "custom" && customWidth ? "" : widthMap[widthVal] || "w-64";
-  const heightClass = heightVal === "custom" && customHeight ? "" : heightMap[heightVal] || "h-64";
+  const heightVal =
+    typeof height === "string" ? height : height?.desktop || "md";
+  const widthClass =
+    widthVal === "custom" && customWidth ? "" : widthMap[widthVal] || "w-64";
+  const heightClass =
+    heightVal === "custom" && customHeight
+      ? ""
+      : heightMap[heightVal] || "h-64";
   const radiusClasses = getResponsiveClasses(borderRadius, borderRadiusMap);
   const aspectClass = aspectMap[aspectRatio] || "";
   const actualDuration = prefersReducedMotion ? 0 : flipDuration;
-  const easingValue = flipEasing === "spring" ? "cubic-bezier(0.34, 1.56, 0.64, 1)" : flipEasing;
+  const easingValue =
+    flipEasing === "spring" ? "cubic-bezier(0.34, 1.56, 0.64, 1)" : flipEasing;
 
   // Flip transform based on direction
   const getFlipTransform = (flipped: boolean) => {
     if (!flipped) return "none";
     switch (flipDirection) {
-      case "vertical": return "rotateX(180deg)";
-      case "diagonal": return "rotateX(180deg) rotateY(180deg)";
-      default: return "rotateY(180deg)";
+      case "vertical":
+        return "rotateX(180deg)";
+      case "diagonal":
+        return "rotateX(180deg) rotateY(180deg)";
+      default:
+        return "rotateY(180deg)";
     }
   };
 
@@ -27475,26 +27757,39 @@ export function CardFlip3DRender({
 
   // Build face background styles
   const buildFaceBackground = (
-    image: string | undefined, bgColor: string, gradient: boolean,
-    gradFrom: string, gradTo: string
+    image: string | undefined,
+    bgColor: string,
+    gradient: boolean,
+    gradFrom: string,
+    gradTo: string,
   ): React.CSSProperties => {
-    if (image) return { backgroundImage: `url(${image})`, backgroundSize: "cover", backgroundPosition: "center" };
-    if (gradient && gradFrom && gradTo) return { background: `linear-gradient(135deg, ${gradFrom}, ${gradTo})` };
+    if (image)
+      return {
+        backgroundImage: `url(${image})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      };
+    if (gradient && gradFrom && gradTo)
+      return { background: `linear-gradient(135deg, ${gradFrom}, ${gradTo})` };
     return { backgroundColor: bgColor || "var(--color-primary, #6366f1)" };
   };
 
   // Back face rotation offset for backface-visibility
   const getBackFaceTransform = () => {
     switch (flipDirection) {
-      case "vertical": return "rotateX(180deg)";
-      case "diagonal": return "rotateX(180deg) rotateY(180deg)";
-      default: return "rotateY(180deg)";
+      case "vertical":
+        return "rotateX(180deg)";
+      case "diagonal":
+        return "rotateX(180deg) rotateY(180deg)";
+      default:
+        return "rotateY(180deg)";
     }
   };
 
   // Button component
   const renderButton = (side: "front" | "back") => {
-    if (!showButton || (buttonPosition !== side && buttonPosition !== "both")) return null;
+    if (!showButton || (buttonPosition !== side && buttonPosition !== "both"))
+      return null;
     const variantClasses: Record<string, string> = {
       primary: "bg-white text-gray-900 hover:bg-gray-100",
       secondary: "bg-white/20 text-white hover:bg-white/30",
@@ -27516,16 +27811,35 @@ export function CardFlip3DRender({
   const renderIndicator = () => {
     if (!showFlipIndicator || disableFlip) return null;
     const posMap: Record<string, string> = {
-      "top-right": "top-2 right-2", "top-left": "top-2 left-2",
-      "bottom-right": "bottom-2 right-2", "bottom-left": "bottom-2 left-2",
+      "top-right": "top-2 right-2",
+      "top-left": "top-2 left-2",
+      "bottom-right": "bottom-2 right-2",
+      "bottom-left": "bottom-2 left-2",
     };
     return (
-      <div className={`absolute ${posMap[indicatorPosition] || "top-2 right-2"} z-20 text-white/70`} aria-hidden="true">
-        {indicatorStyle === "dot" && <div className="w-2 h-2 rounded-full bg-current animate-pulse" />}
-        {indicatorStyle === "text" && <span className="text-xs">{indicatorText || "Flip"}</span>}
+      <div
+        className={`absolute ${posMap[indicatorPosition] || "top-2 right-2"} z-20 text-white/70`}
+        aria-hidden="true"
+      >
+        {indicatorStyle === "dot" && (
+          <div className="w-2 h-2 rounded-full bg-current animate-pulse" />
+        )}
+        {indicatorStyle === "text" && (
+          <span className="text-xs">{indicatorText || "Flip"}</span>
+        )}
         {indicatorStyle === "icon" && (
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"
+            />
           </svg>
         )}
       </div>
@@ -27533,11 +27847,19 @@ export function CardFlip3DRender({
   };
 
   // Mount animation style
-  const mountStyle: React.CSSProperties = animateOnMount ? {
-    opacity: isMounted ? 1 : 0,
-    transform: isMounted ? "none" : mountAnimation === "scale" ? "scale(0.9)" : mountAnimation === "slide" ? "translateY(20px)" : "none",
-    transition: `opacity 0.5s ease-out, transform 0.5s ease-out`,
-  } : {};
+  const mountStyle: React.CSSProperties = animateOnMount
+    ? {
+        opacity: isMounted ? 1 : 0,
+        transform: isMounted
+          ? "none"
+          : mountAnimation === "scale"
+            ? "scale(0.9)"
+            : mountAnimation === "slide"
+              ? "translateY(20px)"
+              : "none",
+        transition: `opacity 0.5s ease-out, transform 0.5s ease-out`,
+      }
+    : {};
 
   // Hover glow + scale container style
   const containerStyle: React.CSSProperties = {
@@ -27568,13 +27890,21 @@ export function CardFlip3DRender({
       aria-label={ariaLabel || `${frontTitle} - flip card`}
       aria-description={ariaDescription}
       aria-pressed={isFlipped}
-      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleClick(); } }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleClick();
+        }
+      }}
     >
       {/* Hover glow */}
       {hoverGlow && (
         <div
           className="absolute -inset-1 rounded-inherit opacity-0 hover:opacity-100 transition-opacity pointer-events-none z-0"
-          style={{ boxShadow: `${glowIntensityMap[glowIntensity] || "0 0 30px"} ${glowColor || "var(--color-primary, #6366f1)"}`, borderRadius: "inherit" }}
+          style={{
+            boxShadow: `${glowIntensityMap[glowIntensity] || "0 0 30px"} ${glowColor || "var(--color-primary, #6366f1)"}`,
+            borderRadius: "inherit",
+          }}
           aria-hidden="true"
         />
       )}
@@ -27583,7 +27913,9 @@ export function CardFlip3DRender({
         style={{
           transformStyle: "preserve-3d",
           transform: `${getFlipTransform(isFlipped)}${hoverScale > 1 ? ` scale(${isFlipped ? hoverScale : 1})` : ""}`,
-          transition: prefersReducedMotion ? "none" : `transform ${actualDuration}ms ${easingValue}`,
+          transition: prefersReducedMotion
+            ? "none"
+            : `transform ${actualDuration}ms ${easingValue}`,
         }}
       >
         {/* Front Face */}
@@ -27593,20 +27925,39 @@ export function CardFlip3DRender({
             backfaceVisibility: "hidden",
             color: frontTextColor,
             opacity: frontOpacity,
-            ...buildFaceBackground(frontImageUrl, frontBackgroundColor, frontGradient, frontGradientFrom, frontGradientTo),
+            ...buildFaceBackground(
+              frontImageUrl,
+              frontBackgroundColor,
+              frontGradient,
+              frontGradientFrom,
+              frontGradientTo,
+            ),
             ...buildBorderStyle(frontBorderColor),
           }}
         >
-          {frontImageUrl && <div className="absolute inset-0 bg-black/30" aria-hidden="true" />}
+          {frontImageUrl && (
+            <div className="absolute inset-0 bg-black/30" aria-hidden="true" />
+          )}
           {reflectionEffect && (
-            <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" aria-hidden="true" />
+            <div
+              className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none"
+              aria-hidden="true"
+            />
           )}
           {renderIndicator()}
           <div className="relative z-10 text-center">
             {frontIcon && <div className="text-3xl mb-2">{frontIcon}</div>}
-            {frontBadge && <span className="inline-block px-2 py-0.5 rounded-full bg-white/20 text-xs font-medium mb-2">{frontBadge}</span>}
+            {frontBadge && (
+              <span className="inline-block px-2 py-0.5 rounded-full bg-white/20 text-xs font-medium mb-2">
+                {frontBadge}
+              </span>
+            )}
             <h3 className="text-xl font-bold mb-1">{frontTitle}</h3>
-            {frontSubtitle && <p className="text-sm font-medium opacity-90 mb-1">{frontSubtitle}</p>}
+            {frontSubtitle && (
+              <p className="text-sm font-medium opacity-90 mb-1">
+                {frontSubtitle}
+              </p>
+            )}
             <p className="text-sm opacity-80">{frontDescription}</p>
             {renderButton("front")}
           </div>
@@ -27620,19 +27971,36 @@ export function CardFlip3DRender({
             transform: getBackFaceTransform(),
             color: backTextColor,
             opacity: backOpacity,
-            ...buildFaceBackground(backImageUrl, backBackgroundColor, backGradient, backGradientFrom, backGradientTo),
+            ...buildFaceBackground(
+              backImageUrl,
+              backBackgroundColor,
+              backGradient,
+              backGradientFrom,
+              backGradientTo,
+            ),
             ...buildBorderStyle(backBorderColor),
           }}
         >
-          {backImageUrl && <div className="absolute inset-0 bg-black/30" aria-hidden="true" />}
+          {backImageUrl && (
+            <div className="absolute inset-0 bg-black/30" aria-hidden="true" />
+          )}
           {reflectionEffect && (
-            <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" aria-hidden="true" />
+            <div
+              className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none"
+              aria-hidden="true"
+            />
           )}
           <div className="relative z-10 text-center">
             <h3 className="text-xl font-bold mb-1">{backTitle}</h3>
-            {backSubtitle && <p className="text-sm font-medium opacity-90 mb-1">{backSubtitle}</p>}
+            {backSubtitle && (
+              <p className="text-sm font-medium opacity-90 mb-1">
+                {backSubtitle}
+              </p>
+            )}
             <p className="text-sm opacity-80">{backDescription}</p>
-            {backContentText && <p className="text-sm mt-2 opacity-90">{backContentText}</p>}
+            {backContentText && (
+              <p className="text-sm mt-2 opacity-90">{backContentText}</p>
+            )}
             {renderButton("back")}
           </div>
         </div>
@@ -27782,7 +28150,9 @@ export function TiltCardRender({
   React.useEffect(() => {
     isTouch.current = "ontouchstart" in window || navigator.maxTouchPoints > 0;
     if (reducedMotion) {
-      prefersReduced.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      prefersReduced.current = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
     }
     if (animateOnMount) {
       const t = setTimeout(() => setIsMounted(true), 50);
@@ -27795,18 +28165,44 @@ export function TiltCardRender({
   const radiusClasses = getResponsiveClasses(borderRadius, borderRadiusMap);
 
   const shadowMap: Record<string, string> = {
-    none: "", sm: "shadow-sm", md: "shadow-md", lg: "shadow-lg", xl: "shadow-xl", "2xl": "shadow-2xl",
+    none: "",
+    sm: "shadow-sm",
+    md: "shadow-md",
+    lg: "shadow-lg",
+    xl: "shadow-xl",
+    "2xl": "shadow-2xl",
   };
 
-  const iconSizeMap: Record<string, string> = { sm: "text-xl", md: "text-2xl", lg: "text-3xl", xl: "text-4xl" };
-  const borderWidthMap: Record<string, string> = { "1": "1px", "2": "2px", "3": "3px", "4": "4px" };
-  const floatMap: Record<string, string> = { subtle: "3px", medium: "6px", strong: "10px" };
+  const iconSizeMap: Record<string, string> = {
+    sm: "text-xl",
+    md: "text-2xl",
+    lg: "text-3xl",
+    xl: "text-4xl",
+  };
+  const borderWidthMap: Record<string, string> = {
+    "1": "1px",
+    "2": "2px",
+    "3": "3px",
+    "4": "4px",
+  };
+  const floatMap: Record<string, string> = {
+    subtle: "3px",
+    medium: "6px",
+    strong: "10px",
+  };
   const gradientMap: Record<string, string> = {
-    "to-r": "to right", "to-l": "to left", "to-t": "to top", "to-b": "to bottom",
-    "to-br": "to bottom right", "to-bl": "to bottom left", "to-tr": "to top right", "to-tl": "to top left",
+    "to-r": "to right",
+    "to-l": "to left",
+    "to-t": "to top",
+    "to-b": "to bottom",
+    "to-br": "to bottom right",
+    "to-bl": "to bottom left",
+    "to-tr": "to top right",
+    "to-tl": "to top left",
   };
 
-  const effectivelyDisabled = disabled || (disableOnMobile && isTouch.current) || prefersReduced.current;
+  const effectivelyDisabled =
+    disabled || (disableOnMobile && isTouch.current) || prefersReduced.current;
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (effectivelyDisabled || !cardRef.current) return;
@@ -27817,9 +28213,15 @@ export function TiltCardRender({
     const cy = rect.height / 2;
     const rotX = axis !== "x" ? ((y - cy) / cy) * -maxRotation : 0;
     const rotY = axis !== "y" ? ((x - cx) / cx) * maxRotation : 0;
-    setTransform(`perspective(${perspective}px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale(${scale})`);
-    const gx = glareReverse ? 100 - (x / rect.width) * 100 : (x / rect.width) * 100;
-    const gy = glareReverse ? 100 - (y / rect.height) * 100 : (y / rect.height) * 100;
+    setTransform(
+      `perspective(${perspective}px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale(${scale})`,
+    );
+    const gx = glareReverse
+      ? 100 - (x / rect.width) * 100
+      : (x / rect.width) * 100;
+    const gy = glareReverse
+      ? 100 - (y / rect.height) * 100
+      : (y / rect.height) * 100;
     setGlarePos({ x: gx, y: gy });
   };
 
@@ -27830,26 +28232,43 @@ export function TiltCardRender({
 
   // Background style
   const bgStyle: React.CSSProperties = bgImageUrl
-    ? { backgroundImage: `url(${bgImageUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
+    ? {
+        backgroundImage: `url(${bgImageUrl})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }
     : backgroundGradient && gradientFrom && gradientTo
-      ? { background: `linear-gradient(${gradientMap[gradientDirection] || "to bottom right"}, ${gradientFrom}, ${gradientTo})` }
+      ? {
+          background: `linear-gradient(${gradientMap[gradientDirection] || "to bottom right"}, ${gradientFrom}, ${gradientTo})`,
+        }
       : { backgroundColor };
 
   // Border style
-  const borderStyle: React.CSSProperties = showBorder ? {
-    border: `${borderWidthMap[borderWidth] || "1px"} solid ${borderColor}`,
-    ...(borderGlow ? { boxShadow: `0 0 15px ${borderColor}` } : {}),
-  } : {};
+  const borderStyle: React.CSSProperties = showBorder
+    ? {
+        border: `${borderWidthMap[borderWidth] || "1px"} solid ${borderColor}`,
+        ...(borderGlow ? { boxShadow: `0 0 15px ${borderColor}` } : {}),
+      }
+    : {};
 
   // Mount animation
-  const mountStyle: React.CSSProperties = animateOnMount ? {
-    opacity: isMounted ? 1 : 0,
-    transform: isMounted ? transform : mountAnimation === "scale" ? "scale(0.9)" : mountAnimation === "slide" ? "translateY(20px)" : "none",
-    transition: `opacity ${animationDuration}ms ease-out, transform ${speed}ms ${easing}`,
-  } : {};
+  const mountStyle: React.CSSProperties = animateOnMount
+    ? {
+        opacity: isMounted ? 1 : 0,
+        transform: isMounted
+          ? transform
+          : mountAnimation === "scale"
+            ? "scale(0.9)"
+            : mountAnimation === "slide"
+              ? "translateY(20px)"
+              : "none",
+        transition: `opacity ${animationDuration}ms ease-out, transform ${speed}ms ${easing}`,
+      }
+    : {};
 
   // Float animation
-  const floatClass = floatEffect && !prefersReduced.current ? "animate-bounce" : "";
+  const floatClass =
+    floatEffect && !prefersReduced.current ? "animate-bounce" : "";
 
   // Button rendering
   const renderButton = () => {
@@ -27877,7 +28296,10 @@ export function TiltCardRender({
     return (
       <div
         className={`${iconSizeMap[iconSize] || "text-3xl"} mb-2 ${iconBackgroundColor ? "inline-flex items-center justify-center w-12 h-12 rounded-xl" : ""}`}
-        style={{ color: iconColor || textColor, backgroundColor: iconBackgroundColor || undefined }}
+        style={{
+          color: iconColor || textColor,
+          backgroundColor: iconBackgroundColor || undefined,
+        }}
       >
         {icon}
       </div>
@@ -27907,7 +28329,11 @@ export function TiltCardRender({
     >
       {/* Image overlay */}
       {(bgImageUrl || overlay) && (
-        <div className="absolute inset-0 pointer-events-none" style={{ backgroundColor: `rgba(0,0,0,${overlayOpacity})` }} aria-hidden="true" />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ backgroundColor: `rgba(0,0,0,${overlayOpacity})` }}
+          aria-hidden="true"
+        />
       )}
 
       {/* Glare effect */}
@@ -27915,11 +28341,12 @@ export function TiltCardRender({
         <div
           className="absolute inset-0 pointer-events-none z-20"
           style={{
-            background: glarePosition === "top"
-              ? `linear-gradient(to bottom, rgba(${glareColor === "#ffffff" ? "255,255,255" : "255,255,255"},${isHovering ? glareMaxOpacity : 0}), transparent 50%)`
-              : glarePosition === "bottom"
-                ? `linear-gradient(to top, rgba(${glareColor === "#ffffff" ? "255,255,255" : "255,255,255"},${isHovering ? glareMaxOpacity : 0}), transparent 50%)`
-                : `radial-gradient(circle at ${glarePos.x}% ${glarePos.y}%, rgba(255,255,255,${isHovering ? glareMaxOpacity : 0}), transparent 50%)`,
+            background:
+              glarePosition === "top"
+                ? `linear-gradient(to bottom, rgba(${glareColor === "#ffffff" ? "255,255,255" : "255,255,255"},${isHovering ? glareMaxOpacity : 0}), transparent 50%)`
+                : glarePosition === "bottom"
+                  ? `linear-gradient(to top, rgba(${glareColor === "#ffffff" ? "255,255,255" : "255,255,255"},${isHovering ? glareMaxOpacity : 0}), transparent 50%)`
+                  : `radial-gradient(circle at ${glarePos.x}% ${glarePos.y}%, rgba(255,255,255,${isHovering ? glareMaxOpacity : 0}), transparent 50%)`,
             transition: `opacity ${speed}ms ${easing}`,
           }}
           aria-hidden="true"
@@ -27948,19 +28375,28 @@ export function TiltCardRender({
         {badge && (
           <span
             className="inline-block px-2 py-0.5 rounded-full text-xs font-medium mb-2"
-            style={{ backgroundColor: badgeColor || "rgba(255,255,255,0.2)", color: textColor }}
+            style={{
+              backgroundColor: badgeColor || "rgba(255,255,255,0.2)",
+              color: textColor,
+            }}
           >
             {badge}
           </span>
         )}
         <h3 className="text-xl font-bold mb-1">{title}</h3>
-        {subtitle && <p className="text-sm font-medium opacity-90 mb-1">{subtitle}</p>}
+        {subtitle && (
+          <p className="text-sm font-medium opacity-90 mb-1">{subtitle}</p>
+        )}
         <p className="text-sm opacity-80">{description}</p>
         {iconPosition === "center" && renderIcon()}
         {buttonPosition === "top" && renderButton()}
-        {buttonPosition !== "top" && buttonPosition !== "bottom" && renderButton()}
+        {buttonPosition !== "top" &&
+          buttonPosition !== "bottom" &&
+          renderButton()}
         {iconPosition === "bottom" && renderIcon()}
-        {buttonPosition === "bottom" && <div className="mt-3">{renderButton()}</div>}
+        {buttonPosition === "bottom" && (
+          <div className="mt-3">{renderButton()}</div>
+        )}
       </div>
     </div>
   );
@@ -27977,7 +28413,14 @@ export interface GlassCardProps {
   description?: string;
   icon?: string;
   badge?: string;
-  preset?: "light" | "dark" | "colored" | "subtle" | "heavy" | "frosted" | "crystal";
+  preset?:
+    | "light"
+    | "dark"
+    | "colored"
+    | "subtle"
+    | "heavy"
+    | "frosted"
+    | "crystal";
   blur?: number;
   saturation?: number;
   brightness?: number;
@@ -28096,7 +28539,9 @@ export function GlassCardRender({
   React.useEffect(() => {
     isMobile.current = "ontouchstart" in window || navigator.maxTouchPoints > 0;
     if (reducedMotion) {
-      prefersReduced.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      prefersReduced.current = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
     }
     if (animateOnMount) {
       const t = setTimeout(() => setIsMounted(true), 50);
@@ -28104,18 +28549,19 @@ export function GlassCardRender({
     }
   }, [reducedMotion, animateOnMount]);
 
-  const presets: Record<string, { blur: number; bg: string; border: number }> = {
-    light: { blur: 10, bg: "rgba(255,255,255,0.25)", border: 0.2 },
-    dark: { blur: 12, bg: "rgba(0,0,0,0.3)", border: 0.1 },
-    colored: { blur: 15, bg: "rgba(99,102,241,0.2)", border: 0.3 },
-    subtle: { blur: 5, bg: "rgba(255,255,255,0.1)", border: 0 },
-    heavy: { blur: 25, bg: "rgba(255,255,255,0.4)", border: 0.4 },
-    frosted: { blur: 20, bg: "rgba(255,255,255,0.15)", border: 0.15 },
-    crystal: { blur: 30, bg: "rgba(255,255,255,0.1)", border: 0.3 },
-  };
+  const presets: Record<string, { blur: number; bg: string; border: number }> =
+    {
+      light: { blur: 10, bg: "rgba(255,255,255,0.25)", border: 0.2 },
+      dark: { blur: 12, bg: "rgba(0,0,0,0.3)", border: 0.1 },
+      colored: { blur: 15, bg: "rgba(99,102,241,0.2)", border: 0.3 },
+      subtle: { blur: 5, bg: "rgba(255,255,255,0.1)", border: 0 },
+      heavy: { blur: 25, bg: "rgba(255,255,255,0.4)", border: 0.4 },
+      frosted: { blur: 20, bg: "rgba(255,255,255,0.15)", border: 0.15 },
+      crystal: { blur: 30, bg: "rgba(255,255,255,0.1)", border: 0.3 },
+    };
 
   const config = presets[preset] || presets.light;
-  const actualBlur = isMobile.current ? mobileBlur : (blur || config.blur);
+  const actualBlur = isMobile.current ? mobileBlur : blur || config.blur;
   const baseBlur = isHovering ? actualBlur + hoverBlur : actualBlur;
   const actualTint = tint || config.bg;
   const actualBorderOpacity = borderOpacity ?? config.border;
@@ -28124,24 +28570,47 @@ export function GlassCardRender({
 
   const paddingClasses = getResponsiveClasses(padding, paddingYMap);
   const radiusClasses = getResponsiveClasses(borderRadius, borderRadiusMap);
-  const minHeightMap: Record<string, string> = { auto: "", sm: "min-h-[8rem]", md: "min-h-[12rem]", lg: "min-h-[16rem]" };
-  const iconSizeMap: Record<string, string> = { sm: "text-xl", md: "text-2xl", lg: "text-3xl", xl: "text-4xl" };
-  const shadowMap: Record<string, string> = { none: "none", sm: `0 2px 8px ${shadowColor}`, md: `0 4px 15px ${shadowColor}`, lg: `0 10px ${shadowBlur}px ${shadowColor}`, xl: `0 20px 40px ${shadowColor}` };
+  const minHeightMap: Record<string, string> = {
+    auto: "",
+    sm: "min-h-[8rem]",
+    md: "min-h-[12rem]",
+    lg: "min-h-[16rem]",
+  };
+  const iconSizeMap: Record<string, string> = {
+    sm: "text-xl",
+    md: "text-2xl",
+    lg: "text-3xl",
+    xl: "text-4xl",
+  };
+  const shadowMap: Record<string, string> = {
+    none: "none",
+    sm: `0 2px 8px ${shadowColor}`,
+    md: `0 4px 15px ${shadowColor}`,
+    lg: `0 10px ${shadowBlur}px ${shadowColor}`,
+    xl: `0 20px 40px ${shadowColor}`,
+  };
 
   const backdropVal = `blur(${baseBlur}px) saturate(${actualSat}%) brightness(${actualBright}%) contrast(${contrast}%)`;
 
   // Background
-  const bgStyle = backgroundGradient && gradientFrom && gradientTo
-    ? `linear-gradient(${gradientAngle}deg, ${gradientFrom}, ${gradientTo})`
-    : actualTint;
+  const bgStyle =
+    backgroundGradient && gradientFrom && gradientTo
+      ? `linear-gradient(${gradientAngle}deg, ${gradientFrom}, ${gradientTo})`
+      : actualTint;
 
   // Border
-  const borderStyle: React.CSSProperties = showBorder ? {
-    border: borderGradient
-      ? undefined
-      : `${borderWidth === "2" ? "2px" : "1px"} solid rgba(${borderColor === "#ffffff" ? "255,255,255" : "255,255,255"},${actualBorderOpacity})`,
-    ...(borderGradient ? { borderImage: `linear-gradient(${gradientAngle}deg, rgba(255,255,255,${actualBorderOpacity}), rgba(255,255,255,0)) 1` } : {}),
-  } : {};
+  const borderStyle: React.CSSProperties = showBorder
+    ? {
+        border: borderGradient
+          ? undefined
+          : `${borderWidth === "2" ? "2px" : "1px"} solid rgba(${borderColor === "#ffffff" ? "255,255,255" : "255,255,255"},${actualBorderOpacity})`,
+        ...(borderGradient
+          ? {
+              borderImage: `linear-gradient(${gradientAngle}deg, rgba(255,255,255,${actualBorderOpacity}), rgba(255,255,255,0)) 1`,
+            }
+          : {}),
+      }
+    : {};
 
   // Shadow
   const boxShadows: string[] = [];
@@ -28152,22 +28621,34 @@ export function GlassCardRender({
   }
 
   // Mount animation
-  const mountStyle: React.CSSProperties = animateOnMount ? {
-    opacity: isMounted ? 1 : 0,
-    transform: isMounted
-      ? (isHovering ? `scale(${hoverScale})` : "none")
-      : mountAnimation === "scale" ? "scale(0.95)" : "none",
-    filter: isMounted ? undefined : mountAnimation === "blur" ? "blur(10px)" : undefined,
-    transition: "opacity 0.4s ease-out, transform 0.3s ease-out, filter 0.4s ease-out, backdrop-filter 0.3s ease",
-  } : {
-    transform: isHovering ? `scale(${hoverScale})` : "none",
-    transition: "transform 0.3s ease, backdrop-filter 0.3s ease",
-  };
+  const mountStyle: React.CSSProperties = animateOnMount
+    ? {
+        opacity: isMounted ? 1 : 0,
+        transform: isMounted
+          ? isHovering
+            ? `scale(${hoverScale})`
+            : "none"
+          : mountAnimation === "scale"
+            ? "scale(0.95)"
+            : "none",
+        filter: isMounted
+          ? undefined
+          : mountAnimation === "blur"
+            ? "blur(10px)"
+            : undefined,
+        transition:
+          "opacity 0.4s ease-out, transform 0.3s ease-out, filter 0.4s ease-out, backdrop-filter 0.3s ease",
+      }
+    : {
+        transform: isHovering ? `scale(${hoverScale})` : "none",
+        transition: "transform 0.3s ease, backdrop-filter 0.3s ease",
+      };
 
   const renderButton = () => {
     if (!showButton) return null;
     const variants: Record<string, string> = {
-      glass: "bg-white/10 backdrop-blur-sm text-white border border-white/20 hover:bg-white/20",
+      glass:
+        "bg-white/10 backdrop-blur-sm text-white border border-white/20 hover:bg-white/20",
       solid: "bg-white text-gray-900 hover:bg-gray-100",
       outline: "border border-white/40 text-white hover:bg-white/10",
     };
@@ -28220,17 +28701,28 @@ export function GlassCardRender({
       {noise && (
         <div
           className="absolute inset-0 pointer-events-none opacity-[0.03] z-0"
-          style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")", backgroundRepeat: "repeat" }}
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")",
+            backgroundRepeat: "repeat",
+          }}
           aria-hidden="true"
         />
       )}
 
       {/* Shimmer sweep */}
       {shimmerEffect && !prefersReduced.current && (
-        <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden" aria-hidden="true">
+        <div
+          className="absolute inset-0 pointer-events-none z-10 overflow-hidden"
+          aria-hidden="true"
+        >
           <div
             className="absolute -inset-full"
-            style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)", animation: "shine-sweep 3s ease-in-out infinite" }}
+            style={{
+              background:
+                "linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)",
+              animation: "shine-sweep 3s ease-in-out infinite",
+            }}
           />
         </div>
       )}
@@ -28239,10 +28731,19 @@ export function GlassCardRender({
       <div className="relative z-10">
         {renderIcon()}
         {badge && (
-          <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium mb-2 bg-white/10 backdrop-blur-sm">{badge}</span>
+          <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium mb-2 bg-white/10 backdrop-blur-sm">
+            {badge}
+          </span>
         )}
-        <h3 className="text-xl font-bold mb-1" style={{ color: headingColor || textColor }}>{title}</h3>
-        {subtitle && <p className="text-sm font-medium opacity-90 mb-1">{subtitle}</p>}
+        <h3
+          className="text-xl font-bold mb-1"
+          style={{ color: headingColor || textColor }}
+        >
+          {title}
+        </h3>
+        {subtitle && (
+          <p className="text-sm font-medium opacity-90 mb-1">{subtitle}</p>
+        )}
         <p className="text-sm opacity-80">{description}</p>
         {renderButton()}
       </div>
@@ -28256,7 +28757,13 @@ export function GlassCardRender({
 
 export interface ParticleBackgroundProps {
   particleCount?: number;
-  particleShape?: "circle" | "square" | "triangle" | "star" | "polygon" | "image";
+  particleShape?:
+    | "circle"
+    | "square"
+    | "triangle"
+    | "star"
+    | "polygon"
+    | "image";
   particleSize?: number;
   particleSizeVariation?: number;
   particleOpacity?: number;
@@ -28267,7 +28774,16 @@ export interface ParticleBackgroundProps {
   colorMode?: "single" | "random" | "gradient";
   colorTransition?: boolean;
   speed?: number;
-  direction?: "none" | "up" | "down" | "left" | "right" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  direction?:
+    | "none"
+    | "up"
+    | "down"
+    | "left"
+    | "right"
+    | "top-left"
+    | "top-right"
+    | "bottom-left"
+    | "bottom-right";
   randomDirection?: boolean;
   bounce?: boolean;
   gravity?: number;
@@ -28389,36 +28905,64 @@ export function ParticleBackgroundRender({
 }: ParticleBackgroundProps) {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const animationRef = React.useRef<number | undefined>(undefined);
-  const mouseRef = React.useRef<{ x: number; y: number; active: boolean }>({ x: 0, y: 0, active: false });
+  const mouseRef = React.useRef<{ x: number; y: number; active: boolean }>({
+    x: 0,
+    y: 0,
+    active: false,
+  });
   const particlesRef = React.useRef<
     Array<{
-      x: number; y: number; size: number; speedX: number; speedY: number;
-      opacity: number; color: string; age: number; maxAge: number;
-      baseOpacity: number; twinklePhase: number; pulsatePhase: number;
+      x: number;
+      y: number;
+      size: number;
+      speedX: number;
+      speedY: number;
+      opacity: number;
+      color: string;
+      age: number;
+      maxAge: number;
+      baseOpacity: number;
+      twinklePhase: number;
+      pulsatePhase: number;
     }>
   >([]);
 
   const bgImageUrl = getImageUrl(backgroundImage);
 
   const heightMap: Record<string, string> = {
-    sm: "h-48", md: "h-64", lg: "h-96", xl: "h-[32rem]", screen: "h-screen", custom: "",
+    sm: "h-48",
+    md: "h-64",
+    lg: "h-96",
+    xl: "h-[32rem]",
+    screen: "h-screen",
+    custom: "",
   };
-  const heightClass = fullScreen ? "h-screen" : heightMap[typeof height === "string" ? height : height?.desktop || "md"];
+  const heightClass = fullScreen
+    ? "h-screen"
+    : heightMap[typeof height === "string" ? height : height?.desktop || "md"];
 
   // Parse color palette
   const paletteColors = React.useMemo(() => {
     if (multiColor && colorPalette) {
-      return colorPalette.split(",").map((c: string) => c.trim()).filter(Boolean);
+      return colorPalette
+        .split(",")
+        .map((c: string) => c.trim())
+        .filter(Boolean);
     }
     return [particleColor || "#ffffff"];
   }, [multiColor, colorPalette, particleColor]);
 
   // Direction vectors
   const dirVectors: Record<string, { x: number; y: number }> = {
-    none: { x: 0, y: 0 }, up: { x: 0, y: -1 }, down: { x: 0, y: 1 },
-    left: { x: -1, y: 0 }, right: { x: 1, y: 0 },
-    "top-left": { x: -0.7, y: -0.7 }, "top-right": { x: 0.7, y: -0.7 },
-    "bottom-left": { x: -0.7, y: 0.7 }, "bottom-right": { x: 0.7, y: 0.7 },
+    none: { x: 0, y: 0 },
+    up: { x: 0, y: -1 },
+    down: { x: 0, y: 1 },
+    left: { x: -1, y: 0 },
+    right: { x: 1, y: 0 },
+    "top-left": { x: -0.7, y: -0.7 },
+    "top-right": { x: 0.7, y: -0.7 },
+    "bottom-left": { x: -0.7, y: 0.7 },
+    "bottom-right": { x: 0.7, y: 0.7 },
   };
 
   React.useEffect(() => {
@@ -28428,10 +28972,16 @@ export function ParticleBackgroundRender({
     if (!ctx) return;
 
     // Check reduced motion
-    if (reducedMotion && pauseOnReducedMotion && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (
+      reducedMotion &&
+      pauseOnReducedMotion &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    )
+      return;
 
     const isMobile = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-    const count = (reducedOnMobile && isMobile) ? mobileParticleCount : particleCount;
+    const count =
+      reducedOnMobile && isMobile ? mobileParticleCount : particleCount;
 
     const resize = () => {
       canvas.width = canvas.offsetWidth;
@@ -28442,8 +28992,12 @@ export function ParticleBackgroundRender({
 
     // Pause on blur
     let paused = false;
-    const handleBlur = () => { if (pauseOnBlur) paused = true; };
-    const handleFocus = () => { paused = false; };
+    const handleBlur = () => {
+      if (pauseOnBlur) paused = true;
+    };
+    const handleFocus = () => {
+      paused = false;
+    };
     window.addEventListener("blur", handleBlur);
     window.addEventListener("focus", handleFocus);
 
@@ -28451,9 +29005,15 @@ export function ParticleBackgroundRender({
     const handleMouseMove = (e: MouseEvent) => {
       if (!interactivity || !canvas) return;
       const rect = canvas.getBoundingClientRect();
-      mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top, active: true };
+      mouseRef.current = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+        active: true,
+      };
     };
-    const handleMouseLeave = () => { mouseRef.current.active = false; };
+    const handleMouseLeave = () => {
+      mouseRef.current.active = false;
+    };
     const handleClick = (e: MouseEvent) => {
       if (!interactivity || clickMode === "none" || !canvas) return;
       const rect = canvas.getBoundingClientRect();
@@ -28461,10 +29021,16 @@ export function ParticleBackgroundRender({
       const my = e.clientY - rect.top;
       if (clickMode === "push") {
         for (let i = 0; i < clickParticleCount; i++) {
-          createParticle(mx + (Math.random() - 0.5) * 20, my + (Math.random() - 0.5) * 20);
+          createParticle(
+            mx + (Math.random() - 0.5) * 20,
+            my + (Math.random() - 0.5) * 20,
+          );
         }
       } else if (clickMode === "remove") {
-        particlesRef.current.splice(0, Math.min(clickParticleCount, particlesRef.current.length));
+        particlesRef.current.splice(
+          0,
+          Math.min(clickParticleCount, particlesRef.current.length),
+        );
       }
     };
     canvas.addEventListener("mousemove", handleMouseMove);
@@ -28473,7 +29039,10 @@ export function ParticleBackgroundRender({
 
     const dir = dirVectors[direction] || dirVectors.none;
 
-    function createParticle(x?: number, y?: number): typeof particlesRef.current[0] {
+    function createParticle(
+      x?: number,
+      y?: number,
+    ): (typeof particlesRef.current)[0] {
       const cw = canvas!.width;
       const ch = canvas!.height;
       let px = x ?? Math.random() * cw;
@@ -28481,24 +29050,40 @@ export function ParticleBackgroundRender({
       if (!x && spawnPosition !== "random") {
         if (spawnPosition === "bottom") py = ch;
         else if (spawnPosition === "top") py = 0;
-        else if (spawnPosition === "center") { px = cw / 2 + (Math.random() - 0.5) * cw * 0.3; py = ch / 2 + (Math.random() - 0.5) * ch * 0.3; }
+        else if (spawnPosition === "center") {
+          px = cw / 2 + (Math.random() - 0.5) * cw * 0.3;
+          py = ch / 2 + (Math.random() - 0.5) * ch * 0.3;
+        }
       }
-      const colorIdx = colorMode === "random" ? Math.floor(Math.random() * paletteColors.length) : 0;
+      const colorIdx =
+        colorMode === "random"
+          ? Math.floor(Math.random() * paletteColors.length)
+          : 0;
       return {
-        x: px, y: py,
+        x: px,
+        y: py,
         size: Math.random() * particleSizeVariation + particleSize * 0.5,
-        speedX: randomDirection ? (Math.random() - 0.5) * speed + dir.x * speed : dir.x * speed,
-        speedY: randomDirection ? (Math.random() - 0.5) * speed + dir.y * speed : dir.y * speed,
-        opacity: particleOpacity + (Math.random() - 0.5) * particleOpacityVariation,
-        baseOpacity: particleOpacity + (Math.random() - 0.5) * particleOpacityVariation,
+        speedX: randomDirection
+          ? (Math.random() - 0.5) * speed + dir.x * speed
+          : dir.x * speed,
+        speedY: randomDirection
+          ? (Math.random() - 0.5) * speed + dir.y * speed
+          : dir.y * speed,
+        opacity:
+          particleOpacity + (Math.random() - 0.5) * particleOpacityVariation,
+        baseOpacity:
+          particleOpacity + (Math.random() - 0.5) * particleOpacityVariation,
         color: paletteColors[colorIdx],
-        age: 0, maxAge: lifetime > 0 ? lifetime * 60 + Math.random() * 60 : 0,
+        age: 0,
+        maxAge: lifetime > 0 ? lifetime * 60 + Math.random() * 60 : 0,
         twinklePhase: Math.random() * Math.PI * 2,
         pulsatePhase: Math.random() * Math.PI * 2,
       };
     }
 
-    particlesRef.current = Array.from({ length: count }, () => createParticle());
+    particlesRef.current = Array.from({ length: count }, () =>
+      createParticle(),
+    );
 
     let lastSpawn = 0;
     const frameInterval = 1000 / fps;
@@ -28506,10 +29091,16 @@ export function ParticleBackgroundRender({
 
     const animate = (timestamp: number) => {
       if (!canvas || !ctx) return;
-      if (paused) { animationRef.current = requestAnimationFrame(animate); return; }
+      if (paused) {
+        animationRef.current = requestAnimationFrame(animate);
+        return;
+      }
 
       // FPS limiting
-      if (timestamp - lastFrame < frameInterval) { animationRef.current = requestAnimationFrame(animate); return; }
+      if (timestamp - lastFrame < frameInterval) {
+        animationRef.current = requestAnimationFrame(animate);
+        return;
+      }
       lastFrame = timestamp;
 
       // Trail effect: don't fully clear
@@ -28521,7 +29112,7 @@ export function ParticleBackgroundRender({
       }
 
       // Spawn new particles
-      if (spawnRate > 0 && timestamp - lastSpawn > (1000 / spawnRate)) {
+      if (spawnRate > 0 && timestamp - lastSpawn > 1000 / spawnRate) {
         particlesRef.current.push(createParticle());
         lastSpawn = timestamp;
       }
@@ -28536,7 +29127,8 @@ export function ParticleBackgroundRender({
           p.age++;
           if (p.age > p.maxAge) return false;
           if (fadeIn && p.age < 30) p.opacity = p.baseOpacity * (p.age / 30);
-          else if (fadeOut && p.age > p.maxAge - 30) p.opacity = p.baseOpacity * ((p.maxAge - p.age) / 30);
+          else if (fadeOut && p.age > p.maxAge - 30)
+            p.opacity = p.baseOpacity * ((p.maxAge - p.age) / 30);
         }
 
         // Movement
@@ -28599,7 +29191,12 @@ export function ParticleBackgroundRender({
 
         ctx.beginPath();
         if (particleShape === "square") {
-          ctx.fillRect(p.x - drawSize / 2, p.y - drawSize / 2, drawSize, drawSize);
+          ctx.fillRect(
+            p.x - drawSize / 2,
+            p.y - drawSize / 2,
+            drawSize,
+            drawSize,
+          );
         } else if (particleShape === "triangle") {
           ctx.moveTo(p.x, p.y - drawSize);
           ctx.lineTo(p.x - drawSize, p.y + drawSize);
@@ -28610,7 +29207,10 @@ export function ParticleBackgroundRender({
           for (let k = 0; k < 5; k++) {
             const angle = (k * 4 * Math.PI) / 5 - Math.PI / 2;
             const method = k === 0 ? "moveTo" : "lineTo";
-            ctx[method](p.x + Math.cos(angle) * drawSize, p.y + Math.sin(angle) * drawSize);
+            ctx[method](
+              p.x + Math.cos(angle) * drawSize,
+              p.y + Math.sin(angle) * drawSize,
+            );
           }
           ctx.closePath();
           ctx.fill();
@@ -28636,7 +29236,8 @@ export function ParticleBackgroundRender({
             if (distance < connectionDistance) {
               ctx.beginPath();
               ctx.strokeStyle = connColor;
-              ctx.globalAlpha = (1 - distance / connectionDistance) * connectionOpacity;
+              ctx.globalAlpha =
+                (1 - distance / connectionDistance) * connectionOpacity;
               if (connectionCurved) {
                 const midX = (p.x + other.x) / 2;
                 const midY = (p.y + other.y) / 2 - distance * 0.1;
@@ -28667,21 +29268,65 @@ export function ParticleBackgroundRender({
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
   }, [
-    particleCount, particleShape, particleSize, particleSizeVariation, particleOpacity, particleOpacityVariation,
-    particleColor, multiColor, colorPalette, colorMode, colorTransition, speed, direction, randomDirection, bounce,
-    gravity, wind, windDirection, connected, connectionDistance, connectionOpacity, connectionColor, connectionWidth,
-    connectionCurved, interactivity, hoverMode, hoverDistance, clickMode, clickParticleCount, repulseDistance,
-    attractDistance, twinkle, twinkleFrequency, trail, trailLength, pulsate, glow, glowIntensity,
-    spawnRate, spawnPosition, lifetime, fadeIn, fadeOut, fps, pauseOnBlur, reducedOnMobile, mobileParticleCount,
-    reducedMotion, pauseOnReducedMotion, paletteColors,
+    particleCount,
+    particleShape,
+    particleSize,
+    particleSizeVariation,
+    particleOpacity,
+    particleOpacityVariation,
+    particleColor,
+    multiColor,
+    colorPalette,
+    colorMode,
+    colorTransition,
+    speed,
+    direction,
+    randomDirection,
+    bounce,
+    gravity,
+    wind,
+    windDirection,
+    connected,
+    connectionDistance,
+    connectionOpacity,
+    connectionColor,
+    connectionWidth,
+    connectionCurved,
+    interactivity,
+    hoverMode,
+    hoverDistance,
+    clickMode,
+    clickParticleCount,
+    repulseDistance,
+    attractDistance,
+    twinkle,
+    twinkleFrequency,
+    trail,
+    trailLength,
+    pulsate,
+    glow,
+    glowIntensity,
+    spawnRate,
+    spawnPosition,
+    lifetime,
+    fadeIn,
+    fadeOut,
+    fps,
+    pauseOnBlur,
+    reducedOnMobile,
+    mobileParticleCount,
+    reducedMotion,
+    pauseOnReducedMotion,
+    paletteColors,
   ]);
 
   // Background style
   const bgStyle: React.CSSProperties = backgroundGradient
     ? {
-        background: gradientDirection === "radial"
-          ? `radial-gradient(circle, ${gradientFrom}, ${gradientTo})`
-          : `linear-gradient(${gradientDirection === "to-b" ? "to bottom" : gradientDirection === "to-r" ? "to right" : "to bottom right"}, ${gradientFrom}, ${gradientTo})`,
+        background:
+          gradientDirection === "radial"
+            ? `radial-gradient(circle, ${gradientFrom}, ${gradientTo})`
+            : `linear-gradient(${gradientDirection === "to-b" ? "to bottom" : gradientDirection === "to-r" ? "to right" : "to bottom right"}, ${gradientFrom}, ${gradientTo})`,
         opacity: backgroundOpacity,
       }
     : { backgroundColor, opacity: backgroundOpacity };
@@ -28701,7 +29346,12 @@ export function ParticleBackgroundRender({
       {bgImageUrl && (
         <div
           className="absolute inset-0 pointer-events-none"
-          style={{ backgroundImage: `url(${bgImageUrl})`, backgroundSize: "cover", backgroundPosition: "center", opacity: backgroundOpacity }}
+          style={{
+            backgroundImage: `url(${bgImageUrl})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            opacity: backgroundOpacity,
+          }}
           aria-hidden="true"
         />
       )}
@@ -28729,15 +29379,34 @@ export interface ScrollAnimateProps {
   description?: string;
   richContent?: string;
   animation?:
-    | "fade-up" | "fade-down" | "fade-left" | "fade-right"
-    | "zoom-in" | "zoom-out"
-    | "flip-up" | "flip-down" | "flip-left" | "flip-right"
-    | "bounce-in" | "rotate-in"
-    | "slide-up" | "slide-down" | "scale-up" | "reveal" | "custom";
+    | "fade-up"
+    | "fade-down"
+    | "fade-left"
+    | "fade-right"
+    | "zoom-in"
+    | "zoom-out"
+    | "flip-up"
+    | "flip-down"
+    | "flip-left"
+    | "flip-right"
+    | "bounce-in"
+    | "rotate-in"
+    | "slide-up"
+    | "slide-down"
+    | "scale-up"
+    | "reveal"
+    | "custom";
   customAnimation?: string;
   duration?: number;
   delay?: number;
-  easing?: "ease" | "ease-in" | "ease-out" | "ease-in-out" | "linear" | "spring" | "bounce";
+  easing?:
+    | "ease"
+    | "ease-in"
+    | "ease-out"
+    | "ease-in-out"
+    | "linear"
+    | "spring"
+    | "bounce";
   threshold?: number;
   triggerOnce?: boolean;
   triggerMargin?: string;
@@ -28845,21 +29514,37 @@ export function ScrollAnimateRender({
   React.useEffect(() => {
     isMobile.current = "ontouchstart" in window || navigator.maxTouchPoints > 0;
     if (reducedMotion) {
-      prefersReduced.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      prefersReduced.current = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
     }
   }, [reducedMotion]);
 
   const paddingClasses = getResponsiveClasses(padding, paddingYMap);
   const radiusClasses = getResponsiveClasses(borderRadius, borderRadiusMap);
-  const shadowMap: Record<string, string> = { none: "", sm: "shadow-sm", md: "shadow-md", lg: "shadow-lg", xl: "shadow-xl" };
+  const shadowMap: Record<string, string> = {
+    none: "",
+    sm: "shadow-sm",
+    md: "shadow-md",
+    lg: "shadow-lg",
+    xl: "shadow-xl",
+  };
 
   const easingMap: Record<string, string> = {
-    ease: "ease", "ease-in": "ease-in", "ease-out": "ease-out", "ease-in-out": "ease-in-out",
-    linear: "linear", spring: "cubic-bezier(0.175, 0.885, 0.32, 1.275)", bounce: "cubic-bezier(0.68, -0.55, 0.265, 1.55)",
+    ease: "ease",
+    "ease-in": "ease-in",
+    "ease-out": "ease-out",
+    "ease-in-out": "ease-in-out",
+    linear: "linear",
+    spring: "cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+    bounce: "cubic-bezier(0.68, -0.55, 0.265, 1.55)",
   };
 
   // Build animation configs including new types
-  const animations: Record<string, { initial: React.CSSProperties; animate: React.CSSProperties }> = {
+  const animations: Record<
+    string,
+    { initial: React.CSSProperties; animate: React.CSSProperties }
+  > = {
     "fade-up": {
       initial: { opacity: opacity, transform: `translateY(${translateY}px)` },
       animate: { opacity: 1, transform: "translateY(0)" },
@@ -28869,11 +29554,17 @@ export function ScrollAnimateRender({
       animate: { opacity: 1, transform: "translateY(0)" },
     },
     "fade-left": {
-      initial: { opacity: opacity, transform: `translateX(${translateX || 40}px)` },
+      initial: {
+        opacity: opacity,
+        transform: `translateX(${translateX || 40}px)`,
+      },
       animate: { opacity: 1, transform: "translateX(0)" },
     },
     "fade-right": {
-      initial: { opacity: opacity, transform: `translateX(-${translateX || 40}px)` },
+      initial: {
+        opacity: opacity,
+        transform: `translateX(-${translateX || 40}px)`,
+      },
       animate: { opacity: 1, transform: "translateX(0)" },
     },
     "zoom-in": {
@@ -28885,19 +29576,31 @@ export function ScrollAnimateRender({
       animate: { opacity: 1, transform: "scale(1)" },
     },
     "flip-up": {
-      initial: { opacity: opacity, transform: `perspective(1000px) rotateX(${rotateStart || -90}deg)` },
+      initial: {
+        opacity: opacity,
+        transform: `perspective(1000px) rotateX(${rotateStart || -90}deg)`,
+      },
       animate: { opacity: 1, transform: "perspective(1000px) rotateX(0)" },
     },
     "flip-down": {
-      initial: { opacity: opacity, transform: `perspective(1000px) rotateX(${rotateStart || 90}deg)` },
+      initial: {
+        opacity: opacity,
+        transform: `perspective(1000px) rotateX(${rotateStart || 90}deg)`,
+      },
       animate: { opacity: 1, transform: "perspective(1000px) rotateX(0)" },
     },
     "flip-left": {
-      initial: { opacity: opacity, transform: `perspective(1000px) rotateY(${rotateStart || 90}deg)` },
+      initial: {
+        opacity: opacity,
+        transform: `perspective(1000px) rotateY(${rotateStart || 90}deg)`,
+      },
       animate: { opacity: 1, transform: "perspective(1000px) rotateY(0)" },
     },
     "flip-right": {
-      initial: { opacity: opacity, transform: `perspective(1000px) rotateY(${rotateStart || -90}deg)` },
+      initial: {
+        opacity: opacity,
+        transform: `perspective(1000px) rotateY(${rotateStart || -90}deg)`,
+      },
       animate: { opacity: 1, transform: "perspective(1000px) rotateY(0)" },
     },
     "bounce-in": {
@@ -28905,7 +29608,10 @@ export function ScrollAnimateRender({
       animate: { opacity: 1, transform: "scale(1)" },
     },
     "rotate-in": {
-      initial: { opacity: opacity, transform: `rotate(${rotateStart || -180}deg) scale(${scaleStart || 0})` },
+      initial: {
+        opacity: opacity,
+        transform: `rotate(${rotateStart || -180}deg) scale(${scaleStart || 0})`,
+      },
       animate: { opacity: 1, transform: "rotate(0) scale(1)" },
     },
     "slide-up": {
@@ -28924,19 +29630,22 @@ export function ScrollAnimateRender({
       initial: { clipPath: "inset(0 0 100% 0)" },
       animate: { clipPath: "inset(0 0 0% 0)" },
     },
-    custom: customAnimation ? {
-      initial: { opacity: opacity, transform: customAnimation },
-      animate: { opacity: 1, transform: "none" },
-    } : {
-      initial: { opacity: opacity },
-      animate: { opacity: 1 },
-    },
+    custom: customAnimation
+      ? {
+          initial: { opacity: opacity, transform: customAnimation },
+          animate: { opacity: 1, transform: "none" },
+        }
+      : {
+          initial: { opacity: opacity },
+          animate: { opacity: 1 },
+        },
   };
 
   // Pick effective animation for mobile/reduced motion
   let effectiveAnimation = animation;
   if (prefersReduced.current) {
-    effectiveAnimation = reducedMotionAnimation === "fade" ? "fade-up" : "fade-up";
+    effectiveAnimation =
+      reducedMotionAnimation === "fade" ? "fade-up" : "fade-up";
   } else if (isMobile.current && mobileAnimation !== "same") {
     effectiveAnimation = mobileAnimation === "fade" ? "fade-up" : "fade-up";
   }
@@ -28947,12 +29656,16 @@ export function ScrollAnimateRender({
   const initialWithBlur: React.CSSProperties = {
     ...config.initial,
     ...(blur > 0 ? { filter: `blur(${blur}px)` } : {}),
-    ...(skew !== 0 ? { transform: `${config.initial.transform || ""} skew(${skew}deg)` } : {}),
+    ...(skew !== 0
+      ? { transform: `${config.initial.transform || ""} skew(${skew}deg)` }
+      : {}),
   };
   const animateWithBlur: React.CSSProperties = {
     ...config.animate,
     ...(blur > 0 ? { filter: "blur(0px)" } : {}),
-    ...(skew !== 0 ? { transform: `${config.animate.transform || ""} skew(0deg)` } : {}),
+    ...(skew !== 0
+      ? { transform: `${config.animate.transform || ""} skew(0deg)` }
+      : {}),
   };
 
   // Intersection observer
@@ -28967,7 +29680,13 @@ export function ScrollAnimateRender({
       return;
     }
 
-    const rootMargin = triggerMargin || (triggerPosition === "top" ? "-20% 0px 0px 0px" : triggerPosition === "center" ? "-40% 0px -40% 0px" : "0px");
+    const rootMargin =
+      triggerMargin ||
+      (triggerPosition === "top"
+        ? "-20% 0px 0px 0px"
+        : triggerPosition === "center"
+          ? "-40% 0px -40% 0px"
+          : "0px");
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -28986,7 +29705,13 @@ export function ScrollAnimateRender({
 
     observer.observe(element);
     return () => observer.disconnect();
-  }, [threshold, triggerOnce, triggerMargin, triggerPosition, reducedMotionAnimation]);
+  }, [
+    threshold,
+    triggerOnce,
+    triggerMargin,
+    triggerPosition,
+    reducedMotionAnimation,
+  ]);
 
   // Scroll progress tracking
   React.useEffect(() => {
@@ -28997,7 +29722,7 @@ export function ScrollAnimateRender({
     const handleScroll = () => {
       const rect = element.getBoundingClientRect();
       const windowHeight = window.innerHeight;
-      const progress = Math.max(0, Math.min(1, 1 - (rect.top / windowHeight)));
+      const progress = Math.max(0, Math.min(1, 1 - rect.top / windowHeight));
       setScrollProgress(progress);
     };
 
@@ -29014,7 +29739,9 @@ export function ScrollAnimateRender({
       const elapsed = now - start;
       const progress = Math.min(1, elapsed / counterDuration);
       const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
-      setCounterValue(Math.round(counterStart + (counterEnd - counterStart) * eased));
+      setCounterValue(
+        Math.round(counterStart + (counterEnd - counterStart) * eased),
+      );
       if (progress < 1) requestAnimationFrame(animate);
     };
     requestAnimationFrame(animate);
@@ -29023,22 +29750,33 @@ export function ScrollAnimateRender({
   const shouldAnimate = isVisible && (!triggerOnce || !hasAnimated);
 
   // Progress-based styles
-  const progressStyle: React.CSSProperties = progressBased ? (() => {
-    const p = Math.max(progressStart, Math.min(progressEnd, scrollProgress));
-    const norm = (p - progressStart) / (progressEnd - progressStart);
-    if (progressProperty === "opacity") return { opacity: norm };
-    if (progressProperty === "scale") return { transform: `scale(${0.5 + norm * 0.5})` };
-    if (progressProperty === "translateY") return { transform: `translateY(${(1 - norm) * 100}px)` };
-    if (progressProperty === "rotate") return { transform: `rotate(${(1 - norm) * 180}deg)` };
-    return {};
-  })() : {};
+  const progressStyle: React.CSSProperties = progressBased
+    ? (() => {
+        const p = Math.max(
+          progressStart,
+          Math.min(progressEnd, scrollProgress),
+        );
+        const norm = (p - progressStart) / (progressEnd - progressStart);
+        if (progressProperty === "opacity") return { opacity: norm };
+        if (progressProperty === "scale")
+          return { transform: `scale(${0.5 + norm * 0.5})` };
+        if (progressProperty === "translateY")
+          return { transform: `translateY(${(1 - norm) * 100}px)` };
+        if (progressProperty === "rotate")
+          return { transform: `rotate(${(1 - norm) * 180}deg)` };
+        return {};
+      })()
+    : {};
 
   // Parallax style
-  const parallaxStyle: React.CSSProperties = parallax ? {
-    transform: parallaxDirection === "horizontal"
-      ? `translateX(${scrollProgress * parallaxSpeed * 100}px)`
-      : `translateY(${scrollProgress * parallaxSpeed * -100}px)`,
-  } : {};
+  const parallaxStyle: React.CSSProperties = parallax
+    ? {
+        transform:
+          parallaxDirection === "horizontal"
+            ? `translateX(${scrollProgress * parallaxSpeed * 100}px)`
+            : `translateY(${scrollProgress * parallaxSpeed * -100}px)`,
+      }
+    : {};
 
   return (
     <div
@@ -29048,24 +29786,42 @@ export function ScrollAnimateRender({
       style={{
         backgroundColor,
         ...(textColor ? { color: textColor } : {}),
-        ...(progressBased ? progressStyle : {
-          ...initialWithBlur,
-          ...(shouldAnimate ? animateWithBlur : {}),
-          transition: prefersReduced.current && reducedMotionAnimation === "none" ? "none" : `all ${duration}ms ${easingMap[easing] || "ease-out"} ${delay}ms`,
-        }),
+        ...(progressBased
+          ? progressStyle
+          : {
+              ...initialWithBlur,
+              ...(shouldAnimate ? animateWithBlur : {}),
+              transition:
+                prefersReduced.current && reducedMotionAnimation === "none"
+                  ? "none"
+                  : `all ${duration}ms ${easingMap[easing] || "ease-out"} ${delay}ms`,
+            }),
         ...parallaxStyle,
       }}
       role={ariaLabel ? "region" : undefined}
       aria-label={ariaLabel}
     >
       <h3 className="text-xl font-bold mb-2">{title}</h3>
-      {subtitle && <p className="text-sm font-medium opacity-90 mb-1">{subtitle}</p>}
-      <p className="text-sm" style={{ color: textColor || "var(--color-muted-foreground, #4b5563)" }}>
+      {subtitle && (
+        <p className="text-sm font-medium opacity-90 mb-1">{subtitle}</p>
+      )}
+      <p
+        className="text-sm"
+        style={{ color: textColor || "var(--color-muted-foreground, #4b5563)" }}
+      >
         {description}
       </p>
-      {richContent && <div className="mt-2 text-sm" dangerouslySetInnerHTML={{ __html: richContent }} />}
+      {richContent && (
+        <div
+          className="mt-2 text-sm"
+          dangerouslySetInnerHTML={{ __html: richContent }}
+        />
+      )}
       {showCounter && isVisible && (
-        <div className="mt-3 text-3xl font-bold">{counterValue}{counterSuffix}</div>
+        <div className="mt-3 text-3xl font-bold">
+          {counterValue}
+          {counterSuffix}
+        </div>
       )}
       {children}
     </div>

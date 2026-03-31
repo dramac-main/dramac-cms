@@ -2108,8 +2108,13 @@ function transformPropsForStudio(
       flipDirection: props.flipDirection || props.direction || "horizontal",
       flipDuration: Number(props.flipDuration || props.duration || 600),
       flipEasing: props.flipEasing || props.easing || "ease-in-out",
-      frontBackgroundColor: props.frontBackgroundColor || props.frontColor || props.backgroundColor || "#6366f1",
-      backBackgroundColor: props.backBackgroundColor || props.backColor || "#ec4899",
+      frontBackgroundColor:
+        props.frontBackgroundColor ||
+        props.frontColor ||
+        props.backgroundColor ||
+        "#6366f1",
+      backBackgroundColor:
+        props.backBackgroundColor || props.backColor || "#ec4899",
       flipOnClick: props.flipOnClick ?? props.clickToFlip ?? true,
       flipOnHover: props.flipOnHover ?? props.hoverToFlip ?? false,
     };
@@ -2119,7 +2124,9 @@ function transformPropsForStudio(
   if (type === "TiltCard") {
     return {
       ...props,
-      maxRotation: Number(props.maxRotation || props.maxTilt || props.tiltAngle || 15),
+      maxRotation: Number(
+        props.maxRotation || props.maxTilt || props.tiltAngle || 15,
+      ),
       perspective: Number(props.perspective || 1000),
       speed: Number(props.speed || 500),
       scale: Number(props.scale || 1.05),
@@ -2171,12 +2178,22 @@ function transformPropsForStudio(
     const rawTexts = props.texts || props.text || props.words || props.phrases;
     return {
       ...props,
-      texts: Array.isArray(rawTexts) ? rawTexts : rawTexts ? [String(rawTexts)] : undefined,
-      typingSpeed: Number(props.typingSpeed || props.speed || props.typeSpeed || 100),
+      texts: Array.isArray(rawTexts)
+        ? rawTexts
+        : rawTexts
+          ? [String(rawTexts)]
+          : undefined,
+      typingSpeed: Number(
+        props.typingSpeed || props.speed || props.typeSpeed || 100,
+      ),
       deletingSpeed: Number(props.deletingSpeed || props.deleteSpeed || 50),
-      pauseDuration: Number(props.pauseDuration || props.pause || props.wait || 2000),
+      pauseDuration: Number(
+        props.pauseDuration || props.pause || props.wait || 2000,
+      ),
       startDelay: Number(props.startDelay || 0),
-      delayBetweenTexts: Number(props.delayBetweenTexts || props.delayBetween || 500),
+      delayBetweenTexts: Number(
+        props.delayBetweenTexts || props.delayBetween || 500,
+      ),
       loop: !!(props.loop ?? props.repeat ?? true),
       showCursor: !!(props.showCursor ?? props.cursor ?? true),
       cursorChar: props.cursorChar || props.cursorCharacter || "|",
@@ -2191,7 +2208,12 @@ function transformPropsForStudio(
   if (type === "Parallax") {
     return {
       ...props,
-      backgroundImage: props.backgroundImage || props.image || props.bgImage || props.src || "",
+      backgroundImage:
+        props.backgroundImage ||
+        props.image ||
+        props.bgImage ||
+        props.src ||
+        "",
       backgroundVideo: props.backgroundVideo || props.video || "",
       speed: Number(props.speed || 0.5),
       direction: props.direction || "up",

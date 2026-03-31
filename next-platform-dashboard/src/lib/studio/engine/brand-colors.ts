@@ -526,7 +526,7 @@ const BRAND_COLOR_MAP: Record<string, keyof BrandColorPalette> = {
   mobileMenuTextColor: "foreground",
   mobileMenuOverlayColor: "foreground",
   playButtonColor: "primaryForeground",
-  secondaryButtonColor: "secondaryButtonBg",
+  secondaryButtonColor: "secondaryButtonText",
 };
 
 /**

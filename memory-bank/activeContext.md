@@ -1,24 +1,58 @@
 # Active Context
 
-## Current Focus: 3D & Effects Components — ALL 12 COMPONENTS FULLY IMPLEMENTED ✅
+## Current Focus: Deep Rendering Bug Investigation — ROOT CAUSE FOUND & FIXED ✅
 
-### What Was Done (Latest Session — Phase 2: Typewriter + Parallax Full Expansion)
+### What Was Done (Latest Session — Brand Injection + Background Image Bug Fixes)
+
+Previous session's fixes were **INCOMPLETE** — user confirmed bugs persisted across all 3 showcase sites. Deep audit revealed the TRUE root cause: the brand color injection system (`injectBrandColors`) was setting wrong values into component color props, AND components didn't account for background images when resolving colors.
+
+#### Root Causes Discovered
+
+1. **`BRAND_COLOR_MAP` mapped `secondaryButtonColor` → `"secondaryButtonBg"` = `"transparent"`** — This value was used as TEXT and BORDER color for secondary buttons, making them completely invisible on ALL sites.
+
+2. **Brand injection fills `textColor` with brand foreground** (e.g., dark `"#1a1412"`) — but components with dark background IMAGES still got dark text → invisible text on dark images.
+
+3. **`isDarkBackground(backgroundColor)` only checks the CSS color prop**, not the actual visual darkness from background images. Components with `backgroundColor: "#FFF8F0"` (light) but a dark photo as `bgImageUrl` were treated as "light" → dark text rendered on dark images.
+
+4. **Previous `resolvedTextColor` fix** used `textColor || (dark || bgImageUrl ? "#ffffff" : undefined)` — but brand injection made `textColor` ALWAYS truthy, so the `||` fallback never fired.
+
+#### Comprehensive Fixes Applied
+
+| File | What Changed | Why |
+|------|-------------|-----|
+| **brand-colors.ts** | `secondaryButtonColor: "secondaryButtonText"` (was `"secondaryButtonBg"`) | Secondary button color now gets a visible, contrast-validated color instead of "transparent" |
+| **HeroRender** | Added `effectivelyDark = dark \|\| hasBackgroundImage`. All color resolutions (text, primary btn, secondary btn) now use `effectivelyDark`. Dark brand-injected text colors are overridden to `#ffffff` when bgImage present | Fixes invisible text and buttons on ALL heroes with background images |
+| **CTARender** | Moved `bgImageUrl` before `bgIsLight`. `bgIsLight` returns false when bgImage present. `resolvedTextColor` forces white when bgImage + dark text. Secondary button props check for "transparent" and dark colors on bgImage | Fixes "Ready to Dine" invisible title, invisible secondary buttons on CTA sections |
+| **SectionRender** | Text color resolution now checks if `bgImageUrl` + `isDarkBackground(textColor)` → forces white | Fixes brand-injected dark text on sections with background images |
+| **FooterRender** | Link contrast check now handles ANY brand-injected link color (not just default `#9ca3af`) using `isDarkBackground()` | Fixes invisible links when brand primary is dark on dark footer bg |
+
+#### Key Insight: The Brand Injection Pipeline
+
+The rendering pipeline is: `Craft.js JSON → injectBrandColors(props, palette) → Component Render`.
+
+Brand injection fills UNSET or PLACEHOLDER color props with brand-derived values. These values are computed to contrast with the brand BACKGROUND color. BUT when a component has a dark background IMAGE, the visual context is completely different from what the brand palette assumes. Components must detect this mismatch and override.
+
+Pattern applied: `const effectivelyDark = isDarkBackground(backgroundColor) || !!bgImageUrl;`
 
 Closed the remaining render gaps for Typewriter and Parallax — the last 2 of 12 components that were still stubs. Added normalizers and enhanced metadata for both.
 
 #### TypewriterRender — COMPLETE REWRITE
+
 - Was: 45-line stub showing first text statically, 11 of 38 registry fields consumed (71% gap)
 - Now: Full typing state machine (~170 lines). Typing/deleting/pausing cycle, configurable speeds (typingSpeed/deletingSpeed/pauseDuration/startDelay/delayBetweenTexts), loop control (loop/loopCount), text options (deleteOnComplete/shuffleTexts), 3 cursor styles (bar/block/underscore) with colour/blink-speed/hide-on-complete, typography (fontSize/fontWeight/fontFamily/letterSpacing/lineHeight/textColor/highlightColor), container styling (backgroundColor/padding/borderRadius/textAlign/minHeight), error effect simulation, scroll-into-view trigger (IntersectionObserver), responsive (hideOnMobile/mobileFontSize), accessibility (ariaLabel, role="status", aria-live="polite", aria-atomic, prefers-reduced-motion)
 
 #### ParallaxRender — COMPLETE REWRITE
+
 - Was: 50-line stub using background-attachment:fixed, 10 of 31 registry fields consumed (68% gap)
 - Now: Real scroll-based parallax (~180 lines). requestAnimationFrame + scroll listener, transform3d-based movement in 4 directions (up/down/left/right), configurable speed/maxOffset/easing, video background support (<video autoplay muted loop>), multi-layer array rendering, overlay with solid colour or gradient (linear/radial), fadeOnScroll opacity, mount animations (fade/scale/slide/blur), content positioning/alignment/maxWidth/padding, border/shadow/borderRadius, mobile fallback (disableOnMobile/mobileHeight/mobileFallbackImage), accessibility (role="region", aria-label, reducedMotion), proper cleanup of scroll listener + RAF
 
 #### Converter.ts — Typewriter + Parallax Normalizers Added
+
 - Typewriter normalizer: texts/text/words/phrases aliasing, speed aliases (typingSpeed/speed/typeSpeed), cursor props, font/colour aliases
 - Parallax normalizer: backgroundImage/image/bgImage/src aliasing, overlay aliases, content position/padding/maxWidth
 
 #### Component Metadata — Typewriter + Parallax Enhanced
+
 - Typewriter: 13 keywords, rich AI description covering state machine/timing/cursor/typography/scroll-trigger/accessibility, suggestedWith: Heading/Hero/Section/GlassCard, usage guidelines
 - Parallax: 14 keywords, rich AI description covering transform-based parallax/video/layers/overlays/effects/mobile/a11y, suggestedWith: Heading/CTA/GlassCard/ScrollAnimate, usage guidelines
 
@@ -45,20 +79,20 @@ Closed the remaining render gaps for Typewriter and Parallax — the last 2 of 1
 
 ### Master Plan Document Status (12 of 12 complete — ALL IMPLEMENTED)
 
-| # | Document | Status |
-|---|----------|--------|
-| 1 | LAYOUT-COMPONENTS-MASTER-PLAN.md | ✅ IMPLEMENTED |
-| 2 | TYPOGRAPHY-COMPONENTS-MASTER-PLAN.md | ✅ IMPLEMENTED |
-| 3 | BUTTONS-COMPONENTS-MASTER-PLAN.md | ✅ IMPLEMENTED |
-| 4 | MEDIA-COMPONENTS-MASTER-PLAN.md | ✅ |
-| 5 | SECTIONS-COMPONENTS-MASTER-PLAN.md | ✅ v2.0 |
-| 6 | NAVIGATION-COMPONENTS-MASTER-PLAN.md | ✅ v1.1 |
-| 7 | FORMS-COMPONENTS-MASTER-PLAN.md | ✅ v1.1 → IMPLEMENTED |
-| 8 | CONTENT-COMPONENTS-MASTER-PLAN.md | ✅ v2.0 → IMPLEMENTED |
-| 9 | INTERACTIVE-COMPONENTS-MASTER-PLAN.md | ✅ v1.0 |
-| 10 | MARKETING-COMPONENTS-MASTER-PLAN.md | ✅ → IMPLEMENTED + REGISTRY ALIGNED |
-| 11 | 3D-EFFECTS-COMPONENTS-MASTER-PLAN.md | ✅ → **IMPLEMENTED** |
-| 12 | ECOMMERCE-COMPONENTS-MASTER-PLAN.md | ✅ → IMPLEMENTED |
+| #   | Document                              | Status                              |
+| --- | ------------------------------------- | ----------------------------------- |
+| 1   | LAYOUT-COMPONENTS-MASTER-PLAN.md      | ✅ IMPLEMENTED                      |
+| 2   | TYPOGRAPHY-COMPONENTS-MASTER-PLAN.md  | ✅ IMPLEMENTED                      |
+| 3   | BUTTONS-COMPONENTS-MASTER-PLAN.md     | ✅ IMPLEMENTED                      |
+| 4   | MEDIA-COMPONENTS-MASTER-PLAN.md       | ✅                                  |
+| 5   | SECTIONS-COMPONENTS-MASTER-PLAN.md    | ✅ v2.0                             |
+| 6   | NAVIGATION-COMPONENTS-MASTER-PLAN.md  | ✅ v1.1                             |
+| 7   | FORMS-COMPONENTS-MASTER-PLAN.md       | ✅ v1.1 → IMPLEMENTED               |
+| 8   | CONTENT-COMPONENTS-MASTER-PLAN.md     | ✅ v2.0 → IMPLEMENTED               |
+| 9   | INTERACTIVE-COMPONENTS-MASTER-PLAN.md | ✅ v1.0                             |
+| 10  | MARKETING-COMPONENTS-MASTER-PLAN.md   | ✅ → IMPLEMENTED + REGISTRY ALIGNED |
+| 11  | 3D-EFFECTS-COMPONENTS-MASTER-PLAN.md  | ✅ → **IMPLEMENTED**                |
+| 12  | ECOMMERCE-COMPONENTS-MASTER-PLAN.md   | ✅ → IMPLEMENTED                    |
 
 ### Next Steps (Potential)
 
