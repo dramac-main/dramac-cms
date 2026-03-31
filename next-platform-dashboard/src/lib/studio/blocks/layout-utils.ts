@@ -477,6 +477,71 @@ export function isDarkBackground(backgroundColor?: string): boolean {
 }
 
 // ============================================================================
+// OVERLAY-AWARE DARKNESS DETECTION
+// ============================================================================
+
+/**
+ * Determine if a section is VISUALLY dark, accounting for:
+ * 1. Explicit dark backgroundColor
+ * 2. Background image (most are dark or have dark overlays)
+ * 3. Overlay color and opacity
+ *
+ * This is the single source of truth for "should text be light?"
+ * Used by all premium components to resolve brand-injected text colors.
+ */
+export function isEffectivelyDark(
+  backgroundColor: string | undefined,
+  bgImageUrl: string | undefined | null,
+  backgroundOverlay?: boolean | string,
+  backgroundOverlayColor?: string,
+  backgroundOverlayOpacity?: number,
+): boolean {
+  const bgIsDark = isDarkBackground(backgroundColor);
+  const hasImage = !!bgImageUrl;
+
+  if (!hasImage) return bgIsDark;
+
+  // Has background image — check overlay to determine visual darkness
+  const overlayActive =
+    typeof backgroundOverlay === "string"
+      ? !!backgroundOverlay // SectionRender passes overlay as color string
+      : !!backgroundOverlay;
+  const overlayColor =
+    typeof backgroundOverlay === "string"
+      ? backgroundOverlay
+      : backgroundOverlayColor || "#000000";
+  // Normalize opacity: some components use 0-1 range, others use 0-100
+  const rawOpacity = backgroundOverlayOpacity ?? 50;
+  const overlayOpacity = rawOpacity > 0 && rawOpacity <= 1 ? rawOpacity * 100 : rawOpacity;
+
+  if (overlayActive && overlayOpacity >= 30) {
+    // Overlay has significant opacity → use overlay color for darkness
+    return isDarkBackground(overlayColor);
+  }
+
+  // Image without significant overlay → assume dark (conservative safe default)
+  return true;
+}
+
+/**
+ * Resolve a color for a dark/light section context.
+ * When the section is effectively dark and brand injection set a dark color,
+ * override to white for readability. When no color is provided, returns
+ * white for dark contexts or the fallback for light contexts.
+ */
+export function resolveContrastColor(
+  color: string | undefined,
+  effectivelyDark: boolean,
+  fallback?: string,
+): string | undefined {
+  if (color) {
+    if (effectivelyDark && isDarkBackground(color)) return "#ffffff";
+    return color;
+  }
+  return effectivelyDark ? "#ffffff" : fallback;
+}
+
+// ============================================================================
 // DARK-AWARE SHADOW SYSTEM (Section 12.3)
 // ============================================================================
 

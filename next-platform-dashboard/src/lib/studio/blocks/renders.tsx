@@ -66,6 +66,8 @@ import {
   spacerWidthMap,
   maxWidthMap as maxWidthMapUtil,
   isDarkBackground,
+  isEffectivelyDark,
+  resolveContrastColor,
   resolveShadow,
   resolveGlassmorphism,
   getDarkAwareDefaults,
@@ -386,6 +388,14 @@ export function SectionRender({
   // Dark-aware defaults
   const darkBg = isDarkBackground(backgroundColor);
   const darkDefaults = getDarkAwareDefaults(darkBg);
+  // Overlay-aware: SectionRender uses backgroundOverlay as the overlay COLOR string
+  const effectivelyDark = isEffectivelyDark(
+    backgroundColor,
+    bgImageUrl,
+    backgroundOverlay,
+    undefined,
+    backgroundOverlayOpacity,
+  );
 
   // Background gradient CSS
   const gradientCSS = backgroundGradient
@@ -422,10 +432,8 @@ export function SectionRender({
       : borderColor;
   }
   if (hasExplicitText) {
-    // If there's a bg image and the text color is dark, it would be invisible → force white
-    sectionStyle.color =
-      bgImageUrl && isDarkBackground(textColor!) ? "#ffffff" : textColor;
-  } else if (hasExplicitBg && darkBg) sectionStyle.color = "#f9fafb";
+    sectionStyle.color = resolveContrastColor(textColor, effectivelyDark);
+  } else if (effectivelyDark) sectionStyle.color = "#f9fafb";
   else if (bgImageUrl) sectionStyle.color = "#ffffff";
 
   // Shape divider renderer
@@ -7286,20 +7294,20 @@ export function HeroRender({
   const bgImageUrl = getImageUrl(backgroundImage);
   const heroImageUrl = getImageUrl(image);
   const heroImageAlt = imageAlt || getImageAlt(image, "Hero image");
-  const dark = isDarkBackground(backgroundColor);
   const hasBackgroundImage = !!bgImageUrl;
-  // When there's a background image (always darkened by overlay), treat as effectively dark
-  const effectivelyDark = dark || hasBackgroundImage;
+  const dark = isDarkBackground(backgroundColor);
+  // Overlay-aware darkness: considers bg color, bg image, AND overlay color/opacity
+  const effectivelyDark = isEffectivelyDark(
+    backgroundColor,
+    bgImageUrl,
+    backgroundOverlay,
+    backgroundOverlayColor,
+    backgroundOverlayOpacity,
+  );
 
-  // Dark-aware text color: force light text when bg image makes section visually dark.
+  // Dark-aware text color: force light text when section is visually dark.
   // Brand injection may set textColor to a dark foreground — override when invisible.
-  const resolvedTextColor = (() => {
-    if (textColor) {
-      if (hasBackgroundImage && isDarkBackground(textColor)) return "#ffffff";
-      return textColor;
-    }
-    return effectivelyDark ? "#ffffff" : undefined;
-  })();
+  const resolvedTextColor = resolveContrastColor(textColor, effectivelyDark);
 
   const pyClasses = paddingYMapUtil[paddingY] || paddingYMapUtil.lg;
   const pxClasses = paddingXMapUtil[paddingX] || paddingXMapUtil.md;
@@ -7370,17 +7378,15 @@ export function HeroRender({
         ? "#e5a956"
         : "var(--brand-primary, #3b82f6)";
   const resolvedSecondaryColor = (() => {
-    // "transparent" is never valid for text/border color
     const sec =
       secondaryButtonColor === "transparent"
         ? undefined
         : secondaryButtonColor;
-    if (sec) {
-      // If bg image and the color is dark, it would be invisible → force white
-      if (hasBackgroundImage && isDarkBackground(sec)) return "#ffffff";
-      return sec;
-    }
-    return resolvedTextColor || (effectivelyDark ? "#ffffff" : "#374151");
+    return resolveContrastColor(
+      sec,
+      effectivelyDark,
+      resolvedTextColor || "#374151",
+    );
   })();
 
   const animationClasses = animateOnLoad
@@ -8075,6 +8081,17 @@ export function FeaturesRender({
   id,
   className = "",
 }: FeaturesProps) {
+  // Overlay-aware darkness detection for brand-injected color correction
+  const featBgImageUrl = backgroundStyle === "image" ? getImageUrl(backgroundImage) : undefined;
+  const effectivelyDark = isEffectivelyDark(
+    backgroundColor,
+    featBgImageUrl,
+    backgroundOverlay,
+    backgroundOverlayColor,
+    backgroundOverlayOpacity,
+  );
+  const resolvedTextColor = resolveContrastColor(textColor, effectivelyDark);
+
   // Padding classes
   const paddingYClasses = {
     none: "",
@@ -8600,7 +8617,7 @@ export function FeaturesRender({
                 <h3
                   className={`${featureTitleSizeClasses} ${featureTitleWeightClasses} mb-2`}
                   style={{
-                    color: featureTitleColor || textColor,
+                    color: resolveContrastColor(featureTitleColor, effectivelyDark) || resolvedTextColor,
                     fontFamily: featureTitleFont || undefined,
                   }}
                 >
@@ -8609,7 +8626,7 @@ export function FeaturesRender({
                 <p
                   className={`${featureDescriptionSizeClasses} opacity-75 leading-relaxed`}
                   style={{
-                    color: featureDescriptionColor || textColor,
+                    color: resolveContrastColor(featureDescriptionColor, effectivelyDark) || resolvedTextColor,
                     ...(descriptionMaxLines > 0
                       ? {
                           display: "-webkit-box",
@@ -8636,13 +8653,13 @@ export function FeaturesRender({
           >
             <h3
               className="text-xl md:text-2xl font-bold mb-2"
-              style={{ color: textColor }}
+              style={{ color: resolvedTextColor }}
             >
               {ctaTitle}
             </h3>
             <p
               className="text-base opacity-80 mb-6 max-w-lg mx-auto"
-              style={{ color: textColor }}
+              style={{ color: resolvedTextColor }}
             >
               {ctaDescription}
             </p>
@@ -8662,7 +8679,7 @@ export function FeaturesRender({
                   ctaButtonStyle === "outline"
                     ? accentColor
                     : ctaButtonStyle === "secondary"
-                      ? textColor
+                      ? resolvedTextColor
                       : "#ffffff",
               }}
             >
@@ -9005,27 +9022,15 @@ export function CTARender({
   const ctaImageUrl = getImageUrl(image);
   const hasBackgroundImage = !!bgImageUrl;
 
-  const bgIsLight = (() => {
-    // Background image with overlay always reads as dark (not light)
-    if (hasBackgroundImage) return false;
-    const bg = String(backgroundColor || "#ffffff");
-    if (bg === "transparent" || !bg.startsWith("#") || bg.length < 4)
-      return false;
-    try {
-      let clean = bg.replace(/^#/, "");
-      if (clean.length === 3)
-        clean = clean
-          .split("")
-          .map((c) => c + c)
-          .join("");
-      const r = parseInt(clean.slice(0, 2), 16);
-      const g = parseInt(clean.slice(2, 4), 16);
-      const b = parseInt(clean.slice(4, 6), 16);
-      return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.55;
-    } catch {
-      return false;
-    }
-  })();
+  // Overlay-aware darkness detection
+  const effectivelyDark = isEffectivelyDark(
+    backgroundColor,
+    bgImageUrl,
+    backgroundOverlay,
+    backgroundOverlayColor,
+    backgroundOverlayOpacity,
+  );
+  const bgIsLight = !effectivelyDark;
 
   // Resolve final button color: prefer explicit > primary alias > contrast-aware default
   const resolvedButtonColor =
@@ -9035,18 +9040,8 @@ export function CTARender({
     primaryButtonTextColor ||
     (bgIsLight ? "#ffffff" : "#0f172a");
 
-  // Auto-resolve textColor for contrast when default conflicts with background.
-  // When a background image is present (overlaid), force light text if the
-  // brand-injected textColor would be invisible on the dark image.
-  const resolvedTextColor = (() => {
-    if (hasBackgroundImage) {
-      if (!textColor || isDarkBackground(textColor)) return "#ffffff";
-      return textColor;
-    }
-    if (textColor === "#ffffff" && bgIsLight) return "#0f172a";
-    if (textColor === "#000000" && !bgIsLight) return "#ffffff";
-    return textColor;
-  })();
+  // Contrast-aware text color using shared utility
+  const resolvedTextColor = resolveContrastColor(textColor, effectivelyDark);
 
   // Size classes
   const titleSizeClasses = {
@@ -9412,15 +9407,13 @@ export function CTARender({
     backgroundColor: (() => {
       const c = secondaryButtonColor || resolvedTextColor;
       if (c === "transparent") return resolvedTextColor;
-      if (hasBackgroundImage && c && isDarkBackground(c)) return "#ffffff";
-      return c;
+      return resolveContrastColor(c, effectivelyDark, resolvedTextColor);
     })(),
     textColor: (() => {
       const c =
         secondaryButtonTextColor || secondaryButtonColor || resolvedTextColor;
       if (c === "transparent") return resolvedTextColor;
-      if (hasBackgroundImage && c && isDarkBackground(c)) return "#ffffff";
-      return c;
+      return resolveContrastColor(c, effectivelyDark, resolvedTextColor);
     })(),
     borderRadius: secondaryButtonRadius as ButtonProps["borderRadius"],
     iconName: secondaryButtonIcon !== "none" ? secondaryButtonIcon : undefined,
@@ -10168,6 +10161,9 @@ export function TestimonialsRender({
     bgStyle.backgroundPosition = "center";
   }
 
+  const effectivelyDark = isEffectivelyDark(backgroundColor, bgImageUrl, backgroundOverlay, backgroundOverlayColor, backgroundOverlayOpacity);
+  const resolvedTextColor = resolveContrastColor(textColor, effectivelyDark);
+
   // Quote icon component
   const QuoteIcon = () => (
     <svg
@@ -10317,7 +10313,7 @@ export function TestimonialsRender({
         {/* Quote */}
         <blockquote
           className={`${quoteFontSizeClasses} ${quoteStyleClasses} leading-relaxed flex-1 mb-6`}
-          style={{ color: quoteColor || textColor }}
+          style={{ color: resolveContrastColor(quoteColor, effectivelyDark) || resolvedTextColor }}
         >
           &ldquo;{testimonial.quote}&rdquo;
         </blockquote>
@@ -10354,11 +10350,11 @@ export function TestimonialsRender({
               />
             )}
           <div>
-            <p className="font-semibold" style={{ color: textColor }}>
+            <p className="font-semibold" style={{ color: resolvedTextColor }}>
               {testimonial.author}
             </p>
             {(testimonial.role || (showCompanyName && testimonial.company)) && (
-              <p className="text-sm opacity-75" style={{ color: textColor }}>
+              <p className="text-sm opacity-75" style={{ color: resolvedTextColor }}>
                 {testimonial.role}
                 {testimonial.role &&
                   showCompanyName &&
@@ -10452,7 +10448,7 @@ export function TestimonialsRender({
             {subtitle && (
               <p
                 className="text-sm md:text-base font-semibold uppercase tracking-wider mb-2"
-                style={{ color: subtitleColor || accentColor }}
+                style={{ color: resolveContrastColor(subtitleColor, effectivelyDark) || accentColor }}
               >
                 {subtitle}
               </p>
@@ -10460,7 +10456,7 @@ export function TestimonialsRender({
             {title && (
               <h2
                 className={`${titleSizeClasses} ${titleWeightClasses} mb-4`}
-                style={{ color: titleColor || textColor }}
+                style={{ color: resolveContrastColor(titleColor, effectivelyDark) || resolvedTextColor }}
               >
                 {title}
               </h2>
@@ -10468,7 +10464,7 @@ export function TestimonialsRender({
             {description && (
               <p
                 className="text-base md:text-lg opacity-80 max-w-2xl mx-auto"
-                style={{ color: descriptionColor || textColor }}
+                style={{ color: resolveContrastColor(descriptionColor, effectivelyDark) || resolvedTextColor }}
               >
                 {description}
               </p>
@@ -11283,6 +11279,10 @@ export function FAQRender({
       }
     : null;
 
+  const faqBgImageUrl = backgroundStyle === "image" ? getImageUrl(backgroundImage) : undefined;
+  const effectivelyDark = isEffectivelyDark(backgroundColor, faqBgImageUrl, backgroundOverlay, backgroundOverlayColor, backgroundOverlayOpacity);
+  const resolvedTextColor = resolveContrastColor(textColor, effectivelyDark);
+
   return (
     <section
       id={id}
@@ -11473,7 +11473,7 @@ export function FAQRender({
             >
               <summary
                 className={`${questionPaddingClasses} cursor-pointer list-none flex items-center ${iconPosition === "left" ? "flex-row-reverse" : ""} justify-between gap-4 ${questionFontSizeClasses} ${questionFontWeightClasses} transition-all`}
-                style={{ color: questionColor || textColor }}
+                style={{ color: resolveContrastColor(questionColor, effectivelyDark) || resolvedTextColor }}
               >
                 <div className="flex items-center gap-3 flex-1">
                   {/* Number */}
@@ -11525,7 +11525,7 @@ export function FAQRender({
               <div
                 className={`${answerPaddingClasses} ${answerFontSizeClasses} ${lineHeightClasses} opacity-80`}
                 style={{
-                  color: answerColor || textColor,
+                  color: resolveContrastColor(answerColor, effectivelyDark) || resolvedTextColor,
                   WebkitLineClamp: answerMaxLines,
                   display: answerMaxLines ? "-webkit-box" : undefined,
                   WebkitBoxOrient: answerMaxLines ? "vertical" : undefined,
@@ -11549,13 +11549,13 @@ export function FAQRender({
           >
             <h3
               className="text-xl md:text-2xl font-bold mb-2"
-              style={{ color: textColor }}
+              style={{ color: resolvedTextColor }}
             >
               {contactTitle}
             </h3>
             <p
               className="text-base opacity-80 mb-6 max-w-lg mx-auto"
-              style={{ color: textColor }}
+              style={{ color: resolvedTextColor }}
             >
               {contactDescription}
             </p>
@@ -11575,7 +11575,7 @@ export function FAQRender({
                   contactButtonStyle === "outline"
                     ? accentColor
                     : contactButtonStyle === "secondary"
-                      ? textColor
+                      ? resolvedTextColor
                       : "#ffffff",
               }}
             >
@@ -12273,6 +12273,10 @@ export function StatsRender({
     );
   };
 
+  const statsBgImageUrl = backgroundStyle === "image" ? getImageUrl(backgroundImage) : undefined;
+  const effectivelyDark = isEffectivelyDark(backgroundColor, statsBgImageUrl, backgroundOverlay, backgroundOverlayColor, backgroundOverlayOpacity);
+  const resolvedTextColor = resolveContrastColor(textColor, effectivelyDark);
+
   return (
     <section
       id={id}
@@ -12349,7 +12353,7 @@ export function StatsRender({
             {subtitle && (
               <p
                 className="text-sm md:text-base font-semibold uppercase tracking-wider mb-2"
-                style={{ color: subtitleColor || accentColor }}
+                style={{ color: resolveContrastColor(subtitleColor, effectivelyDark) || accentColor }}
               >
                 {subtitle}
               </p>
@@ -12360,7 +12364,7 @@ export function StatsRender({
               <h2
                 className={`${titleSizeClasses} font-bold mb-4`}
                 style={{
-                  color: titleColor || textColor,
+                  color: resolveContrastColor(titleColor, effectivelyDark) || resolvedTextColor,
                   fontFamily: titleFont || undefined,
                 }}
               >
@@ -12372,7 +12376,7 @@ export function StatsRender({
             {description && (
               <p
                 className={`text-base md:text-lg max-w-2xl ${headerAlign === "center" ? "mx-auto" : ""} opacity-80`}
-                style={{ color: descriptionColor || textColor }}
+                style={{ color: resolveContrastColor(descriptionColor, effectivelyDark) || resolvedTextColor }}
               >
                 {description}
               </p>
@@ -12432,7 +12436,7 @@ export function StatsRender({
                       <div
                         className={`${labelSizeClasses} mb-2`}
                         style={{
-                          color: labelColor || textColor,
+                          color: resolveContrastColor(labelColor, effectivelyDark) || resolvedTextColor,
                           opacity: labelOpacity,
                         }}
                       >
@@ -12444,7 +12448,7 @@ export function StatsRender({
                     <div
                       className={`${valueSizeClasses} ${valueFontWeightClasses} flex items-center`}
                       style={{
-                        color: valueColor || textColor,
+                        color: resolveContrastColor(valueColor, effectivelyDark) || resolvedTextColor,
                         fontFamily: valueFont || undefined,
                       }}
                     >
@@ -12464,7 +12468,7 @@ export function StatsRender({
                       <div
                         className={`${labelSizeClasses} mt-2`}
                         style={{
-                          color: labelColor || textColor,
+                          color: resolveContrastColor(labelColor, effectivelyDark) || resolvedTextColor,
                           opacity: labelOpacity,
                         }}
                       >
@@ -12476,7 +12480,7 @@ export function StatsRender({
                     {showDescription && stat.description && (
                       <p
                         className={`${descriptionSizeClasses} mt-2 opacity-60 ${hideDescriptionOnMobile ? "hidden md:block" : ""}`}
-                        style={{ color: textColor }}
+                        style={{ color: resolvedTextColor }}
                       >
                         {stat.description}
                       </p>
@@ -14966,6 +14970,10 @@ export function TeamRender({
       "px-6 py-3 rounded-lg font-semibold border-2 bg-transparent transition-all hover:bg-opacity-10",
   }[ctaButtonStyle];
 
+  const teamBgImageUrl = backgroundStyle === "image" ? getImageUrl(backgroundImage) : undefined;
+  const effectivelyDark = isEffectivelyDark(backgroundColor, teamBgImageUrl, backgroundOverlay, backgroundOverlayColor, backgroundOverlayOpacity);
+  const resolvedTextColor = resolveContrastColor(textColor, effectivelyDark);
+
   return (
     <section
       id={id}
@@ -15038,7 +15046,7 @@ export function TeamRender({
           {subtitle && (
             <p
               className="text-sm md:text-base font-semibold uppercase tracking-wider mb-2"
-              style={{ color: subtitleColor || accentColor }}
+              style={{ color: resolveContrastColor(subtitleColor, effectivelyDark) || accentColor }}
             >
               {subtitle}
             </p>
@@ -15048,7 +15056,7 @@ export function TeamRender({
           <h2
             className={`${titleSizeClasses} font-bold mb-4`}
             style={{
-              color: titleColor || textColor,
+              color: resolveContrastColor(titleColor, effectivelyDark) || resolvedTextColor,
               fontFamily: titleFont || undefined,
             }}
           >
@@ -15059,7 +15067,7 @@ export function TeamRender({
           {description && (
             <p
               className={`text-base md:text-lg max-w-2xl ${headerAlign === "center" ? "mx-auto" : ""} opacity-80`}
-              style={{ color: descriptionColor || textColor }}
+              style={{ color: resolveContrastColor(descriptionColor, effectivelyDark) || resolvedTextColor }}
             >
               {description}
             </p>
@@ -15257,7 +15265,7 @@ export function TeamRender({
                   {member.skills.length > maxSkillsShown && (
                     <span
                       className="text-xs opacity-60"
-                      style={{ color: textColor }}
+                      style={{ color: resolvedTextColor }}
                     >
                       +{member.skills.length - maxSkillsShown}
                     </span>
@@ -15279,13 +15287,13 @@ export function TeamRender({
           >
             <h3
               className="text-xl md:text-2xl font-bold mb-2"
-              style={{ color: textColor }}
+              style={{ color: resolvedTextColor }}
             >
               {ctaTitle}
             </h3>
             <p
               className="text-base opacity-80 mb-6 max-w-lg mx-auto"
-              style={{ color: textColor }}
+              style={{ color: resolvedTextColor }}
             >
               {ctaDescription}
             </p>
@@ -15305,7 +15313,7 @@ export function TeamRender({
                   ctaButtonStyle === "outline"
                     ? accentColor
                     : ctaButtonStyle === "secondary"
-                      ? textColor
+                      ? resolvedTextColor
                       : "#ffffff",
               }}
             >
@@ -16010,6 +16018,10 @@ export function GalleryRender({
     right: "justify-end",
   }[filterAlign];
 
+  const galleryBgImageUrl = backgroundStyle === "image" ? getImageUrl(backgroundImage) : undefined;
+  const effectivelyDark = isEffectivelyDark(backgroundColor, galleryBgImageUrl, backgroundOverlay, backgroundOverlayColor, backgroundOverlayOpacity);
+  const resolvedTextColor = resolveContrastColor(textColor, effectivelyDark);
+
   return (
     <section
       id={id}
@@ -16085,7 +16097,7 @@ export function GalleryRender({
             {subtitle && (
               <p
                 className="text-sm md:text-base font-semibold uppercase tracking-wider mb-2"
-                style={{ color: subtitleColor || accentColor }}
+                style={{ color: resolveContrastColor(subtitleColor, effectivelyDark) || accentColor }}
               >
                 {subtitle}
               </p>
@@ -16096,7 +16108,7 @@ export function GalleryRender({
               <h2
                 className={`${titleSizeClasses} font-bold mb-4`}
                 style={{
-                  color: titleColor || textColor,
+                  color: resolveContrastColor(titleColor, effectivelyDark) || resolvedTextColor,
                   fontFamily: titleFont || undefined,
                 }}
               >
@@ -16108,7 +16120,7 @@ export function GalleryRender({
             {description && (
               <p
                 className={`text-base md:text-lg max-w-2xl ${headerAlign === "center" ? "mx-auto" : ""} opacity-80`}
-                style={{ color: descriptionColor || textColor }}
+                style={{ color: resolveContrastColor(descriptionColor, effectivelyDark) || resolvedTextColor }}
               >
                 {description}
               </p>
@@ -16335,13 +16347,13 @@ export function GalleryRender({
           >
             <h3
               className="text-xl md:text-2xl font-bold mb-2"
-              style={{ color: textColor }}
+              style={{ color: resolvedTextColor }}
             >
               {ctaTitle}
             </h3>
             <p
               className="text-base opacity-80 mb-6 max-w-lg mx-auto"
-              style={{ color: textColor }}
+              style={{ color: resolvedTextColor }}
             >
               {ctaDescription}
             </p>
@@ -16361,7 +16373,7 @@ export function GalleryRender({
                   ctaButtonStyle === "outline"
                     ? accentColor
                     : ctaButtonStyle === "secondary"
-                      ? textColor
+                      ? resolvedTextColor
                       : "#ffffff",
               }}
             >
@@ -28164,6 +28176,9 @@ export function TiltCardRender({
   const paddingClasses = getResponsiveClasses(padding, paddingYMap);
   const radiusClasses = getResponsiveClasses(borderRadius, borderRadiusMap);
 
+  const effectivelyDark = isEffectivelyDark(backgroundColor, bgImageUrl, overlay, undefined, overlayOpacity ? overlayOpacity * 100 : undefined);
+  const resolvedTextColor = resolveContrastColor(textColor, effectivelyDark) || textColor;
+
   const shadowMap: Record<string, string> = {
     none: "",
     sm: "shadow-sm",
@@ -28297,7 +28312,7 @@ export function TiltCardRender({
       <div
         className={`${iconSizeMap[iconSize] || "text-3xl"} mb-2 ${iconBackgroundColor ? "inline-flex items-center justify-center w-12 h-12 rounded-xl" : ""}`}
         style={{
-          color: iconColor || textColor,
+          color: iconColor || resolvedTextColor,
           backgroundColor: iconBackgroundColor || undefined,
         }}
       >
@@ -28314,7 +28329,7 @@ export function TiltCardRender({
       style={{
         ...bgStyle,
         ...borderStyle,
-        color: textColor,
+        color: resolvedTextColor,
         transform: effectivelyDisabled ? "none" : transform,
         transition: `transform ${speed}ms ${easing}, box-shadow 0.3s ease`,
         transformStyle: "preserve-3d",
@@ -28377,7 +28392,7 @@ export function TiltCardRender({
             className="inline-block px-2 py-0.5 rounded-full text-xs font-medium mb-2"
             style={{
               backgroundColor: badgeColor || "rgba(255,255,255,0.2)",
-              color: textColor,
+              color: resolvedTextColor,
             }}
           >
             {badge}
