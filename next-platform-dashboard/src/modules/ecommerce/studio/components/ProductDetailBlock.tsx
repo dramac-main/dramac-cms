@@ -52,6 +52,7 @@ import { useStorefrontReviews } from "../../hooks/useStorefrontReviews";
 import { useStorefront } from "../../context/storefront-context";
 import { ReviewListBlock } from "./ReviewListBlock";
 import { ReviewFormBlock } from "./ReviewFormBlock";
+import { normalizeProductImages } from "../../lib/image-utils";
 import type { ComponentDefinition } from "@/types/studio";
 
 // =============================================================================
@@ -191,7 +192,7 @@ export function ProductDetailBlock({
 
   // Computed values
   const images = product?.images?.length
-    ? product.images
+    ? normalizeProductImages(product.images)
     : ["/placeholder-product.png"];
   const hasDiscount =
     product?.compare_at_price && product.compare_at_price > product.base_price;

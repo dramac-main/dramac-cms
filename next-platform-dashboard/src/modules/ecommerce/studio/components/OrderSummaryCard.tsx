@@ -16,6 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { CartItem, CartTotals } from "../../types/ecommerce-types";
 import type { ShippingMethod } from "../../hooks/useCheckout";
+import { getImageUrl } from "../../lib/image-utils";
 import Image from "next/image";
 
 // ============================================================================
@@ -38,7 +39,7 @@ interface OrderSummaryCardProps {
 
 function getItemImage(item: CartItem): string | null {
   if (item.product?.images && item.product.images.length > 0) {
-    return item.product.images[0];
+    return getImageUrl(item.product.images[0]) || null;
   }
   return null;
 }

@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useHapticFeedback } from "../../../hooks/useHapticFeedback";
 import type { CartItem } from "../../../types/ecommerce-types";
+import { getImageUrl } from "../../../lib/image-utils";
 
 // ============================================================================
 // TYPES
@@ -44,7 +45,7 @@ const SPRING_CONFIG = { type: "spring" as const, stiffness: 400, damping: 30 };
 
 function getItemImage(item: CartItem): string | null {
   if (item.product?.images && item.product.images.length > 0) {
-    return item.product.images[0];
+    return getImageUrl(item.product.images[0]) || null;
   }
   return null;
 }

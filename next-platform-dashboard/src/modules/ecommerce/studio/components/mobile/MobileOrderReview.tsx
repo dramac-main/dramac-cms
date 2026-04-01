@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronUp, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CartItem } from "../../../types/ecommerce-types";
+import { getImageUrl } from "../../../lib/image-utils";
 import { useHapticFeedback } from "../../../hooks/useHapticFeedback";
 
 import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from "@/lib/locale-config";
@@ -72,8 +73,8 @@ function defaultGetItemVariant(item: CartItem): string | null {
 
 function defaultGetItemImage(item: CartItem): string | null {
   // Try to get image from product
-  const product = item.product as { images?: string[] } | undefined;
-  return product?.images?.[0] || null;
+  const product = item.product as { images?: unknown[] } | undefined;
+  return getImageUrl(product?.images?.[0]) || null;
 }
 
 // ============================================================================

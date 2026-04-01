@@ -38,6 +38,7 @@ import {
 } from "../../hooks/useQuotations";
 import { QuoteItemCard } from "./QuoteItemCard";
 import { QuotePriceBreakdown } from "./QuotePriceBreakdown";
+import { getImageUrl } from "../../lib/image-utils";
 import Link from "next/link";
 
 // ============================================================================
@@ -136,7 +137,7 @@ export function QuoteRequestBlock({
         addToBuilder({
           product_id: product.id,
           product_name: product.name,
-          product_image: product.images?.[0] || undefined,
+          product_image: getImageUrl(product.images?.[0]) || undefined,
           list_price: product.base_price,
           quantity: 1,
         });

@@ -34,6 +34,7 @@ import { useStorefront } from "../../context/storefront-context";
 import { ProductPriceDisplay } from "./ProductPriceDisplay";
 import { ProductStockBadge } from "./ProductStockBadge";
 import { ProductRatingDisplay } from "./ProductRatingDisplay";
+import { normalizeProductImages } from "../../lib/image-utils";
 
 // =============================================================================
 // TYPES
@@ -189,7 +190,7 @@ export function ProductCardBlock({
     (product as Product).compare_at_price;
   const productQuantity =
     (product as DemoProduct).quantity ?? (product as Product).quantity ?? 0;
-  const productImages = (product as Product).images || [];
+  const productImages = normalizeProductImages((product as Product).images);
   const productRating =
     (product as DemoProduct).rating || (product as any).average_rating || 0;
   const productReviewCount =

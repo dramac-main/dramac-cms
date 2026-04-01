@@ -19,6 +19,7 @@ import {
   notifyPaymentProofUploaded,
 } from "@/lib/services/business-notifications";
 import { logAutomationEvent } from "@/modules/automation/services/event-processor";
+import { getImageUrl } from "../lib/image-utils";
 import type {
   Product,
   ProductFilters,
@@ -1079,7 +1080,7 @@ export async function createPublicOrderFromCart(
         product_name: item.product?.name || "Unknown Product",
         product_sku: item.product?.sku || null,
         variant_options: item.variant?.options || {},
-        image_url: item.product?.images?.[0] || null,
+        image_url: getImageUrl(item.product?.images?.[0]) || null,
         quantity: item.quantity,
         unit_price: item.unit_price,
         total_price: item.unit_price * item.quantity,

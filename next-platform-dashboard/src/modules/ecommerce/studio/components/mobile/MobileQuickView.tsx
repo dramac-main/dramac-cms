@@ -30,6 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { useHapticFeedback } from "../../../hooks/useHapticFeedback";
 import { useSwipeGesture } from "../../../hooks/useSwipeGesture";
 import type { Product, ProductVariant } from "../../../types/ecommerce-types";
+import { normalizeProductImages } from "../../../lib/image-utils";
 
 import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from "@/lib/locale-config";
 // ============================================================================
@@ -356,10 +357,12 @@ export function MobileQuickView({
             <div className="flex-1 overflow-y-auto px-4">
               {/* Product images */}
               <div className="relative aspect-square rounded-xl overflow-hidden bg-muted mb-4">
-                {product.images && product.images.length > 0 ? (
+                {(() => {
+                  const imageUrls = normalizeProductImages(product.images);
+                  return imageUrls.length > 0 ? (
                   <>
                     <Image
-                      src={product.images[currentImageIndex]}
+                      src={imageUrls[currentImageIndex]}
                       alt={product.name}
                       fill
                       className="object-cover"
@@ -367,9 +370,9 @@ export function MobileQuickView({
                     />
 
                     {/* Image indicators */}
-                    {product.images.length > 1 && (
+                    {imageUrls.length > 1 && (
                       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                        {product.images.map((_, index) => (
+                        {imageUrls.map((_, index) => (
                           <button
                             key={index}
                             onClick={() => setCurrentImageIndex(index)}
@@ -392,7 +395,8 @@ export function MobileQuickView({
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className="text-muted-foreground">No image</span>
                   </div>
-                )}
+                );
+                })()}
 
                 {/* Badges */}
                 {hasDiscount && (

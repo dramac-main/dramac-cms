@@ -31,6 +31,7 @@ import { ProductPriceDisplay } from "./ProductPriceDisplay";
 import { ProductStockBadge } from "./ProductStockBadge";
 import { ProductRatingDisplay } from "./ProductRatingDisplay";
 import { ProductImageGallery, type ProductImage } from "./ProductImageGallery";
+import { getImageUrl } from "../../lib/image-utils";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -158,13 +159,14 @@ export function ProductQuickView({
     return selectedVariant?.quantity ?? product?.quantity ?? 0;
   }, [product, selectedVariant]);
 
-  // Product images - convert string array to ProductImage array
+  // Product images - convert to ProductImage array (handles both string and object formats)
   const images: ProductImage[] = useMemo(() => {
     if (!product?.images || product.images.length === 0) return [];
-    return product.images.map((url, index) => ({
-      url,
-      alt: `${product.name} ${index + 1}`,
-    }));
+    return product.images.map((img, index) => {
+      const url = getImageUrl(img);
+      if (!url) return null;
+      return { url, alt: `${product.name} ${index + 1}` };
+    }).filter((img): img is ProductImage => img !== null);
   }, [product]);
 
   // Handlers

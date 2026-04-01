@@ -16,6 +16,7 @@ import { Search, X, Loader2, TrendingUp, History, Package } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { useStorefrontSearch, useRecentlyViewed, useStorefrontCategories } from '@/modules/ecommerce/hooks'
 import { useStorefront } from '@/modules/ecommerce/context/storefront-context'
+import { getImageUrl } from '../../lib/image-utils'
 
 // ============================================================================
 // TYPES
@@ -206,9 +207,9 @@ export function SearchBarBlock({
                   className="flex items-center gap-3 p-2 rounded-md hover:bg-accent transition-colors"
                 >
                   <div className="relative h-10 w-10 shrink-0 rounded bg-muted overflow-hidden">
-                    {product.images?.[0] ? (
+                    {getImageUrl(product.images?.[0]) ? (
                       <Image
-                        src={product.images[0]}
+                        src={getImageUrl(product.images?.[0])!}
                         alt={product.name}
                         fill
                         className="object-cover"
@@ -290,9 +291,9 @@ export function SearchBarBlock({
                   className="flex items-center gap-3 p-2 rounded-md hover:bg-accent transition-colors"
                 >
                   <div className="relative h-8 w-8 shrink-0 rounded bg-muted overflow-hidden">
-                    {product.images?.[0] ? (
+                    {getImageUrl(product.images?.[0]) ? (
                       <Image
-                        src={product.images[0]}
+                        src={getImageUrl(product.images?.[0])!}
                         alt={product.name}
                         fill
                         className="object-cover"

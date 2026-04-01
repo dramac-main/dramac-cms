@@ -27,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useHapticFeedback } from "../../../hooks/useHapticFeedback";
 import type { Product } from "../../../types/ecommerce-types";
+import { getImageUrl } from "../../../lib/image-utils";
 
 import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from "@/lib/locale-config";
 // ============================================================================
@@ -106,7 +107,7 @@ function SwipeableProductCard({
   const [swipeProgress, setSwipeProgress] = useState(0);
 
   // Get primary image
-  const primaryImage = product.images?.[0] || "";
+  const primaryImage = getImageUrl(product.images?.[0]) || "";
   const hasDiscount =
     product.compare_at_price && product.compare_at_price > product.base_price;
 

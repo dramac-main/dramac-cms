@@ -29,6 +29,7 @@ import {
 } from "../../context/storefront-auth-context";
 import { useStorefrontWishlist } from "../../hooks/useStorefrontWishlist";
 import { useStorefrontCart } from "../../hooks/useStorefrontCart";
+import { getImageUrl } from "../../lib/image-utils";
 
 // ============================================================================
 // TYPES
@@ -610,9 +611,9 @@ function WishlistTab({ siteId }: { siteId: string }) {
           >
             {/* Product image */}
             <div className="h-16 w-16 shrink-0 rounded-md bg-muted overflow-hidden">
-              {product.images?.[0] ? (
+              {getImageUrl(product.images?.[0]) ? (
                 <img
-                  src={product.images[0]}
+                  src={getImageUrl(product.images?.[0])!}
                   alt={product.name}
                   className="h-full w-full object-cover"
                 />
