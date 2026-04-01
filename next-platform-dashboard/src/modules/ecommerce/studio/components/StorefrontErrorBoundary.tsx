@@ -64,6 +64,9 @@ export class StorefrontErrorBoundary extends React.Component<
           <AlertTriangle className="h-10 w-10 text-muted-foreground mb-3" />
           <h3 className="font-medium text-foreground mb-1">
             Something went wrong
+            {this.state.error?.message
+              ? `: ${this.state.error.message}`
+              : ""}
           </h3>
           <p className="text-sm text-muted-foreground mb-4">
             {this.props.blockName
