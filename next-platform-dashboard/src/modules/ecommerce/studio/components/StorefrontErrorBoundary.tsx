@@ -69,6 +69,9 @@ export class StorefrontErrorBoundary extends React.Component<
             {this.props.blockName
               ? `The ${this.props.blockName} section couldn't load.`
               : "This section couldn't load."}
+            {this.state.error?.message
+              ? ` Error: ${this.state.error.message}`
+              : ""}
           </p>
           {this.state.error && (
             <p className="text-xs text-muted-foreground/60 mb-3 max-w-md break-all" data-error-detail>

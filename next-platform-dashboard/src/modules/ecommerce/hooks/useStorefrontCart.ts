@@ -45,7 +45,8 @@ function calculateLocalTotals(
   taxRate: number,
   settings?: EcommerceSettings | null,
 ): CartTotals {
-  const subtotal = cart.items.reduce(
+  const items = cart.items || [];
+  const subtotal = items.reduce(
     (sum, item) => sum + item.unit_price * item.quantity,
     0,
   );
@@ -91,7 +92,7 @@ function calculateLocalTotals(
   }
 
   const total = taxableAmount + tax + shipping;
-  const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   return {
     subtotal,
@@ -145,7 +146,7 @@ export function useStorefrontCart(
       const detail = (e as CustomEvent)?.detail;
       // If event includes full cart data, use it directly (no re-fetch)
       if (detail?.cart) {
-        setCart(detail.cart);
+        setCart({ ...detail.cart, items: detail.cart.items || [] });
         return;
       }
       // If event includes itemCount only (from NavCartBadge etc), skip

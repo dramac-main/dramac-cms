@@ -193,15 +193,16 @@ export function FeaturedProductsBlock({
       ? fetchedProducts.filter((p) => productIds.includes(p.id))
       : fetchedProducts;
 
-  // Get responsive values
-  const gapValue = typeof gap === "object" ? gap.mobile : gap;
-  const paddingValue = typeof padding === "object" ? padding.mobile : padding;
+  // Get responsive values (guard against null — typeof null === "object")
+  const gapValue = gap && typeof gap === "object" ? gap.mobile : gap;
+  const paddingValue =
+    padding && typeof padding === "object" ? padding.mobile : padding;
 
   // Responsive column count — cap mobile to 2 columns for readability
   const isMobile = useMobile();
   const isTablet = useMobile(1024) && !isMobile;
   const cols =
-    typeof columns === "object"
+    columns && typeof columns === "object"
       ? columns
       : {
           mobile: Math.min(columns || 2, 2),

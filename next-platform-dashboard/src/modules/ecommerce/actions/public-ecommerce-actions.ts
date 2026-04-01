@@ -431,7 +431,8 @@ async function findPublicCart(
       console.error("[Ecom Public] findPublicCart error:", error);
       return null;
     }
-    return (data as Cart) || null;
+    if (!data) return null;
+    return { ...(data as Cart), items: (data as any).items || [] };
   } catch (err) {
     console.error("[Ecom Public] findPublicCart unexpected error:", err);
     return null;
@@ -494,7 +495,8 @@ export async function getPublicCart(
       console.error("[Ecom Public] getPublicCart error:", error);
       return null;
     }
-    return data as Cart;
+    if (!data) return null;
+    return { ...(data as Cart), items: (data as any).items || [] };
   } catch (err) {
     console.error("[Ecom Public] getPublicCart unexpected error:", err);
     return null;

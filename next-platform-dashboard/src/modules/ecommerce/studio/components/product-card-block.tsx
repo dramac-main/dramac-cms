@@ -303,10 +303,13 @@ export function ProductCardBlock({
     shadow: "transition-shadow hover:shadow-lg",
   };
 
-  // Get responsive values
-  const paddingValue = typeof padding === "object" ? padding.mobile : padding;
+  // Get responsive values (guard against null — typeof null === "object")
+  const paddingValue =
+    padding && typeof padding === "object" ? padding.mobile : padding;
   const borderRadiusValue =
-    typeof borderRadius === "object" ? borderRadius.mobile : borderRadius;
+    borderRadius && typeof borderRadius === "object"
+      ? borderRadius.mobile
+      : borderRadius;
 
   // Primary image
   const primaryImage = productImages[0] || undefined;

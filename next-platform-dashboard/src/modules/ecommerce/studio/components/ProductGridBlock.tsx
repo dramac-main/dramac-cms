@@ -179,15 +179,17 @@ export function ProductGridBlock({
   // Fetch categories for filter
   const { categories } = useStorefrontCategories(effectiveSiteId);
 
-  // Get responsive values
-  const gapValue = typeof gap === "object" ? gap.mobile : gap;
-  const paddingValue = typeof padding === "object" ? padding.mobile : padding;
-  const columnsValue = typeof columns === "object" ? columns.mobile : columns;
+  // Get responsive values (guard against null — typeof null === "object")
+  const gapValue = gap && typeof gap === "object" ? gap.mobile : gap;
+  const paddingValue =
+    padding && typeof padding === "object" ? padding.mobile : padding;
+  const columnsValue =
+    columns && typeof columns === "object" ? columns.mobile : columns;
 
   // Calculate grid columns class — uses module-level maps for Tailwind purge safety
   const gridColsClass = (() => {
     const cols =
-      typeof columns === "object"
+      columns && typeof columns === "object"
         ? columns
         : {
             mobile: 2,
