@@ -26,6 +26,13 @@ export class StorefrontErrorBoundary extends React.Component<
   }
 
   static getDerivedStateFromError(error: Error): StorefrontErrorBoundaryState {
+    // Log here because componentDidCatch does NOT fire during SSR.
+    // getDerivedStateFromError runs in both SSR and CSR contexts.
+    console.error(
+      "[StorefrontErrorBoundary][getDerivedStateFromError]",
+      error?.message,
+      error?.stack,
+    );
     return { hasError: true, error };
   }
 
