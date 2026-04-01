@@ -30,13 +30,12 @@ export class StorefrontErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    if (process.env.NODE_ENV === "development") {
-      console.error(
-        `[StorefrontErrorBoundary] ${this.props.blockName || "Unknown block"} crashed:`,
-        error,
-        errorInfo,
-      );
-    }
+    // Always log in all environments so we can diagnose storefront crashes
+    console.error(
+      `[StorefrontErrorBoundary] ${this.props.blockName || "Unknown block"} crashed:`,
+      error,
+      errorInfo,
+    );
   }
 
   handleRetry = () => {
@@ -64,6 +63,11 @@ export class StorefrontErrorBoundary extends React.Component<
               ? `The ${this.props.blockName} section couldn't load.`
               : "This section couldn't load."}
           </p>
+          {this.state.error && (
+            <p className="text-xs text-muted-foreground/60 mb-3 max-w-md break-all" data-error-detail>
+              {this.state.error.message}
+            </p>
+          )}
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={this.handleRetry}>
               <RefreshCw className="h-4 w-4 mr-1" />

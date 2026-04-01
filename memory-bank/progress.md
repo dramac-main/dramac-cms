@@ -1,11 +1,30 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: March 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅ + **LIVE CHAT RUNTIME FIXES (AI auto-response + file uploads)** ✅ + **PER-ORDER CONVERSATION ISOLATION** ✅ + **PER-ORDER CHAT HARDENING AUDIT (10 bugs fixed, 0 TS errors)** ✅ + **CATEGORIES PAGE + DARK MODE POLISH** ✅ + **LIVE CHAT OVERHAUL + ECOMMERCE FIXES** ✅ + **CANVAS IFRAME RENDERING FIDELITY FIXES** ✅ + **TYPOGRAPHY COMPONENTS OVERHAUL (4 enhanced + 5 new, CSS var type scale)** ✅ + **BUTTON COMPONENTS MASTER PLAN (Phases 1-5: renders, registrations, converter, metadata, CTARender composition)** ✅ + **MARKETING COMPONENTS — FULL IMPLEMENTATION + REGISTRY ALIGNMENT (5 components, all paths)** ✅ + **ECOMMERCE COMPONENTS OVERHAUL — CONVERTER, METADATA, DEFINITION ALIGNMENT (3 files, 23 metadata entries, 6 definitions fixed)** ✅ + **3D & EFFECTS COMPONENTS — FULL RENDER EXPANSION (ALL 12 components, Typewriter+Parallax rewrites, 7 normalizers, metadata enhanced)** ✅ + **3 SHOWCASE WEBSITES — FULLY POPULATED (208 records across 16 tables)** ✅
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅ + **LIVE CHAT RUNTIME FIXES (AI auto-response + file uploads)** ✅ + **PER-ORDER CONVERSATION ISOLATION** ✅ + **PER-ORDER CHAT HARDENING AUDIT (10 bugs fixed, 0 TS errors)** ✅ + **CATEGORIES PAGE + DARK MODE POLISH** ✅ + **LIVE CHAT OVERHAUL + ECOMMERCE FIXES** ✅ + **CANVAS IFRAME RENDERING FIDELITY FIXES** ✅ + **TYPOGRAPHY COMPONENTS OVERHAUL (4 enhanced + 5 new, CSS var type scale)** ✅ + **BUTTON COMPONENTS MASTER PLAN (Phases 1-5: renders, registrations, converter, metadata, CTARender composition)** ✅ + **MARKETING COMPONENTS — FULL IMPLEMENTATION + REGISTRY ALIGNMENT (5 components, all paths)** ✅ + **ECOMMERCE COMPONENTS OVERHAUL — CONVERTER, METADATA, DEFINITION ALIGNMENT (3 files, 23 metadata entries, 6 definitions fixed)** ✅ + **3D & EFFECTS COMPONENTS — FULL RENDER EXPANSION (ALL 12 components, Typewriter+Parallax rewrites, 7 normalizers, metadata enhanced)** ✅ + **3 SHOWCASE WEBSITES — FULLY POPULATED (208 records across 16 tables)** ✅ + **OVERLAY-AWARE CONTRAST RESOLUTION — ALL 10 PREMIUM COMPONENTS (shared utilities, comprehensive render fixes)** ✅
 
 ---
 
-## Latest Update: 3 Showcase Websites — ALL DATA COMPLETE ✅
+## Latest Update: Overlay-Aware Contrast Resolution — ALL 10 PREMIUM COMPONENTS ✅
+
+### What Was Done
+
+Comprehensive fix for text contrast issues caused by brand color injection overriding intentional white text on dark overlays/images. Created shared utility functions and patched all 10 vulnerable premium render components.
+
+**Root Cause:** `PLACEHOLDER_COLORS` includes `#ffffff`. When AI sets white text for dark overlay sections, brand injection replaces it with dark `palette.foreground` → invisible dark text on dark backgrounds.
+
+**New Utilities (layout-utils.ts):**
+- `isEffectivelyDark()` — Overlay-aware darkness detection (considers overlay color, opacity ≥30%, background images)
+- `resolveContrastColor()` — Forces white when dark text meets dark effective background
+
+**Components Fixed (renders.tsx):**
+HeroRender, CTARender, SectionRender, FeaturesRender, TestimonialsRender, FAQRender, StatsRender, TeamRender, GalleryRender, TiltCardRender
+
+**Git:** Committed as `adec5c0f`, pushed to origin/main (178 insertions, 98 deletions across 2 files)
+
+---
+
+## Previous Update: 3 Showcase Websites — ALL DATA COMPLETE ✅
 
 ### What Was Done
 

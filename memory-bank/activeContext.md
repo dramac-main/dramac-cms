@@ -1,38 +1,62 @@
 # Active Context
 
-## Current Focus: Deep Rendering Bug Investigation — ROOT CAUSE FOUND & FIXED ✅
+## Current Focus: Overlay-Aware Contrast Resolution — ALL 10 PREMIUM COMPONENTS FIXED ✅
 
-### What Was Done (Latest Session — Brand Injection + Background Image Bug Fixes)
+### What Was Done (Latest Session — Comprehensive Overlay-Aware Contrast Fixes)
 
-Previous session's fixes were **INCOMPLETE** — user confirmed bugs persisted across all 3 showcase sites. Deep audit revealed the TRUE root cause: the brand color injection system (`injectBrandColors`) was setting wrong values into component color props, AND components didn't account for background images when resolving colors.
+User confirmed previous bgImage-only fixes (commit 9afab9cf) were still insufficient. Specific scenario: Savanna Kitchen hero has `backgroundOverlay: true`, `backgroundOverlayColor: "#1C1410"`, `backgroundOverlayOpacity: 55` with `titleColor: "#ffffff"` — but `#ffffff` is in PLACEHOLDER_COLORS, so brand injection replaces it with `palette.foreground` (dark `"#1C1410"`) → dark text on dark overlay = invisible.
 
-#### Root Causes Discovered
+#### Core Problem
 
-1. **`BRAND_COLOR_MAP` mapped `secondaryButtonColor` → `"secondaryButtonBg"` = `"transparent"`** — This value was used as TEXT and BORDER color for secondary buttons, making them completely invisible on ALL sites.
+`PLACEHOLDER_COLORS` set includes `"#ffffff"`. When AI intentionally sets white text for dark overlay/image sections, brand injection replaces it with dark foreground color. Previous `hasBackgroundImage` check was necessary but insufficient — must also consider overlay color and opacity.
 
-2. **Brand injection fills `textColor` with brand foreground** (e.g., dark `"#1a1412"`) — but components with dark background IMAGES still got dark text → invisible text on dark images.
+#### Solution Architecture
 
-3. **`isDarkBackground(backgroundColor)` only checks the CSS color prop**, not the actual visual darkness from background images. Components with `backgroundColor: "#FFF8F0"` (light) but a dark photo as `bgImageUrl` were treated as "light" → dark text rendered on dark images.
+Two new shared utility functions in `layout-utils.ts`:
 
-4. **Previous `resolvedTextColor` fix** used `textColor || (dark || bgImageUrl ? "#ffffff" : undefined)` — but brand injection made `textColor` ALWAYS truthy, so the `||` fallback never fired.
+1. **`isEffectivelyDark(backgroundColor, bgImageUrl, backgroundOverlay, backgroundOverlayColor, backgroundOverlayOpacity)`** — Overlay-aware darkness detection:
+   - If overlay active with ≥30% opacity → uses overlay color darkness
+   - If image without overlay → assumes dark (conservative)
+   - If no image → uses backgroundColor
+   - Auto-normalizes opacity: `rawOpacity > 0 && rawOpacity <= 1 ? rawOpacity * 100 : rawOpacity`
 
-#### Comprehensive Fixes Applied
+2. **`resolveContrastColor(color, effectivelyDark, fallback?)`** — Returns white when color is dark AND section is effectively dark; returns color as-is when contrast is adequate
 
-| File | What Changed | Why |
-|------|-------------|-----|
-| **brand-colors.ts** | `secondaryButtonColor: "secondaryButtonText"` (was `"secondaryButtonBg"`) | Secondary button color now gets a visible, contrast-validated color instead of "transparent" |
-| **HeroRender** | Added `effectivelyDark = dark \|\| hasBackgroundImage`. All color resolutions (text, primary btn, secondary btn) now use `effectivelyDark`. Dark brand-injected text colors are overridden to `#ffffff` when bgImage present | Fixes invisible text and buttons on ALL heroes with background images |
-| **CTARender** | Moved `bgImageUrl` before `bgIsLight`. `bgIsLight` returns false when bgImage present. `resolvedTextColor` forces white when bgImage + dark text. Secondary button props check for "transparent" and dark colors on bgImage | Fixes "Ready to Dine" invisible title, invisible secondary buttons on CTA sections |
-| **SectionRender** | Text color resolution now checks if `bgImageUrl` + `isDarkBackground(textColor)` → forces white | Fixes brand-injected dark text on sections with background images |
-| **FooterRender** | Link contrast check now handles ANY brand-injected link color (not just default `#9ca3af`) using `isDarkBackground()` | Fixes invisible links when brand primary is dark on dark footer bg |
+#### All 10 Components Fixed
 
-#### Key Insight: The Brand Injection Pipeline
+| Component | Key Changes |
+|-----------|------------|
+| **HeroRender** | `effectivelyDark = isEffectivelyDark(...)`, all text + buttons use `resolveContrastColor()` |
+| **CTARender** | Replaced `bgIsLight` IIFE with overlay-aware detection, secondary button uses `resolveContrastColor()` |
+| **SectionRender** | Text color uses `resolveContrastColor(textColor, effectivelyDark)` |
+| **FeaturesRender** | Header + cards + CTA section all overlay-aware |
+| **TestimonialsRender** | Header + quotes + author info all overlay-aware |
+| **FAQRender** | Header + Q&A + contact CTA all overlay-aware |
+| **StatsRender** | Header + values + labels + descriptions all overlay-aware |
+| **TeamRender** | Header + skills overflow + CTA all overlay-aware |
+| **GalleryRender** | Header + CTA section all overlay-aware |
+| **TiltCardRender** | Container + badge + icon (uses 0-1 opacity scale, auto-normalized) |
 
-The rendering pipeline is: `Craft.js JSON → injectBrandColors(props, palette) → Component Render`.
+#### Files Modified & Committed (adec5c0f)
 
-Brand injection fills UNSET or PLACEHOLDER color props with brand-derived values. These values are computed to contrast with the brand BACKGROUND color. BUT when a component has a dark background IMAGE, the visual context is completely different from what the brand palette assumes. Components must detect this mismatch and override.
+- `layout-utils.ts` — Added `isEffectivelyDark()` and `resolveContrastColor()` after existing `isDarkBackground()`
+- `renders.tsx` — 178 insertions, 98 deletions across all 10 components
 
-Pattern applied: `const effectivelyDark = isDarkBackground(backgroundColor) || !!bgImageUrl;`
+#### Pattern for Future Components
+
+```typescript
+const effectivelyDark = isEffectivelyDark(backgroundColor, bgImageUrl, backgroundOverlay, backgroundOverlayColor, backgroundOverlayOpacity);
+const resolvedTextColor = resolveContrastColor(textColor, effectivelyDark);
+// For specific color props:
+const resolvedColor = resolveContrastColor(specificColor, effectivelyDark) || resolvedTextColor;
+```
+
+### Previous Session: Brand Injection + Background Image Bug Fixes (commit 9afab9cf)
+
+- Fixed `secondaryButtonColor` mapping in brand-colors.ts (`"secondaryButtonBg"` → `"secondaryButtonText"`)
+- Added initial `hasBackgroundImage` checks to HeroRender, CTARender, SectionRender, FooterRender
+
+### Previous Session: Typewriter + Parallax Complete Rewrites
 
 Closed the remaining render gaps for Typewriter and Parallax — the last 2 of 12 components that were still stubs. Added normalizers and enhanced metadata for both.
 
