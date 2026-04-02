@@ -547,7 +547,7 @@ export const categoryPageDefinition: PageDefinition = {
  */
 export function createQuoteRequestTemplate(): StudioPageData {
   resetIdCounter();
-  const page = createEmptyPage("Request a Quote");
+  const page = createEmptyPage("Submit Your Quote");
 
   // Header Section
   const headerSection = createSection(page, {
@@ -559,7 +559,7 @@ export function createQuoteRequestTemplate(): StudioPageData {
     gap: "16px",
   });
 
-  createHeading(page, headerContainer, "Request a Quote", 1);
+  createHeading(page, headerContainer, "Submit Your Quote", 1);
 
   // Quote Form Section
   const formSection = createSection(page, {
@@ -592,8 +592,8 @@ export function createQuoteRequestTemplate(): StudioPageData {
  */
 export const quotePageDefinition: PageDefinition = {
   slug: "quotes",
-  title: "Request a Quote",
-  metaTitle: "Request a Quote",
+  title: "Submit Your Quote",
+  metaTitle: "Submit Your Quote",
   metaDescription:
     "Submit a quote request for our products and services. We will get back to you with competitive pricing.",
   status: "published",

@@ -274,17 +274,30 @@ Your site was auto-published when you clicked "Apply & Edit" in Step 4. Time to 
 1. Go back to your **customer browser** (incognito/private window)
 2. **Refresh** the shop page: **https://YOUR-SUBDOMAIN.sites.dramacagency.com/shop**
 3. Verify the changes:
-   - [ ] "Add to Cart" buttons now say **"Request a Quote"** (or your custom label)
+   - [ ] "Add to Cart" buttons now say **"Add to Quote"** (or your custom label)
    - [ ] If you turned on "Hide Prices" — prices should be hidden
-   - [ ] Cart icon in header should be gone (cart is disabled in quotation mode)
-4. Click **"Request a Quote"** on any product
-5. You'll be redirected to the **Quote Request page** (`/quotes`)
-6. The product you clicked should be pre-loaded in the quote builder
-7. Fill in the quote request form:
+   - [ ] Cart icon in header still shows (it tracks your quote items)
+4. Click **"Add to Quote"** on any product
+   - The product is added to your quote cart (just like adding to a normal cart)
+   - You should see a toast: "Added to quote"
+   - The cart badge updates with the item count
+5. **Add more products** — click "Add to Quote" on 2-3 more products to build a multi-item quote
+6. Click the **cart icon** in the header (or go to `/cart`)
+7. Verify the cart page shows:
+   - [ ] Title says **"Your Quote Items"**
+   - [ ] All products you added with correct names and images
+   - [ ] Quantity controls (you can adjust quantities — changes are instant, no loading delay)
+   - [ ] A **"Submit Quote Request"** button (instead of "Checkout")
+8. Click **"Submit Quote Request"**
+   - You'll be taken to the **Quote Submission page** (`/quotes`)
+   - Your cart items are automatically loaded into the quote form
+9. Fill in the quote request form:
    - **Your Name** — e.g. "Quote Customer"
    - **Your Email** — use a real email (you'll receive quote notifications here)
    - **Message/Notes** — e.g. "I'd like a bulk order of 50 units"
-8. Submit the quote request
+10. Click **"Submit Quote Request"** to submit
+    - You should see a success message: "Quote Request Submitted!"
+    - Your cart is automatically cleared
 
 ### Step 14: Check That Notifications Fired
 
@@ -292,10 +305,15 @@ Your site was auto-published when you clicked "Apply & Edit" in Step 4. Time to 
    - Click the **bell icon** (🔔) at the top of the dashboard
    - You should see an **in-app notification** about the new quote request
    - Check the **email inbox** for your agency owner account — you should receive a "New Quote Request" email
+   - The email should include a **table of items** (product name, quantity, unit price) and the total
 
 2. **Customer Email:**
    - Check the email inbox for the email you used in the quote form
    - You should receive a **confirmation email** saying "Your quote request has been received"
+   - The email should list the items you requested (product name and quantity)
+
+3. **Live Chat (if active):**
+   - If the customer had an active chat session, Chiko should have posted a proactive message about the quote submission
 
 ### Step 15: Process the Quote (as Agency Owner)
 

@@ -1,11 +1,28 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: April 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅ + **LIVE CHAT RUNTIME FIXES (AI auto-response + file uploads)** ✅ + **PER-ORDER CONVERSATION ISOLATION** ✅ + **PER-ORDER CHAT HARDENING AUDIT (10 bugs fixed, 0 TS errors)** ✅ + **CATEGORIES PAGE + DARK MODE POLISH** ✅ + **LIVE CHAT OVERHAUL + ECOMMERCE FIXES** ✅ + **CANVAS IFRAME RENDERING FIDELITY FIXES** ✅ + **TYPOGRAPHY COMPONENTS OVERHAUL (4 enhanced + 5 new, CSS var type scale)** ✅ + **BUTTON COMPONENTS MASTER PLAN (Phases 1-5: renders, registrations, converter, metadata, CTARender composition)** ✅ + **MARKETING COMPONENTS — FULL IMPLEMENTATION + REGISTRY ALIGNMENT (5 components, all paths)** ✅ + **ECOMMERCE COMPONENTS OVERHAUL — CONVERTER, METADATA, DEFINITION ALIGNMENT (3 files, 23 metadata entries, 6 definitions fixed)** ✅ + **3D & EFFECTS COMPONENTS — FULL RENDER EXPANSION (ALL 12 components, Typewriter+Parallax rewrites, 7 normalizers, metadata enhanced)** ✅ + **3 SHOWCASE WEBSITES — FULLY POPULATED (208 records across 16 tables)** ✅ + **OVERLAY-AWARE CONTRAST RESOLUTION — ALL 10 PREMIUM COMPONENTS (shared utilities, comprehensive render fixes)** ✅ + **ECOMMERCE IMAGE FORMAT CRASH FIX — ALL 16 STOREFRONT COMPONENTS (image-utils.ts, normalizeProductImages)** ✅
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅ + **LIVE CHAT RUNTIME FIXES (AI auto-response + file uploads)** ✅ + **PER-ORDER CONVERSATION ISOLATION** ✅ + **PER-ORDER CHAT HARDENING AUDIT (10 bugs fixed, 0 TS errors)** ✅ + **CATEGORIES PAGE + DARK MODE POLISH** ✅ + **LIVE CHAT OVERHAUL + ECOMMERCE FIXES** ✅ + **CANVAS IFRAME RENDERING FIDELITY FIXES** ✅ + **TYPOGRAPHY COMPONENTS OVERHAUL (4 enhanced + 5 new, CSS var type scale)** ✅ + **BUTTON COMPONENTS MASTER PLAN (Phases 1-5: renders, registrations, converter, metadata, CTARender composition)** ✅ + **MARKETING COMPONENTS — FULL IMPLEMENTATION + REGISTRY ALIGNMENT (5 components, all paths)** ✅ + **ECOMMERCE COMPONENTS OVERHAUL — CONVERTER, METADATA, DEFINITION ALIGNMENT (3 files, 23 metadata entries, 6 definitions fixed)** ✅ + **3D & EFFECTS COMPONENTS — FULL RENDER EXPANSION (ALL 12 components, Typewriter+Parallax rewrites, 7 normalizers, metadata enhanced)** ✅ + **3 SHOWCASE WEBSITES — FULLY POPULATED (208 records across 16 tables)** ✅ + **OVERLAY-AWARE CONTRAST RESOLUTION — ALL 10 PREMIUM COMPONENTS (shared utilities, comprehensive render fixes)** ✅ + **ECOMMERCE IMAGE FORMAT CRASH FIX — ALL 16 STOREFRONT COMPONENTS (image-utils.ts, normalizeProductImages)** ✅ + **QUOTATION MODE OVERHAUL — CART-BASED UX, EMAILS, AI, CHAT EVENTS (13 source files)** ✅
 
 ---
 
-## Latest Update: Ecommerce Storefront Image Crash Fix ✅
+## Latest Update: Quotation Mode Overhaul ✅
+
+### What Was Done
+
+Complete overhaul of the quotation mode system. Changed from a redirect-based single-item flow to a cart-based multi-item experience. Fixed email "0 items" bug, enhanced email templates with item tables, integrated Chiko AI with quotation guidance, and added chat event lifecycle tracking.
+
+**13 Source Files Modified:**
+- Storefront context, product cards, product detail, sticky add-to-cart bar, cart drawer, cart page — all now show "Add to Quote" / "Your Quote Items" / "Submit Quote Request" labels
+- `quote-actions.ts` — Notification now fires AFTER items are added (via new `notifyQuoteCreated` server action)
+- Email templates include HTML item tables with name, quantity, and price
+- Chiko AI system prompt enhanced with detailed quotation guidance and confidence boost
+- Chat event bridge: 3 new lifecycle functions (requested/sent/accepted) wired into workflows
+
+**Git:** `b8b02ed3`, pushed to origin/main (416 insertions, 78 deletions across 15 files)
+
+---
+
+## Previous Update: Ecommerce Storefront Image Crash Fix ✅
 
 ### What Was Done
 

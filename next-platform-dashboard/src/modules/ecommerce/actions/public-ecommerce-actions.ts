@@ -585,11 +585,20 @@ export async function addPublicCartItem(
 export async function updatePublicCartItemQuantity(
   itemId: string,
   quantity: number,
-): Promise<CartItem | null> {
+): Promise<Cart | null> {
   const supabase = getPublicClient();
 
   if (quantity <= 0) {
+    // Get cart_id before deleting so we can return the updated cart
+    const { data: item } = await supabase
+      .from(`${TABLE_PREFIX}_cart_items`)
+      .select("cart_id")
+      .eq("id", itemId)
+      .single();
     await removePublicCartItem(itemId);
+    if (item?.cart_id) {
+      return getPublicCart(item.cart_id);
+    }
     return null;
   }
 
@@ -597,11 +606,16 @@ export async function updatePublicCartItemQuantity(
     .from(`${TABLE_PREFIX}_cart_items`)
     .update({ quantity })
     .eq("id", itemId)
-    .select()
+    .select("cart_id")
     .single();
 
   if (error) throw new Error(error.message);
-  return data as CartItem;
+
+  // Return the full updated cart (eliminates separate refresh call)
+  if (data?.cart_id) {
+    return getPublicCart(data.cart_id);
+  }
+  return null;
 }
 
 export async function removePublicCartItem(itemId: string): Promise<void> {

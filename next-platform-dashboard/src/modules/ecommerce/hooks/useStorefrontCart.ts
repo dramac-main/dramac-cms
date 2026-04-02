@@ -240,7 +240,7 @@ export function useStorefrontCart(
     [cart?.id],
   );
 
-  // Update item quantity
+  // Update item quantity (optimistic — instant UI, server in background)
   const updateItemQuantity = useCallback(
     async (itemId: string, quantity: number): Promise<boolean> => {
       if (!cart?.id) {
@@ -248,41 +248,57 @@ export function useStorefrontCart(
         return false;
       }
 
-      setIsUpdating(true);
+      // Optimistic update: immediately update local state
+      const previousCart = cart;
+      setCart((prev) => {
+        if (!prev?.items) return prev;
+        if (quantity <= 0) {
+          return { ...prev, items: prev.items.filter((item) => item.id !== itemId) };
+        }
+        return {
+          ...prev,
+          items: prev.items.map((item) =>
+            item.id === itemId ? { ...item, quantity } : item,
+          ),
+        };
+      });
+
       setError(null);
 
       try {
-        await updateCartItemQty(itemId, quantity);
-        await refresh();
-        // Notify other cart instances with updated data
-        if (typeof window !== "undefined" && cart) {
-          const refreshedCart = cart;
+        // Single server call that returns the full updated cart
+        const updatedCart = await updateCartItemQty(itemId, quantity);
+        if (updatedCart) {
+          setCart(updatedCart);
+        }
+        // Notify other cart instances
+        if (typeof window !== "undefined") {
           const newItemCount =
-            refreshedCart.items?.reduce(
+            updatedCart?.items?.reduce(
               (sum, item) => sum + item.quantity,
               0,
             ) || 0;
           window.dispatchEvent(
             new CustomEvent("cart-updated", {
-              detail: { itemCount: newItemCount },
+              detail: { cart: updatedCart, itemCount: newItemCount },
             }),
           );
         }
         return true;
       } catch (err) {
+        // Rollback to previous state on error
+        setCart(previousCart);
         console.error("Error updating quantity:", err);
         setError(
           err instanceof Error ? err.message : "Failed to update quantity",
         );
         return false;
-      } finally {
-        setIsUpdating(false);
       }
     },
-    [cart?.id, cart, refresh],
+    [cart],
   );
 
-  // Remove item
+  // Remove item (optimistic — instant UI, server in background)
   const removeItem = useCallback(
     async (itemId: string): Promise<boolean> => {
       if (!cart?.id) {
@@ -290,18 +306,23 @@ export function useStorefrontCart(
         return false;
       }
 
-      setIsUpdating(true);
+      // Optimistic: remove from local state immediately
+      const previousCart = cart;
+      const newItemCount =
+        cart.items
+          ?.filter((item) => item.id !== itemId)
+          .reduce((sum, item) => sum + item.quantity, 0) || 0;
+      setCart((prev) => {
+        if (!prev?.items) return prev;
+        return { ...prev, items: prev.items.filter((item) => item.id !== itemId) };
+      });
+
       setError(null);
 
       try {
         await removeCartItemAction(itemId);
-        await refresh();
         // Notify other cart instances
         if (typeof window !== "undefined") {
-          const newItemCount =
-            cart.items
-              ?.filter((item) => item.id !== itemId)
-              .reduce((sum, item) => sum + item.quantity, 0) || 0;
           window.dispatchEvent(
             new CustomEvent("cart-updated", {
               detail: { itemCount: newItemCount },
@@ -310,14 +331,14 @@ export function useStorefrontCart(
         }
         return true;
       } catch (err) {
+        // Rollback on error
+        setCart(previousCart);
         console.error("Error removing item:", err);
         setError(err instanceof Error ? err.message : "Failed to remove item");
         return false;
-      } finally {
-        setIsUpdating(false);
       }
     },
-    [cart?.id, cart?.items, refresh],
+    [cart],
   );
 
   // Clear cart

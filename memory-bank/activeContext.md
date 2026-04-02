@@ -1,8 +1,34 @@
 # Active Context
 
-## Current Focus: Ecommerce Storefront Image Crash Fix + Contrast Fixes — ALL COMPLETE ✅
+## Current Focus: Quotation Mode Overhaul — ALL COMPLETE ✅
 
-### What Was Done (Latest Session — Ecommerce Image Format Crash Fix)
+### What Was Done (Latest Session — Quotation Mode Cart-Based UX + Email Fixes + AI Integration)
+
+**Problem:** Quotation mode was broken — "Request a Quote" button redirected to a single-item form, emails had "0 items", Chiko AI had no quotation awareness, and no chat events tracked quote lifecycle.
+
+**13 Source Files Modified (commit b8b02ed3):**
+
+| File | Change |
+|------|--------|
+| `storefront-context.tsx` | Default `quotationButtonLabel` → "Add to Quote" |
+| `product-card-block.tsx` | Removed redirect, uses `addItem()` like cart; "View Quote Items" link |
+| `ProductDetailBlock.tsx` | Removed redirect, uses `addItem()`; shows "View Quote Items" |
+| `StickyAddToCartBar.tsx` | Full quotation mode support (label, icon, hide price, success text) |
+| `CartDrawerBlock.tsx` | "Your Quote Items" title, "Submit Quote Request" button |
+| `CartPageBlock.tsx` | "Your Quote Items" title, "Submit Quote Request" button |
+| `quote-actions.ts` | Removed premature `notifyNewQuote`; added `notifyQuoteCreated()` server action that runs AFTER items added; wired `notifyChatQuoteRequested` |
+| `useQuotations.ts` | Calls `notifyQuoteCreated` after `recalculateQuoteTotals` |
+| `business-notifications.ts` | Added `items` array to `QuoteNotificationData`; passed to email payloads |
+| `branded-templates.ts` | `quote_request_owner` and `quote_request_customer` now include HTML item tables |
+| `ai-responder.ts` | Enhanced quotation guidance in system prompt; confidence boost for quote queries |
+| `chat-event-bridge.ts` | Added `notifyChatQuoteRequested`, `notifyChatQuoteSent`, `notifyChatQuoteAccepted` |
+| `quote-workflow-actions.ts` | Wired `notifyChatQuoteSent` into `sendQuote()`; `notifyChatQuoteAccepted` into `acceptQuote()` |
+
+**Key Architecture Decision:** Quotation mode now reuses the normal cart system with label changes rather than being a separate redirect-based flow. Customers can add multiple items to their quote like a normal shopping cart.
+
+**Git:** Committed as `b8b02ed3`, pushed to origin/main.
+
+### Previous Session: Ecommerce Storefront Image Crash Fix
 
 **Root Cause Found & Fixed:** ALL ecommerce storefront pages were crashing with `eB?.includes is not a function` after JavaScript hydration. The error boundary showed "Something went wrong" on every ecommerce section.
 

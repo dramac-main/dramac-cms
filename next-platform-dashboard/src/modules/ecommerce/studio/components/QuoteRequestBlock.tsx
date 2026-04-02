@@ -31,6 +31,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useStorefront } from "../../context/storefront-context";
+import { useStorefrontCart } from "../../hooks/useStorefrontCart";
 import {
   useQuotations,
   QuoteBuilderItem,
@@ -84,14 +85,17 @@ export function QuoteRequestBlock({
   requirePhone = false,
   requireCompany = false,
   onSuccess,
-  title = "Request a Quote",
-  description = "Fill out the form below and we'll send you a customized quote.",
+  title = "Submit Your Quote",
+  description = "Review your quote items below and fill in your details to receive a customized quote.",
   className,
 }: QuoteRequestBlockProps) {
-  const { siteId, formatPrice, settings, quotationModeEnabled, isInitialized } =
+  const { siteId, formatPrice, settings, quotationModeEnabled, taxRate, isInitialized } =
     useStorefront();
   const agencyId = settings?.agency_id;
   const searchParams = useSearchParams();
+
+  // Cart integration — items may be in the cart (from "Add to Quote" buttons)
+  const { items: cartItems, clearCart, isLoading: isCartLoading } = useStorefrontCart(siteId, undefined, taxRate);
 
   // Move hooks before conditional returns to satisfy React rules of hooks
   const {
@@ -118,6 +122,26 @@ export function QuoteRequestBlock({
     Partial<Record<keyof QuoteRequestData, string>>
   >({});
   const [isLoadingProduct, setIsLoadingProduct] = React.useState(false);
+  const [cartItemsLoaded, setCartItemsLoaded] = React.useState(false);
+
+  // Auto-populate builder from cart items (quotation mode uses the cart as a quote builder)
+  React.useEffect(() => {
+    if (cartItemsLoaded || isCartLoading || !quotationModeEnabled) return;
+    if (!cartItems || cartItems.length === 0) return;
+    if (builderItems.length > 0) return; // Already has items
+
+    for (const item of cartItems) {
+      addToBuilder({
+        product_id: item.product_id,
+        product_name: item.product?.name || "Product",
+        product_image: getImageUrl(item.product?.images?.[0]) || undefined,
+        list_price: item.unit_price,
+        quantity: item.quantity,
+      });
+    }
+    setCartItemsLoaded(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cartItems, isCartLoading, quotationModeEnabled, cartItemsLoaded, builderItems.length]);
 
   // Auto-load product from ?product= URL parameter
   const productIdParam = searchParams?.get("product");
@@ -228,6 +252,10 @@ export function QuoteRequestBlock({
 
     if (result) {
       setIsSubmitted(true);
+      // Clear cart items since they've been converted to a quote
+      if (cartItems && cartItems.length > 0) {
+        try { await clearCart(); } catch { /* best effort */ }
+      }
       onSuccess?.(result.id);
     }
   };
@@ -252,15 +280,15 @@ export function QuoteRequestBlock({
     );
   }
 
-  // Loading product from URL
-  if (isLoadingProduct) {
+  // Loading product from URL or cart
+  if (isLoadingProduct || (isCartLoading && builderCount === 0)) {
     return (
       <Card className={className}>
         <CardContent className="pt-6">
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             <span className="ml-3 text-muted-foreground">
-              Loading product...
+              Loading quote items...
             </span>
           </div>
         </CardContent>
@@ -281,6 +309,11 @@ export function QuoteRequestBlock({
             <p className="mt-2 text-muted-foreground">
               Add products to your quote request before submitting.
             </p>
+            <Link href="/shop">
+              <Button className="mt-4" variant="outline">
+                <ShoppingBag className="mr-2 h-4 w-4" /> Browse Products
+              </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>

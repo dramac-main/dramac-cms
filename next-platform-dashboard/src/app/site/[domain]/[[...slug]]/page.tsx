@@ -335,9 +335,9 @@ async function generateEcommercePage(slug: string, siteId: string) {
     return {
       id: `virtual-quotes-${siteId}`,
       slug: "/quotes",
-      name: "Request a Quote",
+      name: "Submit Your Quote",
       is_homepage: false,
-      seo_title: "Request a Quote",
+      seo_title: "Submit Your Quote",
       seo_description: "Submit a quote request for our products.",
       seo_image: null,
       page_content: [{ content: createQuoteRequestTemplate() }],
