@@ -1,32 +1,77 @@
 # Active Context
 
-## Current Focus: Quotation Mode Overhaul — ALL COMPLETE ✅
+## Current Focus: Quote Chat Auto-Start Fix — COMPLETE ✅
 
-### What Was Done (Latest Session — Quotation Mode Cart-Based UX + Email Fixes + AI Integration)
+### What Was Done (Latest Session — Quote Chat Auto-Start Pipeline)
 
-**Problem:** Quotation mode was broken — "Request a Quote" button redirected to a single-item form, emails had "0 items", Chiko AI had no quotation awareness, and no chat events tracked quote lifecycle.
+**Problem:** After quote submission, chat widget opened but nothing happened — no conversation created, no AI response. User wanted the same progressive guidance experience as the order flow.
 
-**13 Source Files Modified (commit b8b02ed3):**
+**Root Cause:** Timing race in embed script — `toggleChat()` sent `dramac-chat-open` to iframe BEFORE `quoteContext` was forwarded, so `handleOpen()` ran while `quoteContextRef.current` was still null. Additionally, the conversation API didn't accept `quoteContext`, had no per-quote isolation, and the AI trigger didn't detect quote messages.
+
+**3 Source Files Modified (commit bf20ad1f):**
 
 | File | Change |
 |------|--------|
-| `storefront-context.tsx` | Default `quotationButtonLabel` → "Add to Quote" |
-| `product-card-block.tsx` | Removed redirect, uses `addItem()` like cart; "View Quote Items" link |
-| `ProductDetailBlock.tsx` | Removed redirect, uses `addItem()`; shows "View Quote Items" |
-| `StickyAddToCartBar.tsx` | Full quotation mode support (label, icon, hide price, success text) |
-| `CartDrawerBlock.tsx` | "Your Quote Items" title, "Submit Quote Request" button |
-| `CartPageBlock.tsx` | "Your Quote Items" title, "Submit Quote Request" button |
-| `quote-actions.ts` | Removed premature `notifyNewQuote`; added `notifyQuoteCreated()` server action that runs AFTER items added; wired `notifyChatQuoteRequested` |
-| `useQuotations.ts` | Calls `notifyQuoteCreated` after `recalculateQuoteTotals` |
-| `business-notifications.ts` | Added `items` array to `QuoteNotificationData`; passed to email payloads |
-| `branded-templates.ts` | `quote_request_owner` and `quote_request_customer` now include HTML item tables |
-| `ai-responder.ts` | Enhanced quotation guidance in system prompt; confidence boost for quote queries |
-| `chat-event-bridge.ts` | Added `notifyChatQuoteRequested`, `notifyChatQuoteSent`, `notifyChatQuoteAccepted` |
-| `quote-workflow-actions.ts` | Wired `notifyChatQuoteSent` into `sendQuote()`; `notifyChatQuoteAccepted` into `acceptQuote()` |
+| `route.ts` (embed) | **Timing fix:** Forward `quoteContext` to iframe BEFORE calling `toggleChat()`. Added explicit `dramac-chat-open` forwarding when chat already open. |
+| `ChatWidget.tsx` | `handleStartChat` accepts `quoteContext` param, passes to API body. Per-quote conversation mapping via `saveConvToMap(quoteNumber)`. Per-quote lookup in `handleOpen` via `findConvForOrder(quoteNumber)` — reuses existing quote conversations. |
+| `route.ts` (conversations API) | Accepts `quoteContext` in body. Extracts `quoteNumber`. Per-quote conversation isolation (finds existing by `quote_number` in metadata). New conversations get tags `["quote","quotation"]`, metadata `{quote_number, quote_guidance_active: true}`, subject `Quote ${quoteNumber}`. `shouldSendMessage` includes `!!quoteNumber`. New `isQuoteMsg` detection triggers AI auto-response via `forcePaymentGuidance`. |
 
-**Key Architecture Decision:** Quotation mode now reuses the normal cart system with label changes rather than being a separate redirect-based flow. Customers can add multiple items to their quote like a normal shopping cart.
+**Quote Chat Pipeline (end-to-end):**
+1. `QuoteRequestBlock` → `window.postMessage({ type: "dramac-chat-open", quoteContext })` after 2s delay
+2. Embed script `route.ts` → forwards `quoteContext` as `dramac-chat-quote-context` to iframe FIRST, THEN calls `toggleChat()`
+3. `ChatWidget.handleOpen()` → finds pending `quoteContextRef`, looks up existing conversation by quoteNumber, or calls `handleStartChat` with quoteContext
+4. `handleStartChat` → POST to `/api/modules/live-chat/conversations` with `quoteContext` in body
+5. Conversations API → per-quote isolation, stores metadata, inserts initial message
+6. `isQuoteMsg` triggers `forcePaymentGuidance` → AI (Chiko) auto-responds with quote guidance via `after()`
+7. Supabase Realtime delivers AI response to widget
 
-**Git:** Committed as `b8b02ed3`, pushed to origin/main.
+**Git:** Committed as `bf20ad1f`, pushed to origin/main (97 insertions, 14 deletions across 3 files).
+
+### Previous Session: Cart Debouncing + Quote UX Enhancements (commit d32ff4ad)
+
+**Problems Fixed:**
+1. Cart quantity controls "going haywire" on rapid clicking — race condition from previous optimistic update implementation
+2. Chat doesn't auto-open after quote submission
+3. No way to download the quote from the success screen
+
+**4 Source Files Modified (commit d32ff4ad):**
+
+| File | Change |
+|------|--------|
+| `useStorefrontCart.ts` | **Complete rewrite** of `updateItemQuantity`: 300ms debounce per item, version tracking to ignore stale server responses, functional `setCart(prev => ...)` for always-latest state, `refresh()` on error instead of stale rollback. `removeItem`: cancel pending debounce timer, `refresh()` on error. Dependencies: `[cart?.id, refresh]` |
+| `QuoteRequestBlock.tsx` | Auto-open chat 2s after quote submission via PostMessage. Download Quote Summary button. Chat With Us button. Quote reference number on success screen. Snapshots builder items for PDF. Type fix: `store_name` not `business_name` |
+| `ChatWidget.tsx` | Added `quoteContextRef`, handler for `dramac-chat-quote-context` message, quoteContext check in `handleOpen` to auto-start contextual conversation |
+| `route.ts` (embed) | Added quoteContext forwarding in `dramac-chat-open` handler (parent → iframe bridge) |
+
+**Cart Debounce Pattern (race condition fix):**
+- Each rapid click: instant optimistic UI via functional `setCart(prev => ...)`
+- 300ms debounce timer per item (Map of itemId → timer) — only LAST quantity fires server call
+- Version counter per item (Map of itemId → number) — stale server responses ignored
+- On error: `refresh()` reloads from server (no stale `previousCart` rollback)
+- On remove: cancel any pending debounce timer for that item
+
+**Quote Chat Auto-Open Pattern:**
+- `QuoteRequestBlock` → `window.postMessage({ type: "dramac-chat-open", quoteContext: {...} })` after 2s delay
+- Embed script `route.ts` → forwards `quoteContext` as `dramac-chat-quote-context` to iframe
+- `ChatWidget` → picks up `quoteContext` via ref, auto-starts chat with contextual greeting
+
+**Git:** Committed as `d32ff4ad`, pushed to origin/main (241 insertions, 44 deletions across 4 files).
+
+### Previous Session: Cart-to-Builder Bridge, Optimistic Updates, Page Labels (commit a6cfa2e8)
+
+**6 Source Files Modified:**
+- `public-ecommerce-actions.ts`: `updatePublicCartItemQuantity` returns full `Cart` instead of `CartItem`
+- `useStorefrontCart.ts`: Initial optimistic updates (later replaced by debounced version above)
+- `QuoteRequestBlock.tsx`: Auto-populates builder from cart items, clears cart after submission
+- `page-templates.ts` + `page.tsx`: "Request a Quote" → "Submit Your Quote"
+- `TESTING-WALKTHROUGH.md`: Steps 13-14 rewritten
+
+### Previous Session: Quotation Mode Cart-Based UX + Email Fixes + AI Integration
+
+**13 Source Files Modified (commit b8b02ed3):**
+- Storefront context, product cards, product detail, sticky bar, cart drawer, cart page — "Add to Quote" / "Your Quote Items" / "Submit Quote Request" labels
+- Email templates with HTML item tables, Chiko AI quotation guidance, chat event bridge lifecycle tracking
+- **Git:** `b8b02ed3` (416 insertions, 78 deletions across 15 files)
 
 ### Previous Session: Ecommerce Storefront Image Crash Fix
 

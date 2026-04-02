@@ -1,11 +1,42 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: April 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅ + **LIVE CHAT RUNTIME FIXES (AI auto-response + file uploads)** ✅ + **PER-ORDER CONVERSATION ISOLATION** ✅ + **PER-ORDER CHAT HARDENING AUDIT (10 bugs fixed, 0 TS errors)** ✅ + **CATEGORIES PAGE + DARK MODE POLISH** ✅ + **LIVE CHAT OVERHAUL + ECOMMERCE FIXES** ✅ + **CANVAS IFRAME RENDERING FIDELITY FIXES** ✅ + **TYPOGRAPHY COMPONENTS OVERHAUL (4 enhanced + 5 new, CSS var type scale)** ✅ + **BUTTON COMPONENTS MASTER PLAN (Phases 1-5: renders, registrations, converter, metadata, CTARender composition)** ✅ + **MARKETING COMPONENTS — FULL IMPLEMENTATION + REGISTRY ALIGNMENT (5 components, all paths)** ✅ + **ECOMMERCE COMPONENTS OVERHAUL — CONVERTER, METADATA, DEFINITION ALIGNMENT (3 files, 23 metadata entries, 6 definitions fixed)** ✅ + **3D & EFFECTS COMPONENTS — FULL RENDER EXPANSION (ALL 12 components, Typewriter+Parallax rewrites, 7 normalizers, metadata enhanced)** ✅ + **3 SHOWCASE WEBSITES — FULLY POPULATED (208 records across 16 tables)** ✅ + **OVERLAY-AWARE CONTRAST RESOLUTION — ALL 10 PREMIUM COMPONENTS (shared utilities, comprehensive render fixes)** ✅ + **ECOMMERCE IMAGE FORMAT CRASH FIX — ALL 16 STOREFRONT COMPONENTS (image-utils.ts, normalizeProductImages)** ✅ + **QUOTATION MODE OVERHAUL — CART-BASED UX, EMAILS, AI, CHAT EVENTS (13 source files)** ✅
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅ + **LIVE CHAT RUNTIME FIXES (AI auto-response + file uploads)** ✅ + **PER-ORDER CONVERSATION ISOLATION** ✅ + **PER-ORDER CHAT HARDENING AUDIT (10 bugs fixed, 0 TS errors)** ✅ + **CATEGORIES PAGE + DARK MODE POLISH** ✅ + **LIVE CHAT OVERHAUL + ECOMMERCE FIXES** ✅ + **CANVAS IFRAME RENDERING FIDELITY FIXES** ✅ + **TYPOGRAPHY COMPONENTS OVERHAUL (4 enhanced + 5 new, CSS var type scale)** ✅ + **BUTTON COMPONENTS MASTER PLAN (Phases 1-5: renders, registrations, converter, metadata, CTARender composition)** ✅ + **MARKETING COMPONENTS — FULL IMPLEMENTATION + REGISTRY ALIGNMENT (5 components, all paths)** ✅ + **ECOMMERCE COMPONENTS OVERHAUL — CONVERTER, METADATA, DEFINITION ALIGNMENT (3 files, 23 metadata entries, 6 definitions fixed)** ✅ + **3D & EFFECTS COMPONENTS — FULL RENDER EXPANSION (ALL 12 components, Typewriter+Parallax rewrites, 7 normalizers, metadata enhanced)** ✅ + **3 SHOWCASE WEBSITES — FULLY POPULATED (208 records across 16 tables)** ✅ + **OVERLAY-AWARE CONTRAST RESOLUTION — ALL 10 PREMIUM COMPONENTS (shared utilities, comprehensive render fixes)** ✅ + **ECOMMERCE IMAGE FORMAT CRASH FIX — ALL 16 STOREFRONT COMPONENTS (image-utils.ts, normalizeProductImages)** ✅ + **QUOTATION MODE OVERHAUL — CART-BASED UX, EMAILS, AI, CHAT EVENTS (13 source files)** ✅ + **QUOTATION FLOW FIXES — CART-TO-BUILDER BRIDGE, OPTIMISTIC UPDATES (6 source files)** ✅ + **CART DEBOUNCING + QUOTE CHAT/DOWNLOAD UX (4 source files, race condition fix)** ✅ + **QUOTE CHAT AUTO-START FIX — TIMING RACE, PER-QUOTE ISOLATION, AI GUIDANCE (3 source files)** ✅
 
 ---
 
-## Latest Update: Quotation Mode Overhaul ✅
+## Latest Update: Quote Chat Auto-Start Fix ✅
+
+### What Was Done
+
+Fixed chat not actually starting after quote submission. Root cause: timing race in embed script where `toggleChat()` fired before `quoteContext` was forwarded to the iframe, so `handleOpen()` found no pending context. Also added per-quote conversation isolation (mirrors per-order pattern), quote metadata storage, and AI auto-response detection for quote messages.
+
+**3 Source Files Modified:**
+- `route.ts` (embed) — Forward quoteContext BEFORE toggleChat() to fix timing race
+- `ChatWidget.tsx` — Pass quoteContext through handleStartChat, per-quote conversation mapping, reuse existing quote conversations
+- `route.ts` (conversations API) — Accept quoteContext, per-quote isolation via metadata, quote tags/metadata/subject, isQuoteMsg triggers AI auto-response
+
+**Git:** `bf20ad1f`, pushed to origin/main (97 insertions, 14 deletions across 3 files)
+
+---
+
+## Previous Update: Cart Debouncing + Quote Chat/Download UX ✅
+
+### What Was Done
+
+Fixed three critical UX issues: (1) Cart quantity controls "going haywire" on rapid clicking — race condition from optimistic updates where stale server responses overwrote newer state. Fixed with 300ms debounce per item + version tracking. (2) Chat not auto-opening after quote submission — added PostMessage bridge for quoteContext through embed script to ChatWidget iframe. (3) No quote download — added Download Quote Summary button + Chat With Us button + quote reference number on success screen.
+
+**4 Source Files Modified:**
+- `useStorefrontCart.ts` — 300ms debounce per item, version tracking, functional state updater, `refresh()` on error
+- `QuoteRequestBlock.tsx` — Auto-open chat 2s after submission, download button, chat button, type fix (store_name)
+- `ChatWidget.tsx` — quoteContextRef, dramac-chat-quote-context handler, auto-start conversation
+- `route.ts` (embed) — quoteContext forwarding in PostMessage bridge
+
+**Git:** `d32ff4ad`, pushed to origin/main (241 insertions, 44 deletions across 4 files)
+
+---
+
+## Previous Update: Quotation Flow Fixes ✅
 
 ### What Was Done
 
