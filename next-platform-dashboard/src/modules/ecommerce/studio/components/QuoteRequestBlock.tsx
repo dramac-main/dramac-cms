@@ -29,6 +29,8 @@ import {
   CircleCheck,
   ShoppingBag,
   AlertCircle,
+  Download,
+  MessageCircle,
 } from "lucide-react";
 import { useStorefront } from "../../context/storefront-context";
 import { useStorefrontCart } from "../../hooks/useStorefrontCart";
@@ -40,6 +42,8 @@ import {
 import { QuoteItemCard } from "./QuoteItemCard";
 import { QuotePriceBreakdown } from "./QuotePriceBreakdown";
 import { getImageUrl } from "../../lib/image-utils";
+import { downloadQuotePDF } from "../../lib/quote-pdf-generator";
+import type { Quote, QuoteItem } from "../../types/ecommerce-types";
 import Link from "next/link";
 
 // ============================================================================
@@ -243,14 +247,43 @@ export function QuoteRequestBlock({
   };
 
   // Handle submit
+  const [submittedQuote, setSubmittedQuote] = React.useState<Quote | null>(null);
+  const chatAutoOpenedRef = React.useRef(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validate()) return;
 
+    // Snapshot builder items before submission (for PDF download later)
+    const snapshotItems = [...builderItems];
     const result = await submitQuoteRequest(formData);
 
     if (result) {
+      // Attach items to the quote for PDF download
+      const quoteWithItems: Quote = {
+        ...result,
+        items: snapshotItems.map((item, idx) => ({
+          id: `temp-${idx}`,
+          quote_id: result.id,
+          product_id: item.product_id,
+          variant_id: item.variant_id || null,
+          name: item.product_name,
+          description: null,
+          image_url: item.product_image || null,
+          sku: null,
+          quantity: item.quantity,
+          unit_price: item.requested_price || item.list_price,
+          discount_percent: 0,
+          tax_rate: 0,
+          line_total: (item.requested_price || item.list_price) * item.quantity,
+          options: {},
+          sort_order: idx,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })) as QuoteItem[],
+      };
+      setSubmittedQuote(quoteWithItems);
       setIsSubmitted(true);
       // Clear cart items since they've been converted to a quote
       if (cartItems && cartItems.length > 0) {
@@ -260,8 +293,51 @@ export function QuoteRequestBlock({
     }
   };
 
+  // Auto-open chat widget after quote submission (same pattern as OrderConfirmation)
+  React.useEffect(() => {
+    if (!isSubmitted || !submittedQuote || chatAutoOpenedRef.current) return;
+    chatAutoOpenedRef.current = true;
+
+    const timer = setTimeout(() => {
+      window.postMessage(
+        {
+          type: "dramac-chat-open",
+          quoteContext: {
+            quoteNumber: submittedQuote.quote_number,
+            itemCount: submittedQuote.items?.length || 0,
+            email: formData.customer_email,
+          },
+        },
+        window.location.origin,
+      );
+    }, 2000); // 2s delay so user can see the confirmation first
+    return () => clearTimeout(timer);
+  }, [isSubmitted, submittedQuote, formData.customer_email]);
+
   // Success state
   if (isSubmitted) {
+    const handleDownloadQuote = () => {
+      if (!submittedQuote) return;
+      downloadQuotePDF(submittedQuote, {
+        documentType: "quote",
+        companyName: settings?.store_name || undefined,
+      });
+    };
+
+    const handleOpenChat = () => {
+      window.postMessage(
+        {
+          type: "dramac-chat-open",
+          quoteContext: {
+            quoteNumber: submittedQuote?.quote_number || "",
+            itemCount: submittedQuote?.items?.length || 0,
+            email: formData.customer_email,
+          },
+        },
+        window.location.origin,
+      );
+    };
+
     return (
       <Card className={cn("text-center", className)}>
         <CardContent className="pt-6">
@@ -275,6 +351,33 @@ export function QuoteRequestBlock({
             We&apos;ve received your request and will send your quote to{" "}
             <strong>{formData.customer_email}</strong> shortly.
           </p>
+          {submittedQuote?.quote_number && (
+            <p className="mt-1 text-sm text-muted-foreground">
+              Reference: <strong>{submittedQuote.quote_number}</strong>
+            </p>
+          )}
+          <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            {submittedQuote && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadQuote}
+                className="gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Download Quote Summary
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleOpenChat}
+              className="gap-2"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Chat With Us
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );

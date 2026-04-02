@@ -159,6 +159,11 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
     paymentProvider?: string;
     isManualPayment?: boolean;
   } | null>(null);
+  const quoteContextRef = useRef<{
+    quoteNumber: string;
+    itemCount: number;
+    email: string;
+  } | null>(null);
 
   // --- localStorage helpers for per-order conversation map ---
   const CONV_MAP_KEY = `dramac_chat_convmap_${siteId}`;
@@ -508,6 +513,20 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
       return;
     }
 
+    // Check for pending quote context (from QuoteRequestBlock auto-open)
+    const pendingQuoteCtx = quoteContextRef.current;
+
+    if (pendingQuoteCtx) {
+      quoteContextRef.current = null;
+
+      // Start a chat about the submitted quote
+      handleStartChat({
+        email: pendingQuoteCtx.email,
+        message: `Hi, I just submitted quote request ${pendingQuoteCtx.quoteNumber} with ${pendingQuoteCtx.itemCount} item${pendingQuoteCtx.itemCount !== 1 ? "s" : ""}. I'd like to follow up on its status.`,
+      });
+      return;
+    }
+
     // NO ORDER CONTEXT: Show conversation list if visitor has conversations
     const savedVis = localStorage.getItem(VISITOR_KEY);
     if (savedVis) {
@@ -568,6 +587,16 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
         };
         orderContextRef.current = ctx;
         setOrderContext(ctx);
+      } else if (
+        msg.type === "dramac-chat-quote-context" &&
+        msg.quoteContext
+      ) {
+        // Quote context forwarded from embed script (originated from QuoteRequestBlock)
+        quoteContextRef.current = {
+          quoteNumber: String(msg.quoteContext.quoteNumber || ""),
+          itemCount: Number(msg.quoteContext.itemCount || 0),
+          email: String(msg.quoteContext.email || ""),
+        };
       }
     }
     window.addEventListener("message", handleMessage);

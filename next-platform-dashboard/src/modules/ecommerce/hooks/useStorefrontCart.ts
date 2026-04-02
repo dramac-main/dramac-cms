@@ -7,7 +7,7 @@
  */
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { formatCurrency } from "@/lib/locale-config";
 import {
   getPublicOrCreateCart,
@@ -240,20 +240,38 @@ export function useStorefrontCart(
     [cart?.id],
   );
 
-  // Update item quantity (optimistic — instant UI, server in background)
+  // Update item quantity (optimistic — instant UI, debounced server sync)
+  // Debounce timers per item: only the LAST quantity gets sent to the server
+  const debounceTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
+    new Map(),
+  );
+  // Track in-flight server calls to ignore stale responses
+  const updateVersionRef = useRef<Map<string, number>>(new Map());
+
+  // Cleanup debounce timers on unmount
+  useEffect(() => {
+    const timers = debounceTimersRef.current;
+    return () => {
+      timers.forEach((timer) => clearTimeout(timer));
+      timers.clear();
+    };
+  }, []);
+
   const updateItemQuantity = useCallback(
-    async (itemId: string, quantity: number): Promise<boolean> => {
+    (itemId: string, quantity: number): Promise<boolean> => {
       if (!cart?.id) {
         setError("Cart not initialized");
-        return false;
+        return Promise.resolve(false);
       }
 
-      // Optimistic update: immediately update local state
-      const previousCart = cart;
+      // Optimistic update: instantly update local state (uses functional updater = always latest)
       setCart((prev) => {
         if (!prev?.items) return prev;
         if (quantity <= 0) {
-          return { ...prev, items: prev.items.filter((item) => item.id !== itemId) };
+          return {
+            ...prev,
+            items: prev.items.filter((item) => item.id !== itemId),
+          };
         }
         return {
           ...prev,
@@ -265,40 +283,68 @@ export function useStorefrontCart(
 
       setError(null);
 
-      try {
-        // Single server call that returns the full updated cart
-        const updatedCart = await updateCartItemQty(itemId, quantity);
-        if (updatedCart) {
-          setCart(updatedCart);
-        }
-        // Notify other cart instances
-        if (typeof window !== "undefined") {
-          const newItemCount =
-            updatedCart?.items?.reduce(
-              (sum, item) => sum + item.quantity,
-              0,
-            ) || 0;
-          window.dispatchEvent(
-            new CustomEvent("cart-updated", {
-              detail: { cart: updatedCart, itemCount: newItemCount },
-            }),
-          );
-        }
-        return true;
-      } catch (err) {
-        // Rollback to previous state on error
-        setCart(previousCart);
-        console.error("Error updating quantity:", err);
-        setError(
-          err instanceof Error ? err.message : "Failed to update quantity",
-        );
-        return false;
-      }
+      // Cancel any pending debounce timer for this item
+      const existingTimer = debounceTimersRef.current.get(itemId);
+      if (existingTimer) clearTimeout(existingTimer);
+
+      // Increment version so we can ignore stale responses
+      const version =
+        (updateVersionRef.current.get(itemId) || 0) + 1;
+      updateVersionRef.current.set(itemId, version);
+
+      // Debounce the server call — only fires after user stops clicking (300ms)
+      return new Promise<boolean>((resolve) => {
+        const timer = setTimeout(async () => {
+          debounceTimersRef.current.delete(itemId);
+
+          try {
+            const updatedCart = await updateCartItemQty(itemId, quantity);
+            // Only apply server state if no newer update was queued
+            const currentVersion = updateVersionRef.current.get(itemId) || 0;
+            if (currentVersion === version && updatedCart) {
+              setCart(updatedCart);
+              // Notify other cart instances
+              if (typeof window !== "undefined") {
+                const newItemCount =
+                  updatedCart.items?.reduce(
+                    (sum, item) => sum + item.quantity,
+                    0,
+                  ) || 0;
+                window.dispatchEvent(
+                  new CustomEvent("cart-updated", {
+                    detail: { cart: updatedCart, itemCount: newItemCount },
+                  }),
+                );
+              }
+            }
+            resolve(true);
+          } catch (err) {
+            // On error, refresh from server to get the real state
+            const currentVersion = updateVersionRef.current.get(itemId) || 0;
+            if (currentVersion === version) {
+              try {
+                await refresh();
+              } catch {
+                // If refresh fails too, leave optimistic state
+              }
+            }
+            console.error("Error updating quantity:", err);
+            setError(
+              err instanceof Error
+                ? err.message
+                : "Failed to update quantity",
+            );
+            resolve(false);
+          }
+        }, 300);
+
+        debounceTimersRef.current.set(itemId, timer);
+      });
     },
-    [cart],
+    [cart?.id, refresh],
   );
 
-  // Remove item (optimistic — instant UI, server in background)
+  // Remove item (optimistic — instant UI, server in background, refresh on error)
   const removeItem = useCallback(
     async (itemId: string): Promise<boolean> => {
       if (!cart?.id) {
@@ -306,15 +352,24 @@ export function useStorefrontCart(
         return false;
       }
 
+      // Cancel any pending debounce timer for this item (it's being removed)
+      const existingTimer = debounceTimersRef.current.get(itemId);
+      if (existingTimer) {
+        clearTimeout(existingTimer);
+        debounceTimersRef.current.delete(itemId);
+      }
+
       // Optimistic: remove from local state immediately
-      const previousCart = cart;
       const newItemCount =
         cart.items
           ?.filter((item) => item.id !== itemId)
           .reduce((sum, item) => sum + item.quantity, 0) || 0;
       setCart((prev) => {
         if (!prev?.items) return prev;
-        return { ...prev, items: prev.items.filter((item) => item.id !== itemId) };
+        return {
+          ...prev,
+          items: prev.items.filter((item) => item.id !== itemId),
+        };
       });
 
       setError(null);
@@ -331,14 +386,18 @@ export function useStorefrontCart(
         }
         return true;
       } catch (err) {
-        // Rollback on error
-        setCart(previousCart);
+        // On error, refresh from server to get the real state
+        try {
+          await refresh();
+        } catch {
+          // If refresh fails too, leave optimistic state
+        }
         console.error("Error removing item:", err);
         setError(err instanceof Error ? err.message : "Failed to remove item");
         return false;
       }
     },
-    [cart],
+    [cart?.id, cart?.items, refresh],
   );
 
   // Clear cart
