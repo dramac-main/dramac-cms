@@ -39,7 +39,7 @@ export async function OPTIONS() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { siteId, visitorData, departmentId, initialMessage, orderContext } =
+    const { siteId, visitorData, departmentId, initialMessage, orderContext, quoteContext } =
       body;
 
     if (!siteId) {
@@ -165,6 +165,9 @@ export async function POST(request: NextRequest) {
     const orderNumber = orderContext?.orderNumber
       ? String(orderContext.orderNumber).trim()
       : null;
+    const quoteNumber = quoteContext?.quoteNumber
+      ? String(quoteContext.quoteNumber).trim()
+      : null;
 
     if (orderNumber) {
       // ORDER-SPECIFIC: Find existing conversation for THIS specific order
@@ -188,6 +191,28 @@ export async function POST(request: NextRequest) {
         conversationId = existingOrderConv.id;
         isExisting = true;
         assignedAgentId = existingOrderConv.assigned_agent_id || null;
+      }
+    } else if (quoteNumber) {
+      // QUOTE-SPECIFIC: Find existing conversation for THIS specific quote
+      const { data: allActiveConvs } = await (supabase as any)
+        .from("mod_chat_conversations")
+        .select("id, assigned_agent_id, metadata")
+        .eq("site_id", siteId)
+        .eq("visitor_id", visitorId)
+        .in("status", ["active", "pending", "open", "waiting"])
+        .order("created_at", { ascending: false });
+
+      const existingQuoteConv = (allActiveConvs || []).find(
+        (c: { metadata?: Record<string, unknown> }) =>
+          c.metadata &&
+          typeof c.metadata === "object" &&
+          (c.metadata as Record<string, unknown>).quote_number === quoteNumber,
+      );
+
+      if (existingQuoteConv) {
+        conversationId = existingQuoteConv.id;
+        isExisting = true;
+        assignedAgentId = existingQuoteConv.assigned_agent_id || null;
       }
     } else {
       // GENERAL SUPPORT: Find existing conversation that has NO order_number
@@ -219,7 +244,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!isExisting) {
-      // Create new conversation — one per order or one for general support
+      // Create new conversation — one per order, one per quote, or one for general support
       const convInsert: Record<string, unknown> = {
         site_id: siteId,
         visitor_id: visitorId,
@@ -229,10 +254,27 @@ export async function POST(request: NextRequest) {
         message_count: 0,
         unread_agent_count: 0,
         unread_visitor_count: 0,
-        tags: orderNumber ? ["order", "payment"] : ["general"],
+        tags: orderNumber
+          ? ["order", "payment"]
+          : quoteNumber
+            ? ["quote", "quotation"]
+            : ["general"],
         metadata: orderNumber
           ? {
               order_number: orderNumber,
+              payment_guidance_active: true,
+            }
+          : quoteNumber
+            ? {
+                quote_number: quoteNumber,
+                quote_guidance_active: true,
+              }
+            : {},
+        subject: orderNumber
+          ? `Order ${orderNumber}`
+          : quoteNumber
+            ? `Quote ${quoteNumber}`
+            : null,
               payment_guidance_active: true,
             }
           : {},
@@ -273,10 +315,11 @@ export async function POST(request: NextRequest) {
     }
 
     // 3. Send initial message if provided
-    // For existing conversations: only send if order context is present (new order message)
+    // For existing conversations: only send if order/quote context is present
     // For new conversations: always send initial message
     const shouldSendMessage =
-      initialMessage && (!isExisting || !!orderContext?.orderNumber);
+      initialMessage &&
+      (!isExisting || !!orderContext?.orderNumber || !!quoteNumber);
     if (shouldSendMessage) {
       const msgInsert: Record<string, unknown> = {
         conversation_id: conversationId,
@@ -324,7 +367,14 @@ export async function POST(request: NextRequest) {
         /need\s+help\s+with\s+payment/i.test(initialMessage || "") ||
         /just\s+placed\s+(?:an?\s+)?order/i.test(initialMessage || "");
 
-      if (isPaymentMsg || !assignedAgentId) {
+      const isQuoteMsg =
+        !!quoteNumber ||
+        /\bquot(?:e|ation)\s*(?:#|request|num)/i.test(initialMessage || "") ||
+        /just\s+(?:submitted|sent|requested)\s+(?:a\s+)?quot/i.test(
+          initialMessage || "",
+        );
+
+      if (isPaymentMsg || isQuoteMsg || !assignedAgentId) {
         // Use after() to keep Vercel Lambda alive until AI work completes
         // Without this, the Lambda is killed after returning 201 and the
         // Claude API call (2-5s) never finishes
@@ -332,7 +382,7 @@ export async function POST(request: NextRequest) {
         const capturedConvId = conversationId;
         const capturedMsg = initialMessage;
         const capturedVisitorId = visitorId;
-        const capturedIsPayment = !!isPaymentMsg;
+        const capturedIsPayment = !!isPaymentMsg || !!isQuoteMsg;
 
         after(async () => {
           try {

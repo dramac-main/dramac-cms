@@ -228,17 +228,25 @@ export async function GET(request: NextRequest) {
         if (isOpen) toggleChat();
       } else if (msg.type === 'dramac-chat-open') {
         // External script (e.g. OrderConfirmation, QuoteRequestBlock) or auto-open wants to open chat
-        if (!isOpen) toggleChat();
-        // Forward order context to the iframe widget if present
+        // IMPORTANT: Forward contexts BEFORE opening — handleOpen() in the iframe
+        // checks for pending context refs, so they must be set first.
         if (msg.orderContext) {
           try {
             iframe.contentWindow.postMessage({ type: 'dramac-chat-order-context', orderContext: msg.orderContext }, '*');
           } catch(e) {}
         }
-        // Forward quote context to the iframe widget if present
         if (msg.quoteContext) {
           try {
             iframe.contentWindow.postMessage({ type: 'dramac-chat-quote-context', quoteContext: msg.quoteContext }, '*');
+          } catch(e) {}
+        }
+        // Now open the chat (toggleChat sends dramac-chat-open to iframe, triggering handleOpen)
+        if (!isOpen) {
+          toggleChat();
+        } else {
+          // Already open — still need to tell iframe to process the pending context
+          try {
+            iframe.contentWindow.postMessage({ type: 'dramac-chat-open' }, '*');
           } catch(e) {}
         }
       } else if (msg.type === 'dramac-chat-unread') {

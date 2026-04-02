@@ -411,6 +411,11 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
         paymentProvider?: string;
         isManualPayment?: boolean;
       };
+      quoteContext?: {
+        quoteNumber: string;
+        itemCount: number;
+        email: string;
+      };
     }) => {
       if (!settings) return;
 
@@ -433,6 +438,7 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
               departmentId: visitorData.departmentId,
               initialMessage: visitorData.message,
               orderContext: visitorData.orderContext || undefined,
+              quoteContext: visitorData.quoteContext || undefined,
             }),
           },
         );
@@ -445,10 +451,13 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
         openedAsResolvedRef.current = false; // Always active when created/reopened
         setWidgetState("chat");
 
-        // Save session — per-order conversation map
+        // Save session — per-order/quote conversation map
         localStorage.setItem(VISITOR_KEY, data.visitorId);
-        const orderNum = visitorData.orderContext?.orderNumber || null;
-        saveConvToMap(orderNum, data.conversationId);
+        const mapKey =
+          visitorData.orderContext?.orderNumber ||
+          visitorData.quoteContext?.quoteNumber ||
+          null;
+        saveConvToMap(mapKey, data.conversationId);
 
         // Subscribe to push notifications (non-blocking)
         if (isPushSupported() && Notification.permission !== "denied") {
@@ -519,10 +528,26 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
     if (pendingQuoteCtx) {
       quoteContextRef.current = null;
 
-      // Start a chat about the submitted quote
+      // Check if we already have a conversation for this specific quote
+      const existingConvId = findConvForOrder(pendingQuoteCtx.quoteNumber);
+      const savedVis = localStorage.getItem(VISITOR_KEY);
+
+      if (existingConvId && savedVis) {
+        // Reuse existing conversation for this quote
+        setConversationId(existingConvId);
+        setVisitorId(savedVis);
+        setMessages([]);
+        openedAsResolvedRef.current = false;
+        setWidgetState("chat");
+        setUnreadCount(0);
+        return;
+      }
+
+      // No existing conversation for this quote — create a new one
       handleStartChat({
         email: pendingQuoteCtx.email,
         message: `Hi, I just submitted quote request ${pendingQuoteCtx.quoteNumber} with ${pendingQuoteCtx.itemCount} item${pendingQuoteCtx.itemCount !== 1 ? "s" : ""}. I'd like to follow up on its status.`,
+        quoteContext: pendingQuoteCtx,
       });
       return;
     }
