@@ -1,25 +1,32 @@
 # Active Context
 
-## Current Focus: Build Fix + Module Status 400 Error — COMPLETE ✅
+## Current Focus: Chiko AI Quote Visibility Fix — COMPLETE ✅
 
-### What Was Done (Latest Session — Build Fix + Module Query Fix)
+### What Was Done (Latest Session — AI Quote Visibility)
 
-**Problem 1 — Vercel Build Failure:** Turbopack parse error at line 280 of `conversations/route.ts` — duplicate `metadata`/`subject` block left over from previous edit session (old ternary + new ternary both present).
+**Problem:** After quote submission, Chiko AI responded with "I don't have direct visibility into the status of quote requests from my end." This is wrong — Chiko should have full access to quotes.
 
-**Problem 2 — 400 Bad Request:** `useModuleStatus('ecommerce', siteId)` was querying `site_module_installations` with `module_id=eq.ecommerce` (string slug), but `module_id` is a UUID FK to `modules_v2.id`. Every storefront page hit this error via `EcommerceCartInjector` → `useEcommerceStatus()`.
+**Root Causes Found (3):**
+1. **Status filter too restrictive** — `activeQuotes` only included `["sent", "viewed", "pending_approval"]`. Freshly submitted quotes have status `"pending"` → filtered out entirely
+2. **No fallback guidance** — When `activeQuotes.length === 0`, the QUOTATION GUIDANCE section was completely omitted from the system prompt. Chiko had zero quote instructions.
+3. **`quote_number` from conversation metadata ignored** — Conversations store `{ quote_number, quote_guidance_active: true }` but AI never read them
 
-**4 Source Files Modified (commit 7e7737c2):**
+**Fixes Applied in `ai-responder.ts` (commit f8f505a0):**
 
-| File | Change |
-|------|--------|
-| `route.ts` (conversations API) | Removed duplicate metadata/subject block that caused parse error |
-| `useModuleStatus.ts` | Resolve module slug → UUID via `modules_v2` lookup before querying `site_module_installations` |
-| `cart-recovery-automation.ts` | Same slug-to-UUID fix for ecommerce module lookup |
-| `TESTING-WALKTHROUGH.md` | Updated Step 13 point 10 with quote chat auto-start experience |
+| Fix | Detail |
+|-----|--------|
+| Extract `targetQuoteNumber` from `convMeta.quote_number` | AI now knows which specific quote this conversation is about |
+| Extract `quoteGuidanceActive` from `convMeta.quote_guidance_active` | AI knows this is a quote-dedicated conversation |
+| Expand status filter to include `"pending"` and `"draft"` | Freshly submitted quotes are now visible |
+| Add `allQuotes` variable | Full quote context regardless of status |
+| Add targeted quote context in system prompt | `THIS CONVERSATION IS ABOUT QUOTE: QR-XXXX` |
+| Add fallback guidance when `quoteGuidanceActive` but no quotes found | Covers edge case where DB hasn't processed the quote yet |
+| Explicit instruction: "NEVER say you don't have visibility into quotes" | Direct behavioral instruction |
+| Boost confidence to 0.9 for quote conversations | Chiko responds authoritatively instead of suggesting handoff |
 
-**Git:** Committed as `7e7737c2`, pushed to origin/main (41 insertions, 13 deletions across 4 files).
+**Git:** Committed as `f8f505a0`, pushed to origin/main (42 insertions, 12 deletions).
 
-### Previous Session: Quote Chat Auto-Start Fix (commit bf20ad1f)
+### Previous Session: Build Fix + Module Status 400 Error (commit 7e7737c2)
 
 **Problems Fixed:**
 1. Cart quantity controls "going haywire" on rapid clicking — race condition from previous optimistic update implementation
