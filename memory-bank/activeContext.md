@@ -1,33 +1,25 @@
 # Active Context
 
-## Current Focus: Quote Chat Auto-Start Fix — COMPLETE ✅
+## Current Focus: Build Fix + Module Status 400 Error — COMPLETE ✅
 
-### What Was Done (Latest Session — Quote Chat Auto-Start Pipeline)
+### What Was Done (Latest Session — Build Fix + Module Query Fix)
 
-**Problem:** After quote submission, chat widget opened but nothing happened — no conversation created, no AI response. User wanted the same progressive guidance experience as the order flow.
+**Problem 1 — Vercel Build Failure:** Turbopack parse error at line 280 of `conversations/route.ts` — duplicate `metadata`/`subject` block left over from previous edit session (old ternary + new ternary both present).
 
-**Root Cause:** Timing race in embed script — `toggleChat()` sent `dramac-chat-open` to iframe BEFORE `quoteContext` was forwarded, so `handleOpen()` ran while `quoteContextRef.current` was still null. Additionally, the conversation API didn't accept `quoteContext`, had no per-quote isolation, and the AI trigger didn't detect quote messages.
+**Problem 2 — 400 Bad Request:** `useModuleStatus('ecommerce', siteId)` was querying `site_module_installations` with `module_id=eq.ecommerce` (string slug), but `module_id` is a UUID FK to `modules_v2.id`. Every storefront page hit this error via `EcommerceCartInjector` → `useEcommerceStatus()`.
 
-**3 Source Files Modified (commit bf20ad1f):**
+**4 Source Files Modified (commit 7e7737c2):**
 
 | File | Change |
 |------|--------|
-| `route.ts` (embed) | **Timing fix:** Forward `quoteContext` to iframe BEFORE calling `toggleChat()`. Added explicit `dramac-chat-open` forwarding when chat already open. |
-| `ChatWidget.tsx` | `handleStartChat` accepts `quoteContext` param, passes to API body. Per-quote conversation mapping via `saveConvToMap(quoteNumber)`. Per-quote lookup in `handleOpen` via `findConvForOrder(quoteNumber)` — reuses existing quote conversations. |
-| `route.ts` (conversations API) | Accepts `quoteContext` in body. Extracts `quoteNumber`. Per-quote conversation isolation (finds existing by `quote_number` in metadata). New conversations get tags `["quote","quotation"]`, metadata `{quote_number, quote_guidance_active: true}`, subject `Quote ${quoteNumber}`. `shouldSendMessage` includes `!!quoteNumber`. New `isQuoteMsg` detection triggers AI auto-response via `forcePaymentGuidance`. |
+| `route.ts` (conversations API) | Removed duplicate metadata/subject block that caused parse error |
+| `useModuleStatus.ts` | Resolve module slug → UUID via `modules_v2` lookup before querying `site_module_installations` |
+| `cart-recovery-automation.ts` | Same slug-to-UUID fix for ecommerce module lookup |
+| `TESTING-WALKTHROUGH.md` | Updated Step 13 point 10 with quote chat auto-start experience |
 
-**Quote Chat Pipeline (end-to-end):**
-1. `QuoteRequestBlock` → `window.postMessage({ type: "dramac-chat-open", quoteContext })` after 2s delay
-2. Embed script `route.ts` → forwards `quoteContext` as `dramac-chat-quote-context` to iframe FIRST, THEN calls `toggleChat()`
-3. `ChatWidget.handleOpen()` → finds pending `quoteContextRef`, looks up existing conversation by quoteNumber, or calls `handleStartChat` with quoteContext
-4. `handleStartChat` → POST to `/api/modules/live-chat/conversations` with `quoteContext` in body
-5. Conversations API → per-quote isolation, stores metadata, inserts initial message
-6. `isQuoteMsg` triggers `forcePaymentGuidance` → AI (Chiko) auto-responds with quote guidance via `after()`
-7. Supabase Realtime delivers AI response to widget
+**Git:** Committed as `7e7737c2`, pushed to origin/main (41 insertions, 13 deletions across 4 files).
 
-**Git:** Committed as `bf20ad1f`, pushed to origin/main (97 insertions, 14 deletions across 3 files).
-
-### Previous Session: Cart Debouncing + Quote UX Enhancements (commit d32ff4ad)
+### Previous Session: Quote Chat Auto-Start Fix (commit bf20ad1f)
 
 **Problems Fixed:**
 1. Cart quantity controls "going haywire" on rapid clicking — race condition from previous optimistic update implementation
