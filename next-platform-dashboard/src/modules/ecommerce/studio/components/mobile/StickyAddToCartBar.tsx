@@ -11,7 +11,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, Loader2, Check, Heart, Minus, Plus } from "lucide-react";
+import { ShoppingCart, Loader2, Check, Heart, Minus, Plus, FileText } from "lucide-react";
 import { formatCurrency } from "@/lib/locale-config";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,9 @@ export interface StickyAddToCartBarProps {
   disabled?: boolean;
   maxQuantity?: number;
   targetRef?: React.RefObject<HTMLElement | null>;
+  quotationModeEnabled?: boolean;
+  quotationButtonLabel?: string;
+  quotationHidePrices?: boolean;
   className?: string;
 }
 
@@ -55,6 +58,9 @@ export function StickyAddToCartBar({
   disabled = false,
   maxQuantity = 99,
   targetRef,
+  quotationModeEnabled = false,
+  quotationButtonLabel = "Add to Quote",
+  quotationHidePrices = false,
   className,
 }: StickyAddToCartBarProps) {
   const haptic = useHapticFeedback();
@@ -142,9 +148,11 @@ export function StickyAddToCartBar({
             {/* Price and product info */}
             <div className="flex items-center justify-between mb-3">
               <div>
-                <div className="text-lg font-semibold">
-                  {formatCurrency(totalPrice / 100)}
-                </div>
+                {!quotationHidePrices && (
+                  <div className="text-lg font-semibold">
+                    {formatCurrency(totalPrice / 100)}
+                  </div>
+                )}
                 <div className="text-xs text-muted-foreground line-clamp-1">
                   {product.name}
                 </div>
@@ -195,13 +203,14 @@ export function StickyAddToCartBar({
                 </Button>
               )}
 
-              {/* Add to Cart button */}
+              {/* Add to Cart / Add to Quote button */}
               <Button
                 onClick={handleAddToCart}
                 disabled={disabled || isAddingToCart}
                 className={cn(
                   "flex-1 min-h-[48px] text-base font-semibold",
                   addedToCart && "bg-success hover:bg-success/90",
+                  quotationModeEnabled && !addedToCart && "bg-warning hover:bg-warning/90 text-warning-foreground",
                 )}
               >
                 {isAddingToCart ? (
@@ -212,7 +221,12 @@ export function StickyAddToCartBar({
                 ) : addedToCart ? (
                   <>
                     <Check className="h-5 w-5 mr-2" />
-                    Added to Cart
+                    {quotationModeEnabled ? "Added to Quote" : "Added to Cart"}
+                  </>
+                ) : quotationModeEnabled ? (
+                  <>
+                    <FileText className="h-5 w-5 mr-2" />
+                    {quotationButtonLabel}
                   </>
                 ) : (
                   <>

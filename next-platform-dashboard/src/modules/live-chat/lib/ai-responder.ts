@@ -369,7 +369,14 @@ ACTIVE QUOTATIONS:
 The customer has ${activeQuotes.length} active quotation(s):
 ${activeQuotes.map((q) => `- ${q.quoteNumber}: ${q.status}, ${q.currency} ${(q.total / 100).toFixed(2)}, ${q.itemCount} item(s)${q.expiresAt ? `, expires ${new Date(q.expiresAt).toLocaleDateString()}` : ""}`).join("\n")}
 
-If the customer asks about their quote, provide the details above. Let them know they can view and accept/reject the quote through the link sent to their email.
+QUOTATION GUIDANCE:
+- If the customer asks about their quote, provide the details above
+- Let them know they can view and accept/reject the quote through the link sent to their email
+- If a quote is in "draft" or "sent" status, explain that the store is preparing or has sent their quote
+- If they want to request a new quote, explain they can browse products, add items to their quote from the shop, and submit from the cart page
+- If they have questions about pricing on the quote, let them know the store owner can adjust prices before sending
+- Be proactive: if a quote is pending their action (sent status), gently remind them to review it
+- If they ask about timelines, let them know the store aims to respond promptly but exact times depend on the business
 `
     : ""
 }
@@ -379,7 +386,8 @@ ${
 ACCEPTED QUOTATIONS:
 ${acceptedQuotes.map((q) => `- ${q.quoteNumber}: accepted${q.convertedOrderNumber ? ` → converted to order ${q.convertedOrderNumber}` : " (awaiting conversion to order by store staff)"}`).join("\n")}
 
-If a quote has been converted to an order, guide the customer to complete payment for that order.
+If a quote has been converted to an order, guide the customer to complete payment for that order using the payment guidance above (if available).
+If the quote is accepted but not yet converted, let the customer know the store is processing it and will create an order shortly.
 `
     : ""
 }
@@ -415,6 +423,14 @@ Previous conversations: ${visitorInfo?.total_conversations || 0}${customerCtx ? 
     // Payment guidance mode — high confidence since we have all the context
     if (pendingManualOrder) {
       confidence = 0.95;
+    }
+
+    // Quotation context — high confidence when customer has active quotes
+    if (activeQuotes.length > 0 || acceptedQuotes.length > 0) {
+      const quoteLower = lowerMsg;
+      if (quoteLower.includes("quote") || quoteLower.includes("quotation") || quoteLower.includes("proposal")) {
+        confidence = 0.9;
+      }
     }
 
     for (const article of kbArticles) {

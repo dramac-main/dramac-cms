@@ -219,11 +219,6 @@ export function ProductDetailBlock({
 
   const handleAddToCart = async () => {
     if (!product) return;
-    if (quotationModeEnabled) {
-      // Redirect to quote page
-      router.push(`${quotationRedirectUrl}?product=${product.id}`);
-      return;
-    }
     await addItem(product.id, selectedVariant || null, quantity);
   };
 
@@ -507,11 +502,11 @@ export function ProductDetailBlock({
         )}
 
         {showAddToCart &&
-          (isProductInCart && !quotationModeEnabled ? (
-            <Button size="lg" variant="secondary" className="flex-1" asChild>
+          (isProductInCart ? (
+            <Button size="lg" variant={quotationModeEnabled ? "outline" : "secondary"} className="flex-1" asChild>
               <Link href="/cart">
                 <ShoppingCart className="h-5 w-5 mr-2" />
-                View Cart
+                {quotationModeEnabled ? "View Quote Items" : "View Cart"}
               </Link>
             </Button>
           ) : (

@@ -1,11 +1,25 @@
 # Progress: What Works & What's Left
 
-**Last Updated**: March 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅ + **LIVE CHAT RUNTIME FIXES (AI auto-response + file uploads)** ✅ + **PER-ORDER CONVERSATION ISOLATION** ✅ + **PER-ORDER CHAT HARDENING AUDIT (10 bugs fixed, 0 TS errors)** ✅ + **CATEGORIES PAGE + DARK MODE POLISH** ✅ + **LIVE CHAT OVERHAUL + ECOMMERCE FIXES** ✅ + **CANVAS IFRAME RENDERING FIDELITY FIXES** ✅ + **TYPOGRAPHY COMPONENTS OVERHAUL (4 enhanced + 5 new, CSS var type scale)** ✅ + **BUTTON COMPONENTS MASTER PLAN (Phases 1-5: renders, registrations, converter, metadata, CTARender composition)** ✅ + **MARKETING COMPONENTS — FULL IMPLEMENTATION + REGISTRY ALIGNMENT (5 components, all paths)** ✅ + **ECOMMERCE COMPONENTS OVERHAUL — CONVERTER, METADATA, DEFINITION ALIGNMENT (3 files, 23 metadata entries, 6 definitions fixed)** ✅ + **3D & EFFECTS COMPONENTS — FULL RENDER EXPANSION (ALL 12 components, Typewriter+Parallax rewrites, 7 normalizers, metadata enhanced)** ✅ + **3 SHOWCASE WEBSITES — FULLY POPULATED (208 records across 16 tables)** ✅ + **OVERLAY-AWARE CONTRAST RESOLUTION — ALL 10 PREMIUM COMPONENTS (shared utilities, comprehensive render fixes)** ✅
+**Last Updated**: April 2026  
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅ + **LIVE CHAT RUNTIME FIXES (AI auto-response + file uploads)** ✅ + **PER-ORDER CONVERSATION ISOLATION** ✅ + **PER-ORDER CHAT HARDENING AUDIT (10 bugs fixed, 0 TS errors)** ✅ + **CATEGORIES PAGE + DARK MODE POLISH** ✅ + **LIVE CHAT OVERHAUL + ECOMMERCE FIXES** ✅ + **CANVAS IFRAME RENDERING FIDELITY FIXES** ✅ + **TYPOGRAPHY COMPONENTS OVERHAUL (4 enhanced + 5 new, CSS var type scale)** ✅ + **BUTTON COMPONENTS MASTER PLAN (Phases 1-5: renders, registrations, converter, metadata, CTARender composition)** ✅ + **MARKETING COMPONENTS — FULL IMPLEMENTATION + REGISTRY ALIGNMENT (5 components, all paths)** ✅ + **ECOMMERCE COMPONENTS OVERHAUL — CONVERTER, METADATA, DEFINITION ALIGNMENT (3 files, 23 metadata entries, 6 definitions fixed)** ✅ + **3D & EFFECTS COMPONENTS — FULL RENDER EXPANSION (ALL 12 components, Typewriter+Parallax rewrites, 7 normalizers, metadata enhanced)** ✅ + **3 SHOWCASE WEBSITES — FULLY POPULATED (208 records across 16 tables)** ✅ + **OVERLAY-AWARE CONTRAST RESOLUTION — ALL 10 PREMIUM COMPONENTS (shared utilities, comprehensive render fixes)** ✅ + **ECOMMERCE IMAGE FORMAT CRASH FIX — ALL 16 STOREFRONT COMPONENTS (image-utils.ts, normalizeProductImages)** ✅
 
 ---
 
-## Latest Update: Overlay-Aware Contrast Resolution — ALL 10 PREMIUM COMPONENTS ✅
+## Latest Update: Ecommerce Storefront Image Crash Fix ✅
+
+### What Was Done
+
+Fixed a critical production crash affecting ALL ecommerce storefront pages. The `mod_ecommod01_products.images` JSONB column contained mixed formats (string arrays AND object arrays with `{url, alt}`), while code assumed `string[]` everywhere. This caused `eB?.includes is not a function` crashes after client-side hydration.
+
+**Created:** `src/modules/ecommerce/lib/image-utils.ts` — shared `getImageUrl()` and `normalizeProductImages()` utilities
+**Fixed:** 16 storefront component files to use these utilities
+**Also Fixed:** `cart.items` null guard, `typeof null === "object"` trap on responsive props, cart event normalization
+
+**Git:** `b6bbd889`, deployed and verified working on production (Savanna Kitchen shop page)
+
+---
+
+## Previous Update: Overlay-Aware Contrast Resolution — ALL 10 PREMIUM COMPONENTS ✅
 
 ### What Was Done
 

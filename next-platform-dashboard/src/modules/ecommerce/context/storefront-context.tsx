@@ -39,7 +39,7 @@ const defaultContextValue: StorefrontContextValue = {
   isInitialized: false,
   // Quotation mode defaults
   quotationModeEnabled: false,
-  quotationButtonLabel: "Request a Quote",
+  quotationButtonLabel: "Add to Quote",
   quotationRedirectUrl: "/quotes",
   quotationHidePrices: false,
 };
@@ -109,7 +109,7 @@ export function StorefrontProvider({
   // Quotation mode derived values
   const quotationModeEnabled = settings?.quotation_mode_enabled ?? false;
   const quotationButtonLabel =
-    settings?.quotation_button_label || "Request a Quote";
+    settings?.quotation_button_label || "Add to Quote";
   const quotationRedirectUrl = settings?.quotation_redirect_url || "/quotes";
   const quotationHidePrices = settings?.quotation_hide_prices ?? false;
 

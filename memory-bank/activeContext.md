@@ -1,8 +1,50 @@
 # Active Context
 
-## Current Focus: Overlay-Aware Contrast Resolution — ALL 10 PREMIUM COMPONENTS FIXED ✅
+## Current Focus: Ecommerce Storefront Image Crash Fix + Contrast Fixes — ALL COMPLETE ✅
 
-### What Was Done (Latest Session — Comprehensive Overlay-Aware Contrast Fixes)
+### What Was Done (Latest Session — Ecommerce Image Format Crash Fix)
+
+**Root Cause Found & Fixed:** ALL ecommerce storefront pages were crashing with `eB?.includes is not a function` after JavaScript hydration. The error boundary showed "Something went wrong" on every ecommerce section.
+
+**Root Cause:** The `mod_ecommod01_products.images` JSONB column stores images in TWO formats:
+- Some products: `["https://url1", "https://url2"]` (string array)
+- Other products: `[{"url": "https://...", "alt": "..."}]` (object array)
+
+But ALL code assumed `images: string[]`. When a product had object-format images, `productImages[0]` returned an object, and `.includes(".supabase.co/")` on an object crashed: `eB?.includes is not a function`.
+
+**Solution:** Created shared utility `image-utils.ts` with `getImageUrl()` and `normalizeProductImages()` that handles both formats. Applied across 15 storefront component files.
+
+**New File Created:**
+- `src/modules/ecommerce/lib/image-utils.ts` — `getImageUrl(img)` extracts URL from string or `{url, alt}` object; `normalizeProductImages(images)` normalizes full array
+
+**Files Fixed (16 total):**
+| File | Change |
+|------|--------|
+| `product-card-block.tsx` | `normalizeProductImages((product as Product).images)` |
+| `ProductDetailBlock.tsx` | `normalizeProductImages(product.images)` for gallery |
+| `SearchBarBlock.tsx` | `getImageUrl(product.images?.[0])` in 2 locations |
+| `CartItemCard.tsx` | `getImageUrl(item.product.images[0])` in helper |
+| `OrderSummaryCard.tsx` | `getImageUrl(item.product.images[0])` in helper |
+| `QuoteRequestBlock.tsx` | `getImageUrl(product.images?.[0])` |
+| `MyAccountBlock.tsx` | `getImageUrl(product.images?.[0])` in wishlist |
+| `ProductQuickView.tsx` | `getImageUrl(img)` in images map |
+| `MobileProductCard.tsx` | `getImageUrl(product.images?.[0])` |
+| `MobileOrderReview.tsx` | `getImageUrl(...)` in image helper |
+| `MobileQuickView.tsx` | `getImageUrl(product.images[currentImageIndex])` |
+| `ProductSwipeView.tsx` | `getImageUrl(product.images?.[0])` |
+| `SwipeableCartItem.tsx` | `getImageUrl(item.product.images[0])` |
+| `FeaturedProductsBlock.tsx` | Already fixed typeof null guard (prior commit) |
+| `ProductGridBlock.tsx` | Already fixed typeof null guard (prior commit) |
+| `StorefrontErrorBoundary.tsx` | Cleaned up diagnostic code, kept error.message display |
+
+**Additional Fixes from Same Investigation:**
+- `useStorefrontCart.ts`: `calculateLocalTotals` guards `cart.items || []` to prevent crash on null items
+- `public-ecommerce-actions.ts`: `findPublicCart` and `getPublicCart` normalize items to `[]` when null
+- `FeaturedProductsBlock.tsx` / `ProductGridBlock.tsx` / `product-card-block.tsx`: Fixed `typeof null === "object"` trap on responsive props
+
+**Git:** Committed as `b6bbd889`, pushed to origin/main. Deployed and verified — shop page renders all 6 products correctly.
+
+### Previous Session: Overlay-Aware Contrast Resolution — ALL 10 PREMIUM COMPONENTS FIXED ✅
 
 User confirmed previous bgImage-only fixes (commit 9afab9cf) were still insufficient. Specific scenario: Savanna Kitchen hero has `backgroundOverlay: true`, `backgroundOverlayColor: "#1C1410"`, `backgroundOverlayOpacity: 55` with `titleColor: "#ffffff"` — but `#ffffff` is in PLACEHOLDER_COLORS, so brand injection replaces it with `palette.foreground` (dark `"#1C1410"`) → dark text on dark overlay = invisible.
 

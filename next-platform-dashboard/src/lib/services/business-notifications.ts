@@ -1089,6 +1089,11 @@ interface QuoteNotificationData {
   itemCount: number;
   total?: number;
   currency?: string;
+  items?: Array<{
+    name: string;
+    quantity: number;
+    unitPrice: number;
+  }>;
 }
 
 /**
@@ -1178,6 +1183,8 @@ export async function notifyNewQuote(
             itemCount: data.itemCount,
             total: totalStr,
             dashboardUrl,
+            items: data.items || [],
+            currency,
           },
         }),
       );
@@ -1195,6 +1202,8 @@ export async function notifyNewQuote(
             quoteNumber: data.quoteNumber,
             itemCount: data.itemCount,
             businessName,
+            items: data.items || [],
+            currency,
           },
         }),
       );

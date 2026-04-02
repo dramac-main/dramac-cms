@@ -16,6 +16,7 @@ import {
   notifyNewOrder,
 } from "@/lib/services/business-notifications";
 import { formatCurrency, DEFAULT_CURRENCY } from "@/lib/locale-config";
+import { notifyChatQuoteSent, notifyChatQuoteAccepted } from "@/modules/live-chat/lib/chat-event-bridge";
 import { revalidatePath } from "next/cache";
 import type {
   Quote,
@@ -203,6 +204,20 @@ export async function sendQuote(
         businessName,
       },
     });
+
+    // Notify active chat conversation about the sent quote
+    if (quote.customer_email) {
+      try {
+        await notifyChatQuoteSent(
+          input.site_id,
+          quote.customer_email,
+          quote.quote_number,
+          formatted,
+        );
+      } catch {
+        // Chat notification is best-effort
+      }
+    }
 
     revalidatePath(`/sites/${input.site_id}/ecommerce`);
 
@@ -548,6 +563,20 @@ export async function acceptQuote(
         quote.customer_name || "Customer",
         formatted,
       );
+
+      // Notify active chat conversation about the accepted quote
+      if (quote.customer_email) {
+        try {
+          await notifyChatQuoteAccepted(
+            quote.site_id,
+            quote.customer_email,
+            quote.quote_number,
+            formatted,
+          );
+        } catch {
+          // Chat notification is best-effort
+        }
+      }
     }
 
     return { success: true, quote: updatedQuote };

@@ -68,7 +68,7 @@ export function CartDrawerBlock({
   
   // In quotation mode, redirect to quotes page instead of checkout
   const checkoutHref = quotationModeEnabled ? (quotationRedirectUrl || '/quotes') : checkoutHrefProp
-  const checkoutLabel = quotationModeEnabled ? (quotationButtonLabel || 'Request a Quote') : 'Checkout'
+  const checkoutLabel = quotationModeEnabled ? 'Submit Quote Request' : 'Checkout'
   const {
     cart,
     items,
@@ -130,7 +130,7 @@ export function CartDrawerBlock({
           <div className="flex items-center justify-between">
             <SheetTitle className="flex items-center gap-2">
               <ShoppingCart className="h-5 w-5" />
-              {quotationModeEnabled ? 'Your Items' : 'Your Cart'}
+              {quotationModeEnabled ? 'Your Quote Items' : 'Your Cart'}
               {itemCount > 0 && (
                 <Badge variant="secondary">{itemCount}</Badge>
               )}

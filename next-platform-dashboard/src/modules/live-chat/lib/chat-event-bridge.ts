@@ -232,6 +232,78 @@ export async function notifyChatQuoteConverted(
   );
 }
 
+/**
+ * Notify chat when a new quote request is submitted by the customer.
+ */
+export async function notifyChatQuoteRequested(
+  siteId: string,
+  customerEmail: string,
+  quoteNumber: string,
+  itemCount: number,
+): Promise<void> {
+  const conv = await findActiveConversation(siteId, customerEmail);
+  if (!conv) return;
+
+  const message =
+    `Your quote request ${quoteNumber} with ${itemCount} item${itemCount !== 1 ? "s" : ""} has been submitted successfully! 📋 ` +
+    `The store will review your request and prepare a quote for you. You'll receive an email once it's ready.`;
+
+  await sendProactiveMessage(
+    siteId,
+    conv.conversationId,
+    message,
+    conv.assistantName,
+  );
+}
+
+/**
+ * Notify chat when a quote has been sent to the customer by the store.
+ */
+export async function notifyChatQuoteSent(
+  siteId: string,
+  customerEmail: string,
+  quoteNumber: string,
+  total: string,
+): Promise<void> {
+  const conv = await findActiveConversation(siteId, customerEmail);
+  if (!conv) return;
+
+  const message =
+    `Great news! Your quote ${quoteNumber} is ready (${total})! 🎉 ` +
+    `We've sent it to your email. You can review it and accept or decline from there. Would you like me to tell you more about it?`;
+
+  await sendProactiveMessage(
+    siteId,
+    conv.conversationId,
+    message,
+    conv.assistantName,
+  );
+}
+
+/**
+ * Notify chat when a quote has been accepted by the customer.
+ */
+export async function notifyChatQuoteAccepted(
+  siteId: string,
+  customerEmail: string,
+  quoteNumber: string,
+  total: string,
+): Promise<void> {
+  const conv = await findActiveConversation(siteId, customerEmail);
+  if (!conv) return;
+
+  const message =
+    `You've accepted quote ${quoteNumber} (${total})! ✅ ` +
+    `The store will now process this into an order. You'll be notified once it's ready for payment.`;
+
+  await sendProactiveMessage(
+    siteId,
+    conv.conversationId,
+    message,
+    conv.assistantName,
+  );
+}
+
 // =============================================================================
 // BRIDGE CHAT IMAGE → PAYMENT PROOF
 // =============================================================================

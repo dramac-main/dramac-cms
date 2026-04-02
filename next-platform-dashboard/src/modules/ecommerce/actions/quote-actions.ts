@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendBrandedEmail } from "@/lib/email/send-branded-email";
 import { notifyNewQuote } from "@/lib/services/business-notifications";
+import { notifyChatQuoteRequested } from "@/modules/live-chat/lib/chat-event-bridge";
 import { DEFAULT_CURRENCY } from "@/lib/locale-config";
 import { revalidatePath } from "next/cache";
 import type {
@@ -234,28 +235,8 @@ export async function createQuote(
       },
     );
 
-    // Notify business owner + customer about new quote request
-    if (quote.agency_id && quote.site_id) {
-      try {
-        notifyNewQuote({
-          siteId: quote.site_id,
-          quoteId: quote.id,
-          quoteNumber: quote.quote_number,
-          customerName: quote.customer_name || "Customer",
-          customerEmail: quote.customer_email || "",
-          customerPhone: quote.customer_phone || "",
-          companyName: quote.customer_company || "",
-          itemCount: 0, // Items are added after creation; totals recalculated separately
-          currency: quote.currency || DEFAULT_CURRENCY,
-        });
-      } catch (notifyError) {
-        // Don't fail quote creation if notification fails
-        console.error(
-          "Failed to send quote request notification:",
-          notifyError,
-        );
-      }
-    }
+    // NOTE: Notification is sent AFTER items are added (from the client hook)
+    // to ensure correct item count and details in emails
 
     revalidatePath("/ecommerce");
 
@@ -1172,6 +1153,76 @@ export async function recalculateQuoteTotals(
       error:
         error instanceof Error ? error.message : "Failed to recalculate totals",
     };
+  }
+}
+
+// ============================================================================
+// NOTIFY QUOTE CREATED (called after items are added)
+// ============================================================================
+
+/**
+ * Send notifications for a new quote request AFTER items have been added.
+ * This ensures the correct item count and details are included in emails.
+ */
+export async function notifyQuoteCreated(
+  siteId: string,
+  quoteId: string,
+): Promise<void> {
+  const supabase = await getModuleClient();
+
+  try {
+    // Get quote details
+    const { data: quote } = await supabase
+      .from(`${TABLE_PREFIX}_quotes`)
+      .select("*")
+      .eq("id", quoteId)
+      .eq("site_id", siteId)
+      .single();
+
+    if (!quote) return;
+
+    // Get items for the quote
+    const { data: items } = await supabase
+      .from(`${TABLE_PREFIX}_quote_items`)
+      .select("*")
+      .eq("quote_id", quoteId);
+
+    const quoteItems = items || [];
+
+    await notifyNewQuote({
+      siteId: quote.site_id,
+      quoteId: quote.id,
+      quoteNumber: quote.quote_number,
+      customerName: quote.customer_name || "Customer",
+      customerEmail: quote.customer_email || "",
+      customerPhone: quote.customer_phone || "",
+      companyName: quote.customer_company || "",
+      itemCount: quoteItems.length,
+      total: quote.total || 0,
+      currency: quote.currency || DEFAULT_CURRENCY,
+      items: quoteItems.map((item: Record<string, unknown>) => ({
+        name: String(item.name || "Item"),
+        quantity: Number(item.quantity || 1),
+        unitPrice: Number(item.unit_price || 0),
+      })),
+    });
+
+    // Also notify active chat conversation if customer is chatting
+    if (quote.customer_email) {
+      try {
+        await notifyChatQuoteRequested(
+          quote.site_id,
+          quote.customer_email,
+          quote.quote_number,
+          quoteItems.length,
+        );
+      } catch {
+        // Chat notification is best-effort
+      }
+    }
+  } catch (error) {
+    // Don't throw — notification failure shouldn't break the flow
+    console.error("Failed to send quote creation notification:", error);
   }
 }
 

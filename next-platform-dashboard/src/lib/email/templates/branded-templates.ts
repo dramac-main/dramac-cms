@@ -840,8 +840,34 @@ const quote_reminder_customer: BrandedTemplate = {
 const quote_request_owner: BrandedTemplate = {
   subject: (data) =>
     `📋 New Quote Request ${data.quoteNumber} from ${data.customerName}`,
-  html: (data, b) =>
-    baseEmailTemplate(
+  html: (data, b) => {
+    const items =
+      (data.items as Array<{
+        name: string;
+        quantity: number;
+        unitPrice: number;
+      }>) || [];
+    const currency = String(data.currency || "USD");
+    const itemRows = items.length > 0
+      ? items
+          .map(
+            (item) =>
+              `<tr><td style="padding:10px;border-bottom:1px solid #f3f4f6;">${item.name}</td><td style="padding:10px;border-bottom:1px solid #f3f4f6;text-align:center;">${item.quantity}</td><td style="padding:10px;border-bottom:1px solid #f3f4f6;text-align:right;">${(item.unitPrice / 100).toFixed(2)}</td></tr>`,
+          )
+          .join("")
+      : "";
+    const itemsTable = items.length > 0
+      ? `<table style="width:100%;border-collapse:collapse;margin:20px 0;">
+        <thead><tr style="background:#f9fafb;">
+          <th style="padding:10px;text-align:left;border-bottom:2px solid #e5e7eb;">Item</th>
+          <th style="padding:10px;text-align:center;border-bottom:2px solid #e5e7eb;">Qty</th>
+          <th style="padding:10px;text-align:right;border-bottom:2px solid #e5e7eb;">Unit Price</th>
+        </tr></thead>
+        <tbody>${itemRows}</tbody>
+      </table>`
+      : "";
+
+    return baseEmailTemplate(
       b,
       `<h1 style="${EMAIL_STYLES.heading}">New Quote Request</h1>
       <p style="${EMAIL_STYLES.text}">A customer has submitted a new quote request.</p>
@@ -855,13 +881,28 @@ const quote_request_owner: BrandedTemplate = {
         ...(data.itemCount
           ? [{ label: "Items", value: String(data.itemCount) }]
           : []),
+        ...(data.total
+          ? [{ label: "Total", value: String(data.total) }]
+          : []),
       ])}
+      ${itemsTable}
       ${emailButton(b, String(data.dashboardUrl), "Review Quote")}
       <p style="${EMAIL_STYLES.text}">Review the quote and send a proposal to the customer.</p>`,
       `New quote request ${data.quoteNumber}`,
-    ),
-  text: (data) =>
-    `New Quote Request\n\nQuote: ${data.quoteNumber}\nCustomer: ${data.customerName} (${data.customerEmail})${data.customerPhone ? `\nPhone: ${data.customerPhone}` : ""}${data.itemCount ? `\nItems: ${data.itemCount}` : ""}\n\nReview in dashboard: ${data.dashboardUrl}`,
+    );
+  },
+  text: (data) => {
+    const items =
+      (data.items as Array<{
+        name: string;
+        quantity: number;
+        unitPrice: number;
+      }>) || [];
+    const itemLines = items.length > 0
+      ? "\n\nItems:\n" + items.map((item) => `  ${item.name} x${item.quantity} @ ${(item.unitPrice / 100).toFixed(2)}`).join("\n")
+      : "";
+    return `New Quote Request\n\nQuote: ${data.quoteNumber}\nCustomer: ${data.customerName} (${data.customerEmail})${data.customerPhone ? `\nPhone: ${data.customerPhone}` : ""}${data.itemCount ? `\nItems: ${data.itemCount}` : ""}${itemLines}\n\nReview in dashboard: ${data.dashboardUrl}`;
+  },
 };
 
 const quote_accepted_owner: BrandedTemplate = {
@@ -975,8 +1016,33 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
   quote_request_customer: {
     subject: (data) =>
       `Your Quote Request ${data.quoteNumber} Has Been Received`,
-    html: (data, b) =>
-      baseEmailTemplate(
+    html: (data, b) => {
+      const items =
+        (data.items as Array<{
+          name: string;
+          quantity: number;
+          unitPrice: number;
+        }>) || [];
+      const currency = String(data.currency || "USD");
+      const itemRows = items.length > 0
+        ? items
+            .map(
+              (item) =>
+                `<tr><td style="padding:10px;border-bottom:1px solid #f3f4f6;">${item.name}</td><td style="padding:10px;border-bottom:1px solid #f3f4f6;text-align:center;">${item.quantity}</td></tr>`,
+            )
+            .join("")
+        : "";
+      const itemsTable = items.length > 0
+        ? `<table style="width:100%;border-collapse:collapse;margin:20px 0;">
+        <thead><tr style="background:#f9fafb;">
+          <th style="padding:10px;text-align:left;border-bottom:2px solid #e5e7eb;">Item</th>
+          <th style="padding:10px;text-align:center;border-bottom:2px solid #e5e7eb;">Qty</th>
+        </tr></thead>
+        <tbody>${itemRows}</tbody>
+      </table>`
+        : "";
+
+      return baseEmailTemplate(
         b,
         `<h1 style="${EMAIL_STYLES.heading}">Quote Request Received</h1>
         <p style="${EMAIL_STYLES.text}">Hi ${data.customerName || "there"},</p>
@@ -985,11 +1051,23 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
           { label: "Quote", value: String(data.quoteNumber) },
           { label: "Items", value: String(data.itemCount) },
         ])}
+        ${itemsTable}
         <p style="${EMAIL_STYLES.muted}">We&rsquo;ll be in touch once your quote is ready.</p>`,
         `Quote request ${data.quoteNumber} received`,
-      ),
-    text: (data, b) =>
-      `Quote Request Received\n\nThank you for your quote request to ${b.agency_name}.\n\nQuote: ${data.quoteNumber}\nItems: ${data.itemCount}\n\nWe'll review it and get back to you shortly.`,
+      );
+    },
+    text: (data, b) => {
+      const items =
+        (data.items as Array<{
+          name: string;
+          quantity: number;
+          unitPrice: number;
+        }>) || [];
+      const itemLines = items.length > 0
+        ? "\n\nItems requested:\n" + items.map((item) => `  ${item.name} x${item.quantity}`).join("\n")
+        : "";
+      return `Quote Request Received\n\nThank you for your quote request to ${b.agency_name}.\n\nQuote: ${data.quoteNumber}\nItems: ${data.itemCount}${itemLines}\n\nWe'll review it and get back to you shortly.`;
+    },
   },
   quote_reminder_customer,
   quote_request_owner,

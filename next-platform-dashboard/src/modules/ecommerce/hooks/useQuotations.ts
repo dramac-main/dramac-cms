@@ -83,7 +83,7 @@ async function fetchQuote(siteId: string, quoteId: string): Promise<Quote | null
 }
 
 async function createQuoteAction(siteId: string, agencyId: string, data: QuoteRequestData, items: QuoteBuilderItem[]): Promise<Quote | null> {
-  const { createQuote: createQuoteServerAction, addQuoteItem, recalculateQuoteTotals } = await import('../actions/quote-actions')
+  const { createQuote: createQuoteServerAction, addQuoteItem, recalculateQuoteTotals, notifyQuoteCreated } = await import('../actions/quote-actions')
   
   const quoteInput: QuoteInput = {
     site_id: siteId,
@@ -114,6 +114,14 @@ async function createQuoteAction(siteId: string, agencyId: string, data: QuoteRe
     }
     // Recalculate totals after adding items
     await recalculateQuoteTotals(siteId, result.quote.id)
+    
+    // Send notifications AFTER items are added (fixes items=0 bug)
+    try {
+      await notifyQuoteCreated(siteId, result.quote.id)
+    } catch (notifyErr) {
+      console.error('Failed to send quote notification:', notifyErr)
+    }
+    
     // Return updated quote
     return result.quote
   }

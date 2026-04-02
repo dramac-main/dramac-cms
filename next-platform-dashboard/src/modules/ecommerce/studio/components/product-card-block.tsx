@@ -202,36 +202,29 @@ export function ProductCardBlock({
       ? Math.round(((productCompareAt - productPrice) / productCompareAt) * 100)
       : 0;
 
-  // Handle add to cart (or request quote in quotation mode)
+  // Handle add to cart (or add to quote in quotation mode)
   const handleAddToCart = useCallback(
     async (e: React.MouseEvent) => {
       e.stopPropagation();
       if (!productId || isDemo) return;
 
-      // In quotation mode: navigate to quote request page instead of adding to cart
-      if (quotationModeEnabled) {
-        const quotesUrl = storefront?.quotationRedirectUrl || "/quotes";
-        router.push(`${quotesUrl}?product=${productId}`);
-        return;
-      }
-
       setAddingToCart(true);
       try {
         const success = await addItem(productId, null, 1);
         if (success) {
-          toast.success("Added to cart", {
+          toast.success(quotationModeEnabled ? "Added to quote" : "Added to cart", {
             description: product?.name
-              ? `${product.name} added to your cart`
-              : "Item added to your cart",
+              ? `${product.name} added to your ${quotationModeEnabled ? "quote" : "cart"}`
+              : `Item added to your ${quotationModeEnabled ? "quote" : "cart"}`,
             duration: 3000,
           });
           // Note: cart-updated event is already dispatched by useStorefrontCart.addItem()
         } else {
-          toast.error("Failed to add item to cart");
+          toast.error(quotationModeEnabled ? "Failed to add item to quote" : "Failed to add item to cart");
         }
       } catch (err) {
         console.error("Failed to add to cart:", err);
-        toast.error("Failed to add item to cart");
+        toast.error(quotationModeEnabled ? "Failed to add item to quote" : "Failed to add item to cart");
       } finally {
         setAddingToCart(false);
       }
@@ -241,8 +234,6 @@ export function ProductCardBlock({
       addItem,
       isDemo,
       quotationModeEnabled,
-      storefront?.quotationRedirectUrl,
-      router,
       product?.name,
     ],
   );
@@ -449,7 +440,7 @@ export function ProductCardBlock({
 
   // Add to cart / request quote button
   const AddToCartButton = ({ fullWidth = false }: { fullWidth?: boolean }) => {
-    // If product is already in cart, show "View Cart" button
+    // If product is already in cart, show "View Cart" / "View Quote" button
     if (isProductInCart && !quotationModeEnabled) {
       return (
         <Link
@@ -464,6 +455,24 @@ export function ProductCardBlock({
         >
           <ShoppingCart className="h-4 w-4" />
           View Cart
+        </Link>
+      );
+    }
+
+    if (isProductInCart && quotationModeEnabled) {
+      return (
+        <Link
+          href="/cart"
+          onClick={(e) => e.stopPropagation()}
+          className={cn(
+            "px-4 py-2 min-h-[44px] rounded-md text-sm font-medium",
+            "transition-colors flex items-center justify-center gap-2",
+            "bg-warning/20 hover:bg-warning/30 text-warning-foreground",
+            fullWidth && "w-full",
+          )}
+        >
+          <FileText className="h-4 w-4" />
+          View Quote Items
         </Link>
       );
     }
@@ -485,7 +494,7 @@ export function ProductCardBlock({
         {addingToCart ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
-            {quotationModeEnabled ? "Requesting..." : "Adding..."}
+            {quotationModeEnabled ? "Adding..." : "Adding..."}
           </>
         ) : quotationModeEnabled ? (
           <>

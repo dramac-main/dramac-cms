@@ -75,8 +75,9 @@ export function CartPageBlock({
     ? quotationRedirectUrl || "/quotes"
     : checkoutHref;
   const effectiveCheckoutText = quotationModeEnabled
-    ? quotationButtonLabel || "Request a Quote"
+    ? "Submit Quote Request"
     : checkoutText;
+  const effectiveTitle = quotationModeEnabled ? "Your Quote Items" : title;
   const {
     cart,
     items,
@@ -155,7 +156,7 @@ export function CartPageBlock({
           <div className="mb-8">
             <h1 className="text-3xl font-bold flex items-center gap-3">
               <ShoppingCart className="h-8 w-8" />
-              {title}
+              {effectiveTitle}
             </h1>
           </div>
 
@@ -178,7 +179,7 @@ export function CartPageBlock({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold flex items-center gap-2 sm:gap-3">
             <ShoppingCart className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8" />
-            {title}
+            {effectiveTitle}
             <span className="text-base sm:text-lg font-normal text-muted-foreground">
               ({itemCount} {itemCount === 1 ? "item" : "items"})
             </span>
