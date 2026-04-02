@@ -38,9 +38,9 @@ export interface ModuleStatus {
 // ============================================================================
 
 /**
- * Check if a module is installed and enabled on a site
+ * Check if a module is installed and enabled on a site.
  * 
- * @param moduleId - The module ID to check
+ * @param moduleSlug - The module slug to check (e.g. 'ecommerce', 'live-chat')
  * @param siteId - The site ID to check for
  * @returns Module status object
  * 
@@ -58,7 +58,7 @@ export interface ModuleStatus {
  * ```
  */
 export function useModuleStatus(
-  moduleId: string,
+  moduleSlug: string,
   siteId: string | null | undefined
 ): ModuleStatus {
   const [status, setStatus] = useState<ModuleStatus>({
@@ -70,11 +70,11 @@ export function useModuleStatus(
   });
 
   useEffect(() => {
-    if (!siteId || !moduleId) {
+    if (!siteId || !moduleSlug) {
       setStatus(prev => ({
         ...prev,
         isLoading: false,
-        error: !siteId ? 'No site ID provided' : 'No module ID provided',
+        error: !siteId ? 'No site ID provided' : 'No module slug provided',
       }));
       return;
     }
@@ -84,12 +84,32 @@ export function useModuleStatus(
     async function checkModuleStatus() {
       try {
         const supabase = createClient();
+
+        // Resolve module slug → UUID (module_id is a UUID FK to modules_v2)
+        const { data: moduleRow, error: modErr } = await supabase
+          .from('modules_v2')
+          .select('id')
+          .eq('slug', moduleSlug)
+          .maybeSingle();
+
+        if (!mounted) return;
+
+        if (modErr || !moduleRow) {
+          setStatus({
+            isInstalled: false,
+            isEnabled: false,
+            settings: null,
+            isLoading: false,
+            error: modErr?.message || `Module "${moduleSlug}" not found`,
+          });
+          return;
+        }
         
         const { data, error } = await supabase
           .from('site_module_installations')
           .select('id, is_enabled, settings')
           .eq('site_id', siteId!)
-          .eq('module_id', moduleId)
+          .eq('module_id', moduleRow.id)
           .maybeSingle();
 
         if (!mounted) return;
@@ -130,7 +150,7 @@ export function useModuleStatus(
     return () => {
       mounted = false;
     };
-  }, [moduleId, siteId]);
+  }, [moduleSlug, siteId]);
 
   return status;
 }

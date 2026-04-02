@@ -296,8 +296,13 @@ Your site was auto-published when you clicked "Apply & Edit" in Step 4. Time to 
    - **Your Email** — use a real email (you'll receive quote notifications here)
    - **Message/Notes** — e.g. "I'd like a bulk order of 50 units"
 10. Click **"Submit Quote Request"** to submit
-    - You should see a success message: "Quote Request Submitted!"
+    - You should see a success message: "Quote Request Submitted!" with your quote reference number
     - Your cart is automatically cleared
+    - You'll see two buttons: **"Download Quote Summary"** (saves a text file) and **"Chat With Us"**
+    - After ~2 seconds, the **live chat widget auto-opens** in the bottom-right corner
+    - Chiko (the AI assistant) will **automatically greet you** with context about your quote — e.g. "I see you've just submitted a quote request with 4 items..."
+    - This is a **dedicated quote conversation** — if you come back later, it picks up where you left off
+    - Chiko provides progressive guidance: what happens next, estimated response time, and how to check your quote status
 
 ### Step 14: Check That Notifications Fired
 

@@ -292,10 +292,17 @@ export async function runCartRecoveryAutomation(): Promise<CartRecoveryResult> {
     const supabase = createAdminClient() as any;
 
     // Find all sites with active e-commerce module
+    // module_id is a UUID FK — resolve from slug first
+    const { data: ecomMod } = await supabase
+      .from("modules_v2")
+      .select("id")
+      .eq("slug", "ecommerce")
+      .maybeSingle();
+
     const { data: installations } = await supabase
       .from("site_module_installations")
       .select("site_id")
-      .eq("module_id", "ecommerce")
+      .eq("module_id", ecomMod?.id ?? "00000000-0000-0000-0000-000000000000")
       .eq("status", "active");
 
     if (!installations || installations.length === 0) {

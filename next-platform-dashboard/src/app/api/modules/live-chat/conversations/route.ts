@@ -275,10 +275,6 @@ export async function POST(request: NextRequest) {
           : quoteNumber
             ? `Quote ${quoteNumber}`
             : null,
-              payment_guidance_active: true,
-            }
-          : {},
-        subject: orderNumber ? `Order ${orderNumber}` : null,
       };
 
       if (departmentId) convInsert.department_id = departmentId;
