@@ -138,6 +138,10 @@ export async function generateAutoResponse(
     >;
     let targetOrderNumber: string | null =
       (convMeta.order_number as string) || null;
+    const targetQuoteNumber: string | null =
+      (convMeta.quote_number as string) || null;
+    const quoteGuidanceActive: boolean =
+      !!(convMeta.quote_guidance_active);
 
     if (!targetOrderNumber) {
       // Parse from the most recent visitor message containing an order number
@@ -188,13 +192,15 @@ export async function generateAutoResponse(
     const proofUploaded = pendingManualOrder?.paymentProof?.hasProof || false;
     const proofStatus = pendingManualOrder?.paymentProof?.status || null;
 
-    // Check for active quotations
+    // Check for active quotations — include ALL non-terminal statuses
     const activeQuotes =
       customerCtx?.recentQuotes?.filter((q) =>
-        ["sent", "viewed", "pending_approval"].includes(q.status),
+        ["pending", "draft", "sent", "viewed", "pending_approval"].includes(q.status),
       ) || [];
     const acceptedQuotes =
       customerCtx?.recentQuotes?.filter((q) => q.status === "accepted") || [];
+    // All quotes the customer has (for CUSTOMER HISTORY context)
+    const allQuotes = customerCtx?.recentQuotes || [];
 
     // Fetch store payment instructions when relevant
     let paymentInstructions: string | null = null;
@@ -367,18 +373,36 @@ ${
     ? `
 ACTIVE QUOTATIONS:
 The customer has ${activeQuotes.length} active quotation(s):
-${activeQuotes.map((q) => `- ${q.quoteNumber}: ${q.status}, ${q.currency} ${(q.total / 100).toFixed(2)}, ${q.itemCount} item(s)${q.expiresAt ? `, expires ${new Date(q.expiresAt).toLocaleDateString()}` : ""}`).join("\n")}
+${activeQuotes.map((q) => `- ${q.quoteNumber}: status="${q.status}", ${q.currency} ${(q.total / 100).toFixed(2)}, ${q.itemCount} item(s)${q.expiresAt ? `, expires ${new Date(q.expiresAt).toLocaleDateString()}` : ""}`).join("\n")}
+${targetQuoteNumber ? `\nTHIS CONVERSATION IS ABOUT QUOTE: ${targetQuoteNumber}\nFocus your guidance on this specific quote.` : ""}
 
 QUOTATION GUIDANCE:
-- If the customer asks about their quote, provide the details above
-- Let them know they can view and accept/reject the quote through the link sent to their email
-- If a quote is in "draft" or "sent" status, explain that the store is preparing or has sent their quote
+- You HAVE full visibility into the customer's quotes — use the details above to help them
+- If the quote status is "pending" or "draft": the quote has been submitted and the store team will review it and prepare a formal quote. Let the customer know their request was received and the team is working on it.
+- If the quote is "sent" or "viewed": the store has sent a formal quote to the customer's email. Guide them to check their email for the quote link where they can accept or reject it.
+- If the quote is "pending_approval": the quote is awaiting final approval. Let them know it's being processed.
 - If they want to request a new quote, explain they can browse products, add items to their quote from the shop, and submit from the cart page
-- If they have questions about pricing on the quote, let them know the store owner can adjust prices before sending
-- Be proactive: if a quote is pending their action (sent status), gently remind them to review it
+- If they have questions about pricing, let them know the store owner can adjust prices before sending the final quote
+- Be proactive: if a quote is pending their action (sent status), gently remind them to review it via the email link
 - If they ask about timelines, let them know the store aims to respond promptly but exact times depend on the business
+- NEVER say you don't have visibility into quotes — you DO. Use the data above.
 `
-    : ""
+    : quoteGuidanceActive || targetQuoteNumber
+      ? `
+QUOTATION CONTEXT:
+This conversation was opened after the customer submitted a quote request${targetQuoteNumber ? ` (${targetQuoteNumber})` : ""}.
+The quote has just been submitted and is being processed.
+
+QUOTATION GUIDANCE:
+- Warmly acknowledge their quote submission${targetQuoteNumber ? ` (reference: ${targetQuoteNumber})` : ""}
+- Let them know the store team has received their request and will review it
+- Explain the next steps: the store will prepare a formal quote with pricing and send it to their email
+- They'll be able to accept or reject the quote directly from the email link
+- If they have questions about specific items or want to modify their request, they can let you know
+- Reassure them that the process is straightforward and the team will respond promptly
+- NEVER say you don't have visibility into quotes — you are their guide through the quote process
+`
+      : ""
 }
 ${
   acceptedQuotes.length > 0
@@ -425,10 +449,16 @@ Previous conversations: ${visitorInfo?.total_conversations || 0}${customerCtx ? 
       confidence = 0.95;
     }
 
-    // Quotation context — high confidence when customer has active quotes
-    if (activeQuotes.length > 0 || acceptedQuotes.length > 0) {
+    // Quotation context — high confidence when customer has active quotes or quote guidance is active
+    if (activeQuotes.length > 0 || acceptedQuotes.length > 0 || quoteGuidanceActive || targetQuoteNumber) {
       const quoteLower = lowerMsg;
-      if (quoteLower.includes("quote") || quoteLower.includes("quotation") || quoteLower.includes("proposal")) {
+      if (
+        quoteGuidanceActive ||
+        targetQuoteNumber ||
+        quoteLower.includes("quote") ||
+        quoteLower.includes("quotation") ||
+        quoteLower.includes("proposal")
+      ) {
         confidence = 0.9;
       }
     }
