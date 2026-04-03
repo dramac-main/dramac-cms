@@ -115,8 +115,7 @@ export async function generateAutoResponse(
     const companyName = settingsRes.data?.company_name || "our company";
     const aiTone = settingsRes.data?.ai_response_tone || "friendly";
     const customInstructions = settingsRes.data?.ai_custom_instructions || "";
-    const aiAssistantName =
-      settingsRes.data?.ai_assistant_name || "Chiko";
+    const aiAssistantName = settingsRes.data?.ai_assistant_name || "Chiko";
     const paymentGreeting = settingsRes.data?.ai_payment_greeting || "";
     const kbArticles = kbRes.data || [];
     const previousMessages = (messagesRes.data || []).reverse();
@@ -140,8 +139,7 @@ export async function generateAutoResponse(
       (convMeta.order_number as string) || null;
     const targetQuoteNumber: string | null =
       (convMeta.quote_number as string) || null;
-    const quoteGuidanceActive: boolean =
-      !!(convMeta.quote_guidance_active);
+    const quoteGuidanceActive: boolean = !!convMeta.quote_guidance_active;
 
     if (!targetOrderNumber) {
       // Parse from the most recent visitor message containing an order number
@@ -195,7 +193,9 @@ export async function generateAutoResponse(
     // Check for active quotations — include ALL non-terminal statuses
     const activeQuotes =
       customerCtx?.recentQuotes?.filter((q) =>
-        ["pending", "draft", "sent", "viewed", "pending_approval"].includes(q.status),
+        ["pending", "draft", "sent", "viewed", "pending_approval"].includes(
+          q.status,
+        ),
       ) || [];
     const acceptedQuotes =
       customerCtx?.recentQuotes?.filter((q) => q.status === "accepted") || [];
@@ -322,6 +322,22 @@ export async function generateAutoResponse(
     };
     const toneInstruction = toneMap[aiTone] || toneMap.friendly;
 
+    // Resolve the most accurate customer name available.
+    // Priority: CRM contact name > quote customer_name > visitor display name
+    // Only use a name if it looks real (not generic placeholders like "Visitor").
+    const crmName = customerCtx?.crmContact
+      ? `${customerCtx.crmContact.firstName} ${customerCtx.crmContact.lastName}`.trim()
+      : "";
+    const quoteCustomerName =
+      customerCtx?.recentQuotes?.find((q) => q.customerName)?.customerName ||
+      "";
+    const visitorDisplayName = visitorInfo?.name || "";
+    const genericNames = ["visitor", "unknown", "guest", "anonymous", ""];
+    const resolvedCustomerName =
+      (crmName && !genericNames.includes(crmName.toLowerCase()) ? crmName : "") ||
+      (quoteCustomerName && !genericNames.includes(quoteCustomerName.toLowerCase()) ? quoteCustomerName : "") ||
+      (visitorDisplayName && !genericNames.includes(visitorDisplayName.toLowerCase()) ? visitorDisplayName : "Unknown");
+
     const systemPrompt = `You are a customer support AI assistant for ${companyName}.
 You help website visitors with their questions.
 
@@ -422,7 +438,7 @@ CONVERSATION HISTORY:
 ${historyText}
 
 VISITOR INFO:
-Name: ${visitorInfo?.name || "Unknown"}
+Name: ${resolvedCustomerName}
 Email: ${visitorInfo?.email || "Not provided"}
 Previous conversations: ${visitorInfo?.total_conversations || 0}${customerCtx ? `\n\nCUSTOMER HISTORY:\n${formatCustomerContext(customerCtx)}` : ""}`;
 
@@ -450,7 +466,12 @@ Previous conversations: ${visitorInfo?.total_conversations || 0}${customerCtx ? 
     }
 
     // Quotation context — high confidence when customer has active quotes or quote guidance is active
-    if (activeQuotes.length > 0 || acceptedQuotes.length > 0 || quoteGuidanceActive || targetQuoteNumber) {
+    if (
+      activeQuotes.length > 0 ||
+      acceptedQuotes.length > 0 ||
+      quoteGuidanceActive ||
+      targetQuoteNumber
+    ) {
       const quoteLower = lowerMsg;
       if (
         quoteGuidanceActive ||

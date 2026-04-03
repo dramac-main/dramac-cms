@@ -46,6 +46,7 @@ import {
   type ChatQuoteContext,
 } from "@/modules/live-chat/actions/chat-quote-actions";
 import { updateQuoteStatus } from "@/modules/ecommerce/actions/quote-actions";
+import { sendQuote } from "@/modules/ecommerce/actions/quote-workflow-actions";
 import { QuoteDetailDialog } from "@/modules/ecommerce/components/quotes/quote-detail-dialog";
 import type { QuoteStatus } from "@/modules/ecommerce/types/ecommerce-types";
 
@@ -112,6 +113,21 @@ export function ChatQuotePanel({
     (newStatus: string) => {
       if (!quote) return;
       startTransition(async () => {
+        // "sent" must go through sendQuote() which handles email + chat notification
+        if (newStatus === "sent") {
+          const result = await sendQuote({
+            quote_id: quote.id,
+            site_id: siteId,
+          });
+          if (result.success) {
+            toast.success("Quote sent to customer via email");
+            fetchQuote();
+          } else {
+            toast.error(result.error || "Failed to send quote");
+          }
+          return;
+        }
+
         const result = await updateQuoteStatus(
           siteId,
           quote.id,
@@ -181,9 +197,7 @@ export function ChatQuotePanel({
   }
 
   const statusConfig = QUOTE_STATUS_CONFIG[quote.status as QuoteStatus];
-  const allowedTransitions = getAllowedTransitions(
-    quote.status as QuoteStatus,
-  );
+  const allowedTransitions = getAllowedTransitions(quote.status as QuoteStatus);
   const daysUntilExpiry = calculateDaysUntilExpiry(quote.validUntil);
   const expired = isQuoteExpired(quote.validUntil);
 

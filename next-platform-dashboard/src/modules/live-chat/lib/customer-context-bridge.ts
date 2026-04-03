@@ -53,6 +53,7 @@ export interface CustomerContext {
     expiresAt: string | null;
     convertedOrderNumber: string | null;
     itemCount: number;
+    customerName: string | null;
   }>;
 }
 
@@ -107,7 +108,7 @@ export async function getCustomerContext(
     supabase
       .from("mod_ecommod01_quotes")
       .select(
-        "id, quote_number, status, total, currency, created_at, valid_until, converted_order_id",
+        "id, quote_number, status, total, currency, created_at, valid_until, converted_order_id, customer_name",
       )
       .eq("site_id", siteId)
       .eq("customer_email", email)
@@ -240,6 +241,7 @@ export async function getCustomerContext(
         ? convertedOrderNumbers[q.converted_order_id] || null
         : null,
       itemCount: quoteItemCounts[q.id] || 0,
+      customerName: q.customer_name || null,
     })),
   };
 }

@@ -16,7 +16,11 @@ import {
   notifyNewOrder,
 } from "@/lib/services/business-notifications";
 import { formatCurrency, DEFAULT_CURRENCY } from "@/lib/locale-config";
-import { notifyChatQuoteSent, notifyChatQuoteAccepted } from "@/modules/live-chat/lib/chat-event-bridge";
+import {
+  notifyChatQuoteSent,
+  notifyChatQuoteAccepted,
+  notifyChatQuoteRejected,
+} from "@/modules/live-chat/lib/chat-event-bridge";
 import { revalidatePath } from "next/cache";
 import type {
   Quote,
@@ -172,7 +176,7 @@ export async function sendQuote(
         )
       : quote.total || 0;
     const formatted = formatCurrency(
-      totalAmount / 100,
+      totalAmount,
       quote.currency || DEFAULT_CURRENCY,
     );
 
@@ -213,6 +217,7 @@ export async function sendQuote(
           quote.customer_email,
           quote.quote_number,
           formatted,
+          portalUrl,
         );
       } catch {
         // Chat notification is best-effort
@@ -659,6 +664,20 @@ export async function rejectQuote(
         quote.customer_name || "Customer",
         input.rejection_reason,
       );
+    }
+
+    // Notify active chat conversation about the rejection
+    if (quote.customer_email && quote.site_id) {
+      try {
+        await notifyChatQuoteRejected(
+          quote.site_id,
+          quote.customer_email,
+          quote.quote_number,
+          input.rejection_reason,
+        );
+      } catch {
+        // Chat notification is best-effort
+      }
     }
 
     return { success: true, quote: updatedQuote };

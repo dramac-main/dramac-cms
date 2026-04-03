@@ -264,13 +264,17 @@ export async function notifyChatQuoteSent(
   customerEmail: string,
   quoteNumber: string,
   total: string,
+  portalUrl?: string,
 ): Promise<void> {
   const conv = await findActiveConversation(siteId, customerEmail);
   if (!conv) return;
 
+  const linkPart = portalUrl
+    ? ` You can also view it here: ${portalUrl}`
+    : "";
   const message =
     `Great news! Your quote ${quoteNumber} is ready (${total})! 🎉 ` +
-    `We've sent it to your email. You can review it and accept or decline from there. Would you like me to tell you more about it?`;
+    `We've sent it to your email where you can review, accept, or decline it.${linkPart} Would you like me to tell you more about it?`;
 
   await sendProactiveMessage(
     siteId,
@@ -295,6 +299,31 @@ export async function notifyChatQuoteAccepted(
   const message =
     `You've accepted quote ${quoteNumber} (${total})! ✅ ` +
     `The store will now process this into an order. You'll be notified once it's ready for payment.`;
+
+  await sendProactiveMessage(
+    siteId,
+    conv.conversationId,
+    message,
+    conv.assistantName,
+  );
+}
+
+/**
+ * Notify chat when a quote has been rejected by the customer.
+ */
+export async function notifyChatQuoteRejected(
+  siteId: string,
+  customerEmail: string,
+  quoteNumber: string,
+  reason?: string,
+): Promise<void> {
+  const conv = await findActiveConversation(siteId, customerEmail);
+  if (!conv) return;
+
+  const reasonPart = reason ? ` Reason: "${reason}".` : "";
+  const message =
+    `We've noted that you declined quote ${quoteNumber}.${reasonPart} ` +
+    `If you'd like to discuss changes or request a revised quote, I'm happy to help! 💬`;
 
   await sendProactiveMessage(
     siteId,
