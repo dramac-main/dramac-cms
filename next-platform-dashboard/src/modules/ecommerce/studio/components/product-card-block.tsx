@@ -212,30 +212,35 @@ export function ProductCardBlock({
       try {
         const success = await addItem(productId, null, 1);
         if (success) {
-          toast.success(quotationModeEnabled ? "Added to quote" : "Added to cart", {
-            description: product?.name
-              ? `${product.name} added to your ${quotationModeEnabled ? "quote" : "cart"}`
-              : `Item added to your ${quotationModeEnabled ? "quote" : "cart"}`,
-            duration: 3000,
-          });
+          toast.success(
+            quotationModeEnabled ? "Added to quote" : "Added to cart",
+            {
+              description: product?.name
+                ? `${product.name} added to your ${quotationModeEnabled ? "quote" : "cart"}`
+                : `Item added to your ${quotationModeEnabled ? "quote" : "cart"}`,
+              duration: 3000,
+            },
+          );
           // Note: cart-updated event is already dispatched by useStorefrontCart.addItem()
         } else {
-          toast.error(quotationModeEnabled ? "Failed to add item to quote" : "Failed to add item to cart");
+          toast.error(
+            quotationModeEnabled
+              ? "Failed to add item to quote"
+              : "Failed to add item to cart",
+          );
         }
       } catch (err) {
         console.error("Failed to add to cart:", err);
-        toast.error(quotationModeEnabled ? "Failed to add item to quote" : "Failed to add item to cart");
+        toast.error(
+          quotationModeEnabled
+            ? "Failed to add item to quote"
+            : "Failed to add item to cart",
+        );
       } finally {
         setAddingToCart(false);
       }
     },
-    [
-      productId,
-      addItem,
-      isDemo,
-      quotationModeEnabled,
-      product?.name,
-    ],
+    [productId, addItem, isDemo, quotationModeEnabled, product?.name],
   );
 
   // Handle wishlist toggle

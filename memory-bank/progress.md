@@ -2,28 +2,32 @@
 
 **Last Updated**: April 2026  
 **Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅ + **LIVE CHAT RUNTIME FIXES (AI auto-response + file uploads)** ✅ + **PER-ORDER CONVERSATION ISOLATION** ✅ + **PER-ORDER CHAT HARDENING AUDIT (10 bugs fixed, 0 TS errors)** ✅ + **CATEGORIES PAGE + DARK MODE POLISH** ✅ + **LIVE CHAT OVERHAUL + ECOMMERCE FIXES** ✅ + **CANVAS IFRAME RENDERING FIDELITY FIXES** ✅ + **TYPOGRAPHY COMPONENTS OVERHAUL (4 enhanced + 5 new, CSS var type scale)** ✅ + **BUTTON COMPONENTS MASTER PLAN (Phases 1-5: renders, registrations, converter, metadata, CTARender composition)** ✅ + **MARKETING COMPONENTS — FULL IMPLEMENTATION + REGISTRY ALIGNMENT (5 components, all paths)** ✅ + **ECOMMERCE COMPONENTS OVERHAUL — CONVERTER, METADATA, DEFINITION ALIGNMENT (3 files, 23 metadata entries, 6 definitions fixed)** ✅ + **3D & EFFECTS COMPONENTS — FULL RENDER EXPANSION (ALL 12 components, Typewriter+Parallax rewrites, 7 normalizers, metadata enhanced)** ✅ + **3 SHOWCASE WEBSITES — FULLY POPULATED (208 records across 16 tables)** ✅ + **OVERLAY-AWARE CONTRAST RESOLUTION — ALL 10 PREMIUM COMPONENTS (shared utilities, comprehensive render fixes)** ✅ + **ECOMMERCE IMAGE FORMAT CRASH FIX — ALL 16 STOREFRONT COMPONENTS (image-utils.ts, normalizeProductImages)** ✅ + **QUOTATION MODE OVERHAUL — CART-BASED UX, EMAILS, AI, CHAT EVENTS (13 source files)** ✅ + **QUOTATION FLOW FIXES — CART-TO-BUILDER BRIDGE, OPTIMISTIC UPDATES (6 source files)** ✅ + **CART DEBOUNCING + QUOTE CHAT/DOWNLOAD UX (4 source files, race condition fix)** ✅ + **QUOTE CHAT AUTO-START FIX — TIMING RACE, PER-QUOTE ISOLATION, AI GUIDANCE (3 source files)** ✅ + **BUILD FIX + MODULE STATUS 400 ERROR (slug→UUID resolution, 4 source files)** ✅ + **CHIKO AI QUOTE VISIBILITY FIX — FULL QUOTE ACCESS, STATUS FILTER, METADATA, GUIDANCE (1 source file)** ✅ + **QUOTE PRICING 100x FIX + LIVE CHAT QUOTE PANEL (6 source files, cents→main currency conversion)** ✅ + **QUOTE WORKFLOW PRODUCTION-READINESS — SMART STATUS ROUTING, CHAT NOTIFICATIONS, CUSTOMER NAME (5 source files)** ✅
++ **QUOTE END-TO-END WORKFLOW FIX — PORTAL AUTH, TOKEN AT CREATION, AMENDMENT FLOW, EDITABLE DIALOG (10 files)** ✅
 
 ---
 
-## Latest Update: Quote Workflow Production-Readiness ✅
+## Latest Update: Quote End-to-End Workflow Fix ✅
 
 ### What Was Done
 
-Hardened quote workflow for production: ChatQuotePanel "sent" now routes through `sendQuote()` (email + chat notification) instead of raw DB update. Fixed `/100` bug in `sendQuote()` formatCurrency. Added `notifyChatQuoteRejected()` and wired into `rejectQuote()`. `notifyChatQuoteSent()` now includes portal URL. AI responder resolves customer name from CRM > quote `customer_name` > visitor display name, filtering generic names for accuracy.
+Fixed the entire quote workflow which was broken end-to-end. Customer portal was blocked by auth middleware, no tracking link provided, store owner couldn't edit from live chat, no way to send quotes, and no amendment request option for customers.
 
-**5 Source Files Modified:**
+**9 Source Files Modified + 1 New File Created:**
 
-- `ChatQuotePanel.tsx` — Smart status routing: "sent" → `sendQuote()`, others → `updateQuoteStatus()`
-- `quote-workflow-actions.ts` — Fix /100, add rejection chat notification, pass portal URL
-- `chat-event-bridge.ts` — New `notifyChatQuoteRejected()`, enhanced `notifyChatQuoteSent()` with portal URL
-- `customer-context-bridge.ts` — Added `customer_name` to quote data for AI
-- `ai-responder.ts` — Customer name priority chain (CRM > quote > visitor), generic name blocklist
-
-**Git:** `b71de96e`, pushed to origin/main (99 insertions, 14 deletions across 5 files)
+- `proxy.ts` — Added `/quote/` to public routes (portal accessible without login)
+- `quote-actions.ts` — `createQuote()` generates `access_token` immediately; `notifyQuoteCreated()` passes portal URL
+- `business-notifications.ts` — Customer email now includes portal tracking URL
+- `ChatQuotePanel.tsx` — Prominent "Send to Customer" + "Convert to Order" buttons, `onSend`/`onConvert`/`onQuoteChange` passed to dialog
+- `quote-detail-dialog.tsx` — Items now editable (`isReadOnly={!canEdit}`), live add/update/remove via server actions
+- `quote-workflow-actions.ts` — New `requestQuoteAmendment()` action (back to pending_approval, logs activity, notifies chat)
+- `chat-event-bridge.ts` — New `notifyChatQuoteAmendmentRequested()` function
+- `quote-portal-view.tsx` — "Request Changes" button + amendment dialog + "Quote Being Prepared" banner for pending status
+- `quote-amendment-dialog.tsx` — NEW: Customer dialog for describing requested changes
+- `QuoteRequestBlock.tsx` — "Track Your Quote" button, "What happens next" explainer section
 
 ---
 
-## Previous Update: Quote Pricing 100x Fix + Live Chat Quote Panel ✅
+## Previous Update: Quote Workflow Production-Readiness ✅
 
 ### What Was Done
 

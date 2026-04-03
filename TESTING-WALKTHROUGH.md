@@ -462,7 +462,7 @@ After completing all steps, verify these worked:
 | E-Commerce tab not showing                 | Refresh the page (F5). The auto-install writes to DB; tab appears on next page load                 |
 | Shop page is blank                         | Make sure E-Commerce module is installed AND enabled (check the Modules tab on site detail)         |
 | No products showing                        | Make sure products are set to **"Active"** status (not Draft)                                       |
-| Can't access storefront                    | Check the subdomain URL is correct: `https://YOUR-SUBDOMAIN.sites.dramacagency.com`                             |
+| Can't access storefront                    | Check the subdomain URL is correct: `https://YOUR-SUBDOMAIN.sites.dramacagency.com`                 |
 | "View Live" button not showing             | The site might not be published — click the Publish button on the site detail page                  |
 | No emails arriving                         | Check spam/junk folder. Emails come from `noreply@app.dramacagency.com`                             |
 | "Add to Cart" instead of "Request a Quote" | Refresh the page — quotation mode settings may take a moment to propagate                           |

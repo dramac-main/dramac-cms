@@ -688,6 +688,108 @@ export async function rejectQuote(
 }
 
 // ============================================================================
+// REQUEST AMENDMENT (CUSTOMER)
+// ============================================================================
+
+interface RequestAmendmentInput {
+  token: string;
+  amendment_notes: string;
+  requested_by_name?: string;
+}
+
+/**
+ * Customer requests changes to a quote (sends it back for revision)
+ */
+export async function requestQuoteAmendment(
+  input: RequestAmendmentInput,
+): Promise<WorkflowResult> {
+  try {
+    const supabase = getPublicModuleClient();
+
+    // Get quote by token
+    const { data: quote, error: quoteError } = await supabase
+      .from(`${TABLE_PREFIX}_quotes`)
+      .select("*")
+      .eq("access_token", input.token)
+      .single();
+
+    if (quoteError || !quote) {
+      return { success: false, error: "Quote not found" };
+    }
+
+    // Validate quote can receive amendment requests
+    if (!["sent", "viewed"].includes(quote.status)) {
+      return {
+        success: false,
+        error: "Quote cannot be amended in current status",
+      };
+    }
+
+    // Update quote back to pending_approval so store owner can revise
+    const now = new Date().toISOString();
+    const amendmentCount = (quote.metadata?.amendment_count || 0) + 1;
+    const { data: updatedQuote, error: updateError } = await supabase
+      .from(`${TABLE_PREFIX}_quotes`)
+      .update({
+        status: "pending_approval" as QuoteStatus,
+        response_notes: input.amendment_notes,
+        metadata: {
+          ...quote.metadata,
+          amendment_requested: true,
+          amendment_notes: input.amendment_notes,
+          amendment_requested_at: now,
+          amendment_requested_by: input.requested_by_name,
+          amendment_count: amendmentCount,
+        },
+        updated_at: now,
+      })
+      .eq("id", quote.id)
+      .select()
+      .single();
+
+    if (updateError) {
+      return { success: false, error: updateError.message };
+    }
+
+    // Log activity
+    await supabase.from(`${TABLE_PREFIX}_quote_activities`).insert({
+      quote_id: quote.id,
+      activity_type: "amendment_requested",
+      description: `Customer requested changes: ${input.amendment_notes}`,
+      metadata: {
+        amendment_notes: input.amendment_notes,
+        requested_by_name: input.requested_by_name,
+        amendment_number: amendmentCount,
+      },
+    });
+
+    // Notify active chat conversation
+    if (quote.customer_email && quote.site_id) {
+      try {
+        const { notifyChatQuoteAmendmentRequested } = await import(
+          "@/modules/live-chat/lib/chat-event-bridge"
+        );
+        await notifyChatQuoteAmendmentRequested(
+          quote.site_id,
+          quote.customer_email,
+          quote.quote_number,
+          input.amendment_notes,
+        );
+      } catch {
+        // Chat notification is best-effort
+      }
+    }
+
+    revalidatePath("/ecommerce");
+
+    return { success: true, quote: updatedQuote };
+  } catch (error) {
+    console.error("Error requesting quote amendment:", error);
+    return { success: false, error: "Failed to request changes" };
+  }
+}
+
+// ============================================================================
 // CONVERT TO ORDER
 // ============================================================================
 

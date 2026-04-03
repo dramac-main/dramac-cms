@@ -26,6 +26,7 @@ import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { QuoteAcceptForm } from './quote-accept-form'
 import { QuoteRejectDialog } from './quote-reject-dialog'
+import { QuoteAmendmentDialog } from './quote-amendment-dialog'
 import { formatQuoteCurrency, isQuoteExpired, calculateDaysUntilExpiry } from '../../lib/quote-utils'
 import { downloadQuotePDF } from '../../lib/quote-pdf-generator'
 import type { Quote } from '../../types/ecommerce-types'
@@ -46,6 +47,7 @@ interface QuotePortalViewProps {
 export function QuotePortalView({ quote, token }: QuotePortalViewProps) {
   const [showAcceptForm, setShowAcceptForm] = useState(false)
   const [showRejectDialog, setShowRejectDialog] = useState(false)
+  const [showAmendmentDialog, setShowAmendmentDialog] = useState(false)
   const [currentStatus, setCurrentStatus] = useState(quote.status)
   
   const expired = quote.valid_until ? isQuoteExpired(quote.valid_until) : false
@@ -55,6 +57,7 @@ export function QuotePortalView({ quote, token }: QuotePortalViewProps) {
   const isAccepted = currentStatus === 'accepted'
   const isRejected = currentStatus === 'rejected'
   const isExpired = currentStatus === 'expired' || expired
+  const isPending = ['draft', 'pending_approval'].includes(currentStatus)
   
   // Handle acceptance/rejection
   const handleAccepted = () => {
@@ -65,6 +68,11 @@ export function QuotePortalView({ quote, token }: QuotePortalViewProps) {
   const handleRejected = () => {
     setCurrentStatus('rejected')
     setShowRejectDialog(false)
+  }
+  
+  const handleAmendmentRequested = () => {
+    setCurrentStatus('pending_approval')
+    setShowAmendmentDialog(false)
   }
 
   return (
@@ -101,6 +109,18 @@ export function QuotePortalView({ quote, token }: QuotePortalViewProps) {
             <p className="font-semibold text-amber-700 dark:text-amber-300">Quote Expired</p>
             <p className="text-sm text-amber-600 dark:text-amber-400">
               This quote has expired. Please contact us for an updated quote.
+            </p>
+          </div>
+        </div>
+      )}
+      
+      {isPending && (
+        <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg flex items-center gap-3">
+          <Clock className="h-6 w-6 text-blue-600" />
+          <div>
+            <p className="font-semibold text-blue-700 dark:text-blue-300">Quote Being Prepared</p>
+            <p className="text-sm text-blue-600 dark:text-blue-400">
+              Your quote request is being reviewed. We&apos;ll notify you by email when it&apos;s ready.
             </p>
           </div>
         </div>
@@ -304,6 +324,14 @@ export function QuotePortalView({ quote, token }: QuotePortalViewProps) {
                 Accept Quote
               </Button>
               <Button 
+                variant="secondary"
+                size="lg"
+                onClick={() => setShowAmendmentDialog(true)}
+              >
+                <FileText className="h-5 w-5 mr-2" />
+                Request Changes
+              </Button>
+              <Button 
                 variant="outline"
                 size="lg"
                 onClick={() => setShowRejectDialog(true)}
@@ -348,6 +376,14 @@ export function QuotePortalView({ quote, token }: QuotePortalViewProps) {
         onOpenChange={setShowRejectDialog}
         token={token}
         onRejected={handleRejected}
+      />
+      
+      {/* Amendment Dialog */}
+      <QuoteAmendmentDialog
+        open={showAmendmentDialog}
+        onOpenChange={setShowAmendmentDialog}
+        token={token}
+        onAmendmentRequested={handleAmendmentRequested}
       />
     </div>
   )

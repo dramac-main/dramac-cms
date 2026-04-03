@@ -93,13 +93,23 @@ export function QuoteRequestBlock({
   description = "Review your quote items below and fill in your details to receive a customized quote.",
   className,
 }: QuoteRequestBlockProps) {
-  const { siteId, formatPrice, settings, quotationModeEnabled, taxRate, isInitialized } =
-    useStorefront();
+  const {
+    siteId,
+    formatPrice,
+    settings,
+    quotationModeEnabled,
+    taxRate,
+    isInitialized,
+  } = useStorefront();
   const agencyId = settings?.agency_id;
   const searchParams = useSearchParams();
 
   // Cart integration — items may be in the cart (from "Add to Quote" buttons)
-  const { items: cartItems, clearCart, isLoading: isCartLoading } = useStorefrontCart(siteId, undefined, taxRate);
+  const {
+    items: cartItems,
+    clearCart,
+    isLoading: isCartLoading,
+  } = useStorefrontCart(siteId, undefined, taxRate);
 
   // Move hooks before conditional returns to satisfy React rules of hooks
   const {
@@ -145,7 +155,13 @@ export function QuoteRequestBlock({
     }
     setCartItemsLoaded(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cartItems, isCartLoading, quotationModeEnabled, cartItemsLoaded, builderItems.length]);
+  }, [
+    cartItems,
+    isCartLoading,
+    quotationModeEnabled,
+    cartItemsLoaded,
+    builderItems.length,
+  ]);
 
   // Auto-load product from ?product= URL parameter
   const productIdParam = searchParams?.get("product");
@@ -247,7 +263,9 @@ export function QuoteRequestBlock({
   };
 
   // Handle submit
-  const [submittedQuote, setSubmittedQuote] = React.useState<Quote | null>(null);
+  const [submittedQuote, setSubmittedQuote] = React.useState<Quote | null>(
+    null,
+  );
   const chatAutoOpenedRef = React.useRef(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -287,7 +305,11 @@ export function QuoteRequestBlock({
       setIsSubmitted(true);
       // Clear cart items since they've been converted to a quote
       if (cartItems && cartItems.length > 0) {
-        try { await clearCart(); } catch { /* best effort */ }
+        try {
+          await clearCart();
+        } catch {
+          /* best effort */
+        }
       }
       onSuccess?.(result.id);
     }
@@ -356,7 +378,35 @@ export function QuoteRequestBlock({
               Reference: <strong>{submittedQuote.quote_number}</strong>
             </p>
           )}
+
+          {/* What happens next */}
+          <div className="mt-5 text-left bg-muted/50 rounded-lg p-4">
+            <p className="text-sm font-medium mb-2">What happens next:</p>
+            <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+              <li>Our team reviews your request</li>
+              <li>We prepare a detailed quote with pricing</li>
+              <li>You&apos;ll receive an email when it&apos;s ready</li>
+              <li>Accept, request changes, or decline — all online</li>
+            </ol>
+          </div>
+
           <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            {submittedQuote?.access_token && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => {
+                  window.open(
+                    `${window.location.origin}/quote/${submittedQuote.access_token}`,
+                    "_blank",
+                  );
+                }}
+                className="gap-2"
+              >
+                <FileText className="h-4 w-4" />
+                Track Your Quote
+              </Button>
+            )}
             {submittedQuote && (
               <Button
                 variant="outline"

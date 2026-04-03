@@ -121,6 +121,11 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Quote portal - public, token-based access (no login required)
+  if (pathname.startsWith('/quote/')) {
+    return NextResponse.next();
+  }
+
   // Embed routes - fully public (booking widget, ecommerce, etc.)
   if (pathname.startsWith('/embed/')) {
     return NextResponse.next();

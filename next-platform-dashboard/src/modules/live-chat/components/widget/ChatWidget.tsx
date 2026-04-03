@@ -612,10 +612,7 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
         };
         orderContextRef.current = ctx;
         setOrderContext(ctx);
-      } else if (
-        msg.type === "dramac-chat-quote-context" &&
-        msg.quoteContext
-      ) {
+      } else if (msg.type === "dramac-chat-quote-context" && msg.quoteContext) {
         // Quote context forwarded from embed script (originated from QuoteRequestBlock)
         quoteContextRef.current = {
           quoteNumber: String(msg.quoteContext.quoteNumber || ""),

@@ -269,9 +269,7 @@ export async function notifyChatQuoteSent(
   const conv = await findActiveConversation(siteId, customerEmail);
   if (!conv) return;
 
-  const linkPart = portalUrl
-    ? ` You can also view it here: ${portalUrl}`
-    : "";
+  const linkPart = portalUrl ? ` You can also view it here: ${portalUrl}` : "";
   const message =
     `Great news! Your quote ${quoteNumber} is ready (${total})! 🎉 ` +
     `We've sent it to your email where you can review, accept, or decline it.${linkPart} Would you like me to tell you more about it?`;
@@ -324,6 +322,30 @@ export async function notifyChatQuoteRejected(
   const message =
     `We've noted that you declined quote ${quoteNumber}.${reasonPart} ` +
     `If you'd like to discuss changes or request a revised quote, I'm happy to help! 💬`;
+
+  await sendProactiveMessage(
+    siteId,
+    conv.conversationId,
+    message,
+    conv.assistantName,
+  );
+}
+
+/**
+ * Notify chat when the customer requests changes to a quote.
+ */
+export async function notifyChatQuoteAmendmentRequested(
+  siteId: string,
+  customerEmail: string,
+  quoteNumber: string,
+  notes: string,
+): Promise<void> {
+  const conv = await findActiveConversation(siteId, customerEmail);
+  if (!conv) return;
+
+  const message =
+    `📝 The customer has requested changes to quote ${quoteNumber}. ` +
+    `Their notes: "${notes}". The quote has been moved back to Pending Approval for your review.`;
 
   await sendProactiveMessage(
     siteId,

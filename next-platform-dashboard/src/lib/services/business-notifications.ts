@@ -1089,6 +1089,7 @@ interface QuoteNotificationData {
   itemCount: number;
   total?: number;
   currency?: string;
+  portalUrl?: string;
   items?: Array<{
     name: string;
     quantity: number;
@@ -1204,6 +1205,7 @@ export async function notifyNewQuote(
             businessName,
             items: data.items || [],
             currency,
+            trackQuoteUrl: data.portalUrl,
           },
         }),
       );

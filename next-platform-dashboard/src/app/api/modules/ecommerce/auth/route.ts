@@ -758,6 +758,313 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // ── ADD ADDRESS ──────────────────────────────────────────────────────────
+    if (action === "add-address") {
+      const { token, address } = body;
+
+      if (!token) {
+        return NextResponse.json(
+          { error: "Authentication required" },
+          { status: 401, headers: corsHeaders },
+        );
+      }
+
+      if (
+        !address ||
+        !address.firstName ||
+        !address.addressLine1 ||
+        !address.city ||
+        !address.country
+      ) {
+        return NextResponse.json(
+          { error: "First name, address, city, and country are required" },
+          { status: 400, headers: corsHeaders },
+        );
+      }
+
+      const tokenHash = hashToken(token);
+      const { data: session } = await (supabase as any)
+        .from(SESSIONS)
+        .select("customer_id")
+        .eq("token_hash", tokenHash)
+        .gt("expires_at", new Date().toISOString())
+        .single();
+
+      if (!session) {
+        return NextResponse.json(
+          { error: "Session expired" },
+          { status: 401, headers: corsHeaders },
+        );
+      }
+
+      // If this is the first address or marked as default, clear other defaults
+      const { data: existingAddresses } = await (supabase as any)
+        .from("mod_ecommod01_customer_addresses")
+        .select("id")
+        .eq("customer_id", session.customer_id);
+
+      const isFirst = !existingAddresses || existingAddresses.length === 0;
+      const setDefault = isFirst || address.isDefault;
+
+      if (setDefault && existingAddresses?.length) {
+        await (supabase as any)
+          .from("mod_ecommod01_customer_addresses")
+          .update({ is_default_shipping: false, is_default_billing: false })
+          .eq("customer_id", session.customer_id);
+      }
+
+      const { data: newAddress, error: insertError } = await (supabase as any)
+        .from("mod_ecommod01_customer_addresses")
+        .insert({
+          customer_id: session.customer_id,
+          first_name: address.firstName,
+          last_name: address.lastName || "",
+          company: address.company || null,
+          address_line_1: address.addressLine1,
+          address_line_2: address.addressLine2 || null,
+          city: address.city,
+          state: address.state || null,
+          postal_code: address.postalCode || null,
+          country: address.country,
+          phone: address.phone || null,
+          is_default_shipping: setDefault,
+          is_default_billing: setDefault,
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        return NextResponse.json(
+          { error: "Failed to add address" },
+          { status: 500, headers: corsHeaders },
+        );
+      }
+
+      return NextResponse.json(
+        { address: newAddress },
+        { status: 201, headers: corsHeaders },
+      );
+    }
+
+    // ── UPDATE ADDRESS ───────────────────────────────────────────────────────
+    if (action === "update-address") {
+      const { token, addressId, address } = body;
+
+      if (!token) {
+        return NextResponse.json(
+          { error: "Authentication required" },
+          { status: 401, headers: corsHeaders },
+        );
+      }
+
+      if (!addressId || !address) {
+        return NextResponse.json(
+          { error: "addressId and address are required" },
+          { status: 400, headers: corsHeaders },
+        );
+      }
+
+      const tokenHash = hashToken(token);
+      const { data: session } = await (supabase as any)
+        .from(SESSIONS)
+        .select("customer_id")
+        .eq("token_hash", tokenHash)
+        .gt("expires_at", new Date().toISOString())
+        .single();
+
+      if (!session) {
+        return NextResponse.json(
+          { error: "Session expired" },
+          { status: 401, headers: corsHeaders },
+        );
+      }
+
+      // Verify address belongs to this customer
+      const { data: existing } = await (supabase as any)
+        .from("mod_ecommod01_customer_addresses")
+        .select("id")
+        .eq("id", addressId)
+        .eq("customer_id", session.customer_id)
+        .single();
+
+      if (!existing) {
+        return NextResponse.json(
+          { error: "Address not found" },
+          { status: 404, headers: corsHeaders },
+        );
+      }
+
+      // If setting as default, clear other defaults first
+      if (address.isDefault) {
+        await (supabase as any)
+          .from("mod_ecommod01_customer_addresses")
+          .update({ is_default_shipping: false, is_default_billing: false })
+          .eq("customer_id", session.customer_id);
+      }
+
+      const updates: Record<string, unknown> = {};
+      if (address.firstName !== undefined)
+        updates.first_name = address.firstName;
+      if (address.lastName !== undefined) updates.last_name = address.lastName;
+      if (address.company !== undefined)
+        updates.company = address.company || null;
+      if (address.addressLine1 !== undefined)
+        updates.address_line_1 = address.addressLine1;
+      if (address.addressLine2 !== undefined)
+        updates.address_line_2 = address.addressLine2 || null;
+      if (address.city !== undefined) updates.city = address.city;
+      if (address.state !== undefined) updates.state = address.state || null;
+      if (address.postalCode !== undefined)
+        updates.postal_code = address.postalCode || null;
+      if (address.country !== undefined) updates.country = address.country;
+      if (address.phone !== undefined) updates.phone = address.phone || null;
+      if (address.isDefault !== undefined) {
+        updates.is_default_shipping = address.isDefault;
+        updates.is_default_billing = address.isDefault;
+      }
+
+      const { data: updatedAddress, error: updateError } = await (
+        supabase as any
+      )
+        .from("mod_ecommod01_customer_addresses")
+        .update(updates)
+        .eq("id", addressId)
+        .select()
+        .single();
+
+      if (updateError) {
+        return NextResponse.json(
+          { error: "Failed to update address" },
+          { status: 500, headers: corsHeaders },
+        );
+      }
+
+      return NextResponse.json(
+        { address: updatedAddress },
+        { status: 200, headers: corsHeaders },
+      );
+    }
+
+    // ── GET BOOKINGS ─────────────────────────────────────────────────────────
+    if (action === "get-bookings") {
+      const { token } = body;
+
+      if (!token) {
+        return NextResponse.json(
+          { error: "Authentication required" },
+          { status: 401, headers: corsHeaders },
+        );
+      }
+
+      const tokenHash = hashToken(token);
+      const { data: session } = await (supabase as any)
+        .from(SESSIONS)
+        .select("customer_id")
+        .eq("token_hash", tokenHash)
+        .gt("expires_at", new Date().toISOString())
+        .single();
+
+      if (!session) {
+        return NextResponse.json(
+          { error: "Session expired" },
+          { status: 401, headers: corsHeaders },
+        );
+      }
+
+      // Get customer email for booking lookup (bookings use email, not customer_id)
+      const { data: customer } = await (supabase as any)
+        .from(TABLE)
+        .select("email")
+        .eq("id", session.customer_id)
+        .single();
+
+      if (!customer) {
+        return NextResponse.json(
+          { error: "Customer not found" },
+          { status: 404, headers: corsHeaders },
+        );
+      }
+
+      const { data: bookings } = await (supabase as any)
+        .from("mod_bookmod01_appointments")
+        .select(
+          "id, service_name, customer_name, customer_email, date, start_time, end_time, status, notes, created_at",
+        )
+        .eq("site_id", siteId)
+        .eq("customer_email", customer.email)
+        .order("date", { ascending: false })
+        .limit(50);
+
+      return NextResponse.json(
+        { bookings: bookings || [] },
+        { status: 200, headers: corsHeaders },
+      );
+    }
+
+    // ── GET QUOTES ───────────────────────────────────────────────────────────
+    if (action === "get-quotes") {
+      const { token } = body;
+
+      if (!token) {
+        return NextResponse.json(
+          { error: "Authentication required" },
+          { status: 401, headers: corsHeaders },
+        );
+      }
+
+      const tokenHash = hashToken(token);
+      const { data: session } = await (supabase as any)
+        .from(SESSIONS)
+        .select("customer_id")
+        .eq("token_hash", tokenHash)
+        .gt("expires_at", new Date().toISOString())
+        .single();
+
+      if (!session) {
+        return NextResponse.json(
+          { error: "Session expired" },
+          { status: 401, headers: corsHeaders },
+        );
+      }
+
+      // Get customer email for quote lookup
+      const { data: customer } = await (supabase as any)
+        .from(TABLE)
+        .select("email")
+        .eq("id", session.customer_id)
+        .single();
+
+      if (!customer) {
+        return NextResponse.json(
+          { error: "Customer not found" },
+          { status: 404, headers: corsHeaders },
+        );
+      }
+
+      const TABLE_PREFIX = "mod_ecommod01";
+
+      // Quotes can be linked by customer_id or customer_email
+      const { data: quotes } = await (supabase as any)
+        .from(`${TABLE_PREFIX}_quotes`)
+        .select(
+          `
+          id, quote_number, status, total, currency, valid_until, notes, created_at,
+          items:${TABLE_PREFIX}_quote_items(id, product_name, variant_label, quantity, unit_price)
+        `,
+        )
+        .eq("site_id", siteId)
+        .or(
+          `customer_id.eq.${session.customer_id},customer_email.eq.${customer.email}`,
+        )
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      return NextResponse.json(
+        { quotes: quotes || [] },
+        { status: 200, headers: corsHeaders },
+      );
+    }
+
     return NextResponse.json(
       { error: `Unknown action: ${action}` },
       { status: 400, headers: corsHeaders },

@@ -288,8 +288,7 @@ export function useStorefrontCart(
       if (existingTimer) clearTimeout(existingTimer);
 
       // Increment version so we can ignore stale responses
-      const version =
-        (updateVersionRef.current.get(itemId) || 0) + 1;
+      const version = (updateVersionRef.current.get(itemId) || 0) + 1;
       updateVersionRef.current.set(itemId, version);
 
       // Debounce the server call — only fires after user stops clicking (300ms)
@@ -330,9 +329,7 @@ export function useStorefrontCart(
             }
             console.error("Error updating quantity:", err);
             setError(
-              err instanceof Error
-                ? err.message
-                : "Failed to update quantity",
+              err instanceof Error ? err.message : "Failed to update quantity",
             );
             resolve(false);
           }

@@ -11,7 +11,15 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, Loader2, Check, Heart, Minus, Plus, FileText } from "lucide-react";
+import {
+  ShoppingCart,
+  Loader2,
+  Check,
+  Heart,
+  Minus,
+  Plus,
+  FileText,
+} from "lucide-react";
 import { formatCurrency } from "@/lib/locale-config";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -210,7 +218,9 @@ export function StickyAddToCartBar({
                 className={cn(
                   "flex-1 min-h-[48px] text-base font-semibold",
                   addedToCart && "bg-success hover:bg-success/90",
-                  quotationModeEnabled && !addedToCart && "bg-warning hover:bg-warning/90 text-warning-foreground",
+                  quotationModeEnabled &&
+                    !addedToCart &&
+                    "bg-warning hover:bg-warning/90 text-warning-foreground",
                 )}
               >
                 {isAddingToCart ? (

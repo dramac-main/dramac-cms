@@ -39,8 +39,14 @@ export async function OPTIONS() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { siteId, visitorData, departmentId, initialMessage, orderContext, quoteContext } =
-      body;
+    const {
+      siteId,
+      visitorData,
+      departmentId,
+      initialMessage,
+      orderContext,
+      quoteContext,
+    } = body;
 
     if (!siteId) {
       return NextResponse.json(

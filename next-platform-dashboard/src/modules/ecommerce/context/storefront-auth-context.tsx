@@ -15,6 +15,7 @@ import React, {
   useCallback,
   ReactNode,
 } from "react";
+import { mergePublicCarts } from "../actions/public-ecommerce-actions";
 
 // ============================================================================
 // TYPES
@@ -174,6 +175,42 @@ export function StorefrontAuthProvider({
     [storageKey],
   );
 
+  /** Merge guest cart into the authenticated user's cart and notify cart hook */
+  const mergeGuestCart = useCallback(
+    async (customerId: string) => {
+      try {
+        const sessionId = localStorage.getItem("ecom_session_id");
+        if (!sessionId) return;
+
+        const mergedCart = await mergePublicCarts(
+          siteId,
+          customerId,
+          sessionId,
+        );
+        if (mergedCart) {
+          // Clear guest session so future cart lookups use user_id
+          localStorage.removeItem("ecom_session_id");
+          // Notify cart hook to refresh with the merged cart
+          window.dispatchEvent(
+            new CustomEvent("cart-updated", {
+              detail: {
+                cart: mergedCart,
+                itemCount:
+                  mergedCart.items?.reduce(
+                    (sum, item) => sum + item.quantity,
+                    0,
+                  ) || 0,
+              },
+            }),
+          );
+        }
+      } catch (err) {
+        console.error("[Auth] Cart merge failed (non-blocking):", err);
+      }
+    },
+    [siteId],
+  );
+
   const login = useCallback(
     async (
       email: string,
@@ -182,9 +219,11 @@ export function StorefrontAuthProvider({
       const data = await callAuth({ action: "login", email, password });
       if (data?.error) return { error: data.error };
       saveSession(data.token, data.customer);
+      // Merge guest cart into user's cart (non-blocking)
+      mergeGuestCart(data.customer.id);
       return { error: null };
     },
-    [callAuth, saveSession],
+    [callAuth, saveSession, mergeGuestCart],
   );
 
   const register = useCallback(
@@ -203,9 +242,11 @@ export function StorefrontAuthProvider({
       });
       if (data?.error) return { error: data.error };
       saveSession(data.token, data.customer);
+      // Merge guest cart into user's cart (non-blocking)
+      mergeGuestCart(data.customer.id);
       return { error: null };
     },
-    [callAuth, saveSession],
+    [callAuth, saveSession, mergeGuestCart],
   );
 
   const logout = useCallback(async () => {

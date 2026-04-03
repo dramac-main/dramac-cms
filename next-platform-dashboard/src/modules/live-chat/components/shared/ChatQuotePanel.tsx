@@ -46,7 +46,10 @@ import {
   type ChatQuoteContext,
 } from "@/modules/live-chat/actions/chat-quote-actions";
 import { updateQuoteStatus } from "@/modules/ecommerce/actions/quote-actions";
-import { sendQuote } from "@/modules/ecommerce/actions/quote-workflow-actions";
+import {
+  sendQuote,
+  convertQuoteToOrder,
+} from "@/modules/ecommerce/actions/quote-workflow-actions";
 import { QuoteDetailDialog } from "@/modules/ecommerce/components/quotes/quote-detail-dialog";
 import type { QuoteStatus } from "@/modules/ecommerce/types/ecommerce-types";
 
@@ -154,6 +157,46 @@ export function ChatQuotePanel({
     navigator.clipboard.writeText(portalUrl);
     toast.success("Quote portal link copied to clipboard");
   }, [quote]);
+
+  // Send quote to customer (from dialog or prominent button)
+  const handleSendQuote = useCallback(() => {
+    if (!quote) return;
+    startTransition(async () => {
+      const result = await sendQuote({
+        quote_id: quote.id,
+        site_id: siteId,
+      });
+      if (result.success) {
+        toast.success("Quote sent to customer via email");
+        fetchQuote();
+        setShowFullQuote(false);
+      } else {
+        toast.error(result.error || "Failed to send quote");
+      }
+    });
+  }, [quote, siteId, fetchQuote]);
+
+  // Convert accepted quote to order
+  const handleConvertToOrder = useCallback(() => {
+    if (!quote) return;
+    startTransition(async () => {
+      const result = await convertQuoteToOrder({
+        quote_id: quote.id,
+        site_id: siteId,
+        user_id: userId,
+        user_name: userName,
+      });
+      if (result.success) {
+        toast.success(
+          `Quote converted to order ${result.order?.order_number || ""}`,
+        );
+        fetchQuote();
+        setShowFullQuote(false);
+      } else {
+        toast.error(result.error || "Failed to convert quote");
+      }
+    });
+  }, [quote, siteId, userId, userName, fetchQuote]);
 
   // Loading state
   if (loading) {
@@ -347,10 +390,50 @@ export function ChatQuotePanel({
           </>
         )}
 
+        {/* Primary Action: Send to Customer */}
+        {["draft", "pending_approval"].includes(quote.status) && (
+          <>
+            <Separator />
+            <Button
+              size="sm"
+              className="w-full h-8 text-xs"
+              onClick={handleSendQuote}
+              disabled={isPending}
+            >
+              {isPending ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <Send className="h-3 w-3 mr-1" />
+              )}
+              Send to Customer
+            </Button>
+          </>
+        )}
+
+        {/* Convert to Order */}
+        {quote.status === "accepted" && (
+          <>
+            <Separator />
+            <Button
+              size="sm"
+              className="w-full h-8 text-xs"
+              onClick={handleConvertToOrder}
+              disabled={isPending}
+            >
+              {isPending ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <ArrowRightCircle className="h-3 w-3 mr-1" />
+              )}
+              Convert to Order
+            </Button>
+          </>
+        )}
+
         {/* Quick Actions */}
         <Separator />
         <div className="space-y-1.5">
-          {quote.status !== "draft" && quote.accessToken && (
+          {quote.accessToken && (
             <Button
               variant="outline"
               size="sm"
@@ -379,6 +462,9 @@ export function ChatQuotePanel({
             onOpenChange={setShowFullQuote}
             quoteId={quote.id}
             siteId={siteId}
+            onSend={handleSendQuote}
+            onConvert={handleConvertToOrder}
+            onQuoteChange={fetchQuote}
           />
         )}
       </CardContent>

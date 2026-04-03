@@ -181,7 +181,8 @@ export async function createQuote(
       validUntil = expiryDate.toISOString();
     }
 
-    // Create quote
+    // Create quote — generate access_token immediately so customers can track
+    const accessToken = crypto.randomUUID().replace(/-/g, "");
     const { data: quote, error } = await supabase
       .from(`${TABLE_PREFIX}_quotes`)
       .insert({
@@ -197,6 +198,7 @@ export async function createQuote(
         billing_address: input.billing_address,
         shipping_address: input.shipping_address,
         status: "draft",
+        access_token: accessToken,
         subtotal: 0,
         discount_type: input.discount_type,
         discount_value: input.discount_value || 0,
@@ -1189,6 +1191,11 @@ export async function notifyQuoteCreated(
 
     const quoteItems = items || [];
 
+    // Build portal URL for customer tracking
+    const portalUrl = quote.access_token
+      ? `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/quote/${quote.access_token}`
+      : undefined;
+
     await notifyNewQuote({
       siteId: quote.site_id,
       quoteId: quote.id,
@@ -1200,6 +1207,7 @@ export async function notifyQuoteCreated(
       itemCount: quoteItems.length,
       total: quote.total || 0,
       currency: quote.currency || DEFAULT_CURRENCY,
+      portalUrl,
       items: quoteItems.map((item: Record<string, unknown>) => ({
         name: String(item.name || "Item"),
         quantity: Number(item.quantity || 1),

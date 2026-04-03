@@ -1,16 +1,16 @@
 /**
  * useModuleStatus Hook
- * 
+ *
  * PHASE-ECOM-52: Navigation & Widget Auto-Setup
- * 
+ *
  * Hook to check the installation status of a module on a site.
  * Used by header components to conditionally render module widgets.
  */
 
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 // ============================================================================
 // TYPES
@@ -19,16 +19,16 @@ import { createClient } from '@/lib/supabase/client';
 export interface ModuleStatus {
   /** Whether the module is installed on the site */
   isInstalled: boolean;
-  
+
   /** Whether the module is currently enabled */
   isEnabled: boolean;
-  
+
   /** Module settings if available */
   settings: Record<string, unknown> | null;
-  
+
   /** Loading state */
   isLoading: boolean;
-  
+
   /** Error if any */
   error: string | null;
 }
@@ -39,16 +39,16 @@ export interface ModuleStatus {
 
 /**
  * Check if a module is installed and enabled on a site.
- * 
+ *
  * @param moduleSlug - The module slug to check (e.g. 'ecommerce', 'live-chat')
  * @param siteId - The site ID to check for
  * @returns Module status object
- * 
+ *
  * @example
  * ```tsx
  * function SiteHeader({ siteId }) {
  *   const { isInstalled, isEnabled } = useModuleStatus('ecommerce', siteId);
- *   
+ *
  *   return (
  *     <header>
  *       {isInstalled && isEnabled && <CartIconWidget siteId={siteId} />}
@@ -59,7 +59,7 @@ export interface ModuleStatus {
  */
 export function useModuleStatus(
   moduleSlug: string,
-  siteId: string | null | undefined
+  siteId: string | null | undefined,
 ): ModuleStatus {
   const [status, setStatus] = useState<ModuleStatus>({
     isInstalled: false,
@@ -71,10 +71,10 @@ export function useModuleStatus(
 
   useEffect(() => {
     if (!siteId || !moduleSlug) {
-      setStatus(prev => ({
+      setStatus((prev) => ({
         ...prev,
         isLoading: false,
-        error: !siteId ? 'No site ID provided' : 'No module slug provided',
+        error: !siteId ? "No site ID provided" : "No module slug provided",
       }));
       return;
     }
@@ -87,9 +87,9 @@ export function useModuleStatus(
 
         // Resolve module slug → UUID (module_id is a UUID FK to modules_v2)
         const { data: moduleRow, error: modErr } = await supabase
-          .from('modules_v2')
-          .select('id')
-          .eq('slug', moduleSlug)
+          .from("modules_v2")
+          .select("id")
+          .eq("slug", moduleSlug)
           .maybeSingle();
 
         if (!mounted) return;
@@ -104,12 +104,12 @@ export function useModuleStatus(
           });
           return;
         }
-        
+
         const { data, error } = await supabase
-          .from('site_module_installations')
-          .select('id, is_enabled, settings')
-          .eq('site_id', siteId!)
-          .eq('module_id', moduleRow.id)
+          .from("site_module_installations")
+          .select("id, is_enabled, settings")
+          .eq("site_id", siteId!)
+          .eq("module_id", moduleRow.id)
           .maybeSingle();
 
         if (!mounted) return;
@@ -134,13 +134,13 @@ export function useModuleStatus(
         });
       } catch (err) {
         if (!mounted) return;
-        
+
         setStatus({
           isInstalled: false,
           isEnabled: false,
           settings: null,
           isLoading: false,
-          error: err instanceof Error ? err.message : 'Unknown error',
+          error: err instanceof Error ? err.message : "Unknown error",
         });
       }
     }
@@ -158,8 +158,10 @@ export function useModuleStatus(
 /**
  * Check if e-commerce module is installed (convenience wrapper)
  */
-export function useEcommerceStatus(siteId: string | null | undefined): ModuleStatus {
-  return useModuleStatus('ecommerce', siteId);
+export function useEcommerceStatus(
+  siteId: string | null | undefined,
+): ModuleStatus {
+  return useModuleStatus("ecommerce", siteId);
 }
 
 /**
@@ -167,7 +169,7 @@ export function useEcommerceStatus(siteId: string | null | undefined): ModuleSta
  */
 export function useModulesStatus(
   moduleIds: string[],
-  siteId: string | null | undefined
+  siteId: string | null | undefined,
 ): Record<string, ModuleStatus> {
   const [statuses, setStatuses] = useState<Record<string, ModuleStatus>>(() => {
     const initial: Record<string, ModuleStatus> = {};
@@ -193,24 +195,25 @@ export function useModulesStatus(
     async function checkStatuses() {
       try {
         const supabase = createClient();
-        
+
         const { data, error } = await supabase
-          .from('site_module_installations')
-          .select('module_id, is_enabled, settings')
-          .eq('site_id', siteId!)
-          .in('module_id', moduleIds);
+          .from("site_module_installations")
+          .select("module_id, is_enabled, settings")
+          .eq("site_id", siteId!)
+          .in("module_id", moduleIds);
 
         if (!mounted) return;
 
         const newStatuses: Record<string, ModuleStatus> = {};
-        
+
         for (const id of moduleIds) {
-          const installation = data?.find(d => d.module_id === id);
-          
+          const installation = data?.find((d) => d.module_id === id);
+
           newStatuses[id] = {
             isInstalled: !!installation,
             isEnabled: installation?.is_enabled ?? false,
-            settings: (installation?.settings as Record<string, unknown>) ?? null,
+            settings:
+              (installation?.settings as Record<string, unknown>) ?? null,
             isLoading: false,
             error: error?.message ?? null,
           };
@@ -219,7 +222,7 @@ export function useModulesStatus(
         setStatuses(newStatuses);
       } catch (err) {
         if (!mounted) return;
-        
+
         const errorStatuses: Record<string, ModuleStatus> = {};
         for (const id of moduleIds) {
           errorStatuses[id] = {
@@ -227,7 +230,7 @@ export function useModulesStatus(
             isEnabled: false,
             settings: null,
             isLoading: false,
-            error: err instanceof Error ? err.message : 'Unknown error',
+            error: err instanceof Error ? err.message : "Unknown error",
           };
         }
         setStatuses(errorStatuses);
@@ -239,7 +242,7 @@ export function useModulesStatus(
     return () => {
       mounted = false;
     };
-  }, [moduleIds.join(','), siteId]);
+  }, [moduleIds.join(","), siteId]);
 
   return statuses;
 }

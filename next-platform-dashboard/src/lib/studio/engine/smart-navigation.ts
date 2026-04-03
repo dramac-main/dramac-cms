@@ -140,6 +140,15 @@ export const ECOMMERCE_UTILITY_ITEMS: SmartNavItem[] = [
     // EcommerceCartInjector widget (industry standard pattern).
     moduleId: "ecommerce",
   },
+  {
+    id: "ecom-account",
+    label: "Account",
+    href: "/account",
+    icon: "user",
+    position: "utility",
+    sortOrder: 15,
+    moduleId: "ecommerce",
+  },
 ];
 
 export const ECOMMERCE_FOOTER_ITEMS: SmartNavItem[] = [
@@ -157,6 +166,14 @@ export const ECOMMERCE_FOOTER_ITEMS: SmartNavItem[] = [
     href: "/cart",
     position: "footer",
     sortOrder: 2,
+    moduleId: "ecommerce",
+  },
+  {
+    id: "ecom-footer-account",
+    label: "My Account",
+    href: "/account",
+    position: "footer",
+    sortOrder: 3,
     moduleId: "ecommerce",
   },
 ];
@@ -178,7 +195,7 @@ export const ECOMMERCE_FOOTER_ITEMS: SmartNavItem[] = [
  */
 export function getModuleNavigation(
   siteSettings: Record<string, unknown> | null | undefined,
-  modules?: Array<{ slug: string; status: string }> | null
+  modules?: Array<{ slug: string; status: string }> | null,
 ): SiteNavigation {
   const result: SiteNavigation = { main: [], utility: [], footer: [] };
 
@@ -196,12 +213,12 @@ export function getModuleNavigation(
   //    are missing from settings.navigation (covers pre-existing sites)
   if (modules) {
     const activeModules = new Set(
-      modules.filter(m => m.status === "active").map(m => m.slug)
+      modules.filter((m) => m.status === "active").map((m) => m.slug),
     );
 
     // Booking module: inject if not already present from settings
     if (activeModules.has("booking")) {
-      const hasBookingMain = result.main.some(i => i.moduleId === "booking");
+      const hasBookingMain = result.main.some((i) => i.moduleId === "booking");
       if (!hasBookingMain) {
         result.main.push(...BOOKING_NAV_ITEMS);
         result.utility.push(...BOOKING_UTILITY_ITEMS);
@@ -213,7 +230,7 @@ export function getModuleNavigation(
     // This is the safety net for sites installed before PHASE-ECOM-50
     // deployed the install hook that writes to site.settings.navigation.
     if (activeModules.has("ecommerce")) {
-      const hasEcomMain = result.main.some(i => i.moduleId === "ecommerce");
+      const hasEcomMain = result.main.some((i) => i.moduleId === "ecommerce");
       if (!hasEcomMain) {
         result.main.push(...ECOMMERCE_NAV_ITEMS);
         result.utility.push(...ECOMMERCE_UTILITY_ITEMS);
@@ -239,14 +256,24 @@ export function getModuleNavigation(
  * - Sorted by sortOrder within the injected group
  */
 export function mergeMainNavLinks(
-  staticLinks: Array<{ label?: string; text?: string; href?: string; [k: string]: unknown }>,
-  moduleItems: SmartNavItem[]
-): Array<{ label?: string; text?: string; href?: string; [k: string]: unknown }> {
+  staticLinks: Array<{
+    label?: string;
+    text?: string;
+    href?: string;
+    [k: string]: unknown;
+  }>,
+  moduleItems: SmartNavItem[],
+): Array<{
+  label?: string;
+  text?: string;
+  href?: string;
+  [k: string]: unknown;
+}> {
   if (!moduleItems.length) return staticLinks;
 
   // Build a set of existing hrefs for dedup
   const existingHrefs = new Set(
-    staticLinks.map((l) => normalizeHref(l.href || ""))
+    staticLinks.map((l) => normalizeHref(l.href || "")),
   );
 
   // Filter out module items whose href already exists in static links
@@ -262,7 +289,7 @@ export function mergeMainNavLinks(
 
   // Insert before "Contact" link if it exists, otherwise append
   const contactIdx = staticLinks.findIndex(
-    (l) => (l.label || l.text || "").toLowerCase() === "contact"
+    (l) => (l.label || l.text || "").toLowerCase() === "contact",
   );
 
   const result = [...staticLinks];
@@ -289,7 +316,7 @@ export function mergeMainNavLinks(
  * just a link).
  */
 export function buildUtilityItems(
-  moduleUtilityItems: SmartNavItem[]
+  moduleUtilityItems: SmartNavItem[],
 ): NavUtilityItem[] {
   return moduleUtilityItems
     .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -300,7 +327,8 @@ export function buildUtilityItems(
       icon: normalizeIconName(item.icon || "cart"),
       // Strip template badges (e.g. "{{cartCount}}") — they can't be
       // resolved server-side. Only pass through concrete numeric badges.
-      badge: item.badge && /^\{\{.*\}\}$/.test(item.badge) ? undefined : item.badge,
+      badge:
+        item.badge && /^\{\{.*\}\}$/.test(item.badge) ? undefined : item.badge,
       ariaLabel: item.label,
     }));
 }
@@ -316,14 +344,17 @@ export function mergeFooterLinks(
     title?: string;
     links?: Array<{ label?: string; href?: string; [k: string]: unknown }>;
   }>,
-  moduleFooterItems: SmartNavItem[]
+  moduleFooterItems: SmartNavItem[],
 ): Array<{
   title?: string;
   links?: Array<{ label?: string; href?: string; [k: string]: unknown }>;
 }> {
   if (!moduleFooterItems.length) return existingColumns;
 
-  const result = existingColumns.map((col) => ({ ...col, links: [...(col.links || [])] }));
+  const result = existingColumns.map((col) => ({
+    ...col,
+    links: [...(col.links || [])],
+  }));
 
   // Collect all existing footer hrefs for dedup
   const existingFooterHrefs = new Set<string>();
@@ -343,7 +374,12 @@ export function mergeFooterLinks(
   // Try to find a "Quick Links" or "Navigation" column to inject into
   let targetCol = result.find((col) => {
     const title = (col.title || "").toLowerCase();
-    return title.includes("quick") || title.includes("links") || title.includes("navigation") || title.includes("pages");
+    return (
+      title.includes("quick") ||
+      title.includes("links") ||
+      title.includes("navigation") ||
+      title.includes("pages")
+    );
   });
 
   if (!targetCol) {

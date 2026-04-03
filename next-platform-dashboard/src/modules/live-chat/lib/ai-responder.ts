@@ -334,9 +334,17 @@ export async function generateAutoResponse(
     const visitorDisplayName = visitorInfo?.name || "";
     const genericNames = ["visitor", "unknown", "guest", "anonymous", ""];
     const resolvedCustomerName =
-      (crmName && !genericNames.includes(crmName.toLowerCase()) ? crmName : "") ||
-      (quoteCustomerName && !genericNames.includes(quoteCustomerName.toLowerCase()) ? quoteCustomerName : "") ||
-      (visitorDisplayName && !genericNames.includes(visitorDisplayName.toLowerCase()) ? visitorDisplayName : "Unknown");
+      (crmName && !genericNames.includes(crmName.toLowerCase())
+        ? crmName
+        : "") ||
+      (quoteCustomerName &&
+      !genericNames.includes(quoteCustomerName.toLowerCase())
+        ? quoteCustomerName
+        : "") ||
+      (visitorDisplayName &&
+      !genericNames.includes(visitorDisplayName.toLowerCase())
+        ? visitorDisplayName
+        : "Unknown");
 
     const systemPrompt = `You are a customer support AI assistant for ${companyName}.
 You help website visitors with their questions.

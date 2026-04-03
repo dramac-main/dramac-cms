@@ -1,37 +1,48 @@
 # Active Context
 
-## Current Focus: Quote Workflow Production-Readiness — COMPLETE ✅
+## Current Focus: Quote End-to-End Workflow Fix — COMPLETE ✅
 
-### What Was Done (Latest Session — Quote Workflow Hardening)
+### What Was Done (Latest Session — Quote E2E Workflow)
 
-**Problems Identified (user's production-readiness review):**
+**User Complaint:** After submitting a quote, the customer is completely lost — can't find their request, doesn't know where to log in, and the store owner can't edit or send quotes from the live chat panel. The entire quote lifecycle was broken from submission to customer response.
 
-1. **No guarantee "sent" means email was actually sent** — ChatQuotePanel used raw `updateQuoteStatus()` for ALL transitions including "sent", which only does a DB update with no email
-2. **sendQuote() had /100 bug** — `formatCurrency(totalAmount / 100, ...)` divided by 100 but quotes store in main currency (not cents)
-3. **No chat notification on quote rejection** — `rejectQuote()` notified via email/in-app but NOT in the chat conversation
-4. **Sent message didn't include portal link** — Chiko told customer "check your email" but didn't share the direct link
-5. **AI used generic "Hey there" instead of real name** — `visitorInfo?.name` can be "Visitor" or generic; customer's actual name available in quote data + CRM
+**Root Causes Found (6):**
 
-**Fixes Applied (commit b71de96e):**
+1. **Quote portal blocked by auth** — `/quote/[token]` route not in proxy.ts public routes, customers redirected to dashboard login
+2. **No access_token at creation** — Token only generated when store owner clicks "Send", so customers can't track before that
+3. **Customer email missing portal link** — Confirmation email sent on submission didn't include tracking URL
+4. **Chat dialog read-only** — `QuoteDetailDialog` had `isReadOnly={true}` hardcoded, no `onSend`/`onConvert` callbacks passed from `ChatQuotePanel`
+5. **No "Send to Customer" action** — Store owner had no prominent way to send the prepared quote
+6. **No amendment request option** — Customer could only Accept or Decline, no way to request changes
+
+**Fixes Applied (9 files, 1 file created):**
 
 | File | Change |
 |------|--------|
-| `ChatQuotePanel.tsx` | Smart routing: "sent" → `sendQuote()` (email + status + chat), other transitions → `updateQuoteStatus()` |
-| `quote-workflow-actions.ts` | Removed `/100` from `formatCurrency` in `sendQuote()`. Added `notifyChatQuoteRejected()` call to `rejectQuote()`. Passes `portalUrl` to `notifyChatQuoteSent()` |
-| `chat-event-bridge.ts` | Added `notifyChatQuoteRejected()` function. Enhanced `notifyChatQuoteSent()` to accept + show portal URL |
-| `customer-context-bridge.ts` | Added `customer_name` to quotes select query + mapped as `customerName` in quote data |
-| `ai-responder.ts` | Customer name resolution: CRM name > quote customerName > visitor displayName. Filters out generic names ("Visitor", "Unknown", "Guest"). Falls back to "Unknown" only if nothing real available |
+| `proxy.ts` | Added `/quote/` to PUBLIC ROUTES — portal accessible without login |
+| `quote-actions.ts` | `createQuote()` generates `access_token` at creation time (not just on send) |
+| `quote-actions.ts` | `notifyQuoteCreated()` builds portal URL and passes to notification |
+| `business-notifications.ts` | Added `portalUrl?` to `QuoteNotificationData`, customer email now includes `trackQuoteUrl` |
+| `ChatQuotePanel.tsx` | Added `handleSendQuote` + `handleConvertToOrder` callbacks, prominent Send/Convert buttons, passed `onSend`/`onConvert`/`onQuoteChange` to dialog |
+| `quote-detail-dialog.tsx` | Changed `isReadOnly={!canEdit}` (dynamic), wired item add/update/remove with real server actions, added `reloadQuote()` for live refresh |
+| `quote-workflow-actions.ts` | Added `requestQuoteAmendment()` — sets status back to `pending_approval`, logs activity, notifies chat |
+| `chat-event-bridge.ts` | Added `notifyChatQuoteAmendmentRequested()` — proactive message when customer requests changes |
+| `quote-portal-view.tsx` | Added "Request Changes" button + `QuoteAmendmentDialog`, "Quote Being Prepared" banner for pending/draft status |
+| `quote-amendment-dialog.tsx` | NEW FILE — Customer dialog for describing requested changes |
+| `QuoteRequestBlock.tsx` | Added "Track Your Quote" button with portal link, "What happens next" explainer, reordered CTA buttons |
 
-**Key Architecture Decisions:**
+**Complete Quote Lifecycle Now Works:**
 
-- "sent" MUST go through `sendQuote()` — this is the ONLY path that sends the actual email + chat notification. Raw `updateQuoteStatus()` is for internal DB-only transitions.
-- Customer name resolution uses a priority chain with a blocklist of generic names to guarantee accuracy (user requirement: "100% accurate all the time")
-- Chat notifications are best-effort (try/catch) — never block the primary action
-- Portal URL is non-sensitive (requires `access_token` in the URL) — safe to share in chat
+1. **Customer submits** → Gets portal tracking link + "what happens next" guidance + email with tracking URL
+2. **Store owner reviews** → Opens from live chat, edits items inline (no longer read-only), adjusts pricing
+3. **Store owner sends** → Prominent "Send to Customer" button, quote emailed with portal link
+4. **Customer responds** → Three options on portal: Accept (with signature), Request Changes (with notes), or Decline
+5. **Amendment loop** → Quote goes back to `pending_approval`, store owner gets chat notification, can revise and re-send
+6. **Convert to order** → "Convert to Order" button appears when quote is accepted
 
-**Git:** `b71de96e`, pushed to origin/main (99 insertions, 14 deletions across 5 files)
+**TypeScript:** No new errors introduced (19 pre-existing errors in unrelated files)
 
-### Previous Session: Quote Detail Dialog Crash Fix (commit 4d00aecf)
+### Previous Session: Quote Workflow Production-Readiness (commit b71de96e)
 
 Fixed "useEcommerce must be used within an EcommerceProvider" crash when clicking Items tab in quote dialog from live chat. `QuoteItemsEditor` → `ProductSelector` → `useEcommerce()` chain crashed outside provider. Fixed by using `useCurrencySafe` and conditionally rendering `ProductSelector` only in edit mode.
 

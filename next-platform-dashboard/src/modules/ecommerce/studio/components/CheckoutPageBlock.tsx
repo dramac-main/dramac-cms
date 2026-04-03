@@ -66,12 +66,109 @@ interface CheckoutPageBlockProps {
 interface StepProps {
   checkout: ReturnType<typeof useCheckout>;
   formatPrice: (price: number) => string;
+  authCustomer?: {
+    id: string;
+    email: string;
+    phone: string | null;
+    firstName: string;
+    lastName: string;
+    siteId: string;
+  } | null;
+  authToken?: string | null;
 }
 
 // Information Step - Contact, Shipping Address & Shipping Method (combined)
-function InformationStep({ checkout, formatPrice }: StepProps) {
+function InformationStep({
+  checkout,
+  formatPrice,
+  authCustomer,
+  authToken,
+}: StepProps) {
+  const [savedAddresses, setSavedAddresses] = React.useState<
+    Array<{
+      id: string;
+      first_name: string;
+      last_name: string;
+      company: string | null;
+      address_line_1: string;
+      address_line_2: string | null;
+      city: string;
+      state: string | null;
+      postal_code: string | null;
+      country: string;
+      phone: string | null;
+      is_default_shipping: boolean;
+    }>
+  >([]);
+  const [addressLoaded, setAddressLoaded] = React.useState(false);
+
+  // Fetch saved addresses for logged-in customers
+  React.useEffect(() => {
+    if (!authCustomer || !authToken) return;
+    const apiBase = typeof window !== "undefined" ? window.location.origin : "";
+    fetch(`${apiBase}/api/modules/ecommerce/auth`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "get-addresses",
+        token: authToken,
+        siteId: authCustomer.siteId,
+      }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.addresses?.length) {
+          setSavedAddresses(data.addresses);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setAddressLoaded(true));
+  }, [authCustomer?.id, authToken]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const applySavedAddress = (addressId: string) => {
+    const addr = savedAddresses.find((a) => a.id === addressId);
+    if (!addr) return;
+    checkout.setShippingAddress({
+      first_name: addr.first_name,
+      last_name: addr.last_name,
+      company: addr.company || "",
+      address_line_1: addr.address_line_1,
+      address_line_2: addr.address_line_2 || "",
+      city: addr.city,
+      state: addr.state || "",
+      postal_code: addr.postal_code || "",
+      country: addr.country,
+    });
+    if (addr.phone) checkout.setPhone(addr.phone);
+  };
+
   return (
     <div className="space-y-6">
+      {/* Saved address selector for logged-in customers */}
+      {authCustomer && addressLoaded && savedAddresses.length > 0 && (
+        <div className="rounded-md border border-border bg-muted/30 p-4">
+          <label className="block text-sm font-medium text-foreground mb-2">
+            Use a saved address
+          </label>
+          <select
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            defaultValue=""
+            onChange={(e) => {
+              if (e.target.value) applySavedAddress(e.target.value);
+            }}
+          >
+            <option value="">Select a saved address...</option>
+            {savedAddresses.map((addr) => (
+              <option key={addr.id} value={addr.id}>
+                {addr.first_name} {addr.last_name} — {addr.address_line_1},{" "}
+                {addr.city}
+                {addr.is_default_shipping ? " (Default)" : ""}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <ShippingAddressForm
         title="Shipping Address"
         address={checkout.state.shippingAddress}
@@ -592,7 +689,12 @@ export function CheckoutPageBlock({
     switch (checkout.currentStep) {
       case "information":
         return (
-          <InformationStep checkout={checkout} formatPrice={formatPrice} />
+          <InformationStep
+            checkout={checkout}
+            formatPrice={formatPrice}
+            authCustomer={authCustomer}
+            authToken={authToken}
+          />
         );
       case "payment":
         return <PaymentStep checkout={checkout} formatPrice={formatPrice} />;

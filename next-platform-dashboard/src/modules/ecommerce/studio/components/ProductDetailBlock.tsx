@@ -503,7 +503,12 @@ export function ProductDetailBlock({
 
         {showAddToCart &&
           (isProductInCart ? (
-            <Button size="lg" variant={quotationModeEnabled ? "outline" : "secondary"} className="flex-1" asChild>
+            <Button
+              size="lg"
+              variant={quotationModeEnabled ? "outline" : "secondary"}
+              className="flex-1"
+              asChild
+            >
               <Link href="/cart">
                 <ShoppingCart className="h-5 w-5 mr-2" />
                 {quotationModeEnabled ? "View Quote Items" : "View Cart"}

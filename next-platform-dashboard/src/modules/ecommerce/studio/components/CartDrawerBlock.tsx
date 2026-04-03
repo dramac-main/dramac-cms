@@ -1,43 +1,43 @@
 /**
  * CartDrawerBlock - Slide-out cart drawer
- * 
+ *
  * Phase ECOM-22: Cart Components
- * 
+ *
  * A slide-out drawer that displays the shopping cart contents.
  * Integrates with useStorefrontCart hook.
  */
-'use client'
+"use client";
 
-import React from 'react'
-import { cn } from '@/lib/utils'
-import { X, ShoppingCart, Loader2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import React from "react";
+import { cn } from "@/lib/utils";
+import { X, ShoppingCart, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet'
-import { Badge } from '@/components/ui/badge'
-import { CartItemCard } from './CartItemCard'
-import { CartEmptyState } from './CartEmptyState'
-import { CartSummaryCard } from './CartSummaryCard'
-import { useStorefrontCart } from '../../hooks/useStorefrontCart'
-import { useStorefront } from '../../context/storefront-context'
-import type { CartTotals } from '../../types/ecommerce-types'
+} from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
+import { CartItemCard } from "./CartItemCard";
+import { CartEmptyState } from "./CartEmptyState";
+import { CartSummaryCard } from "./CartSummaryCard";
+import { useStorefrontCart } from "../../hooks/useStorefrontCart";
+import { useStorefront } from "../../context/storefront-context";
+import type { CartTotals } from "../../types/ecommerce-types";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 interface CartDrawerBlockProps {
-  trigger?: React.ReactNode
-  side?: 'left' | 'right'
-  checkoutHref?: string
-  shopLink?: string
-  className?: string
+  trigger?: React.ReactNode;
+  side?: "left" | "right";
+  checkoutHref?: string;
+  shopLink?: string;
+  className?: string;
 }
 
 // ============================================================================
@@ -50,8 +50,8 @@ const DEFAULT_TOTALS: CartTotals = {
   tax: 0,
   shipping: 0,
   total: 0,
-  itemCount: 0
-}
+  itemCount: 0,
+};
 
 // ============================================================================
 // COMPONENT
@@ -59,16 +59,27 @@ const DEFAULT_TOTALS: CartTotals = {
 
 export function CartDrawerBlock({
   trigger,
-  side = 'right',
-  checkoutHref: checkoutHrefProp = '/checkout',
-  shopLink = '/shop',
-  className
+  side = "right",
+  checkoutHref: checkoutHrefProp = "/checkout",
+  shopLink = "/shop",
+  className,
 }: CartDrawerBlockProps) {
-  const { siteId, formatPrice, taxRate, quotationModeEnabled, quotationButtonLabel, quotationRedirectUrl } = useStorefront()
-  
+  const {
+    siteId,
+    formatPrice,
+    taxRate,
+    quotationModeEnabled,
+    quotationButtonLabel,
+    quotationRedirectUrl,
+  } = useStorefront();
+
   // In quotation mode, redirect to quotes page instead of checkout
-  const checkoutHref = quotationModeEnabled ? (quotationRedirectUrl || '/quotes') : checkoutHrefProp
-  const checkoutLabel = quotationModeEnabled ? 'Submit Quote Request' : 'Checkout'
+  const checkoutHref = quotationModeEnabled
+    ? quotationRedirectUrl || "/quotes"
+    : checkoutHrefProp;
+  const checkoutLabel = quotationModeEnabled
+    ? "Submit Quote Request"
+    : "Checkout";
   const {
     cart,
     items,
@@ -79,27 +90,32 @@ export function CartDrawerBlock({
     updateItemQuantity,
     removeItem,
     applyDiscount,
-    removeDiscount
-  } = useStorefrontCart(siteId, undefined, taxRate)
+    removeDiscount,
+  } = useStorefrontCart(siteId, undefined, taxRate);
 
-  const [open, setOpen] = React.useState(false)
-  
+  const [open, setOpen] = React.useState(false);
+
   // Use default totals if null
-  const totals = cartTotals ?? DEFAULT_TOTALS
+  const totals = cartTotals ?? DEFAULT_TOTALS;
 
   // Current discount from cart data
-  const currentDiscount = totals.discount > 0
-    ? { code: cart?.discount_code || 'DISCOUNT', amount: totals.discount, type: 'fixed' as const }
-    : null
+  const currentDiscount =
+    totals.discount > 0
+      ? {
+          code: cart?.discount_code || "DISCOUNT",
+          amount: totals.discount,
+          type: "fixed" as const,
+        }
+      : null;
 
   const handleApplyDiscount = async (code: string): Promise<boolean> => {
     try {
-      const result = await applyDiscount(code)
-      return result.success
+      const result = await applyDiscount(code);
+      return result.success;
     } catch {
-      return false
+      return false;
     }
-  }
+  };
 
   // Default trigger button
   const defaultTrigger = (
@@ -110,30 +126,26 @@ export function CartDrawerBlock({
           variant="destructive"
           className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
         >
-          {itemCount > 99 ? '99+' : itemCount}
+          {itemCount > 99 ? "99+" : itemCount}
         </Badge>
       )}
     </Button>
-  )
+  );
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        {trigger || defaultTrigger}
-      </SheetTrigger>
+      <SheetTrigger asChild>{trigger || defaultTrigger}</SheetTrigger>
 
-      <SheetContent 
-        side={side} 
-        className={cn('w-full sm:max-w-md flex flex-col', className)}
+      <SheetContent
+        side={side}
+        className={cn("w-full sm:max-w-md flex flex-col", className)}
       >
         <SheetHeader className="border-b pb-4">
           <div className="flex items-center justify-between">
             <SheetTitle className="flex items-center gap-2">
               <ShoppingCart className="h-5 w-5" />
-              {quotationModeEnabled ? 'Your Quote Items' : 'Your Cart'}
-              {itemCount > 0 && (
-                <Badge variant="secondary">{itemCount}</Badge>
-              )}
+              {quotationModeEnabled ? "Your Quote Items" : "Your Cart"}
+              {itemCount > 0 && <Badge variant="secondary">{itemCount}</Badge>}
             </SheetTitle>
           </div>
         </SheetHeader>
@@ -146,10 +158,7 @@ export function CartDrawerBlock({
         ) : items.length === 0 ? (
           /* Empty State */
           <div className="flex-1 flex items-center justify-center">
-            <CartEmptyState
-              shopLink={shopLink}
-              className="py-8"
-            />
+            <CartEmptyState shopLink={shopLink} className="py-8" />
           </div>
         ) : (
           /* Cart Items */
@@ -189,5 +198,5 @@ export function CartDrawerBlock({
         )}
       </SheetContent>
     </Sheet>
-  )
+  );
 }

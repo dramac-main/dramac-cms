@@ -783,6 +783,118 @@ export async function removePublicDiscountFromCart(
 }
 
 // ============================================================================
+// CART MERGE (transfer guest session cart → authenticated user cart)
+// ============================================================================
+
+/**
+ * Merge a guest session cart into the authenticated user's cart.
+ * Called after login/register to preserve items added before signing in.
+ *
+ * Logic:
+ * 1. Find guest cart by session_id
+ * 2. Find or create user cart by user_id
+ * 3. If they're the same cart (already claimed), skip
+ * 4. Move items from guest → user cart (merge quantities for duplicates)
+ * 5. Carry over any discount code from guest cart if user cart has none
+ * 6. Deactivate (soft-delete) the guest cart
+ */
+export async function mergePublicCarts(
+  siteId: string,
+  userId: string,
+  sessionId: string,
+): Promise<Cart | null> {
+  try {
+    const supabase = getPublicClient();
+
+    // 1. Find guest cart
+    const guestCart = await findPublicCart(siteId, undefined, sessionId);
+    if (!guestCart || !guestCart.items?.length) {
+      // No guest cart or empty — just return the user's cart (or create one)
+      return getPublicOrCreateCart(siteId, userId);
+    }
+
+    // 2. Find existing user cart
+    const userCart = await findPublicCart(siteId, userId);
+
+    // 3. If guest cart is already the user's cart (session was claimed), skip merge
+    if (userCart && userCart.id === guestCart.id) {
+      return userCart;
+    }
+
+    // 4. If user has no cart, simply claim the guest cart
+    if (!userCart) {
+      const { error } = await supabase
+        .from(`${TABLE_PREFIX}_carts`)
+        .update({ user_id: userId, session_id: null })
+        .eq("id", guestCart.id);
+
+      if (error) {
+        console.error("[Ecom Public] mergePublicCarts claim error:", error);
+        return guestCart;
+      }
+      // Return the now-claimed cart
+      return getPublicCart(guestCart.id);
+    }
+
+    // 5. Both carts exist — merge guest items into user cart
+    for (const guestItem of guestCart.items) {
+      // Check if user cart already has this product+variant
+      const { data: existing } = await supabase
+        .from(`${TABLE_PREFIX}_cart_items`)
+        .select("id, quantity")
+        .eq("cart_id", userCart.id)
+        .eq("product_id", guestItem.product_id)
+        .is("variant_id", guestItem.variant_id || null)
+        .maybeSingle();
+
+      if (existing) {
+        // Merge quantities
+        await supabase
+          .from(`${TABLE_PREFIX}_cart_items`)
+          .update({ quantity: existing.quantity + guestItem.quantity })
+          .eq("id", existing.id);
+      } else {
+        // Move item to user cart
+        await supabase
+          .from(`${TABLE_PREFIX}_cart_items`)
+          .update({ cart_id: userCart.id })
+          .eq("id", guestItem.id);
+      }
+    }
+
+    // 6. Carry over discount code if user cart doesn't have one
+    if (guestCart.discount_code && !userCart.discount_code) {
+      await supabase
+        .from(`${TABLE_PREFIX}_carts`)
+        .update({
+          discount_code: guestCart.discount_code,
+          discount_amount: guestCart.discount_amount,
+          discount_type: guestCart.discount_type,
+        })
+        .eq("id", userCart.id);
+    }
+
+    // 7. Deactivate guest cart (soft-delete)
+    await supabase
+      .from(`${TABLE_PREFIX}_carts`)
+      .update({ status: "merged" })
+      .eq("id", guestCart.id);
+
+    // Delete any remaining guest cart items that were merged (quantity-merged ones)
+    await supabase
+      .from(`${TABLE_PREFIX}_cart_items`)
+      .delete()
+      .eq("cart_id", guestCart.id);
+
+    // Return the merged user cart
+    return getPublicCart(userCart.id);
+  } catch (err) {
+    console.error("[Ecom Public] mergePublicCarts unexpected error:", err);
+    return null;
+  }
+}
+
+// ============================================================================
 // SETTINGS (public reads — needed by checkout + webhooks)
 // ============================================================================
 

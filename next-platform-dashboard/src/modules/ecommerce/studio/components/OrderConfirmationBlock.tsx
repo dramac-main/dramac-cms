@@ -48,6 +48,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useStorefront } from "../../context/storefront-context";
+import { useStorefrontAuth } from "../../context/storefront-auth-context";
 import {
   getPublicOrderById,
   uploadPaymentProof,
@@ -117,6 +118,117 @@ interface OrderConfirmationBlockProps {
 // COMPONENT
 // ============================================================================
 
+// ============================================================================
+// GUEST ACCOUNT NUDGE
+// ============================================================================
+
+function GuestAccountNudge({
+  email,
+  siteId,
+  setPassword,
+}: {
+  email: string;
+  siteId: string;
+  setPassword: (
+    password: string,
+    email?: string,
+  ) => Promise<{ error: string | null }>;
+}) {
+  const [password, setPass] = React.useState("");
+  const [confirm, setConfirm] = React.useState("");
+  const [saving, setSaving] = React.useState(false);
+  const [error, setError] = React.useState("");
+  const [done, setDone] = React.useState(false);
+
+  if (done) {
+    return (
+      <Card className="border-success/30 bg-success/5">
+        <CardContent className="py-6 text-center">
+          <CheckCircle2 className="h-8 w-8 text-success mx-auto mb-2" />
+          <p className="font-medium text-foreground">Account created!</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            You can now sign in with <strong>{email}</strong> to track your
+            orders and manage your account.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+    if (password !== confirm) {
+      setError("Passwords don't match");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    const result = await setPassword(password, email);
+    setSaving(false);
+    if (result.error) {
+      setError(result.error);
+    } else {
+      setDone(true);
+    }
+  };
+
+  return (
+    <Card className="border-primary/30 bg-primary/5">
+      <CardContent className="py-6">
+        <div className="flex items-start gap-4">
+          <div className="rounded-full bg-primary/10 p-2 flex-shrink-0">
+            <Mail className="h-5 w-5 text-primary" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold text-foreground">
+              Create an account to track your orders
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1 mb-4">
+              Set a password for <strong>{email}</strong> to sign in anytime and
+              view your order history, manage addresses, and check out faster.
+            </p>
+            <form onSubmit={handleCreate} className="space-y-3 max-w-sm">
+              <input
+                type="password"
+                placeholder="Create a password (min 8 chars)"
+                value={password}
+                onChange={(e) => setPass(e.target.value)}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                minLength={8}
+                required
+                autoComplete="new-password"
+              />
+              <input
+                type="password"
+                placeholder="Confirm password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                minLength={8}
+                required
+                autoComplete="new-password"
+              />
+              {error && <p className="text-sm text-destructive">{error}</p>}
+              <Button type="submit" size="sm" disabled={saving}>
+                {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                Create Account
+              </Button>
+            </form>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
 export function OrderConfirmationBlock({
   order: orderProp,
   orderId: orderIdProp,
@@ -129,6 +241,7 @@ export function OrderConfirmationBlock({
 }: OrderConfirmationBlockProps) {
   const searchParams = useSearchParams();
   const storefront = useStorefront();
+  const auth = useStorefrontAuth();
   const [fetchedOrder, setFetchedOrder] = React.useState<OrderData | null>(
     null,
   );
@@ -1066,6 +1179,15 @@ export function OrderConfirmationBlock({
             </div>
           </CardContent>
         </Card>
+
+        {/* Create Account Nudge — for guest checkouts */}
+        {!auth.isLoggedIn && order.email && (
+          <GuestAccountNudge
+            email={order.email}
+            siteId={storefront.siteId}
+            setPassword={auth.setPassword}
+          />
+        )}
 
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">

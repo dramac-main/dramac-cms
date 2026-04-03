@@ -22,6 +22,10 @@ import {
   Check,
   Heart,
   ShoppingCart,
+  Calendar,
+  FileText,
+  Clock,
+  X,
 } from "lucide-react";
 import {
   useStorefrontAuth,
@@ -63,7 +67,46 @@ interface Address {
   isDefault: boolean;
 }
 
-type AccountTab = "orders" | "addresses" | "wishlist" | "profile";
+type AccountTab =
+  | "orders"
+  | "addresses"
+  | "wishlist"
+  | "bookings"
+  | "quotes"
+  | "profile";
+
+interface Booking {
+  id: string;
+  service_name: string;
+  customer_name: string;
+  customer_email: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+  notes: string | null;
+  created_at: string;
+}
+
+interface Quote {
+  id: string;
+  quote_number: string;
+  status: string;
+  total: number;
+  currency: string;
+  valid_until: string | null;
+  notes: string | null;
+  created_at: string;
+  items: QuoteItem[];
+}
+
+interface QuoteItem {
+  id: string;
+  product_name: string;
+  variant_label: string | null;
+  quantity: number;
+  unit_price: number;
+}
 
 interface MyAccountBlockProps {
   /** Called when user clicks on an order to view details */
@@ -309,6 +352,8 @@ function AddressesTab({
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [editingAddress, setEditingAddress] = useState<Address | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -320,7 +365,24 @@ function AddressesTab({
       .then((r) => r.json())
       .then((data) => {
         if (data.error) throw new Error(data.error);
-        setAddresses(data.addresses || []);
+        // Map DB snake_case to camelCase
+        const mapped = (data.addresses || []).map(
+          (a: Record<string, unknown>) => ({
+            id: a.id,
+            firstName: a.first_name || "",
+            lastName: a.last_name || "",
+            company: a.company || "",
+            addressLine1: a.address_line_1 || "",
+            addressLine2: a.address_line_2 || "",
+            city: a.city || "",
+            state: a.state || "",
+            postalCode: a.postal_code || "",
+            country: a.country || "",
+            phone: a.phone || "",
+            isDefault: a.is_default_shipping || false,
+          }),
+        );
+        setAddresses(mapped);
       })
       .catch((e) => setError(e.message || "Failed to load addresses"))
       .finally(() => setLoading(false));
@@ -345,6 +407,41 @@ function AddressesTab({
     setAddresses((prev) => prev.filter((a) => a.id !== id));
   };
 
+  const handleSaveAddress = async (
+    address: Omit<Address, "id"> & { id?: string },
+  ) => {
+    const isEdit = !!address.id;
+    const res = await fetch(`${apiBase}/api/modules/ecommerce/auth`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: isEdit ? "update-address" : "add-address",
+        token,
+        siteId,
+        ...(isEdit ? { addressId: address.id } : {}),
+        address: {
+          firstName: address.firstName,
+          lastName: address.lastName,
+          company: address.company,
+          addressLine1: address.addressLine1,
+          addressLine2: address.addressLine2,
+          city: address.city,
+          state: address.state,
+          postalCode: address.postalCode,
+          country: address.country,
+          phone: address.phone,
+          isDefault: address.isDefault,
+        },
+      }),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    // Reload addresses to get fresh state
+    load();
+    setShowAddForm(false);
+    setEditingAddress(null);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -364,6 +461,20 @@ function AddressesTab({
     );
   }
 
+  // Show address form (add or edit)
+  if (showAddForm || editingAddress) {
+    return (
+      <AddressForm
+        address={editingAddress || undefined}
+        onSave={handleSaveAddress}
+        onCancel={() => {
+          setShowAddForm(false);
+          setEditingAddress(null);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="space-y-3">
       {addresses.length === 0 && (
@@ -380,22 +491,250 @@ function AddressesTab({
           key={addr.id}
           address={addr}
           onDelete={handleDelete}
-          onEdit={() => {
-            /* address edit form is beyond MVP scope — show inline edit later */
-          }}
+          onEdit={(a) => setEditingAddress(a)}
         />
       ))}
 
-      {/* Add Address placeholder */}
       <button
         type="button"
         className="w-full rounded-lg border-2 border-dashed border-border py-4 text-sm font-medium text-muted-foreground hover:border-primary/40 hover:text-primary flex items-center justify-center gap-2"
-        onClick={() => alert("Address form coming soon")}
+        onClick={() => setShowAddForm(true)}
       >
         <Plus className="h-4 w-4" />
         Add New Address
       </button>
     </div>
+  );
+}
+
+// ============================================================================
+// ADDRESS FORM (shared for add + edit)
+// ============================================================================
+
+function AddressForm({
+  address,
+  onSave,
+  onCancel,
+}: {
+  address?: Address;
+  onSave: (address: Omit<Address, "id"> & { id?: string }) => Promise<void>;
+  onCancel: () => void;
+}) {
+  const [form, setForm] = useState({
+    firstName: address?.firstName || "",
+    lastName: address?.lastName || "",
+    company: address?.company || "",
+    addressLine1: address?.addressLine1 || "",
+    addressLine2: address?.addressLine2 || "",
+    city: address?.city || "",
+    state: address?.state || "",
+    postalCode: address?.postalCode || "",
+    country: address?.country || "",
+    phone: address?.phone || "",
+    isDefault: address?.isDefault || false,
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.firstName || !form.addressLine1 || !form.city || !form.country) {
+      setError("First name, address, city, and country are required.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      await onSave({ ...form, id: address?.id } as Omit<Address, "id"> & {
+        id?: string;
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save address");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const update = (field: string, value: string | boolean) =>
+    setForm((prev) => ({ ...prev, [field]: value }));
+
+  const inputClass =
+    "w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20";
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4 max-w-lg">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-base font-semibold text-foreground">
+          {address ? "Edit Address" : "Add New Address"}
+        </h3>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <X className="h-4 w-4" /> Cancel
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-foreground">
+            First Name <span className="text-destructive">*</span>
+          </label>
+          <input
+            value={form.firstName}
+            onChange={(e) => update("firstName", e.target.value)}
+            className={inputClass}
+            required
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-foreground">
+            Last Name
+          </label>
+          <input
+            value={form.lastName}
+            onChange={(e) => update("lastName", e.target.value)}
+            className={inputClass}
+          />
+        </div>
+      </div>
+
+      <div className="space-y-1">
+        <label className="block text-sm font-medium text-foreground">
+          Company
+        </label>
+        <input
+          value={form.company}
+          onChange={(e) => update("company", e.target.value)}
+          className={inputClass}
+          placeholder="Optional"
+        />
+      </div>
+
+      <div className="space-y-1">
+        <label className="block text-sm font-medium text-foreground">
+          Address Line 1 <span className="text-destructive">*</span>
+        </label>
+        <input
+          value={form.addressLine1}
+          onChange={(e) => update("addressLine1", e.target.value)}
+          className={inputClass}
+          required
+        />
+      </div>
+
+      <div className="space-y-1">
+        <label className="block text-sm font-medium text-foreground">
+          Address Line 2
+        </label>
+        <input
+          value={form.addressLine2}
+          onChange={(e) => update("addressLine2", e.target.value)}
+          className={inputClass}
+          placeholder="Apartment, suite, etc."
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-foreground">
+            City <span className="text-destructive">*</span>
+          </label>
+          <input
+            value={form.city}
+            onChange={(e) => update("city", e.target.value)}
+            className={inputClass}
+            required
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-foreground">
+            State / Province
+          </label>
+          <input
+            value={form.state}
+            onChange={(e) => update("state", e.target.value)}
+            className={inputClass}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-foreground">
+            Postal Code
+          </label>
+          <input
+            value={form.postalCode}
+            onChange={(e) => update("postalCode", e.target.value)}
+            className={inputClass}
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-foreground">
+            Country <span className="text-destructive">*</span>
+          </label>
+          <input
+            value={form.country}
+            onChange={(e) => update("country", e.target.value)}
+            className={inputClass}
+            required
+          />
+        </div>
+      </div>
+
+      <div className="space-y-1">
+        <label className="block text-sm font-medium text-foreground">
+          Phone
+        </label>
+        <input
+          type="tel"
+          value={form.phone}
+          onChange={(e) => update("phone", e.target.value)}
+          className={inputClass}
+        />
+      </div>
+
+      <label className="flex items-center gap-3 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={form.isDefault}
+          onChange={(e) => update("isDefault", e.target.checked)}
+          className="h-4 w-4 rounded border-input text-primary focus:ring-primary"
+        />
+        <span className="text-sm text-muted-foreground">
+          Set as default address
+        </span>
+      </label>
+
+      {error && (
+        <p
+          role="alert"
+          className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
+        >
+          {error}
+        </p>
+      )}
+
+      <div className="flex gap-3">
+        <button
+          type="submit"
+          disabled={saving}
+          className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60 flex items-center gap-2 min-h-11"
+        >
+          {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+          {address ? "Update Address" : "Add Address"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="rounded-md border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted/50 min-h-11"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
   );
 }
 
@@ -670,6 +1009,275 @@ function WishlistTab({ siteId }: { siteId: string }) {
 }
 
 // ============================================================================
+// BOOKINGS TAB
+// ============================================================================
+
+const BOOKING_STATUS_COLORS: Record<string, string> = {
+  pending: "bg-warning/10 text-warning",
+  confirmed: "bg-primary/10 text-primary",
+  completed: "bg-success/10 text-success",
+  cancelled: "bg-destructive/10 text-destructive",
+  "no-show": "bg-muted text-muted-foreground",
+};
+
+function BookingsTab({
+  siteId,
+  token,
+  apiBase,
+}: {
+  siteId: string;
+  token: string;
+  apiBase: string;
+}) {
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch(`${apiBase}/api/modules/ecommerce/auth`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "get-bookings", token, siteId }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.error) throw new Error(data.error);
+        setBookings(data.bookings || []);
+      })
+      .catch((e) => setError(e.message || "Failed to load bookings"))
+      .finally(() => setLoading(false));
+  }, [siteId, token, apiBase]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <p
+        role="alert"
+        className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive"
+      >
+        {error}
+      </p>
+    );
+  }
+
+  if (bookings.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <Calendar className="mb-3 h-10 w-10 text-muted-foreground/40" />
+        <h3 className="text-base font-medium text-foreground">
+          No bookings yet
+        </h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          When you make bookings, they&apos;ll appear here.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {bookings.map((booking) => {
+        const statusColors =
+          BOOKING_STATUS_COLORS[booking.status] ||
+          "bg-muted text-muted-foreground";
+        const isPast = new Date(booking.date) < new Date();
+
+        return (
+          <div
+            key={booking.id}
+            className={`rounded-lg border border-border bg-card p-4 ${isPast ? "opacity-75" : ""}`}
+          >
+            <div className="flex items-start justify-between">
+              <div className="space-y-1">
+                <p className="font-medium text-foreground">
+                  {booking.service_name}
+                </p>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="h-3.5 w-3.5" />
+                  {formatDate(booking.date)}
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Clock className="h-3.5 w-3.5" />
+                  {booking.start_time}
+                  {booking.end_time ? ` – ${booking.end_time}` : ""}
+                </div>
+                {booking.notes && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {booking.notes}
+                  </p>
+                )}
+              </div>
+              <span
+                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColors}`}
+              >
+                {booking.status.charAt(0).toUpperCase() +
+                  booking.status.slice(1)}
+              </span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ============================================================================
+// QUOTES TAB
+// ============================================================================
+
+const QUOTE_STATUS_COLORS: Record<string, string> = {
+  draft: "bg-muted text-muted-foreground",
+  sent: "bg-primary/10 text-primary",
+  viewed: "bg-info/10 text-info",
+  accepted: "bg-success/10 text-success",
+  declined: "bg-destructive/10 text-destructive",
+  expired: "bg-muted text-muted-foreground",
+};
+
+function QuotesTab({
+  siteId,
+  token,
+  apiBase,
+}: {
+  siteId: string;
+  token: string;
+  apiBase: string;
+}) {
+  const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch(`${apiBase}/api/modules/ecommerce/auth`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "get-quotes", token, siteId }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.error) throw new Error(data.error);
+        setQuotes(data.quotes || []);
+      })
+      .catch((e) => setError(e.message || "Failed to load quotes"))
+      .finally(() => setLoading(false));
+  }, [siteId, token, apiBase]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <p
+        role="alert"
+        className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive"
+      >
+        {error}
+      </p>
+    );
+  }
+
+  if (quotes.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <FileText className="mb-3 h-10 w-10 text-muted-foreground/40" />
+        <h3 className="text-base font-medium text-foreground">No quotes yet</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Quotes you request will appear here.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {quotes.map((quote) => {
+        const statusColors =
+          QUOTE_STATUS_COLORS[quote.status] || "bg-muted text-muted-foreground";
+        const isExpired =
+          quote.valid_until && new Date(quote.valid_until) < new Date();
+
+        return (
+          <div
+            key={quote.id}
+            className="rounded-lg border border-border bg-card p-4"
+          >
+            <div className="flex items-start justify-between mb-2">
+              <div>
+                <p className="font-medium text-foreground">
+                  {quote.quote_number}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {formatDate(quote.created_at)}
+                  {quote.valid_until && (
+                    <span className={isExpired ? "text-destructive" : ""}>
+                      {" "}
+                      · Valid until {formatDate(quote.valid_until)}
+                    </span>
+                  )}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <p className="font-semibold tabular-nums text-foreground">
+                  {formatCents(quote.total, quote.currency)}
+                </p>
+                <span
+                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColors}`}
+                >
+                  {quote.status.charAt(0).toUpperCase() + quote.status.slice(1)}
+                </span>
+              </div>
+            </div>
+            {quote.items && quote.items.length > 0 && (
+              <div className="mt-2 border-t border-border pt-2 space-y-1">
+                {quote.items.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between text-sm"
+                  >
+                    <span className="text-muted-foreground">
+                      {item.product_name}
+                      {item.variant_label && (
+                        <span className="text-xs ml-1">
+                          ({item.variant_label})
+                        </span>
+                      )}
+                      <span className="text-xs ml-1">×{item.quantity}</span>
+                    </span>
+                    <span className="tabular-nums text-foreground">
+                      {formatCents(
+                        item.unit_price * item.quantity,
+                        quote.currency,
+                      )}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {quote.notes && (
+              <p className="mt-2 text-xs text-muted-foreground border-t border-border pt-2">
+                {quote.notes}
+              </p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
@@ -739,6 +1347,12 @@ export function MyAccountBlock({
       icon: <MapPin className="h-4 w-4" />,
     },
     { key: "wishlist", label: "Wishlist", icon: <Heart className="h-4 w-4" /> },
+    {
+      key: "bookings",
+      label: "Bookings",
+      icon: <Calendar className="h-4 w-4" />,
+    },
+    { key: "quotes", label: "Quotes", icon: <FileText className="h-4 w-4" /> },
     { key: "profile", label: "Profile", icon: <User className="h-4 w-4" /> },
   ];
 
@@ -800,6 +1414,12 @@ export function MyAccountBlock({
         <AddressesTab siteId={siteId} token={token} apiBase={apiBase} />
       )}
       {activeTab === "wishlist" && <WishlistTab siteId={siteId} />}
+      {activeTab === "bookings" && (
+        <BookingsTab siteId={siteId} token={token} apiBase={apiBase} />
+      )}
+      {activeTab === "quotes" && (
+        <QuotesTab siteId={siteId} token={token} apiBase={apiBase} />
+      )}
       {activeTab === "profile" && (
         <ProfileTab
           customer={customer}
