@@ -121,6 +121,7 @@ const MODULE_COMPONENT_TYPES = new Set([
   "EcommerceQuoteDetail",
   "EcommerceReviewForm",
   "EcommerceReviewList",
+  "EcommerceMyAccount",
   "ProductDetailBlock",
   "CategoryHeroBlock",
 ]);

@@ -334,18 +334,30 @@ Your site was auto-published when you clicked "Apply & Edit" in Step 4. Time to 
 
 1. In the customer email, click the **View Quote** link
    - This opens a page like: `https://app.dramacagency.com/quote/SOME-TOKEN`
-2. The customer can see:
+2. **Email Verification Gate** — You'll see a verification form first (NOT the quote)
+   - [ ] Form shows the quote reference number (e.g. "Quote QUO-1008")
+   - [ ] Enter the **same email** the quote was sent to
+   - [ ] Click "Verify & View Quote"
+   - [ ] If wrong email → error message appears
+   - [ ] If correct → quote portal loads (cookie valid for 7 days)
+3. The customer can now see:
    - [ ] Quote number and details
    - [ ] All line items and pricing
    - [ ] **"Accept Quote"** and **"Reject Quote"** buttons
-3. **Test Accept:** Click "Accept Quote"
-   - Enter your name and signature
+   - [ ] Email field in accept form is pre-filled and locked with a "✓ Verified" badge
+4. **Test Accept:** Click "Accept Quote"
+   - Enter your name and signature (email is already filled)
    - Click confirm
    - Both parties should get notifications (in-app for owner + emails for both)
-4. **(OR) Test Reject:** Click "Reject Quote"
+5. **(OR) Test Reject:** Click "Reject Quote"
    - Enter a reason (optional)
    - Click confirm
    - The agency owner gets a notification about the rejection
+6. **(OR) Test Request Changes:** Click "Request Changes"
+   - Enter amendment notes
+   - Click submit
+   - **Customer chat** shows: "Your change request for QUO-XXXX has been submitted! ✅"
+   - **Agency owner** gets an in-app notification AND email about the amendment request
 
 ### Step 17: Turn Off Quotation Mode
 

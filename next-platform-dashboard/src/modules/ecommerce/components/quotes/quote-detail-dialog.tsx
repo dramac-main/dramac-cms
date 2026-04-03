@@ -37,14 +37,23 @@ import { cn } from "@/lib/utils";
 import { QuoteStatusBadge } from "./quote-status-badge";
 import { QuoteTimeline } from "./quote-timeline";
 import { QuoteItemsEditor } from "./quote-items-editor";
-import { getQuote, duplicateQuote, addQuoteItem, updateQuoteItem, removeQuoteItem } from "../../actions/quote-actions";
+import {
+  getQuote,
+  duplicateQuote,
+  addQuoteItem,
+  updateQuoteItem,
+  removeQuoteItem,
+} from "../../actions/quote-actions";
 import {
   formatQuoteCurrency,
   isQuoteExpired,
   calculateDaysUntilExpiry,
 } from "../../lib/quote-utils";
 import { downloadQuotePDF } from "../../lib/quote-pdf-generator";
-import type { QuoteDetailData, QuoteItemInput } from "../../types/ecommerce-types";
+import type {
+  QuoteDetailData,
+  QuoteItemInput,
+} from "../../types/ecommerce-types";
 
 // ============================================================================
 // TYPES
@@ -145,7 +154,10 @@ export function QuoteDetailDialog({
     await reloadQuote();
   };
 
-  const handleUpdateItem = async (itemId: string, updates: Record<string, unknown>) => {
+  const handleUpdateItem = async (
+    itemId: string,
+    updates: Record<string, unknown>,
+  ) => {
     const result = await updateQuoteItem(siteId, quoteId, itemId, updates);
     if (result.success) {
       await reloadQuote();

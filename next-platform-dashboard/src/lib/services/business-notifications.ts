@@ -1143,9 +1143,7 @@ export async function notifyNewQuote(
     const businessName = site.name || "Our Business";
     const currency = data.currency || "USD";
     // Quote totals are in main currency unit (not cents) — no /100 needed
-    const totalStr = data.total
-      ? formatCurrency(data.total, currency)
-      : "";
+    const totalStr = data.total ? formatCurrency(data.total, currency) : "";
     const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${data.siteId}/ecommerce?view=quotes`;
 
     // 1. In-app notification to business owner

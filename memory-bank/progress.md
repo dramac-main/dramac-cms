@@ -2,28 +2,50 @@
 
 **Last Updated**: April 2026  
 **Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅ + **LIVE CHAT RUNTIME FIXES (AI auto-response + file uploads)** ✅ + **PER-ORDER CONVERSATION ISOLATION** ✅ + **PER-ORDER CHAT HARDENING AUDIT (10 bugs fixed, 0 TS errors)** ✅ + **CATEGORIES PAGE + DARK MODE POLISH** ✅ + **LIVE CHAT OVERHAUL + ECOMMERCE FIXES** ✅ + **CANVAS IFRAME RENDERING FIDELITY FIXES** ✅ + **TYPOGRAPHY COMPONENTS OVERHAUL (4 enhanced + 5 new, CSS var type scale)** ✅ + **BUTTON COMPONENTS MASTER PLAN (Phases 1-5: renders, registrations, converter, metadata, CTARender composition)** ✅ + **MARKETING COMPONENTS — FULL IMPLEMENTATION + REGISTRY ALIGNMENT (5 components, all paths)** ✅ + **ECOMMERCE COMPONENTS OVERHAUL — CONVERTER, METADATA, DEFINITION ALIGNMENT (3 files, 23 metadata entries, 6 definitions fixed)** ✅ + **3D & EFFECTS COMPONENTS — FULL RENDER EXPANSION (ALL 12 components, Typewriter+Parallax rewrites, 7 normalizers, metadata enhanced)** ✅ + **3 SHOWCASE WEBSITES — FULLY POPULATED (208 records across 16 tables)** ✅ + **OVERLAY-AWARE CONTRAST RESOLUTION — ALL 10 PREMIUM COMPONENTS (shared utilities, comprehensive render fixes)** ✅ + **ECOMMERCE IMAGE FORMAT CRASH FIX — ALL 16 STOREFRONT COMPONENTS (image-utils.ts, normalizeProductImages)** ✅ + **QUOTATION MODE OVERHAUL — CART-BASED UX, EMAILS, AI, CHAT EVENTS (13 source files)** ✅ + **QUOTATION FLOW FIXES — CART-TO-BUILDER BRIDGE, OPTIMISTIC UPDATES (6 source files)** ✅ + **CART DEBOUNCING + QUOTE CHAT/DOWNLOAD UX (4 source files, race condition fix)** ✅ + **QUOTE CHAT AUTO-START FIX — TIMING RACE, PER-QUOTE ISOLATION, AI GUIDANCE (3 source files)** ✅ + **BUILD FIX + MODULE STATUS 400 ERROR (slug→UUID resolution, 4 source files)** ✅ + **CHIKO AI QUOTE VISIBILITY FIX — FULL QUOTE ACCESS, STATUS FILTER, METADATA, GUIDANCE (1 source file)** ✅ + **QUOTE PRICING 100x FIX + LIVE CHAT QUOTE PANEL (6 source files, cents→main currency conversion)** ✅ + **QUOTE WORKFLOW PRODUCTION-READINESS — SMART STATUS ROUTING, CHAT NOTIFICATIONS, CUSTOMER NAME (5 source files)** ✅
-+ **QUOTE END-TO-END WORKFLOW FIX — PORTAL AUTH, TOKEN AT CREATION, AMENDMENT FLOW, EDITABLE DIALOG (10 files)** ✅
+
+- **QUOTE END-TO-END WORKFLOW FIX — PORTAL AUTH, TOKEN AT CREATION, AMENDMENT FLOW, EDITABLE DIALOG (10 files)** ✅
+- **QUOTE SYSTEM DEEP AUDIT — 7 CRITICAL BUGS: 404, TOTALS 0.00, AI VERBOSITY, /100 ERRORS, PRICE CONVERSION (6 files)** ✅
+- **QUOTE PORTAL EMAIL VERIFICATION GATE — HMAC-SHA256 AUTH, AMENDMENT NOTIFICATIONS, /100 FIX (8 files)** ✅
 
 ---
 
-## Latest Update: Quote End-to-End Workflow Fix ✅
+## Latest Update: Quote Portal Email Verification Gate + Amendment Fixes ✅
 
 ### What Was Done
 
-Fixed the entire quote workflow which was broken end-to-end. Customer portal was blocked by auth middleware, no tracking link provided, store owner couldn't edit from live chat, no way to send quotes, and no amendment request option for customers.
+Implemented industry-standard email verification gate (Stripe/HubSpot/PandaDoc pattern) for the quote portal. Previously, anyone with a quote link could view and act on it with zero authentication. Now customers must verify their email before accessing the portal. All actions (accept/reject/amend) are also server-side guarded. Also fixed amendment chat message language (was store-owner language shown to customer), added missing store owner notification for amendment requests, and fixed another `/100` bug in `notifyQuoteRejected`.
 
-**9 Source Files Modified + 1 New File Created:**
+**8 Source Files (2 new, 6 modified):**
 
-- `proxy.ts` — Added `/quote/` to public routes (portal accessible without login)
-- `quote-actions.ts` — `createQuote()` generates `access_token` immediately; `notifyQuoteCreated()` passes portal URL
-- `business-notifications.ts` — Customer email now includes portal tracking URL
-- `ChatQuotePanel.tsx` — Prominent "Send to Customer" + "Convert to Order" buttons, `onSend`/`onConvert`/`onQuoteChange` passed to dialog
-- `quote-detail-dialog.tsx` — Items now editable (`isReadOnly={!canEdit}`), live add/update/remove via server actions
-- `quote-workflow-actions.ts` — New `requestQuoteAmendment()` action (back to pending_approval, logs activity, notifies chat)
-- `chat-event-bridge.ts` — New `notifyChatQuoteAmendmentRequested()` function
-- `quote-portal-view.tsx` — "Request Changes" button + amendment dialog + "Quote Being Prepared" banner for pending status
-- `quote-amendment-dialog.tsx` — NEW: Customer dialog for describing requested changes
-- `QuoteRequestBlock.tsx` — "Track Your Quote" button, "What happens next" explainer section
+- `quote-portal-auth.ts` (NEW) — HMAC-SHA256 cookie auth with timing-safe comparison
+- `quote-email-gate.tsx` (NEW) — Email verification form UI
+- `quote/[token]/page.tsx` — Verification gate before portal render
+- `quote-workflow-actions.ts` — `requireQuoteAccess()` on all 3 actions + amendment notification
+- `quote-portal-view.tsx` — Pass verifiedEmail to accept form
+- `quote-accept-form.tsx` — Pre-fill and lock email when verified
+- `chat-event-bridge.ts` — Customer-friendly amendment message
+- `business-notifications.ts` — Added amendment notification + fixed `/100` in rejection
+
+**Git:** Committed as `355be723`, pushed to origin/main.
+
+---
+
+## Previous Update: Quote System Deep Audit — 7 Critical Bug Fixes ✅
+
+### What Was Done
+
+Deep audit of the entire quote system uncovered 7 critical bugs beyond the initially reported 3. Fixed domain mismatch causing 404 on Track Your Quote, stale totals returning ZMW 0.00, AI chat verbosity, 5× wrong `/100` division on quote totals (which are stored in main currency not cents), and price-currency mismatch in convertQuoteToOrder.
+
+**6 Source Files Modified:**
+
+- `QuoteRequestBlock.tsx` — Track Your Quote URL uses `NEXT_PUBLIC_APP_URL`; snapshot divides by 100
+- `useQuotations.ts` — Calculate subtotal/total from items instead of returning stale 0s
+- `ai-responder.ts` — Shortened QUOTATION GUIDANCE to enforce 1-2 sentences
+- `chat-event-bridge.ts` — All proactive messages shortened; amendment/rejection notes truncated
+- `quote-workflow-actions.ts` — Removed 4× wrong `/100`; added `toCents()` for order conversion
+- `business-notifications.ts` — Removed wrong `/100` in notifyNewQuote
+
+**Git:** Committed as `d5783382`, pushed to origin/main.
 
 ---
 

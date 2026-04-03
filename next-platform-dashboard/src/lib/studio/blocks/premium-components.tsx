@@ -17,6 +17,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { getImageUrl, type ImageValue } from "@/lib/studio/utils/image-helpers";
 import { NavCartBadge } from "@/modules/ecommerce/studio/components/NavCartBadge";
+import { NavAccountBadge } from "@/modules/ecommerce/studio/components/NavAccountBadge";
 import { isDarkBackground, isEffectivelyDark, resolveContrastColor } from "@/lib/studio/blocks/layout-utils";
 
 // ============================================================================
@@ -821,6 +822,13 @@ export function PremiumNavbarRender({
           {utilityItems && utilityItems.length > 0 && (
             <div className="hidden md:flex items-center gap-2 mr-2">
               {utilityItems.map((item) => (
+                item.id === "ecom-account" ? (
+                  <NavAccountBadge
+                    key={item.id}
+                    accountHref={item.href}
+                    color={resolvedTextColor}
+                  />
+                ) : (
                 <a
                   key={item.id}
                   href={item.href}
@@ -846,6 +854,7 @@ export function PremiumNavbarRender({
                     </span>
                   ) : null}
                 </a>
+                )
               ))}
             </div>
           )}
@@ -1113,6 +1122,15 @@ export function PremiumNavbarRender({
               style={{ borderColor }}
             >
               {utilityItems.map((item) => (
+                item.id === "ecom-account" ? (
+                  <div key={item.id} className="flex items-center gap-2 p-2" onClick={() => setMobileMenuOpen(false)}>
+                    <NavAccountBadge
+                      accountHref={item.href}
+                      color={mobileMenuTextColor}
+                    />
+                    <span className="text-sm font-medium" style={{ color: mobileMenuTextColor }}>Account</span>
+                  </div>
+                ) : (
                 <a
                   key={item.id}
                   href={item.href}
@@ -1139,6 +1157,7 @@ export function PremiumNavbarRender({
                     </span>
                   ) : null}
                 </a>
+                )
               ))}
             </div>
           )}

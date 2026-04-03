@@ -289,6 +289,7 @@ async function generateEcommercePage(slug: string, siteId: string) {
     createProductDetailTemplate,
     createCategoryPageTemplate,
     createQuoteRequestTemplate,
+    createMyAccountTemplate,
   } = await import("@/modules/ecommerce/lib/page-templates");
 
   // Static ecommerce pages
@@ -341,6 +342,19 @@ async function generateEcommercePage(slug: string, siteId: string) {
       seo_description: "Submit a quote request for our products.",
       seo_image: null,
       page_content: [{ content: createQuoteRequestTemplate() }],
+    };
+  }
+
+  if (slug === "account") {
+    return {
+      id: `virtual-account-${siteId}`,
+      slug: "/account",
+      name: "My Account",
+      is_homepage: false,
+      seo_title: "My Account",
+      seo_description: "Manage your account, orders, and preferences.",
+      seo_image: null,
+      page_content: [{ content: createMyAccountTemplate() }],
     };
   }
 

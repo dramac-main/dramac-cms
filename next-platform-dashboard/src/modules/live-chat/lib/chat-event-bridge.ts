@@ -244,8 +244,7 @@ export async function notifyChatQuoteRequested(
   const conv = await findActiveConversation(siteId, customerEmail);
   if (!conv) return;
 
-  const message =
-    `Quote ${quoteNumber} received! ✅ Our team will review your ${itemCount} item${itemCount !== 1 ? "s" : ""} and email you when it's ready.`;
+  const message = `Quote ${quoteNumber} received! ✅ Our team will review your ${itemCount} item${itemCount !== 1 ? "s" : ""} and email you when it's ready.`;
 
   await sendProactiveMessage(
     siteId,
@@ -269,8 +268,7 @@ export async function notifyChatQuoteSent(
   if (!conv) return;
 
   const linkPart = portalUrl ? ` View it here: ${portalUrl}` : "";
-  const message =
-    `Your quote ${quoteNumber} is ready (${total})! 🎉 Check your email to review and respond.${linkPart}`;
+  const message = `Your quote ${quoteNumber} is ready (${total})! 🎉 Check your email to review and respond.${linkPart}`;
 
   await sendProactiveMessage(
     siteId,
@@ -292,8 +290,7 @@ export async function notifyChatQuoteAccepted(
   const conv = await findActiveConversation(siteId, customerEmail);
   if (!conv) return;
 
-  const message =
-    `Quote ${quoteNumber} accepted (${total})! ✅ The store will process your order shortly.`;
+  const message = `Quote ${quoteNumber} accepted (${total})! ✅ The store will process your order shortly.`;
 
   await sendProactiveMessage(
     siteId,
@@ -315,9 +312,10 @@ export async function notifyChatQuoteRejected(
   const conv = await findActiveConversation(siteId, customerEmail);
   if (!conv) return;
 
-  const reasonPart = reason ? ` Reason: "${reason.length > 100 ? reason.substring(0, 97) + '...' : reason}".` : "";
-  const message =
-    `Quote ${quoteNumber} declined.${reasonPart} Let me know if you'd like a revised quote.`;
+  const reasonPart = reason
+    ? ` Reason: "${reason.length > 100 ? reason.substring(0, 97) + "..." : reason}".`
+    : "";
+  const message = `Quote ${quoteNumber} declined.${reasonPart} Let me know if you'd like a revised quote.`;
 
   await sendProactiveMessage(
     siteId,
@@ -340,8 +338,7 @@ export async function notifyChatQuoteAmendmentRequested(
   const conv = await findActiveConversation(siteId, customerEmail);
   if (!conv) return;
 
-  const message =
-    `Your change request for ${quoteNumber} has been submitted! ✅ We'll review your notes and send an updated quote.`;
+  const message = `Your change request for ${quoteNumber} has been submitted! ✅ We'll review your notes and send an updated quote.`;
 
   await sendProactiveMessage(
     siteId,

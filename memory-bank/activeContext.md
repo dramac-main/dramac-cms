@@ -1,46 +1,61 @@
 # Active Context
 
-## Current Focus: Quote End-to-End Workflow Fix — COMPLETE ✅
+## Current Focus: Quote Portal Email Verification Gate + Amendment Notification Fixes ✅
 
-### What Was Done (Latest Session — Quote E2E Workflow)
+### What Was Done (Latest Session — Quote Portal Security, commit 355be723)
 
-**User Complaint:** After submitting a quote, the customer is completely lost — can't find their request, doesn't know where to log in, and the store owner can't edit or send quotes from the live chat panel. The entire quote lifecycle was broken from submission to customer response.
+**User Complaints:**
 
-**Root Causes Found (6):**
+1. "Anyone with a quote link is able to see the quote" — zero authentication on the quote portal
+2. Amendment chat message says "📝 The customer has requested changes to quote QUO-1008..." in the CUSTOMER's chat (third-person store-owner language shown to wrong audience)
 
-1. **Quote portal blocked by auth** — `/quote/[token]` route not in proxy.ts public routes, customers redirected to dashboard login
-2. **No access_token at creation** — Token only generated when store owner clicks "Send", so customers can't track before that
-3. **Customer email missing portal link** — Confirmation email sent on submission didn't include tracking URL
-4. **Chat dialog read-only** — `QuoteDetailDialog` had `isReadOnly={true}` hardcoded, no `onSend`/`onConvert` callbacks passed from `ChatQuotePanel`
-5. **No "Send to Customer" action** — Store owner had no prominent way to send the prepared quote
-6. **No amendment request option** — Customer could only Accept or Decline, no way to request changes
+**Root Causes Found:**
 
-**Fixes Applied (9 files, 1 file created):**
+1. `/quote/[token]/page.tsx` had ZERO authentication — just fetched quote by token and rendered everything
+2. `middleware.ts` and `proxy.ts` explicitly bypassed auth for `/quote/` routes
+3. `getQuoteByToken`, `acceptQuote`, `rejectQuote`, `requestQuoteAmendment` — all took only a token, no identity verification
+4. `notifyChatQuoteAmendmentRequested` sent message only to CUSTOMER's chat (store owner got NO notification)
+5. `notifyQuoteRejected` had another `/100` bug (same pattern as prior session)
 
-| File | Change |
-|------|--------|
-| `proxy.ts` | Added `/quote/` to PUBLIC ROUTES — portal accessible without login |
-| `quote-actions.ts` | `createQuote()` generates `access_token` at creation time (not just on send) |
-| `quote-actions.ts` | `notifyQuoteCreated()` builds portal URL and passes to notification |
-| `business-notifications.ts` | Added `portalUrl?` to `QuoteNotificationData`, customer email now includes `trackQuoteUrl` |
-| `ChatQuotePanel.tsx` | Added `handleSendQuote` + `handleConvertToOrder` callbacks, prominent Send/Convert buttons, passed `onSend`/`onConvert`/`onQuoteChange` to dialog |
-| `quote-detail-dialog.tsx` | Changed `isReadOnly={!canEdit}` (dynamic), wired item add/update/remove with real server actions, added `reloadQuote()` for live refresh |
-| `quote-workflow-actions.ts` | Added `requestQuoteAmendment()` — sets status back to `pending_approval`, logs activity, notifies chat |
-| `chat-event-bridge.ts` | Added `notifyChatQuoteAmendmentRequested()` — proactive message when customer requests changes |
-| `quote-portal-view.tsx` | Added "Request Changes" button + `QuoteAmendmentDialog`, "Quote Being Prepared" banner for pending/draft status |
-| `quote-amendment-dialog.tsx` | NEW FILE — Customer dialog for describing requested changes |
-| `QuoteRequestBlock.tsx` | Added "Track Your Quote" button with portal link, "What happens next" explainer, reordered CTA buttons |
+**Solution: Industry-Standard Token + Email Verification Gate** (Stripe, HubSpot, PandaDoc pattern)
 
-**Complete Quote Lifecycle Now Works:**
+- Customer clicks link → sees email verification form (not the quote)
+- Enters email → server checks it matches `quote.customer_email`
+- If match → sets secure HMAC-SHA256 signed HttpOnly cookie (7 days)
+- All actions also verify the cookie server-side via `requireQuoteAccess()`
+- Cookie uses timing-safe comparison to prevent timing attacks
 
-1. **Customer submits** → Gets portal tracking link + "what happens next" guidance + email with tracking URL
-2. **Store owner reviews** → Opens from live chat, edits items inline (no longer read-only), adjusts pricing
-3. **Store owner sends** → Prominent "Send to Customer" button, quote emailed with portal link
-4. **Customer responds** → Three options on portal: Accept (with signature), Request Changes (with notes), or Decline
-5. **Amendment loop** → Quote goes back to `pending_approval`, store owner gets chat notification, can revise and re-send
-6. **Convert to order** → "Convert to Order" button appears when quote is accepted
+**8 Files Created/Modified:**
 
-**TypeScript:** No new errors introduced (19 pre-existing errors in unrelated files)
+| File                         | Change                                                                                                                                         |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `quote-portal-auth.ts` (NEW) | Server actions: `verifyQuoteAccess()`, `verifyQuoteAccessCookie()`, `requireQuoteAccess()` — HMAC-SHA256 signed cookies with `timingSafeEqual` |
+| `quote-email-gate.tsx` (NEW) | Client component: email verification form with ShieldCheck icon, error handling, 7-day messaging                                               |
+| `quote/[token]/page.tsx`     | Verification gate: checks cookie → shows gate or portal; `recordQuoteView` only when verified                                                  |
+| `quote-workflow-actions.ts`  | All 3 customer actions (accept/reject/amend) now call `requireQuoteAccess()`; added `notifyQuoteAmendmentRequested` business notification      |
+| `quote-portal-view.tsx`      | Passes `verifiedEmail` prop to accept form                                                                                                     |
+| `quote-accept-form.tsx`      | Email pre-filled and locked (readOnly) when verified, with green "✓ Verified" badge                                                            |
+| `chat-event-bridge.ts`       | Amendment message changed to customer-friendly: "Your change request for {quoteNumber} has been submitted! ✅"                                 |
+| `business-notifications.ts`  | Added `notifyQuoteAmendmentRequested()` (in-app + email to store owner); fixed `/100` bug in `notifyQuoteRejected`                             |
+
+**Security Pattern:**
+
+- Cookie name: `qa_{first 12 chars of token}`
+- Cookie value: HMAC-SHA256(`token:email`, secret)
+- Secret: `QUOTE_ACCESS_SECRET` env var → fallback `NEXTAUTH_SECRET`
+- Cookie: HttpOnly, Secure (prod), SameSite=Lax, 7-day maxAge
+
+**TypeScript:** Zero errors. Git: `355be723`, pushed to origin/main.
+
+### Previous Session: Quote System Deep Audit — 7 Critical Bugs Fixed ✅ (commit d5783382)
+
+Deep audit uncovered 7 bugs: Track Your Quote 404, totals ZMW 0.00, AI verbosity, 5× wrong `/100`, convertQuoteToOrder price mismatch. 6 source files modified.
+
+**Critical Pattern:** Quotes = MAIN CURRENCY, Orders = CENTS, `formatCurrency()` expects MAIN CURRENCY.
+
+### Previous Session: Quote End-to-End Workflow Fix (commit 22fe3c24)
+
+Fixed the entire quote workflow which was broken end-to-end. Customer portal was blocked by auth middleware, no tracking link provided, store owner couldn't edit from live chat, no way to send quotes, and no amendment request option for customers. 9 source files modified + 1 new file created.
 
 ### Previous Session: Quote Workflow Production-Readiness (commit b71de96e)
 

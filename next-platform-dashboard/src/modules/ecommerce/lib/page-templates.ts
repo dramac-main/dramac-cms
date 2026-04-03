@@ -603,6 +603,44 @@ export const quotePageDefinition: PageDefinition = {
 };
 
 // ============================================================================
+// MY ACCOUNT PAGE TEMPLATE
+// ============================================================================
+
+/**
+ * Create the customer account page template
+ * URL: /account
+ *
+ * Customer dashboard with orders, addresses, wishlist, quotes, and profile.
+ * Uses the EcommerceMyAccount studio component.
+ * If the customer is not logged in, the component shows the auth dialog.
+ */
+export function createMyAccountTemplate(): StudioPageData {
+  resetIdCounter();
+  const page = createEmptyPage("My Account");
+
+  const section = createSection(page, {
+    padding: "32px 24px",
+  });
+
+  const container = createContainer(page, section, {
+    gap: "24px",
+  });
+
+  addBreadcrumb(page, container, { showHome: true });
+
+  addComponent(
+    page,
+    {
+      type: "EcommerceMyAccount",
+      props: {},
+    },
+    container,
+  );
+
+  return page;
+}
+
+// ============================================================================
 // CATEGORIES BROWSE PAGE TEMPLATE
 // ============================================================================
 

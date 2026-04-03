@@ -65,6 +65,9 @@ import { QuoteRequestBlock } from "./components/QuoteRequestBlock";
 import { QuoteListBlock } from "./components/QuoteListBlock";
 import { QuoteDetailBlock } from "./components/QuoteDetailBlock";
 
+// Customer Account (ECOM-ACCOUNTS)
+import { MyAccountBlock } from "./components/MyAccountBlock";
+
 // Review components (ECOM-60)
 import {
   ReviewFormBlock,
@@ -324,6 +327,16 @@ const orderTrackingDefinition: Omit<ComponentDefinition, "render"> = {
     },
   },
   defaultProps: { shopLink: "/shop" },
+};
+
+const myAccountDefinition: Omit<ComponentDefinition, "render"> = {
+  type: "EcommerceMyAccount",
+  label: "My Account",
+  description: "Customer account dashboard with orders, addresses, wishlist, and profile",
+  category: "ecommerce",
+  icon: "User",
+  fields: {},
+  defaultProps: {},
 };
 
 const categoryNavDefinition: Omit<ComponentDefinition, "render"> = {
@@ -797,6 +810,12 @@ export const studioComponents: ModuleStudioExports["studioComponents"] = {
   EcommerceQuoteDetail: {
     ...quoteDetailDefinition,
     render: QuoteDetailBlock,
+  },
+
+  // Customer Account (ECOM-ACCOUNTS)
+  EcommerceMyAccount: {
+    ...myAccountDefinition,
+    render: MyAccountBlock,
   },
 
   // Review Components (ECOM-60)

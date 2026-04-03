@@ -282,8 +282,7 @@ export function QuoteRequestBlock({
       // NOTE: list_price/requested_price are in CENTS (from cart/product base_price).
       // Quote items store in main currency unit, so divide by 100.
       const mappedItems = snapshotItems.map((item, idx) => {
-        const unitPrice =
-          (item.requested_price || item.list_price) / 100;
+        const unitPrice = (item.requested_price || item.list_price) / 100;
         return {
           id: `temp-${idx}`,
           quote_id: result.id,

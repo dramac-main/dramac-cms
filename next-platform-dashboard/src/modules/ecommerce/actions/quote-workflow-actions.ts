@@ -791,9 +791,8 @@ export async function requestQuoteAmendment(
     // Notify active chat conversation (customer-facing confirmation)
     if (quote.customer_email && quote.site_id) {
       try {
-        const { notifyChatQuoteAmendmentRequested } = await import(
-          "@/modules/live-chat/lib/chat-event-bridge"
-        );
+        const { notifyChatQuoteAmendmentRequested } =
+          await import("@/modules/live-chat/lib/chat-event-bridge");
         await notifyChatQuoteAmendmentRequested(
           quote.site_id,
           quote.customer_email,
@@ -808,9 +807,8 @@ export async function requestQuoteAmendment(
     // Notify store owner (in-app + email)
     if (quote.site_id) {
       try {
-        const { notifyQuoteAmendmentRequested } = await import(
-          "@/lib/services/business-notifications"
-        );
+        const { notifyQuoteAmendmentRequested } =
+          await import("@/lib/services/business-notifications");
         await notifyQuoteAmendmentRequested(
           quote.site_id,
           quote.quote_number,
@@ -941,7 +939,9 @@ export async function convertQuoteToOrder(
     if (quote.items && quote.items.length > 0) {
       const orderItems = quote.items.map((item: QuoteItem) => {
         const unitPriceCents = toCents(item.unit_price);
-        const lineTotalCents = toCents(item.line_total || item.unit_price * item.quantity);
+        const lineTotalCents = toCents(
+          item.line_total || item.unit_price * item.quantity,
+        );
         return {
           order_id: newOrder.id,
           product_id: item.product_id,
