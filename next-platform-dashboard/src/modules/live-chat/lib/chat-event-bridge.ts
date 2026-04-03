@@ -245,8 +245,7 @@ export async function notifyChatQuoteRequested(
   if (!conv) return;
 
   const message =
-    `Your quote request ${quoteNumber} with ${itemCount} item${itemCount !== 1 ? "s" : ""} has been submitted successfully! 📋 ` +
-    `The store will review your request and prepare a quote for you. You'll receive an email once it's ready.`;
+    `Quote ${quoteNumber} received! ✅ Our team will review your ${itemCount} item${itemCount !== 1 ? "s" : ""} and email you when it's ready.`;
 
   await sendProactiveMessage(
     siteId,
@@ -269,10 +268,9 @@ export async function notifyChatQuoteSent(
   const conv = await findActiveConversation(siteId, customerEmail);
   if (!conv) return;
 
-  const linkPart = portalUrl ? ` You can also view it here: ${portalUrl}` : "";
+  const linkPart = portalUrl ? ` View it here: ${portalUrl}` : "";
   const message =
-    `Great news! Your quote ${quoteNumber} is ready (${total})! 🎉 ` +
-    `We've sent it to your email where you can review, accept, or decline it.${linkPart} Would you like me to tell you more about it?`;
+    `Your quote ${quoteNumber} is ready (${total})! 🎉 Check your email to review and respond.${linkPart}`;
 
   await sendProactiveMessage(
     siteId,
@@ -295,8 +293,7 @@ export async function notifyChatQuoteAccepted(
   if (!conv) return;
 
   const message =
-    `You've accepted quote ${quoteNumber} (${total})! ✅ ` +
-    `The store will now process this into an order. You'll be notified once it's ready for payment.`;
+    `Quote ${quoteNumber} accepted (${total})! ✅ The store will process your order shortly.`;
 
   await sendProactiveMessage(
     siteId,
@@ -318,10 +315,9 @@ export async function notifyChatQuoteRejected(
   const conv = await findActiveConversation(siteId, customerEmail);
   if (!conv) return;
 
-  const reasonPart = reason ? ` Reason: "${reason}".` : "";
+  const reasonPart = reason ? ` Reason: "${reason.length > 100 ? reason.substring(0, 97) + '...' : reason}".` : "";
   const message =
-    `We've noted that you declined quote ${quoteNumber}.${reasonPart} ` +
-    `If you'd like to discuss changes or request a revised quote, I'm happy to help! 💬`;
+    `Quote ${quoteNumber} declined.${reasonPart} Let me know if you'd like a revised quote.`;
 
   await sendProactiveMessage(
     siteId,
@@ -343,9 +339,10 @@ export async function notifyChatQuoteAmendmentRequested(
   const conv = await findActiveConversation(siteId, customerEmail);
   if (!conv) return;
 
+  const truncatedNotes =
+    notes.length > 200 ? notes.substring(0, 197) + "..." : notes;
   const message =
-    `📝 The customer has requested changes to quote ${quoteNumber}. ` +
-    `Their notes: "${notes}". The quote has been moved back to Pending Approval for your review.`;
+    `📝 Change request on quote ${quoteNumber}: "${truncatedNotes}". Moved back to Pending Approval.`;
 
   await sendProactiveMessage(
     siteId,

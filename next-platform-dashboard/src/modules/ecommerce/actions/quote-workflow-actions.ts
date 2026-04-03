@@ -283,8 +283,9 @@ export async function resendQuote(
     // Send resend email
     const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL || ""}/quote/${quote.access_token}`;
     const totalAmount = quote.total || 0;
+    // Quote totals are stored in main currency unit (not cents) — no /100 needed
     const formatted = formatCurrency(
-      totalAmount / 100,
+      totalAmount,
       quote.currency || DEFAULT_CURRENCY,
     );
 
@@ -364,8 +365,9 @@ export async function sendQuoteReminder(
     // Send reminder email
     const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL || ""}/quote/${quote.access_token}`;
     const totalAmount = quote.total || 0;
+    // Quote totals are stored in main currency unit (not cents) — no /100 needed
     const formatted = formatCurrency(
-      totalAmount / 100,
+      totalAmount,
       quote.currency || DEFAULT_CURRENCY,
     );
 
@@ -555,8 +557,9 @@ export async function acceptQuote(
 
     // Send acceptance notifications (in-app + emails to owner & customer)
     const totalAmount = quote.total || 0;
+    // Quote totals are stored in main currency unit (not cents) — no /100 needed
     const formatted = formatCurrency(
-      totalAmount / 100,
+      totalAmount,
       quote.currency || DEFAULT_CURRENCY,
     );
 
@@ -848,6 +851,9 @@ export async function convertQuoteToOrder(
     const orderNumber = generatedNumber as string;
 
     // Create order — quotes default to manual payment
+    // IMPORTANT: Quote amounts are in main currency units (e.g. 28000 for ZMW 28,000).
+    // Order amounts must be in CENTS (e.g. 2800000). Multiply by 100.
+    const toCents = (amount: number) => Math.round(amount * 100);
     const orderData = {
       site_id: input.site_id,
       agency_id: quote.agency_id,
@@ -858,11 +864,11 @@ export async function convertQuoteToOrder(
       payment_provider: "manual",
       fulfillment_status: "unfulfilled",
       currency: quote.currency,
-      subtotal: quote.subtotal,
-      discount_amount: quote.discount_amount,
-      tax_amount: quote.tax_amount,
-      shipping_amount: quote.shipping_amount,
-      total: quote.total,
+      subtotal: toCents(quote.subtotal || 0),
+      discount_amount: toCents(quote.discount_amount || 0),
+      tax_amount: toCents(quote.tax_amount || 0),
+      shipping_amount: toCents(quote.shipping_amount || 0),
+      total: toCents(quote.total || 0),
       customer_email: quote.customer_email,
       customer_name: quote.customer_name,
       customer_phone: quote.customer_phone,
@@ -891,30 +897,38 @@ export async function convertQuoteToOrder(
       };
     }
 
-    // Create order items from quote items
+    // Create order items from quote items (convert main currency → cents)
     if (quote.items && quote.items.length > 0) {
-      const orderItems = quote.items.map((item: QuoteItem) => ({
-        order_id: newOrder.id,
-        product_id: item.product_id,
-        variant_id: item.variant_id,
-        name: item.name,
-        sku: item.sku,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        discount_amount: item.discount_percent
-          ? (item.unit_price * item.quantity * item.discount_percent) / 100
-          : 0,
-        tax_amount: item.tax_rate
-          ? (item.unit_price *
-              item.quantity *
-              (1 - (item.discount_percent || 0) / 100) *
-              item.tax_rate) /
-            100
-          : 0,
-        subtotal: item.unit_price * item.quantity,
-        total: item.line_total,
-        options: item.options,
-      }));
+      const orderItems = quote.items.map((item: QuoteItem) => {
+        const unitPriceCents = toCents(item.unit_price);
+        const lineTotalCents = toCents(item.line_total || item.unit_price * item.quantity);
+        return {
+          order_id: newOrder.id,
+          product_id: item.product_id,
+          variant_id: item.variant_id,
+          name: item.name,
+          sku: item.sku,
+          quantity: item.quantity,
+          unit_price: unitPriceCents,
+          discount_amount: item.discount_percent
+            ? Math.round(
+                (unitPriceCents * item.quantity * item.discount_percent) / 100,
+              )
+            : 0,
+          tax_amount: item.tax_rate
+            ? Math.round(
+                (unitPriceCents *
+                  item.quantity *
+                  (1 - (item.discount_percent || 0) / 100) *
+                  item.tax_rate) /
+                  100,
+              )
+            : 0,
+          subtotal: unitPriceCents * item.quantity,
+          total: lineTotalCents,
+          options: item.options,
+        };
+      });
 
       await supabase.from(`${TABLE_PREFIX}_order_items`).insert(orderItems);
     }
@@ -953,6 +967,7 @@ export async function convertQuoteToOrder(
     });
 
     // Notify business owner + customer about the new order
+    // notifyNewOrder expects prices in CENTS (it divides by 100 internally)
     const currency = quote.currency || DEFAULT_CURRENCY;
     await notifyNewOrder({
       siteId: input.site_id,
@@ -964,12 +979,12 @@ export async function convertQuoteToOrder(
         quote.items?.map((item: QuoteItem) => ({
           name: item.name,
           quantity: item.quantity,
-          unitPrice: item.unit_price,
+          unitPrice: toCents(item.unit_price),
         })) || [],
-      subtotal: quote.subtotal || 0,
-      shipping: quote.shipping_amount || 0,
-      tax: quote.tax_amount || 0,
-      total: quote.total || 0,
+      subtotal: toCents(quote.subtotal || 0),
+      shipping: toCents(quote.shipping_amount || 0),
+      tax: toCents(quote.tax_amount || 0),
+      total: toCents(quote.total || 0),
       currency,
       paymentStatus: "pending",
       paymentProvider: "manual",
@@ -977,7 +992,8 @@ export async function convertQuoteToOrder(
 
     // Notify active chat conversation about quote → order conversion (async)
     if (quote.customer_email) {
-      const totalFormatted = formatCurrency((quote.total || 0) / 100, currency);
+      // Quote totals are in main currency unit (not cents) — no /100 needed
+      const totalFormatted = formatCurrency(quote.total || 0, currency);
       import("@/modules/live-chat/lib/chat-event-bridge")
         .then(({ notifyChatQuoteConverted }) =>
           notifyChatQuoteConverted(

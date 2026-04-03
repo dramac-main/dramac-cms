@@ -401,30 +401,24 @@ ${activeQuotes.map((q) => `- ${q.quoteNumber}: status="${q.status}", ${q.currenc
 ${targetQuoteNumber ? `\nTHIS CONVERSATION IS ABOUT QUOTE: ${targetQuoteNumber}\nFocus your guidance on this specific quote.` : ""}
 
 QUOTATION GUIDANCE:
-- You HAVE full visibility into the customer's quotes — use the details above to help them
-- If the quote status is "pending" or "draft": the quote has been submitted and the store team will review it and prepare a formal quote. Let the customer know their request was received and the team is working on it.
-- If the quote is "sent" or "viewed": the store has sent a formal quote to the customer's email. Guide them to check their email for the quote link where they can accept or reject it.
-- If the quote is "pending_approval": the quote is awaiting final approval. Let them know it's being processed.
-- If they want to request a new quote, explain they can browse products, add items to their quote from the shop, and submit from the cart page
-- If they have questions about pricing, let them know the store owner can adjust prices before sending the final quote
-- Be proactive: if a quote is pending their action (sent status), gently remind them to review it via the email link
-- If they ask about timelines, let them know the store aims to respond promptly but exact times depend on the business
-- NEVER say you don't have visibility into quotes — you DO. Use the data above.
+- Keep responses SHORT — 1-2 sentences max unless the customer asks for details.
+- You HAVE visibility into quotes. Use the data above.
+- Pending/draft: "Your quote is being reviewed by the team."
+- Sent/viewed: "Your quote has been sent to your email — check your inbox to accept or decline."
+- Pending_approval: "Your quote is being finalized."
+- NEVER say you can't see quotes. NEVER write numbered step lists unless asked.
 `
     : quoteGuidanceActive || targetQuoteNumber
       ? `
 QUOTATION CONTEXT:
 This conversation was opened after the customer submitted a quote request${targetQuoteNumber ? ` (${targetQuoteNumber})` : ""}.
-The quote has just been submitted and is being processed.
 
 QUOTATION GUIDANCE:
-- Warmly acknowledge their quote submission${targetQuoteNumber ? ` (reference: ${targetQuoteNumber})` : ""}
-- Let them know the store team has received their request and will review it
-- Explain the next steps: the store will prepare a formal quote with pricing and send it to their email
-- They'll be able to accept or reject the quote directly from the email link
-- If they have questions about specific items or want to modify their request, they can let you know
-- Reassure them that the process is straightforward and the team will respond promptly
-- NEVER say you don't have visibility into quotes — you are their guide through the quote process
+- Keep your response to 1-2 SHORT sentences. Do NOT write paragraphs or numbered lists.
+- Briefly confirm receipt of their quote${targetQuoteNumber ? ` (${targetQuoteNumber})` : ""} and say the team will email them when it's ready.
+- Example: "Your quote request ${targetQuoteNumber || ""} has been received! We'll review it and send the details to your email shortly."
+- NEVER say you don't have visibility into quotes.
+- Only elaborate if the customer asks follow-up questions.
 `
       : ""
 }

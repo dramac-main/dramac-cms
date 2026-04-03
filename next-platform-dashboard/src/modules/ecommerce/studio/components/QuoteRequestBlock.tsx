@@ -279,9 +279,12 @@ export function QuoteRequestBlock({
 
     if (result) {
       // Attach items to the quote for PDF download
-      const quoteWithItems: Quote = {
-        ...result,
-        items: snapshotItems.map((item, idx) => ({
+      // NOTE: list_price/requested_price are in CENTS (from cart/product base_price).
+      // Quote items store in main currency unit, so divide by 100.
+      const mappedItems = snapshotItems.map((item, idx) => {
+        const unitPrice =
+          (item.requested_price || item.list_price) / 100;
+        return {
           id: `temp-${idx}`,
           quote_id: result.id,
           product_id: item.product_id,
@@ -291,15 +294,19 @@ export function QuoteRequestBlock({
           image_url: item.product_image || null,
           sku: null,
           quantity: item.quantity,
-          unit_price: item.requested_price || item.list_price,
+          unit_price: unitPrice,
           discount_percent: 0,
           tax_rate: 0,
-          line_total: (item.requested_price || item.list_price) * item.quantity,
+          line_total: unitPrice * item.quantity,
           options: {},
           sort_order: idx,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        })) as QuoteItem[],
+        };
+      });
+      const quoteWithItems: Quote = {
+        ...result,
+        items: mappedItems as QuoteItem[],
       };
       setSubmittedQuote(quoteWithItems);
       setIsSubmitted(true);
@@ -396,8 +403,11 @@ export function QuoteRequestBlock({
                 variant="default"
                 size="sm"
                 onClick={() => {
+                  const appDomain =
+                    process.env.NEXT_PUBLIC_APP_URL ||
+                    "https://app.dramacagency.com";
                   window.open(
-                    `${window.location.origin}/quote/${submittedQuote.access_token}`,
+                    `${appDomain}/quote/${submittedQuote.access_token}`,
                     "_blank",
                   );
                 }}

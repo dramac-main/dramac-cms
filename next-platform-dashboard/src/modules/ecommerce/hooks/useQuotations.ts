@@ -158,8 +158,14 @@ async function createQuoteAction(
       console.error("Failed to send quote notification:", notifyErr);
     }
 
-    // Return updated quote
-    return result.quote;
+    // Calculate correct totals from items (the DB was updated by recalculateQuoteTotals
+    // but result.quote still has the stale 0 values from initial insert)
+    const subtotal = items.reduce((sum, item) => {
+      const unitPrice = (item.requested_price || item.list_price) / 100;
+      return sum + unitPrice * item.quantity;
+    }, 0);
+
+    return { ...result.quote, subtotal, total: subtotal };
   }
 
   return null;
