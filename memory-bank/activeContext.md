@@ -1,91 +1,84 @@
 # Active Context
 
-## Current Focus: Quote Pricing Fix + Live Chat Quote Panel — COMPLETE ✅
+## Current Focus: Quote Workflow Production-Readiness — COMPLETE ✅
 
-### What Was Done (Latest Session — Quote System Overhaul)
+### What Was Done (Latest Session — Quote Workflow Hardening)
 
-**Problems Identified (via user screenshots of QUO-1005):**
-1. Dashboard showing wrong figures — quote prices 100x inflated (e.g., ZMW 35,000.00 instead of ZMW 350.00)
-2. Total showing "ZMW 2,896,500.005" (decimal precision bug from large cent values)
-3. No quote management panel in live chat (orders had `ChatOrderPanel`, quotes had nothing)
-4. Chiko AI had no real data to respond accurately about quote amounts
+**Problems Identified (user's production-readiness review):**
 
-**Root Cause — 100x Price Inflation:**
-- Products store prices in CENTS (integer) in `base_price`
-- Cart stores prices in CENTS in `unit_price`
-- Quote DB uses `DECIMAL(12,2)` expecting MAIN CURRENCY (e.g., ZMW 350.00)
-- **Dashboard quote-items-editor**: correctly divides by 100 when adding products ✅
-- **Storefront useQuotations.ts**: passed cart cents directly WITHOUT dividing by 100 ❌
-- Result: all storefront-submitted quotes had prices 100x too large
+1. **No guarantee "sent" means email was actually sent** — ChatQuotePanel used raw `updateQuoteStatus()` for ALL transitions including "sent", which only does a DB update with no email
+2. **sendQuote() had /100 bug** — `formatCurrency(totalAmount / 100, ...)` divided by 100 but quotes store in main currency (not cents)
+3. **No chat notification on quote rejection** — `rejectQuote()` notified via email/in-app but NOT in the chat conversation
+4. **Sent message didn't include portal link** — Chiko told customer "check your email" but didn't share the direct link
+5. **AI used generic "Hey there" instead of real name** — `visitorInfo?.name` can be "Visitor" or generic; customer's actual name available in quote data + CRM
 
-**Secondary Bug — AI Price Display:**
-- Both `ai-responder.ts` and `customer-context-bridge.ts` divided quote totals by 100
-- This was wrong because quotes already store in main currency, not cents
-- The `/100` accidentally showed correct values for the inflated prices, but was fundamentally wrong
-
-**Fixes Applied (commit 32c4f456):**
+**Fixes Applied (commit b71de96e):**
 
 | File | Change |
 |------|--------|
-| `useQuotations.ts` | Added `/100` conversion: `unit_price: (item.requested_price \|\| item.list_price) / 100` |
-| `ai-responder.ts` | Removed `/100` from quote total display in system prompt |
-| `customer-context-bridge.ts` | Removed `/100` from quote total in AI context |
-| `ChatQuotePanel.tsx` | **NEW** — Live chat sidebar quote panel (status badge, items summary, status transitions, copy customer link, view full quote) |
-| `chat-quote-actions.ts` | **NEW** — `getQuoteContextForChat()` server action |
-| `ConversationViewWrapper.tsx` | Renders ChatQuotePanel when `conversation.metadata.quote_number` exists |
+| `ChatQuotePanel.tsx` | Smart routing: "sent" → `sendQuote()` (email + status + chat), other transitions → `updateQuoteStatus()` |
+| `quote-workflow-actions.ts` | Removed `/100` from `formatCurrency` in `sendQuote()`. Added `notifyChatQuoteRejected()` call to `rejectQuote()`. Passes `portalUrl` to `notifyChatQuoteSent()` |
+| `chat-event-bridge.ts` | Added `notifyChatQuoteRejected()` function. Enhanced `notifyChatQuoteSent()` to accept + show portal URL |
+| `customer-context-bridge.ts` | Added `customer_name` to quotes select query + mapped as `customerName` in quote data |
+| `ai-responder.ts` | Customer name resolution: CRM name > quote customerName > visitor displayName. Filters out generic names ("Visitor", "Unknown", "Guest"). Falls back to "Unknown" only if nothing real available |
 
-**Key Technical Details:**
-- `ChatQuotePanel` mirrors `ChatOrderPanel` pattern — shown in right sidebar of chat
-- Uses `updateQuoteStatus`, `formatQuoteCurrency`, `QUOTE_STATUS_CONFIG`, `getAllowedTransitions` from ecommerce module
-- Hides "Copy Customer Link" for draft quotes (not ready for customer)
-- Shows first 3 items with overflow indicator
-- Status change dropdown with allowed transitions
+**Key Architecture Decisions:**
 
-**Git:** `32c4f456`, pushed to origin/main (516 insertions, 3 deletions across 6 files)
+- "sent" MUST go through `sendQuote()` — this is the ONLY path that sends the actual email + chat notification. Raw `updateQuoteStatus()` is for internal DB-only transitions.
+- Customer name resolution uses a priority chain with a blocklist of generic names to guarantee accuracy (user requirement: "100% accurate all the time")
+- Chat notifications are best-effort (try/catch) — never block the primary action
+- Portal URL is non-sensitive (requires `access_token` in the URL) — safe to share in chat
 
-**Note:** Existing quotes in DB still have inflated prices from before the fix. New quotes submitted from the storefront will have correct prices. Old test quotes can be recreated.
+**Git:** `b71de96e`, pushed to origin/main (99 insertions, 14 deletions across 5 files)
 
-### Previous Session: Chiko AI Quote Visibility Fix (commit f8f505a0)
+### Previous Session: Quote Detail Dialog Crash Fix (commit 4d00aecf)
+
+Fixed "useEcommerce must be used within an EcommerceProvider" crash when clicking Items tab in quote dialog from live chat. `QuoteItemsEditor` → `ProductSelector` → `useEcommerce()` chain crashed outside provider. Fixed by using `useCurrencySafe` and conditionally rendering `ProductSelector` only in edit mode.
+
+### Previous Session: Quote Pricing 100x Fix + Chat Quote Panel (commit 32c4f456)
 
 **Problem:** After quote submission, Chiko AI responded with "I don't have direct visibility into the status of quote requests from my end." This is wrong — Chiko should have full access to quotes.
 
 **Root Causes Found (3):**
+
 1. **Status filter too restrictive** — `activeQuotes` only included `["sent", "viewed", "pending_approval"]`. Freshly submitted quotes have status `"pending"` → filtered out entirely
 2. **No fallback guidance** — When `activeQuotes.length === 0`, the QUOTATION GUIDANCE section was completely omitted from the system prompt. Chiko had zero quote instructions.
 3. **`quote_number` from conversation metadata ignored** — Conversations store `{ quote_number, quote_guidance_active: true }` but AI never read them
 
 **Fixes Applied in `ai-responder.ts` (commit f8f505a0):**
 
-| Fix | Detail |
-|-----|--------|
-| Extract `targetQuoteNumber` from `convMeta.quote_number` | AI now knows which specific quote this conversation is about |
-| Extract `quoteGuidanceActive` from `convMeta.quote_guidance_active` | AI knows this is a quote-dedicated conversation |
-| Expand status filter to include `"pending"` and `"draft"` | Freshly submitted quotes are now visible |
-| Add `allQuotes` variable | Full quote context regardless of status |
-| Add targeted quote context in system prompt | `THIS CONVERSATION IS ABOUT QUOTE: QR-XXXX` |
-| Add fallback guidance when `quoteGuidanceActive` but no quotes found | Covers edge case where DB hasn't processed the quote yet |
-| Explicit instruction: "NEVER say you don't have visibility into quotes" | Direct behavioral instruction |
-| Boost confidence to 0.9 for quote conversations | Chiko responds authoritatively instead of suggesting handoff |
+| Fix                                                                     | Detail                                                       |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Extract `targetQuoteNumber` from `convMeta.quote_number`                | AI now knows which specific quote this conversation is about |
+| Extract `quoteGuidanceActive` from `convMeta.quote_guidance_active`     | AI knows this is a quote-dedicated conversation              |
+| Expand status filter to include `"pending"` and `"draft"`               | Freshly submitted quotes are now visible                     |
+| Add `allQuotes` variable                                                | Full quote context regardless of status                      |
+| Add targeted quote context in system prompt                             | `THIS CONVERSATION IS ABOUT QUOTE: QR-XXXX`                  |
+| Add fallback guidance when `quoteGuidanceActive` but no quotes found    | Covers edge case where DB hasn't processed the quote yet     |
+| Explicit instruction: "NEVER say you don't have visibility into quotes" | Direct behavioral instruction                                |
+| Boost confidence to 0.9 for quote conversations                         | Chiko responds authoritatively instead of suggesting handoff |
 
 **Git:** Committed as `f8f505a0`, pushed to origin/main (42 insertions, 12 deletions).
 
 ### Previous Session: Build Fix + Module Status 400 Error (commit 7e7737c2)
 
 **Problems Fixed:**
+
 1. Cart quantity controls "going haywire" on rapid clicking — race condition from previous optimistic update implementation
 2. Chat doesn't auto-open after quote submission
 3. No way to download the quote from the success screen
 
 **4 Source Files Modified (commit d32ff4ad):**
 
-| File | Change |
-|------|--------|
-| `useStorefrontCart.ts` | **Complete rewrite** of `updateItemQuantity`: 300ms debounce per item, version tracking to ignore stale server responses, functional `setCart(prev => ...)` for always-latest state, `refresh()` on error instead of stale rollback. `removeItem`: cancel pending debounce timer, `refresh()` on error. Dependencies: `[cart?.id, refresh]` |
-| `QuoteRequestBlock.tsx` | Auto-open chat 2s after quote submission via PostMessage. Download Quote Summary button. Chat With Us button. Quote reference number on success screen. Snapshots builder items for PDF. Type fix: `store_name` not `business_name` |
-| `ChatWidget.tsx` | Added `quoteContextRef`, handler for `dramac-chat-quote-context` message, quoteContext check in `handleOpen` to auto-start contextual conversation |
-| `route.ts` (embed) | Added quoteContext forwarding in `dramac-chat-open` handler (parent → iframe bridge) |
+| File                    | Change                                                                                                                                                                                                                                                                                                                                      |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `useStorefrontCart.ts`  | **Complete rewrite** of `updateItemQuantity`: 300ms debounce per item, version tracking to ignore stale server responses, functional `setCart(prev => ...)` for always-latest state, `refresh()` on error instead of stale rollback. `removeItem`: cancel pending debounce timer, `refresh()` on error. Dependencies: `[cart?.id, refresh]` |
+| `QuoteRequestBlock.tsx` | Auto-open chat 2s after quote submission via PostMessage. Download Quote Summary button. Chat With Us button. Quote reference number on success screen. Snapshots builder items for PDF. Type fix: `store_name` not `business_name`                                                                                                         |
+| `ChatWidget.tsx`        | Added `quoteContextRef`, handler for `dramac-chat-quote-context` message, quoteContext check in `handleOpen` to auto-start contextual conversation                                                                                                                                                                                          |
+| `route.ts` (embed)      | Added quoteContext forwarding in `dramac-chat-open` handler (parent → iframe bridge)                                                                                                                                                                                                                                                        |
 
 **Cart Debounce Pattern (race condition fix):**
+
 - Each rapid click: instant optimistic UI via functional `setCart(prev => ...)`
 - 300ms debounce timer per item (Map of itemId → timer) — only LAST quantity fires server call
 - Version counter per item (Map of itemId → number) — stale server responses ignored
@@ -93,6 +86,7 @@
 - On remove: cancel any pending debounce timer for that item
 
 **Quote Chat Auto-Open Pattern:**
+
 - `QuoteRequestBlock` → `window.postMessage({ type: "dramac-chat-open", quoteContext: {...} })` after 2s delay
 - Embed script `route.ts` → forwards `quoteContext` as `dramac-chat-quote-context` to iframe
 - `ChatWidget` → picks up `quoteContext` via ref, auto-starts chat with contextual greeting
@@ -102,6 +96,7 @@
 ### Previous Session: Cart-to-Builder Bridge, Optimistic Updates, Page Labels (commit a6cfa2e8)
 
 **6 Source Files Modified:**
+
 - `public-ecommerce-actions.ts`: `updatePublicCartItemQuantity` returns full `Cart` instead of `CartItem`
 - `useStorefrontCart.ts`: Initial optimistic updates (later replaced by debounced version above)
 - `QuoteRequestBlock.tsx`: Auto-populates builder from cart items, clears cart after submission
@@ -111,6 +106,7 @@
 ### Previous Session: Quotation Mode Cart-Based UX + Email Fixes + AI Integration
 
 **13 Source Files Modified (commit b8b02ed3):**
+
 - Storefront context, product cards, product detail, sticky bar, cart drawer, cart page — "Add to Quote" / "Your Quote Items" / "Submit Quote Request" labels
 - Email templates with HTML item tables, Chiko AI quotation guidance, chat event bridge lifecycle tracking
 - **Git:** `b8b02ed3` (416 insertions, 78 deletions across 15 files)
@@ -120,6 +116,7 @@
 **Root Cause Found & Fixed:** ALL ecommerce storefront pages were crashing with `eB?.includes is not a function` after JavaScript hydration. The error boundary showed "Something went wrong" on every ecommerce section.
 
 **Root Cause:** The `mod_ecommod01_products.images` JSONB column stores images in TWO formats:
+
 - Some products: `["https://url1", "https://url2"]` (string array)
 - Other products: `[{"url": "https://...", "alt": "..."}]` (object array)
 
@@ -128,6 +125,7 @@ But ALL code assumed `images: string[]`. When a product had object-format images
 **Solution:** Created shared utility `image-utils.ts` with `getImageUrl()` and `normalizeProductImages()` that handles both formats. Applied across 15 storefront component files.
 
 **New File Created:**
+
 - `src/modules/ecommerce/lib/image-utils.ts` — `getImageUrl(img)` extracts URL from string or `{url, alt}` object; `normalizeProductImages(images)` normalizes full array
 
 **Files Fixed (16 total):**
@@ -151,6 +149,7 @@ But ALL code assumed `images: string[]`. When a product had object-format images
 | `StorefrontErrorBoundary.tsx` | Cleaned up diagnostic code, kept error.message display |
 
 **Additional Fixes from Same Investigation:**
+
 - `useStorefrontCart.ts`: `calculateLocalTotals` guards `cart.items || []` to prevent crash on null items
 - `public-ecommerce-actions.ts`: `findPublicCart` and `getPublicCart` normalize items to `[]` when null
 - `FeaturedProductsBlock.tsx` / `ProductGridBlock.tsx` / `product-card-block.tsx`: Fixed `typeof null === "object"` trap on responsive props
@@ -179,18 +178,18 @@ Two new shared utility functions in `layout-utils.ts`:
 
 #### All 10 Components Fixed
 
-| Component | Key Changes |
-|-----------|------------|
-| **HeroRender** | `effectivelyDark = isEffectivelyDark(...)`, all text + buttons use `resolveContrastColor()` |
-| **CTARender** | Replaced `bgIsLight` IIFE with overlay-aware detection, secondary button uses `resolveContrastColor()` |
-| **SectionRender** | Text color uses `resolveContrastColor(textColor, effectivelyDark)` |
-| **FeaturesRender** | Header + cards + CTA section all overlay-aware |
-| **TestimonialsRender** | Header + quotes + author info all overlay-aware |
-| **FAQRender** | Header + Q&A + contact CTA all overlay-aware |
-| **StatsRender** | Header + values + labels + descriptions all overlay-aware |
-| **TeamRender** | Header + skills overflow + CTA all overlay-aware |
-| **GalleryRender** | Header + CTA section all overlay-aware |
-| **TiltCardRender** | Container + badge + icon (uses 0-1 opacity scale, auto-normalized) |
+| Component              | Key Changes                                                                                            |
+| ---------------------- | ------------------------------------------------------------------------------------------------------ |
+| **HeroRender**         | `effectivelyDark = isEffectivelyDark(...)`, all text + buttons use `resolveContrastColor()`            |
+| **CTARender**          | Replaced `bgIsLight` IIFE with overlay-aware detection, secondary button uses `resolveContrastColor()` |
+| **SectionRender**      | Text color uses `resolveContrastColor(textColor, effectivelyDark)`                                     |
+| **FeaturesRender**     | Header + cards + CTA section all overlay-aware                                                         |
+| **TestimonialsRender** | Header + quotes + author info all overlay-aware                                                        |
+| **FAQRender**          | Header + Q&A + contact CTA all overlay-aware                                                           |
+| **StatsRender**        | Header + values + labels + descriptions all overlay-aware                                              |
+| **TeamRender**         | Header + skills overflow + CTA all overlay-aware                                                       |
+| **GalleryRender**      | Header + CTA section all overlay-aware                                                                 |
+| **TiltCardRender**     | Container + badge + icon (uses 0-1 opacity scale, auto-normalized)                                     |
 
 #### Files Modified & Committed (adec5c0f)
 
@@ -200,10 +199,17 @@ Two new shared utility functions in `layout-utils.ts`:
 #### Pattern for Future Components
 
 ```typescript
-const effectivelyDark = isEffectivelyDark(backgroundColor, bgImageUrl, backgroundOverlay, backgroundOverlayColor, backgroundOverlayOpacity);
+const effectivelyDark = isEffectivelyDark(
+  backgroundColor,
+  bgImageUrl,
+  backgroundOverlay,
+  backgroundOverlayColor,
+  backgroundOverlayOpacity,
+);
 const resolvedTextColor = resolveContrastColor(textColor, effectivelyDark);
 // For specific color props:
-const resolvedColor = resolveContrastColor(specificColor, effectivelyDark) || resolvedTextColor;
+const resolvedColor =
+  resolveContrastColor(specificColor, effectivelyDark) || resolvedTextColor;
 ```
 
 ### Previous Session: Brand Injection + Background Image Bug Fixes (commit 9afab9cf)

@@ -1,35 +1,36 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: April 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅ + **LIVE CHAT RUNTIME FIXES (AI auto-response + file uploads)** ✅ + **PER-ORDER CONVERSATION ISOLATION** ✅ + **PER-ORDER CHAT HARDENING AUDIT (10 bugs fixed, 0 TS errors)** ✅ + **CATEGORIES PAGE + DARK MODE POLISH** ✅ + **LIVE CHAT OVERHAUL + ECOMMERCE FIXES** ✅ + **CANVAS IFRAME RENDERING FIDELITY FIXES** ✅ + **TYPOGRAPHY COMPONENTS OVERHAUL (4 enhanced + 5 new, CSS var type scale)** ✅ + **BUTTON COMPONENTS MASTER PLAN (Phases 1-5: renders, registrations, converter, metadata, CTARender composition)** ✅ + **MARKETING COMPONENTS — FULL IMPLEMENTATION + REGISTRY ALIGNMENT (5 components, all paths)** ✅ + **ECOMMERCE COMPONENTS OVERHAUL — CONVERTER, METADATA, DEFINITION ALIGNMENT (3 files, 23 metadata entries, 6 definitions fixed)** ✅ + **3D & EFFECTS COMPONENTS — FULL RENDER EXPANSION (ALL 12 components, Typewriter+Parallax rewrites, 7 normalizers, metadata enhanced)** ✅ + **3 SHOWCASE WEBSITES — FULLY POPULATED (208 records across 16 tables)** ✅ + **OVERLAY-AWARE CONTRAST RESOLUTION — ALL 10 PREMIUM COMPONENTS (shared utilities, comprehensive render fixes)** ✅ + **ECOMMERCE IMAGE FORMAT CRASH FIX — ALL 16 STOREFRONT COMPONENTS (image-utils.ts, normalizeProductImages)** ✅ + **QUOTATION MODE OVERHAUL — CART-BASED UX, EMAILS, AI, CHAT EVENTS (13 source files)** ✅ + **QUOTATION FLOW FIXES — CART-TO-BUILDER BRIDGE, OPTIMISTIC UPDATES (6 source files)** ✅ + **CART DEBOUNCING + QUOTE CHAT/DOWNLOAD UX (4 source files, race condition fix)** ✅ + **QUOTE CHAT AUTO-START FIX — TIMING RACE, PER-QUOTE ISOLATION, AI GUIDANCE (3 source files)** ✅ + **BUILD FIX + MODULE STATUS 400 ERROR (slug→UUID resolution, 4 source files)** ✅ + **CHIKO AI QUOTE VISIBILITY FIX — FULL QUOTE ACCESS, STATUS FILTER, METADATA, GUIDANCE (1 source file)** ✅ + **QUOTE PRICING 100x FIX + LIVE CHAT QUOTE PANEL (6 source files, cents→main currency conversion)** ✅
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + ALL 7 PRIORITIES + BOOKING OVERHAUL + E-COMMERCE VERIFICATION COMPLETE + CROSS-MODULE INTEGRATION + ERROR #310 FIX (DASHBOARD + STOREFRONT) + PLATFORM SYNC AUDIT + LIVE CHAT COMPLETE OVERHAUL + DOMAIN FIX + LIVE CHAT ERROR #310 & AGENT HARDENING + STOREFRONT PERF OVERHAUL + POST-PURCHASE EXPERIENCE OVERHAUL + AI CHAT PAYMENT GUIDANCE + EMAIL PRICE FIX + AI PAYMENT GUIDANCE PIPELINE FIX + AI DB SCHEMA FIX & ENHANCED SETTINGS + AI LAMBDA FIX + END-TO-END AI AUTOMATION + STOREFRONT BRANDING FIX + ORDER LIFECYCLE FIX + AI CHAT WRONG ORDER NUMBER FIX + IN-CHAT ORDER MANAGEMENT + PAYMENT PROOF VISIBILITY FIX + **ECOMMERCE CORE OVERHAUL — ALL 22 PHASES COMPLETE** ✅ + **LIVE CHAT RUNTIME FIXES (AI auto-response + file uploads)** ✅ + **PER-ORDER CONVERSATION ISOLATION** ✅ + **PER-ORDER CHAT HARDENING AUDIT (10 bugs fixed, 0 TS errors)** ✅ + **CATEGORIES PAGE + DARK MODE POLISH** ✅ + **LIVE CHAT OVERHAUL + ECOMMERCE FIXES** ✅ + **CANVAS IFRAME RENDERING FIDELITY FIXES** ✅ + **TYPOGRAPHY COMPONENTS OVERHAUL (4 enhanced + 5 new, CSS var type scale)** ✅ + **BUTTON COMPONENTS MASTER PLAN (Phases 1-5: renders, registrations, converter, metadata, CTARender composition)** ✅ + **MARKETING COMPONENTS — FULL IMPLEMENTATION + REGISTRY ALIGNMENT (5 components, all paths)** ✅ + **ECOMMERCE COMPONENTS OVERHAUL — CONVERTER, METADATA, DEFINITION ALIGNMENT (3 files, 23 metadata entries, 6 definitions fixed)** ✅ + **3D & EFFECTS COMPONENTS — FULL RENDER EXPANSION (ALL 12 components, Typewriter+Parallax rewrites, 7 normalizers, metadata enhanced)** ✅ + **3 SHOWCASE WEBSITES — FULLY POPULATED (208 records across 16 tables)** ✅ + **OVERLAY-AWARE CONTRAST RESOLUTION — ALL 10 PREMIUM COMPONENTS (shared utilities, comprehensive render fixes)** ✅ + **ECOMMERCE IMAGE FORMAT CRASH FIX — ALL 16 STOREFRONT COMPONENTS (image-utils.ts, normalizeProductImages)** ✅ + **QUOTATION MODE OVERHAUL — CART-BASED UX, EMAILS, AI, CHAT EVENTS (13 source files)** ✅ + **QUOTATION FLOW FIXES — CART-TO-BUILDER BRIDGE, OPTIMISTIC UPDATES (6 source files)** ✅ + **CART DEBOUNCING + QUOTE CHAT/DOWNLOAD UX (4 source files, race condition fix)** ✅ + **QUOTE CHAT AUTO-START FIX — TIMING RACE, PER-QUOTE ISOLATION, AI GUIDANCE (3 source files)** ✅ + **BUILD FIX + MODULE STATUS 400 ERROR (slug→UUID resolution, 4 source files)** ✅ + **CHIKO AI QUOTE VISIBILITY FIX — FULL QUOTE ACCESS, STATUS FILTER, METADATA, GUIDANCE (1 source file)** ✅ + **QUOTE PRICING 100x FIX + LIVE CHAT QUOTE PANEL (6 source files, cents→main currency conversion)** ✅ + **QUOTE WORKFLOW PRODUCTION-READINESS — SMART STATUS ROUTING, CHAT NOTIFICATIONS, CUSTOMER NAME (5 source files)** ✅
 
 ---
 
-## Latest Update: Quote Pricing 100x Fix + Live Chat Quote Panel ✅
+## Latest Update: Quote Workflow Production-Readiness ✅
 
 ### What Was Done
 
-Fixed quote prices being 100x inflated and added live chat quote management panel. Root cause: storefront `useQuotations.ts` passed cart cents directly to quote DB (which expects main currency) without dividing by 100. Also removed erroneous `/100` from AI quote display (quotes already in main currency). Created `ChatQuotePanel.tsx` and `chat-quote-actions.ts` for live chat sidebar quote management, wired into `ConversationViewWrapper.tsx`.
+Hardened quote workflow for production: ChatQuotePanel "sent" now routes through `sendQuote()` (email + chat notification) instead of raw DB update. Fixed `/100` bug in `sendQuote()` formatCurrency. Added `notifyChatQuoteRejected()` and wired into `rejectQuote()`. `notifyChatQuoteSent()` now includes portal URL. AI responder resolves customer name from CRM > quote `customer_name` > visitor display name, filtering generic names for accuracy.
 
-**6 Source Files Modified/Created:**
-- `useQuotations.ts` — Added `/100` cents→main currency conversion at storefront submission
-- `ai-responder.ts` — Removed `/100` from quote total display in system prompt
-- `customer-context-bridge.ts` — Removed `/100` from quote total in AI context
-- `ChatQuotePanel.tsx` — **NEW** sidebar panel for live chat quote management
-- `chat-quote-actions.ts` — **NEW** server action to fetch quote context
-- `ConversationViewWrapper.tsx` — Renders ChatQuotePanel when quote_number in metadata
+**5 Source Files Modified:**
 
-**Git:** `32c4f456`, pushed to origin/main (516 insertions, 3 deletions across 6 files)
+- `ChatQuotePanel.tsx` — Smart status routing: "sent" → `sendQuote()`, others → `updateQuoteStatus()`
+- `quote-workflow-actions.ts` — Fix /100, add rejection chat notification, pass portal URL
+- `chat-event-bridge.ts` — New `notifyChatQuoteRejected()`, enhanced `notifyChatQuoteSent()` with portal URL
+- `customer-context-bridge.ts` — Added `customer_name` to quote data for AI
+- `ai-responder.ts` — Customer name priority chain (CRM > quote > visitor), generic name blocklist
+
+**Git:** `b71de96e`, pushed to origin/main (99 insertions, 14 deletions across 5 files)
 
 ---
 
-## Previous Update: Chiko AI Quote Visibility Fix ✅
+## Previous Update: Quote Pricing 100x Fix + Live Chat Quote Panel ✅
 
 ### What Was Done
 
 Fixed Chiko AI saying "I don't have direct visibility into the status of quote requests" when it SHOULD have full access. Three root causes: (1) status filter excluded freshly submitted quotes (`"pending"`, `"draft"` not in filter), (2) no fallback guidance when active quotes list was empty, (3) `quote_number` from conversation metadata was never extracted.
 
 **1 Source File Modified (`ai-responder.ts`):**
+
 - Extract `targetQuoteNumber` and `quoteGuidanceActive` from conversation metadata
 - Expand active quotes filter to include `"pending"` and `"draft"` statuses
 - Add targeted quote context: "THIS CONVERSATION IS ABOUT QUOTE: QR-XXXX"
@@ -48,6 +49,7 @@ Fixed Chiko AI saying "I don't have direct visibility into the status of quote r
 Fixed Vercel build failure (Turbopack parse error from duplicate metadata/subject block in conversations/route.ts) and 400 Bad Request on every storefront page (`useModuleStatus` was querying `site_module_installations` with a string slug instead of a UUID for `module_id`). Also fixed the same bug in `cart-recovery-automation.ts`. Updated TESTING-WALKTHROUGH.md Step 13 with the new quote chat experience.
 
 **4 Source Files Modified:**
+
 - `route.ts` (conversations API) — Removed duplicate code block causing parse error
 - `useModuleStatus.ts` — Resolve module slug → UUID via `modules_v2` lookup
 - `cart-recovery-automation.ts` — Same slug-to-UUID fix
@@ -64,6 +66,7 @@ Fixed Vercel build failure (Turbopack parse error from duplicate metadata/subjec
 Fixed chat not actually starting after quote submission. Root cause: timing race in embed script where `toggleChat()` fired before `quoteContext` was forwarded to the iframe, so `handleOpen()` found no pending context. Also added per-quote conversation isolation (mirrors per-order pattern), quote metadata storage, and AI auto-response detection for quote messages.
 
 **3 Source Files Modified:**
+
 - `route.ts` (embed) — Forward quoteContext BEFORE toggleChat() to fix timing race
 - `ChatWidget.tsx` — Pass quoteContext through handleStartChat, per-quote conversation mapping, reuse existing quote conversations
 - `route.ts` (conversations API) — Accept quoteContext, per-quote isolation via metadata, quote tags/metadata/subject, isQuoteMsg triggers AI auto-response
@@ -79,6 +82,7 @@ Fixed chat not actually starting after quote submission. Root cause: timing race
 Fixed three critical UX issues: (1) Cart quantity controls "going haywire" on rapid clicking — race condition from optimistic updates where stale server responses overwrote newer state. Fixed with 300ms debounce per item + version tracking. (2) Chat not auto-opening after quote submission — added PostMessage bridge for quoteContext through embed script to ChatWidget iframe. (3) No quote download — added Download Quote Summary button + Chat With Us button + quote reference number on success screen.
 
 **4 Source Files Modified:**
+
 - `useStorefrontCart.ts` — 300ms debounce per item, version tracking, functional state updater, `refresh()` on error
 - `QuoteRequestBlock.tsx` — Auto-open chat 2s after submission, download button, chat button, type fix (store_name)
 - `ChatWidget.tsx` — quoteContextRef, dramac-chat-quote-context handler, auto-start conversation
@@ -95,6 +99,7 @@ Fixed three critical UX issues: (1) Cart quantity controls "going haywire" on ra
 Complete overhaul of the quotation mode system. Changed from a redirect-based single-item flow to a cart-based multi-item experience. Fixed email "0 items" bug, enhanced email templates with item tables, integrated Chiko AI with quotation guidance, and added chat event lifecycle tracking.
 
 **13 Source Files Modified:**
+
 - Storefront context, product cards, product detail, sticky add-to-cart bar, cart drawer, cart page — all now show "Add to Quote" / "Your Quote Items" / "Submit Quote Request" labels
 - `quote-actions.ts` — Notification now fires AFTER items are added (via new `notifyQuoteCreated` server action)
 - Email templates include HTML item tables with name, quantity, and price
@@ -128,6 +133,7 @@ Comprehensive fix for text contrast issues caused by brand color injection overr
 **Root Cause:** `PLACEHOLDER_COLORS` includes `#ffffff`. When AI sets white text for dark overlay sections, brand injection replaces it with dark `palette.foreground` → invisible dark text on dark backgrounds.
 
 **New Utilities (layout-utils.ts):**
+
 - `isEffectivelyDark()` — Overlay-aware darkness detection (considers overlay color, opacity ≥30%, background images)
 - `resolveContrastColor()` — Forces white when dark text meets dark effective background
 
