@@ -1380,7 +1380,7 @@ export async function notifyQuoteRejected(
       .eq("site_id", siteId)
       .single();
     const total = quoteData?.total
-      ? formatCurrency(quoteData.total / 100, quoteData.currency || "USD")
+      ? formatCurrency(quoteData.total, quoteData.currency || "USD")
       : "";
 
     // 1. In-app notification to business owner
@@ -1421,6 +1421,90 @@ export async function notifyQuoteRejected(
   } catch (error) {
     console.error(
       "[BusinessNotify] Error sending quote rejected notifications:",
+      error,
+    );
+  }
+}
+
+/**
+ * Send notifications when a customer requests changes to a quote:
+ * 1. In-app notification to business owner
+ * 2. Email to business owner
+ */
+export async function notifyQuoteAmendmentRequested(
+  siteId: string,
+  quoteNumber: string,
+  customerEmail: string,
+  customerName: string,
+  amendmentNotes: string,
+): Promise<void> {
+  try {
+    const supabase = createAdminClient();
+    const { data: site } = await supabase
+      .from("sites")
+      .select("name, agency_id")
+      .eq("id", siteId)
+      .single();
+
+    if (!site?.agency_id) return;
+
+    const { data: agency } = await supabase
+      .from("agencies")
+      .select("owner_id")
+      .eq("id", site.agency_id)
+      .single();
+
+    const { data: ownerProfile } = agency?.owner_id
+      ? await supabase
+          .from("profiles")
+          .select("email, full_name")
+          .eq("id", agency.owner_id)
+          .single()
+      : { data: null };
+
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=quotes`;
+    const truncatedNotes =
+      amendmentNotes.length > 200
+        ? amendmentNotes.substring(0, 197) + "..."
+        : amendmentNotes;
+
+    // 1. In-app notification to business owner
+    if (agency?.owner_id) {
+      await createNotification({
+        userId: agency.owner_id,
+        type: "quote_amendment_requested",
+        title: `Quote #${quoteNumber} — Changes Requested`,
+        message: `${customerName} requested changes: "${truncatedNotes}"`,
+        link: dashboardUrl,
+        metadata: { quoteNumber, siteId, customerEmail },
+      });
+    }
+
+    // 2. Email to business owner
+    if (ownerProfile?.email) {
+      await sendBrandedEmail(site.agency_id, {
+        to: {
+          email: ownerProfile.email,
+          name: ownerProfile.full_name || undefined,
+        },
+        emailType: "quote_amendment_requested_owner",
+        recipientUserId: agency?.owner_id,
+        data: {
+          customerName,
+          customerEmail,
+          quoteNumber,
+          amendmentNotes: truncatedNotes,
+          dashboardUrl,
+        },
+      });
+    }
+
+    console.log(
+      `[BusinessNotify] Quote amendment notifications sent for quote ${quoteNumber}`,
+    );
+  } catch (error) {
+    console.error(
+      "[BusinessNotify] Error sending quote amendment notifications:",
       error,
     );
   }

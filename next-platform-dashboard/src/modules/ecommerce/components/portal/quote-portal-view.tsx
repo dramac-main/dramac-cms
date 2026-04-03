@@ -38,13 +38,14 @@ import type { Quote } from '../../types/ecommerce-types'
 interface QuotePortalViewProps {
   quote: Quote
   token: string
+  verifiedEmail?: string
 }
 
 // ============================================================================
 // COMPONENT
 // ============================================================================
 
-export function QuotePortalView({ quote, token }: QuotePortalViewProps) {
+export function QuotePortalView({ quote, token, verifiedEmail }: QuotePortalViewProps) {
   const [showAcceptForm, setShowAcceptForm] = useState(false)
   const [showRejectDialog, setShowRejectDialog] = useState(false)
   const [showAmendmentDialog, setShowAmendmentDialog] = useState(false)
@@ -347,6 +348,7 @@ export function QuotePortalView({ quote, token }: QuotePortalViewProps) {
             <QuoteAcceptForm
               token={token}
               quoteName={quote.customer_name}
+              verifiedEmail={verifiedEmail}
               onAccepted={handleAccepted}
               onCancel={() => setShowAcceptForm(false)}
             />

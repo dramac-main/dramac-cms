@@ -24,6 +24,7 @@ import { acceptQuote } from '../../actions/quote-workflow-actions'
 interface QuoteAcceptFormProps {
   token: string
   quoteName: string
+  verifiedEmail?: string
   onAccepted: () => void
   onCancel: () => void
 }
@@ -35,12 +36,13 @@ interface QuoteAcceptFormProps {
 export function QuoteAcceptForm({
   token,
   quoteName,
+  verifiedEmail,
   onAccepted,
   onCancel
 }: QuoteAcceptFormProps) {
   const [loading, setLoading] = useState(false)
   const [acceptedBy, setAcceptedBy] = useState(quoteName)
-  const [acceptedEmail, setAcceptedEmail] = useState('')
+  const [acceptedEmail, setAcceptedEmail] = useState(verifiedEmail || '')
   const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [signatureData, setSignatureData] = useState<string | null>(null)
   
@@ -198,14 +200,24 @@ export function QuoteAcceptForm({
           {/* Email */}
           <div className="space-y-2">
             <Label htmlFor="acceptedEmail">Your Email *</Label>
-            <Input
-              id="acceptedEmail"
-              type="email"
-              value={acceptedEmail}
-              onChange={(e) => setAcceptedEmail(e.target.value)}
-              placeholder="Enter your email"
-              required
-            />
+            <div className="relative">
+              <Input
+                id="acceptedEmail"
+                type="email"
+                value={acceptedEmail}
+                onChange={(e) => setAcceptedEmail(e.target.value)}
+                placeholder="Enter your email"
+                required
+                readOnly={!!verifiedEmail}
+                className={verifiedEmail ? 'pr-24 bg-muted/50' : ''}
+              />
+              {verifiedEmail && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-600 font-medium flex items-center gap-1">
+                  <CircleCheck className="h-3 w-3" />
+                  Verified
+                </span>
+              )}
+            </div>
           </div>
           
           {/* Signature Canvas */}

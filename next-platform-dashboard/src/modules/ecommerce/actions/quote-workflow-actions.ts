@@ -21,6 +21,7 @@ import {
   notifyChatQuoteAccepted,
   notifyChatQuoteRejected,
 } from "@/modules/live-chat/lib/chat-event-bridge";
+import { requireQuoteAccess } from "./quote-portal-auth";
 import { revalidatePath } from "next/cache";
 import type {
   Quote,
@@ -488,12 +489,18 @@ export async function recordQuoteView(token: string): Promise<void> {
 }
 
 /**
- * Accept quote (customer action)
+ * Accept quote (customer action — requires email verification)
  */
 export async function acceptQuote(
   input: AcceptQuoteInput,
 ): Promise<WorkflowResult> {
   try {
+    // Verify email gate cookie before allowing acceptance
+    const access = await requireQuoteAccess(input.token);
+    if (!access.verified) {
+      return { success: false, error: access.error };
+    }
+
     const supabase = getPublicModuleClient();
 
     // Get quote by token
@@ -595,12 +602,18 @@ export async function acceptQuote(
 }
 
 /**
- * Reject quote (customer action)
+ * Reject quote (customer action — requires email verification)
  */
 export async function rejectQuote(
   input: RejectQuoteInput,
 ): Promise<WorkflowResult> {
   try {
+    // Verify email gate cookie before allowing rejection
+    const access = await requireQuoteAccess(input.token);
+    if (!access.verified) {
+      return { success: false, error: access.error };
+    }
+
     const supabase = getPublicModuleClient();
 
     // Get quote by token
@@ -702,11 +715,20 @@ interface RequestAmendmentInput {
 
 /**
  * Customer requests changes to a quote (sends it back for revision)
+/**
+ * Customer requests changes to a quote (sends it back for revision).
+ * Requires email verification.
  */
 export async function requestQuoteAmendment(
   input: RequestAmendmentInput,
 ): Promise<WorkflowResult> {
   try {
+    // Verify email gate cookie before allowing amendment request
+    const access = await requireQuoteAccess(input.token);
+    if (!access.verified) {
+      return { success: false, error: access.error };
+    }
+
     const supabase = getPublicModuleClient();
 
     // Get quote by token
@@ -766,7 +788,7 @@ export async function requestQuoteAmendment(
       },
     });
 
-    // Notify active chat conversation
+    // Notify active chat conversation (customer-facing confirmation)
     if (quote.customer_email && quote.site_id) {
       try {
         const { notifyChatQuoteAmendmentRequested } = await import(
@@ -780,6 +802,24 @@ export async function requestQuoteAmendment(
         );
       } catch {
         // Chat notification is best-effort
+      }
+    }
+
+    // Notify store owner (in-app + email)
+    if (quote.site_id) {
+      try {
+        const { notifyQuoteAmendmentRequested } = await import(
+          "@/lib/services/business-notifications"
+        );
+        await notifyQuoteAmendmentRequested(
+          quote.site_id,
+          quote.quote_number,
+          quote.customer_email || "",
+          quote.customer_name || "Customer",
+          input.amendment_notes,
+        );
+      } catch {
+        // Business notification is best-effort
       }
     }
 

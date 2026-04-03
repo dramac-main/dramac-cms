@@ -329,6 +329,7 @@ export async function notifyChatQuoteRejected(
 
 /**
  * Notify chat when the customer requests changes to a quote.
+ * This message appears in the customer's chat — use customer-friendly language.
  */
 export async function notifyChatQuoteAmendmentRequested(
   siteId: string,
@@ -339,10 +340,8 @@ export async function notifyChatQuoteAmendmentRequested(
   const conv = await findActiveConversation(siteId, customerEmail);
   if (!conv) return;
 
-  const truncatedNotes =
-    notes.length > 200 ? notes.substring(0, 197) + "..." : notes;
   const message =
-    `📝 Change request on quote ${quoteNumber}: "${truncatedNotes}". Moved back to Pending Approval.`;
+    `Your change request for ${quoteNumber} has been submitted! ✅ We'll review your notes and send an updated quote.`;
 
   await sendProactiveMessage(
     siteId,
