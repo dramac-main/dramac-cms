@@ -99,6 +99,8 @@ async function createQuoteAction(siteId: string, agencyId: string, data: QuoteRe
   
   if (result.success && result.quote) {
     // Add items to the quote
+    // NOTE: list_price and requested_price are in CENTS (from cart/product base_price).
+    // Quote items store prices in main currency unit (e.g. ZMW, not ngwee), so divide by 100.
     for (const item of items) {
       await addQuoteItem(siteId, {
         quote_id: result.quote.id,
@@ -107,7 +109,7 @@ async function createQuoteAction(siteId: string, agencyId: string, data: QuoteRe
         name: item.product_name,
         image_url: item.product_image,
         quantity: item.quantity,
-        unit_price: item.requested_price || item.list_price,
+        unit_price: (item.requested_price || item.list_price) / 100,
         discount_percent: 0,
         tax_rate: 0
       })

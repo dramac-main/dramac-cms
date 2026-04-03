@@ -282,7 +282,7 @@ export function formatCustomerContext(ctx: CustomerContext): string {
 
   if (ctx.recentQuotes.length > 0) {
     const quoteLines = ctx.recentQuotes.map((q) => {
-      let line = `- ${q.quoteNumber}: ${q.status}, ${q.currency} ${(q.total / 100).toFixed(2)}, ${q.itemCount} item(s), ${new Date(q.createdAt).toLocaleDateString()}`;
+      let line = `- ${q.quoteNumber}: ${q.status}, ${q.currency} ${q.total.toFixed(2)}, ${q.itemCount} item(s), ${new Date(q.createdAt).toLocaleDateString()}`;
       if (q.expiresAt) {
         line += `, expires ${new Date(q.expiresAt).toLocaleDateString()}`;
       }

@@ -373,7 +373,7 @@ ${
     ? `
 ACTIVE QUOTATIONS:
 The customer has ${activeQuotes.length} active quotation(s):
-${activeQuotes.map((q) => `- ${q.quoteNumber}: status="${q.status}", ${q.currency} ${(q.total / 100).toFixed(2)}, ${q.itemCount} item(s)${q.expiresAt ? `, expires ${new Date(q.expiresAt).toLocaleDateString()}` : ""}`).join("\n")}
+${activeQuotes.map((q) => `- ${q.quoteNumber}: status="${q.status}", ${q.currency} ${q.total.toFixed(2)}, ${q.itemCount} item(s)${q.expiresAt ? `, expires ${new Date(q.expiresAt).toLocaleDateString()}` : ""}`).join("\n")}
 ${targetQuoteNumber ? `\nTHIS CONVERSATION IS ABOUT QUOTE: ${targetQuoteNumber}\nFocus your guidance on this specific quote.` : ""}
 
 QUOTATION GUIDANCE:

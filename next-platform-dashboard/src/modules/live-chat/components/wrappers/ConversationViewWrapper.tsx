@@ -87,6 +87,7 @@ import type {
   ConversationPriority,
 } from "@/modules/live-chat/types";
 import { ChatOrderPanel } from "../shared/ChatOrderPanel";
+import { ChatQuotePanel } from "../shared/ChatQuotePanel";
 
 interface ConversationViewWrapperProps {
   conversation: ChatConversation;
@@ -819,6 +820,21 @@ export function ConversationViewWrapper({
               <ChatOrderPanel
                 siteId={siteId}
                 orderNumber={orderNum}
+                userId={userId}
+                userName={userName}
+              />
+            ) : null;
+          })()}
+
+          {/* Quote Context Panel — shown when conversation has an associated quote */}
+          {(() => {
+            const quoteNum = (conversation.metadata as Record<string, unknown>)
+              ?.quote_number;
+            return typeof quoteNum === "string" &&
+              quoteNum.trim().length > 0 ? (
+              <ChatQuotePanel
+                siteId={siteId}
+                quoteNumber={quoteNum}
                 userId={userId}
                 userName={userName}
               />
