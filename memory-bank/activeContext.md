@@ -1,8 +1,51 @@
 # Active Context
 
-## Current Focus: Chiko AI Quote Visibility Fix — COMPLETE ✅
+## Current Focus: Quote Pricing Fix + Live Chat Quote Panel — COMPLETE ✅
 
-### What Was Done (Latest Session — AI Quote Visibility)
+### What Was Done (Latest Session — Quote System Overhaul)
+
+**Problems Identified (via user screenshots of QUO-1005):**
+1. Dashboard showing wrong figures — quote prices 100x inflated (e.g., ZMW 35,000.00 instead of ZMW 350.00)
+2. Total showing "ZMW 2,896,500.005" (decimal precision bug from large cent values)
+3. No quote management panel in live chat (orders had `ChatOrderPanel`, quotes had nothing)
+4. Chiko AI had no real data to respond accurately about quote amounts
+
+**Root Cause — 100x Price Inflation:**
+- Products store prices in CENTS (integer) in `base_price`
+- Cart stores prices in CENTS in `unit_price`
+- Quote DB uses `DECIMAL(12,2)` expecting MAIN CURRENCY (e.g., ZMW 350.00)
+- **Dashboard quote-items-editor**: correctly divides by 100 when adding products ✅
+- **Storefront useQuotations.ts**: passed cart cents directly WITHOUT dividing by 100 ❌
+- Result: all storefront-submitted quotes had prices 100x too large
+
+**Secondary Bug — AI Price Display:**
+- Both `ai-responder.ts` and `customer-context-bridge.ts` divided quote totals by 100
+- This was wrong because quotes already store in main currency, not cents
+- The `/100` accidentally showed correct values for the inflated prices, but was fundamentally wrong
+
+**Fixes Applied (commit 32c4f456):**
+
+| File | Change |
+|------|--------|
+| `useQuotations.ts` | Added `/100` conversion: `unit_price: (item.requested_price \|\| item.list_price) / 100` |
+| `ai-responder.ts` | Removed `/100` from quote total display in system prompt |
+| `customer-context-bridge.ts` | Removed `/100` from quote total in AI context |
+| `ChatQuotePanel.tsx` | **NEW** — Live chat sidebar quote panel (status badge, items summary, status transitions, copy customer link, view full quote) |
+| `chat-quote-actions.ts` | **NEW** — `getQuoteContextForChat()` server action |
+| `ConversationViewWrapper.tsx` | Renders ChatQuotePanel when `conversation.metadata.quote_number` exists |
+
+**Key Technical Details:**
+- `ChatQuotePanel` mirrors `ChatOrderPanel` pattern — shown in right sidebar of chat
+- Uses `updateQuoteStatus`, `formatQuoteCurrency`, `QUOTE_STATUS_CONFIG`, `getAllowedTransitions` from ecommerce module
+- Hides "Copy Customer Link" for draft quotes (not ready for customer)
+- Shows first 3 items with overflow indicator
+- Status change dropdown with allowed transitions
+
+**Git:** `32c4f456`, pushed to origin/main (516 insertions, 3 deletions across 6 files)
+
+**Note:** Existing quotes in DB still have inflated prices from before the fix. New quotes submitted from the storefront will have correct prices. Old test quotes can be recreated.
+
+### Previous Session: Chiko AI Quote Visibility Fix (commit f8f505a0)
 
 **Problem:** After quote submission, Chiko AI responded with "I don't have direct visibility into the status of quote requests from my end." This is wrong — Chiko should have full access to quotes.
 
