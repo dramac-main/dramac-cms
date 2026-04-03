@@ -39,7 +39,7 @@ import { ProductSelector, ProductSelection } from './product-selector'
 import { calculateItemLineTotal, formatQuoteCurrency } from '../../lib/quote-utils'
 import type { QuoteItem, QuoteItemInput } from '../../types/ecommerce-types'
 
-import { useCurrency } from '../../context/ecommerce-context'
+import { useCurrencySafe } from '../../context/ecommerce-context'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -333,12 +333,14 @@ function EditableItemRow({
 
 export function QuoteItemsEditor({
   items,
+  currency: currencyProp,
   onAddItems,
   onUpdateItem,
   onRemoveItem,
   isReadOnly = false
 }: QuoteItemsEditorProps) {
-  const { currency } = useCurrency()
+  const { currency: ctxCurrency } = useCurrencySafe()
+  const currency = currencyProp || ctxCurrency
   const [showProductSelector, setShowProductSelector] = useState(false)
   const [showCustomForm, setShowCustomForm] = useState(false)
   
@@ -463,13 +465,15 @@ export function QuoteItemsEditor({
         </div>
       )}
       
-      {/* Product selector modal */}
-      <ProductSelector
-        open={showProductSelector}
-        onOpenChange={setShowProductSelector}
-        onSelect={handleProductSelect}
-        excludeProductIds={items.filter(i => i.product_id).map(i => i.product_id!)}
-      />
+      {/* Product selector modal — only mount when editing (requires EcommerceProvider) */}
+      {!isReadOnly && (
+        <ProductSelector
+          open={showProductSelector}
+          onOpenChange={setShowProductSelector}
+          onSelect={handleProductSelect}
+          excludeProductIds={items.filter(i => i.product_id).map(i => i.product_id!)}
+        />
+      )}
     </div>
   )
 }
