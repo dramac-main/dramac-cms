@@ -211,13 +211,8 @@ export async function sendQuote(
     // Build portal URL using the site's public domain
     const siteBaseUrl = await getSitePublicUrl(input.site_id);
     const portalUrl = `${siteBaseUrl}/quote/${accessToken}`;
-    const totalAmount = quote.items
-      ? (quote.items as Array<{ quantity: number; unit_price: number }>).reduce(
-          (sum: number, item: { quantity: number; unit_price: number }) =>
-            sum + item.quantity * item.unit_price,
-          0,
-        )
-      : quote.total || 0;
+    // Use the pre-calculated total which includes discounts, taxes, and shipping
+    const totalAmount = quote.total || 0;
     const formatted = formatCurrency(
       totalAmount,
       quote.currency || DEFAULT_CURRENCY,

@@ -48,6 +48,7 @@ import {
   formatQuoteCurrency,
   isQuoteExpired,
   calculateDaysUntilExpiry,
+  calculateQuoteTotals,
 } from "../../lib/quote-utils";
 import { downloadQuotePDF } from "../../lib/quote-pdf-generator";
 import type { QuotePDFOptions } from "../../lib/quote-pdf-generator";
@@ -166,11 +167,36 @@ export function QuoteDetailDialog({
     itemId: string,
     updates: Record<string, unknown>,
   ) => {
+    // Optimistic local update — no full reload so other rows stay editable
+    if (quote) {
+      const updatedItems = quote.items.map((item) =>
+        item.id === itemId ? { ...item, ...updates } as typeof item : item,
+      );
+      const totals = calculateQuoteTotals(
+        updatedItems,
+        { type: quote.discount_type, value: quote.discount_value },
+        quote.shipping_amount,
+        quote.tax_rate,
+      );
+      setQuote({
+        ...quote,
+        items: updatedItems,
+        subtotal: totals.subtotal,
+        discount_amount: totals.quoteDiscountAmount,
+        tax_amount: totals.taxAmount,
+        total: totals.total,
+      });
+    }
+
+    // Persist to server in the background
     const result = await updateQuoteItem(siteId, quoteId, itemId, updates);
-    if (result.success) {
+    if (!result.success) {
+      toast.error(result.error || "Failed to update item");
+      // Resync from server on failure
       await reloadQuote();
     } else {
-      toast.error(result.error || "Failed to update item");
+      // Notify parent (e.g. list view) that data changed
+      onQuoteChange?.();
     }
   };
 
