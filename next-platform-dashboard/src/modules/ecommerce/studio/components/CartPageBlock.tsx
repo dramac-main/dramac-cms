@@ -68,6 +68,7 @@ export function CartPageBlock({
     quotationModeEnabled,
     quotationButtonLabel,
     quotationRedirectUrl,
+    quotationHidePrices,
   } = useStorefront();
 
   // In quote mode, change checkout to quote request
@@ -236,6 +237,7 @@ export function CartPageBlock({
                     formatPrice={formatPrice}
                     variant="default"
                     disabled={isUpdating}
+                    hidePrices={quotationModeEnabled && quotationHidePrices}
                   />
                 ))}
               </CardContent>
@@ -251,11 +253,12 @@ export function CartPageBlock({
                 checkoutHref={effectiveCheckoutHref}
                 checkoutText={effectiveCheckoutText}
                 isLoading={isUpdating}
-                showDiscount={true}
+                showDiscount={!quotationHidePrices}
                 currentDiscount={currentDiscount}
                 onApplyDiscount={handleApplyDiscount}
                 onRemoveDiscount={removeDiscount}
                 variant="default"
+                hidePrices={quotationModeEnabled && quotationHidePrices}
               />
             </div>
           </div>

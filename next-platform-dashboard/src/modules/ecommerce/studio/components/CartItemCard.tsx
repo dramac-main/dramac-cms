@@ -28,6 +28,8 @@ interface CartItemCardProps {
   formatPrice: (price: number) => string;
   variant?: "default" | "compact" | "drawer";
   disabled?: boolean;
+  /** Hide all price displays (quotation mode with hide prices) */
+  hidePrices?: boolean;
   className?: string;
 }
 
@@ -78,6 +80,7 @@ export function CartItemCard({
   formatPrice,
   variant = "default",
   disabled = false,
+  hidePrices = false,
   className,
 }: CartItemCardProps) {
   const imageUrl = getItemImage(item);
@@ -111,15 +114,19 @@ export function CartItemCard({
         {/* Info */}
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate">{itemName}</p>
-          <p className="text-xs text-muted-foreground tabular-nums">
-            {formatPrice(item.unit_price)} × {item.quantity}
-          </p>
+          {!hidePrices && (
+            <p className="text-xs text-muted-foreground tabular-nums">
+              {formatPrice(item.unit_price)} × {item.quantity}
+            </p>
+          )}
         </div>
 
         {/* Total */}
-        <div className="text-sm font-semibold tabular-nums shrink-0">
-          {formatPrice(lineTotal)}
-        </div>
+        {!hidePrices && (
+          <div className="text-sm font-semibold tabular-nums shrink-0">
+            {formatPrice(lineTotal)}
+          </div>
+        )}
       </div>
     );
   }
@@ -174,9 +181,11 @@ export function CartItemCard({
               showRemove={false}
               disabled={disabled}
             />
-            <p className="text-sm font-semibold tabular-nums">
-              {formatPrice(lineTotal)}
-            </p>
+            {!hidePrices && (
+              <p className="text-sm font-semibold tabular-nums">
+                {formatPrice(lineTotal)}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -216,9 +225,11 @@ export function CartItemCard({
                   {variantName}
                 </p>
               )}
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {formatPrice(item.unit_price)} each
-              </p>
+              {!hidePrices && (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {formatPrice(item.unit_price)} each
+                </p>
+              )}
             </div>
             <Button
               variant="ghost"
@@ -252,9 +263,11 @@ export function CartItemCard({
               size="sm"
               disabled={disabled}
             />
-            <p className="text-sm sm:text-base font-semibold tabular-nums shrink-0">
-              {formatPrice(lineTotal)}
-            </p>
+            {!hidePrices && (
+              <p className="text-sm sm:text-base font-semibold tabular-nums shrink-0">
+                {formatPrice(lineTotal)}
+              </p>
+            )}
           </div>
         </div>
       </div>

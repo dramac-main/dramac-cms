@@ -1,80 +1,93 @@
 /**
  * Quote Portal View Component
- * 
+ *
  * Phase ECOM-12: Quote Workflow & Customer Portal
- * 
+ *
  * Customer-facing view for quotes
  */
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
-import { 
-  CircleCheck, 
-  CircleX, 
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import {
+  CircleCheck,
+  CircleX,
   Clock,
   AlertTriangle,
   Building,
   Mail,
   Phone,
   Download,
-  FileText
-} from 'lucide-react'
-import { format } from 'date-fns'
-import { cn } from '@/lib/utils'
-import { QuoteAcceptForm } from './quote-accept-form'
-import { QuoteRejectDialog } from './quote-reject-dialog'
-import { QuoteAmendmentDialog } from './quote-amendment-dialog'
-import { formatQuoteCurrency, isQuoteExpired, calculateDaysUntilExpiry } from '../../lib/quote-utils'
-import { downloadQuotePDF } from '../../lib/quote-pdf-generator'
-import type { Quote } from '../../types/ecommerce-types'
+  FileText,
+} from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { QuoteAcceptForm } from "./quote-accept-form";
+import { QuoteRejectDialog } from "./quote-reject-dialog";
+import { QuoteAmendmentDialog } from "./quote-amendment-dialog";
+import {
+  formatQuoteCurrency,
+  isQuoteExpired,
+  calculateDaysUntilExpiry,
+} from "../../lib/quote-utils";
+import { downloadQuotePDF } from "../../lib/quote-pdf-generator";
+import type { QuotePDFOptions } from "../../lib/quote-pdf-generator";
+import type { Quote } from "../../types/ecommerce-types";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 interface QuotePortalViewProps {
-  quote: Quote
-  token: string
-  verifiedEmail?: string
+  quote: Quote;
+  token: string;
+  verifiedEmail?: string;
+  pdfBranding?: QuotePDFOptions;
 }
 
 // ============================================================================
 // COMPONENT
 // ============================================================================
 
-export function QuotePortalView({ quote, token, verifiedEmail }: QuotePortalViewProps) {
-  const [showAcceptForm, setShowAcceptForm] = useState(false)
-  const [showRejectDialog, setShowRejectDialog] = useState(false)
-  const [showAmendmentDialog, setShowAmendmentDialog] = useState(false)
-  const [currentStatus, setCurrentStatus] = useState(quote.status)
-  
-  const expired = quote.valid_until ? isQuoteExpired(quote.valid_until) : false
-  const daysUntilExpiry = quote.valid_until ? calculateDaysUntilExpiry(quote.valid_until) : null
-  
-  const canRespond = ['sent', 'viewed'].includes(currentStatus) && !expired
-  const isAccepted = currentStatus === 'accepted'
-  const isRejected = currentStatus === 'rejected'
-  const isExpired = currentStatus === 'expired' || expired
-  const isPending = ['draft', 'pending_approval'].includes(currentStatus)
-  
+export function QuotePortalView({
+  quote,
+  token,
+  verifiedEmail,
+  pdfBranding,
+}: QuotePortalViewProps) {
+  const [showAcceptForm, setShowAcceptForm] = useState(false);
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [showAmendmentDialog, setShowAmendmentDialog] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState(quote.status);
+
+  const expired = quote.valid_until ? isQuoteExpired(quote.valid_until) : false;
+  const daysUntilExpiry = quote.valid_until
+    ? calculateDaysUntilExpiry(quote.valid_until)
+    : null;
+
+  const canRespond = ["sent", "viewed"].includes(currentStatus) && !expired;
+  const isAccepted = currentStatus === "accepted";
+  const isRejected = currentStatus === "rejected";
+  const isExpired = currentStatus === "expired" || expired;
+  const isPending = ["draft", "pending_approval"].includes(currentStatus);
+
   // Handle acceptance/rejection
   const handleAccepted = () => {
-    setCurrentStatus('accepted')
-    setShowAcceptForm(false)
-  }
-  
+    setCurrentStatus("accepted");
+    setShowAcceptForm(false);
+  };
+
   const handleRejected = () => {
-    setCurrentStatus('rejected')
-    setShowRejectDialog(false)
-  }
-  
+    setCurrentStatus("rejected");
+    setShowRejectDialog(false);
+  };
+
   const handleAmendmentRequested = () => {
-    setCurrentStatus('pending_approval')
-    setShowAmendmentDialog(false)
-  }
+    setCurrentStatus("pending_approval");
+    setShowAmendmentDialog(false);
+  };
 
   return (
     <div className="max-w-4xl mx-auto p-4 py-8">
@@ -83,50 +96,59 @@ export function QuotePortalView({ quote, token, verifiedEmail }: QuotePortalView
         <div className="mb-6 p-4 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 rounded-lg flex items-center gap-3">
           <CircleCheck className="h-6 w-6 text-green-600" />
           <div>
-            <p className="font-semibold text-green-700 dark:text-green-300">Quote Accepted</p>
+            <p className="font-semibold text-green-700 dark:text-green-300">
+              Quote Accepted
+            </p>
             <p className="text-sm text-green-600 dark:text-green-400">
               Thank you! We will process your order shortly.
             </p>
           </div>
         </div>
       )}
-      
+
       {isRejected && (
         <div className="mb-6 p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-lg flex items-center gap-3">
           <CircleX className="h-6 w-6 text-red-600" />
           <div>
-            <p className="font-semibold text-red-700 dark:text-red-300">Quote Declined</p>
+            <p className="font-semibold text-red-700 dark:text-red-300">
+              Quote Declined
+            </p>
             <p className="text-sm text-red-600 dark:text-red-400">
               This quote has been declined. Contact us if you change your mind.
             </p>
           </div>
         </div>
       )}
-      
+
       {isExpired && (
         <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg flex items-center gap-3">
           <AlertTriangle className="h-6 w-6 text-amber-600" />
           <div>
-            <p className="font-semibold text-amber-700 dark:text-amber-300">Quote Expired</p>
+            <p className="font-semibold text-amber-700 dark:text-amber-300">
+              Quote Expired
+            </p>
             <p className="text-sm text-amber-600 dark:text-amber-400">
               This quote has expired. Please contact us for an updated quote.
             </p>
           </div>
         </div>
       )}
-      
+
       {isPending && (
         <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg flex items-center gap-3">
           <Clock className="h-6 w-6 text-blue-600" />
           <div>
-            <p className="font-semibold text-blue-700 dark:text-blue-300">Quote Being Prepared</p>
+            <p className="font-semibold text-blue-700 dark:text-blue-300">
+              Quote Being Prepared
+            </p>
             <p className="text-sm text-blue-600 dark:text-blue-400">
-              Your quote request is being reviewed. We&apos;ll notify you by email when it&apos;s ready.
+              Your quote request is being reviewed. We&apos;ll notify you by
+              email when it&apos;s ready.
             </p>
           </div>
         </div>
       )}
-      
+
       {/* Main Card */}
       <Card className="mb-6">
         <CardHeader className="pb-4">
@@ -139,24 +161,29 @@ export function QuotePortalView({ quote, token, verifiedEmail }: QuotePortalView
                 Quote #{quote.quote_number}
               </p>
             </div>
-            
+
             <div className="text-right">
               <div className="text-3xl font-bold">
                 {formatQuoteCurrency(quote.total, quote.currency)}
               </div>
               {quote.valid_until && !isExpired && daysUntilExpiry !== null && (
-                <p className={cn(
-                  "text-sm mt-1",
-                  daysUntilExpiry <= 3 ? "text-amber-600" : "text-muted-foreground"
-                )}>
+                <p
+                  className={cn(
+                    "text-sm mt-1",
+                    daysUntilExpiry <= 3
+                      ? "text-amber-600"
+                      : "text-muted-foreground",
+                  )}
+                >
                   <Clock className="h-3 w-3 inline mr-1" />
-                  Valid for {daysUntilExpiry} more day{daysUntilExpiry !== 1 ? 's' : ''}
+                  Valid for {daysUntilExpiry} more day
+                  {daysUntilExpiry !== 1 ? "s" : ""}
                 </p>
               )}
             </div>
           </div>
         </CardHeader>
-        
+
         <CardContent>
           {/* Introduction */}
           {quote.introduction && (
@@ -164,7 +191,7 @@ export function QuotePortalView({ quote, token, verifiedEmail }: QuotePortalView
               <p className="whitespace-pre-wrap">{quote.introduction}</p>
             </div>
           )}
-          
+
           {/* Quote Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div className="space-y-3">
@@ -179,19 +206,21 @@ export function QuotePortalView({ quote, token, verifiedEmail }: QuotePortalView
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Date</span>
-                  <span>{format(new Date(quote.created_at), 'MMMM d, yyyy')}</span>
+                  <span>
+                    {format(new Date(quote.created_at), "MMMM d, yyyy")}
+                  </span>
                 </div>
                 {quote.valid_until && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Valid Until</span>
-                    <span className={expired ? 'text-red-600' : ''}>
-                      {format(new Date(quote.valid_until), 'MMMM d, yyyy')}
+                    <span className={expired ? "text-red-600" : ""}>
+                      {format(new Date(quote.valid_until), "MMMM d, yyyy")}
                     </span>
                   </div>
                 )}
               </div>
             </div>
-            
+
             <div className="space-y-3">
               <h3 className="font-semibold flex items-center gap-2">
                 <Building className="h-4 w-4" />
@@ -200,7 +229,9 @@ export function QuotePortalView({ quote, token, verifiedEmail }: QuotePortalView
               <div className="space-y-2 text-sm">
                 <p className="font-medium">{quote.customer_name}</p>
                 {quote.customer_company && (
-                  <p className="text-muted-foreground">{quote.customer_company}</p>
+                  <p className="text-muted-foreground">
+                    {quote.customer_company}
+                  </p>
                 )}
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Mail className="h-3 w-3" />
@@ -215,9 +246,9 @@ export function QuotePortalView({ quote, token, verifiedEmail }: QuotePortalView
               </div>
             </div>
           </div>
-          
+
           <Separator className="my-6" />
-          
+
           {/* Line Items */}
           <div className="mb-6">
             <h3 className="font-semibold mb-4">Items</h3>
@@ -233,7 +264,10 @@ export function QuotePortalView({ quote, token, verifiedEmail }: QuotePortalView
                 </thead>
                 <tbody>
                   {quote.items?.map((item, index) => (
-                    <tr key={item.id} className={index % 2 === 1 ? 'bg-muted/20' : ''}>
+                    <tr
+                      key={item.id}
+                      className={index % 2 === 1 ? "bg-muted/20" : ""}
+                    >
                       <td className="p-3">
                         <div>
                           <p className="font-medium">{item.name}</p>
@@ -257,30 +291,39 @@ export function QuotePortalView({ quote, token, verifiedEmail }: QuotePortalView
               </table>
             </div>
           </div>
-          
+
           {/* Totals */}
           <div className="flex justify-end mb-6">
             <div className="w-64 space-y-2 text-sm">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>{formatQuoteCurrency(quote.subtotal, quote.currency)}</span>
+                <span>
+                  {formatQuoteCurrency(quote.subtotal, quote.currency)}
+                </span>
               </div>
               {quote.discount_amount > 0 && (
                 <div className="flex justify-between text-green-600">
                   <span>Discount</span>
-                  <span>-{formatQuoteCurrency(quote.discount_amount, quote.currency)}</span>
+                  <span>
+                    -
+                    {formatQuoteCurrency(quote.discount_amount, quote.currency)}
+                  </span>
                 </div>
               )}
               {quote.tax_amount > 0 && (
                 <div className="flex justify-between">
                   <span>Tax</span>
-                  <span>{formatQuoteCurrency(quote.tax_amount, quote.currency)}</span>
+                  <span>
+                    {formatQuoteCurrency(quote.tax_amount, quote.currency)}
+                  </span>
                 </div>
               )}
               {quote.shipping_amount > 0 && (
                 <div className="flex justify-between">
                   <span>Shipping</span>
-                  <span>{formatQuoteCurrency(quote.shipping_amount, quote.currency)}</span>
+                  <span>
+                    {formatQuoteCurrency(quote.shipping_amount, quote.currency)}
+                  </span>
                 </div>
               )}
               <Separator />
@@ -290,17 +333,19 @@ export function QuotePortalView({ quote, token, verifiedEmail }: QuotePortalView
               </div>
             </div>
           </div>
-          
+
           {/* Notes to Customer */}
           {quote.notes_to_customer && (
             <div className="mb-6 p-4 bg-primary/5 dark:bg-primary/10 border border-primary/20 dark:border-primary/30 rounded-lg">
-              <h4 className="font-medium text-primary dark:text-primary/80 mb-2">Notes</h4>
+              <h4 className="font-medium text-primary dark:text-primary/80 mb-2">
+                Notes
+              </h4>
               <p className="text-sm text-primary/80 dark:text-primary/70 whitespace-pre-wrap">
                 {quote.notes_to_customer}
               </p>
             </div>
           )}
-          
+
           {/* Terms & Conditions */}
           {quote.terms_and_conditions && (
             <div className="mb-6">
@@ -310,13 +355,13 @@ export function QuotePortalView({ quote, token, verifiedEmail }: QuotePortalView
               </div>
             </div>
           )}
-          
+
           <Separator className="my-6" />
-          
+
           {/* Action Buttons */}
           {canRespond && !showAcceptForm && (
             <div className="flex flex-col sm:flex-row gap-3">
-              <Button 
+              <Button
                 className="flex-1"
                 size="lg"
                 onClick={() => setShowAcceptForm(true)}
@@ -324,7 +369,7 @@ export function QuotePortalView({ quote, token, verifiedEmail }: QuotePortalView
                 <CircleCheck className="h-5 w-5 mr-2" />
                 Accept Quote
               </Button>
-              <Button 
+              <Button
                 variant="secondary"
                 size="lg"
                 onClick={() => setShowAmendmentDialog(true)}
@@ -332,7 +377,7 @@ export function QuotePortalView({ quote, token, verifiedEmail }: QuotePortalView
                 <FileText className="h-5 w-5 mr-2" />
                 Request Changes
               </Button>
-              <Button 
+              <Button
                 variant="outline"
                 size="lg"
                 onClick={() => setShowRejectDialog(true)}
@@ -342,7 +387,7 @@ export function QuotePortalView({ quote, token, verifiedEmail }: QuotePortalView
               </Button>
             </div>
           )}
-          
+
           {/* Accept Form */}
           {showAcceptForm && (
             <QuoteAcceptForm
@@ -355,15 +400,17 @@ export function QuotePortalView({ quote, token, verifiedEmail }: QuotePortalView
           )}
         </CardContent>
       </Card>
-      
+
       {/* Download PDF Button */}
       <div className="text-center">
         <Button
           variant="outline"
           onClick={() => {
-            const success = downloadQuotePDF(quote)
+            const success = downloadQuotePDF(quote, pdfBranding);
             if (!success) {
-              alert('Could not open print window. Please allow popups for this site.')
+              alert(
+                "Could not open print window. Please allow popups for this site.",
+              );
             }
           }}
         >
@@ -371,7 +418,7 @@ export function QuotePortalView({ quote, token, verifiedEmail }: QuotePortalView
           Download PDF
         </Button>
       </div>
-      
+
       {/* Reject Dialog */}
       <QuoteRejectDialog
         open={showRejectDialog}
@@ -379,7 +426,7 @@ export function QuotePortalView({ quote, token, verifiedEmail }: QuotePortalView
         token={token}
         onRejected={handleRejected}
       />
-      
+
       {/* Amendment Dialog */}
       <QuoteAmendmentDialog
         open={showAmendmentDialog}
@@ -388,5 +435,5 @@ export function QuotePortalView({ quote, token, verifiedEmail }: QuotePortalView
         onAmendmentRequested={handleAmendmentRequested}
       />
     </div>
-  )
+  );
 }

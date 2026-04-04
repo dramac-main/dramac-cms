@@ -9,12 +9,14 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { getAgencyBranding } from '@/lib/queries/branding'
 import type { 
   QuoteTemplate, 
   QuoteTemplateInput,
   QuoteSiteSettings,
   QuoteSiteSettingsUpdate
 } from '../types/ecommerce-types'
+import type { QuotePDFOptions } from '../lib/quote-pdf-generator'
 
 const TABLE_PREFIX = 'mod_ecommod01'
 
@@ -433,5 +435,34 @@ export async function getNextQuoteNumber(siteId: string): Promise<string> {
   } catch (error) {
     console.error('Error getting next quote number:', error)
     return `QT-${Date.now()}`
+  }
+}
+
+// ============================================================================
+// PDF BRANDING
+// ============================================================================
+
+/**
+ * Get branding options for quote PDFs.
+ * Merges quote-specific overrides (quote_settings) with site branding fallback.
+ */
+export async function getQuotePDFBranding(
+  siteId: string,
+  agencyId: string
+): Promise<QuotePDFOptions> {
+  const [quoteSettings, agencyBranding] = await Promise.all([
+    getQuoteSiteSettings(siteId),
+    getAgencyBranding(agencyId),
+  ])
+
+  return {
+    companyName: quoteSettings?.company_name || agencyBranding?.agency_display_name || undefined,
+    companyEmail: quoteSettings?.company_email || agencyBranding?.support_email || agencyBranding?.email_reply_to || undefined,
+    companyPhone: quoteSettings?.company_phone || undefined,
+    companyAddress: quoteSettings?.company_address || agencyBranding?.email_footer_address || undefined,
+    logoUrl: quoteSettings?.logo_url || agencyBranding?.logo_url || undefined,
+    primaryColor: quoteSettings?.primary_color || agencyBranding?.primary_color || undefined,
+    includeCompanyLogo: true,
+    showTerms: true,
   }
 }

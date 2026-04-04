@@ -43,6 +43,8 @@ export interface QuoteItemCardProps {
   onRemove?: () => void;
   /** Show discount information */
   showDiscount?: boolean;
+  /** Hide all price displays */
+  hidePrices?: boolean;
   className?: string;
 }
 
@@ -72,6 +74,7 @@ export function QuoteItemCard({
   onRequestedPriceChange,
   onRemove,
   showDiscount = true,
+  hidePrices = false,
   className,
 }: QuoteItemCardProps) {
   const [isEditingNotes, setIsEditingNotes] = React.useState(false);
@@ -130,9 +133,11 @@ export function QuoteItemCard({
           <p className="text-xs text-muted-foreground">Qty: {quantity}</p>
         </div>
 
-        <div className="text-right text-sm font-medium">
-          {format(finalTotal)}
-        </div>
+        {!hidePrices && (
+          <div className="text-right text-sm font-medium">
+            {format(finalTotal)}
+          </div>
+        )}
       </div>
     );
   }
@@ -174,39 +179,63 @@ export function QuoteItemCard({
           </div>
 
           {/* Pricing row */}
-          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-            <span className="text-muted-foreground">
-              Unit: {format(unitPrice)}
-            </span>
-
-            {/* Quantity */}
-            {variant === "editable" && onQuantityChange ? (
-              <div className="flex items-center gap-1">
-                <span className="text-muted-foreground">Qty:</span>
-                <Input
-                  type="number"
-                  min={1}
-                  value={quantity}
-                  onChange={(e) =>
-                    onQuantityChange(parseInt(e.target.value) || 1)
-                  }
-                  className="h-7 w-16 text-center text-sm"
-                />
-              </div>
-            ) : (
-              <span className="text-muted-foreground">Qty: {quantity}</span>
-            )}
-
-            {/* Discount */}
-            {showDiscount && discountPercent > 0 && (
-              <span className="text-success">
-                -{discountPercent}% ({format(discountAmount)} off)
+          {!hidePrices && (
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+              <span className="text-muted-foreground">
+                Unit: {format(unitPrice)}
               </span>
-            )}
-          </div>
+
+              {/* Quantity */}
+              {variant === "editable" && onQuantityChange ? (
+                <div className="flex items-center gap-1">
+                  <span className="text-muted-foreground">Qty:</span>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={quantity}
+                    onChange={(e) =>
+                      onQuantityChange(parseInt(e.target.value) || 1)
+                    }
+                    className="h-7 w-16 text-center text-sm"
+                  />
+                </div>
+              ) : (
+                <span className="text-muted-foreground">Qty: {quantity}</span>
+              )}
+
+              {/* Discount */}
+              {showDiscount && discountPercent > 0 && (
+                <span className="text-success">
+                  -{discountPercent}% ({format(discountAmount)} off)
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Quantity-only row when prices are hidden */}
+          {hidePrices && (
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+              {variant === "editable" && onQuantityChange ? (
+                <div className="flex items-center gap-1">
+                  <span className="text-muted-foreground">Qty:</span>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={quantity}
+                    onChange={(e) =>
+                      onQuantityChange(parseInt(e.target.value) || 1)
+                    }
+                    className="h-7 w-16 text-center text-sm"
+                  />
+                </div>
+              ) : (
+                <span className="text-muted-foreground">Qty: {quantity}</span>
+              )}
+            </div>
+          )}
 
           {/* Requested price for builder */}
-          {variant === "editable" && onRequestedPriceChange && (
+          {variant === "editable" && onRequestedPriceChange && !hidePrices && (
             <div className="mt-2 flex items-center gap-2 text-sm">
               <span className="text-muted-foreground">Request price:</span>
               <Input
@@ -270,16 +299,18 @@ export function QuoteItemCard({
         </div>
 
         {/* Line total */}
-        <div className="shrink-0 text-right">
-          {discountPercent > 0 && (
-            <p className="text-sm text-muted-foreground line-through">
-              {format(lineTotal)}
+        {!hidePrices && (
+          <div className="shrink-0 text-right">
+            {discountPercent > 0 && (
+              <p className="text-sm text-muted-foreground line-through">
+                {format(lineTotal)}
+              </p>
+            )}
+            <p className="text-lg font-semibold text-foreground">
+              {format(finalTotal)}
             </p>
-          )}
-          <p className="text-lg font-semibold text-foreground">
-            {format(finalTotal)}
-          </p>
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

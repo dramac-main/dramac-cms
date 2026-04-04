@@ -15,6 +15,7 @@ import {
   recordQuoteView,
 } from "@/modules/ecommerce/actions/quote-workflow-actions";
 import { verifyQuoteAccessCookie } from "@/modules/ecommerce/actions/quote-portal-auth";
+import { getQuotePDFBranding } from "@/modules/ecommerce/actions/quote-template-actions";
 import { QuotePortalView } from "@/modules/ecommerce/components/portal/quote-portal-view";
 import { QuoteEmailGate } from "@/modules/ecommerce/components/portal/quote-email-gate";
 
@@ -88,6 +89,9 @@ export default async function QuotePortalPage({
   // Verified — record view and show full portal
   recordQuoteView(token);
 
+  // Load PDF branding from site + agency
+  const pdfBranding = await getQuotePDFBranding(quote.site_id, quote.agency_id);
+
   return (
     <div
       className="min-h-screen bg-gray-50"
@@ -98,6 +102,7 @@ export default async function QuotePortalPage({
         quote={quote}
         token={token}
         verifiedEmail={quote.customer_email}
+        pdfBranding={pdfBranding}
       />
     </div>
   );

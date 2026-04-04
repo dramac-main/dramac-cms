@@ -43,6 +43,8 @@ import { QuoteItemCard } from "./QuoteItemCard";
 import { QuotePriceBreakdown } from "./QuotePriceBreakdown";
 import { getImageUrl } from "../../lib/image-utils";
 import { downloadQuotePDF } from "../../lib/quote-pdf-generator";
+import type { QuotePDFOptions } from "../../lib/quote-pdf-generator";
+import { getQuotePDFBranding } from "../../actions/quote-template-actions";
 import type { Quote, QuoteItem } from "../../types/ecommerce-types";
 import Link from "next/link";
 
@@ -98,11 +100,16 @@ export function QuoteRequestBlock({
     formatPrice,
     settings,
     quotationModeEnabled,
+    quotationHidePrices,
     taxRate,
     isInitialized,
   } = useStorefront();
   const agencyId = settings?.agency_id;
   const searchParams = useSearchParams();
+
+  // When hide prices is on, override showPricing to false
+  const effectiveHidePrices = quotationHidePrices;
+  const effectiveShowPricing = showPricing && !effectiveHidePrices;
 
   // Cart integration — items may be in the cart (from "Add to Quote" buttons)
   const {
@@ -344,12 +351,18 @@ export function QuoteRequestBlock({
 
   // Success state
   if (isSubmitted) {
-    const handleDownloadQuote = () => {
+    const handleDownloadQuote = async () => {
       if (!submittedQuote) return;
-      downloadQuotePDF(submittedQuote, {
-        documentType: "quote",
-        companyName: settings?.store_name || undefined,
-      });
+      let branding: QuotePDFOptions = { documentType: "quote" };
+      if (siteId && agencyId) {
+        try {
+          branding = { ...await getQuotePDFBranding(siteId, agencyId), documentType: "quote" };
+        } catch {
+          // Fallback to store name only
+          branding = { documentType: "quote", companyName: settings?.store_name || undefined };
+        }
+      }
+      downloadQuotePDF(submittedQuote, branding);
     };
 
     const handleOpenChat = () => {
@@ -548,7 +561,7 @@ export function QuoteRequestBlock({
         </CardHeader>
 
         <CardContent className="space-y-4">
-          {showPricing && (
+          {effectiveShowPricing && (
             <QuotePriceBreakdown
               builderItems={builderItems}
               formatPrice={formatPrice}
@@ -647,11 +660,12 @@ export function QuoteRequestBlock({
                       })
                     }
                     onRemove={() => removeFromBuilder(item.product_id)}
+                    hidePrices={effectiveHidePrices}
                   />
                 ))}
               </div>
 
-              {showPricing && (
+              {effectiveShowPricing && (
                 <div className="border-t pt-3">
                   <QuotePriceBreakdown
                     builderItems={builderItems}

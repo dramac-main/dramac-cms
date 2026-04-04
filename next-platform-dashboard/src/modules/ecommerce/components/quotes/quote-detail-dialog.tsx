@@ -50,6 +50,8 @@ import {
   calculateDaysUntilExpiry,
 } from "../../lib/quote-utils";
 import { downloadQuotePDF } from "../../lib/quote-pdf-generator";
+import type { QuotePDFOptions } from "../../lib/quote-pdf-generator";
+import { getQuotePDFBranding } from "../../actions/quote-template-actions";
 import type {
   QuoteDetailData,
   QuoteItemInput,
@@ -87,6 +89,7 @@ export function QuoteDetailDialog({
   const [quote, setQuote] = useState<QuoteDetailData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("details");
+  const [pdfBranding, setPdfBranding] = useState<QuotePDFOptions>({});
 
   // Load quote data
   useEffect(() => {
@@ -97,6 +100,10 @@ export function QuoteDetailDialog({
       try {
         const data = await getQuote(siteId, quoteId);
         setQuote(data);
+        if (data?.agency_id) {
+          const branding = await getQuotePDFBranding(siteId, data.agency_id);
+          setPdfBranding(branding);
+        }
       } catch (error) {
         console.error("Error loading quote:", error);
         toast.error("Failed to load quote details");
@@ -493,7 +500,7 @@ export function QuoteDetailDialog({
                     size="sm"
                     onClick={() => {
                       if (!quote) return;
-                      const success = downloadQuotePDF(quote);
+                      const success = downloadQuotePDF(quote, pdfBranding);
                       if (!success) {
                         toast.error(
                           "Could not open print window. Please allow popups.",
