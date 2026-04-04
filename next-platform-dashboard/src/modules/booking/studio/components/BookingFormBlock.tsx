@@ -379,6 +379,13 @@ export function BookingFormBlock({
     try {
       // If siteId is available, create a REAL appointment in the database
       if (siteId) {
+        // Validate service is selected before submitting
+        if (!serviceId) {
+          setSubmitError(true);
+          setIsSubmitting(false);
+          return;
+        }
+
         // Compute start/end times from props or defaults
         let computedStartTime = startTime || new Date().toISOString();
         let computedEndTime = endTime || "";

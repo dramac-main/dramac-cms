@@ -33,6 +33,7 @@ import {
 } from "../../context/storefront-auth-context";
 import { useStorefrontWishlist } from "../../hooks/useStorefrontWishlist";
 import { useStorefrontCart } from "../../hooks/useStorefrontCart";
+import { useStorefront } from "../../context/storefront-context";
 import { getImageUrl } from "../../lib/image-utils";
 
 // ============================================================================
@@ -907,6 +908,7 @@ function WishlistTab({ siteId }: { siteId: string }) {
   const { products, isLoading, removeItem, itemCount } =
     useStorefrontWishlist(siteId);
   const { addItem: addToCart } = useStorefrontCart(siteId);
+  const { currency } = useStorefront();
 
   if (isLoading) {
     return (
@@ -971,7 +973,7 @@ function WishlistTab({ siteId }: { siteId: string }) {
                 {product.name}
               </p>
               <p className="text-sm font-semibold text-foreground tabular-nums">
-                {formatCents(product.base_price, "ZMW")}
+                {formatCents(product.base_price, currency)}
               </p>
               <p
                 className={`text-xs ${inStock ? "text-success" : "text-destructive"}`}

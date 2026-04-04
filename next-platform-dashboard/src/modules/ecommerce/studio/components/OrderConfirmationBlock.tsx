@@ -126,6 +126,7 @@ function GuestAccountNudge({
   email,
   siteId,
   setPassword,
+  openAuthDialog,
 }: {
   email: string;
   siteId: string;
@@ -133,6 +134,7 @@ function GuestAccountNudge({
     password: string,
     email?: string,
   ) => Promise<{ error: string | null }>;
+  openAuthDialog?: (mode?: "login" | "register" | "set-password") => void;
 }) {
   const [password, setPass] = React.useState("");
   const [confirm, setConfirm] = React.useState("");
@@ -218,6 +220,18 @@ function GuestAccountNudge({
                 Create Account
               </Button>
             </form>
+            {openAuthDialog && (
+              <p className="text-sm text-muted-foreground mt-3">
+                Already have an account?{" "}
+                <button
+                  type="button"
+                  onClick={() => openAuthDialog("login")}
+                  className="text-primary font-medium hover:underline"
+                >
+                  Sign in
+                </button>
+              </p>
+            )}
           </div>
         </div>
       </CardContent>
@@ -1186,6 +1200,7 @@ export function OrderConfirmationBlock({
             email={order.email}
             siteId={storefront.siteId}
             setPassword={auth.setPassword}
+            openAuthDialog={auth.openAuthDialog}
           />
         )}
 
