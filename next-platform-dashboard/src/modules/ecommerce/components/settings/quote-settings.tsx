@@ -120,7 +120,7 @@ export function QuoteSettingsForm({ siteId, agencyId }: QuoteSettingsFormProps) 
           setAgencyBranding(branding)
         }
         // Merge quote settings with agency branding fallbacks, then reset form once
-        const qs = (quoteSettings || {}) as Record<string, unknown>
+        const qs = { ...(quoteSettings || {}) } as Record<string, unknown>
         if (branding) {
           if (!qs.company_name && branding.agency_display_name) {
             qs.company_name = branding.agency_display_name
