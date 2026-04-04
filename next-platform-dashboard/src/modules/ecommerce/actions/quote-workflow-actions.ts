@@ -154,6 +154,22 @@ export async function sendQuote(
       };
     }
 
+    // Validate quote has items and a customer email
+    const items = quote.items as Array<{ quantity: number; unit_price: number }> | null;
+    if (!items || items.length === 0) {
+      return {
+        success: false,
+        error: "Cannot send a quote with no items. Please add items first.",
+      };
+    }
+
+    if (!quote.customer_email) {
+      return {
+        success: false,
+        error: "Cannot send a quote without a customer email address.",
+      };
+    }
+
     // Generate access token if not exists
     let accessToken = quote.access_token;
     if (!accessToken) {

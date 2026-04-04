@@ -22,6 +22,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   FileText,
   RefreshCw,
   Loader2,
@@ -32,6 +42,7 @@ import {
   Clock,
   Eye,
   Copy,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -91,6 +102,8 @@ export function ChatQuotePanel({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [showFullQuote, setShowFullQuote] = useState(false);
+  const [showSendConfirm, setShowSendConfirm] = useState(false);
+  const [showConvertConfirm, setShowConvertConfirm] = useState(false);
 
   const fetchQuote = useCallback(async () => {
     try {
@@ -115,22 +128,14 @@ export function ChatQuotePanel({
   const handleStatusChange = useCallback(
     (newStatus: string) => {
       if (!quote) return;
-      startTransition(async () => {
-        // "sent" must go through sendQuote() which handles email + chat notification
-        if (newStatus === "sent") {
-          const result = await sendQuote({
-            quote_id: quote.id,
-            site_id: siteId,
-          });
-          if (result.success) {
-            toast.success("Quote sent to customer via email");
-            fetchQuote();
-          } else {
-            toast.error(result.error || "Failed to send quote");
-          }
-          return;
-        }
 
+      // "sent" must go through confirmation dialog first
+      if (newStatus === "sent") {
+        setShowSendConfirm(true);
+        return;
+      }
+
+      startTransition(async () => {
         const result = await updateQuoteStatus(
           siteId,
           quote.id,
@@ -158,9 +163,16 @@ export function ChatQuotePanel({
     toast.success("Quote portal link copied to clipboard");
   }, [quote]);
 
-  // Send quote to customer (from dialog or prominent button)
+  // Show confirmation dialog before sending quote
   const handleSendQuote = useCallback(() => {
     if (!quote) return;
+    setShowSendConfirm(true);
+  }, [quote]);
+
+  // Actually send the quote (called from confirmation dialog)
+  const confirmSendQuote = useCallback(() => {
+    if (!quote) return;
+    setShowSendConfirm(false);
     startTransition(async () => {
       const result = await sendQuote({
         quote_id: quote.id,
@@ -176,9 +188,16 @@ export function ChatQuotePanel({
     });
   }, [quote, siteId, fetchQuote]);
 
-  // Convert accepted quote to order
+  // Show confirmation dialog before converting
   const handleConvertToOrder = useCallback(() => {
     if (!quote) return;
+    setShowConvertConfirm(true);
+  }, [quote]);
+
+  // Actually convert the quote (called from confirmation dialog)
+  const confirmConvertToOrder = useCallback(() => {
+    if (!quote) return;
+    setShowConvertConfirm(false);
     startTransition(async () => {
       const result = await convertQuoteToOrder({
         quote_id: quote.id,
@@ -467,6 +486,113 @@ export function ChatQuotePanel({
             onQuoteChange={fetchQuote}
           />
         )}
+
+        {/* Send Quote Confirmation Dialog */}
+        <AlertDialog open={showSendConfirm} onOpenChange={setShowSendConfirm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Send quote to customer?</AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3">
+                  <p>
+                    This will email the quote to{" "}
+                    <strong>{quote.customerEmail}</strong> and send a message in
+                    chat. Please review before sending:
+                  </p>
+                  <div className="rounded-md border p-3 space-y-1.5 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Quote</span>
+                      <span className="font-medium">{quote.quoteNumber}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Items</span>
+                      <span className="font-medium">{quote.items.length}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Total</span>
+                      <span className="font-semibold">
+                        {formatQuoteCurrency(quote.total, quote.currency)}
+                      </span>
+                    </div>
+                  </div>
+                  {quote.items.length === 0 && (
+                    <p className="text-amber-600 text-sm flex items-center gap-1.5">
+                      <AlertTriangle className="h-4 w-4" />
+                      This quote has no items. Add items before sending.
+                    </p>
+                  )}
+                  {quote.total <= 0 && quote.items.length > 0 && (
+                    <p className="text-amber-600 text-sm flex items-center gap-1.5">
+                      <AlertTriangle className="h-4 w-4" />
+                      The quote total is zero. Have you reviewed the pricing?
+                    </p>
+                  )}
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowSendConfirm(false);
+                  setShowFullQuote(true);
+                }}
+              >
+                <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                Review Quote First
+              </Button>
+              <AlertDialogAction
+                onClick={confirmSendQuote}
+                disabled={quote.items.length === 0}
+              >
+                <Send className="h-3.5 w-3.5 mr-1.5" />
+                Send Now
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Convert to Order Confirmation Dialog */}
+        <AlertDialog open={showConvertConfirm} onOpenChange={setShowConvertConfirm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Convert quote to order?</AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3">
+                  <p>
+                    This will create a new order from{" "}
+                    <strong>{quote.quoteNumber}</strong> and change the quote
+                    status to &ldquo;Converted&rdquo;. This action cannot be undone.
+                  </p>
+                  <div className="rounded-md border p-3 space-y-1.5 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Customer</span>
+                      <span className="font-medium">{quote.customerName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Items</span>
+                      <span className="font-medium">{quote.items.length}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Total</span>
+                      <span className="font-semibold">
+                        {formatQuoteCurrency(quote.total, quote.currency)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmConvertToOrder}>
+                <ArrowRightCircle className="h-3.5 w-3.5 mr-1.5" />
+                Convert to Order
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardContent>
     </Card>
   );
