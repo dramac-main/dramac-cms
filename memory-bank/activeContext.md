@@ -1,95 +1,46 @@
 # Active Context
 
-## Current Focus: Agent Permissions System + Quote/Account Fixes ✅ (commit 5cb203f8)
+## Current Focus: Quotes Tab Fix + Clickable Chat Links ✅ (commit e56107b4)
 
 ### What Was Done
 
-**Session covered 8 fixes — 3 code changes, 4 verified already-working, 1 full new system:**
+**Session covered 2 critical fixes + comprehensive audit of all 6 My Account tabs:**
 
-#### Fix 1: Quote PDF Pricing Hide ✅
+#### Fix 1: Quotes Tab Not Loading — CRITICAL BUG ✅
 
-- Added `hidePricing?: boolean` option to `QuotePDFOptions` in `quote-pdf-generator.ts`
-- When `hidePricing=true`: omits Unit Price/Total columns, hides totals section, shows "Pricing is being prepared" message
-- `QuoteRequestBlock.tsx` success state passes `hidePricing: true` when downloading just-submitted quote
-- Button label changed from "Download Quote Summary" to "Download Request Summary"
+- **Root cause:** `get-quotes` API handler selected 3 non-existent database columns
+  - `notes` → actual column is `notes_to_customer`
+  - `product_name` (on quote_items) → actual column is `name`
+  - `variant_label` (on quote_items) → actual column is `description`
+- Supabase PostgREST silently returned `null` data (not error) for invalid columns
+- Handler had no error check: `const { data: quotes } = ...` → returned `{ quotes: [] }`
+- **Fix:** Used Supabase column aliases: `notes:notes_to_customer`, `product_name:name`, `variant_label:description`
+- Added error logging for query failures
 
-#### Fix 2: Address "Set as Default" ✅
+#### Fix 2: Chat Links Not Clickable ✅
 
-- Added `onSetDefault` prop to `AddressCard` component in `MyAccountBlock.tsx`
-- Blue "Set as Default" button (only shows on non-default addresses)
-- `AddressesTab` handler calls `update-address` API with `isDefault: true`, then reloads
+- URLs in chat messages were rendered as plain text
+- Added URL linkification regex to both `formatMessageText()` (customer widget) and `formatChatMarkdown()` (dashboard)
+- Applied AFTER HTML escaping (XSS-safe), using `<a>` tags with `target="_blank"` and `rel="noopener noreferrer"`
+- Files: `WidgetMessageBubble.tsx`, `MessageBubble.tsx`
 
-#### Fix 3: QuotesTab Price Hiding ✅
+#### Full My Account Tab Audit ✅
 
-- QuotesTab in `MyAccountBlock.tsx` conditionally hides prices for `draft` and `pending_approval` status quotes
-- Shows "Pricing pending" italic text instead of monetary total
-- Fixed status display: underscores replaced with spaces
+- **Orders:** OK — all columns match `mod_ecommod01_orders` schema
+- **Bookings:** OK — all columns match `mod_bookmod01_appointments` schema, email-based lookup works
+- **Quotes:** FIXED (see Fix 1)
+- **Wishlist:** OK — localStorage persistence, dynamic currency via `useStorefront()`, batch product fetch
+- **Addresses:** OK — CRUD operations, `customer_addresses` table has no `site_id` (scoped via customer_id)
+- **Profile:** OK — `update-profile` updates correct columns
 
-#### Fix 4: Quote Tracking Auth — VERIFIED ✅
-
-- Already has email verification gate (HMAC-SHA256 cookie auth)
-- Files: `quote-email-gate.tsx`, `quote-portal-auth.ts`, `quote/[token]/page.tsx`
-
-#### Fix 5: Profile Subscription — VERIFIED ✅
-
-- `acceptsMarketing` field fully persisted via `update-profile` action → `accepts_marketing` column
-
-#### Fix 6: Wishlist — VERIFIED ✅
-
-- localStorage + `getPublicProductsByIds` batch fetch, fully functional with images/prices/stock/cart
-
-#### Fix 7: Orders/Bookings — VERIFIED ✅
-
-- All 6 MyAccountBlock tabs confirmed using real API data, zero hardcoding
-
-#### Fix 8: Agent Permissions System ✅ (NEW — Full Implementation)
-
-**Database:** `permissions jsonb DEFAULT '{}'::jsonb` column added to `mod_chat_agents` via Supabase migration
-
-**Type System** (`agent-permissions.ts`):
-
-- 32 granular permissions across 9 categories: chat(6), quotes(5), orders(4), customers(3), products(4), bookings(2), analytics(2), agents(3), settings(3)
-- `PermissionKey` union type, `PermissionDefinition` with label/description/category
-- `AgentPermissions = Partial<Record<PermissionKey, boolean>>`
-
-**Role Defaults:**
-
-- Admin: ALL 32 permissions enabled
-- Supervisor: 23/32 enabled (no delete, refund, permissions management, or site settings)
-- Agent: 7/32 enabled (basic chat respond/transfer/close + view-only for quotes/orders/customers/products/bookings/agents)
-
-**Utilities:** `getEffectivePermissions()` (merges role defaults + overrides), `hasPermission()`, `getDefaultPermissions()`, `getPermissionsByCategory()`, `countPermissions()`
-
-**Server Action:** `updateAgentPermissions(agentId, permissions)` — replaces JSONB on agent record, revalidates path
-
-**UI — AgentPermissionsEditor component:**
-
-- Full dialog with collapsible category sections
-- Switch toggles per permission with labels + descriptions
-- "Enable All" / "Disable All" per category
-- Custom overrides highlighted with blue background + "custom" badge
-- "Reset to Role Defaults" button
-- Counter showing enabled/total permissions
-- Scroll area for long permission lists
-
-**Integration — AgentsPageWrapper:**
-
-- "Permissions" button (Shield icon) on every agent card
-- Opens permission editor dialog
-- Saved permissions update local state immediately
+**Test data cleanup:** Deleted `harpinsltd@gmail.com` auth user, customer, sessions. 2 quotes remain (email-linked) for re-testing.
 
 **Files Modified:**
+- `src/app/api/modules/ecommerce/auth/route.ts` — Fixed `get-quotes` column names
+- `src/modules/live-chat/components/widget/WidgetMessageBubble.tsx` — URL linkification
+- `src/modules/live-chat/components/shared/MessageBubble.tsx` — URL linkification
 
-- `src/modules/ecommerce/lib/quote-pdf-generator.ts` — hidePricing option
-- `src/modules/ecommerce/studio/components/QuoteRequestBlock.tsx` — Download Request Summary
-- `src/modules/ecommerce/studio/components/MyAccountBlock.tsx` — Address defaults, quotes pricing
-- `src/modules/live-chat/lib/agent-permissions.ts` (NEW) — Permission types + defaults + utilities
-- `src/modules/live-chat/components/shared/AgentPermissionsEditor.tsx` (NEW) — Editor UI
-- `src/modules/live-chat/actions/agent-actions.ts` — updateAgentPermissions action
-- `src/modules/live-chat/types/index.ts` — permissions field on ChatAgent
-- `src/modules/live-chat/components/wrappers/AgentsPageWrapper.tsx` — Permissions button + dialog
-
-**TypeScript:** 25 pre-existing errors, 0 new. **Git:** `5cb203f8`
+**TypeScript:** 25 pre-existing errors, 0 new. **Git:** `e56107b4`, pushed to origin/main.
 
 ---
 
