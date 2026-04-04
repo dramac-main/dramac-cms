@@ -86,7 +86,7 @@ export function QuoteSettingsForm({ siteId, agencyId }: QuoteSettingsFormProps) 
   // Quotation mode state (stored in EcommerceSettings, not QuoteSiteSettings)
   const [quotationModeEnabled, setQuotationModeEnabled] = useState(false)
   const [quotationHidePrices, setQuotationHidePrices] = useState(false)
-  const [quotationButtonLabel, setQuotationButtonLabel] = useState('Request a Quote')
+  const [quotationButtonLabel, setQuotationButtonLabel] = useState('Add to Quote')
   const [isSavingMode, setIsSavingMode] = useState(false)
   
   const { register, handleSubmit, setValue, watch, reset } = useForm<FormData>({
@@ -119,32 +119,30 @@ export function QuoteSettingsForm({ siteId, agencyId }: QuoteSettingsFormProps) 
         if (branding) {
           setAgencyBranding(branding)
         }
-        if (quoteSettings) {
-          reset(quoteSettings as FormData)
-        }
-        // Pre-fill empty branding fields from site branding
+        // Merge quote settings with agency branding fallbacks, then reset form once
+        const qs = (quoteSettings || {}) as Record<string, unknown>
         if (branding) {
-          const qs = quoteSettings as FormData | null
-          if (!qs?.company_name && branding.agency_display_name) {
-            setValue('company_name', branding.agency_display_name)
+          if (!qs.company_name && branding.agency_display_name) {
+            qs.company_name = branding.agency_display_name
           }
-          if (!qs?.company_email && (branding.support_email || branding.email_reply_to)) {
-            setValue('company_email', branding.support_email || branding.email_reply_to || '')
+          if (!qs.company_email && (branding.support_email || branding.email_reply_to)) {
+            qs.company_email = branding.support_email || branding.email_reply_to
           }
-          if (!qs?.primary_color && branding.primary_color) {
-            setValue('primary_color', branding.primary_color)
+          if (!qs.primary_color && branding.primary_color) {
+            qs.primary_color = branding.primary_color
           }
-          if (!qs?.company_address && branding.email_footer_address) {
-            setValue('company_address', branding.email_footer_address)
+          if (!qs.company_address && branding.email_footer_address) {
+            qs.company_address = branding.email_footer_address
           }
-          if (!qs?.logo_url && branding.logo_url) {
-            setValue('logo_url', branding.logo_url)
+          if (!qs.logo_url && branding.logo_url) {
+            qs.logo_url = branding.logo_url
           }
         }
+        reset(qs as FormData)
         if (ecomSettings) {
           setQuotationModeEnabled(ecomSettings.quotation_mode_enabled ?? false)
           setQuotationHidePrices(ecomSettings.quotation_hide_prices ?? false)
-          setQuotationButtonLabel(ecomSettings.quotation_button_label || 'Request a Quote')
+          setQuotationButtonLabel(ecomSettings.quotation_button_label || 'Add to Quote')
         }
       } catch (error) {
         console.error('Error loading quote settings:', error)
