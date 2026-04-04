@@ -172,16 +172,18 @@ export function StorefrontAuthProvider({
 
     const REFRESH_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
     const interval = setInterval(() => {
-      callAuth({ action: "session", token }).then((data) => {
-        if (data?.customer) {
-          setCustomer(data.customer);
-        } else {
-          // Session expired server-side
-          localStorage.removeItem(storageKey);
-          setToken(null);
-          setCustomer(null);
-        }
-      }).catch(() => {});
+      callAuth({ action: "session", token })
+        .then((data) => {
+          if (data?.customer) {
+            setCustomer(data.customer);
+          } else {
+            // Session expired server-side
+            localStorage.removeItem(storageKey);
+            setToken(null);
+            setCustomer(null);
+          }
+        })
+        .catch(() => {});
     }, REFRESH_INTERVAL);
 
     return () => clearInterval(interval);

@@ -155,7 +155,10 @@ export async function sendQuote(
     }
 
     // Validate quote has items and a customer email
-    const items = quote.items as Array<{ quantity: number; unit_price: number }> | null;
+    const items = quote.items as Array<{
+      quantity: number;
+      unit_price: number;
+    }> | null;
     if (!items || items.length === 0) {
       return {
         success: false,

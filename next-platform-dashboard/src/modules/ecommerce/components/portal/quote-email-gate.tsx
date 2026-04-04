@@ -25,7 +25,11 @@ interface QuoteEmailGateProps {
   siteId?: string;
 }
 
-export function QuoteEmailGate({ token, quoteNumber, siteId }: QuoteEmailGateProps) {
+export function QuoteEmailGate({
+  token,
+  quoteNumber,
+  siteId,
+}: QuoteEmailGateProps) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -98,84 +102,86 @@ export function QuoteEmailGate({ token, quoteNumber, siteId }: QuoteEmailGatePro
         <Card className="w-full max-w-md">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-            <p className="text-sm text-muted-foreground">Verifying your identity...</p>
+            <p className="text-sm text-muted-foreground">
+              Verifying your identity...
+            </p>
           </CardContent>
         </Card>
       ) : (
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center pb-4">
-          <div className="mx-auto mb-4 h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
-            <ShieldCheck className="h-7 w-7 text-primary" />
-          </div>
-          <CardTitle className="text-xl">View Your Quote</CardTitle>
-          <p className="text-sm text-muted-foreground mt-2">
-            To protect your custom pricing, please confirm the email
-            address this quote was sent to.
-          </p>
-        </CardHeader>
-
-        <CardContent>
-          {/* Quote Reference */}
-          <div className="mb-6 p-3 bg-muted/50 rounded-lg flex items-center gap-3">
-            <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
-            <div>
-              <p className="text-xs text-muted-foreground">Quote Reference</p>
-              <p className="font-medium">{quoteNumber}</p>
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center pb-4">
+            <div className="mx-auto mb-4 h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
+              <ShieldCheck className="h-7 w-7 text-primary" />
             </div>
-          </div>
+            <CardTitle className="text-xl">View Your Quote</CardTitle>
+            <p className="text-sm text-muted-foreground mt-2">
+              To protect your custom pricing, please confirm the email address
+              this quote was sent to.
+            </p>
+          </CardHeader>
 
-          {/* Email Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="verify-email">Your Email Address</Label>
-              <Input
-                id="verify-email"
-                type="email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (error) setError("");
-                }}
-                placeholder="Enter the email this quote was sent to"
-                autoComplete="email"
-                autoFocus
-                disabled={loading}
-              />
-            </div>
-
-            {error && (
-              <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                <span>{error}</span>
+          <CardContent>
+            {/* Quote Reference */}
+            <div className="mb-6 p-3 bg-muted/50 rounded-lg flex items-center gap-3">
+              <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
+              <div>
+                <p className="text-xs text-muted-foreground">Quote Reference</p>
+                <p className="font-medium">{quoteNumber}</p>
               </div>
-            )}
+            </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              size="lg"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Verifying...
-                </>
-              ) : (
-                <>
-                  <ShieldCheck className="h-4 w-4 mr-2" />
-                  Verify & View Quote
-                </>
+            {/* Email Form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="verify-email">Your Email Address</Label>
+                <Input
+                  id="verify-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (error) setError("");
+                  }}
+                  placeholder="Enter the email this quote was sent to"
+                  autoComplete="email"
+                  autoFocus
+                  disabled={loading}
+                />
+              </div>
+
+              {error && (
+                <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span>{error}</span>
+                </div>
               )}
-            </Button>
-          </form>
 
-          <p className="mt-4 text-xs text-center text-muted-foreground">
-            Enter the same email this quote was sent to. You&apos;ll stay
-            verified on this device for 7 days.
-          </p>
-        </CardContent>
-      </Card>
+              <Button
+                type="submit"
+                className="w-full"
+                size="lg"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Verifying...
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="h-4 w-4 mr-2" />
+                    Verify & View Quote
+                  </>
+                )}
+              </Button>
+            </form>
+
+            <p className="mt-4 text-xs text-center text-muted-foreground">
+              Enter the same email this quote was sent to. You&apos;ll stay
+              verified on this device for 7 days.
+            </p>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

@@ -10,21 +10,21 @@
 
 **Solution: Multi-Layer Safety**
 
-| Layer | Protection |
-|---|---|
-| **UI — Confirmation Dialog** | Send & Convert buttons now open AlertDialog with quote summary (number, items, total) |
-| **UI — Empty Quote Warning** | Dialog warns if 0 items or $0 total; disables "Send Now" when no items |
-| **UI — Review First Button** | "Review Quote First" opens full QuoteDetailDialog editor before sending |
-| **UI — Status Dropdown** | Selecting "sent" in status dropdown also triggers confirmation dialog |
-| **Server — Item Validation** | `sendQuote()` rejects quotes with 0 items |
-| **Server — Email Validation** | `sendQuote()` rejects quotes with no customer email |
+| Layer                         | Protection                                                                            |
+| ----------------------------- | ------------------------------------------------------------------------------------- |
+| **UI — Confirmation Dialog**  | Send & Convert buttons now open AlertDialog with quote summary (number, items, total) |
+| **UI — Empty Quote Warning**  | Dialog warns if 0 items or $0 total; disables "Send Now" when no items                |
+| **UI — Review First Button**  | "Review Quote First" opens full QuoteDetailDialog editor before sending               |
+| **UI — Status Dropdown**      | Selecting "sent" in status dropdown also triggers confirmation dialog                 |
+| **Server — Item Validation**  | `sendQuote()` rejects quotes with 0 items                                             |
+| **Server — Email Validation** | `sendQuote()` rejects quotes with no customer email                                   |
 
 **2 Source Files Modified:**
 
-| File | Change |
-|---|---|
-| `ChatQuotePanel.tsx` | Added confirmation dialogs (Send + Convert), rewrote 3 handlers, new `confirmSendQuote`/`confirmConvertToOrder` |
-| `quote-workflow-actions.ts` | Server-side validation: items must exist, customer email required |
+| File                        | Change                                                                                                          |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `ChatQuotePanel.tsx`        | Added confirmation dialogs (Send + Convert), rewrote 3 handlers, new `confirmSendQuote`/`confirmConvertToOrder` |
+| `quote-workflow-actions.ts` | Server-side validation: items must exist, customer email required                                               |
 
 **Also this session:** Pushed 2 previously unpushed commits (`34beef62` site branding fix + `c982b06c` comprehensive auth+quote fixes).
 

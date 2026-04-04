@@ -79,9 +79,7 @@ export function CartSummaryCard({
           <span className="text-muted-foreground">
             {totals.itemCount} {totals.itemCount === 1 ? "item" : "items"}
           </span>
-          <span className="text-muted-foreground italic">
-            Price on request
-          </span>
+          <span className="text-muted-foreground italic">Price on request</span>
         </div>
       );
     }

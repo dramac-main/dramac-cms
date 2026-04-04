@@ -226,33 +226,26 @@ export function getModuleNavigation(
     }
   }
 
-  // 2. Runtime detection — inject built-in items for active modules that
-  //    are missing from settings.navigation (covers pre-existing sites)
+  // 2. Runtime detection — fill in any missing constant items for active
+  //    modules.  Layer 1 may have *some* items from settings.navigation
+  //    (e.g. main links) but miss others (e.g. account icon added after
+  //    the install hook ran).  Per-item merge ensures every constant is
+  //    present without duplicating items that already exist.
   if (modules) {
     const activeModules = new Set(
       modules.filter((m) => m.status === "active").map((m) => m.slug),
     );
 
-    // Booking module: inject if not already present from settings
     if (activeModules.has("booking")) {
-      const hasBookingMain = result.main.some((i) => i.moduleId === "booking");
-      if (!hasBookingMain) {
-        result.main.push(...BOOKING_NAV_ITEMS);
-        result.utility.push(...BOOKING_UTILITY_ITEMS);
-        result.footer.push(...BOOKING_FOOTER_ITEMS);
-      }
+      mergeModuleItems(result.main, BOOKING_NAV_ITEMS);
+      mergeModuleItems(result.utility, BOOKING_UTILITY_ITEMS);
+      mergeModuleItems(result.footer, BOOKING_FOOTER_ITEMS);
     }
 
-    // E-commerce module: inject if not already present from settings
-    // This is the safety net for sites installed before PHASE-ECOM-50
-    // deployed the install hook that writes to site.settings.navigation.
     if (activeModules.has("ecommerce")) {
-      const hasEcomMain = result.main.some((i) => i.moduleId === "ecommerce");
-      if (!hasEcomMain) {
-        result.main.push(...ECOMMERCE_NAV_ITEMS);
-        result.utility.push(...ECOMMERCE_UTILITY_ITEMS);
-        result.footer.push(...ECOMMERCE_FOOTER_ITEMS);
-      }
+      mergeModuleItems(result.main, ECOMMERCE_NAV_ITEMS);
+      mergeModuleItems(result.utility, ECOMMERCE_UTILITY_ITEMS);
+      mergeModuleItems(result.footer, ECOMMERCE_FOOTER_ITEMS);
     }
   }
 
@@ -270,6 +263,19 @@ export function getModuleNavigation(
   result.footer = deduplicateByHref(result.footer);
 
   return result;
+}
+
+/** Add constant items whose ID is not already in the target array */
+function mergeModuleItems(
+  target: SmartNavItem[],
+  constants: SmartNavItem[],
+): void {
+  const existingIds = new Set(target.map((i) => i.id));
+  for (const item of constants) {
+    if (!existingIds.has(item.id)) {
+      target.push(item);
+    }
+  }
 }
 
 /** Remove duplicate items that share the same normalized href, keeping first */

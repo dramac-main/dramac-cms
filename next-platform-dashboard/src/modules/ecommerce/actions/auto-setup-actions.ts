@@ -320,6 +320,15 @@ const ECOMMERCE_NAV_ITEMS: NavigationItem[] = [
     moduleId: "ecommerce",
   },
   {
+    id: "ecom-search",
+    label: "Search",
+    href: "/shop?search=",
+    icon: "Search",
+    position: "utility",
+    sortOrder: 5,
+    moduleId: "ecommerce",
+  },
+  {
     id: "ecom-cart",
     label: "Cart",
     href: "/cart",
@@ -329,6 +338,15 @@ const ECOMMERCE_NAV_ITEMS: NavigationItem[] = [
     // No badge here — the live cart count is handled by the floating
     // EcommerceCartInjector widget (industry standard). Template strings
     // like "{{cartCount}}" can't be resolved server-side.
+    moduleId: "ecommerce",
+  },
+  {
+    id: "ecom-account",
+    label: "Account",
+    href: "/account",
+    icon: "User",
+    position: "utility",
+    sortOrder: 15,
     moduleId: "ecommerce",
   },
 ];
@@ -359,6 +377,14 @@ const ECOMMERCE_FOOTER_ITEMS: NavigationItem[] = [
     href: "/cart",
     position: "footer",
     sortOrder: 3,
+    moduleId: "ecommerce",
+  },
+  {
+    id: "ecom-footer-account",
+    label: "My Account",
+    href: "/account",
+    position: "footer",
+    sortOrder: 4,
     moduleId: "ecommerce",
   },
 ];

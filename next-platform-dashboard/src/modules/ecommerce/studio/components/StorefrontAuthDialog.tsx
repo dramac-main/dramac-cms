@@ -307,7 +307,9 @@ function RegisterForm({
       return;
     }
     if (!/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
-      setError("Password must include at least one uppercase letter and one number.");
+      setError(
+        "Password must include at least one uppercase letter and one number.",
+      );
       return;
     }
     setLoading(true);
@@ -638,19 +640,25 @@ export function StorefrontAuthDialog({
 
         {activeMode === "register" && (
           <div className="mb-4 rounded-lg bg-primary/5 border border-primary/10 p-3">
-            <p className="text-xs font-medium text-foreground mb-1.5">With your account you can:</p>
+            <p className="text-xs font-medium text-foreground mb-1.5">
+              With your account you can:
+            </p>
             <ul className="text-xs text-muted-foreground space-y-1">
               <li className="flex items-center gap-1.5">
-                <span className="text-primary">✓</span> Track orders &amp; view invoices
+                <span className="text-primary">✓</span> Track orders &amp; view
+                invoices
               </li>
               <li className="flex items-center gap-1.5">
-                <span className="text-primary">✓</span> Manage quotes &amp; request changes
+                <span className="text-primary">✓</span> Manage quotes &amp;
+                request changes
               </li>
               <li className="flex items-center gap-1.5">
-                <span className="text-primary">✓</span> Save addresses for faster checkout
+                <span className="text-primary">✓</span> Save addresses for
+                faster checkout
               </li>
               <li className="flex items-center gap-1.5">
-                <span className="text-primary">✓</span> Build a wishlist of favourite products
+                <span className="text-primary">✓</span> Build a wishlist of
+                favourite products
               </li>
             </ul>
           </div>

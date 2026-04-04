@@ -356,10 +356,16 @@ export function QuoteRequestBlock({
       let branding: QuotePDFOptions = { documentType: "quote" };
       if (siteId && agencyId) {
         try {
-          branding = { ...await getQuotePDFBranding(siteId, agencyId), documentType: "quote" };
+          branding = {
+            ...(await getQuotePDFBranding(siteId, agencyId)),
+            documentType: "quote",
+          };
         } catch {
           // Fallback to store name only
-          branding = { documentType: "quote", companyName: settings?.store_name || undefined };
+          branding = {
+            documentType: "quote",
+            companyName: settings?.store_name || undefined,
+          };
         }
       }
       downloadQuotePDF(submittedQuote, branding);
@@ -408,13 +414,17 @@ export function QuoteRequestBlock({
             <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
               <li>Our team reviews your request</li>
               <li>We prepare a detailed quote with pricing</li>
-              <li>You&apos;ll receive an email with a link to view your quote</li>
-              <li>Click the link and enter your email to verify it&apos;s you</li>
+              <li>
+                You&apos;ll receive an email with a link to view your quote
+              </li>
+              <li>
+                Click the link and enter your email to verify it&apos;s you
+              </li>
               <li>Accept, request changes, or decline — all online</li>
             </ol>
             <p className="mt-3 text-xs text-muted-foreground">
-              Tip: You can also create a free account on our site to track
-              all your quotes and orders in one place.
+              Tip: You can also create a free account on our site to track all
+              your quotes and orders in one place.
             </p>
           </div>
 

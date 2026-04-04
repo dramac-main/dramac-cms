@@ -554,7 +554,10 @@ export function ChatQuotePanel({
         </AlertDialog>
 
         {/* Convert to Order Confirmation Dialog */}
-        <AlertDialog open={showConvertConfirm} onOpenChange={setShowConvertConfirm}>
+        <AlertDialog
+          open={showConvertConfirm}
+          onOpenChange={setShowConvertConfirm}
+        >
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Convert quote to order?</AlertDialogTitle>
@@ -563,7 +566,8 @@ export function ChatQuotePanel({
                   <p>
                     This will create a new order from{" "}
                     <strong>{quote.quoteNumber}</strong> and change the quote
-                    status to &ldquo;Converted&rdquo;. This action cannot be undone.
+                    status to &ldquo;Converted&rdquo;. This action cannot be
+                    undone.
                   </p>
                   <div className="rounded-md border p-3 space-y-1.5 text-sm">
                     <div className="flex justify-between">

@@ -989,7 +989,10 @@ export async function POST(request: NextRequest) {
         .eq("id", addressId)
         .single();
 
-      if (!existingAddress || existingAddress.customer_id !== session.customer_id) {
+      if (
+        !existingAddress ||
+        existingAddress.customer_id !== session.customer_id
+      ) {
         return NextResponse.json(
           { error: "Address not found" },
           { status: 404, headers: corsHeaders },

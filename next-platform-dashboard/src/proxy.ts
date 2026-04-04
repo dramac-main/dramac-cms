@@ -80,7 +80,9 @@ export async function proxy(request: NextRequest) {
   // The API routes, embed pages, and quote portal exist at the app level and should work directly
   if (
     (isClientSite || isCustomDomain) &&
-    (pathname.startsWith("/api") || pathname.startsWith("/embed") || pathname.startsWith("/quote/"))
+    (pathname.startsWith("/api") ||
+      pathname.startsWith("/embed") ||
+      pathname.startsWith("/quote/"))
   ) {
     if (DEBUG)
       console.log("[proxy] → API/embed route on subdomain, passing through");
