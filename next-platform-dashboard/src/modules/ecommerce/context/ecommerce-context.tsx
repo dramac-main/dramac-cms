@@ -889,3 +889,22 @@ export function EcommerceProvider({
     </EcommerceContext.Provider>
   );
 }
+
+/**
+ * Conditional provider wrapper — renders EcommerceProvider only when not
+ * already inside one.  Safe to use in components that may appear both inside
+ * the ecommerce dashboard (provider present) and elsewhere (e.g. live chat).
+ */
+export function EnsureEcommerceProvider({
+  children,
+  siteId,
+  agencyId,
+}: EcommerceProviderProps) {
+  const existing = useContext(EcommerceContext);
+  if (existing) return <>{children}</>;
+  return (
+    <EcommerceProvider siteId={siteId} agencyId={agencyId}>
+      {children}
+    </EcommerceProvider>
+  );
+}

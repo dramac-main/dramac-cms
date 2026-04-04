@@ -52,6 +52,7 @@ import {
 import { downloadQuotePDF } from "../../lib/quote-pdf-generator";
 import type { QuotePDFOptions } from "../../lib/quote-pdf-generator";
 import { getQuotePDFBranding } from "../../actions/quote-template-actions";
+import { EnsureEcommerceProvider } from "../../context/ecommerce-context";
 import type {
   QuoteDetailData,
   QuoteItemInput,
@@ -227,6 +228,7 @@ export function QuoteDetailDialog({
   }
 
   return (
+    <EnsureEcommerceProvider siteId={siteId} agencyId={quote.agency_id}>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
@@ -543,5 +545,6 @@ export function QuoteDetailDialog({
         </Tabs>
       </DialogContent>
     </Dialog>
+    </EnsureEcommerceProvider>
   );
 }
