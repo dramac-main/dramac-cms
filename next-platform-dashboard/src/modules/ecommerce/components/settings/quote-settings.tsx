@@ -122,6 +122,25 @@ export function QuoteSettingsForm({ siteId, agencyId }: QuoteSettingsFormProps) 
         if (quoteSettings) {
           reset(quoteSettings as FormData)
         }
+        // Pre-fill empty branding fields from site branding
+        if (branding) {
+          const qs = quoteSettings as FormData | null
+          if (!qs?.company_name && branding.agency_display_name) {
+            setValue('company_name', branding.agency_display_name)
+          }
+          if (!qs?.company_email && (branding.support_email || branding.email_reply_to)) {
+            setValue('company_email', branding.support_email || branding.email_reply_to || '')
+          }
+          if (!qs?.primary_color && branding.primary_color) {
+            setValue('primary_color', branding.primary_color)
+          }
+          if (!qs?.company_address && branding.email_footer_address) {
+            setValue('company_address', branding.email_footer_address)
+          }
+          if (!qs?.logo_url && branding.logo_url) {
+            setValue('logo_url', branding.logo_url)
+          }
+        }
         if (ecomSettings) {
           setQuotationModeEnabled(ecomSettings.quotation_mode_enabled ?? false)
           setQuotationHidePrices(ecomSettings.quotation_hide_prices ?? false)
@@ -599,18 +618,15 @@ export function QuoteSettingsForm({ siteId, agencyId }: QuoteSettingsFormProps) 
                 Quote Branding
               </CardTitle>
               <CardDescription>
-                Branding applied to quotes and PDFs. Values are pulled from your site branding settings.
-                Override below only if quote branding should differ from your main site branding.
+                Branding applied to quotes and PDFs. These values are auto-filled from your site branding.
+                Edit any field to override for quotes specifically.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {agencyBranding && (
                 <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20 text-sm text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
                   <Info className="h-4 w-4 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="font-medium">Using site branding</p>
-                    <p className="mt-0.5">Empty fields below will automatically use your site branding values. Only fill in fields you want to override for quotes.</p>
-                  </div>
+                  <p>Fields were auto-filled from your <strong>site branding</strong>. Any changes here only affect quotes and PDFs.</p>
                 </div>
               )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -619,13 +635,8 @@ export function QuoteSettingsForm({ siteId, agencyId }: QuoteSettingsFormProps) 
                   <Input
                     id="company_name"
                     {...register('company_name')}
-                    placeholder={agencyBranding?.agency_display_name || 'Your Company Name'}
+                    placeholder="Your Company Name"
                   />
-                  {agencyBranding?.agency_display_name && !watch('company_name') && (
-                    <p className="text-xs text-muted-foreground">
-                      Using site: <strong>{agencyBranding.agency_display_name}</strong>
-                    </p>
-                  )}
                 </div>
                 
                 <div className="space-y-2">
@@ -634,13 +645,8 @@ export function QuoteSettingsForm({ siteId, agencyId }: QuoteSettingsFormProps) 
                     id="company_email"
                     type="email"
                     {...register('company_email')}
-                    placeholder={agencyBranding?.support_email || agencyBranding?.email_reply_to || 'sales@company.com'}
+                    placeholder="sales@company.com"
                   />
-                  {(agencyBranding?.support_email || agencyBranding?.email_reply_to) && !watch('company_email') && (
-                    <p className="text-xs text-muted-foreground">
-                      Using site: <strong>{agencyBranding.support_email || agencyBranding.email_reply_to}</strong>
-                    </p>
-                  )}
                 </div>
               </div>
               
@@ -660,19 +666,14 @@ export function QuoteSettingsForm({ siteId, agencyId }: QuoteSettingsFormProps) 
                     <Input
                       id="primary_color"
                       {...register('primary_color')}
-                      placeholder={agencyBranding?.primary_color || 'Site brand color'}
+                      placeholder="#2563eb"
                       className="flex-1"
                     />
                     <div 
                       className="w-10 h-10 rounded-md border"
-                      style={{ backgroundColor: primaryColor || agencyBranding?.primary_color || '#0f172a' }}
+                      style={{ backgroundColor: primaryColor || '#0f172a' }}
                     />
                   </div>
-                  {agencyBranding?.primary_color && !primaryColor && (
-                    <p className="text-xs text-muted-foreground">
-                      Using site: <strong>{agencyBranding.primary_color}</strong>
-                    </p>
-                  )}
                 </div>
               </div>
               
@@ -681,14 +682,9 @@ export function QuoteSettingsForm({ siteId, agencyId }: QuoteSettingsFormProps) 
                 <Textarea
                   id="company_address"
                   {...register('company_address')}
-                  placeholder={agencyBranding?.email_footer_address || '123 Business St, Suite 100\nCity, State 12345\nCountry'}
+                  placeholder="123 Business St, Suite 100&#10;City, State 12345"
                   rows={3}
                 />
-                {agencyBranding?.email_footer_address && !watch('company_address') && (
-                  <p className="text-xs text-muted-foreground">
-                    Using site: <strong>{agencyBranding.email_footer_address}</strong>
-                  </p>
-                )}
               </div>
               
               <div className="space-y-2">
@@ -696,13 +692,8 @@ export function QuoteSettingsForm({ siteId, agencyId }: QuoteSettingsFormProps) 
                 <Input
                   id="logo_url"
                   {...register('logo_url')}
-                  placeholder={agencyBranding?.logo_url || 'https://example.com/logo.png'}
+                  placeholder="https://example.com/logo.png"
                 />
-                {agencyBranding?.logo_url && !watch('logo_url') && (
-                  <p className="text-xs text-muted-foreground">
-                    Using site logo: <strong>{agencyBranding.logo_url.substring(0, 60)}...</strong>
-                  </p>
-                )}
                 <p className="text-xs text-muted-foreground">
                   URL to your company logo (displayed on quotes and PDFs)
                 </p>
