@@ -237,6 +237,7 @@ export async function sendQuote(
       emailType: "quote_sent_customer",
       data: {
         customerName: quote.customer_name || "Customer",
+        customerEmail: quote.customer_email,
         quoteNumber: quote.quote_number,
         subject: input.subject,
         message: input.message,
@@ -347,6 +348,7 @@ export async function resendQuote(
       emailType: "quote_sent_customer",
       data: {
         customerName: quote.customer_name || "Customer",
+        customerEmail: quote.customer_email,
         quoteNumber: quote.quote_number,
         subject,
         message,

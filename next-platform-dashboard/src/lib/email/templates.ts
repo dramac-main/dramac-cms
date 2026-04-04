@@ -801,18 +801,27 @@ ${data.dashboardUrl ? `View in dashboard: ${data.dashboardUrl}` : ""}
 
   quote_sent_customer: {
     subject: (data) =>
-      `Quote ${data.quoteNumber} from ${data.businessName || "us"}`,
+      `Your Quote is Ready — ${data.quoteNumber} from ${data.businessName || "us"}`,
     html: (data) =>
       wrapHtml(`
       <h1 style="${STYLES.heading}">Your Quote is Ready</h1>
       <p style="${STYLES.text}">Hi ${data.customerName || "there"},</p>
-      <p style="${STYLES.text}">We've prepared a quote for you.</p>
-      <p style="${STYLES.text}"><strong>Quote #:</strong> ${data.quoteNumber}<br><strong>Total:</strong> ${data.totalAmount}${data.expiryDate ? `<br><strong>Valid until:</strong> ${data.expiryDate}` : ""}</p>
+      <p style="${STYLES.text}">We've prepared a custom quote for you. Here are the details:</p>
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
+        <p style="margin: 4px 0; color: #374151; font-size: 14px;"><strong>Quote #:</strong> ${data.quoteNumber}</p>
+        <p style="margin: 4px 0; color: #374151; font-size: 14px;"><strong>Total:</strong> ${data.totalAmount}</p>
+        ${data.expiryDate ? `<p style="margin: 4px 0; color: #374151; font-size: 14px;"><strong>Valid until:</strong> ${data.expiryDate}</p>` : ""}
+      </div>
       ${data.message ? `<p style="${STYLES.text}">${data.message}</p>` : ""}
-      ${data.viewQuoteUrl ? `<p style="margin: 24px 0;"><a href="${data.viewQuoteUrl}" style="${STYLES.button}">View Quote</a></p>` : ""}
+      ${data.viewQuoteUrl ? `<p style="margin: 24px 0;"><a href="${data.viewQuoteUrl}" style="${STYLES.button}">View &amp; Respond to Your Quote</a></p>` : ""}
+      <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px 16px; margin: 16px 0;">
+        <p style="margin: 0 0 4px 0; color: #92400e; font-size: 14px; font-weight: 600;">How to view your quote:</p>
+        <p style="margin: 0; color: #92400e; font-size: 13px;">Click the button above and enter this email address (${data.customerEmail || "the one this was sent to"}) to verify it's you. This is a one-time security step to protect your custom pricing.</p>
+      </div>
+      <p style="${STYLES.muted}">From there you can accept, request changes, or decline — all online. You can also create a free store account to track your quotes and orders anytime.</p>
     `),
     text: (data) =>
-      `Your Quote is Ready\n\nHi ${data.customerName || "there"},\n\nQuote #: ${data.quoteNumber}\nTotal: ${data.totalAmount}${data.expiryDate ? `\nValid until: ${data.expiryDate}` : ""}\n\n${data.message || ""}${data.viewQuoteUrl ? `\n\nView quote: ${data.viewQuoteUrl}` : ""}`,
+      `Your Quote is Ready\n\nHi ${data.customerName || "there"},\n\nWe've prepared a custom quote for you.\n\nQuote #: ${data.quoteNumber}\nTotal: ${data.totalAmount}${data.expiryDate ? `\nValid until: ${data.expiryDate}` : ""}\n\n${data.message || ""}${data.viewQuoteUrl ? `\n\nView & respond to your quote: ${data.viewQuoteUrl}\n\nHow to view: Click the link and enter this email address to verify it's you. This is a one-time security step.\n\nYou can accept, request changes, or decline — all online. Create a free store account to track your quotes and orders anytime.` : ""}`,
   },
 
   quote_reminder_customer: {
@@ -870,9 +879,10 @@ ${data.dashboardUrl ? `View in dashboard: ${data.dashboardUrl}` : ""}
       <p style="${STYLES.text}">Hi ${data.customerName || "there"},</p>
       <p style="${STYLES.text}">Thank you for your quote request. We've received it and will get back to you shortly.</p>
       <p style="${STYLES.text}"><strong>Quote #:</strong> ${data.quoteNumber}<br><strong>Items:</strong> ${data.itemCount}</p>
+      <p style="${STYLES.text}"><strong>What happens next:</strong> Our team will review your request and prepare a detailed quote. You'll receive another email with a link to view your quote. Click it and enter this email address to securely access your custom pricing.</p>
     `),
     text: (data) =>
-      `Quote Request Received\n\nHi ${data.customerName || "there"},\n\nThank you for your quote request.\nQuote #: ${data.quoteNumber}\nItems: ${data.itemCount}`,
+      `Quote Request Received\n\nHi ${data.customerName || "there"},\n\nThank you for your quote request.\nQuote #: ${data.quoteNumber}\nItems: ${data.itemCount}\n\nWhat happens next: Our team will review your request and prepare a detailed quote. You'll receive another email with a link to view your quote. Click it and enter this email address to securely access your custom pricing.`,
   },
 
   quote_accepted_customer: {
@@ -881,11 +891,15 @@ ${data.dashboardUrl ? `View in dashboard: ${data.dashboardUrl}` : ""}
       wrapHtml(`
       <h1 style="${STYLES.heading}">Quote Confirmed</h1>
       <p style="${STYLES.text}">Hi ${data.customerName || "there"},</p>
-      <p style="${STYLES.text}">Your acceptance of quote <strong>${data.quoteNumber}</strong> has been confirmed.</p>
+      <p style="${STYLES.text}">Your acceptance of quote <strong>${data.quoteNumber}</strong> has been confirmed. We'll process your order shortly.</p>
       ${data.total ? `<p style="${STYLES.text}"><strong>Total:</strong> ${data.total}</p>` : ""}
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px; margin: 16px 0;">
+        <p style="margin: 0 0 4px 0; color: #166534; font-size: 14px; font-weight: 600;">Track your order online</p>
+        <p style="margin: 0; color: #166534; font-size: 13px;">Create a free account on our website to view your order status, past quotes, and more. Just click &ldquo;Sign In&rdquo; on our site and use this email address to get started.</p>
+      </div>
     `),
     text: (data) =>
-      `Quote Confirmed\n\nHi ${data.customerName || "there"},\n\nYour acceptance of quote ${data.quoteNumber} has been confirmed.${data.total ? `\nTotal: ${data.total}` : ""}`,
+      `Quote Confirmed\n\nHi ${data.customerName || "there"},\n\nYour acceptance of quote ${data.quoteNumber} has been confirmed. We'll process your order shortly.${data.total ? `\nTotal: ${data.total}` : ""}\n\nTrack your order: Create a free account on our website to view your order status, past quotes, and more. Just click "Sign In" on our site and use this email address.`,
   },
 
   quote_rejected_owner: {

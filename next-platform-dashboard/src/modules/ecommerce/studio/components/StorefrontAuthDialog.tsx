@@ -550,7 +550,7 @@ export function StorefrontAuthDialog({
 
   const subtitles: Record<DialogMode, string> = {
     login: "Welcome back! Sign in to your store account.",
-    register: "Create a customer account to save addresses and track orders.",
+    register: "Create a free account to manage orders, quotes & more.",
     "set-password": "Set a password to access your account anytime.",
   };
 
@@ -633,6 +633,26 @@ export function StorefrontAuthDialog({
             >
               Create Account
             </button>
+          </div>
+        )}
+
+        {activeMode === "register" && (
+          <div className="mb-4 rounded-lg bg-primary/5 border border-primary/10 p-3">
+            <p className="text-xs font-medium text-foreground mb-1.5">With your account you can:</p>
+            <ul className="text-xs text-muted-foreground space-y-1">
+              <li className="flex items-center gap-1.5">
+                <span className="text-primary">✓</span> Track orders &amp; view invoices
+              </li>
+              <li className="flex items-center gap-1.5">
+                <span className="text-primary">✓</span> Manage quotes &amp; request changes
+              </li>
+              <li className="flex items-center gap-1.5">
+                <span className="text-primary">✓</span> Save addresses for faster checkout
+              </li>
+              <li className="flex items-center gap-1.5">
+                <span className="text-primary">✓</span> Build a wishlist of favourite products
+              </li>
+            </ul>
           </div>
         )}
 

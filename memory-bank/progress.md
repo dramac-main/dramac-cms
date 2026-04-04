@@ -9,9 +9,26 @@
 - **STOREFRONT CUSTOMER AUTH WIRING — NavAccountBadge, MyAccountBlock, /account page, studio registry (5 files)** ✅
 - **QUOTE USER JOURNEY WALKTHROUGH — 22-step verified walkthrough document** ✅
 
+- **QUOTE SEND SAFETY — CONFIRMATION DIALOGS + SERVER VALIDATION (2 files, 159 insertions)** ✅
+
 ---
 
-## Latest Update: Storefront Customer Auth Wiring + Quote Journey Walkthrough ✅
+## Latest Update: Quote Send Safety — Confirmation Dialogs + Server Validation ✅
+
+### What Was Done
+
+Added multi-layer safety to prevent accidental quote sends from live chat. ChatQuotePanel now requires explicit confirmation before sending quotes or converting to orders. Confirmation dialog shows quote summary, warns about empty/zero quotes, and offers a "Review Quote First" button. Server-side validation rejects quotes with no items or no customer email. Also confirmed storefront customer accounts are fully working (no changes needed).
+
+**2 Source Files Modified:**
+
+- `ChatQuotePanel.tsx` — Confirmation dialogs (Send + Convert), rewrote handlers, review-first button
+- `quote-workflow-actions.ts` — Server-side validation: items exist, customer email present
+
+**Git:** Committed as `67b46eda`, pushed to origin/main.
+
+---
+
+## Previous Update: Storefront Customer Auth Wiring + Quote Journey Walkthrough ✅
 
 ### What Was Done
 

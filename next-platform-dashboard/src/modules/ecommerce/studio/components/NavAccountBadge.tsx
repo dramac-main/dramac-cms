@@ -18,6 +18,8 @@ interface NavAccountBadgeProps {
   accountHref?: string;
   /** Icon color */
   color?: string;
+  /** Show text label next to icon (default: true) */
+  showLabel?: boolean;
   className?: string;
 }
 
@@ -46,6 +48,7 @@ function UserIcon({ className }: { className?: string }) {
 export function NavAccountBadge({
   accountHref = "/account",
   color,
+  showLabel = true,
   className = "",
 }: NavAccountBadgeProps) {
   const { customer, isLoading, openAuthDialog } = useStorefrontAuth();
@@ -94,12 +97,15 @@ export function NavAccountBadge({
     <button
       type="button"
       onClick={() => openAuthDialog("login")}
-      className={`inline-flex items-center justify-center hover:opacity-70 transition-opacity ${className}`}
+      className={`inline-flex items-center justify-center gap-1.5 hover:opacity-70 transition-opacity ${className}`}
       style={color ? { color } : undefined}
-      title="Sign in to your store account"
-      aria-label="Sign in to your store account"
+      title="Sign in or create an account"
+      aria-label="Sign in or create an account"
     >
-      <UserIcon className="w-6 h-6" />
+      <UserIcon className="w-5 h-5" />
+      {showLabel && (
+        <span className="text-sm font-medium hidden sm:inline">Sign In</span>
+      )}
     </button>
   );
 }

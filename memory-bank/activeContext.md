@@ -1,8 +1,42 @@
 # Active Context
 
-## Current Focus: Storefront Customer Auth Wiring + Quote Journey Walkthrough ✅
+## Current Focus: Quote Send Safety — Confirmation Dialogs + Server Validation ✅
 
-### What Was Done (Latest Session — Customer Auth + Quote Walkthrough, commit 36533df8)
+### What Was Done (Latest Session — Quote Send Safety, commits 34beef62 + c982b06c + 67b46eda)
+
+**User Complaint:** "I just clicked Send to Customer in live chat and it sent a quote I didn't even look at, don't even know the prices there"
+
+**Root Cause:** `ChatQuotePanel.tsx` "Send to Customer" button directly called `sendQuote()` with ZERO confirmation. No pricing review, no item validation. One click = quote emailed to customer.
+
+**Solution: Multi-Layer Safety**
+
+| Layer | Protection |
+|---|---|
+| **UI — Confirmation Dialog** | Send & Convert buttons now open AlertDialog with quote summary (number, items, total) |
+| **UI — Empty Quote Warning** | Dialog warns if 0 items or $0 total; disables "Send Now" when no items |
+| **UI — Review First Button** | "Review Quote First" opens full QuoteDetailDialog editor before sending |
+| **UI — Status Dropdown** | Selecting "sent" in status dropdown also triggers confirmation dialog |
+| **Server — Item Validation** | `sendQuote()` rejects quotes with 0 items |
+| **Server — Email Validation** | `sendQuote()` rejects quotes with no customer email |
+
+**2 Source Files Modified:**
+
+| File | Change |
+|---|---|
+| `ChatQuotePanel.tsx` | Added confirmation dialogs (Send + Convert), rewrote 3 handlers, new `confirmSendQuote`/`confirmConvertToOrder` |
+| `quote-workflow-actions.ts` | Server-side validation: items must exist, customer email required |
+
+**Also this session:** Pushed 2 previously unpushed commits (`34beef62` site branding fix + `c982b06c` comprehensive auth+quote fixes).
+
+**Audit result on customer accounts:** System is COMPLETE and working — real Supabase Auth accounts, passwords, 6-tab MyAccountBlock, all wired in commit `36533df8`. No changes needed.
+
+**TypeScript:** Zero errors. Git: `67b46eda`, pushed to origin/main.
+
+---
+
+## Previous Focus: Storefront Customer Auth Wiring + Quote Journey Walkthrough ✅
+
+### What Was Done (commit 36533df8)
 
 **User Complaints:**
 

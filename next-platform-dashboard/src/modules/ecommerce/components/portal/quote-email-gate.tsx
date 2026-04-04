@@ -107,10 +107,10 @@ export function QuoteEmailGate({ token, quoteNumber, siteId }: QuoteEmailGatePro
           <div className="mx-auto mb-4 h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
             <ShieldCheck className="h-7 w-7 text-primary" />
           </div>
-          <CardTitle className="text-xl">Verify Your Identity</CardTitle>
+          <CardTitle className="text-xl">View Your Quote</CardTitle>
           <p className="text-sm text-muted-foreground mt-2">
-            For your security, please enter the email address associated with
-            this quote to view its details.
+            To protect your custom pricing, please confirm the email
+            address this quote was sent to.
           </p>
         </CardHeader>
 
@@ -171,8 +171,8 @@ export function QuoteEmailGate({ token, quoteNumber, siteId }: QuoteEmailGatePro
           </form>
 
           <p className="mt-4 text-xs text-center text-muted-foreground">
-            This is a one-time verification. You won&apos;t need to re-enter
-            your email for 7 days on this device.
+            Enter the same email this quote was sent to. You&apos;ll stay
+            verified on this device for 7 days.
           </p>
         </CardContent>
       </Card>

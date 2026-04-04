@@ -392,6 +392,10 @@ export function QuoteRequestBlock({
             We&apos;ve received your request and will send your quote to{" "}
             <strong>{formData.customer_email}</strong> shortly.
           </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            You&apos;ll use this email to securely view and respond to your
+            quote when it&apos;s ready.
+          </p>
           {submittedQuote?.quote_number && (
             <p className="mt-1 text-sm text-muted-foreground">
               Reference: <strong>{submittedQuote.quote_number}</strong>
@@ -404,9 +408,14 @@ export function QuoteRequestBlock({
             <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
               <li>Our team reviews your request</li>
               <li>We prepare a detailed quote with pricing</li>
-              <li>You&apos;ll receive an email when it&apos;s ready</li>
+              <li>You&apos;ll receive an email with a link to view your quote</li>
+              <li>Click the link and enter your email to verify it&apos;s you</li>
               <li>Accept, request changes, or decline — all online</li>
             </ol>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Tip: You can also create a free account on our site to track
+              all your quotes and orders in one place.
+            </p>
           </div>
 
           <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
@@ -782,6 +791,11 @@ export function QuoteRequestBlock({
               <AlertDescription>{submitError}</AlertDescription>
             </Alert>
           )}
+
+          <p className="text-xs text-muted-foreground">
+            We&apos;ll send your quote to the email address above. You&apos;ll
+            use it to securely view and respond to your quote.
+          </p>
         </form>
       </CardContent>
 
