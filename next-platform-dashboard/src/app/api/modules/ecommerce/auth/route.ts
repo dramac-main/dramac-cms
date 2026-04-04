@@ -336,6 +336,13 @@ export async function POST(request: NextRequest) {
         .update({ last_seen_at: new Date().toISOString() })
         .eq("id", customer.id);
 
+      // Link any unlinked quotes to this customer (e.g. submitted as guest before registering)
+      await (supabase as any)
+        .from("mod_ecommod01_quotes")
+        .update({ customer_id: customer.id })
+        .eq("customer_email", emailLower)
+        .is("customer_id", null);
+
       const token = await createSession(supabase, customer.id, siteId, {
         userAgent: ua,
         ip,
@@ -562,6 +569,15 @@ export async function POST(request: NextRequest) {
           .select("id")
           .single();
         customerId = newCustomer?.id;
+      }
+
+      // Retroactively link any quotes submitted with this email to the customer
+      if (customerId && customerEmail) {
+        await (supabase as any)
+          .from("mod_ecommod01_quotes")
+          .update({ customer_id: customerId })
+          .eq("customer_email", customerEmail)
+          .is("customer_id", null);
       }
 
       // Create session

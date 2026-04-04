@@ -113,8 +113,8 @@ function QuoteAccountNudge({
               Account created!
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Sign in with <strong>{email}</strong> to track your quotes and
-              orders.
+              You&apos;re now signed in as <strong>{email}</strong>. Your quotes
+              will be linked to your account automatically.
             </p>
           </div>
         </div>
