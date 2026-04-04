@@ -1,41 +1,41 @@
 /**
  * Quote & Invoice PDF Generator Utility
- * 
+ *
  * Phase ECOM-12: Quote Workflow & Customer Portal
  * Phase FIX-02: PDF Generation Implementation
- * 
+ *
  * Generates professional HTML documents for quotes/invoices.
  * Uses browser print-to-PDF (window.print) — no external PDF libraries needed.
  */
 
-import type { Quote, QuoteItem } from '../types/ecommerce-types'
-import { formatQuoteCurrency, calculateItemLineTotal } from './quote-utils'
-import { DEFAULT_LOCALE } from '@/lib/locale-config'
+import type { Quote, QuoteItem } from "../types/ecommerce-types";
+import { formatQuoteCurrency, calculateItemLineTotal } from "./quote-utils";
+import { DEFAULT_LOCALE } from "@/lib/locale-config";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 export interface QuotePDFOptions {
-  includeCompanyLogo?: boolean
-  logoUrl?: string
-  companyName?: string
-  companyAddress?: string
-  companyPhone?: string
-  companyEmail?: string
-  primaryColor?: string
-  showTerms?: boolean
-  customFooter?: string
+  includeCompanyLogo?: boolean;
+  logoUrl?: string;
+  companyName?: string;
+  companyAddress?: string;
+  companyPhone?: string;
+  companyEmail?: string;
+  primaryColor?: string;
+  showTerms?: boolean;
+  customFooter?: string;
   /** 'quote' or 'invoice' — controls heading text */
-  documentType?: 'quote' | 'invoice'
+  documentType?: "quote" | "invoice";
   /** Hide all pricing — used for pending/draft quotes where pricing isn't ready yet */
-  hidePricing?: boolean
+  hidePricing?: boolean;
 }
 
 export interface QuotePDFData {
-  quote: Quote
-  items: QuoteItem[]
-  options: QuotePDFOptions
+  quote: Quote;
+  items: QuoteItem[];
+  options: QuotePDFOptions;
 }
 
 // ============================================================================
@@ -48,130 +48,147 @@ export interface QuotePDFData {
 export function generatePDFData(
   quote: Quote,
   items: QuoteItem[],
-  options: QuotePDFOptions = {}
+  options: QuotePDFOptions = {},
 ): QuotePDFData {
   return {
     quote,
     items: items.sort((a, b) => a.sort_order - b.sort_order),
     options: {
       includeCompanyLogo: true,
-      primaryColor: '',
+      primaryColor: "",
       showTerms: true,
-      documentType: 'quote',
-      ...options
-    }
-  }
+      documentType: "quote",
+      ...options,
+    },
+  };
 }
 
 /**
  * Format quote data for PDF sections
  */
 export function formatQuoteForPDF(data: QuotePDFData) {
-  const { quote, items, options } = data
-  
+  const { quote, items, options } = data;
+
   return {
     // Header
     header: {
       title: quote.title || `Quote ${quote.quote_number}`,
       quoteNumber: quote.quote_number,
       date: new Date(quote.created_at).toLocaleDateString(DEFAULT_LOCALE, {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       }),
-      validUntil: quote.valid_until 
+      validUntil: quote.valid_until
         ? new Date(quote.valid_until).toLocaleDateString(DEFAULT_LOCALE, {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
+            year: "numeric",
+            month: "long",
+            day: "numeric",
           })
-        : null
+        : null,
     },
-    
+
     // Company Info
     company: {
-      name: options.companyName || '',
-      address: options.companyAddress || '',
-      phone: options.companyPhone || '',
-      email: options.companyEmail || '',
-      logo: options.logoUrl || null
+      name: options.companyName || "",
+      address: options.companyAddress || "",
+      phone: options.companyPhone || "",
+      email: options.companyEmail || "",
+      logo: options.logoUrl || null,
     },
-    
+
     // Customer Info
     customer: {
       name: quote.customer_name,
       email: quote.customer_email,
-      company: quote.customer_company || '',
-      phone: quote.customer_phone || ''
+      company: quote.customer_company || "",
+      phone: quote.customer_phone || "",
     },
-    
+
     // Introduction
     introduction: quote.introduction || null,
-    
+
     // Line Items
-    items: items.map(item => ({
+    items: items.map((item) => ({
       name: item.name,
-      sku: item.sku || '',
-      description: item.description || '',
+      sku: item.sku || "",
+      description: item.description || "",
       quantity: item.quantity,
-      unitPrice: options.hidePricing ? '' : formatQuoteCurrency(item.unit_price, quote.currency),
-      discount: options.hidePricing ? '' : (item.discount_percent > 0 ? `${item.discount_percent}%` : ''),
-      total: options.hidePricing ? '' : formatQuoteCurrency(
-        calculateItemLineTotal(
-          item.quantity,
-          item.unit_price,
-          item.discount_percent,
-          item.tax_rate
-        ),
-        quote.currency
-      )
+      unitPrice: options.hidePricing
+        ? ""
+        : formatQuoteCurrency(item.unit_price, quote.currency),
+      discount: options.hidePricing
+        ? ""
+        : item.discount_percent > 0
+          ? `${item.discount_percent}%`
+          : "",
+      total: options.hidePricing
+        ? ""
+        : formatQuoteCurrency(
+            calculateItemLineTotal(
+              item.quantity,
+              item.unit_price,
+              item.discount_percent,
+              item.tax_rate,
+            ),
+            quote.currency,
+          ),
     })),
-    
+
     // Totals
-    totals: options.hidePricing ? null : {
-      subtotal: formatQuoteCurrency(quote.subtotal, quote.currency),
-      discount: quote.discount_amount > 0 
-        ? formatQuoteCurrency(quote.discount_amount, quote.currency)
-        : null,
-      discountLabel: quote.discount_type === 'percentage'
-        ? `Discount (${quote.discount_value}%)`
-        : 'Discount',
-      tax: quote.tax_amount > 0
-        ? formatQuoteCurrency(quote.tax_amount, quote.currency)
-        : null,
-      taxLabel: quote.tax_rate > 0 ? `Tax (${quote.tax_rate}%)` : 'Tax',
-      shipping: quote.shipping_amount > 0
-        ? formatQuoteCurrency(quote.shipping_amount, quote.currency)
-        : null,
-      total: formatQuoteCurrency(quote.total, quote.currency)
-    },
-    
+    totals: options.hidePricing
+      ? null
+      : {
+          subtotal: formatQuoteCurrency(quote.subtotal, quote.currency),
+          discount:
+            quote.discount_amount > 0
+              ? formatQuoteCurrency(quote.discount_amount, quote.currency)
+              : null,
+          discountLabel:
+            quote.discount_type === "percentage"
+              ? `Discount (${quote.discount_value}%)`
+              : "Discount",
+          tax:
+            quote.tax_amount > 0
+              ? formatQuoteCurrency(quote.tax_amount, quote.currency)
+              : null,
+          taxLabel: quote.tax_rate > 0 ? `Tax (${quote.tax_rate}%)` : "Tax",
+          shipping:
+            quote.shipping_amount > 0
+              ? formatQuoteCurrency(quote.shipping_amount, quote.currency)
+              : null,
+          total: formatQuoteCurrency(quote.total, quote.currency),
+        },
+
     // Terms
     terms: options.showTerms ? quote.terms_and_conditions : null,
-    
+
     // Notes
     notesToCustomer: quote.notes_to_customer || null,
-    
+
     // Footer
     footer: options.customFooter || null,
-    
+
     // Styling
-    primaryColor: options.primaryColor || '#0f172a'
-  }
+    primaryColor: options.primaryColor || "#0f172a",
+  };
 }
 
 /**
  * Generate PDF filename
  */
-export function generatePDFFilename(quote: Quote, type: 'quote' | 'invoice' = 'quote'): string {
+export function generatePDFFilename(
+  quote: Quote,
+  type: "quote" | "invoice" = "quote",
+): string {
   const customerSlug = quote.customer_name
     .toLowerCase()
-    .replace(/[^a-z0-9]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-  
-  const prefix = type === 'invoice' ? 'INV' : quote.quote_number
-  return `${prefix}-${customerSlug}.pdf`
+    .replace(/[^a-z0-9]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  const prefix = type === "invoice" ? "INV" : quote.quote_number;
+  return `${prefix}-${customerSlug}.pdf`;
 }
 
 // ============================================================================
@@ -183,11 +200,11 @@ export function generatePDFFilename(quote: Quote, type: 'quote' | 'invoice' = 'q
  */
 function escapeHtml(str: string): string {
   return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 /**
@@ -195,22 +212,22 @@ function escapeHtml(str: string): string {
  * Only allows valid hex colors, named colors, rgb/hsl functions.
  */
 function sanitizeCSSColor(value: string): string {
-  const trimmed = (value || '').trim()
+  const trimmed = (value || "").trim();
   // Allow hex colors
-  if (/^#[0-9a-fA-F]{3,8}$/.test(trimmed)) return trimmed
+  if (/^#[0-9a-fA-F]{3,8}$/.test(trimmed)) return trimmed;
   // Allow named colors (letters only)
-  if (/^[a-zA-Z]{3,30}$/.test(trimmed)) return trimmed
+  if (/^[a-zA-Z]{3,30}$/.test(trimmed)) return trimmed;
   // Allow rgb/rgba/hsl/hsla functions with safe characters
-  if (/^(?:rgb|hsl)a?\([0-9,.\s%]+\)$/.test(trimmed)) return trimmed
+  if (/^(?:rgb|hsl)a?\([0-9,.\s%]+\)$/.test(trimmed)) return trimmed;
   // Fallback to safe default
-  return '#0f172a'
+  return "#0f172a";
 }
 
 /**
  * Generate the CSS styles for print-ready document
  */
 function generateStyles(unsafePrimaryColor: string): string {
-  const primaryColor = sanitizeCSSColor(unsafePrimaryColor)
+  const primaryColor = sanitizeCSSColor(unsafePrimaryColor);
   return `
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
@@ -536,7 +553,7 @@ function generateStyles(unsafePrimaryColor: string): string {
     .print-btn.secondary {
       background: #6b7280;
     }
-  `
+  `;
 }
 
 /**
@@ -544,16 +561,16 @@ function generateStyles(unsafePrimaryColor: string): string {
  */
 function getStatusClass(status: string): string {
   const map: Record<string, string> = {
-    draft: 'status-draft',
-    pending_approval: 'status-sent',
-    sent: 'status-sent',
-    viewed: 'status-viewed',
-    accepted: 'status-accepted',
-    rejected: 'status-rejected',
-    expired: 'status-expired',
-    converted: 'status-converted',
-  }
-  return map[status] || 'status-draft'
+    draft: "status-draft",
+    pending_approval: "status-sent",
+    sent: "status-sent",
+    viewed: "status-viewed",
+    accepted: "status-accepted",
+    rejected: "status-rejected",
+    expired: "status-expired",
+    converted: "status-converted",
+  };
+  return map[status] || "status-draft";
 }
 
 /**
@@ -561,58 +578,77 @@ function getStatusClass(status: string): string {
  * Opens in a new window for browser print-to-PDF.
  */
 export function generateQuoteHTML(data: QuotePDFData): string {
-  const formatted = formatQuoteForPDF(data)
-  const docType = data.options.documentType || 'quote'
-  const docLabel = docType === 'invoice' ? 'Invoice' : 'Quote'
-  const primaryColor = formatted.primaryColor
+  const formatted = formatQuoteForPDF(data);
+  const docType = data.options.documentType || "quote";
+  const docLabel = docType === "invoice" ? "Invoice" : "Quote";
+  const primaryColor = formatted.primaryColor;
 
   // Build items rows
-  const hasDiscount = !data.options.hidePricing && data.items.some(i => i.discount_percent > 0)
-  const hidePricing = data.options.hidePricing
-  const itemsHtml = formatted.items.map(item => `
+  const hasDiscount =
+    !data.options.hidePricing && data.items.some((i) => i.discount_percent > 0);
+  const hidePricing = data.options.hidePricing;
+  const itemsHtml = formatted.items
+    .map(
+      (item) => `
     <tr>
       <td>
         <div class="item-name">${escapeHtml(item.name)}</div>
-        ${item.sku ? `<div class="item-sku">SKU: ${escapeHtml(item.sku)}</div>` : ''}
-        ${item.description ? `<div class="item-desc">${escapeHtml(item.description)}</div>` : ''}
+        ${item.sku ? `<div class="item-sku">SKU: ${escapeHtml(item.sku)}</div>` : ""}
+        ${item.description ? `<div class="item-desc">${escapeHtml(item.description)}</div>` : ""}
       </td>
       <td class="text-center">${item.quantity}</td>
-      ${hidePricing ? '' : `<td class="text-right">${escapeHtml(item.unitPrice)}</td>`}
-      ${hasDiscount ? `<td class="text-center">${item.discount || '—'}</td>` : ''}
-      ${hidePricing ? '' : `<td class="text-right">${escapeHtml(item.total)}</td>`}
+      ${hidePricing ? "" : `<td class="text-right">${escapeHtml(item.unitPrice)}</td>`}
+      ${hasDiscount ? `<td class="text-center">${item.discount || "—"}</td>` : ""}
+      ${hidePricing ? "" : `<td class="text-right">${escapeHtml(item.total)}</td>`}
     </tr>
-  `).join('')
+  `,
+    )
+    .join("");
 
   // Build totals
-  const totalsHtml = formatted.totals ? `
+  const totalsHtml = formatted.totals
+    ? `
     <div class="totals-row">
       <span>Subtotal</span>
       <span>${escapeHtml(formatted.totals.subtotal)}</span>
     </div>
-    ${formatted.totals.discount ? `
+    ${
+      formatted.totals.discount
+        ? `
       <div class="totals-row discount">
         <span>${escapeHtml(formatted.totals.discountLabel)}</span>
         <span>-${escapeHtml(formatted.totals.discount)}</span>
       </div>
-    ` : ''}
-    ${formatted.totals.tax ? `
+    `
+        : ""
+    }
+    ${
+      formatted.totals.tax
+        ? `
       <div class="totals-row">
         <span>${escapeHtml(formatted.totals.taxLabel)}</span>
         <span>${escapeHtml(formatted.totals.tax)}</span>
       </div>
-    ` : ''}
-    ${formatted.totals.shipping ? `
+    `
+        : ""
+    }
+    ${
+      formatted.totals.shipping
+        ? `
       <div class="totals-row">
         <span>Shipping</span>
         <span>${escapeHtml(formatted.totals.shipping)}</span>
       </div>
-    ` : ''}
+    `
+        : ""
+    }
     <div class="totals-divider"></div>
     <div class="totals-row total">
       <span>Total</span>
       <span>${escapeHtml(formatted.totals.total)}</span>
     </div>
-  ` : ''
+  `
+    : "";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -632,19 +668,19 @@ export function generateQuoteHTML(data: QuotePDFData): string {
     <!-- Header -->
     <div class="header">
       <div class="header-left">
-        ${formatted.company.logo ? `<img src="${escapeHtml(formatted.company.logo)}" alt="${escapeHtml(formatted.company.name)}" class="company-logo" />` : ''}
-        ${formatted.company.name ? `<div class="company-name">${escapeHtml(formatted.company.name)}</div>` : ''}
+        ${formatted.company.logo ? `<img src="${escapeHtml(formatted.company.logo)}" alt="${escapeHtml(formatted.company.name)}" class="company-logo" />` : ""}
+        ${formatted.company.name ? `<div class="company-name">${escapeHtml(formatted.company.name)}</div>` : ""}
         <div class="company-details">
-          ${formatted.company.address ? escapeHtml(formatted.company.address) + '<br>' : ''}
-          ${formatted.company.phone ? escapeHtml(formatted.company.phone) + '<br>' : ''}
-          ${formatted.company.email ? escapeHtml(formatted.company.email) : ''}
+          ${formatted.company.address ? escapeHtml(formatted.company.address) + "<br>" : ""}
+          ${formatted.company.phone ? escapeHtml(formatted.company.phone) + "<br>" : ""}
+          ${formatted.company.email ? escapeHtml(formatted.company.email) : ""}
         </div>
       </div>
       <div class="header-right">
         <div class="doc-type">${docLabel}</div>
         <div class="doc-number">#${escapeHtml(formatted.header.quoteNumber)}</div>
         <div class="doc-status ${getStatusClass(data.quote.status)}">
-          ${escapeHtml(data.quote.status.replace(/_/g, ' '))}
+          ${escapeHtml(data.quote.status.replace(/_/g, " "))}
         </div>
       </div>
     </div>
@@ -655,9 +691,9 @@ export function generateQuoteHTML(data: QuotePDFData): string {
         <div class="info-label">${docLabel} To</div>
         <div class="info-value">
           <strong>${escapeHtml(formatted.customer.name)}</strong>
-          ${formatted.customer.company ? escapeHtml(formatted.customer.company) + '<br>' : ''}
-          ${formatted.customer.email ? escapeHtml(formatted.customer.email) + '<br>' : ''}
-          ${formatted.customer.phone ? escapeHtml(formatted.customer.phone) : ''}
+          ${formatted.customer.company ? escapeHtml(formatted.customer.company) + "<br>" : ""}
+          ${formatted.customer.email ? escapeHtml(formatted.customer.email) + "<br>" : ""}
+          ${formatted.customer.phone ? escapeHtml(formatted.customer.phone) : ""}
         </div>
       </div>
       <div class="info-block">
@@ -665,14 +701,18 @@ export function generateQuoteHTML(data: QuotePDFData): string {
         <div class="info-value">
           <strong>${docLabel} #${escapeHtml(formatted.header.quoteNumber)}</strong>
           Date: ${escapeHtml(formatted.header.date)}<br>
-          ${formatted.header.validUntil ? `Valid Until: ${escapeHtml(formatted.header.validUntil)}` : ''}
+          ${formatted.header.validUntil ? `Valid Until: ${escapeHtml(formatted.header.validUntil)}` : ""}
         </div>
       </div>
     </div>
 
-    ${formatted.introduction ? `
+    ${
+      formatted.introduction
+        ? `
       <div class="introduction">${escapeHtml(formatted.introduction)}</div>
-    ` : ''}
+    `
+        : ""
+    }
 
     <!-- Line Items -->
     <table class="items-table">
@@ -680,9 +720,9 @@ export function generateQuoteHTML(data: QuotePDFData): string {
         <tr>
           <th>Item</th>
           <th class="text-center">Qty</th>
-          ${hidePricing ? '' : '<th class="text-right">Unit Price</th>'}
-          ${hasDiscount ? '<th class="text-center">Discount</th>' : ''}
-          ${hidePricing ? '' : '<th class="text-right">Total</th>'}
+          ${hidePricing ? "" : '<th class="text-right">Unit Price</th>'}
+          ${hasDiscount ? '<th class="text-center">Discount</th>' : ""}
+          ${hidePricing ? "" : '<th class="text-right">Total</th>'}
         </tr>
       </thead>
       <tbody>
@@ -690,43 +730,55 @@ export function generateQuoteHTML(data: QuotePDFData): string {
       </tbody>
     </table>
 
-    ${hidePricing ? `
+    ${
+      hidePricing
+        ? `
       <div class="notes-section">
         <div class="notes-title">Pricing</div>
         <div class="notes-content">Pricing is being prepared. You will receive an updated quote with detailed pricing once our team has reviewed your request.</div>
       </div>
-    ` : `
+    `
+        : `
     <!-- Totals -->
     <div class="totals-section">
       <div class="totals-table">
         ${totalsHtml}
       </div>
     </div>
-    `}
+    `
+    }
 
-    ${formatted.notesToCustomer ? `
+    ${
+      formatted.notesToCustomer
+        ? `
       <div class="notes-section">
         <div class="notes-title">Notes</div>
         <div class="notes-content">${escapeHtml(formatted.notesToCustomer)}</div>
       </div>
-    ` : ''}
+    `
+        : ""
+    }
 
-    ${formatted.terms ? `
+    ${
+      formatted.terms
+        ? `
       <div class="terms-section">
         <div class="terms-title">Terms &amp; Conditions</div>
         <div class="terms-content">${escapeHtml(formatted.terms)}</div>
       </div>
-    ` : ''}
+    `
+        : ""
+    }
 
     <!-- Footer -->
     <div class="footer">
-      ${formatted.footer ? `<p>${escapeHtml(formatted.footer)}</p>` : ''}
-      <p>Generated on ${new Date().toLocaleDateString(DEFAULT_LOCALE, { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-      ${formatted.company.name ? `<p class="footer-brand">${escapeHtml(formatted.company.name)}</p>` : ''}
+      ${formatted.footer ? `<p>${escapeHtml(formatted.footer)}</p>` : ""}
+      <p>Generated on ${new Date().toLocaleDateString(DEFAULT_LOCALE, { year: "numeric", month: "long", day: "numeric" })}</p>
+      ${formatted.company.name ? `<p class="footer-brand">${escapeHtml(formatted.company.name)}</p>` : ""}
     </div>
   </div>
 </body>
-</html>`
+</html>`;
 }
 
 // ============================================================================
@@ -736,18 +788,18 @@ export function generateQuoteHTML(data: QuotePDFData): string {
 /**
  * Generate a quote/invoice PDF by opening a print-ready HTML page in a new window.
  * The user can then use the browser's "Save as PDF" option from the print dialog.
- * 
+ *
  * @returns true if the window was successfully opened
  */
 export function generateQuotePDF(data: QuotePDFData): boolean {
-  const html = generateQuoteHTML(data)
-  const printWindow = window.open('', '_blank')
+  const html = generateQuoteHTML(data);
+  const printWindow = window.open("", "_blank");
   if (!printWindow) {
-    return false
+    return false;
   }
-  printWindow.document.write(html)
-  printWindow.document.close()
-  return true
+  printWindow.document.write(html);
+  printWindow.document.close();
+  return true;
 }
 
 /**
@@ -756,11 +808,11 @@ export function generateQuotePDF(data: QuotePDFData): boolean {
  */
 export function downloadQuotePDF(
   quote: Quote,
-  options: QuotePDFOptions = {}
+  options: QuotePDFOptions = {},
 ): boolean {
-  const items = quote.items || []
-  const data = generatePDFData(quote, items, options)
-  return generateQuotePDF(data)
+  const items = quote.items || [];
+  const data = generatePDFData(quote, items, options);
+  return generateQuotePDF(data);
 }
 
 /**
@@ -768,7 +820,7 @@ export function downloadQuotePDF(
  */
 export function downloadInvoicePDF(
   quote: Quote,
-  options: QuotePDFOptions = {}
+  options: QuotePDFOptions = {},
 ): boolean {
-  return downloadQuotePDF(quote, { ...options, documentType: 'invoice' })
+  return downloadQuotePDF(quote, { ...options, documentType: "invoice" });
 }

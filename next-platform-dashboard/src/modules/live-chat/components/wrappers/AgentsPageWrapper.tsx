@@ -167,7 +167,9 @@ export function AgentsPageWrapper({
   });
 
   // Permissions editor state
-  const [permissionsAgent, setPermissionsAgent] = useState<ChatAgent | null>(null);
+  const [permissionsAgent, setPermissionsAgent] = useState<ChatAgent | null>(
+    null,
+  );
   const [showPermissions, setShowPermissions] = useState(false);
 
   const handleOpenPermissions = useCallback((agent: ChatAgent) => {

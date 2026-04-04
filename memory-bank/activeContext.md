@@ -7,32 +7,39 @@
 **Session covered 8 fixes — 3 code changes, 4 verified already-working, 1 full new system:**
 
 #### Fix 1: Quote PDF Pricing Hide ✅
+
 - Added `hidePricing?: boolean` option to `QuotePDFOptions` in `quote-pdf-generator.ts`
 - When `hidePricing=true`: omits Unit Price/Total columns, hides totals section, shows "Pricing is being prepared" message
 - `QuoteRequestBlock.tsx` success state passes `hidePricing: true` when downloading just-submitted quote
 - Button label changed from "Download Quote Summary" to "Download Request Summary"
 
 #### Fix 2: Address "Set as Default" ✅
+
 - Added `onSetDefault` prop to `AddressCard` component in `MyAccountBlock.tsx`
 - Blue "Set as Default" button (only shows on non-default addresses)
 - `AddressesTab` handler calls `update-address` API with `isDefault: true`, then reloads
 
 #### Fix 3: QuotesTab Price Hiding ✅
+
 - QuotesTab in `MyAccountBlock.tsx` conditionally hides prices for `draft` and `pending_approval` status quotes
 - Shows "Pricing pending" italic text instead of monetary total
 - Fixed status display: underscores replaced with spaces
 
 #### Fix 4: Quote Tracking Auth — VERIFIED ✅
+
 - Already has email verification gate (HMAC-SHA256 cookie auth)
 - Files: `quote-email-gate.tsx`, `quote-portal-auth.ts`, `quote/[token]/page.tsx`
 
 #### Fix 5: Profile Subscription — VERIFIED ✅
+
 - `acceptsMarketing` field fully persisted via `update-profile` action → `accepts_marketing` column
 
 #### Fix 6: Wishlist — VERIFIED ✅
+
 - localStorage + `getPublicProductsByIds` batch fetch, fully functional with images/prices/stock/cart
 
 #### Fix 7: Orders/Bookings — VERIFIED ✅
+
 - All 6 MyAccountBlock tabs confirmed using real API data, zero hardcoding
 
 #### Fix 8: Agent Permissions System ✅ (NEW — Full Implementation)
@@ -40,11 +47,13 @@
 **Database:** `permissions jsonb DEFAULT '{}'::jsonb` column added to `mod_chat_agents` via Supabase migration
 
 **Type System** (`agent-permissions.ts`):
+
 - 32 granular permissions across 9 categories: chat(6), quotes(5), orders(4), customers(3), products(4), bookings(2), analytics(2), agents(3), settings(3)
 - `PermissionKey` union type, `PermissionDefinition` with label/description/category
 - `AgentPermissions = Partial<Record<PermissionKey, boolean>>`
 
 **Role Defaults:**
+
 - Admin: ALL 32 permissions enabled
 - Supervisor: 23/32 enabled (no delete, refund, permissions management, or site settings)
 - Agent: 7/32 enabled (basic chat respond/transfer/close + view-only for quotes/orders/customers/products/bookings/agents)
@@ -54,6 +63,7 @@
 **Server Action:** `updateAgentPermissions(agentId, permissions)` — replaces JSONB on agent record, revalidates path
 
 **UI — AgentPermissionsEditor component:**
+
 - Full dialog with collapsible category sections
 - Switch toggles per permission with labels + descriptions
 - "Enable All" / "Disable All" per category
@@ -63,11 +73,13 @@
 - Scroll area for long permission lists
 
 **Integration — AgentsPageWrapper:**
+
 - "Permissions" button (Shield icon) on every agent card
 - Opens permission editor dialog
 - Saved permissions update local state immediately
 
 **Files Modified:**
+
 - `src/modules/ecommerce/lib/quote-pdf-generator.ts` — hidePricing option
 - `src/modules/ecommerce/studio/components/QuoteRequestBlock.tsx` — Download Request Summary
 - `src/modules/ecommerce/studio/components/MyAccountBlock.tsx` — Address defaults, quotes pricing

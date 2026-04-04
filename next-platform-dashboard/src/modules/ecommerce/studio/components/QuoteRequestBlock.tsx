@@ -480,7 +480,10 @@ export function QuoteRequestBlock({
   if (isSubmitted) {
     const handleDownloadQuote = async () => {
       if (!submittedQuote) return;
-      let branding: QuotePDFOptions = { documentType: "quote", hidePricing: true };
+      let branding: QuotePDFOptions = {
+        documentType: "quote",
+        hidePricing: true,
+      };
       if (siteId && agencyId) {
         try {
           branding = {

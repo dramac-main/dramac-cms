@@ -24,6 +24,7 @@
 Comprehensive end-to-end fixes covering quotes, addresses, and a full agent permissions system:
 
 **Quote/Account Fixes:**
+
 1. Quote PDF `hidePricing` option — omits prices/totals for pending quotes
 2. QuoteRequestBlock "Download Request Summary" uses hidePricing
 3. AddressCard "Set as Default" button with API integration
@@ -31,6 +32,7 @@ Comprehensive end-to-end fixes covering quotes, addresses, and a full agent perm
 5. Verified: quote tracking auth, profile subscription, wishlist, orders/bookings all working
 
 **Agent Permissions System (NEW):**
+
 - Database: `permissions jsonb` column on `mod_chat_agents`
 - 32 granular permissions across 9 categories
 - Role-based defaults (admin=all 32, supervisor=23, agent=7)

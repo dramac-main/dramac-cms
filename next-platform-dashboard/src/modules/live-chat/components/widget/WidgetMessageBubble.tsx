@@ -25,6 +25,11 @@ function formatMessageText(text: string): string {
   // *italic* or _italic_ (but not inside words like some_var_name)
   safe = safe.replace(/(?<![\w])\*(.+?)\*(?![\w])/g, "<em>$1</em>");
   safe = safe.replace(/(?<![\w])_(.+?)_(?![\w])/g, "<em>$1</em>");
+  // Linkify URLs (after HTML escaping so <a> tags are safe)
+  safe = safe.replace(
+    /(https?:\/\/[^\s<>]+)/g,
+    '<a href="$1" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: underline; word-break: break-all;">$1</a>',
+  );
   return safe;
 }
 

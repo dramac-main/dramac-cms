@@ -1251,7 +1251,8 @@ function QuotesTab({
           QUOTE_STATUS_COLORS[quote.status] || "bg-muted text-muted-foreground";
         const isExpired =
           quote.valid_until && new Date(quote.valid_until) < new Date();
-        const isPricingPending = quote.status === "draft" || quote.status === "pending_approval";
+        const isPricingPending =
+          quote.status === "draft" || quote.status === "pending_approval";
 
         return (
           <div
@@ -1286,7 +1287,8 @@ function QuotesTab({
                 <span
                   className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColors}`}
                 >
-                  {quote.status.charAt(0).toUpperCase() + quote.status.slice(1).replace(/_/g, ' ')}
+                  {quote.status.charAt(0).toUpperCase() +
+                    quote.status.slice(1).replace(/_/g, " ")}
                 </span>
               </div>
             </div>

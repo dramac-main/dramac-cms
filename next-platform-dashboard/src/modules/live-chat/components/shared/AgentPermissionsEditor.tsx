@@ -77,9 +77,9 @@ export function AgentPermissionsEditor({
   const [localPermissions, setLocalPermissions] = useState<AgentPermissions>(
     () => agent.permissions || {},
   );
-  const [collapsedCategories, setCollapsedCategories] = useState<
-    Set<string>
-  >(new Set());
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(
+    new Set(),
+  );
 
   const grouped = getPermissionsByCategory();
   const effective = getEffectivePermissions(agent.role, localPermissions);
@@ -110,9 +110,7 @@ export function AgentPermissionsEditor({
 
   const toggleCategory = useCallback(
     (categoryKey: string, enable: boolean) => {
-      const categoryPerms = grouped.find(
-        (g) => g.category.key === categoryKey,
-      );
+      const categoryPerms = grouped.find((g) => g.category.key === categoryKey);
       if (!categoryPerms) return;
 
       setLocalPermissions((prev) => {
@@ -148,10 +146,7 @@ export function AgentPermissionsEditor({
 
   const handleSave = useCallback(() => {
     startTransition(async () => {
-      const result = await updateAgentPermissions(
-        agent.id,
-        localPermissions,
-      );
+      const result = await updateAgentPermissions(agent.id, localPermissions);
       if (result.error) {
         toast.error(result.error);
       } else {
@@ -239,10 +234,7 @@ export function AgentPermissionsEditor({
                         className="h-6 px-2 text-xs"
                         onClick={(e) => {
                           e.stopPropagation();
-                          toggleCategory(
-                            category.key,
-                            !allEnabled,
-                          );
+                          toggleCategory(category.key, !allEnabled);
                         }}
                       >
                         {allEnabled ? "Disable All" : "Enable All"}
@@ -268,9 +260,7 @@ export function AgentPermissionsEditor({
                           >
                             <div className="flex-1 min-w-0 pl-7">
                               <div className="flex items-center gap-2">
-                                <span className="text-sm">
-                                  {perm.label}
-                                </span>
+                                <span className="text-sm">{perm.label}</span>
                                 {isOverridden && (
                                   <Badge
                                     variant="outline"

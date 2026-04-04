@@ -1156,12 +1156,12 @@ export async function POST(request: NextRequest) {
       const TABLE_PREFIX = "mod_ecommod01";
 
       // Quotes can be linked by customer_id or customer_email
-      const { data: quotes } = await (supabase as any)
+      const { data: quotes, error: quotesError } = await (supabase as any)
         .from(`${TABLE_PREFIX}_quotes`)
         .select(
           `
-          id, quote_number, status, total, currency, valid_until, notes, created_at,
-          items:${TABLE_PREFIX}_quote_items(id, product_name, variant_label, quantity, unit_price)
+          id, quote_number, status, total, currency, valid_until, notes:notes_to_customer, created_at,
+          items:${TABLE_PREFIX}_quote_items(id, product_name:name, variant_label:description, quantity, unit_price)
         `,
         )
         .eq("site_id", siteId)
@@ -1170,6 +1170,10 @@ export async function POST(request: NextRequest) {
         )
         .order("created_at", { ascending: false })
         .limit(50);
+
+      if (quotesError) {
+        console.error("[get-quotes] Query error:", quotesError.message);
+      }
 
       return NextResponse.json(
         { quotes: quotes || [] },
