@@ -411,9 +411,18 @@ export const NAVBAR_GENERATOR_PROMPT = `You are designing a premium navigation b
 
 ## NAVIGATION LINKS
 - Every href must point to an ACTUAL page being generated
-- Include 4-6 main navigation items
+- Include 4-6 main navigation items (STRICT MAXIMUM: 6)
 - Order by importance/user journey
-- Do NOT add module-specific links like "Shop" or "Book Now" — those are injected automatically at render time by the Smart Navigation system when modules (e-commerce, booking) are enabled.
+- Do NOT add module-specific links like "Shop", "Cart", "Book Now", or "Categories" — those are injected automatically at render time by the Smart Navigation system when modules (e-commerce, booking) are enabled. Adding them manually causes duplicates.
+- If more than 5 pages exist, group related ones into dropdown menus using hasDropdown/dropdownLinks instead of flat links (e.g., group "About", "Team", "Careers" under an "About" dropdown)
+- NEVER add a separate "Cart" text link — the cart icon is added automatically by Smart Navigation
+- The navbar uses a Priority+ pattern: if too many links appear at runtime (after module items are injected), overflow links collapse into a "More" dropdown automatically. Design with this in mind.
+
+## RESPONSIVE DESIGN
+- linkSpacing: Use "compact" when the site has many pages or modules active. Use "normal" for simple 4-5 link sites
+- linkFontSize: Use "sm" for content-heavy sites with many nav items, "md" for standard sites
+- height: Use "md" for standard, "sm" for minimal/content-heavy sites
+- The navbar adapts across breakpoints: tighter spacing and smaller text on tablets, Priority+ overflow on narrow desktops, full hamburger menu on mobile
 
 ## UTILITY ITEMS (Smart Navigation)
 - The navbar has a utility area for icon buttons (cart, calendar) that is populated automatically at render time based on installed modules.

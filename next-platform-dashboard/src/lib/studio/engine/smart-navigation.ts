@@ -296,6 +296,8 @@ function deduplicateByHref(items: SmartNavItem[]): SmartNavItem[] {
  * - Module items are inserted at the end by default, before "Contact" if present
  * - Deduplication by href — if a static link already points to the same URL, skip
  * - Sorted by sortOrder within the injected group
+ * - Static links that duplicate utility items (cart, search, account) are stripped
+ *   to prevent redundancy (e.g. "Cart" text link when cart icon exists)
  */
 export function mergeMainNavLinks(
   staticLinks: Array<{
@@ -305,17 +307,29 @@ export function mergeMainNavLinks(
     [k: string]: unknown;
   }>,
   moduleItems: SmartNavItem[],
+  utilityHrefs?: string[],
 ): Array<{
   label?: string;
   text?: string;
   href?: string;
   [k: string]: unknown;
 }> {
-  if (!moduleItems.length) return staticLinks;
+  // Strip static links whose href is already covered by a utility icon.
+  // This prevents "Cart" text link from appearing alongside cart icon,
+  // "Search" text alongside search icon, etc.
+  let cleanedStatic = staticLinks;
+  if (utilityHrefs && utilityHrefs.length > 0) {
+    const utilityHrefSet = new Set(utilityHrefs.map(normalizeHref));
+    cleanedStatic = staticLinks.filter(
+      (l) => !utilityHrefSet.has(normalizeHref(l.href || "")),
+    );
+  }
+
+  if (!moduleItems.length) return cleanedStatic;
 
   // Build a set of existing hrefs for dedup
   const existingHrefs = new Set(
-    staticLinks.map((l) => normalizeHref(l.href || "")),
+    cleanedStatic.map((l) => normalizeHref(l.href || "")),
   );
 
   // Filter out module items whose href already exists in static links
@@ -327,14 +341,14 @@ export function mergeMainNavLinks(
       href: item.href,
     }));
 
-  if (!newItems.length) return staticLinks;
+  if (!newItems.length) return cleanedStatic;
 
   // Insert before "Contact" link if it exists, otherwise append
-  const contactIdx = staticLinks.findIndex(
+  const contactIdx = cleanedStatic.findIndex(
     (l) => (l.label || l.text || "").toLowerCase() === "contact",
   );
 
-  const result = [...staticLinks];
+  const result = [...cleanedStatic];
   if (contactIdx >= 0) {
     result.splice(contactIdx, 0, ...newItems);
   } else {

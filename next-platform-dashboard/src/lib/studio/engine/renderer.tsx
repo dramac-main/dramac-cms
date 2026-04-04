@@ -262,8 +262,16 @@ function ComponentRenderer({
     const moduleNav = getModuleNavigation(siteSettings, modules);
     const existingLinks =
       (injectedProps.links as Array<{ label: string; href: string }>) || [];
-    injectedProps.links = mergeMainNavLinks(existingLinks, moduleNav.main);
-    injectedProps.utilityItems = buildUtilityItems(moduleNav.utility);
+    const utilityItems = buildUtilityItems(moduleNav.utility);
+    // Pass utility hrefs so mergeMainNavLinks can strip redundant text links
+    // (e.g. "Cart" text link removed when cart icon is present)
+    const utilityHrefs = utilityItems.map((u) => u.href);
+    injectedProps.links = mergeMainNavLinks(
+      existingLinks,
+      moduleNav.main,
+      utilityHrefs,
+    );
+    injectedProps.utilityItems = utilityItems;
   }
   if (component.type === "Footer" && siteSettings) {
     const moduleNav = getModuleNavigation(siteSettings, modules);

@@ -452,6 +452,13 @@ export function PremiumNavbarRender({
   const [scrollProgress, setScrollProgress] = useState(0);
   const navRef = useRef<HTMLElement>(null);
 
+  // Priority+ Navigation (progressive collapse — industry-standard overflow pattern)
+  const desktopLinksRef = useRef<HTMLDivElement>(null);
+  const moreDropdownRef = useRef<HTMLDivElement>(null);
+  const measuredLinkWidths = useRef<number[]>([]);
+  const [visibleLinkCount, setVisibleLinkCount] = useState<number>(999);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+
   // Active page detection for nav link highlighting
   const pathname = usePathname();
 
@@ -499,18 +506,99 @@ export function PremiumNavbarRender({
     showScrollProgress,
   ]);
 
-  // Close mobile menu on escape
+  // Close mobile menu / More dropdown on escape
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setMobileMenuOpen(false);
         setOpenDropdown(null);
+        setMoreMenuOpen(false);
       }
     };
 
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
   }, []);
+
+  // Priority+ Navigation — measure links and calculate overflow
+  useEffect(() => {
+    if (_isEditor) return;
+    const container = desktopLinksRef.current;
+    const allLinks = links || [];
+    if (!container || allLinks.length === 0) return;
+
+    const gapFallback: Record<string, number> = { compact: 16, normal: 24, wide: 40 };
+    const moreReserve = 84; // Space for the "More ▾" button
+
+    const calculate = () => {
+      // Read actual computed gap (respects responsive CSS breakpoints)
+      const gapPx =
+        parseFloat(getComputedStyle(container).gap) ||
+        gapFallback[linkSpacing] ||
+        24;
+
+      // Measure link widths if not yet measured (first pass when all links are visible)
+      if (measuredLinkWidths.current.length === 0) {
+        const els = container.querySelectorAll<HTMLElement>("[data-nav-link]");
+        els.forEach((el) => measuredLinkWidths.current.push(el.offsetWidth));
+      }
+
+      const widths = measuredLinkWidths.current;
+      if (widths.length === 0) return;
+
+      const containerWidth = container.offsetWidth;
+      if (containerWidth <= 0) return;
+
+      // Check if ALL links fit without needing "More"
+      let totalWidth = 0;
+      for (let i = 0; i < widths.length; i++) {
+        totalWidth += widths[i] + (i > 0 ? gapPx : 0);
+      }
+      if (totalWidth <= containerWidth) {
+        setVisibleLinkCount(allLinks.length);
+        return;
+      }
+
+      // Find how many links fit alongside the "More" button
+      let usedWidth = 0;
+      for (let i = 0; i < widths.length; i++) {
+        usedWidth += widths[i] + (i > 0 ? gapPx : 0);
+        if (usedWidth + gapPx + moreReserve > containerWidth) {
+          setVisibleLinkCount(Math.max(1, i));
+          return;
+        }
+      }
+      setVisibleLinkCount(allLinks.length);
+    };
+
+    // Measure on next frame (all links rendered initially for measurement)
+    requestAnimationFrame(calculate);
+
+    const observer = new ResizeObserver(() => calculate());
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [links, linkSpacing, _isEditor]);
+
+  // Re-measure when links change
+  useEffect(() => {
+    measuredLinkWidths.current = [];
+    setVisibleLinkCount(999);
+  }, [links?.length]);
+
+  // Close "More" dropdown on click outside
+  useEffect(() => {
+    if (!moreMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        moreDropdownRef.current &&
+        !moreDropdownRef.current.contains(e.target as Node)
+      ) {
+        setMoreMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [moreMenuOpen]);
 
   // Lock body scroll when mobile menu open
   useEffect(() => {
@@ -533,6 +621,14 @@ export function PremiumNavbarRender({
   );
   const effectiveHamburgerColor = hamburgerColor || resolvedTextColor;
   const isMobileView = _isEditor ? _breakpoint === "mobile" : false;
+
+  // Priority+ computed values
+  const allLinks = links || [];
+  const effectiveVisibleCount = _isEditor
+    ? allLinks.length
+    : Math.min(visibleLinkCount, allLinks.length);
+  const visibleLinks = allLinks.slice(0, effectiveVisibleCount);
+  const overflowLinks = allLinks.slice(effectiveVisibleCount);
 
   // Style maps
   const heightClasses: Record<string, string> = {
@@ -565,15 +661,15 @@ export function PremiumNavbarRender({
   };
 
   const linkSpacingClasses: Record<string, string> = {
-    compact: "gap-4",
-    normal: "gap-6",
-    wide: "gap-10",
+    compact: "gap-2 lg:gap-4",
+    normal: "gap-3 lg:gap-6",
+    wide: "gap-5 lg:gap-10",
   };
 
   const linkFontSizeClasses: Record<string, string> = {
-    sm: "text-sm",
-    md: "text-base",
-    lg: "text-lg",
+    sm: "text-xs lg:text-sm",
+    md: "text-sm lg:text-base",
+    lg: "text-base lg:text-lg",
   };
 
   const linkWeightClasses: Record<string, string> = {
@@ -584,9 +680,9 @@ export function PremiumNavbarRender({
   };
 
   const ctaSizeClasses: Record<string, string> = {
-    sm: "px-4 py-1.5 text-sm",
-    md: "px-5 py-2 text-base",
-    lg: "px-7 py-3 text-lg",
+    sm: "px-3 py-1.5 text-xs lg:px-4 lg:text-sm",
+    md: "px-3.5 py-1.5 text-sm lg:px-5 lg:py-2 lg:text-base",
+    lg: "px-5 py-2 text-sm lg:px-7 lg:py-3 lg:text-lg",
   };
 
   const ctaRadiusClasses: Record<string, string> = {
@@ -735,11 +831,12 @@ export function PremiumNavbarRender({
             </a>
           </div>
 
-          {/* Desktop Navigation Links */}
+          {/* Desktop Navigation Links — Priority+ pattern (progressive collapse) */}
           <div
-            className={`hidden md:flex items-center ${linkSpacingClasses[linkSpacing]} ${
+            ref={desktopLinksRef}
+            className={`hidden md:flex items-center ${linkSpacingClasses[linkSpacing]} min-w-0 overflow-hidden flex-nowrap ${
               layout === "standard"
-                ? "flex-1 ml-10"
+                ? "flex-1 ml-8 lg:ml-10"
                 : layout === "centered"
                   ? "flex-1 justify-center"
                   : layout === "split"
@@ -747,10 +844,13 @@ export function PremiumNavbarRender({
                     : ""
             } ${linkAlignment === "right" ? "justify-end" : linkAlignment === "center" ? "justify-center" : ""}`}
           >
-            {(links || []).map((link, i) => {
+            {allLinks.map((link, i) => {
               // Support both 'label' and 'text' properties for backwards compatibility
               const linkText = link.label || link.text || "";
               if (!linkText) return null;
+
+              // Priority+ hide: overflow links are hidden but stay in DOM for measurement
+              const isOverflow = i >= effectiveVisibleCount;
 
               // Active state detection
               const linkHref = link.href || "#";
@@ -770,11 +870,17 @@ export function PremiumNavbarRender({
                 : "opacity-80";
 
               return (
-                <div key={i} className="relative group">
+                <div
+                  key={i}
+                  className={`relative group shrink-0 ${isOverflow ? "invisible absolute" : ""}`}
+                  data-nav-link
+                  aria-hidden={isOverflow || undefined}
+                >
                   <a
                     href={linkHref}
                     target={link.target || "_self"}
-                    className={`inline-flex items-center gap-1 ${linkFontSizeClasses[linkFontSize]} ${linkWeightClasses[linkFontWeight]} ${getLinkHoverClass()} ${activeClass}`}
+                    tabIndex={isOverflow ? -1 : undefined}
+                    className={`inline-flex items-center gap-1 whitespace-nowrap ${linkFontSizeClasses[linkFontSize]} ${linkWeightClasses[linkFontWeight]} ${getLinkHoverClass()} ${activeClass}`}
                     style={{
                       color: resolvedTextColor,
                       textTransform: linkTextTransform,
@@ -794,7 +900,8 @@ export function PremiumNavbarRender({
                   </a>
 
                   {/* Dropdown Menu */}
-                  {link.hasDropdown &&
+                  {!isOverflow &&
+                    link.hasDropdown &&
                     link.dropdownLinks &&
                     openDropdown === i && (
                       <div
@@ -823,11 +930,82 @@ export function PremiumNavbarRender({
                 </div>
               );
             })}
+
+            {/* Priority+ "More" dropdown for overflow links */}
+            {overflowLinks.length > 0 && (
+              <div className="relative shrink-0" ref={moreDropdownRef}>
+                <button
+                  onClick={() => setMoreMenuOpen(!moreMenuOpen)}
+                  className={`inline-flex items-center gap-1 whitespace-nowrap ${linkFontSizeClasses[linkFontSize]} ${linkWeightClasses[linkFontWeight]} transition-opacity hover:opacity-70`}
+                  style={{ color: resolvedTextColor }}
+                  aria-expanded={moreMenuOpen}
+                  aria-haspopup="true"
+                >
+                  More
+                  <ChevronDownIcon
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${moreMenuOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+
+                {moreMenuOpen && (
+                  <div className="absolute top-full right-0 mt-2 min-w-[200px] bg-card rounded-lg shadow-xl border border-border py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                    {overflowLinks.map((link, i) => {
+                      const linkText = link.label || link.text || "";
+                      if (!linkText) return null;
+                      const linkHref = link.href || "#";
+                      const isActive =
+                        pathname === linkHref ||
+                        (linkHref !== "/" && pathname?.startsWith(linkHref));
+
+                      return (
+                        <div key={i}>
+                          <a
+                            href={linkHref}
+                            target={link.target || "_self"}
+                            className={`block px-4 py-2.5 transition-colors hover:bg-muted ${
+                              isActive
+                                ? "bg-muted/50 font-semibold"
+                                : "font-medium"
+                            }`}
+                            onClick={() => setMoreMenuOpen(false)}
+                          >
+                            <span className="text-foreground text-sm">
+                              {linkText}
+                            </span>
+                          </a>
+
+                          {/* Nested dropdowns in More menu */}
+                          {link.hasDropdown &&
+                            link.dropdownLinks &&
+                            link.dropdownLinks.map((dropLink, j) => (
+                              <a
+                                key={j}
+                                href={dropLink.href || "#"}
+                                className="block pl-8 pr-4 py-2 transition-colors hover:bg-muted"
+                                onClick={() => setMoreMenuOpen(false)}
+                              >
+                                <span className="text-sm text-muted-foreground">
+                                  {dropLink.label || dropLink.text}
+                                </span>
+                                {dropLink.description && (
+                                  <span className="block text-xs text-muted-foreground/70 mt-0.5">
+                                    {dropLink.description}
+                                  </span>
+                                )}
+                              </a>
+                            ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Utility Items (cart icon, etc.) — injected by modules */}
           {utilityItems && utilityItems.length > 0 && (
-            <div className="hidden md:flex items-center gap-2 mr-2">
+            <div className="hidden md:flex items-center gap-1 lg:gap-2 ml-1 mr-1 lg:mr-2 shrink-0">
               {utilityItems.map((item) =>
                 item.id.endsWith("-account") ? (
                   <NavAccountBadge
@@ -839,7 +1017,7 @@ export function PremiumNavbarRender({
                   <a
                     key={item.id}
                     href={item.href}
-                    className="relative p-2 rounded-lg transition-colors hover:opacity-70"
+                    className="relative p-1.5 lg:p-2 rounded-lg transition-colors hover:opacity-70"
                     style={{ color: resolvedTextColor }}
                     aria-label={item.ariaLabel || item.label}
                     title={item.label}
@@ -871,7 +1049,7 @@ export function PremiumNavbarRender({
 
           {/* CTA Buttons */}
           <div
-            className={`hidden md:flex items-center gap-3 ${logoPosition === "center" ? "order-3" : ""}`}
+            className={`hidden md:flex items-center gap-2 lg:gap-3 shrink-0 ${logoPosition === "center" ? "order-3" : ""}`}
           >
             {secondaryCtaText && (
               <a

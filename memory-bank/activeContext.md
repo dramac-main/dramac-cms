@@ -1,35 +1,44 @@
 # Active Context
 
-## Current Focus: Ecommerce & Booking Comprehensive Audit ✅ (commit 213d8068)
+## Current Focus: Set-Password Fix + Booking Account Nudge ✅ (commit b1da0123)
 
 ### What Was Done
 
-**User Request:** Full audit of the ecommerce and booking space to find and fix all bugs/gaps.
+**User Report:** After submitting quote QUO-1012 with `harpinsltd@gmail.com`, the new "Create Account" card appeared but clicking it returned "Customer not found" error.
 
-**Comprehensive Audit Performed:**
-- Reviewed all 14 auth API actions (register, login, logout, session, set-password, magic-link, get-orders, get-addresses, get-bookings, get-quotes, update-profile, add-address, update-address, delete-address)
-- Cataloged 80+ ecommerce/booking storefront files, 22 registered studio components, 10 auto-generated pages
-- Ran thorough bug hunt across cart, checkout, orders, wishlist, booking, and auth flows
+**Root Cause:** The `set-password` auth action (auth/route.ts) required an existing customer record in `mod_ecommod01_customers`. Quotes only write to `mod_ecommod01_quotes` — they never create a customer record. So `set-password` always failed with 404 for quote-only users.
 
-**4 Bugs Found, 3 Fixed:**
+**Fix — `set-password` auth action now creates customer records:**
+- When no customer record exists for the email, the action now creates one (matching the `register` action pattern) instead of returning 404
+- Handles edge case where Supabase auth user already exists but customer record doesn't (tries sign-in to get auth_user_id)
+- Returns 400 if neither email nor token is provided
 
-| Bug | Severity | File | Fix |
+**Booking Account Nudge Added:**
+- Added `BookingAccountNudge` component to `BookingFormBlock.tsx` success screen
+- Same pattern as `QuoteAccountNudge` and `GuestAccountNudge` (password fields, validation, sign-in link)
+- All three store types (orders, quotes, bookings) now offer account creation after guest submission
+
+**Account Creation Parity Across All Store Types:**
+
+| Store Type | Success Component | Account Nudge | Auth Action |
 | --- | --- | --- | --- |
-| Wishlist hardcoded "ZMW" currency | HIGH | `MyAccountBlock.tsx` | Added `useStorefront()` import, use dynamic `currency` |
-| GuestAccountNudge missing "Sign in" option | MEDIUM | `OrderConfirmationBlock.tsx` | Added `openAuthDialog` prop + "Already have an account? Sign in" button |
-| BookingFormBlock no serviceId validation | HIGH | `BookingFormBlock.tsx` | Added `if (!serviceId)` guard before booking submission |
-| Cart API no stock validation at API level | MEDIUM | (not fixed) | Mitigated by `addCartItem` internal validation; deferred |
+| Orders | OrderConfirmationBlock | GuestAccountNudge ✅ | set-password ✅ |
+| Quotes | QuoteRequestBlock | QuoteAccountNudge ✅ | set-password ✅ |
+| Bookings | BookingFormBlock | BookingAccountNudge ✅ | set-password ✅ |
 
-**Also Verified:**
-- Password flow: 3 industry-standard scenarios (direct register, guest→account upgrade, magic link)
-- Checkout: 2-step flow, 5 payment providers, all working
-- Auth provider tree: StorefrontProvider → StorefrontAuthProvider → StudioRenderer → StorefrontAuthDialogProvider
+**Test Data Cleanup:**
+- Deleted all `harpinsltd@gmail.com` data: QUO-1012, 5 quote items, 6 quote activities
+- Verified no customer, auth user, or order records existed
 
-**Git:** Committed as `213d8068` on main. Not yet pushed.
+**Files Modified:**
+- `src/app/api/modules/ecommerce/auth/route.ts` — `set-password` action creates customer if none exists
+- `src/modules/booking/studio/components/BookingFormBlock.tsx` — Added `BookingAccountNudge`, `useStorefrontAuth` import
+
+**Git:** Committed as `b1da0123`, pushed to origin/main.
 
 ---
 
-## Previous Focus: Account Icon Runtime Merge Fix ✅ (commit 38a679be)
+## Previous Focus: Ecommerce & Booking Comprehensive Audit ✅ (commit 213d8068)
 
 ---
 
