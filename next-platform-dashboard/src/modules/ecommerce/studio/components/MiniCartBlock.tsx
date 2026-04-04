@@ -196,7 +196,9 @@ export function MiniCartBlock({
               {/* Total */}
               {!quotationHidePrices && (
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Subtotal</span>
+                  <span className="text-sm text-muted-foreground">
+                    Subtotal
+                  </span>
                   <span className="font-semibold tabular-nums">
                     {formatPrice(totals.subtotal)}
                   </span>

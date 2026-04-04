@@ -1,53 +1,69 @@
 # Active Context
 
-## Current Focus: Quotes Tab Fix + Clickable Chat Links ✅ (commit e56107b4)
+## Current Focus: Wishlist + Price Hiding Audit + Inline Quote Editing ✅ (commit e92b3a32)
 
 ### What Was Done
 
-**Session covered 2 critical fixes + comprehensive audit of all 6 My Account tabs:**
+**Session covered 3 user-reported bugs + comprehensive quotation price-hiding audit across 10 components:**
 
-#### Fix 1: Quotes Tab Not Loading — CRITICAL BUG ✅
+#### Fix 1: Wishlist Showing Only 1 Item — Race Condition ✅
 
-- **Root cause:** `get-quotes` API handler selected 3 non-existent database columns
-  - `notes` → actual column is `notes_to_customer`
-  - `product_name` (on quote_items) → actual column is `name`
-  - `variant_label` (on quote_items) → actual column is `description`
-- Supabase PostgREST silently returned `null` data (not error) for invalid columns
-- Handler had no error check: `const { data: quotes } = ...` → returned `{ quotes: [] }`
-- **Fix:** Used Supabase column aliases: `notes:notes_to_customer`, `product_name:name`, `variant_label:description`
-- Added error logging for query failures
+- **Root cause:** `useStorefrontWishlist` hook initialized `items` as `[]`, then had a save effect that wrote `[]` to localStorage on mount before the load effect's `setItems(storedItems)` could take effect. In React StrictMode or fast navigation, this permanently wiped the wishlist.
+- **Fix:** Replaced `useState<WishlistItem[]>([])` with lazy initializer `useState(() => getStoredWishlist(siteId))`. Items now start with localStorage data from the very first render — save effect never writes `[]`.
+- Removed redundant load effect (load now happens in initializer).
 
-#### Fix 2: Chat Links Not Clickable ✅
+#### Fix 2: Prices Visible on Quotation Storefront — 10 Components Fixed ✅
 
-- URLs in chat messages were rendered as plain text
-- Added URL linkification regex to both `formatMessageText()` (customer widget) and `formatChatMarkdown()` (dashboard)
-- Applied AFTER HTML escaping (XSS-safe), using `<a>` tags with `target="_blank"` and `rel="noopener noreferrer"`
-- Files: `WidgetMessageBubble.tsx`, `MessageBubble.tsx`
+Full audit of all storefront components for `quotationHidePrices` compliance:
 
-#### Full My Account Tab Audit ✅
+**Already correct:** product-card-block, ProductDetailBlock, CartDrawerBlock, CartPageBlock, CartItemCard, CartSummaryCard, StickyAddToCartBar, QuoteRequestBlock, QuoteItemCard
 
-- **Orders:** OK — all columns match `mod_ecommod01_orders` schema
-- **Bookings:** OK — all columns match `mod_bookmod01_appointments` schema, email-based lookup works
-- **Quotes:** FIXED (see Fix 1)
-- **Wishlist:** OK — localStorage persistence, dynamic currency via `useStorefront()`, batch product fetch
-- **Addresses:** OK — CRUD operations, `customer_addresses` table has no `site_id` (scoped via customer_id)
-- **Profile:** OK — `update-profile` updates correct columns
+**Fixed in this commit:**
 
-**Test data cleanup:** Deleted `harpinsltd@gmail.com` auth user, customer, sessions. 2 quotes remain (email-linked) for re-testing.
+1. **MyAccountBlock WishlistTab** — Hides price, stock badge, "Add to Cart". Shows "Request Quote" link instead.
+2. **FeaturedProductsBlock** — All 4 display modes (carousel, row, hero primary, hero secondary) now pass `showPrice && !quotationHidePrices`.
+3. **ProductQuickView** — Hides `ProductPriceDisplay` and sale badge when quotationHidePrices.
+4. **FilterSidebarBlock** — Hides price range filter section.
+5. **ActiveFilters** — New `hidePrices` prop suppresses price range badge.
+6. **SwipeableCartItem** — New `hidePrices` prop hides unit price and line total.
+7. **MiniCartBlock** — Hides subtotal display, passes `hidePrices` to CartItemCard.
+8. **MobileCartBottomSheet** — Hides price summary section, checkout button shows "Request Quote" instead.
 
-**Files Modified:**
+**Intentionally NOT changed (prices should show on these):**
 
-- `src/app/api/modules/ecommerce/auth/route.ts` — Fixed `get-quotes` column names
-- `src/modules/live-chat/components/widget/WidgetMessageBubble.tsx` — URL linkification
-- `src/modules/live-chat/components/shared/MessageBubble.tsx` — URL linkification
+- QuoteDetailBlock, QuoteListBlock (quotes ARE priced offers — customer needs to see them)
+- OrdersTab, OrderConfirmationBlock (finalized orders should show prices)
+- CheckoutPageBlock (payment flow needs prices)
 
-**TypeScript:** 25 pre-existing errors, 0 new. **Git:** `e56107b4`, pushed to origin/main.
+#### Fix 3: Quote Items Editor — Inline Auto-Save ✅
+
+- Converted `EditableItemRow` from explicit Edit → Save/Cancel workflow to always-editable inline fields.
+- Quantity, Price, Discount are always rendered as `<Input>` when not readonly.
+- `onBlur` handler compares current values to last-saved values. If changed, validates and calls `onUpdate()`.
+- Uses `savedRef` to track last-persisted values and avoid unnecessary saves.
+- Removed Save/Cancel buttons and "Edit" dropdown option. Dropdown now only shows "Remove".
+- Works seamlessly with the optimistic local state update from previous session.
+
+**Test data cleanup:** Deleted `harpinsltd@gmail.com` customer, quote (1), quote items, and auth user.
+
+**Files Modified (10 files):**
+
+- `useStorefrontWishlist.ts` — Lazy state initializer fix
+- `MyAccountBlock.tsx` — WishlistTab price hiding
+- `quote-items-editor.tsx` — Inline auto-save editing
+- `FeaturedProductsBlock.tsx` — quotationHidePrices on showPrice
+- `ProductQuickView.tsx` — Hide price display + sale badge
+- `FilterSidebarBlock.tsx` — Hide price range filter
+- `ActiveFilters.tsx` — hidePrices prop
+- `MiniCartBlock.tsx` — Hide subtotal, pass hidePrices
+- `MobileCartBottomSheet.tsx` — Hide summary, "Request Quote" button
+- `SwipeableCartItem.tsx` — hidePrices prop
+
+**TypeScript:** All pre-existing errors only, 0 new. **Git:** `e92b3a32`, pushed to origin/main.
 
 ---
 
-## Previous Focus: Storefront Customer Auth Wiring + Quote Journey Walkthrough ✅
-
-### What Was Done (commit 36533df8)
+## Previous Focus: Quotes Tab Fix + Clickable Chat Links ✅ (commit e56107b4)
 
 **User Complaints:**
 

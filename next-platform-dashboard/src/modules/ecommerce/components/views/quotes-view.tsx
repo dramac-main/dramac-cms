@@ -134,6 +134,13 @@ export function QuotesView({
     loadQuotes()
     setViewQuoteId(null)
   }
+
+  const handleDialogClose = (open: boolean) => {
+    if (!open) {
+      setViewQuoteId(null)
+      loadQuotes() // Refresh list to pick up any inline edits
+    }
+  }
   
   const statusOptions = getQuoteStatusOptions()
 
@@ -256,7 +263,7 @@ export function QuotesView({
       {viewQuoteId && (
         <QuoteDetailDialog
           open={!!viewQuoteId}
-          onOpenChange={(open) => !open && setViewQuoteId(null)}
+          onOpenChange={handleDialogClose}
           quoteId={viewQuoteId}
           siteId={siteId}
           onEdit={handleEditQuote}

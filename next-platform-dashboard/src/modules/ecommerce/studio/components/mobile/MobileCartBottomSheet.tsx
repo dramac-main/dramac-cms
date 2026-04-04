@@ -268,28 +268,28 @@ export function MobileCartBottomSheet({
               >
                 {/* Summary */}
                 {!quotationHidePrices && (
-                <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span>{formatCurrency(totals.subtotal / 100)}</span>
-                  </div>
-                  {totals.discount > 0 && (
-                    <div className="flex justify-between text-success">
-                      <span>Discount</span>
-                      <span>-{formatCurrency(totals.discount / 100)}</span>
-                    </div>
-                  )}
-                  {totals.tax > 0 && (
+                  <div className="space-y-1 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Tax</span>
-                      <span>{formatCurrency(totals.tax / 100)}</span>
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span>{formatCurrency(totals.subtotal / 100)}</span>
                     </div>
-                  )}
-                  <div className="flex justify-between font-semibold text-base pt-1 border-t">
-                    <span>Total</span>
-                    <span>{formatCurrency(totals.total / 100)}</span>
+                    {totals.discount > 0 && (
+                      <div className="flex justify-between text-success">
+                        <span>Discount</span>
+                        <span>-{formatCurrency(totals.discount / 100)}</span>
+                      </div>
+                    )}
+                    {totals.tax > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Tax</span>
+                        <span>{formatCurrency(totals.tax / 100)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between font-semibold text-base pt-1 border-t">
+                      <span>Total</span>
+                      <span>{formatCurrency(totals.total / 100)}</span>
+                    </div>
                   </div>
-                </div>
                 )}
 
                 {/* Checkout button */}
@@ -298,7 +298,9 @@ export function MobileCartBottomSheet({
                   className="w-full min-h-[52px] text-base font-semibold"
                   onClick={handleCheckout}
                 >
-                  {quotationHidePrices ? "Request Quote" : `Checkout • ${formatCurrency(totals.total / 100)}`}
+                  {quotationHidePrices
+                    ? "Request Quote"
+                    : `Checkout • ${formatCurrency(totals.total / 100)}`}
                 </Button>
               </div>
             )}

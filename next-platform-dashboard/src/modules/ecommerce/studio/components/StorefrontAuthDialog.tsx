@@ -560,7 +560,7 @@ export function StorefrontAuthDialog({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
+        className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm"
         onClick={handleClose}
         aria-hidden="true"
       />
@@ -571,7 +571,7 @@ export function StorefrontAuthDialog({
         role="dialog"
         aria-modal="true"
         aria-label={titles[activeMode]}
-        className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl bg-card p-6 shadow-2xl border border-border"
+        className="fixed inset-x-4 top-1/2 z-[60] mx-auto w-auto max-w-md -translate-y-1/2 max-h-[90dvh] overflow-y-auto overscroll-contain rounded-xl bg-card p-6 shadow-2xl border border-border sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2"
       >
         {/* Close button */}
         <button

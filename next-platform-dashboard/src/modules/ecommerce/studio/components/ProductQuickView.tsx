@@ -163,11 +163,13 @@ export function ProductQuickView({
   // Product images - convert to ProductImage array (handles both string and object formats)
   const images: ProductImage[] = useMemo(() => {
     if (!product?.images || product.images.length === 0) return [];
-    return product.images.map((img, index) => {
-      const url = getImageUrl(img);
-      if (!url) return null;
-      return { url, alt: `${product.name} ${index + 1}` };
-    }).filter((img): img is ProductImage => img !== null);
+    return product.images
+      .map((img, index) => {
+        const url = getImageUrl(img);
+        if (!url) return null;
+        return { url, alt: `${product.name} ${index + 1}` };
+      })
+      .filter((img): img is ProductImage => img !== null);
   }, [product]);
 
   // Handlers
@@ -271,11 +273,16 @@ export function ProductQuickView({
               />
 
               {/* Sale badge */}
-              {!quotationHidePrices && compareAtPrice && currentPrice < compareAtPrice && (
-                <Badge variant="destructive" className="absolute top-8 left-8">
-                  Sale
-                </Badge>
-              )}
+              {!quotationHidePrices &&
+                compareAtPrice &&
+                currentPrice < compareAtPrice && (
+                  <Badge
+                    variant="destructive"
+                    className="absolute top-8 left-8"
+                  >
+                    Sale
+                  </Badge>
+                )}
             </div>
 
             {/* Product info */}

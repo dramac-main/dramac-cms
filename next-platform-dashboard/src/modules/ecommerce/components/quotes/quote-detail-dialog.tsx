@@ -170,7 +170,7 @@ export function QuoteDetailDialog({
     // Optimistic local update — no full reload so other rows stay editable
     if (quote) {
       const updatedItems = quote.items.map((item) =>
-        item.id === itemId ? { ...item, ...updates } as typeof item : item,
+        item.id === itemId ? ({ ...item, ...updates } as typeof item) : item,
       );
       const totals = calculateQuoteTotals(
         updatedItems,
@@ -194,10 +194,9 @@ export function QuoteDetailDialog({
       toast.error(result.error || "Failed to update item");
       // Resync from server on failure
       await reloadQuote();
-    } else {
-      // Notify parent (e.g. list view) that data changed
-      onQuoteChange?.();
     }
+    // Don't call onQuoteChange here — it closes the dialog in list view.
+    // The list refreshes when the dialog is closed instead.
   };
 
   const handleRemoveItem = async (itemId: string) => {
