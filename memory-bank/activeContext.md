@@ -1,6 +1,39 @@
 # Active Context
 
-## Current Focus: Quote Send Safety — Confirmation Dialogs + Server Validation ✅
+## Current Focus: Ecommerce & Booking Comprehensive Audit ✅ (commit 213d8068)
+
+### What Was Done
+
+**User Request:** Full audit of the ecommerce and booking space to find and fix all bugs/gaps.
+
+**Comprehensive Audit Performed:**
+- Reviewed all 14 auth API actions (register, login, logout, session, set-password, magic-link, get-orders, get-addresses, get-bookings, get-quotes, update-profile, add-address, update-address, delete-address)
+- Cataloged 80+ ecommerce/booking storefront files, 22 registered studio components, 10 auto-generated pages
+- Ran thorough bug hunt across cart, checkout, orders, wishlist, booking, and auth flows
+
+**4 Bugs Found, 3 Fixed:**
+
+| Bug | Severity | File | Fix |
+| --- | --- | --- | --- |
+| Wishlist hardcoded "ZMW" currency | HIGH | `MyAccountBlock.tsx` | Added `useStorefront()` import, use dynamic `currency` |
+| GuestAccountNudge missing "Sign in" option | MEDIUM | `OrderConfirmationBlock.tsx` | Added `openAuthDialog` prop + "Already have an account? Sign in" button |
+| BookingFormBlock no serviceId validation | HIGH | `BookingFormBlock.tsx` | Added `if (!serviceId)` guard before booking submission |
+| Cart API no stock validation at API level | MEDIUM | (not fixed) | Mitigated by `addCartItem` internal validation; deferred |
+
+**Also Verified:**
+- Password flow: 3 industry-standard scenarios (direct register, guest→account upgrade, magic link)
+- Checkout: 2-step flow, 5 payment providers, all working
+- Auth provider tree: StorefrontProvider → StorefrontAuthProvider → StudioRenderer → StorefrontAuthDialogProvider
+
+**Git:** Committed as `213d8068` on main. Not yet pushed.
+
+---
+
+## Previous Focus: Account Icon Runtime Merge Fix ✅ (commit 38a679be)
+
+---
+
+## Previous Focus: Quote Send Safety — Confirmation Dialogs + Server Validation ✅
 
 ### What Was Done (Latest Session — Quote Send Safety, commits 34beef62 + c982b06c + 67b46eda)
 

@@ -10,25 +10,28 @@
 - **QUOTE USER JOURNEY WALKTHROUGH — 22-step verified walkthrough document** ✅
 
 - **QUOTE SEND SAFETY — CONFIRMATION DIALOGS + SERVER VALIDATION (2 files, 159 insertions)** ✅
+- **ACCOUNT ICON RUNTIME MERGE FIX — PER-ITEM MERGE, INSTALL HOOK UPDATE (2 files)** ✅
+- **ECOMMERCE & BOOKING COMPREHENSIVE AUDIT — 4 BUGS FOUND, 3 FIXED (3 files, 25 insertions)** ✅
 
 ---
 
-## Latest Update: Quote Send Safety — Confirmation Dialogs + Server Validation ✅
+## Latest Update: Ecommerce & Booking Comprehensive Audit — 3 Bug Fixes ✅
 
 ### What Was Done
 
-Added multi-layer safety to prevent accidental quote sends from live chat. ChatQuotePanel now requires explicit confirmation before sending quotes or converting to orders. Confirmation dialog shows quote summary, warns about empty/zero quotes, and offers a "Review Quote First" button. Server-side validation rejects quotes with no items or no customer email. Also confirmed storefront customer accounts are fully working (no changes needed).
+Comprehensive audit of entire ecommerce and booking storefront space. Reviewed all 14 auth API actions, cataloged 80+ files and 22 registered studio components, ran thorough bug hunt. Found 4 bugs, fixed 3:
 
-**2 Source Files Modified:**
+1. **MyAccountBlock.tsx** — WishlistTab hardcoded "ZMW" currency → now uses `useStorefront().currency`
+2. **OrderConfirmationBlock.tsx** — GuestAccountNudge had no "Sign in" option → added `openAuthDialog` prop + "Already have an account? Sign in" link
+3. **BookingFormBlock.tsx** — No serviceId validation before booking submit → added guard that shows error and returns early
 
-- `ChatQuotePanel.tsx` — Confirmation dialogs (Send + Convert), rewrote handlers, review-first button
-- `quote-workflow-actions.ts` — Server-side validation: items exist, customer email present
+Bug 4 (cart stock validation at API level) deferred — mitigated by `addCartItem` internal validation.
 
-**Git:** Committed as `67b46eda`, pushed to origin/main.
+**Git:** Committed as `213d8068`. Not yet pushed.
 
 ---
 
-## Previous Update: Storefront Customer Auth Wiring + Quote Journey Walkthrough ✅
+## Previous Update: Account Icon Runtime Merge Fix ✅
 
 ### What Was Done
 

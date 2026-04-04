@@ -462,30 +462,28 @@ export async function POST(request: NextRequest) {
         if (c) customerId = c.id;
       }
 
-      if (!customerId) {
+      if (!customerId && !customerEmail) {
         return NextResponse.json(
-          { error: "Customer not found" },
-          { status: 404, headers: corsHeaders },
+          { error: "Email is required to create an account" },
+          { status: 400, headers: corsHeaders },
         );
       }
 
-      // Get customer details
-      const { data: customer } = await (supabase as any)
-        .from(TABLE)
-        .select("*")
-        .eq("id", customerId)
-        .single();
-
-      if (!customer) {
-        return NextResponse.json(
-          { error: "Customer not found" },
-          { status: 404, headers: corsHeaders },
-        );
+      // If no customer record exists, create one (e.g. quote-only or booking-only users)
+      let customer: any = null;
+      if (customerId) {
+        const { data: c } = await (supabase as any)
+          .from(TABLE)
+          .select("*")
+          .eq("id", customerId)
+          .single();
+        customer = c;
       }
 
-      if (!customerEmail) customerEmail = customer.email;
+      if (!customerEmail && customer) customerEmail = customer.email;
 
-      let authUserId = customer.auth_user_id;
+      // Create Supabase Auth user or update existing
+      let authUserId = customer?.auth_user_id;
 
       if (authUserId) {
         // Update existing auth user password
@@ -500,30 +498,71 @@ export async function POST(request: NextRequest) {
             user_metadata: {
               role: "customer",
               site_id: siteId,
-              first_name: customer.first_name,
-              last_name: customer.last_name,
+              first_name: customer?.first_name || customerEmail!.split("@")[0],
+              last_name: customer?.last_name || "",
             },
           });
 
         if (authError) {
-          return NextResponse.json(
-            { error: "Failed to create account" },
-            { status: 500, headers: corsHeaders },
-          );
+          if (authError.message?.includes("already been registered")) {
+            // Auth user exists but no customer record — sign in to get auth_user_id
+            const { data: signIn, error: signInError } =
+              await supabase.auth.signInWithPassword({
+                email: customerEmail!,
+                password,
+              });
+            if (signInError) {
+              return NextResponse.json(
+                {
+                  error:
+                    "An account with this email already exists. Please sign in.",
+                },
+                { status: 409, headers: corsHeaders },
+              );
+            }
+            authUserId = signIn.user.id;
+          } else {
+            return NextResponse.json(
+              { error: "Failed to create account" },
+              { status: 500, headers: corsHeaders },
+            );
+          }
+        } else {
+          authUserId = authUser.user.id;
         }
-        authUserId = authUser.user.id;
       }
 
-      // Upgrade customer record
-      await (supabase as any)
-        .from(TABLE)
-        .update({
-          auth_user_id: authUserId,
-          is_guest: false,
-          email_verified: true,
-          password_set_at: new Date().toISOString(),
-        })
-        .eq("id", customerId);
+      if (customer) {
+        // Upgrade existing customer record
+        await (supabase as any)
+          .from(TABLE)
+          .update({
+            auth_user_id: authUserId,
+            is_guest: false,
+            email_verified: true,
+            password_set_at: new Date().toISOString(),
+          })
+          .eq("id", customerId);
+      } else {
+        // Create new customer record (quote-only, booking-only, etc.)
+        const { data: newCustomer } = await (supabase as any)
+          .from(TABLE)
+          .insert({
+            site_id: siteId,
+            agency_id: await getSiteAgencyId(supabase, siteId),
+            email: customerEmail,
+            first_name: customerEmail!.split("@")[0],
+            last_name: "",
+            is_guest: false,
+            email_verified: true,
+            auth_user_id: authUserId,
+            password_set_at: new Date().toISOString(),
+            status: "active",
+          })
+          .select("id")
+          .single();
+        customerId = newCustomer?.id;
+      }
 
       // Create session
       const newToken = await createSession(supabase, customerId, siteId, {

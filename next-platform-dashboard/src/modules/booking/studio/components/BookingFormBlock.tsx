@@ -17,12 +17,15 @@ import {
   FileText,
   Send,
   CircleCheck,
+  CheckCircle2,
   AlertCircle,
   Loader2,
   Clock,
 } from "lucide-react";
 import type { ComponentDefinition } from "@/types/studio";
 import { useCreateBooking } from "../../hooks/useCreateBooking";
+import { useStorefrontAuth } from "@/modules/ecommerce/context/storefront-auth-context";
+import { Button } from "@/components/ui/button";
 
 // =============================================================================
 // TYPES
@@ -163,6 +166,126 @@ const SHADOW_MAP: Record<string, string> = {
 };
 
 // =============================================================================
+// ACCOUNT NUDGE (shown after booking for guest users)
+// =============================================================================
+
+function BookingAccountNudge({
+  email,
+  setPassword,
+  openAuthDialog,
+}: {
+  email: string;
+  setPassword: (
+    password: string,
+    email?: string,
+  ) => Promise<{ error: string | null }>;
+  openAuthDialog?: (mode?: "login" | "register" | "set-password") => void;
+}) {
+  const [password, setPass] = React.useState("");
+  const [confirm, setConfirm] = React.useState("");
+  const [saving, setSaving] = React.useState(false);
+  const [error, setError] = React.useState("");
+  const [done, setDone] = React.useState(false);
+
+  if (done) {
+    return (
+      <div className="mt-5 rounded-lg border border-success/30 bg-success/5 p-4 text-left">
+        <div className="flex items-center gap-2">
+          <CheckCircle2 className="h-5 w-5 text-success shrink-0" />
+          <div>
+            <p className="font-medium text-foreground text-sm">
+              Account created!
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Sign in with <strong>{email}</strong> to manage your bookings.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+    if (password !== confirm) {
+      setError("Passwords don't match");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    const result = await setPassword(password, email);
+    setSaving(false);
+    if (result.error) {
+      setError(result.error);
+    } else {
+      setDone(true);
+    }
+  };
+
+  return (
+    <div className="mt-5 text-left rounded-lg border border-primary/30 bg-primary/5 p-4">
+      <div className="flex items-start gap-3">
+        <div className="rounded-full bg-primary/10 p-1.5 shrink-0 mt-0.5">
+          <Mail className="h-4 w-4 text-primary" />
+        </div>
+        <div className="flex-1">
+          <p className="font-medium text-foreground text-sm">
+            Create an account to manage your bookings
+          </p>
+          <p className="text-xs text-muted-foreground mt-1 mb-3">
+            Set a password for <strong>{email}</strong> to sign in anytime
+            and view your bookings, orders, and more.
+          </p>
+          <form onSubmit={handleCreate} className="space-y-2 max-w-sm">
+            <input
+              type="password"
+              placeholder="Create a password (min 8 chars)"
+              value={password}
+              onChange={(e) => setPass(e.target.value)}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              minLength={8}
+              required
+              autoComplete="new-password"
+            />
+            <input
+              type="password"
+              placeholder="Confirm password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              minLength={8}
+              required
+              autoComplete="new-password"
+            />
+            {error && <p className="text-xs text-destructive">{error}</p>}
+            <Button type="submit" size="sm" disabled={saving}>
+              {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Create Account
+            </Button>
+          </form>
+          {openAuthDialog && (
+            <p className="text-xs text-muted-foreground mt-2">
+              Already have an account?{" "}
+              <button
+                type="button"
+                onClick={() => openAuthDialog("login")}
+                className="text-primary font-medium hover:underline"
+              >
+                Sign in
+              </button>
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
 // COMPONENT
 // =============================================================================
 
@@ -293,6 +416,8 @@ export function BookingFormBlock({
   const [bookingStatus, setBookingStatus] = useState<"confirmed" | "pending">(
     "confirmed",
   );
+
+  const auth = useStorefrontAuth();
 
   // Real booking creation hook — only active when siteId exists
   const { createBooking } = useCreateBooking(siteId || "");
@@ -582,6 +707,13 @@ export function BookingFormBlock({
         >
           {displayMessage}
         </p>
+        {!auth.isLoggedIn && formData.email && (
+          <BookingAccountNudge
+            email={formData.email}
+            setPassword={auth.setPassword}
+            openAuthDialog={auth.openAuthDialog}
+          />
+        )}
         <style>{`@keyframes bounceIn { 0% { transform: scale(0); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }`}</style>
       </div>
     );
