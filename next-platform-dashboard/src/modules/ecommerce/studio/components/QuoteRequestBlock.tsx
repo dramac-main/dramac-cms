@@ -154,8 +154,8 @@ function QuoteAccountNudge({
             Create an account to track your quotes
           </p>
           <p className="text-xs text-muted-foreground mt-1 mb-3">
-            Set a password for <strong>{email}</strong> to sign in anytime
-            and view your quotes, orders, and more.
+            Set a password for <strong>{email}</strong> to sign in anytime and
+            view your quotes, orders, and more.
           </p>
           <form onSubmit={handleCreate} className="space-y-2 max-w-sm">
             <input
@@ -480,18 +480,20 @@ export function QuoteRequestBlock({
   if (isSubmitted) {
     const handleDownloadQuote = async () => {
       if (!submittedQuote) return;
-      let branding: QuotePDFOptions = { documentType: "quote" };
+      let branding: QuotePDFOptions = { documentType: "quote", hidePricing: true };
       if (siteId && agencyId) {
         try {
           branding = {
             ...(await getQuotePDFBranding(siteId, agencyId)),
             documentType: "quote",
+            hidePricing: true,
           };
         } catch {
           // Fallback to store name only
           branding = {
             documentType: "quote",
             companyName: settings?.store_name || undefined,
+            hidePricing: true,
           };
         }
       }
@@ -586,7 +588,7 @@ export function QuoteRequestBlock({
                 className="gap-2"
               >
                 <Download className="h-4 w-4" />
-                Download Quote Summary
+                Download Request Summary
               </Button>
             )}
             <Button

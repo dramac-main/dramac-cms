@@ -278,7 +278,8 @@ export function QuotePortalView({
             </h3>
             {isPending && (
               <p className="text-sm text-muted-foreground mb-3">
-                These are the items you requested. Final pricing will be provided once our team has reviewed your quote.
+                These are the items you requested. Final pricing will be
+                provided once our team has reviewed your quote.
               </p>
             )}
             <div className="border rounded-lg overflow-hidden">
@@ -289,8 +290,12 @@ export function QuotePortalView({
                     <th className="text-right p-3 font-medium w-20">Qty</th>
                     {!isPending && (
                       <>
-                        <th className="text-right p-3 font-medium w-28">Price</th>
-                        <th className="text-right p-3 font-medium w-28">Total</th>
+                        <th className="text-right p-3 font-medium w-28">
+                          Price
+                        </th>
+                        <th className="text-right p-3 font-medium w-28">
+                          Total
+                        </th>
                       </>
                     )}
                   </tr>
@@ -315,10 +320,16 @@ export function QuotePortalView({
                       {!isPending && (
                         <>
                           <td className="p-3 text-right">
-                            {formatQuoteCurrency(item.unit_price, quote.currency)}
+                            {formatQuoteCurrency(
+                              item.unit_price,
+                              quote.currency,
+                            )}
                           </td>
                           <td className="p-3 text-right font-medium">
-                            {formatQuoteCurrency(item.line_total, quote.currency)}
+                            {formatQuoteCurrency(
+                              item.line_total,
+                              quote.currency,
+                            )}
                           </td>
                         </>
                       )}
@@ -339,46 +350,54 @@ export function QuotePortalView({
               </div>
             </div>
           ) : (
-          <div className="flex justify-end mb-6">
-            <div className="w-64 space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>
-                  {formatQuoteCurrency(quote.subtotal, quote.currency)}
-                </span>
-              </div>
-              {quote.discount_amount > 0 && (
-                <div className="flex justify-between text-green-600">
-                  <span>Discount</span>
-                  <span>
-                    -
-                    {formatQuoteCurrency(quote.discount_amount, quote.currency)}
-                  </span>
-                </div>
-              )}
-              {quote.tax_amount > 0 && (
+            <div className="flex justify-end mb-6">
+              <div className="w-64 space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span>Tax</span>
+                  <span>Subtotal</span>
                   <span>
-                    {formatQuoteCurrency(quote.tax_amount, quote.currency)}
+                    {formatQuoteCurrency(quote.subtotal, quote.currency)}
                   </span>
                 </div>
-              )}
-              {quote.shipping_amount > 0 && (
-                <div className="flex justify-between">
-                  <span>Shipping</span>
+                {quote.discount_amount > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Discount</span>
+                    <span>
+                      -
+                      {formatQuoteCurrency(
+                        quote.discount_amount,
+                        quote.currency,
+                      )}
+                    </span>
+                  </div>
+                )}
+                {quote.tax_amount > 0 && (
+                  <div className="flex justify-between">
+                    <span>Tax</span>
+                    <span>
+                      {formatQuoteCurrency(quote.tax_amount, quote.currency)}
+                    </span>
+                  </div>
+                )}
+                {quote.shipping_amount > 0 && (
+                  <div className="flex justify-between">
+                    <span>Shipping</span>
+                    <span>
+                      {formatQuoteCurrency(
+                        quote.shipping_amount,
+                        quote.currency,
+                      )}
+                    </span>
+                  </div>
+                )}
+                <Separator />
+                <div className="flex justify-between font-semibold text-base">
+                  <span>Total</span>
                   <span>
-                    {formatQuoteCurrency(quote.shipping_amount, quote.currency)}
+                    {formatQuoteCurrency(quote.total, quote.currency)}
                   </span>
                 </div>
-              )}
-              <Separator />
-              <div className="flex justify-between font-semibold text-base">
-                <span>Total</span>
-                <span>{formatQuoteCurrency(quote.total, quote.currency)}</span>
               </div>
             </div>
-          </div>
           )}
 
           {/* Notes to Customer */}

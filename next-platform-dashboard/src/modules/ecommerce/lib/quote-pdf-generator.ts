@@ -28,6 +28,8 @@ export interface QuotePDFOptions {
   customFooter?: string
   /** 'quote' or 'invoice' — controls heading text */
   documentType?: 'quote' | 'invoice'
+  /** Hide all pricing — used for pending/draft quotes where pricing isn't ready yet */
+  hidePricing?: boolean
 }
 
 export interface QuotePDFData {
@@ -112,9 +114,9 @@ export function formatQuoteForPDF(data: QuotePDFData) {
       sku: item.sku || '',
       description: item.description || '',
       quantity: item.quantity,
-      unitPrice: formatQuoteCurrency(item.unit_price, quote.currency),
-      discount: item.discount_percent > 0 ? `${item.discount_percent}%` : '',
-      total: formatQuoteCurrency(
+      unitPrice: options.hidePricing ? '' : formatQuoteCurrency(item.unit_price, quote.currency),
+      discount: options.hidePricing ? '' : (item.discount_percent > 0 ? `${item.discount_percent}%` : ''),
+      total: options.hidePricing ? '' : formatQuoteCurrency(
         calculateItemLineTotal(
           item.quantity,
           item.unit_price,
@@ -126,7 +128,7 @@ export function formatQuoteForPDF(data: QuotePDFData) {
     })),
     
     // Totals
-    totals: {
+    totals: options.hidePricing ? null : {
       subtotal: formatQuoteCurrency(quote.subtotal, quote.currency),
       discount: quote.discount_amount > 0 
         ? formatQuoteCurrency(quote.discount_amount, quote.currency)
@@ -565,7 +567,8 @@ export function generateQuoteHTML(data: QuotePDFData): string {
   const primaryColor = formatted.primaryColor
 
   // Build items rows
-  const hasDiscount = data.items.some(i => i.discount_percent > 0)
+  const hasDiscount = !data.options.hidePricing && data.items.some(i => i.discount_percent > 0)
+  const hidePricing = data.options.hidePricing
   const itemsHtml = formatted.items.map(item => `
     <tr>
       <td>
@@ -574,14 +577,14 @@ export function generateQuoteHTML(data: QuotePDFData): string {
         ${item.description ? `<div class="item-desc">${escapeHtml(item.description)}</div>` : ''}
       </td>
       <td class="text-center">${item.quantity}</td>
-      <td class="text-right">${escapeHtml(item.unitPrice)}</td>
+      ${hidePricing ? '' : `<td class="text-right">${escapeHtml(item.unitPrice)}</td>`}
       ${hasDiscount ? `<td class="text-center">${item.discount || '—'}</td>` : ''}
-      <td class="text-right">${escapeHtml(item.total)}</td>
+      ${hidePricing ? '' : `<td class="text-right">${escapeHtml(item.total)}</td>`}
     </tr>
   `).join('')
 
   // Build totals
-  const totalsHtml = `
+  const totalsHtml = formatted.totals ? `
     <div class="totals-row">
       <span>Subtotal</span>
       <span>${escapeHtml(formatted.totals.subtotal)}</span>
@@ -609,7 +612,7 @@ export function generateQuoteHTML(data: QuotePDFData): string {
       <span>Total</span>
       <span>${escapeHtml(formatted.totals.total)}</span>
     </div>
-  `
+  ` : ''
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -677,9 +680,9 @@ export function generateQuoteHTML(data: QuotePDFData): string {
         <tr>
           <th>Item</th>
           <th class="text-center">Qty</th>
-          <th class="text-right">Unit Price</th>
+          ${hidePricing ? '' : '<th class="text-right">Unit Price</th>'}
           ${hasDiscount ? '<th class="text-center">Discount</th>' : ''}
-          <th class="text-right">Total</th>
+          ${hidePricing ? '' : '<th class="text-right">Total</th>'}
         </tr>
       </thead>
       <tbody>
@@ -687,12 +690,19 @@ export function generateQuoteHTML(data: QuotePDFData): string {
       </tbody>
     </table>
 
+    ${hidePricing ? `
+      <div class="notes-section">
+        <div class="notes-title">Pricing</div>
+        <div class="notes-content">Pricing is being prepared. You will receive an updated quote with detailed pricing once our team has reviewed your request.</div>
+      </div>
+    ` : `
     <!-- Totals -->
     <div class="totals-section">
       <div class="totals-table">
         ${totalsHtml}
       </div>
     </div>
+    `}
 
     ${formatted.notesToCustomer ? `
       <div class="notes-section">

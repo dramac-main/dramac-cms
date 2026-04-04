@@ -9,28 +9,32 @@
 **Root Cause:** The `set-password` auth action (auth/route.ts) required an existing customer record in `mod_ecommod01_customers`. Quotes only write to `mod_ecommod01_quotes` — they never create a customer record. So `set-password` always failed with 404 for quote-only users.
 
 **Fix — `set-password` auth action now creates customer records:**
+
 - When no customer record exists for the email, the action now creates one (matching the `register` action pattern) instead of returning 404
 - Handles edge case where Supabase auth user already exists but customer record doesn't (tries sign-in to get auth_user_id)
 - Returns 400 if neither email nor token is provided
 
 **Booking Account Nudge Added:**
+
 - Added `BookingAccountNudge` component to `BookingFormBlock.tsx` success screen
 - Same pattern as `QuoteAccountNudge` and `GuestAccountNudge` (password fields, validation, sign-in link)
 - All three store types (orders, quotes, bookings) now offer account creation after guest submission
 
 **Account Creation Parity Across All Store Types:**
 
-| Store Type | Success Component | Account Nudge | Auth Action |
-| --- | --- | --- | --- |
-| Orders | OrderConfirmationBlock | GuestAccountNudge ✅ | set-password ✅ |
-| Quotes | QuoteRequestBlock | QuoteAccountNudge ✅ | set-password ✅ |
-| Bookings | BookingFormBlock | BookingAccountNudge ✅ | set-password ✅ |
+| Store Type | Success Component      | Account Nudge          | Auth Action     |
+| ---------- | ---------------------- | ---------------------- | --------------- |
+| Orders     | OrderConfirmationBlock | GuestAccountNudge ✅   | set-password ✅ |
+| Quotes     | QuoteRequestBlock      | QuoteAccountNudge ✅   | set-password ✅ |
+| Bookings   | BookingFormBlock       | BookingAccountNudge ✅ | set-password ✅ |
 
 **Test Data Cleanup:**
+
 - Deleted all `harpinsltd@gmail.com` data: QUO-1012, 5 quote items, 6 quote activities
 - Verified no customer, auth user, or order records existed
 
 **Files Modified:**
+
 - `src/app/api/modules/ecommerce/auth/route.ts` — `set-password` action creates customer if none exists
 - `src/modules/booking/studio/components/BookingFormBlock.tsx` — Added `BookingAccountNudge`, `useStorefrontAuth` import
 

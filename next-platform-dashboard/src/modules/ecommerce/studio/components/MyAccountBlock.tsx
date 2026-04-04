@@ -292,10 +292,12 @@ function AddressCard({
   address,
   onDelete,
   onEdit,
+  onSetDefault,
 }: {
   address: Address;
   onDelete: (id: string) => void;
   onEdit: (address: Address) => void;
+  onSetDefault?: (address: Address) => void;
 }) {
   return (
     <div className="relative rounded-lg border border-border bg-card p-4">
@@ -324,6 +326,15 @@ function AddressCard({
         <p className="text-sm text-muted-foreground">{address.phone}</p>
       )}
       <div className="mt-3 flex gap-2">
+        {!address.isDefault && onSetDefault && (
+          <button
+            type="button"
+            onClick={() => onSetDefault(address)}
+            className="inline-flex items-center gap-1 rounded-md border border-primary/30 px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-primary/10"
+          >
+            <Check className="h-3 w-3" /> Set as Default
+          </button>
+        )}
         <button
           type="button"
           onClick={() => onEdit(address)}
@@ -408,6 +419,34 @@ function AddressesTab({
       }),
     });
     setAddresses((prev) => prev.filter((a) => a.id !== id));
+  };
+
+  const handleSetDefault = async (address: Address) => {
+    await fetch(`${apiBase}/api/modules/ecommerce/auth`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "update-address",
+        token,
+        siteId,
+        addressId: address.id,
+        address: {
+          firstName: address.firstName,
+          lastName: address.lastName,
+          company: address.company,
+          addressLine1: address.addressLine1,
+          addressLine2: address.addressLine2,
+          city: address.city,
+          state: address.state,
+          postalCode: address.postalCode,
+          country: address.country,
+          phone: address.phone,
+          isDefault: true,
+        },
+      }),
+    });
+    // Reload to get fresh default state
+    load();
   };
 
   const handleSaveAddress = async (
@@ -495,6 +534,7 @@ function AddressesTab({
           address={addr}
           onDelete={handleDelete}
           onEdit={(a) => setEditingAddress(a)}
+          onSetDefault={handleSetDefault}
         />
       ))}
 
@@ -1211,6 +1251,7 @@ function QuotesTab({
           QUOTE_STATUS_COLORS[quote.status] || "bg-muted text-muted-foreground";
         const isExpired =
           quote.valid_until && new Date(quote.valid_until) < new Date();
+        const isPricingPending = quote.status === "draft" || quote.status === "pending_approval";
 
         return (
           <div
@@ -1233,13 +1274,19 @@ function QuotesTab({
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <p className="font-semibold tabular-nums text-foreground">
-                  {formatCents(quote.total, quote.currency)}
-                </p>
+                {isPricingPending ? (
+                  <p className="text-sm text-muted-foreground italic">
+                    Pricing pending
+                  </p>
+                ) : (
+                  <p className="font-semibold tabular-nums text-foreground">
+                    {formatCents(quote.total, quote.currency)}
+                  </p>
+                )}
                 <span
                   className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColors}`}
                 >
-                  {quote.status.charAt(0).toUpperCase() + quote.status.slice(1)}
+                  {quote.status.charAt(0).toUpperCase() + quote.status.slice(1).replace(/_/g, ' ')}
                 </span>
               </div>
             </div>
@@ -1259,12 +1306,14 @@ function QuotesTab({
                       )}
                       <span className="text-xs ml-1">×{item.quantity}</span>
                     </span>
-                    <span className="tabular-nums text-foreground">
-                      {formatCents(
-                        item.unit_price * item.quantity,
-                        quote.currency,
-                      )}
-                    </span>
+                    {!isPricingPending && (
+                      <span className="tabular-nums text-foreground">
+                        {formatCents(
+                          item.unit_price * item.quantity,
+                          quote.currency,
+                        )}
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>
@@ -1300,11 +1349,17 @@ export function MyAccountBlock({
     openAuthDialog,
   } = useStorefrontAuth();
 
-  const hasEcommerce = !activeModuleSlugs || activeModuleSlugs.includes("ecommerce");
-  const hasBooking = !activeModuleSlugs || activeModuleSlugs.includes("booking");
+  const hasEcommerce =
+    !activeModuleSlugs || activeModuleSlugs.includes("ecommerce");
+  const hasBooking =
+    !activeModuleSlugs || activeModuleSlugs.includes("booking");
 
   // Smart default tab: bookings-first for booking-only sites
-  const defaultTab: AccountTab = hasEcommerce ? "orders" : hasBooking ? "bookings" : "orders";
+  const defaultTab: AccountTab = hasEcommerce
+    ? "orders"
+    : hasBooking
+      ? "bookings"
+      : "orders";
   const [activeTab, setActiveTab] = useState<AccountTab>(defaultTab);
 
   const apiBase = typeof window !== "undefined" ? window.location.origin : "";
@@ -1356,16 +1411,36 @@ export function MyAccountBlock({
 
   // Build tabs contextually based on active modules
   // Industry standard: only show tabs relevant to installed features
-  const allTabs: { key: AccountTab; label: string; icon: React.ReactNode; module?: string }[] = [
-    { key: "orders", label: "Orders", icon: <Package className="h-4 w-4" />, module: "ecommerce" },
+  const allTabs: {
+    key: AccountTab;
+    label: string;
+    icon: React.ReactNode;
+    module?: string;
+  }[] = [
+    {
+      key: "orders",
+      label: "Orders",
+      icon: <Package className="h-4 w-4" />,
+      module: "ecommerce",
+    },
     {
       key: "bookings",
       label: "Bookings",
       icon: <Calendar className="h-4 w-4" />,
       module: "booking",
     },
-    { key: "quotes", label: "Quotes", icon: <FileText className="h-4 w-4" />, module: "ecommerce" },
-    { key: "wishlist", label: "Wishlist", icon: <Heart className="h-4 w-4" />, module: "ecommerce" },
+    {
+      key: "quotes",
+      label: "Quotes",
+      icon: <FileText className="h-4 w-4" />,
+      module: "ecommerce",
+    },
+    {
+      key: "wishlist",
+      label: "Wishlist",
+      icon: <Heart className="h-4 w-4" />,
+      module: "ecommerce",
+    },
     {
       key: "addresses",
       label: "Addresses",

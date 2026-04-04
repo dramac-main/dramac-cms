@@ -527,7 +527,11 @@ export function PremiumNavbarRender({
     const allLinks = links || [];
     if (!container || allLinks.length === 0) return;
 
-    const gapFallback: Record<string, number> = { compact: 16, normal: 24, wide: 40 };
+    const gapFallback: Record<string, number> = {
+      compact: 16,
+      normal: 24,
+      wide: 40,
+    };
     const moreReserve = 84; // Space for the "More ▾" button
 
     const calculate = () => {

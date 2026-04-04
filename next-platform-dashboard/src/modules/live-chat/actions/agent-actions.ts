@@ -11,6 +11,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { mapRecord, mapRecords } from "../lib/map-db-record";
 import type { ChatAgent, AgentStatus, AgentPerformanceData } from "../types";
+import type { AgentPermissions } from "../lib/agent-permissions";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -661,5 +662,42 @@ export async function inviteAndCreateAgent(data: {
   } catch (error) {
     console.error("[LiveChat] Error inviting & creating agent:", error);
     return { agent: null, error: (error as Error).message };
+  }
+}
+
+// ─── Permissions ─────────────────────────────────────────────────────────────
+
+/**
+ * Update an agent's custom permissions.
+ * Pass the full permissions object — it replaces the existing one.
+ * Pass an empty object `{}` to reset to role defaults.
+ */
+export async function updateAgentPermissions(
+  agentId: string,
+  permissions: AgentPermissions,
+): Promise<{ success: boolean; error: string | null }> {
+  try {
+    const supabase = await getModuleClient();
+
+    const { data: agent } = await supabase
+      .from("mod_chat_agents")
+      .select("site_id")
+      .eq("id", agentId)
+      .single();
+
+    if (!agent) return { success: false, error: "Agent not found" };
+
+    const { error } = await supabase
+      .from("mod_chat_agents")
+      .update({ permissions })
+      .eq("id", agentId);
+
+    if (error) throw error;
+
+    revalidatePath(liveChatPath(agent.site_id));
+    return { success: true, error: null };
+  } catch (error) {
+    console.error("[LiveChat] Error updating agent permissions:", error);
+    return { success: false, error: (error as Error).message };
   }
 }

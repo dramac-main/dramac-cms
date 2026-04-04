@@ -237,8 +237,8 @@ function BookingAccountNudge({
             Create an account to manage your bookings
           </p>
           <p className="text-xs text-muted-foreground mt-1 mb-3">
-            Set a password for <strong>{email}</strong> to sign in anytime
-            and view your bookings, orders, and more.
+            Set a password for <strong>{email}</strong> to sign in anytime and
+            view your bookings, orders, and more.
           </p>
           <form onSubmit={handleCreate} className="space-y-2 max-w-sm">
             <input

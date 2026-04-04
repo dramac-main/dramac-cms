@@ -229,322 +229,334 @@ export function QuoteDetailDialog({
 
   return (
     <EnsureEcommerceProvider siteId={siteId} agencyId={quote.agency_id}>
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0">
-          <div className="flex items-start justify-between">
-            <div>
-              <DialogTitle className="flex items-center gap-2">
-                Quote {quote.quote_number}
-                <QuoteStatusBadge status={quote.status} />
-              </DialogTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Created {format(new Date(quote.created_at), "MMMM d, yyyy")}
-              </p>
-            </div>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
+            <div className="flex items-start justify-between">
+              <div>
+                <DialogTitle className="flex items-center gap-2">
+                  Quote {quote.quote_number}
+                  <QuoteStatusBadge status={quote.status} />
+                </DialogTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Created {format(new Date(quote.created_at), "MMMM d, yyyy")}
+                </p>
+              </div>
 
-            {/* Action buttons */}
-            <div className="flex items-center gap-2">
-              {canEdit && onEdit && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onEdit(quote.id)}
-                >
-                  <Edit className="h-4 w-4 mr-1" />
-                  Edit
-                </Button>
-              )}
-              {canSend && onSend && (
-                <Button size="sm" onClick={() => onSend(quote.id)}>
-                  <Send className="h-4 w-4 mr-1" />
-                  Send
-                </Button>
-              )}
-              {canConvert && onConvert && (
-                <Button
-                  size="sm"
-                  variant="default"
-                  onClick={() => onConvert(quote.id)}
-                >
-                  <ArrowRightCircle className="h-4 w-4 mr-1" />
-                  Convert to Order
-                </Button>
-              )}
-            </div>
-          </div>
-        </DialogHeader>
-
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="flex-1 flex flex-col"
-        >
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="items">
-              Items ({quote.items?.length || 0})
-            </TabsTrigger>
-            <TabsTrigger value="activity">
-              Activity ({quote.activities?.length || 0})
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Details Tab */}
-          <TabsContent value="details" className="flex-1 overflow-auto">
-            <ScrollArea className="h-full">
-              <div className="space-y-6 p-1">
-                {/* Summary Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="p-4 border rounded-lg">
-                    <p className="text-sm text-muted-foreground">Total</p>
-                    <p className="text-2xl font-bold">
-                      {formatQuoteCurrency(quote.total, quote.currency)}
-                    </p>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <p className="text-sm text-muted-foreground">Items</p>
-                    <p className="text-2xl font-bold">
-                      {quote.items?.length || 0}
-                    </p>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <p className="text-sm text-muted-foreground">Views</p>
-                    <p className="text-2xl font-bold">{quote.view_count}</p>
-                  </div>
-                  <div
-                    className={cn(
-                      "p-4 border rounded-lg",
-                      expired &&
-                        "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950",
-                    )}
+              {/* Action buttons */}
+              <div className="flex items-center gap-2">
+                {canEdit && onEdit && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onEdit(quote.id)}
                   >
-                    <p className="text-sm text-muted-foreground">Valid Until</p>
-                    {quote.valid_until ? (
-                      <div>
-                        <p
-                          className={cn(
-                            "text-lg font-semibold",
-                            expired && "text-red-600",
-                          )}
-                        >
-                          {format(new Date(quote.valid_until), "MMM d, yyyy")}
-                        </p>
-                        {!expired && daysUntilExpiry !== null && (
+                    <Edit className="h-4 w-4 mr-1" />
+                    Edit
+                  </Button>
+                )}
+                {canSend && onSend && (
+                  <Button size="sm" onClick={() => onSend(quote.id)}>
+                    <Send className="h-4 w-4 mr-1" />
+                    Send
+                  </Button>
+                )}
+                {canConvert && onConvert && (
+                  <Button
+                    size="sm"
+                    variant="default"
+                    onClick={() => onConvert(quote.id)}
+                  >
+                    <ArrowRightCircle className="h-4 w-4 mr-1" />
+                    Convert to Order
+                  </Button>
+                )}
+              </div>
+            </div>
+          </DialogHeader>
+
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="flex-1 flex flex-col"
+          >
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="items">
+                Items ({quote.items?.length || 0})
+              </TabsTrigger>
+              <TabsTrigger value="activity">
+                Activity ({quote.activities?.length || 0})
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Details Tab */}
+            <TabsContent value="details" className="flex-1 overflow-auto">
+              <ScrollArea className="h-full">
+                <div className="space-y-6 p-1">
+                  {/* Summary Cards */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="p-4 border rounded-lg">
+                      <p className="text-sm text-muted-foreground">Total</p>
+                      <p className="text-2xl font-bold">
+                        {formatQuoteCurrency(quote.total, quote.currency)}
+                      </p>
+                    </div>
+                    <div className="p-4 border rounded-lg">
+                      <p className="text-sm text-muted-foreground">Items</p>
+                      <p className="text-2xl font-bold">
+                        {quote.items?.length || 0}
+                      </p>
+                    </div>
+                    <div className="p-4 border rounded-lg">
+                      <p className="text-sm text-muted-foreground">Views</p>
+                      <p className="text-2xl font-bold">{quote.view_count}</p>
+                    </div>
+                    <div
+                      className={cn(
+                        "p-4 border rounded-lg",
+                        expired &&
+                          "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950",
+                      )}
+                    >
+                      <p className="text-sm text-muted-foreground">
+                        Valid Until
+                      </p>
+                      {quote.valid_until ? (
+                        <div>
                           <p
                             className={cn(
-                              "text-xs",
-                              daysUntilExpiry <= 3
-                                ? "text-amber-600"
-                                : "text-muted-foreground",
+                              "text-lg font-semibold",
+                              expired && "text-red-600",
                             )}
                           >
-                            {daysUntilExpiry === 0
-                              ? "Expires today"
-                              : `${daysUntilExpiry} days left`}
+                            {format(new Date(quote.valid_until), "MMM d, yyyy")}
                           </p>
-                        )}
-                        {expired && (
-                          <p className="text-xs text-red-600">Expired</p>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-lg font-semibold">No expiry</p>
-                    )}
+                          {!expired && daysUntilExpiry !== null && (
+                            <p
+                              className={cn(
+                                "text-xs",
+                                daysUntilExpiry <= 3
+                                  ? "text-amber-600"
+                                  : "text-muted-foreground",
+                              )}
+                            >
+                              {daysUntilExpiry === 0
+                                ? "Expires today"
+                                : `${daysUntilExpiry} days left`}
+                            </p>
+                          )}
+                          {expired && (
+                            <p className="text-xs text-red-600">Expired</p>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-lg font-semibold">No expiry</p>
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                {/* Customer Info */}
-                <div className="border rounded-lg p-4">
-                  <h3 className="font-semibold mb-4 flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    Customer Information
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <span>{quote.customer_name}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      <a
-                        href={`mailto:${quote.customer_email}`}
-                        className="text-primary hover:underline"
-                      >
-                        {quote.customer_email}
-                      </a>
-                    </div>
-                    {quote.customer_company && (
+                  {/* Customer Info */}
+                  <div className="border rounded-lg p-4">
+                    <h3 className="font-semibold mb-4 flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Customer Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="flex items-center gap-2">
-                        <Building className="h-4 w-4 text-muted-foreground" />
-                        <span>{quote.customer_company}</span>
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <span>{quote.customer_name}</span>
                       </div>
-                    )}
-                    {quote.customer_phone && (
                       <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <Mail className="h-4 w-4 text-muted-foreground" />
                         <a
-                          href={`tel:${quote.customer_phone}`}
+                          href={`mailto:${quote.customer_email}`}
                           className="text-primary hover:underline"
                         >
-                          {quote.customer_phone}
+                          {quote.customer_email}
                         </a>
                       </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Financial Summary */}
-                <div className="border rounded-lg p-4">
-                  <h3 className="font-semibold mb-4">Financial Summary</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Subtotal</span>
-                      <span>
-                        {formatQuoteCurrency(quote.subtotal, quote.currency)}
-                      </span>
-                    </div>
-                    {quote.discount_amount > 0 && (
-                      <div className="flex justify-between text-green-600">
-                        <span>
-                          Discount
-                          {quote.discount_type === "percentage" &&
-                            ` (${quote.discount_value}%)`}
-                        </span>
-                        <span>
-                          -
-                          {formatQuoteCurrency(
-                            quote.discount_amount,
-                            quote.currency,
-                          )}
-                        </span>
-                      </div>
-                    )}
-                    {quote.tax_amount > 0 && (
-                      <div className="flex justify-between">
-                        <span>Tax ({quote.tax_rate}%)</span>
-                        <span>
-                          {formatQuoteCurrency(
-                            quote.tax_amount,
-                            quote.currency,
-                          )}
-                        </span>
-                      </div>
-                    )}
-                    {quote.shipping_amount > 0 && (
-                      <div className="flex justify-between">
-                        <span>Shipping</span>
-                        <span>
-                          {formatQuoteCurrency(
-                            quote.shipping_amount,
-                            quote.currency,
-                          )}
-                        </span>
-                      </div>
-                    )}
-                    <Separator />
-                    <div className="flex justify-between font-semibold text-base">
-                      <span>Total</span>
-                      <span>
-                        {formatQuoteCurrency(quote.total, quote.currency)}
-                      </span>
+                      {quote.customer_company && (
+                        <div className="flex items-center gap-2">
+                          <Building className="h-4 w-4 text-muted-foreground" />
+                          <span>{quote.customer_company}</span>
+                        </div>
+                      )}
+                      {quote.customer_phone && (
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          <a
+                            href={`tel:${quote.customer_phone}`}
+                            className="text-primary hover:underline"
+                          >
+                            {quote.customer_phone}
+                          </a>
+                        </div>
+                      )}
                     </div>
                   </div>
+
+                  {/* Financial Summary */}
+                  <div className="border rounded-lg p-4">
+                    <h3 className="font-semibold mb-4">Financial Summary</h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Subtotal</span>
+                        <span>
+                          {formatQuoteCurrency(quote.subtotal, quote.currency)}
+                        </span>
+                      </div>
+                      {quote.discount_amount > 0 && (
+                        <div className="flex justify-between text-green-600">
+                          <span>
+                            Discount
+                            {quote.discount_type === "percentage" &&
+                              ` (${quote.discount_value}%)`}
+                          </span>
+                          <span>
+                            -
+                            {formatQuoteCurrency(
+                              quote.discount_amount,
+                              quote.currency,
+                            )}
+                          </span>
+                        </div>
+                      )}
+                      {quote.tax_amount > 0 && (
+                        <div className="flex justify-between">
+                          <span>Tax ({quote.tax_rate}%)</span>
+                          <span>
+                            {formatQuoteCurrency(
+                              quote.tax_amount,
+                              quote.currency,
+                            )}
+                          </span>
+                        </div>
+                      )}
+                      {quote.shipping_amount > 0 && (
+                        <div className="flex justify-between">
+                          <span>Shipping</span>
+                          <span>
+                            {formatQuoteCurrency(
+                              quote.shipping_amount,
+                              quote.currency,
+                            )}
+                          </span>
+                        </div>
+                      )}
+                      <Separator />
+                      <div className="flex justify-between font-semibold text-base">
+                        <span>Total</span>
+                        <span>
+                          {formatQuoteCurrency(quote.total, quote.currency)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Content sections */}
+                  {quote.title && (
+                    <div className="border rounded-lg p-4">
+                      <h3 className="font-semibold mb-2">Title</h3>
+                      <p>{quote.title}</p>
+                    </div>
+                  )}
+
+                  {quote.introduction && (
+                    <div className="border rounded-lg p-4">
+                      <h3 className="font-semibold mb-2">Introduction</h3>
+                      <p className="whitespace-pre-wrap">
+                        {quote.introduction}
+                      </p>
+                    </div>
+                  )}
+
+                  {quote.terms_and_conditions && (
+                    <div className="border rounded-lg p-4">
+                      <h3 className="font-semibold mb-2">Terms & Conditions</h3>
+                      <p className="whitespace-pre-wrap text-sm">
+                        {quote.terms_and_conditions}
+                      </p>
+                    </div>
+                  )}
+
+                  {quote.internal_notes && (
+                    <div className="border rounded-lg p-4 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900">
+                      <h3 className="font-semibold mb-2 text-amber-800 dark:text-amber-200">
+                        Internal Notes (Not visible to customer)
+                      </h3>
+                      <p className="whitespace-pre-wrap text-sm">
+                        {quote.internal_notes}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Quick Actions */}
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCopyLink}
+                    >
+                      <ExternalLink className="h-4 w-4 mr-1" />
+                      Copy Portal Link
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDuplicate}
+                    >
+                      <Copy className="h-4 w-4 mr-1" />
+                      Duplicate
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (!quote) return;
+                        const success = downloadQuotePDF(quote, pdfBranding);
+                        if (!success) {
+                          toast.error(
+                            "Could not open print window. Please allow popups.",
+                          );
+                        }
+                      }}
+                    >
+                      <FileDown className="h-4 w-4 mr-1" />
+                      Download PDF
+                    </Button>
+                  </div>
                 </div>
+              </ScrollArea>
+            </TabsContent>
 
-                {/* Content sections */}
-                {quote.title && (
-                  <div className="border rounded-lg p-4">
-                    <h3 className="font-semibold mb-2">Title</h3>
-                    <p>{quote.title}</p>
-                  </div>
-                )}
-
-                {quote.introduction && (
-                  <div className="border rounded-lg p-4">
-                    <h3 className="font-semibold mb-2">Introduction</h3>
-                    <p className="whitespace-pre-wrap">{quote.introduction}</p>
-                  </div>
-                )}
-
-                {quote.terms_and_conditions && (
-                  <div className="border rounded-lg p-4">
-                    <h3 className="font-semibold mb-2">Terms & Conditions</h3>
-                    <p className="whitespace-pre-wrap text-sm">
-                      {quote.terms_and_conditions}
-                    </p>
-                  </div>
-                )}
-
-                {quote.internal_notes && (
-                  <div className="border rounded-lg p-4 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900">
-                    <h3 className="font-semibold mb-2 text-amber-800 dark:text-amber-200">
-                      Internal Notes (Not visible to customer)
-                    </h3>
-                    <p className="whitespace-pre-wrap text-sm">
-                      {quote.internal_notes}
-                    </p>
-                  </div>
-                )}
-
-                {/* Quick Actions */}
-                <div className="flex flex-wrap gap-2">
-                  <Button variant="outline" size="sm" onClick={handleCopyLink}>
-                    <ExternalLink className="h-4 w-4 mr-1" />
-                    Copy Portal Link
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={handleDuplicate}>
-                    <Copy className="h-4 w-4 mr-1" />
-                    Duplicate
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      if (!quote) return;
-                      const success = downloadQuotePDF(quote, pdfBranding);
-                      if (!success) {
-                        toast.error(
-                          "Could not open print window. Please allow popups.",
-                        );
-                      }
-                    }}
-                  >
-                    <FileDown className="h-4 w-4 mr-1" />
-                    Download PDF
-                  </Button>
+            {/* Items Tab */}
+            <TabsContent value="items" className="flex-1 overflow-auto">
+              <ScrollArea className="h-full">
+                <div className="p-1">
+                  <QuoteItemsEditor
+                    items={quote.items || []}
+                    currency={quote.currency}
+                    onAddItems={handleAddItems}
+                    onUpdateItem={handleUpdateItem}
+                    onRemoveItem={handleRemoveItem}
+                    isReadOnly={!canEdit}
+                  />
                 </div>
-              </div>
-            </ScrollArea>
-          </TabsContent>
+              </ScrollArea>
+            </TabsContent>
 
-          {/* Items Tab */}
-          <TabsContent value="items" className="flex-1 overflow-auto">
-            <ScrollArea className="h-full">
-              <div className="p-1">
-                <QuoteItemsEditor
-                  items={quote.items || []}
-                  currency={quote.currency}
-                  onAddItems={handleAddItems}
-                  onUpdateItem={handleUpdateItem}
-                  onRemoveItem={handleRemoveItem}
-                  isReadOnly={!canEdit}
-                />
-              </div>
-            </ScrollArea>
-          </TabsContent>
-
-          {/* Activity Tab */}
-          <TabsContent value="activity" className="flex-1 overflow-auto">
-            <ScrollArea className="h-full">
-              <div className="p-1">
-                <QuoteTimeline activities={quote.activities || []} />
-              </div>
-            </ScrollArea>
-          </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
+            {/* Activity Tab */}
+            <TabsContent value="activity" className="flex-1 overflow-auto">
+              <ScrollArea className="h-full">
+                <div className="p-1">
+                  <QuoteTimeline activities={quote.activities || []} />
+                </div>
+              </ScrollArea>
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
     </EnsureEcommerceProvider>
   );
 }

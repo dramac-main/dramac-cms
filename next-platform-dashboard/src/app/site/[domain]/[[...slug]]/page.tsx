@@ -456,9 +456,8 @@ async function processData(
     // Shared module pages — /account is available for ANY module (ecommerce or booking)
     // because customer accounts are shared across all commerce/booking features.
     if (!page && siteHasAnyModule && stripped === "account") {
-      const { createMyAccountTemplate } = await import(
-        "@/modules/ecommerce/lib/page-templates"
-      );
+      const { createMyAccountTemplate } =
+        await import("@/modules/ecommerce/lib/page-templates");
       page = {
         id: `virtual-account-${site.id}`,
         slug: "/account",

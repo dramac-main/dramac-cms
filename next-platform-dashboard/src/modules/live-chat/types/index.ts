@@ -5,6 +5,8 @@
  * realtime events, and WhatsApp integration.
  */
 
+import type { AgentPermissions } from "../lib/agent-permissions";
+
 // =============================================================================
 // ENUMS / UNION TYPES
 // =============================================================================
@@ -86,6 +88,7 @@ export interface ChatAgent {
   totalRatings: number;
   isActive: boolean;
   lastActiveAt: string | null;
+  permissions: AgentPermissions;
   createdAt: string;
   updatedAt: string;
 }

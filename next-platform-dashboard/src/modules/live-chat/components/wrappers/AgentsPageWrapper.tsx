@@ -41,10 +41,14 @@ import {
   Trash2,
   UserPlus,
   ExternalLink,
+  Shield,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AgentStatusDot } from "../shared/AgentStatusDot";
 import { LiveChatEmptyState } from "../shared/LiveChatEmptyState";
+import { AgentPermissionsEditor } from "../shared/AgentPermissionsEditor";
+import { countPermissions } from "@/modules/live-chat/lib/agent-permissions";
+import type { AgentPermissions } from "@/modules/live-chat/lib/agent-permissions";
 import {
   createAgent,
   updateAgent,
@@ -161,6 +165,24 @@ export function AgentsPageWrapper({
     description: "",
     autoAssign: true,
   });
+
+  // Permissions editor state
+  const [permissionsAgent, setPermissionsAgent] = useState<ChatAgent | null>(null);
+  const [showPermissions, setShowPermissions] = useState(false);
+
+  const handleOpenPermissions = useCallback((agent: ChatAgent) => {
+    setPermissionsAgent(agent);
+    setShowPermissions(true);
+  }, []);
+
+  const handlePermissionsSaved = useCallback(
+    (agent: ChatAgent, permissions: AgentPermissions) => {
+      setAgents((prev) =>
+        prev.map((a) => (a.id === agent.id ? { ...a, permissions } : a)),
+      );
+    },
+    [],
+  );
 
   const handleAddAgent = useCallback(() => {
     if (!agentForm.userId || !agentForm.displayName) {
@@ -809,6 +831,18 @@ export function AgentsPageWrapper({
                         <Pencil className="h-3.5 w-3.5 mr-1" />
                         Edit
                       </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleOpenPermissions(agent)}
+                        disabled={isPending}
+                      >
+                        <Shield className="h-3.5 w-3.5 mr-1" />
+                        Permissions
+                      </Button>
+                    </div>
+                    <div className="flex gap-2 mt-2">
                       {agent.role !== "admin" ? (
                         <Button
                           variant="destructive"
@@ -937,6 +971,16 @@ export function AgentsPageWrapper({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Permissions Editor Dialog */}
+      {permissionsAgent && (
+        <AgentPermissionsEditor
+          agent={permissionsAgent}
+          open={showPermissions}
+          onOpenChange={setShowPermissions}
+          onSaved={handlePermissionsSaved}
+        />
+      )}
 
       {/* Departments section */}
       <div className="space-y-4">
