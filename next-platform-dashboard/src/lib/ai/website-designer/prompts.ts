@@ -955,22 +955,30 @@ Generate compelling, business-specific content — not generic placeholder text.
  * Industry-specific media component defaults.
  * The AI uses these as guidance when generating media-heavy components.
  */
-export const INDUSTRY_MEDIA_STYLES: Record<string, {
-  gallery?: Record<string, any>;
-  carousel?: Record<string, any>;
-  socialProof?: Record<string, any>;
-  map?: Record<string, any>;
-  imageStyle?: Record<string, any>;
-  trustBadges?: Record<string, any>;
-  stats?: Record<string, any>;
-  logoCloud?: Record<string, any>;
-  comparisonTable?: Record<string, any>;
-  beforeAfter?: Record<string, any>;
-  timeline?: Record<string, any>;
-  rule: string;
-}> = {
+export const INDUSTRY_MEDIA_STYLES: Record<
+  string,
+  {
+    gallery?: Record<string, any>;
+    carousel?: Record<string, any>;
+    socialProof?: Record<string, any>;
+    map?: Record<string, any>;
+    imageStyle?: Record<string, any>;
+    trustBadges?: Record<string, any>;
+    stats?: Record<string, any>;
+    logoCloud?: Record<string, any>;
+    comparisonTable?: Record<string, any>;
+    beforeAfter?: Record<string, any>;
+    timeline?: Record<string, any>;
+    rule: string;
+  }
+> = {
   restaurant: {
-    gallery: { variant: "masonry", hoverEffect: "zoom", aspectRatio: "square", columns: 3 },
+    gallery: {
+      variant: "masonry",
+      hoverEffect: "zoom",
+      aspectRatio: "square",
+      columns: 3,
+    },
     carousel: { transition: "fade", autoplay: true, interval: 4000 },
     socialProof: { variant: "stars", platform: "Google Reviews" },
     rule: "Warm, appetising image treatment with masonry food gallery",
@@ -993,7 +1001,12 @@ export const INDUSTRY_MEDIA_STYLES: Record<string, {
     rule: "Masonry galleries showcasing portfolio work with elegant transitions",
   },
   ecommerce: {
-    gallery: { variant: "grid", columns: 4, showFilter: true, hoverEffect: "zoom" },
+    gallery: {
+      variant: "grid",
+      columns: 4,
+      showFilter: true,
+      hoverEffect: "zoom",
+    },
     carousel: { transition: "slide", showDots: true },
     comparisonTable: { variant: "cards", stickyHeader: true },
     rule: "Product grids with quick filtering and comparison tables",

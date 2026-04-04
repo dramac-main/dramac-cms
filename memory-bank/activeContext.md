@@ -36,6 +36,7 @@
 **Test data cleanup:** Deleted `harpinsltd@gmail.com` auth user, customer, sessions. 2 quotes remain (email-linked) for re-testing.
 
 **Files Modified:**
+
 - `src/app/api/modules/ecommerce/auth/route.ts` — Fixed `get-quotes` column names
 - `src/modules/live-chat/components/widget/WidgetMessageBubble.tsx` — URL linkification
 - `src/modules/live-chat/components/shared/MessageBubble.tsx` — URL linkification

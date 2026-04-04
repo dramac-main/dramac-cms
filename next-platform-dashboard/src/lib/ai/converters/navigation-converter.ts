@@ -1,9 +1,12 @@
 import { CraftNode, AISection } from "../types";
 import { generateNodeId } from "../id-generator";
 
-export function convertNavigation(section: AISection): { nodeId: string; node: CraftNode } {
+export function convertNavigation(section: AISection): {
+  nodeId: string;
+  node: CraftNode;
+} {
   const nodeId = generateNodeId();
-  
+
   // Determine responsive defaults based on number of links
   const links = section.props.links || [
     { label: "Home", href: "#" },
