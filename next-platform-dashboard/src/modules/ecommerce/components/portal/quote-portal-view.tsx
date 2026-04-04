@@ -179,9 +179,15 @@ export function QuotePortalView({
             </div>
 
             <div className="text-right">
-              <div className="text-3xl font-bold">
-                {formatQuoteCurrency(quote.total, quote.currency)}
-              </div>
+              {isPending ? (
+                <div className="text-lg font-medium text-muted-foreground">
+                  Pricing pending
+                </div>
+              ) : (
+                <div className="text-3xl font-bold">
+                  {formatQuoteCurrency(quote.total, quote.currency)}
+                </div>
+              )}
               {quote.valid_until && !isExpired && daysUntilExpiry !== null && (
                 <p
                   className={cn(
@@ -267,15 +273,26 @@ export function QuotePortalView({
 
           {/* Line Items */}
           <div className="mb-6">
-            <h3 className="font-semibold mb-4">Items</h3>
+            <h3 className="font-semibold mb-4">
+              {isPending ? "Items Requested" : "Items"}
+            </h3>
+            {isPending && (
+              <p className="text-sm text-muted-foreground mb-3">
+                These are the items you requested. Final pricing will be provided once our team has reviewed your quote.
+              </p>
+            )}
             <div className="border rounded-lg overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50">
                   <tr>
                     <th className="text-left p-3 font-medium">Item</th>
                     <th className="text-right p-3 font-medium w-20">Qty</th>
-                    <th className="text-right p-3 font-medium w-28">Price</th>
-                    <th className="text-right p-3 font-medium w-28">Total</th>
+                    {!isPending && (
+                      <>
+                        <th className="text-right p-3 font-medium w-28">Price</th>
+                        <th className="text-right p-3 font-medium w-28">Total</th>
+                      </>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -295,12 +312,16 @@ export function QuotePortalView({
                         </div>
                       </td>
                       <td className="p-3 text-right">{item.quantity}</td>
-                      <td className="p-3 text-right">
-                        {formatQuoteCurrency(item.unit_price, quote.currency)}
-                      </td>
-                      <td className="p-3 text-right font-medium">
-                        {formatQuoteCurrency(item.line_total, quote.currency)}
-                      </td>
+                      {!isPending && (
+                        <>
+                          <td className="p-3 text-right">
+                            {formatQuoteCurrency(item.unit_price, quote.currency)}
+                          </td>
+                          <td className="p-3 text-right font-medium">
+                            {formatQuoteCurrency(item.line_total, quote.currency)}
+                          </td>
+                        </>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -308,7 +329,16 @@ export function QuotePortalView({
             </div>
           </div>
 
-          {/* Totals */}
+          {/* Totals — hidden while quote is being prepared */}
+          {isPending ? (
+            <div className="flex justify-end mb-6">
+              <div className="w-64 p-4 bg-muted/30 rounded-lg text-center">
+                <p className="text-sm text-muted-foreground">
+                  Pricing will appear here once your quote is ready.
+                </p>
+              </div>
+            </div>
+          ) : (
           <div className="flex justify-end mb-6">
             <div className="w-64 space-y-2 text-sm">
               <div className="flex justify-between">
@@ -349,6 +379,7 @@ export function QuotePortalView({
               </div>
             </div>
           </div>
+          )}
 
           {/* Notes to Customer */}
           {quote.notes_to_customer && (
@@ -417,23 +448,25 @@ export function QuotePortalView({
         </CardContent>
       </Card>
 
-      {/* Download PDF Button */}
-      <div className="text-center">
-        <Button
-          variant="outline"
-          onClick={() => {
-            const success = downloadQuotePDF(quote, pdfBranding);
-            if (!success) {
-              alert(
-                "Could not open print window. Please allow popups for this site.",
-              );
-            }
-          }}
-        >
-          <Download className="h-4 w-4 mr-2" />
-          Download PDF
-        </Button>
-      </div>
+      {/* Download PDF Button — only when quote has been priced */}
+      {!isPending && (
+        <div className="text-center">
+          <Button
+            variant="outline"
+            onClick={() => {
+              const success = downloadQuotePDF(quote, pdfBranding);
+              if (!success) {
+                alert(
+                  "Could not open print window. Please allow popups for this site.",
+                );
+              }
+            }}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Download PDF
+          </Button>
+        </div>
+      )}
 
       {/* Reject Dialog */}
       <QuoteRejectDialog
