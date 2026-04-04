@@ -145,7 +145,9 @@ export async function verifyQuoteAccessCookie(
  */
 export async function requireQuoteAccess(
   token: string,
-): Promise<{ verified: true; email: string } | { verified: false; error: string }> {
+): Promise<
+  { verified: true; email: string } | { verified: false; error: string }
+> {
   if (!token) {
     return { verified: false, error: "Missing quote token." };
   }

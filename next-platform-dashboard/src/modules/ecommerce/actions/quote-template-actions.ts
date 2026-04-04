@@ -9,7 +9,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { getAgencyBranding } from '@/lib/queries/branding'
+import { getSiteBrandingAction } from '@/lib/actions/sites'
 import type { 
   QuoteTemplate, 
   QuoteTemplateInput,
@@ -450,18 +450,35 @@ export async function getQuotePDFBranding(
   siteId: string,
   agencyId: string
 ): Promise<QuotePDFOptions> {
-  const [quoteSettings, agencyBranding] = await Promise.all([
+  const supabase = await getModuleClient()
+  const [quoteSettings, siteBrandingResult, ecomSettingsResult] = await Promise.all([
     getQuoteSiteSettings(siteId),
-    getAgencyBranding(agencyId),
+    getSiteBrandingAction(siteId),
+    supabase
+      .from(`${TABLE_PREFIX}_settings`)
+      .select('store_name, store_email, store_phone, store_address')
+      .eq('site_id', siteId)
+      .single(),
   ])
 
+  const siteBranding = siteBrandingResult?.data
+  const ecomSettings = ecomSettingsResult?.data as { store_name?: string; store_email?: string; store_phone?: string; store_address?: { address_line_1?: string; city?: string; state?: string; postal_code?: string; country?: string } } | null
+
+  // Format store address as string
+  let storeAddress: string | undefined
+  if (ecomSettings?.store_address) {
+    const addr = ecomSettings.store_address
+    const parts = [addr.address_line_1, addr.city, addr.state, addr.postal_code, addr.country].filter(Boolean)
+    if (parts.length > 0) storeAddress = parts.join(', ')
+  }
+
   return {
-    companyName: quoteSettings?.company_name || agencyBranding?.agency_display_name || undefined,
-    companyEmail: quoteSettings?.company_email || agencyBranding?.support_email || agencyBranding?.email_reply_to || undefined,
-    companyPhone: quoteSettings?.company_phone || undefined,
-    companyAddress: quoteSettings?.company_address || agencyBranding?.email_footer_address || undefined,
-    logoUrl: quoteSettings?.logo_url || agencyBranding?.logo_url || undefined,
-    primaryColor: quoteSettings?.primary_color || agencyBranding?.primary_color || undefined,
+    companyName: quoteSettings?.company_name || ecomSettings?.store_name || undefined,
+    companyEmail: quoteSettings?.company_email || ecomSettings?.store_email || undefined,
+    companyPhone: quoteSettings?.company_phone || ecomSettings?.store_phone || undefined,
+    companyAddress: quoteSettings?.company_address || storeAddress || undefined,
+    logoUrl: quoteSettings?.logo_url || siteBranding?.logo_url || undefined,
+    primaryColor: quoteSettings?.primary_color || siteBranding?.primary_color || undefined,
     includeCompanyLogo: true,
     showTerms: true,
   }

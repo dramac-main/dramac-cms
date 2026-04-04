@@ -268,7 +268,12 @@ const miniCartDefinition: Omit<ComponentDefinition, "render"> = {
       defaultValue: "/checkout",
     },
   },
-  defaultProps: { align: "end", maxItems: 5, cartHref: "/cart", checkoutHref: "/checkout" },
+  defaultProps: {
+    align: "end",
+    maxItems: 5,
+    cartHref: "/cart",
+    checkoutHref: "/checkout",
+  },
 };
 
 const checkoutPageDefinition: Omit<ComponentDefinition, "render"> = {
@@ -332,7 +337,8 @@ const orderTrackingDefinition: Omit<ComponentDefinition, "render"> = {
 const myAccountDefinition: Omit<ComponentDefinition, "render"> = {
   type: "EcommerceMyAccount",
   label: "My Account",
-  description: "Customer account dashboard with orders, addresses, wishlist, and profile",
+  description:
+    "Customer account dashboard with orders, addresses, wishlist, and profile",
   category: "ecommerce",
   icon: "User",
   fields: {},

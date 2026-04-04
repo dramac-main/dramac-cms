@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
-import { DOMAINS, isAppDomain as checkIsAppDomain } from "@/lib/constants/domains";
+import {
+  DOMAINS,
+  isAppDomain as checkIsAppDomain,
+} from "@/lib/constants/domains";
 
 const DEBUG = process.env.NODE_ENV !== "production";
 
@@ -21,7 +24,7 @@ export async function proxy(request: NextRequest) {
   // ========================================
   // DETERMINE DOMAIN TYPE FIRST
   // ========================================
-  
+
   // Use centralized domain constants
   const baseDomain = DOMAINS.SITES_BASE;
   const appDomain = process.env.NEXT_PUBLIC_APP_URL || "localhost:3000";
@@ -29,7 +32,9 @@ export async function proxy(request: NextRequest) {
   // Parse the app domain host
   let appHost = appDomain;
   try {
-    appHost = new URL(appDomain.includes("://") ? appDomain : `https://${appDomain}`).host;
+    appHost = new URL(
+      appDomain.includes("://") ? appDomain : `https://${appDomain}`,
+    ).host;
   } catch {
     appHost = appDomain;
   }
@@ -57,9 +62,12 @@ export async function proxy(request: NextRequest) {
   if (
     pathname.startsWith("/_next/") ||
     pathname.startsWith("/favicon") ||
-    /\.(js|css|woff2?|ttf|otf|eot|svg|png|jpg|jpeg|gif|webp|ico|map)$/i.test(pathname)
+    /\.(js|css|woff2?|ttf|otf|eot|svg|png|jpg|jpeg|gif|webp|ico|map)$/i.test(
+      pathname,
+    )
   ) {
-    if (DEBUG) console.log("[proxy] → Static asset, passing through:", pathname);
+    if (DEBUG)
+      console.log("[proxy] → Static asset, passing through:", pathname);
     return NextResponse.next();
   }
 
@@ -67,23 +75,33 @@ export async function proxy(request: NextRequest) {
   // SUBDOMAIN/CUSTOM DOMAIN ROUTING (FIRST!)
   // Must be checked BEFORE any other routes
   // ========================================
-  
+
   // For client sites and custom domains, DON'T rewrite API or embed routes
   // The API routes and embed pages exist at the app level and should work directly
-  if ((isClientSite || isCustomDomain) && (pathname.startsWith("/api") || pathname.startsWith("/embed"))) {
-    if (DEBUG) console.log("[proxy] → API/embed route on subdomain, passing through");
+  if (
+    (isClientSite || isCustomDomain) &&
+    (pathname.startsWith("/api") || pathname.startsWith("/embed"))
+  ) {
+    if (DEBUG)
+      console.log("[proxy] → API/embed route on subdomain, passing through");
     return NextResponse.next();
   }
-  
+
   // Route client site subdomains FIRST - before any auth checks
   if (isClientSite) {
     const subdomain = hostname.replace(`.${baseDomain}`, "");
     const url = request.nextUrl.clone();
     url.pathname = `/site/${subdomain}${pathname}`;
-    if (DEBUG) console.log("[proxy] ✅ Client site rewrite:", hostname, "→", url.pathname);
+    if (DEBUG)
+      console.log(
+        "[proxy] ✅ Client site rewrite:",
+        hostname,
+        "→",
+        url.pathname,
+      );
     return NextResponse.rewrite(url);
   }
-  
+
   // Route custom domains FIRST - before any auth checks
   if (isCustomDomain) {
     // Check for 301 redirect from old domain (domain_redirects table)
@@ -98,7 +116,8 @@ export async function proxy(request: NextRequest) {
       if (redirectCheck.status === 301) {
         const location = redirectCheck.headers.get("location");
         if (location) {
-          if (DEBUG) console.log("[proxy] ✅ 301 redirect:", hostname, "→", location);
+          if (DEBUG)
+            console.log("[proxy] ✅ 301 redirect:", hostname, "→", location);
           return NextResponse.redirect(location + pathname, { status: 301 });
         }
       }
@@ -108,33 +127,39 @@ export async function proxy(request: NextRequest) {
 
     const url = request.nextUrl.clone();
     url.pathname = `/site/${hostname}${pathname}`;
-    if (DEBUG) console.log("[proxy] ✅ Custom domain rewrite:", hostname, "→", url.pathname);
+    if (DEBUG)
+      console.log(
+        "[proxy] ✅ Custom domain rewrite:",
+        hostname,
+        "→",
+        url.pathname,
+      );
     return NextResponse.rewrite(url);
   }
 
   // ========================================
   // PUBLIC ROUTES - No Auth Required
   // ========================================
-  
+
   // Portal login/verify - must be accessible without auth
-  if (pathname === '/portal/login' || pathname === '/portal/verify') {
+  if (pathname === "/portal/login" || pathname === "/portal/verify") {
     return NextResponse.next();
   }
 
   // Quote portal - public, token-based access (no login required)
-  if (pathname.startsWith('/quote/')) {
+  if (pathname.startsWith("/quote/")) {
     return NextResponse.next();
   }
 
   // Embed routes - fully public (booking widget, ecommerce, etc.)
-  if (pathname.startsWith('/embed/')) {
+  if (pathname.startsWith("/embed/")) {
     return NextResponse.next();
   }
 
   // Block test/debug pages in production
-  if (pathname.startsWith('/test-') || pathname.startsWith('/debug-')) {
-    if (process.env.NODE_ENV === 'production') {
-      return NextResponse.rewrite(new URL('/404', request.url));
+  if (pathname.startsWith("/test-") || pathname.startsWith("/debug-")) {
+    if (process.env.NODE_ENV === "production") {
+      return NextResponse.rewrite(new URL("/404", request.url));
     }
   }
 
@@ -176,12 +201,12 @@ export async function proxy(request: NextRequest) {
   // ========================================
   // DASHBOARD ROUTES - Session Required
   // ========================================
-  
+
   // Only check session for app domain routes
   if (isAppDomain) {
     const response = await updateSession(request);
     // Set x-pathname header for server components that need the current path
-    response.headers.set('x-pathname', pathname);
+    response.headers.set("x-pathname", pathname);
     return response;
   }
 

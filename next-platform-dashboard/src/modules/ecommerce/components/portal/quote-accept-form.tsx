@@ -1,32 +1,32 @@
 /**
  * Quote Accept Form Component
- * 
+ *
  * Phase ECOM-12: Quote Workflow & Customer Portal
- * 
+ *
  * Form for customer to accept a quote
  */
-'use client'
+"use client";
 
-import { useState, useRef, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Loader2, CircleCheck, Eraser } from 'lucide-react'
-import { toast } from 'sonner'
-import { acceptQuote } from '../../actions/quote-workflow-actions'
+import { useState, useRef, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2, CircleCheck, Eraser } from "lucide-react";
+import { toast } from "sonner";
+import { acceptQuote } from "../../actions/quote-workflow-actions";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 interface QuoteAcceptFormProps {
-  token: string
-  quoteName: string
-  verifiedEmail?: string
-  onAccepted: () => void
-  onCancel: () => void
+  token: string;
+  quoteName: string;
+  verifiedEmail?: string;
+  onAccepted: () => void;
+  onCancel: () => void;
 }
 
 // ============================================================================
@@ -38,142 +38,151 @@ export function QuoteAcceptForm({
   quoteName,
   verifiedEmail,
   onAccepted,
-  onCancel
+  onCancel,
 }: QuoteAcceptFormProps) {
-  const [loading, setLoading] = useState(false)
-  const [acceptedBy, setAcceptedBy] = useState(quoteName)
-  const [acceptedEmail, setAcceptedEmail] = useState(verifiedEmail || '')
-  const [acceptedTerms, setAcceptedTerms] = useState(false)
-  const [signatureData, setSignatureData] = useState<string | null>(null)
-  
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const isDrawing = useRef(false)
-  
+  const [loading, setLoading] = useState(false);
+  const [acceptedBy, setAcceptedBy] = useState(quoteName);
+  const [acceptedEmail, setAcceptedEmail] = useState(verifiedEmail || "");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [signatureData, setSignatureData] = useState<string | null>(null);
+
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const isDrawing = useRef(false);
+
   // Initialize canvas
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
     // Set up canvas
-    ctx.strokeStyle = '#000'
-    ctx.lineWidth = 2
-    ctx.lineCap = 'round'
-    ctx.lineJoin = 'round'
-  }, [])
-  
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+  }, []);
+
   // Drawing handlers
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    
-    isDrawing.current = true
-    
-    const rect = canvas.getBoundingClientRect()
-    let x: number, y: number
-    
-    if ('touches' in e) {
-      x = e.touches[0].clientX - rect.left
-      y = e.touches[0].clientY - rect.top
+  const startDrawing = (
+    e:
+      | React.MouseEvent<HTMLCanvasElement>
+      | React.TouchEvent<HTMLCanvasElement>,
+  ) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    isDrawing.current = true;
+
+    const rect = canvas.getBoundingClientRect();
+    let x: number, y: number;
+
+    if ("touches" in e) {
+      x = e.touches[0].clientX - rect.left;
+      y = e.touches[0].clientY - rect.top;
     } else {
-      x = e.clientX - rect.left
-      y = e.clientY - rect.top
+      x = e.clientX - rect.left;
+      y = e.clientY - rect.top;
     }
-    
-    ctx.beginPath()
-    ctx.moveTo(x, y)
-  }
-  
-  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    if (!isDrawing.current) return
-    
-    const canvas = canvasRef.current
-    if (!canvas) return
-    
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    
-    const rect = canvas.getBoundingClientRect()
-    let x: number, y: number
-    
-    if ('touches' in e) {
-      e.preventDefault()
-      x = e.touches[0].clientX - rect.left
-      y = e.touches[0].clientY - rect.top
+
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  };
+
+  const draw = (
+    e:
+      | React.MouseEvent<HTMLCanvasElement>
+      | React.TouchEvent<HTMLCanvasElement>,
+  ) => {
+    if (!isDrawing.current) return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const rect = canvas.getBoundingClientRect();
+    let x: number, y: number;
+
+    if ("touches" in e) {
+      e.preventDefault();
+      x = e.touches[0].clientX - rect.left;
+      y = e.touches[0].clientY - rect.top;
     } else {
-      x = e.clientX - rect.left
-      y = e.clientY - rect.top
+      x = e.clientX - rect.left;
+      y = e.clientY - rect.top;
     }
-    
-    ctx.lineTo(x, y)
-    ctx.stroke()
-  }
-  
+
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  };
+
   const stopDrawing = () => {
-    if (!isDrawing.current) return
-    
-    isDrawing.current = false
-    
-    const canvas = canvasRef.current
+    if (!isDrawing.current) return;
+
+    isDrawing.current = false;
+
+    const canvas = canvasRef.current;
     if (canvas) {
-      setSignatureData(canvas.toDataURL('image/png'))
+      setSignatureData(canvas.toDataURL("image/png"));
     }
-  }
-  
+  };
+
   const clearSignature = () => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    setSignatureData(null)
-  }
-  
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setSignatureData(null);
+  };
+
   // Form validation
-  const isValid = acceptedBy.trim() !== '' && 
-                  acceptedEmail.trim() !== '' && 
-                  acceptedTerms && 
-                  signatureData !== null
-  
+  const isValid =
+    acceptedBy.trim() !== "" &&
+    acceptedEmail.trim() !== "" &&
+    acceptedTerms &&
+    signatureData !== null;
+
   // Submit handler
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
+    e.preventDefault();
+
     if (!isValid) {
-      toast.error('Please complete all required fields')
-      return
+      toast.error("Please complete all required fields");
+      return;
     }
-    
-    setLoading(true)
-    
+
+    setLoading(true);
+
     try {
       const result = await acceptQuote({
         token,
         accepted_by_name: acceptedBy.trim(),
         accepted_by_email: acceptedEmail.trim(),
-        signature_data: signatureData || undefined
-      })
-      
+        signature_data: signatureData || undefined,
+      });
+
       if (result.success) {
-        toast.success('Quote accepted successfully!')
-        onAccepted()
+        toast.success("Quote accepted successfully!");
+        onAccepted();
       } else {
-        toast.error(result.error || 'Failed to accept quote')
+        toast.error(result.error || "Failed to accept quote");
       }
     } catch (error) {
-      console.error('Error accepting quote:', error)
-      toast.error('An unexpected error occurred')
+      console.error("Error accepting quote:", error);
+      toast.error("An unexpected error occurred");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Card className="border-green-200 dark:border-green-900">
@@ -196,7 +205,7 @@ export function QuoteAcceptForm({
               required
             />
           </div>
-          
+
           {/* Email */}
           <div className="space-y-2">
             <Label htmlFor="acceptedEmail">Your Email *</Label>
@@ -209,7 +218,7 @@ export function QuoteAcceptForm({
                 placeholder="Enter your email"
                 required
                 readOnly={!!verifiedEmail}
-                className={verifiedEmail ? 'pr-24 bg-muted/50' : ''}
+                className={verifiedEmail ? "pr-24 bg-muted/50" : ""}
               />
               {verifiedEmail && (
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-600 font-medium flex items-center gap-1">
@@ -219,7 +228,7 @@ export function QuoteAcceptForm({
               )}
             </div>
           </div>
-          
+
           {/* Signature Canvas */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -253,7 +262,7 @@ export function QuoteAcceptForm({
               Please sign above using your mouse or touch screen
             </p>
           </div>
-          
+
           {/* Terms Agreement */}
           <div className="flex items-start gap-3">
             <Checkbox
@@ -261,15 +270,16 @@ export function QuoteAcceptForm({
               checked={acceptedTerms}
               onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
             />
-            <Label 
-              htmlFor="acceptedTerms" 
+            <Label
+              htmlFor="acceptedTerms"
               className="text-sm font-normal leading-relaxed cursor-pointer"
             >
-              I have read and agree to the terms and conditions. I understand that 
-              by accepting this quote, I am authorizing the work to proceed.
+              I have read and agree to the terms and conditions. I understand
+              that by accepting this quote, I am authorizing the work to
+              proceed.
             </Label>
           </div>
-          
+
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
             <Button
@@ -278,7 +288,7 @@ export function QuoteAcceptForm({
               disabled={!isValid || loading}
             >
               {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {loading ? 'Accepting...' : 'Accept & Authorize'}
+              {loading ? "Accepting..." : "Accept & Authorize"}
             </Button>
             <Button
               type="button"
@@ -292,5 +302,5 @@ export function QuoteAcceptForm({
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }

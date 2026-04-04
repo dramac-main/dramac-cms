@@ -6,10 +6,31 @@
 - **QUOTE END-TO-END WORKFLOW FIX — PORTAL AUTH, TOKEN AT CREATION, AMENDMENT FLOW, EDITABLE DIALOG (10 files)** ✅
 - **QUOTE SYSTEM DEEP AUDIT — 7 CRITICAL BUGS: 404, TOTALS 0.00, AI VERBOSITY, /100 ERRORS, PRICE CONVERSION (6 files)** ✅
 - **QUOTE PORTAL EMAIL VERIFICATION GATE — HMAC-SHA256 AUTH, AMENDMENT NOTIFICATIONS, /100 FIX (8 files)** ✅
+- **STOREFRONT CUSTOMER AUTH WIRING — NavAccountBadge, MyAccountBlock, /account page, studio registry (5 files)** ✅
+- **QUOTE USER JOURNEY WALKTHROUGH — 22-step verified walkthrough document** ✅
 
 ---
 
-## Latest Update: Quote Portal Email Verification Gate + Amendment Fixes ✅
+## Latest Update: Storefront Customer Auth Wiring + Quote Journey Walkthrough ✅
+
+### What Was Done
+
+Wired the already-built customer auth system (StorefrontAuthProvider, StorefrontAuthDialog, NavAccountBadge, MyAccountBlock) to the storefront UI. Previously, all auth components existed but were not connected — navbar had a dead link, no /account page, MyAccountBlock not registered. Also created a comprehensive 22-step quote user journey walkthrough document, verified every step against source code.
+
+**5 Source Files Modified + 1 New:**
+
+- `premium-components.tsx` — NavAccountBadge replaces plain `<a>` for account icon (desktop + mobile)
+- `studio/index.ts` — MyAccountBlock registered as EcommerceMyAccount
+- `page-templates.ts` — `createMyAccountTemplate()` for /account virtual page
+- `page.tsx` (catch-all) — `/account` virtual page route
+- `renderer.tsx` — EcommerceMyAccount in MODULE_COMPONENT_TYPES
+- `QUOTE-USER-JOURNEY-WALKTHROUGH.md` (NEW) — Full journey documentation
+
+**Git:** Committed as `36533df8`, pushed to origin/main.
+
+---
+
+## Previous Update: Quote Portal Email Verification Gate + Amendment Fixes ✅
 
 ### What Was Done
 

@@ -1,8 +1,38 @@
 # Active Context
 
-## Current Focus: Quote Portal Email Verification Gate + Amendment Notification Fixes ✅
+## Current Focus: Storefront Customer Auth Wiring + Quote Journey Walkthrough ✅
 
-### What Was Done (Latest Session — Quote Portal Security, commit 355be723)
+### What Was Done (Latest Session — Customer Auth + Quote Walkthrough, commit 36533df8)
+
+**User Complaints:**
+
+1. "Why is it that still up to now, I don't input a password anywhere as a storefront visitor?" — The entire customer auth system was BUILT but NOT WIRED to the UI
+2. Navbar user icon was a dead `<a href="/account">` link (404)
+3. No `/account` page route existed
+4. MyAccountBlock not registered in studio component registry
+
+**Solution: Wire Existing Auth System to Storefront UI**
+
+- `NavAccountBadge` integrated into premium navbar (desktop + mobile) — guest click opens auth dialog, logged-in shows initials + links to `/account`
+- `MyAccountBlock` registered as `EcommerceMyAccount` in studio component registry
+- `/account` virtual page route created in catch-all handler with breadcrumb + MyAccountBlock
+- `EcommerceMyAccount` added to renderer's `MODULE_COMPONENT_TYPES`
+
+**5 Source Files Modified:**
+
+| File                     | Change                                                                           |
+| ------------------------ | -------------------------------------------------------------------------------- |
+| `premium-components.tsx` | NavAccountBadge replaces plain `<a>` for account utility item (desktop + mobile) |
+| `studio/index.ts`        | MyAccountBlock registered as EcommerceMyAccount with ComponentDefinition         |
+| `page-templates.ts`      | `createMyAccountTemplate()` function for virtual account page                    |
+| `page.tsx` (catch-all)   | `/account` virtual page route handler                                            |
+| `renderer.tsx`           | EcommerceMyAccount added to MODULE_COMPONENT_TYPES set                           |
+
+**Also Created:** `QUOTE-USER-JOURNEY-WALKTHROUGH.md` — comprehensive 22-step walkthrough of the entire quote user journey, verified step-by-step against source code.
+
+**TypeScript:** Zero errors. Git: `36533df8`, pushed to origin/main.
+
+### Previous Session: Quote Portal Email Verification Gate ✅ (commit 355be723)
 
 **User Complaints:**
 

@@ -34,8 +34,7 @@ import { toast } from 'sonner'
 import { getQuoteSiteSettings, upsertQuoteSiteSettings } from '../../actions/quote-template-actions'
 import { getEcommerceSettings, updateEcommerceSettings } from '../../actions/ecommerce-actions'
 import { createQuotePage, deleteQuotePage } from '../../actions/auto-setup-actions'
-import { getAgencyBranding } from '@/lib/queries/branding'
-import type { AgencyBranding } from '@/types/branding'
+import { getSiteBrandingAction } from '@/lib/actions/sites'
 
 import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 // ============================================================================
@@ -81,7 +80,7 @@ export function QuoteSettingsForm({ siteId, agencyId }: QuoteSettingsFormProps) 
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [activeTab, setActiveTab] = useState('numbering')
-  const [agencyBranding, setAgencyBranding] = useState<AgencyBranding | null>(null)
+  const [hasSiteBranding, setHasSiteBranding] = useState(false)
 
   // Quotation mode state (stored in EcommerceSettings, not QuoteSiteSettings)
   const [quotationModeEnabled, setQuotationModeEnabled] = useState(false)
@@ -111,32 +110,37 @@ export function QuoteSettingsForm({ siteId, agencyId }: QuoteSettingsFormProps) 
   useEffect(() => {
     async function loadSettings() {
       try {
-        const [quoteSettings, ecomSettings, branding] = await Promise.all([
+        const [quoteSettings, ecomSettings, siteBrandingResult] = await Promise.all([
           getQuoteSiteSettings(siteId),
           getEcommerceSettings(siteId),
-          getAgencyBranding(agencyId)
+          getSiteBrandingAction(siteId)
         ])
-        if (branding) {
-          setAgencyBranding(branding)
-        }
-        // Merge quote settings with agency branding fallbacks, then reset form once
+        const siteBranding = siteBrandingResult?.data
+        const hasAnyBranding = !!(siteBranding?.primary_color || siteBranding?.logo_url || ecomSettings?.store_name)
+        setHasSiteBranding(hasAnyBranding)
+        // Merge quote settings with SITE branding fallbacks, then reset form once
         const qs = { ...(quoteSettings || {}) } as Record<string, unknown>
-        if (branding) {
-          if (!qs.company_name && branding.agency_display_name) {
-            qs.company_name = branding.agency_display_name
+        if (!qs.company_name && ecomSettings?.store_name) {
+          qs.company_name = ecomSettings.store_name
+        }
+        if (!qs.company_email && ecomSettings?.store_email) {
+          qs.company_email = ecomSettings.store_email
+        }
+        if (!qs.company_phone && ecomSettings?.store_phone) {
+          qs.company_phone = ecomSettings.store_phone
+        }
+        if (siteBranding) {
+          if (!qs.primary_color && siteBranding.primary_color) {
+            qs.primary_color = siteBranding.primary_color
           }
-          if (!qs.company_email && (branding.support_email || branding.email_reply_to)) {
-            qs.company_email = branding.support_email || branding.email_reply_to
+          if (!qs.logo_url && siteBranding.logo_url) {
+            qs.logo_url = siteBranding.logo_url
           }
-          if (!qs.primary_color && branding.primary_color) {
-            qs.primary_color = branding.primary_color
-          }
-          if (!qs.company_address && branding.email_footer_address) {
-            qs.company_address = branding.email_footer_address
-          }
-          if (!qs.logo_url && branding.logo_url) {
-            qs.logo_url = branding.logo_url
-          }
+        }
+        if (!qs.company_address && ecomSettings?.store_address) {
+          const addr = ecomSettings.store_address
+          const parts = [addr.address_line_1, addr.city, addr.state, addr.postal_code, addr.country].filter(Boolean)
+          if (parts.length > 0) qs.company_address = parts.join(', ')
         }
         reset(qs as FormData)
         if (ecomSettings) {
@@ -621,10 +625,10 @@ export function QuoteSettingsForm({ siteId, agencyId }: QuoteSettingsFormProps) 
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {agencyBranding && (
+              {hasSiteBranding && (
                 <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20 text-sm text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
                   <Info className="h-4 w-4 mt-0.5 shrink-0" />
-                  <p>Fields were auto-filled from your <strong>site branding</strong>. Any changes here only affect quotes and PDFs.</p>
+                  <p>Fields were auto-filled from your <strong>site branding</strong> and <strong>store settings</strong>. Any changes here only affect quotes and PDFs.</p>
                 </div>
               )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

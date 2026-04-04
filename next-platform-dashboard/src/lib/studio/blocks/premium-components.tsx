@@ -18,7 +18,11 @@ import { usePathname } from "next/navigation";
 import { getImageUrl, type ImageValue } from "@/lib/studio/utils/image-helpers";
 import { NavCartBadge } from "@/modules/ecommerce/studio/components/NavCartBadge";
 import { NavAccountBadge } from "@/modules/ecommerce/studio/components/NavAccountBadge";
-import { isDarkBackground, isEffectivelyDark, resolveContrastColor } from "@/lib/studio/blocks/layout-utils";
+import {
+  isDarkBackground,
+  isEffectivelyDark,
+  resolveContrastColor,
+} from "@/lib/studio/blocks/layout-utils";
 
 // ============================================================================
 // SHARED TYPES & UTILITIES
@@ -523,7 +527,10 @@ export function PremiumNavbarRender({
   // Normalized values
   const logoUrl = getImageUrl(logo);
   const navDark = isDarkBackground(backgroundColor);
-  const resolvedTextColor = resolveContrastColor(textColor || (navDark ? "#f8fafc" : "#1f2937"), navDark);
+  const resolvedTextColor = resolveContrastColor(
+    textColor || (navDark ? "#f8fafc" : "#1f2937"),
+    navDark,
+  );
   const effectiveHamburgerColor = hamburgerColor || resolvedTextColor;
   const isMobileView = _isEditor ? _breakpoint === "mobile" : false;
 
@@ -821,7 +828,7 @@ export function PremiumNavbarRender({
           {/* Utility Items (cart icon, etc.) — injected by modules */}
           {utilityItems && utilityItems.length > 0 && (
             <div className="hidden md:flex items-center gap-2 mr-2">
-              {utilityItems.map((item) => (
+              {utilityItems.map((item) =>
                 item.id === "ecom-account" ? (
                   <NavAccountBadge
                     key={item.id}
@@ -829,33 +836,36 @@ export function PremiumNavbarRender({
                     color={resolvedTextColor}
                   />
                 ) : (
-                <a
-                  key={item.id}
-                  href={item.href}
-                  className="relative p-2 rounded-lg transition-colors hover:opacity-70"
-                  style={{ color: resolvedTextColor }}
-                  aria-label={item.ariaLabel || item.label}
-                  title={item.label}
-                >
-                  <UtilityIcon name={item.icon} className="w-5 h-5" />
-                  {/* Live cart badge for e-commerce cart icon */}
-                  {item.id === "ecom-cart" && siteId ? (
-                    <NavCartBadge
-                      siteId={siteId}
-                      badgeBg={ctaColor}
-                      badgeText={ctaTextColor}
-                    />
-                  ) : item.badge ? (
-                    <span
-                      className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold rounded-full"
-                      style={{ backgroundColor: ctaColor, color: ctaTextColor }}
-                    >
-                      {item.badge}
-                    </span>
-                  ) : null}
-                </a>
-                )
-              ))}
+                  <a
+                    key={item.id}
+                    href={item.href}
+                    className="relative p-2 rounded-lg transition-colors hover:opacity-70"
+                    style={{ color: resolvedTextColor }}
+                    aria-label={item.ariaLabel || item.label}
+                    title={item.label}
+                  >
+                    <UtilityIcon name={item.icon} className="w-5 h-5" />
+                    {/* Live cart badge for e-commerce cart icon */}
+                    {item.id === "ecom-cart" && siteId ? (
+                      <NavCartBadge
+                        siteId={siteId}
+                        badgeBg={ctaColor}
+                        badgeText={ctaTextColor}
+                      />
+                    ) : item.badge ? (
+                      <span
+                        className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold rounded-full"
+                        style={{
+                          backgroundColor: ctaColor,
+                          color: ctaTextColor,
+                        }}
+                      >
+                        {item.badge}
+                      </span>
+                    ) : null}
+                  </a>
+                ),
+              )}
             </div>
           )}
 
@@ -867,7 +877,11 @@ export function PremiumNavbarRender({
               <a
                 href={secondaryCtaLink}
                 className={`${ctaSizeClasses[ctaSize]} ${ctaRadiusClasses[ctaBorderRadius]} font-medium transition-all hover:opacity-80`}
-                style={getCtaStyles(secondaryCtaStyle, ctaColor, resolvedTextColor || "")}
+                style={getCtaStyles(
+                  secondaryCtaStyle,
+                  ctaColor,
+                  resolvedTextColor || "",
+                )}
               >
                 {secondaryCtaText}
               </a>
@@ -1121,44 +1135,56 @@ export function PremiumNavbarRender({
               className={`pt-4 mt-4 border-t flex items-center justify-center gap-6 ${mobileMenuStyle === "fullscreen" ? "w-full max-w-xs mx-auto" : ""}`}
               style={{ borderColor }}
             >
-              {utilityItems.map((item) => (
+              {utilityItems.map((item) =>
                 item.id === "ecom-account" ? (
-                  <div key={item.id} className="flex items-center gap-2 p-2" onClick={() => setMobileMenuOpen(false)}>
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-2 p-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
                     <NavAccountBadge
                       accountHref={item.href}
                       color={mobileMenuTextColor}
                     />
-                    <span className="text-sm font-medium" style={{ color: mobileMenuTextColor }}>Account</span>
+                    <span
+                      className="text-sm font-medium"
+                      style={{ color: mobileMenuTextColor }}
+                    >
+                      Account
+                    </span>
                   </div>
                 ) : (
-                <a
-                  key={item.id}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="relative flex items-center gap-2 p-2 rounded-lg transition-colors"
-                  style={{ color: mobileMenuTextColor }}
-                  aria-label={item.ariaLabel || item.label}
-                >
-                  <UtilityIcon name={item.icon} className="w-5 h-5" />
-                  <span className="text-sm font-medium">{item.label}</span>
-                  {/* Live cart badge for e-commerce cart icon */}
-                  {item.id === "ecom-cart" && siteId ? (
-                    <NavCartBadge
-                      siteId={siteId}
-                      badgeBg={ctaColor}
-                      badgeText={ctaTextColor}
-                    />
-                  ) : item.badge ? (
-                    <span
-                      className="min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold rounded-full"
-                      style={{ backgroundColor: ctaColor, color: ctaTextColor }}
-                    >
-                      {item.badge}
-                    </span>
-                  ) : null}
-                </a>
-                )
-              ))}
+                  <a
+                    key={item.id}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="relative flex items-center gap-2 p-2 rounded-lg transition-colors"
+                    style={{ color: mobileMenuTextColor }}
+                    aria-label={item.ariaLabel || item.label}
+                  >
+                    <UtilityIcon name={item.icon} className="w-5 h-5" />
+                    <span className="text-sm font-medium">{item.label}</span>
+                    {/* Live cart badge for e-commerce cart icon */}
+                    {item.id === "ecom-cart" && siteId ? (
+                      <NavCartBadge
+                        siteId={siteId}
+                        badgeBg={ctaColor}
+                        badgeText={ctaTextColor}
+                      />
+                    ) : item.badge ? (
+                      <span
+                        className="min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold rounded-full"
+                        style={{
+                          backgroundColor: ctaColor,
+                          color: ctaTextColor,
+                        }}
+                      >
+                        {item.badge}
+                      </span>
+                    ) : null}
+                  </a>
+                ),
+              )}
             </div>
           )}
 
@@ -1797,10 +1823,26 @@ export function PremiumHeroRender({
   };
 
   // Contrast resolution
-  const heroDark = isEffectivelyDark(backgroundColor, bgImageUrl, backgroundOverlay, backgroundOverlayColor, backgroundOverlayOpacity);
-  const resolvedTitleColor = resolveContrastColor(titleColor || (heroDark ? "#ffffff" : "#1f2937"), heroDark);
-  const resolvedSubtitleColor = resolveContrastColor(subtitleColor || (resolvedTitleColor ? `${resolvedTitleColor}dd` : undefined), heroDark);
-  const resolvedDescColor = resolveContrastColor(descriptionColor || resolvedTitleColor, heroDark);
+  const heroDark = isEffectivelyDark(
+    backgroundColor,
+    bgImageUrl,
+    backgroundOverlay,
+    backgroundOverlayColor,
+    backgroundOverlayOpacity,
+  );
+  const resolvedTitleColor = resolveContrastColor(
+    titleColor || (heroDark ? "#ffffff" : "#1f2937"),
+    heroDark,
+  );
+  const resolvedSubtitleColor = resolveContrastColor(
+    subtitleColor ||
+      (resolvedTitleColor ? `${resolvedTitleColor}dd` : undefined),
+    heroDark,
+  );
+  const resolvedDescColor = resolveContrastColor(
+    descriptionColor || resolvedTitleColor,
+    heroDark,
+  );
 
   // Get button styles
   const getButtonStyles = (
@@ -2556,7 +2598,10 @@ export function PremiumFooterRender({
   const footerDark = isDarkBackground(backgroundColor);
   const resolvedTextColor = resolveContrastColor(textColor, footerDark);
   const resolvedLinkColor = resolveContrastColor(linkColor, footerDark);
-  const resolvedLinkHoverColor = resolveContrastColor(linkHoverColor, footerDark);
+  const resolvedLinkHoverColor = resolveContrastColor(
+    linkHoverColor,
+    footerDark,
+  );
   // Style maps
   const paddingTopClasses: Record<string, string> = {
     sm: "pt-8",
@@ -2630,7 +2675,9 @@ export function PremiumFooterRender({
           style={{
             color: socialColor || resolvedLinkColor,
             borderColor:
-              socialStyle === "outline" ? socialColor || resolvedLinkColor : undefined,
+              socialStyle === "outline"
+                ? socialColor || resolvedLinkColor
+                : undefined,
             backgroundColor:
               socialStyle === "filled"
                 ? `${socialColor || resolvedLinkColor}20`
@@ -2649,7 +2696,10 @@ export function PremiumFooterRender({
 
   const renderNewsletter = (isCompact = false) => (
     <div className={isCompact ? "" : "max-w-md"}>
-      <h3 className="font-semibold text-base mb-2" style={{ color: resolvedTextColor }}>
+      <h3
+        className="font-semibold text-base mb-2"
+        style={{ color: resolvedTextColor }}
+      >
         {newsletterTitle}
       </h3>
       {!isCompact && newsletterDescription && (
@@ -2667,7 +2717,10 @@ export function PremiumFooterRender({
         <button
           type="submit"
           className="px-5 py-2.5 rounded-lg font-medium text-sm transition-all hover:opacity-90 hover:shadow-lg shrink-0"
-          style={{ backgroundColor: newsletterButtonColor, color: resolvedTextColor }}
+          style={{
+            backgroundColor: newsletterButtonColor,
+            color: resolvedTextColor,
+          }}
         >
           {newsletterButtonText}
         </button>
@@ -2832,7 +2885,8 @@ export function PremiumFooterRender({
                       className="inline-flex items-center gap-1.5 text-sm transition-colors"
                       style={{ color: resolvedLinkColor }}
                       onMouseEnter={(e) =>
-                        (e.currentTarget.style.color = resolvedLinkHoverColor || "")
+                        (e.currentTarget.style.color =
+                          resolvedLinkHoverColor || "")
                       }
                       onMouseLeave={(e) =>
                         (e.currentTarget.style.color = resolvedLinkColor || "")
@@ -2948,7 +3002,8 @@ export function PremiumFooterRender({
                     className="text-sm transition-colors"
                     style={{ color: resolvedLinkColor }}
                     onMouseEnter={(e) =>
-                      (e.currentTarget.style.color = resolvedLinkHoverColor || "")
+                      (e.currentTarget.style.color =
+                        resolvedLinkHoverColor || "")
                     }
                     onMouseLeave={(e) =>
                       (e.currentTarget.style.color = resolvedLinkColor || "")
