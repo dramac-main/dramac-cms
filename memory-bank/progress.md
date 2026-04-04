@@ -12,10 +12,37 @@
 - **QUOTE SEND SAFETY — CONFIRMATION DIALOGS + SERVER VALIDATION (2 files, 159 insertions)** ✅
 - **ACCOUNT ICON RUNTIME MERGE FIX — PER-ITEM MERGE, INSTALL HOOK UPDATE (2 files)** ✅
 - **ECOMMERCE & BOOKING COMPREHENSIVE AUDIT — 4 BUGS FOUND, 3 FIXED (3 files, 25 insertions)** ✅
+- **QUOTE PDF PRICING HIDE + ADDRESS DEFAULTS + QUOTES TAB PRICING (3 files)** ✅
+- **AGENT PERMISSIONS SYSTEM — 32 PERMISSIONS, 9 CATEGORIES, ROLE DEFAULTS, FULL EDITOR UI (8 files, 1408 insertions)** ✅
 
 ---
 
-## Latest Update: Ecommerce & Booking Comprehensive Audit — 3 Bug Fixes ✅
+## Latest Update: Agent Permissions System + Quote/Account Fixes ✅
+
+### What Was Done
+
+Comprehensive end-to-end fixes covering quotes, addresses, and a full agent permissions system:
+
+**Quote/Account Fixes:**
+1. Quote PDF `hidePricing` option — omits prices/totals for pending quotes
+2. QuoteRequestBlock "Download Request Summary" uses hidePricing
+3. AddressCard "Set as Default" button with API integration
+4. QuotesTab hides prices for draft/pending_approval quotes
+5. Verified: quote tracking auth, profile subscription, wishlist, orders/bookings all working
+
+**Agent Permissions System (NEW):**
+- Database: `permissions jsonb` column on `mod_chat_agents`
+- 32 granular permissions across 9 categories
+- Role-based defaults (admin=all 32, supervisor=23, agent=7)
+- `updateAgentPermissions` server action
+- Full editor UI with collapsible categories, toggle switches, custom overrides, reset to defaults
+- Integrated into AgentsPageWrapper with "Permissions" button on each agent card
+
+**Git:** `5cb203f8`. **TypeScript:** 25 pre-existing, 0 new.
+
+---
+
+## Previous Update: Ecommerce & Booking Comprehensive Audit — 3 Bug Fixes ✅
 
 ### What Was Done
 
