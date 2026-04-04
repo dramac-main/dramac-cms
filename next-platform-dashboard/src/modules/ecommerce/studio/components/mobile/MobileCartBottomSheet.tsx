@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useStorefrontCart } from "../../../hooks/useStorefrontCart";
+import { useStorefront } from "../../../context/storefront-context";
 import { useMobile, usePrefersReducedMotion } from "../../../hooks/useMobile";
 import { useHapticFeedback } from "../../../hooks/useHapticFeedback";
 import { SwipeableCartItem } from "./SwipeableCartItem";
@@ -54,6 +55,7 @@ export function MobileCartBottomSheet({
   // Cart data
   const { cart, totals, isLoading, updateItemQuantity, removeItem, clearCart } =
     useStorefrontCart(siteId, userId);
+  const { quotationHidePrices } = useStorefront();
 
   // Sheet height states
   const [sheetHeight, setSheetHeight] = useState<"half" | "full">("half");
@@ -244,6 +246,7 @@ export function MobileCartBottomSheet({
                       <SwipeableCartItem
                         key={item.id}
                         item={item}
+                        hidePrices={quotationHidePrices}
                         onQuantityChange={(qty) =>
                           handleQuantityChange(item.id, qty)
                         }
@@ -264,6 +267,7 @@ export function MobileCartBottomSheet({
                 }}
               >
                 {/* Summary */}
+                {!quotationHidePrices && (
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Subtotal</span>
@@ -286,6 +290,7 @@ export function MobileCartBottomSheet({
                     <span>{formatCurrency(totals.total / 100)}</span>
                   </div>
                 </div>
+                )}
 
                 {/* Checkout button */}
                 <Button
@@ -293,7 +298,7 @@ export function MobileCartBottomSheet({
                   className="w-full min-h-[52px] text-base font-semibold"
                   onClick={handleCheckout}
                 >
-                  Checkout • {formatCurrency(totals.total / 100)}
+                  {quotationHidePrices ? "Request Quote" : `Checkout • ${formatCurrency(totals.total / 100)}`}
                 </Button>
               </div>
             )}

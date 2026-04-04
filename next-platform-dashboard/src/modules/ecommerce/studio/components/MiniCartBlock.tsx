@@ -73,6 +73,7 @@ export function MiniCartBlock({
     quotationModeEnabled,
     quotationButtonLabel,
     quotationRedirectUrl,
+    quotationHidePrices,
   } = useStorefront();
 
   // In quotation mode, redirect to quotes page instead of checkout
@@ -171,6 +172,7 @@ export function MiniCartBlock({
                   onQuantityChange={updateItemQuantity}
                   onRemove={removeItem}
                   formatPrice={formatPrice}
+                  hidePrices={quotationHidePrices}
                   variant="compact"
                   disabled={isUpdating}
                 />
@@ -192,12 +194,14 @@ export function MiniCartBlock({
             <Separator />
             <div className="p-4 space-y-3">
               {/* Total */}
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Subtotal</span>
-                <span className="font-semibold tabular-nums">
-                  {formatPrice(totals.subtotal)}
-                </span>
-              </div>
+              {!quotationHidePrices && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Subtotal</span>
+                  <span className="font-semibold tabular-nums">
+                    {formatPrice(totals.subtotal)}
+                  </span>
+                </div>
+              )}
 
               {/* Actions */}
               <div className="flex gap-2">

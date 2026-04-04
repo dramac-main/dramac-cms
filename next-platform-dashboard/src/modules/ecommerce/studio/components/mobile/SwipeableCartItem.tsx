@@ -28,6 +28,7 @@ interface SwipeableCartItemProps {
   onQuantityChange: (quantity: number) => void;
   onRemove: () => void;
   onMoveToWishlist?: () => void;
+  hidePrices?: boolean;
   className?: string;
 }
 
@@ -77,6 +78,7 @@ export function SwipeableCartItem({
   onQuantityChange,
   onRemove,
   onMoveToWishlist,
+  hidePrices,
   className,
 }: SwipeableCartItemProps) {
   const haptic = useHapticFeedback();
@@ -312,9 +314,11 @@ export function SwipeableCartItem({
           )}
 
           {/* Price */}
-          <p className="text-sm font-semibold mt-1">
-            {formatCurrency(item.unit_price / 100)}
-          </p>
+          {!hidePrices && (
+            <p className="text-sm font-semibold mt-1">
+              {formatCurrency(item.unit_price / 100)}
+            </p>
+          )}
         </div>
 
         {/* Quantity controls */}
@@ -346,9 +350,11 @@ export function SwipeableCartItem({
           </div>
 
           {/* Line total */}
-          <p className="text-sm font-semibold">
-            {formatCurrency(lineTotal / 100)}
-          </p>
+          {!hidePrices && (
+            <p className="text-sm font-semibold">
+              {formatCurrency(lineTotal / 100)}
+            </p>
+          )}
         </div>
       </motion.div>
     </div>

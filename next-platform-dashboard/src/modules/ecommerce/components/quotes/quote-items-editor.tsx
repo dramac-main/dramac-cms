@@ -7,7 +7,7 @@
  */
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,7 +30,6 @@ import {
   Package,
   MoreHorizontal,
   Trash2,
-  Edit,
   GripVertical,
   Image as ImageIcon,
 } from "lucide-react";
@@ -171,31 +170,53 @@ function EditableItemRow({
   onRemove,
   isReadOnly,
 }: EditableItemRowProps) {
-  const [isEditing, setIsEditing] = useState(false);
   const [editQuantity, setEditQuantity] = useState(item.quantity);
   const [editPrice, setEditPrice] = useState(item.unit_price);
   const [editDiscount, setEditDiscount] = useState(item.discount_percent || 0);
 
-  const handleSave = () => {
-    onUpdate({
-      quantity: editQuantity,
-      unit_price: editPrice,
-      discount_percent: editDiscount,
-    });
-    setIsEditing(false);
-  };
+  // Track the last-saved values to avoid unnecessary saves
+  const savedRef = useRef({
+    quantity: item.quantity,
+    unit_price: item.unit_price,
+    discount_percent: item.discount_percent || 0,
+  });
 
-  const handleCancel = () => {
-    setEditQuantity(item.quantity);
-    setEditPrice(item.unit_price);
-    setEditDiscount(item.discount_percent || 0);
-    setIsEditing(false);
-  };
+  // Auto-save on blur when a value has changed
+  const handleBlur = useCallback(() => {
+    const prev = savedRef.current;
+    const changed =
+      editQuantity !== prev.quantity ||
+      editPrice !== prev.unit_price ||
+      editDiscount !== prev.discount_percent;
+
+    if (!changed) return;
+
+    // Validate
+    const qty = Math.max(1, editQuantity);
+    const price = Math.max(0, editPrice);
+    const disc = Math.min(100, Math.max(0, editDiscount));
+
+    setEditQuantity(qty);
+    setEditPrice(price);
+    setEditDiscount(disc);
+
+    savedRef.current = {
+      quantity: qty,
+      unit_price: price,
+      discount_percent: disc,
+    };
+
+    onUpdate({
+      quantity: qty,
+      unit_price: price,
+      discount_percent: disc,
+    });
+  }, [editQuantity, editPrice, editDiscount, onUpdate]);
 
   const lineTotal = calculateItemLineTotal(
-    isEditing ? editQuantity : item.quantity,
-    isEditing ? editPrice : item.unit_price,
-    isEditing ? editDiscount : item.discount_percent || 0,
+    editQuantity,
+    editPrice,
+    editDiscount,
     item.tax_rate || 0,
   );
 
@@ -240,38 +261,46 @@ function EditableItemRow({
 
       {/* Quantity */}
       <TableCell className="w-24">
-        {isEditing ? (
+        {isReadOnly ? (
+          <span>{item.quantity}</span>
+        ) : (
           <Input
             type="number"
             min="1"
             value={editQuantity}
             onChange={(e) => setEditQuantity(Number(e.target.value))}
+            onBlur={handleBlur}
             className="h-8 w-20"
           />
-        ) : (
-          <span>{item.quantity}</span>
         )}
       </TableCell>
 
       {/* Unit Price */}
       <TableCell className="w-28">
-        {isEditing ? (
+        {isReadOnly ? (
+          <span>{formatQuoteCurrency(item.unit_price, currency)}</span>
+        ) : (
           <Input
             type="number"
             min="0"
             step="0.01"
             value={editPrice}
             onChange={(e) => setEditPrice(Number(e.target.value))}
+            onBlur={handleBlur}
             className="h-8 w-24"
           />
-        ) : (
-          <span>{formatQuoteCurrency(item.unit_price, currency)}</span>
         )}
       </TableCell>
 
       {/* Discount */}
       <TableCell className="w-24">
-        {isEditing ? (
+        {isReadOnly ? (
+          <span>
+            {(item.discount_percent || 0) > 0
+              ? `${item.discount_percent}%`
+              : "-"}
+          </span>
+        ) : (
           <div className="flex items-center gap-1">
             <Input
               type="number"
@@ -279,16 +308,11 @@ function EditableItemRow({
               max="100"
               value={editDiscount}
               onChange={(e) => setEditDiscount(Number(e.target.value))}
+              onBlur={handleBlur}
               className="h-8 w-16"
             />
             <span className="text-xs">%</span>
           </div>
-        ) : (
-          <span>
-            {(item.discount_percent || 0) > 0
-              ? `${item.discount_percent}%`
-              : "-"}
-          </span>
         )}
       </TableCell>
 
@@ -297,45 +321,25 @@ function EditableItemRow({
         {formatQuoteCurrency(lineTotal, currency)}
       </TableCell>
 
-      {/* Actions */}
+      {/* Actions — Remove only (edit is always-inline now) */}
       {!isReadOnly && (
         <TableCell className="w-20">
-          {isEditing ? (
-            <div className="flex gap-1">
-              <Button size="sm" className="h-7" onClick={handleSave}>
-                Save
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreHorizontal className="h-4 w-4" />
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-7"
-                onClick={handleCancel}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={onRemove}
+                className="text-red-600 focus:text-red-600"
               >
-                ✕
-              </Button>
-            </div>
-          ) : (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setIsEditing(true)}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={onRemove}
-                  className="text-red-600 focus:text-red-600"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Remove
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+                <Trash2 className="h-4 w-4 mr-2" />
+                Remove
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </TableCell>
       )}
     </TableRow>

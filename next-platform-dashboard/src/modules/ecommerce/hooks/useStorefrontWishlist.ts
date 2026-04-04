@@ -44,19 +44,18 @@ function setStoredWishlist(siteId: string, items: WishlistItem[]): void {
 export function useStorefrontWishlist(
   siteId: string,
 ): StorefrontWishlistResult {
-  const [items, setItems] = useState<WishlistItem[]>([]);
+  // Lazy-initialise from localStorage so items are never [] on first render.
+  // This eliminates the race where the save-effect wrote [] before the old
+  // load-effect's setItems could fire.
+  const [items, setItems] = useState<WishlistItem[]>(() =>
+    getStoredWishlist(siteId),
+  );
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load wishlist from localStorage
+  // Mark loading done once siteId is available
   useEffect(() => {
-    if (!siteId) {
-      setIsLoading(false);
-      return;
-    }
-
-    const storedItems = getStoredWishlist(siteId);
-    setItems(storedItems);
+    if (!siteId) return;
     setIsLoading(false);
   }, [siteId]);
 

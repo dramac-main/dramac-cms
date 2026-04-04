@@ -158,6 +158,7 @@ export function FeaturedProductsBlock({
 }: FeaturedProductsProps) {
   // Context
   const storefront = useStorefront();
+  const { quotationHidePrices } = storefront;
   // Use _siteId from Studio canvas, then siteId prop, then context
   const effectiveSiteId = _siteId || siteId || storefront?.siteId || "";
 
@@ -377,7 +378,7 @@ export function FeaturedProductsBlock({
                           productData={product}
                           siteId={effectiveSiteId}
                           variant={cardVariant}
-                          showPrice={showPrice}
+                          showPrice={showPrice && !quotationHidePrices}
                           showRating={showRating}
                           showButton={showAddToCart}
                           showWishlistButton={showWishlist}
@@ -436,7 +437,7 @@ export function FeaturedProductsBlock({
                   productData={product}
                   siteId={effectiveSiteId}
                   variant={cardVariant}
-                  showPrice={showPrice}
+                  showPrice={showPrice && !quotationHidePrices}
                   showRating={showRating}
                   showButton={showAddToCart}
                   showWishlistButton={showWishlist}
@@ -466,7 +467,7 @@ export function FeaturedProductsBlock({
               productData={products[0]}
               siteId={effectiveSiteId}
               variant="card"
-              showPrice={showPrice}
+              showPrice={showPrice && !quotationHidePrices}
               showRating={showRating}
               showButton={showAddToCart}
               showWishlistButton={showWishlist}
@@ -491,7 +492,7 @@ export function FeaturedProductsBlock({
                 productData={product}
                 siteId={effectiveSiteId}
                 variant="minimal"
-                showPrice={showPrice}
+                showPrice={showPrice && !quotationHidePrices}
                 showRating={false}
                 showButton={false}
                 showWishlistButton={showWishlist}

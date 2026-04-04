@@ -265,7 +265,7 @@ export function FilterSidebarBlock({
   onFilterChange,
   className,
 }: FilterSidebarBlockProps) {
-  const { siteId, formatPrice } = useStorefront();
+  const { siteId, formatPrice, quotationHidePrices } = useStorefront();
   const { categories, isLoading: categoriesLoading } =
     useStorefrontCategories(siteId);
   const filterResult = useProductFilters();
@@ -305,6 +305,7 @@ export function FilterSidebarBlock({
         <ActiveFilters
           filters={filters}
           categoryLabels={categoryLabels}
+          hidePrices={quotationHidePrices}
           formatPrice={formatPrice}
           onRemoveCategory={(id) => filterResult.setCategory(id, false)}
           onRemoveBrand={(b) => filterResult.setBrand(b, false)}
@@ -377,7 +378,7 @@ export function FilterSidebarBlock({
       )}
 
       {/* Price Range */}
-      {showPriceRange && (
+      {showPriceRange && !quotationHidePrices && (
         <>
           <FilterSection
             title="Price"

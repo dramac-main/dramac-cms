@@ -75,6 +75,7 @@ export function ProductQuickView({
 }: ProductQuickViewProps) {
   // Context
   const storefront = useStorefront();
+  const { quotationHidePrices } = storefront;
   const effectiveSiteId = siteId || storefront?.siteId || "";
 
   // Hooks for data
@@ -270,7 +271,7 @@ export function ProductQuickView({
               />
 
               {/* Sale badge */}
-              {compareAtPrice && currentPrice < compareAtPrice && (
+              {!quotationHidePrices && compareAtPrice && currentPrice < compareAtPrice && (
                 <Badge variant="destructive" className="absolute top-8 left-8">
                   Sale
                 </Badge>
@@ -285,12 +286,14 @@ export function ProductQuickView({
               </div>
 
               {/* Price */}
-              <ProductPriceDisplay
-                price={currentPrice}
-                compareAtPrice={compareAtPrice}
-                size="lg"
-                showSavingsBadge
-              />
+              {!quotationHidePrices && (
+                <ProductPriceDisplay
+                  price={currentPrice}
+                  compareAtPrice={compareAtPrice}
+                  size="lg"
+                  showSavingsBadge
+                />
+              )}
 
               {/* Stock status */}
               <ProductStockBadge

@@ -30,6 +30,7 @@ interface ActiveFiltersProps {
   onRemoveAttribute: (name: string, value: string) => void
   onRemoveTag: (tag: string) => void
   onClearAll: () => void
+  hidePrices?: boolean
   categoryLabels?: Record<string, string>
   formatPrice?: (price: number) => string
   className?: string
@@ -51,6 +52,7 @@ export function ActiveFilters({
   onRemoveTag,
   onClearAll,
   categoryLabels = {},
+  hidePrices = false,
   formatPrice = (p) => `${DEFAULT_CURRENCY_SYMBOL}${p}`,
   className
 }: ActiveFiltersProps) {
@@ -105,7 +107,7 @@ export function ActiveFilters({
       ))}
 
       {/* Price Range */}
-      {(filters.priceRange.min !== null || filters.priceRange.max !== null) && (
+      {!hidePrices && (filters.priceRange.min !== null || filters.priceRange.max !== null) && (
         <Badge variant="secondary" className="gap-1">
           {formatPriceRange(filters.priceRange)}
           <button onClick={onRemovePriceRange} aria-label="Remove price filter">

@@ -948,7 +948,7 @@ function WishlistTab({ siteId }: { siteId: string }) {
   const { products, isLoading, removeItem, itemCount } =
     useStorefrontWishlist(siteId);
   const { addItem: addToCart } = useStorefrontCart(siteId);
-  const { currency } = useStorefront();
+  const { currency, quotationHidePrices } = useStorefront();
 
   if (isLoading) {
     return (
@@ -1012,19 +1012,30 @@ function WishlistTab({ siteId }: { siteId: string }) {
               <p className="font-medium text-foreground truncate">
                 {product.name}
               </p>
-              <p className="text-sm font-semibold text-foreground tabular-nums">
-                {formatCents(product.base_price, currency)}
-              </p>
-              <p
-                className={`text-xs ${inStock ? "text-success" : "text-destructive"}`}
-              >
-                {inStock ? "In Stock" : "Out of Stock"}
-              </p>
+              {!quotationHidePrices && (
+                <p className="text-sm font-semibold text-foreground tabular-nums">
+                  {formatCents(product.base_price, currency)}
+                </p>
+              )}
+              {!quotationHidePrices && (
+                <p
+                  className={`text-xs ${inStock ? "text-success" : "text-destructive"}`}
+                >
+                  {inStock ? "In Stock" : "Out of Stock"}
+                </p>
+              )}
             </div>
 
             {/* Actions */}
             <div className="flex items-center gap-2 shrink-0">
-              {inStock ? (
+              {quotationHidePrices ? (
+                <a
+                  href="/"
+                  className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  Request Quote
+                </a>
+              ) : inStock ? (
                 <button
                   onClick={() => addToCart(product.id, null, 1)}
                   className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
