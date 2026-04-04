@@ -81,7 +81,7 @@ export default async function QuotePortalPage({
     // Show email verification gate — customer must prove identity
     return (
       <div data-theme="light" style={{ colorScheme: "light" }}>
-        <QuoteEmailGate token={token} quoteNumber={quote.quote_number} />
+        <QuoteEmailGate token={token} quoteNumber={quote.quote_number} siteId={quote.site_id} />
       </div>
     );
   }

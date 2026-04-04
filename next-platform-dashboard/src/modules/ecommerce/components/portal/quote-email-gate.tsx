@@ -3,10 +3,13 @@
  *
  * Shown before the quote portal. Customer must verify their email
  * to prove they are the intended recipient before viewing quote details.
+ *
+ * If the customer is already logged in to the storefront and their email
+ * matches the quote recipient, auto-verifies without prompting.
  */
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,13 +21,49 @@ import { verifyQuoteAccess } from "../../actions/quote-portal-auth";
 interface QuoteEmailGateProps {
   token: string;
   quoteNumber: string;
+  /** Site ID — used to check for existing storefront login and auto-verify */
+  siteId?: string;
 }
 
-export function QuoteEmailGate({ token, quoteNumber }: QuoteEmailGateProps) {
+export function QuoteEmailGate({ token, quoteNumber, siteId }: QuoteEmailGateProps) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [autoVerifying, setAutoVerifying] = useState(false);
+
+  // Auto-verify if the customer is already logged into the storefront
+  useEffect(() => {
+    if (!siteId) return;
+
+    const savedToken = localStorage.getItem(`dramac_customer_token_${siteId}`);
+    if (!savedToken) return;
+
+    setAutoVerifying(true);
+
+    // Validate the session and get the customer email
+    fetch(`${window.location.origin}/api/modules/ecommerce/auth`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "session", token: savedToken, siteId }),
+    })
+      .then((res) => res.json())
+      .then(async (data) => {
+        if (data?.customer?.email) {
+          // Try to auto-verify with the customer's email
+          const result = await verifyQuoteAccess(token, data.customer.email);
+          if (result.success) {
+            router.refresh();
+            return;
+          }
+        }
+        // Auto-verify failed — show the manual form
+        setAutoVerifying(false);
+      })
+      .catch(() => {
+        setAutoVerifying(false);
+      });
+  }, [siteId, token, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +94,14 @@ export function QuoteEmailGate({ token, quoteNumber }: QuoteEmailGateProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      {autoVerifying ? (
+        <Card className="w-full max-w-md">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+            <p className="text-sm text-muted-foreground">Verifying your identity...</p>
+          </CardContent>
+        </Card>
+      ) : (
       <Card className="w-full max-w-md">
         <CardHeader className="text-center pb-4">
           <div className="mx-auto mb-4 h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
@@ -129,6 +176,7 @@ export function QuoteEmailGate({ token, quoteNumber }: QuoteEmailGateProps) {
           </p>
         </CardContent>
       </Card>
+      )}
     </div>
   );
 }

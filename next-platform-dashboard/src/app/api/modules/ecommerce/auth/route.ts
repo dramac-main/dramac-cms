@@ -373,10 +373,21 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Update last_used_at
+      // Update last_used_at and extend session if nearing expiry (rolling window)
+      const expiresAt = new Date(session.expires_at);
+      const sevenDaysFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      const sessionUpdate: Record<string, string> = {
+        last_used_at: new Date().toISOString(),
+      };
+      if (expiresAt < sevenDaysFromNow) {
+        // Extend by 30 days from now
+        sessionUpdate.expires_at = new Date(
+          Date.now() + 30 * 24 * 60 * 60 * 1000,
+        ).toISOString();
+      }
       await (supabase as any)
         .from(SESSIONS)
-        .update({ last_used_at: new Date().toISOString() })
+        .update(sessionUpdate)
         .eq("token_hash", tokenHash);
 
       const { data: customer } = await (supabase as any)
@@ -941,6 +952,65 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(
         { address: updatedAddress },
+        { status: 200, headers: corsHeaders },
+      );
+    }
+
+    // ── DELETE ADDRESS ───────────────────────────────────────────────────────
+    if (action === "delete-address") {
+      const { token, addressId } = body;
+
+      if (!token || !addressId) {
+        return NextResponse.json(
+          { error: "Token and address ID are required" },
+          { status: 400, headers: corsHeaders },
+        );
+      }
+
+      const tokenHash = hashToken(token);
+      const { data: session } = await (supabase as any)
+        .from(SESSIONS)
+        .select("customer_id")
+        .eq("token_hash", tokenHash)
+        .gt("expires_at", new Date().toISOString())
+        .single();
+
+      if (!session) {
+        return NextResponse.json(
+          { error: "Session expired" },
+          { status: 401, headers: corsHeaders },
+        );
+      }
+
+      // Verify ownership
+      const { data: existingAddress } = await (supabase as any)
+        .from("mod_ecommod01_customer_addresses")
+        .select("id, customer_id")
+        .eq("id", addressId)
+        .single();
+
+      if (!existingAddress || existingAddress.customer_id !== session.customer_id) {
+        return NextResponse.json(
+          { error: "Address not found" },
+          { status: 404, headers: corsHeaders },
+        );
+      }
+
+      const { error: deleteError } = await (supabase as any)
+        .from("mod_ecommod01_customer_addresses")
+        .delete()
+        .eq("id", addressId)
+        .eq("customer_id", session.customer_id);
+
+      if (deleteError) {
+        return NextResponse.json(
+          { error: "Failed to delete address" },
+          { status: 500, headers: corsHeaders },
+        );
+      }
+
+      return NextResponse.json(
+        { success: true },
         { status: 200, headers: corsHeaders },
       );
     }

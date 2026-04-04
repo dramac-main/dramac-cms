@@ -126,6 +126,10 @@ function LoginForm({
       setError("Please enter your email and password.");
       return;
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
     setLoading(true);
     setError("");
     const result = await login(email, password);
@@ -294,8 +298,16 @@ function RegisterForm({
       setError("Email and password are required.");
       return;
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
     if (password.length < 8) {
       setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (!/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+      setError("Password must include at least one uppercase letter and one number.");
       return;
     }
     setLoading(true);
@@ -356,6 +368,9 @@ function RegisterForm({
         autoComplete="new-password"
         disabled={loading}
       />
+      <p className="text-xs text-muted-foreground -mt-2">
+        Must be 8+ characters with at least one uppercase letter and one number.
+      </p>
 
       {error && (
         <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">

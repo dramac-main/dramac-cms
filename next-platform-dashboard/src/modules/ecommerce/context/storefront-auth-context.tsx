@@ -166,6 +166,27 @@ export function StorefrontAuthProvider({
       .finally(() => setIsLoading(false));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Periodic session refresh — keeps the rolling expiry alive (every 24h)
+  useEffect(() => {
+    if (!token) return;
+
+    const REFRESH_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
+    const interval = setInterval(() => {
+      callAuth({ action: "session", token }).then((data) => {
+        if (data?.customer) {
+          setCustomer(data.customer);
+        } else {
+          // Session expired server-side
+          localStorage.removeItem(storageKey);
+          setToken(null);
+          setCustomer(null);
+        }
+      }).catch(() => {});
+    }, REFRESH_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [token, callAuth, storageKey]);
+
   const saveSession = useCallback(
     (newToken: string, newCustomer: StorefrontCustomer) => {
       localStorage.setItem(storageKey, newToken);

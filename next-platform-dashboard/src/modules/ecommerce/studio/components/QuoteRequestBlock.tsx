@@ -415,11 +415,8 @@ export function QuoteRequestBlock({
                 variant="default"
                 size="sm"
                 onClick={() => {
-                  const appDomain =
-                    process.env.NEXT_PUBLIC_APP_URL ||
-                    "https://app.dramacagency.com";
                   window.open(
-                    `${appDomain}/quote/${submittedQuote.access_token}`,
+                    `${window.location.origin}/quote/${submittedQuote.access_token}`,
                     "_blank",
                   );
                 }}

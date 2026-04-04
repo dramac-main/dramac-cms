@@ -51,6 +51,28 @@ function getPublicModuleClient() {
   return createAdminClient() as any;
 }
 
+/**
+ * Build the public-facing site URL for a given site.
+ * Uses custom_domain if set, otherwise falls back to subdomain.sites.dramacagency.com,
+ * and finally to NEXT_PUBLIC_APP_URL as last resort.
+ */
+async function getSitePublicUrl(siteId: string): Promise<string> {
+  const supabase = await getModuleClient();
+  const { data: site } = await supabase
+    .from("sites")
+    .select("subdomain, custom_domain")
+    .eq("id", siteId)
+    .single();
+
+  if (site?.custom_domain) {
+    return `https://${site.custom_domain}`;
+  }
+  if (site?.subdomain) {
+    return `https://${site.subdomain}.sites.dramacagency.com`;
+  }
+  return process.env.NEXT_PUBLIC_APP_URL || "";
+}
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -167,8 +189,9 @@ export async function sendQuote(
       },
     });
 
-    // TODO: Send actual email via email service (Resend, SendGrid, etc.)
-    const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL || ""}/quote/${accessToken}`;
+    // Build portal URL using the site's public domain
+    const siteBaseUrl = await getSitePublicUrl(input.site_id);
+    const portalUrl = `${siteBaseUrl}/quote/${accessToken}`;
     const totalAmount = quote.items
       ? (quote.items as Array<{ quantity: number; unit_price: number }>).reduce(
           (sum: number, item: { quantity: number; unit_price: number }) =>
@@ -282,7 +305,8 @@ export async function resendQuote(
     });
 
     // Send resend email
-    const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL || ""}/quote/${quote.access_token}`;
+    const siteBaseUrl = await getSitePublicUrl(siteId);
+    const portalUrl = `${siteBaseUrl}/quote/${quote.access_token}`;
     const totalAmount = quote.total || 0;
     // Quote totals are stored in main currency unit (not cents) — no /100 needed
     const formatted = formatCurrency(
@@ -364,7 +388,8 @@ export async function sendQuoteReminder(
     });
 
     // Send reminder email
-    const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL || ""}/quote/${quote.access_token}`;
+    const siteBaseUrl = await getSitePublicUrl(siteId);
+    const portalUrl = `${siteBaseUrl}/quote/${quote.access_token}`;
     const totalAmount = quote.total || 0;
     // Quote totals are stored in main currency unit (not cents) — no /100 needed
     const formatted = formatCurrency(
