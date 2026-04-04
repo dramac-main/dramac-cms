@@ -280,6 +280,13 @@ function ComponentRenderer({
     }
   }
 
+  // Inject active module slugs so MyAccountBlock can show contextual tabs
+  if (component.type === "EcommerceMyAccount" && modules) {
+    injectedProps.activeModuleSlugs = modules
+      .filter((m) => m.status === "active")
+      .map((m) => m.slug);
+  }
+
   // Determine if this is a module component that needs containment wrapping
   const isModuleComponent = MODULE_COMPONENT_TYPES.has(component.type);
 

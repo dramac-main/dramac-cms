@@ -111,6 +111,8 @@ interface QuoteItem {
 interface MyAccountBlockProps {
   /** Called when user clicks on an order to view details */
   onOrderClick?: (orderId: string, orderNumber: string) => void;
+  /** Active module slugs injected by the renderer (e.g. ["ecommerce", "booking"]) */
+  activeModuleSlugs?: string[];
   className?: string;
 }
 
@@ -1283,6 +1285,7 @@ function QuotesTab({
 
 export function MyAccountBlock({
   onOrderClick,
+  activeModuleSlugs,
   className,
 }: MyAccountBlockProps) {
   const {
@@ -1294,7 +1297,13 @@ export function MyAccountBlock({
     refreshCustomer,
     openAuthDialog,
   } = useStorefrontAuth();
-  const [activeTab, setActiveTab] = useState<AccountTab>("orders");
+
+  const hasEcommerce = !activeModuleSlugs || activeModuleSlugs.includes("ecommerce");
+  const hasBooking = !activeModuleSlugs || activeModuleSlugs.includes("booking");
+
+  // Smart default tab: bookings-first for booking-only sites
+  const defaultTab: AccountTab = hasEcommerce ? "orders" : hasBooking ? "bookings" : "orders";
+  const [activeTab, setActiveTab] = useState<AccountTab>(defaultTab);
 
   const apiBase = typeof window !== "undefined" ? window.location.origin : "";
   const siteId = customer?.siteId || "";
@@ -1319,7 +1328,11 @@ export function MyAccountBlock({
           Sign in to your account
         </h2>
         <p className="mt-2 mb-6 text-sm text-muted-foreground">
-          Track orders, manage addresses, and update your profile.
+          {hasEcommerce && hasBooking
+            ? "Track orders, manage bookings, and update your profile."
+            : hasBooking
+              ? "Manage your bookings, save addresses, and update your profile."
+              : "Track orders, manage addresses, and update your profile."}
         </p>
         <div className="flex gap-3">
           <button
@@ -1339,22 +1352,32 @@ export function MyAccountBlock({
     );
   }
 
-  const tabs: { key: AccountTab; label: string; icon: React.ReactNode }[] = [
-    { key: "orders", label: "Orders", icon: <Package className="h-4 w-4" /> },
+  // Build tabs contextually based on active modules
+  // Industry standard: only show tabs relevant to installed features
+  const allTabs: { key: AccountTab; label: string; icon: React.ReactNode; module?: string }[] = [
+    { key: "orders", label: "Orders", icon: <Package className="h-4 w-4" />, module: "ecommerce" },
+    {
+      key: "bookings",
+      label: "Bookings",
+      icon: <Calendar className="h-4 w-4" />,
+      module: "booking",
+    },
+    { key: "quotes", label: "Quotes", icon: <FileText className="h-4 w-4" />, module: "ecommerce" },
+    { key: "wishlist", label: "Wishlist", icon: <Heart className="h-4 w-4" />, module: "ecommerce" },
     {
       key: "addresses",
       label: "Addresses",
       icon: <MapPin className="h-4 w-4" />,
     },
-    { key: "wishlist", label: "Wishlist", icon: <Heart className="h-4 w-4" /> },
-    {
-      key: "bookings",
-      label: "Bookings",
-      icon: <Calendar className="h-4 w-4" />,
-    },
-    { key: "quotes", label: "Quotes", icon: <FileText className="h-4 w-4" /> },
     { key: "profile", label: "Profile", icon: <User className="h-4 w-4" /> },
   ];
+
+  const tabs = allTabs.filter((tab) => {
+    if (!tab.module) return true; // Always show addresses, profile
+    if (tab.module === "ecommerce") return hasEcommerce;
+    if (tab.module === "booking") return hasBooking;
+    return true;
+  });
 
   return (
     <div className={`max-w-4xl mx-auto px-4 py-8 ${className || ""}`}>

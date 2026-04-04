@@ -79,6 +79,15 @@ export const BOOKING_UTILITY_ITEMS: SmartNavItem[] = [
     sortOrder: 20,
     moduleId: "booking",
   },
+  {
+    id: "booking-account",
+    label: "Account",
+    href: "/account",
+    icon: "user",
+    position: "utility",
+    sortOrder: 25,
+    moduleId: "booking",
+  },
 ];
 
 export const BOOKING_FOOTER_ITEMS: SmartNavItem[] = [
@@ -88,6 +97,14 @@ export const BOOKING_FOOTER_ITEMS: SmartNavItem[] = [
     href: "/book",
     position: "footer",
     sortOrder: 1,
+    moduleId: "booking",
+  },
+  {
+    id: "booking-footer-account",
+    label: "My Account",
+    href: "/account",
+    position: "footer",
+    sortOrder: 2,
     moduleId: "booking",
   },
 ];
@@ -244,7 +261,26 @@ export function getModuleNavigation(
   result.utility.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
   result.footer.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
 
+  // Deduplicate by href within each group — when both booking and ecommerce
+  // inject an /account item, keep the first (lower sortOrder wins after sort).
+  // Industry standard: one account icon, one footer link, regardless of
+  // how many modules contribute the same route.
+  result.main = deduplicateByHref(result.main);
+  result.utility = deduplicateByHref(result.utility);
+  result.footer = deduplicateByHref(result.footer);
+
   return result;
+}
+
+/** Remove duplicate items that share the same normalized href, keeping first */
+function deduplicateByHref(items: SmartNavItem[]): SmartNavItem[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const key = normalizeHref(item.href);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 /**

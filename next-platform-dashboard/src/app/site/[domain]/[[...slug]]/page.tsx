@@ -289,7 +289,6 @@ async function generateEcommercePage(slug: string, siteId: string) {
     createProductDetailTemplate,
     createCategoryPageTemplate,
     createQuoteRequestTemplate,
-    createMyAccountTemplate,
   } = await import("@/modules/ecommerce/lib/page-templates");
 
   // Static ecommerce pages
@@ -342,19 +341,6 @@ async function generateEcommercePage(slug: string, siteId: string) {
       seo_description: "Submit a quote request for our products.",
       seo_image: null,
       page_content: [{ content: createQuoteRequestTemplate() }],
-    };
-  }
-
-  if (slug === "account") {
-    return {
-      id: `virtual-account-${siteId}`,
-      slug: "/account",
-      name: "My Account",
-      is_homepage: false,
-      seo_title: "My Account",
-      seo_description: "Manage your account, orders, and preferences.",
-      seo_image: null,
-      page_content: [{ content: createMyAccountTemplate() }],
     };
   }
 
@@ -424,35 +410,65 @@ async function processData(
   //   - Product detail pages need dynamic routing (products/premium-t-shirt)
   //   - Category pages need dynamic routing (categories/footwear)
   //   - The quotes page is needed for quotation mode
+  //   - The /account page is needed for any module (ecommerce OR booking)
   // ──────────────────────────────────────────────────────────────────────────
   if (!page && pageSlug) {
     const stripped = pageSlug.replace(/^\/+/, "");
 
-    // Check if ecommerce module is installed for this site
-    const { data: ecomInstall } = await supabase
+    // Check which modules are installed for this site
+    const { data: moduleInstalls } = await supabase
       .from("site_module_installations")
-      .select("id, is_enabled, module_id")
+      .select("module_id, is_enabled")
       .eq("site_id", site.id)
       .eq("is_enabled", true);
 
-    const hasEcommerce = ecomInstall?.some((inst: any) => {
-      return inst.is_enabled;
-    });
+    let activeSlugs = new Set<string>();
+    if (moduleInstalls && moduleInstalls.length > 0) {
+      const moduleIds = moduleInstalls.map((inst: any) => inst.module_id);
+      const { data: mods } = await supabase
+        .from("modules_v2")
+        .select("slug")
+        .in("id", moduleIds);
+      if (mods) {
+        activeSlugs = new Set(mods.map((m: any) => m.slug).filter(Boolean));
+      }
+    }
 
-    // Fast heuristic: site has ecommerce if it has a /shop or /cart page,
-    // OR has an enabled ecommerce module installation
+    // Fast heuristic: site has ecommerce if it has the ecommerce module,
+    // OR has /shop or /cart pages (catches sites set up before module system)
     const siteHasEcommerce =
-      hasEcommerce ||
+      activeSlugs.has("ecommerce") ||
       pages.some((p: any) => {
         const s = (p.slug || "").replace(/^\/+/, "");
         return s === "shop" || s === "cart";
       });
 
+    const siteHasAnyModule = activeSlugs.size > 0 || siteHasEcommerce;
+
+    // Ecommerce-specific virtual pages (checkout, products, categories, etc.)
     if (siteHasEcommerce) {
       const dynamicPage = await generateEcommercePage(stripped, site.id);
       if (dynamicPage) {
         page = dynamicPage;
       }
+    }
+
+    // Shared module pages — /account is available for ANY module (ecommerce or booking)
+    // because customer accounts are shared across all commerce/booking features.
+    if (!page && siteHasAnyModule && stripped === "account") {
+      const { createMyAccountTemplate } = await import(
+        "@/modules/ecommerce/lib/page-templates"
+      );
+      page = {
+        id: `virtual-account-${site.id}`,
+        slug: "/account",
+        name: "My Account",
+        is_homepage: false,
+        seo_title: "My Account",
+        seo_description: "Manage your account, bookings, and preferences.",
+        seo_image: null,
+        page_content: [{ content: createMyAccountTemplate() }],
+      };
     }
   }
 

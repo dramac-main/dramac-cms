@@ -829,7 +829,7 @@ export function PremiumNavbarRender({
           {utilityItems && utilityItems.length > 0 && (
             <div className="hidden md:flex items-center gap-2 mr-2">
               {utilityItems.map((item) =>
-                item.id === "ecom-account" ? (
+                item.id.endsWith("-account") ? (
                   <NavAccountBadge
                     key={item.id}
                     accountHref={item.href}
@@ -1136,7 +1136,7 @@ export function PremiumNavbarRender({
               style={{ borderColor }}
             >
               {utilityItems.map((item) =>
-                item.id === "ecom-account" ? (
+                item.id.endsWith("-account") ? (
                   <div
                     key={item.id}
                     className="flex items-center gap-2 p-2"
