@@ -3,7 +3,7 @@
  *
  * Phase ECOM-12: Quote Workflow & Customer Portal
  *
- * Form for customer to accept a quote
+ * Form for customer to accept a quote — includes delivery address collection
  */
 "use client";
 
@@ -13,9 +13,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, CircleCheck, Eraser } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Loader2, CircleCheck, Eraser, MapPin, Package } from "lucide-react";
 import { toast } from "sonner";
 import { acceptQuote } from "../../actions/quote-workflow-actions";
+import { getCountryList } from "../../lib/settings-utils";
+import type { Address } from "../../types/ecommerce-types";
 
 // ============================================================================
 // TYPES
@@ -28,6 +37,25 @@ interface QuoteAcceptFormProps {
   onAccepted: () => void;
   onCancel: () => void;
 }
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+const COUNTRIES = getCountryList();
+
+const ZM_PROVINCES = [
+  "Central",
+  "Copperbelt",
+  "Eastern",
+  "Luapula",
+  "Lusaka",
+  "Muchinga",
+  "Northern",
+  "North-Western",
+  "Southern",
+  "Western",
+];
 
 // ============================================================================
 // COMPONENT
@@ -45,6 +73,14 @@ export function QuoteAcceptForm({
   const [acceptedEmail, setAcceptedEmail] = useState(verifiedEmail || "");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [signatureData, setSignatureData] = useState<string | null>(null);
+
+  // Address state
+  const [noDelivery, setNoDelivery] = useState(false);
+  const [address, setAddress] = useState<Partial<Address>>({
+    first_name: quoteName?.split(" ")[0] || "",
+    last_name: quoteName?.split(" ").slice(1).join(" ") || "",
+    country: "ZM",
+  });
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isDrawing = useRef(false);
@@ -149,11 +185,20 @@ export function QuoteAcceptForm({
   };
 
   // Form validation
+  const addressValid =
+    noDelivery ||
+    (!!address.first_name?.trim() &&
+      !!address.last_name?.trim() &&
+      !!address.address_line_1?.trim() &&
+      !!address.city?.trim() &&
+      !!address.country?.trim());
+
   const isValid =
     acceptedBy.trim() !== "" &&
     acceptedEmail.trim() !== "" &&
     acceptedTerms &&
-    signatureData !== null;
+    signatureData !== null &&
+    addressValid;
 
   // Submit handler
   const handleSubmit = async (e: React.FormEvent) => {
@@ -172,6 +217,20 @@ export function QuoteAcceptForm({
         accepted_by_name: acceptedBy.trim(),
         accepted_by_email: acceptedEmail.trim(),
         signature_data: signatureData || undefined,
+        shipping_address: noDelivery
+          ? undefined
+          : {
+              first_name: address.first_name?.trim() || "",
+              last_name: address.last_name?.trim() || "",
+              company: address.company?.trim() || "",
+              address_line_1: address.address_line_1?.trim() || "",
+              address_line_2: address.address_line_2?.trim() || "",
+              city: address.city?.trim() || "",
+              state: address.state?.trim() || "",
+              postal_code: address.postal_code?.trim() || "",
+              country: address.country || "ZM",
+              phone: address.phone?.trim() || "",
+            },
       });
 
       if (result.success) {
@@ -231,6 +290,213 @@ export function QuoteAcceptForm({
                 </span>
               )}
             </div>
+          </div>
+
+          {/* ── Delivery Address Section ─────────────────────────── */}
+          <div className="space-y-4 rounded-lg border p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 font-medium">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+                Delivery Address
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="noDelivery"
+                  checked={noDelivery}
+                  onCheckedChange={(checked) => setNoDelivery(checked === true)}
+                />
+                <Label
+                  htmlFor="noDelivery"
+                  className="text-sm font-normal cursor-pointer flex items-center gap-1"
+                >
+                  <Package className="h-3.5 w-3.5" />
+                  No delivery needed (services only)
+                </Label>
+              </div>
+            </div>
+
+            {!noDelivery && (
+              <div className="space-y-4">
+                {/* Name row */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="addr_first_name">First name *</Label>
+                    <Input
+                      id="addr_first_name"
+                      value={address.first_name || ""}
+                      onChange={(e) =>
+                        setAddress((a) => ({
+                          ...a,
+                          first_name: e.target.value,
+                        }))
+                      }
+                      placeholder="John"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="addr_last_name">Last name *</Label>
+                    <Input
+                      id="addr_last_name"
+                      value={address.last_name || ""}
+                      onChange={(e) =>
+                        setAddress((a) => ({
+                          ...a,
+                          last_name: e.target.value,
+                        }))
+                      }
+                      placeholder="Doe"
+                    />
+                  </div>
+                </div>
+
+                {/* Company (optional) */}
+                <div className="space-y-2">
+                  <Label htmlFor="addr_company">Company</Label>
+                  <Input
+                    id="addr_company"
+                    value={address.company || ""}
+                    onChange={(e) =>
+                      setAddress((a) => ({ ...a, company: e.target.value }))
+                    }
+                    placeholder="Company name (optional)"
+                  />
+                </div>
+
+                {/* Address line 1 */}
+                <div className="space-y-2">
+                  <Label htmlFor="addr_line1">Street address *</Label>
+                  <Input
+                    id="addr_line1"
+                    value={address.address_line_1 || ""}
+                    onChange={(e) =>
+                      setAddress((a) => ({
+                        ...a,
+                        address_line_1: e.target.value,
+                      }))
+                    }
+                    placeholder="123 Main St"
+                  />
+                </div>
+
+                {/* Address line 2 */}
+                <div className="space-y-2">
+                  <Label htmlFor="addr_line2">Apartment, suite, etc.</Label>
+                  <Input
+                    id="addr_line2"
+                    value={address.address_line_2 || ""}
+                    onChange={(e) =>
+                      setAddress((a) => ({
+                        ...a,
+                        address_line_2: e.target.value,
+                      }))
+                    }
+                    placeholder="Apt 4B (optional)"
+                  />
+                </div>
+
+                {/* City + State */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="addr_city">City *</Label>
+                    <Input
+                      id="addr_city"
+                      value={address.city || ""}
+                      onChange={(e) =>
+                        setAddress((a) => ({ ...a, city: e.target.value }))
+                      }
+                      placeholder="Lusaka"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="addr_state">
+                      {(address.country || "ZM") === "ZM"
+                        ? "Province"
+                        : "State / Province"}
+                    </Label>
+                    {(address.country || "ZM") === "ZM" ? (
+                      <Select
+                        value={address.state || ""}
+                        onValueChange={(v) =>
+                          setAddress((a) => ({ ...a, state: v }))
+                        }
+                      >
+                        <SelectTrigger id="addr_state">
+                          <SelectValue placeholder="Select province" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ZM_PROVINCES.map((p) => (
+                            <SelectItem key={p} value={p}>
+                              {p}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input
+                        id="addr_state"
+                        value={address.state || ""}
+                        onChange={(e) =>
+                          setAddress((a) => ({ ...a, state: e.target.value }))
+                        }
+                        placeholder="State / Province"
+                      />
+                    )}
+                  </div>
+                </div>
+
+                {/* Postal + Country */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="addr_postal">Postal code</Label>
+                    <Input
+                      id="addr_postal"
+                      value={address.postal_code || ""}
+                      onChange={(e) =>
+                        setAddress((a) => ({
+                          ...a,
+                          postal_code: e.target.value,
+                        }))
+                      }
+                      placeholder="10101"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="addr_country">Country *</Label>
+                    <Select
+                      value={address.country || "ZM"}
+                      onValueChange={(v) =>
+                        setAddress((a) => ({ ...a, country: v, state: "" }))
+                      }
+                    >
+                      <SelectTrigger id="addr_country">
+                        <SelectValue placeholder="Select country" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {COUNTRIES.map((c) => (
+                          <SelectItem key={c.code} value={c.code}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Phone */}
+                <div className="space-y-2">
+                  <Label htmlFor="addr_phone">Phone</Label>
+                  <Input
+                    id="addr_phone"
+                    type="tel"
+                    value={address.phone || ""}
+                    onChange={(e) =>
+                      setAddress((a) => ({ ...a, phone: e.target.value }))
+                    }
+                    placeholder="+260 77 123 4567"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Signature Canvas */}

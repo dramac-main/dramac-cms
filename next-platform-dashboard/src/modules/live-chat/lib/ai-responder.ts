@@ -98,6 +98,7 @@ export async function generateAutoResponse(
           .from("mod_chat_messages")
           .select("sender_type, sender_name, content, content_type")
           .eq("conversation_id", conversationId)
+          .eq("is_internal_note", false) // SECURITY: Never feed internal notes into AI context
           .order("created_at", { ascending: false })
           .limit(MAX_CONTEXT_MESSAGES),
         supabase

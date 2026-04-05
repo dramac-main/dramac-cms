@@ -93,6 +93,7 @@ interface AcceptQuoteInput {
   accepted_by_email?: string;
   signature_data?: string;
   notes?: string;
+  shipping_address?: Partial<Address>;
 }
 
 interface RejectQuoteInput {
@@ -589,20 +590,31 @@ export async function acceptQuote(
 
     // Update quote to accepted
     const now = new Date().toISOString();
+    const updatePayload: Record<string, unknown> = {
+      status: "accepted",
+      responded_at: now,
+      response_notes: input.notes,
+      metadata: {
+        ...quote.metadata,
+        accepted_by_name: input.accepted_by_name,
+        accepted_by_email: input.accepted_by_email,
+        signature_data: input.signature_data,
+      },
+      updated_at: now,
+    };
+
+    // Store shipping address if customer provided one during acceptance
+    if (input.shipping_address) {
+      updatePayload.shipping_address = input.shipping_address;
+      // Use same address for billing unless already set
+      if (!quote.billing_address) {
+        updatePayload.billing_address = input.shipping_address;
+      }
+    }
+
     const { data: updatedQuote, error: updateError } = await supabase
       .from(`${TABLE_PREFIX}_quotes`)
-      .update({
-        status: "accepted",
-        responded_at: now,
-        response_notes: input.notes,
-        metadata: {
-          ...quote.metadata,
-          accepted_by_name: input.accepted_by_name,
-          accepted_by_email: input.accepted_by_email,
-          signature_data: input.signature_data,
-        },
-        updated_at: now,
-      })
+      .update(updatePayload)
       .eq("id", quote.id)
       .select()
       .single();
