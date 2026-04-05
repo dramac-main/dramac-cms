@@ -949,9 +949,8 @@ export async function convertQuoteToOrder(
     const orderNumber = generatedNumber as string;
 
     // Create order — quotes default to manual payment
-    // IMPORTANT: Quote amounts are in main currency units (e.g. 28000 for ZMW 28,000).
-    // Order amounts must be in CENTS (e.g. 2800000). Multiply by 100.
-    const toCents = (amount: number) => Math.round(amount * 100);
+    // NOTE: Quote amounts are stored in cents (same as orders/products).
+    // e.g. unit_price 7500.00 = ZMW 75.00. No conversion needed.
 
     // Resolve addresses: input > quote > customer default > placeholder
     let shippingAddr = input.shipping_address || quote.shipping_address || null;
@@ -1026,11 +1025,11 @@ export async function convertQuoteToOrder(
       payment_provider: "manual",
       fulfillment_status: "unfulfilled",
       currency: quote.currency,
-      subtotal: toCents(quote.subtotal || 0),
-      discount_amount: toCents(quote.discount_amount || 0),
-      tax_amount: toCents(quote.tax_amount || 0),
-      shipping_amount: toCents(quote.shipping_amount || 0),
-      total: toCents(quote.total || 0),
+      subtotal: quote.subtotal || 0,
+      discount_amount: quote.discount_amount || 0,
+      tax_amount: quote.tax_amount || 0,
+      shipping_amount: quote.shipping_amount || 0,
+      total: quote.total || 0,
       customer_email: quote.customer_email,
       customer_name: quote.customer_name,
       customer_phone: quote.customer_phone,
@@ -1059,35 +1058,30 @@ export async function convertQuoteToOrder(
       };
     }
 
-    // Create order items from quote items (convert main currency → cents)
+    // Create order items from quote items
     // Column mapping: order_items table uses product_name, product_sku, variant_options, image_url, total_price, fulfilled_quantity
+    // Prices are already in cents in both quotes and orders — no conversion needed
     if (quote.items && quote.items.length > 0) {
-      const orderItems = quote.items.map((item: QuoteItem) => {
-        const unitPriceCents = toCents(item.unit_price);
-        const lineTotalCents = toCents(
-          item.line_total || item.unit_price * item.quantity,
-        );
-        return {
-          order_id: newOrder.id,
-          product_id: item.product_id || null,
-          variant_id: item.variant_id || null,
-          product_name: item.name || 'Unknown Product',
-          product_sku: item.sku || null,
-          variant_options: item.options || {},
-          image_url: null,
-          quantity: item.quantity,
-          unit_price: unitPriceCents,
-          total_price: lineTotalCents,
-          fulfilled_quantity: 0,
-        };
-      });
+      const orderItems = quote.items.map((item: QuoteItem) => ({
+        order_id: newOrder.id,
+        product_id: item.product_id || null,
+        variant_id: item.variant_id || null,
+        product_name: item.name || "Unknown Product",
+        product_sku: item.sku || null,
+        variant_options: item.options || {},
+        image_url: null,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        total_price: item.line_total || item.unit_price * item.quantity,
+        fulfilled_quantity: 0,
+      }));
 
       const { error: itemsError } = await supabase
         .from(`${TABLE_PREFIX}_order_items`)
         .insert(orderItems);
 
       if (itemsError) {
-        console.error('Error creating order items from quote:', itemsError);
+        console.error("Error creating order items from quote:", itemsError);
       }
     }
 
@@ -1125,7 +1119,8 @@ export async function convertQuoteToOrder(
     });
 
     // Notify business owner + customer about the new order
-    // notifyNewOrder expects prices in CENTS (it divides by 100 internally)
+    // notifyNewOrder expects prices in cents (divides by 100 internally)
+    // Quote prices are already in cents — pass directly
     const currency = quote.currency || DEFAULT_CURRENCY;
     await notifyNewOrder({
       siteId: input.site_id,
@@ -1137,12 +1132,12 @@ export async function convertQuoteToOrder(
         quote.items?.map((item: QuoteItem) => ({
           name: item.name,
           quantity: item.quantity,
-          unitPrice: toCents(item.unit_price),
+          unitPrice: item.unit_price,
         })) || [],
-      subtotal: toCents(quote.subtotal || 0),
-      shipping: toCents(quote.shipping_amount || 0),
-      tax: toCents(quote.tax_amount || 0),
-      total: toCents(quote.total || 0),
+      subtotal: quote.subtotal || 0,
+      shipping: quote.shipping_amount || 0,
+      tax: quote.tax_amount || 0,
+      total: quote.total || 0,
       currency,
       paymentStatus: "pending",
       paymentProvider: "manual",
