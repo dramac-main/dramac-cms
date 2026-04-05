@@ -7,6 +7,7 @@
  */
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { DEFAULT_CURRENCY } from "@/lib/locale-config";
 
 export interface CustomerContext {
   crmContact: {
@@ -39,7 +40,9 @@ export interface CustomerContext {
     serviceName: string;
     staffName: string | null;
     startTime: string;
+    endTime: string;
     status: string;
+    paymentStatus: string;
     price: number;
     currency: string;
   }>;
@@ -97,7 +100,7 @@ export async function getCustomerContext(
     supabase
       .from("mod_bookmod01_appointments")
       .select(
-        "id, start_time, status, customer_name, service:mod_bookmod01_services(name, price, currency), staff:mod_bookmod01_staff(name)",
+        "id, start_time, end_time, status, payment_status, customer_name, service:mod_bookmod01_services(name, price, currency), staff:mod_bookmod01_staff(name)",
       )
       .eq("site_id", siteId)
       .eq("customer_email", email)
@@ -207,7 +210,7 @@ export async function getCustomerContext(
         paymentStatus: o.payment_status,
         paymentProvider: o.payment_provider || o.payment_method || null,
         total: o.total,
-        currency: o.currency || "USD",
+        currency: o.currency || DEFAULT_CURRENCY,
         createdAt: o.created_at,
         itemCount: orderItemCounts[o.id] || 0,
         paymentProof: {
@@ -224,9 +227,11 @@ export async function getCustomerContext(
       serviceName: b.service?.name || "Unknown Service",
       staffName: b.staff?.name || null,
       startTime: b.start_time,
+      endTime: b.end_time,
       status: b.status,
+      paymentStatus: b.payment_status || "not_required",
       price: b.service?.price || 0,
-      currency: b.service?.currency || "USD",
+      currency: b.service?.currency || DEFAULT_CURRENCY,
     })),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     recentQuotes: quotes.map((q: any) => ({
@@ -234,7 +239,7 @@ export async function getCustomerContext(
       quoteNumber: q.quote_number,
       status: q.status,
       total: q.total,
-      currency: q.currency || "USD",
+      currency: q.currency || DEFAULT_CURRENCY,
       createdAt: q.created_at,
       expiresAt: q.valid_until || null,
       convertedOrderNumber: q.converted_order_id
@@ -276,8 +281,13 @@ export function formatCustomerContext(ctx: CustomerContext): string {
 
   if (ctx.recentBookings.length > 0) {
     const bookingLines = ctx.recentBookings.map(
-      (b) =>
-        `- ${b.serviceName}${b.staffName ? ` with ${b.staffName}` : ""}: ${b.status}, ${new Date(b.startTime).toLocaleString()}`,
+      (b) => {
+        const start = new Date(b.startTime);
+        const isPast = start < new Date();
+        const timePart = `${start.toLocaleDateString()} ${start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+        const payPart = b.paymentStatus !== "not_required" ? `, payment: ${b.paymentStatus}` : "";
+        return `- ${b.serviceName}${b.staffName ? ` with ${b.staffName}` : ""}: ${b.status}${payPart}, ${timePart}${isPast ? " (past)" : ""}`;
+      },
     );
     parts.push(`RECENT BOOKINGS:\n${bookingLines.join("\n")}`);
   }

@@ -1,6 +1,84 @@
 # Active Context
 
-## Current Focus: Comprehensive Ecommerce Quality Pass ✅ (commit 309fa6cf)
+## Current Focus: Booking Module Comprehensive Overhaul ✅
+
+### What Was Done
+
+**Complete overhaul of the booking module: hardcoded values removed, settings enhanced, live chat integration built, AI context enriched, storefront components made responsive.**
+
+#### Phase 1 — Hardcoded Values Removed ✅
+
+- `customer-context-bridge.ts`: 3x `"USD"` fallbacks → `DEFAULT_CURRENCY` from locale-config
+- `create-service-dialog.tsx`: Static `DEFAULT_CURRENCY_SYMBOL` → dynamic `getCurrencySymbol()` from booking settings context
+- `edit-service-dialog.tsx`: Same dynamic currency pattern applied
+
+#### Phase 2 — Dashboard UI Responsive ✅
+
+- `booking-dashboard.tsx`: Stats grid `grid-cols-4` → `grid-cols-2 sm:grid-cols-4` for mobile
+
+#### Phase 3 — Settings Tabs Enhanced ✅
+
+- `settings-view.tsx`: Added currency selector with 17 currencies (ZMW, USD, EUR, GBP, ZAR, KES, NGN, etc.)
+- Currency dropdown with live symbol preview in General tab
+
+#### Phase 4 — Payments Tab Overhaul ✅
+
+- `settings-view.tsx`: Rewrote Payments tab from placeholder to functional UI
+- Require Payment toggle, manual payment tracking flow (3-step visual guide)
+- Payment statuses guide (Pending/Paid/Refunded/Not Required with color indicators)
+- Coming Soon note for online payment gateway
+
+#### Phase 5 — Live Chat Booking Panel ✅
+
+- **NEW FILE** `chat-booking-actions.ts`: Server actions (getBookingContextForChat, updateBookingStatusFromChat, updateBookingPaymentFromChat) with auth + site access verification
+- **NEW FILE** `ChatBookingPanel.tsx`: Full agent-facing booking panel following ChatOrderPanel pattern exactly — status badges, service/staff details, payment dropdown, status change actions, refresh
+- `ConversationViewWrapper.tsx`: Wired ChatBookingPanel via IIFE on `conversation.metadata?.booking_id`
+
+#### Phase 6 — Chat Event Bridge Notifications ✅
+
+- `chat-event-bridge.ts`: Added 6 booking notification functions (Created, Confirmed, Cancelled, Rescheduled, Completed, PaymentConfirmed)
+- `booking-actions.ts`: Wired notifications into createAppointment, updateAppointment (confirm/complete), cancelAppointment
+
+#### Phase 7 — AI Responder Context Enhanced ✅
+
+- `customer-context-bridge.ts`: Booking query now includes `end_time`, `payment_status`
+- AI prompt formatting enhanced with payment info and past/upcoming indicators
+
+#### Phase 8 — Storefront Responsiveness ✅
+
+- `ServiceSelectorBlock.tsx`: Added `useBreakpointDown("md")` — `mobileColumns` prop now actually works (was defined but unused)
+- `StaffGridBlock.tsx`: Same fix — `mobileColumns` prop now applied on mobile
+- `BookingCalendarBlock.tsx`: Time slots capped at 2 cols on mobile; side-by-side layout falls back to stacked on mobile
+- `BookingFormBlock.tsx`: Two-column layout forces single column on mobile
+- `BookingEmbedBlock.tsx`: Toolbar flexWrap added to prevent overflow
+- SDK `BookingWidget.tsx`: Fixed time grid → `auto-fill, minmax(70px, 1fr)` for responsive columns
+
+### Files Modified (14 files)
+
+- `modules/booking/actions/booking-actions.ts` — Chat notification imports + calls in create/update/cancel
+- `modules/booking/components/booking-dashboard.tsx` — Responsive stats grid
+- `modules/booking/components/settings-view.tsx` — Currency selector + payments tab overhaul
+- `modules/booking/components/create-service-dialog.tsx` — Dynamic currency from settings
+- `modules/booking/components/edit-service-dialog.tsx` — Dynamic currency from settings
+- `modules/booking/studio/components/ServiceSelectorBlock.tsx` — Mobile columns responsive
+- `modules/booking/studio/components/StaffGridBlock.tsx` — Mobile columns responsive
+- `modules/booking/studio/components/BookingCalendarBlock.tsx` — Mobile layout fixes
+- `modules/booking/studio/components/BookingFormBlock.tsx` — Mobile form layout
+- `modules/booking/studio/components/BookingEmbedBlock.tsx` — Toolbar flexWrap
+- `modules/live-chat/lib/chat-event-bridge.ts` — 6 booking notification functions
+- `modules/live-chat/lib/customer-context-bridge.ts` — Enhanced booking context with payment_status + end_time
+- `modules/live-chat/components/wrappers/ConversationViewWrapper.tsx` — ChatBookingPanel wiring
+
+### Files Created (2 files)
+
+- `modules/live-chat/actions/chat-booking-actions.ts` — Server actions for chat booking management
+- `modules/live-chat/components/shared/ChatBookingPanel.tsx` — In-chat booking management panel
+
+### TypeScript: Zero new errors from changes
+
+---
+
+## Previous Focus: Internal Notes Preview Leak + @Mention Fix + Order Lifecycle Audit ✅ (commit 71ada0e5)
 
 ### What Was Done
 

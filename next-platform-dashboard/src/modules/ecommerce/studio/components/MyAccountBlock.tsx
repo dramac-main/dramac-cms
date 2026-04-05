@@ -443,9 +443,7 @@ function OrderDetailView({
       <div className="flex flex-wrap gap-3 text-xs">
         <div className="flex items-center gap-1.5">
           <span className="text-muted-foreground">Payment:</span>
-          <OrderStatusBadge
-            status={detail.paymentStatus || "pending"}
-          />
+          <OrderStatusBadge status={detail.paymentStatus || "pending"} />
         </div>
         <div className="flex items-center gap-1.5">
           <span className="text-muted-foreground">Fulfillment:</span>

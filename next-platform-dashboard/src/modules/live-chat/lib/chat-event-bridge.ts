@@ -690,3 +690,155 @@ export async function bridgeChatImageAsPaymentProof(
     return false;
   }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// BOOKING NOTIFICATIONS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Notify the customer's chat when a new booking is created (e.g. from storefront).
+ */
+export async function notifyChatBookingCreated(
+  siteId: string,
+  customerEmail: string,
+  serviceName: string,
+  dateFormatted: string,
+  timeFormatted: string,
+): Promise<void> {
+  const conv = await findActiveConversation(siteId, customerEmail);
+  if (!conv) return;
+
+  const message =
+    `Your booking for ${serviceName} on ${dateFormatted} at ${timeFormatted} has been received! 📅 ` +
+    `You'll be notified once it's confirmed.`;
+
+  await sendProactiveMessage(
+    siteId,
+    conv.conversationId,
+    message,
+    conv.assistantName,
+  );
+}
+
+/**
+ * Notify the customer's chat when their booking has been confirmed.
+ */
+export async function notifyChatBookingConfirmed(
+  siteId: string,
+  customerEmail: string,
+  serviceName: string,
+  dateFormatted: string,
+  timeFormatted: string,
+): Promise<void> {
+  const conv = await findActiveConversation(siteId, customerEmail);
+  if (!conv) return;
+
+  const message =
+    `Great news — your booking for ${serviceName} on ${dateFormatted} at ${timeFormatted} is confirmed! ✅ ` +
+    `We look forward to seeing you.`;
+
+  await sendProactiveMessage(
+    siteId,
+    conv.conversationId,
+    message,
+    conv.assistantName,
+  );
+}
+
+/**
+ * Notify the customer's chat when their booking has been cancelled.
+ */
+export async function notifyChatBookingCancelled(
+  siteId: string,
+  customerEmail: string,
+  serviceName: string,
+  reason?: string,
+): Promise<void> {
+  const conv = await findActiveConversation(siteId, customerEmail);
+  if (!conv) return;
+
+  const reasonPart = reason
+    ? ` Reason: "${reason.length > 120 ? reason.substring(0, 117) + "..." : reason}".`
+    : "";
+  const message =
+    `Your booking for ${serviceName} has been cancelled.${reasonPart} ` +
+    `If you'd like to reschedule, just let me know!`;
+
+  await sendProactiveMessage(
+    siteId,
+    conv.conversationId,
+    message,
+    conv.assistantName,
+  );
+}
+
+/**
+ * Notify the customer's chat when their booking has been rescheduled.
+ */
+export async function notifyChatBookingRescheduled(
+  siteId: string,
+  customerEmail: string,
+  serviceName: string,
+  newDateFormatted: string,
+  newTimeFormatted: string,
+): Promise<void> {
+  const conv = await findActiveConversation(siteId, customerEmail);
+  if (!conv) return;
+
+  const message =
+    `Your booking for ${serviceName} has been rescheduled to ${newDateFormatted} at ${newTimeFormatted}. 🔄 ` +
+    `Let me know if this works for you!`;
+
+  await sendProactiveMessage(
+    siteId,
+    conv.conversationId,
+    message,
+    conv.assistantName,
+  );
+}
+
+/**
+ * Notify the customer's chat when their booking has been completed.
+ */
+export async function notifyChatBookingCompleted(
+  siteId: string,
+  customerEmail: string,
+  serviceName: string,
+): Promise<void> {
+  const conv = await findActiveConversation(siteId, customerEmail);
+  if (!conv) return;
+
+  const message =
+    `Your booking for ${serviceName} is complete! 🎉 Thank you for choosing us. ` +
+    `We'd love to hear your feedback — feel free to share!`;
+
+  await sendProactiveMessage(
+    siteId,
+    conv.conversationId,
+    message,
+    conv.assistantName,
+  );
+}
+
+/**
+ * Notify the customer's chat when their booking payment has been confirmed.
+ */
+export async function notifyChatBookingPaymentConfirmed(
+  siteId: string,
+  customerEmail: string,
+  serviceName: string,
+  amount: string,
+): Promise<void> {
+  const conv = await findActiveConversation(siteId, customerEmail);
+  if (!conv) return;
+
+  const message =
+    `Payment of ${amount} for your ${serviceName} booking has been confirmed! 💳 Thank you.`;
+
+  await sendProactiveMessage(
+    siteId,
+    conv.conversationId,
+    message,
+    conv.assistantName,
+  );
+}

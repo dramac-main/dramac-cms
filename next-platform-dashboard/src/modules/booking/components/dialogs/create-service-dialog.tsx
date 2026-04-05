@@ -6,7 +6,7 @@
 "use client";
 
 import { useState } from "react";
-import { DEFAULT_CURRENCY_SYMBOL } from "@/lib/locale-config";
+import { DEFAULT_CURRENCY, getCurrencySymbol } from "@/lib/locale-config";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +23,6 @@ import { Switch } from "@/components/ui/switch";
 import { useBooking } from "../../context/booking-context";
 import { toast } from "sonner";
 
-import { DEFAULT_CURRENCY } from "@/lib/locale-config";
 interface CreateServiceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -33,8 +32,9 @@ export function CreateServiceDialog({
   open,
   onOpenChange,
 }: CreateServiceDialogProps) {
-  const { addService } = useBooking();
+  const { addService, settings } = useBooking();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const currencySymbol = getCurrencySymbol(settings?.currency || DEFAULT_CURRENCY);
 
   // Form state
   const [name, setName] = useState("");
@@ -78,7 +78,7 @@ export function CreateServiceDialog({
         require_confirmation: requireConfirmation,
         max_attendees: maxAttendees,
         is_active: true,
-        currency: DEFAULT_CURRENCY,
+        currency: settings?.currency || DEFAULT_CURRENCY,
         buffer_before_minutes: 0,
         buffer_after_minutes: 0,
         sort_order: 0,
@@ -149,7 +149,7 @@ export function CreateServiceDialog({
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="price">Price ({DEFAULT_CURRENCY_SYMBOL})</Label>
+                <Label htmlFor="price">Price ({currencySymbol})</Label>
                 <Input
                   id="price"
                   type="number"

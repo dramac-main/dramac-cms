@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * MessageInput — Composable message input with canned responses, file upload,
@@ -9,10 +9,10 @@
  * Arrow keys to navigate, Enter to select, Escape to close.
  */
 
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { cn } from '@/lib/utils'
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import {
   Send,
   Paperclip,
@@ -21,24 +21,28 @@ import {
   Loader2,
   AtSign,
   Search,
-} from 'lucide-react'
-import type { CannedResponse } from '@/modules/live-chat/types'
-import { incrementCannedResponseUsage } from '@/modules/live-chat/actions/canned-response-actions'
+} from "lucide-react";
+import type { CannedResponse } from "@/modules/live-chat/types";
+import { incrementCannedResponseUsage } from "@/modules/live-chat/actions/canned-response-actions";
 
 interface AgentOption {
-  id: string
-  name: string
-  avatar?: string
+  id: string;
+  name: string;
+  avatar?: string;
 }
 
 interface MessageInputProps {
-  onSend: (content: string, isNote: boolean, mentionedAgentIds?: string[]) => Promise<void>
-  onFileUpload?: (file: File) => Promise<void>
-  cannedResponses?: CannedResponse[]
-  agents?: AgentOption[]
-  disabled?: boolean
-  placeholder?: string
-  className?: string
+  onSend: (
+    content: string,
+    isNote: boolean,
+    mentionedAgentIds?: string[],
+  ) => Promise<void>;
+  onFileUpload?: (file: File) => Promise<void>;
+  cannedResponses?: CannedResponse[];
+  agents?: AgentOption[];
+  disabled?: boolean;
+  placeholder?: string;
+  className?: string;
 }
 
 export function MessageInput({
@@ -47,75 +51,79 @@ export function MessageInput({
   cannedResponses = [],
   agents = [],
   disabled = false,
-  placeholder = 'Type a message...',
+  placeholder = "Type a message...",
   className,
 }: MessageInputProps) {
-  const [content, setContent] = useState('')
-  const [isNote, setIsNote] = useState(false)
-  const [isSending, setIsSending] = useState(false)
+  const [content, setContent] = useState("");
+  const [isNote, setIsNote] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   // Canned responses state
-  const [cannedOpen, setCannedOpen] = useState(false)
-  const [cannedSearch, setCannedSearch] = useState('')
-  const [cannedIndex, setCannedIndex] = useState(0)
-  const [cannedTrigger, setCannedTrigger] = useState<'slash' | 'button' | null>(null)
+  const [cannedOpen, setCannedOpen] = useState(false);
+  const [cannedSearch, setCannedSearch] = useState("");
+  const [cannedIndex, setCannedIndex] = useState(0);
+  const [cannedTrigger, setCannedTrigger] = useState<"slash" | "button" | null>(
+    null,
+  );
 
   // Mentions state
-  const [showMentions, setShowMentions] = useState(false)
-  const [mentionSearch, setMentionSearch] = useState('')
-  const [mentionedAgents, setMentionedAgents] = useState<Set<string>>(new Set())
+  const [showMentions, setShowMentions] = useState(false);
+  const [mentionSearch, setMentionSearch] = useState("");
+  const [mentionedAgents, setMentionedAgents] = useState<Set<string>>(
+    new Set(),
+  );
 
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const cannedPanelRef = useRef<HTMLDivElement>(null)
-  const cannedItemRefs = useRef<Map<number, HTMLButtonElement>>(new Map())
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cannedPanelRef = useRef<HTMLDivElement>(null);
+  const cannedItemRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
 
   // Auto-resize textarea
   useEffect(() => {
-    const textarea = textareaRef.current
+    const textarea = textareaRef.current;
     if (textarea) {
-      textarea.style.height = 'auto'
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`
+      textarea.style.height = "auto";
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`;
     }
-  }, [content])
+  }, [content]);
 
   // Detect "/" trigger for canned responses
   useEffect(() => {
-    if (content.startsWith('/') && content.length >= 1) {
-      setCannedOpen(true)
-      setCannedTrigger('slash')
-      setCannedSearch(content.slice(1).toLowerCase())
-    } else if (cannedTrigger === 'slash') {
+    if (content.startsWith("/") && content.length >= 1) {
+      setCannedOpen(true);
+      setCannedTrigger("slash");
+      setCannedSearch(content.slice(1).toLowerCase());
+    } else if (cannedTrigger === "slash") {
       // Close only if opened by slash and user erased the "/"
-      setCannedOpen(false)
-      setCannedTrigger(null)
-      setCannedSearch('')
+      setCannedOpen(false);
+      setCannedTrigger(null);
+      setCannedSearch("");
     }
-  }, [content, cannedTrigger])
+  }, [content, cannedTrigger]);
 
   // Detect "@" trigger for agent mentions (only in note mode)
   useEffect(() => {
     if (!isNote || agents.length === 0) {
-      setShowMentions(false)
-      return
+      setShowMentions(false);
+      return;
     }
-    const textarea = textareaRef.current
-    if (!textarea) return
-    const cursorPos = textarea.selectionStart
-    const textBeforeCursor = content.slice(0, cursorPos)
-    const mentionMatch = textBeforeCursor.match(/(^|\s)@(\w*)$/)
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const cursorPos = textarea.selectionStart;
+    const textBeforeCursor = content.slice(0, cursorPos);
+    const mentionMatch = textBeforeCursor.match(/(^|\s)@(\w*)$/);
     if (mentionMatch) {
-      setShowMentions(true)
-      setMentionSearch(mentionMatch[2].toLowerCase())
+      setShowMentions(true);
+      setMentionSearch(mentionMatch[2].toLowerCase());
     } else {
-      setShowMentions(false)
-      setMentionSearch('')
+      setShowMentions(false);
+      setMentionSearch("");
     }
-  }, [content, isNote, agents.length])
+  }, [content, isNote, agents.length]);
 
   // Close canned panel on outside click
   useEffect(() => {
-    if (!cannedOpen) return
+    if (!cannedOpen) return;
     function handleClickOutside(e: MouseEvent) {
       if (
         cannedPanelRef.current &&
@@ -123,196 +131,215 @@ export function MessageInput({
         textareaRef.current &&
         !textareaRef.current.contains(e.target as Node)
       ) {
-        setCannedOpen(false)
-        setCannedTrigger(null)
-        setCannedSearch('')
+        setCannedOpen(false);
+        setCannedTrigger(null);
+        setCannedSearch("");
       }
     }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [cannedOpen])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [cannedOpen]);
 
   const filteredAgents = useMemo(() => {
-    if (!mentionSearch) return agents
-    return agents.filter((a) => a.name.toLowerCase().includes(mentionSearch))
-  }, [agents, mentionSearch])
+    if (!mentionSearch) return agents;
+    return agents.filter((a) => a.name.toLowerCase().includes(mentionSearch));
+  }, [agents, mentionSearch]);
 
   const filteredCanned = useMemo(() => {
-    if (!cannedSearch) return cannedResponses
+    if (!cannedSearch) return cannedResponses;
     return cannedResponses.filter(
       (cr) =>
         cr.shortcut?.toLowerCase().includes(cannedSearch) ||
         cr.title.toLowerCase().includes(cannedSearch) ||
-        cr.content.toLowerCase().includes(cannedSearch)
-    )
-  }, [cannedResponses, cannedSearch])
+        cr.content.toLowerCase().includes(cannedSearch),
+    );
+  }, [cannedResponses, cannedSearch]);
 
   // Group filtered canned responses by category
   const groupedCanned = useMemo(() => {
-    const groups: Record<string, CannedResponse[]> = {}
+    const groups: Record<string, CannedResponse[]> = {};
     for (const cr of filteredCanned) {
-      const cat = cr.category || 'General'
-      if (!groups[cat]) groups[cat] = []
-      groups[cat].push(cr)
+      const cat = cr.category || "General";
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(cr);
     }
-    return groups
-  }, [filteredCanned])
+    return groups;
+  }, [filteredCanned]);
 
   // Reset active index when filter results change
   useEffect(() => {
-    setCannedIndex(0)
-  }, [filteredCanned.length])
+    setCannedIndex(0);
+  }, [filteredCanned.length]);
 
   // Scroll active item into view
   useEffect(() => {
-    if (!cannedOpen) return
-    const el = cannedItemRefs.current.get(cannedIndex)
-    el?.scrollIntoView({ block: 'nearest' })
-  }, [cannedIndex, cannedOpen])
+    if (!cannedOpen) return;
+    const el = cannedItemRefs.current.get(cannedIndex);
+    el?.scrollIntoView({ block: "nearest" });
+  }, [cannedIndex, cannedOpen]);
 
   const handleSend = useCallback(async () => {
-    const trimmed = content.trim()
-    if (!trimmed || isSending) return
-    setIsSending(true)
+    const trimmed = content.trim();
+    if (!trimmed || isSending) return;
+    setIsSending(true);
     try {
-      const mentionIds = isNote ? Array.from(mentionedAgents) : undefined
-      await onSend(trimmed, isNote, mentionIds)
-      setContent('')
-      setIsNote(false)
-      setMentionedAgents(new Set())
-      textareaRef.current?.focus()
+      const mentionIds = isNote ? Array.from(mentionedAgents) : undefined;
+      await onSend(trimmed, isNote, mentionIds);
+      setContent("");
+      setIsNote(false);
+      setMentionedAgents(new Set());
+      textareaRef.current?.focus();
     } finally {
-      setIsSending(false)
+      setIsSending(false);
     }
-  }, [content, isNote, isSending, onSend, mentionedAgents])
+  }, [content, isNote, isSending, onSend, mentionedAgents]);
 
   const selectCannedResponse = useCallback((cr: CannedResponse) => {
-    setContent(cr.content)
-    setCannedOpen(false)
-    setCannedTrigger(null)
-    setCannedSearch('')
-    setCannedIndex(0)
-    textareaRef.current?.focus()
-    incrementCannedResponseUsage(cr.id).catch(() => {})
-  }, [])
+    setContent(cr.content);
+    setCannedOpen(false);
+    setCannedTrigger(null);
+    setCannedSearch("");
+    setCannedIndex(0);
+    textareaRef.current?.focus();
+    incrementCannedResponseUsage(cr.id).catch(() => {});
+  }, []);
 
   const openCannedPanel = useCallback(() => {
     if (cannedOpen) {
-      setCannedOpen(false)
-      setCannedTrigger(null)
-      setCannedSearch('')
+      setCannedOpen(false);
+      setCannedTrigger(null);
+      setCannedSearch("");
     } else {
-      setCannedOpen(true)
-      setCannedTrigger('button')
-      setCannedSearch('')
-      setCannedIndex(0)
+      setCannedOpen(true);
+      setCannedTrigger("button");
+      setCannedSearch("");
+      setCannedIndex(0);
     }
-  }, [cannedOpen])
+  }, [cannedOpen]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       // When canned panel is open, capture navigation keys
       if (cannedOpen && filteredCanned.length > 0) {
-        if (e.key === 'ArrowDown') {
-          e.preventDefault()
-          setCannedIndex((i) => (i + 1) % filteredCanned.length)
-          return
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          setCannedIndex((i) => (i + 1) % filteredCanned.length);
+          return;
         }
-        if (e.key === 'ArrowUp') {
-          e.preventDefault()
-          setCannedIndex((i) => (i - 1 + filteredCanned.length) % filteredCanned.length)
-          return
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setCannedIndex(
+            (i) => (i - 1 + filteredCanned.length) % filteredCanned.length,
+          );
+          return;
         }
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault()
-          selectCannedResponse(filteredCanned[cannedIndex])
-          return
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          selectCannedResponse(filteredCanned[cannedIndex]);
+          return;
         }
-        if (e.key === 'Tab') {
-          e.preventDefault()
-          selectCannedResponse(filteredCanned[cannedIndex])
-          return
+        if (e.key === "Tab") {
+          e.preventDefault();
+          selectCannedResponse(filteredCanned[cannedIndex]);
+          return;
         }
-        if (e.key === 'Escape') {
-          e.preventDefault()
-          setCannedOpen(false)
-          setCannedTrigger(null)
-          if (cannedTrigger === 'slash') setContent('')
-          setCannedSearch('')
-          return
+        if (e.key === "Escape") {
+          e.preventDefault();
+          setCannedOpen(false);
+          setCannedTrigger(null);
+          if (cannedTrigger === "slash") setContent("");
+          setCannedSearch("");
+          return;
         }
       }
 
       // Enter to send (without Shift)
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault()
-        handleSend()
-        return
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+        return;
       }
       // Ctrl+Enter or Cmd+Enter also sends
-      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault()
-        handleSend()
-        return
+      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        handleSend();
+        return;
       }
       // Escape fallback
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         if (showMentions) {
-          setShowMentions(false)
+          setShowMentions(false);
         } else if (isNote) {
-          setIsNote(false)
+          setIsNote(false);
         } else if (content) {
-          setContent('')
+          setContent("");
         }
-        return
+        return;
       }
       // Ctrl+/ to toggle internal note mode
-      if (e.key === '/' && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault()
-        setIsNote(!isNote)
-        return
+      if (e.key === "/" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        setIsNote(!isNote);
+        return;
       }
     },
-    [handleSend, cannedOpen, filteredCanned, cannedIndex, cannedTrigger, selectCannedResponse, showMentions, isNote, content]
-  )
+    [
+      handleSend,
+      cannedOpen,
+      filteredCanned,
+      cannedIndex,
+      cannedTrigger,
+      selectCannedResponse,
+      showMentions,
+      isNote,
+      content,
+    ],
+  );
 
   const handleFileClick = useCallback(() => {
-    fileInputRef.current?.click()
-  }, [])
+    fileInputRef.current?.click();
+  }, []);
 
   const handleFileChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0]
+      const file = e.target.files?.[0];
       if (file && onFileUpload) {
-        await onFileUpload(file)
+        await onFileUpload(file);
       }
-      if (fileInputRef.current) fileInputRef.current.value = ''
+      if (fileInputRef.current) fileInputRef.current.value = "";
     },
-    [onFileUpload]
-  )
+    [onFileUpload],
+  );
 
-  const selectMention = useCallback((agent: AgentOption) => {
-    const textarea = textareaRef.current
-    if (!textarea) return
-    const cursorPos = textarea.selectionStart
-    const textBeforeCursor = content.slice(0, cursorPos)
-    const textAfterCursor = content.slice(cursorPos)
-    const newBefore = textBeforeCursor.replace(/(^|\s)@\w*$/, `$1@${agent.name} `)
-    setContent(newBefore + textAfterCursor)
-    setMentionedAgents((prev) => new Set(prev).add(agent.id))
-    setShowMentions(false)
-    setTimeout(() => textarea.focus(), 10)
-  }, [content])
+  const selectMention = useCallback(
+    (agent: AgentOption) => {
+      const textarea = textareaRef.current;
+      if (!textarea) return;
+      const cursorPos = textarea.selectionStart;
+      const textBeforeCursor = content.slice(0, cursorPos);
+      const textAfterCursor = content.slice(cursorPos);
+      const newBefore = textBeforeCursor.replace(
+        /(^|\s)@\w*$/,
+        `$1@${agent.name} `,
+      );
+      setContent(newBefore + textAfterCursor);
+      setMentionedAgents((prev) => new Set(prev).add(agent.id));
+      setShowMentions(false);
+      setTimeout(() => textarea.focus(), 10);
+    },
+    [content],
+  );
 
   // Build flat index for keyboard navigation
-  let flatIdx = 0
+  let flatIdx = 0;
 
   return (
     <div
       className={cn(
-        'relative border-t bg-background',
-        isNote && 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800',
-        className
+        "relative border-t bg-background",
+        isNote &&
+          "bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800",
+        className,
       )}
     >
       {/* ================================================================
@@ -330,42 +357,51 @@ export function MessageInput({
               <Search className="h-4 w-4 text-muted-foreground shrink-0" />
               <input
                 type="text"
-                value={cannedTrigger === 'slash' ? content.slice(1) : cannedSearch}
+                value={
+                  cannedTrigger === "slash" ? content.slice(1) : cannedSearch
+                }
                 onChange={(e) => {
-                  const val = e.target.value.toLowerCase()
-                  setCannedSearch(val)
-                  if (cannedTrigger === 'slash') {
-                    setContent('/' + e.target.value)
+                  const val = e.target.value.toLowerCase();
+                  setCannedSearch(val);
+                  if (cannedTrigger === "slash") {
+                    setContent("/" + e.target.value);
                   }
                 }}
                 onKeyDown={(e) => {
-                  if (e.key === 'ArrowDown') {
-                    e.preventDefault()
-                    setCannedIndex((i) => (i + 1) % Math.max(filteredCanned.length, 1))
-                  } else if (e.key === 'ArrowUp') {
-                    e.preventDefault()
-                    setCannedIndex((i) => (i - 1 + filteredCanned.length) % Math.max(filteredCanned.length, 1))
-                  } else if (e.key === 'Enter' && filteredCanned.length > 0) {
-                    e.preventDefault()
-                    selectCannedResponse(filteredCanned[cannedIndex])
-                  } else if (e.key === 'Escape') {
-                    e.preventDefault()
-                    setCannedOpen(false)
-                    setCannedTrigger(null)
-                    setCannedSearch('')
-                    if (cannedTrigger === 'slash') setContent('')
-                    textareaRef.current?.focus()
-                  } else if (e.key === 'Tab' && filteredCanned.length > 0) {
-                    e.preventDefault()
-                    selectCannedResponse(filteredCanned[cannedIndex])
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    setCannedIndex(
+                      (i) => (i + 1) % Math.max(filteredCanned.length, 1),
+                    );
+                  } else if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    setCannedIndex(
+                      (i) =>
+                        (i - 1 + filteredCanned.length) %
+                        Math.max(filteredCanned.length, 1),
+                    );
+                  } else if (e.key === "Enter" && filteredCanned.length > 0) {
+                    e.preventDefault();
+                    selectCannedResponse(filteredCanned[cannedIndex]);
+                  } else if (e.key === "Escape") {
+                    e.preventDefault();
+                    setCannedOpen(false);
+                    setCannedTrigger(null);
+                    setCannedSearch("");
+                    if (cannedTrigger === "slash") setContent("");
+                    textareaRef.current?.focus();
+                  } else if (e.key === "Tab" && filteredCanned.length > 0) {
+                    e.preventDefault();
+                    selectCannedResponse(filteredCanned[cannedIndex]);
                   }
                 }}
                 placeholder="Search responses..."
                 className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-                autoFocus={cannedTrigger === 'button'}
+                autoFocus={cannedTrigger === "button"}
               />
               <span className="text-xs text-muted-foreground shrink-0">
-                {filteredCanned.length} result{filteredCanned.length !== 1 ? 's' : ''}
+                {filteredCanned.length} result
+                {filteredCanned.length !== 1 ? "s" : ""}
               </span>
             </div>
 
@@ -374,7 +410,9 @@ export function MessageInput({
               {filteredCanned.length === 0 ? (
                 <div className="px-3 py-6 text-center">
                   <Zap className="h-5 w-5 text-muted-foreground/40 mx-auto mb-1.5" />
-                  <p className="text-sm text-muted-foreground">No matching responses</p>
+                  <p className="text-sm text-muted-foreground">
+                    No matching responses
+                  </p>
                   <p className="text-xs text-muted-foreground/70 mt-0.5">
                     Try a different search term
                   </p>
@@ -386,27 +424,29 @@ export function MessageInput({
                       {category}
                     </div>
                     {responses.map((cr) => {
-                      const itemIndex = flatIdx++
-                      const isActive = itemIndex === cannedIndex
+                      const itemIndex = flatIdx++;
+                      const isActive = itemIndex === cannedIndex;
                       return (
                         <button
                           key={cr.id}
                           ref={(el) => {
-                            if (el) cannedItemRefs.current.set(itemIndex, el)
-                            else cannedItemRefs.current.delete(itemIndex)
+                            if (el) cannedItemRefs.current.set(itemIndex, el);
+                            else cannedItemRefs.current.delete(itemIndex);
                           }}
                           type="button"
                           className={cn(
-                            'w-full text-left px-3 py-2 transition-colors',
+                            "w-full text-left px-3 py-2 transition-colors",
                             isActive
-                              ? 'bg-primary/10 text-primary'
-                              : 'hover:bg-muted/50'
+                              ? "bg-primary/10 text-primary"
+                              : "hover:bg-muted/50",
                           )}
                           onClick={() => selectCannedResponse(cr)}
                           onMouseEnter={() => setCannedIndex(itemIndex)}
                         >
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium truncate">{cr.title}</span>
+                            <span className="text-sm font-medium truncate">
+                              {cr.title}
+                            </span>
                             {cr.shortcut && (
                               <span className="ml-auto text-[11px] text-muted-foreground font-mono bg-muted rounded px-1.5 py-0.5 shrink-0">
                                 /{cr.shortcut}
@@ -417,7 +457,7 @@ export function MessageInput({
                             {cr.content}
                           </p>
                         </button>
-                      )
+                      );
                     })}
                   </div>
                 ))
@@ -427,13 +467,22 @@ export function MessageInput({
             {/* Footer hint */}
             <div className="border-t px-3 py-1.5 flex items-center gap-3 text-[11px] text-muted-foreground">
               <span>
-                <kbd className="px-1 py-0.5 rounded bg-muted font-mono text-[10px]">↑↓</kbd> navigate
+                <kbd className="px-1 py-0.5 rounded bg-muted font-mono text-[10px]">
+                  ↑↓
+                </kbd>{" "}
+                navigate
               </span>
               <span>
-                <kbd className="px-1 py-0.5 rounded bg-muted font-mono text-[10px]">Enter</kbd> select
+                <kbd className="px-1 py-0.5 rounded bg-muted font-mono text-[10px]">
+                  Enter
+                </kbd>{" "}
+                select
               </span>
               <span>
-                <kbd className="px-1 py-0.5 rounded bg-muted font-mono text-[10px]">Esc</kbd> close
+                <kbd className="px-1 py-0.5 rounded bg-muted font-mono text-[10px]">
+                  Esc
+                </kbd>{" "}
+                close
               </span>
             </div>
           </div>
@@ -444,7 +493,21 @@ export function MessageInput({
       {isNote && (
         <div className="flex items-center gap-1.5 px-3 pt-2 text-xs text-amber-700 dark:text-amber-400">
           <StickyNote className="h-3.5 w-3.5" />
-          <span>Writing an internal note (not visible to visitor) — Type <kbd className="px-1 py-0.5 rounded bg-amber-200/50 dark:bg-amber-800/50 font-mono text-[10px]">@</kbd> to mention an agent · <kbd className="px-1 py-0.5 rounded bg-amber-200/50 dark:bg-amber-800/50 font-mono text-[10px]">Ctrl+/</kbd> to switch back · <kbd className="px-1 py-0.5 rounded bg-amber-200/50 dark:bg-amber-800/50 font-mono text-[10px]">Esc</kbd> to cancel</span>
+          <span>
+            Writing an internal note (not visible to visitor) — Type{" "}
+            <kbd className="px-1 py-0.5 rounded bg-amber-200/50 dark:bg-amber-800/50 font-mono text-[10px]">
+              @
+            </kbd>{" "}
+            to mention an agent ·{" "}
+            <kbd className="px-1 py-0.5 rounded bg-amber-200/50 dark:bg-amber-800/50 font-mono text-[10px]">
+              Ctrl+/
+            </kbd>{" "}
+            to switch back ·{" "}
+            <kbd className="px-1 py-0.5 rounded bg-amber-200/50 dark:bg-amber-800/50 font-mono text-[10px]">
+              Esc
+            </kbd>{" "}
+            to cancel
+          </span>
         </div>
       )}
 
@@ -499,7 +562,7 @@ export function MessageInput({
         {cannedResponses.length > 0 && (
           <Button
             type="button"
-            variant={cannedOpen ? 'secondary' : 'ghost'}
+            variant={cannedOpen ? "secondary" : "ghost"}
             size="icon"
             className="h-9 w-9 shrink-0"
             onClick={openCannedPanel}
@@ -513,15 +576,16 @@ export function MessageInput({
         {/* Internal note toggle */}
         <Button
           type="button"
-          variant={isNote ? 'secondary' : 'ghost'}
+          variant={isNote ? "secondary" : "ghost"}
           size="icon"
           className={cn(
-            'h-9 w-9 shrink-0',
-            isNote && 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+            "h-9 w-9 shrink-0",
+            isNote &&
+              "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400",
           )}
           onClick={() => setIsNote(!isNote)}
           disabled={disabled}
-          title={isNote ? 'Switch to reply' : 'Write internal note'}
+          title={isNote ? "Switch to reply" : "Write internal note"}
         >
           <StickyNote className="h-4 w-4" />
         </Button>
@@ -534,15 +598,15 @@ export function MessageInput({
           onKeyDown={handleKeyDown}
           placeholder={
             isNote
-              ? 'Write an internal note...'
+              ? "Write an internal note..."
               : cannedResponses.length > 0
-                ? 'Type a message... (/ for canned responses)'
+                ? "Type a message... (/ for canned responses)"
                 : placeholder
           }
           disabled={disabled}
           className={cn(
-            'min-h-[40px] max-h-[160px] resize-none flex-1',
-            isNote && 'border-amber-300 dark:border-amber-700'
+            "min-h-[40px] max-h-[160px] resize-none flex-1",
+            isNote && "border-amber-300 dark:border-amber-700",
           )}
           rows={1}
         />
@@ -563,5 +627,5 @@ export function MessageInput({
         </Button>
       </div>
     </div>
-  )
+  );
 }

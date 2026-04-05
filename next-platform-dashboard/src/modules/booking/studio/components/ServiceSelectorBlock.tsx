@@ -10,6 +10,7 @@
 
 import React, { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
+import { useBreakpointDown } from "@/hooks/use-media-query";
 import {
   Clock,
   Coins,
@@ -348,6 +349,8 @@ export function ServiceSelectorBlock({
   className,
   onServiceSelect,
 }: ServiceSelectorBlockProps) {
+  const isMobile = useBreakpointDown("md");
+  const effectiveColumns = isMobile ? mobileColumns : columns;
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(
     serviceId || null,
   );
@@ -632,7 +635,7 @@ export function ServiceSelectorBlock({
             style={{
               display: isGrid ? "grid" : "flex",
               gridTemplateColumns: isGrid
-                ? `repeat(${columns}, 1fr)`
+                ? `repeat(${effectiveColumns}, 1fr)`
                 : undefined,
               flexDirection: !isGrid ? "column" : undefined,
               gap,

@@ -10,6 +10,7 @@
 
 import React, { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { useBreakpointDown } from "@/hooks/use-media-query";
 import {
   User,
   Mail,
@@ -407,6 +408,7 @@ export function BookingFormBlock({
   className,
   onSubmit,
 }: BookingFormBlockProps) {
+  const isMobileView = useBreakpointDown("md");
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -719,7 +721,7 @@ export function BookingFormBlock({
     );
   }
 
-  const isTwoCol = layout === "two-column";
+  const isTwoCol = layout === "two-column" && !isMobileView;
 
   return (
     <div

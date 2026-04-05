@@ -16,10 +16,80 @@
 - **AGENT PERMISSIONS SYSTEM — 32 PERMISSIONS, 9 CATEGORIES, ROLE DEFAULTS, FULL EDITOR UI (8 files, 1408 insertions)** ✅
 - **QUOTES TAB COLUMN MISMATCH FIX + CLICKABLE CHAT LINKS (3 files)** ✅
 - **COMPREHENSIVE ECOMMERCE QUALITY PASS — 14 FIXES, 10 FILES (quote dialog, wishlist, orders, cart, portal, a11y)** ✅
+- **ORDER DETAIL VIEW + CANNED RESPONSES — ORDER ITEMS FIX, INLINE DETAIL, 41 CHAT RESPONSES (3 files + DB)** ✅
+- **CANNED RESPONSES UI REWRITE + QUOTE PRICE BUG FIX — UNIFIED PANEL, toCents REMOVAL (2 files)** ✅
+- **INTERNAL NOTES SECURITY FIX + QUOTE ADDRESS COLLECTION — 4-LAYER DEFENSE, PORTAL ADDRESS FORM (4 files + DB)** ✅
+- **INTERNAL NOTES PREVIEW LEAK + @MENTION FIX + ORDER LIFECYCLE AUDIT — DB TRIGGER, NOTIFICATION TARGETING, FULL E2E VERIFIED (2 files + DB)** ✅
+- **BOOKING MODULE COMPREHENSIVE OVERHAUL — HARDCODED VALUES, SETTINGS, LIVE CHAT PANEL, NOTIFICATIONS, AI CONTEXT, STOREFRONT RESPONSIVE (14 modified + 2 new files)** ✅
 
 ---
 
-## Latest Update: Comprehensive Ecommerce Quality Pass ✅ (commit 309fa6cf)
+## Latest Update: Booking Module Comprehensive Overhaul ✅
+
+### What Was Done
+
+Complete overhaul of the booking module across 9 phases:
+
+1. **Hardcoded values removed** — 3x USD→DEFAULT_CURRENCY in customer-context-bridge, dynamic currency from settings in create/edit service dialogs
+2. **Dashboard responsive** — Stats grid mobile breakpoint
+3. **Settings enhanced** — Currency selector (17 currencies), payments tab overhaul (require payment toggle, manual tracking flow, payment statuses guide)
+4. **Live chat booking panel** — NEW ChatBookingPanel + chat-booking-actions server actions, wired into ConversationViewWrapper via booking_id metadata
+5. **Chat event bridge** — 6 booking notification functions (Created, Confirmed, Cancelled, Rescheduled, Completed, PaymentConfirmed) wired into booking-actions
+6. **AI responder context** — Enhanced booking query with payment_status + end_time, richer prompt formatting
+7. **Storefront responsive** — ServiceSelectorBlock + StaffGridBlock mobileColumns actually applied, BookingCalendarBlock mobile stacking, BookingFormBlock single-col mobile, BookingEmbedBlock toolbar flexWrap, SDK BookingWidget auto-fill grid
+
+**TypeScript:** Zero new errors.
+
+---
+
+## Previous Update: Internal Notes Preview Leak + @Mention Fix + Order Lifecycle Audit ✅ (commit 71ada0e5)
+
+### What Was Done
+
+Critical security fix + industry-standard address collection: (1) internal notes leaked to storefront widget via Supabase Realtime — fixed with RLS policy + AI context filter, (2) quote acceptance had no address collection — added full address form with "no delivery" toggle.
+
+**Git:** `11afcf41`, pushed. **TypeScript:** Zero new errors.
+
+---
+
+## Previous Update: Canned Responses UI Rewrite + Quote Price Bug Fix ✅ (commit 41c16c11)
+
+### What Was Done
+
+2 critical fixes: (1) dual overlapping canned responses popups consolidated into single panel with search/categories/keyboard nav, (2) `toCents()` in quote-to-order conversion was 100x inflating already-cents prices.
+
+**Fixes:**
+
+- Rewrote MessageInput.tsx: removed Radix Popover + inline div dual system → single absolutely-positioned panel with search, category grouping, keyboard nav (↑↓/Enter/Esc), active highlighting, outside click dismissal
+- Removed `toCents()` function and all 13 call sites in quote-workflow-actions.ts (quotes already store in cents)
+- Verified all 3 order creation paths (dashboard checkout, storefront checkout, quote-to-order) use consistent cents format
+- Cross-verified product catalog `base_price`, quote items `unit_price`, order items `unit_price` — all stored in cents
+
+**Git:** `41c16c11`, pushed. **TypeScript:** Zero new errors in modified files.
+
+---
+
+## Previous Update: Order Detail View + Canned Responses ✅ (commit 08fbea28)
+
+### What Was Done
+
+3 critical fixes: (1) convertQuoteToOrder used wrong column names causing 0 items, (2) no order detail view in storefront, (3) chat canned responses empty.
+
+**Fixes:**
+
+- Fixed order items column mapping in `convertQuoteToOrder()` (name→product_name, sku→product_sku, etc.)
+- Added error checking on order items insert
+- Retroactively fixed ORD-1002 in DB (inserted 5 missing items)
+- Added `get-order-detail` API endpoint for storefront customer authentication
+- Built inline expandable order detail view in OrdersTab (items table, totals, address, tracking)
+- Seeded 41 canned chat responses across 10 categories for Savanna Kitchen
+- Confirmed email support link is NOT hardcoded (3-tier fallback, configurable in settings)
+
+**Git:** `08fbea28`, pushed. **TypeScript:** Zero new errors.
+
+---
+
+## Previous Update: Comprehensive Ecommerce Quality Pass ✅ (commit 309fa6cf)
 
 ### What Was Done
 

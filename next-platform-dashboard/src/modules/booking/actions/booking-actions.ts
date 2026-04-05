@@ -12,6 +12,12 @@ import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_CURRENCY, DEFAULT_TIMEZONE } from "@/lib/locale-config";
 import { notifyBookingCancelled } from "@/lib/services/business-notifications";
 import { logAutomationEvent } from "@/modules/automation/services/event-processor";
+import {
+  notifyChatBookingCreated,
+  notifyChatBookingConfirmed,
+  notifyChatBookingCancelled,
+  notifyChatBookingCompleted,
+} from "@/modules/live-chat/lib/chat-event-bridge";
 import type {
   Service,
   ServiceInput,
@@ -619,6 +625,21 @@ export async function createAppointment(
     throw new Error(error.message);
   }
 
+  // Notify customer's live chat (async, non-blocking)
+  const created = data as Appointment;
+  if (created.customer_email) {
+    const start = new Date(created.start_time);
+    notifyChatBookingCreated(
+      siteId,
+      created.customer_email,
+      (created as any).service?.name || "Service",
+      start.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }),
+      start.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }),
+    ).catch((err) =>
+      console.error("[Booking] Chat notification error (create):", err),
+    );
+  }
+
   return data as Appointment;
 }
 
@@ -646,6 +667,23 @@ export async function updateAppointment(
   if (error) {
     console.error("[Booking] updateAppointment error:", error);
     throw new Error(error.message);
+  }
+
+  // Notify customer's live chat on status changes (async, non-blocking)
+  const updated = data as Appointment;
+  if (updated.customer_email && updates.status) {
+    const start = new Date(updated.start_time);
+    const dateFmt = start.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+    const timeFmt = start.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+    const serviceName = (updated as any).service?.name || "Service";
+
+    if (updates.status === "confirmed") {
+      notifyChatBookingConfirmed(siteId, updated.customer_email, serviceName, dateFmt, timeFmt)
+        .catch((err) => console.error("[Booking] Chat notification error (confirm):", err));
+    } else if (updates.status === "completed") {
+      notifyChatBookingCompleted(siteId, updated.customer_email, serviceName)
+        .catch((err) => console.error("[Booking] Chat notification error (complete):", err));
+    }
   }
 
   return data as Appointment;
@@ -701,6 +739,18 @@ export async function cancelAppointment(
   }).catch((err) =>
     console.error("[Booking] Cancellation notification error:", err),
   );
+
+  // Notify customer's live chat about cancellation (async, non-blocking)
+  if (appointment.customer_email) {
+    notifyChatBookingCancelled(
+      siteId,
+      appointment.customer_email,
+      (appointment as any).service?.name || "Service",
+      reason,
+    ).catch((err) =>
+      console.error("[Booking] Chat notification error (cancel):", err),
+    );
+  }
 
   // Emit automation event for appointment cancellation
   logAutomationEvent(

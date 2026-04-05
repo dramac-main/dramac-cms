@@ -6,7 +6,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { DEFAULT_CURRENCY_SYMBOL } from "@/lib/locale-config";
+import { DEFAULT_CURRENCY, getCurrencySymbol } from "@/lib/locale-config";
 import {
   Dialog,
   DialogContent,
@@ -35,8 +35,9 @@ export function EditServiceDialog({
   open,
   onOpenChange,
 }: EditServiceDialogProps) {
-  const { editService } = useBooking();
+  const { editService, settings } = useBooking();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const currencySymbol = getCurrencySymbol(settings?.currency || DEFAULT_CURRENCY);
 
   // Form state
   const [name, setName] = useState("");
@@ -171,7 +172,7 @@ export function EditServiceDialog({
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="price">Price ({DEFAULT_CURRENCY_SYMBOL})</Label>
+                <Label htmlFor="price">Price ({currencySymbol})</Label>
                 <Input
                   id="price"
                   type="number"

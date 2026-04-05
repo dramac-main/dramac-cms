@@ -10,6 +10,7 @@
 
 import React, { useState, useMemo, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { useBreakpointDown } from "@/hooks/use-media-query";
 import {
   ChevronLeft,
   ChevronRight,
@@ -270,6 +271,7 @@ export function BookingCalendarBlock({
   onDateSelect,
   onTimeSelect,
 }: BookingCalendarBlockProps) {
+  const isMobileView = useBreakpointDown("md");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -422,10 +424,9 @@ export function BookingCalendarBlock({
     titleFontSize,
     calendarSize === "lg" ? "20px" : "16px",
   );
-  const slotCols = resolveResponsive(
-    timeSlotsColumns,
-    layout === "side-by-side" ? 2 : 4,
-  );
+  const slotCols = isMobileView
+    ? Math.min(resolveResponsive(timeSlotsColumns, layout === "side-by-side" ? 2 : 4), 2)
+    : resolveResponsive(timeSlotsColumns, layout === "side-by-side" ? 2 : 4);
 
   // Resolved colors — fall back to CSS variables from the branding system
   const pc = primaryColor || "var(--brand-primary, #0f172a)";
@@ -508,7 +509,7 @@ export function BookingCalendarBlock({
       )}
 
       <div
-        style={{ display: isSideBySide ? "flex" : "block", gap: resolvedGap }}
+        style={{ display: isSideBySide && !isMobileView ? "flex" : "block", gap: resolvedGap }}
       >
         {/* Calendar */}
         <div

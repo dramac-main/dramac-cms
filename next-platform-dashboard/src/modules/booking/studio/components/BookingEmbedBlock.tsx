@@ -341,6 +341,8 @@ export function BookingEmbedBlock({
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
+        flexWrap: "wrap",
+        gap: "8px",
         padding: `8px ${padding}`,
         backgroundColor: toolbarBackgroundColor || undefined,
         color: toolbarTextColor || undefined,

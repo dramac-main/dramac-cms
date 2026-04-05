@@ -10,6 +10,7 @@
 
 import React, { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
+import { useBreakpointDown } from "@/hooks/use-media-query";
 import {
   Star,
   Clock,
@@ -345,6 +346,8 @@ export function StaffGridBlock({
   onStaffSelect,
   onBookClick,
 }: StaffGridBlockProps) {
+  const isMobile = useBreakpointDown("md");
+  const effectiveColumns = isMobile ? mobileColumns : columns;
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSpecialty, setActiveSpecialty] = useState<string | null>(
     filterBySpecialty || null,
@@ -600,7 +603,7 @@ export function StaffGridBlock({
             style={{
               display: isGrid ? "grid" : "flex",
               gridTemplateColumns: isGrid
-                ? `repeat(${columns}, 1fr)`
+                ? `repeat(${effectiveColumns}, 1fr)`
                 : undefined,
               flexDirection: isList ? "column" : undefined,
               gap,

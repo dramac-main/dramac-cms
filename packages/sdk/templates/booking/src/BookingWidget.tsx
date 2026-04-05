@@ -192,7 +192,7 @@ export function BookingWidget({
             onChange={(e) => setSelectedDate(new Date(e.target.value))}
           />
           {selectedDate && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(70px, 1fr))', gap: '8px' }}>
               {['09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00'].map((time) => (
                 <button
                   key={time}

@@ -88,6 +88,7 @@ import type {
 } from "@/modules/live-chat/types";
 import { ChatOrderPanel } from "../shared/ChatOrderPanel";
 import { ChatQuotePanel } from "../shared/ChatQuotePanel";
+import { ChatBookingPanel } from "../shared/ChatBookingPanel";
 
 interface ConversationViewWrapperProps {
   conversation: ChatConversation;
@@ -835,6 +836,21 @@ export function ConversationViewWrapper({
               <ChatQuotePanel
                 siteId={siteId}
                 quoteNumber={quoteNum}
+                userId={userId}
+                userName={userName}
+              />
+            ) : null;
+          })()}
+
+          {/* Booking Context Panel — shown when conversation has an associated booking */}
+          {(() => {
+            const bookingId = (conversation.metadata as Record<string, unknown>)
+              ?.booking_id;
+            return typeof bookingId === "string" &&
+              bookingId.trim().length > 0 ? (
+              <ChatBookingPanel
+                siteId={siteId}
+                bookingId={bookingId}
                 userId={userId}
                 userName={userName}
               />
