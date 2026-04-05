@@ -972,10 +972,10 @@ export async function convertQuoteToOrder(
       internal_notes: input.include_notes
         ? `Converted from Quote ${quote.quote_number}\n${input.custom_order_notes || quote.internal_notes || ""}`
         : input.custom_order_notes || null,
-      source: "quote",
       metadata: {
         source_quote_id: quote.id,
         source_quote_number: quote.quote_number,
+        source: "quote",
       },
     };
 

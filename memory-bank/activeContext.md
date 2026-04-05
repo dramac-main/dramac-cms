@@ -1,52 +1,85 @@
 # Active Context
 
-## Current Focus: Wishlist + Price Hiding Audit + Inline Quote Editing ✅ (commit e92b3a32)
+## Current Focus: Comprehensive Ecommerce Quality Pass ✅ (commit 309fa6cf)
 
 ### What Was Done
 
-**Session covered 3 user-reported bugs + comprehensive quotation price-hiding audit across 10 components:**
+**Session covered ~14 fixes across 10 files — quote dialog, wishlist, orders, cart, portal, and accessibility.**
 
-#### Fix 1: Wishlist Showing Only 1 Item — Race Condition ✅
+#### Quote Dialog — Add/Remove Items No Longer Closes ✅
 
-- **Root cause:** `useStorefrontWishlist` hook initialized `items` as `[]`, then had a save effect that wrote `[]` to localStorage on mount before the load effect's `setItems(storedItems)` could take effect. In React StrictMode or fast navigation, this permanently wiped the wishlist.
-- **Fix:** Replaced `useState<WishlistItem[]>([])` with lazy initializer `useState(() => getStoredWishlist(siteId))`. Items now start with localStorage data from the very first render — save effect never writes `[]`.
-- Removed redundant load effect (load now happens in initializer).
+- **Root cause:** `reloadQuote()` called `onQuoteChange?.()` → parent `handleQuoteChange` called `setViewQuoteId(null)` → dialog unmounts on every add/remove
+- **Fix:** `reloadQuote()` now only does `const data = await getQuote(...); setQuote(data);` — no parent notification. Parent list refreshes on dialog close via `handleDialogClose`.
 
-#### Fix 2: Prices Visible on Quotation Storefront — 10 Components Fixed ✅
+#### Quote Dialog — Optimistic Local Updates ✅
 
-Full audit of all storefront components for `quotationHidePrices` compliance:
+- `handleRemoveItem`: Filters item locally, recalculates totals via `calculateQuoteTotals`, sets state before server call. Resyncs on error.
+- `handleUpdateItem`: Already had optimistic updates from previous session.
+- `handleAddItems`: Now tracks partial success count — if 3/5 items succeed before failure, toast shows "Added 3 of 5 item(s)".
 
-**Already correct:** product-card-block, ProductDetailBlock, CartDrawerBlock, CartPageBlock, CartItemCard, CartSummaryCard, StickyAddToCartBar, QuoteRequestBlock, QuoteItemCard
+#### Quote Items Editor — Stale State After Server Resync ✅
 
-**Fixed in this commit:**
+- `EditableItemRow` used `useState(item.quantity)` which doesn't re-sync when props change.
+- Added `useEffect` that re-syncs `editQuantity`, `editPrice`, `editDiscount`, and `savedRef` when item props change.
 
-1. **MyAccountBlock WishlistTab** — Hides price, stock badge, "Add to Cart". Shows "Request Quote" link instead.
-2. **FeaturedProductsBlock** — All 4 display modes (carousel, row, hero primary, hero secondary) now pass `showPrice && !quotationHidePrices`.
-3. **ProductQuickView** — Hides `ProductPriceDisplay` and sale badge when quotationHidePrices.
-4. **FilterSidebarBlock** — Hides price range filter section.
-5. **ActiveFilters** — New `hidePrices` prop suppresses price range badge.
-6. **SwipeableCartItem** — New `hidePrices` prop hides unit price and line total.
-7. **MiniCartBlock** — Hides subtotal display, passes `hidePrices` to CartItemCard.
-8. **MobileCartBottomSheet** — Hides price summary section, checkout button shows "Request Quote" instead.
+#### convertQuoteToOrder — CRITICAL Notes Column Bug ✅
 
-**Intentionally NOT changed (prices should show on these):**
+- `convertQuoteToOrder` inserted `notes:` field but the `mod_ecommod01_orders` table only has `customer_notes` and `internal_notes` columns.
+- Changed to `internal_notes:` — this was silently failing every quote-to-order conversion.
 
-- QuoteDetailBlock, QuoteListBlock (quotes ARE priced offers — customer needs to see them)
-- OrdersTab, OrderConfirmationBlock (finalized orders should show prices)
-- CheckoutPageBlock (payment flow needs prices)
+#### Post-Acceptance Portal Flow ✅
 
-#### Fix 3: Quote Items Editor — Inline Auto-Save ✅
+- `getQuoteByToken`: Now does secondary lookup when `converted_to_order_id` is set — queries `mod_ecommod01_orders` for `order_number`, stores in `data.metadata.converted_order_number`.
+- `quote-portal-view.tsx`: Added `isConverted` detection and green "Order Created" banner with order number.
 
-- Converted `EditableItemRow` from explicit Edit → Save/Cancel workflow to always-editable inline fields.
-- Quantity, Price, Discount are always rendered as `<Input>` when not readonly.
-- `onBlur` handler compares current values to last-saved values. If changed, validates and calls `onUpdate()`.
-- Uses `savedRef` to track last-persisted values and avoid unnecessary saves.
-- Removed Save/Cancel buttons and "Edit" dropdown option. Dropdown now only shows "Remove".
-- Works seamlessly with the optimistic local state update from previous session.
+#### Signature View in Dashboard ✅
 
-**Test data cleanup:** Deleted `harpinsltd@gmail.com` customer, quote (1), quote items, and auth user.
+- Added "Acceptance Details" section in quote detail dialog's Details tab for accepted/converted quotes.
+- Shows: accepted_by_name, accepted_by_email, accepted_at date, and signature image (rendered from base64 `metadata.signature_data`).
+- Green-themed section with `PenTool` icon.
 
-**Files Modified (10 files):**
+#### Wishlist — Loading + Phantom Items ✅
+
+- Merged two effects into one: `setIsLoading(true)` before fetch, `false` in `.finally()`.
+- Added phantom item pruning (products deleted on server get removed from localStorage).
+- Stabilized fetch dependency with `productIdsKey` (sorted IDs as comma-separated string) instead of raw `items` array.
+- Used `justPruned` ref to skip unnecessary re-fetch when pruning changes the items array.
+
+#### Order Status Dropdown — Valid Transitions + Refunded ✅
+
+- Added `"refunded"` to statuses list (was missing — impossible to refund delivered orders).
+- Dropdown now filters by `VALID_TRANSITIONS[currentStatus]` — only shows valid next states.
+- Imported `VALID_TRANSITIONS` from `order-constants.ts`.
+
+#### Cart removeItem — Stale Closure ✅
+
+- `newItemCount` was computed from `cart.items` closure (stale) instead of from the functional updater's filtered list.
+- Now computes inside `setCart` callback for accurate event dispatch.
+
+#### Price Filter — $100 Max ✅
+
+- `ProductGridBlock` had price range slider hardcoded to `max={10000}` (= $100 in cents).
+- Raised to `max={1000000}` ($10,000) with `step={100}` ($1 increments).
+
+#### DialogContent Aria Warnings ✅
+
+- 27 files had `<DialogContent>` without `<DialogDescription>`.
+- Fixed globally: `dialog.tsx` wrapper now passes `aria-describedby={props["aria-describedby"] ?? undefined}` to suppress Radix warning.
+
+### Files Modified (10 files)
+
+- `components/ui/dialog.tsx` — Global aria fix
+- `ecommerce/actions/quote-workflow-actions.ts` — notes→internal_notes, getQuoteByToken order lookup
+- `ecommerce/components/orders/order-detail-dialog.tsx` — Status dropdown filtering + refunded
+- `ecommerce/components/portal/quote-portal-view.tsx` — Converted banner + order number
+- `ecommerce/components/quotes/quote-detail-dialog.tsx` — reloadQuote decoupled, partial add tracking, signature display
+- `ecommerce/components/quotes/quote-items-editor.tsx` — State resync useEffect
+- `ecommerce/components/views/quotes-view.tsx` — (modified in prev round, included in commit)
+- `ecommerce/hooks/useStorefrontCart.ts` — removeItem stale closure fix
+- `ecommerce/hooks/useStorefrontWishlist.ts` — Loading, pruning, stable deps
+- `ecommerce/studio/components/ProductGridBlock.tsx` — Price filter range
+
+**TypeScript:** Zero errors. **Git:** `309fa6cf`, pushed to origin/main. **Cleanup:** Deleted test user `harpinsltd@gmail.com` (auth, customer, quote, items, activities).
 
 - `useStorefrontWishlist.ts` — Lazy state initializer fix
 - `MyAccountBlock.tsx` — WishlistTab price hiding

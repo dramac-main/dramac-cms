@@ -1176,7 +1176,7 @@ export async function POST(request: NextRequest) {
         .from(`${TABLE_PREFIX}_quotes`)
         .select(
           `
-          id, quote_number, status, total, currency, valid_until, notes:notes_to_customer, created_at,
+          id, quote_number, status, total, currency, valid_until, notes:notes_to_customer, created_at, access_token,
           items:${TABLE_PREFIX}_quote_items(id, product_name:name, variant_label:description, quantity, unit_price)
         `,
         )

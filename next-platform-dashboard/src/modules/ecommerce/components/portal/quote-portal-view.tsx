@@ -133,7 +133,8 @@ export function QuotePortalView({
             <ShoppingBag className="h-6 w-6 text-green-600" />
             <div>
               <p className="font-semibold text-green-700 dark:text-green-300">
-                Order Created{convertedOrderNumber ? ` — ${convertedOrderNumber}` : ""}
+                Order Created
+                {convertedOrderNumber ? ` — ${convertedOrderNumber}` : ""}
               </p>
               <p className="text-sm text-green-600 dark:text-green-400">
                 This quote has been converted to an order. Check your email for

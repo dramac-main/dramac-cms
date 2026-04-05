@@ -55,7 +55,11 @@ export function useStorefrontWishlist(
 
   // Stable key for product IDs — only re-fetch when the set of IDs changes
   const productIdsKey = useMemo(
-    () => items.map((i) => i.productId).sort().join(","),
+    () =>
+      items
+        .map((i) => i.productId)
+        .sort()
+        .join(","),
     [items],
   );
   const justPruned = useRef(false);

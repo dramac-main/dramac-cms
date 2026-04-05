@@ -65,7 +65,9 @@ function ProductItem({
   const [showVariants, setShowVariants] = useState(false)
   const hasVariants = product.variants && product.variants.length > 0
   
-  const imageUrl = product.images?.[0]
+  // Handle both string[] and {url, alt}[] image formats from different products
+  const rawImage = product.images?.[0] as string | { url: string; alt?: string } | undefined
+  const imageUrl = typeof rawImage === 'string' ? rawImage : rawImage?.url
   
   const formatPrice = (price: number) => {
     // Convert cents to dollars (database stores prices as cents)

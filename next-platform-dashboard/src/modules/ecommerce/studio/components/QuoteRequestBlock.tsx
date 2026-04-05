@@ -265,6 +265,21 @@ export function QuoteRequestBlock({
     notes: "",
   });
 
+  // Auto-fill form from logged-in customer data
+  React.useEffect(() => {
+    if (!auth.isLoggedIn || !auth.customer) return;
+    setFormData((prev) => ({
+      ...prev,
+      customer_name:
+        prev.customer_name ||
+        [auth.customer!.firstName, auth.customer!.lastName]
+          .filter(Boolean)
+          .join(" "),
+      customer_email: prev.customer_email || auth.customer!.email,
+      customer_phone: prev.customer_phone || auth.customer!.phone || "",
+    }));
+  }, [auth.isLoggedIn, auth.customer]);
+
   const [isSubmitted, setIsSubmitted] = React.useState(false);
   const [validationErrors, setValidationErrors] = React.useState<
     Partial<Record<keyof QuoteRequestData, string>>
@@ -443,6 +458,38 @@ export function QuoteRequestBlock({
       };
       setSubmittedQuote(quoteWithItems);
       setIsSubmitted(true);
+
+      // Sync phone back to customer profile if logged in and phone was provided
+      if (auth.isLoggedIn && auth.customer && formData.customer_phone?.trim()) {
+        const needsPhoneUpdate =
+          !auth.customer.phone && formData.customer_phone.trim();
+        const needsNameUpdate =
+          !auth.customer.firstName && formData.customer_name.trim();
+        if (needsPhoneUpdate || needsNameUpdate) {
+          const nameParts = formData.customer_name.trim().split(/\s+/);
+          fetch(`/api/modules/ecommerce/auth`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "update-profile",
+              token: auth.token,
+              siteId,
+              ...(needsPhoneUpdate
+                ? { phone: formData.customer_phone.trim() }
+                : {}),
+              ...(needsNameUpdate
+                ? {
+                    firstName: nameParts[0],
+                    lastName: nameParts.slice(1).join(" "),
+                  }
+                : {}),
+            }),
+          }).catch(() => {
+            /* best effort */
+          });
+        }
+      }
+
       // Clear cart items since they've been converted to a quote
       if (cartItems && cartItems.length > 0) {
         try {

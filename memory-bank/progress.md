@@ -15,11 +15,43 @@
 - **QUOTE PDF PRICING HIDE + ADDRESS DEFAULTS + QUOTES TAB PRICING (3 files)** ✅
 - **AGENT PERMISSIONS SYSTEM — 32 PERMISSIONS, 9 CATEGORIES, ROLE DEFAULTS, FULL EDITOR UI (8 files, 1408 insertions)** ✅
 - **QUOTES TAB COLUMN MISMATCH FIX + CLICKABLE CHAT LINKS (3 files)** ✅
-- **AGENT PERMISSIONS SYSTEM — 32 PERMISSIONS, 9 CATEGORIES, ROLE DEFAULTS, FULL EDITOR UI (8 files, 1408 insertions)** ✅
+- **COMPREHENSIVE ECOMMERCE QUALITY PASS — 14 FIXES, 10 FILES (quote dialog, wishlist, orders, cart, portal, a11y)** ✅
 
 ---
 
-## Latest Update: Agent Permissions System + Quote/Account Fixes ✅
+## Latest Update: Comprehensive Ecommerce Quality Pass ✅ (commit 309fa6cf)
+
+### What Was Done
+
+14 fixes across 10 files addressing quote dialog UX, wishlist reliability, order management, cart accuracy, portal flow, and accessibility:
+
+**Critical Fixes:**
+
+- Quote dialog no longer closes on add/remove items (reloadQuote decoupled from onQuoteChange)
+- `convertQuoteToOrder` was using nonexistent `notes` column → fixed to `internal_notes`
+- Order status dropdown was missing "refunded" → added + filtered by valid transitions
+- Wishlist loading race condition + phantom item pruning + stable fetch deps
+
+**UX Improvements:**
+
+- Quote portal shows "Order Created" banner for converted quotes with order number
+- Dashboard shows acceptance details with signature image for accepted quotes
+- Quote items editor re-syncs local state when server resync changes props
+- handleAddItems tracks partial success ("Added 3 of 5 items")
+
+**Other Fixes:**
+
+- Cart removeItem stale closure on event dispatch
+- Price filter max raised from $100 to $10,000
+- DialogContent aria-describedby warning suppressed globally
+- Quote totals optimistic local recalculation on add/remove
+
+**Git:** `309fa6cf`, pushed. **TypeScript:** Zero errors.
+**Cleanup:** Deleted test user `harpinsltd@gmail.com`.
+
+---
+
+## Previous Update: Agent Permissions System + Quote/Account Fixes ✅
 
 ### What Was Done
 

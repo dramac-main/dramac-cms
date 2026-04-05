@@ -98,6 +98,7 @@ interface Quote {
   valid_until: string | null;
   notes: string | null;
   created_at: string;
+  access_token: string | null;
   items: QuoteItem[];
 }
 
@@ -141,6 +142,18 @@ function formatCents(cents: number, currency = "USD"): string {
     }).format(cents / 100);
   } catch {
     return `${currency} ${(cents / 100).toFixed(2)}`;
+  }
+}
+
+/** Format a value already in main currency units (NOT cents). Used for quotes. */
+function formatCurrency(amount: number, currency = "USD"): string {
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency,
+    }).format(amount);
+  } catch {
+    return `${currency} ${amount.toFixed(2)}`;
   }
 }
 
@@ -1030,7 +1043,7 @@ function WishlistTab({ siteId }: { siteId: string }) {
             <div className="flex items-center gap-2 shrink-0">
               {quotationHidePrices ? (
                 <a
-                  href="/"
+                  href={`/quotes?product=${product.id}`}
                   className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
                 >
                   Request Quote
@@ -1268,7 +1281,13 @@ function QuotesTab({
         return (
           <div
             key={quote.id}
-            className="rounded-lg border border-border bg-card p-4"
+            className={`rounded-lg border border-border bg-card p-4 ${quote.access_token ? "cursor-pointer hover:border-primary/50 transition-colors" : ""}`}
+            onClick={() => {
+              if (quote.access_token) {
+                window.location.href = `/quote/${quote.access_token}`;
+              }
+            }}
+            role={quote.access_token ? "link" : undefined}
           >
             <div className="flex items-start justify-between mb-2">
               <div>
@@ -1292,7 +1311,7 @@ function QuotesTab({
                   </p>
                 ) : (
                   <p className="font-semibold tabular-nums text-foreground">
-                    {formatCents(quote.total, quote.currency)}
+                    {formatCurrency(quote.total, quote.currency)}
                   </p>
                 )}
                 <span
@@ -1321,7 +1340,7 @@ function QuotesTab({
                     </span>
                     {!isPricingPending && (
                       <span className="tabular-nums text-foreground">
-                        {formatCents(
+                        {formatCurrency(
                           item.unit_price * item.quantity,
                           quote.currency,
                         )}

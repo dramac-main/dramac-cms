@@ -541,7 +541,8 @@ export function QuoteDetailDialog({
                   )}
 
                   {/* Acceptance Details — shown for accepted/converted quotes */}
-                  {(quote.status === "accepted" || quote.status === "converted") &&
+                  {(quote.status === "accepted" ||
+                    quote.status === "converted") &&
                     quote.metadata && (
                       <div className="border rounded-lg p-4 bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900">
                         <h3 className="font-semibold mb-4 flex items-center gap-2 text-green-800 dark:text-green-200">
@@ -551,7 +552,9 @@ export function QuoteDetailDialog({
                         <div className="space-y-3">
                           {quote.metadata.accepted_by_name && (
                             <div className="text-sm">
-                              <span className="text-muted-foreground">Accepted by: </span>
+                              <span className="text-muted-foreground">
+                                Accepted by:{" "}
+                              </span>
                               <span className="font-medium">
                                 {quote.metadata.accepted_by_name}
                               </span>
@@ -559,7 +562,9 @@ export function QuoteDetailDialog({
                           )}
                           {quote.metadata.accepted_by_email && (
                             <div className="text-sm">
-                              <span className="text-muted-foreground">Email: </span>
+                              <span className="text-muted-foreground">
+                                Email:{" "}
+                              </span>
                               <span className="font-medium">
                                 {quote.metadata.accepted_by_email}
                               </span>
@@ -567,10 +572,14 @@ export function QuoteDetailDialog({
                           )}
                           {quote.metadata.accepted_at && (
                             <div className="text-sm">
-                              <span className="text-muted-foreground">Date: </span>
+                              <span className="text-muted-foreground">
+                                Date:{" "}
+                              </span>
                               <span className="font-medium">
                                 {format(
-                                  new Date(quote.metadata.accepted_at as string),
+                                  new Date(
+                                    quote.metadata.accepted_at as string,
+                                  ),
                                   "MMMM d, yyyy 'at' h:mm a",
                                 )}
                               </span>
