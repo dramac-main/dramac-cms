@@ -197,6 +197,9 @@ function OrdersTab({
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [orderDetail, setOrderDetail] = useState<OrderDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   useEffect(() => {
     fetch(`${apiBase}/api/modules/ecommerce/auth`, {
@@ -212,6 +215,46 @@ function OrdersTab({
       .catch((e) => setError(e.message || "Failed to load orders"))
       .finally(() => setLoading(false));
   }, [siteId, token, apiBase]);
+
+  const handleOrderClick = useCallback(
+    async (orderId: string, orderNumber: string) => {
+      // If external handler provided, use it
+      if (onOrderClick) {
+        onOrderClick(orderId, orderNumber);
+        return;
+      }
+
+      // Toggle inline detail
+      if (selectedOrderId === orderId) {
+        setSelectedOrderId(null);
+        setOrderDetail(null);
+        return;
+      }
+
+      setSelectedOrderId(orderId);
+      setDetailLoading(true);
+      try {
+        const res = await fetch(`${apiBase}/api/modules/ecommerce/auth`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "get-order-detail",
+            token,
+            siteId,
+            orderId,
+          }),
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        setOrderDetail(data.order);
+      } catch {
+        setOrderDetail(null);
+      } finally {
+        setDetailLoading(false);
+      }
+    },
+    [apiBase, onOrderClick, selectedOrderId, siteId, token],
+  );
 
   if (loading) {
     return (
@@ -247,53 +290,323 @@ function OrdersTab({
   return (
     <div className="space-y-3">
       {orders.map((order) => (
-        <div
-          key={order.id}
-          className={`rounded-lg border border-border bg-card p-4 ${onOrderClick ? "cursor-pointer hover:border-primary/50 hover:shadow-sm" : ""}`}
-          onClick={() => onOrderClick?.(order.id, order.orderNumber)}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium text-foreground">{order.orderNumber}</p>
-              <p className="text-sm text-muted-foreground">
-                {formatDate(order.createdAt)} · {order.itemCount}{" "}
-                {order.itemCount === 1 ? "item" : "items"}
-              </p>
-              {order.trackingNumber && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Tracking: {order.trackingNumber}
-                  {order.trackingUrl && (
-                    <>
-                      {" · "}
-                      <a
-                        href={ensureAbsoluteUrl(order.trackingUrl)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        Track →
-                      </a>
-                    </>
-                  )}
+        <div key={order.id}>
+          <div
+            className="rounded-lg border border-border bg-card p-4 cursor-pointer hover:border-primary/50 hover:shadow-sm transition-all"
+            onClick={() => handleOrderClick(order.id, order.orderNumber)}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-foreground">
+                  {order.orderNumber}
                 </p>
-              )}
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="text-right">
-                <p className="font-semibold tabular-nums">
-                  {formatCents(order.total, order.currency)}
+                <p className="text-sm text-muted-foreground">
+                  {formatDate(order.createdAt)} · {order.itemCount}{" "}
+                  {order.itemCount === 1 ? "item" : "items"}
                 </p>
-                <OrderStatusBadge status={order.status} />
+                {order.trackingNumber && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Tracking: {order.trackingNumber}
+                    {order.trackingUrl && (
+                      <>
+                        {" · "}
+                        <a
+                          href={ensureAbsoluteUrl(order.trackingUrl)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Track →
+                        </a>
+                      </>
+                    )}
+                  </p>
+                )}
               </div>
-              {onOrderClick && (
-                <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              )}
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <p className="font-semibold tabular-nums">
+                    {formatCents(order.total, order.currency)}
+                  </p>
+                  <OrderStatusBadge status={order.status} />
+                </div>
+                <ChevronRight
+                  className={`h-4 w-4 text-muted-foreground flex-shrink-0 transition-transform ${
+                    selectedOrderId === order.id ? "rotate-90" : ""
+                  }`}
+                />
+              </div>
             </div>
           </div>
+
+          {/* Inline Order Detail */}
+          {selectedOrderId === order.id && (
+            <div className="mt-1 rounded-lg border border-border bg-card/50 p-4 space-y-4">
+              {detailLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : !orderDetail ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">
+                  Could not load order details
+                </p>
+              ) : (
+                <OrderDetailView
+                  detail={orderDetail}
+                  currency={order.currency}
+                />
+              )}
+            </div>
+          )}
         </div>
       ))}
     </div>
+  );
+}
+
+// ============================================================================
+// ORDER DETAIL VIEW (inline)
+// ============================================================================
+
+interface OrderDetailItem {
+  id: string;
+  productName: string;
+  productSku: string | null;
+  variantOptions: Record<string, string> | null;
+  imageUrl: string | null;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  fulfilledQuantity: number;
+}
+
+interface OrderDetailAddress {
+  first_name?: string;
+  last_name?: string;
+  company?: string;
+  address_line_1?: string;
+  address_line_2?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
+  country?: string;
+  phone?: string;
+}
+
+interface OrderDetail {
+  id: string;
+  orderNumber: string;
+  status: string;
+  paymentStatus: string;
+  fulfillmentStatus: string;
+  total: number;
+  subtotal: number;
+  taxAmount: number;
+  shippingAmount: number;
+  discountAmount: number;
+  currency: string;
+  createdAt: string;
+  shippingAddress: OrderDetailAddress | null;
+  billingAddress: OrderDetailAddress | null;
+  trackingNumber: string | null;
+  trackingUrl: string | null;
+  customerNotes: string | null;
+  items: OrderDetailItem[];
+}
+
+function formatAddress(addr: OrderDetailAddress | null): string | null {
+  if (!addr || !addr.address_line_1) return null;
+  const parts = [
+    [addr.first_name, addr.last_name].filter(Boolean).join(" "),
+    addr.company,
+    addr.address_line_1,
+    addr.address_line_2,
+    [addr.city, addr.state, addr.postal_code].filter(Boolean).join(", "),
+    addr.country,
+  ].filter(Boolean);
+  return parts.join("\n");
+}
+
+function OrderDetailView({
+  detail,
+  currency,
+}: {
+  detail: OrderDetail;
+  currency: string;
+}) {
+  const shippingAddr = formatAddress(detail.shippingAddress);
+
+  return (
+    <>
+      {/* Status bar */}
+      <div className="flex flex-wrap gap-3 text-xs">
+        <div className="flex items-center gap-1.5">
+          <span className="text-muted-foreground">Payment:</span>
+          <OrderStatusBadge
+            status={detail.paymentStatus || "pending"}
+          />
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-muted-foreground">Fulfillment:</span>
+          <OrderStatusBadge
+            status={detail.fulfillmentStatus || "unfulfilled"}
+          />
+        </div>
+        {detail.trackingNumber && (
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted-foreground">Tracking:</span>
+            {detail.trackingUrl ? (
+              <a
+                href={ensureAbsoluteUrl(detail.trackingUrl)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline font-medium"
+              >
+                {detail.trackingNumber}
+              </a>
+            ) : (
+              <span className="font-medium">{detail.trackingNumber}</span>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Items table */}
+      {detail.items.length > 0 && (
+        <div className="border rounded-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/30">
+                <th className="text-left px-3 py-2 font-medium text-muted-foreground">
+                  Item
+                </th>
+                <th className="text-center px-3 py-2 font-medium text-muted-foreground w-16">
+                  Qty
+                </th>
+                <th className="text-right px-3 py-2 font-medium text-muted-foreground w-24">
+                  Price
+                </th>
+                <th className="text-right px-3 py-2 font-medium text-muted-foreground w-24">
+                  Total
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {detail.items.map((item) => (
+                <tr key={item.id} className="border-b last:border-b-0">
+                  <td className="px-3 py-2.5">
+                    <div className="flex items-center gap-3">
+                      {item.imageUrl && (
+                        <img
+                          src={getImageUrl(item.imageUrl)}
+                          alt={item.productName}
+                          className="h-10 w-10 rounded object-cover border"
+                        />
+                      )}
+                      <div>
+                        <p className="font-medium text-foreground">
+                          {item.productName}
+                        </p>
+                        {item.productSku && (
+                          <p className="text-xs text-muted-foreground">
+                            SKU: {item.productSku}
+                          </p>
+                        )}
+                        {item.variantOptions &&
+                          Object.keys(item.variantOptions).length > 0 && (
+                            <p className="text-xs text-muted-foreground">
+                              {Object.entries(item.variantOptions)
+                                .map(([k, v]) => `${k}: ${v}`)
+                                .join(", ")}
+                            </p>
+                          )}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-3 py-2.5 text-center tabular-nums">
+                    {item.quantity}
+                  </td>
+                  <td className="px-3 py-2.5 text-right tabular-nums">
+                    {formatCents(Number(item.unitPrice), currency)}
+                  </td>
+                  <td className="px-3 py-2.5 text-right tabular-nums font-medium">
+                    {formatCents(Number(item.totalPrice), currency)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Totals */}
+      <div className="flex justify-end">
+        <div className="w-64 space-y-1 text-sm">
+          {detail.subtotal > 0 && (
+            <div className="flex justify-between text-muted-foreground">
+              <span>Subtotal</span>
+              <span className="tabular-nums">
+                {formatCents(detail.subtotal, currency)}
+              </span>
+            </div>
+          )}
+          {detail.shippingAmount > 0 && (
+            <div className="flex justify-between text-muted-foreground">
+              <span>Shipping</span>
+              <span className="tabular-nums">
+                {formatCents(detail.shippingAmount, currency)}
+              </span>
+            </div>
+          )}
+          {detail.taxAmount > 0 && (
+            <div className="flex justify-between text-muted-foreground">
+              <span>Tax</span>
+              <span className="tabular-nums">
+                {formatCents(detail.taxAmount, currency)}
+              </span>
+            </div>
+          )}
+          {detail.discountAmount > 0 && (
+            <div className="flex justify-between text-muted-foreground">
+              <span>Discount</span>
+              <span className="tabular-nums text-green-600">
+                -{formatCents(detail.discountAmount, currency)}
+              </span>
+            </div>
+          )}
+          <div className="flex justify-between font-semibold border-t pt-1">
+            <span>Total</span>
+            <span className="tabular-nums">
+              {formatCents(detail.total, currency)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Shipping Address */}
+      {shippingAddr && (
+        <div className="space-y-1">
+          <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+            <MapPin className="h-3 w-3" />
+            Shipping Address
+          </h4>
+          <p className="text-sm text-foreground whitespace-pre-line">
+            {shippingAddr}
+          </p>
+        </div>
+      )}
+
+      {/* Customer Notes */}
+      {detail.customerNotes && (
+        <div className="space-y-1">
+          <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Your Notes
+          </h4>
+          <p className="text-sm text-foreground">{detail.customerNotes}</p>
+        </div>
+      )}
+    </>
   );
 }
 

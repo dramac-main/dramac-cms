@@ -514,14 +514,18 @@ export async function POST(request: NextRequest) {
         if (authError) {
           if (authError.message?.includes("already been registered")) {
             // Auth user exists — look up via admin API and update their password
-            const { data: { users } } = await supabase.auth.admin.listUsers();
+            const {
+              data: { users },
+            } = await supabase.auth.admin.listUsers();
             const existingAuthUser = users.find(
-              (u) => u.email?.toLowerCase() === customerEmail!.toLowerCase()
+              (u) => u.email?.toLowerCase() === customerEmail!.toLowerCase(),
             );
             if (existingAuthUser) {
               authUserId = existingAuthUser.id;
               // Update their password to the new one
-              await supabase.auth.admin.updateUserById(authUserId, { password });
+              await supabase.auth.admin.updateUserById(authUserId, {
+                password,
+              });
             } else {
               return NextResponse.json(
                 {
@@ -655,7 +659,10 @@ export async function POST(request: NextRequest) {
       });
 
       // Build magic link URL using the request origin (storefront's domain)
-      const origin = request.headers.get("origin") || request.headers.get("referer")?.replace(/\/[^/]*$/, "") || "";
+      const origin =
+        request.headers.get("origin") ||
+        request.headers.get("referer")?.replace(/\/[^/]*$/, "") ||
+        "";
       const loginUrl = `${origin}/account?magic_token=${magicToken}`;
 
       // Get site name for the email
@@ -759,6 +766,109 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(
         { orders: mapped },
+        { status: 200, headers: corsHeaders },
+      );
+    }
+
+    // ── GET ORDER DETAIL (for My Account order view) ─────────────────────────
+    if (action === "get-order-detail") {
+      const { token, orderId } = body;
+
+      if (!token) {
+        return NextResponse.json(
+          { error: "Authentication required" },
+          { status: 401, headers: corsHeaders },
+        );
+      }
+
+      if (!orderId) {
+        return NextResponse.json(
+          { error: "Order ID required" },
+          { status: 400, headers: corsHeaders },
+        );
+      }
+
+      const tokenHash = hashToken(token);
+      const { data: session } = await (supabase as any)
+        .from(SESSIONS)
+        .select("customer_id")
+        .eq("token_hash", tokenHash)
+        .gt("expires_at", new Date().toISOString())
+        .single();
+
+      if (!session) {
+        return NextResponse.json(
+          { error: "Session expired" },
+          { status: 401, headers: corsHeaders },
+        );
+      }
+
+      const TABLE_PREFIX = "mod_ecommod01";
+
+      // Get order — verify it belongs to this customer
+      const { data: order } = await (supabase as any)
+        .from(`${TABLE_PREFIX}_orders`)
+        .select(
+          "id, order_number, status, payment_status, fulfillment_status, total, subtotal, tax_amount, shipping_amount, discount_amount, currency, created_at, shipping_address, billing_address, tracking_number, tracking_url, customer_notes, internal_notes",
+        )
+        .eq("id", orderId)
+        .eq("customer_id", session.customer_id)
+        .eq("site_id", siteId)
+        .single();
+
+      if (!order) {
+        return NextResponse.json(
+          { error: "Order not found" },
+          { status: 404, headers: corsHeaders },
+        );
+      }
+
+      // Get order items
+      const { data: items } = await (supabase as any)
+        .from(`${TABLE_PREFIX}_order_items`)
+        .select(
+          "id, product_id, variant_id, product_name, product_sku, variant_options, image_url, quantity, unit_price, total_price, fulfilled_quantity",
+        )
+        .eq("order_id", orderId)
+        .order("created_at", { ascending: true });
+
+      return NextResponse.json(
+        {
+          order: {
+            id: order.id,
+            orderNumber: order.order_number,
+            status: order.status,
+            paymentStatus: order.payment_status,
+            fulfillmentStatus: order.fulfillment_status,
+            total: order.total,
+            subtotal: order.subtotal,
+            taxAmount: order.tax_amount,
+            shippingAmount: order.shipping_amount,
+            discountAmount: order.discount_amount,
+            currency: order.currency,
+            createdAt: order.created_at,
+            shippingAddress: order.shipping_address,
+            billingAddress: order.billing_address,
+            trackingNumber: order.tracking_number,
+            trackingUrl: order.tracking_url,
+            customerNotes: order.customer_notes,
+            items: (items || []).map(
+              (i: Record<string, unknown>) => ({
+                id: i.id,
+                productId: i.product_id,
+                variantId: i.variant_id,
+                productName: i.product_name,
+                productSku: i.product_sku,
+                variantOptions: i.variant_options,
+                imageUrl: i.image_url,
+                quantity: i.quantity,
+                unitPrice: i.unit_price,
+                totalPrice: i.total_price,
+                fulfilledQuantity: i.fulfilled_quantity,
+              }),
+            ),
+          },
+        },
         { status: 200, headers: corsHeaders },
       );
     }

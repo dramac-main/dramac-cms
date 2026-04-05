@@ -967,7 +967,9 @@ export async function convertQuoteToOrder(
 
       if (custAddresses && custAddresses.length > 0) {
         if (!shippingAddr) {
-          const defaultShip = custAddresses.find((a: any) => a.is_default_shipping) || custAddresses[0];
+          const defaultShip =
+            custAddresses.find((a: any) => a.is_default_shipping) ||
+            custAddresses[0];
           shippingAddr = {
             first_name: defaultShip.first_name,
             last_name: defaultShip.last_name,
@@ -982,7 +984,9 @@ export async function convertQuoteToOrder(
           };
         }
         if (!billingAddr) {
-          const defaultBill = custAddresses.find((a: any) => a.is_default_billing) || custAddresses[0];
+          const defaultBill =
+            custAddresses.find((a: any) => a.is_default_billing) ||
+            custAddresses[0];
           billingAddr = {
             first_name: defaultBill.first_name,
             last_name: defaultBill.last_name,
@@ -1056,6 +1060,7 @@ export async function convertQuoteToOrder(
     }
 
     // Create order items from quote items (convert main currency → cents)
+    // Column mapping: order_items table uses product_name, product_sku, variant_options, image_url, total_price, fulfilled_quantity
     if (quote.items && quote.items.length > 0) {
       const orderItems = quote.items.map((item: QuoteItem) => {
         const unitPriceCents = toCents(item.unit_price);
@@ -1064,33 +1069,26 @@ export async function convertQuoteToOrder(
         );
         return {
           order_id: newOrder.id,
-          product_id: item.product_id,
-          variant_id: item.variant_id,
-          name: item.name,
-          sku: item.sku,
+          product_id: item.product_id || null,
+          variant_id: item.variant_id || null,
+          product_name: item.name || 'Unknown Product',
+          product_sku: item.sku || null,
+          variant_options: item.options || {},
+          image_url: null,
           quantity: item.quantity,
           unit_price: unitPriceCents,
-          discount_amount: item.discount_percent
-            ? Math.round(
-                (unitPriceCents * item.quantity * item.discount_percent) / 100,
-              )
-            : 0,
-          tax_amount: item.tax_rate
-            ? Math.round(
-                (unitPriceCents *
-                  item.quantity *
-                  (1 - (item.discount_percent || 0) / 100) *
-                  item.tax_rate) /
-                  100,
-              )
-            : 0,
-          subtotal: unitPriceCents * item.quantity,
-          total: lineTotalCents,
-          options: item.options,
+          total_price: lineTotalCents,
+          fulfilled_quantity: 0,
         };
       });
 
-      await supabase.from(`${TABLE_PREFIX}_order_items`).insert(orderItems);
+      const { error: itemsError } = await supabase
+        .from(`${TABLE_PREFIX}_order_items`)
+        .insert(orderItems);
+
+      if (itemsError) {
+        console.error('Error creating order items from quote:', itemsError);
+      }
     }
 
     // Update quote as converted

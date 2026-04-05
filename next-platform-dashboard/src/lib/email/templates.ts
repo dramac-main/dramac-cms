@@ -154,8 +154,7 @@ If you didn't make this change, please contact our support team immediately.
   },
 
   storefront_magic_link: {
-    subject: (data) =>
-      `Sign in to ${data.siteName || "your account"}`,
+    subject: (data) => `Sign in to ${data.siteName || "your account"}`,
     html: (data) =>
       wrapHtml(`
       <h1 style="${STYLES.heading}">Sign In to Your Account</h1>
