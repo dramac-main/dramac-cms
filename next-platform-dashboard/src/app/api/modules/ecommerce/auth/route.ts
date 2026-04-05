@@ -20,6 +20,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PUBLIC_RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
+import { sendEmail } from "@/lib/email/send-email";
 import * as crypto from "crypto";
 
 export const dynamic = "force-dynamic";
@@ -465,7 +466,7 @@ export async function POST(request: NextRequest) {
           .select("id, auth_user_id")
           .eq("site_id", siteId)
           .eq("email", customerEmail)
-          .single();
+          .maybeSingle();
         if (c) customerId = c.id;
       }
 
@@ -512,13 +513,16 @@ export async function POST(request: NextRequest) {
 
         if (authError) {
           if (authError.message?.includes("already been registered")) {
-            // Auth user exists but no customer record — sign in to get auth_user_id
-            const { data: signIn, error: signInError } =
-              await supabase.auth.signInWithPassword({
-                email: customerEmail!,
-                password,
-              });
-            if (signInError) {
+            // Auth user exists — look up via admin API and update their password
+            const { data: { users } } = await supabase.auth.admin.listUsers();
+            const existingAuthUser = users.find(
+              (u) => u.email?.toLowerCase() === customerEmail!.toLowerCase()
+            );
+            if (existingAuthUser) {
+              authUserId = existingAuthUser.id;
+              // Update their password to the new one
+              await supabase.auth.admin.updateUserById(authUserId, { password });
+            } else {
               return NextResponse.json(
                 {
                   error:
@@ -527,7 +531,6 @@ export async function POST(request: NextRequest) {
                 { status: 409, headers: corsHeaders },
               );
             }
-            authUserId = signIn.user.id;
           } else {
             return NextResponse.json(
               { error: "Failed to create account" },
@@ -581,6 +584,13 @@ export async function POST(request: NextRequest) {
       }
 
       // Create session
+      if (!customerId) {
+        return NextResponse.json(
+          { error: "Failed to create customer account" },
+          { status: 500, headers: corsHeaders },
+        );
+      }
+
       const newToken = await createSession(supabase, customerId, siteId, {
         userAgent: ua,
         ip,
@@ -644,16 +654,31 @@ export async function POST(request: NextRequest) {
         ip_address: ip || null,
       });
 
-      // In production, send this via email. For now, return the token
-      // so the frontend can use it (email sending via notification service is separate)
+      // Build magic link URL using the request origin (storefront's domain)
+      const origin = request.headers.get("origin") || request.headers.get("referer")?.replace(/\/[^/]*$/, "") || "";
+      const loginUrl = `${origin}/account?magic_token=${magicToken}`;
+
+      // Get site name for the email
+      const { data: site } = await (supabase as any)
+        .from("sites")
+        .select("name")
+        .eq("id", siteId)
+        .single();
+
+      // Send the magic link email
+      await sendEmail({
+        to: { email: emailLower },
+        type: "storefront_magic_link",
+        data: {
+          loginUrl,
+          siteName: site?.name || "your store",
+        },
+      });
+
       return NextResponse.json(
         {
           success: true,
           message: "If an account exists, a login link has been sent.",
-          // Only included in dev for testing — production hides this
-          ...(process.env.NODE_ENV !== "production"
-            ? { _devToken: magicToken }
-            : {}),
         },
         { status: 200, headers: corsHeaders },
       );

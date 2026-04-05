@@ -138,12 +138,37 @@ export function StorefrontAuthProvider({
     [base, siteId],
   );
 
-  // Restore session on mount
+  // Restore session on mount (or handle magic link token from URL)
   useEffect(() => {
     if (typeof window === "undefined") {
       setIsLoading(false);
       return;
     }
+
+    // Check for magic link token in URL (?magic_token=...)
+    const urlParams = new URLSearchParams(window.location.search);
+    const magicToken = urlParams.get("magic_token");
+
+    if (magicToken) {
+      // Clean the magic_token from the URL to prevent reuse / bookmarking
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete("magic_token");
+      window.history.replaceState({}, "", cleanUrl.toString());
+
+      // Validate the magic token as a session
+      callAuth({ action: "session", token: magicToken })
+        .then((data) => {
+          if (data?.customer) {
+            saveSession(magicToken, data.customer);
+            // Merge guest cart (non-blocking)
+            mergeGuestCart(data.customer.id);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setIsLoading(false));
+      return;
+    }
+
     const savedToken = localStorage.getItem(storageKey);
     if (!savedToken) {
       setIsLoading(false);

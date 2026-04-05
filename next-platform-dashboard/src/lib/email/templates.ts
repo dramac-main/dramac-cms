@@ -153,6 +153,36 @@ If you didn't make this change, please contact our support team immediately.
     `.trim(),
   },
 
+  storefront_magic_link: {
+    subject: (data) =>
+      `Sign in to ${data.siteName || "your account"}`,
+    html: (data) =>
+      wrapHtml(`
+      <h1 style="${STYLES.heading}">Sign In to Your Account</h1>
+      <p style="${STYLES.text}">We received a request to sign in to your account${data.siteName ? ` on <strong>${data.siteName}</strong>` : ""}.</p>
+      <p style="${STYLES.text}">Click the button below to sign in — no password needed:</p>
+      <p style="margin: 24px 0;">
+        <a href="${data.loginUrl}" style="${STYLES.button}">
+          Sign In
+        </a>
+      </p>
+      <p style="${STYLES.muted}">
+        This link expires in 1 hour and can only be used once. If you didn't request this, you can safely ignore this email.
+      </p>
+    `),
+    text: (data) =>
+      `
+Sign In to Your Account
+
+We received a request to sign in to your account${data.siteName ? ` on ${data.siteName}` : ""}.
+
+Click the link below to sign in:
+${data.loginUrl}
+
+This link expires in 1 hour and can only be used once. If you didn't request this, you can safely ignore this email.
+    `.trim(),
+  },
+
   // ============================================
   // TEAM EMAILS
   // ============================================

@@ -995,6 +995,21 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
   welcome,
   password_reset,
   email_changed,
+  storefront_magic_link: {
+    subject: (data) => `Sign in to ${data.siteName || "your account"}`,
+    html: (data, b) =>
+      baseEmailTemplate(
+        b,
+        `<h1 style="${EMAIL_STYLES.heading}">Sign In to Your Account</h1>
+        <p style="${EMAIL_STYLES.text}">We received a request to sign in to your account${data.siteName ? ` on <strong>${data.siteName}</strong>` : ""}.</p>
+        <p style="${EMAIL_STYLES.text}">Click the button below to sign in — no password needed:</p>
+        ${emailButton(b, String(data.loginUrl), "Sign In")}
+        <p style="${EMAIL_STYLES.muted}">This link expires in 1 hour and can only be used once. If you didn't request this, you can safely ignore this email.</p>`,
+        "Sign in to your account",
+      ),
+    text: (data) =>
+      `Sign In to Your Account\n\nWe received a request to sign in to your account${data.siteName ? ` on ${data.siteName}` : ""}.\n\nSign in here: ${data.loginUrl}\n\nThis link expires in 1 hour and can only be used once.`,
+  },
   team_invitation,
   team_member_joined,
   site_published,
