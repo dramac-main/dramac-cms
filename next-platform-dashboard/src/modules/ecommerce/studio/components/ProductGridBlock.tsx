@@ -154,7 +154,7 @@ export function ProductGridBlock({
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(
     categoryId,
   );
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000]);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [onSaleOnly, setOnSaleOnly] = useState(false);
   const [sortBy, setSortBy] = useState<
@@ -169,7 +169,7 @@ export function ProductGridBlock({
       categoryId: selectedCategory,
       search: debouncedSearch || undefined,
       minPrice: priceRange[0] > 0 ? priceRange[0] : undefined,
-      maxPrice: priceRange[1] < 10000 ? priceRange[1] : undefined,
+      maxPrice: priceRange[1] < 1000000 ? priceRange[1] : undefined,
       inStock: inStockOnly || undefined,
       sortBy,
       page: currentPage,
@@ -245,7 +245,7 @@ export function ProductGridBlock({
   const clearFilters = useCallback(() => {
     setSearchQuery("");
     setSelectedCategory(categoryId);
-    setPriceRange([0, 10000]);
+    setPriceRange([0, 1000000]);
     setInStockOnly(false);
     setOnSaleOnly(false);
     setCurrentPage(1);
@@ -256,7 +256,7 @@ export function ProductGridBlock({
     searchQuery ||
     selectedCategory !== categoryId ||
     priceRange[0] > 0 ||
-    priceRange[1] < 10000 ||
+    priceRange[1] < 1000000 ||
     inStockOnly ||
     onSaleOnly;
 
@@ -305,8 +305,8 @@ export function ProductGridBlock({
             value={priceRange}
             onValueChange={(value) => setPriceRange(value as [number, number])}
             min={0}
-            max={10000}
-            step={10}
+            max={1000000}
+            step={100}
             className="mb-4"
           />
           <div className="flex items-center gap-2 text-sm">

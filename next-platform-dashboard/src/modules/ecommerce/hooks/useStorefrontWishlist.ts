@@ -7,7 +7,7 @@
  */
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { getPublicProductsByIds } from "../actions/public-ecommerce-actions";
 import type {
   Product,
@@ -53,24 +53,49 @@ export function useStorefrontWishlist(
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Mark loading done once siteId is available
-  useEffect(() => {
-    if (!siteId) return;
-    setIsLoading(false);
-  }, [siteId]);
+  // Stable key for product IDs — only re-fetch when the set of IDs changes
+  const productIdsKey = useMemo(
+    () => items.map((i) => i.productId).sort().join(","),
+    [items],
+  );
+  const justPruned = useRef(false);
 
   // Fetch product details for wishlist items — single batch query
   useEffect(() => {
+    if (!siteId) return;
+
     if (items.length === 0) {
       setProducts([]);
+      setIsLoading(false);
       return;
     }
 
+    // Skip re-fetch if we just pruned phantom items (IDs changed, but no new items)
+    if (justPruned.current) {
+      justPruned.current = false;
+      return;
+    }
+
+    setIsLoading(true);
     const productIds = items.map((item) => item.productId);
     getPublicProductsByIds(siteId, productIds)
-      .then((results) => setProducts(results))
-      .catch(() => setProducts([]));
-  }, [siteId, items]);
+      .then((results) => {
+        setProducts(results);
+        // Prune localStorage items whose products no longer exist (deleted/archived)
+        const fetchedIds = new Set(results.map((p) => p.id));
+        setItems((prev) => {
+          const cleaned = prev.filter((i) => fetchedIds.has(i.productId));
+          if (cleaned.length !== prev.length) {
+            justPruned.current = true;
+            return cleaned;
+          }
+          return prev;
+        });
+      })
+      .catch(() => setProducts([]))
+      .finally(() => setIsLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [siteId, productIdsKey]);
 
   // Save to localStorage whenever items change
   useEffect(() => {

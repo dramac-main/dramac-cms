@@ -22,6 +22,7 @@ import {
   Download,
   FileText,
   UserPlus,
+  ShoppingBag,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -70,9 +71,13 @@ export function QuotePortalView({
 
   const canRespond = ["sent", "viewed"].includes(currentStatus) && !expired;
   const isAccepted = currentStatus === "accepted";
+  const isConverted = currentStatus === "converted";
   const isRejected = currentStatus === "rejected";
   const isExpired = currentStatus === "expired" || expired;
   const isPending = ["draft", "pending_approval"].includes(currentStatus);
+
+  const convertedOrderNumber =
+    (quote.metadata?.converted_order_number as string) || null;
 
   // Handle acceptance/rejection
   const handleAccepted = () => {
@@ -116,6 +121,35 @@ export function QuotePortalView({
                 Create a free account with this same email to view all your
                 orders, quotes, and more. Look for the &ldquo;Sign In&rdquo;
                 link on our website.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isConverted && (
+        <div className="mb-6 p-4 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 rounded-lg space-y-3">
+          <div className="flex items-center gap-3">
+            <ShoppingBag className="h-6 w-6 text-green-600" />
+            <div>
+              <p className="font-semibold text-green-700 dark:text-green-300">
+                Order Created{convertedOrderNumber ? ` — ${convertedOrderNumber}` : ""}
+              </p>
+              <p className="text-sm text-green-600 dark:text-green-400">
+                This quote has been converted to an order. Check your email for
+                order details and payment instructions.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3 pt-2 border-t border-green-200 dark:border-green-800">
+            <UserPlus className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-green-700 dark:text-green-300">
+                Track your order
+              </p>
+              <p className="text-xs text-green-600 dark:text-green-400 mt-0.5">
+                Create a free account with this same email to track your order,
+                upload payment proof, and view invoices.
               </p>
             </div>
           </div>

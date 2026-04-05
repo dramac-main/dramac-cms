@@ -476,6 +476,22 @@ export async function getQuoteByToken(token: string): Promise<Quote | null> {
       return null;
     }
 
+    // If converted, look up the order number for the portal banner
+    if (data.converted_to_order_id) {
+      const { data: orderRow } = await supabase
+        .from(`${TABLE_PREFIX}_orders`)
+        .select("order_number")
+        .eq("id", data.converted_to_order_id)
+        .single();
+
+      if (orderRow) {
+        data.metadata = {
+          ...(data.metadata || {}),
+          converted_order_number: orderRow.order_number,
+        };
+      }
+    }
+
     return data;
   } catch (error) {
     console.error("Error getting quote by token:", error);
@@ -953,7 +969,7 @@ export async function convertQuoteToOrder(
       customer_phone: quote.customer_phone,
       billing_address: quote.billing_address,
       shipping_address: quote.shipping_address,
-      notes: input.include_notes
+      internal_notes: input.include_notes
         ? `Converted from Quote ${quote.quote_number}\n${input.custom_order_notes || quote.internal_notes || ""}`
         : input.custom_order_notes || null,
       source: "quote",

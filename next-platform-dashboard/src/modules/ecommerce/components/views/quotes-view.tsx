@@ -1,148 +1,142 @@
 /**
  * Quotes View Component
- * 
+ *
  * Phase ECOM-11B: Quote UI Components
- * 
+ *
  * Main view for quote management
  */
-'use client'
+"use client";
 
-import { useState, useEffect, useCallback } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { useState, useEffect, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { 
-  FileText, 
-  Plus, 
-  Search, 
-  Filter,
-  RefreshCw
-} from 'lucide-react'
-import { useEcommerce } from '../../context/ecommerce-context'
-import { 
-  QuoteTable, 
-  QuoteBuilderDialog, 
-  QuoteDetailDialog 
-} from '../quotes'
-import { getQuotes, getQuoteStats } from '../../actions/quote-actions'
-import { getQuoteStatusOptions } from '../../lib/quote-utils'
-import type { QuoteSummary, QuoteStatus, QuoteTableFilters } from '../../types/ecommerce-types'
+} from "@/components/ui/select";
+import { FileText, Plus, Search, Filter, RefreshCw } from "lucide-react";
+import { useEcommerce } from "../../context/ecommerce-context";
+import { QuoteTable, QuoteBuilderDialog, QuoteDetailDialog } from "../quotes";
+import { getQuotes, getQuoteStats } from "../../actions/quote-actions";
+import { getQuoteStatusOptions } from "../../lib/quote-utils";
+import type {
+  QuoteSummary,
+  QuoteStatus,
+  QuoteTableFilters,
+} from "../../types/ecommerce-types";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 interface QuotesViewProps {
-  searchQuery?: string
-  siteId: string
-  agencyId: string
-  userId?: string
-  userName?: string
+  searchQuery?: string;
+  siteId: string;
+  agencyId: string;
+  userId?: string;
+  userName?: string;
 }
 
 // ============================================================================
 // COMPONENT
 // ============================================================================
 
-export function QuotesView({ 
-  searchQuery = '',
+export function QuotesView({
+  searchQuery = "",
   siteId,
   agencyId,
   userId,
-  userName 
+  userName,
 }: QuotesViewProps) {
   // State
-  const [quotes, setQuotes] = useState<QuoteSummary[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [total, setTotal] = useState(0)
-  
+  const [quotes, setQuotes] = useState<QuoteSummary[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [total, setTotal] = useState(0);
+
   // Filters
-  const [statusFilter, setStatusFilter] = useState<QuoteStatus | 'all'>('all')
-  const [localSearch, setLocalSearch] = useState(searchQuery)
-  
+  const [statusFilter, setStatusFilter] = useState<QuoteStatus | "all">("all");
+  const [localSearch, setLocalSearch] = useState(searchQuery);
+
   // Dialogs
-  const [showBuilder, setShowBuilder] = useState(false)
-  const [editQuoteId, setEditQuoteId] = useState<string | null>(null)
-  const [viewQuoteId, setViewQuoteId] = useState<string | null>(null)
-  
+  const [showBuilder, setShowBuilder] = useState(false);
+  const [editQuoteId, setEditQuoteId] = useState<string | null>(null);
+  const [viewQuoteId, setViewQuoteId] = useState<string | null>(null);
+
   // Stats
   const [stats, setStats] = useState({
     total: 0,
     draft: 0,
     sent: 0,
     accepted: 0,
-    converted: 0
-  })
-  
+    converted: 0,
+  });
+
   // Load quotes
   const loadQuotes = useCallback(async () => {
-    if (!siteId) return
-    
-    setIsLoading(true)
+    if (!siteId) return;
+
+    setIsLoading(true);
     try {
       const filters: Partial<QuoteTableFilters> = {
         status: statusFilter,
-        search: localSearch || searchQuery
-      }
-      
-      const result = await getQuotes(siteId, filters)
-      setQuotes(result.quotes)
-      setTotal(result.total)
-      
+        search: localSearch || searchQuery,
+      };
+
+      const result = await getQuotes(siteId, filters);
+      setQuotes(result.quotes);
+      setTotal(result.total);
+
       // Load stats
-      const quoteStats = await getQuoteStats(siteId)
+      const quoteStats = await getQuoteStats(siteId);
       setStats({
         total: quoteStats.total,
         draft: quoteStats.draft,
         sent: quoteStats.sent + quoteStats.viewed,
         accepted: quoteStats.accepted,
-        converted: quoteStats.converted
-      })
+        converted: quoteStats.converted,
+      });
     } catch (error) {
-      console.error('Error loading quotes:', error)
+      console.error("Error loading quotes:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [siteId, statusFilter, localSearch, searchQuery])
-  
+  }, [siteId, statusFilter, localSearch, searchQuery]);
+
   useEffect(() => {
-    loadQuotes()
-  }, [loadQuotes])
-  
+    loadQuotes();
+  }, [loadQuotes]);
+
   // Handlers
   const handleViewQuote = (quoteId: string) => {
-    setViewQuoteId(quoteId)
-  }
-  
+    setViewQuoteId(quoteId);
+  };
+
   const handleEditQuote = (quoteId: string) => {
-    setEditQuoteId(quoteId)
-    setShowBuilder(true)
-  }
-  
+    setEditQuoteId(quoteId);
+    setShowBuilder(true);
+  };
+
   const handleCreateQuote = () => {
-    setEditQuoteId(null)
-    setShowBuilder(true)
-  }
-  
+    setEditQuoteId(null);
+    setShowBuilder(true);
+  };
+
   const handleQuoteChange = () => {
-    loadQuotes()
-    setViewQuoteId(null)
-  }
+    loadQuotes();
+    setViewQuoteId(null);
+  };
 
   const handleDialogClose = (open: boolean) => {
     if (!open) {
-      setViewQuoteId(null)
-      loadQuotes() // Refresh list to pick up any inline edits
+      setViewQuoteId(null);
+      loadQuotes(); // Refresh list to pick up any inline edits
     }
-  }
-  
-  const statusOptions = getQuoteStatusOptions()
+  };
+
+  const statusOptions = getQuoteStatusOptions();
 
   return (
     <div className="space-y-6">
@@ -159,7 +153,7 @@ export function QuotesView({
           Create Quote
         </Button>
       </div>
-      
+
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div className="p-4 border rounded-lg">
@@ -180,10 +174,12 @@ export function QuotesView({
         </div>
         <div className="p-4 border rounded-lg">
           <p className="text-sm text-muted-foreground">Converted</p>
-          <p className="text-2xl font-bold text-emerald-600">{stats.converted}</p>
+          <p className="text-2xl font-bold text-emerald-600">
+            {stats.converted}
+          </p>
         </div>
       </div>
-      
+
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
@@ -195,10 +191,10 @@ export function QuotesView({
             className="pl-9"
           />
         </div>
-        
-        <Select 
-          value={statusFilter} 
-          onValueChange={(v) => setStatusFilter(v as QuoteStatus | 'all')}
+
+        <Select
+          value={statusFilter}
+          onValueChange={(v) => setStatusFilter(v as QuoteStatus | "all")}
         >
           <SelectTrigger className="w-[180px]">
             <Filter className="h-4 w-4 mr-2" />
@@ -206,30 +202,30 @@ export function QuotesView({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Status</SelectItem>
-            {statusOptions.map(option => (
+            {statusOptions.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        
+
         <Button variant="outline" onClick={loadQuotes}>
           <RefreshCw className="h-4 w-4" />
         </Button>
       </div>
-      
+
       {/* Quote Table */}
       {quotes.length === 0 && !isLoading ? (
         <div className="flex flex-col items-center justify-center py-12 text-center border rounded-lg">
           <FileText className="h-12 w-12 text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold">No quotes found</h3>
           <p className="text-sm text-muted-foreground max-w-sm mt-1">
-            {localSearch || statusFilter !== 'all' 
-              ? 'Try adjusting your filters' 
-              : 'Create your first quote to get started'}
+            {localSearch || statusFilter !== "all"
+              ? "Try adjusting your filters"
+              : "Create your first quote to get started"}
           </p>
-          {!localSearch && statusFilter === 'all' && (
+          {!localSearch && statusFilter === "all" && (
             <Button className="mt-4" onClick={handleCreateQuote}>
               <Plus className="h-4 w-4 mr-2" />
               Create Quote
@@ -246,7 +242,7 @@ export function QuotesView({
           onQuotesChange={loadQuotes}
         />
       )}
-      
+
       {/* Quote Builder Dialog */}
       <QuoteBuilderDialog
         open={showBuilder}
@@ -258,7 +254,7 @@ export function QuotesView({
         userName={userName}
         onSaved={handleQuoteChange}
       />
-      
+
       {/* Quote Detail Dialog */}
       {viewQuoteId && (
         <QuoteDetailDialog
@@ -271,5 +267,5 @@ export function QuotesView({
         />
       )}
     </div>
-  )
+  );
 }

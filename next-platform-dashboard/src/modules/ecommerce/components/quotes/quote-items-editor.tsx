@@ -7,7 +7,7 @@
  */
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -180,6 +180,18 @@ function EditableItemRow({
     unit_price: item.unit_price,
     discount_percent: item.discount_percent || 0,
   });
+
+  // Re-sync local state when props change (e.g., after server resync on error)
+  useEffect(() => {
+    setEditQuantity(item.quantity);
+    setEditPrice(item.unit_price);
+    setEditDiscount(item.discount_percent || 0);
+    savedRef.current = {
+      quantity: item.quantity,
+      unit_price: item.unit_price,
+      discount_percent: item.discount_percent || 0,
+    };
+  }, [item.quantity, item.unit_price, item.discount_percent]);
 
   // Auto-save on blur when a value has changed
   const handleBlur = useCallback(() => {

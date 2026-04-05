@@ -357,15 +357,14 @@ export function useStorefrontCart(
       }
 
       // Optimistic: remove from local state immediately
-      const newItemCount =
-        cart.items
-          ?.filter((item) => item.id !== itemId)
-          .reduce((sum, item) => sum + item.quantity, 0) || 0;
+      let newItemCount = 0;
       setCart((prev) => {
         if (!prev?.items) return prev;
+        const filtered = prev.items.filter((item) => item.id !== itemId);
+        newItemCount = filtered.reduce((sum, item) => sum + item.quantity, 0);
         return {
           ...prev,
-          items: prev.items.filter((item) => item.id !== itemId),
+          items: filtered,
         };
       });
 

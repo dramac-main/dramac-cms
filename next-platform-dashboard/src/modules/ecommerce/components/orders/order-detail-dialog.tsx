@@ -64,7 +64,7 @@ import {
   updatePaymentProofStatus,
 } from "../../actions/order-actions";
 import type { OrderDetailData, OrderStatus } from "../../types/ecommerce-types";
-
+import { VALID_TRANSITIONS } from "../../lib/order-constants";
 import { useCurrencySafe } from "../../context/ecommerce-context";
 import { ImageLightbox } from "@/modules/live-chat/components/shared/ImageLightbox";
 // ============================================================================
@@ -139,6 +139,7 @@ const statuses: OrderStatus[] = [
   "shipped",
   "delivered",
   "cancelled",
+  "refunded",
 ];
 
 // ============================================================================
@@ -434,11 +435,17 @@ export function OrderDetailDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {statuses.map((status) => (
-                      <SelectItem key={status} value={status}>
-                        {statusConfig[status].label}
-                      </SelectItem>
-                    ))}
+                    {statuses
+                      .filter(
+                        (s) =>
+                          s === orderData.status ||
+                          VALID_TRANSITIONS[orderData.status]?.includes(s),
+                      )
+                      .map((status) => (
+                        <SelectItem key={status} value={status}>
+                          {statusConfig[status].label}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
 

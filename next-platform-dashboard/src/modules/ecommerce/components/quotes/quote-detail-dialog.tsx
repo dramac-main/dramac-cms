@@ -30,6 +30,7 @@ import {
   Phone,
   Building,
   User,
+  PenTool,
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -139,12 +140,11 @@ export function QuoteDetailDialog({
     toast.success("Quote link copied to clipboard");
   };
 
-  // Reload quote data after modifications
+  // Reload quote data locally (does NOT close dialog)
   const reloadQuote = async () => {
     try {
       const data = await getQuote(siteId, quoteId);
       setQuote(data);
-      onQuoteChange?.();
     } catch {
       toast.error("Failed to refresh quote data");
     }
@@ -152,15 +152,20 @@ export function QuoteDetailDialog({
 
   // Item management handlers
   const handleAddItems = async (items: QuoteItemInput[]) => {
+    let added = 0;
     for (const item of items) {
       const result = await addQuoteItem(siteId, { ...item, quote_id: quoteId });
-      if (!result.success) {
-        toast.error(result.error || "Failed to add item");
-        return;
+      if (result.success) {
+        added++;
+      } else {
+        toast.error(result.error || `Failed to add item ${added + 1}`);
+        break;
       }
     }
-    toast.success(`Added ${items.length} item(s)`);
-    await reloadQuote();
+    if (added > 0) {
+      toast.success(`Added ${added} of ${items.length} item(s)`);
+      await reloadQuote();
+    }
   };
 
   const handleUpdateItem = async (
@@ -200,12 +205,31 @@ export function QuoteDetailDialog({
   };
 
   const handleRemoveItem = async (itemId: string) => {
+    // Optimistic local removal
+    if (quote) {
+      const updatedItems = quote.items.filter((item) => item.id !== itemId);
+      const totals = calculateQuoteTotals(
+        updatedItems,
+        { type: quote.discount_type, value: quote.discount_value },
+        quote.shipping_amount,
+        quote.tax_rate,
+      );
+      setQuote({
+        ...quote,
+        items: updatedItems,
+        subtotal: totals.subtotal,
+        discount_amount: totals.quoteDiscountAmount,
+        tax_amount: totals.taxAmount,
+        total: totals.total,
+      });
+    }
+
     const result = await removeQuoteItem(siteId, quoteId, itemId);
-    if (result.success) {
-      toast.success("Item removed");
-      await reloadQuote();
-    } else {
+    if (!result.success) {
       toast.error(result.error || "Failed to remove item");
+      await reloadQuote(); // Resync from server on failure
+    } else {
+      toast.success("Item removed");
     }
   };
 
@@ -515,6 +539,61 @@ export function QuoteDetailDialog({
                       </p>
                     </div>
                   )}
+
+                  {/* Acceptance Details — shown for accepted/converted quotes */}
+                  {(quote.status === "accepted" || quote.status === "converted") &&
+                    quote.metadata && (
+                      <div className="border rounded-lg p-4 bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900">
+                        <h3 className="font-semibold mb-4 flex items-center gap-2 text-green-800 dark:text-green-200">
+                          <PenTool className="h-4 w-4" />
+                          Acceptance Details
+                        </h3>
+                        <div className="space-y-3">
+                          {quote.metadata.accepted_by_name && (
+                            <div className="text-sm">
+                              <span className="text-muted-foreground">Accepted by: </span>
+                              <span className="font-medium">
+                                {quote.metadata.accepted_by_name}
+                              </span>
+                            </div>
+                          )}
+                          {quote.metadata.accepted_by_email && (
+                            <div className="text-sm">
+                              <span className="text-muted-foreground">Email: </span>
+                              <span className="font-medium">
+                                {quote.metadata.accepted_by_email}
+                              </span>
+                            </div>
+                          )}
+                          {quote.metadata.accepted_at && (
+                            <div className="text-sm">
+                              <span className="text-muted-foreground">Date: </span>
+                              <span className="font-medium">
+                                {format(
+                                  new Date(quote.metadata.accepted_at as string),
+                                  "MMMM d, yyyy 'at' h:mm a",
+                                )}
+                              </span>
+                            </div>
+                          )}
+                          {quote.metadata.signature_data && (
+                            <div className="mt-3">
+                              <p className="text-sm text-muted-foreground mb-2">
+                                Signature:
+                              </p>
+                              <div className="bg-white dark:bg-gray-900 border rounded-md p-2 inline-block">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={quote.metadata.signature_data as string}
+                                  alt="Customer signature"
+                                  className="max-h-24 w-auto"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                   {/* Quick Actions */}
                   <div className="flex flex-wrap gap-2">
