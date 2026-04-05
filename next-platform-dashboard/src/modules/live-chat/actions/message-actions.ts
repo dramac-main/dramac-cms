@@ -185,10 +185,20 @@ export async function sendMessage(data: {
             ? data.content.slice(0, 80) + "…"
             : data.content;
 
+        // Resolve agent table IDs → auth user IDs for notifications
+        const { data: agentRows } = await supabase
+          .from("mod_chat_agents")
+          .select("id, user_id")
+          .in("id", data.mentionedAgentIds);
+
+        const resolvedUserIds = (agentRows || [])
+          .filter((a: { id: string; user_id: string }) => a.user_id)
+          .map((a: { id: string; user_id: string }) => a.user_id);
+
         await Promise.allSettled(
-          data.mentionedAgentIds.map((agentId) =>
+          resolvedUserIds.map((authUserId: string) =>
             createNotification({
-              userId: agentId,
+              userId: authUserId,
               type: "mention",
               title: `${senderLabel} mentioned you in a chat note`,
               message: preview,
