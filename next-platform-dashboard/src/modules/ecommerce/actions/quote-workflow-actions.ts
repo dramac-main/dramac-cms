@@ -29,6 +29,7 @@ import type {
   QuoteItem,
   Order,
   OrderItem,
+  Address,
 } from "../types/ecommerce-types";
 
 const TABLE_PREFIX = "mod_ecommod01";
@@ -107,6 +108,8 @@ interface ConvertToOrderInput {
   custom_order_notes?: string;
   user_id?: string;
   user_name?: string;
+  shipping_address?: Partial<Address> | null;
+  billing_address?: Partial<Address> | null;
 }
 
 interface WorkflowResult {
@@ -949,6 +952,66 @@ export async function convertQuoteToOrder(
     // IMPORTANT: Quote amounts are in main currency units (e.g. 28000 for ZMW 28,000).
     // Order amounts must be in CENTS (e.g. 2800000). Multiply by 100.
     const toCents = (amount: number) => Math.round(amount * 100);
+
+    // Resolve addresses: input > quote > customer default > placeholder
+    let shippingAddr = input.shipping_address || quote.shipping_address || null;
+    let billingAddr = input.billing_address || quote.billing_address || null;
+
+    // If still missing, try the customer's saved default address
+    if ((!shippingAddr || !billingAddr) && quote.customer_id) {
+      const { data: custAddresses } = await supabase
+        .from(`${TABLE_PREFIX}_customer_addresses`)
+        .select("*")
+        .eq("customer_id", quote.customer_id)
+        .order("is_default_shipping", { ascending: false });
+
+      if (custAddresses && custAddresses.length > 0) {
+        if (!shippingAddr) {
+          const defaultShip = custAddresses.find((a: any) => a.is_default_shipping) || custAddresses[0];
+          shippingAddr = {
+            first_name: defaultShip.first_name,
+            last_name: defaultShip.last_name,
+            company: defaultShip.company || "",
+            address_line_1: defaultShip.address_line_1,
+            address_line_2: defaultShip.address_line_2 || "",
+            city: defaultShip.city,
+            state: defaultShip.state,
+            postal_code: defaultShip.postal_code,
+            country: defaultShip.country,
+            phone: defaultShip.phone || quote.customer_phone || "",
+          };
+        }
+        if (!billingAddr) {
+          const defaultBill = custAddresses.find((a: any) => a.is_default_billing) || custAddresses[0];
+          billingAddr = {
+            first_name: defaultBill.first_name,
+            last_name: defaultBill.last_name,
+            company: defaultBill.company || "",
+            address_line_1: defaultBill.address_line_1,
+            address_line_2: defaultBill.address_line_2 || "",
+            city: defaultBill.city,
+            state: defaultBill.state,
+            postal_code: defaultBill.postal_code,
+            country: defaultBill.country,
+            phone: defaultBill.phone || quote.customer_phone || "",
+          };
+        }
+      }
+    }
+
+    // Final fallback: construct from customer info on the quote
+    const nameParts = (quote.customer_name || "").split(" ");
+    const fallbackAddress: Partial<Address> = {
+      first_name: nameParts[0] || "",
+      last_name: nameParts.slice(1).join(" ") || "",
+      address_line_1: "",
+      city: "",
+      state: "",
+      postal_code: "",
+      country: "",
+      phone: quote.customer_phone || "",
+    };
+
     const orderData = {
       site_id: input.site_id,
       agency_id: quote.agency_id,
@@ -967,8 +1030,8 @@ export async function convertQuoteToOrder(
       customer_email: quote.customer_email,
       customer_name: quote.customer_name,
       customer_phone: quote.customer_phone,
-      billing_address: quote.billing_address,
-      shipping_address: quote.shipping_address,
+      shipping_address: shippingAddr || fallbackAddress,
+      billing_address: billingAddr || shippingAddr || fallbackAddress,
       internal_notes: input.include_notes
         ? `Converted from Quote ${quote.quote_number}\n${input.custom_order_notes || quote.internal_notes || ""}`
         : input.custom_order_notes || null,
