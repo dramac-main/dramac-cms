@@ -55,7 +55,7 @@ function wrapHtml(content: string): string {
 </html>`;
 }
 
-export const EMAIL_TEMPLATES: Record<EmailType, EmailTemplate> = {
+export const EMAIL_TEMPLATES: Partial<Record<EmailType, EmailTemplate>> = {
   // ============================================
   // AUTH EMAILS
   // ============================================

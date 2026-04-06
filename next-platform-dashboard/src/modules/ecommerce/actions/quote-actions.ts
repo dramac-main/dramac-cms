@@ -242,6 +242,24 @@ export async function createQuote(
 
     revalidatePath("/ecommerce");
 
+    // Bridge to CRM: create contact + deal at "Proposal" stage (non-blocking)
+    if (quote.customer_email) {
+      import("@/modules/crm/actions/crm-bridge")
+        .then(({ bridgeQuoteToCRM }) =>
+          bridgeQuoteToCRM(input.site_id, {
+            id: quote.id,
+            quote_number: quoteNumber,
+            customer_name: input.customer_name,
+            customer_email: input.customer_email,
+            customer_phone: input.customer_phone,
+            customer_company: input.customer_company,
+            total: quote.total || 0,
+            currency: quote.currency || DEFAULT_CURRENCY,
+          }),
+        )
+        .catch((err) => console.error("[Quote] CRM bridge error:", err));
+    }
+
     return { success: true, quote };
   } catch (error) {
     console.error("Error creating quote:", error);

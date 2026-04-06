@@ -31,7 +31,6 @@ import {
   CalendarCheck,
   FileText,
   MessageCircle,
-  Mail,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -920,11 +919,6 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                         label: "Blog",
                         icon: FileText,
                         builtIn: true,
-                      },
-                      {
-                        id: "contact-forms",
-                        label: "Contact Forms",
-                        icon: Mail,
                       },
                       {
                         id: "live-chat",

@@ -16,6 +16,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendBrandedEmail } from "@/lib/email/send-branded-email";
 import { createNotification } from "@/lib/services/notifications";
 import { formatCurrency, formatDate, formatTime } from "@/lib/locale-config";
+import {
+  shouldSendEmail,
+  shouldSendInApp,
+} from "@/lib/services/notification-channel-resolver";
+import type { NotificationTemplateType } from "@/modules/ecommerce/types/ecommerce-types";
 
 // =============================================================================
 // TYPES
@@ -153,25 +158,38 @@ export async function notifyNewBooking(
     const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${data.siteId}/booking`;
 
     // 1. In-app notification to business owner
-    await createNotification({
-      userId: agency.owner_id,
-      type: "new_booking",
-      title: `New Booking: ${data.serviceName}`,
-      message: `${data.customerName} booked ${data.serviceName} for ${dateStr} at ${timeStr} (${priceStr})`,
-      link: dashboardUrl,
-      metadata: {
-        appointmentId: data.appointmentId,
-        siteId: data.siteId,
-        customerEmail: data.customerEmail,
-      },
-    });
+    if (
+      await shouldSendInApp(
+        data.siteId,
+        "booking_confirmation_owner" as NotificationTemplateType,
+      )
+    ) {
+      await createNotification({
+        userId: agency.owner_id,
+        type: "new_booking",
+        title: `New Booking: ${data.serviceName}`,
+        message: `${data.customerName} booked ${data.serviceName} for ${dateStr} at ${timeStr} (${priceStr})`,
+        link: dashboardUrl,
+        metadata: {
+          appointmentId: data.appointmentId,
+          siteId: data.siteId,
+          customerEmail: data.customerEmail,
+        },
+      });
+    }
 
     // 2 & 3. Email to business owner + customer — sent in PARALLEL for faster delivery.
     // Previously sequential (one after another), which doubled email latency.
     const emailPromises: Promise<unknown>[] = [];
 
     // Email to business owner
-    if (ownerProfile?.email) {
+    if (
+      ownerProfile?.email &&
+      (await shouldSendEmail(
+        data.siteId,
+        "booking_confirmation_owner" as NotificationTemplateType,
+      ))
+    ) {
       emailPromises.push(
         sendBrandedEmail(site.agency_id, {
           to: {
@@ -200,7 +218,13 @@ export async function notifyNewBooking(
     }
 
     // Email to customer (uses SITE branding — customer sees the business name/colors)
-    if (data.customerEmail) {
+    if (
+      data.customerEmail &&
+      (await shouldSendEmail(
+        data.siteId,
+        "booking_confirmation_customer" as NotificationTemplateType,
+      ))
+    ) {
       emailPromises.push(
         sendBrandedEmail(site.agency_id, {
           to: { email: data.customerEmail, name: data.customerName },
@@ -302,21 +326,34 @@ export async function notifyBookingCancelled(
     const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${data.siteId}/booking`;
 
     // 1. In-app notification to business owner
-    await createNotification({
-      userId: agency.owner_id,
-      type: "booking_cancelled",
-      title: `Booking Cancelled: ${data.serviceName}`,
-      message: `${data.customerName}'s booking for ${data.serviceName} on ${dateStr} at ${timeStr} has been cancelled${data.reason ? `: ${data.reason}` : ""}.`,
-      link: dashboardUrl,
-      metadata: {
-        appointmentId: data.appointmentId,
-        siteId: data.siteId,
-        cancelledBy: data.cancelledBy,
-      },
-    });
+    if (
+      await shouldSendInApp(
+        data.siteId,
+        "booking_cancelled_owner" as NotificationTemplateType,
+      )
+    ) {
+      await createNotification({
+        userId: agency.owner_id,
+        type: "booking_cancelled",
+        title: `Booking Cancelled: ${data.serviceName}`,
+        message: `${data.customerName}'s booking for ${data.serviceName} on ${dateStr} at ${timeStr} has been cancelled${data.reason ? `: ${data.reason}` : ""}.`,
+        link: dashboardUrl,
+        metadata: {
+          appointmentId: data.appointmentId,
+          siteId: data.siteId,
+          cancelledBy: data.cancelledBy,
+        },
+      });
+    }
 
     // 2. Email to business owner
-    if (ownerProfile?.email) {
+    if (
+      ownerProfile?.email &&
+      (await shouldSendEmail(
+        data.siteId,
+        "booking_cancelled_owner" as NotificationTemplateType,
+      ))
+    ) {
       await sendBrandedEmail(site.agency_id, {
         to: {
           email: ownerProfile.email,
@@ -342,7 +379,13 @@ export async function notifyBookingCancelled(
     }
 
     // 3. Email to customer (uses SITE branding)
-    if (data.customerEmail) {
+    if (
+      data.customerEmail &&
+      (await shouldSendEmail(
+        data.siteId,
+        "booking_cancelled_customer" as NotificationTemplateType,
+      ))
+    ) {
       await sendBrandedEmail(site.agency_id, {
         to: { email: data.customerEmail, name: data.customerName },
         emailType: "booking_cancelled_customer",
@@ -430,7 +473,13 @@ export async function notifyBookingConfirmed(
     const emailPromises: Promise<unknown>[] = [];
 
     // Email to customer
-    if (data.customerEmail) {
+    if (
+      data.customerEmail &&
+      (await shouldSendEmail(
+        data.siteId,
+        "booking_confirmed_customer" as NotificationTemplateType,
+      ))
+    ) {
       emailPromises.push(
         sendBrandedEmail(site.agency_id, {
           to: { email: data.customerEmail, name: data.customerName },
@@ -454,10 +503,19 @@ export async function notifyBookingConfirmed(
     }
 
     // Email to owner
-    if (ownerProfile?.email) {
+    if (
+      ownerProfile?.email &&
+      (await shouldSendEmail(
+        data.siteId,
+        "booking_confirmed_owner" as NotificationTemplateType,
+      ))
+    ) {
       emailPromises.push(
         sendBrandedEmail(site.agency_id, {
-          to: { email: ownerProfile.email, name: ownerProfile.full_name || undefined },
+          to: {
+            email: ownerProfile.email,
+            name: ownerProfile.full_name || undefined,
+          },
           emailType: "booking_confirmed_owner",
           recipientUserId: agency.owner_id,
           data: {
@@ -479,9 +537,14 @@ export async function notifyBookingConfirmed(
       await Promise.all(emailPromises);
     }
 
-    console.log(`[BusinessNotify] Booking confirmed notifications sent for ${data.appointmentId}`);
+    console.log(
+      `[BusinessNotify] Booking confirmed notifications sent for ${data.appointmentId}`,
+    );
   } catch (error) {
-    console.error("[BusinessNotify] Error sending booking confirmed notifications:", error);
+    console.error(
+      "[BusinessNotify] Error sending booking confirmed notifications:",
+      error,
+    );
   }
 }
 
@@ -531,7 +594,13 @@ export async function notifyBookingCompleted(
     const emailPromises: Promise<unknown>[] = [];
 
     // Email to customer (thank you)
-    if (data.customerEmail) {
+    if (
+      data.customerEmail &&
+      (await shouldSendEmail(
+        data.siteId,
+        "booking_completed_customer" as NotificationTemplateType,
+      ))
+    ) {
       emailPromises.push(
         sendBrandedEmail(site.agency_id, {
           to: { email: data.customerEmail, name: data.customerName },
@@ -551,10 +620,19 @@ export async function notifyBookingCompleted(
     }
 
     // Email to owner
-    if (ownerProfile?.email) {
+    if (
+      ownerProfile?.email &&
+      (await shouldSendEmail(
+        data.siteId,
+        "booking_completed_owner" as NotificationTemplateType,
+      ))
+    ) {
       emailPromises.push(
         sendBrandedEmail(site.agency_id, {
-          to: { email: ownerProfile.email, name: ownerProfile.full_name || undefined },
+          to: {
+            email: ownerProfile.email,
+            name: ownerProfile.full_name || undefined,
+          },
           emailType: "booking_completed_owner",
           recipientUserId: agency.owner_id,
           data: {
@@ -574,9 +652,14 @@ export async function notifyBookingCompleted(
       await Promise.all(emailPromises);
     }
 
-    console.log(`[BusinessNotify] Booking completed notifications sent for ${data.appointmentId}`);
+    console.log(
+      `[BusinessNotify] Booking completed notifications sent for ${data.appointmentId}`,
+    );
   } catch (error) {
-    console.error("[BusinessNotify] Error sending booking completed notifications:", error);
+    console.error(
+      "[BusinessNotify] Error sending booking completed notifications:",
+      error,
+    );
   }
 }
 
@@ -607,23 +690,35 @@ export async function notifyBookingNoShow(
     const dateStr = formatDate(data.startTime);
     const timeStr = formatTime(data.startTime);
 
-    await sendBrandedEmail(site.agency_id, {
-      to: { email: data.customerEmail, name: data.customerName },
-      emailType: "booking_no_show_customer",
-      siteId: data.siteId,
-      data: {
-        customerName: data.customerName,
-        serviceName: data.serviceName,
-        date: dateStr,
-        time: timeStr,
-        businessName,
-        bookingId: data.appointmentId,
-      },
-    });
+    if (
+      await shouldSendEmail(
+        data.siteId,
+        "booking_no_show_customer" as NotificationTemplateType,
+      )
+    ) {
+      await sendBrandedEmail(site.agency_id, {
+        to: { email: data.customerEmail, name: data.customerName },
+        emailType: "booking_no_show_customer",
+        siteId: data.siteId,
+        data: {
+          customerName: data.customerName,
+          serviceName: data.serviceName,
+          date: dateStr,
+          time: timeStr,
+          businessName,
+          bookingId: data.appointmentId,
+        },
+      });
+    }
 
-    console.log(`[BusinessNotify] Booking no-show notification sent for ${data.appointmentId}`);
+    console.log(
+      `[BusinessNotify] Booking no-show notification sent for ${data.appointmentId}`,
+    );
   } catch (error) {
-    console.error("[BusinessNotify] Error sending booking no-show notification:", error);
+    console.error(
+      "[BusinessNotify] Error sending booking no-show notification:",
+      error,
+    );
   }
 }
 
@@ -674,7 +769,13 @@ export async function notifyBookingPaymentReceived(
     const emailPromises: Promise<unknown>[] = [];
 
     // Email to customer
-    if (data.customerEmail) {
+    if (
+      data.customerEmail &&
+      (await shouldSendEmail(
+        data.siteId,
+        "booking_payment_received_customer" as NotificationTemplateType,
+      ))
+    ) {
       emailPromises.push(
         sendBrandedEmail(site.agency_id, {
           to: { email: data.customerEmail, name: data.customerName },
@@ -695,10 +796,19 @@ export async function notifyBookingPaymentReceived(
     }
 
     // Email to owner
-    if (ownerProfile?.email) {
+    if (
+      ownerProfile?.email &&
+      (await shouldSendEmail(
+        data.siteId,
+        "booking_payment_received_owner" as NotificationTemplateType,
+      ))
+    ) {
       emailPromises.push(
         sendBrandedEmail(site.agency_id, {
-          to: { email: ownerProfile.email, name: ownerProfile.full_name || undefined },
+          to: {
+            email: ownerProfile.email,
+            name: ownerProfile.full_name || undefined,
+          },
           emailType: "booking_payment_received_owner",
           recipientUserId: agency.owner_id,
           data: {
@@ -718,9 +828,14 @@ export async function notifyBookingPaymentReceived(
       await Promise.all(emailPromises);
     }
 
-    console.log(`[BusinessNotify] Booking payment received notifications sent for ${data.appointmentId}`);
+    console.log(
+      `[BusinessNotify] Booking payment received notifications sent for ${data.appointmentId}`,
+    );
   } catch (error) {
-    console.error("[BusinessNotify] Error sending booking payment notifications:", error);
+    console.error(
+      "[BusinessNotify] Error sending booking payment notifications:",
+      error,
+    );
   }
 }
 
@@ -811,23 +926,36 @@ export async function notifyNewOrder(
     }));
 
     // 1. In-app notification to business owner
-    await createNotification({
-      userId: agency.owner_id,
-      type: "new_order",
-      title: `New Order #${data.orderNumber}`,
-      message: `${data.customerName} placed an order for ${totalStr} (${data.items.length} item${data.items.length > 1 ? "s" : ""})`,
-      link: dashboardUrl,
-      metadata: {
-        orderId: data.orderId,
-        orderNumber: data.orderNumber,
-        siteId: data.siteId,
-        customerEmail: data.customerEmail,
-        total: data.total,
-      },
-    });
+    if (
+      await shouldSendInApp(
+        data.siteId,
+        "order_confirmation_owner" as NotificationTemplateType,
+      )
+    ) {
+      await createNotification({
+        userId: agency.owner_id,
+        type: "new_order",
+        title: `New Order #${data.orderNumber}`,
+        message: `${data.customerName} placed an order for ${totalStr} (${data.items.length} item${data.items.length > 1 ? "s" : ""})`,
+        link: dashboardUrl,
+        metadata: {
+          orderId: data.orderId,
+          orderNumber: data.orderNumber,
+          siteId: data.siteId,
+          customerEmail: data.customerEmail,
+          total: data.total,
+        },
+      });
+    }
 
     // 2. Email to business owner
-    if (ownerProfile?.email) {
+    if (
+      ownerProfile?.email &&
+      (await shouldSendEmail(
+        data.siteId,
+        "order_confirmation_owner" as NotificationTemplateType,
+      ))
+    ) {
       await sendBrandedEmail(site.agency_id, {
         to: {
           email: ownerProfile.email,
@@ -848,7 +976,13 @@ export async function notifyNewOrder(
     }
 
     // 3. Email to customer (uses SITE branding)
-    if (data.customerEmail) {
+    if (
+      data.customerEmail &&
+      (await shouldSendEmail(
+        data.siteId,
+        "order_confirmation_customer" as NotificationTemplateType,
+      ))
+    ) {
       await sendBrandedEmail(site.agency_id, {
         to: { email: data.customerEmail, name: data.customerName },
         emailType: "order_confirmation_customer",
@@ -908,7 +1042,13 @@ export async function notifyOrderShipped(
       .single();
 
     // In-app notification to business owner
-    if (agency?.owner_id) {
+    if (
+      agency?.owner_id &&
+      (await shouldSendInApp(
+        siteId,
+        "order_shipped_customer" as NotificationTemplateType,
+      ))
+    ) {
       await createNotification({
         userId: agency.owner_id,
         type: "order_shipped",
@@ -920,18 +1060,25 @@ export async function notifyOrderShipped(
     }
 
     // Email to customer (uses SITE branding)
-    await sendBrandedEmail(site?.agency_id || null, {
-      to: { email: customerEmail, name: customerName },
-      emailType: "order_shipped_customer",
-      siteId,
-      data: {
-        customerName,
-        orderNumber,
-        trackingNumber: trackingNumber || "",
-        trackingUrl: trackingUrl || "",
-        businessName: site?.name || "Our Store",
-      },
-    });
+    if (
+      await shouldSendEmail(
+        siteId,
+        "order_shipped_customer" as NotificationTemplateType,
+      )
+    ) {
+      await sendBrandedEmail(site?.agency_id || null, {
+        to: { email: customerEmail, name: customerName },
+        emailType: "order_shipped_customer",
+        siteId,
+        data: {
+          customerName,
+          orderNumber,
+          trackingNumber: trackingNumber || "",
+          trackingUrl: trackingUrl || "",
+          businessName: site?.name || "Our Store",
+        },
+      });
+    }
 
     console.log(
       `[BusinessNotify] Shipping notifications sent for order ${orderNumber}`,
@@ -982,7 +1129,13 @@ export async function notifyOrderDelivered(
     const orderUrl = siteUrl ? `${siteUrl}/order-tracking` : undefined;
 
     // In-app notification to business owner
-    if (agency?.owner_id) {
+    if (
+      agency?.owner_id &&
+      (await shouldSendInApp(
+        siteId,
+        "order_delivered_customer" as NotificationTemplateType,
+      ))
+    ) {
       await createNotification({
         userId: agency.owner_id,
         type: "order_delivered",
@@ -994,7 +1147,13 @@ export async function notifyOrderDelivered(
     }
 
     // Email to customer (uses SITE branding)
-    if (customerEmail) {
+    if (
+      customerEmail &&
+      (await shouldSendEmail(
+        siteId,
+        "order_delivered_customer" as NotificationTemplateType,
+      ))
+    ) {
       await sendBrandedEmail(site?.agency_id || null, {
         to: { email: customerEmail, name: customerName },
         emailType: "order_delivered_customer",
@@ -1069,7 +1228,13 @@ export async function notifyOrderCancelled(
     const orderUrl = siteUrl ? `${siteUrl}/order-tracking` : undefined;
 
     // In-app notification to business owner
-    if (agency?.owner_id) {
+    if (
+      agency?.owner_id &&
+      (await shouldSendInApp(
+        siteId,
+        "order_cancelled_owner" as NotificationTemplateType,
+      ))
+    ) {
       await createNotification({
         userId: agency.owner_id,
         type: "order_cancelled",
@@ -1081,7 +1246,13 @@ export async function notifyOrderCancelled(
     }
 
     // Email to business owner
-    if (ownerProfile?.email) {
+    if (
+      ownerProfile?.email &&
+      (await shouldSendEmail(
+        siteId,
+        "order_cancelled_owner" as NotificationTemplateType,
+      ))
+    ) {
       await sendBrandedEmail(site?.agency_id || null, {
         to: {
           email: ownerProfile.email,
@@ -1101,7 +1272,13 @@ export async function notifyOrderCancelled(
     }
 
     // Email to customer (uses SITE branding)
-    if (customerEmail) {
+    if (
+      customerEmail &&
+      (await shouldSendEmail(
+        siteId,
+        "order_cancelled_customer" as NotificationTemplateType,
+      ))
+    ) {
       await sendBrandedEmail(site?.agency_id || null, {
         to: { email: customerEmail, name: customerName },
         emailType: "order_cancelled_customer",
@@ -1167,7 +1344,13 @@ export async function notifyPaymentReceived(
     const orderUrl = siteUrl ? `${siteUrl}/order-tracking` : undefined;
 
     // In-app notification to business owner
-    if (agency?.owner_id) {
+    if (
+      agency?.owner_id &&
+      (await shouldSendInApp(
+        siteId,
+        "payment_received_customer" as NotificationTemplateType,
+      ))
+    ) {
       await createNotification({
         userId: agency.owner_id,
         type: "payment_received",
@@ -1178,7 +1361,13 @@ export async function notifyPaymentReceived(
       });
     }
 
-    if (customerEmail) {
+    if (
+      customerEmail &&
+      (await shouldSendEmail(
+        siteId,
+        "payment_received_customer" as NotificationTemplateType,
+      ))
+    ) {
       await sendBrandedEmail(site.agency_id, {
         to: { email: customerEmail, name: customerName },
         emailType: "payment_received_customer",
@@ -1239,7 +1428,13 @@ export async function notifyPaymentProofUploaded(
     const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=orders`;
 
     // In-app notification to business owner
-    if (agency?.owner_id) {
+    if (
+      agency?.owner_id &&
+      (await shouldSendInApp(
+        siteId,
+        "payment_proof_uploaded_owner" as NotificationTemplateType,
+      ))
+    ) {
       await createNotification({
         userId: agency.owner_id,
         type: "payment_received",
@@ -1251,7 +1446,13 @@ export async function notifyPaymentProofUploaded(
     }
 
     // Email to business owner
-    if (agency?.owner_id) {
+    if (
+      agency?.owner_id &&
+      (await shouldSendEmail(
+        siteId,
+        "payment_proof_uploaded_owner" as NotificationTemplateType,
+      ))
+    ) {
       const { data: ownerProfile } = await supabase
         .from("profiles")
         .select("email, full_name")
@@ -1330,7 +1531,13 @@ export async function notifyRefundIssued(
     const orderUrl = siteUrl ? `${siteUrl}/order-tracking` : undefined;
 
     // In-app notification to business owner
-    if (agency?.owner_id) {
+    if (
+      agency?.owner_id &&
+      (await shouldSendInApp(
+        siteId,
+        "refund_issued_customer" as NotificationTemplateType,
+      ))
+    ) {
       await createNotification({
         userId: agency.owner_id,
         type: "refund_issued",
@@ -1342,7 +1549,13 @@ export async function notifyRefundIssued(
     }
 
     // Email to customer (uses SITE branding)
-    if (customerEmail) {
+    if (
+      customerEmail &&
+      (await shouldSendEmail(
+        siteId,
+        "refund_issued_customer" as NotificationTemplateType,
+      ))
+    ) {
       await sendBrandedEmail(site?.agency_id || null, {
         to: { email: customerEmail, name: customerName },
         emailType: "refund_issued_customer",
@@ -1407,7 +1620,13 @@ export async function notifyLowStock(
     const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=products`;
 
     // In-app notification to business owner
-    if (agency?.owner_id) {
+    if (
+      agency?.owner_id &&
+      (await shouldSendInApp(
+        siteId,
+        "low_stock_admin" as NotificationTemplateType,
+      ))
+    ) {
       await createNotification({
         userId: agency.owner_id,
         type: "low_stock",
@@ -1419,7 +1638,13 @@ export async function notifyLowStock(
     }
 
     // Email to business owner
-    if (ownerProfile?.email) {
+    if (
+      ownerProfile?.email &&
+      (await shouldSendEmail(
+        siteId,
+        "low_stock_admin" as NotificationTemplateType,
+      ))
+    ) {
       await sendBrandedEmail(site?.agency_id || null, {
         to: {
           email: ownerProfile.email,
@@ -1519,25 +1744,38 @@ export async function notifyNewQuote(
     const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${data.siteId}/ecommerce?view=quotes`;
 
     // 1. In-app notification to business owner
-    await createNotification({
-      userId: agency.owner_id,
-      type: "new_quote_request",
-      title: `New Quote Request #${data.quoteNumber}`,
-      message: `${data.customerName} requested a quote for ${data.itemCount} item${data.itemCount !== 1 ? "s" : ""}${totalStr ? ` (${totalStr})` : ""}`,
-      link: dashboardUrl,
-      metadata: {
-        quoteId: data.quoteId,
-        quoteNumber: data.quoteNumber,
-        siteId: data.siteId,
-        customerEmail: data.customerEmail,
-      },
-    });
+    if (
+      await shouldSendInApp(
+        data.siteId,
+        "quote_request_owner" as NotificationTemplateType,
+      )
+    ) {
+      await createNotification({
+        userId: agency.owner_id,
+        type: "new_quote_request",
+        title: `New Quote Request #${data.quoteNumber}`,
+        message: `${data.customerName} requested a quote for ${data.itemCount} item${data.itemCount !== 1 ? "s" : ""}${totalStr ? ` (${totalStr})` : ""}`,
+        link: dashboardUrl,
+        metadata: {
+          quoteId: data.quoteId,
+          quoteNumber: data.quoteNumber,
+          siteId: data.siteId,
+          customerEmail: data.customerEmail,
+        },
+      });
+    }
 
     // 2 & 3. Emails in parallel
     const emailPromises: Promise<unknown>[] = [];
 
     // Email to business owner
-    if (ownerProfile?.email) {
+    if (
+      ownerProfile?.email &&
+      (await shouldSendEmail(
+        data.siteId,
+        "quote_request_owner" as NotificationTemplateType,
+      ))
+    ) {
       emailPromises.push(
         sendBrandedEmail(site.agency_id, {
           to: {
@@ -1563,7 +1801,13 @@ export async function notifyNewQuote(
     }
 
     // Email to customer (confirmation that quote request was received)
-    if (data.customerEmail) {
+    if (
+      data.customerEmail &&
+      (await shouldSendEmail(
+        data.siteId,
+        "quote_request_customer" as NotificationTemplateType,
+      ))
+    ) {
       emailPromises.push(
         sendBrandedEmail(site.agency_id, {
           to: { email: data.customerEmail, name: data.customerName },
@@ -1638,7 +1882,13 @@ export async function notifyQuoteAccepted(
     const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=quotes`;
 
     // 1. In-app notification to business owner
-    if (agency?.owner_id) {
+    if (
+      agency?.owner_id &&
+      (await shouldSendInApp(
+        siteId,
+        "quote_accepted_owner" as NotificationTemplateType,
+      ))
+    ) {
       await createNotification({
         userId: agency.owner_id,
         type: "quote_accepted",
@@ -1652,7 +1902,13 @@ export async function notifyQuoteAccepted(
     const emailPromises: Promise<unknown>[] = [];
 
     // 2. Email to business owner
-    if (ownerProfile?.email) {
+    if (
+      ownerProfile?.email &&
+      (await shouldSendEmail(
+        siteId,
+        "quote_accepted_owner" as NotificationTemplateType,
+      ))
+    ) {
       emailPromises.push(
         sendBrandedEmail(site.agency_id, {
           to: {
@@ -1673,7 +1929,13 @@ export async function notifyQuoteAccepted(
     }
 
     // 3. Email to customer (confirmation)
-    if (customerEmail) {
+    if (
+      customerEmail &&
+      (await shouldSendEmail(
+        siteId,
+        "quote_accepted_customer" as NotificationTemplateType,
+      ))
+    ) {
       emailPromises.push(
         sendBrandedEmail(site.agency_id, {
           to: { email: customerEmail, name: customerName },
@@ -1743,18 +2005,25 @@ export async function notifyQuoteRejected(
     const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/ecommerce?view=quotes`;
 
     // Fetch quote total for the email
-    const { data: quoteData } = await supabase
+    const { data: rawQuoteData } = await supabase
       .from("mod_ecommod01_quotes")
       .select("total, currency")
       .eq("quote_number", quoteNumber)
       .eq("site_id", siteId)
       .single();
+    const quoteData = rawQuoteData as { total: number; currency: string } | null;
     const total = quoteData?.total
       ? formatCurrency(quoteData.total, quoteData.currency || "USD")
       : "";
 
     // 1. In-app notification to business owner
-    if (agency?.owner_id) {
+    if (
+      agency?.owner_id &&
+      (await shouldSendInApp(
+        siteId,
+        "quote_rejected_owner" as NotificationTemplateType,
+      ))
+    ) {
       await createNotification({
         userId: agency.owner_id,
         type: "quote_rejected",
@@ -1766,7 +2035,13 @@ export async function notifyQuoteRejected(
     }
 
     // 2. Email to business owner
-    if (ownerProfile?.email) {
+    if (
+      ownerProfile?.email &&
+      (await shouldSendEmail(
+        siteId,
+        "quote_rejected_owner" as NotificationTemplateType,
+      ))
+    ) {
       await sendBrandedEmail(site.agency_id, {
         to: {
           email: ownerProfile.email,
@@ -1839,7 +2114,13 @@ export async function notifyQuoteAmendmentRequested(
         : amendmentNotes;
 
     // 1. In-app notification to business owner
-    if (agency?.owner_id) {
+    if (
+      agency?.owner_id &&
+      (await shouldSendInApp(
+        siteId,
+        "quote_amendment_requested_owner" as NotificationTemplateType,
+      ))
+    ) {
       await createNotification({
         userId: agency.owner_id,
         type: "quote_amendment_requested",
@@ -1851,7 +2132,13 @@ export async function notifyQuoteAmendmentRequested(
     }
 
     // 2. Email to business owner
-    if (ownerProfile?.email) {
+    if (
+      ownerProfile?.email &&
+      (await shouldSendEmail(
+        siteId,
+        "quote_amendment_requested_owner" as NotificationTemplateType,
+      ))
+    ) {
       await sendBrandedEmail(site.agency_id, {
         to: {
           email: ownerProfile.email,

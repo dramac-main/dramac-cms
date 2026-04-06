@@ -757,6 +757,18 @@ function convertComponentToStudio(
     ProductDetailBlock: "ProductDetailBlock",
     CategoryHero: "CategoryHeroBlock",
     CategoryHeroBlock: "CategoryHeroBlock",
+    // CRM module component type mappings
+    CRMContactForm: "CRMContactForm",
+    CRMLeadCaptureForm: "CRMLeadCaptureForm",
+    CRMNewsletterForm: "CRMNewsletterForm",
+    CRMCustomForm: "CRMCustomForm",
+    LeadCapture: "CRMLeadCaptureForm",
+    LeadCaptureForm: "CRMLeadCaptureForm",
+    LeadCaptureBlock: "CRMLeadCaptureForm",
+    LeadForm: "CRMLeadCaptureForm",
+    CustomForm: "CRMCustomForm",
+    CustomCRMForm: "CRMCustomForm",
+    DynamicForm: "CRMCustomForm",
     OrderTracking: "EcommerceOrderTracking",
     EcommerceOrderTracking: "EcommerceOrderTracking",
     CategoriesPage: "EcommerceCategoriesPage",
@@ -1603,6 +1615,13 @@ function transformPropsForStudio(
     };
   }
 
+  // Responsive value normalizer — used by Section, Container, Columns, Stack, FlexBox, Grid, etc.
+  const toResponsive = (val: unknown, fallback: string) => {
+    if (typeof val === "object" && val !== null) return val;
+    const v = String(val || fallback);
+    return { mobile: v, tablet: v, desktop: v };
+  };
+
   // Section wrapper — render expects paddingY/paddingX, NOT padding
   if (type === "Section") {
     return {
@@ -1867,12 +1886,6 @@ function transformPropsForStudio(
   // { mobile: "column", tablet: "column", desktop: "column" }
   // ==========================================================================
 
-  const toResponsive = (val: unknown, fallback: string) => {
-    if (typeof val === "object" && val !== null) return val;
-    const v = String(val || fallback);
-    return { mobile: v, tablet: v, desktop: v };
-  };
-
   // Stack layout
   if (type === "Stack") {
     return {
@@ -1983,12 +1996,13 @@ function transformPropsForStudio(
 
   // Animate — render expects nested config objects: entrance, loop, scroll, stagger
   if (type === "Animate") {
+    const ent = props.entrance as Record<string, unknown> | undefined;
     const animType = String(
-      props.animation || props.effect || props.entrance?.type || "fadeIn",
+      props.animation || props.effect || ent?.type || "fadeIn",
     );
     const trigger = String(props.trigger || "scroll");
-    const dur = Number(props.duration || props.entrance?.duration || 0.6);
-    const del = Number(props.delay || props.entrance?.delay || 0);
+    const dur = Number(props.duration || ent?.duration || 0.6);
+    const del = Number(props.delay || ent?.delay || 0);
 
     // Build entrance config (scroll-triggered entrance animation)
     const entrance =

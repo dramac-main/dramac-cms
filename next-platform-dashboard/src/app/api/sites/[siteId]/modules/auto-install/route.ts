@@ -36,7 +36,6 @@ const FEATURE_MODULE_MAP: Record<string, string> = {
   ecommerce: "ecommerce",
   booking: "booking",
   "live-chat": "live-chat",
-  "contact-forms": "contact-forms",
   crm: "crm",
   automation: "automation",
 };

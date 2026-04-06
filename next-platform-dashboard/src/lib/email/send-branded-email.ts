@@ -25,7 +25,7 @@ import {
   type EmailBranding,
   type SiteBrandingData,
 } from "./email-branding";
-import { renderBrandedTemplate } from "./templates/branded-templates";
+import { resolveEmailTemplate } from "./template-resolver";
 import { shouldSendEmail } from "./notification-prefs";
 import { getAgencyBranding } from "@/lib/queries/branding";
 import type { EmailType, EmailRecipient, EmailResult } from "./email-types";
@@ -109,11 +109,12 @@ export async function sendBrandedEmail(
       }
     }
 
-    // 3. Render branded template
-    const { subject, html, text } = renderBrandedTemplate(
+    // 3. Render template (checks site-owner customizations first, falls back to hardcoded)
+    const { subject, html, text } = await resolveEmailTemplate(
       options.emailType,
       options.data,
       branding,
+      options.siteId,
     );
 
     // 4. Format recipients

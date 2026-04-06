@@ -670,6 +670,71 @@ export type ContactNoteInput = Omit<
 export type ContactNoteUpdate = Partial<ContactNoteInput>;
 
 // ============================================================================
+// CRM FORM DEFINITIONS (Form Builder)
+// ============================================================================
+
+export type CRMFormFieldType =
+  | "text"
+  | "email"
+  | "phone"
+  | "textarea"
+  | "select"
+  | "multi_select"
+  | "checkbox"
+  | "radio"
+  | "number"
+  | "date"
+  | "url"
+  | "hidden";
+
+export interface CRMFormField {
+  id: string;
+  field_key: string; // machine-readable key (e.g. "company_size")
+  label: string; // display label
+  field_type: CRMFormFieldType;
+  placeholder?: string;
+  is_required: boolean;
+  options?: string[]; // for select/multi_select/radio
+  default_value?: string;
+  validation_regex?: string;
+  validation_message?: string;
+  width: "full" | "half"; // grid layout
+  position: number; // sort order
+  map_to_contact_field?: string; // auto-map to CRM contact field (e.g. "email", "phone")
+}
+
+export type CRMFormStatus = "active" | "inactive" | "archived";
+
+export interface CRMFormDefinition {
+  id: string;
+  site_id: string;
+  name: string; // display name (e.g. "Request a Demo")
+  slug: string; // URL-safe identifier
+  description?: string | null;
+  fields: CRMFormField[]; // stored as JSONB
+  status: CRMFormStatus;
+  settings: {
+    submit_button_text?: string;
+    success_message?: string;
+    redirect_url?: string;
+    notify_email?: string;
+    auto_create_deal?: boolean;
+    deal_pipeline_stage?: string; // stage name
+    assign_tags?: string[];
+    assign_lead_status?: LeadStatus;
+  };
+  submission_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export type CRMFormInput = Omit<
+  CRMFormDefinition,
+  "id" | "created_at" | "updated_at" | "submission_count"
+>;
+export type CRMFormUpdate = Partial<CRMFormInput>;
+
+// ============================================================================
 // FORM CAPTURES
 // ============================================================================
 

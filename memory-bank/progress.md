@@ -25,9 +25,33 @@
 - **MULTI-TENANT STOREFRONT AUTH FIX — Replaced Supabase auth.users with bcrypt, 4 bugs fixed (critical security + isolation), password_hash column added, existing users migrated (3 files + migration)** ✅
 - **BOOKING AUTO-CHAT + STOREFRONT MODERNIZATION — Full booking→chat pipeline (postMessage→embed→ChatWidget→conversations API), modernized success screens with summary cards/reference/status/chat button, storefront UI modernization (transitions, responsive clamp, improved layouts) (5 files)** ✅
 
+- **CRM FORM UNIFICATION — CONTACT FORMS MODULE REMOVAL + FORM REWIRING (3 code files + DB cleanup + 1 render file rewired)** ✅
+
 ---
 
-## Latest Update: Booking Auto-Chat + Storefront Modernization ✅ (commit a9363b1f)
+## Latest Update: CRM Form Unification ✅
+
+### What Was Done
+
+Removed phantom "Contact Forms" module (existed only as DB rows, no actual code) and rewired all studio form components to submit to CRM instead of generic form_submissions table.
+
+**Contact Forms Module Removal:**
+
+- Removed from AI Designer feature chips (page.tsx), engine.ts FEATURE_MODULE_MAP, auto-install/route.ts FEATURE_MODULE_MAP
+- Deleted from DB: modules_v2, site_module_installations (4 rows), agency_module_subscriptions (1 row)
+
+**Form Rewiring:**
+
+- ContactFormRender → `/api/modules/crm/form-capture` (formType: "contact")
+- NewsletterRender → `/api/modules/crm/form-capture` (formType: "newsletter")
+- Generic Form+FormField kept on `/api/forms/submit` (arbitrary fields, can't map to CRM)
+- CRM API already saves to form_submissions for backward compat
+
+**TypeScript:** Zero new errors.
+
+---
+
+## Previous Update: Booking Auto-Chat + Storefront Modernization ✅ (commit a9363b1f)
 
 ### What Was Done
 

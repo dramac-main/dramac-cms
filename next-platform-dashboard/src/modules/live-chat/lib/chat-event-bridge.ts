@@ -10,6 +10,10 @@
  */
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  resolveChatMessage,
+  type ChatMessageEventType,
+} from "./chat-template-resolver";
 
 // =============================================================================
 // FIND ACTIVE CONVERSATION
@@ -137,10 +141,18 @@ export async function notifyChatPaymentProofUploaded(
   const conv = await findActiveConversation(siteId, customerEmail);
   if (!conv) return;
 
-  const message =
+  const defaultMessage =
     `Great news! I can see that you've uploaded your payment proof (${fileName}) for order ${orderNumber}. ` +
     `The store owner will now review it and verify your payment. ` +
     `This usually takes a short while — I'll keep you updated on the progress! 😊`;
+
+  const message = await resolveChatMessage(
+    siteId,
+    "payment_proof_uploaded",
+    { order_number: orderNumber, file_name: fileName },
+    defaultMessage,
+  );
+  if (!message) return;
 
   await sendProactiveMessage(
     siteId,
@@ -162,9 +174,17 @@ export async function notifyChatPaymentConfirmed(
   const conv = await findActiveConversation(siteId, customerEmail);
   if (!conv) return;
 
-  const message =
+  const defaultMessage =
     `Your payment for order ${orderNumber} (${total}) has been confirmed! 🎉 ` +
     `Your order is now confirmed and being prepared. You'll receive updates as it progresses through shipping and delivery.`;
+
+  const message = await resolveChatMessage(
+    siteId,
+    "payment_confirmed",
+    { order_number: orderNumber, total },
+    defaultMessage,
+  );
+  if (!message) return;
 
   await sendProactiveMessage(
     siteId,
@@ -195,9 +215,28 @@ export async function notifyChatOrderStatusChanged(
     refunded: `A refund has been processed for order ${orderNumber}. It may take a few business days to appear in your account.`,
   };
 
-  const message =
+  const statusToEventType: Record<string, ChatMessageEventType> = {
+    confirmed: "order_confirmed",
+    processing: "order_processing",
+    shipped: "order_shipped",
+    delivered: "order_delivered",
+    cancelled: "order_cancelled",
+    refunded: "order_refunded",
+  };
+
+  const defaultMessage =
     statusMessages[newStatus] ||
     `Your order ${orderNumber} status has been updated to: ${newStatus}.`;
+  const eventType: ChatMessageEventType =
+    statusToEventType[newStatus] || "order_status_generic";
+
+  const message = await resolveChatMessage(
+    siteId,
+    eventType,
+    { order_number: orderNumber, status: newStatus },
+    defaultMessage,
+  );
+  if (!message) return;
 
   await sendProactiveMessage(
     siteId,
@@ -220,9 +259,17 @@ export async function notifyChatQuoteConverted(
   const conv = await findActiveConversation(siteId, customerEmail);
   if (!conv) return;
 
-  const message =
+  const defaultMessage =
     `Your quotation ${quoteNumber} has been converted to order ${orderNumber} (${total})! ` +
     `You can now proceed with payment. Would you like me to guide you through the payment process?`;
+
+  const message = await resolveChatMessage(
+    siteId,
+    "quote_converted",
+    { quote_number: quoteNumber, order_number: orderNumber, total },
+    defaultMessage,
+  );
+  if (!message) return;
 
   await sendProactiveMessage(
     siteId,
@@ -244,7 +291,15 @@ export async function notifyChatQuoteRequested(
   const conv = await findActiveConversation(siteId, customerEmail);
   if (!conv) return;
 
-  const message = `Quote ${quoteNumber} received! ✅ Our team will review your ${itemCount} item${itemCount !== 1 ? "s" : ""} and email you when it's ready.`;
+  const defaultMessage = `Quote ${quoteNumber} received! ✅ Our team will review your ${itemCount} item${itemCount !== 1 ? "s" : ""} and email you when it's ready.`;
+
+  const message = await resolveChatMessage(
+    siteId,
+    "quote_requested",
+    { quote_number: quoteNumber, item_count: String(itemCount) },
+    defaultMessage,
+  );
+  if (!message) return;
 
   await sendProactiveMessage(
     siteId,
@@ -268,7 +323,15 @@ export async function notifyChatQuoteSent(
   if (!conv) return;
 
   const linkPart = portalUrl ? ` View it here: ${portalUrl}` : "";
-  const message = `Your quote ${quoteNumber} is ready (${total})! 🎉 Check your email to review and respond.${linkPart}`;
+  const defaultMessage = `Your quote ${quoteNumber} is ready (${total})! 🎉 Check your email to review and respond.${linkPart}`;
+
+  const message = await resolveChatMessage(
+    siteId,
+    "quote_sent",
+    { quote_number: quoteNumber, total, portal_link: linkPart },
+    defaultMessage,
+  );
+  if (!message) return;
 
   await sendProactiveMessage(
     siteId,
@@ -290,7 +353,15 @@ export async function notifyChatQuoteAccepted(
   const conv = await findActiveConversation(siteId, customerEmail);
   if (!conv) return;
 
-  const message = `Quote ${quoteNumber} accepted (${total})! ✅ The store will process your order shortly.`;
+  const defaultMessage = `Quote ${quoteNumber} accepted (${total})! ✅ The store will process your order shortly.`;
+
+  const message = await resolveChatMessage(
+    siteId,
+    "quote_accepted",
+    { quote_number: quoteNumber, total },
+    defaultMessage,
+  );
+  if (!message) return;
 
   await sendProactiveMessage(
     siteId,
@@ -315,7 +386,15 @@ export async function notifyChatQuoteRejected(
   const reasonPart = reason
     ? ` Reason: "${reason.length > 100 ? reason.substring(0, 97) + "..." : reason}".`
     : "";
-  const message = `Quote ${quoteNumber} declined.${reasonPart} Let me know if you'd like a revised quote.`;
+  const defaultMessage = `Quote ${quoteNumber} declined.${reasonPart} Let me know if you'd like a revised quote.`;
+
+  const message = await resolveChatMessage(
+    siteId,
+    "quote_rejected",
+    { quote_number: quoteNumber, reason: reasonPart },
+    defaultMessage,
+  );
+  if (!message) return;
 
   await sendProactiveMessage(
     siteId,
@@ -338,7 +417,15 @@ export async function notifyChatQuoteAmendmentRequested(
   const conv = await findActiveConversation(siteId, customerEmail);
   if (!conv) return;
 
-  const message = `Your change request for ${quoteNumber} has been submitted! ✅ We'll review your notes and send an updated quote.`;
+  const defaultMessage = `Your change request for ${quoteNumber} has been submitted! ✅ We'll review your notes and send an updated quote.`;
+
+  const message = await resolveChatMessage(
+    siteId,
+    "quote_amendment_requested",
+    { quote_number: quoteNumber },
+    defaultMessage,
+  );
+  if (!message) return;
 
   await sendProactiveMessage(
     siteId,
@@ -649,14 +736,25 @@ export async function bridgeChatImageAsPaymentProof(
       .single();
     const assistantName = widgetSettings?.ai_assistant_name || "Chiko";
 
-    await sendProactiveMessage(
-      siteId,
-      conversationId,
+    const bridgeDefaultMessage =
       `I can see you've uploaded your payment proof (${fileName}) for order ${order.order_number}. ` +
-        `The store owner will now review it and verify your payment. ` +
-        `This usually takes a short while — I'll keep you updated on the progress! 😊`,
-      assistantName,
+      `The store owner will now review it and verify your payment. ` +
+      `This usually takes a short while — I'll keep you updated on the progress! 😊`;
+
+    const bridgeMessage = await resolveChatMessage(
+      siteId,
+      "payment_proof_uploaded",
+      { order_number: order.order_number as string, file_name: fileName },
+      bridgeDefaultMessage,
     );
+    if (bridgeMessage) {
+      await sendProactiveMessage(
+        siteId,
+        conversationId,
+        bridgeMessage,
+        assistantName,
+      );
+    }
 
     // 9. Notify business owner (in-app notification + email)
     const totalCents = (order.total as number) || 0;
@@ -708,9 +806,17 @@ export async function notifyChatBookingCreated(
   const conv = await findActiveConversation(siteId, customerEmail);
   if (!conv) return;
 
-  const message =
+  const defaultMessage =
     `Your booking for ${serviceName} on ${dateFormatted} at ${timeFormatted} has been received! 📅 ` +
     `You'll be notified once it's confirmed.`;
+
+  const message = await resolveChatMessage(
+    siteId,
+    "booking_created",
+    { service_name: serviceName, date: dateFormatted, time: timeFormatted },
+    defaultMessage,
+  );
+  if (!message) return;
 
   await sendProactiveMessage(
     siteId,
@@ -733,9 +839,17 @@ export async function notifyChatBookingConfirmed(
   const conv = await findActiveConversation(siteId, customerEmail);
   if (!conv) return;
 
-  const message =
+  const defaultMessage =
     `Great news — your booking for ${serviceName} on ${dateFormatted} at ${timeFormatted} is confirmed! ✅ ` +
     `We look forward to seeing you.`;
+
+  const message = await resolveChatMessage(
+    siteId,
+    "booking_confirmed",
+    { service_name: serviceName, date: dateFormatted, time: timeFormatted },
+    defaultMessage,
+  );
+  if (!message) return;
 
   await sendProactiveMessage(
     siteId,
@@ -760,9 +874,17 @@ export async function notifyChatBookingCancelled(
   const reasonPart = reason
     ? ` Reason: "${reason.length > 120 ? reason.substring(0, 117) + "..." : reason}".`
     : "";
-  const message =
+  const defaultMessage =
     `Your booking for ${serviceName} has been cancelled.${reasonPart} ` +
     `If you'd like to reschedule, just let me know!`;
+
+  const message = await resolveChatMessage(
+    siteId,
+    "booking_cancelled",
+    { service_name: serviceName, reason: reasonPart },
+    defaultMessage,
+  );
+  if (!message) return;
 
   await sendProactiveMessage(
     siteId,
@@ -785,9 +907,21 @@ export async function notifyChatBookingRescheduled(
   const conv = await findActiveConversation(siteId, customerEmail);
   if (!conv) return;
 
-  const message =
+  const defaultMessage =
     `Your booking for ${serviceName} has been rescheduled to ${newDateFormatted} at ${newTimeFormatted}. 🔄 ` +
     `Let me know if this works for you!`;
+
+  const message = await resolveChatMessage(
+    siteId,
+    "booking_rescheduled",
+    {
+      service_name: serviceName,
+      new_date: newDateFormatted,
+      new_time: newTimeFormatted,
+    },
+    defaultMessage,
+  );
+  if (!message) return;
 
   await sendProactiveMessage(
     siteId,
@@ -808,9 +942,17 @@ export async function notifyChatBookingCompleted(
   const conv = await findActiveConversation(siteId, customerEmail);
   if (!conv) return;
 
-  const message =
+  const defaultMessage =
     `Your booking for ${serviceName} is complete! 🎉 Thank you for choosing us. ` +
     `We'd love to hear your feedback — feel free to share!`;
+
+  const message = await resolveChatMessage(
+    siteId,
+    "booking_completed",
+    { service_name: serviceName },
+    defaultMessage,
+  );
+  if (!message) return;
 
   await sendProactiveMessage(
     siteId,
@@ -832,7 +974,15 @@ export async function notifyChatBookingPaymentConfirmed(
   const conv = await findActiveConversation(siteId, customerEmail);
   if (!conv) return;
 
-  const message = `Payment of ${amount} for your ${serviceName} booking has been confirmed! 💳 Thank you.`;
+  const defaultMessage = `Payment of ${amount} for your ${serviceName} booking has been confirmed! 💳 Thank you.`;
+
+  const message = await resolveChatMessage(
+    siteId,
+    "booking_payment_confirmed",
+    { amount, service_name: serviceName },
+    defaultMessage,
+  );
+  if (!message) return;
 
   await sendProactiveMessage(
     siteId,

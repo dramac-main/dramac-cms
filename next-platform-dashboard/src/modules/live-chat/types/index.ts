@@ -145,6 +145,8 @@ export interface ChatWidgetSettings {
   aiResponseTone: string;
   aiCustomInstructions: string | null;
   aiAssistantName: string;
+  aiHandoffKeywords: string[];
+  aiHandoffMessage: string | null;
   // Language
   language: string;
   customTranslations: Record<string, string>;

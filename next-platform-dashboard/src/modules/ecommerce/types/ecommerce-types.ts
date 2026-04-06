@@ -949,22 +949,96 @@ export interface CheckoutField {
   options?: string[];
 }
 
+/**
+ * All customizable email template types.
+ * Grouped by module for clarity in the notification settings UI.
+ */
+export type NotificationTemplateType =
+  // Booking
+  | "booking_confirmation_customer"
+  | "booking_confirmation_owner"
+  | "booking_cancelled_customer"
+  | "booking_cancelled_owner"
+  | "booking_confirmed_customer"
+  | "booking_confirmed_owner"
+  | "booking_completed_customer"
+  | "booking_completed_owner"
+  | "booking_no_show_customer"
+  | "booking_payment_received_customer"
+  | "booking_payment_received_owner"
+  // E-Commerce Orders
+  | "order_confirmation_customer"
+  | "order_confirmation_owner"
+  | "order_shipped_customer"
+  | "order_delivered_customer"
+  | "order_cancelled_customer"
+  | "order_cancelled_owner"
+  // Payments
+  | "payment_received_customer"
+  | "payment_proof_uploaded_owner"
+  | "payment_proof_rejected_customer"
+  | "refund_issued_customer"
+  // Stock & Cart
+  | "low_stock_admin"
+  | "back_in_stock_customer"
+  | "abandoned_cart_customer"
+  // Quotes
+  | "quote_sent_customer"
+  | "quote_request_customer"
+  | "quote_reminder_customer"
+  | "quote_request_owner"
+  | "quote_accepted_owner"
+  | "quote_accepted_customer"
+  | "quote_rejected_owner"
+  // Forms
+  | "form_submission_owner"
+  // Reviews
+  | "review_request_customer"
+  // Chat
+  | "chat_transcript"
+  | "chat_missed_notification";
+
+/** Template category for grouping in the UI */
+export type NotificationTemplateCategory =
+  | "booking"
+  | "orders"
+  | "payments"
+  | "stock"
+  | "quotes"
+  | "forms"
+  | "reviews"
+  | "chat";
+
+export interface NotificationChannels {
+  email: boolean;
+  inapp: boolean;
+  chat: boolean;
+}
+
 export interface NotificationTemplate {
   id: string;
-  type:
-    | "order_confirmation"
-    | "order_shipped"
-    | "order_delivered"
-    | "order_cancelled"
-    | "payment_received"
-    | "refund_issued"
-    | "low_stock"
-    | "back_in_stock"
-    | "abandoned_cart";
+  type: NotificationTemplateType;
   enabled: boolean;
   subject: string;
   body: string;
   send_to: "customer" | "admin" | "both";
+  channels?: NotificationChannels;
+}
+
+/** Merge variable info for the template editor */
+export interface TemplateMergeVariable {
+  key: string;
+  label: string;
+  example: string;
+}
+
+/** Category metadata for the notification settings UI */
+export interface NotificationTemplateConfig {
+  label: string;
+  description: string;
+  category: NotificationTemplateCategory;
+  defaultSendTo: "customer" | "admin" | "both";
+  mergeVariables: TemplateMergeVariable[];
 }
 
 export interface NotificationSettings {

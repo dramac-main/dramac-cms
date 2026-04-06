@@ -206,6 +206,11 @@ export const notificationTypeInfo: Record<
     color: "text-red-500",
     label: "Quote Rejected",
   },
+  quote_amendment_requested: {
+    icon: "FilePen",
+    color: "text-orange-500",
+    label: "Quote Amendment Requested",
+  },
   // Form submissions
   form_submission: {
     icon: "FileText",

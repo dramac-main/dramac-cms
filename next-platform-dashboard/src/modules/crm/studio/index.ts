@@ -9,11 +9,13 @@
  * Website Form → API → CRM Contact → Lead Score → Automation Trigger
  */
 
-import type { ComponentType } from "react";
 import type { ModuleStudioExports } from "@/types/studio-module";
-
-// Placeholder render — CRM form components are rendered via module integration
-const CRMFormPlaceholder: ComponentType<Record<string, unknown>> = () => null;
+import {
+  CRMContactFormRender,
+  CRMLeadCaptureFormRender,
+  CRMNewsletterFormRender,
+  CRMCustomFormRender,
+} from "./renders";
 
 // =============================================================================
 // STUDIO COMPONENTS — CRM-Connected Forms
@@ -84,7 +86,7 @@ export const studioComponents: ModuleStudioExports["studioComponents"] = {
         ],
       },
     },
-    render: CRMFormPlaceholder,
+    render: CRMContactFormRender,
   },
 
   CRMLeadCaptureForm: {
@@ -126,7 +128,7 @@ export const studioComponents: ModuleStudioExports["studioComponents"] = {
       buttonColor: { type: "color", label: "Button Color" },
       buttonTextColor: { type: "color", label: "Button Text" },
     },
-    render: CRMFormPlaceholder,
+    render: CRMLeadCaptureFormRender,
   },
 
   CRMNewsletterForm: {
@@ -163,7 +165,67 @@ export const studioComponents: ModuleStudioExports["studioComponents"] = {
       buttonColor: { type: "color", label: "Button Color" },
       buttonTextColor: { type: "color", label: "Button Text" },
     },
-    render: CRMFormPlaceholder,
+    render: CRMNewsletterFormRender,
+  },
+
+  CRMCustomForm: {
+    type: "CRMCustomForm",
+    label: "Custom CRM Form",
+    category: "forms",
+    icon: "FileEdit",
+    description:
+      "Render a custom form built in the CRM Form Builder — fully dynamic fields, contact mapping, and deal creation",
+    defaultProps: {
+      formSlug: "",
+      title: "",
+      subtitle: "",
+      backgroundColor: "#ffffff",
+      buttonColor: "",
+      buttonTextColor: "",
+      textColor: "#1e293b",
+      borderRadius: "xl",
+      shadow: "lg",
+    },
+    fields: {
+      formSlug: {
+        type: "text",
+        label: "Form Slug",
+        description: "Enter the slug of the form created in CRM → Forms",
+      },
+      title: {
+        type: "text",
+        label: "Title Override",
+        description: "Leave empty to use the form's own title",
+      },
+      subtitle: { type: "text", label: "Subtitle Override" },
+      backgroundColor: { type: "color", label: "Background" },
+      buttonColor: { type: "color", label: "Button Color" },
+      buttonTextColor: { type: "color", label: "Button Text" },
+      textColor: { type: "color", label: "Text Color" },
+      borderRadius: {
+        type: "select",
+        label: "Border Radius",
+        options: [
+          { value: "none", label: "None" },
+          { value: "sm", label: "Small" },
+          { value: "md", label: "Medium" },
+          { value: "lg", label: "Large" },
+          { value: "xl", label: "Extra Large" },
+        ],
+      },
+      shadow: {
+        type: "select",
+        label: "Shadow",
+        options: [
+          { value: "none", label: "None" },
+          { value: "sm", label: "Small" },
+          { value: "md", label: "Medium" },
+          { value: "lg", label: "Large" },
+          { value: "xl", label: "Extra Large" },
+        ],
+      },
+    },
+    render: CRMCustomFormRender,
   },
 };
 

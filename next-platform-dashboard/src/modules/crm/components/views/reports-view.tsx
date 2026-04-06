@@ -1,27 +1,33 @@
 /**
  * Reports View
- * 
+ *
  * Phase EM-50: CRM Module - Enterprise Ready
- * 
+ *
  * CRM analytics and reporting dashboard
  */
-'use client'
+"use client";
 
-import { useMemo, useState } from 'react'
-import { useCRM } from '../../context/crm-context'
-import { exportToCSV, flattenDeal } from '../../utils/export-csv'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { useMemo, useState } from "react";
+import { useCRM } from "../../context/crm-context";
+import { exportToCSV, flattenDeal } from "../../utils/export-csv";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from "@/components/ui/select";
 
-import { Skeleton } from '@/components/ui/skeleton'
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   TrendingUp,
   TrendingDown,
@@ -39,27 +45,40 @@ import {
   CheckCircle2,
   CircleX,
   Download,
+  FileText,
   LucideIcon,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import type { Deal, Activity as CRMActivity } from '../../types/crm-types'
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { Deal, Activity as CRMActivity } from "../../types/crm-types";
+import {
+  AreaChart,
+  Area,
+  BarChart as RechartsBarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
 
-import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from "@/lib/locale-config";
 // ============================================================================
 // HELPERS
 // ============================================================================
 
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat(DEFAULT_LOCALE, {
-    style: 'currency',
+    style: "currency",
     currency: DEFAULT_CURRENCY,
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  }).format(value)
+    maximumFractionDigits: 0,
+  }).format(value);
 }
 
 function formatPercent(value: number): string {
-  return `${value.toFixed(1)}%`
+  return `${value.toFixed(1)}%`;
 }
 
 // ============================================================================
@@ -67,18 +86,25 @@ function formatPercent(value: number): string {
 // ============================================================================
 
 interface StatCardProps {
-  title: string
-  value: string | number
-  description?: string
-  icon: LucideIcon
+  title: string;
+  value: string | number;
+  description?: string;
+  icon: LucideIcon;
   trend?: {
-    value: number
-    positive: boolean
-  }
-  className?: string
+    value: number;
+    positive: boolean;
+  };
+  className?: string;
 }
 
-function StatCard({ title, value, description, icon: Icon, trend, className }: StatCardProps) {
+function StatCard({
+  title,
+  value,
+  description,
+  icon: Icon,
+  trend,
+  className,
+}: StatCardProps) {
   return (
     <Card className={className}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -92,18 +118,24 @@ function StatCard({ title, value, description, icon: Icon, trend, className }: S
             <p className="text-xs text-muted-foreground">{description}</p>
           )}
           {trend && (
-            <div className={cn(
-              "flex items-center text-xs",
-              trend.positive ? "text-green-500" : "text-red-500"
-            )}>
-              {trend.positive ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+            <div
+              className={cn(
+                "flex items-center text-xs",
+                trend.positive ? "text-green-500" : "text-red-500",
+              )}
+            >
+              {trend.positive ? (
+                <ArrowUp className="h-3 w-3" />
+              ) : (
+                <ArrowDown className="h-3 w-3" />
+              )}
               {Math.abs(trend.value)}%
             </div>
           )}
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 // ============================================================================
@@ -111,14 +143,20 @@ function StatCard({ title, value, description, icon: Icon, trend, className }: S
 // ============================================================================
 
 interface BarChartData {
-  label: string
-  value: number
-  color?: string
+  label: string;
+  value: number;
+  color?: string;
 }
 
-function SimpleBarChart({ data, maxValue }: { data: BarChartData[], maxValue?: number }) {
-  const max = maxValue || Math.max(...data.map(d => d.value), 1)
-  
+function SimpleBarChart({
+  data,
+  maxValue,
+}: {
+  data: BarChartData[];
+  maxValue?: number;
+}) {
+  const max = maxValue || Math.max(...data.map((d) => d.value), 1);
+
   return (
     <div className="space-y-3">
       {data.map((item, i) => (
@@ -128,10 +166,10 @@ function SimpleBarChart({ data, maxValue }: { data: BarChartData[], maxValue?: n
             <span className="text-muted-foreground">{item.value}</span>
           </div>
           <div className="h-2 bg-muted rounded-full overflow-hidden">
-            <div 
+            <div
               className={cn(
                 "h-full rounded-full transition-all",
-                item.color || "bg-primary"
+                item.color || "bg-primary",
               )}
               style={{ width: `${(item.value / max) * 100}%` }}
             />
@@ -139,7 +177,7 @@ function SimpleBarChart({ data, maxValue }: { data: BarChartData[], maxValue?: n
         </div>
       ))}
     </div>
-  )
+  );
 }
 
 // ============================================================================
@@ -147,24 +185,24 @@ function SimpleBarChart({ data, maxValue }: { data: BarChartData[], maxValue?: n
 // ============================================================================
 
 interface PipelineFunnelProps {
-  stages: Array<{ name: string; count: number; value: number }>
+  stages: Array<{ name: string; count: number; value: number }>;
 }
 
 function PipelineFunnel({ stages }: PipelineFunnelProps) {
-  const maxCount = Math.max(...stages.map(s => s.count), 1)
-  
+  const maxCount = Math.max(...stages.map((s) => s.count), 1);
+
   return (
     <div className="space-y-2">
       {stages.map((stage, i) => {
-        const width = Math.max(((stages.length - i) / stages.length) * 100, 40)
+        const width = Math.max(((stages.length - i) / stages.length) * 100, 40);
         return (
-          <div 
+          <div
             key={stage.name}
             className="relative"
-            style={{ 
+            style={{
               width: `${width}%`,
-              marginLeft: 'auto',
-              marginRight: 'auto'
+              marginLeft: "auto",
+              marginRight: "auto",
             }}
           >
             <div className="bg-primary/20 rounded-lg p-3 text-center border border-primary/30">
@@ -174,10 +212,10 @@ function PipelineFunnel({ stages }: PipelineFunnelProps) {
               </div>
             </div>
           </div>
-        )
+        );
       })}
     </div>
-  )
+  );
 }
 
 // ============================================================================
@@ -185,7 +223,7 @@ function PipelineFunnel({ stages }: PipelineFunnelProps) {
 // ============================================================================
 
 interface ActivityBreakdownProps {
-  activities: CRMActivity[]
+  activities: CRMActivity[];
 }
 
 function ActivityBreakdown({ activities }: ActivityBreakdownProps) {
@@ -197,32 +235,267 @@ function ActivityBreakdown({ activities }: ActivityBreakdownProps) {
       task: 0,
       note: 0,
       sms: 0,
-      chat: 0
-    }
-    
-    activities.forEach(a => {
-      counts[a.activity_type]++
-    })
-    
+      chat: 0,
+    };
+
+    activities.forEach((a) => {
+      counts[a.activity_type]++;
+    });
+
     return Object.entries(counts)
       .filter(([_, count]) => count > 0)
       .sort((a, b) => b[1] - a[1])
       .map(([type, count]) => ({
-        label: type.charAt(0).toUpperCase() + type.slice(1) + 's',
+        label: type.charAt(0).toUpperCase() + type.slice(1) + "s",
         value: count,
         color: {
-          call: 'bg-blue-500',
-          email: 'bg-purple-500',
-          meeting: 'bg-orange-500',
-          task: 'bg-green-500',
-          note: 'bg-gray-500',
-          sms: 'bg-pink-500',
-          chat: 'bg-cyan-500'
-        }[type]
-      }))
-  }, [activities])
+          call: "bg-blue-500",
+          email: "bg-purple-500",
+          meeting: "bg-orange-500",
+          task: "bg-green-500",
+          note: "bg-gray-500",
+          sms: "bg-pink-500",
+          chat: "bg-cyan-500",
+        }[type],
+      }));
+  }, [activities]);
 
-  return <SimpleBarChart data={breakdown} />
+  return <SimpleBarChart data={breakdown} />;
+}
+
+// ============================================================================
+// TIME-SERIES HELPERS
+// ============================================================================
+
+function groupByMonth(
+  items: Array<{ created_at: string }>,
+  valueFn?: (item: any) => number,
+) {
+  const buckets = new Map<
+    string,
+    { label: string; count: number; value: number }
+  >();
+
+  items.forEach((item) => {
+    const d = new Date(item.created_at);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const label = d.toLocaleDateString(DEFAULT_LOCALE, {
+      month: "short",
+      year: "2-digit",
+    });
+    if (!buckets.has(key)) {
+      buckets.set(key, { label, count: 0, value: 0 });
+    }
+    const b = buckets.get(key)!;
+    b.count++;
+    if (valueFn) b.value += valueFn(item);
+  });
+
+  return Array.from(buckets.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([, v]) => v);
+}
+
+// ============================================================================
+// REVENUE OVER TIME CHART (recharts)
+// ============================================================================
+
+function RevenueChart({ deals }: { deals: Deal[] }) {
+  const data = useMemo(() => {
+    const won = deals.filter((d) => d.status === "won");
+    return groupByMonth(won, (d: Deal) => d.amount || 0);
+  }, [deals]);
+
+  if (data.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        No revenue data yet
+      </div>
+    );
+  }
+
+  return (
+    <ResponsiveContainer width="100%" height={260}>
+      <AreaChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+        <defs>
+          <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop
+              offset="5%"
+              stopColor="hsl(var(--primary))"
+              stopOpacity={0.3}
+            />
+            <stop
+              offset="95%"
+              stopColor="hsl(var(--primary))"
+              stopOpacity={0}
+            />
+          </linearGradient>
+        </defs>
+        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+        <XAxis
+          dataKey="label"
+          tick={{ fontSize: 12 }}
+          className="text-muted-foreground"
+        />
+        <YAxis
+          tickFormatter={(v) => formatCurrency(v)}
+          tick={{ fontSize: 12 }}
+          width={70}
+          className="text-muted-foreground"
+        />
+        <Tooltip
+          formatter={(val) => [formatCurrency(val as number), "Revenue"]}
+          contentStyle={{
+            backgroundColor: "hsl(var(--background))",
+            border: "1px solid hsl(var(--border))",
+            borderRadius: "0.5rem",
+            fontSize: "0.875rem",
+          }}
+        />
+        <Area
+          type="monotone"
+          dataKey="value"
+          stroke="hsl(var(--primary))"
+          fillOpacity={1}
+          fill="url(#revenueGrad)"
+          strokeWidth={2}
+        />
+      </AreaChart>
+    </ResponsiveContainer>
+  );
+}
+
+// ============================================================================
+// CONTACT ACQUISITION CHART (recharts)
+// ============================================================================
+
+function ContactAcquisitionChart({
+  contacts,
+}: {
+  contacts: Array<{ created_at: string }>;
+}) {
+  const data = useMemo(() => groupByMonth(contacts), [contacts]);
+
+  if (data.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        No contact data yet
+      </div>
+    );
+  }
+
+  return (
+    <ResponsiveContainer width="100%" height={260}>
+      <RechartsBarChart
+        data={data}
+        margin={{ top: 5, right: 10, left: 0, bottom: 0 }}
+      >
+        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+        <XAxis
+          dataKey="label"
+          tick={{ fontSize: 12 }}
+          className="text-muted-foreground"
+        />
+        <YAxis
+          tick={{ fontSize: 12 }}
+          width={40}
+          className="text-muted-foreground"
+        />
+        <Tooltip
+          formatter={(val) => [val, "New Contacts"]}
+          contentStyle={{
+            backgroundColor: "hsl(var(--background))",
+            border: "1px solid hsl(var(--border))",
+            borderRadius: "0.5rem",
+            fontSize: "0.875rem",
+          }}
+        />
+        <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+          {data.map((_, idx) => (
+            <Cell key={idx} fill="hsl(var(--primary))" fillOpacity={0.8} />
+          ))}
+        </Bar>
+      </RechartsBarChart>
+    </ResponsiveContainer>
+  );
+}
+
+// ============================================================================
+// DEAL VELOCITY CHART (recharts)
+// ============================================================================
+
+function DealVelocityChart({ deals }: { deals: Deal[] }) {
+  const data = useMemo(() => {
+    const created = groupByMonth(deals);
+    const won = groupByMonth(deals.filter((d) => d.status === "won"));
+    const lost = groupByMonth(deals.filter((d) => d.status === "lost"));
+
+    // Merge all months
+    const allLabels = new Set([
+      ...created.map((d) => d.label),
+      ...won.map((d) => d.label),
+      ...lost.map((d) => d.label),
+    ]);
+
+    return Array.from(allLabels).map((label) => ({
+      label,
+      created: created.find((d) => d.label === label)?.count || 0,
+      won: won.find((d) => d.label === label)?.count || 0,
+      lost: lost.find((d) => d.label === label)?.count || 0,
+    }));
+  }, [deals]);
+
+  if (data.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        No deal data yet
+      </div>
+    );
+  }
+
+  return (
+    <ResponsiveContainer width="100%" height={260}>
+      <RechartsBarChart
+        data={data}
+        margin={{ top: 5, right: 10, left: 0, bottom: 0 }}
+      >
+        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+        <XAxis
+          dataKey="label"
+          tick={{ fontSize: 12 }}
+          className="text-muted-foreground"
+        />
+        <YAxis
+          tick={{ fontSize: 12 }}
+          width={40}
+          className="text-muted-foreground"
+        />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: "hsl(var(--background))",
+            border: "1px solid hsl(var(--border))",
+            borderRadius: "0.5rem",
+            fontSize: "0.875rem",
+          }}
+        />
+        <Bar
+          dataKey="created"
+          name="Created"
+          fill="hsl(var(--primary))"
+          fillOpacity={0.6}
+          radius={[4, 4, 0, 0]}
+        />
+        <Bar dataKey="won" name="Won" fill="#22c55e" radius={[4, 4, 0, 0]} />
+        <Bar
+          dataKey="lost"
+          name="Lost"
+          fill="#ef4444"
+          fillOpacity={0.6}
+          radius={[4, 4, 0, 0]}
+        />
+      </RechartsBarChart>
+    </ResponsiveContainer>
+  );
 }
 
 // ============================================================================
@@ -230,46 +503,55 @@ function ActivityBreakdown({ activities }: ActivityBreakdownProps) {
 // ============================================================================
 
 interface RecentDealsProps {
-  deals: Deal[]
+  deals: Deal[];
 }
 
 function RecentDeals({ deals }: RecentDealsProps) {
   const recentDeals = useMemo(() => {
     return [...deals]
-      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-      .slice(0, 5)
-  }, [deals])
+      .sort(
+        (a, b) =>
+          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
+      )
+      .slice(0, 5);
+  }, [deals]);
 
   return (
     <div className="space-y-4">
-      {recentDeals.map(deal => (
+      {recentDeals.map((deal) => (
         <div key={deal.id} className="flex items-center justify-between">
           <div>
             <div className="font-medium">{deal.name}</div>
             <div className="text-sm text-muted-foreground">
-              {deal.company?.name || deal.contact?.email || 'No contact'}
+              {deal.company?.name || deal.contact?.email || "No contact"}
             </div>
           </div>
           <div className="text-right">
-            <div className="font-medium">{formatCurrency(deal.amount || 0)}</div>
-            <Badge variant={
-              deal.status === 'won' ? 'default' :
-              deal.status === 'lost' ? 'destructive' :
-              'secondary'
-            }>
+            <div className="font-medium">
+              {formatCurrency(deal.amount || 0)}
+            </div>
+            <Badge
+              variant={
+                deal.status === "won"
+                  ? "default"
+                  : deal.status === "lost"
+                    ? "destructive"
+                    : "secondary"
+              }
+            >
               {deal.status}
             </Badge>
           </div>
         </div>
       ))}
-      
+
       {recentDeals.length === 0 && (
         <div className="text-center py-4 text-muted-foreground">
           No deals yet
         </div>
       )}
     </div>
-  )
+  );
 }
 
 // ============================================================================
@@ -277,55 +559,146 @@ function RecentDeals({ deals }: RecentDealsProps) {
 // ============================================================================
 
 export function ReportsView() {
-  const { deals, contacts, companies, activities, pipelines, isLoading } = useCRM()
-  
+  const { deals, contacts, companies, activities, pipelines, isLoading } =
+    useCRM();
+
   // State
-  const [dateRange, setDateRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d')
-  const [selectedPipeline, setSelectedPipeline] = useState<string>('all')
+  const [dateRange, setDateRange] = useState<"7d" | "30d" | "90d" | "1y">(
+    "30d",
+  );
+  const [selectedPipeline, setSelectedPipeline] = useState<string>("all");
 
   // Calculate date filter
   const dateFilter = useMemo(() => {
-    const now = new Date()
-    const days = dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : dateRange === '90d' ? 90 : 365
-    const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000)
-    return startDate
-  }, [dateRange])
+    const now = new Date();
+    const days =
+      dateRange === "7d"
+        ? 7
+        : dateRange === "30d"
+          ? 30
+          : dateRange === "90d"
+            ? 90
+            : 365;
+    const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+    return startDate;
+  }, [dateRange]);
 
   // Filtered data
   const filteredDeals = useMemo(() => {
-    return deals.filter(deal => {
-      const createdAt = new Date(deal.created_at)
-      if (createdAt < dateFilter) return false
-      if (selectedPipeline !== 'all' && deal.pipeline_id !== selectedPipeline) return false
-      return true
-    })
-  }, [deals, dateFilter, selectedPipeline])
+    return deals.filter((deal) => {
+      const createdAt = new Date(deal.created_at);
+      if (createdAt < dateFilter) return false;
+      if (selectedPipeline !== "all" && deal.pipeline_id !== selectedPipeline)
+        return false;
+      return true;
+    });
+  }, [deals, dateFilter, selectedPipeline]);
 
-  // Calculate metrics
+  // Calculate date range for previous period comparison
+  const prevDateFilter = useMemo(() => {
+    const days =
+      dateRange === "7d"
+        ? 7
+        : dateRange === "30d"
+          ? 30
+          : dateRange === "90d"
+            ? 90
+            : 365;
+    return new Date(dateFilter.getTime() - days * 24 * 60 * 60 * 1000);
+  }, [dateFilter, dateRange]);
+
+  // Calculate metrics with period-over-period trends
   const metrics = useMemo(() => {
-    const totalDeals = filteredDeals.length
-    const totalValue = filteredDeals.reduce((sum, d) => sum + (d.amount || 0), 0)
-    const wonDeals = filteredDeals.filter(d => d.status === 'won')
-    const lostDeals = filteredDeals.filter(d => d.status === 'lost')
-    const openDeals = filteredDeals.filter(d => d.status === 'open')
-    
-    const wonValue = wonDeals.reduce((sum, d) => sum + (d.amount || 0), 0)
-    const lostValue = lostDeals.reduce((sum, d) => sum + (d.amount || 0), 0)
-    const openValue = openDeals.reduce((sum, d) => sum + (d.amount || 0), 0)
-    
-    const winRate = totalDeals > 0 
-      ? (wonDeals.length / (wonDeals.length + lostDeals.length)) * 100 || 0
-      : 0
-    
-    const avgDealValue = totalDeals > 0 ? totalValue / totalDeals : 0
-    
+    const totalDeals = filteredDeals.length;
+    const totalValue = filteredDeals.reduce(
+      (sum, d) => sum + (d.amount || 0),
+      0,
+    );
+    const wonDeals = filteredDeals.filter((d) => d.status === "won");
+    const lostDeals = filteredDeals.filter((d) => d.status === "lost");
+    const openDeals = filteredDeals.filter((d) => d.status === "open");
+
+    const wonValue = wonDeals.reduce((sum, d) => sum + (d.amount || 0), 0);
+    const lostValue = lostDeals.reduce((sum, d) => sum + (d.amount || 0), 0);
+    const openValue = openDeals.reduce((sum, d) => sum + (d.amount || 0), 0);
+
+    const winRate =
+      totalDeals > 0
+        ? (wonDeals.length / (wonDeals.length + lostDeals.length)) * 100 || 0
+        : 0;
+
+    const avgDealValue = totalDeals > 0 ? totalValue / totalDeals : 0;
+
     // Calculate weighted pipeline value
-    const weightedValue = openDeals.reduce((sum, d) => sum + ((d.amount || 0) * d.probability / 100), 0)
-    
+    const weightedValue = openDeals.reduce(
+      (sum, d) => sum + ((d.amount || 0) * d.probability) / 100,
+      0,
+    );
+
     // Activity metrics
-    const periodActivities = activities.filter(a => new Date(a.created_at) >= dateFilter)
-    const completedTasks = periodActivities.filter(a => a.activity_type === 'task' && a.task_completed)
-    
+    const periodActivities = activities.filter(
+      (a) => new Date(a.created_at) >= dateFilter,
+    );
+    const completedTasks = periodActivities.filter(
+      (a) => a.activity_type === "task" && a.task_completed,
+    );
+
+    const newContacts = contacts.filter(
+      (c) => new Date(c.created_at) >= dateFilter,
+    ).length;
+    const newCompanies = companies.filter(
+      (c) => new Date(c.created_at) >= dateFilter,
+    ).length;
+
+    // ---- Previous-period comparison ----
+    const prevDeals = deals.filter((d) => {
+      const t = new Date(d.created_at).getTime();
+      return t >= prevDateFilter.getTime() && t < dateFilter.getTime();
+    });
+    const prevWonValue = prevDeals
+      .filter((d) => d.status === "won")
+      .reduce((s, d) => s + (d.amount || 0), 0);
+    const prevOpenValue = prevDeals
+      .filter((d) => d.status === "open")
+      .reduce((s, d) => s + (d.amount || 0), 0);
+    const prevWon = prevDeals.filter((d) => d.status === "won").length;
+    const prevLost = prevDeals.filter((d) => d.status === "lost").length;
+    const prevWinRate =
+      prevWon + prevLost > 0 ? (prevWon / (prevWon + prevLost)) * 100 : 0;
+    const prevAvg =
+      prevDeals.length > 0
+        ? prevDeals.reduce((s, d) => s + (d.amount || 0), 0) / prevDeals.length
+        : 0;
+    const prevContacts = contacts.filter((c) => {
+      const t = new Date(c.created_at).getTime();
+      return t >= prevDateFilter.getTime() && t < dateFilter.getTime();
+    }).length;
+    const prevCompanies = companies.filter((c) => {
+      const t = new Date(c.created_at).getTime();
+      return t >= prevDateFilter.getTime() && t < dateFilter.getTime();
+    }).length;
+    const prevActivities = activities.filter((a) => {
+      const t = new Date(a.created_at).getTime();
+      return t >= prevDateFilter.getTime() && t < dateFilter.getTime();
+    }).length;
+    const prevTasks = activities.filter((a) => {
+      const t = new Date(a.created_at).getTime();
+      return (
+        t >= prevDateFilter.getTime() &&
+        t < dateFilter.getTime() &&
+        a.activity_type === "task" &&
+        a.task_completed
+      );
+    }).length;
+
+    function calcTrend(current: number, previous: number) {
+      if (previous === 0)
+        return current > 0 ? { value: 100, positive: true } : undefined;
+      const pct = Math.round(((current - previous) / previous) * 100);
+      if (pct === 0) return undefined;
+      return { value: Math.abs(pct), positive: pct > 0 };
+    }
+
     return {
       totalDeals,
       totalValue,
@@ -340,49 +713,74 @@ export function ReportsView() {
       weightedValue,
       totalActivities: periodActivities.length,
       completedTasks: completedTasks.length,
-      newContacts: contacts.filter(c => new Date(c.created_at) >= dateFilter).length,
-      newCompanies: companies.filter(c => new Date(c.created_at) >= dateFilter).length
-    }
-  }, [filteredDeals, activities, contacts, companies, dateFilter])
+      newContacts,
+      newCompanies,
+      trends: {
+        revenue: calcTrend(wonValue, prevWonValue),
+        pipeline: calcTrend(openValue, prevOpenValue),
+        winRate: calcTrend(winRate, prevWinRate),
+        avgDeal: calcTrend(avgDealValue, prevAvg),
+        contacts: calcTrend(newContacts, prevContacts),
+        companies: calcTrend(newCompanies, prevCompanies),
+        activities: calcTrend(periodActivities.length, prevActivities),
+        tasks: calcTrend(completedTasks.length, prevTasks),
+      },
+    };
+  }, [
+    filteredDeals,
+    deals,
+    activities,
+    contacts,
+    companies,
+    dateFilter,
+    prevDateFilter,
+  ]);
 
   // Pipeline stage breakdown
   const stageBreakdown = useMemo(() => {
-    const stages = new Map<string, { name: string; count: number; value: number; position: number }>()
-    
-    filteredDeals.filter(d => d.status === 'open').forEach(deal => {
-      if (deal.stage) {
-        const key = deal.stage.id
-        if (!stages.has(key)) {
-          stages.set(key, {
-            name: deal.stage.name,
-            count: 0,
-            value: 0,
-            position: deal.stage.position
-          })
+    const stages = new Map<
+      string,
+      { name: string; count: number; value: number; position: number }
+    >();
+
+    filteredDeals
+      .filter((d) => d.status === "open")
+      .forEach((deal) => {
+        if (deal.stage) {
+          const key = deal.stage.id;
+          if (!stages.has(key)) {
+            stages.set(key, {
+              name: deal.stage.name,
+              count: 0,
+              value: 0,
+              position: deal.stage.position,
+            });
+          }
+          const stage = stages.get(key)!;
+          stage.count++;
+          stage.value += deal.amount || 0;
         }
-        const stage = stages.get(key)!
-        stage.count++
-        stage.value += (deal.amount || 0)
-      }
-    })
-    
-    return Array.from(stages.values()).sort((a, b) => a.position - b.position)
-  }, [filteredDeals])
+      });
+
+    return Array.from(stages.values()).sort((a, b) => a.position - b.position);
+  }, [filteredDeals]);
 
   // Lead source breakdown
   const sourceBreakdown = useMemo(() => {
-    const sources = new Map<string, number>()
-    
-    contacts.filter(c => new Date(c.created_at) >= dateFilter).forEach(contact => {
-      const source = contact.source || 'Unknown'
-      sources.set(source, (sources.get(source) || 0) + 1)
-    })
-    
+    const sources = new Map<string, number>();
+
+    contacts
+      .filter((c) => new Date(c.created_at) >= dateFilter)
+      .forEach((contact) => {
+        const source = contact.source || "Unknown";
+        sources.set(source, (sources.get(source) || 0) + 1);
+      });
+
     return Array.from(sources.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
-      .map(([label, value]) => ({ label, value }))
-  }, [contacts, dateFilter])
+      .map(([label, value]) => ({ label, value }));
+  }, [contacts, dateFilter]);
 
   // Loading state
   if (isLoading) {
@@ -402,7 +800,7 @@ export function ReportsView() {
           <Skeleton className="h-80" />
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -413,7 +811,7 @@ export function ReportsView() {
           <h2 className="text-2xl font-bold">Reports & Analytics</h2>
           <p className="text-muted-foreground">Track your CRM performance</p>
         </div>
-        
+
         <div className="flex items-center gap-4">
           {/* Pipeline filter */}
           <Select value={selectedPipeline} onValueChange={setSelectedPipeline}>
@@ -422,16 +820,19 @@ export function ReportsView() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Pipelines</SelectItem>
-              {pipelines.map(pipeline => (
+              {pipelines.map((pipeline) => (
                 <SelectItem key={pipeline.id} value={pipeline.id}>
                   {pipeline.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          
+
           {/* Date range */}
-          <Select value={dateRange} onValueChange={(v) => setDateRange(v as typeof dateRange)}>
+          <Select
+            value={dateRange}
+            onValueChange={(v) => setDateRange(v as typeof dateRange)}
+          >
             <SelectTrigger className="w-36">
               <SelectValue />
             </SelectTrigger>
@@ -442,15 +843,23 @@ export function ReportsView() {
               <SelectItem value="1y">Last year</SelectItem>
             </SelectContent>
           </Select>
-          
-          <Button variant="outline" onClick={() => {
-            try {
-              const data = filteredDeals.map((d) => flattenDeal(d as unknown as Record<string, unknown>))
-              exportToCSV(data, `crm-report-${dateRange}-${new Date().toISOString().slice(0, 10)}`)
-            } catch (error) {
-              console.error('Export failed:', error)
-            }
-          }}>
+
+          <Button
+            variant="outline"
+            onClick={() => {
+              try {
+                const data = filteredDeals.map((d) =>
+                  flattenDeal(d as unknown as Record<string, unknown>),
+                );
+                exportToCSV(
+                  data,
+                  `crm-report-${dateRange}-${new Date().toISOString().slice(0, 10)}`,
+                );
+              } catch (error) {
+                console.error("Export failed:", error);
+              }
+            }}
+          >
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
@@ -464,24 +873,28 @@ export function ReportsView() {
           value={formatCurrency(metrics.wonValue)}
           description={`${metrics.wonDeals} deals won`}
           icon={Coins}
+          trend={metrics.trends.revenue}
         />
         <StatCard
           title="Pipeline Value"
           value={formatCurrency(metrics.openValue)}
           description={`${metrics.openDeals} open deals`}
           icon={TrendingUp}
+          trend={metrics.trends.pipeline}
         />
         <StatCard
           title="Win Rate"
           value={formatPercent(metrics.winRate)}
           description="Closed deals"
           icon={Target}
+          trend={metrics.trends.winRate}
         />
         <StatCard
           title="Avg Deal Value"
           value={formatCurrency(metrics.avgDealValue)}
           description="All deals"
           icon={BarChart3}
+          trend={metrics.trends.avgDeal}
         />
       </div>
 
@@ -492,24 +905,28 @@ export function ReportsView() {
           value={metrics.newContacts}
           icon={Users}
           className="bg-blue-50/50 dark:bg-blue-950/20"
+          trend={metrics.trends.contacts}
         />
         <StatCard
           title="New Companies"
           value={metrics.newCompanies}
           icon={Building2}
           className="bg-purple-50/50 dark:bg-purple-950/20"
+          trend={metrics.trends.companies}
         />
         <StatCard
           title="Activities Logged"
           value={metrics.totalActivities}
           icon={Activity}
           className="bg-green-50/50 dark:bg-green-950/20"
+          trend={metrics.trends.activities}
         />
         <StatCard
           title="Tasks Completed"
           value={metrics.completedTasks}
           icon={CheckCircle2}
           className="bg-orange-50/50 dark:bg-orange-950/20"
+          trend={metrics.trends.tasks}
         />
       </div>
 
@@ -553,14 +970,18 @@ export function ReportsView() {
                   </div>
                   <div>
                     <div className="font-medium">Won Deals</div>
-                    <div className="text-sm text-muted-foreground">{metrics.wonDeals} deals</div>
+                    <div className="text-sm text-muted-foreground">
+                      {metrics.wonDeals} deals
+                    </div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xl font-bold text-green-600">{formatCurrency(metrics.wonValue)}</div>
+                  <div className="text-xl font-bold text-green-600">
+                    {formatCurrency(metrics.wonValue)}
+                  </div>
                 </div>
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-red-100 dark:bg-red-900 rounded-full">
@@ -568,11 +989,15 @@ export function ReportsView() {
                   </div>
                   <div>
                     <div className="font-medium">Lost Deals</div>
-                    <div className="text-sm text-muted-foreground">{metrics.lostDeals} deals</div>
+                    <div className="text-sm text-muted-foreground">
+                      {metrics.lostDeals} deals
+                    </div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xl font-bold text-red-600">{formatCurrency(metrics.lostValue)}</div>
+                  <div className="text-xl font-bold text-red-600">
+                    {formatCurrency(metrics.lostValue)}
+                  </div>
                 </div>
               </div>
 
@@ -583,11 +1008,15 @@ export function ReportsView() {
                   </div>
                   <div>
                     <div className="font-medium">Open Deals</div>
-                    <div className="text-sm text-muted-foreground">{metrics.openDeals} deals</div>
+                    <div className="text-sm text-muted-foreground">
+                      {metrics.openDeals} deals
+                    </div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xl font-bold text-blue-600">{formatCurrency(metrics.openValue)}</div>
+                  <div className="text-xl font-bold text-blue-600">
+                    {formatCurrency(metrics.openValue)}
+                  </div>
                   <div className="text-xs text-muted-foreground">
                     Weighted: {formatCurrency(metrics.weightedValue)}
                   </div>
@@ -597,6 +1026,57 @@ export function ReportsView() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Trends Row — recharts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Revenue Over Time */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Revenue Over Time
+            </CardTitle>
+            <CardDescription>Monthly won-deal revenue</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RevenueChart deals={filteredDeals} />
+          </CardContent>
+        </Card>
+
+        {/* Contact Acquisition */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Contact Acquisition
+            </CardTitle>
+            <CardDescription>New contacts per month</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ContactAcquisitionChart
+              contacts={contacts.filter(
+                (c) => new Date(c.created_at) >= dateFilter,
+              )}
+            />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Deal Velocity */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Deal Velocity
+          </CardTitle>
+          <CardDescription>
+            Deals created, won, and lost by month
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DealVelocityChart deals={filteredDeals} />
+        </CardContent>
+      </Card>
 
       {/* Bottom Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -631,7 +1111,11 @@ export function ReportsView() {
           </CardHeader>
           <CardContent>
             {activities.length > 0 ? (
-              <ActivityBreakdown activities={activities.filter(a => new Date(a.created_at) >= dateFilter)} />
+              <ActivityBreakdown
+                activities={activities.filter(
+                  (a) => new Date(a.created_at) >= dateFilter,
+                )}
+              />
             ) : (
               <div className="text-center py-8 text-muted-foreground">
                 No activities logged
@@ -655,7 +1139,7 @@ export function ReportsView() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
 
-export default ReportsView
+export default ReportsView;

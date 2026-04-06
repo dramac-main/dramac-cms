@@ -417,7 +417,10 @@ async function findPublicCart(
       `,
       )
       // Order cart items by creation time so they don't shift on quantity updates
-      .order("created_at", { ascending: true, referencedTable: `${TABLE_PREFIX}_cart_items` })
+      .order("created_at", {
+        ascending: true,
+        referencedTable: `${TABLE_PREFIX}_cart_items`,
+      })
       .eq("site_id", siteId)
       .eq("status", "active");
 
@@ -490,7 +493,10 @@ export async function getPublicCart(
       `,
     );
     // Order cart items by creation time so they don't shift on quantity updates
-    query = query.order("created_at", { ascending: true, referencedTable: `${TABLE_PREFIX}_cart_items` });
+    query = query.order("created_at", {
+      ascending: true,
+      referencedTable: `${TABLE_PREFIX}_cart_items`,
+    });
     query = query.eq("id", cartId);
     if (siteId) query = query.eq("site_id", siteId);
     const { data, error } = await query.single();
@@ -1372,6 +1378,21 @@ export async function createPublicOrderFromCart(
       sourceEntityId: order.id,
     },
   ).catch((err) => console.error("[Ecom Public] Automation event error:", err));
+
+  // Bridge to CRM: create contact + deal (non-blocking)
+  import("@/modules/crm/actions/crm-bridge")
+    .then(({ bridgeOrderToCRM }) =>
+      bridgeOrderToCRM(input.site_id, {
+        id: order.id,
+        order_number: orderNumber,
+        customer_name: input.customer_name || "",
+        customer_email: input.customer_email,
+        customer_phone: input.customer_phone || undefined,
+        total: input.total || 0,
+        currency: input.currency || "USD",
+      }),
+    )
+    .catch((err) => console.error("[Ecom Public] CRM bridge error:", err));
 
   return order as Order;
 }

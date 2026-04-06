@@ -233,7 +233,9 @@ export async function updateBookingStatusFromChat(
   const customerEmail = appointment?.customer_email || "";
   const currency = appointment?.service?.currency;
   const startTime = new Date(appointment?.start_time);
-  const endTime = appointment?.end_time ? new Date(appointment.end_time) : undefined;
+  const endTime = appointment?.end_time
+    ? new Date(appointment.end_time)
+    : undefined;
   const paymentStatus = appointment?.payment_status;
 
   const startFmt = startTime.toLocaleDateString("en-US", {
@@ -270,8 +272,14 @@ export async function updateBookingStatusFromChat(
     );
     // Chat notification
     if (customerEmail) {
-      notifyChatBookingConfirmed(siteId, customerEmail, serviceName, startFmt, timeFmt).catch(
-        (err) => console.error("[ChatBooking] Chat confirm notify error:", err),
+      notifyChatBookingConfirmed(
+        siteId,
+        customerEmail,
+        serviceName,
+        startFmt,
+        timeFmt,
+      ).catch((err) =>
+        console.error("[ChatBooking] Chat confirm notify error:", err),
       );
     }
   } else if (newStatus === "completed") {
@@ -280,7 +288,8 @@ export async function updateBookingStatusFromChat(
     );
     if (customerEmail) {
       notifyChatBookingCompleted(siteId, customerEmail, serviceName).catch(
-        (err) => console.error("[ChatBooking] Chat complete notify error:", err),
+        (err) =>
+          console.error("[ChatBooking] Chat complete notify error:", err),
       );
     }
   } else if (newStatus === "cancelled") {
@@ -379,7 +388,9 @@ export async function updateBookingPaymentFromChat(
     const customerEmail = appointment.customer_email || "";
     const currency = appointment.service?.currency;
     const startTime = new Date(appointment.start_time);
-    const endTime = appointment.end_time ? new Date(appointment.end_time) : undefined;
+    const endTime = appointment.end_time
+      ? new Date(appointment.end_time)
+      : undefined;
 
     notifyBookingPaymentReceived({
       siteId,
@@ -400,11 +411,17 @@ export async function updateBookingPaymentFromChat(
     );
 
     if (customerEmail) {
-      const priceStr = servicePrice > 0
-        ? `${currency || "USD"} ${servicePrice.toFixed(2)}`
-        : "your payment";
-      notifyChatBookingPaymentConfirmed(siteId, customerEmail, serviceName, priceStr).catch(
-        (err) => console.error("[ChatBooking] Chat payment notify error:", err),
+      const priceStr =
+        servicePrice > 0
+          ? `${currency || "USD"} ${servicePrice.toFixed(2)}`
+          : "your payment";
+      notifyChatBookingPaymentConfirmed(
+        siteId,
+        customerEmail,
+        serviceName,
+        priceStr,
+      ).catch((err) =>
+        console.error("[ChatBooking] Chat payment notify error:", err),
       );
     }
   }

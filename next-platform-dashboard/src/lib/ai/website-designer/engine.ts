@@ -178,10 +178,6 @@ export class WebsiteDesignerEngine {
           ecommerce: { module_type: "ecommerce", module_name: "E-Commerce" },
           booking: { module_type: "booking", module_name: "Booking" },
           "live-chat": { module_type: "live-chat", module_name: "Live Chat" },
-          "contact-forms": {
-            module_type: "contact-forms",
-            module_name: "Contact Forms",
-          },
         };
         for (const feature of input.selectedFeatures) {
           const mapped = FEATURE_MODULE_MAP[feature];

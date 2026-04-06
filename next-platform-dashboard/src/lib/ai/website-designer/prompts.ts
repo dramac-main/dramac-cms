@@ -135,6 +135,12 @@ Booking module (use when booking/appointment module is active):
 - BookingEmbed — embeddable booking widget (iframe/popup/inline)
 - BookingStaffGrid — team member cards with bio, rating, specialties, and book button
 
+CRM module (use when CRM/contact management module is active):
+- CRMContactForm — CRM-connected contact form that creates contacts and triggers automations. Key props: title, subtitle, showPhone, showCompany, showSubject, submitText, successMessage, backgroundColor, buttonColor, borderRadius, shadow
+- CRMLeadCaptureForm — minimal lead capture for landing pages. Key props: title, subtitle, submitText, showPhone, showCompany, layout (horizontal/vertical/card), backgroundColor, buttonColor
+- CRMNewsletterForm — newsletter signup that adds subscribers to CRM. Key props: title, subtitle, submitText, layout (inline/stacked/card), backgroundColor, buttonColor
+- CRMCustomForm — renders a custom form built in the CRM Form Builder. Key props: formSlug (required — slug of the form), title, subtitle, backgroundColor, buttonColor, borderRadius, shadow
+
 E-commerce module (use when ecommerce/shop module is active):
 - EcommerceProductGrid — product catalog grid with columns and filtering
 - EcommerceFeaturedProducts — featured/new/bestselling product showcase (carousel, row, or hero)
@@ -163,6 +169,10 @@ Do NOT invent new component type names like "ServicesSection" or "PatientInfo".
 
 ## MODULE AWARENESS
 Check the Business Context for "Enabled Features & Modules".
+- If a CRM module is enabled: Use CRMContactForm instead of ContactForm, CRMNewsletterForm instead of Newsletter.
+  These CRM variants automatically create contacts in the CRM, track lead sources, and trigger automations.
+  For landing pages, use CRMLeadCaptureForm for minimal lead capture forms.
+  If a custom form has been built in the CRM, use CRMCustomForm with the form's slug.
 - If a BOOKING module is enabled: YOU MUST include BookingWidget as a section on the HOMEPAGE (not just a CTA).
   On the homepage, include "BookingWidget" as one of the section's suggestedComponent values — this renders an
   interactive booking wizard that lets users pick a service, staff, date/time, and book instantly.
@@ -216,6 +226,10 @@ Use these versatile components to represent ANY content:
 **Supporting components:**
 - ContactForm — for contact sections, inquiry forms, location/contact info
 - Newsletter — for email signup, subscription sections
+- CRMContactForm — CRM-connected contact form (creates CRM contacts + automations)
+- CRMLeadCaptureForm — minimal lead capture for landing pages (creates CRM leads)
+- CRMNewsletterForm — newsletter signup connected to CRM
+- CRMCustomForm — renders a custom form from the CRM Form Builder (requires formSlug prop)
 - Accordion — for expandable content, categorized information
 - Tabs — for tabbed content sections
 - Carousel — for image/content sliders
@@ -249,6 +263,12 @@ Use these versatile components to represent ANY content:
 
 **Module components (use ONLY when the module is mentioned in the business context):**
 
+CRM module:
+- CRMContactForm — CRM-connected contact form. Key props: title, subtitle, showPhone, showCompany, showSubject, submitText, successMessage, backgroundColor, buttonColor, buttonTextColor, textColor, borderRadius (none/sm/md/lg/xl), shadow (none/sm/md/lg/xl)
+- CRMLeadCaptureForm — compact lead capture. Key props: title, subtitle, submitText, showPhone, showCompany, layout (horizontal/vertical/card), backgroundColor, buttonColor, buttonTextColor
+- CRMNewsletterForm — newsletter signup to CRM. Key props: title, subtitle, submitText, layout (inline/stacked/card), backgroundColor, buttonColor, buttonTextColor
+- CRMCustomForm — dynamic form from CRM Form Builder. Key props: formSlug (required), title, subtitle, backgroundColor, buttonColor, buttonTextColor, textColor, borderRadius, shadow
+
 Booking module:
 - BookingWidget — all-in-one booking wizard. Key props: title, subtitle, layout (standard/compact/wide), showServiceStep, showStaffStep, primaryColor, buttonBackgroundColor, buttonTextColor
 - BookingCalendar — interactive date/time selector. Key props: title, layout (standard/compact/expanded/side-by-side), showTimeSlots, firstDayOfWeek, timeFormat (12h/24h), primaryColor
@@ -279,6 +299,9 @@ E-commerce module:
 - Business hours → use "Features" (each day as a feature item)
 - Reviews → use "Testimonials" or "EcommerceReviewList" (if ecommerce active)
 - Product showcase → use "EcommerceFeaturedProducts" or "EcommerceProductGrid" (if ecommerce active)
+- Contact/inquiry forms → use "CRMContactForm" (if CRM module active) or "ContactForm"
+- Newsletter signup → use "CRMNewsletterForm" (if CRM module active) or "Newsletter"
+- Lead capture forms → use "CRMLeadCaptureForm" (if CRM module active)
 - Animated headings → use "Typewriter" for typing animation effects
 - Scroll effects → use "Parallax" for immersive parallax sections
 - Staff/team → use "Team" or "BookingStaffGrid" (if booking module active)

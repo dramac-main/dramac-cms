@@ -16,32 +16,80 @@ import { z } from "zod";
 
 export const VALID_COMPONENT_TYPES = [
   // Sections (primary page builders)
-  "Hero", "Features", "CTA", "Testimonials", "FAQ", "Stats", "Team", "Gallery",
+  "Hero",
+  "Features",
+  "CTA",
+  "Testimonials",
+  "FAQ",
+  "Stats",
+  "Team",
+  "Gallery",
   // Marketing
-  "Pricing", "LogoCloud", "TrustBadges", "SocialProof", "ComparisonTable", "AnnouncementBar",
+  "Pricing",
+  "LogoCloud",
+  "TrustBadges",
+  "SocialProof",
+  "ComparisonTable",
+  "AnnouncementBar",
   // Content
-  "RichText", "Quote", "CodeBlock", "Heading", "Text", "Image",
-  "Badge", "SocialLinks",
+  "RichText",
+  "Quote",
+  "CodeBlock",
+  "Heading",
+  "Text",
+  "Image",
+  "Badge",
+  "SocialLinks",
   // Forms
-  "ContactForm", "Newsletter", "Form",
+  "ContactForm",
+  "Newsletter",
+  "Form",
+  // CRM module components
+  "CRMContactForm",
+  "CRMLeadCaptureForm",
+  "CRMNewsletterForm",
+  "CRMCustomForm",
   // Interactive
-  "Accordion", "Tabs", "Carousel", "Countdown", "Modal",
-  "Typewriter", "Parallax",
+  "Accordion",
+  "Tabs",
+  "Carousel",
+  "Countdown",
+  "Modal",
+  "Typewriter",
+  "Parallax",
   // Media
-  "Map", "Video",
+  "Map",
+  "Video",
   // Layout
-  "Section", "Divider", "Spacer",
+  "Section",
+  "Divider",
+  "Spacer",
   // Booking module components
-  "BookingWidget", "BookingCalendar", "BookingServiceSelector", "BookingForm",
-  "BookingEmbed", "BookingStaffGrid",
+  "BookingWidget",
+  "BookingCalendar",
+  "BookingServiceSelector",
+  "BookingForm",
+  "BookingEmbed",
+  "BookingStaffGrid",
   // E-commerce module components
-  "EcommerceProductGrid", "EcommerceFeaturedProducts", "EcommerceProductCard",
-  "EcommerceProductCatalog", "EcommerceCartPage", "EcommerceMiniCart",
-  "EcommerceCheckoutPage", "EcommerceOrderConfirmation",
-  "EcommerceCategoryNav", "EcommerceSearchBar", "EcommerceFilterSidebar",
-  "EcommerceBreadcrumb", "EcommerceProductSort",
-  "EcommerceQuoteRequest", "EcommerceReviewForm", "EcommerceReviewList",
-  "ProductDetailBlock", "CategoryHeroBlock",
+  "EcommerceProductGrid",
+  "EcommerceFeaturedProducts",
+  "EcommerceProductCard",
+  "EcommerceProductCatalog",
+  "EcommerceCartPage",
+  "EcommerceMiniCart",
+  "EcommerceCheckoutPage",
+  "EcommerceOrderConfirmation",
+  "EcommerceCategoryNav",
+  "EcommerceSearchBar",
+  "EcommerceFilterSidebar",
+  "EcommerceBreadcrumb",
+  "EcommerceProductSort",
+  "EcommerceQuoteRequest",
+  "EcommerceReviewForm",
+  "EcommerceReviewList",
+  "ProductDetailBlock",
+  "CategoryHeroBlock",
 ] as const;
 
 // =============================================================================
@@ -50,7 +98,10 @@ export const VALID_COMPONENT_TYPES = [
 
 export const DesignTokensSchema = z.object({
   primaryColor: z.string().describe("Primary brand color in hex format"),
-  secondaryColor: z.string().optional().describe("Secondary color in hex format"),
+  secondaryColor: z
+    .string()
+    .optional()
+    .describe("Secondary color in hex format"),
   accentColor: z.string().optional().describe("Accent color for highlights"),
   backgroundColor: z.string().optional().describe("Background color"),
   textColor: z.string().optional().describe("Main text color"),
@@ -72,10 +123,22 @@ export const DesignTokensSchema = z.object({
 // =============================================================================
 
 export const SectionPlanSchema = z.object({
-  intent: z.string().describe("Purpose of this section (e.g., 'Hero section to capture attention')"),
-  suggestedComponent: z.enum(VALID_COMPONENT_TYPES).describe("Best component type for this section — MUST be one of the exact values listed"),
-  alternativeComponents: z.array(z.string()).describe("Alternative component options"),
-  contentNeeds: z.array(z.string()).describe("Content items needed (e.g., headline, image)"),
+  intent: z
+    .string()
+    .describe(
+      "Purpose of this section (e.g., 'Hero section to capture attention')",
+    ),
+  suggestedComponent: z
+    .enum(VALID_COMPONENT_TYPES)
+    .describe(
+      "Best component type for this section — MUST be one of the exact values listed",
+    ),
+  alternativeComponents: z
+    .array(z.string())
+    .describe("Alternative component options"),
+  contentNeeds: z
+    .array(z.string())
+    .describe("Content items needed (e.g., headline, image)"),
   designNotes: z.string().describe("Design guidance for this section"),
 });
 
@@ -85,10 +148,16 @@ export const SectionPlanSchema = z.object({
 
 export const PagePlanSchema = z.object({
   name: z.string().describe("Display name for the page"),
-  slug: z.string().describe("URL slug for the page (e.g., '/' for home, '/about' for about)"),
+  slug: z
+    .string()
+    .describe("URL slug for the page (e.g., '/' for home, '/about' for about)"),
   purpose: z.string().describe("Purpose of this page"),
-  sections: z.array(SectionPlanSchema).describe("Sections to include on this page"),
-  priority: z.number().describe("Page priority as a whole number (1 = highest, max 99)"),
+  sections: z
+    .array(SectionPlanSchema)
+    .describe("Sections to include on this page"),
+  priority: z
+    .number()
+    .describe("Page priority as a whole number (1 = highest, max 99)"),
 });
 
 // =============================================================================
@@ -96,8 +165,12 @@ export const PagePlanSchema = z.object({
 // =============================================================================
 
 export const NavbarPlanSchema = z.object({
-  style: z.enum(["sticky", "fixed", "static"]).describe("Navbar positioning style"),
-  variant: z.enum(["minimal", "modern", "classic", "transparent"]).describe("Visual variant"),
+  style: z
+    .enum(["sticky", "fixed", "static"])
+    .describe("Navbar positioning style"),
+  variant: z
+    .enum(["minimal", "modern", "classic", "transparent"])
+    .describe("Visual variant"),
   ctaButton: z.boolean().describe("Whether to show a CTA button"),
   ctaText: z.string().optional().describe("CTA button text"),
   ctaLink: z.string().optional().describe("CTA button link"),
@@ -108,7 +181,9 @@ export const NavbarPlanSchema = z.object({
 // =============================================================================
 
 export const FooterPlanSchema = z.object({
-  style: z.enum(["minimal", "simple", "comprehensive", "centered"]).describe("Footer style"),
+  style: z
+    .enum(["minimal", "simple", "comprehensive", "centered"])
+    .describe("Footer style"),
   columns: z.number().describe("Number of footer link columns (1, 2, 3, or 4)"),
   newsletter: z.boolean().describe("Include newsletter signup"),
   socialLinks: z.boolean().describe("Include social media links"),
@@ -165,9 +240,16 @@ export const SiteArchitectureSchema = z.object({
 
 export const GeneratedComponentSchema = z.object({
   id: z.string().describe("Unique component ID"),
-  type: z.enum(VALID_COMPONENT_TYPES).describe("Component type — MUST be one of the exact values listed. Never invent new type names."),
+  type: z
+    .enum(VALID_COMPONENT_TYPES)
+    .describe(
+      "Component type — MUST be one of the exact values listed. Never invent new type names.",
+    ),
   props: z.record(z.string(), z.unknown()).describe("Component props"),
-  aiNotes: z.string().optional().describe("AI reasoning for this configuration"),
+  aiNotes: z
+    .string()
+    .optional()
+    .describe("AI reasoning for this configuration"),
 });
 
 // =============================================================================
@@ -179,7 +261,10 @@ export const PageSEOSchema = z.object({
   description: z.string().describe("Meta description"),
   keywords: z.array(z.string()).optional().describe("SEO keywords"),
   ogImage: z.string().optional().describe("Open Graph image URL"),
-  noIndex: z.boolean().optional().describe("Whether to hide from search engines"),
+  noIndex: z
+    .boolean()
+    .optional()
+    .describe("Whether to hide from search engines"),
 });
 
 // =============================================================================
@@ -219,21 +304,38 @@ export const NavbarComponentSchema = z.object({
         label: z.string(),
         href: z.string(),
         isExternal: z.boolean().optional(),
-      })
+      }),
     )
     .optional(),
   ctaText: z.string().optional(),
   ctaLink: z.string().optional(),
   ctaVariant: z.string().optional(),
-  ctaColor: z.string().optional().describe("CTA button background color — use primary brand color for visibility"),
-  ctaTextColor: z.string().optional().describe("CTA button text color — MUST contrast with ctaColor"),
-  backgroundColor: z.string().optional().describe("Navbar background color — match the site theme"),
-  textColor: z.string().optional().describe("Navbar text/link color — MUST contrast with backgroundColor"),
+  ctaColor: z
+    .string()
+    .optional()
+    .describe(
+      "CTA button background color — use primary brand color for visibility",
+    ),
+  ctaTextColor: z
+    .string()
+    .optional()
+    .describe("CTA button text color — MUST contrast with ctaColor"),
+  backgroundColor: z
+    .string()
+    .optional()
+    .describe("Navbar background color — match the site theme"),
+  textColor: z
+    .string()
+    .optional()
+    .describe("Navbar text/link color — MUST contrast with backgroundColor"),
   linkHoverColor: z.string().optional().describe("Navbar link hover color"),
   shadow: z.boolean().optional(),
   transparent: z.boolean().optional(),
   mobileMenuStyle: z.string().optional(),
-  mobileMenuBackground: z.string().optional().describe("Mobile menu background — match navbar theme"),
+  mobileMenuBackground: z
+    .string()
+    .optional()
+    .describe("Mobile menu background — match navbar theme"),
   mobileMenuTextColor: z.string().optional().describe("Mobile menu text color"),
 });
 
@@ -242,9 +344,20 @@ export const NavbarComponentSchema = z.object({
 // =============================================================================
 
 export const FooterComponentSchema = z.object({
-  variant: z.string().optional().describe("Footer variant: standard, centered, simple, extended"),
-  companyName: z.string().optional().describe("The business name to display in the footer"),
-  description: z.string().optional().describe("A one-line tagline describing this specific business — NOT generic platform text"),
+  variant: z
+    .string()
+    .optional()
+    .describe("Footer variant: standard, centered, simple, extended"),
+  companyName: z
+    .string()
+    .optional()
+    .describe("The business name to display in the footer"),
+  description: z
+    .string()
+    .optional()
+    .describe(
+      "A one-line tagline describing this specific business — NOT generic platform text",
+    ),
   columns: z
     .array(
       z.object({
@@ -253,15 +366,18 @@ export const FooterComponentSchema = z.object({
           z.object({
             label: z.string(),
             href: z.string(),
-          })
+          }),
         ),
-      })
+      }),
     )
     .optional()
     .describe("Footer link columns with business-relevant content"),
   logoUrl: z.string().optional(),
   logoText: z.string().optional(),
-  tagline: z.string().optional().describe("Short tagline about this specific business"),
+  tagline: z
+    .string()
+    .optional()
+    .describe("Short tagline about this specific business"),
   businessName: z.string().optional(),
   email: z.string().optional().describe("Contact email"),
   phone: z.string().optional().describe("Contact phone"),
@@ -271,7 +387,7 @@ export const FooterComponentSchema = z.object({
       z.object({
         platform: z.string(),
         url: z.string(),
-      })
+      }),
     )
     .optional(),
   showNewsletter: z.boolean().optional(),
@@ -283,17 +399,32 @@ export const FooterComponentSchema = z.object({
       z.object({
         label: z.string(),
         href: z.string(),
-      })
+      }),
     )
     .optional()
     .describe("Legal links like Privacy Policy, Terms of Service"),
-  backgroundColor: z.string().optional().describe("Footer background color — typically dark for contrast"),
-  textColor: z.string().optional().describe("Footer text color — MUST contrast with backgroundColor"),
+  backgroundColor: z
+    .string()
+    .optional()
+    .describe("Footer background color — typically dark for contrast"),
+  textColor: z
+    .string()
+    .optional()
+    .describe("Footer text color — MUST contrast with backgroundColor"),
   linkColor: z.string().optional().describe("Footer link color"),
   linkHoverColor: z.string().optional().describe("Footer link hover color"),
-  accentColor: z.string().optional().describe("Accent color for decorative elements"),
-  newsletterButtonColor: z.string().optional().describe("Newsletter subscribe button color"),
-  newsletterButtonTextColor: z.string().optional().describe("Newsletter subscribe button text color"),
+  accentColor: z
+    .string()
+    .optional()
+    .describe("Accent color for decorative elements"),
+  newsletterButtonColor: z
+    .string()
+    .optional()
+    .describe("Newsletter subscribe button color"),
+  newsletterButtonTextColor: z
+    .string()
+    .optional()
+    .describe("Newsletter subscribe button text color"),
   borderTop: z.boolean().optional(),
 });
 
@@ -305,7 +436,9 @@ export type DesignTokensSchemaType = z.infer<typeof DesignTokensSchema>;
 export type SectionPlanSchemaType = z.infer<typeof SectionPlanSchema>;
 export type PagePlanSchemaType = z.infer<typeof PagePlanSchema>;
 export type SiteArchitectureSchemaType = z.infer<typeof SiteArchitectureSchema>;
-export type GeneratedComponentSchemaType = z.infer<typeof GeneratedComponentSchema>;
+export type GeneratedComponentSchemaType = z.infer<
+  typeof GeneratedComponentSchema
+>;
 export type GeneratedPageSchemaType = z.infer<typeof GeneratedPageSchema>;
 export type NavbarComponentSchemaType = z.infer<typeof NavbarComponentSchema>;
 export type FooterComponentSchemaType = z.infer<typeof FooterComponentSchema>;

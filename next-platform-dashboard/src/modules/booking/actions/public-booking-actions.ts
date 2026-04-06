@@ -643,6 +643,26 @@ export async function createPublicAppointment(
       console.error("[Booking Public] Automation event error:", err),
     );
 
+    // Bridge to CRM: create contact if auto_create_crm_contact enabled (non-blocking)
+    if (settings?.auto_create_crm_contact !== false) {
+      import("@/modules/crm/actions/crm-bridge")
+        .then(({ bridgeBookingToCRM }) =>
+          bridgeBookingToCRM(siteId, {
+            id: appointment?.id || "",
+            customer_name: input.customerName,
+            customer_email: input.customerEmail,
+            customer_phone: input.customerPhone,
+            service_name: service.name || "Service",
+            service_price: service.price,
+            currency: service.currency,
+            start_time: input.startTime.toISOString(),
+          }),
+        )
+        .catch((err) =>
+          console.error("[Booking Public] CRM bridge error:", err),
+        );
+    }
+
     return { success: true, appointmentId: appointment?.id, status };
   } catch (err) {
     console.error(

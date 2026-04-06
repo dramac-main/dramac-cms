@@ -3966,7 +3966,10 @@ export function QuoteRender({
 
   const resolvedFontFamily = fontFamily || `var(--font-body, inherit)`;
   const dark = isDarkBackground(backgroundColor);
-  const resolvedTextColor = resolveContrastColor(textColor || (dark ? "#f8fafc" : "#1f2937"), dark);
+  const resolvedTextColor = resolveContrastColor(
+    textColor || (dark ? "#f8fafc" : "#1f2937"),
+    dark,
+  );
 
   // Author footer — shared across variants
   const renderAuthor = (centered = false) =>
@@ -7381,9 +7384,7 @@ export function HeroRender({
         : "var(--brand-primary, #3b82f6)";
   const resolvedSecondaryColor = (() => {
     const sec =
-      secondaryButtonColor === "transparent"
-        ? undefined
-        : secondaryButtonColor;
+      secondaryButtonColor === "transparent" ? undefined : secondaryButtonColor;
     return resolveContrastColor(
       sec,
       effectivelyDark,
@@ -7448,7 +7449,9 @@ export function HeroRender({
   const renderScrollIndicator = () => {
     if (!showScrollIndicator) return null;
     const indicatorColor =
-      scrollIndicatorColor || resolvedTextColor || (effectivelyDark ? "#ffffff" : "#374151");
+      scrollIndicatorColor ||
+      resolvedTextColor ||
+      (effectivelyDark ? "#ffffff" : "#374151");
     return (
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 animate-bounce z-10">
         <svg
@@ -8084,7 +8087,8 @@ export function FeaturesRender({
   className = "",
 }: FeaturesProps) {
   // Overlay-aware darkness detection for brand-injected color correction
-  const featBgImageUrl = backgroundStyle === "image" ? getImageUrl(backgroundImage) : undefined;
+  const featBgImageUrl =
+    backgroundStyle === "image" ? getImageUrl(backgroundImage) : undefined;
   const effectivelyDark = isEffectivelyDark(
     backgroundColor,
     featBgImageUrl,
@@ -8539,7 +8543,12 @@ export function FeaturesRender({
           {subtitle && (
             <p
               className="text-sm md:text-base font-semibold uppercase tracking-wider mb-2"
-              style={{ color: resolveContrastColor(subtitleColor || accentColor, effectivelyDark) }}
+              style={{
+                color: resolveContrastColor(
+                  subtitleColor || accentColor,
+                  effectivelyDark,
+                ),
+              }}
             >
               {subtitle}
             </p>
@@ -8549,7 +8558,9 @@ export function FeaturesRender({
           <h2
             className={`${titleSizeClasses} font-bold mb-4`}
             style={{
-              color: titleColor ? resolveContrastColor(titleColor, effectivelyDark) : resolvedTextColor,
+              color: titleColor
+                ? resolveContrastColor(titleColor, effectivelyDark)
+                : resolvedTextColor,
               fontFamily: titleFont || undefined,
             }}
           >
@@ -8560,7 +8571,12 @@ export function FeaturesRender({
           {description && (
             <p
               className={`text-base md:text-lg max-w-2xl ${headerAlign === "center" ? "mx-auto" : ""} opacity-80`}
-              style={{ color: resolveContrastColor(descriptionColor || textColor, effectivelyDark) }}
+              style={{
+                color: resolveContrastColor(
+                  descriptionColor || textColor,
+                  effectivelyDark,
+                ),
+              }}
             >
               {description}
             </p>
@@ -8619,7 +8635,11 @@ export function FeaturesRender({
                 <h3
                   className={`${featureTitleSizeClasses} ${featureTitleWeightClasses} mb-2`}
                   style={{
-                    color: resolveContrastColor(featureTitleColor, effectivelyDark) || resolvedTextColor,
+                    color:
+                      resolveContrastColor(
+                        featureTitleColor,
+                        effectivelyDark,
+                      ) || resolvedTextColor,
                     fontFamily: featureTitleFont || undefined,
                   }}
                 >
@@ -8628,7 +8648,11 @@ export function FeaturesRender({
                 <p
                   className={`${featureDescriptionSizeClasses} opacity-75 leading-relaxed`}
                   style={{
-                    color: resolveContrastColor(featureDescriptionColor, effectivelyDark) || resolvedTextColor,
+                    color:
+                      resolveContrastColor(
+                        featureDescriptionColor,
+                        effectivelyDark,
+                      ) || resolvedTextColor,
                     ...(descriptionMaxLines > 0
                       ? {
                           display: "-webkit-box",
@@ -10163,7 +10187,13 @@ export function TestimonialsRender({
     bgStyle.backgroundPosition = "center";
   }
 
-  const effectivelyDark = isEffectivelyDark(backgroundColor, bgImageUrl, backgroundOverlay, backgroundOverlayColor, backgroundOverlayOpacity);
+  const effectivelyDark = isEffectivelyDark(
+    backgroundColor,
+    bgImageUrl,
+    backgroundOverlay,
+    backgroundOverlayColor,
+    backgroundOverlayOpacity,
+  );
   const resolvedTextColor = resolveContrastColor(textColor, effectivelyDark);
 
   // Quote icon component
@@ -10315,7 +10345,11 @@ export function TestimonialsRender({
         {/* Quote */}
         <blockquote
           className={`${quoteFontSizeClasses} ${quoteStyleClasses} leading-relaxed flex-1 mb-6`}
-          style={{ color: resolveContrastColor(quoteColor, effectivelyDark) || resolvedTextColor }}
+          style={{
+            color:
+              resolveContrastColor(quoteColor, effectivelyDark) ||
+              resolvedTextColor,
+          }}
         >
           &ldquo;{testimonial.quote}&rdquo;
         </blockquote>
@@ -10356,7 +10390,10 @@ export function TestimonialsRender({
               {testimonial.author}
             </p>
             {(testimonial.role || (showCompanyName && testimonial.company)) && (
-              <p className="text-sm opacity-75" style={{ color: resolvedTextColor }}>
+              <p
+                className="text-sm opacity-75"
+                style={{ color: resolvedTextColor }}
+              >
                 {testimonial.role}
                 {testimonial.role &&
                   showCompanyName &&
@@ -10450,7 +10487,11 @@ export function TestimonialsRender({
             {subtitle && (
               <p
                 className="text-sm md:text-base font-semibold uppercase tracking-wider mb-2"
-                style={{ color: resolveContrastColor(subtitleColor, effectivelyDark) || accentColor }}
+                style={{
+                  color:
+                    resolveContrastColor(subtitleColor, effectivelyDark) ||
+                    accentColor,
+                }}
               >
                 {subtitle}
               </p>
@@ -10458,7 +10499,11 @@ export function TestimonialsRender({
             {title && (
               <h2
                 className={`${titleSizeClasses} ${titleWeightClasses} mb-4`}
-                style={{ color: resolveContrastColor(titleColor, effectivelyDark) || resolvedTextColor }}
+                style={{
+                  color:
+                    resolveContrastColor(titleColor, effectivelyDark) ||
+                    resolvedTextColor,
+                }}
               >
                 {title}
               </h2>
@@ -10466,7 +10511,11 @@ export function TestimonialsRender({
             {description && (
               <p
                 className="text-base md:text-lg opacity-80 max-w-2xl mx-auto"
-                style={{ color: resolveContrastColor(descriptionColor, effectivelyDark) || resolvedTextColor }}
+                style={{
+                  color:
+                    resolveContrastColor(descriptionColor, effectivelyDark) ||
+                    resolvedTextColor,
+                }}
               >
                 {description}
               </p>
@@ -11246,7 +11295,10 @@ export function FAQRender({
         className="flex items-center gap-3 mt-4 pt-4 border-t"
         style={{ borderColor: dividerColor }}
       >
-        <span className="text-sm opacity-70" style={{ color: resolvedTextColor }}>
+        <span
+          className="text-sm opacity-70"
+          style={{ color: resolvedTextColor }}
+        >
           {helpfulText}
         </span>
         <button
@@ -11281,8 +11333,15 @@ export function FAQRender({
       }
     : null;
 
-  const faqBgImageUrl = backgroundStyle === "image" ? getImageUrl(backgroundImage) : undefined;
-  const effectivelyDark = isEffectivelyDark(backgroundColor, faqBgImageUrl, backgroundOverlay, backgroundOverlayColor, backgroundOverlayOpacity);
+  const faqBgImageUrl =
+    backgroundStyle === "image" ? getImageUrl(backgroundImage) : undefined;
+  const effectivelyDark = isEffectivelyDark(
+    backgroundColor,
+    faqBgImageUrl,
+    backgroundOverlay,
+    backgroundOverlayColor,
+    backgroundOverlayOpacity,
+  );
   const resolvedTextColor = resolveContrastColor(textColor, effectivelyDark);
 
   return (
@@ -11475,7 +11534,11 @@ export function FAQRender({
             >
               <summary
                 className={`${questionPaddingClasses} cursor-pointer list-none flex items-center ${iconPosition === "left" ? "flex-row-reverse" : ""} justify-between gap-4 ${questionFontSizeClasses} ${questionFontWeightClasses} transition-all`}
-                style={{ color: resolveContrastColor(questionColor, effectivelyDark) || resolvedTextColor }}
+                style={{
+                  color:
+                    resolveContrastColor(questionColor, effectivelyDark) ||
+                    resolvedTextColor,
+                }}
               >
                 <div className="flex items-center gap-3 flex-1">
                   {/* Number */}
@@ -11527,7 +11590,9 @@ export function FAQRender({
               <div
                 className={`${answerPaddingClasses} ${answerFontSizeClasses} ${lineHeightClasses} opacity-80`}
                 style={{
-                  color: resolveContrastColor(answerColor, effectivelyDark) || resolvedTextColor,
+                  color:
+                    resolveContrastColor(answerColor, effectivelyDark) ||
+                    resolvedTextColor,
                   WebkitLineClamp: answerMaxLines,
                   display: answerMaxLines ? "-webkit-box" : undefined,
                   WebkitBoxOrient: answerMaxLines ? "vertical" : undefined,
@@ -12275,8 +12340,15 @@ export function StatsRender({
     );
   };
 
-  const statsBgImageUrl = backgroundStyle === "image" ? getImageUrl(backgroundImage) : undefined;
-  const effectivelyDark = isEffectivelyDark(backgroundColor, statsBgImageUrl, backgroundOverlay, backgroundOverlayColor, backgroundOverlayOpacity);
+  const statsBgImageUrl =
+    backgroundStyle === "image" ? getImageUrl(backgroundImage) : undefined;
+  const effectivelyDark = isEffectivelyDark(
+    backgroundColor,
+    statsBgImageUrl,
+    backgroundOverlay,
+    backgroundOverlayColor,
+    backgroundOverlayOpacity,
+  );
   const resolvedTextColor = resolveContrastColor(textColor, effectivelyDark);
 
   return (
@@ -12355,7 +12427,11 @@ export function StatsRender({
             {subtitle && (
               <p
                 className="text-sm md:text-base font-semibold uppercase tracking-wider mb-2"
-                style={{ color: resolveContrastColor(subtitleColor, effectivelyDark) || accentColor }}
+                style={{
+                  color:
+                    resolveContrastColor(subtitleColor, effectivelyDark) ||
+                    accentColor,
+                }}
               >
                 {subtitle}
               </p>
@@ -12366,7 +12442,9 @@ export function StatsRender({
               <h2
                 className={`${titleSizeClasses} font-bold mb-4`}
                 style={{
-                  color: resolveContrastColor(titleColor, effectivelyDark) || resolvedTextColor,
+                  color:
+                    resolveContrastColor(titleColor, effectivelyDark) ||
+                    resolvedTextColor,
                   fontFamily: titleFont || undefined,
                 }}
               >
@@ -12378,7 +12456,11 @@ export function StatsRender({
             {description && (
               <p
                 className={`text-base md:text-lg max-w-2xl ${headerAlign === "center" ? "mx-auto" : ""} opacity-80`}
-                style={{ color: resolveContrastColor(descriptionColor, effectivelyDark) || resolvedTextColor }}
+                style={{
+                  color:
+                    resolveContrastColor(descriptionColor, effectivelyDark) ||
+                    resolvedTextColor,
+                }}
               >
                 {description}
               </p>
@@ -12438,7 +12520,9 @@ export function StatsRender({
                       <div
                         className={`${labelSizeClasses} mb-2`}
                         style={{
-                          color: resolveContrastColor(labelColor, effectivelyDark) || resolvedTextColor,
+                          color:
+                            resolveContrastColor(labelColor, effectivelyDark) ||
+                            resolvedTextColor,
                           opacity: labelOpacity,
                         }}
                       >
@@ -12450,7 +12534,9 @@ export function StatsRender({
                     <div
                       className={`${valueSizeClasses} ${valueFontWeightClasses} flex items-center`}
                       style={{
-                        color: resolveContrastColor(valueColor, effectivelyDark) || resolvedTextColor,
+                        color:
+                          resolveContrastColor(valueColor, effectivelyDark) ||
+                          resolvedTextColor,
                         fontFamily: valueFont || undefined,
                       }}
                     >
@@ -12470,7 +12556,9 @@ export function StatsRender({
                       <div
                         className={`${labelSizeClasses} mt-2`}
                         style={{
-                          color: resolveContrastColor(labelColor, effectivelyDark) || resolvedTextColor,
+                          color:
+                            resolveContrastColor(labelColor, effectivelyDark) ||
+                            resolvedTextColor,
                           opacity: labelOpacity,
                         }}
                       >
@@ -14972,8 +15060,15 @@ export function TeamRender({
       "px-6 py-3 rounded-lg font-semibold border-2 bg-transparent transition-all hover:bg-opacity-10",
   }[ctaButtonStyle];
 
-  const teamBgImageUrl = backgroundStyle === "image" ? getImageUrl(backgroundImage) : undefined;
-  const effectivelyDark = isEffectivelyDark(backgroundColor, teamBgImageUrl, backgroundOverlay, backgroundOverlayColor, backgroundOverlayOpacity);
+  const teamBgImageUrl =
+    backgroundStyle === "image" ? getImageUrl(backgroundImage) : undefined;
+  const effectivelyDark = isEffectivelyDark(
+    backgroundColor,
+    teamBgImageUrl,
+    backgroundOverlay,
+    backgroundOverlayColor,
+    backgroundOverlayOpacity,
+  );
   const resolvedTextColor = resolveContrastColor(textColor, effectivelyDark);
 
   return (
@@ -15048,7 +15143,11 @@ export function TeamRender({
           {subtitle && (
             <p
               className="text-sm md:text-base font-semibold uppercase tracking-wider mb-2"
-              style={{ color: resolveContrastColor(subtitleColor, effectivelyDark) || accentColor }}
+              style={{
+                color:
+                  resolveContrastColor(subtitleColor, effectivelyDark) ||
+                  accentColor,
+              }}
             >
               {subtitle}
             </p>
@@ -15058,7 +15157,9 @@ export function TeamRender({
           <h2
             className={`${titleSizeClasses} font-bold mb-4`}
             style={{
-              color: resolveContrastColor(titleColor, effectivelyDark) || resolvedTextColor,
+              color:
+                resolveContrastColor(titleColor, effectivelyDark) ||
+                resolvedTextColor,
               fontFamily: titleFont || undefined,
             }}
           >
@@ -15069,7 +15170,11 @@ export function TeamRender({
           {description && (
             <p
               className={`text-base md:text-lg max-w-2xl ${headerAlign === "center" ? "mx-auto" : ""} opacity-80`}
-              style={{ color: resolveContrastColor(descriptionColor, effectivelyDark) || resolvedTextColor }}
+              style={{
+                color:
+                  resolveContrastColor(descriptionColor, effectivelyDark) ||
+                  resolvedTextColor,
+              }}
             >
               {description}
             </p>
@@ -16020,8 +16125,15 @@ export function GalleryRender({
     right: "justify-end",
   }[filterAlign];
 
-  const galleryBgImageUrl = backgroundStyle === "image" ? getImageUrl(backgroundImage) : undefined;
-  const effectivelyDark = isEffectivelyDark(backgroundColor, galleryBgImageUrl, backgroundOverlay, backgroundOverlayColor, backgroundOverlayOpacity);
+  const galleryBgImageUrl =
+    backgroundStyle === "image" ? getImageUrl(backgroundImage) : undefined;
+  const effectivelyDark = isEffectivelyDark(
+    backgroundColor,
+    galleryBgImageUrl,
+    backgroundOverlay,
+    backgroundOverlayColor,
+    backgroundOverlayOpacity,
+  );
   const resolvedTextColor = resolveContrastColor(textColor, effectivelyDark);
 
   return (
@@ -16099,7 +16211,11 @@ export function GalleryRender({
             {subtitle && (
               <p
                 className="text-sm md:text-base font-semibold uppercase tracking-wider mb-2"
-                style={{ color: resolveContrastColor(subtitleColor, effectivelyDark) || accentColor }}
+                style={{
+                  color:
+                    resolveContrastColor(subtitleColor, effectivelyDark) ||
+                    accentColor,
+                }}
               >
                 {subtitle}
               </p>
@@ -16110,7 +16226,9 @@ export function GalleryRender({
               <h2
                 className={`${titleSizeClasses} font-bold mb-4`}
                 style={{
-                  color: resolveContrastColor(titleColor, effectivelyDark) || resolvedTextColor,
+                  color:
+                    resolveContrastColor(titleColor, effectivelyDark) ||
+                    resolvedTextColor,
                   fontFamily: titleFont || undefined,
                 }}
               >
@@ -16122,7 +16240,11 @@ export function GalleryRender({
             {description && (
               <p
                 className={`text-base md:text-lg max-w-2xl ${headerAlign === "center" ? "mx-auto" : ""} opacity-80`}
-                style={{ color: resolveContrastColor(descriptionColor, effectivelyDark) || resolvedTextColor }}
+                style={{
+                  color:
+                    resolveContrastColor(descriptionColor, effectivelyDark) ||
+                    resolvedTextColor,
+                }}
               >
                 {description}
               </p>
@@ -16634,7 +16756,10 @@ function NavbarWithMenu(props: NavbarProps) {
 
   // Contrast-safe text color
   const navDark = isDarkBackground(backgroundColor);
-  const resolvedTextColor = resolveContrastColor(textColor || (navDark ? "#f8fafc" : "#1f2937"), navDark);
+  const resolvedTextColor = resolveContrastColor(
+    textColor || (navDark ? "#f8fafc" : "#1f2937"),
+    navDark,
+  );
   const resolvedMobileMenuText = mobileMenuTextColor || resolvedTextColor;
 
   // Responsive behavior
@@ -17538,8 +17663,7 @@ export function FooterRender(props: FooterProps) {
   const resolvedTextColor = resolveContrastColor(textColor, bgIsDark);
   const linkColor = (() => {
     // Default gray — adjust for background
-    if (linkColorProp === "#9ca3af")
-      return bgIsDark ? "#9ca3af" : "#4b5563";
+    if (linkColorProp === "#9ca3af") return bgIsDark ? "#9ca3af" : "#4b5563";
     // Brand-injected link color: ensure it contrasts with footer bg
     if (bgIsDark && isDarkBackground(linkColorProp)) return "#9ca3af";
     if (!bgIsDark && !isDarkBackground(linkColorProp)) return "#4b5563";
@@ -17723,7 +17847,10 @@ export function FooterRender(props: FooterProps) {
           {newsletterTitle}
         </h3>
         {newsletterDescription && (
-          <p className="text-sm opacity-75 mb-4" style={{ color: resolvedTextColor }}>
+          <p
+            className="text-sm opacity-75 mb-4"
+            style={{ color: resolvedTextColor }}
+          >
             {newsletterDescription}
           </p>
         )}
@@ -17916,7 +18043,10 @@ export function FooterRender(props: FooterProps) {
           </a>
         ))}
         {showMadeWith && (
-          <span className="text-sm opacity-60" style={{ color: resolvedTextColor }}>
+          <span
+            className="text-sm opacity-60"
+            style={{ color: resolvedTextColor }}
+          >
             {madeWithText}
           </span>
         )}
@@ -17946,7 +18076,10 @@ export function FooterRender(props: FooterProps) {
               style={{ height: logoHeight }}
             />
           ) : (
-            <p className="text-lg font-bold" style={{ color: resolvedTextColor }}>
+            <p
+              className="text-lg font-bold"
+              style={{ color: resolvedTextColor }}
+            >
               {companyName}
             </p>
           )}
@@ -17963,7 +18096,10 @@ export function FooterRender(props: FooterProps) {
               {socialLinks.map(renderSocialIcon)}
             </div>
           )}
-          <p className="text-sm opacity-75" style={{ color: resolvedTextColor }}>
+          <p
+            className="text-sm opacity-75"
+            style={{ color: resolvedTextColor }}
+          >
             {copyright}
           </p>
           {resolvedLegalLinks.length > 0 && (
@@ -18013,7 +18149,10 @@ export function FooterRender(props: FooterProps) {
               style={{ height: logoHeight }}
             />
           ) : (
-            <p className="text-xl font-bold" style={{ color: resolvedTextColor }}>
+            <p
+              className="text-xl font-bold"
+              style={{ color: resolvedTextColor }}
+            >
               {companyName}
             </p>
           )}
@@ -18052,7 +18191,10 @@ export function FooterRender(props: FooterProps) {
           {showSocialLinks && socialLinks.length > 0 && (
             <div className="flex flex-col items-center gap-2">
               {socialLinksTitle && (
-                <p className="text-sm font-medium" style={{ color: resolvedTextColor }}>
+                <p
+                  className="text-sm font-medium"
+                  style={{ color: resolvedTextColor }}
+                >
                   {socialLinksTitle}
                 </p>
               )}
@@ -18142,7 +18284,10 @@ export function FooterRender(props: FooterProps) {
                   style={{ height: logoHeight }}
                 />
               ) : (
-                <p className="text-xl font-bold" style={{ color: resolvedTextColor }}>
+                <p
+                  className="text-xl font-bold"
+                  style={{ color: resolvedTextColor }}
+                >
                   {companyName}
                 </p>
               )}
@@ -18222,7 +18367,10 @@ export function FooterRender(props: FooterProps) {
                   style={{ height: logoHeight }}
                 />
               ) : (
-                <p className="text-xl font-bold" style={{ color: resolvedTextColor }}>
+                <p
+                  className="text-xl font-bold"
+                  style={{ color: resolvedTextColor }}
+                >
                   {companyName}
                 </p>
               )}
@@ -19767,7 +19915,10 @@ export function ContactFormRender({
   const isDark = isDarkBackground(backgroundColor);
   const resolvedButtonColor =
     buttonColor || (isDark ? "#e5a956" : "var(--brand-primary, #3b82f6)");
-  const resolvedTextColor = resolveContrastColor(textColor || (isDark ? "#f9fafb" : "#1f2937"), isDark);
+  const resolvedTextColor = resolveContrastColor(
+    textColor || (isDark ? "#f9fafb" : "#1f2937"),
+    isDark,
+  );
   const resolvedSubtitleColor = isDark ? "#9ca3af" : "#6b7280";
   const resolvedInputBg =
     inputBackgroundColor || (isDark ? "#374151" : "#ffffff");
@@ -19803,14 +19954,19 @@ export function ContactFormRender({
     setErrorMessage("");
 
     try {
-      const res = await fetch("/api/forms/submit", {
+      const res = await fetch("/api/modules/crm/form-capture", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           siteId,
-          formId: "contact-form",
-          data,
-          honeypot: formData.get("_honeypot") || "",
+          formType: "contact",
+          name: data.name || "",
+          email: data.email || "",
+          phone: data.phone || "",
+          subject: data.subject || "",
+          message: data.message || "",
+          pageUrl: typeof window !== "undefined" ? window.location.href : "",
+          referrer: typeof document !== "undefined" ? document.referrer : "",
         }),
       });
       const result = await res.json();
@@ -20087,7 +20243,10 @@ export function NewsletterRender({
 
   const bgDark = isDarkBackground(backgroundColor);
 
-  const resolvedTextColor = resolveContrastColor(textColor || (bgDark ? "#f8fafc" : "#1f2937"), bgDark);
+  const resolvedTextColor = resolveContrastColor(
+    textColor || (bgDark ? "#f8fafc" : "#1f2937"),
+    bgDark,
+  );
   const resolvedInputBorder =
     inputBorderColorProp ||
     (bgDark ? "rgba(255,255,255,0.2)" : `${buttonColor || "#d1d5db"}30`);
@@ -20112,14 +20271,15 @@ export function NewsletterRender({
     setErrorMsg("");
 
     try {
-      const res = await fetch("/api/forms/submit", {
+      const res = await fetch("/api/modules/crm/form-capture", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           siteId,
-          formId: "newsletter",
-          data: { email: formData.get("email") },
-          honeypot: formData.get("_honeypot") || "",
+          formType: "newsletter",
+          email: formData.get("email") || "",
+          pageUrl: typeof window !== "undefined" ? window.location.href : "",
+          referrer: typeof document !== "undefined" ? document.referrer : "",
         }),
       });
 
@@ -21054,7 +21214,10 @@ export function CountdownRender({
   className = "",
 }: CountdownProps) {
   const dark = isDarkBackground(backgroundColor);
-  const resolvedTextColor = resolveContrastColor(textColor || (dark ? "#f8fafc" : "#1f2937"), dark);
+  const resolvedTextColor = resolveContrastColor(
+    textColor || (dark ? "#f8fafc" : "#1f2937"),
+    dark,
+  );
   const resolvedNumberColor = numberColor || accentColor || resolvedTextColor;
   const resolvedLabelColor = labelColor || (dark ? "#94a3b8" : "#6b7280");
   const resolvedCardBg = cardBackgroundColor || (dark ? "#1e293b" : "#f3f4f6");
@@ -21307,7 +21470,10 @@ export function PricingRender({
   );
 
   const dark = isDarkBackground(backgroundColor);
-  const resolvedTextColor = resolveContrastColor(textColor || (dark ? "#f8fafc" : "#1f2937"), dark);
+  const resolvedTextColor = resolveContrastColor(
+    textColor || (dark ? "#f8fafc" : "#1f2937"),
+    dark,
+  );
   const resolvedPriceColor = priceColor || resolvedTextColor;
   const resolvedPeriodColor = periodColor || (dark ? "#94a3b8" : "#6b7280");
   const resolvedCardBg = cardBackgroundColor || (dark ? "#1e293b" : "#ffffff");
@@ -21717,7 +21883,10 @@ export function AccordionRender({
     accentColor ||
     activeColor ||
     (dark ? "#e5a956" : "var(--brand-primary, #3b82f6)");
-  const resolvedTextColor = resolveContrastColor(textColor || (dark ? "#e2e8f0" : "#374151"), dark);
+  const resolvedTextColor = resolveContrastColor(
+    textColor || (dark ? "#e2e8f0" : "#374151"),
+    dark,
+  );
   const resolvedBorderColor = borderColor || (dark ? "#334155" : "#e5e7eb");
   const resolvedBadgeColor = badgeColor || resolvedIconColor;
   const resolvedFilledBg = dark ? "#1e293b" : "#f9fafb";
@@ -21994,10 +22163,21 @@ export function TabsRender(props: TabsProps) {
     props.borderColor || props.tabBorderColor || "#e5e7eb";
   const resolvedContentBg = props.contentBackgroundColor || undefined;
   const tabsDark = isDarkBackground(backgroundColor);
-  const resolvedTitleColor = resolveContrastColor(props.titleColor || props.textColor || (tabsDark ? "#f8fafc" : "#1f2937"), tabsDark);
-  const resolvedSubtitleColor = resolveContrastColor(props.subtitleColor || props.textColor || (tabsDark ? "#94a3b8" : "#6b7280"), tabsDark);
+  const resolvedTitleColor = resolveContrastColor(
+    props.titleColor || props.textColor || (tabsDark ? "#f8fafc" : "#1f2937"),
+    tabsDark,
+  );
+  const resolvedSubtitleColor = resolveContrastColor(
+    props.subtitleColor ||
+      props.textColor ||
+      (tabsDark ? "#94a3b8" : "#6b7280"),
+    tabsDark,
+  );
   const textColor = props.textColor;
-  const resolvedTextColor = resolveContrastColor(textColor || (tabsDark ? "#f8fafc" : "#1f2937"), tabsDark);
+  const resolvedTextColor = resolveContrastColor(
+    textColor || (tabsDark ? "#f8fafc" : "#1f2937"),
+    tabsDark,
+  );
 
   // Filter hidden tabs
   const tabs = rawTabs.filter((tab) => !tab.hidden);
@@ -25521,7 +25701,10 @@ export function TypewriterRender({
   };
 
   const textStyle: React.CSSProperties = {
-    color: resolveContrastColor(textColor || "var(--color-foreground, #111827)", isDarkBackground(backgroundColor)),
+    color: resolveContrastColor(
+      textColor || "var(--color-foreground, #111827)",
+      isDarkBackground(backgroundColor),
+    ),
     ...(highlightColor
       ? {
           backgroundColor: highlightColor,
@@ -26091,7 +26274,10 @@ export function AnnouncementBarRender({
   const dark = isCustom
     ? isDarkBackground(backgroundColor)
     : !["warning", "outlined", "minimal"].includes(variant);
-  const resolvedTextColor = resolveContrastColor(textColor || (dark ? "#ffffff" : "#111827"), dark);
+  const resolvedTextColor = resolveContrastColor(
+    textColor || (dark ? "#ffffff" : "#111827"),
+    dark,
+  );
   const resolvedLinkColor = linkColor || resolvedTextColor;
 
   // Variant-specific extra styles
@@ -28187,8 +28373,15 @@ export function TiltCardRender({
   const paddingClasses = getResponsiveClasses(padding, paddingYMap);
   const radiusClasses = getResponsiveClasses(borderRadius, borderRadiusMap);
 
-  const effectivelyDark = isEffectivelyDark(backgroundColor, bgImageUrl, overlay, undefined, overlayOpacity ? overlayOpacity * 100 : undefined);
-  const resolvedTextColor = resolveContrastColor(textColor, effectivelyDark) || textColor;
+  const effectivelyDark = isEffectivelyDark(
+    backgroundColor,
+    bgImageUrl,
+    overlay,
+    undefined,
+    overlayOpacity ? overlayOpacity * 100 : undefined,
+  );
+  const resolvedTextColor =
+    resolveContrastColor(textColor, effectivelyDark) || textColor;
 
   const shadowMap: Record<string, string> = {
     none: "",
@@ -28588,8 +28781,17 @@ export function GlassCardRender({
 
   const config = presets[preset] || presets.light;
   // Glass cards are typically on dark backgrounds; resolve contrast
-  const glassIsDark = ["dark", "heavy", "frosted", "crystal", "colored"].includes(preset);
-  const resolvedTextColor = resolveContrastColor(textColor || "#ffffff", glassIsDark);
+  const glassIsDark = [
+    "dark",
+    "heavy",
+    "frosted",
+    "crystal",
+    "colored",
+  ].includes(preset);
+  const resolvedTextColor = resolveContrastColor(
+    textColor || "#ffffff",
+    glassIsDark,
+  );
   const actualBlur = isMobile.current ? mobileBlur : blur || config.blur;
   const baseBlur = isHovering ? actualBlur + hoverBlur : actualBlur;
   const actualTint = tint || config.bg;
@@ -29552,7 +29754,10 @@ export function ScrollAnimateRender({
   const paddingClasses = getResponsiveClasses(padding, paddingYMap);
   const radiusClasses = getResponsiveClasses(borderRadius, borderRadiusMap);
   const scrollDark = isDarkBackground(backgroundColor);
-  const resolvedTextColor = resolveContrastColor(textColor || (scrollDark ? "#f8fafc" : "#1f2937"), scrollDark);
+  const resolvedTextColor = resolveContrastColor(
+    textColor || (scrollDark ? "#f8fafc" : "#1f2937"),
+    scrollDark,
+  );
   const shadowMap: Record<string, string> = {
     none: "",
     sm: "shadow-sm",
@@ -29838,7 +30043,9 @@ export function ScrollAnimateRender({
       )}
       <p
         className="text-sm"
-        style={{ color: resolvedTextColor || "var(--color-muted-foreground, #4b5563)" }}
+        style={{
+          color: resolvedTextColor || "var(--color-muted-foreground, #4b5563)",
+        }}
       >
         {description}
       </p>

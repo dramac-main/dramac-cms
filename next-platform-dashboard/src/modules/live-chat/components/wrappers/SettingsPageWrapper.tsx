@@ -44,8 +44,10 @@ import {
   Eye,
   AlertCircle,
   Bot,
+  MessagesSquare,
 } from "lucide-react";
 import { updateWidgetSettings } from "@/modules/live-chat/actions";
+import { ChatMessageTemplates } from "@/modules/live-chat/components/settings/chat-message-templates";
 import type {
   ChatWidgetSettings,
   ChatDepartment,
@@ -225,7 +227,7 @@ export function SettingsPageWrapper({
       )}
 
       <Tabs defaultValue="appearance" className="space-y-6">
-        <TabsList className="grid grid-cols-4 lg:grid-cols-9 gap-1 h-auto p-1">
+        <TabsList className="grid grid-cols-4 lg:grid-cols-10 gap-1 h-auto p-1">
           <TabsTrigger value="appearance" className="text-xs gap-1">
             <Palette className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Appearance</span>
@@ -233,6 +235,10 @@ export function SettingsPageWrapper({
           <TabsTrigger value="branding" className="text-xs gap-1">
             <Building2 className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Branding</span>
+          </TabsTrigger>
+          <TabsTrigger value="messages" className="text-xs gap-1">
+            <MessagesSquare className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Messages</span>
           </TabsTrigger>
           <TabsTrigger value="pre-chat" className="text-xs gap-1">
             <MessageSquare className="h-3.5 w-3.5" />
@@ -587,6 +593,11 @@ export function SettingsPageWrapper({
               </Button>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ──────────── MESSAGES ──────────── */}
+        <TabsContent value="messages">
+          <ChatMessageTemplates siteId={siteId} />
         </TabsContent>
 
         {/* ──────────── PRE-CHAT ──────────── */}
@@ -1404,6 +1415,49 @@ export function SettingsPageWrapper({
                 </div>
               </div>
 
+              {/* ── Handoff Keywords ─────────────────────────────── */}
+              <div className="space-y-2">
+                <Label>Handoff Keywords</Label>
+                <Textarea
+                  value={
+                    Array.isArray(settings.aiHandoffKeywords) && settings.aiHandoffKeywords.length > 0
+                      ? settings.aiHandoffKeywords.join(", ")
+                      : ""
+                  }
+                  onChange={(e) => {
+                    const keywords = e.target.value
+                      .split(",")
+                      .map((k) => k.trim())
+                      .filter(Boolean);
+                    update("aiHandoffKeywords", keywords);
+                  }}
+                  placeholder="human, agent, person, speak to someone, real person, talk to agent, live agent, support agent, customer service, representative, operator"
+                  rows={3}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Comma-separated words or phrases. When a visitor&apos;s message
+                  contains any of these, the AI immediately hands off to a human
+                  agent. Leave empty to use the built-in defaults.
+                </p>
+              </div>
+
+              {/* ── Handoff Message ──────────────────────────────── */}
+              <div className="space-y-2">
+                <Label>Handoff Message</Label>
+                <Textarea
+                  value={settings.aiHandoffMessage || ""}
+                  onChange={(e) =>
+                    update("aiHandoffMessage", e.target.value || null)
+                  }
+                  placeholder="I understand you'd like to speak with a human agent. Let me connect you right away. An agent will be with you shortly!"
+                  rows={3}
+                />
+                <p className="text-xs text-muted-foreground">
+                  The message sent to the visitor when a handoff keyword is
+                  detected. Leave empty for the default message.
+                </p>
+              </div>
+
               <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 text-sm text-blue-700 dark:text-blue-300">
                 <strong>How it works:</strong> After checkout, the chat widget
                 automatically opens and sends a message on behalf of the
@@ -1426,6 +1480,11 @@ export function SettingsPageWrapper({
                     aiResponseTone: settings.aiResponseTone || "friendly",
                     aiCustomInstructions: settings.aiCustomInstructions || null,
                     aiAssistantName: settings.aiAssistantName || "Chiko",
+                    aiHandoffKeywords:
+                      Array.isArray(settings.aiHandoffKeywords) && settings.aiHandoffKeywords.length > 0
+                        ? settings.aiHandoffKeywords
+                        : [],
+                    aiHandoffMessage: settings.aiHandoffMessage || null,
                   })
                 }
                 disabled={isPending}

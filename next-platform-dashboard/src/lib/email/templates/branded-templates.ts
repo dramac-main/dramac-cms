@@ -251,7 +251,10 @@ const booking_confirmation_customer: BrandedTemplate = {
         { label: "Time", value: String(data.time) },
         { label: "Duration", value: String(data.duration) },
         { label: "Price", value: String(data.price) },
-        { label: "Status", value: isConfirmed ? "✅ Confirmed" : "⏳ Awaiting Confirmation" },
+        {
+          label: "Status",
+          value: isConfirmed ? "✅ Confirmed" : "⏳ Awaiting Confirmation",
+        },
       ])}
       ${paymentSection}
       ${nextSteps}
@@ -295,7 +298,10 @@ const booking_confirmation_owner: BrandedTemplate = {
           { label: "Duration", value: String(data.duration) },
           { label: "Price", value: String(data.price) },
           { label: "Status", value: String(data.status) },
-          { label: "Payment", value: paymentPending ? "⏳ Pending" : "✅ Not Required" },
+          {
+            label: "Payment",
+            value: paymentPending ? "⏳ Pending" : "✅ Not Required",
+          },
         ],
         "#f0fdf4",
         "#bbf7d0",
@@ -357,7 +363,8 @@ const booking_cancelled_owner: BrandedTemplate = {
 const booking_confirmed_customer: BrandedTemplate = {
   subject: (data) => `Your Booking is Confirmed — ${data.serviceName}`,
   html: (data, b) => {
-    const paymentPending = data.paymentStatus === "pending" && data.paymentRequired;
+    const paymentPending =
+      data.paymentStatus === "pending" && data.paymentRequired;
     const paymentSection = paymentPending
       ? `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:16px;margin:20px 0;">
         <p style="margin:0 0 8px;font-weight:600;color:#92400e;">⏳ Payment Required</p>
@@ -372,7 +379,9 @@ const booking_confirmed_customer: BrandedTemplate = {
       <p style="${EMAIL_STYLES.text}">Great news — your booking has been confirmed! Here are your appointment details:</p>
       ${emailInfoBox([
         { label: "Service", value: String(data.serviceName) },
-        ...(data.staffName ? [{ label: "With", value: String(data.staffName) }] : []),
+        ...(data.staffName
+          ? [{ label: "With", value: String(data.staffName) }]
+          : []),
         { label: "Date", value: String(data.date) },
         { label: "Time", value: String(data.time) },
         { label: "Duration", value: String(data.duration) },
@@ -395,7 +404,8 @@ const booking_confirmed_customer: BrandedTemplate = {
 };
 
 const booking_confirmed_owner: BrandedTemplate = {
-  subject: (data) => `✅ Booking Confirmed: ${data.customerName} — ${data.serviceName}`,
+  subject: (data) =>
+    `✅ Booking Confirmed: ${data.customerName} — ${data.serviceName}`,
   html: (data, b) =>
     baseEmailTemplate(
       b,
@@ -407,7 +417,13 @@ const booking_confirmed_owner: BrandedTemplate = {
           { label: "Service", value: String(data.serviceName) },
           { label: "Date", value: String(data.date) },
           { label: "Time", value: String(data.time) },
-          { label: "Payment", value: data.paymentStatus === "pending" ? "⏳ Pending" : "✅ Paid / Not Required" },
+          {
+            label: "Payment",
+            value:
+              data.paymentStatus === "pending"
+                ? "⏳ Pending"
+                : "✅ Paid / Not Required",
+          },
         ],
         "#f0fdf4",
         "#bbf7d0",
@@ -431,7 +447,9 @@ const booking_completed_customer: BrandedTemplate = {
       <p style="${EMAIL_STYLES.text}">We hope you enjoyed your <strong>${data.serviceName}</strong> appointment${data.staffName ? ` with ${data.staffName}` : ""}. Thank you for choosing ${data.businessName || b.agency_name}!</p>
       ${emailInfoBox([
         { label: "Service", value: String(data.serviceName) },
-        ...(data.staffName ? [{ label: "With", value: String(data.staffName) }] : []),
+        ...(data.staffName
+          ? [{ label: "With", value: String(data.staffName) }]
+          : []),
         { label: "Date", value: String(data.date) },
         { label: "Price", value: String(data.price) },
       ])}
@@ -444,7 +462,8 @@ const booking_completed_customer: BrandedTemplate = {
 };
 
 const booking_completed_owner: BrandedTemplate = {
-  subject: (data) => `✔️ Booking Completed: ${data.customerName} — ${data.serviceName}`,
+  subject: (data) =>
+    `✔️ Booking Completed: ${data.customerName} — ${data.serviceName}`,
   html: (data, b) =>
     baseEmailTemplate(
       b,
@@ -456,7 +475,15 @@ const booking_completed_owner: BrandedTemplate = {
           { label: "Service", value: String(data.serviceName) },
           { label: "Date", value: String(data.date) },
           { label: "Price", value: String(data.price) },
-          { label: "Payment", value: data.paymentStatus === "paid" ? "✅ Paid" : data.paymentStatus === "pending" ? "⚠️ Unpaid" : "N/A" },
+          {
+            label: "Payment",
+            value:
+              data.paymentStatus === "paid"
+                ? "✅ Paid"
+                : data.paymentStatus === "pending"
+                  ? "⚠️ Unpaid"
+                  : "N/A",
+          },
         ],
         "#f0fdf4",
         "#bbf7d0",
@@ -499,7 +526,9 @@ const booking_payment_received_customer: BrandedTemplate = {
       <p style="${EMAIL_STYLES.text}">We've received your payment of <strong>${data.price}</strong> for your upcoming appointment. Your booking is fully secured!</p>
       ${emailInfoBox([
         { label: "Service", value: String(data.serviceName) },
-        ...(data.staffName ? [{ label: "With", value: String(data.staffName) }] : []),
+        ...(data.staffName
+          ? [{ label: "With", value: String(data.staffName) }]
+          : []),
         { label: "Date", value: String(data.date) },
         { label: "Time", value: String(data.time) },
         { label: "Amount Paid", value: String(data.price) },
@@ -513,7 +542,8 @@ const booking_payment_received_customer: BrandedTemplate = {
 };
 
 const booking_payment_received_owner: BrandedTemplate = {
-  subject: (data) => `💰 Payment Received: ${data.customerName} — ${data.serviceName}`,
+  subject: (data) =>
+    `💰 Payment Received: ${data.customerName} — ${data.serviceName}`,
   html: (data, b) =>
     baseEmailTemplate(
       b,
@@ -1403,6 +1433,28 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
       ),
     text: (data) =>
       `Missed Chat\n\nVisitor: ${data.visitorName || "Unknown"}\nMessage: ${data.visitorMessage || "N/A"}\n\nConsider following up with this visitor.`,
+  },
+  quote_amendment_requested_owner: {
+    subject: (data) => `Quote #${data.quoteNumber} — Changes Requested`,
+    html: (data, b) =>
+      baseEmailTemplate(
+        b,
+        `<h1 style="${EMAIL_STYLES.heading}">Quote Amendment Requested</h1>
+        <p style="${EMAIL_STYLES.text}"><strong>${data.customerName || "A customer"}</strong> has requested changes to quote <strong>${data.quoteNumber}</strong>.</p>
+        ${emailInfoBox([
+          { label: "Customer", value: String(data.customerName || "N/A") },
+          { label: "Email", value: String(data.customerEmail || "N/A") },
+          { label: "Quote", value: `#${data.quoteNumber || ""}` },
+        ])}
+        <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:16px;margin:16px 0;">
+          <p style="margin:0 0 8px;color:#92400e;font-weight:600;">Requested Changes:</p>
+          <p style="margin:0;color:#78350f;">${data.amendmentNotes || "No details provided."}</p>
+        </div>
+        ${data.dashboardUrl ? emailButton(b, String(data.dashboardUrl), "Review in Dashboard") : ""}`,
+        `Quote ${data.quoteNumber} amendment request`,
+      ),
+    text: (data) =>
+      `Quote Amendment Requested\n\n${data.customerName || "A customer"} has requested changes to quote #${data.quoteNumber}.\n\nRequested Changes:\n${data.amendmentNotes || "N/A"}\n\n${data.dashboardUrl ? `Review: ${data.dashboardUrl}` : ""}`,
   },
 };
 

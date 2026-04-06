@@ -31,6 +31,7 @@ export type NotificationType =
   | "new_quote_request"
   | "quote_accepted"
   | "quote_rejected"
+  | "quote_amendment_requested"
   // Form submissions
   | "form_submission"
   // Live Chat

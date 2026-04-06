@@ -556,7 +556,7 @@ export function QuoteDetailDialog({
                                 Accepted by:{" "}
                               </span>
                               <span className="font-medium">
-                                {quote.metadata.accepted_by_name}
+                                {String(quote.metadata.accepted_by_name)}
                               </span>
                             </div>
                           )}
@@ -566,7 +566,7 @@ export function QuoteDetailDialog({
                                 Email:{" "}
                               </span>
                               <span className="font-medium">
-                                {quote.metadata.accepted_by_email}
+                                {String(quote.metadata.accepted_by_email)}
                               </span>
                             </div>
                           )}

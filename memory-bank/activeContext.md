@@ -1,76 +1,123 @@
 # Active Context
 
-## Current Focus: Booking Industry-Standard Confirmation + Settings Integration ✅ (commits b903bd77, 3d235887)
+## Current Focus: CRM Form Unification — Contact Forms Module Removal + Form Rewiring ✅
 
 ### What Was Done
 
-**Full rewrite of booking agent panel with confirmation dialogs, smart auto-advance for public wizard, `require_payment`/`auto_confirm` settings wired end-to-end, branding audit completed.**
+**Phantom "Contact Forms" module completely removed from platform + all form submissions unified under CRM.**
 
-#### ChatBookingPanel — Confirmation Dialogs ✅
+#### Contact Forms Module Removal ✅
 
-- **AlertDialog pattern** (matching ChatOrderPanel): Every status action (Confirm, Complete, Cancel, No Show) now opens a confirmation dialog with full booking summary (service, date/time, staff, customer, price, payment status)
-- **Complete with payment warning**: If `require_payment` is enabled and payment is unpaid, the Complete dialog shows a yellow warning banner + destructive "Complete Without Payment" button
-- **Cancel with reason**: Cancel dialog includes a Textarea for cancellation reason, passed to server action
-- **Agent name audit trail**: `userName` passed to `updateBookingStatusFromChat` so `cancelled_by` records the actual agent
-- **Payment amount display**: Prominently shown when payment is required (was fetched but hidden before)
-- **Payment required inline warning**: Yellow banner in the panel when payment is outstanding
+- Removed "contact-forms" feature chip from AI Designer page.tsx
+- Removed from engine.ts FEATURE_MODULE_MAP
+- Removed from auto-install/route.ts FEATURE_MODULE_MAP
+- Deleted from database: `modules_v2` (1 row), `site_module_installations` (4 rows), `agency_module_subscriptions` (1 row)
+- Module was a phantom — no code, no dashboard page, no server actions, just a DB entry
 
-#### chat-booking-actions.ts — Server Action Updates ✅
+#### Form Submission Rewiring ✅
 
-- `ChatBookingContext` type extended with `requirePayment: boolean`, `autoConfirm: boolean`
-- `getBookingContextForChat()` now fetches `mod_bookmod01_settings` for `require_payment` and `auto_confirm`
-- `updateBookingStatusFromChat()` accepts `options?: { cancellationReason?: string; agentName?: string }` — no more hardcoded "admin" / "Cancelled via live chat"
+- **ContactFormRender** in `src/lib/studio/blocks/renders.tsx` now submits to `/api/modules/crm/form-capture` instead of `/api/forms/submit`
+  - Sends: siteId, formType: "contact", name, email, phone, subject, message, pageUrl, referrer
+- **NewsletterRender** in same file now submits to `/api/modules/crm/form-capture` instead of `/api/forms/submit`
+  - Sends: siteId, formType: "newsletter", email, pageUrl, referrer
+- **Form+FormField** (generic dynamic form builder) intentionally kept on `/api/forms/submit` — handles arbitrary custom fields that CRM can't process
+- CRM form-capture API already saves to `form_submissions` table for backward compatibility
+- Honeypot spam protection preserved on both forms (client-side check before API call)
 
-#### BookingWidgetBlock.tsx — Smart Auto-Advance + Payment ✅
+#### Architecture Result
 
-- **Auto-advance default changed to `true`**: Single-option steps auto-select and advance (useEffect-based)
-- **Service step**: If only 1 service, auto-select + advance
-- **Staff step**: If only 1 staff (filtered by service), auto-select + advance
-- **Payment status wired**: `handleConfirm` now sends `payment_status: "pending"` when `bookingSettings.require_payment` is true (was always `"not_required"`)
-- **Payment notice in confirm step**: Shows "Payment Required" card with amount when `require_payment` is enabled
+- All ContactForm and Newsletter submissions → CRM contacts + automations + form_submissions (via CRM backward compat)
+- Custom Form builder submissions → form_submissions only (appropriate for arbitrary fields)
+- No data silos: every contact/newsletter form creates a CRM contact automatically
 
-#### public-booking-actions.ts — Settings Integration ✅
-
-- **`auto_confirm` global override**: `settings.auto_confirm` now overrides per-service `require_confirmation` — if globally auto-confirmed, all bookings get status `"confirmed"` regardless of service setting
-- **`require_payment` wired**: Sets `payment_status: "pending"` and `payment_amount: service.price` when enabled
-- Payment amount now stored on the appointment row
-
-#### ServiceSelectorBlock.tsx — Branding Fix ✅
-
-- Removed 3 hardcoded `rgba(139,92,246,...)` purple fallback colors
-- Replaced with palette-derived `${pc}08`, `${pc}10`, `${pc}20`
-
-### Branding Audit Results
-
-All 6 booking studio components verified:
-
-- **BookingWidgetBlock** ✅ — Full `resolveBrandColors()`, zero hardcoded colors
-- **ServiceSelectorBlock** ✅ — Fixed 3 purple fallbacks (now clean)
-- **StaffGridBlock** ✅ — Clean
-- **BookingCalendarBlock** ✅ — Clean
-- **BookingFormBlock** ✅ — Clean (Tailwind classes use semantic tokens)
-- **BookingEmbedBlock** ✅ — Clean
-
-### Settings Integration Status (Updated)
-
-| Setting                      | Status                                           |
-| ---------------------------- | ------------------------------------------------ |
-| `require_payment`            | ✅ Wired in widget + server action + agent panel |
-| `auto_confirm`               | ✅ Wired in server action (global override)      |
-| `currency`                   | ✅ Was already working                           |
-| `min_booking_notice_hours`   | ✅ Was already working                           |
-| `max_booking_advance_days`   | ✅ Was already working                           |
-| `slot_interval_minutes`      | ✅ Was already working                           |
-| `confirmation_email_enabled` | ⬜ No email sending logic yet                    |
-| `reminder_hours`             | ⬜ No scheduler yet                              |
-| `notification_email`         | ⬜ Not consumed (uses site owner email)          |
-| `auto_create_crm_contact`    | ⬜ No CRM integration yet                        |
-| `accent_color`               | ⬜ Not passed to public site (uses brand colors) |
-| `cancellation_notice_hours`  | ⬜ No enforcement yet                            |
+**TypeScript:** Zero new errors (only pre-existing converter.ts issues).
 
 ---
 
-## Previous: Booking Auto-Chat + Storefront Modernization ✅ (commit a9363b1f)
+## Previous Focus: Complete Booking Email Notification System ✅ (commit 9780da9d)
+
+### What Was Done
+
+**Full booking email notification lifecycle implemented — every status change from chat panel and dashboard now sends proper email notifications to customers and business owners.**
+
+#### Email Template Fixes ✅
+
+- **Heading bug fixed**: "Your Booking is Booking Confirmed" → proper conditional headings ("Booking Received" / "Booking Confirmed")
+- **Payment info added**: Initial booking emails now include payment pending section, "Payment Required" yellow banner, and next steps with payment instructions
+- **Owner email enhanced**: Now shows payment status info and payment pending section
+
+#### 7 New Email Templates ✅ (branded-templates.ts)
+
+- `booking_confirmed_customer` / `booking_confirmed_owner` — when pending→confirmed
+- `booking_completed_customer` / `booking_completed_owner` — thank you / completion record
+- `booking_no_show_customer` — missed appointment email
+- `booking_payment_received_customer` / `booking_payment_received_owner` — payment confirmation
+- All registered in email-types.ts (union type + validTypes array)
+
+#### 4 New Notification Functions ✅ (business-notifications.ts)
+
+- `notifyBookingConfirmed()` — emails customer + owner when booking confirmed
+- `notifyBookingCompleted()` — thank you email to customer, record email to owner
+- `notifyBookingNoShow()` — missed appointment email to customer
+- `notifyBookingPaymentReceived()` — payment confirmation to customer + owner
+- New `BookingStatusChangeData` interface for all status change notifications
+- `paymentStatus` field added to `BookingNotificationData`
+
+#### Chat Booking Actions — Full Notification Wiring ✅ (chat-booking-actions.ts)
+
+- `updateBookingStatusFromChat`: After DB update, fetches full appointment with service/staff joins, then fires:
+  - confirmed → `notifyBookingConfirmed()` + `notifyChatBookingConfirmed()`
+  - completed → `notifyBookingCompleted()` + `notifyChatBookingCompleted()`
+  - cancelled → `notifyBookingCancelled()` + `notifyChatBookingCancelled()`
+  - no_show → `notifyBookingNoShow()`
+- `updateBookingPaymentFromChat`: When payment marked as "paid", fires `notifyBookingPaymentReceived()` + `notifyChatBookingPaymentConfirmed()`
+- All notification calls are async/non-blocking (.catch pattern)
+
+#### Dashboard Booking Actions — Email Notifications Added ✅ (booking-actions.ts)
+
+- `updateAppointment`: Now fires email notifications alongside existing chat notifications:
+  - confirmed → `notifyBookingConfirmed()` + chat notification
+  - completed → `notifyBookingCompleted()` + chat notification
+  - no_show → `notifyBookingNoShow()`
+- Imported `notifyBookingConfirmed`, `notifyBookingCompleted`, `notifyBookingNoShow`
+- `cancelAppointment` already had `notifyBookingCancelled()` — unchanged
+
+#### Notification Pipeline Updated ✅
+
+- `notifyNewBooking()` now passes `paymentStatus` and `paymentRequired` data to email templates
+- `public-booking-actions.ts` passes `paymentStatus` to `notifyNewBooking()` call
+
+### Email Lifecycle Summary
+
+| Event             | Customer Email                       | Owner Email                       | Chat Message                         |
+| ----------------- | ------------------------------------ | --------------------------------- | ------------------------------------ |
+| Booking created   | ✅ booking_confirmation_customer     | ✅ booking_confirmation_owner     | ✅ notifyChatBookingCreated          |
+| Booking confirmed | ✅ booking_confirmed_customer        | ✅ booking_confirmed_owner        | ✅ notifyChatBookingConfirmed        |
+| Booking completed | ✅ booking_completed_customer        | ✅ booking_completed_owner        | ✅ notifyChatBookingCompleted        |
+| Booking cancelled | ✅ booking_cancelled_customer        | ✅ booking_cancelled_owner        | ✅ notifyChatBookingCancelled        |
+| No show           | ✅ booking_no_show_customer          | —                                 | —                                    |
+| Payment received  | ✅ booking_payment_received_customer | ✅ booking_payment_received_owner | ✅ notifyChatBookingPaymentConfirmed |
+
+### Settings Integration Status (Updated)
+
+| Setting                      | Status                                                    |
+| ---------------------------- | --------------------------------------------------------- |
+| `require_payment`            | ✅ Wired in widget + server action + agent panel + emails |
+| `auto_confirm`               | ✅ Wired in server action (global override)               |
+| `confirmation_email_enabled` | ✅ Full email notification system now implemented         |
+| `currency`                   | ✅ Was already working                                    |
+| `min_booking_notice_hours`   | ✅ Was already working                                    |
+| `max_booking_advance_days`   | ✅ Was already working                                    |
+| `slot_interval_minutes`      | ✅ Was already working                                    |
+| `reminder_hours`             | ⬜ No scheduler yet                                       |
+| `notification_email`         | ⬜ Not consumed (uses site owner email)                   |
+| `auto_create_crm_contact`    | ⬜ No CRM integration yet                                 |
+| `accent_color`               | ⬜ Not passed to public site (uses brand colors)          |
+| `cancellation_notice_hours`  | ⬜ No enforcement yet                                     |
+
+---
+
+## Previous: Booking Confirmation Dialogs + Settings Integration ✅ (commits b903bd77, 3d235887)
 
 Fixed cart items reordering when quantity changes by adding `ORDER BY created_at` to `findPublicCart()` and `getPublicCart()` nested cart_items queries.
 

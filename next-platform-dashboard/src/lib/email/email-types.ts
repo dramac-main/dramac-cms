@@ -57,6 +57,7 @@ export type EmailType =
   | "quote_accepted_owner"
   | "quote_accepted_customer"
   | "quote_rejected_owner"
+  | "quote_amendment_requested_owner"
   // Forms
   | "form_submission_owner"
   // Domains

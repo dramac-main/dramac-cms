@@ -62,11 +62,11 @@ export interface AuthContextValue {
     email: string,
   ) => Promise<{ error: string | null; message?: string }>;
   /** Open the auth dialog (login/register) */
-  openAuthDialog: (mode?: "login" | "register") => void;
+  openAuthDialog: (mode?: "login" | "register" | "set-password") => void;
   /** Close the auth dialog */
   closeAuthDialog: () => void;
   authDialogOpen: boolean;
-  authDialogMode: "login" | "register";
+  authDialogMode: "login" | "register" | "set-password";
 }
 
 // ============================================================================
@@ -118,7 +118,7 @@ export function StorefrontAuthProvider({
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
-  const [authDialogMode, setAuthDialogMode] = useState<"login" | "register">(
+  const [authDialogMode, setAuthDialogMode] = useState<"login" | "register" | "set-password">(
     "login",
   );
 
@@ -356,7 +356,7 @@ export function StorefrontAuthProvider({
     [callAuth],
   );
 
-  const openAuthDialog = useCallback((mode?: "login" | "register") => {
+  const openAuthDialog = useCallback((mode?: "login" | "register" | "set-password") => {
     setAuthDialogMode(mode || "login");
     setAuthDialogOpen(true);
   }, []);

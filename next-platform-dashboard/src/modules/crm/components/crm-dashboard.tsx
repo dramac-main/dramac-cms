@@ -1,36 +1,37 @@
 /**
  * CRM Dashboard Main Component
- * 
+ *
  * Phase EM-50: CRM Module - Enterprise Ready
  * PHASE-UI-10A/10B: Enhanced UI Components Integration
- * 
+ *
  * The main dashboard shell that provides navigation between CRM views
  */
-'use client'
+"use client";
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ContactsView } from './views/contacts-view'
-import { CompaniesView } from './views/companies-view'
-import { DealsView } from './views/deals-view'
-import { ActivitiesView } from './views/activities-view'
-import { ReportsView } from './views/reports-view'
-import { SegmentsView } from './views/segments-view'
-import { FormCapturesView } from './views/form-captures-view'
-import { CRMProvider, useCRM } from '../context/crm-context'
-import { 
+import { useState } from "react";
+import Link from "next/link";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ContactsView } from "./views/contacts-view";
+import { CompaniesView } from "./views/companies-view";
+import { DealsView } from "./views/deals-view";
+import { ActivitiesView } from "./views/activities-view";
+import { ReportsView } from "./views/reports-view";
+import { SegmentsView } from "./views/segments-view";
+import { FormCapturesView } from "./views/form-captures-view";
+import { FormsView } from "./views/forms-view";
+import { CRMProvider, useCRM } from "../context/crm-context";
+import {
   // Enhanced UI Components (PHASE-UI-10A/10B)
   CRMHeader,
   CRMMetricCards,
   LeadScoringSettings,
-  type TimeRange
-} from './ui'
-import { 
-  Users, 
-  Building2, 
-  TrendingUp, 
-  Activity, 
+  type TimeRange,
+} from "./ui";
+import {
+  Users,
+  Building2,
+  TrendingUp,
+  Activity,
   BarChart3,
   RefreshCw,
   LineChart,
@@ -39,20 +40,20 @@ import {
   Target,
   GitMerge,
   Upload,
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { ImportContactsDialog } from './dialogs/import-dialog'
-import { MergeContactsDialog } from './dialogs/merge-dialog'
-import type { CRMSettings } from '../types/crm-types'
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ImportContactsDialog } from "./dialogs/import-dialog";
+import { MergeContactsDialog } from "./dialogs/merge-dialog";
+import type { CRMSettings } from "../types/crm-types";
 
 // ============================================================================
 // DASHBOARD PROPS
 // ============================================================================
 
 interface CRMDashboardProps {
-  siteId: string
-  settings?: CRMSettings
+  siteId: string;
+  settings?: CRMSettings;
 }
 
 // ============================================================================
@@ -60,32 +61,28 @@ interface CRMDashboardProps {
 // ============================================================================
 
 function CRMDashboardContent() {
-  const { 
-    contacts, 
-    companies, 
-    deals, 
-    error, 
-    refresh,
-    siteId
-  } = useCRM()
-  
-  const [activeTab, setActiveTab] = useState('deals')
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [timeRange, setTimeRange] = useState<TimeRange>('30d')
-  const [importOpen, setImportOpen] = useState(false)
-  const [mergeOpen, setMergeOpen] = useState(false)
+  const { contacts, companies, deals, error, refresh, siteId } = useCRM();
+
+  const [activeTab, setActiveTab] = useState("deals");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [timeRange, setTimeRange] = useState<TimeRange>("30d");
+  const [importOpen, setImportOpen] = useState(false);
+  const [mergeOpen, setMergeOpen] = useState(false);
 
   // Calculate summary stats
-  const openDeals = deals.filter(d => d.status === 'open')
-  const totalPipelineValue = openDeals.reduce((sum, d) => sum + (d.amount || 0), 0)
-  const wonDeals = deals.filter(d => d.status === 'won')
-  const totalWonValue = wonDeals.reduce((sum, d) => sum + (d.amount || 0), 0)
+  const openDeals = deals.filter((d) => d.status === "open");
+  const totalPipelineValue = openDeals.reduce(
+    (sum, d) => sum + (d.amount || 0),
+    0,
+  );
+  const wonDeals = deals.filter((d) => d.status === "won");
+  const totalWonValue = wonDeals.reduce((sum, d) => sum + (d.amount || 0), 0);
 
   const handleRefresh = async () => {
-    setIsRefreshing(true)
-    await refresh()
-    setIsRefreshing(false)
-  }
+    setIsRefreshing(true);
+    await refresh();
+    setIsRefreshing(false);
+  };
 
   if (error) {
     return (
@@ -96,7 +93,7 @@ function CRMDashboardContent() {
           Retry
         </Button>
       </div>
-    )
+    );
   }
 
   return (
@@ -120,41 +117,41 @@ function CRMDashboardContent() {
         <CRMMetricCards
           metrics={[
             {
-              id: 'contacts',
-              label: 'Total Contacts',
+              id: "contacts",
+              label: "Total Contacts",
               value: contacts.length,
               icon: Users,
-              onClick: () => setActiveTab('contacts'),
+              onClick: () => setActiveTab("contacts"),
             },
             {
-              id: 'companies',
-              label: 'Companies',
+              id: "companies",
+              label: "Companies",
               value: companies.length,
               icon: Building2,
-              onClick: () => setActiveTab('companies'),
+              onClick: () => setActiveTab("companies"),
             },
             {
-              id: 'openDeals',
-              label: 'Open Deals',
+              id: "openDeals",
+              label: "Open Deals",
               value: openDeals.length,
               icon: TrendingUp,
-              onClick: () => setActiveTab('deals'),
+              onClick: () => setActiveTab("deals"),
             },
             {
-              id: 'pipelineValue',
-              label: 'Pipeline Value',
+              id: "pipelineValue",
+              label: "Pipeline Value",
               value: totalPipelineValue,
-              format: 'currency',
+              format: "currency",
               icon: BarChart3,
-              onClick: () => setActiveTab('reports'),
+              onClick: () => setActiveTab("reports"),
             },
             {
-              id: 'wonValue',
-              label: 'Won This Month',
+              id: "wonValue",
+              label: "Won This Month",
               value: totalWonValue,
-              format: 'currency',
+              format: "currency",
               icon: Activity,
-              color: 'success',
+              color: "success",
             },
           ]}
           columns={5}
@@ -162,56 +159,92 @@ function CRMDashboardContent() {
       </div>
 
       {/* Main Content */}
-      <Tabs 
-        value={activeTab} 
-        onValueChange={setActiveTab} 
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
         className="flex-1 flex flex-col"
       >
         <div className="border-b px-6">
           <TabsList className="bg-transparent h-12">
-            <TabsTrigger value="deals" className="gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+            <TabsTrigger
+              value="deals"
+              className="gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+            >
               <TrendingUp className="h-4 w-4" />
               Deals
-              <Badge variant="secondary" className="ml-1">{openDeals.length}</Badge>
+              <Badge variant="secondary" className="ml-1">
+                {openDeals.length}
+              </Badge>
             </TabsTrigger>
-            <TabsTrigger value="contacts" className="gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+            <TabsTrigger
+              value="contacts"
+              className="gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+            >
               <Users className="h-4 w-4" />
               Contacts
-              <Badge variant="secondary" className="ml-1">{contacts.length}</Badge>
+              <Badge variant="secondary" className="ml-1">
+                {contacts.length}
+              </Badge>
             </TabsTrigger>
-            <TabsTrigger value="companies" className="gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+            <TabsTrigger
+              value="companies"
+              className="gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+            >
               <Building2 className="h-4 w-4" />
               Companies
-              <Badge variant="secondary" className="ml-1">{companies.length}</Badge>
+              <Badge variant="secondary" className="ml-1">
+                {companies.length}
+              </Badge>
             </TabsTrigger>
-            <TabsTrigger value="activities" className="gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+            <TabsTrigger
+              value="activities"
+              className="gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+            >
               <Activity className="h-4 w-4" />
               Activities
             </TabsTrigger>
-            <TabsTrigger value="reports" className="gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+            <TabsTrigger
+              value="reports"
+              className="gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+            >
               <BarChart3 className="h-4 w-4" />
               Reports
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+            <TabsTrigger
+              value="analytics"
+              className="gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+            >
               <LineChart className="h-4 w-4" />
               Analytics
             </TabsTrigger>
-            <TabsTrigger value="segments" className="gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+            <TabsTrigger
+              value="segments"
+              className="gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+            >
               <Filter className="h-4 w-4" />
               Segments
             </TabsTrigger>
-            <TabsTrigger value="forms" className="gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+            <TabsTrigger
+              value="forms"
+              className="gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+            >
               <FileText className="h-4 w-4" />
               Form Captures
             </TabsTrigger>
-            <TabsTrigger value="scoring" className="gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+            <TabsTrigger
+              value="scoring"
+              className="gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+            >
               <Target className="h-4 w-4" />
               Scoring
             </TabsTrigger>
           </TabsList>
         </div>
 
-        <TabsContent value="deals" className="flex-1 m-0 data-[state=active]:flex data-[state=active]:flex-col">
+        <TabsContent
+          value="deals"
+          className="flex-1 m-0 data-[state=active]:flex data-[state=active]:flex-col"
+        >
           <DealsView />
         </TabsContent>
         <TabsContent value="contacts" className="flex-1 m-0">
@@ -230,7 +263,9 @@ function CRMDashboardContent() {
           <div className="space-y-4">
             <div>
               <h2 className="text-2xl font-bold">CRM Analytics</h2>
-              <p className="text-muted-foreground">Comprehensive analytics and insights for your CRM data.</p>
+              <p className="text-muted-foreground">
+                Comprehensive analytics and insights for your CRM data.
+              </p>
             </div>
             <Link href={`/dashboard/sites/${siteId}/crm-module/analytics`}>
               <Button size="lg" className="w-full max-w-md">
@@ -244,7 +279,7 @@ function CRMDashboardContent() {
           <SegmentsView />
         </TabsContent>
         <TabsContent value="forms" className="flex-1 m-0">
-          <FormCapturesView />
+          <FormsView />
         </TabsContent>
         <TabsContent value="scoring" className="flex-1 m-0 p-6">
           <LeadScoringSettings siteId={siteId} />
@@ -265,7 +300,7 @@ function CRMDashboardContent() {
         onMerged={handleRefresh}
       />
     </div>
-  )
+  );
 }
 
 // ============================================================================
@@ -277,7 +312,7 @@ export function CRMDashboard({ siteId, settings = {} }: CRMDashboardProps) {
     <CRMProvider siteId={siteId} settings={settings}>
       <CRMDashboardContent />
     </CRMProvider>
-  )
+  );
 }
 
-export default CRMDashboard
+export default CRMDashboard;

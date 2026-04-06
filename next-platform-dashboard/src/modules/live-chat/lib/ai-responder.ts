@@ -27,7 +27,7 @@ if (!AI_ENABLED) {
   );
 }
 const MAX_CONTEXT_MESSAGES = 10;
-const HANDOFF_KEYWORDS = [
+const DEFAULT_HANDOFF_KEYWORDS = [
   "human",
   "agent",
   "person",
@@ -40,6 +40,8 @@ const HANDOFF_KEYWORDS = [
   "representative",
   "operator",
 ];
+const DEFAULT_HANDOFF_MESSAGE =
+  "I understand you'd like to speak with a human agent. Let me connect you right away. An agent will be with you shortly!";
 const CONFIDENCE_THRESHOLD = 0.7;
 
 function getModel() {
@@ -67,24 +69,13 @@ export async function generateAutoResponse(
   try {
     const supabase = createAdminClient() as any;
 
-    // Check for handoff keywords
-    const lowerMsg = visitorMessage.toLowerCase();
-    if (HANDOFF_KEYWORDS.some((kw) => lowerMsg.includes(kw))) {
-      return {
-        response:
-          "I understand you'd like to speak with a human agent. Let me connect you right away. An agent will be with you shortly!",
-        confidence: 1.0,
-        shouldHandoff: true,
-      };
-    }
-
     // Load context
     const [settingsRes, kbRes, messagesRes, visitorRes, convMetaRes] =
       await Promise.all([
         supabase
           .from("mod_chat_widget_settings")
           .select(
-            "company_name, welcome_message, ai_response_tone, ai_custom_instructions, ai_assistant_name, ai_payment_greeting",
+            "company_name, welcome_message, ai_response_tone, ai_custom_instructions, ai_assistant_name, ai_payment_greeting, ai_handoff_keywords, ai_handoff_message",
           )
           .eq("site_id", siteId)
           .single(),
@@ -118,6 +109,24 @@ export async function generateAutoResponse(
     const customInstructions = settingsRes.data?.ai_custom_instructions || "";
     const aiAssistantName = settingsRes.data?.ai_assistant_name || "Chiko";
     const paymentGreeting = settingsRes.data?.ai_payment_greeting || "";
+    const handoffKeywords: string[] =
+      Array.isArray(settingsRes.data?.ai_handoff_keywords) && settingsRes.data.ai_handoff_keywords.length > 0
+        ? settingsRes.data.ai_handoff_keywords
+        : DEFAULT_HANDOFF_KEYWORDS;
+    const handoffMessage: string =
+      settingsRes.data?.ai_handoff_message || DEFAULT_HANDOFF_MESSAGE;
+
+    // Check for handoff keywords (uses DB-configured or default list)
+    const lowerMsg = visitorMessage.toLowerCase();
+    if (handoffKeywords.some((kw) => lowerMsg.includes(kw.toLowerCase()))) {
+      return {
+        response: handoffMessage,
+        confidence: 1.0,
+        shouldHandoff: true,
+        assistantName: settingsRes.data?.ai_assistant_name || "Chiko",
+      };
+    }
+
     const kbArticles = kbRes.data || [];
     const previousMessages = (messagesRes.data || []).reverse();
     const visitorInfo = visitorRes.data?.mod_chat_visitors;

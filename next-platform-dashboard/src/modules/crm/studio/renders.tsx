@@ -1,211 +1,282 @@
 /**
  * CRM Module - Studio Component Renders
- * 
+ *
  * These are the actual React components rendered inside the Studio preview
  * and published website pages. They send form data to the CRM form-capture API.
- * 
+ *
  * Flow: Studio Preview → Published Site → /api/modules/crm/form-capture → CRM Contact
  */
-'use client'
+"use client";
 
-import React, { useState, FormEvent } from 'react'
+import React, { useState, useEffect, FormEvent } from "react";
+
+import type { CRMFormField, CRMFormDefinition } from "../types/crm-types";
 
 // =============================================================================
 // SHARED HELPERS
 // =============================================================================
 
 const borderRadiusMap: Record<string, string> = {
-  none: '0',
-  sm: '0.25rem',
-  md: '0.375rem',
-  lg: '0.5rem',
-  xl: '0.75rem',
-}
+  none: "0",
+  sm: "0.25rem",
+  md: "0.375rem",
+  lg: "0.5rem",
+  xl: "0.75rem",
+};
 
 const shadowMap: Record<string, string> = {
-  none: 'none',
-  sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-  md: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-  lg: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-  xl: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
-}
+  none: "none",
+  sm: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+  md: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+  lg: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
+  xl: "0 20px 25px -5px rgb(0 0 0 / 0.1)",
+};
 
 interface SubmitState {
-  loading: boolean
-  success: boolean
-  error: string | null
+  loading: boolean;
+  success: boolean;
+  error: string | null;
 }
 
-async function submitToCRM(data: Record<string, string>, formType: string): Promise<void> {
+async function submitToCRM(
+  data: Record<string, string>,
+  formType: string,
+  formName?: string,
+): Promise<void> {
   // Determine the API URL — works for both same-origin (dashboard) and cross-origin (published site)
-  const apiUrl = typeof window !== 'undefined' && (window as any).__CRM_API_URL
-    ? (window as any).__CRM_API_URL
-    : '/api/modules/crm/form-capture'
+  const apiUrl =
+    typeof window !== "undefined" && (window as any).__CRM_API_URL
+      ? (window as any).__CRM_API_URL
+      : "/api/modules/crm/form-capture";
 
   const response = await fetch(apiUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       ...data,
       form_type: formType,
-      page_url: typeof window !== 'undefined' ? window.location.href : '',
-      referrer: typeof document !== 'undefined' ? document.referrer : '',
+      ...(formName ? { formName } : {}),
+      page_url: typeof window !== "undefined" ? window.location.href : "",
+      referrer: typeof document !== "undefined" ? document.referrer : "",
     }),
-  })
+  });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => null)
-    throw new Error(errorData?.error || 'Failed to submit form')
+    const errorData = await response.json().catch(() => null);
+    throw new Error(errorData?.error || "Failed to submit form");
   }
 }
 
 // Shared input style
 const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.625rem 0.875rem',
-  border: '1px solid #e2e8f0',
-  borderRadius: '0.375rem',
-  fontSize: '0.875rem',
-  lineHeight: '1.25rem',
-  outline: 'none',
-  transition: 'border-color 0.15s',
-  backgroundColor: '#fff',
-  color: '#1e293b',
-}
+  width: "100%",
+  padding: "0.625rem 0.875rem",
+  border: "1px solid #e2e8f0",
+  borderRadius: "0.375rem",
+  fontSize: "0.875rem",
+  lineHeight: "1.25rem",
+  outline: "none",
+  transition: "border-color 0.15s",
+  backgroundColor: "#fff",
+  color: "#1e293b",
+};
 
 const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontSize: '0.875rem',
+  display: "block",
+  fontSize: "0.875rem",
   fontWeight: 500,
-  color: '#374151',
-  marginBottom: '0.25rem',
-}
+  color: "#374151",
+  marginBottom: "0.25rem",
+};
 
 // =============================================================================
 // CRM CONTACT FORM RENDER
 // =============================================================================
 
 interface CRMContactFormProps {
-  title?: string
-  subtitle?: string
-  nameLabel?: string
-  emailLabel?: string
-  phoneLabel?: string
-  messageLabel?: string
-  submitText?: string
-  successMessage?: string
-  showPhone?: boolean
-  showCompany?: boolean
-  showSubject?: boolean
-  backgroundColor?: string
-  buttonColor?: string
-  buttonTextColor?: string
-  textColor?: string
-  borderRadius?: string
-  shadow?: string
-  siteId?: string
+  title?: string;
+  subtitle?: string;
+  nameLabel?: string;
+  emailLabel?: string;
+  phoneLabel?: string;
+  messageLabel?: string;
+  submitText?: string;
+  successMessage?: string;
+  showPhone?: boolean;
+  showCompany?: boolean;
+  showSubject?: boolean;
+  backgroundColor?: string;
+  buttonColor?: string;
+  buttonTextColor?: string;
+  textColor?: string;
+  borderRadius?: string;
+  shadow?: string;
+  siteId?: string;
 }
 
 export function CRMContactFormRender(props: CRMContactFormProps) {
   const {
-    title = 'Contact Us',
+    title = "Contact Us",
     subtitle = "Fill out the form below and we'll get back to you shortly.",
-    nameLabel = 'Full Name',
-    emailLabel = 'Email Address',
-    phoneLabel = 'Phone Number',
-    messageLabel = 'Message',
-    submitText = 'Send Message',
+    nameLabel = "Full Name",
+    emailLabel = "Email Address",
+    phoneLabel = "Phone Number",
+    messageLabel = "Message",
+    submitText = "Send Message",
     successMessage = "Thank you! We'll be in touch soon.",
     showPhone = true,
     showCompany = false,
     showSubject = true,
-    backgroundColor = '#ffffff',
-    buttonColor = 'var(--brand-primary, #3b82f6)',
-    buttonTextColor = 'var(--brand-button-text, #ffffff)',
-    textColor = '#1e293b',
-    borderRadius = 'xl',
-    shadow = 'lg',
+    backgroundColor = "#ffffff",
+    buttonColor = "var(--brand-primary, #3b82f6)",
+    buttonTextColor = "var(--brand-button-text, #ffffff)",
+    textColor = "#1e293b",
+    borderRadius = "xl",
+    shadow = "lg",
     siteId,
-  } = props
+  } = props;
 
-  const [state, setState] = useState<SubmitState>({ loading: false, success: false, error: null })
+  const [state, setState] = useState<SubmitState>({
+    loading: false,
+    success: false,
+    error: null,
+  });
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setState({ loading: true, success: false, error: null })
+    e.preventDefault();
+    setState({ loading: true, success: false, error: null });
 
-    const formData = new FormData(e.currentTarget)
+    const formData = new FormData(e.currentTarget);
     const data: Record<string, string> = {
-      site_id: siteId || '',
-      name: formData.get('name') as string || '',
-      email: formData.get('email') as string || '',
-      phone: formData.get('phone') as string || '',
-      company: formData.get('company') as string || '',
-      subject: formData.get('subject') as string || '',
-      message: formData.get('message') as string || '',
-    }
+      site_id: siteId || "",
+      name: (formData.get("name") as string) || "",
+      email: (formData.get("email") as string) || "",
+      phone: (formData.get("phone") as string) || "",
+      company: (formData.get("company") as string) || "",
+      subject: (formData.get("subject") as string) || "",
+      message: (formData.get("message") as string) || "",
+    };
 
     try {
-      await submitToCRM(data, 'contact')
-      setState({ loading: false, success: true, error: null })
+      await submitToCRM(data, "contact");
+      setState({ loading: false, success: true, error: null });
     } catch (err) {
-      setState({ loading: false, success: false, error: (err as Error).message })
+      setState({
+        loading: false,
+        success: false,
+        error: (err as Error).message,
+      });
     }
-  }
+  };
 
   if (state.success) {
     return (
-      <div style={{
-        backgroundColor,
-        borderRadius: borderRadiusMap[borderRadius] || borderRadiusMap.xl,
-        boxShadow: shadowMap[shadow] || shadowMap.lg,
-        padding: '2.5rem',
-        textAlign: 'center',
-        color: textColor,
-      }}>
-        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✓</div>
-        <p style={{ fontSize: '1.125rem', fontWeight: 600 }}>{successMessage}</p>
+      <div
+        style={{
+          backgroundColor,
+          borderRadius: borderRadiusMap[borderRadius] || borderRadiusMap.xl,
+          boxShadow: shadowMap[shadow] || shadowMap.lg,
+          padding: "2.5rem",
+          textAlign: "center",
+          color: textColor,
+        }}
+      >
+        <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>✓</div>
+        <p style={{ fontSize: "1.125rem", fontWeight: 600 }}>
+          {successMessage}
+        </p>
       </div>
-    )
+    );
   }
 
   return (
-    <div style={{
-      backgroundColor,
-      borderRadius: borderRadiusMap[borderRadius] || borderRadiusMap.xl,
-      boxShadow: shadowMap[shadow] || shadowMap.lg,
-      padding: '2rem',
-      color: textColor,
-    }}>
+    <div
+      style={{
+        backgroundColor,
+        borderRadius: borderRadiusMap[borderRadius] || borderRadiusMap.xl,
+        boxShadow: shadowMap[shadow] || shadowMap.lg,
+        padding: "2rem",
+        color: textColor,
+      }}
+    >
       {/* Honeypot for spam */}
-      <div style={{ position: 'absolute', left: '-9999px' }} aria-hidden="true">
+      <div style={{ position: "absolute", left: "-9999px" }} aria-hidden="true">
         <input type="text" name="website" tabIndex={-1} autoComplete="off" />
       </div>
 
-      {title && <h3 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' }}>{title}</h3>}
-      {subtitle && <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '1.5rem' }}>{subtitle}</p>}
+      {title && (
+        <h3
+          style={{
+            fontSize: "1.5rem",
+            fontWeight: 700,
+            marginBottom: "0.25rem",
+          }}
+        >
+          {title}
+        </h3>
+      )}
+      {subtitle && (
+        <p
+          style={{
+            fontSize: "0.875rem",
+            color: "#64748b",
+            marginBottom: "1.5rem",
+          }}
+        >
+          {subtitle}
+        </p>
+      )}
 
       {state.error && (
-        <div style={{ padding: '0.75rem', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '0.375rem', color: '#dc2626', fontSize: '0.875rem', marginBottom: '1rem' }}>
+        <div
+          style={{
+            padding: "0.75rem",
+            backgroundColor: "#fef2f2",
+            border: "1px solid #fecaca",
+            borderRadius: "0.375rem",
+            color: "#dc2626",
+            fontSize: "0.875rem",
+            marginBottom: "1rem",
+          }}
+        >
           {state.error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <form
+        onSubmit={handleSubmit}
+        style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+      >
         <div>
           <label style={labelStyle}>{nameLabel} *</label>
-          <input name="name" required style={inputStyle} placeholder="John Smith" />
+          <input
+            name="name"
+            required
+            style={inputStyle}
+            placeholder="John Smith"
+          />
         </div>
 
         <div>
           <label style={labelStyle}>{emailLabel} *</label>
-          <input name="email" type="email" required style={inputStyle} placeholder="john@example.com" />
+          <input
+            name="email"
+            type="email"
+            required
+            style={inputStyle}
+            placeholder="john@example.com"
+          />
         </div>
 
         {showPhone && (
           <div>
             <label style={labelStyle}>{phoneLabel}</label>
-            <input name="phone" type="tel" style={inputStyle} placeholder="+1 (555) 000-0000" />
+            <input
+              name="phone"
+              type="tel"
+              style={inputStyle}
+              placeholder="+1 (555) 000-0000"
+            />
           </div>
         )}
 
@@ -219,36 +290,46 @@ export function CRMContactFormRender(props: CRMContactFormProps) {
         {showSubject && (
           <div>
             <label style={labelStyle}>Subject</label>
-            <input name="subject" style={inputStyle} placeholder="How can we help?" />
+            <input
+              name="subject"
+              style={inputStyle}
+              placeholder="How can we help?"
+            />
           </div>
         )}
 
         <div>
           <label style={labelStyle}>{messageLabel} *</label>
-          <textarea name="message" required rows={4} style={{ ...inputStyle, resize: 'vertical' as const }} placeholder="Tell us about your project..." />
+          <textarea
+            name="message"
+            required
+            rows={4}
+            style={{ ...inputStyle, resize: "vertical" as const }}
+            placeholder="Tell us about your project..."
+          />
         </div>
 
         <button
           type="submit"
           disabled={state.loading}
           style={{
-            width: '100%',
-            padding: '0.75rem 1.5rem',
-            backgroundColor: state.loading ? '#94a3b8' : buttonColor,
+            width: "100%",
+            padding: "0.75rem 1.5rem",
+            backgroundColor: state.loading ? "#94a3b8" : buttonColor,
             color: buttonTextColor,
-            border: 'none',
-            borderRadius: '0.375rem',
-            fontSize: '0.875rem',
+            border: "none",
+            borderRadius: "0.375rem",
+            fontSize: "0.875rem",
             fontWeight: 600,
-            cursor: state.loading ? 'not-allowed' : 'pointer',
-            transition: 'opacity 0.15s',
+            cursor: state.loading ? "not-allowed" : "pointer",
+            transition: "opacity 0.15s",
           }}
         >
-          {state.loading ? 'Sending...' : submitText}
+          {state.loading ? "Sending..." : submitText}
         </button>
       </form>
     </div>
-  )
+  );
 }
 
 // =============================================================================
@@ -256,111 +337,178 @@ export function CRMContactFormRender(props: CRMContactFormProps) {
 // =============================================================================
 
 interface CRMLeadCaptureFormProps {
-  title?: string
-  subtitle?: string
-  submitText?: string
-  successMessage?: string
-  showPhone?: boolean
-  showCompany?: boolean
-  layout?: 'horizontal' | 'vertical' | 'card'
-  backgroundColor?: string
-  buttonColor?: string
-  buttonTextColor?: string
-  siteId?: string
+  title?: string;
+  subtitle?: string;
+  submitText?: string;
+  successMessage?: string;
+  showPhone?: boolean;
+  showCompany?: boolean;
+  layout?: "horizontal" | "vertical" | "card";
+  backgroundColor?: string;
+  buttonColor?: string;
+  buttonTextColor?: string;
+  siteId?: string;
 }
 
 export function CRMLeadCaptureFormRender(props: CRMLeadCaptureFormProps) {
   const {
-    title = 'Get Started',
-    subtitle = 'Enter your details to get a free consultation.',
-    submitText = 'Get Started',
+    title = "Get Started",
+    subtitle = "Enter your details to get a free consultation.",
+    submitText = "Get Started",
     successMessage = "Thank you! We'll contact you shortly.",
     showPhone = true,
     showCompany = true,
-    layout = 'horizontal',
-    backgroundColor = '#f8fafc',
-    buttonColor = 'var(--brand-primary, #3b82f6)',
-    buttonTextColor = 'var(--brand-button-text, #ffffff)',
+    layout = "horizontal",
+    backgroundColor = "#f8fafc",
+    buttonColor = "var(--brand-primary, #3b82f6)",
+    buttonTextColor = "var(--brand-button-text, #ffffff)",
     siteId,
-  } = props
+  } = props;
 
-  const [state, setState] = useState<SubmitState>({ loading: false, success: false, error: null })
+  const [state, setState] = useState<SubmitState>({
+    loading: false,
+    success: false,
+    error: null,
+  });
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setState({ loading: true, success: false, error: null })
+    e.preventDefault();
+    setState({ loading: true, success: false, error: null });
 
-    const formData = new FormData(e.currentTarget)
+    const formData = new FormData(e.currentTarget);
     const data: Record<string, string> = {
-      site_id: siteId || '',
-      name: formData.get('name') as string || '',
-      email: formData.get('email') as string || '',
-      phone: formData.get('phone') as string || '',
-      company: formData.get('company') as string || '',
-    }
+      site_id: siteId || "",
+      name: (formData.get("name") as string) || "",
+      email: (formData.get("email") as string) || "",
+      phone: (formData.get("phone") as string) || "",
+      company: (formData.get("company") as string) || "",
+    };
 
     try {
-      await submitToCRM(data, 'lead_capture')
-      setState({ loading: false, success: true, error: null })
+      await submitToCRM(data, "lead_capture");
+      setState({ loading: false, success: true, error: null });
     } catch (err) {
-      setState({ loading: false, success: false, error: (err as Error).message })
+      setState({
+        loading: false,
+        success: false,
+        error: (err as Error).message,
+      });
     }
-  }
+  };
 
   if (state.success) {
     return (
-      <div style={{ backgroundColor, padding: '2rem', borderRadius: '0.75rem', textAlign: 'center' }}>
-        <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🎉</div>
-        <p style={{ fontSize: '1rem', fontWeight: 600 }}>{successMessage}</p>
+      <div
+        style={{
+          backgroundColor,
+          padding: "2rem",
+          borderRadius: "0.75rem",
+          textAlign: "center",
+        }}
+      >
+        <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>🎉</div>
+        <p style={{ fontSize: "1rem", fontWeight: 600 }}>{successMessage}</p>
       </div>
-    )
+    );
   }
 
-  const isHorizontal = layout === 'horizontal'
-  const isCard = layout === 'card'
+  const isHorizontal = layout === "horizontal";
+  const isCard = layout === "card";
 
   return (
-    <div style={{
-      backgroundColor,
-      padding: isCard ? '2rem' : '1.5rem',
-      borderRadius: '0.75rem',
-      ...(isCard ? { boxShadow: shadowMap.lg, border: '1px solid #e2e8f0' } : {}),
-    }}>
-      {title && <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.25rem' }}>{title}</h3>}
-      {subtitle && <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '1rem' }}>{subtitle}</p>}
+    <div
+      style={{
+        backgroundColor,
+        padding: isCard ? "2rem" : "1.5rem",
+        borderRadius: "0.75rem",
+        ...(isCard
+          ? { boxShadow: shadowMap.lg, border: "1px solid #e2e8f0" }
+          : {}),
+      }}
+    >
+      {title && (
+        <h3
+          style={{
+            fontSize: "1.25rem",
+            fontWeight: 700,
+            marginBottom: "0.25rem",
+          }}
+        >
+          {title}
+        </h3>
+      )}
+      {subtitle && (
+        <p
+          style={{
+            fontSize: "0.875rem",
+            color: "#64748b",
+            marginBottom: "1rem",
+          }}
+        >
+          {subtitle}
+        </p>
+      )}
 
       {state.error && (
-        <div style={{ padding: '0.5rem', backgroundColor: '#fef2f2', color: '#dc2626', fontSize: '0.75rem', borderRadius: '0.25rem', marginBottom: '0.75rem' }}>
+        <div
+          style={{
+            padding: "0.5rem",
+            backgroundColor: "#fef2f2",
+            color: "#dc2626",
+            fontSize: "0.75rem",
+            borderRadius: "0.25rem",
+            marginBottom: "0.75rem",
+          }}
+        >
           {state.error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} style={{
-        display: 'flex',
-        flexDirection: isHorizontal ? 'row' : 'column',
-        gap: '0.75rem',
-        flexWrap: isHorizontal ? 'wrap' : 'nowrap',
-        alignItems: isHorizontal ? 'flex-end' : 'stretch',
-      }}>
-        <div style={{ flex: isHorizontal ? '1 1 200px' : undefined }}>
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          display: "flex",
+          flexDirection: isHorizontal ? "row" : "column",
+          gap: "0.75rem",
+          flexWrap: isHorizontal ? "wrap" : "nowrap",
+          alignItems: isHorizontal ? "flex-end" : "stretch",
+        }}
+      >
+        <div style={{ flex: isHorizontal ? "1 1 200px" : undefined }}>
           <label style={labelStyle}>Name *</label>
-          <input name="name" required style={inputStyle} placeholder="Full name" />
+          <input
+            name="name"
+            required
+            style={inputStyle}
+            placeholder="Full name"
+          />
         </div>
 
-        <div style={{ flex: isHorizontal ? '1 1 200px' : undefined }}>
+        <div style={{ flex: isHorizontal ? "1 1 200px" : undefined }}>
           <label style={labelStyle}>Email *</label>
-          <input name="email" type="email" required style={inputStyle} placeholder="Email address" />
+          <input
+            name="email"
+            type="email"
+            required
+            style={inputStyle}
+            placeholder="Email address"
+          />
         </div>
 
         {showPhone && (
-          <div style={{ flex: isHorizontal ? '1 1 160px' : undefined }}>
+          <div style={{ flex: isHorizontal ? "1 1 160px" : undefined }}>
             <label style={labelStyle}>Phone</label>
-            <input name="phone" type="tel" style={inputStyle} placeholder="Phone" />
+            <input
+              name="phone"
+              type="tel"
+              style={inputStyle}
+              placeholder="Phone"
+            />
           </div>
         )}
 
         {showCompany && (
-          <div style={{ flex: isHorizontal ? '1 1 160px' : undefined }}>
+          <div style={{ flex: isHorizontal ? "1 1 160px" : undefined }}>
             <label style={labelStyle}>Company</label>
             <input name="company" style={inputStyle} placeholder="Company" />
           </div>
@@ -370,23 +518,23 @@ export function CRMLeadCaptureFormRender(props: CRMLeadCaptureFormProps) {
           type="submit"
           disabled={state.loading}
           style={{
-            padding: '0.625rem 1.5rem',
-            backgroundColor: state.loading ? '#94a3b8' : buttonColor,
+            padding: "0.625rem 1.5rem",
+            backgroundColor: state.loading ? "#94a3b8" : buttonColor,
             color: buttonTextColor,
-            border: 'none',
-            borderRadius: '0.375rem',
-            fontSize: '0.875rem',
+            border: "none",
+            borderRadius: "0.375rem",
+            fontSize: "0.875rem",
             fontWeight: 600,
-            cursor: state.loading ? 'not-allowed' : 'pointer',
-            whiteSpace: 'nowrap',
-            flex: isHorizontal ? '0 0 auto' : undefined,
+            cursor: state.loading ? "not-allowed" : "pointer",
+            whiteSpace: "nowrap",
+            flex: isHorizontal ? "0 0 auto" : undefined,
           }}
         >
-          {state.loading ? '...' : submitText}
+          {state.loading ? "..." : submitText}
         </button>
       </form>
     </div>
-  )
+  );
 }
 
 // =============================================================================
@@ -394,89 +542,133 @@ export function CRMLeadCaptureFormRender(props: CRMLeadCaptureFormProps) {
 // =============================================================================
 
 interface CRMNewsletterFormProps {
-  title?: string
-  subtitle?: string
-  submitText?: string
-  successMessage?: string
-  layout?: 'inline' | 'stacked' | 'card'
-  backgroundColor?: string
-  buttonColor?: string
-  buttonTextColor?: string
-  siteId?: string
+  title?: string;
+  subtitle?: string;
+  submitText?: string;
+  successMessage?: string;
+  layout?: "inline" | "stacked" | "card";
+  backgroundColor?: string;
+  buttonColor?: string;
+  buttonTextColor?: string;
+  siteId?: string;
 }
 
 export function CRMNewsletterFormRender(props: CRMNewsletterFormProps) {
   const {
-    title = 'Stay Updated',
-    subtitle = 'Subscribe to our newsletter for the latest updates.',
-    submitText = 'Subscribe',
+    title = "Stay Updated",
+    subtitle = "Subscribe to our newsletter for the latest updates.",
+    submitText = "Subscribe",
     successMessage = "You're subscribed! Check your inbox.",
-    layout = 'inline',
-    backgroundColor = 'transparent',
-    buttonColor = 'var(--brand-primary, #3b82f6)',
-    buttonTextColor = 'var(--brand-button-text, #ffffff)',
+    layout = "inline",
+    backgroundColor = "transparent",
+    buttonColor = "var(--brand-primary, #3b82f6)",
+    buttonTextColor = "var(--brand-button-text, #ffffff)",
     siteId,
-  } = props
+  } = props;
 
-  const [state, setState] = useState<SubmitState>({ loading: false, success: false, error: null })
+  const [state, setState] = useState<SubmitState>({
+    loading: false,
+    success: false,
+    error: null,
+  });
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setState({ loading: true, success: false, error: null })
+    e.preventDefault();
+    setState({ loading: true, success: false, error: null });
 
-    const formData = new FormData(e.currentTarget)
+    const formData = new FormData(e.currentTarget);
     const data: Record<string, string> = {
-      site_id: siteId || '',
-      name: formData.get('name') as string || '',
-      email: formData.get('email') as string || '',
-    }
+      site_id: siteId || "",
+      name: (formData.get("name") as string) || "",
+      email: (formData.get("email") as string) || "",
+    };
 
     try {
-      await submitToCRM(data, 'newsletter')
-      setState({ loading: false, success: true, error: null })
+      await submitToCRM(data, "newsletter");
+      setState({ loading: false, success: true, error: null });
     } catch (err) {
-      setState({ loading: false, success: false, error: (err as Error).message })
+      setState({
+        loading: false,
+        success: false,
+        error: (err as Error).message,
+      });
     }
-  }
+  };
 
   if (state.success) {
     return (
-      <div style={{ backgroundColor, padding: '1rem', textAlign: 'center' }}>
-        <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#16a34a' }}>✓ {successMessage}</p>
+      <div style={{ backgroundColor, padding: "1rem", textAlign: "center" }}>
+        <p style={{ fontSize: "0.875rem", fontWeight: 600, color: "#16a34a" }}>
+          ✓ {successMessage}
+        </p>
       </div>
-    )
+    );
   }
 
-  const isInline = layout === 'inline'
-  const isCard = layout === 'card'
+  const isInline = layout === "inline";
+  const isCard = layout === "card";
 
   return (
-    <div style={{
-      backgroundColor,
-      padding: isCard ? '2rem' : '1rem',
-      borderRadius: isCard ? '0.75rem' : '0',
-      ...(isCard ? { boxShadow: shadowMap.md, border: '1px solid #e2e8f0' } : {}),
-    }}>
-      {title && <h4 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: '0.25rem' }}>{title}</h4>}
-      {subtitle && <p style={{ fontSize: '0.8125rem', color: '#64748b', marginBottom: '0.75rem' }}>{subtitle}</p>}
+    <div
+      style={{
+        backgroundColor,
+        padding: isCard ? "2rem" : "1rem",
+        borderRadius: isCard ? "0.75rem" : "0",
+        ...(isCard
+          ? { boxShadow: shadowMap.md, border: "1px solid #e2e8f0" }
+          : {}),
+      }}
+    >
+      {title && (
+        <h4
+          style={{
+            fontSize: "1.125rem",
+            fontWeight: 700,
+            marginBottom: "0.25rem",
+          }}
+        >
+          {title}
+        </h4>
+      )}
+      {subtitle && (
+        <p
+          style={{
+            fontSize: "0.8125rem",
+            color: "#64748b",
+            marginBottom: "0.75rem",
+          }}
+        >
+          {subtitle}
+        </p>
+      )}
 
       {state.error && (
-        <div style={{ padding: '0.375rem', color: '#dc2626', fontSize: '0.75rem', marginBottom: '0.5rem' }}>
+        <div
+          style={{
+            padding: "0.375rem",
+            color: "#dc2626",
+            fontSize: "0.75rem",
+            marginBottom: "0.5rem",
+          }}
+        >
           {state.error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} style={{
-        display: 'flex',
-        flexDirection: isInline ? 'row' : 'column',
-        gap: '0.5rem',
-        alignItems: isInline ? 'center' : 'stretch',
-      }}>
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          display: "flex",
+          flexDirection: isInline ? "row" : "column",
+          gap: "0.5rem",
+          alignItems: isInline ? "center" : "stretch",
+        }}
+      >
         <input
           name="email"
           type="email"
           required
-          style={{ ...inputStyle, flex: isInline ? '1' : undefined }}
+          style={{ ...inputStyle, flex: isInline ? "1" : undefined }}
           placeholder="Enter your email"
         />
 
@@ -484,20 +676,432 @@ export function CRMNewsletterFormRender(props: CRMNewsletterFormProps) {
           type="submit"
           disabled={state.loading}
           style={{
-            padding: '0.625rem 1.25rem',
-            backgroundColor: state.loading ? '#94a3b8' : buttonColor,
+            padding: "0.625rem 1.25rem",
+            backgroundColor: state.loading ? "#94a3b8" : buttonColor,
             color: buttonTextColor,
-            border: 'none',
-            borderRadius: '0.375rem',
-            fontSize: '0.875rem',
+            border: "none",
+            borderRadius: "0.375rem",
+            fontSize: "0.875rem",
             fontWeight: 600,
-            cursor: state.loading ? 'not-allowed' : 'pointer',
-            whiteSpace: 'nowrap',
+            cursor: state.loading ? "not-allowed" : "pointer",
+            whiteSpace: "nowrap",
           }}
         >
-          {state.loading ? '...' : submitText}
+          {state.loading ? "..." : submitText}
         </button>
       </form>
     </div>
-  )
+  );
+}
+
+// =============================================================================
+// CRM CUSTOM FORM RENDER (Dynamic Form Builder Forms)
+// =============================================================================
+
+interface CRMCustomFormProps {
+  formSlug?: string;
+  title?: string;
+  subtitle?: string;
+  backgroundColor?: string;
+  buttonColor?: string;
+  buttonTextColor?: string;
+  textColor?: string;
+  borderRadius?: string;
+  shadow?: string;
+  siteId?: string;
+}
+
+interface FormDefinitionPublic {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string | null;
+  fields: CRMFormField[];
+  settings: CRMFormDefinition["settings"];
+}
+
+export function CRMCustomFormRender(props: CRMCustomFormProps) {
+  const {
+    formSlug,
+    title,
+    subtitle,
+    backgroundColor = "#ffffff",
+    buttonColor = "var(--brand-primary, #3b82f6)",
+    buttonTextColor = "var(--brand-button-text, #ffffff)",
+    textColor = "#1e293b",
+    borderRadius = "xl",
+    shadow = "lg",
+    siteId,
+  } = props;
+
+  const [formDef, setFormDef] = useState<FormDefinitionPublic | null>(null);
+  const [loadingForm, setLoadingForm] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [state, setState] = useState<SubmitState>({
+    loading: false,
+    success: false,
+    error: null,
+  });
+
+  useEffect(() => {
+    if (!formSlug || !siteId) {
+      setLoadingForm(false);
+      return;
+    }
+
+    const apiBase =
+      typeof window !== "undefined" && (window as any).__CRM_API_URL
+        ? (window as any).__CRM_API_URL.replace("/form-capture", "")
+        : "/api/modules/crm";
+
+    fetch(
+      `${apiBase}/forms/${encodeURIComponent(formSlug)}?siteId=${encodeURIComponent(siteId)}`,
+    )
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Form not found");
+        const json = await res.json();
+        setFormDef(json.form);
+        setLoadingForm(false);
+      })
+      .catch((err) => {
+        setFetchError(err.message);
+        setLoadingForm(false);
+      });
+  }, [formSlug, siteId]);
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!formDef || !siteId) return;
+
+    setState({ loading: true, success: false, error: null });
+
+    const formData = new FormData(e.currentTarget);
+    const data: Record<string, string> = {
+      site_id: siteId,
+    };
+
+    // Collect all field values using field_key
+    for (const field of formDef.fields) {
+      const value = (formData.get(field.field_key) as string) || "";
+      data[field.field_key] = value;
+
+      // Also map to contact fields if configured
+      if (field.map_to_contact_field) {
+        data[field.map_to_contact_field] = value;
+      }
+    }
+
+    try {
+      await submitToCRM(data, "custom", formDef.name);
+      setState({ loading: false, success: true, error: null });
+
+      // Handle redirect
+      if (formDef.settings.redirect_url) {
+        window.location.href = formDef.settings.redirect_url;
+      }
+    } catch (err) {
+      setState({
+        loading: false,
+        success: false,
+        error: (err as Error).message,
+      });
+    }
+  };
+
+  const containerStyle: React.CSSProperties = {
+    backgroundColor,
+    borderRadius: borderRadiusMap[borderRadius] || borderRadiusMap.xl,
+    boxShadow: shadowMap[shadow] || shadowMap.lg,
+    padding: "2rem",
+    color: textColor,
+  };
+
+  // Loading state
+  if (loadingForm) {
+    return (
+      <div
+        style={{ ...containerStyle, textAlign: "center", padding: "2.5rem" }}
+      >
+        <div style={{ fontSize: "0.875rem", color: "#94a3b8" }}>
+          Loading form...
+        </div>
+      </div>
+    );
+  }
+
+  // No form slug selected
+  if (!formSlug) {
+    return (
+      <div
+        style={{
+          ...containerStyle,
+          textAlign: "center",
+          padding: "2.5rem",
+          border: "2px dashed #e2e8f0",
+        }}
+      >
+        <div style={{ fontSize: "0.875rem", color: "#94a3b8" }}>
+          Select a form in the component settings
+        </div>
+      </div>
+    );
+  }
+
+  // Form not found
+  if (fetchError || !formDef) {
+    return (
+      <div
+        style={{ ...containerStyle, textAlign: "center", padding: "2.5rem" }}
+      >
+        <div style={{ fontSize: "0.875rem", color: "#ef4444" }}>
+          Form not found: &ldquo;{formSlug}&rdquo;
+        </div>
+      </div>
+    );
+  }
+
+  // Success state
+  if (state.success) {
+    return (
+      <div
+        style={{ ...containerStyle, textAlign: "center", padding: "2.5rem" }}
+      >
+        <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>✓</div>
+        <p style={{ fontSize: "1.125rem", fontWeight: 600 }}>
+          {formDef.settings.success_message ||
+            "Thank you! Your form has been submitted."}
+        </p>
+      </div>
+    );
+  }
+
+  const displayTitle = title || formDef.name;
+  const displaySubtitle = subtitle || formDef.description;
+  const formSubmitText = formDef.settings.submit_button_text || "Submit";
+  const sortedFields = [...formDef.fields].sort(
+    (a, b) => a.position - b.position,
+  );
+
+  return (
+    <div style={containerStyle}>
+      {/* Honeypot */}
+      <div style={{ position: "absolute", left: "-9999px" }} aria-hidden="true">
+        <input type="text" name="website" tabIndex={-1} autoComplete="off" />
+      </div>
+
+      {displayTitle && (
+        <h3
+          style={{
+            fontSize: "1.5rem",
+            fontWeight: 700,
+            marginBottom: "0.25rem",
+          }}
+        >
+          {displayTitle}
+        </h3>
+      )}
+      {displaySubtitle && (
+        <p
+          style={{
+            fontSize: "0.875rem",
+            color: "#64748b",
+            marginBottom: "1.5rem",
+          }}
+        >
+          {displaySubtitle}
+        </p>
+      )}
+
+      {state.error && (
+        <div
+          style={{
+            padding: "0.75rem",
+            backgroundColor: "#fef2f2",
+            border: "1px solid #fecaca",
+            borderRadius: "0.375rem",
+            color: "#dc2626",
+            fontSize: "0.875rem",
+            marginBottom: "1rem",
+          }}
+        >
+          {state.error}
+        </div>
+      )}
+
+      <form
+        onSubmit={handleSubmit}
+        style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}
+      >
+        {sortedFields.map((field) => (
+          <div
+            key={field.id}
+            style={{
+              width: field.width === "half" ? "calc(50% - 0.5rem)" : "100%",
+              minWidth: field.width === "half" ? "200px" : undefined,
+              flex:
+                field.width === "half" ? "1 1 calc(50% - 0.5rem)" : "1 1 100%",
+            }}
+          >
+            {field.field_type !== "hidden" && (
+              <label style={labelStyle}>
+                {field.label}
+                {field.is_required ? " *" : ""}
+              </label>
+            )}
+            {renderFormField(field)}
+          </div>
+        ))}
+
+        <div style={{ width: "100%" }}>
+          <button
+            type="submit"
+            disabled={state.loading}
+            style={{
+              width: "100%",
+              padding: "0.75rem 1.5rem",
+              backgroundColor: state.loading ? "#94a3b8" : buttonColor,
+              color: buttonTextColor,
+              border: "none",
+              borderRadius: "0.375rem",
+              fontSize: "0.875rem",
+              fontWeight: 600,
+              cursor: state.loading ? "not-allowed" : "pointer",
+              transition: "opacity 0.15s",
+            }}
+          >
+            {state.loading ? "Submitting..." : formSubmitText}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+// =============================================================================
+// DYNAMIC FIELD RENDERER
+// =============================================================================
+
+function renderFormField(field: CRMFormField) {
+  const baseProps = {
+    name: field.field_key,
+    required: field.is_required,
+    placeholder: field.placeholder || "",
+    defaultValue: field.default_value || "",
+  };
+
+  switch (field.field_type) {
+    case "textarea":
+      return (
+        <textarea
+          {...baseProps}
+          rows={4}
+          style={{ ...inputStyle, resize: "vertical" as const }}
+        />
+      );
+
+    case "select":
+      return (
+        <select {...baseProps} style={inputStyle}>
+          <option value="">{field.placeholder || "Select..."}</option>
+          {(field.options || []).map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
+      );
+
+    case "multi_select":
+      return (
+        <select
+          {...baseProps}
+          multiple
+          style={{ ...inputStyle, minHeight: "5rem" }}
+        >
+          {(field.options || []).map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
+      );
+
+    case "radio":
+      return (
+        <div
+          style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}
+        >
+          {(field.options || []).map((opt) => (
+            <label
+              key={opt}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                fontSize: "0.875rem",
+                cursor: "pointer",
+              }}
+            >
+              <input
+                type="radio"
+                name={field.field_key}
+                value={opt}
+                required={field.is_required}
+                defaultChecked={field.default_value === opt}
+              />
+              {opt}
+            </label>
+          ))}
+        </div>
+      );
+
+    case "checkbox":
+      return (
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            fontSize: "0.875rem",
+            cursor: "pointer",
+          }}
+        >
+          <input
+            type="checkbox"
+            name={field.field_key}
+            value="true"
+            defaultChecked={field.default_value === "true"}
+          />
+          {field.placeholder || field.label}
+        </label>
+      );
+
+    case "hidden":
+      return (
+        <input
+          type="hidden"
+          name={field.field_key}
+          value={field.default_value || ""}
+        />
+      );
+
+    case "number":
+      return <input {...baseProps} type="number" style={inputStyle} />;
+
+    case "date":
+      return <input {...baseProps} type="date" style={inputStyle} />;
+
+    case "email":
+      return <input {...baseProps} type="email" style={inputStyle} />;
+
+    case "phone":
+      return <input {...baseProps} type="tel" style={inputStyle} />;
+
+    case "url":
+      return <input {...baseProps} type="url" style={inputStyle} />;
+
+    case "text":
+    default:
+      return <input {...baseProps} type="text" style={inputStyle} />;
+  }
 }
