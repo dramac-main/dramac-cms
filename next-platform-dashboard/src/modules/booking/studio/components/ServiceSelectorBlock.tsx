@@ -439,9 +439,7 @@ export function ServiceSelectorBlock({
   const btnBg = buttonBackgroundColor || pc;
   const selectedBorder = cardSelectedBorderColor || pc;
   const selectedBg =
-    cardSelectedBgColor ||
-    `${primaryColor ? primaryColor + "08" : "var(--brand-primary-light, rgba(139,92,246,0.03))"}`;
-  const badgeBg = featuredBadgeBgColor || pc;
+    cardSelectedBgColor || `${pc}08`;  const badgeBg = featuredBadgeBgColor || pc;
 
   const isGrid = layout === "grid" || layout === "cards";
 
@@ -795,8 +793,7 @@ export function ServiceSelectorBlock({
                         borderRadius: "4px",
                         marginBottom: "8px",
                         backgroundColor:
-                          categoryBgColor ||
-                          `${primaryColor ? primaryColor + "10" : "var(--brand-primary-light, rgba(139,92,246,0.06))"}`,
+                          categoryBgColor || `${pc}10`,
                         color: categoryColor || pc,
                       }}
                     >
@@ -911,7 +908,7 @@ export function ServiceSelectorBlock({
                         padding: "6px 16px",
                         borderRadius: buttonBorderRadius,
                         backgroundColor: isActive
-                          ? `${primaryColor ? primaryColor + "20" : "var(--brand-primary-light, rgba(139,92,246,0.12))"}`
+                          ? `${pc}20`
                           : btnBg,
                         color: isActive ? pc : btnTxt,
                         border: isActive
