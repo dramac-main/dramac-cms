@@ -22,6 +22,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { PUBLIC_RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
 import { sendEmail } from "@/lib/email/send-email";
 import * as crypto from "crypto";
+import bcrypt from "bcryptjs";
+
+const BCRYPT_ROUNDS = 12;
 
 export const dynamic = "force-dynamic";
 
@@ -66,7 +69,7 @@ type CustomerRow = {
   is_guest: boolean;
   email_verified: boolean;
   password_set_at: string | null;
-  auth_user_id: string | null;
+  password_hash: string | null;
   orders_count: number;
   total_spent: number;
   status: string;
@@ -188,7 +191,7 @@ export async function POST(request: NextRequest) {
       // Check for existing customer
       const { data: existing } = await (supabase as any)
         .from(TABLE)
-        .select("id, auth_user_id, password_set_at")
+        .select("id, password_hash, password_set_at")
         .eq("site_id", siteId)
         .eq("email", emailLower)
         .maybeSingle();
@@ -202,32 +205,8 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Create Supabase Auth user
-      const { data: authUser, error: authError } =
-        await supabase.auth.admin.createUser({
-          email: emailLower,
-          password,
-          email_confirm: true,
-          user_metadata: {
-            role: "customer",
-            site_id: siteId,
-            first_name: firstName || "",
-            last_name: lastName || "",
-          },
-        });
-
-      if (authError) {
-        if (authError.message?.includes("already been registered")) {
-          return NextResponse.json(
-            { error: "An account with this email already exists." },
-            { status: 409, headers: corsHeaders },
-          );
-        }
-        return NextResponse.json(
-          { error: "Failed to create account" },
-          { status: 500, headers: corsHeaders },
-        );
-      }
+      // Hash password with bcrypt (site-scoped, no global auth.users dependency)
+      const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
       let customerId: string;
 
@@ -236,7 +215,7 @@ export async function POST(request: NextRequest) {
         await (supabase as any)
           .from(TABLE)
           .update({
-            auth_user_id: authUser.user.id,
+            password_hash: passwordHash,
             is_guest: false,
             email_verified: true,
             password_set_at: new Date().toISOString(),
@@ -248,7 +227,6 @@ export async function POST(request: NextRequest) {
         customerId = existing.id;
       } else {
         // Brand new customer
-        const nameParts = (firstName || "").trim();
         const { data: newCustomer } = await (supabase as any)
           .from(TABLE)
           .insert({
@@ -260,7 +238,7 @@ export async function POST(request: NextRequest) {
             phone: phone || null,
             is_guest: false,
             email_verified: true,
-            auth_user_id: authUser.user.id,
+            password_hash: passwordHash,
             password_set_at: new Date().toISOString(),
             status: "active",
           })
@@ -306,25 +284,17 @@ export async function POST(request: NextRequest) {
         .eq("email", emailLower)
         .maybeSingle();
 
-      if (!customer || !customer.auth_user_id || !customer.password_set_at) {
+      if (!customer || !customer.password_hash || !customer.password_set_at) {
         return NextResponse.json(
           { error: "Invalid email or password" },
           { status: 401, headers: corsHeaders },
         );
       }
 
-      // Verify password via Supabase Auth sign-in
-      // Use admin createClient to verify — we use the service key to check
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-      const { createClient } = await import("@supabase/supabase-js");
-      const anonClient = createClient(supabaseUrl, supabaseAnonKey);
-      const { error: signInError } = await anonClient.auth.signInWithPassword({
-        email: emailLower,
-        password,
-      });
+      // Verify password via bcrypt (site-scoped, no global auth.users dependency)
+      const passwordValid = await bcrypt.compare(password, customer.password_hash);
 
-      if (signInError) {
+      if (!passwordValid) {
         return NextResponse.json(
           { error: "Invalid email or password" },
           { status: 401, headers: corsHeaders },
@@ -463,7 +433,7 @@ export async function POST(request: NextRequest) {
       if (!customerId && customerEmail) {
         const { data: c } = await (supabase as any)
           .from(TABLE)
-          .select("id, auth_user_id")
+          .select("id")
           .eq("site_id", siteId)
           .eq("email", customerEmail)
           .maybeSingle();
@@ -490,68 +460,15 @@ export async function POST(request: NextRequest) {
 
       if (!customerEmail && customer) customerEmail = customer.email;
 
-      // Create Supabase Auth user or update existing
-      let authUserId = customer?.auth_user_id;
-
-      if (authUserId) {
-        // Update existing auth user password
-        await supabase.auth.admin.updateUserById(authUserId, { password });
-      } else {
-        // Create new auth user
-        const { data: authUser, error: authError } =
-          await supabase.auth.admin.createUser({
-            email: customerEmail,
-            password,
-            email_confirm: true,
-            user_metadata: {
-              role: "customer",
-              site_id: siteId,
-              first_name: customer?.first_name || customerEmail!.split("@")[0],
-              last_name: customer?.last_name || "",
-            },
-          });
-
-        if (authError) {
-          if (authError.message?.includes("already been registered")) {
-            // Auth user exists — look up via admin API and update their password
-            const {
-              data: { users },
-            } = await supabase.auth.admin.listUsers();
-            const existingAuthUser = users.find(
-              (u) => u.email?.toLowerCase() === customerEmail!.toLowerCase(),
-            );
-            if (existingAuthUser) {
-              authUserId = existingAuthUser.id;
-              // Update their password to the new one
-              await supabase.auth.admin.updateUserById(authUserId, {
-                password,
-              });
-            } else {
-              return NextResponse.json(
-                {
-                  error:
-                    "An account with this email already exists. Please sign in.",
-                },
-                { status: 409, headers: corsHeaders },
-              );
-            }
-          } else {
-            return NextResponse.json(
-              { error: "Failed to create account" },
-              { status: 500, headers: corsHeaders },
-            );
-          }
-        } else {
-          authUserId = authUser.user.id;
-        }
-      }
+      // Hash password with bcrypt (site-scoped, no global auth.users dependency)
+      const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
       if (customer) {
         // Upgrade existing customer record
         await (supabase as any)
           .from(TABLE)
           .update({
-            auth_user_id: authUserId,
+            password_hash: passwordHash,
             is_guest: false,
             email_verified: true,
             password_set_at: new Date().toISOString(),
@@ -569,7 +486,7 @@ export async function POST(request: NextRequest) {
             last_name: "",
             is_guest: false,
             email_verified: true,
-            auth_user_id: authUserId,
+            password_hash: passwordHash,
             password_set_at: new Date().toISOString(),
             status: "active",
           })
@@ -628,13 +545,13 @@ export async function POST(request: NextRequest) {
       // Check if customer exists with an account (not just a guest)
       const { data: customer } = await (supabase as any)
         .from(TABLE)
-        .select("id, auth_user_id, password_set_at")
+        .select("id, password_set_at")
         .eq("site_id", siteId)
         .eq("email", emailLower)
         .maybeSingle();
 
       // Always return success to prevent email enumeration
-      if (!customer || !customer.auth_user_id) {
+      if (!customer || !customer.password_set_at) {
         return NextResponse.json(
           {
             success: true,
