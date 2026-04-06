@@ -350,10 +350,10 @@ export function ChatBookingPanel({
                   <div className="text-xs">
                     <p className="font-medium">Payment Outstanding</p>
                     <p className="mt-0.5 text-muted-foreground">
-                      This booking requires payment (
-                      {price || "amount not set"}) but the current payment
-                      status is &ldquo;{paymentConfig.label}&rdquo;. Completing
-                      without payment may result in lost revenue.
+                      This booking requires payment ({price || "amount not set"}
+                      ) but the current payment status is &ldquo;
+                      {paymentConfig.label}&rdquo;. Completing without payment
+                      may result in lost revenue.
                     </p>
                   </div>
                 </div>
@@ -716,7 +716,9 @@ export function ChatBookingPanel({
                 Go Back
               </AlertDialogCancel>
               <AlertDialogAction
-                onClick={() => confirmAction && executeStatusChange(confirmAction)}
+                onClick={() =>
+                  confirmAction && executeStatusChange(confirmAction)
+                }
                 disabled={isPending}
                 className={
                   dialogConfig?.variant === "destructive"

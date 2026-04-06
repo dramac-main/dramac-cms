@@ -26,6 +26,13 @@ export type EmailType =
   | "booking_confirmation_owner"
   | "booking_cancelled_customer"
   | "booking_cancelled_owner"
+  | "booking_confirmed_customer"
+  | "booking_confirmed_owner"
+  | "booking_completed_customer"
+  | "booking_completed_owner"
+  | "booking_no_show_customer"
+  | "booking_payment_received_customer"
+  | "booking_payment_received_owner"
   // E-Commerce
   | "order_confirmation_customer"
   | "order_confirmation_owner"
@@ -93,6 +100,13 @@ export function isValidEmailType(type: string): type is EmailType {
     "booking_confirmation_owner",
     "booking_cancelled_customer",
     "booking_cancelled_owner",
+    "booking_confirmed_customer",
+    "booking_confirmed_owner",
+    "booking_completed_customer",
+    "booking_completed_owner",
+    "booking_no_show_customer",
+    "booking_payment_received_customer",
+    "booking_payment_received_owner",
     "order_confirmation_customer",
     "order_confirmation_owner",
     "order_shipped_customer",

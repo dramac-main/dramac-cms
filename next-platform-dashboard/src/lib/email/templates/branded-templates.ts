@@ -204,17 +204,44 @@ const trial_ending: BrandedTemplate = {
 
 const booking_confirmation_customer: BrandedTemplate = {
   subject: (data) =>
-    `Booking ${data.status === "confirmed" ? "Confirmed" : "Received"} - ${data.serviceName}`,
-  html: (data, b) =>
-    baseEmailTemplate(
+    `Booking ${data.status === "confirmed" ? "Confirmed" : "Received"} — ${data.serviceName}`,
+  html: (data, b) => {
+    const isConfirmed = data.status === "confirmed";
+    const heading = isConfirmed ? "Booking Confirmed" : "Booking Received";
+    const intro = isConfirmed
+      ? "Great news — your booking has been confirmed! Here are your appointment details:"
+      : "We've received your booking request. You'll receive a confirmation email once it's been reviewed and approved.";
+
+    const paymentPending =
+      data.paymentStatus === "pending" && data.paymentRequired;
+    const paymentSection = paymentPending
+      ? `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:16px;margin:20px 0;">
+        <p style="margin:0 0 8px;font-weight:600;color:#92400e;">⏳ Payment Required</p>
+        <p style="margin:0;color:#92400e;font-size:14px;">Payment of <strong>${data.price}</strong> is required to secure your booking. Please contact us via our website chat or reply to this email to arrange payment.</p>
+      </div>`
+      : "";
+
+    const nextSteps = isConfirmed
+      ? `<p style="${EMAIL_STYLES.text}"><strong>What's next?</strong></p>
+      <ul style="${EMAIL_STYLES.text}">
+        ${paymentPending ? `<li>Complete your payment of <strong>${data.price}</strong> to secure your spot</li>` : ""}
+        <li>Add this appointment to your calendar</li>
+        <li>Arrive on time at your scheduled slot</li>
+        ${data.businessName ? `<li>Contact ${data.businessName} if you need to reschedule or cancel</li>` : ""}
+      </ul>`
+      : `<p style="${EMAIL_STYLES.text}"><strong>What happens next?</strong></p>
+      <ul style="${EMAIL_STYLES.text}">
+        <li>Our team will review your booking request</li>
+        <li>You'll receive a confirmation email once approved</li>
+        ${paymentPending ? `<li>Payment of <strong>${data.price}</strong> will be required to secure your booking</li>` : ""}
+        ${data.businessName ? `<li>Contact ${data.businessName} if you have any questions</li>` : ""}
+      </ul>`;
+
+    return baseEmailTemplate(
       b,
-      `<h1 style="${EMAIL_STYLES.heading}">Your Booking is ${data.status === "confirmed" ? "Booking Confirmed" : "Booking Received"}</h1>
+      `<h1 style="${EMAIL_STYLES.heading}">${heading}</h1>
       <p style="${EMAIL_STYLES.text}">Hi ${data.customerName || "there"},</p>
-      <p style="${EMAIL_STYLES.text}">${
-        data.status === "confirmed"
-          ? "Your booking has been confirmed. Here are the details:"
-          : "We have received your booking request. You'll receive a confirmation once it's approved."
-      }</p>
+      <p style="${EMAIL_STYLES.text}">${intro}</p>
       ${emailInfoBox([
         { label: "Service", value: String(data.serviceName) },
         ...(data.staffName
@@ -224,20 +251,31 @@ const booking_confirmation_customer: BrandedTemplate = {
         { label: "Time", value: String(data.time) },
         { label: "Duration", value: String(data.duration) },
         { label: "Price", value: String(data.price) },
+        { label: "Status", value: isConfirmed ? "✅ Confirmed" : "⏳ Awaiting Confirmation" },
       ])}
-      <p style="${EMAIL_STYLES.muted}">Booking ID: <code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;">${data.bookingId}</code></p>
+      ${paymentSection}
+      ${nextSteps}
+      <p style="${EMAIL_STYLES.muted}">Booking Reference: <code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:12px;">${String(data.bookingId).substring(0, 8).toUpperCase()}</code></p>
       <p style="${EMAIL_STYLES.muted}">If you need to make changes, please contact ${data.businessName || b.agency_name}.</p>`,
       `Your booking for ${data.serviceName} on ${data.date}`,
-    ),
+    );
+  },
   text: (data, b) =>
-    `Your Booking is ${data.status === "confirmed" ? "Confirmed!" : "Received!"}\n\nService: ${data.serviceName}\nDate: ${data.date}\nTime: ${data.time}\nDuration: ${data.duration}\nPrice: ${data.price}\n\nBooking ID: ${data.bookingId}\n\nContact ${data.businessName || b.agency_name} for changes.`,
+    `${data.status === "confirmed" ? "Booking Confirmed" : "Booking Received"}\n\nHi ${data.customerName || "there"},\n\nService: ${data.serviceName}\nDate: ${data.date}\nTime: ${data.time}\nDuration: ${data.duration}\nPrice: ${data.price}\nStatus: ${data.status === "confirmed" ? "Confirmed" : "Awaiting Confirmation"}\n\nBooking Reference: ${String(data.bookingId).substring(0, 8).toUpperCase()}\n\nContact ${data.businessName || b.agency_name} for changes.`,
 };
 
 const booking_confirmation_owner: BrandedTemplate = {
   subject: (data) =>
-    `🔔 New Booking: ${data.serviceName} - ${data.customerName}`,
-  html: (data, b) =>
-    baseEmailTemplate(
+    `🔔 New Booking: ${data.serviceName} — ${data.customerName}`,
+  html: (data, b) => {
+    const paymentPending = data.paymentStatus === "pending";
+    const paymentSection = paymentPending
+      ? `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px;margin:16px 0;">
+        <p style="margin:0;font-weight:600;color:#92400e;font-size:14px;">⏳ Payment of ${data.price} is pending</p>
+      </div>`
+      : "";
+
+    return baseEmailTemplate(
       b,
       `<h1 style="${EMAIL_STYLES.heading}">New Booking Received</h1>
       <p style="${EMAIL_STYLES.text}">You have a new booking from <strong>${data.customerName}</strong>.</p>
@@ -257,15 +295,18 @@ const booking_confirmation_owner: BrandedTemplate = {
           { label: "Duration", value: String(data.duration) },
           { label: "Price", value: String(data.price) },
           { label: "Status", value: String(data.status) },
+          { label: "Payment", value: paymentPending ? "⏳ Pending" : "✅ Not Required" },
         ],
         "#f0fdf4",
         "#bbf7d0",
       )}
+      ${paymentSection}
       ${emailButton(b, String(data.dashboardUrl), "View in Dashboard")}`,
       `New booking from ${data.customerName} for ${data.serviceName}`,
-    ),
+    );
+  },
   text: (data) =>
-    `New Booking!\n\nCustomer: ${data.customerName} (${data.customerEmail})\nService: ${data.serviceName}\nDate: ${data.date} at ${data.time}\nPrice: ${data.price}\nStatus: ${data.status}\n\nDashboard: ${data.dashboardUrl}`,
+    `New Booking!\n\nCustomer: ${data.customerName} (${data.customerEmail})\nService: ${data.serviceName}\nDate: ${data.date} at ${data.time}\nPrice: ${data.price}\nStatus: ${data.status}\nPayment: ${data.paymentStatus || "not_required"}\n\nDashboard: ${data.dashboardUrl}`,
 };
 
 const booking_cancelled_customer: BrandedTemplate = {
@@ -309,6 +350,191 @@ const booking_cancelled_owner: BrandedTemplate = {
     ),
   text: (data) =>
     `Booking Cancelled\n\nCustomer: ${data.customerName}\nService: ${data.serviceName}\nDate/Time: ${data.date} at ${data.time}\n\nDashboard: ${data.dashboardUrl}`,
+};
+
+// --- Booking Confirmed (status change from pending → confirmed) ---
+
+const booking_confirmed_customer: BrandedTemplate = {
+  subject: (data) => `Your Booking is Confirmed — ${data.serviceName}`,
+  html: (data, b) => {
+    const paymentPending = data.paymentStatus === "pending" && data.paymentRequired;
+    const paymentSection = paymentPending
+      ? `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:16px;margin:20px 0;">
+        <p style="margin:0 0 8px;font-weight:600;color:#92400e;">⏳ Payment Required</p>
+        <p style="margin:0;color:#92400e;font-size:14px;">Payment of <strong>${data.price}</strong> is required to secure your booking. Please contact us via our website chat or reply to this email to arrange payment.</p>
+      </div>`
+      : "";
+
+    return baseEmailTemplate(
+      b,
+      `<h1 style="${EMAIL_STYLES.heading}">Booking Confirmed ✅</h1>
+      <p style="${EMAIL_STYLES.text}">Hi ${data.customerName || "there"},</p>
+      <p style="${EMAIL_STYLES.text}">Great news — your booking has been confirmed! Here are your appointment details:</p>
+      ${emailInfoBox([
+        { label: "Service", value: String(data.serviceName) },
+        ...(data.staffName ? [{ label: "With", value: String(data.staffName) }] : []),
+        { label: "Date", value: String(data.date) },
+        { label: "Time", value: String(data.time) },
+        { label: "Duration", value: String(data.duration) },
+        { label: "Price", value: String(data.price) },
+      ])}
+      ${paymentSection}
+      <p style="${EMAIL_STYLES.text}"><strong>What to do next:</strong></p>
+      <ul style="${EMAIL_STYLES.text}">
+        ${paymentPending ? `<li>Complete your payment of <strong>${data.price}</strong></li>` : ""}
+        <li>Add this appointment to your calendar</li>
+        <li>Arrive on time at your scheduled slot</li>
+      </ul>
+      <p style="${EMAIL_STYLES.muted}">Booking Reference: <code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:12px;">${String(data.bookingId).substring(0, 8).toUpperCase()}</code></p>
+      <p style="${EMAIL_STYLES.muted}">Need to make changes? Contact ${data.businessName || b.agency_name}.</p>`,
+      `Your booking for ${data.serviceName} has been confirmed`,
+    );
+  },
+  text: (data, b) =>
+    `Booking Confirmed!\n\nHi ${data.customerName || "there"},\n\nYour booking has been confirmed.\n\nService: ${data.serviceName}\nDate: ${data.date}\nTime: ${data.time}\nDuration: ${data.duration}\nPrice: ${data.price}\n\nBooking Reference: ${String(data.bookingId).substring(0, 8).toUpperCase()}\n\nContact ${data.businessName || b.agency_name} for changes.`,
+};
+
+const booking_confirmed_owner: BrandedTemplate = {
+  subject: (data) => `✅ Booking Confirmed: ${data.customerName} — ${data.serviceName}`,
+  html: (data, b) =>
+    baseEmailTemplate(
+      b,
+      `<h1 style="${EMAIL_STYLES.heading}">Booking Confirmed</h1>
+      <p style="${EMAIL_STYLES.text}">A booking has been confirmed${data.confirmedBy ? ` by <strong>${data.confirmedBy}</strong>` : ""}.</p>
+      ${emailInfoBox(
+        [
+          { label: "Customer", value: String(data.customerName) },
+          { label: "Service", value: String(data.serviceName) },
+          { label: "Date", value: String(data.date) },
+          { label: "Time", value: String(data.time) },
+          { label: "Payment", value: data.paymentStatus === "pending" ? "⏳ Pending" : "✅ Paid / Not Required" },
+        ],
+        "#f0fdf4",
+        "#bbf7d0",
+      )}
+      ${emailButton(b, String(data.dashboardUrl), "View in Dashboard")}`,
+      `Booking confirmed: ${data.customerName} — ${data.serviceName}`,
+    ),
+  text: (data) =>
+    `Booking Confirmed\n\nCustomer: ${data.customerName}\nService: ${data.serviceName}\nDate: ${data.date} at ${data.time}\nPayment: ${data.paymentStatus || "not_required"}\n\nDashboard: ${data.dashboardUrl}`,
+};
+
+// --- Booking Completed ---
+
+const booking_completed_customer: BrandedTemplate = {
+  subject: (data) => `Thank You for Your Visit — ${data.serviceName}`,
+  html: (data, b) =>
+    baseEmailTemplate(
+      b,
+      `<h1 style="${EMAIL_STYLES.heading}">Thank You for Your Visit! 🎉</h1>
+      <p style="${EMAIL_STYLES.text}">Hi ${data.customerName || "there"},</p>
+      <p style="${EMAIL_STYLES.text}">We hope you enjoyed your <strong>${data.serviceName}</strong> appointment${data.staffName ? ` with ${data.staffName}` : ""}. Thank you for choosing ${data.businessName || b.agency_name}!</p>
+      ${emailInfoBox([
+        { label: "Service", value: String(data.serviceName) },
+        ...(data.staffName ? [{ label: "With", value: String(data.staffName) }] : []),
+        { label: "Date", value: String(data.date) },
+        { label: "Price", value: String(data.price) },
+      ])}
+      <p style="${EMAIL_STYLES.text}">We'd love to see you again! Book your next appointment anytime.</p>
+      <p style="${EMAIL_STYLES.muted}">Booking Reference: <code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:12px;">${String(data.bookingId).substring(0, 8).toUpperCase()}</code></p>`,
+      `Thank you for your ${data.serviceName} appointment`,
+    ),
+  text: (data, b) =>
+    `Thank You for Your Visit!\n\nHi ${data.customerName || "there"},\n\nWe hope you enjoyed your ${data.serviceName} appointment. Thank you for choosing ${data.businessName || b.agency_name}!\n\nBooking Reference: ${String(data.bookingId).substring(0, 8).toUpperCase()}`,
+};
+
+const booking_completed_owner: BrandedTemplate = {
+  subject: (data) => `✔️ Booking Completed: ${data.customerName} — ${data.serviceName}`,
+  html: (data, b) =>
+    baseEmailTemplate(
+      b,
+      `<h1 style="${EMAIL_STYLES.heading}">Booking Completed</h1>
+      <p style="${EMAIL_STYLES.text}">An appointment has been marked as completed.</p>
+      ${emailInfoBox(
+        [
+          { label: "Customer", value: String(data.customerName) },
+          { label: "Service", value: String(data.serviceName) },
+          { label: "Date", value: String(data.date) },
+          { label: "Price", value: String(data.price) },
+          { label: "Payment", value: data.paymentStatus === "paid" ? "✅ Paid" : data.paymentStatus === "pending" ? "⚠️ Unpaid" : "N/A" },
+        ],
+        "#f0fdf4",
+        "#bbf7d0",
+      )}
+      ${emailButton(b, String(data.dashboardUrl), "View in Dashboard")}`,
+      `Booking completed: ${data.customerName} — ${data.serviceName}`,
+    ),
+  text: (data) =>
+    `Booking Completed\n\nCustomer: ${data.customerName}\nService: ${data.serviceName}\nDate: ${data.date}\nPrice: ${data.price}\nPayment: ${data.paymentStatus}\n\nDashboard: ${data.dashboardUrl}`,
+};
+
+// --- Booking No Show ---
+
+const booking_no_show_customer: BrandedTemplate = {
+  subject: (data) => `Missed Appointment — ${data.serviceName}`,
+  html: (data, b) =>
+    baseEmailTemplate(
+      b,
+      `<h1 style="${EMAIL_STYLES.heading}">Missed Appointment</h1>
+      <p style="${EMAIL_STYLES.text}">Hi ${data.customerName || "there"},</p>
+      <p style="${EMAIL_STYLES.text}">It looks like you missed your <strong>${data.serviceName}</strong> appointment on ${data.date} at ${data.time}.</p>
+      <p style="${EMAIL_STYLES.text}">We understand things come up! If you'd like to reschedule, please visit our booking page or get in touch.</p>
+      <p style="${EMAIL_STYLES.muted}">Booking Reference: <code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:12px;">${String(data.bookingId).substring(0, 8).toUpperCase()}</code></p>
+      <p style="${EMAIL_STYLES.muted}">Contact ${data.businessName || b.agency_name} for assistance.</p>`,
+      `Missed appointment for ${data.serviceName}`,
+    ),
+  text: (data, b) =>
+    `Missed Appointment\n\nHi ${data.customerName || "there"},\n\nIt looks like you missed your ${data.serviceName} appointment on ${data.date} at ${data.time}.\n\nPlease contact ${data.businessName || b.agency_name} to reschedule.`,
+};
+
+// --- Booking Payment Received ---
+
+const booking_payment_received_customer: BrandedTemplate = {
+  subject: (data) => `Payment Received — ${data.serviceName}`,
+  html: (data, b) =>
+    baseEmailTemplate(
+      b,
+      `<h1 style="${EMAIL_STYLES.heading}">Payment Received ✅</h1>
+      <p style="${EMAIL_STYLES.text}">Hi ${data.customerName || "there"},</p>
+      <p style="${EMAIL_STYLES.text}">We've received your payment of <strong>${data.price}</strong> for your upcoming appointment. Your booking is fully secured!</p>
+      ${emailInfoBox([
+        { label: "Service", value: String(data.serviceName) },
+        ...(data.staffName ? [{ label: "With", value: String(data.staffName) }] : []),
+        { label: "Date", value: String(data.date) },
+        { label: "Time", value: String(data.time) },
+        { label: "Amount Paid", value: String(data.price) },
+      ])}
+      <p style="${EMAIL_STYLES.text}">You're all set! We look forward to seeing you.</p>
+      <p style="${EMAIL_STYLES.muted}">Booking Reference: <code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:12px;">${String(data.bookingId).substring(0, 8).toUpperCase()}</code></p>`,
+      `Payment received for ${data.serviceName}`,
+    ),
+  text: (data) =>
+    `Payment Received\n\nHi ${data.customerName || "there"},\n\nWe've received your payment of ${data.price} for your ${data.serviceName} appointment on ${data.date} at ${data.time}.\n\nBooking Reference: ${String(data.bookingId).substring(0, 8).toUpperCase()}`,
+};
+
+const booking_payment_received_owner: BrandedTemplate = {
+  subject: (data) => `💰 Payment Received: ${data.customerName} — ${data.serviceName}`,
+  html: (data, b) =>
+    baseEmailTemplate(
+      b,
+      `<h1 style="${EMAIL_STYLES.heading}">Booking Payment Received</h1>
+      <p style="${EMAIL_STYLES.text}">Payment has been received for a booking.</p>
+      ${emailInfoBox(
+        [
+          { label: "Customer", value: String(data.customerName) },
+          { label: "Service", value: String(data.serviceName) },
+          { label: "Date", value: String(data.date) },
+          { label: "Time", value: String(data.time) },
+          { label: "Amount", value: String(data.price) },
+        ],
+        "#f0fdf4",
+        "#bbf7d0",
+      )}
+      ${emailButton(b, String(data.dashboardUrl), "View in Dashboard")}`,
+      `Payment received: ${data.customerName} — ${data.serviceName}`,
+    ),
+  text: (data) =>
+    `Booking Payment Received\n\nCustomer: ${data.customerName}\nService: ${data.serviceName}\nDate: ${data.date}\nAmount: ${data.price}\n\nDashboard: ${data.dashboardUrl}`,
 };
 
 // ============================================================================
@@ -1021,6 +1247,13 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
   booking_confirmation_owner,
   booking_cancelled_customer,
   booking_cancelled_owner,
+  booking_confirmed_customer,
+  booking_confirmed_owner,
+  booking_completed_customer,
+  booking_completed_owner,
+  booking_no_show_customer,
+  booking_payment_received_customer,
+  booking_payment_received_owner,
   order_confirmation_customer,
   order_confirmation_owner,
   order_shipped_customer,

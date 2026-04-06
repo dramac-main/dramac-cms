@@ -1,41 +1,76 @@
 # Active Context
 
-## Current Focus: Booking Auto-Chat + Storefront Modernization ✅ (commit a9363b1f)
+## Current Focus: Booking Industry-Standard Confirmation + Settings Integration ✅ (commits b903bd77, 3d235887)
 
 ### What Was Done
 
-**Full booking→live chat auto-open pipeline (mirroring ecommerce pattern) + modernized booking confirmation screens + storefront UI improvements.**
+**Full rewrite of booking agent panel with confirmation dialogs, smart auto-advance for public wizard, `require_payment`/`auto_confirm` settings wired end-to-end, branding audit completed.**
 
-#### Auto-Chat Pipeline (4-file chain) ✅
+#### ChatBookingPanel — Confirmation Dialogs ✅
 
-- **BookingWidgetBlock.tsx**: Fires `window.postMessage({ type: "dramac-chat-open", bookingContext })` 3s after booking, sessionStorage dedup
-- **BookingFormBlock.tsx**: Same auto-chat pattern
-- **embed/route.ts**: Forwards `dramac-chat-booking-context` to iframe
-- **ChatWidget.tsx**: `bookingContextRef`, booking branch in `handleOpen()`, booking context in `handleStartChat()`
-- **conversations/route.ts**: Booking-specific isolation via `metadata.booking_id`, booking tags, AI auto-responder trigger
+- **AlertDialog pattern** (matching ChatOrderPanel): Every status action (Confirm, Complete, Cancel, No Show) now opens a confirmation dialog with full booking summary (service, date/time, staff, customer, price, payment status)
+- **Complete with payment warning**: If `require_payment` is enabled and payment is unpaid, the Complete dialog shows a yellow warning banner + destructive "Complete Without Payment" button
+- **Cancel with reason**: Cancel dialog includes a Textarea for cancellation reason, passed to server action
+- **Agent name audit trail**: `userName` passed to `updateBookingStatusFromChat` so `cancelled_by` records the actual agent
+- **Payment amount display**: Prominently shown when payment is required (was fetched but hidden before)
+- **Payment required inline warning**: Yellow banner in the panel when payment is outstanding
 
-#### Success Screen Modernization ✅
+#### chat-booking-actions.ts — Server Action Updates ✅
 
-Both BookingWidgetBlock and BookingFormBlock now show: gradient icon, responsive clamp() typography, booking summary card (service/date/time/staff), reference number, status badge, "Chat with us" button.
+- `ChatBookingContext` type extended with `requirePayment: boolean`, `autoConfirm: boolean`
+- `getBookingContextForChat()` now fetches `mod_bookmod01_settings` for `require_payment` and `auto_confirm`
+- `updateBookingStatusFromChat()` accepts `options?: { cancellationReason?: string; agentName?: string }` — no more hardcoded "admin" / "Cancelled via live chat"
 
-#### Storefront UI Modernization ✅
+#### BookingWidgetBlock.tsx — Smart Auto-Advance + Payment ✅
 
-Time slots, staff cards, confirmation step, contact details, nav buttons — all got `transition: all 0.2s ease`, responsive `clamp()` sizing, improved spacing.
+- **Auto-advance default changed to `true`**: Single-option steps auto-select and advance (useEffect-based)
+- **Service step**: If only 1 service, auto-select + advance
+- **Staff step**: If only 1 staff (filtered by service), auto-select + advance
+- **Payment status wired**: `handleConfirm` now sends `payment_status: "pending"` when `bookingSettings.require_payment` is true (was always `"not_required"`)
+- **Payment notice in confirm step**: Shows "Payment Required" card with amount when `require_payment` is enabled
 
-### Architecture: Booking→Chat Flow
+#### public-booking-actions.ts — Settings Integration ✅
 
-```
-BookingWidget/FormBlock → postMessage(dramac-chat-open, bookingContext)
-  → embed script forwards dramac-chat-booking-context to iframe
-  → ChatWidget bookingContextRef + handleOpen() booking branch
-  → conversations API creates conv with metadata.booking_id
-  → ChatBookingPanel shows in agent sidebar
-  → AI auto-responder triggers
-```
+- **`auto_confirm` global override**: `settings.auto_confirm` now overrides per-service `require_confirmation` — if globally auto-confirmed, all bookings get status `"confirmed"` regardless of service setting
+- **`require_payment` wired**: Sets `payment_status: "pending"` and `payment_amount: service.price` when enabled
+- Payment amount now stored on the appointment row
+
+#### ServiceSelectorBlock.tsx — Branding Fix ✅
+
+- Removed 3 hardcoded `rgba(139,92,246,...)` purple fallback colors
+- Replaced with palette-derived `${pc}08`, `${pc}10`, `${pc}20`
+
+### Branding Audit Results
+
+All 6 booking studio components verified:
+
+- **BookingWidgetBlock** ✅ — Full `resolveBrandColors()`, zero hardcoded colors
+- **ServiceSelectorBlock** ✅ — Fixed 3 purple fallbacks (now clean)
+- **StaffGridBlock** ✅ — Clean
+- **BookingCalendarBlock** ✅ — Clean
+- **BookingFormBlock** ✅ — Clean (Tailwind classes use semantic tokens)
+- **BookingEmbedBlock** ✅ — Clean
+
+### Settings Integration Status (Updated)
+
+| Setting                      | Status                                           |
+| ---------------------------- | ------------------------------------------------ |
+| `require_payment`            | ✅ Wired in widget + server action + agent panel |
+| `auto_confirm`               | ✅ Wired in server action (global override)      |
+| `currency`                   | ✅ Was already working                           |
+| `min_booking_notice_hours`   | ✅ Was already working                           |
+| `max_booking_advance_days`   | ✅ Was already working                           |
+| `slot_interval_minutes`      | ✅ Was already working                           |
+| `confirmation_email_enabled` | ⬜ No email sending logic yet                    |
+| `reminder_hours`             | ⬜ No scheduler yet                              |
+| `notification_email`         | ⬜ Not consumed (uses site owner email)          |
+| `auto_create_crm_contact`    | ⬜ No CRM integration yet                        |
+| `accent_color`               | ⬜ Not passed to public site (uses brand colors) |
+| `cancellation_notice_hours`  | ⬜ No enforcement yet                            |
 
 ---
 
-## Previous: Multi-Tenant Storefront Auth Fix ✅ (commit e8f82331)
+## Previous: Booking Auto-Chat + Storefront Modernization ✅ (commit a9363b1f)
 
 Fixed cart items reordering when quantity changes by adding `ORDER BY created_at` to `findPublicCart()` and `getPublicCart()` nested cart_items queries.
 

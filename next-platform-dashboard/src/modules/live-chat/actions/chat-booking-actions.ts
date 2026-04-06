@@ -12,6 +12,19 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { verifyUserSiteAccess } from "@/lib/multi-tenant/tenant-context";
+import {
+  notifyBookingConfirmed,
+  notifyBookingCompleted,
+  notifyBookingCancelled,
+  notifyBookingNoShow,
+  notifyBookingPaymentReceived,
+} from "@/lib/services/business-notifications";
+import {
+  notifyChatBookingConfirmed,
+  notifyChatBookingCancelled,
+  notifyChatBookingCompleted,
+  notifyChatBookingPaymentConfirmed,
+} from "@/modules/live-chat/lib/chat-event-bridge";
 
 const BOOKING_PREFIX = "mod_bookmod01";
 
@@ -148,6 +161,7 @@ export async function getBookingContextForChat(
 
 /**
  * Update an appointment's status directly from the chat panel.
+ * Sends email notifications and chat notifications on status change.
  */
 export async function updateBookingStatusFromChat(
   siteId: string,
@@ -190,15 +204,116 @@ export async function updateBookingStatusFromChat(
       options?.cancellationReason?.trim() || "Cancelled via live chat";
   }
 
-  const { error } = await db
+  // Update and return full appointment with service/staff for notifications
+  const { data: appointment, error } = await db
     .from(`${BOOKING_PREFIX}_appointments`)
     .update(updates)
     .eq("site_id", siteId)
-    .eq("id", bookingId);
+    .eq("id", bookingId)
+    .select(
+      `
+      *,
+      service:${BOOKING_PREFIX}_services(name, price, duration_minutes, currency),
+      staff:${BOOKING_PREFIX}_staff(name)
+    `,
+    )
+    .single();
 
   if (error) {
     console.error("[ChatBooking] updateStatus error:", error);
     return { error: error.message };
+  }
+
+  // Fire notifications async (don't block the response)
+  const serviceName = appointment?.service?.name || "Service";
+  const servicePrice = appointment?.service?.price || 0;
+  const serviceDuration = appointment?.service?.duration_minutes || 30;
+  const staffName = appointment?.staff?.name;
+  const customerName = appointment?.customer_name || "Customer";
+  const customerEmail = appointment?.customer_email || "";
+  const currency = appointment?.service?.currency;
+  const startTime = new Date(appointment?.start_time);
+  const endTime = appointment?.end_time ? new Date(appointment.end_time) : undefined;
+  const paymentStatus = appointment?.payment_status;
+
+  const startFmt = startTime.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+  const timeFmt = startTime.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  const notificationData = {
+    siteId,
+    appointmentId: bookingId,
+    serviceName,
+    servicePrice,
+    serviceDuration,
+    staffName,
+    customerName,
+    customerEmail,
+    startTime,
+    endTime,
+    currency,
+    paymentStatus,
+    changedBy: options?.agentName || "Agent",
+  };
+
+  if (newStatus === "confirmed") {
+    // Email notifications
+    notifyBookingConfirmed(notificationData).catch((err) =>
+      console.error("[ChatBooking] Confirm notification error:", err),
+    );
+    // Chat notification
+    if (customerEmail) {
+      notifyChatBookingConfirmed(siteId, customerEmail, serviceName, startFmt, timeFmt).catch(
+        (err) => console.error("[ChatBooking] Chat confirm notify error:", err),
+      );
+    }
+  } else if (newStatus === "completed") {
+    notifyBookingCompleted(notificationData).catch((err) =>
+      console.error("[ChatBooking] Complete notification error:", err),
+    );
+    if (customerEmail) {
+      notifyChatBookingCompleted(siteId, customerEmail, serviceName).catch(
+        (err) => console.error("[ChatBooking] Chat complete notify error:", err),
+      );
+    }
+  } else if (newStatus === "cancelled") {
+    notifyBookingCancelled({
+      siteId,
+      appointmentId: bookingId,
+      serviceName,
+      servicePrice,
+      serviceDuration,
+      staffName,
+      customerName,
+      customerEmail,
+      startTime,
+      cancelledBy: "staff",
+      reason: options?.cancellationReason?.trim() || "Cancelled via live chat",
+      currency,
+    }).catch((err) =>
+      console.error("[ChatBooking] Cancel notification error:", err),
+    );
+    if (customerEmail) {
+      notifyChatBookingCancelled(
+        siteId,
+        customerEmail,
+        serviceName,
+        options?.cancellationReason?.trim(),
+      ).catch((err) =>
+        console.error("[ChatBooking] Chat cancel notify error:", err),
+      );
+    }
+  } else if (newStatus === "no_show") {
+    notifyBookingNoShow(notificationData).catch((err) =>
+      console.error("[ChatBooking] No-show notification error:", err),
+    );
   }
 
   return {};
@@ -210,6 +325,7 @@ export async function updateBookingStatusFromChat(
 
 /**
  * Update an appointment's payment status directly from the chat panel.
+ * Sends payment confirmation notifications when payment is marked as paid.
  */
 export async function updateBookingPaymentFromChat(
   siteId: string,
@@ -233,15 +349,64 @@ export async function updateBookingPaymentFromChat(
     return { error: `Invalid payment status: ${paymentStatus}` };
   }
 
-  const { error } = await db
+  // Update and return full appointment with service/staff for notifications
+  const { data: appointment, error } = await db
     .from(`${BOOKING_PREFIX}_appointments`)
     .update({ payment_status: paymentStatus })
     .eq("site_id", siteId)
-    .eq("id", bookingId);
+    .eq("id", bookingId)
+    .select(
+      `
+      *,
+      service:${BOOKING_PREFIX}_services(name, price, duration_minutes, currency),
+      staff:${BOOKING_PREFIX}_staff(name)
+    `,
+    )
+    .single();
 
   if (error) {
     console.error("[ChatBooking] updatePayment error:", error);
     return { error: error.message };
+  }
+
+  // Send payment confirmation notifications when marked as paid
+  if (paymentStatus === "paid" && appointment) {
+    const serviceName = appointment.service?.name || "Service";
+    const servicePrice = appointment.service?.price || 0;
+    const serviceDuration = appointment.service?.duration_minutes || 30;
+    const staffName = appointment.staff?.name;
+    const customerName = appointment.customer_name || "Customer";
+    const customerEmail = appointment.customer_email || "";
+    const currency = appointment.service?.currency;
+    const startTime = new Date(appointment.start_time);
+    const endTime = appointment.end_time ? new Date(appointment.end_time) : undefined;
+
+    notifyBookingPaymentReceived({
+      siteId,
+      appointmentId: bookingId,
+      serviceName,
+      servicePrice,
+      serviceDuration,
+      staffName,
+      customerName,
+      customerEmail,
+      startTime,
+      endTime,
+      currency,
+      paymentStatus: "paid",
+      changedBy: "Agent",
+    }).catch((err) =>
+      console.error("[ChatBooking] Payment notification error:", err),
+    );
+
+    if (customerEmail) {
+      const priceStr = servicePrice > 0
+        ? `${currency || "USD"} ${servicePrice.toFixed(2)}`
+        : "your payment";
+      notifyChatBookingPaymentConfirmed(siteId, customerEmail, serviceName, priceStr).catch(
+        (err) => console.error("[ChatBooking] Chat payment notify error:", err),
+      );
+    }
   }
 
   return {};

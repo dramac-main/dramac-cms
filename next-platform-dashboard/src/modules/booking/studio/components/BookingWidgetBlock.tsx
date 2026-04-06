@@ -534,7 +534,13 @@ export function BookingWidgetBlock({
       return () => clearTimeout(t);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStepIdForEffect, autoAdvance, siteId, loadingServices, dataServices.length]);
+  }, [
+    currentStepIdForEffect,
+    autoAdvance,
+    siteId,
+    loadingServices,
+    dataServices.length,
+  ]);
 
   useEffect(() => {
     if (!autoAdvance || !siteId) return;
@@ -549,7 +555,13 @@ export function BookingWidgetBlock({
       return () => clearTimeout(t);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStepIdForEffect, autoAdvance, siteId, loadingStaff, dataStaff.length]);
+  }, [
+    currentStepIdForEffect,
+    autoAdvance,
+    siteId,
+    loadingStaff,
+    dataStaff.length,
+  ]);
 
   const monthNames = [
     "January",
@@ -2151,7 +2163,10 @@ export function BookingWidgetBlock({
                     }}
                   >
                     Payment of{" "}
-                    {formatPrice(selectedService.price, selectedService.currency)}{" "}
+                    {formatPrice(
+                      selectedService.price,
+                      selectedService.currency,
+                    )}{" "}
                     will be due to confirm your booking.
                   </p>
                 </div>

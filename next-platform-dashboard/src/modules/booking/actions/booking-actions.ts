@@ -10,7 +10,12 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_CURRENCY, DEFAULT_TIMEZONE } from "@/lib/locale-config";
-import { notifyBookingCancelled } from "@/lib/services/business-notifications";
+import {
+  notifyBookingCancelled,
+  notifyBookingConfirmed,
+  notifyBookingCompleted,
+  notifyBookingNoShow,
+} from "@/lib/services/business-notifications";
 import { logAutomationEvent } from "@/modules/automation/services/event-processor";
 import {
   notifyChatBookingCreated,
@@ -677,7 +682,7 @@ export async function updateAppointment(
     throw new Error(error.message);
   }
 
-  // Notify customer's live chat on status changes (async, non-blocking)
+  // Notify customer's live chat + email on status changes (async, non-blocking)
   const updated = data as Appointment;
   if (updated.customer_email && updates.status) {
     const start = new Date(updated.start_time);
@@ -692,8 +697,32 @@ export async function updateAppointment(
       hour12: true,
     });
     const serviceName = (updated as any).service?.name || "Service";
+    const servicePrice = (updated as any).service?.price || 0;
+    const serviceDuration = (updated as any).service?.duration_minutes || 30;
+    const staffName = (updated as any).staff?.name;
+    const currency = (updated as any).service?.currency;
+    const endTime = updated.end_time ? new Date(updated.end_time) : undefined;
+
+    const notificationData = {
+      siteId,
+      appointmentId,
+      serviceName,
+      servicePrice,
+      serviceDuration,
+      staffName,
+      customerName: updated.customer_name || "Customer",
+      customerEmail: updated.customer_email,
+      startTime: start,
+      endTime,
+      currency,
+      paymentStatus: updated.payment_status,
+      changedBy: "Admin",
+    };
 
     if (updates.status === "confirmed") {
+      notifyBookingConfirmed(notificationData).catch((err) =>
+        console.error("[Booking] Confirm email notification error:", err),
+      );
       notifyChatBookingConfirmed(
         siteId,
         updated.customer_email,
@@ -704,12 +733,19 @@ export async function updateAppointment(
         console.error("[Booking] Chat notification error (confirm):", err),
       );
     } else if (updates.status === "completed") {
+      notifyBookingCompleted(notificationData).catch((err) =>
+        console.error("[Booking] Complete email notification error:", err),
+      );
       notifyChatBookingCompleted(
         siteId,
         updated.customer_email,
         serviceName,
       ).catch((err) =>
         console.error("[Booking] Chat notification error (complete):", err),
+      );
+    } else if (updates.status === "no_show") {
+      notifyBookingNoShow(notificationData).catch((err) =>
+        console.error("[Booking] No-show email notification error:", err),
       );
     }
   }
@@ -1111,7 +1147,7 @@ export async function updateSettings(
     "slot_interval_minutes",
   ]) {
     if (numField in sanitized && typeof sanitized[numField] === "number") {
-      if (sanitized[numField] as number <= 0) {
+      if ((sanitized[numField] as number) <= 0) {
         throw new Error(`${numField} must be a positive number`);
       }
     }

@@ -36,6 +36,7 @@ interface BookingNotificationData {
   status: "pending" | "confirmed";
   currency?: string;
   timezone?: string;
+  paymentStatus?: string;
 }
 
 interface BookingCancellationData {
@@ -51,6 +52,22 @@ interface BookingCancellationData {
   cancelledBy: "customer" | "staff" | "system";
   reason?: string;
   currency?: string;
+}
+
+interface BookingStatusChangeData {
+  siteId: string;
+  appointmentId: string;
+  serviceName: string;
+  servicePrice: number;
+  serviceDuration: number;
+  staffName?: string;
+  customerName: string;
+  customerEmail: string;
+  startTime: Date;
+  endTime?: Date;
+  currency?: string;
+  paymentStatus?: string;
+  changedBy?: string;
 }
 
 interface OrderNotificationData {
@@ -174,6 +191,7 @@ export async function notifyNewBooking(
             duration: durationStr,
             price: priceStr,
             status: data.status,
+            paymentStatus: data.paymentStatus || "not_required",
             dashboardUrl,
             bookingId: data.appointmentId,
           },
@@ -197,6 +215,8 @@ export async function notifyNewBooking(
             duration: durationStr,
             price: priceStr,
             status: data.status,
+            paymentStatus: data.paymentStatus || "not_required",
+            paymentRequired: data.paymentStatus === "pending",
             businessName,
             bookingId: data.appointmentId,
           },
@@ -349,6 +369,358 @@ export async function notifyBookingCancelled(
       "[BusinessNotify] Error sending booking cancellation notifications:",
       error,
     );
+  }
+}
+
+// =============================================================================
+// BOOKING CONFIRMED NOTIFICATIONS
+// =============================================================================
+
+/**
+ * Send notifications when a booking is confirmed (pending → confirmed):
+ * 1. Email to customer (booking confirmed)
+ * 2. Email to business owner (booking confirmed)
+ */
+export async function notifyBookingConfirmed(
+  data: BookingStatusChangeData,
+): Promise<void> {
+  try {
+    const supabase = createAdminClient();
+
+    const { data: site } = await supabase
+      .from("sites")
+      .select("name, agency_id")
+      .eq("id", data.siteId)
+      .single();
+
+    if (!site) return;
+
+    const { data: agency } = await supabase
+      .from("agencies")
+      .select("owner_id")
+      .eq("id", site.agency_id)
+      .single();
+
+    if (!agency?.owner_id) return;
+
+    const { data: ownerProfile } = await supabase
+      .from("profiles")
+      .select("email, full_name")
+      .eq("id", agency.owner_id)
+      .single();
+
+    // Check if payment is required for this site
+    const { data: settings } = await supabase
+      .from("mod_bookmod01_settings" as any)
+      .select("require_payment")
+      .eq("site_id", data.siteId)
+      .single();
+
+    const businessName = site.name || "Our Business";
+    const currency = data.currency || "USD";
+    const dateStr = formatDate(data.startTime);
+    const timeStr = formatTime(data.startTime);
+    const priceStr = formatCurrency(data.servicePrice, currency);
+    const durationStr =
+      data.serviceDuration >= 60
+        ? `${Math.floor(data.serviceDuration / 60)}h${data.serviceDuration % 60 > 0 ? ` ${data.serviceDuration % 60}m` : ""}`
+        : `${data.serviceDuration}m`;
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${data.siteId}/booking`;
+
+    const emailPromises: Promise<unknown>[] = [];
+
+    // Email to customer
+    if (data.customerEmail) {
+      emailPromises.push(
+        sendBrandedEmail(site.agency_id, {
+          to: { email: data.customerEmail, name: data.customerName },
+          emailType: "booking_confirmed_customer",
+          siteId: data.siteId,
+          data: {
+            customerName: data.customerName,
+            serviceName: data.serviceName,
+            staffName: data.staffName || "",
+            date: dateStr,
+            time: timeStr,
+            duration: durationStr,
+            price: priceStr,
+            businessName,
+            bookingId: data.appointmentId,
+            paymentStatus: data.paymentStatus || "not_required",
+            paymentRequired: (settings as any)?.require_payment ?? false,
+          },
+        }),
+      );
+    }
+
+    // Email to owner
+    if (ownerProfile?.email) {
+      emailPromises.push(
+        sendBrandedEmail(site.agency_id, {
+          to: { email: ownerProfile.email, name: ownerProfile.full_name || undefined },
+          emailType: "booking_confirmed_owner",
+          recipientUserId: agency.owner_id,
+          data: {
+            customerName: data.customerName,
+            serviceName: data.serviceName,
+            date: dateStr,
+            time: timeStr,
+            price: priceStr,
+            paymentStatus: data.paymentStatus || "not_required",
+            confirmedBy: data.changedBy || "System",
+            dashboardUrl,
+            bookingId: data.appointmentId,
+          },
+        }),
+      );
+    }
+
+    if (emailPromises.length > 0) {
+      await Promise.all(emailPromises);
+    }
+
+    console.log(`[BusinessNotify] Booking confirmed notifications sent for ${data.appointmentId}`);
+  } catch (error) {
+    console.error("[BusinessNotify] Error sending booking confirmed notifications:", error);
+  }
+}
+
+// =============================================================================
+// BOOKING COMPLETED NOTIFICATIONS
+// =============================================================================
+
+/**
+ * Send notifications when a booking is completed:
+ * 1. Email to customer (thank you)
+ * 2. Email to business owner (completion record)
+ */
+export async function notifyBookingCompleted(
+  data: BookingStatusChangeData,
+): Promise<void> {
+  try {
+    const supabase = createAdminClient();
+
+    const { data: site } = await supabase
+      .from("sites")
+      .select("name, agency_id")
+      .eq("id", data.siteId)
+      .single();
+
+    if (!site) return;
+
+    const { data: agency } = await supabase
+      .from("agencies")
+      .select("owner_id")
+      .eq("id", site.agency_id)
+      .single();
+
+    if (!agency?.owner_id) return;
+
+    const { data: ownerProfile } = await supabase
+      .from("profiles")
+      .select("email, full_name")
+      .eq("id", agency.owner_id)
+      .single();
+
+    const businessName = site.name || "Our Business";
+    const currency = data.currency || "USD";
+    const dateStr = formatDate(data.startTime);
+    const priceStr = formatCurrency(data.servicePrice, currency);
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${data.siteId}/booking`;
+
+    const emailPromises: Promise<unknown>[] = [];
+
+    // Email to customer (thank you)
+    if (data.customerEmail) {
+      emailPromises.push(
+        sendBrandedEmail(site.agency_id, {
+          to: { email: data.customerEmail, name: data.customerName },
+          emailType: "booking_completed_customer",
+          siteId: data.siteId,
+          data: {
+            customerName: data.customerName,
+            serviceName: data.serviceName,
+            staffName: data.staffName || "",
+            date: dateStr,
+            price: priceStr,
+            businessName,
+            bookingId: data.appointmentId,
+          },
+        }),
+      );
+    }
+
+    // Email to owner
+    if (ownerProfile?.email) {
+      emailPromises.push(
+        sendBrandedEmail(site.agency_id, {
+          to: { email: ownerProfile.email, name: ownerProfile.full_name || undefined },
+          emailType: "booking_completed_owner",
+          recipientUserId: agency.owner_id,
+          data: {
+            customerName: data.customerName,
+            serviceName: data.serviceName,
+            date: dateStr,
+            price: priceStr,
+            paymentStatus: data.paymentStatus || "not_required",
+            dashboardUrl,
+            bookingId: data.appointmentId,
+          },
+        }),
+      );
+    }
+
+    if (emailPromises.length > 0) {
+      await Promise.all(emailPromises);
+    }
+
+    console.log(`[BusinessNotify] Booking completed notifications sent for ${data.appointmentId}`);
+  } catch (error) {
+    console.error("[BusinessNotify] Error sending booking completed notifications:", error);
+  }
+}
+
+// =============================================================================
+// BOOKING NO SHOW NOTIFICATIONS
+// =============================================================================
+
+/**
+ * Send notification when a customer no-shows:
+ * 1. Email to customer (missed appointment — encourage rebook)
+ */
+export async function notifyBookingNoShow(
+  data: BookingStatusChangeData,
+): Promise<void> {
+  try {
+    const supabase = createAdminClient();
+
+    const { data: site } = await supabase
+      .from("sites")
+      .select("name, agency_id")
+      .eq("id", data.siteId)
+      .single();
+
+    if (!site || !data.customerEmail) return;
+
+    const businessName = site.name || "Our Business";
+    const currency = data.currency || "USD";
+    const dateStr = formatDate(data.startTime);
+    const timeStr = formatTime(data.startTime);
+
+    await sendBrandedEmail(site.agency_id, {
+      to: { email: data.customerEmail, name: data.customerName },
+      emailType: "booking_no_show_customer",
+      siteId: data.siteId,
+      data: {
+        customerName: data.customerName,
+        serviceName: data.serviceName,
+        date: dateStr,
+        time: timeStr,
+        businessName,
+        bookingId: data.appointmentId,
+      },
+    });
+
+    console.log(`[BusinessNotify] Booking no-show notification sent for ${data.appointmentId}`);
+  } catch (error) {
+    console.error("[BusinessNotify] Error sending booking no-show notification:", error);
+  }
+}
+
+// =============================================================================
+// BOOKING PAYMENT RECEIVED NOTIFICATIONS
+// =============================================================================
+
+/**
+ * Send notifications when payment is marked as received for a booking:
+ * 1. Email to customer (payment confirmation)
+ * 2. Email to business owner (payment received)
+ */
+export async function notifyBookingPaymentReceived(
+  data: BookingStatusChangeData,
+): Promise<void> {
+  try {
+    const supabase = createAdminClient();
+
+    const { data: site } = await supabase
+      .from("sites")
+      .select("name, agency_id")
+      .eq("id", data.siteId)
+      .single();
+
+    if (!site) return;
+
+    const { data: agency } = await supabase
+      .from("agencies")
+      .select("owner_id")
+      .eq("id", site.agency_id)
+      .single();
+
+    if (!agency?.owner_id) return;
+
+    const { data: ownerProfile } = await supabase
+      .from("profiles")
+      .select("email, full_name")
+      .eq("id", agency.owner_id)
+      .single();
+
+    const businessName = site.name || "Our Business";
+    const currency = data.currency || "USD";
+    const dateStr = formatDate(data.startTime);
+    const timeStr = formatTime(data.startTime);
+    const priceStr = formatCurrency(data.servicePrice, currency);
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${data.siteId}/booking`;
+
+    const emailPromises: Promise<unknown>[] = [];
+
+    // Email to customer
+    if (data.customerEmail) {
+      emailPromises.push(
+        sendBrandedEmail(site.agency_id, {
+          to: { email: data.customerEmail, name: data.customerName },
+          emailType: "booking_payment_received_customer",
+          siteId: data.siteId,
+          data: {
+            customerName: data.customerName,
+            serviceName: data.serviceName,
+            staffName: data.staffName || "",
+            date: dateStr,
+            time: timeStr,
+            price: priceStr,
+            businessName,
+            bookingId: data.appointmentId,
+          },
+        }),
+      );
+    }
+
+    // Email to owner
+    if (ownerProfile?.email) {
+      emailPromises.push(
+        sendBrandedEmail(site.agency_id, {
+          to: { email: ownerProfile.email, name: ownerProfile.full_name || undefined },
+          emailType: "booking_payment_received_owner",
+          recipientUserId: agency.owner_id,
+          data: {
+            customerName: data.customerName,
+            serviceName: data.serviceName,
+            date: dateStr,
+            time: timeStr,
+            price: priceStr,
+            dashboardUrl,
+            bookingId: data.appointmentId,
+          },
+        }),
+      );
+    }
+
+    if (emailPromises.length > 0) {
+      await Promise.all(emailPromises);
+    }
+
+    console.log(`[BusinessNotify] Booking payment received notifications sent for ${data.appointmentId}`);
+  } catch (error) {
+    console.error("[BusinessNotify] Error sending booking payment notifications:", error);
   }
 }
 

@@ -541,7 +541,9 @@ export async function createPublicAppointment(
       autoConfirm || !service.require_confirmation ? "confirmed" : "pending";
 
     // Wire require_payment setting to payment_status
-    const paymentStatus = settings?.require_payment ? "pending" : "not_required";
+    const paymentStatus = settings?.require_payment
+      ? "pending"
+      : "not_required";
     const paymentAmount = settings?.require_payment ? service.price : null;
 
     const { data: appointment, error } = await supabase
@@ -608,6 +610,7 @@ export async function createPublicAppointment(
       endTime: input.endTime,
       status: status as "pending" | "confirmed",
       currency: service.currency,
+      paymentStatus,
     }).catch((err) =>
       console.error("[Booking Public] Notification error:", err),
     );
