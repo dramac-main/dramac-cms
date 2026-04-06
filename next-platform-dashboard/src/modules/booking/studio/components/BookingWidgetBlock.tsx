@@ -40,6 +40,11 @@ import { useBookingSettings } from "../../hooks/useBookingSettings";
 import type { Service, Staff } from "../../types/booking-types";
 
 import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from "@/lib/locale-config";
+import {
+  resolveBrandColors,
+  lighten,
+  darken,
+} from "@/lib/studio/engine/brand-colors";
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -628,31 +633,45 @@ export function BookingWidgetBlock({
     recentlyBookedSlots,
   ]);
 
-  // Resolved colors — fall back to CSS variables from the branding system
-  const pc = primaryColor || "var(--brand-primary, #0f172a)";
-  const btnTxt = buttonTextColor || "var(--brand-button-text, #ffffff)";
-  const slotSelTxt =
-    slotSelectedTextColor || "var(--brand-button-text, #ffffff)";
-  const successClr = successColor || "#22c55e";
-  const errorClr = errorColor || "#ef4444";
-  const ratingClr = ratingColor || "#f59e0b";
+  // Build a complete brand palette from whatever color props the site provides
+  const brandPalette = useMemo(
+    () =>
+      resolveBrandColors({
+        primaryColor: primaryColor || undefined,
+        backgroundColor: backgroundColor || undefined,
+        textColor: textColor || undefined,
+      }),
+    [primaryColor, backgroundColor, textColor],
+  );
 
-  // Derived colors
-  const btnBg = buttonBackgroundColor || pc;
-  const activeStep = stepActiveColor || pc;
-  const completedStep = stepCompletedColor || pc;
-  const inactiveStep = stepInactiveColor || "#d1d5db";
-  const selBorder = cardSelectedBorderColor || pc;
-  const selBg =
-    cardSelectedBgColor ||
-    `${primaryColor ? primaryColor + "08" : "var(--brand-primary-light, rgba(15,23,42,0.03))"}`;
-  const slotSelBg = slotSelectedBgColor || pc;
-  const focusBorder = inputFocusBorderColor || pc;
-  const summaryBg =
-    summaryBgColor ||
-    `${primaryColor ? primaryColor + "05" : "var(--brand-primary-light, rgba(15,23,42,0.02))"}`;
-  const secBtnBg = secondaryButtonBgColor || "transparent";
-  const secBtnText = secondaryButtonTextColor || textColor || undefined;
+  // Resolved colors — every fallback now comes from the brand palette
+  const pc = primaryColor || brandPalette.primary;
+  const btnTxt = buttonTextColor || brandPalette.buttonText;
+  const slotSelTxt = slotSelectedTextColor || brandPalette.primaryForeground;
+  const successClr = successColor || brandPalette.success;
+  const errorClr = errorColor || brandPalette.error;
+  const ratingClr = ratingColor || brandPalette.ratingColor;
+
+  // Derived colors — all from palette, zero hardcoded
+  const btnBg = buttonBackgroundColor || brandPalette.buttonBg;
+  const activeStep = stepActiveColor || brandPalette.primary;
+  const completedStep = stepCompletedColor || brandPalette.primary;
+  const inactiveStep = stepInactiveColor || brandPalette.border;
+  const selBorder = cardSelectedBorderColor || brandPalette.selectedBorder;
+  const selBg = cardSelectedBgColor || brandPalette.selectedBg;
+  const slotSelBg = slotSelectedBgColor || brandPalette.primary;
+  const focusBorder = inputFocusBorderColor || brandPalette.inputFocus;
+  const summaryBg = summaryBgColor || brandPalette.muted;
+  const secBtnBg = secondaryButtonBgColor || brandPalette.secondaryButtonBg;
+  const secBtnText =
+    secondaryButtonTextColor || textColor || brandPalette.secondaryButtonText;
+
+  // Common fallback colors (previously hardcoded)
+  const borderFallback = brandPalette.border;
+  const inputBorderFallback = brandPalette.inputBorder;
+  const dividerFallback = brandPalette.divider;
+  const mutedColor = brandPalette.muted;
+  const mutedFgColor = brandPalette.mutedForeground;
 
   const canGoNext = () => {
     const step = steps[currentStep];
@@ -803,8 +822,13 @@ export function BookingWidgetBlock({
   useEffect(() => {
     if (!isComplete || !lastBookingId || !siteId) return;
     const storageKey = `dramac_booking_chat_opened_${lastBookingId}`;
-    if (typeof sessionStorage !== "undefined" && sessionStorage.getItem(storageKey)) return;
-    if (typeof sessionStorage !== "undefined") sessionStorage.setItem(storageKey, "1");
+    if (
+      typeof sessionStorage !== "undefined" &&
+      sessionStorage.getItem(storageKey)
+    )
+      return;
+    if (typeof sessionStorage !== "undefined")
+      sessionStorage.setItem(storageKey, "1");
     const timer = setTimeout(() => {
       openChatWithBookingContext();
     }, 3000);
@@ -818,7 +842,9 @@ export function BookingWidgetBlock({
     const displayMessage = isPending
       ? "Your appointment request has been submitted and is awaiting confirmation. You\u2019ll receive an email once confirmed."
       : successMessage;
-    const displayColor = isPending ? "#f59e0b" : successClr;
+    // Use brand primary for the main visual; semantic colors only for the status badge
+    const displayColor = pc;
+    const statusColor = isPending ? brandPalette.warning : brandPalette.success;
     const DisplayIcon = isPending ? Clock : CircleCheck;
     const formattedDate = selectedDate
       ? selectedDate.toLocaleDateString("en-US", {
@@ -835,7 +861,7 @@ export function BookingWidgetBlock({
           backgroundColor: backgroundColor || undefined,
           borderRadius,
           width: width || "100%",
-          border: `${borderWidth} solid ${borderColor || "#e5e7eb"}`,
+          border: `${borderWidth} solid ${borderColor || borderFallback}`,
           boxShadow: SHADOW_MAP[shadow] || "none",
           padding: "clamp(24px, 5vw, 48px) clamp(16px, 4vw, 32px)",
           textAlign: "center",
@@ -928,8 +954,8 @@ export function BookingWidgetBlock({
                 fontWeight: 600,
                 padding: "3px 10px",
                 borderRadius: "999px",
-                backgroundColor: isPending ? "#fef3c7" : "#d1fae5",
-                color: isPending ? "#92400e" : "#065f46",
+                backgroundColor: lighten(statusColor, 0.85),
+                color: darken(statusColor, 0.4),
               }}
             >
               <DisplayIcon style={{ width: 12, height: 12 }} />
@@ -1055,7 +1081,7 @@ export function BookingWidgetBlock({
         backgroundColor: backgroundColor || undefined,
         color: textColor || undefined,
         borderRadius,
-        border: `${borderWidth} solid ${borderColor || "#e5e7eb"}`,
+        border: `${borderWidth} solid ${borderColor || borderFallback}`,
         boxShadow: SHADOW_MAP[shadow] || "none",
         width: width || "100%",
         minHeight: minHeight || undefined,
@@ -1072,7 +1098,7 @@ export function BookingWidgetBlock({
             padding,
             backgroundColor: headerBackgroundColor || undefined,
             color: headerTextColor || textColor || undefined,
-            borderBottom: `1px solid ${dividerColor || borderColor || "#e5e7eb"}`,
+            borderBottom: `1px solid ${dividerColor || borderColor || borderFallback}`,
             textAlign: headerAlignment,
           }}
         >
@@ -1105,7 +1131,7 @@ export function BookingWidgetBlock({
         <div
           style={{
             padding: `12px ${padding}`,
-            borderBottom: `1px solid ${dividerColor || borderColor || "#e5e7eb"}`,
+            borderBottom: `1px solid ${dividerColor || borderColor || borderFallback}`,
           }}
         >
           {stepIndicatorStyle === "progress-bar" ? (
@@ -1113,7 +1139,7 @@ export function BookingWidgetBlock({
               style={{
                 height: 4,
                 borderRadius: 2,
-                backgroundColor: progressBarBgColor || "#e5e7eb",
+                backgroundColor: progressBarBgColor || borderFallback,
               }}
             >
               <div
@@ -1162,7 +1188,7 @@ export function BookingWidgetBlock({
                               : isActive
                                 ? activeStep
                                 : "transparent",
-                            color: isDone || isActive ? "#fff" : inactiveStep,
+                            color: isDone || isActive ? brandPalette.primaryForeground : inactiveStep,
                             border: `2px solid ${isDone ? completedStep : isActive ? activeStep : inactiveStep}`,
                             fontSize: "12px",
                             fontWeight: 600,
@@ -1288,7 +1314,7 @@ export function BookingWidgetBlock({
                   style={{
                     padding: "14px",
                     borderRadius: cardBorderRadius,
-                    border: `${selectedService?.id === service.id ? "2px" : borderWidth} solid ${selectedService?.id === service.id ? selBorder : cardBorderColor || "#e5e7eb"}`,
+                    border: `${selectedService?.id === service.id ? "2px" : borderWidth} solid ${selectedService?.id === service.id ? selBorder : cardBorderColor || borderFallback}`,
                     backgroundColor:
                       selectedService?.id === service.id
                         ? selBg
@@ -1394,7 +1420,7 @@ export function BookingWidgetBlock({
                   style={{
                     padding: "clamp(12px, 2vw, 16px)",
                     borderRadius: cardBorderRadius,
-                    border: `${selectedStaff?.id === staff.id ? "2px" : borderWidth} solid ${selectedStaff?.id === staff.id ? selBorder : cardBorderColor || "#e5e7eb"}`,
+                    border: `${selectedStaff?.id === staff.id ? "2px" : borderWidth} solid ${selectedStaff?.id === staff.id ? selBorder : cardBorderColor || borderFallback}`,
                     backgroundColor:
                       selectedStaff?.id === staff.id
                         ? selBg
@@ -1440,7 +1466,11 @@ export function BookingWidgetBlock({
                   )}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <h4
-                      style={{ fontWeight: "600", fontSize: "clamp(14px, 2vw, 15px)", margin: 0 }}
+                      style={{
+                        fontWeight: "600",
+                        fontSize: "clamp(14px, 2vw, 15px)",
+                        margin: 0,
+                      }}
                     >
                       {staff.name}
                     </h4>
@@ -1578,9 +1608,9 @@ export function BookingWidgetBlock({
                             ? pc
                             : undefined,
                           color: isDateSelected(date)
-                            ? "#fff"
+                            ? brandPalette.primaryForeground
                             : isDateDisabled(date)
-                              ? "#d1d5db"
+                              ? mutedFgColor
                               : undefined,
                           fontSize: "13px",
                           fontWeight: isDateSelected(date) ? 600 : 400,
@@ -1662,14 +1692,14 @@ export function BookingWidgetBlock({
                               ? slotSelBg
                               : slot.available
                                 ? slotBgColor || "transparent"
-                                : "#f3f4f6",
+                                : mutedColor,
                           color:
                             selectedTime === slot.time
                               ? slotSelTxt
                               : slot.available
                                 ? undefined
-                                : "#d1d5db",
-                          border: `1.5px solid ${selectedTime === slot.time ? slotSelBg : slot.available ? cardBorderColor || "#e5e7eb" : "transparent"}`,
+                                : mutedFgColor,
+                          border: `1.5px solid ${selectedTime === slot.time ? slotSelBg : slot.available ? cardBorderColor || borderFallback : "transparent"}`,
                           cursor: slot.available ? "pointer" : "not-allowed",
                           fontWeight: selectedTime === slot.time ? 600 : 500,
                           textDecoration: !slot.available
@@ -1721,13 +1751,13 @@ export function BookingWidgetBlock({
                     width: "100%",
                     padding: "12px 14px",
                     borderRadius: inputBorderRadius,
-                    border: `1px solid ${inputBorderColor || "#e5e7eb"}`,
+                    border: `1px solid ${inputBorderColor || inputBorderFallback}`,
                     fontSize: "16px",
                     outline: "none",
                   }}
                   onFocus={(e) => (e.target.style.borderColor = focusBorder)}
                   onBlur={(e) =>
-                    (e.target.style.borderColor = inputBorderColor || "#e5e7eb")
+                    (e.target.style.borderColor = inputBorderColor || inputBorderFallback)
                   }
                 />
               </div>
@@ -1758,13 +1788,13 @@ export function BookingWidgetBlock({
                     width: "100%",
                     padding: "12px 14px",
                     borderRadius: inputBorderRadius,
-                    border: `1px solid ${inputBorderColor || "#e5e7eb"}`,
+                    border: `1px solid ${inputBorderColor || inputBorderFallback}`,
                     fontSize: "16px",
                     outline: "none",
                   }}
                   onFocus={(e) => (e.target.style.borderColor = focusBorder)}
                   onBlur={(e) =>
-                    (e.target.style.borderColor = inputBorderColor || "#e5e7eb")
+                    (e.target.style.borderColor = inputBorderColor || inputBorderFallback)
                   }
                 />
               </div>
@@ -1795,13 +1825,13 @@ export function BookingWidgetBlock({
                     width: "100%",
                     padding: "12px 14px",
                     borderRadius: inputBorderRadius,
-                    border: `1px solid ${inputBorderColor || "#e5e7eb"}`,
+                    border: `1px solid ${inputBorderColor || inputBorderFallback}`,
                     fontSize: "16px",
                     outline: "none",
                   }}
                   onFocus={(e) => (e.target.style.borderColor = focusBorder)}
                   onBlur={(e) =>
-                    (e.target.style.borderColor = inputBorderColor || "#e5e7eb")
+                    (e.target.style.borderColor = inputBorderColor || inputBorderFallback)
                   }
                 />
               </div>
@@ -1832,14 +1862,14 @@ export function BookingWidgetBlock({
                     width: "100%",
                     padding: "12px 14px",
                     borderRadius: inputBorderRadius,
-                    border: `1px solid ${inputBorderColor || "#e5e7eb"}`,
+                    border: `1px solid ${inputBorderColor || inputBorderFallback}`,
                     fontSize: "16px",
                     outline: "none",
                     resize: "vertical",
                   }}
                   onFocus={(e) => (e.target.style.borderColor = focusBorder)}
                   onBlur={(e) =>
-                    (e.target.style.borderColor = inputBorderColor || "#e5e7eb")
+                    (e.target.style.borderColor = inputBorderColor || inputBorderFallback)
                   }
                 />
               </div>
@@ -1879,8 +1909,20 @@ export function BookingWidgetBlock({
                       padding: "8px 0",
                     }}
                   >
-                    <span style={{ opacity: 0.6, fontSize: "clamp(12px, 2vw, 14px)" }}>Service</span>
-                    <span style={{ fontWeight: 500, fontSize: "clamp(13px, 2vw, 14px)" }}>
+                    <span
+                      style={{
+                        opacity: 0.6,
+                        fontSize: "clamp(12px, 2vw, 14px)",
+                      }}
+                    >
+                      Service
+                    </span>
+                    <span
+                      style={{
+                        fontWeight: 500,
+                        fontSize: "clamp(13px, 2vw, 14px)",
+                      }}
+                    >
                       {selectedService.name}
                     </span>
                   </div>
@@ -1892,11 +1934,23 @@ export function BookingWidgetBlock({
                       justifyContent: "space-between",
                       alignItems: "center",
                       padding: "8px 0",
-                      borderTop: `1px solid ${dividerColor || "#f0f0f0"}`,
+                      borderTop: `1px solid ${dividerColor || dividerFallback}`,
                     }}
                   >
-                    <span style={{ opacity: 0.6, fontSize: "clamp(12px, 2vw, 14px)" }}>Staff</span>
-                    <span style={{ fontWeight: 500, fontSize: "clamp(13px, 2vw, 14px)" }}>
+                    <span
+                      style={{
+                        opacity: 0.6,
+                        fontSize: "clamp(12px, 2vw, 14px)",
+                      }}
+                    >
+                      Staff
+                    </span>
+                    <span
+                      style={{
+                        fontWeight: 500,
+                        fontSize: "clamp(13px, 2vw, 14px)",
+                      }}
+                    >
                       {selectedStaff.name}
                     </span>
                   </div>
@@ -1908,11 +1962,23 @@ export function BookingWidgetBlock({
                       justifyContent: "space-between",
                       alignItems: "center",
                       padding: "8px 0",
-                      borderTop: `1px solid ${dividerColor || "#f0f0f0"}`,
+                      borderTop: `1px solid ${dividerColor || dividerFallback}`,
                     }}
                   >
-                    <span style={{ opacity: 0.6, fontSize: "clamp(12px, 2vw, 14px)" }}>Date</span>
-                    <span style={{ fontWeight: 500, fontSize: "clamp(13px, 2vw, 14px)" }}>
+                    <span
+                      style={{
+                        opacity: 0.6,
+                        fontSize: "clamp(12px, 2vw, 14px)",
+                      }}
+                    >
+                      Date
+                    </span>
+                    <span
+                      style={{
+                        fontWeight: 500,
+                        fontSize: "clamp(13px, 2vw, 14px)",
+                      }}
+                    >
                       {selectedDate.toLocaleDateString(DEFAULT_LOCALE, {
                         weekday: "short",
                         month: "short",
@@ -1928,11 +1994,23 @@ export function BookingWidgetBlock({
                       justifyContent: "space-between",
                       alignItems: "center",
                       padding: "8px 0",
-                      borderTop: `1px solid ${dividerColor || "#f0f0f0"}`,
+                      borderTop: `1px solid ${dividerColor || dividerFallback}`,
                     }}
                   >
-                    <span style={{ opacity: 0.6, fontSize: "clamp(12px, 2vw, 14px)" }}>Time</span>
-                    <span style={{ fontWeight: 500, fontSize: "clamp(13px, 2vw, 14px)" }}>
+                    <span
+                      style={{
+                        opacity: 0.6,
+                        fontSize: "clamp(12px, 2vw, 14px)",
+                      }}
+                    >
+                      Time
+                    </span>
+                    <span
+                      style={{
+                        fontWeight: 500,
+                        fontSize: "clamp(13px, 2vw, 14px)",
+                      }}
+                    >
                       {(() => {
                         if (timeFormat === "12h") {
                           const [h, m] = selectedTime.split(":").map(Number);
@@ -1952,11 +2030,18 @@ export function BookingWidgetBlock({
                       justifyContent: "space-between",
                       alignItems: "center",
                       paddingTop: "10px",
-                      borderTop: `1.5px solid ${dividerColor || "#e5e7eb"}`,
+                      borderTop: `1.5px solid ${dividerColor || borderFallback}`,
                       marginTop: "4px",
                     }}
                   >
-                    <span style={{ fontWeight: 600, fontSize: "clamp(13px, 2vw, 15px)" }}>Total</span>
+                    <span
+                      style={{
+                        fontWeight: 600,
+                        fontSize: "clamp(13px, 2vw, 15px)",
+                      }}
+                    >
+                      Total
+                    </span>
                     <span
                       style={{
                         fontWeight: priceFontWeight,
@@ -1979,7 +2064,7 @@ export function BookingWidgetBlock({
               style={{
                 padding: "clamp(12px, 2vw, 16px)",
                 borderRadius: cardBorderRadius,
-                border: `1px solid ${cardBorderColor || "#e5e7eb"}`,
+                border: `1px solid ${cardBorderColor || borderFallback}`,
                 fontSize: "clamp(12px, 2vw, 14px)",
               }}
             >
@@ -1992,19 +2077,15 @@ export function BookingWidgetBlock({
               >
                 Contact Details
               </h4>
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                {formData.name && (
-                  <p style={{ margin: 0 }}>{formData.name}</p>
-                )}
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: "6px" }}
+              >
+                {formData.name && <p style={{ margin: 0 }}>{formData.name}</p>}
                 {formData.email && (
-                  <p style={{ margin: 0, opacity: 0.65 }}>
-                    {formData.email}
-                  </p>
+                  <p style={{ margin: 0, opacity: 0.65 }}>{formData.email}</p>
                 )}
                 {formData.phone && (
-                  <p style={{ margin: 0, opacity: 0.65 }}>
-                    {formData.phone}
-                  </p>
+                  <p style={{ margin: 0, opacity: 0.65 }}>{formData.phone}</p>
                 )}
                 {formData.notes && (
                   <p style={{ margin: 0, opacity: 0.65, fontStyle: "italic" }}>
@@ -2022,7 +2103,7 @@ export function BookingWidgetBlock({
         className="flex flex-col-reverse sm:flex-row sm:justify-between sm:items-center gap-3"
         style={{
           padding,
-          borderTop: `1px solid ${dividerColor || borderColor || "#e5e7eb"}`,
+          borderTop: `1px solid ${dividerColor || borderColor || borderFallback}`,
         }}
       >
         {currentStep > 0 ? (
@@ -2034,7 +2115,7 @@ export function BookingWidgetBlock({
               borderRadius: buttonBorderRadius,
               backgroundColor: secBtnBg,
               color: secBtnText,
-              border: `1px solid ${borderColor || "#e5e7eb"}`,
+              border: `1px solid ${borderColor || borderFallback}`,
               fontSize: buttonFontSize,
               fontWeight: buttonFontWeight,
               cursor: "pointer",

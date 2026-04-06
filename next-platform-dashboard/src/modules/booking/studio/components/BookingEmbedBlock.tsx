@@ -8,8 +8,9 @@
  */
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
+import { resolveBrandColors } from "@/lib/studio/engine/brand-colors";
 import {
   Code,
   Eye,
@@ -193,7 +194,7 @@ export function BookingEmbedBlock({
   borderColor,
   dividerColor,
   noSiteIconColor,
-  copySuccessColor = "#22c55e",
+  copySuccessColor = "",
 
   // Typography
   titleFontSize = "18px",
@@ -226,9 +227,15 @@ export function BookingEmbedBlock({
   const [activeTab, setActiveTab] = useState<"preview" | "code">("preview");
   const [copied, setCopied] = useState(false);
 
-  // Resolved colors — fall back to CSS variables from the branding system
-  const pc = primaryColor || "var(--brand-primary, #0f172a)";
-  const resolvedBtnText = btnTextColor || "var(--brand-button-text, #ffffff)";
+  // Resolved colors — fall back to brand palette
+  const brandPalette = useMemo(() => resolveBrandColors({ primaryColor, backgroundColor, textColor }), [primaryColor, backgroundColor, textColor]);
+  const borderFallback = brandPalette.border;
+  const dividerFallback = brandPalette.divider;
+  const mutedColor = brandPalette.muted;
+
+  const pc = primaryColor || brandPalette.primary;
+  const resolvedBtnText = btnTextColor || brandPalette.buttonText;
+  const resolvedCopySuccess = copySuccessColor || brandPalette.success;
 
   const resolvedUrl =
     embedUrl || (siteId ? `https://app.dramacagency.com/book/${siteId}` : "");
@@ -239,11 +246,11 @@ export function BookingEmbedBlock({
   const noSiteIcon = noSiteIconColor || pc;
 
   const embedCode = resolvedUrl
-    ? `<iframe\n  src="${resolvedUrl}"\n  width="${embedWidth}"\n  height="${embedHeight}"\n  frameborder="0"\n  allow="payment"\n  style="border-radius: ${embedBorderRadius}; border: ${showBorder ? `1px solid ${embedBorderColor || "#e5e7eb"}` : "none"};"\n  ${allowFullscreen ? "allowfullscreen" : ""}\n  ${lazyLoad ? 'loading="lazy"' : ""}\n></iframe>`
+    ? `<iframe\n  src="${resolvedUrl}"\n  width="${embedWidth}"\n  height="${embedHeight}"\n  frameborder="0"\n  allow="payment"\n  style="border-radius: ${embedBorderRadius}; border: ${showBorder ? `1px solid ${embedBorderColor || borderFallback}` : "none"};"\n  ${allowFullscreen ? "allowfullscreen" : ""}\n  ${lazyLoad ? 'loading="lazy"' : ""}\n></iframe>`
     : "";
 
   const popupCode = resolvedUrl
-    ? `<script>\n  function openBooking() {\n    window.open('${resolvedUrl}', 'booking', 'width=500,height=700');\n  }\n</script>\n<button onclick="openBooking()"\n  style="padding: 12px 24px; background: ${pc}; color: #fff; border: none; border-radius: ${buttonBorderRadius}; cursor: pointer; font-size: ${buttonFontSize};">\n  ${buttonText}\n</button>`
+    ? `<script>\n  function openBooking() {\n    window.open('${resolvedUrl}', 'booking', 'width=500,height=700');\n  }\n</script>\n<button onclick="openBooking()"\n  style="padding: 12px 24px; background: ${pc}; color: ${resolvedBtnText}; border: none; border-radius: ${buttonBorderRadius}; cursor: pointer; font-size: ${buttonFontSize};">\n  ${buttonText}\n</button>`
     : "";
 
   const handleCopy = async () => {
@@ -268,7 +275,7 @@ export function BookingEmbedBlock({
           backgroundColor: backgroundColor || undefined,
           color: textColor || undefined,
           borderRadius,
-          border: `${borderWidth} solid ${borderColor || "#e5e7eb"}`,
+          border: `${borderWidth} solid ${borderColor || borderFallback}`,
           boxShadow: SHADOW_MAP[shadow] || "none",
           width: width || "100%",
           padding: "40px 20px",
@@ -348,11 +355,11 @@ export function BookingEmbedBlock({
         color: toolbarTextColor || undefined,
         borderBottom:
           toolbarPosition === "top"
-            ? `1px solid ${dividerColor || borderColor || "#e5e7eb"}`
+            ? `1px solid ${dividerColor || borderColor || dividerFallback}`
             : undefined,
-        borderTop:
-          toolbarPosition === "bottom"
-            ? `1px solid ${dividerColor || borderColor || "#e5e7eb"}`
+          borderTop:
+            toolbarPosition === "bottom"
+            ? `1px solid ${dividerColor || borderColor || dividerFallback}`
             : undefined,
       }}
     >
@@ -402,9 +409,9 @@ export function BookingEmbedBlock({
             style={{
               padding: "6px 12px",
               borderRadius: tabBorderRadius,
-              backgroundColor: copied ? `${copySuccessColor}10` : "transparent",
-              color: copied ? copySuccessColor : undefined,
-              border: `1px solid ${copied ? copySuccessColor : borderColor || "#e5e7eb"}`,
+              backgroundColor: copied ? `${resolvedCopySuccess}10` : "transparent",
+              color: copied ? resolvedCopySuccess : undefined,
+              border: `1px solid ${copied ? resolvedCopySuccess : borderColor || borderFallback}`,
               fontSize: tabFontSize,
               cursor: "pointer",
               display: "flex",
@@ -427,7 +434,7 @@ export function BookingEmbedBlock({
             borderRadius: tabBorderRadius,
             backgroundColor: "transparent",
             color: undefined,
-            border: `1px solid ${borderColor || "#e5e7eb"}`,
+            border: `1px solid ${borderColor || borderFallback}`,
             fontSize: tabFontSize,
             cursor: "pointer",
             display: "flex",
@@ -448,7 +455,7 @@ export function BookingEmbedBlock({
         backgroundColor: backgroundColor || undefined,
         color: textColor || undefined,
         borderRadius,
-        border: `${borderWidth} solid ${borderColor || "#e5e7eb"}`,
+        border: `${borderWidth} solid ${borderColor || borderFallback}`,
         boxShadow: SHADOW_MAP[shadow] || "none",
         width: width || "100%",
         minHeight: minHeight || undefined,
@@ -465,7 +472,7 @@ export function BookingEmbedBlock({
             padding,
             backgroundColor: headerBackgroundColor || undefined,
             color: headerTextColor || textColor || undefined,
-            borderBottom: `1px solid ${dividerColor || borderColor || "#e5e7eb"}`,
+            borderBottom: `1px solid ${dividerColor || borderColor || dividerFallback}`,
             textAlign: headerAlignment,
           }}
         >
@@ -533,11 +540,11 @@ export function BookingEmbedBlock({
               style={{
                 borderRadius: embedBorderRadius,
                 border: showBorder
-                  ? `1px solid ${embedBorderColor || "#e5e7eb"}`
+                  ? `1px solid ${embedBorderColor || borderFallback}`
                   : "none",
                 boxShadow: SHADOW_MAP[embedShadow] || "none",
                 overflow: "hidden",
-                backgroundColor: embedBackgroundColor || "#f9fafb",
+                backgroundColor: embedBackgroundColor || mutedColor,
               }}
             >
               <iframe
@@ -561,8 +568,8 @@ export function BookingEmbedBlock({
           <div
             style={{
               borderRadius: embedBorderRadius,
-              backgroundColor: codeBackgroundColor || "#1e1e1e",
-              color: codeTextColor || "#d4d4d4",
+              backgroundColor: codeBackgroundColor || brandPalette.foreground,
+              color: codeTextColor || brandPalette.mutedForeground,
               padding: "16px",
               fontSize: codeFontSize,
               fontFamily: codeFontFamily,

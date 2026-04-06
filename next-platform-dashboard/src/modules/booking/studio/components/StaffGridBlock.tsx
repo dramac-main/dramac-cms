@@ -11,6 +11,7 @@
 import React, { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { useBreakpointDown } from "@/hooks/use-media-query";
+import { resolveBrandColors } from "@/lib/studio/engine/brand-colors";
 import {
   Star,
   Clock,
@@ -296,11 +297,11 @@ export function StaffGridBlock({
   roleColor,
   bioColor,
   ratingColor,
-  starColor = "#f59e0b",
+  starColor = "",
   specialtyBgColor,
   specialtyTextColor,
-  availableDotColor = "#22c55e",
-  unavailableDotColor = "#ef4444",
+  availableDotColor = "",
+  unavailableDotColor = "",
   buttonBackgroundColor,
   buttonTextColor: btnTextColor = "",
   buttonHoverColor,
@@ -401,9 +402,16 @@ export function StaffGridBlock({
     return staff.slice(0, maxStaff);
   }, [dataStaff, searchQuery, activeSpecialty, maxStaff, sortBy]);
 
-  // Resolved colors — fall back to CSS variables from the branding system
-  const pc = primaryColor || "var(--brand-primary, #0f172a)";
-  const resolvedBtnText = btnTextColor || "var(--brand-button-text, #ffffff)";
+  // Resolved colors — fall back to brand palette
+  const brandPalette = useMemo(() => resolveBrandColors({ primaryColor, backgroundColor, textColor }), [primaryColor, backgroundColor, textColor]);
+  const borderFallback = brandPalette.border;
+  const dividerFallback = brandPalette.divider;
+
+  const pc = primaryColor || brandPalette.primary;
+  const resolvedBtnText = btnTextColor || brandPalette.buttonText;
+  const resolvedStarColor = starColor || brandPalette.ratingColor;
+  const resolvedAvailDot = availableDotColor || brandPalette.success;
+  const resolvedUnavailDot = unavailableDotColor || brandPalette.error;
 
   const btnBg = buttonBackgroundColor || pc;
   const avSize = AVATAR_SIZES[avatarSize];
@@ -427,7 +435,7 @@ export function StaffGridBlock({
         style={{
           backgroundColor: backgroundColor || undefined,
           borderRadius,
-          border: `${borderWidth} solid ${borderColor || "#e5e7eb"}`,
+          border: `${borderWidth} solid ${borderColor || borderFallback}`,
           padding,
           minHeight: "200px",
           display: "flex",
@@ -459,7 +467,7 @@ export function StaffGridBlock({
         backgroundColor: backgroundColor || undefined,
         color: textColor || undefined,
         borderRadius,
-        border: `${borderWidth} solid ${borderColor || "#e5e7eb"}`,
+        border: `${borderWidth} solid ${borderColor || borderFallback}`,
         boxShadow: SHADOW_MAP[shadow] || "none",
         width: width || "100%",
         minHeight: minHeight || undefined,
@@ -476,7 +484,7 @@ export function StaffGridBlock({
             padding,
             backgroundColor: headerBackgroundColor || undefined,
             color: headerTextColor || textColor || undefined,
-            borderBottom: `1px solid ${dividerColor || borderColor || "#e5e7eb"}`,
+            borderBottom: `1px solid ${dividerColor || borderColor || dividerFallback}`,
             textAlign: headerAlignment,
           }}
         >
@@ -535,7 +543,7 @@ export function StaffGridBlock({
                     width: "100%",
                     padding: "9px 12px 9px 34px",
                     borderRadius: buttonBorderRadius,
-                    border: `1px solid ${searchBorderColor || borderColor || "#e5e7eb"}`,
+                    border: `1px solid ${searchBorderColor || borderColor || borderFallback}`,
                     backgroundColor: searchBgColor || "transparent",
                     fontSize: searchFontSize,
                     outline: "none",
@@ -553,9 +561,9 @@ export function StaffGridBlock({
                     borderRadius: specialtyBorderRadius,
                     fontSize: specialtyFontSize,
                     fontWeight: 500,
-                    border: `1px solid ${!activeSpecialty ? pc : borderColor || "#e5e7eb"}`,
+                    border: `1px solid ${!activeSpecialty ? pc : borderColor || borderFallback}`,
                     backgroundColor: !activeSpecialty ? pc : "transparent",
-                    color: !activeSpecialty ? "#fff" : undefined,
+                    color: !activeSpecialty ? brandPalette.primaryForeground : undefined,
                     cursor: "pointer",
                   }}
                 >
@@ -570,10 +578,10 @@ export function StaffGridBlock({
                       borderRadius: specialtyBorderRadius,
                       fontSize: specialtyFontSize,
                       fontWeight: 500,
-                      border: `1px solid ${activeSpecialty === sp ? pc : borderColor || "#e5e7eb"}`,
+                      border: `1px solid ${activeSpecialty === sp ? pc : borderColor || borderFallback}`,
                       backgroundColor:
                         activeSpecialty === sp ? pc : "transparent",
-                      color: activeSpecialty === sp ? "#fff" : undefined,
+                      color: activeSpecialty === sp ? brandPalette.primaryForeground : undefined,
                       cursor: "pointer",
                     }}
                   >
@@ -616,7 +624,7 @@ export function StaffGridBlock({
                 style={{
                   padding: cardPadding,
                   borderRadius: cardBorderRadius,
-                  border: `${borderWidth} solid ${cardBorderColor || "#e5e7eb"}`,
+                  border: `${borderWidth} solid ${cardBorderColor || borderFallback}`,
                   backgroundColor: cardBackgroundColor || undefined,
                   boxShadow: SHADOW_MAP[cardShadow] || "none",
                   textAlign: contentAlignment,
@@ -734,8 +742,8 @@ export function StaffGridBlock({
                         style={{
                           width: 14,
                           height: 14,
-                          fill: starColor,
-                          color: starColor,
+                          fill: resolvedStarColor,
+                          color: resolvedStarColor,
                         }}
                       />
                       <span
@@ -824,8 +832,8 @@ export function StaffGridBlock({
                           height: 8,
                           borderRadius: "50%",
                           backgroundColor: staff.bookable
-                            ? availableDotColor
-                            : unavailableDotColor,
+                            ? resolvedAvailDot
+                            : resolvedUnavailDot,
                           display: "inline-block",
                         }}
                       />
@@ -893,8 +901,8 @@ export function StaffGridBlock({
                     style={{
                       padding: "8px 16px",
                       borderRadius: buttonBorderRadius,
-                      backgroundColor: staff.bookable ? btnBg : "#e5e7eb",
-                      color: staff.bookable ? resolvedBtnText : "#9ca3af",
+                      backgroundColor: staff.bookable ? btnBg : brandPalette.muted,
+                      color: staff.bookable ? resolvedBtnText : brandPalette.mutedForeground,
                       border: "none",
                       fontSize: buttonFontSize,
                       fontWeight: buttonFontWeight,
@@ -976,9 +984,9 @@ export const staffGridDefinition: ComponentDefinition = {
     sortBy: "name",
     primaryColor: "",
     buttonTextColor: "",
-    starColor: "#f59e0b",
-    availableDotColor: "#22c55e",
-    unavailableDotColor: "#ef4444",
+    starColor: "",
+    availableDotColor: "",
+    unavailableDotColor: "",
     borderRadius: "12px",
     cardBorderRadius: "12px",
     buttonBorderRadius: "8px",

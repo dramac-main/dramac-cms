@@ -11,6 +11,7 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { useBreakpointDown } from "@/hooks/use-media-query";
+import { resolveBrandColors } from "@/lib/studio/engine/brand-colors";
 import {
   ChevronLeft,
   ChevronRight,
@@ -226,13 +227,13 @@ export function BookingCalendarBlock({
   dayTextColor,
   dayHoverColor,
   selectedDayBgColor,
-  selectedDayTextColor = "#ffffff",
+  selectedDayTextColor = "",
   todayBorderColor,
   disabledDayColor,
   slotBackgroundColor,
   slotHoverColor,
   slotSelectedBgColor,
-  slotSelectedTextColor = "#ffffff",
+  slotSelectedTextColor = "",
   slotUnavailableColor,
   borderColor,
   dividerColor,
@@ -432,16 +433,23 @@ export function BookingCalendarBlock({
     : resolveResponsive(timeSlotsColumns, layout === "side-by-side" ? 2 : 4);
 
   // Resolved colors — fall back to CSS variables from the branding system
-  const pc = primaryColor || "var(--brand-primary, #0f172a)";
+  const brandPalette = useMemo(() => resolveBrandColors({ primaryColor, backgroundColor, textColor }), [primaryColor, backgroundColor, textColor]);
+  const borderFallback = brandPalette.border;
+  const dividerFallback = brandPalette.divider;
+  const mutedFgColor = brandPalette.mutedForeground;
+
+  const pc = primaryColor || brandPalette.primary;
 
   const accentColor = selectedDayBgColor || pc;
   const slotAccent = slotSelectedBgColor || pc;
   const todayBorder = todayBorderColor || pc;
   const hoverBg = dayHoverColor || `${pc}15`;
   const slotHover = slotHoverColor || `${pc}15`;
-  const unavailColor = slotUnavailableColor || disabledDayColor || "#d1d5db";
-  const legendAvail = legendDotAvailableColor || "#22c55e";
+  const unavailColor = slotUnavailableColor || disabledDayColor || mutedFgColor;
+  const legendAvail = legendDotAvailableColor || brandPalette.success;
   const legendUnavail = legendDotUnavailableColor || unavailColor;
+  const resolvedSelectedDayText = selectedDayTextColor || brandPalette.primaryForeground;
+  const resolvedSlotSelectedText = slotSelectedTextColor || brandPalette.primaryForeground;
 
   const isSideBySide = layout === "side-by-side";
   const isCompact = layout === "compact" || calendarSize === "sm";
@@ -452,7 +460,7 @@ export function BookingCalendarBlock({
       style={{
         backgroundColor: backgroundColor || undefined,
         color: textColor || undefined,
-        border: `${borderWidth} ${borderStyle} ${borderColor || "#e5e7eb"}`,
+        border: `${borderWidth} ${borderStyle} ${borderColor || borderFallback}`,
         borderRadius: radius,
         boxShadow: SHADOW_MAP[shadow] || "none",
         width: resolvedWidth,
@@ -470,7 +478,7 @@ export function BookingCalendarBlock({
             padding: resolvedPadding,
             backgroundColor: headerBackgroundColor || undefined,
             color: headerTextColor || textColor || undefined,
-            borderBottom: `1px solid ${dividerColor || borderColor || "#e5e7eb"}`,
+            borderBottom: `1px solid ${dividerColor || borderColor || dividerFallback}`,
             textAlign: headerAlignment,
           }}
         >
@@ -660,9 +668,9 @@ export function BookingCalendarBlock({
                         ? accentColor
                         : undefined,
                       color: isSelected(date)
-                        ? selectedDayTextColor
+                        ? resolvedSelectedDayText
                         : isPast(date)
-                          ? disabledDayColor || "#d1d5db"
+                          ? disabledDayColor || mutedFgColor
                           : dayTextColor || undefined,
                       border:
                         isToday(date) && !isSelected(date)
@@ -746,10 +754,10 @@ export function BookingCalendarBlock({
             style={{
               padding: resolvedPadding,
               borderTop: !isSideBySide
-                ? `1px solid ${dividerColor || borderColor || "#e5e7eb"}`
+                ? `1px solid ${dividerColor || borderColor || dividerFallback}`
                 : undefined,
               borderLeft: isSideBySide
-                ? `1px solid ${dividerColor || borderColor || "#e5e7eb"}`
+                ? `1px solid ${dividerColor || borderColor || dividerFallback}`
                 : undefined,
               flex: isSideBySide ? 1 : undefined,
             }}
@@ -842,13 +850,13 @@ export function BookingCalendarBlock({
                                 : `${unavailColor}20`,
                           color:
                             selectedTime === slot.time
-                              ? slotSelectedTextColor
+                              ? resolvedSlotSelectedText
                               : slot.available
                                 ? undefined
                                 : unavailColor,
                           border:
                             slot.available && selectedTime !== slot.time
-                              ? `1px solid ${borderColor || "#e5e7eb"}`
+                              ? `1px solid ${borderColor || borderFallback}`
                               : selectedTime === slot.time
                                 ? `1px solid ${slotAccent}`
                                 : "1px solid transparent",

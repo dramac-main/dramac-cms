@@ -8,7 +8,7 @@
  */
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useBreakpointDown } from "@/hooks/use-media-query";
 import {
@@ -30,6 +30,11 @@ import type { ComponentDefinition } from "@/types/studio";
 import { useCreateBooking } from "../../hooks/useCreateBooking";
 import { useStorefrontAuth } from "@/modules/ecommerce/context/storefront-auth-context";
 import { Button } from "@/components/ui/button";
+import {
+  resolveBrandColors,
+  lighten,
+  darken,
+} from "@/lib/studio/engine/brand-colors";
 
 // =============================================================================
 // TYPES
@@ -371,8 +376,8 @@ export function BookingFormBlock({
   buttonBackgroundColor,
   buttonTextColor = "",
   buttonHoverColor,
-  errorColor = "#ef4444",
-  successColor = "#22c55e",
+  errorColor = "",
+  successColor = "",
   successBgColor,
   requiredAsteriskColor,
   borderColor,
@@ -428,14 +433,34 @@ export function BookingFormBlock({
   // Real booking creation hook — only active when siteId exists
   const { createBooking } = useCreateBooking(siteId || "");
 
-  // Resolved colors — fall back to CSS variables from the branding system
-  const pc = primaryColor || "var(--brand-primary, #0f172a)";
-  const btnTxt = buttonTextColor || "var(--brand-button-text, #ffffff)";
+  // Build a complete brand palette from whatever color props the site provides
+  const brandPalette = useMemo(
+    () =>
+      resolveBrandColors({
+        primaryColor: primaryColor || undefined,
+        backgroundColor: backgroundColor || undefined,
+        textColor: textColor || undefined,
+      }),
+    [primaryColor, backgroundColor, textColor],
+  );
 
-  const btnBg = buttonBackgroundColor || pc;
-  const focusBorder = inputFocusBorderColor || pc;
-  const asteriskColor = requiredAsteriskColor || errorColor;
-  const successBg = successBgColor || `${successColor}08`;
+  // Resolved colors — every fallback now comes from the brand palette
+  const pc = primaryColor || brandPalette.primary;
+  const btnTxt = buttonTextColor || brandPalette.buttonText;
+
+  // Semantic state colors — resolved from props, falling back to palette
+  const errClr = errorColor || brandPalette.error;
+  const succClr = successColor || brandPalette.success;
+
+  const btnBg = buttonBackgroundColor || brandPalette.buttonBg;
+  const focusBorder = inputFocusBorderColor || brandPalette.inputFocus;
+  const asteriskColor = requiredAsteriskColor || errClr;
+  const successBg = successBgColor || `${succClr}08`;
+
+  // Common fallback colors (previously hardcoded)
+  const borderFallback = brandPalette.border;
+  const inputBorderFallback = brandPalette.inputBorder;
+  const dividerFallback = brandPalette.divider;
 
   const validate = useCallback(
     (field: string, value: string): string => {
@@ -597,8 +622,13 @@ export function BookingFormBlock({
   useEffect(() => {
     if (!isSuccess || !lastBookingId || !siteId) return;
     const storageKey = `dramac_booking_chat_opened_${lastBookingId}`;
-    if (typeof sessionStorage !== "undefined" && sessionStorage.getItem(storageKey)) return;
-    if (typeof sessionStorage !== "undefined") sessionStorage.setItem(storageKey, "1");
+    if (
+      typeof sessionStorage !== "undefined" &&
+      sessionStorage.getItem(storageKey)
+    )
+      return;
+    if (typeof sessionStorage !== "undefined")
+      sessionStorage.setItem(storageKey, "1");
     const timer = setTimeout(() => {
       openChatWithBookingContext();
     }, 3000);
@@ -651,7 +681,7 @@ export function BookingFormBlock({
             width: "100%",
             padding: "10px 12px",
             borderRadius: inputBorderRadius,
-            border: `${borderWidth} solid ${errors[field] && touched[field] ? errorColor : inputBorderColor || "#e5e7eb"}`,
+            border: `${borderWidth} solid ${errors[field] && touched[field] ? errClr : inputBorderColor || inputBorderFallback}`,
             backgroundColor: inputBackgroundColor || undefined,
             color: inputTextColor || undefined,
             fontSize: inputFontSize,
@@ -675,7 +705,7 @@ export function BookingFormBlock({
             width: "100%",
             padding: "10px 12px",
             borderRadius: inputBorderRadius,
-            border: `${borderWidth} solid ${errors[field] && touched[field] ? errorColor : inputBorderColor || "#e5e7eb"}`,
+            border: `${borderWidth} solid ${errors[field] && touched[field] ? errClr : inputBorderColor || inputBorderFallback}`,
             backgroundColor: inputBackgroundColor || undefined,
             color: inputTextColor || undefined,
             fontSize: inputFontSize,
@@ -692,7 +722,7 @@ export function BookingFormBlock({
         <span
           style={{
             fontSize: errorFontSize,
-            color: errorColor,
+            color: errClr,
             display: "flex",
             alignItems: "center",
             gap: "4px",
@@ -712,7 +742,8 @@ export function BookingFormBlock({
     const displayMessage = isPending
       ? "Your appointment request has been submitted and is awaiting confirmation. You\u2019ll receive an email once confirmed."
       : successMessage;
-    const displayColor = isPending ? "#f59e0b" : successColor;
+    const displayColor = pc;
+    const statusColor = isPending ? brandPalette.warning : brandPalette.success;
     const DisplayIcon = isPending ? Clock : CircleCheck;
     const formattedDate = startTime
       ? new Date(startTime).toLocaleDateString("en-US", {
@@ -828,8 +859,8 @@ export function BookingFormBlock({
                 fontWeight: 600,
                 padding: "3px 10px",
                 borderRadius: "999px",
-                backgroundColor: isPending ? "#fef3c7" : "#d1fae5",
-                color: isPending ? "#92400e" : "#065f46",
+                backgroundColor: lighten(statusColor, 0.85),
+                color: darken(statusColor, 0.4),
               }}
             >
               <DisplayIcon style={{ width: 12, height: 12 }} />
@@ -937,7 +968,7 @@ export function BookingFormBlock({
         backgroundColor: backgroundColor || undefined,
         color: textColor || undefined,
         borderRadius,
-        border: `${borderWidth} solid ${borderColor || "#e5e7eb"}`,
+        border: `${borderWidth} solid ${borderColor || borderFallback}`,
         boxShadow: SHADOW_MAP[shadow] || "none",
         width: width || "100%",
         minHeight: minHeight || undefined,
@@ -954,7 +985,7 @@ export function BookingFormBlock({
             padding,
             backgroundColor: headerBackgroundColor || undefined,
             color: headerTextColor || textColor || undefined,
-            borderBottom: `1px solid ${dividerColor || borderColor || "#e5e7eb"}`,
+            borderBottom: `1px solid ${dividerColor || borderColor || borderFallback}`,
             textAlign: headerAlignment,
           }}
         >
@@ -1095,8 +1126,8 @@ export function BookingFormBlock({
             style={{
               padding: "8px 12px",
               borderRadius: "6px",
-              backgroundColor: `${errorColor}10`,
-              color: errorColor,
+              backgroundColor: `${errClr}10`,
+              color: errClr,
               fontSize: errorFontSize,
               marginTop: "12px",
               display: "flex",

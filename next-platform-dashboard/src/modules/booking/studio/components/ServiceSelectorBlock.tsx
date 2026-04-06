@@ -11,6 +11,7 @@
 import React, { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { useBreakpointDown } from "@/hooks/use-media-query";
+import { resolveBrandColors } from "@/lib/studio/engine/brand-colors";
 import {
   Clock,
   Coins,
@@ -422,11 +423,15 @@ export function ServiceSelectorBlock({
     }
   };
 
-  // Resolved colors — fall back to CSS variables from the branding system
-  const pc = primaryColor || "var(--brand-primary, #0f172a)";
-  const btnTxt = buttonTextColor || "var(--brand-button-text, #ffffff)";
-  const badgeTxt = featuredBadgeTextColor || "#ffffff";
-  const ratingClr = ratingColor || "#f59e0b";
+  // Resolved colors — fall back to brand palette
+  const brandPalette = useMemo(() => resolveBrandColors({ primaryColor, backgroundColor, textColor }), [primaryColor, backgroundColor, textColor]);
+  const borderFallback = brandPalette.border;
+  const dividerFallback = brandPalette.divider;
+
+  const pc = primaryColor || brandPalette.primary;
+  const btnTxt = buttonTextColor || brandPalette.buttonText;
+  const badgeTxt = featuredBadgeTextColor || brandPalette.primaryForeground;
+  const ratingClr = ratingColor || brandPalette.ratingColor;
 
   const btnBg = buttonBackgroundColor || pc;
   const selectedBorder = cardSelectedBorderColor || pc;
@@ -445,7 +450,7 @@ export function ServiceSelectorBlock({
         style={{
           backgroundColor: backgroundColor || undefined,
           borderRadius,
-          border: `${borderWidth} solid ${cardBorderColor || "#e5e7eb"}`,
+          border: `${borderWidth} solid ${cardBorderColor || borderFallback}`,
           padding,
           minHeight: "200px",
           display: "flex",
@@ -477,7 +482,7 @@ export function ServiceSelectorBlock({
         backgroundColor: backgroundColor || undefined,
         color: textColor || undefined,
         borderRadius,
-        border: `${borderWidth} solid ${cardBorderColor || "#e5e7eb"}`,
+        border: `${borderWidth} solid ${cardBorderColor || borderFallback}`,
         boxShadow: SHADOW_MAP[shadow] || "none",
         width: width || "100%",
         minHeight: minHeight || undefined,
@@ -494,7 +499,7 @@ export function ServiceSelectorBlock({
             padding,
             backgroundColor: headerBackgroundColor || undefined,
             color: headerTextColor || textColor || undefined,
-            borderBottom: `1px solid ${dividerColor || cardBorderColor || "#e5e7eb"}`,
+            borderBottom: `1px solid ${dividerColor || cardBorderColor || dividerFallback}`,
             textAlign: headerAlignment,
           }}
         >
@@ -555,7 +560,7 @@ export function ServiceSelectorBlock({
                     width: "100%",
                     padding: "8px 8px 8px 32px",
                     borderRadius: buttonBorderRadius,
-                    border: `1px solid ${searchBorderColor || cardBorderColor || "#e5e7eb"}`,
+                    border: `1px solid ${searchBorderColor || cardBorderColor || borderFallback}`,
                     backgroundColor: searchBgColor || "transparent",
                     fontSize: "14px",
                     outline: "none",
@@ -580,9 +585,9 @@ export function ServiceSelectorBlock({
                     borderRadius: "9999px",
                     fontSize: categoryFontSize,
                     fontWeight: 500,
-                    border: `1px solid ${!activeCategory ? pc : cardBorderColor || "#e5e7eb"}`,
+                    border: `1px solid ${!activeCategory ? pc : cardBorderColor || borderFallback}`,
                     backgroundColor: !activeCategory ? pc : "transparent",
-                    color: !activeCategory ? "#fff" : undefined,
+                    color: !activeCategory ? brandPalette.primaryForeground : undefined,
                     cursor: "pointer",
                   }}
                 >
@@ -597,14 +602,14 @@ export function ServiceSelectorBlock({
                       borderRadius: "9999px",
                       fontSize: categoryFontSize,
                       fontWeight: 500,
-                      border: `1px solid ${activeCategory === cat ? pc : cardBorderColor || "#e5e7eb"}`,
+                      border: `1px solid ${activeCategory === cat ? pc : cardBorderColor || borderFallback}`,
                       backgroundColor:
                         activeCategory === cat
                           ? pc
                           : categoryBgColor || "transparent",
                       color:
                         activeCategory === cat
-                          ? "#fff"
+                          ? brandPalette.primaryForeground
                           : categoryColor || undefined,
                       cursor: "pointer",
                     }}
@@ -650,7 +655,7 @@ export function ServiceSelectorBlock({
                   style={{
                     padding: cardPadding,
                     borderRadius: cardBorderRadius,
-                    border: `${isActive ? "2px" : borderWidth} solid ${isActive ? selectedBorder : cardBorderColor || "#e5e7eb"}`,
+                    border: `${isActive ? "2px" : borderWidth} solid ${isActive ? selectedBorder : cardBorderColor || borderFallback}`,
                     backgroundColor: isActive
                       ? selectedBg
                       : cardBackgroundColor || undefined,
@@ -748,8 +753,8 @@ export function ServiceSelectorBlock({
                         borderRadius: "4px",
                         fontSize: "11px",
                         fontWeight: 600,
-                        backgroundColor: "#ef4444",
-                        color: "#ffffff",
+                        backgroundColor: brandPalette.error,
+                        color: brandPalette.errorForeground,
                       }}
                     >
                       Unavailable

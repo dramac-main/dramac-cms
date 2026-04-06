@@ -139,7 +139,7 @@ function isLight(hex: string): boolean {
 }
 
 /** Lighten a hex color by a factor (0=no change, 1=white) */
-function lighten(hex: string, amount: number): string {
+export function lighten(hex: string, amount: number): string {
   const rgb = hexToRgb(hex);
   if (!rgb) return "#f8fafc";
   return rgbToHex(
@@ -150,7 +150,7 @@ function lighten(hex: string, amount: number): string {
 }
 
 /** Darken a hex color by a factor (0=no change, 1=black) */
-function darken(hex: string, amount: number): string {
+export function darken(hex: string, amount: number): string {
   const rgb = hexToRgb(hex);
   if (!rgb) return "#1e293b";
   return rgbToHex(
