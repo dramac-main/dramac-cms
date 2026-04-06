@@ -591,9 +591,10 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
       }
 
       // No existing conversation for this booking — create a new one
-      const statusText = pendingBookingCtx.status === "confirmed"
-        ? "has been confirmed"
-        : "is awaiting confirmation";
+      const statusText =
+        pendingBookingCtx.status === "confirmed"
+          ? "has been confirmed"
+          : "is awaiting confirmation";
       handleStartChat({
         email: pendingBookingCtx.email,
         message: `Hi, I just booked an appointment for ${pendingBookingCtx.serviceName} on ${pendingBookingCtx.bookingDate} at ${pendingBookingCtx.bookingTime}. My booking ${statusText}.`,

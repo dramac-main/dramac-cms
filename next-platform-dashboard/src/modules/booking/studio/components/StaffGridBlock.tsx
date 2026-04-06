@@ -403,7 +403,10 @@ export function StaffGridBlock({
   }, [dataStaff, searchQuery, activeSpecialty, maxStaff, sortBy]);
 
   // Resolved colors — fall back to brand palette
-  const brandPalette = useMemo(() => resolveBrandColors({ primaryColor, backgroundColor, textColor }), [primaryColor, backgroundColor, textColor]);
+  const brandPalette = useMemo(
+    () => resolveBrandColors({ primaryColor, backgroundColor, textColor }),
+    [primaryColor, backgroundColor, textColor],
+  );
   const borderFallback = brandPalette.border;
   const dividerFallback = brandPalette.divider;
 
@@ -563,7 +566,9 @@ export function StaffGridBlock({
                     fontWeight: 500,
                     border: `1px solid ${!activeSpecialty ? pc : borderColor || borderFallback}`,
                     backgroundColor: !activeSpecialty ? pc : "transparent",
-                    color: !activeSpecialty ? brandPalette.primaryForeground : undefined,
+                    color: !activeSpecialty
+                      ? brandPalette.primaryForeground
+                      : undefined,
                     cursor: "pointer",
                   }}
                 >
@@ -581,7 +586,10 @@ export function StaffGridBlock({
                       border: `1px solid ${activeSpecialty === sp ? pc : borderColor || borderFallback}`,
                       backgroundColor:
                         activeSpecialty === sp ? pc : "transparent",
-                      color: activeSpecialty === sp ? brandPalette.primaryForeground : undefined,
+                      color:
+                        activeSpecialty === sp
+                          ? brandPalette.primaryForeground
+                          : undefined,
                       cursor: "pointer",
                     }}
                   >
@@ -901,8 +909,12 @@ export function StaffGridBlock({
                     style={{
                       padding: "8px 16px",
                       borderRadius: buttonBorderRadius,
-                      backgroundColor: staff.bookable ? btnBg : brandPalette.muted,
-                      color: staff.bookable ? resolvedBtnText : brandPalette.mutedForeground,
+                      backgroundColor: staff.bookable
+                        ? btnBg
+                        : brandPalette.muted,
+                      color: staff.bookable
+                        ? resolvedBtnText
+                        : brandPalette.mutedForeground,
                       border: "none",
                       fontSize: buttonFontSize,
                       fontWeight: buttonFontWeight,

@@ -228,7 +228,10 @@ export function BookingEmbedBlock({
   const [copied, setCopied] = useState(false);
 
   // Resolved colors — fall back to brand palette
-  const brandPalette = useMemo(() => resolveBrandColors({ primaryColor, backgroundColor, textColor }), [primaryColor, backgroundColor, textColor]);
+  const brandPalette = useMemo(
+    () => resolveBrandColors({ primaryColor, backgroundColor, textColor }),
+    [primaryColor, backgroundColor, textColor],
+  );
   const borderFallback = brandPalette.border;
   const dividerFallback = brandPalette.divider;
   const mutedColor = brandPalette.muted;
@@ -357,8 +360,8 @@ export function BookingEmbedBlock({
           toolbarPosition === "top"
             ? `1px solid ${dividerColor || borderColor || dividerFallback}`
             : undefined,
-          borderTop:
-            toolbarPosition === "bottom"
+        borderTop:
+          toolbarPosition === "bottom"
             ? `1px solid ${dividerColor || borderColor || dividerFallback}`
             : undefined,
       }}
@@ -409,7 +412,9 @@ export function BookingEmbedBlock({
             style={{
               padding: "6px 12px",
               borderRadius: tabBorderRadius,
-              backgroundColor: copied ? `${resolvedCopySuccess}10` : "transparent",
+              backgroundColor: copied
+                ? `${resolvedCopySuccess}10`
+                : "transparent",
               color: copied ? resolvedCopySuccess : undefined,
               border: `1px solid ${copied ? resolvedCopySuccess : borderColor || borderFallback}`,
               fontSize: tabFontSize,

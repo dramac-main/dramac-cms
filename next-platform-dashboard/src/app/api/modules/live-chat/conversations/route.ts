@@ -358,7 +358,10 @@ export async function POST(request: NextRequest) {
     // For new conversations: always send initial message
     const shouldSendMessage =
       initialMessage &&
-      (!isExisting || !!orderContext?.orderNumber || !!quoteNumber || !!bookingId);
+      (!isExisting ||
+        !!orderContext?.orderNumber ||
+        !!quoteNumber ||
+        !!bookingId);
     if (shouldSendMessage) {
       const msgInsert: Record<string, unknown> = {
         conversation_id: conversationId,
@@ -427,7 +430,8 @@ export async function POST(request: NextRequest) {
         const capturedConvId = conversationId;
         const capturedMsg = initialMessage;
         const capturedVisitorId = visitorId;
-        const capturedIsPayment = !!isPaymentMsg || !!isQuoteMsg || !!isBookingMsg;
+        const capturedIsPayment =
+          !!isPaymentMsg || !!isQuoteMsg || !!isBookingMsg;
 
         after(async () => {
           try {

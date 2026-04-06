@@ -21,10 +21,38 @@
 - **INTERNAL NOTES SECURITY FIX + QUOTE ADDRESS COLLECTION — 4-LAYER DEFENSE, PORTAL ADDRESS FORM (4 files + DB)** ✅
 - **INTERNAL NOTES PREVIEW LEAK + @MENTION FIX + ORDER LIFECYCLE AUDIT — DB TRIGGER, NOTIFICATION TARGETING, FULL E2E VERIFIED (2 files + DB)** ✅
 - **BOOKING MODULE COMPREHENSIVE OVERHAUL — HARDCODED VALUES, SETTINGS, LIVE CHAT PANEL, NOTIFICATIONS, AI CONTEXT, STOREFRONT RESPONSIVE (14 modified + 2 new files)** ✅
+- **CART ITEMS SHIFTING FIX — ORDER BY created_at on nested cart_items queries (1 file)** ✅
+- **MULTI-TENANT STOREFRONT AUTH FIX — Replaced Supabase auth.users with bcrypt, 4 bugs fixed (critical security + isolation), password_hash column added, existing users migrated (3 files + migration)** ✅
+- **BOOKING AUTO-CHAT + STOREFRONT MODERNIZATION — Full booking→chat pipeline (postMessage→embed→ChatWidget→conversations API), modernized success screens with summary cards/reference/status/chat button, storefront UI modernization (transitions, responsive clamp, improved layouts) (5 files)** ✅
 
 ---
 
-## Latest Update: Booking Module Comprehensive Overhaul ✅ (commit 105d4bd1)
+## Latest Update: Booking Auto-Chat + Storefront Modernization ✅ (commit a9363b1f)
+
+### What Was Done
+
+Replaced Supabase `auth.users` dependency with bcrypt-based passwords (`password_hash` column) on the multi-tenant `mod_ecommod01_customers` table. Fixed 4 bugs:
+
+1. **CRITICAL**: Signup fails across sites (auth.users global unique email constraint)
+2. **CRITICAL**: set-password overwrites another site's password via updateUserById
+3. **HIGH**: listUsers() scanned ALL auth users (performance bomb)
+4. **MEDIUM**: Login used global signInWithPassword
+
+Key: `mod_ecommod01_customers` already had `UNIQUE(site_id, email)` — now that constraint actually works. Custom session system was already independent. bcryptjs 3.0.3 installed, 12 rounds. 2 existing users' hashes migrated from auth.users.
+
+**Git:** `e8f82331`, pushed. **TypeScript:** Zero errors.
+
+---
+
+## Previous Update: Cart Items Shifting Fix ✅ (commit bdc98f81)
+
+Added `ORDER BY created_at` to `findPublicCart()` and `getPublicCart()` nested cart_items queries. PostgreSQL returned items in non-deterministic order after quantity UPDATE.
+
+**Git:** `bdc98f81`, pushed.
+
+---
+
+## Previous Update: Booking Module Comprehensive Overhaul ✅ (commit 105d4bd1)
 
 ### What Was Done
 

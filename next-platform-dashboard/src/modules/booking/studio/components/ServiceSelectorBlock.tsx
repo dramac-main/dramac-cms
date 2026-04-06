@@ -424,7 +424,10 @@ export function ServiceSelectorBlock({
   };
 
   // Resolved colors — fall back to brand palette
-  const brandPalette = useMemo(() => resolveBrandColors({ primaryColor, backgroundColor, textColor }), [primaryColor, backgroundColor, textColor]);
+  const brandPalette = useMemo(
+    () => resolveBrandColors({ primaryColor, backgroundColor, textColor }),
+    [primaryColor, backgroundColor, textColor],
+  );
   const borderFallback = brandPalette.border;
   const dividerFallback = brandPalette.divider;
 
@@ -587,7 +590,9 @@ export function ServiceSelectorBlock({
                     fontWeight: 500,
                     border: `1px solid ${!activeCategory ? pc : cardBorderColor || borderFallback}`,
                     backgroundColor: !activeCategory ? pc : "transparent",
-                    color: !activeCategory ? brandPalette.primaryForeground : undefined,
+                    color: !activeCategory
+                      ? brandPalette.primaryForeground
+                      : undefined,
                     cursor: "pointer",
                   }}
                 >

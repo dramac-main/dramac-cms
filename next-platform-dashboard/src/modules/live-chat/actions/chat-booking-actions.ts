@@ -49,6 +49,9 @@ export interface ChatBookingContext {
   cancellationReason: string | null;
   cancelledAt: string | null;
   cancelledBy: string | null;
+  // Booking settings relevant to agent actions
+  requirePayment: boolean;
+  autoConfirm: boolean;
 }
 
 // =============================================================================
@@ -93,6 +96,13 @@ export async function getBookingContextForChat(
 
   if (!appointment) return null;
 
+  // Fetch booking settings for this site (require_payment, auto_confirm)
+  const { data: settings } = await db
+    .from(`${BOOKING_PREFIX}_settings`)
+    .select("require_payment, auto_confirm")
+    .eq("site_id", siteId)
+    .single();
+
   return {
     id: appointment.id,
     customerName: appointment.customer_name,
@@ -127,6 +137,8 @@ export async function getBookingContextForChat(
     cancellationReason: appointment.cancellation_reason,
     cancelledAt: appointment.cancelled_at,
     cancelledBy: appointment.cancelled_by,
+    requirePayment: settings?.require_payment ?? false,
+    autoConfirm: settings?.auto_confirm ?? false,
   };
 }
 
@@ -141,6 +153,10 @@ export async function updateBookingStatusFromChat(
   siteId: string,
   bookingId: string,
   newStatus: string,
+  options?: {
+    cancellationReason?: string;
+    agentName?: string;
+  },
 ): Promise<{ error?: string }> {
   const supabase = await createClient();
   const {
@@ -169,8 +185,9 @@ export async function updateBookingStatusFromChat(
 
   if (newStatus === "cancelled") {
     updates.cancelled_at = new Date().toISOString();
-    updates.cancelled_by = "admin";
-    updates.cancellation_reason = "Cancelled via live chat";
+    updates.cancelled_by = options?.agentName || "admin";
+    updates.cancellation_reason =
+      options?.cancellationReason?.trim() || "Cancelled via live chat";
   }
 
   const { error } = await db

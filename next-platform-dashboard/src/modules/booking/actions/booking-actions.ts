@@ -1058,13 +1058,72 @@ export async function updateSettings(
 ): Promise<BookingSettings> {
   const supabase = await getModuleClient();
 
+  if (!siteId) {
+    throw new Error("Site ID is required");
+  }
+
+  // Whitelist only valid settings columns to prevent unknown-column errors
+  const sanitized: Record<string, unknown> = {};
+  const ALLOWED_FIELDS = [
+    "business_name",
+    "currency",
+    "timezone",
+    "date_format",
+    "time_format",
+    "min_booking_notice_hours",
+    "max_booking_advance_days",
+    "cancellation_notice_hours",
+    "slot_interval_minutes",
+    "reminder_hours",
+    "auto_confirm",
+    "confirmation_email_enabled",
+    "accent_color",
+    "logo_url",
+    "require_payment",
+    "payment_provider",
+    "notification_email",
+    "auto_create_crm_contact",
+  ] as const;
+
+  for (const field of ALLOWED_FIELDS) {
+    if (field in (updates as Record<string, unknown>)) {
+      sanitized[field] = (updates as Record<string, unknown>)[field];
+    }
+  }
+
+  // Validate email format if provided
+  if (
+    sanitized.notification_email &&
+    typeof sanitized.notification_email === "string" &&
+    sanitized.notification_email.trim() !== ""
+  ) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(sanitized.notification_email)) {
+      throw new Error("Invalid notification email format");
+    }
+  }
+
+  // Validate numeric fields are positive
+  for (const numField of [
+    "min_booking_notice_hours",
+    "max_booking_advance_days",
+    "cancellation_notice_hours",
+    "slot_interval_minutes",
+  ]) {
+    if (numField in sanitized && typeof sanitized[numField] === "number") {
+      if (sanitized[numField] as number <= 0) {
+        throw new Error(`${numField} must be a positive number`);
+      }
+    }
+  }
+
   // Upsert settings (create if not exists)
   const { data, error } = await supabase
     .from(`${TABLE_PREFIX}_settings`)
     .upsert(
       {
         site_id: siteId,
-        ...updates,
+        ...sanitized,
       },
       {
         onConflict: "site_id",

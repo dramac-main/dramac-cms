@@ -535,7 +535,14 @@ export async function createPublicAppointment(
     }
 
     // Create the appointment
-    const status = service.require_confirmation ? "pending" : "confirmed";
+    // auto_confirm setting overrides per-service require_confirmation
+    const autoConfirm = settings?.auto_confirm ?? false;
+    const status =
+      autoConfirm || !service.require_confirmation ? "confirmed" : "pending";
+
+    // Wire require_payment setting to payment_status
+    const paymentStatus = settings?.require_payment ? "pending" : "not_required";
+    const paymentAmount = settings?.require_payment ? service.price : null;
 
     const { data: appointment, error } = await supabase
       .from(`${TABLE_PREFIX}_appointments`)
@@ -546,6 +553,8 @@ export async function createPublicAppointment(
         start_time: input.startTime.toISOString(),
         end_time: input.endTime.toISOString(),
         status,
+        payment_status: paymentStatus,
+        payment_amount: paymentAmount,
         customer_name: input.customerName,
         customer_email: input.customerEmail,
         customer_phone: input.customerPhone || null,

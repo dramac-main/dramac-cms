@@ -433,7 +433,10 @@ export function BookingCalendarBlock({
     : resolveResponsive(timeSlotsColumns, layout === "side-by-side" ? 2 : 4);
 
   // Resolved colors — fall back to CSS variables from the branding system
-  const brandPalette = useMemo(() => resolveBrandColors({ primaryColor, backgroundColor, textColor }), [primaryColor, backgroundColor, textColor]);
+  const brandPalette = useMemo(
+    () => resolveBrandColors({ primaryColor, backgroundColor, textColor }),
+    [primaryColor, backgroundColor, textColor],
+  );
   const borderFallback = brandPalette.border;
   const dividerFallback = brandPalette.divider;
   const mutedFgColor = brandPalette.mutedForeground;
@@ -448,8 +451,10 @@ export function BookingCalendarBlock({
   const unavailColor = slotUnavailableColor || disabledDayColor || mutedFgColor;
   const legendAvail = legendDotAvailableColor || brandPalette.success;
   const legendUnavail = legendDotUnavailableColor || unavailColor;
-  const resolvedSelectedDayText = selectedDayTextColor || brandPalette.primaryForeground;
-  const resolvedSlotSelectedText = slotSelectedTextColor || brandPalette.primaryForeground;
+  const resolvedSelectedDayText =
+    selectedDayTextColor || brandPalette.primaryForeground;
+  const resolvedSlotSelectedText =
+    slotSelectedTextColor || brandPalette.primaryForeground;
 
   const isSideBySide = layout === "side-by-side";
   const isCompact = layout === "compact" || calendarSize === "sm";

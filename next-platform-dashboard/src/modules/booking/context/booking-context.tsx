@@ -140,12 +140,10 @@ export function BookingProvider({ children, siteId, settings: initialSettings }:
         refreshCalendars()
       ])
       
-      // Also refresh settings if not provided initially
-      if (!initialSettings) {
-        const settingsData = await getSettings(siteId)
-        if (settingsData) {
-          setSettings(settingsData)
-        }
+      // Always refresh settings from DB to pick up latest changes
+      const settingsData = await getSettings(siteId)
+      if (settingsData) {
+        setSettings(settingsData)
       }
     } catch (err) {
       console.error('[Booking] Error refreshing data:', err)
@@ -153,7 +151,7 @@ export function BookingProvider({ children, siteId, settings: initialSettings }:
     } finally {
       setIsLoading(false)
     }
-  }, [refreshServices, refreshStaff, refreshAppointments, refreshCalendars, siteId, initialSettings])
+  }, [refreshServices, refreshStaff, refreshAppointments, refreshCalendars, siteId])
   
   // ---------------------------------------------------------------------------
   // INITIAL LOAD

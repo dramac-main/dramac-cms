@@ -291,7 +291,7 @@ export function BookingWidgetBlock({
   showServiceStep = true,
   showStaffStep = true,
   showSummary = true,
-  autoAdvance = false,
+  autoAdvance = true,
   requireStaff = false,
 
   // Data
@@ -514,6 +514,43 @@ export function BookingWidgetBlock({
     }));
   }, [siteId, realStaff, selectedService]);
 
+  // ── Smart Auto-Advance ───────────────────────────────────────────────────
+  // When there is exactly one option at the current step, auto-select and
+  // advance so the user doesn't have to tap a single card then "Continue".
+  const currentStepIdForEffect = steps[currentStep]?.id;
+
+  useEffect(() => {
+    if (!autoAdvance || !siteId) return; // only in live mode
+    if (
+      currentStepIdForEffect === "service" &&
+      !loadingServices &&
+      dataServices.length === 1 &&
+      !selectedService
+    ) {
+      setSelectedService(dataServices[0]);
+      setSelectedStaff(null);
+      // Use setTimeout to avoid state-update-during-render
+      const t = setTimeout(() => goNext(), 0);
+      return () => clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStepIdForEffect, autoAdvance, siteId, loadingServices, dataServices.length]);
+
+  useEffect(() => {
+    if (!autoAdvance || !siteId) return;
+    if (
+      currentStepIdForEffect === "staff" &&
+      !loadingStaff &&
+      dataStaff.length === 1 &&
+      !selectedStaff
+    ) {
+      setSelectedStaff(dataStaff[0]);
+      const t = setTimeout(() => goNext(), 0);
+      return () => clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStepIdForEffect, autoAdvance, siteId, loadingStaff, dataStaff.length]);
+
   const monthNames = [
     "January",
     "February",
@@ -729,7 +766,9 @@ export function BookingWidgetBlock({
           start_time: startTime,
           end_time: endTime,
           status: "pending",
-          payment_status: "not_required",
+          payment_status: bookingSettings?.require_payment
+            ? "pending"
+            : "not_required",
           metadata: {
             source: "website_widget",
             service_name: selectedService.name,
@@ -1188,7 +1227,10 @@ export function BookingWidgetBlock({
                               : isActive
                                 ? activeStep
                                 : "transparent",
-                            color: isDone || isActive ? brandPalette.primaryForeground : inactiveStep,
+                            color:
+                              isDone || isActive
+                                ? brandPalette.primaryForeground
+                                : inactiveStep,
                             border: `2px solid ${isDone ? completedStep : isActive ? activeStep : inactiveStep}`,
                             fontSize: "12px",
                             fontWeight: 600,
@@ -1757,7 +1799,8 @@ export function BookingWidgetBlock({
                   }}
                   onFocus={(e) => (e.target.style.borderColor = focusBorder)}
                   onBlur={(e) =>
-                    (e.target.style.borderColor = inputBorderColor || inputBorderFallback)
+                    (e.target.style.borderColor =
+                      inputBorderColor || inputBorderFallback)
                   }
                 />
               </div>
@@ -1794,7 +1837,8 @@ export function BookingWidgetBlock({
                   }}
                   onFocus={(e) => (e.target.style.borderColor = focusBorder)}
                   onBlur={(e) =>
-                    (e.target.style.borderColor = inputBorderColor || inputBorderFallback)
+                    (e.target.style.borderColor =
+                      inputBorderColor || inputBorderFallback)
                   }
                 />
               </div>
@@ -1831,7 +1875,8 @@ export function BookingWidgetBlock({
                   }}
                   onFocus={(e) => (e.target.style.borderColor = focusBorder)}
                   onBlur={(e) =>
-                    (e.target.style.borderColor = inputBorderColor || inputBorderFallback)
+                    (e.target.style.borderColor =
+                      inputBorderColor || inputBorderFallback)
                   }
                 />
               </div>
@@ -1869,7 +1914,8 @@ export function BookingWidgetBlock({
                   }}
                   onFocus={(e) => (e.target.style.borderColor = focusBorder)}
                   onBlur={(e) =>
-                    (e.target.style.borderColor = inputBorderColor || inputBorderFallback)
+                    (e.target.style.borderColor =
+                      inputBorderColor || inputBorderFallback)
                   }
                 />
               </div>
@@ -2056,6 +2102,59 @@ export function BookingWidgetBlock({
                     </span>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Payment Notice */}
+            {bookingSettings?.require_payment && selectedService && (
+              <div
+                style={{
+                  padding: "clamp(12px, 2vw, 16px)",
+                  borderRadius: cardBorderRadius,
+                  border: `1.5px solid ${pc}40`,
+                  backgroundColor: `${pc}08`,
+                  fontSize: "clamp(12px, 2vw, 14px)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                }}
+              >
+                <div
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: "50%",
+                    backgroundColor: `${pc}15`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Tag style={{ width: 16, height: 16, color: pc }} />
+                </div>
+                <div>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontWeight: 600,
+                      fontSize: "clamp(13px, 2vw, 14px)",
+                    }}
+                  >
+                    Payment Required
+                  </p>
+                  <p
+                    style={{
+                      margin: "2px 0 0",
+                      opacity: 0.65,
+                      fontSize: "clamp(11px, 2vw, 13px)",
+                    }}
+                  >
+                    Payment of{" "}
+                    {formatPrice(selectedService.price, selectedService.currency)}{" "}
+                    will be due to confirm your booking.
+                  </p>
+                </div>
               </div>
             )}
 
@@ -2251,7 +2350,7 @@ export const bookingWidgetDefinition: ComponentDefinition = {
     showServiceStep: true,
     showStaffStep: true,
     showSummary: true,
-    autoAdvance: false,
+    autoAdvance: true,
     stepIndicatorStyle: "dots",
     headerAlignment: "center",
     layout: "standard",

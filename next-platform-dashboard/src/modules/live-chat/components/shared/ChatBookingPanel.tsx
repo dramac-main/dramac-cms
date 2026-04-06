@@ -24,6 +24,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
+import {
   Calendar,
   Clock,
   User,
@@ -35,6 +46,7 @@ import {
   CircleCheck,
   CircleX,
   AlertCircle,
+  DollarSign,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/locale-config";
@@ -122,10 +134,12 @@ export function ChatBookingPanel({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  // Suppress unused variable warnings — userId/userName kept for future use
-  // (e.g., audit trail when status changes need to track who made the change)
+  // Confirmation dialog state
+  const [confirmAction, setConfirmAction] = useState<string | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+
+  // Suppress unused variable warning — userId kept for future use
   void userId;
-  void userName;
 
   const fetchBooking = useCallback(async () => {
     try {
@@ -147,16 +161,23 @@ export function ChatBookingPanel({
     fetchBooking();
   }, [fetchBooking]);
 
-  // Handle status change
-  const handleStatusChange = useCallback(
+  // Handle confirmed status change (called from dialog)
+  const executeStatusChange = useCallback(
     (newStatus: string) => {
       if (!booking) return;
+
+      const opts: { cancellationReason?: string; agentName?: string } = {};
+      if (newStatus === "cancelled" && cancelReason.trim()) {
+        opts.cancellationReason = cancelReason.trim();
+      }
+      opts.agentName = userName;
 
       startTransition(async () => {
         const result = await updateBookingStatusFromChat(
           siteId,
           booking.id,
           newStatus,
+          opts,
         );
         if (result.error) {
           toast.error(result.error);
@@ -165,9 +186,11 @@ export function ChatBookingPanel({
           toast.success(`Booking ${config?.label || newStatus}`);
           fetchBooking();
         }
+        setConfirmAction(null);
+        setCancelReason("");
       });
     },
-    [booking, siteId, fetchBooking],
+    [booking, siteId, fetchBooking, cancelReason, userName],
   );
 
   // Handle payment status change
@@ -238,6 +261,152 @@ export function ChatBookingPanel({
     PAYMENT_CONFIG[booking.paymentStatus] || PAYMENT_CONFIG.pending;
   const nextStatuses = VALID_STATUS_TRANSITIONS[booking.status] || [];
   const isPast = new Date(booking.endTime) < new Date();
+  const paymentRequired = booking.requirePayment;
+  const paymentUnpaid =
+    paymentRequired &&
+    booking.paymentStatus !== "paid" &&
+    booking.paymentStatus !== "not_required";
+
+  // Dialog content helpers
+  function getDialogConfig(action: string) {
+    const price =
+      booking!.service &&
+      formatCurrency(booking!.service.price, booking!.service.currency);
+
+    const summary = (
+      <div className="text-sm space-y-1.5 mt-2 bg-muted/50 p-3 rounded-md">
+        {booking!.service && (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Service</span>
+            <span className="font-medium">{booking!.service.name}</span>
+          </div>
+        )}
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Date</span>
+          <span className="font-medium">{formatDate(booking!.startTime)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Time</span>
+          <span className="font-medium">
+            {formatTime(booking!.startTime)} – {formatTime(booking!.endTime)}
+          </span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Customer</span>
+          <span className="font-medium">{booking!.customerName}</span>
+        </div>
+        {booking!.staff && (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Staff</span>
+            <span className="font-medium">{booking!.staff.name}</span>
+          </div>
+        )}
+        {price && (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Price</span>
+            <span className="font-medium">{price}</span>
+          </div>
+        )}
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Payment</span>
+          <Badge variant="outline" className="text-[10px] h-5">
+            <div
+              className="h-2 w-2 rounded-full mr-1"
+              style={{ backgroundColor: paymentConfig.color }}
+            />
+            {paymentConfig.label}
+          </Badge>
+        </div>
+      </div>
+    );
+
+    switch (action) {
+      case "confirmed":
+        return {
+          title: "Confirm Booking",
+          description:
+            "Are you sure you want to confirm this booking? The customer will expect to attend at the scheduled time.",
+          actionLabel: "Confirm Booking",
+          variant: "default" as const,
+          extra: summary,
+        };
+      case "completed":
+        return {
+          title: "Complete Booking",
+          description: paymentUnpaid
+            ? "Payment has NOT been received for this booking. Are you sure you want to mark it as completed without payment?"
+            : "Mark this booking as completed. This action cannot be undone.",
+          actionLabel: paymentUnpaid
+            ? "Complete Without Payment"
+            : "Complete Booking",
+          variant: (paymentUnpaid ? "destructive" : "default") as
+            | "destructive"
+            | "default",
+          extra: (
+            <>
+              {paymentUnpaid && (
+                <div className="flex items-start gap-2 p-2.5 rounded-md bg-yellow-500/10 border border-yellow-500/30 text-yellow-700 dark:text-yellow-400 mt-2">
+                  <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                  <div className="text-xs">
+                    <p className="font-medium">Payment Outstanding</p>
+                    <p className="mt-0.5 text-muted-foreground">
+                      This booking requires payment (
+                      {price || "amount not set"}) but the current payment
+                      status is &ldquo;{paymentConfig.label}&rdquo;. Completing
+                      without payment may result in lost revenue.
+                    </p>
+                  </div>
+                </div>
+              )}
+              {summary}
+            </>
+          ),
+        };
+      case "cancelled":
+        return {
+          title: "Cancel Booking",
+          description:
+            "This will cancel the booking. Please provide a reason for the cancellation.",
+          actionLabel: "Cancel Booking",
+          variant: "destructive" as const,
+          extra: (
+            <>
+              {summary}
+              <div className="mt-3 space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">
+                  Cancellation Reason
+                </label>
+                <Textarea
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  placeholder="e.g. Customer requested cancellation, scheduling conflict..."
+                  className="min-h-[60px] text-sm"
+                />
+              </div>
+            </>
+          ),
+        };
+      case "no_show":
+        return {
+          title: "Mark as No Show",
+          description:
+            "The customer did not attend the appointment. This action cannot be undone.",
+          actionLabel: "Mark No Show",
+          variant: "destructive" as const,
+          extra: summary,
+        };
+      default:
+        return {
+          title: "Update Status",
+          description: "Are you sure?",
+          actionLabel: "Confirm",
+          variant: "default" as const,
+          extra: summary,
+        };
+    }
+  }
+
+  const dialogConfig = confirmAction ? getDialogConfig(confirmAction) : null;
 
   return (
     <Card className="border-primary/20 bg-primary/2">
@@ -282,7 +451,7 @@ export function ChatBookingPanel({
             )}
         </div>
 
-        {/* Service */}
+        {/* Service + Price */}
         {booking.service && (
           <div className="space-y-1">
             <p className="text-sm font-medium">{booking.service.name}</p>
@@ -300,6 +469,46 @@ export function ChatBookingPanel({
             </div>
           </div>
         )}
+
+        {/* Payment Amount (when payment is required) */}
+        {paymentRequired && booking.paymentAmount != null && (
+          <div className="flex items-center gap-2 p-2 rounded-md bg-muted/50">
+            <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+            <div className="flex-1">
+              <p className="text-[10px] text-muted-foreground">
+                Payment Amount
+              </p>
+              <p className="text-sm font-medium">
+                {formatCurrency(
+                  booking.paymentAmount,
+                  booking.service?.currency || "USD",
+                )}
+              </p>
+            </div>
+            <Badge
+              variant="outline"
+              className="text-[10px]"
+              style={{
+                borderColor: paymentConfig.color,
+                color: paymentConfig.color,
+              }}
+            >
+              {paymentConfig.label}
+            </Badge>
+          </div>
+        )}
+
+        {/* Payment Required Warning */}
+        {paymentUnpaid &&
+          booking.status !== "completed" &&
+          booking.status !== "cancelled" && (
+            <div className="flex items-start gap-2 p-2 rounded-md bg-yellow-500/10 border border-yellow-500/30">
+              <AlertTriangle className="h-3.5 w-3.5 text-yellow-600 mt-0.5 shrink-0" />
+              <p className="text-[10px] text-yellow-700 dark:text-yellow-400">
+                Payment required but not yet received
+              </p>
+            </div>
+          )}
 
         <Separator />
 
@@ -372,6 +581,13 @@ export function ChatBookingPanel({
                 Cancellation Reason
               </p>
               <p className="text-xs">{booking.cancellationReason}</p>
+              {booking.cancelledBy && (
+                <p className="text-[10px] text-muted-foreground">
+                  Cancelled by {booking.cancelledBy}
+                  {booking.cancelledAt &&
+                    ` on ${formatDate(booking.cancelledAt)}`}
+                </p>
+              )}
             </div>
           </>
         )}
@@ -410,7 +626,7 @@ export function ChatBookingPanel({
           </>
         )}
 
-        {/* Quick Status Actions */}
+        {/* Quick Status Actions (with confirmation dialogs) */}
         {nextStatuses.length > 0 && (
           <>
             <Separator />
@@ -424,7 +640,7 @@ export function ChatBookingPanel({
                     variant="outline"
                     size="sm"
                     className="h-7 text-xs flex-1"
-                    onClick={() => handleStatusChange("confirmed")}
+                    onClick={() => setConfirmAction("confirmed")}
                     disabled={isPending}
                   >
                     <CircleCheck className="h-3 w-3 mr-1 text-blue-500" />
@@ -436,7 +652,7 @@ export function ChatBookingPanel({
                     variant="outline"
                     size="sm"
                     className="h-7 text-xs flex-1"
-                    onClick={() => handleStatusChange("completed")}
+                    onClick={() => setConfirmAction("completed")}
                     disabled={isPending}
                   >
                     <CircleCheck className="h-3 w-3 mr-1 text-green-500" />
@@ -448,7 +664,10 @@ export function ChatBookingPanel({
                     variant="outline"
                     size="sm"
                     className="h-7 text-xs flex-1"
-                    onClick={() => handleStatusChange("cancelled")}
+                    onClick={() => {
+                      setCancelReason("");
+                      setConfirmAction("cancelled");
+                    }}
                     disabled={isPending}
                   >
                     <CircleX className="h-3 w-3 mr-1 text-red-500" />
@@ -460,7 +679,7 @@ export function ChatBookingPanel({
                     variant="outline"
                     size="sm"
                     className="h-7 text-xs flex-1"
-                    onClick={() => handleStatusChange("no_show")}
+                    onClick={() => setConfirmAction("no_show")}
                     disabled={isPending}
                   >
                     <AlertCircle className="h-3 w-3 mr-1 text-gray-500" />
@@ -471,6 +690,48 @@ export function ChatBookingPanel({
             </div>
           </>
         )}
+
+        {/* Confirmation Dialog */}
+        <AlertDialog
+          open={!!confirmAction}
+          onOpenChange={(open) => {
+            if (!open) {
+              setConfirmAction(null);
+              setCancelReason("");
+            }
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{dialogConfig?.title}</AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div>
+                  <p>{dialogConfig?.description}</p>
+                  {dialogConfig?.extra}
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isPending}>
+                Go Back
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => confirmAction && executeStatusChange(confirmAction)}
+                disabled={isPending}
+                className={
+                  dialogConfig?.variant === "destructive"
+                    ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    : ""
+                }
+              >
+                {isPending ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                ) : null}
+                {dialogConfig?.actionLabel}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardContent>
     </Card>
   );
