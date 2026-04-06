@@ -9,6 +9,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { DOMAINS } from "@/lib/constants/domains";
 import { sendBrandedEmail } from "@/lib/email/send-branded-email";
 import {
   notifyQuoteAccepted,
@@ -54,7 +55,7 @@ function getPublicModuleClient() {
 
 /**
  * Build the public-facing site URL for a given site.
- * Uses custom_domain if set, otherwise falls back to subdomain.sites.dramacagency.com,
+ * Uses custom_domain if set, otherwise falls back to subdomain + SITES_BASE,
  * and finally to NEXT_PUBLIC_APP_URL as last resort.
  */
 async function getSitePublicUrl(siteId: string): Promise<string> {
@@ -69,7 +70,7 @@ async function getSitePublicUrl(siteId: string): Promise<string> {
     return `https://${site.custom_domain}`;
   }
   if (site?.subdomain) {
-    return `https://${site.subdomain}.sites.dramacagency.com`;
+    return `https://${site.subdomain}.${DOMAINS.SITES_BASE}`;
   }
   return process.env.NEXT_PUBLIC_APP_URL || "";
 }

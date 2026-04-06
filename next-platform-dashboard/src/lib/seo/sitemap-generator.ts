@@ -3,6 +3,7 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
+import { DOMAINS } from "@/lib/constants/domains";
 
 export interface SitemapUrl {
   loc: string;
@@ -352,7 +353,7 @@ export function getDefaultRobotsTxt(
 ): string {
   const baseUrl = customDomain
     ? `https://${customDomain}`
-    : `https://${subdomain}.sites.dramacagency.com`;
+    : `https://${subdomain}.${DOMAINS.SITES_BASE}`;
 
   return `# Robots.txt for ${subdomain}
 User-agent: *

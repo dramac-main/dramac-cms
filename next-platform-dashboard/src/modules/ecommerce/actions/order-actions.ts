@@ -8,6 +8,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { DOMAINS } from "@/lib/constants/domains";
 import { formatCurrency } from "@/lib/locale-config";
 import { sendBrandedEmail } from "@/lib/email/send-branded-email";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -710,7 +711,7 @@ export async function updatePaymentProofStatus(
           const siteUrl = site.custom_domain
             ? `https://${site.custom_domain}`
             : site.subdomain
-              ? `https://${site.subdomain}.sites.dramacagency.com`
+              ? `https://${site.subdomain}.${DOMAINS.SITES_BASE}`
               : null;
           const orderUrl = siteUrl
             ? `${siteUrl}/order-confirmation?order=${orderId}`
@@ -1031,7 +1032,7 @@ export async function sendOrderEmail(
     const siteUrl = site?.custom_domain
       ? `https://${site.custom_domain}`
       : site?.subdomain
-        ? `https://${site.subdomain}.sites.dramacagency.com`
+        ? `https://${site.subdomain}.${DOMAINS.SITES_BASE}`
         : null;
     const orderUrl = siteUrl
       ? `${siteUrl}/order-confirmation?order=${orderId}`

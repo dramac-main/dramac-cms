@@ -7,6 +7,7 @@ import type { InstalledModuleInfo } from "@/types/studio-module";
 import { LiveChatWidgetInjector } from "@/components/renderer/live-chat-widget-injector";
 import { EcommerceCartInjector } from "@/components/renderer/ecommerce-cart-injector";
 import { EcommerceSeoInjector } from "@/modules/ecommerce/components/ecommerce-seo-injector";
+import { DOMAINS } from "@/lib/constants/domains";
 
 // Known module slugs that have Studio components
 const KNOWN_MODULE_SLUGS = [
@@ -44,7 +45,7 @@ export async function generateMetadata({
   const siteUrl = data.site.customDomain
     ? `https://${data.site.customDomain}`
     : data.site.subdomain
-      ? `https://${data.site.subdomain}.sites.dramacagency.com`
+      ? `https://${data.site.subdomain}.${DOMAINS.SITES_BASE}`
       : undefined;
   const canonicalUrl = siteUrl && pageSlug ? `${siteUrl}/${pageSlug}` : siteUrl;
 
@@ -188,13 +189,10 @@ async function getSiteData(domain: string, pageSlug: string) {
   let subdomain = domain;
   let customDomain = domain;
 
-  // Check if this is a platform subdomain (*.sites.dramacagency.com)
-  if (domain.endsWith(".sites.dramacagency.com")) {
+  // Check if this is a platform subdomain (*.SITES_BASE)
+  if (domain.endsWith(`.${DOMAINS.SITES_BASE}`)) {
     subdomain = domain.split(".")[0]; // Extract first part
-  } else if (
-    domain.endsWith(".dramac.app") ||
-    domain.endsWith(".sites.dramacagency.com")
-  ) {
+  } else if (domain.endsWith(".dramac.app")) {
     subdomain = domain.split(".")[0]; // Extract first part
   }
 

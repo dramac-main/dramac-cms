@@ -1,6 +1,7 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { DOMAINS } from "@/lib/constants/domains";
 import { revalidatePath } from "next/cache";
 import dns from "dns";
 import { promisify } from "util";
@@ -28,8 +29,7 @@ export interface DnsRecord {
 
 // Platform IP address for A records (would be your load balancer/CDN)
 const PLATFORM_IP = process.env.PLATFORM_IP || "76.76.21.21";
-const VERIFICATION_DOMAIN =
-  process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
+const VERIFICATION_DOMAIN = DOMAINS.SITES_BASE;
 
 export async function setCustomDomain(
   siteId: string,

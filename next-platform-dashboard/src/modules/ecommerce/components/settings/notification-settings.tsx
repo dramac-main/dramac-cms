@@ -723,6 +723,10 @@ const DEFAULT_CHANNELS: NotificationChannels = {
   chat: true,
 };
 
+// Generic placeholder body used in v1 defaults — treated as "not customized"
+const LEGACY_GENERIC_BODY =
+  "Hi {{customer_name}},\n\n{{store_name}} notification.\n\nBest regards,\n{{store_name}}";
+
 const DEFAULT_TEMPLATES: NotificationTemplate[] = (
   Object.keys(TEMPLATE_CONFIGS) as NotificationTemplateType[]
 ).map((type) => ({
@@ -730,7 +734,7 @@ const DEFAULT_TEMPLATES: NotificationTemplate[] = (
   type,
   enabled: true,
   subject: TEMPLATE_CONFIGS[type].label,
-  body: `Hi {{customer_name}},\n\n{{store_name}} notification.\n\nBest regards,\n{{store_name}}`,
+  body: "", // empty = uses built-in rich template
   send_to: TEMPLATE_CONFIGS[type].defaultSendTo,
   channels: { ...DEFAULT_CHANNELS },
 }));
@@ -791,8 +795,8 @@ function TemplateDialog({
   );
 
   const handleSave = () => {
-    if (!template || !formData.subject || !formData.body) {
-      toast.error("Please fill in all fields");
+    if (!template || !formData.subject) {
+      toast.error("Please fill in the subject line");
       return;
     }
 
@@ -804,6 +808,7 @@ function TemplateDialog({
       enabled: formData.enabled ?? true,
       channels: formData.channels || { ...DEFAULT_CHANNELS },
     });
+    toast.success("Template updated");
     onOpenChange(false);
   };
 
@@ -922,14 +927,25 @@ function TemplateDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="body">Email Body</Label>
+            <Label htmlFor="body">Email Body (Optional)</Label>
+            {!formData.body && (
+              <div className="rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/40 p-3">
+                <p className="text-xs text-blue-700 dark:text-blue-300">
+                  This notification currently uses the{" "}
+                  <strong>built-in rich email template</strong> with
+                  professional formatting, order details, and branding. Add
+                  custom text below only if you want to override it with a
+                  plain-text layout.
+                </p>
+              </div>
+            )}
             <Textarea
               id="body"
               value={formData.body}
               onChange={(e) =>
                 setFormData({ ...formData, body: e.target.value })
               }
-              placeholder="Email content with {{merge_variables}}..."
+              placeholder="Leave empty to use the built-in rich template, or type custom content with {{merge_variables}}..."
               rows={12}
               className="font-mono text-sm"
             />
@@ -994,7 +1010,14 @@ export function NotificationSettingsForm({
         );
         data.templates = DEFAULT_TEMPLATES.map((defaultT) => {
           const saved = savedTemplateMap.get(defaultT.type);
-          return saved ? { ...defaultT, ...saved } : defaultT;
+          if (saved) {
+            // Migrate legacy generic body → empty (so rich templates are used)
+            if (saved.body === LEGACY_GENERIC_BODY) {
+              saved.body = "";
+            }
+            return { ...defaultT, ...saved };
+          }
+          return defaultT;
         });
         setSettings(data);
       } catch (error) {
@@ -1006,6 +1029,16 @@ export function NotificationSettingsForm({
     }
     loadSettings();
   }, [siteId]);
+
+  // Warn user about unsaved changes before leaving
+  useEffect(() => {
+    if (!hasChanges) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [hasChanges]);
 
   const updateField = <K extends keyof NotificationSettings>(
     field: K,

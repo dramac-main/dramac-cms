@@ -3,6 +3,8 @@
  * Handles device configurations, URLs, and clipboard operations
  */
 
+import { DOMAINS } from "@/lib/constants/domains";
+
 export type DeviceType = "mobile" | "tablet" | "desktop" | "full";
 
 export interface DeviceConfig {
@@ -52,8 +54,7 @@ export function getPublicUrl(
   if (customDomain) {
     return `https://${customDomain}`;
   }
-  const baseDomain =
-    process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
+  const baseDomain = DOMAINS.SITES_BASE;
   return `https://${subdomain}.${baseDomain}`;
 }
 

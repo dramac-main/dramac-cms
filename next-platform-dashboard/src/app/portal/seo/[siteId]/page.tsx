@@ -13,6 +13,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DOMAINS } from "@/lib/constants/domains";
 import {
   Card,
   CardContent,
@@ -137,7 +138,7 @@ export default function PortalSiteSeoPage({
             {site?.name || "Site"} SEO
           </h1>
           <p className="text-muted-foreground mt-1">
-            {site?.domain || `${site?.subdomain}.sites.dramacagency.com`}
+            {site?.domain || `${site?.subdomain}.${DOMAINS.SITES_BASE}`}
           </p>
         </div>
       </div>

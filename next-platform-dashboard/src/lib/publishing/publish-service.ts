@@ -1,6 +1,7 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { DOMAINS } from "@/lib/constants/domains";
 import { revalidatePath } from "next/cache";
 import { captureAndStoreSiteScreenshot } from "@/lib/screenshots/screenshot-service";
 
@@ -20,8 +21,7 @@ export interface SitePublishStatus {
   siteUrl: string;
 }
 
-const BASE_DOMAIN =
-  process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
+const BASE_DOMAIN = DOMAINS.SITES_BASE;
 
 export async function publishSite(siteId: string): Promise<PublishResult> {
   try {

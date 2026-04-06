@@ -10,6 +10,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { DOMAINS } from "@/lib/constants/domains";
 
 export const dynamic = "force-dynamic";
 
@@ -74,7 +75,7 @@ export async function GET(request: NextRequest) {
     const appUrl =
       process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com";
     const domain =
-      site.custom_domain || `${site.subdomain}.sites.dramacagency.com`;
+      site.custom_domain || `${site.subdomain}.${DOMAINS.SITES_BASE}`;
     const checkoutUrl = `https://${domain}/checkout?cart=${cart.id}&recovered=true`;
 
     // Track that the recovery link was clicked

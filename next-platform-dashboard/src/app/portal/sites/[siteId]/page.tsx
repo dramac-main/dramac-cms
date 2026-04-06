@@ -13,6 +13,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { DOMAINS } from "@/lib/constants/domains";
 import { requirePortalAuth } from "@/lib/portal/portal-auth";
 import {
   getClientSite,
@@ -228,7 +229,7 @@ export default async function PortalSiteDetailPage({
                   </p>
                   <p className="mt-1">
                     {site.customDomain ||
-                      `${site.subdomain}.sites.dramacagency.com`}
+                      `${site.subdomain}.${DOMAINS.SITES_BASE}`}
                   </p>
                 </div>
                 <div>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { generateSitemap } from "@/lib/seo/sitemap-generator";
+import { DOMAINS } from "@/lib/constants/domains";
 
 // Use service role for public access to sitemap
 const supabase = createClient(
@@ -32,8 +33,7 @@ export async function GET(
     }
 
     // Determine base URL
-    const baseDomain =
-      process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
+    const baseDomain = DOMAINS.SITES_BASE;
     const baseUrl = site.custom_domain
       ? `https://${site.custom_domain}`
       : `https://${site.subdomain}.${baseDomain}`;

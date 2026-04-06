@@ -3,8 +3,9 @@
  * Centralized handling of site URLs using environment variables
  */
 
-const BASE_DOMAIN =
-  process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
+import { DOMAINS } from "@/lib/constants/domains";
+
+const BASE_DOMAIN = DOMAINS.SITES_BASE;
 
 /**
  * Get the full URL for a site

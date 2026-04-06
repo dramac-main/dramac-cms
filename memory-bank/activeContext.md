@@ -1,40 +1,41 @@
 # Active Context
 
-## Current Focus: CRM Form Unification — Contact Forms Module Removal + Form Rewiring ✅
+## Current Focus: CRM Overhaul Complete + Full TypeScript Clean ✅ (commit 833135b7)
 
 ### What Was Done
 
-**Phantom "Contact Forms" module completely removed from platform + all form submissions unified under CRM.**
+**Completed the full CRM overhaul (form builder, cross-module wiring, reports enhancement, studio integration, AI designer update) and fixed all 34 TypeScript errors across 10 files.**
 
-#### Contact Forms Module Removal ✅
+#### CRM Overhaul Features (completed in prior sessions, committed in 867b08d1)
+- CRM Bridge module (`crm-bridge.ts`) for cross-module integration
+- E-Commerce → CRM, Quotes → CRM, Booking → CRM wiring
+- CRM Form Builder (types, server actions, DB migration, UI)
+- CRM Custom Forms registered in studio + public form API
+- AI Designer fully updated for CRM forms
+- CRM Reports with recharts (AreaChart revenue, BarChart contacts, DealVelocityChart, trends)
 
-- Removed "contact-forms" feature chip from AI Designer page.tsx
-- Removed from engine.ts FEATURE_MODULE_MAP
-- Removed from auto-install/route.ts FEATURE_MODULE_MAP
-- Deleted from database: `modules_v2` (1 row), `site_module_installations` (4 rows), `agency_module_subscriptions` (1 row)
-- Module was a phantom — no code, no dashboard page, no server actions, just a DB entry
+#### TypeScript Error Fixes (34 → 0) ✅
+- **email-types.ts**: Added `"quote_amendment_requested_owner"` to EmailType union
+- **notifications.ts (types)**: Added `"quote_amendment_requested"` to NotificationType union  
+- **notifications.ts (services)**: Added `quote_amendment_requested` config entry
+- **storefront-auth-context.tsx**: Updated `openAuthDialog` + `authDialogMode` to include `"set-password"`
+- **templates.ts**: Changed to `Partial<Record<EmailType, EmailTemplate>>`
+- **branded-templates.ts**: Added full `quote_amendment_requested_owner` template
+- **converter.ts**: Hoisted `toResponsive` function, fixed `entrance` type narrowing
+- **reports-view.tsx**: Fixed recharts Tooltip formatter types (removed explicit `: number` annotations)
+- **public-ecommerce-actions.ts**: Fixed `customer_phone` null coercion
+- **business-notifications.ts**: Added Supabase `as never` cast + query result typing
+- **quote-detail-dialog.tsx**: Fixed `unknown` → ReactNode with ternary pattern (`? ... : null`)
+- **ProductQuickView.tsx**: Removed conflicting type predicate on filter
 
-#### Form Submission Rewiring ✅
-
-- **ContactFormRender** in `src/lib/studio/blocks/renders.tsx` now submits to `/api/modules/crm/form-capture` instead of `/api/forms/submit`
-  - Sends: siteId, formType: "contact", name, email, phone, subject, message, pageUrl, referrer
-- **NewsletterRender** in same file now submits to `/api/modules/crm/form-capture` instead of `/api/forms/submit`
-  - Sends: siteId, formType: "newsletter", email, pageUrl, referrer
-- **Form+FormField** (generic dynamic form builder) intentionally kept on `/api/forms/submit` — handles arbitrary custom fields that CRM can't process
-- CRM form-capture API already saves to `form_submissions` table for backward compatibility
-- Honeypot spam protection preserved on both forms (client-side check before API call)
-
-#### Architecture Result
-
-- All ContactForm and Newsletter submissions → CRM contacts + automations + form_submissions (via CRM backward compat)
-- Custom Form builder submissions → form_submissions only (appropriate for arbitrary fields)
-- No data silos: every contact/newsletter form creates a CRM contact automatically
-
-**TypeScript:** Zero new errors (only pre-existing converter.ts issues).
+### Key Patterns Learned
+- **Supabase module tables** not in generated types → use `.from("tablename" as never)` cast
+- **Recharts v3 Tooltip formatter**: Don't annotate `val` parameter type, cast inside body
+- **`unknown && JSX`** pattern fails in React — use ternary `unknown ? JSX : null` instead
 
 ---
 
-## Previous Focus: Complete Booking Email Notification System ✅ (commit 9780da9d)
+## Previous Focus: CRM Form Unification — Contact Forms Module Removal + Form Rewiring ✅
 
 ### What Was Done
 

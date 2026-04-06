@@ -22,6 +22,7 @@ import type {
   ProductVariant,
   EcommerceSettings,
 } from "../types/ecommerce-types";
+import { DOMAINS } from "@/lib/constants/domains";
 
 // ============================================================================
 // TYPES
@@ -392,7 +393,7 @@ export function buildSiteUrl(
     return `https://${customDomain}`;
   }
   if (subdomain) {
-    return `https://${subdomain}.sites.dramacagency.com`;
+    return `https://${subdomain}.${DOMAINS.SITES_BASE}`;
   }
   return "";
 }

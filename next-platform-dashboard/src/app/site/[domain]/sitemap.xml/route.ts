@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateSitemap } from "@/lib/seo/sitemap-generator";
+import { DOMAINS } from "@/lib/constants/domains";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 3600; // Cache for 1 hour
@@ -19,13 +20,13 @@ export async function GET(
 
   // Check if it's a custom domain or subdomain
   const isSubdomain =
-    domain.endsWith(".sites.dramacagency.com") ||
+    domain.endsWith(`.${DOMAINS.SITES_BASE}`) ||
     domain.endsWith(".dramac.app") ||
     !domain.includes(".");
 
   if (isSubdomain) {
     const subdomain = domain
-      .replace(".sites.dramacagency.com", "")
+      .replace(`.${DOMAINS.SITES_BASE}`, "")
       .replace(".dramac.app", "");
     const { data } = await supabase
       .from("sites")
@@ -64,7 +65,7 @@ export async function GET(
   // Determine base URL
   const baseUrl = site.custom_domain
     ? `https://${site.custom_domain}`
-    : `https://${site.subdomain}.sites.dramacagency.com`;
+    : `https://${site.subdomain}.${DOMAINS.SITES_BASE}`;
 
   try {
     // Generate sitemap

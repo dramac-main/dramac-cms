@@ -15,6 +15,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendBrandedEmail } from "@/lib/email/send-branded-email";
 import { createNotification } from "@/lib/services/notifications";
+import { DOMAINS } from "@/lib/constants/domains";
 import { formatCurrency, formatDate, formatTime } from "@/lib/locale-config";
 import {
   shouldSendEmail,
@@ -899,7 +900,7 @@ export async function notifyNewOrder(
     const siteUrl = site.custom_domain
       ? `https://${site.custom_domain}`
       : site.subdomain
-        ? `https://${site.subdomain}.sites.dramacagency.com`
+        ? `https://${site.subdomain}.${DOMAINS.SITES_BASE}`
         : null;
     const orderUrl = siteUrl
       ? `${siteUrl}/order-confirmation?order=${data.orderId}`
@@ -1124,7 +1125,7 @@ export async function notifyOrderDelivered(
     const siteUrl = site.custom_domain
       ? `https://${site.custom_domain}`
       : site.subdomain
-        ? `https://${site.subdomain}.sites.dramacagency.com`
+        ? `https://${site.subdomain}.${DOMAINS.SITES_BASE}`
         : null;
     const orderUrl = siteUrl ? `${siteUrl}/order-tracking` : undefined;
 
@@ -1223,7 +1224,7 @@ export async function notifyOrderCancelled(
     const siteUrl = site.custom_domain
       ? `https://${site.custom_domain}`
       : site.subdomain
-        ? `https://${site.subdomain}.sites.dramacagency.com`
+        ? `https://${site.subdomain}.${DOMAINS.SITES_BASE}`
         : null;
     const orderUrl = siteUrl ? `${siteUrl}/order-tracking` : undefined;
 
@@ -1339,7 +1340,7 @@ export async function notifyPaymentReceived(
     const siteUrl = site.custom_domain
       ? `https://${site.custom_domain}`
       : site.subdomain
-        ? `https://${site.subdomain}.sites.dramacagency.com`
+        ? `https://${site.subdomain}.${DOMAINS.SITES_BASE}`
         : null;
     const orderUrl = siteUrl ? `${siteUrl}/order-tracking` : undefined;
 
@@ -1526,7 +1527,7 @@ export async function notifyRefundIssued(
     const siteUrl = site.custom_domain
       ? `https://${site.custom_domain}`
       : site.subdomain
-        ? `https://${site.subdomain}.sites.dramacagency.com`
+        ? `https://${site.subdomain}.${DOMAINS.SITES_BASE}`
         : null;
     const orderUrl = siteUrl ? `${siteUrl}/order-tracking` : undefined;
 

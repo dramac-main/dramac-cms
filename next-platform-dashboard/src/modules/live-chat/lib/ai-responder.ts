@@ -13,6 +13,10 @@ import {
   formatCustomerContext,
 } from "./customer-context-bridge";
 import { parsePaymentMethods } from "./payment-method-parser";
+import {
+  DEFAULT_HANDOFF_KEYWORDS,
+  DEFAULT_HANDOFF_MESSAGE,
+} from "./ai-defaults";
 
 // =============================================================================
 // CONFIG
@@ -27,21 +31,6 @@ if (!AI_ENABLED) {
   );
 }
 const MAX_CONTEXT_MESSAGES = 10;
-const DEFAULT_HANDOFF_KEYWORDS = [
-  "human",
-  "agent",
-  "person",
-  "speak to someone",
-  "real person",
-  "talk to agent",
-  "live agent",
-  "support agent",
-  "customer service",
-  "representative",
-  "operator",
-];
-const DEFAULT_HANDOFF_MESSAGE =
-  "I understand you'd like to speak with a human agent. Let me connect you right away. An agent will be with you shortly!";
 const CONFIDENCE_THRESHOLD = 0.7;
 
 function getModel() {

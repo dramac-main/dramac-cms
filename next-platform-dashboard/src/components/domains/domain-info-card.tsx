@@ -11,6 +11,7 @@ import {
   Building,
   Link as LinkIcon,
 } from "lucide-react";
+import { DOMAINS } from "@/lib/constants/domains";
 import {
   Card,
   CardContent,
@@ -155,7 +156,7 @@ export function DomainInfoCard({ domain }: DomainInfoCardProps) {
                     <div>
                       <p className="text-sm font-medium">{domain.site.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {domain.site.subdomain}.sites.dramacagency.com
+                        {domain.site.subdomain}.{DOMAINS.SITES_BASE}
                       </p>
                     </div>
                   </div>

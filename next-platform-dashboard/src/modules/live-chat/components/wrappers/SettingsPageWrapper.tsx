@@ -48,6 +48,10 @@ import {
 } from "lucide-react";
 import { updateWidgetSettings } from "@/modules/live-chat/actions";
 import { ChatMessageTemplates } from "@/modules/live-chat/components/settings/chat-message-templates";
+import {
+  DEFAULT_HANDOFF_KEYWORDS,
+  DEFAULT_HANDOFF_MESSAGE,
+} from "@/modules/live-chat/lib/ai-defaults";
 import type {
   ChatWidgetSettings,
   ChatDepartment,
@@ -1423,7 +1427,7 @@ export function SettingsPageWrapper({
                     Array.isArray(settings.aiHandoffKeywords) &&
                     settings.aiHandoffKeywords.length > 0
                       ? settings.aiHandoffKeywords.join(", ")
-                      : ""
+                      : DEFAULT_HANDOFF_KEYWORDS.join(", ")
                   }
                   onChange={(e) => {
                     const keywords = e.target.value
@@ -1438,7 +1442,7 @@ export function SettingsPageWrapper({
                 <p className="text-xs text-muted-foreground">
                   Comma-separated words or phrases. When a visitor&apos;s
                   message contains any of these, the AI immediately hands off to
-                  a human agent. Leave empty to use the built-in defaults.
+                  a human agent.
                 </p>
               </div>
 
@@ -1446,7 +1450,7 @@ export function SettingsPageWrapper({
               <div className="space-y-2">
                 <Label>Handoff Message</Label>
                 <Textarea
-                  value={settings.aiHandoffMessage || ""}
+                  value={settings.aiHandoffMessage || DEFAULT_HANDOFF_MESSAGE}
                   onChange={(e) =>
                     update("aiHandoffMessage", e.target.value || null)
                   }
@@ -1455,7 +1459,7 @@ export function SettingsPageWrapper({
                 />
                 <p className="text-xs text-muted-foreground">
                   The message sent to the visitor when a handoff keyword is
-                  detected. Leave empty for the default message.
+                  detected.
                 </p>
               </div>
 

@@ -102,7 +102,7 @@ async function updateSiteRecord(
         .from("sites")
         .update({
           custom_domain: null,
-          domain_verified: false,
+          custom_domain_verified: false,
           updated_at: new Date().toISOString(),
         })
         .eq("id", event.siteId);
@@ -111,7 +111,7 @@ async function updateSiteRecord(
         .from("sites")
         .update({
           custom_domain: event.newDomain,
-          domain_verified: false, // Will be verified after DNS propagation
+          custom_domain_verified: false, // Will be verified after DNS propagation
           updated_at: new Date().toISOString(),
         })
         .eq("id", event.siteId);

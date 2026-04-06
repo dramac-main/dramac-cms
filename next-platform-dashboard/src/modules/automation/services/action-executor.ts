@@ -21,6 +21,15 @@ import { createClient } from '@/lib/supabase/server'
 import { sendEmail } from '@/lib/email/send-email'
 import type { ExecutionContext, ActionResult } from '../types/automation-types'
 
+// Cross-module action imports
+import { updateOrderStatus, addOrderNote, addOrderShipment, createRefund } from '@/modules/ecommerce/actions/order-actions'
+import { adjustStock } from '@/modules/ecommerce/actions/inventory-actions'
+import { updateQuoteStatus, notifyQuoteCreated } from '@/modules/ecommerce/actions/quote-actions'
+import { sendQuote, sendQuoteReminder, convertQuoteToOrder } from '@/modules/ecommerce/actions/quote-workflow-actions'
+import { createAppointment, updateAppointment, cancelAppointment, createReminder } from '@/modules/booking/actions/booking-actions'
+import { sendMessage } from '@/modules/live-chat/actions/message-actions'
+import { assignConversation, resolveConversation, closeConversation, updateConversationTags } from '@/modules/live-chat/actions/conversation-actions'
+
 // ============================================================================
 // SUPABASE CLIENT TYPE HELPER
 // ============================================================================
@@ -56,6 +65,12 @@ export async function executeAction(
   switch (category) {
     case 'crm':
       return executeCrmAction(action, config, context)
+    case 'ecommerce':
+      return executeEcommerceAction(action, config, context)
+    case 'booking':
+      return executeBookingAction(action, config, context)
+    case 'chat':
+      return executeChatAction(action, config, context)
     case 'email':
       return executeEmailAction(action, config, context)
     case 'notification':
@@ -286,6 +301,395 @@ async function executeCrmAction(
     
     default:
       return { status: 'failed', error: `Unknown CRM action: ${action}` }
+  }
+}
+
+// ============================================================================
+// E-COMMERCE ACTIONS
+// ============================================================================
+
+async function executeEcommerceAction(
+  action: string,
+  config: Record<string, unknown>,
+  context: ExecutionContext
+): Promise<ActionResult> {
+  const siteId = context.execution?.siteId
+  
+  if (!siteId) {
+    return { status: 'failed', error: 'Site ID not available in context' }
+  }
+  
+  switch (action) {
+    case 'update_order_status': {
+      try {
+        const result = await updateOrderStatus(
+          siteId,
+          config.order_id as string,
+          config.status as 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded',
+          config.user_id as string || 'automation',
+          config.user_name as string || 'Automation',
+          config.note as string || undefined
+        )
+        if (!result.success) {
+          return { status: 'failed', error: result.error || 'Failed to update order status' }
+        }
+        return { status: 'completed', output: { success: true, order_id: config.order_id, status: config.status } }
+      } catch (error) {
+        return { status: 'failed', error: error instanceof Error ? error.message : 'Failed to update order status' }
+      }
+    }
+    
+    case 'add_order_note': {
+      try {
+        const note = await addOrderNote(
+          siteId,
+          config.order_id as string,
+          config.content as string,
+          (config.is_internal as boolean) ?? true,
+          config.user_id as string || 'automation',
+          config.user_name as string || 'Automation'
+        )
+        if (!note) {
+          return { status: 'failed', error: 'Failed to add order note' }
+        }
+        return { status: 'completed', output: { success: true, note_id: note.id } }
+      } catch (error) {
+        return { status: 'failed', error: error instanceof Error ? error.message : 'Failed to add order note' }
+      }
+    }
+    
+    case 'add_shipment': {
+      try {
+        const shipment = await addOrderShipment(
+          siteId,
+          config.order_id as string,
+          {
+            carrier: config.carrier as string,
+            tracking_number: config.tracking_number as string,
+            tracking_url: config.tracking_url as string || undefined,
+          },
+          config.user_id as string || 'automation',
+          config.user_name as string || 'Automation'
+        )
+        if (!shipment) {
+          return { status: 'failed', error: 'Failed to add shipment' }
+        }
+        return { status: 'completed', output: { success: true, shipment_id: shipment.id } }
+      } catch (error) {
+        return { status: 'failed', error: error instanceof Error ? error.message : 'Failed to add shipment' }
+      }
+    }
+    
+    case 'create_refund': {
+      try {
+        const refund = await createRefund(
+          siteId,
+          config.order_id as string,
+          {
+            amount: config.amount as number,
+            reason: config.reason as string,
+            refund_method: (config.refund_method as 'original_payment' | 'store_credit' | 'other') || 'original_payment',
+          },
+          config.user_id as string || 'automation',
+          config.user_name as string || 'Automation'
+        )
+        if (!refund) {
+          return { status: 'failed', error: 'Failed to create refund' }
+        }
+        return { status: 'completed', output: { success: true, refund_id: refund.id } }
+      } catch (error) {
+        return { status: 'failed', error: error instanceof Error ? error.message : 'Failed to create refund' }
+      }
+    }
+    
+    case 'adjust_stock': {
+      try {
+        const result = await adjustStock(
+          siteId,
+          config.product_id as string,
+          (config.variant_id as string) || null,
+          config.quantity as number,
+          (config.movement_type as string) || 'adjustment',
+          config.reason as string || undefined
+        )
+        if (!result.success) {
+          return { status: 'failed', error: result.error || 'Failed to adjust stock' }
+        }
+        return { status: 'completed', output: { success: true, movement: result.movement } }
+      } catch (error) {
+        return { status: 'failed', error: error instanceof Error ? error.message : 'Failed to adjust stock' }
+      }
+    }
+    
+    case 'update_quote_status': {
+      try {
+        const result = await updateQuoteStatus(
+          siteId,
+          config.quote_id as string,
+          config.status as string,
+          config.user_id as string || undefined,
+          config.user_name as string || undefined,
+          config.notes as string || undefined
+        )
+        if (!result.success) {
+          return { status: 'failed', error: result.error || 'Failed to update quote status' }
+        }
+        return { status: 'completed', output: { success: true, quote_id: config.quote_id, status: config.status } }
+      } catch (error) {
+        return { status: 'failed', error: error instanceof Error ? error.message : 'Failed to update quote status' }
+      }
+    }
+    
+    case 'send_quote': {
+      try {
+        const result = await sendQuote({
+          quote_id: config.quote_id as string,
+          site_id: siteId,
+          subject: config.subject as string || undefined,
+          message: config.message as string || undefined,
+        })
+        if (!result.success) {
+          return { status: 'failed', error: result.error || 'Failed to send quote' }
+        }
+        return { status: 'completed', output: { success: true, quote_id: config.quote_id } }
+      } catch (error) {
+        return { status: 'failed', error: error instanceof Error ? error.message : 'Failed to send quote' }
+      }
+    }
+    
+    case 'send_quote_reminder': {
+      try {
+        const result = await sendQuoteReminder(
+          siteId,
+          config.quote_id as string,
+          config.message as string || undefined
+        )
+        if (!result.success) {
+          return { status: 'failed', error: result.error || 'Failed to send quote reminder' }
+        }
+        return { status: 'completed', output: { success: true, quote_id: config.quote_id } }
+      } catch (error) {
+        return { status: 'failed', error: error instanceof Error ? error.message : 'Failed to send quote reminder' }
+      }
+    }
+    
+    case 'convert_quote_to_order': {
+      try {
+        const result = await convertQuoteToOrder({
+          quote_id: config.quote_id as string,
+          site_id: siteId,
+          user_id: config.user_id as string || undefined,
+          user_name: config.user_name as string || undefined,
+        })
+        if (!result.success) {
+          return { status: 'failed', error: result.error || 'Failed to convert quote to order' }
+        }
+        return { status: 'completed', output: { success: true, order_id: result.data?.order_id } }
+      } catch (error) {
+        return { status: 'failed', error: error instanceof Error ? error.message : 'Failed to convert quote to order' }
+      }
+    }
+    
+    case 'notify_quote_created': {
+      try {
+        await notifyQuoteCreated(siteId, config.quote_id as string)
+        return { status: 'completed', output: { success: true } }
+      } catch (error) {
+        return { status: 'failed', error: error instanceof Error ? error.message : 'Failed to send quote notification' }
+      }
+    }
+    
+    default:
+      return { status: 'failed', error: `Unknown e-commerce action: ${action}` }
+  }
+}
+
+// ============================================================================
+// BOOKING ACTIONS
+// ============================================================================
+
+async function executeBookingAction(
+  action: string,
+  config: Record<string, unknown>,
+  context: ExecutionContext
+): Promise<ActionResult> {
+  const siteId = context.execution?.siteId
+  
+  if (!siteId) {
+    return { status: 'failed', error: 'Site ID not available in context' }
+  }
+  
+  switch (action) {
+    case 'create_appointment': {
+      try {
+        const appointment = await createAppointment(siteId, {
+          service_id: config.service_id as string,
+          staff_id: config.staff_id as string || undefined,
+          customer_name: config.customer_name as string,
+          customer_email: config.customer_email as string,
+          customer_phone: config.customer_phone as string || undefined,
+          start_time: config.start_time as string,
+          end_time: config.end_time as string,
+          notes: config.notes as string || undefined,
+        })
+        return { status: 'completed', output: { appointment_id: appointment.id, appointment } }
+      } catch (error) {
+        return { status: 'failed', error: error instanceof Error ? error.message : 'Failed to create appointment' }
+      }
+    }
+    
+    case 'update_appointment': {
+      try {
+        const appointment = await updateAppointment(
+          siteId,
+          config.appointment_id as string,
+          config.updates as Record<string, unknown>
+        )
+        return { status: 'completed', output: { appointment_id: appointment.id, appointment } }
+      } catch (error) {
+        return { status: 'failed', error: error instanceof Error ? error.message : 'Failed to update appointment' }
+      }
+    }
+    
+    case 'update_status': {
+      try {
+        const appointment = await updateAppointment(
+          siteId,
+          config.appointment_id as string,
+          { status: config.status as string }
+        )
+        return { status: 'completed', output: { appointment_id: appointment.id, status: config.status } }
+      } catch (error) {
+        return { status: 'failed', error: error instanceof Error ? error.message : 'Failed to update appointment status' }
+      }
+    }
+    
+    case 'cancel_appointment': {
+      try {
+        const appointment = await cancelAppointment(
+          siteId,
+          config.appointment_id as string,
+          (config.cancelled_by as string) || 'system',
+          config.reason as string || undefined
+        )
+        return { status: 'completed', output: { appointment_id: appointment.id, cancelled: true } }
+      } catch (error) {
+        return { status: 'failed', error: error instanceof Error ? error.message : 'Failed to cancel appointment' }
+      }
+    }
+    
+    case 'create_reminder': {
+      try {
+        const reminder = await createReminder(siteId, {
+          appointment_id: config.appointment_id as string,
+          type: (config.type as string) || 'email',
+          send_at: config.send_at as string,
+          message: config.message as string || undefined,
+        })
+        return { status: 'completed', output: { reminder_id: reminder.id, reminder } }
+      } catch (error) {
+        return { status: 'failed', error: error instanceof Error ? error.message : 'Failed to create reminder' }
+      }
+    }
+    
+    default:
+      return { status: 'failed', error: `Unknown booking action: ${action}` }
+  }
+}
+
+// ============================================================================
+// LIVE CHAT ACTIONS
+// ============================================================================
+
+async function executeChatAction(
+  action: string,
+  config: Record<string, unknown>,
+  context: ExecutionContext
+): Promise<ActionResult> {
+  const siteId = context.execution?.siteId
+  
+  if (!siteId) {
+    return { status: 'failed', error: 'Site ID not available in context' }
+  }
+  
+  switch (action) {
+    case 'send_message': {
+      try {
+        const result = await sendMessage({
+          conversationId: config.conversation_id as string,
+          siteId,
+          senderType: (config.sender_type as 'agent' | 'system') || 'system',
+          senderId: config.sender_id as string || undefined,
+          senderName: config.sender_name as string || 'Automation',
+          content: config.content as string,
+          contentType: (config.content_type as 'text' | 'html') || 'text',
+          isInternalNote: (config.is_internal as boolean) || false,
+        })
+        if (result.error) {
+          return { status: 'failed', error: result.error }
+        }
+        return { status: 'completed', output: { message_id: result.message?.id, success: true } }
+      } catch (error) {
+        return { status: 'failed', error: error instanceof Error ? error.message : 'Failed to send message' }
+      }
+    }
+    
+    case 'assign_conversation': {
+      try {
+        const result = await assignConversation(
+          config.conversation_id as string,
+          config.agent_id as string
+        )
+        if (!result.success) {
+          return { status: 'failed', error: result.error || 'Failed to assign conversation' }
+        }
+        return { status: 'completed', output: { success: true } }
+      } catch (error) {
+        return { status: 'failed', error: error instanceof Error ? error.message : 'Failed to assign conversation' }
+      }
+    }
+    
+    case 'resolve_conversation': {
+      try {
+        const result = await resolveConversation(config.conversation_id as string)
+        if (!result.success) {
+          return { status: 'failed', error: result.error || 'Failed to resolve conversation' }
+        }
+        return { status: 'completed', output: { success: true } }
+      } catch (error) {
+        return { status: 'failed', error: error instanceof Error ? error.message : 'Failed to resolve conversation' }
+      }
+    }
+    
+    case 'close_conversation': {
+      try {
+        const result = await closeConversation(config.conversation_id as string)
+        if (!result.success) {
+          return { status: 'failed', error: result.error || 'Failed to close conversation' }
+        }
+        return { status: 'completed', output: { success: true } }
+      } catch (error) {
+        return { status: 'failed', error: error instanceof Error ? error.message : 'Failed to close conversation' }
+      }
+    }
+    
+    case 'update_tags': {
+      try {
+        const result = await updateConversationTags(
+          config.conversation_id as string,
+          config.tags as string[]
+        )
+        if (!result.success) {
+          return { status: 'failed', error: result.error || 'Failed to update tags' }
+        }
+        return { status: 'completed', output: { success: true, tags: config.tags } }
+      } catch (error) {
+        return { status: 'failed', error: error instanceof Error ? error.message : 'Failed to update tags' }
+      }
+    }
+    
+    default:
+      return { status: 'failed', error: `Unknown chat action: ${action}` }
   }
 }
 

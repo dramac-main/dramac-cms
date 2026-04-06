@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { DOMAINS } from "@/lib/constants/domains";
 
 interface Client {
   id: string;
@@ -152,7 +153,7 @@ export function DomainAssignment({
             <div>
               <p className="text-sm font-medium">{selectedSite.name}</p>
               <p className="text-xs text-muted-foreground">
-                {selectedSite.subdomain}.sites.dramacagency.com
+                {selectedSite.subdomain}.{DOMAINS.SITES_BASE}
               </p>
             </div>
             <Button
@@ -176,7 +177,7 @@ export function DomainAssignment({
                   <div className="flex flex-col">
                     <span>{site.name}</span>
                     <span className="text-xs text-muted-foreground">
-                      {site.subdomain}.sites.dramacagency.com
+                      {site.subdomain}.{DOMAINS.SITES_BASE}
                     </span>
                   </div>
                 </SelectItem>

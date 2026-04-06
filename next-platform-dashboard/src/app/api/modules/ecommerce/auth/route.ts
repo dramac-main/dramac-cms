@@ -19,6 +19,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { DOMAINS } from "@/lib/constants/domains";
 import { PUBLIC_RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
 import { sendEmail } from "@/lib/email/send-email";
 import * as crypto from "crypto";
@@ -31,7 +32,7 @@ export const dynamic = "force-dynamic";
 // ── CORS origin validation ──────────────────────────────────────────────────
 // Only allow requests from known storefront origins (subdomain-based or custom domains).
 // The dashboard app itself is also allowed.
-const STOREFRONT_BASE_DOMAIN = process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
+const STOREFRONT_BASE_DOMAIN = DOMAINS.SITES_BASE;
 const APP_ORIGIN = process.env.NEXT_PUBLIC_APP_URL || "";
 
 /**

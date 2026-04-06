@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { DOMAINS } from '@/lib/constants/domains'
 
 /**
  * Generate and store screenshot for a site
@@ -60,7 +61,7 @@ export async function refreshSiteScreenshot(siteId: string): Promise<{
     return { success: false, error: 'Site not found' }
   }
 
-  const domain = site.custom_domain || `${site.subdomain}.sites.dramacagency.com`
+  const domain = site.custom_domain || `${site.subdomain}.${DOMAINS.SITES_BASE}`
   const url = `https://${domain}`
 
   return await captureAndStoreSiteScreenshot(siteId, url)

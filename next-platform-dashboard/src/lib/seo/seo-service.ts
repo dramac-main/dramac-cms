@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { DOMAINS } from "@/lib/constants/domains";
 import { getCurrentUserId, isSuperAdmin } from "@/lib/auth/permissions";
 import { cookies } from "next/headers";
 
@@ -721,7 +722,7 @@ function generateDefaultRobotsTxt(
 ): string {
   const baseUrl = customDomain
     ? `https://${customDomain}`
-    : `https://${subdomain}.sites.dramacagency.com`;
+    : `https://${subdomain}.${DOMAINS.SITES_BASE}`;
 
   return `# Robots.txt for ${subdomain}
 User-agent: *

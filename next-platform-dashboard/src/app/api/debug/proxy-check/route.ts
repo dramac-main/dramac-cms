@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { DOMAINS } from "@/lib/constants/domains";
 
 /**
  * Debug endpoint to check proxy routing
@@ -14,7 +15,7 @@ export async function GET(request: Request) {
   const hostname = request.headers.get("host") || "";
   const url = new URL(request.url);
   
-  const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
+  const baseDomain = DOMAINS.SITES_BASE;
   
   const isLocalhost = hostname.includes("localhost");
   const isAppDomain = hostname === "app.dramacagency.com" || isLocalhost;

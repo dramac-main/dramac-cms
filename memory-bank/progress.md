@@ -29,29 +29,26 @@
 
 ---
 
-## Latest Update: CRM Form Unification ✅
+## Latest Update: CRM Overhaul Complete + TypeScript Clean ✅ (commit 833135b7)
 
 ### What Was Done
 
-Removed phantom "Contact Forms" module (existed only as DB rows, no actual code) and rewired all studio form components to submit to CRM instead of generic form_submissions table.
+Full CRM overhaul completed across prior sessions (form builder, cross-module wiring, reports, studio, AI designer). This session fixed all 34 remaining TypeScript errors across 10 files and pushed clean to main.
 
-**Contact Forms Module Removal:**
+**34 TypeScript Errors Fixed:**
+- Type definition gaps: EmailType, NotificationType, openAuthDialog mode, authDialogMode state
+- Supabase codegen gaps: `as never` cast for module tables, query result casting
+- Variable hoisting: `toResponsive` in converter.ts
+- Type narrowing: entrance cast, String() for unknown metadata, ProductImage filter cast
+- Recharts v3 compat: removed explicit type annotations on Tooltip formatter params
+- Template completeness: Partial<Record<...>>, added branded template for quote_amendment_requested_owner
+- ReactNode coercion: `unknown && JSX` → `unknown ? JSX : null` ternary pattern
 
-- Removed from AI Designer feature chips (page.tsx), engine.ts FEATURE_MODULE_MAP, auto-install/route.ts FEATURE_MODULE_MAP
-- Deleted from DB: modules_v2, site_module_installations (4 rows), agency_module_subscriptions (1 row)
-
-**Form Rewiring:**
-
-- ContactFormRender → `/api/modules/crm/form-capture` (formType: "contact")
-- NewsletterRender → `/api/modules/crm/form-capture` (formType: "newsletter")
-- Generic Form+FormField kept on `/api/forms/submit` (arbitrary fields, can't map to CRM)
-- CRM API already saves to form_submissions for backward compat
-
-**TypeScript:** Zero new errors.
+**Commit:** `833135b7` — pushed to origin/main
 
 ---
 
-## Previous Update: Booking Auto-Chat + Storefront Modernization ✅ (commit a9363b1f)
+## Previous Update: CRM Form Unification ✅
 
 ### What Was Done
 

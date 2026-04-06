@@ -814,6 +814,325 @@ export const ACTION_REGISTRY = {
       },
     },
   },
+  
+  // =========================================================
+  // E-COMMERCE ACTIONS
+  // =========================================================
+  ecommerce: {
+    update_order_status: {
+      id: 'ecommerce.update_order_status',
+      name: 'Update Order Status',
+      description: 'Update the status of an order (e.g., confirmed, shipped, delivered)',
+      category: 'ecommerce',
+      icon: 'Package',
+      inputs: {
+        order_id: { type: 'string' as const, required: true, description: 'Order ID' },
+        status: { type: 'enum' as const, values: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'], required: true, description: 'New order status' },
+        note: { type: 'string' as const, required: false, description: 'Status change note' },
+      },
+      outputs: {
+        success: { type: 'boolean' as const, description: 'Whether status was updated' },
+        order_id: { type: 'string' as const, description: 'Order ID' },
+        status: { type: 'string' as const, description: 'New status' },
+      },
+    },
+    add_order_note: {
+      id: 'ecommerce.add_order_note',
+      name: 'Add Order Note',
+      description: 'Add an internal or customer-facing note to an order',
+      category: 'ecommerce',
+      icon: 'FileText',
+      inputs: {
+        order_id: { type: 'string' as const, required: true, description: 'Order ID' },
+        content: { type: 'string' as const, required: true, description: 'Note content' },
+        is_internal: { type: 'boolean' as const, required: false, default: true, description: 'Whether note is internal only' },
+      },
+      outputs: {
+        success: { type: 'boolean' as const, description: 'Whether note was added' },
+        note_id: { type: 'string' as const, description: 'Created note ID' },
+      },
+    },
+    add_shipment: {
+      id: 'ecommerce.add_shipment',
+      name: 'Add Shipment Tracking',
+      description: 'Add shipping/tracking information to an order',
+      category: 'ecommerce',
+      icon: 'Truck',
+      inputs: {
+        order_id: { type: 'string' as const, required: true, description: 'Order ID' },
+        carrier: { type: 'string' as const, required: true, description: 'Shipping carrier name' },
+        tracking_number: { type: 'string' as const, required: true, description: 'Tracking number' },
+        tracking_url: { type: 'string' as const, required: false, description: 'Tracking URL' },
+      },
+      outputs: {
+        success: { type: 'boolean' as const, description: 'Whether shipment was added' },
+        shipment_id: { type: 'string' as const, description: 'Created shipment ID' },
+      },
+    },
+    create_refund: {
+      id: 'ecommerce.create_refund',
+      name: 'Create Refund',
+      description: 'Create a refund for an order',
+      category: 'ecommerce',
+      icon: 'RotateCcw',
+      inputs: {
+        order_id: { type: 'string' as const, required: true, description: 'Order ID' },
+        amount: { type: 'number' as const, required: true, description: 'Refund amount' },
+        reason: { type: 'string' as const, required: true, description: 'Reason for refund' },
+        refund_method: { type: 'enum' as const, values: ['original_payment', 'store_credit', 'other'], required: false, description: 'Refund method' },
+      },
+      outputs: {
+        success: { type: 'boolean' as const, description: 'Whether refund was created' },
+        refund_id: { type: 'string' as const, description: 'Created refund ID' },
+      },
+    },
+    adjust_stock: {
+      id: 'ecommerce.adjust_stock',
+      name: 'Adjust Stock Level',
+      description: 'Adjust inventory stock for a product',
+      category: 'ecommerce',
+      icon: 'Boxes',
+      inputs: {
+        product_id: { type: 'string' as const, required: true, description: 'Product ID' },
+        variant_id: { type: 'string' as const, required: false, description: 'Variant ID (if applicable)' },
+        quantity: { type: 'number' as const, required: true, description: 'Quantity to adjust (positive or negative)' },
+        movement_type: { type: 'enum' as const, values: ['adjustment', 'restock', 'damage', 'return', 'count'], required: false, description: 'Type of stock movement' },
+        reason: { type: 'string' as const, required: false, description: 'Reason for adjustment' },
+      },
+      outputs: {
+        success: { type: 'boolean' as const, description: 'Whether stock was adjusted' },
+        movement: { type: 'object' as const, description: 'Stock movement record' },
+      },
+    },
+    update_quote_status: {
+      id: 'ecommerce.update_quote_status',
+      name: 'Update Quote Status',
+      description: 'Update the status of a quotation',
+      category: 'ecommerce',
+      icon: 'FileSpreadsheet',
+      inputs: {
+        quote_id: { type: 'string' as const, required: true, description: 'Quote ID' },
+        status: { type: 'enum' as const, values: ['draft', 'pending_approval', 'sent', 'viewed', 'accepted', 'rejected', 'expired', 'converted'], required: true, description: 'New quote status' },
+        notes: { type: 'string' as const, required: false, description: 'Status change notes' },
+      },
+      outputs: {
+        success: { type: 'boolean' as const, description: 'Whether status was updated' },
+        quote_id: { type: 'string' as const, description: 'Quote ID' },
+      },
+    },
+    send_quote: {
+      id: 'ecommerce.send_quote',
+      name: 'Send Quote to Customer',
+      description: 'Send a quotation to the customer via email',
+      category: 'ecommerce',
+      icon: 'Send',
+      inputs: {
+        quote_id: { type: 'string' as const, required: true, description: 'Quote ID' },
+        subject: { type: 'string' as const, required: false, description: 'Custom email subject' },
+        message: { type: 'string' as const, required: false, description: 'Custom email message' },
+      },
+      outputs: {
+        success: { type: 'boolean' as const, description: 'Whether quote was sent' },
+        quote_id: { type: 'string' as const, description: 'Quote ID' },
+      },
+    },
+    send_quote_reminder: {
+      id: 'ecommerce.send_quote_reminder',
+      name: 'Send Quote Reminder',
+      description: 'Send a reminder email for a pending quote',
+      category: 'ecommerce',
+      icon: 'BellRing',
+      inputs: {
+        quote_id: { type: 'string' as const, required: true, description: 'Quote ID' },
+        message: { type: 'string' as const, required: false, description: 'Custom reminder message' },
+      },
+      outputs: {
+        success: { type: 'boolean' as const, description: 'Whether reminder was sent' },
+      },
+    },
+    convert_quote_to_order: {
+      id: 'ecommerce.convert_quote_to_order',
+      name: 'Convert Quote to Order',
+      description: 'Convert an accepted quote into an order',
+      category: 'ecommerce',
+      icon: 'ArrowRightLeft',
+      inputs: {
+        quote_id: { type: 'string' as const, required: true, description: 'Quote ID to convert' },
+      },
+      outputs: {
+        success: { type: 'boolean' as const, description: 'Whether conversion succeeded' },
+        order_id: { type: 'string' as const, description: 'Created order ID' },
+      },
+    },
+  },
+  
+  // =========================================================
+  // BOOKING ACTIONS
+  // =========================================================
+  booking: {
+    create_appointment: {
+      id: 'booking.create_appointment',
+      name: 'Create Appointment',
+      description: 'Create a new booking appointment',
+      category: 'booking',
+      icon: 'CalendarPlus',
+      inputs: {
+        service_id: { type: 'string' as const, required: true, description: 'Service ID' },
+        staff_id: { type: 'string' as const, required: false, description: 'Staff member ID' },
+        customer_name: { type: 'string' as const, required: true, description: 'Customer name' },
+        customer_email: { type: 'string' as const, required: true, description: 'Customer email' },
+        customer_phone: { type: 'string' as const, required: false, description: 'Customer phone' },
+        start_time: { type: 'string' as const, required: true, description: 'Start time (ISO 8601)' },
+        end_time: { type: 'string' as const, required: true, description: 'End time (ISO 8601)' },
+        notes: { type: 'string' as const, required: false, description: 'Booking notes' },
+      },
+      outputs: {
+        appointment_id: { type: 'string' as const, description: 'Created appointment ID' },
+        appointment: { type: 'object' as const, description: 'Full appointment object' },
+      },
+    },
+    update_appointment: {
+      id: 'booking.update_appointment',
+      name: 'Update Appointment',
+      description: 'Update an existing appointment',
+      category: 'booking',
+      icon: 'CalendarCog',
+      inputs: {
+        appointment_id: { type: 'string' as const, required: true, description: 'Appointment ID' },
+        updates: { type: 'object' as const, required: true, description: 'Fields to update' },
+      },
+      outputs: {
+        appointment_id: { type: 'string' as const, description: 'Updated appointment ID' },
+        appointment: { type: 'object' as const, description: 'Updated appointment object' },
+      },
+    },
+    update_status: {
+      id: 'booking.update_status',
+      name: 'Update Appointment Status',
+      description: 'Change appointment status (confirm, complete, no-show)',
+      category: 'booking',
+      icon: 'CalendarCheck',
+      inputs: {
+        appointment_id: { type: 'string' as const, required: true, description: 'Appointment ID' },
+        status: { type: 'enum' as const, values: ['pending', 'confirmed', 'completed', 'cancelled', 'no_show'], required: true, description: 'New status' },
+      },
+      outputs: {
+        appointment_id: { type: 'string' as const, description: 'Appointment ID' },
+        status: { type: 'string' as const, description: 'New status' },
+      },
+    },
+    cancel_appointment: {
+      id: 'booking.cancel_appointment',
+      name: 'Cancel Appointment',
+      description: 'Cancel a booking appointment',
+      category: 'booking',
+      icon: 'CalendarX',
+      inputs: {
+        appointment_id: { type: 'string' as const, required: true, description: 'Appointment ID' },
+        cancelled_by: { type: 'enum' as const, values: ['customer', 'staff', 'system'], required: false, description: 'Who cancelled' },
+        reason: { type: 'string' as const, required: false, description: 'Cancellation reason' },
+      },
+      outputs: {
+        appointment_id: { type: 'string' as const, description: 'Cancelled appointment ID' },
+        cancelled: { type: 'boolean' as const, description: 'Whether cancellation succeeded' },
+      },
+    },
+    create_reminder: {
+      id: 'booking.create_reminder',
+      name: 'Create Appointment Reminder',
+      description: 'Create a reminder for an upcoming appointment',
+      category: 'booking',
+      icon: 'AlarmClock',
+      inputs: {
+        appointment_id: { type: 'string' as const, required: true, description: 'Appointment ID' },
+        type: { type: 'enum' as const, values: ['email', 'sms'], required: false, description: 'Reminder type' },
+        send_at: { type: 'string' as const, required: true, description: 'When to send (ISO 8601)' },
+        message: { type: 'string' as const, required: false, description: 'Custom reminder message' },
+      },
+      outputs: {
+        reminder_id: { type: 'string' as const, description: 'Created reminder ID' },
+      },
+    },
+  },
+  
+  // =========================================================
+  // LIVE CHAT ACTIONS
+  // =========================================================
+  chat: {
+    send_message: {
+      id: 'chat.send_message',
+      name: 'Send Chat Message',
+      description: 'Send a message in a live chat conversation',
+      category: 'chat',
+      icon: 'MessageSquare',
+      inputs: {
+        conversation_id: { type: 'string' as const, required: true, description: 'Conversation ID' },
+        content: { type: 'string' as const, required: true, description: 'Message content' },
+        sender_type: { type: 'enum' as const, values: ['agent', 'system'], required: false, description: 'Sender type' },
+        sender_name: { type: 'string' as const, required: false, description: 'Sender name' },
+        is_internal: { type: 'boolean' as const, required: false, default: false, description: 'Internal note only' },
+      },
+      outputs: {
+        message_id: { type: 'string' as const, description: 'Sent message ID' },
+        success: { type: 'boolean' as const, description: 'Whether message was sent' },
+      },
+    },
+    assign_conversation: {
+      id: 'chat.assign_conversation',
+      name: 'Assign Conversation',
+      description: 'Assign a chat conversation to an agent',
+      category: 'chat',
+      icon: 'UserPlus',
+      inputs: {
+        conversation_id: { type: 'string' as const, required: true, description: 'Conversation ID' },
+        agent_id: { type: 'string' as const, required: true, description: 'Agent user ID' },
+      },
+      outputs: {
+        success: { type: 'boolean' as const, description: 'Whether assignment succeeded' },
+      },
+    },
+    resolve_conversation: {
+      id: 'chat.resolve_conversation',
+      name: 'Resolve Conversation',
+      description: 'Mark a chat conversation as resolved',
+      category: 'chat',
+      icon: 'CheckCircle',
+      inputs: {
+        conversation_id: { type: 'string' as const, required: true, description: 'Conversation ID' },
+      },
+      outputs: {
+        success: { type: 'boolean' as const, description: 'Whether conversation was resolved' },
+      },
+    },
+    close_conversation: {
+      id: 'chat.close_conversation',
+      name: 'Close Conversation',
+      description: 'Close a chat conversation permanently',
+      category: 'chat',
+      icon: 'XCircle',
+      inputs: {
+        conversation_id: { type: 'string' as const, required: true, description: 'Conversation ID' },
+      },
+      outputs: {
+        success: { type: 'boolean' as const, description: 'Whether conversation was closed' },
+      },
+    },
+    update_tags: {
+      id: 'chat.update_tags',
+      name: 'Update Conversation Tags',
+      description: 'Update tags on a chat conversation',
+      category: 'chat',
+      icon: 'Tags',
+      inputs: {
+        conversation_id: { type: 'string' as const, required: true, description: 'Conversation ID' },
+        tags: { type: 'array' as const, required: true, description: 'Tags to set on conversation' },
+      },
+      outputs: {
+        success: { type: 'boolean' as const, description: 'Whether tags were updated' },
+        tags: { type: 'array' as const, description: 'Updated tags' },
+      },
+    },
+  },
 } as const
 
 // ============================================================================
@@ -822,6 +1141,9 @@ export const ACTION_REGISTRY = {
 
 export const ACTION_CATEGORIES = [
   { id: 'crm', name: 'CRM', icon: 'User', description: 'Contact, company, deal, and task actions' },
+  { id: 'ecommerce', name: 'E-Commerce', icon: 'ShoppingCart', description: 'Orders, quotes, inventory, and refund actions' },
+  { id: 'booking', name: 'Booking', icon: 'Calendar', description: 'Appointments, reminders, and scheduling actions' },
+  { id: 'chat', name: 'Live Chat', icon: 'MessageSquare', description: 'Messages, conversations, and agent assignment' },
   { id: 'email', name: 'Email', icon: 'Mail', description: 'Send emails and templates' },
   { id: 'notification', name: 'Notifications', icon: 'Bell', description: 'SMS, Slack, Discord, and in-app notifications' },
   { id: 'webhook', name: 'Webhooks', icon: 'Globe', description: 'Send HTTP requests to external services' },

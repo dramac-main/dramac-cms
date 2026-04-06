@@ -12,6 +12,7 @@ import {
   FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DOMAINS } from "@/lib/constants/domains";
 import {
   Card,
   CardContent,
@@ -97,7 +98,7 @@ export default function RobotsPage({
     if (!site) return "#";
     const baseUrl = site.domain
       ? `https://${site.domain}`
-      : `https://${site.subdomain}.sites.dramacagency.com`;
+      : `https://${site.subdomain}.${DOMAINS.SITES_BASE}`;
     return `${baseUrl}/robots.txt`;
   };
 
