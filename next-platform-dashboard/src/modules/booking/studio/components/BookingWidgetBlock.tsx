@@ -9,7 +9,7 @@
  */
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import {
   Tag,
@@ -27,6 +27,7 @@ import {
   Loader2,
   ArrowRight,
   Check,
+  MessageCircle,
 } from "lucide-react";
 import type { ComponentDefinition } from "@/types/studio";
 import {
@@ -417,6 +418,7 @@ export function BookingWidgetBlock({
   const [bookingStatus, setBookingStatus] = useState<"confirmed" | "pending">(
     "confirmed",
   );
+  const [lastBookingId, setLastBookingId] = useState<string | null>(null);
 
   const [calendarDate, setCalendarDate] = useState(new Date());
   const calYear = calendarDate.getFullYear();
@@ -718,6 +720,7 @@ export function BookingWidgetBlock({
         setBookingStatus(
           result.status === "confirmed" ? "confirmed" : "pending",
         );
+        setLastBookingId(result.id || null);
 
         // Immediately mark this slot as booked locally (belt-and-suspenders)
         if (selectedTime) {
@@ -759,17 +762,72 @@ export function BookingWidgetBlock({
     setIsComplete(false);
     setBookingError(null);
     setBookingStatus("confirmed");
+    setLastBookingId(null);
   };
+
+  // Auto-open live chat after booking confirmation (mirrors ecommerce OrderConfirmation pattern)
+  const openChatWithBookingContext = useCallback(() => {
+    if (!lastBookingId || !selectedService || !formData.email) return;
+    const dateStr = selectedDate
+      ? selectedDate.toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : "";
+    const timeStr = selectedTime || "";
+    window.postMessage(
+      {
+        type: "dramac-chat-open",
+        bookingContext: {
+          bookingId: lastBookingId,
+          serviceName: selectedService.name,
+          bookingDate: dateStr,
+          bookingTime: timeStr,
+          email: formData.email,
+          status: bookingStatus,
+        },
+      },
+      window.location.origin,
+    );
+  }, [
+    lastBookingId,
+    selectedService,
+    selectedDate,
+    selectedTime,
+    formData.email,
+    bookingStatus,
+  ]);
+
+  useEffect(() => {
+    if (!isComplete || !lastBookingId || !siteId) return;
+    const storageKey = `dramac_booking_chat_opened_${lastBookingId}`;
+    if (typeof sessionStorage !== "undefined" && sessionStorage.getItem(storageKey)) return;
+    if (typeof sessionStorage !== "undefined") sessionStorage.setItem(storageKey, "1");
+    const timer = setTimeout(() => {
+      openChatWithBookingContext();
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [isComplete, lastBookingId, siteId, openChatWithBookingContext]);
 
   // Success screen
   if (isComplete) {
     const isPending = bookingStatus === "pending";
     const displayTitle = isPending ? "Booking Submitted!" : successTitle;
     const displayMessage = isPending
-      ? "Your appointment request has been submitted and is awaiting confirmation. You will receive an email once confirmed."
+      ? "Your appointment request has been submitted and is awaiting confirmation. You\u2019ll receive an email once confirmed."
       : successMessage;
     const displayColor = isPending ? "#f59e0b" : successClr;
     const DisplayIcon = isPending ? Clock : CircleCheck;
+    const formattedDate = selectedDate
+      ? selectedDate.toLocaleDateString("en-US", {
+          weekday: "long",
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        })
+      : null;
     return (
       <div
         className={cn("booking-widget-block", className)}
@@ -779,61 +837,210 @@ export function BookingWidgetBlock({
           width: width || "100%",
           border: `${borderWidth} solid ${borderColor || "#e5e7eb"}`,
           boxShadow: SHADOW_MAP[shadow] || "none",
-          padding: "40px 20px",
+          padding: "clamp(24px, 5vw, 48px) clamp(16px, 4vw, 32px)",
           textAlign: "center",
         }}
       >
+        {/* Animated icon */}
         <div
           style={{
-            width: 64,
-            height: 64,
+            width: 72,
+            height: 72,
             borderRadius: "50%",
-            backgroundColor: `${displayColor}15`,
+            background: `linear-gradient(135deg, ${displayColor}20, ${displayColor}08)`,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            margin: "0 auto 16px",
+            margin: "0 auto 20px",
             animation: showSuccessAnimation ? "bounceIn 0.5s ease" : undefined,
           }}
         >
-          <DisplayIcon style={{ width: 32, height: 32, color: displayColor }} />
+          <DisplayIcon style={{ width: 36, height: 36, color: displayColor }} />
         </div>
+
+        {/* Title & subtitle */}
         <h3
           style={{
             fontWeight: "700",
-            fontSize: "20px",
-            margin: "0 0 8px",
+            fontSize: "clamp(20px, 3vw, 24px)",
+            margin: "0 0 6px",
             color: displayColor,
+            letterSpacing: "-0.01em",
           }}
         >
           {displayTitle}
         </h3>
         <p
           style={{
-            fontSize: "14px",
-            opacity: 0.7,
-            margin: "0 0 20px",
-            lineHeight: 1.5,
+            fontSize: "clamp(13px, 2vw, 15px)",
+            opacity: 0.65,
+            margin: "0 0 24px",
+            lineHeight: 1.6,
+            maxWidth: 420,
+            marginLeft: "auto",
+            marginRight: "auto",
           }}
         >
           {displayMessage}
         </p>
-        <button
-          onClick={resetWidget}
-          className="min-h-[44px]"
+
+        {/* Booking summary card */}
+        <div
           style={{
-            padding: "10px 24px",
-            borderRadius: buttonBorderRadius,
-            backgroundColor: btnBg,
-            color: btnTxt,
-            border: "none",
-            fontSize: buttonFontSize,
-            fontWeight: buttonFontWeight,
-            cursor: "pointer",
+            background: `${displayColor}08`,
+            border: `1px solid ${displayColor}20`,
+            borderRadius: "12px",
+            padding: "clamp(16px, 3vw, 24px)",
+            maxWidth: 400,
+            margin: "0 auto 24px",
+            textAlign: "left",
           }}
         >
-          {bookAnotherText}
-        </button>
+          {/* Reference & status row */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 16,
+              flexWrap: "wrap",
+              gap: 8,
+            }}
+          >
+            {lastBookingId && (
+              <span
+                style={{
+                  fontSize: "12px",
+                  fontFamily: "monospace",
+                  color: displayColor,
+                  fontWeight: 600,
+                }}
+              >
+                REF: {lastBookingId.slice(0, 8).toUpperCase()}
+              </span>
+            )}
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                fontSize: "12px",
+                fontWeight: 600,
+                padding: "3px 10px",
+                borderRadius: "999px",
+                backgroundColor: isPending ? "#fef3c7" : "#d1fae5",
+                color: isPending ? "#92400e" : "#065f46",
+              }}
+            >
+              <DisplayIcon style={{ width: 12, height: 12 }} />
+              {isPending ? "Awaiting Confirmation" : "Confirmed"}
+            </span>
+          </div>
+
+          {/* Detail rows */}
+          {[
+            { icon: Tag, label: "Service", value: selectedService?.name },
+            { icon: Calendar, label: "Date", value: formattedDate },
+            { icon: Clock, label: "Time", value: selectedTime },
+            { icon: User, label: "Staff", value: selectedStaff?.name },
+          ]
+            .filter((row) => row.value)
+            .map((row) => (
+              <div
+                key={row.label}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "8px 0",
+                  borderTop: `1px solid ${displayColor}10`,
+                }}
+              >
+                <row.icon
+                  style={{
+                    width: 16,
+                    height: 16,
+                    color: displayColor,
+                    opacity: 0.7,
+                    flexShrink: 0,
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: 500,
+                    opacity: 0.55,
+                    minWidth: 52,
+                    flexShrink: 0,
+                  }}
+                >
+                  {row.label}
+                </span>
+                <span
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {row.value}
+                </span>
+              </div>
+            ))}
+        </div>
+
+        {/* Action buttons */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          <button
+            onClick={resetWidget}
+            className="min-h-[44px]"
+            style={{
+              padding: "10px 24px",
+              borderRadius: buttonBorderRadius,
+              backgroundColor: btnBg,
+              color: btnTxt,
+              border: "none",
+              fontSize: buttonFontSize,
+              fontWeight: buttonFontWeight,
+              cursor: "pointer",
+              transition: "opacity 0.2s",
+            }}
+          >
+            {bookAnotherText}
+          </button>
+          <button
+            onClick={openChatWithBookingContext}
+            className="min-h-[44px]"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "10px 20px",
+              borderRadius: buttonBorderRadius,
+              backgroundColor: "transparent",
+              color: displayColor,
+              border: `1.5px solid ${displayColor}40`,
+              fontSize: buttonFontSize,
+              fontWeight: buttonFontWeight,
+              cursor: "pointer",
+              transition: "background-color 0.2s, border-color 0.2s",
+            }}
+          >
+            <MessageCircle style={{ width: 16, height: 16 }} />
+            Questions? Chat with us
+          </button>
+        </div>
+
         <style>{`@keyframes bounceIn { 0% { transform: scale(0); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }`}</style>
       </div>
     );
@@ -1185,7 +1392,7 @@ export function BookingWidgetBlock({
                     if (autoAdvance) goNext();
                   }}
                   style={{
-                    padding: "14px",
+                    padding: "clamp(12px, 2vw, 16px)",
                     borderRadius: cardBorderRadius,
                     border: `${selectedStaff?.id === staff.id ? "2px" : borderWidth} solid ${selectedStaff?.id === staff.id ? selBorder : cardBorderColor || "#e5e7eb"}`,
                     backgroundColor:
@@ -1196,8 +1403,8 @@ export function BookingWidgetBlock({
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
-                    gap: "12px",
-                    transition: animateSteps ? "all 0.2s ease" : "none",
+                    gap: "clamp(10px, 2vw, 14px)",
+                    transition: "all 0.2s ease",
                   }}
                 >
                   {staff.avatar ? (
@@ -1205,17 +1412,18 @@ export function BookingWidgetBlock({
                       src={staff.avatar}
                       alt={staff.name}
                       style={{
-                        width: 44,
-                        height: 44,
+                        width: "clamp(40px, 6vw, 48px)",
+                        height: "clamp(40px, 6vw, 48px)",
                         borderRadius: "50%",
                         objectFit: "cover",
+                        flexShrink: 0,
                       }}
                     />
                   ) : (
                     <div
                       style={{
-                        width: 44,
-                        height: 44,
+                        width: "clamp(40px, 6vw, 48px)",
+                        height: "clamp(40px, 6vw, 48px)",
                         borderRadius: "50%",
                         backgroundColor: `${pc}15`,
                         display: "flex",
@@ -1223,15 +1431,16 @@ export function BookingWidgetBlock({
                         justifyContent: "center",
                         color: pc,
                         fontWeight: 700,
-                        fontSize: "16px",
+                        fontSize: "clamp(14px, 2vw, 17px)",
+                        flexShrink: 0,
                       }}
                     >
                       {staff.name.charAt(0)}
                     </div>
                   )}
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <h4
-                      style={{ fontWeight: "600", fontSize: "15px", margin: 0 }}
+                      style={{ fontWeight: "600", fontSize: "clamp(14px, 2vw, 15px)", margin: 0 }}
                     >
                       {staff.name}
                     </h4>
@@ -1435,7 +1644,7 @@ export function BookingWidgetBlock({
                     {noSlotsMessage}
                   </p>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                     {timeSlots.map((slot) => (
                       <button
                         key={slot.time}
@@ -1445,9 +1654,9 @@ export function BookingWidgetBlock({
                         disabled={!slot.available}
                         className="min-h-[44px]"
                         style={{
-                          padding: "7px 10px",
-                          borderRadius: "6px",
-                          fontSize: "13px",
+                          padding: "8px 12px",
+                          borderRadius: cardBorderRadius || "8px",
+                          fontSize: "clamp(12px, 2vw, 14px)",
                           backgroundColor:
                             selectedTime === slot.time
                               ? slotSelBg
@@ -1460,13 +1669,14 @@ export function BookingWidgetBlock({
                               : slot.available
                                 ? undefined
                                 : "#d1d5db",
-                          border: `1px solid ${selectedTime === slot.time ? slotSelBg : slot.available ? cardBorderColor || "#e5e7eb" : "transparent"}`,
+                          border: `1.5px solid ${selectedTime === slot.time ? slotSelBg : slot.available ? cardBorderColor || "#e5e7eb" : "transparent"}`,
                           cursor: slot.available ? "pointer" : "not-allowed",
-                          fontWeight: selectedTime === slot.time ? 600 : 400,
+                          fontWeight: selectedTime === slot.time ? 600 : 500,
                           textDecoration: !slot.available
                             ? "line-through"
                             : "none",
                           opacity: !slot.available ? 0.5 : 1,
+                          transition: "all 0.2s ease",
                         }}
                       >
                         {slot.display}
@@ -1653,8 +1863,9 @@ export function BookingWidgetBlock({
                 <h4
                   style={{
                     fontWeight: "600",
-                    fontSize: "15px",
-                    margin: "0 0 12px",
+                    fontSize: "clamp(14px, 2vw, 16px)",
+                    margin: "0 0 14px",
+                    letterSpacing: "-0.01em",
                   }}
                 >
                   Booking Summary
@@ -1664,11 +1875,12 @@ export function BookingWidgetBlock({
                     style={{
                       display: "flex",
                       justifyContent: "space-between",
-                      marginBottom: "8px",
+                      alignItems: "center",
+                      padding: "8px 0",
                     }}
                   >
-                    <span style={{ opacity: 0.7 }}>Service</span>
-                    <span style={{ fontWeight: 500 }}>
+                    <span style={{ opacity: 0.6, fontSize: "clamp(12px, 2vw, 14px)" }}>Service</span>
+                    <span style={{ fontWeight: 500, fontSize: "clamp(13px, 2vw, 14px)" }}>
                       {selectedService.name}
                     </span>
                   </div>
@@ -1678,11 +1890,13 @@ export function BookingWidgetBlock({
                     style={{
                       display: "flex",
                       justifyContent: "space-between",
-                      marginBottom: "8px",
+                      alignItems: "center",
+                      padding: "8px 0",
+                      borderTop: `1px solid ${dividerColor || "#f0f0f0"}`,
                     }}
                   >
-                    <span style={{ opacity: 0.7 }}>Staff</span>
-                    <span style={{ fontWeight: 500 }}>
+                    <span style={{ opacity: 0.6, fontSize: "clamp(12px, 2vw, 14px)" }}>Staff</span>
+                    <span style={{ fontWeight: 500, fontSize: "clamp(13px, 2vw, 14px)" }}>
                       {selectedStaff.name}
                     </span>
                   </div>
@@ -1692,11 +1906,13 @@ export function BookingWidgetBlock({
                     style={{
                       display: "flex",
                       justifyContent: "space-between",
-                      marginBottom: "8px",
+                      alignItems: "center",
+                      padding: "8px 0",
+                      borderTop: `1px solid ${dividerColor || "#f0f0f0"}`,
                     }}
                   >
-                    <span style={{ opacity: 0.7 }}>Date</span>
-                    <span style={{ fontWeight: 500 }}>
+                    <span style={{ opacity: 0.6, fontSize: "clamp(12px, 2vw, 14px)" }}>Date</span>
+                    <span style={{ fontWeight: 500, fontSize: "clamp(13px, 2vw, 14px)" }}>
                       {selectedDate.toLocaleDateString(DEFAULT_LOCALE, {
                         weekday: "short",
                         month: "short",
@@ -1710,11 +1926,13 @@ export function BookingWidgetBlock({
                     style={{
                       display: "flex",
                       justifyContent: "space-between",
-                      marginBottom: "8px",
+                      alignItems: "center",
+                      padding: "8px 0",
+                      borderTop: `1px solid ${dividerColor || "#f0f0f0"}`,
                     }}
                   >
-                    <span style={{ opacity: 0.7 }}>Time</span>
-                    <span style={{ fontWeight: 500 }}>
+                    <span style={{ opacity: 0.6, fontSize: "clamp(12px, 2vw, 14px)" }}>Time</span>
+                    <span style={{ fontWeight: 500, fontSize: "clamp(13px, 2vw, 14px)" }}>
                       {(() => {
                         if (timeFormat === "12h") {
                           const [h, m] = selectedTime.split(":").map(Number);
@@ -1732,12 +1950,13 @@ export function BookingWidgetBlock({
                     style={{
                       display: "flex",
                       justifyContent: "space-between",
-                      paddingTop: "8px",
-                      borderTop: `1px solid ${dividerColor || "#e5e7eb"}`,
+                      alignItems: "center",
+                      paddingTop: "10px",
+                      borderTop: `1.5px solid ${dividerColor || "#e5e7eb"}`,
                       marginTop: "4px",
                     }}
                   >
-                    <span style={{ fontWeight: 600 }}>Total</span>
+                    <span style={{ fontWeight: 600, fontSize: "clamp(13px, 2vw, 15px)" }}>Total</span>
                     <span
                       style={{
                         fontWeight: priceFontWeight,
@@ -1758,39 +1977,41 @@ export function BookingWidgetBlock({
             {/* Contact Info */}
             <div
               style={{
-                padding: "12px",
+                padding: "clamp(12px, 2vw, 16px)",
                 borderRadius: cardBorderRadius,
                 border: `1px solid ${cardBorderColor || "#e5e7eb"}`,
-                fontSize: "13px",
+                fontSize: "clamp(12px, 2vw, 14px)",
               }}
             >
               <h4
                 style={{
                   fontWeight: "600",
-                  fontSize: "14px",
-                  margin: "0 0 8px",
+                  fontSize: "clamp(13px, 2vw, 15px)",
+                  margin: "0 0 10px",
                 }}
               >
                 Contact Details
               </h4>
-              {formData.name && (
-                <p style={{ margin: "0 0 4px" }}>{formData.name}</p>
-              )}
-              {formData.email && (
-                <p style={{ margin: "0 0 4px", opacity: 0.7 }}>
-                  {formData.email}
-                </p>
-              )}
-              {formData.phone && (
-                <p style={{ margin: "0 0 4px", opacity: 0.7 }}>
-                  {formData.phone}
-                </p>
-              )}
-              {formData.notes && (
-                <p style={{ margin: "0", opacity: 0.7, fontStyle: "italic" }}>
-                  &ldquo;{formData.notes}&rdquo;
-                </p>
-              )}
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                {formData.name && (
+                  <p style={{ margin: 0 }}>{formData.name}</p>
+                )}
+                {formData.email && (
+                  <p style={{ margin: 0, opacity: 0.65 }}>
+                    {formData.email}
+                  </p>
+                )}
+                {formData.phone && (
+                  <p style={{ margin: 0, opacity: 0.65 }}>
+                    {formData.phone}
+                  </p>
+                )}
+                {formData.notes && (
+                  <p style={{ margin: 0, opacity: 0.65, fontStyle: "italic" }}>
+                    &ldquo;{formData.notes}&rdquo;
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -1821,6 +2042,7 @@ export function BookingWidgetBlock({
               alignItems: "center",
               justifyContent: "center",
               gap: "6px",
+              transition: "all 0.2s ease",
             }}
           >
             <ChevronLeft style={{ width: 16, height: 16 }} /> {prevButtonText}

@@ -280,15 +280,16 @@ export function formatCustomerContext(ctx: CustomerContext): string {
   }
 
   if (ctx.recentBookings.length > 0) {
-    const bookingLines = ctx.recentBookings.map(
-      (b) => {
-        const start = new Date(b.startTime);
-        const isPast = start < new Date();
-        const timePart = `${start.toLocaleDateString()} ${start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
-        const payPart = b.paymentStatus !== "not_required" ? `, payment: ${b.paymentStatus}` : "";
-        return `- ${b.serviceName}${b.staffName ? ` with ${b.staffName}` : ""}: ${b.status}${payPart}, ${timePart}${isPast ? " (past)" : ""}`;
-      },
-    );
+    const bookingLines = ctx.recentBookings.map((b) => {
+      const start = new Date(b.startTime);
+      const isPast = start < new Date();
+      const timePart = `${start.toLocaleDateString()} ${start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+      const payPart =
+        b.paymentStatus !== "not_required"
+          ? `, payment: ${b.paymentStatus}`
+          : "";
+      return `- ${b.serviceName}${b.staffName ? ` with ${b.staffName}` : ""}: ${b.status}${payPart}, ${timePart}${isPast ? " (past)" : ""}`;
+    });
     parts.push(`RECENT BOOKINGS:\n${bookingLines.join("\n")}`);
   }
 

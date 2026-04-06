@@ -8,7 +8,7 @@
  */
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useBreakpointDown } from "@/hooks/use-media-query";
 import {
@@ -22,6 +22,9 @@ import {
   AlertCircle,
   Loader2,
   Clock,
+  MessageCircle,
+  Calendar,
+  Tag,
 } from "lucide-react";
 import type { ComponentDefinition } from "@/types/studio";
 import { useCreateBooking } from "../../hooks/useCreateBooking";
@@ -418,6 +421,7 @@ export function BookingFormBlock({
   const [bookingStatus, setBookingStatus] = useState<"confirmed" | "pending">(
     "confirmed",
   );
+  const [lastBookingId, setLastBookingId] = useState<string | null>(null);
 
   const auth = useStorefrontAuth();
 
@@ -544,6 +548,7 @@ export function BookingFormBlock({
         setBookingStatus(
           result.status === "confirmed" ? "confirmed" : "pending",
         );
+        setLastBookingId(result.id || null);
       } else {
         // Demo mode (Studio editor only) — simulate delay
         await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -556,6 +561,49 @@ export function BookingFormBlock({
       setIsSubmitting(false);
     }
   };
+
+  // Auto-open live chat with booking context (mirrors ecommerce OrderConfirmation pattern)
+  const openChatWithBookingContext = useCallback(() => {
+    if (!lastBookingId || !formData.email) return;
+    const dateStr = startTime
+      ? new Date(startTime).toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : "";
+    window.postMessage(
+      {
+        type: "dramac-chat-open",
+        bookingContext: {
+          bookingId: lastBookingId,
+          serviceName: serviceId || "Appointment",
+          bookingDate: dateStr,
+          bookingTime: startTime
+            ? new Date(startTime).toLocaleTimeString("en-US", {
+                hour: "numeric",
+                minute: "2-digit",
+              })
+            : "",
+          email: formData.email,
+          status: bookingStatus,
+        },
+      },
+      window.location.origin,
+    );
+  }, [lastBookingId, formData.email, startTime, serviceId, bookingStatus]);
+
+  useEffect(() => {
+    if (!isSuccess || !lastBookingId || !siteId) return;
+    const storageKey = `dramac_booking_chat_opened_${lastBookingId}`;
+    if (typeof sessionStorage !== "undefined" && sessionStorage.getItem(storageKey)) return;
+    if (typeof sessionStorage !== "undefined") sessionStorage.setItem(storageKey, "1");
+    const timer = setTimeout(() => {
+      openChatWithBookingContext();
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [isSuccess, lastBookingId, siteId, openChatWithBookingContext]);
 
   const renderField = (
     field: string,
@@ -662,10 +710,24 @@ export function BookingFormBlock({
     const isPending = bookingStatus === "pending";
     const displayTitle = isPending ? "Booking Submitted!" : successTitle;
     const displayMessage = isPending
-      ? "Your appointment request has been submitted and is awaiting confirmation. You will receive an email once confirmed."
+      ? "Your appointment request has been submitted and is awaiting confirmation. You\u2019ll receive an email once confirmed."
       : successMessage;
     const displayColor = isPending ? "#f59e0b" : successColor;
     const DisplayIcon = isPending ? Clock : CircleCheck;
+    const formattedDate = startTime
+      ? new Date(startTime).toLocaleDateString("en-US", {
+          weekday: "long",
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        })
+      : null;
+    const formattedTime = startTime
+      ? new Date(startTime).toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+        })
+      : null;
     return (
       <div
         className={cn("booking-form-block", className)}
@@ -673,42 +735,187 @@ export function BookingFormBlock({
           backgroundColor: successBg,
           borderRadius,
           border: `${borderWidth} solid ${displayColor}30`,
-          padding: "40px 20px",
+          padding: "clamp(24px, 5vw, 48px) clamp(16px, 4vw, 32px)",
           textAlign: "center",
           width: width || "100%",
         }}
         role="status"
       >
+        {/* Animated icon */}
         <div
           style={{
-            width: 56,
-            height: 56,
+            width: 64,
+            height: 64,
             borderRadius: "50%",
-            backgroundColor: `${displayColor}15`,
+            background: `linear-gradient(135deg, ${displayColor}20, ${displayColor}08)`,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            margin: "0 auto 16px",
+            margin: "0 auto 20px",
             animation: showSuccessAnimation ? "bounceIn 0.5s ease" : undefined,
           }}
         >
-          <DisplayIcon style={{ width: 28, height: 28, color: displayColor }} />
+          <DisplayIcon style={{ width: 32, height: 32, color: displayColor }} />
         </div>
+
+        {/* Title & subtitle */}
         <h3
           style={{
             fontWeight: successFontWeight,
-            fontSize: successFontSize,
-            margin: "0 0 8px",
+            fontSize: "clamp(18px, 3vw, 22px)",
+            margin: "0 0 6px",
             color: displayColor,
+            letterSpacing: "-0.01em",
           }}
         >
           {displayTitle}
         </h3>
         <p
-          style={{ fontSize: "14px", opacity: 0.7, margin: 0, lineHeight: 1.5 }}
+          style={{
+            fontSize: "clamp(13px, 2vw, 15px)",
+            opacity: 0.65,
+            margin: "0 0 24px",
+            lineHeight: 1.6,
+            maxWidth: 420,
+            marginLeft: "auto",
+            marginRight: "auto",
+          }}
         >
           {displayMessage}
         </p>
+
+        {/* Booking summary card */}
+        <div
+          style={{
+            background: `${displayColor}08`,
+            border: `1px solid ${displayColor}20`,
+            borderRadius: "12px",
+            padding: "clamp(14px, 3vw, 20px)",
+            maxWidth: 380,
+            margin: "0 auto 20px",
+            textAlign: "left",
+          }}
+        >
+          {/* Reference & status */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 14,
+              flexWrap: "wrap",
+              gap: 8,
+            }}
+          >
+            {lastBookingId && (
+              <span
+                style={{
+                  fontSize: "12px",
+                  fontFamily: "monospace",
+                  color: displayColor,
+                  fontWeight: 600,
+                }}
+              >
+                REF: {lastBookingId.slice(0, 8).toUpperCase()}
+              </span>
+            )}
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                fontSize: "12px",
+                fontWeight: 600,
+                padding: "3px 10px",
+                borderRadius: "999px",
+                backgroundColor: isPending ? "#fef3c7" : "#d1fae5",
+                color: isPending ? "#92400e" : "#065f46",
+              }}
+            >
+              <DisplayIcon style={{ width: 12, height: 12 }} />
+              {isPending ? "Awaiting Confirmation" : "Confirmed"}
+            </span>
+          </div>
+
+          {/* Detail rows */}
+          {[
+            { icon: Tag, label: "Service", value: serviceId ? "Booked" : null },
+            { icon: Calendar, label: "Date", value: formattedDate },
+            { icon: Clock, label: "Time", value: formattedTime },
+            { icon: User, label: "Name", value: formData.name },
+          ]
+            .filter((row) => row.value)
+            .map((row) => (
+              <div
+                key={row.label}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "7px 0",
+                  borderTop: `1px solid ${displayColor}10`,
+                }}
+              >
+                <row.icon
+                  style={{
+                    width: 15,
+                    height: 15,
+                    color: displayColor,
+                    opacity: 0.7,
+                    flexShrink: 0,
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 500,
+                    opacity: 0.55,
+                    minWidth: 48,
+                    flexShrink: 0,
+                  }}
+                >
+                  {row.label}
+                </span>
+                <span
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {row.value}
+                </span>
+              </div>
+            ))}
+        </div>
+
+        {/* Chat button */}
+        <button
+          onClick={openChatWithBookingContext}
+          className="min-h-[44px]"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "9px 18px",
+            borderRadius: buttonBorderRadius,
+            backgroundColor: "transparent",
+            color: displayColor,
+            border: `1.5px solid ${displayColor}40`,
+            fontSize: "13px",
+            fontWeight: 600,
+            cursor: "pointer",
+            marginBottom: 16,
+            transition: "background-color 0.2s, border-color 0.2s",
+          }}
+        >
+          <MessageCircle style={{ width: 15, height: 15 }} />
+          Questions? Chat with us
+        </button>
+
+        {/* Account nudge for guests */}
         {!auth.isLoggedIn && formData.email && (
           <BookingAccountNudge
             email={formData.email}

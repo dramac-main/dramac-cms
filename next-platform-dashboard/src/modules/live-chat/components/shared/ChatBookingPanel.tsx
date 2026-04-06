@@ -51,19 +51,24 @@ import {
 
 const STATUS_CONFIG: Record<
   string,
-  { label: string; variant: "default" | "secondary" | "destructive" | "outline"; color: string }
+  {
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+    color: string;
+  }
 > = {
   pending: { label: "Pending", variant: "outline", color: "bg-yellow-500" },
   confirmed: { label: "Confirmed", variant: "secondary", color: "bg-blue-500" },
   completed: { label: "Completed", variant: "default", color: "bg-green-500" },
-  cancelled: { label: "Cancelled", variant: "destructive", color: "bg-red-500" },
+  cancelled: {
+    label: "Cancelled",
+    variant: "destructive",
+    color: "bg-red-500",
+  },
   no_show: { label: "No Show", variant: "outline", color: "bg-gray-500" },
 };
 
-const PAYMENT_CONFIG: Record<
-  string,
-  { label: string; color: string }
-> = {
+const PAYMENT_CONFIG: Record<string, { label: string; color: string }> = {
   pending: { label: "Pending", color: "#eab308" },
   paid: { label: "Paid", color: "#22c55e" },
   refunded: { label: "Refunded", color: "#ef4444" },
@@ -157,9 +162,7 @@ export function ChatBookingPanel({
           toast.error(result.error);
         } else {
           const config = STATUS_CONFIG[newStatus];
-          toast.success(
-            `Booking ${config?.label || newStatus}`,
-          );
+          toast.success(`Booking ${config?.label || newStatus}`);
           fetchBooking();
         }
       });
@@ -182,9 +185,7 @@ export function ChatBookingPanel({
           toast.error(result.error);
         } else {
           const config = PAYMENT_CONFIG[newStatus];
-          toast.success(
-            `Payment marked as ${config?.label || newStatus}`,
-          );
+          toast.success(`Payment marked as ${config?.label || newStatus}`);
           fetchBooking();
         }
       });
@@ -233,7 +234,8 @@ export function ChatBookingPanel({
   }
 
   const statusConfig = STATUS_CONFIG[booking.status] || STATUS_CONFIG.pending;
-  const paymentConfig = PAYMENT_CONFIG[booking.paymentStatus] || PAYMENT_CONFIG.pending;
+  const paymentConfig =
+    PAYMENT_CONFIG[booking.paymentStatus] || PAYMENT_CONFIG.pending;
   const nextStatuses = VALID_STATUS_TRANSITIONS[booking.status] || [];
   const isPast = new Date(booking.endTime) < new Date();
 
@@ -268,11 +270,16 @@ export function ChatBookingPanel({
             <CreditCard className="h-2.5 w-2.5 mr-0.5" />
             {paymentConfig.label}
           </Badge>
-          {isPast && booking.status !== "completed" && booking.status !== "cancelled" && (
-            <Badge variant="outline" className="text-[10px] text-orange-600 border-orange-300">
-              Past Due
-            </Badge>
-          )}
+          {isPast &&
+            booking.status !== "completed" &&
+            booking.status !== "cancelled" && (
+              <Badge
+                variant="outline"
+                className="text-[10px] text-orange-600 border-orange-300"
+              >
+                Past Due
+              </Badge>
+            )}
         </div>
 
         {/* Service */}
@@ -285,7 +292,10 @@ export function ChatBookingPanel({
                 {booking.service.durationMinutes} min
               </span>
               <span className="font-medium text-foreground">
-                {formatCurrency(booking.service.price, booking.service.currency)}
+                {formatCurrency(
+                  booking.service.price,
+                  booking.service.currency,
+                )}
               </span>
             </div>
           </div>

@@ -37,7 +37,9 @@ export function EditServiceDialog({
 }: EditServiceDialogProps) {
   const { editService, settings } = useBooking();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const currencySymbol = getCurrencySymbol(settings?.currency || DEFAULT_CURRENCY);
+  const currencySymbol = getCurrencySymbol(
+    settings?.currency || DEFAULT_CURRENCY,
+  );
 
   // Form state
   const [name, setName] = useState("");

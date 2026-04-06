@@ -1,28 +1,28 @@
 /**
  * Booking Dashboard Main Component
- * 
+ *
  * Phase EM-51: Booking Module
- * 
+ *
  * The main dashboard shell that provides navigation between Booking views
  */
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { CalendarView } from './views/calendar-view'
-import { AppointmentsView } from './views/appointments-view'
-import { ServicesView } from './views/services-view'
-import { StaffView } from './views/staff-view'
-import { AnalyticsView } from './views/analytics-view'
-import { SettingsView } from './views/settings-view'
-import { EmbedCodeView } from './views/embed-code-view'
-import { AppointmentDetailSheet } from './sheets/appointment-detail-sheet'
-import { ServiceDetailSheet } from './sheets/service-detail-sheet'
-import { StaffDetailSheet } from './sheets/staff-detail-sheet'
-import { BookingProvider, useBooking } from '../context/booking-context'
-import { 
-  Calendar, 
-  CalendarCheck, 
+import { useState, useEffect } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CalendarView } from "./views/calendar-view";
+import { AppointmentsView } from "./views/appointments-view";
+import { ServicesView } from "./views/services-view";
+import { StaffView } from "./views/staff-view";
+import { AnalyticsView } from "./views/analytics-view";
+import { SettingsView } from "./views/settings-view";
+import { EmbedCodeView } from "./views/embed-code-view";
+import { AppointmentDetailSheet } from "./sheets/appointment-detail-sheet";
+import { ServiceDetailSheet } from "./sheets/service-detail-sheet";
+import { StaffDetailSheet } from "./sheets/staff-detail-sheet";
+import { BookingProvider, useBooking } from "../context/booking-context";
+import {
+  Calendar,
+  CalendarCheck,
   Briefcase,
   Users,
   BarChart3,
@@ -30,35 +30,41 @@ import {
   Plus,
   RefreshCw,
   Settings,
-  Code
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
+  Code,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { cn } from '@/lib/utils'
-import { CreateServiceDialog } from './dialogs/create-service-dialog'
-import { EditServiceDialog } from './dialogs/edit-service-dialog'
-import { CreateStaffDialog } from './dialogs/create-staff-dialog'
-import { EditStaffDialog } from './dialogs/edit-staff-dialog'
-import { CreateAppointmentDialog } from './dialogs/create-appointment-dialog'
-import type { BookingView, BookingSettings, Appointment, Service, Staff } from '../types/booking-types'
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+import { CreateServiceDialog } from "./dialogs/create-service-dialog";
+import { EditServiceDialog } from "./dialogs/edit-service-dialog";
+import { CreateStaffDialog } from "./dialogs/create-staff-dialog";
+import { EditStaffDialog } from "./dialogs/edit-staff-dialog";
+import { CreateAppointmentDialog } from "./dialogs/create-appointment-dialog";
+import type {
+  BookingView,
+  BookingSettings,
+  Appointment,
+  Service,
+  Staff,
+} from "../types/booking-types";
 
 // ============================================================================
 // DASHBOARD PROPS
 // ============================================================================
 
 interface BookingDashboardProps {
-  siteId: string
-  settings?: BookingSettings | null
-  initialView?: string
+  siteId: string;
+  settings?: BookingSettings | null;
+  initialView?: string;
 }
 
 // ============================================================================
@@ -66,63 +72,82 @@ interface BookingDashboardProps {
 // ============================================================================
 
 function BookingDashboardContent({ initialView }: { initialView?: string }) {
-  const { 
+  const {
     services,
     staff,
     appointments,
-    error, 
+    error,
     isLoading,
     refreshAll,
     activeView,
-    setActiveView
-  } = useBooking()
-  
-  const [searchQuery, setSearchQuery] = useState('')
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [showCreateService, setShowCreateService] = useState(false)
-  const [showCreateStaff, setShowCreateStaff] = useState(false)
-  const [showCreateAppointment, setShowCreateAppointment] = useState(false)
-  
+    setActiveView,
+  } = useBooking();
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showCreateService, setShowCreateService] = useState(false);
+  const [showCreateStaff, setShowCreateStaff] = useState(false);
+  const [showCreateAppointment, setShowCreateAppointment] = useState(false);
+
   // Detail sheets state
-  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
-  const [selectedService, setSelectedService] = useState<Service | null>(null)
-  const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null)
-  
+  const [selectedAppointment, setSelectedAppointment] =
+    useState<Appointment | null>(null);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
+
   // Edit dialogs state
-  const [serviceToEdit, setServiceToEdit] = useState<Service | null>(null)
-  const [staffToEdit, setStaffToEdit] = useState<Staff | null>(null)
+  const [serviceToEdit, setServiceToEdit] = useState<Service | null>(null);
+  const [staffToEdit, setStaffToEdit] = useState<Staff | null>(null);
 
   // Set initial view from URL
   useEffect(() => {
     if (initialView) {
-      const view = initialView as BookingView
-      if (['calendar', 'appointments', 'services', 'staff', 'analytics', 'settings', 'embed'].includes(view)) {
-        setActiveView(view)
+      const view = initialView as BookingView;
+      if (
+        [
+          "calendar",
+          "appointments",
+          "services",
+          "staff",
+          "analytics",
+          "settings",
+          "embed",
+        ].includes(view)
+      ) {
+        setActiveView(view);
       }
     }
-  }, [initialView, setActiveView])
+  }, [initialView, setActiveView]);
 
   // Calculate summary stats
-  const todayStart = new Date()
-  todayStart.setHours(0, 0, 0, 0)
-  const todayEnd = new Date()
-  todayEnd.setHours(23, 59, 59, 999)
-  
-  const todayAppointments = appointments.filter(a => {
-    const startTime = new Date(a.start_time)
-    return startTime >= todayStart && startTime <= todayEnd && a.status !== 'cancelled'
-  })
-  
-  const pendingAppointments = appointments.filter(a => a.status === 'pending')
-  const confirmedAppointments = appointments.filter(a => a.status === 'confirmed')
-  const activeServices = services.filter(s => s.is_active)
-  const activeStaff = staff.filter(s => s.is_active)
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date();
+  todayEnd.setHours(23, 59, 59, 999);
+
+  const todayAppointments = appointments.filter((a) => {
+    const startTime = new Date(a.start_time);
+    return (
+      startTime >= todayStart &&
+      startTime <= todayEnd &&
+      a.status !== "cancelled"
+    );
+  });
+
+  const pendingAppointments = appointments.filter(
+    (a) => a.status === "pending",
+  );
+  const confirmedAppointments = appointments.filter(
+    (a) => a.status === "confirmed",
+  );
+  const activeServices = services.filter((s) => s.is_active);
+  const activeStaff = staff.filter((s) => s.is_active);
 
   const handleRefresh = async () => {
-    setIsRefreshing(true)
-    await refreshAll()
-    setIsRefreshing(false)
-  }
+    setIsRefreshing(true);
+    await refreshAll();
+    setIsRefreshing(false);
+  };
 
   if (error) {
     return (
@@ -133,7 +158,7 @@ function BookingDashboardContent({ initialView }: { initialView?: string }) {
           Retry
         </Button>
       </div>
-    )
+    );
   }
 
   return (
@@ -147,7 +172,7 @@ function BookingDashboardContent({ initialView }: { initialView?: string }) {
               Manage appointments, services, and staff schedules
             </p>
           </div>
-          
+
           <div className="flex items-center gap-4">
             {/* Search */}
             <div className="relative">
@@ -159,17 +184,19 @@ function BookingDashboardContent({ initialView }: { initialView?: string }) {
                 className="pl-10 w-64"
               />
             </div>
-            
+
             {/* Actions */}
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="icon"
               onClick={handleRefresh}
               disabled={isRefreshing}
             >
-              <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+              <RefreshCw
+                className={cn("h-4 w-4", isRefreshing && "animate-spin")}
+              />
             </Button>
-            
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button>
@@ -178,7 +205,9 @@ function BookingDashboardContent({ initialView }: { initialView?: string }) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setShowCreateAppointment(true)}>
+                <DropdownMenuItem
+                  onClick={() => setShowCreateAppointment(true)}
+                >
                   <CalendarCheck className="h-4 w-4 mr-2" />
                   New Appointment
                 </DropdownMenuItem>
@@ -203,7 +232,9 @@ function BookingDashboardContent({ initialView }: { initialView?: string }) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Today</p>
-                  <p className="text-2xl font-bold">{todayAppointments.length}</p>
+                  <p className="text-2xl font-bold">
+                    {todayAppointments.length}
+                  </p>
                 </div>
                 <Calendar className="h-8 w-8 text-muted-foreground" />
               </div>
@@ -214,9 +245,13 @@ function BookingDashboardContent({ initialView }: { initialView?: string }) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Pending</p>
-                  <p className="text-2xl font-bold">{pendingAppointments.length}</p>
+                  <p className="text-2xl font-bold">
+                    {pendingAppointments.length}
+                  </p>
                 </div>
-                <Badge variant="secondary">{confirmedAppointments.length} confirmed</Badge>
+                <Badge variant="secondary">
+                  {confirmedAppointments.length} confirmed
+                </Badge>
               </div>
             </CardContent>
           </Card>
@@ -247,8 +282,8 @@ function BookingDashboardContent({ initialView }: { initialView?: string }) {
 
       {/* Tabs */}
       <div className="flex-1 overflow-hidden">
-        <Tabs 
-          value={activeView} 
+        <Tabs
+          value={activeView}
           onValueChange={(v) => setActiveView(v as BookingView)}
           className="h-full flex flex-col"
         >
@@ -292,32 +327,28 @@ function BookingDashboardContent({ initialView }: { initialView?: string }) {
 
           <div className="flex-1 overflow-auto">
             <TabsContent value="calendar" className="h-full m-0">
-              <CalendarView 
-                onAppointmentClick={setSelectedAppointment}
-              />
+              <CalendarView onAppointmentClick={setSelectedAppointment} />
             </TabsContent>
             <TabsContent value="appointments" className="h-full m-0">
-              <AppointmentsView 
-                onAppointmentClick={setSelectedAppointment}
-              />
+              <AppointmentsView onAppointmentClick={setSelectedAppointment} />
             </TabsContent>
             <TabsContent value="services" className="h-full m-0">
-              <ServicesView 
+              <ServicesView
                 onServiceClick={setSelectedService}
                 onCreateClick={() => setShowCreateService(true)}
                 onEditClick={(service) => {
-                  setSelectedService(null)
-                  setServiceToEdit(service)
+                  setSelectedService(null);
+                  setServiceToEdit(service);
                 }}
               />
             </TabsContent>
             <TabsContent value="staff" className="h-full m-0">
-              <StaffView 
+              <StaffView
                 onStaffClick={setSelectedStaff}
                 onCreateClick={() => setShowCreateStaff(true)}
                 onEditClick={(staff) => {
-                  setSelectedStaff(null)
-                  setStaffToEdit(staff)
+                  setSelectedStaff(null);
+                  setStaffToEdit(staff);
                 }}
               />
             </TabsContent>
@@ -357,7 +388,7 @@ function BookingDashboardContent({ initialView }: { initialView?: string }) {
         open={showCreateAppointment}
         onOpenChange={setShowCreateAppointment}
       />
-      
+
       {/* Detail Sheets */}
       <AppointmentDetailSheet
         appointment={selectedAppointment}
@@ -369,8 +400,8 @@ function BookingDashboardContent({ initialView }: { initialView?: string }) {
         open={!!selectedService}
         onOpenChange={(open) => !open && setSelectedService(null)}
         onEdit={(service) => {
-          setSelectedService(null)
-          setServiceToEdit(service)
+          setSelectedService(null);
+          setServiceToEdit(service);
         }}
       />
       <StaffDetailSheet
@@ -378,22 +409,26 @@ function BookingDashboardContent({ initialView }: { initialView?: string }) {
         open={!!selectedStaff}
         onOpenChange={(open) => !open && setSelectedStaff(null)}
         onEdit={(staff) => {
-          setSelectedStaff(null)
-          setStaffToEdit(staff)
+          setSelectedStaff(null);
+          setStaffToEdit(staff);
         }}
       />
     </div>
-  )
+  );
 }
 
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
-export function BookingDashboard({ siteId, settings, initialView }: BookingDashboardProps) {
+export function BookingDashboard({
+  siteId,
+  settings,
+  initialView,
+}: BookingDashboardProps) {
   return (
     <BookingProvider siteId={siteId} settings={settings}>
       <BookingDashboardContent initialView={initialView} />
     </BookingProvider>
-  )
+  );
 }

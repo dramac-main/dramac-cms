@@ -164,6 +164,14 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
     itemCount: number;
     email: string;
   } | null>(null);
+  const bookingContextRef = useRef<{
+    bookingId: string;
+    serviceName: string;
+    bookingDate: string;
+    bookingTime: string;
+    email: string;
+    status: string;
+  } | null>(null);
 
   // --- localStorage helpers for per-order conversation map ---
   const CONV_MAP_KEY = `dramac_chat_convmap_${siteId}`;
@@ -416,6 +424,14 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
         itemCount: number;
         email: string;
       };
+      bookingContext?: {
+        bookingId: string;
+        serviceName: string;
+        bookingDate: string;
+        bookingTime: string;
+        email: string;
+        status: string;
+      };
     }) => {
       if (!settings) return;
 
@@ -439,6 +455,7 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
               initialMessage: visitorData.message,
               orderContext: visitorData.orderContext || undefined,
               quoteContext: visitorData.quoteContext || undefined,
+              bookingContext: visitorData.bookingContext || undefined,
             }),
           },
         );
@@ -456,6 +473,7 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
         const mapKey =
           visitorData.orderContext?.orderNumber ||
           visitorData.quoteContext?.quoteNumber ||
+          visitorData.bookingContext?.bookingId ||
           null;
         saveConvToMap(mapKey, data.conversationId);
 
@@ -552,6 +570,38 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
       return;
     }
 
+    // Check for pending booking context (from BookingWidget auto-open)
+    const pendingBookingCtx = bookingContextRef.current;
+
+    if (pendingBookingCtx) {
+      bookingContextRef.current = null;
+
+      // Check if we already have a conversation for this specific booking
+      const existingConvId = findConvForOrder(pendingBookingCtx.bookingId);
+      const savedVis = localStorage.getItem(VISITOR_KEY);
+
+      if (existingConvId && savedVis) {
+        setConversationId(existingConvId);
+        setVisitorId(savedVis);
+        setMessages([]);
+        openedAsResolvedRef.current = false;
+        setWidgetState("chat");
+        setUnreadCount(0);
+        return;
+      }
+
+      // No existing conversation for this booking — create a new one
+      const statusText = pendingBookingCtx.status === "confirmed"
+        ? "has been confirmed"
+        : "is awaiting confirmation";
+      handleStartChat({
+        email: pendingBookingCtx.email,
+        message: `Hi, I just booked an appointment for ${pendingBookingCtx.serviceName} on ${pendingBookingCtx.bookingDate} at ${pendingBookingCtx.bookingTime}. My booking ${statusText}.`,
+        bookingContext: pendingBookingCtx,
+      });
+      return;
+    }
+
     // NO ORDER CONTEXT: Show conversation list if visitor has conversations
     const savedVis = localStorage.getItem(VISITOR_KEY);
     if (savedVis) {
@@ -618,6 +668,19 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
           quoteNumber: String(msg.quoteContext.quoteNumber || ""),
           itemCount: Number(msg.quoteContext.itemCount || 0),
           email: String(msg.quoteContext.email || ""),
+        };
+      } else if (
+        msg.type === "dramac-chat-booking-context" &&
+        msg.bookingContext
+      ) {
+        // Booking context forwarded from embed script (originated from BookingWidget)
+        bookingContextRef.current = {
+          bookingId: String(msg.bookingContext.bookingId || ""),
+          serviceName: String(msg.bookingContext.serviceName || ""),
+          bookingDate: String(msg.bookingContext.bookingDate || ""),
+          bookingTime: String(msg.bookingContext.bookingTime || ""),
+          email: String(msg.bookingContext.email || ""),
+          status: String(msg.bookingContext.status || "pending"),
         };
       }
     }

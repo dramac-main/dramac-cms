@@ -332,7 +332,9 @@ export function SettingsView({ className }: SettingsViewProps) {
                         {SUPPORTED_CURRENCIES.map((c) => (
                           <SelectItem key={c.value} value={c.value}>
                             <span className="flex items-center gap-2">
-                              <span className="font-mono text-muted-foreground w-6">{getCurrencySymbol(c.value)}</span>
+                              <span className="font-mono text-muted-foreground w-6">
+                                {getCurrencySymbol(c.value)}
+                              </span>
                               {c.label}
                             </span>
                           </SelectItem>
@@ -751,7 +753,9 @@ export function SettingsView({ className }: SettingsViewProps) {
                           </p>
                         </div>
                         <Badge variant="outline" className="text-sm font-mono">
-                          {getCurrencySymbol(formData.currency || DEFAULT_CURRENCY)}{" "}
+                          {getCurrencySymbol(
+                            formData.currency || DEFAULT_CURRENCY,
+                          )}{" "}
                           {formData.currency || DEFAULT_CURRENCY}
                         </Badge>
                       </div>
@@ -762,16 +766,21 @@ export function SettingsView({ className }: SettingsViewProps) {
 
                     {/* Payment Flow Info */}
                     <div className="space-y-4">
-                      <Label className="text-base">Manual Payment Tracking</Label>
+                      <Label className="text-base">
+                        Manual Payment Tracking
+                      </Label>
                       <div className="grid gap-3">
                         <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
                           <div className="flex items-center justify-center h-6 w-6 rounded-full bg-yellow-500/20 text-yellow-600 text-xs font-bold shrink-0 mt-0.5">
                             1
                           </div>
                           <div>
-                            <p className="text-sm font-medium">Booking Created</p>
+                            <p className="text-sm font-medium">
+                              Booking Created
+                            </p>
                             <p className="text-xs text-muted-foreground">
-                              New bookings are created with &quot;Payment Pending&quot; status automatically
+                              New bookings are created with &quot;Payment
+                              Pending&quot; status automatically
                             </p>
                           </div>
                         </div>
@@ -780,9 +789,12 @@ export function SettingsView({ className }: SettingsViewProps) {
                             2
                           </div>
                           <div>
-                            <p className="text-sm font-medium">Collect Payment</p>
+                            <p className="text-sm font-medium">
+                              Collect Payment
+                            </p>
                             <p className="text-xs text-muted-foreground">
-                              Collect payment via your preferred method (cash, bank transfer, mobile money, etc.)
+                              Collect payment via your preferred method (cash,
+                              bank transfer, mobile money, etc.)
                             </p>
                           </div>
                         </div>
@@ -793,7 +805,8 @@ export function SettingsView({ className }: SettingsViewProps) {
                           <div>
                             <p className="text-sm font-medium">Update Status</p>
                             <p className="text-xs text-muted-foreground">
-                              Mark payment as &quot;Paid&quot; from the appointment detail panel or live chat
+                              Mark payment as &quot;Paid&quot; from the
+                              appointment detail panel or live chat
                             </p>
                           </div>
                         </div>
@@ -807,29 +820,41 @@ export function SettingsView({ className }: SettingsViewProps) {
                         <div className="flex items-center gap-2 p-2 border rounded-lg">
                           <div className="h-2 w-2 rounded-full bg-yellow-500" />
                           <span className="text-sm font-medium">Pending</span>
-                          <span className="text-xs text-muted-foreground ml-auto">Awaiting payment</span>
+                          <span className="text-xs text-muted-foreground ml-auto">
+                            Awaiting payment
+                          </span>
                         </div>
                         <div className="flex items-center gap-2 p-2 border rounded-lg">
                           <div className="h-2 w-2 rounded-full bg-green-500" />
                           <span className="text-sm font-medium">Paid</span>
-                          <span className="text-xs text-muted-foreground ml-auto">Payment received</span>
+                          <span className="text-xs text-muted-foreground ml-auto">
+                            Payment received
+                          </span>
                         </div>
                         <div className="flex items-center gap-2 p-2 border rounded-lg">
                           <div className="h-2 w-2 rounded-full bg-red-500" />
                           <span className="text-sm font-medium">Refunded</span>
-                          <span className="text-xs text-muted-foreground ml-auto">Payment returned</span>
+                          <span className="text-xs text-muted-foreground ml-auto">
+                            Payment returned
+                          </span>
                         </div>
                         <div className="flex items-center gap-2 p-2 border rounded-lg">
                           <div className="h-2 w-2 rounded-full bg-gray-400" />
-                          <span className="text-sm font-medium">Not Required</span>
-                          <span className="text-xs text-muted-foreground ml-auto">Free service</span>
+                          <span className="text-sm font-medium">
+                            Not Required
+                          </span>
+                          <span className="text-xs text-muted-foreground ml-auto">
+                            Free service
+                          </span>
                         </div>
                       </div>
                     </div>
 
                     <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                       <p className="text-sm text-blue-700 dark:text-blue-300">
-                        <strong>Coming Soon:</strong> Online payment gateway integration (Stripe, PayPal, mobile money) for automatic payment collection during booking.
+                        <strong>Coming Soon:</strong> Online payment gateway
+                        integration (Stripe, PayPal, mobile money) for automatic
+                        payment collection during booking.
                       </p>
                     </div>
                   </>
@@ -838,8 +863,9 @@ export function SettingsView({ className }: SettingsViewProps) {
                 {!formData.require_payment && (
                   <div className="p-4 bg-muted/50 rounded-lg">
                     <p className="text-sm text-muted-foreground">
-                      Payment tracking is disabled. Bookings will be created without payment requirements. 
-                      Enable &quot;Require Payment&quot; above to track payments for your bookings.
+                      Payment tracking is disabled. Bookings will be created
+                      without payment requirements. Enable &quot;Require
+                      Payment&quot; above to track payments for your bookings.
                     </p>
                   </div>
                 )}

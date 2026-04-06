@@ -240,6 +240,11 @@ export async function GET(request: NextRequest) {
             iframe.contentWindow.postMessage({ type: 'dramac-chat-quote-context', quoteContext: msg.quoteContext }, '*');
           } catch(e) {}
         }
+        if (msg.bookingContext) {
+          try {
+            iframe.contentWindow.postMessage({ type: 'dramac-chat-booking-context', bookingContext: msg.bookingContext }, '*');
+          } catch(e) {}
+        }
         // Now open the chat (toggleChat sends dramac-chat-open to iframe, triggering handleOpen)
         if (!isOpen) {
           toggleChat();

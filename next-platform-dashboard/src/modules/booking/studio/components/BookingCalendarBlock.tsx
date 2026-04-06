@@ -425,7 +425,10 @@ export function BookingCalendarBlock({
     calendarSize === "lg" ? "20px" : "16px",
   );
   const slotCols = isMobileView
-    ? Math.min(resolveResponsive(timeSlotsColumns, layout === "side-by-side" ? 2 : 4), 2)
+    ? Math.min(
+        resolveResponsive(timeSlotsColumns, layout === "side-by-side" ? 2 : 4),
+        2,
+      )
     : resolveResponsive(timeSlotsColumns, layout === "side-by-side" ? 2 : 4);
 
   // Resolved colors — fall back to CSS variables from the branding system
@@ -509,7 +512,10 @@ export function BookingCalendarBlock({
       )}
 
       <div
-        style={{ display: isSideBySide && !isMobileView ? "flex" : "block", gap: resolvedGap }}
+        style={{
+          display: isSideBySide && !isMobileView ? "flex" : "block",
+          gap: resolvedGap,
+        }}
       >
         {/* Calendar */}
         <div

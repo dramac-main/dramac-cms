@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
       initialMessage,
       orderContext,
       quoteContext,
+      bookingContext,
     } = body;
 
     if (!siteId) {
@@ -174,6 +175,9 @@ export async function POST(request: NextRequest) {
     const quoteNumber = quoteContext?.quoteNumber
       ? String(quoteContext.quoteNumber).trim()
       : null;
+    const bookingId = bookingContext?.bookingId
+      ? String(bookingContext.bookingId).trim()
+      : null;
 
     if (orderNumber) {
       // ORDER-SPECIFIC: Find existing conversation for THIS specific order
@@ -197,6 +201,28 @@ export async function POST(request: NextRequest) {
         conversationId = existingOrderConv.id;
         isExisting = true;
         assignedAgentId = existingOrderConv.assigned_agent_id || null;
+      }
+    } else if (bookingId) {
+      // BOOKING-SPECIFIC: Find existing conversation for THIS specific booking
+      const { data: allActiveConvs } = await (supabase as any)
+        .from("mod_chat_conversations")
+        .select("id, assigned_agent_id, metadata")
+        .eq("site_id", siteId)
+        .eq("visitor_id", visitorId)
+        .in("status", ["active", "pending", "open", "waiting"])
+        .order("created_at", { ascending: false });
+
+      const existingBookingConv = (allActiveConvs || []).find(
+        (c: { metadata?: Record<string, unknown> }) =>
+          c.metadata &&
+          typeof c.metadata === "object" &&
+          (c.metadata as Record<string, unknown>).booking_id === bookingId,
+      );
+
+      if (existingBookingConv) {
+        conversationId = existingBookingConv.id;
+        isExisting = true;
+        assignedAgentId = existingBookingConv.assigned_agent_id || null;
       }
     } else if (quoteNumber) {
       // QUOTE-SPECIFIC: Find existing conversation for THIS specific quote
@@ -235,9 +261,7 @@ export async function POST(request: NextRequest) {
           const meta = c.metadata as Record<string, unknown> | null;
           return (
             !meta ||
-            !meta.order_number ||
-            (typeof meta.order_number === "string" &&
-              meta.order_number.trim() === "")
+            (!meta.order_number && !meta.quote_number && !meta.booking_id)
           );
         },
       );
@@ -262,25 +286,38 @@ export async function POST(request: NextRequest) {
         unread_visitor_count: 0,
         tags: orderNumber
           ? ["order", "payment"]
-          : quoteNumber
-            ? ["quote", "quotation"]
-            : ["general"],
+          : bookingId
+            ? ["booking", "appointment"]
+            : quoteNumber
+              ? ["quote", "quotation"]
+              : ["general"],
         metadata: orderNumber
           ? {
               order_number: orderNumber,
               payment_guidance_active: true,
             }
-          : quoteNumber
+          : bookingId
             ? {
-                quote_number: quoteNumber,
-                quote_guidance_active: true,
+                booking_id: bookingId,
+                booking_guidance_active: true,
+                service_name: bookingContext?.serviceName || null,
+                booking_date: bookingContext?.bookingDate || null,
+                booking_time: bookingContext?.bookingTime || null,
+                booking_status: bookingContext?.status || "pending",
               }
-            : {},
+            : quoteNumber
+              ? {
+                  quote_number: quoteNumber,
+                  quote_guidance_active: true,
+                }
+              : {},
         subject: orderNumber
           ? `Order ${orderNumber}`
-          : quoteNumber
-            ? `Quote ${quoteNumber}`
-            : null,
+          : bookingId
+            ? `Booking — ${bookingContext?.serviceName || "Appointment"}`
+            : quoteNumber
+              ? `Quote ${quoteNumber}`
+              : null,
       };
 
       if (departmentId) convInsert.department_id = departmentId;
@@ -321,7 +358,7 @@ export async function POST(request: NextRequest) {
     // For new conversations: always send initial message
     const shouldSendMessage =
       initialMessage &&
-      (!isExisting || !!orderContext?.orderNumber || !!quoteNumber);
+      (!isExisting || !!orderContext?.orderNumber || !!quoteNumber || !!bookingId);
     if (shouldSendMessage) {
       const msgInsert: Record<string, unknown> = {
         conversation_id: conversationId,
@@ -376,7 +413,13 @@ export async function POST(request: NextRequest) {
           initialMessage || "",
         );
 
-      if (isPaymentMsg || isQuoteMsg || !assignedAgentId) {
+      const isBookingMsg =
+        !!bookingId ||
+        /just\s+(?:booked|submitted)\s+(?:an?\s+)?(?:appointment|booking)/i.test(
+          initialMessage || "",
+        );
+
+      if (isPaymentMsg || isQuoteMsg || isBookingMsg || !assignedAgentId) {
         // Use after() to keep Vercel Lambda alive until AI work completes
         // Without this, the Lambda is killed after returning 201 and the
         // Claude API call (2-5s) never finishes
@@ -384,7 +427,7 @@ export async function POST(request: NextRequest) {
         const capturedConvId = conversationId;
         const capturedMsg = initialMessage;
         const capturedVisitorId = visitorId;
-        const capturedIsPayment = !!isPaymentMsg || !!isQuoteMsg;
+        const capturedIsPayment = !!isPaymentMsg || !!isQuoteMsg || !!isBookingMsg;
 
         after(async () => {
           try {

@@ -832,8 +832,7 @@ export async function notifyChatBookingPaymentConfirmed(
   const conv = await findActiveConversation(siteId, customerEmail);
   if (!conv) return;
 
-  const message =
-    `Payment of ${amount} for your ${serviceName} booking has been confirmed! 💳 Thank you.`;
+  const message = `Payment of ${amount} for your ${serviceName} booking has been confirmed! 💳 Thank you.`;
 
   await sendProactiveMessage(
     siteId,

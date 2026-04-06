@@ -24,7 +24,7 @@
 
 ---
 
-## Latest Update: Booking Module Comprehensive Overhaul ✅
+## Latest Update: Booking Module Comprehensive Overhaul ✅ (commit 105d4bd1)
 
 ### What Was Done
 

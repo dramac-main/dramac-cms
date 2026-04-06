@@ -633,8 +633,16 @@ export async function createAppointment(
       siteId,
       created.customer_email,
       (created as any).service?.name || "Service",
-      start.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }),
-      start.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }),
+      start.toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      }),
+      start.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }),
     ).catch((err) =>
       console.error("[Booking] Chat notification error (create):", err),
     );
@@ -673,16 +681,36 @@ export async function updateAppointment(
   const updated = data as Appointment;
   if (updated.customer_email && updates.status) {
     const start = new Date(updated.start_time);
-    const dateFmt = start.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-    const timeFmt = start.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+    const dateFmt = start.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+    const timeFmt = start.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
     const serviceName = (updated as any).service?.name || "Service";
 
     if (updates.status === "confirmed") {
-      notifyChatBookingConfirmed(siteId, updated.customer_email, serviceName, dateFmt, timeFmt)
-        .catch((err) => console.error("[Booking] Chat notification error (confirm):", err));
+      notifyChatBookingConfirmed(
+        siteId,
+        updated.customer_email,
+        serviceName,
+        dateFmt,
+        timeFmt,
+      ).catch((err) =>
+        console.error("[Booking] Chat notification error (confirm):", err),
+      );
     } else if (updates.status === "completed") {
-      notifyChatBookingCompleted(siteId, updated.customer_email, serviceName)
-        .catch((err) => console.error("[Booking] Chat notification error (complete):", err));
+      notifyChatBookingCompleted(
+        siteId,
+        updated.customer_email,
+        serviceName,
+      ).catch((err) =>
+        console.error("[Booking] Chat notification error (complete):", err),
+      );
     }
   }
 
