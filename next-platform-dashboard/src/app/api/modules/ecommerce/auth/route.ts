@@ -28,12 +28,42 @@ const BCRYPT_ROUNDS = 12;
 
 export const dynamic = "force-dynamic";
 
-/** Build CORS headers scoped to the request origin */
-function getCorsHeaders(request?: NextRequest) {
-  const origin = request?.headers.get("origin") || "";
-  // Allow same-site and any subdomain (storefront sites)
+// ── CORS origin validation ──────────────────────────────────────────────────
+// Only allow requests from known storefront origins (subdomain-based or custom domains).
+// The dashboard app itself is also allowed.
+const STOREFRONT_BASE_DOMAIN = process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
+const APP_ORIGIN = process.env.NEXT_PUBLIC_APP_URL || "";
+
+/**
+ * Validate origin against known storefront patterns:
+ * 1. The dashboard app origin itself
+ * 2. Any *.{STOREFRONT_BASE_DOMAIN} subdomain
+ * 3. Custom domains (validated per-request against the sites table)
+ */
+function isAllowedOrigin(origin: string): boolean | "check-custom-domain" {
+  if (!origin) return false;
+  try {
+    const url = new URL(origin);
+    // Dashboard app
+    if (APP_ORIGIN && origin === APP_ORIGIN) return true;
+    // Localhost for development
+    if (url.hostname === "localhost" || url.hostname === "127.0.0.1") return true;
+    // Storefront subdomains (e.g. mystore.sites.dramacagency.com)
+    if (url.hostname.endsWith(`.${STOREFRONT_BASE_DOMAIN}`)) return true;
+    if (url.hostname === STOREFRONT_BASE_DOMAIN) return true;
+    // Vercel preview deployments
+    if (url.hostname.endsWith(".vercel.app")) return true;
+    // Unknown origin — might be a custom domain, needs DB check
+    return "check-custom-domain";
+  } catch {
+    return false;
+  }
+}
+
+/** Build CORS headers — only set Allow-Origin for validated origins */
+function getCorsHeaders(origin: string): Record<string, string> {
   return {
-    "Access-Control-Allow-Origin": origin || "*",
+    "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
   };
@@ -44,9 +74,15 @@ const SESSIONS = "mod_ecommod01_customer_sessions";
 const SESSION_TTL_DAYS = 30;
 
 export async function OPTIONS(request: NextRequest) {
+  const origin = request.headers.get("origin") || "";
+  const allowed = isAllowedOrigin(origin);
+  // For OPTIONS preflight, allow known origins + custom domains (can't DB-check in preflight)
+  if (allowed === false) {
+    return new NextResponse(null, { status: 403 });
+  }
   return new NextResponse(null, {
     status: 204,
-    headers: getCorsHeaders(request),
+    headers: getCorsHeaders(origin),
   });
 }
 
@@ -56,6 +92,31 @@ function hashToken(token: string): string {
 
 function generateToken(): string {
   return crypto.randomBytes(32).toString("hex");
+}
+
+// ── Password validation ────────────────────────────────────────────────────
+const COMMON_PASSWORDS = new Set([
+  "password", "12345678", "123456789", "1234567890", "qwerty123",
+  "password1", "iloveyou", "princess", "sunshine", "letmein",
+  "football", "monkey123", "shadow12", "master12", "dragon12",
+  "trustno1", "whatever", "qwerty12", "abc12345", "welcome1",
+  "login123", "admin123", "passw0rd", "password123", "p@ssw0rd",
+  "changeme", "qwertyui", "asd123456", "baseball1",
+]);
+
+function validateEmail(email: string): string | null {
+  if (!email || typeof email !== "string") return "Email is required";
+  if (email.length > 254) return "Email is too long";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return "Invalid email format";
+  return null;
+}
+
+function validatePassword(password: string): string | null {
+  if (!password || typeof password !== "string") return "Password is required";
+  if (password.length < 8) return "Password must be at least 8 characters";
+  if (password.length > 128) return "Password must be at most 128 characters";
+  if (COMMON_PASSWORDS.has(password.toLowerCase())) return "This password is too common. Please choose a stronger password.";
+  return null;
 }
 
 type CustomerRow = {
@@ -87,13 +148,12 @@ async function createSession(
   supabase: ReturnType<typeof createAdminClient>,
   customerId: string,
   siteId: string,
-  meta?: { userAgent?: string; ip?: string },
+  meta?: { userAgent?: string; ip?: string; isMagicLink?: boolean },
 ): Promise<string> {
   const token = generateToken();
   const tokenHash = hashToken(token);
-  const expiresAt = new Date(
-    Date.now() + SESSION_TTL_DAYS * 24 * 60 * 60 * 1000,
-  ).toISOString();
+  const ttl = meta?.isMagicLink ? 60 * 60 * 1000 : SESSION_TTL_DAYS * 24 * 60 * 60 * 1000;
+  const expiresAt = new Date(Date.now() + ttl).toISOString();
 
   await (supabase as any).from(SESSIONS).insert({
     customer_id: customerId,
@@ -102,6 +162,7 @@ async function createSession(
     expires_at: expiresAt,
     user_agent: meta?.userAgent || null,
     ip_address: meta?.ip || null,
+    is_magic_link: meta?.isMagicLink || false,
   });
 
   return token;
@@ -128,7 +189,13 @@ function safeCustomer(c: CustomerRow) {
 }
 
 export async function POST(request: NextRequest) {
-  const corsHeaders = getCorsHeaders(request);
+  const origin = request.headers.get("origin") || "";
+  let corsAllowed = isAllowedOrigin(origin);
+
+  // For unknown origins, defer decision until after we have a DB client
+  // to check custom_domain. Build headers optimistically for known origins.
+  const corsHeaders = corsAllowed === true ? getCorsHeaders(origin) : getCorsHeaders(origin);
+
   try {
     // Rate limit: 15 requests/minute per IP
     const ip = getClientIp(request);
@@ -168,6 +235,31 @@ export async function POST(request: NextRequest) {
     const ua = request.headers.get("user-agent") || undefined;
     // ip already extracted above for rate limiting (via getClientIp)
 
+    // Validate CORS: for unknown origins, check if it's a verified custom domain for this site
+    if (corsAllowed === "check-custom-domain") {
+      const { data: site } = await (supabase as any)
+        .from("sites")
+        .select("custom_domain, custom_domain_verified")
+        .eq("id", siteId)
+        .single();
+      try {
+        const originHost = new URL(origin).hostname;
+        if (
+          site?.custom_domain_verified &&
+          site?.custom_domain &&
+          originHost === site.custom_domain
+        ) {
+          corsAllowed = true;
+        }
+      } catch { /* invalid origin URL */ }
+      if (corsAllowed !== true) {
+        return NextResponse.json(
+          { error: "Origin not allowed" },
+          { status: 403 },
+        );
+      }
+    }
+
     // ── REGISTER ────────────────────────────────────────────────────────────
     if (action === "register") {
       const { email, password, firstName, lastName, phone } = body;
@@ -179,9 +271,18 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      if (password.length < 8) {
+      const emailError = validateEmail(email);
+      if (emailError) {
         return NextResponse.json(
-          { error: "Password must be at least 8 characters" },
+          { error: emailError },
+          { status: 400, headers: corsHeaders },
+        );
+      }
+
+      const pwError = validatePassword(password);
+      if (pwError) {
+        return NextResponse.json(
+          { error: pwError },
           { status: 400, headers: corsHeaders },
         );
       }
@@ -196,11 +297,10 @@ export async function POST(request: NextRequest) {
         .eq("email", emailLower)
         .maybeSingle();
 
+      // Prevent email enumeration: same generic error whether account exists or not
       if (existing && existing.password_set_at) {
         return NextResponse.json(
-          {
-            error: "An account with this email already exists. Please sign in.",
-          },
+          { error: "Unable to complete registration. Please try signing in or use a different email." },
           { status: 409, headers: corsHeaders },
         );
       }
@@ -274,7 +374,33 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // Stricter per-IP rate limit for login (5/min vs 15/min for general auth)
+      const loginRl = PUBLIC_RATE_LIMITS.login.check(ip);
+      if (!loginRl.allowed) {
+        return NextResponse.json(
+          { error: "Too many login attempts. Please try again later." },
+          { status: 429, headers: { ...corsHeaders, "Retry-After": String(Math.ceil(loginRl.retryAfterMs / 1000)) } },
+        );
+      }
+
+      const emailError = validateEmail(email);
+      if (emailError) {
+        return NextResponse.json(
+          { error: "Invalid email or password" },
+          { status: 401, headers: corsHeaders },
+        );
+      }
+
       const emailLower = email.toLowerCase().trim();
+
+      // Per-email rate limit (5/15min — prevents brute-forcing specific accounts)
+      const emailRl = PUBLIC_RATE_LIMITS.loginByEmail.check(`${siteId}:${emailLower}`);
+      if (!emailRl.allowed) {
+        return NextResponse.json(
+          { error: "Too many login attempts for this account. Please try again later." },
+          { status: 429, headers: { ...corsHeaders, "Retry-After": String(Math.ceil(emailRl.retryAfterMs / 1000)) } },
+        );
+      }
 
       // Find customer for this site
       const { data: customer } = await (supabase as any)
@@ -339,8 +465,9 @@ export async function POST(request: NextRequest) {
       const tokenHash = hashToken(token);
       const { data: session } = await (supabase as any)
         .from(SESSIONS)
-        .select("customer_id, expires_at")
+        .select("customer_id, expires_at, is_magic_link")
         .eq("token_hash", tokenHash)
+        .eq("site_id", siteId)
         .gt("expires_at", new Date().toISOString())
         .single();
 
@@ -351,7 +478,44 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Update last_used_at and extend session if nearing expiry (rolling window)
+      // Magic link tokens are single-use: consume and issue a proper session
+      if (session.is_magic_link) {
+        // Delete the magic link session (single-use)
+        await (supabase as any)
+          .from(SESSIONS)
+          .delete()
+          .eq("token_hash", tokenHash);
+
+        // Look up customer (verify site_id)
+        const { data: mlCustomer } = await (supabase as any)
+          .from(TABLE)
+          .select("*")
+          .eq("id", session.customer_id)
+          .eq("site_id", siteId)
+          .single();
+
+        if (!mlCustomer) {
+          return NextResponse.json(
+            { customer: null },
+            { status: 200, headers: corsHeaders },
+          );
+        }
+
+        // Issue a new long-lived session (not a magic link)
+        const newToken = await createSession(
+          supabase,
+          session.customer_id,
+          siteId,
+          { userAgent: ua, ip },
+        );
+
+        return NextResponse.json(
+          { customer: safeCustomer(mlCustomer), token: newToken },
+          { status: 200, headers: corsHeaders },
+        );
+      }
+
+      // Regular session: update last_used_at and extend if nearing expiry (rolling window)
       const expiresAt = new Date(session.expires_at);
       const sevenDaysFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
       const sessionUpdate: Record<string, string> = {
@@ -406,38 +570,56 @@ export async function POST(request: NextRequest) {
     }
 
     // ── SET PASSWORD (guest → account upgrade) ───────────────────────────────
+    // SECURITY: Requires EITHER a valid session token OR email + the customer
+    // must be a guest who has never set a password (prevents account takeover).
     if (action === "set-password") {
       const { token, email, password } = body;
 
-      if (!password || password.length < 8) {
+      const pwError = validatePassword(password);
+      if (pwError) {
         return NextResponse.json(
-          { error: "Password must be at least 8 characters" },
+          { error: pwError },
           { status: 400, headers: corsHeaders },
         );
       }
 
-      // Find customer by email or session token
+      // Find customer by session token (preferred) or email (guest-only fallback)
       let customerId: string | null = null;
       let customerEmail = email?.toLowerCase()?.trim();
+      let authenticatedViaToken = false;
 
       if (token) {
         const { data: session } = await (supabase as any)
           .from(SESSIONS)
           .select("customer_id")
           .eq("token_hash", hashToken(token))
+          .eq("site_id", siteId)
           .gt("expires_at", new Date().toISOString())
           .single();
-        if (session) customerId = session.customer_id;
+        if (session) {
+          customerId = session.customer_id;
+          authenticatedViaToken = true;
+        }
       }
 
+      // Email-only fallback: ONLY allowed for guests who have never set a password
       if (!customerId && customerEmail) {
         const { data: c } = await (supabase as any)
           .from(TABLE)
-          .select("id")
+          .select("id, password_set_at, is_guest")
           .eq("site_id", siteId)
           .eq("email", customerEmail)
           .maybeSingle();
-        if (c) customerId = c.id;
+        // Guard: only allow email-only access for accounts that never had a password
+        if (c && !c.password_set_at) {
+          customerId = c.id;
+        } else if (c && c.password_set_at) {
+          // Account already has a password — must be authenticated to change it
+          return NextResponse.json(
+            { error: "Authentication required to change password" },
+            { status: 401, headers: corsHeaders },
+          );
+        }
       }
 
       if (!customerId && !customerEmail) {
@@ -447,53 +629,56 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // If no customer record exists, create one (e.g. quote-only or booking-only users)
+      if (!customerId) {
+        return NextResponse.json(
+          { error: "No account found for this email" },
+          { status: 404, headers: corsHeaders },
+        );
+      }
+
+      // Load the customer record
       let customer: any = null;
       if (customerId) {
         const { data: c } = await (supabase as any)
           .from(TABLE)
           .select("*")
           .eq("id", customerId)
+          .eq("site_id", siteId)
           .single();
         customer = c;
       }
 
-      if (!customerEmail && customer) customerEmail = customer.email;
+      if (!customer) {
+        return NextResponse.json(
+          { error: "Customer not found" },
+          { status: 404, headers: corsHeaders },
+        );
+      }
+
+      // If customer already has a password and caller is NOT authenticated via token, reject
+      if (customer.password_set_at && !authenticatedViaToken) {
+        return NextResponse.json(
+          { error: "Authentication required to change password" },
+          { status: 401, headers: corsHeaders },
+        );
+      }
+
+      if (!customerEmail) customerEmail = customer.email;
 
       // Hash password with bcrypt (site-scoped, no global auth.users dependency)
       const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
-      if (customer) {
-        // Upgrade existing customer record
-        await (supabase as any)
-          .from(TABLE)
-          .update({
-            password_hash: passwordHash,
-            is_guest: false,
-            email_verified: true,
-            password_set_at: new Date().toISOString(),
-          })
-          .eq("id", customerId);
-      } else {
-        // Create new customer record (quote-only, booking-only, etc.)
-        const { data: newCustomer } = await (supabase as any)
-          .from(TABLE)
-          .insert({
-            site_id: siteId,
-            agency_id: await getSiteAgencyId(supabase, siteId),
-            email: customerEmail,
-            first_name: customerEmail!.split("@")[0],
-            last_name: "",
-            is_guest: false,
-            email_verified: true,
-            password_hash: passwordHash,
-            password_set_at: new Date().toISOString(),
-            status: "active",
-          })
-          .select("id")
-          .single();
-        customerId = newCustomer?.id;
-      }
+      // Upgrade existing customer record
+      await (supabase as any)
+        .from(TABLE)
+        .update({
+          password_hash: passwordHash,
+          is_guest: false,
+          email_verified: true,
+          password_set_at: new Date().toISOString(),
+        })
+        .eq("id", customerId)
+        .eq("site_id", siteId);
 
       // Retroactively link any quotes submitted with this email to the customer
       if (customerId && customerEmail) {
@@ -502,14 +687,6 @@ export async function POST(request: NextRequest) {
           .update({ customer_id: customerId })
           .eq("customer_email", customerEmail)
           .is("customer_id", null);
-      }
-
-      // Create session
-      if (!customerId) {
-        return NextResponse.json(
-          { error: "Failed to create customer account" },
-          { status: 500, headers: corsHeaders },
-        );
       }
 
       const newToken = await createSession(supabase, customerId, siteId, {
@@ -561,18 +738,11 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Generate a short-lived magic token (1 hour)
-      const magicToken = generateToken();
-      const magicHash = hashToken(magicToken);
-      const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-
-      await (supabase as any).from(SESSIONS).insert({
-        customer_id: customer.id,
-        site_id: siteId,
-        token_hash: magicHash,
-        expires_at: expiresAt,
-        user_agent: ua || null,
-        ip_address: ip || null,
+      // Generate a short-lived magic token (1 hour, single-use)
+      const magicToken = await createSession(supabase, customer.id, siteId, {
+        userAgent: ua,
+        ip,
+        isMagicLink: true,
       });
 
       // Build magic link URL using the request origin (storefront's domain)
@@ -624,6 +794,7 @@ export async function POST(request: NextRequest) {
         .from(SESSIONS)
         .select("customer_id")
         .eq("token_hash", tokenHash)
+        .eq("site_id", siteId)
         .gt("expires_at", new Date().toISOString())
         .single();
 
@@ -710,6 +881,7 @@ export async function POST(request: NextRequest) {
         .from(SESSIONS)
         .select("customer_id")
         .eq("token_hash", tokenHash)
+        .eq("site_id", siteId)
         .gt("expires_at", new Date().toISOString())
         .single();
 
@@ -726,7 +898,7 @@ export async function POST(request: NextRequest) {
       const { data: order } = await (supabase as any)
         .from(`${TABLE_PREFIX}_orders`)
         .select(
-          "id, order_number, status, payment_status, fulfillment_status, total, subtotal, tax_amount, shipping_amount, discount_amount, currency, created_at, shipping_address, billing_address, tracking_number, tracking_url, customer_notes, internal_notes",
+          "id, order_number, status, payment_status, fulfillment_status, total, subtotal, tax_amount, shipping_amount, discount_amount, currency, created_at, shipping_address, billing_address, tracking_number, tracking_url, customer_notes",
         )
         .eq("id", orderId)
         .eq("customer_id", session.customer_id)
@@ -804,6 +976,7 @@ export async function POST(request: NextRequest) {
         .from(SESSIONS)
         .select("customer_id")
         .eq("token_hash", tokenHash)
+        .eq("site_id", siteId)
         .gt("expires_at", new Date().toISOString())
         .single();
 
@@ -842,6 +1015,7 @@ export async function POST(request: NextRequest) {
         .from(SESSIONS)
         .select("customer_id")
         .eq("token_hash", tokenHash)
+        .eq("site_id", siteId)
         .gt("expires_at", new Date().toISOString())
         .single();
 
@@ -903,6 +1077,7 @@ export async function POST(request: NextRequest) {
         .from(SESSIONS)
         .select("customer_id")
         .eq("token_hash", tokenHash)
+        .eq("site_id", siteId)
         .gt("expires_at", new Date().toISOString())
         .single();
 
@@ -985,6 +1160,7 @@ export async function POST(request: NextRequest) {
         .from(SESSIONS)
         .select("customer_id")
         .eq("token_hash", tokenHash)
+        .eq("site_id", siteId)
         .gt("expires_at", new Date().toISOString())
         .single();
 
@@ -1077,6 +1253,7 @@ export async function POST(request: NextRequest) {
         .from(SESSIONS)
         .select("customer_id")
         .eq("token_hash", tokenHash)
+        .eq("site_id", siteId)
         .gt("expires_at", new Date().toISOString())
         .single();
 
@@ -1139,6 +1316,7 @@ export async function POST(request: NextRequest) {
         .from(SESSIONS)
         .select("customer_id")
         .eq("token_hash", tokenHash)
+        .eq("site_id", siteId)
         .gt("expires_at", new Date().toISOString())
         .single();
 
@@ -1154,6 +1332,7 @@ export async function POST(request: NextRequest) {
         .from(TABLE)
         .select("email")
         .eq("id", session.customer_id)
+        .eq("site_id", siteId)
         .single();
 
       if (!customer) {
@@ -1195,6 +1374,7 @@ export async function POST(request: NextRequest) {
         .from(SESSIONS)
         .select("customer_id")
         .eq("token_hash", tokenHash)
+        .eq("site_id", siteId)
         .gt("expires_at", new Date().toISOString())
         .single();
 
@@ -1210,6 +1390,7 @@ export async function POST(request: NextRequest) {
         .from(TABLE)
         .select("email")
         .eq("id", session.customer_id)
+        .eq("site_id", siteId)
         .single();
 
       if (!customer) {

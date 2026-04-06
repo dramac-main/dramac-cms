@@ -155,11 +155,13 @@ export function StorefrontAuthProvider({
       cleanUrl.searchParams.delete("magic_token");
       window.history.replaceState({}, "", cleanUrl.toString());
 
-      // Validate the magic token as a session
+      // Validate the magic token — server consumes it and returns a new long-lived token
       callAuth({ action: "session", token: magicToken })
         .then((data) => {
           if (data?.customer) {
-            saveSession(magicToken, data.customer);
+            // Use the new token returned by the server (magic token is now consumed)
+            const sessionToken = data.token || magicToken;
+            saveSession(sessionToken, data.customer);
             // Merge guest cart (non-blocking)
             mergeGuestCart(data.customer.id);
           }

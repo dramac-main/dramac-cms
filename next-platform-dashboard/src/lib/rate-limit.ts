@@ -305,8 +305,12 @@ export function getClientIp(request: Request): string {
 
 /** Pre-configured limiters for public ecommerce routes */
 export const PUBLIC_RATE_LIMITS = {
-  /** 15 auth attempts per minute per IP (login, register, magic-link) */
+  /** 15 auth attempts per minute per IP (register, session, set-password, etc.) */
   auth: ipRateLimit("ecom-auth", 15, 60_000),
+  /** 5 login attempts per minute per IP (stricter — brute-force protection) */
+  login: ipRateLimit("ecom-login", 5, 60_000),
+  /** 5 login attempts per 15 min per email (account-level brute-force protection) */
+  loginByEmail: ipRateLimit("ecom-login-email", 5, 900_000),
   /** 10 checkout attempts per minute per IP */
   checkout: ipRateLimit("ecom-checkout", 10, 60_000),
   /** 30 cart operations per minute per IP */
