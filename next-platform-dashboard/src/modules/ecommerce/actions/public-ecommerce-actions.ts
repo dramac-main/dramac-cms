@@ -416,6 +416,8 @@ async function findPublicCart(
         )
       `,
       )
+      // Order cart items by creation time so they don't shift on quantity updates
+      .order("created_at", { ascending: true, referencedTable: `${TABLE_PREFIX}_cart_items` })
       .eq("site_id", siteId)
       .eq("status", "active");
 
@@ -487,6 +489,8 @@ export async function getPublicCart(
         )
       `,
     );
+    // Order cart items by creation time so they don't shift on quantity updates
+    query = query.order("created_at", { ascending: true, referencedTable: `${TABLE_PREFIX}_cart_items` });
     query = query.eq("id", cartId);
     if (siteId) query = query.eq("site_id", siteId);
     const { data, error } = await query.single();
