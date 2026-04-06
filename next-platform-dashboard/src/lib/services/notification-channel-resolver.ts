@@ -147,6 +147,6 @@ export async function shouldSendInApp(
  * Invalidate the channel cache for a site.
  * Called when notification settings are updated.
  */
-export function invalidateChannelCache(siteId: string): void {
+export async function invalidateChannelCache(siteId: string): Promise<void> {
   cache.delete(siteId);
 }

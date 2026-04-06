@@ -2006,12 +2006,15 @@ export async function notifyQuoteRejected(
 
     // Fetch quote total for the email
     const { data: rawQuoteData } = await supabase
-      .from("mod_ecommod01_quotes")
+      .from("mod_ecommod01_quotes" as never)
       .select("total, currency")
       .eq("quote_number", quoteNumber)
       .eq("site_id", siteId)
       .single();
-    const quoteData = rawQuoteData as { total: number; currency: string } | null;
+    const quoteData = rawQuoteData as {
+      total: number;
+      currency: string;
+    } | null;
     const total = quoteData?.total
       ? formatCurrency(quoteData.total, quoteData.currency || "USD")
       : "";

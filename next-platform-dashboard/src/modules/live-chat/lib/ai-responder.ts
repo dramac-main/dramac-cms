@@ -110,7 +110,8 @@ export async function generateAutoResponse(
     const aiAssistantName = settingsRes.data?.ai_assistant_name || "Chiko";
     const paymentGreeting = settingsRes.data?.ai_payment_greeting || "";
     const handoffKeywords: string[] =
-      Array.isArray(settingsRes.data?.ai_handoff_keywords) && settingsRes.data.ai_handoff_keywords.length > 0
+      Array.isArray(settingsRes.data?.ai_handoff_keywords) &&
+      settingsRes.data.ai_handoff_keywords.length > 0
         ? settingsRes.data.ai_handoff_keywords
         : DEFAULT_HANDOFF_KEYWORDS;
     const handoffMessage: string =

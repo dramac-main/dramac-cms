@@ -169,7 +169,7 @@ export function ProductQuickView({
         if (!url) return null;
         return { url, alt: `${product.name} ${index + 1}` };
       })
-      .filter((img): img is ProductImage => img !== null) as ProductImage[];
+      .filter((img) => img !== null) as ProductImage[];
   }, [product]);
 
   // Handlers

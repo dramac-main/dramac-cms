@@ -550,7 +550,7 @@ export function QuoteDetailDialog({
                           Acceptance Details
                         </h3>
                         <div className="space-y-3">
-                          {quote.metadata.accepted_by_name && (
+                          {quote.metadata.accepted_by_name ? (
                             <div className="text-sm">
                               <span className="text-muted-foreground">
                                 Accepted by:{" "}
@@ -559,8 +559,8 @@ export function QuoteDetailDialog({
                                 {String(quote.metadata.accepted_by_name)}
                               </span>
                             </div>
-                          )}
-                          {quote.metadata.accepted_by_email && (
+                          ) : null}
+                          {quote.metadata.accepted_by_email ? (
                             <div className="text-sm">
                               <span className="text-muted-foreground">
                                 Email:{" "}
@@ -569,8 +569,8 @@ export function QuoteDetailDialog({
                                 {String(quote.metadata.accepted_by_email)}
                               </span>
                             </div>
-                          )}
-                          {quote.metadata.accepted_at && (
+                          ) : null}
+                          {quote.metadata.accepted_at ? (
                             <div className="text-sm">
                               <span className="text-muted-foreground">
                                 Date:{" "}
@@ -584,8 +584,8 @@ export function QuoteDetailDialog({
                                 )}
                               </span>
                             </div>
-                          )}
-                          {quote.metadata.signature_data && (
+                          ) : null}
+                          {quote.metadata.signature_data ? (
                             <div className="mt-3">
                               <p className="text-sm text-muted-foreground mb-2">
                                 Signature:
@@ -599,7 +599,7 @@ export function QuoteDetailDialog({
                                 />
                               </div>
                             </div>
-                          )}
+                          ) : null}
                         </div>
                       </div>
                     )}

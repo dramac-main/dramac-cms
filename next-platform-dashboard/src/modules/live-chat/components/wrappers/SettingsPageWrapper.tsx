@@ -1420,7 +1420,8 @@ export function SettingsPageWrapper({
                 <Label>Handoff Keywords</Label>
                 <Textarea
                   value={
-                    Array.isArray(settings.aiHandoffKeywords) && settings.aiHandoffKeywords.length > 0
+                    Array.isArray(settings.aiHandoffKeywords) &&
+                    settings.aiHandoffKeywords.length > 0
                       ? settings.aiHandoffKeywords.join(", ")
                       : ""
                   }
@@ -1435,9 +1436,9 @@ export function SettingsPageWrapper({
                   rows={3}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Comma-separated words or phrases. When a visitor&apos;s message
-                  contains any of these, the AI immediately hands off to a human
-                  agent. Leave empty to use the built-in defaults.
+                  Comma-separated words or phrases. When a visitor&apos;s
+                  message contains any of these, the AI immediately hands off to
+                  a human agent. Leave empty to use the built-in defaults.
                 </p>
               </div>
 
@@ -1481,7 +1482,8 @@ export function SettingsPageWrapper({
                     aiCustomInstructions: settings.aiCustomInstructions || null,
                     aiAssistantName: settings.aiAssistantName || "Chiko",
                     aiHandoffKeywords:
-                      Array.isArray(settings.aiHandoffKeywords) && settings.aiHandoffKeywords.length > 0
+                      Array.isArray(settings.aiHandoffKeywords) &&
+                      settings.aiHandoffKeywords.length > 0
                         ? settings.aiHandoffKeywords
                         : [],
                     aiHandoffMessage: settings.aiHandoffMessage || null,
