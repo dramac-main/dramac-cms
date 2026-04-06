@@ -409,7 +409,7 @@ async function executeEcommerceAction(
           config.product_id as string,
           (config.variant_id as string) || null,
           config.quantity as number,
-          (config.movement_type as string) || 'adjustment',
+          ((config.movement_type as string) || 'adjustment') as import('@/modules/ecommerce/types/inventory-types').InventoryMovementType,
           config.reason as string || undefined
         )
         if (!result.success) {
@@ -426,7 +426,7 @@ async function executeEcommerceAction(
         const result = await updateQuoteStatus(
           siteId,
           config.quote_id as string,
-          config.status as string,
+          config.status as import('@/modules/ecommerce/types/ecommerce-types').QuoteStatus,
           config.user_id as string || undefined,
           config.user_name as string || undefined,
           config.notes as string || undefined
@@ -484,7 +484,7 @@ async function executeEcommerceAction(
         if (!result.success) {
           return { status: 'failed', error: result.error || 'Failed to convert quote to order' }
         }
-        return { status: 'completed', output: { success: true, order_id: result.data?.order_id } }
+        return { status: 'completed', output: { success: true, order_id: result.order?.id } }
       } catch (error) {
         return { status: 'failed', error: error instanceof Error ? error.message : 'Failed to convert quote to order' }
       }
@@ -530,7 +530,7 @@ async function executeBookingAction(
           customer_phone: config.customer_phone as string || undefined,
           start_time: config.start_time as string,
           end_time: config.end_time as string,
-          notes: config.notes as string || undefined,
+          customer_notes: config.notes as string || undefined,
         })
         return { status: 'completed', output: { appointment_id: appointment.id, appointment } }
       } catch (error) {
@@ -556,7 +556,7 @@ async function executeBookingAction(
         const appointment = await updateAppointment(
           siteId,
           config.appointment_id as string,
-          { status: config.status as string }
+          { status: config.status as import('@/modules/booking/types/booking-types').AppointmentStatus }
         )
         return { status: 'completed', output: { appointment_id: appointment.id, status: config.status } }
       } catch (error) {
@@ -569,7 +569,7 @@ async function executeBookingAction(
         const appointment = await cancelAppointment(
           siteId,
           config.appointment_id as string,
-          (config.cancelled_by as string) || 'system',
+          ((config.cancelled_by as string) || 'system') as import('@/modules/booking/types/booking-types').CancelledBy,
           config.reason as string || undefined
         )
         return { status: 'completed', output: { appointment_id: appointment.id, cancelled: true } }
@@ -582,9 +582,10 @@ async function executeBookingAction(
       try {
         const reminder = await createReminder(siteId, {
           appointment_id: config.appointment_id as string,
-          type: (config.type as string) || 'email',
+          type: ((config.type as string) || 'email') as import('@/modules/booking/types/booking-types').ReminderType,
           send_at: config.send_at as string,
-          message: config.message as string || undefined,
+          subject: config.subject as string || undefined,
+          body: config.message as string || undefined,
         })
         return { status: 'completed', output: { reminder_id: reminder.id, reminder } }
       } catch (error) {
@@ -622,7 +623,7 @@ async function executeChatAction(
           senderId: config.sender_id as string || undefined,
           senderName: config.sender_name as string || 'Automation',
           content: config.content as string,
-          contentType: (config.content_type as 'text' | 'html') || 'text',
+          contentType: ((config.content_type as string) || 'text') as import('@/modules/live-chat/types').MessageContentType,
           isInternalNote: (config.is_internal as boolean) || false,
         })
         if (result.error) {

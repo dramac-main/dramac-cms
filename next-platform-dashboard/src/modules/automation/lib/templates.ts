@@ -1011,6 +1011,774 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
       },
     ],
   },
+
+  // =========================================================
+  // CROSS-MODULE: ORDER → CRM
+  // =========================================================
+  {
+    id: 'order-to-crm-contact',
+    name: 'New Order → CRM Contact & Deal',
+    description: 'When a new order is placed, find or create the customer as a CRM contact and open a deal for the order value',
+    category: 'E-Commerce',
+    icon: 'ShoppingCart',
+    complexity: 'intermediate',
+    estimatedSetupTime: '10 minutes',
+    tags: ['order', 'crm', 'contact', 'deal', 'cross-module'],
+    trigger: {
+      type: 'event',
+      config: { event_type: 'ecommerce.order.created' },
+    },
+    steps: [
+      {
+        step_type: 'action',
+        action_type: 'crm.find_contact',
+        action_config: {
+          field: 'email',
+          value: '{{trigger.customer_email}}',
+        },
+        name: 'Find Existing Contact',
+      },
+      {
+        step_type: 'condition',
+        condition_config: {
+          operator: 'and',
+          conditions: [
+            { field: '{{steps.Find Existing Contact.found}}', operator: 'equals', value: false },
+          ],
+        },
+        name: 'Is New Customer?',
+      },
+      {
+        step_type: 'action',
+        action_type: 'crm.create_contact',
+        action_config: {
+          email: '{{trigger.customer_email}}',
+          first_name: '{{trigger.customer_first_name}}',
+          last_name: '{{trigger.customer_last_name}}',
+          phone: '{{trigger.customer_phone}}',
+          tags: ['customer', 'ecommerce'],
+        },
+        name: 'Create CRM Contact',
+      },
+      {
+        step_type: 'action',
+        action_type: 'crm.create_deal',
+        action_config: {
+          title: 'Order #{{trigger.order_number}}',
+          value: '{{trigger.total_amount}}',
+          stage: 'won',
+          contact_email: '{{trigger.customer_email}}',
+          custom_fields: {
+            order_id: '{{trigger.order_id}}',
+            source: 'ecommerce',
+          },
+        },
+        name: 'Create Deal from Order',
+      },
+      {
+        step_type: 'action',
+        action_type: 'notification.in_app',
+        action_config: {
+          title: 'New Order Received',
+          message: 'Order #{{trigger.order_number}} from {{trigger.customer_first_name}} {{trigger.customer_last_name}} — ${{trigger.total_amount}}',
+          type: 'info',
+        },
+        name: 'Notify Team',
+      },
+    ],
+  },
+
+  // =========================================================
+  // CROSS-MODULE: ORDER SHIPPED → CUSTOMER NOTIFICATION
+  // =========================================================
+  {
+    id: 'order-shipped-notify',
+    name: 'Order Shipped → Multi-Channel Notification',
+    description: 'When an order is shipped, send the customer an email with tracking info and log the activity in CRM',
+    category: 'E-Commerce',
+    icon: 'Truck',
+    complexity: 'intermediate',
+    estimatedSetupTime: '10 minutes',
+    tags: ['order', 'shipping', 'email', 'crm', 'cross-module'],
+    trigger: {
+      type: 'event',
+      config: { event_type: 'ecommerce.order.shipped' },
+    },
+    steps: [
+      {
+        step_type: 'action',
+        action_type: 'email.send',
+        action_config: {
+          to: '{{trigger.customer_email}}',
+          subject: 'Your order #{{trigger.order_number}} has shipped!',
+          body: 'Hi {{trigger.customer_first_name}},\n\nGreat news! Your order #{{trigger.order_number}} has been shipped.\n\nTracking number: {{trigger.tracking_number}}\nCarrier: {{trigger.carrier}}\n\nYou can track your package using the link above.\n\nThank you for your order!',
+        },
+        name: 'Send Shipping Email',
+      },
+      {
+        step_type: 'action',
+        action_type: 'crm.log_activity',
+        action_config: {
+          contact_email: '{{trigger.customer_email}}',
+          activity_type: 'note',
+          subject: 'Order #{{trigger.order_number}} shipped',
+          description: 'Tracking: {{trigger.tracking_number}} via {{trigger.carrier}}',
+        },
+        name: 'Log CRM Activity',
+      },
+    ],
+  },
+
+  // =========================================================
+  // CROSS-MODULE: QUOTE LIFECYCLE
+  // =========================================================
+  {
+    id: 'quote-accepted-to-order',
+    name: 'Quote Accepted → Convert to Order',
+    description: 'When a customer accepts a quote, automatically convert it to an order and notify the team',
+    category: 'E-Commerce',
+    icon: 'FileCheck',
+    complexity: 'intermediate',
+    estimatedSetupTime: '5 minutes',
+    tags: ['quote', 'order', 'conversion', 'cross-module'],
+    trigger: {
+      type: 'event',
+      config: { event_type: 'ecommerce.quote.accepted' },
+    },
+    steps: [
+      {
+        step_type: 'action',
+        action_type: 'ecommerce.convert_quote_to_order',
+        action_config: {
+          quote_id: '{{trigger.quote_id}}',
+        },
+        name: 'Convert Quote to Order',
+      },
+      {
+        step_type: 'action',
+        action_type: 'crm.log_activity',
+        action_config: {
+          contact_email: '{{trigger.customer_email}}',
+          activity_type: 'note',
+          subject: 'Quote accepted and converted to order',
+          description: 'Quote #{{trigger.quote_number}} was accepted and converted to an order.',
+        },
+        name: 'Log CRM Activity',
+      },
+      {
+        step_type: 'action',
+        action_type: 'email.send',
+        action_config: {
+          to: '{{trigger.customer_email}}',
+          subject: 'Quote #{{trigger.quote_number}} — Order Confirmed',
+          body: 'Hi {{trigger.customer_first_name}},\n\nThank you for accepting your quote! Your order has been created and our team will begin processing it shortly.\n\nQuote reference: #{{trigger.quote_number}}\n\nWe\'ll keep you updated on the progress.',
+        },
+        name: 'Send Confirmation Email',
+      },
+      {
+        step_type: 'action',
+        action_type: 'notification.in_app',
+        action_config: {
+          title: 'Quote Accepted!',
+          message: 'Quote #{{trigger.quote_number}} from {{trigger.customer_first_name}} {{trigger.customer_last_name}} was accepted and converted to an order.',
+          type: 'success',
+        },
+        name: 'Notify Team',
+      },
+    ],
+  },
+  {
+    id: 'quote-reminder-sequence',
+    name: 'Quote Follow-Up Reminder Sequence',
+    description: 'Automatically send reminders for quotes that have been viewed but not yet accepted',
+    category: 'E-Commerce',
+    icon: 'Clock',
+    complexity: 'advanced',
+    estimatedSetupTime: '15 minutes',
+    tags: ['quote', 'reminder', 'follow-up', 'drip', 'cross-module'],
+    trigger: {
+      type: 'event',
+      config: { event_type: 'ecommerce.quote.viewed' },
+    },
+    steps: [
+      {
+        step_type: 'action',
+        action_type: 'flow.delay',
+        action_config: {
+          duration: '2d',
+        },
+        name: 'Wait 2 Days',
+      },
+      {
+        step_type: 'action',
+        action_type: 'ecommerce.send_quote_reminder',
+        action_config: {
+          quote_id: '{{trigger.quote_id}}',
+        },
+        name: 'Send First Reminder',
+      },
+      {
+        step_type: 'action',
+        action_type: 'flow.delay',
+        action_config: {
+          duration: '5d',
+        },
+        name: 'Wait 5 More Days',
+      },
+      {
+        step_type: 'action',
+        action_type: 'ecommerce.send_quote_reminder',
+        action_config: {
+          quote_id: '{{trigger.quote_id}}',
+        },
+        name: 'Send Final Reminder',
+      },
+      {
+        step_type: 'action',
+        action_type: 'crm.log_activity',
+        action_config: {
+          contact_email: '{{trigger.customer_email}}',
+          activity_type: 'note',
+          subject: 'Quote reminder sequence completed',
+          description: 'Automated reminders sent for Quote #{{trigger.quote_number}}. No response yet.',
+        },
+        name: 'Log Follow-Up Activity',
+      },
+    ],
+  },
+  {
+    id: 'quote-rejected-review',
+    name: 'Quote Rejected → Team Review',
+    description: 'When a quote is rejected, notify the team for review and log the outcome in CRM',
+    category: 'E-Commerce',
+    icon: 'XCircle',
+    complexity: 'simple',
+    estimatedSetupTime: '5 minutes',
+    tags: ['quote', 'rejected', 'review', 'cross-module'],
+    trigger: {
+      type: 'event',
+      config: { event_type: 'ecommerce.quote.rejected' },
+    },
+    steps: [
+      {
+        step_type: 'action',
+        action_type: 'crm.log_activity',
+        action_config: {
+          contact_email: '{{trigger.customer_email}}',
+          activity_type: 'note',
+          subject: 'Quote #{{trigger.quote_number}} rejected',
+          description: 'Customer rejected the quote. Reason: {{trigger.rejection_reason}}',
+        },
+        name: 'Log Rejection in CRM',
+      },
+      {
+        step_type: 'action',
+        action_type: 'notification.in_app',
+        action_config: {
+          title: 'Quote Rejected',
+          message: 'Quote #{{trigger.quote_number}} was rejected by {{trigger.customer_first_name}} {{trigger.customer_last_name}}. Reason: {{trigger.rejection_reason}}',
+          type: 'warning',
+        },
+        name: 'Alert Sales Team',
+      },
+    ],
+  },
+
+  // =========================================================
+  // CROSS-MODULE: BOOKING → CRM
+  // =========================================================
+  {
+    id: 'booking-to-crm-contact',
+    name: 'New Booking → CRM Contact & Activity',
+    description: 'When a new appointment is booked, find or create the customer in CRM and log the booking as an activity',
+    category: 'Booking',
+    icon: 'CalendarPlus',
+    complexity: 'intermediate',
+    estimatedSetupTime: '10 minutes',
+    tags: ['booking', 'appointment', 'crm', 'contact', 'cross-module'],
+    trigger: {
+      type: 'event',
+      config: { event_type: 'booking.appointment.created' },
+    },
+    steps: [
+      {
+        step_type: 'action',
+        action_type: 'crm.find_contact',
+        action_config: {
+          field: 'email',
+          value: '{{trigger.customer_email}}',
+        },
+        name: 'Find Existing Contact',
+      },
+      {
+        step_type: 'condition',
+        condition_config: {
+          operator: 'and',
+          conditions: [
+            { field: '{{steps.Find Existing Contact.found}}', operator: 'equals', value: false },
+          ],
+        },
+        name: 'Is New Customer?',
+      },
+      {
+        step_type: 'action',
+        action_type: 'crm.create_contact',
+        action_config: {
+          email: '{{trigger.customer_email}}',
+          first_name: '{{trigger.customer_name}}',
+          tags: ['booking-customer'],
+        },
+        name: 'Create CRM Contact',
+      },
+      {
+        step_type: 'action',
+        action_type: 'crm.log_activity',
+        action_config: {
+          contact_email: '{{trigger.customer_email}}',
+          activity_type: 'meeting',
+          subject: 'Appointment booked — {{trigger.service_name}}',
+          description: 'Appointment scheduled for {{trigger.start_time}} with {{trigger.staff_name}}. Service: {{trigger.service_name}}.',
+        },
+        name: 'Log Booking in CRM',
+      },
+    ],
+  },
+  {
+    id: 'booking-cancelled-followup',
+    name: 'Booking Cancelled → Follow-Up',
+    description: 'When a booking is cancelled, send a follow-up email offering to reschedule and log it in CRM',
+    category: 'Booking',
+    icon: 'CalendarX',
+    complexity: 'intermediate',
+    estimatedSetupTime: '10 minutes',
+    tags: ['booking', 'cancellation', 'follow-up', 'email', 'cross-module'],
+    trigger: {
+      type: 'event',
+      config: { event_type: 'booking.appointment.cancelled' },
+    },
+    steps: [
+      {
+        step_type: 'action',
+        action_type: 'email.send',
+        action_config: {
+          to: '{{trigger.customer_email}}',
+          subject: 'We\'re sorry to see you cancel — can we reschedule?',
+          body: 'Hi {{trigger.customer_name}},\n\nWe noticed your appointment for {{trigger.service_name}} on {{trigger.start_time}} was cancelled.\n\nWe understand plans change! If you\'d like to reschedule, simply visit our booking page and choose a new time that works for you.\n\nWe look forward to seeing you soon!',
+        },
+        name: 'Send Reschedule Email',
+      },
+      {
+        step_type: 'action',
+        action_type: 'crm.log_activity',
+        action_config: {
+          contact_email: '{{trigger.customer_email}}',
+          activity_type: 'note',
+          subject: 'Appointment cancelled',
+          description: '{{trigger.service_name}} appointment on {{trigger.start_time}} was cancelled. Reason: {{trigger.cancellation_reason}}',
+        },
+        name: 'Log Cancellation in CRM',
+      },
+    ],
+  },
+  {
+    id: 'booking-confirmation-chat',
+    name: 'Booking Confirmed → Chat Message',
+    description: 'When a booking is confirmed, send a confirmation message to the customer via live chat',
+    category: 'Booking',
+    icon: 'MessageSquare',
+    complexity: 'intermediate',
+    estimatedSetupTime: '10 minutes',
+    tags: ['booking', 'chat', 'confirmation', 'cross-module'],
+    trigger: {
+      type: 'event',
+      config: { event_type: 'booking.appointment.confirmed' },
+    },
+    steps: [
+      {
+        step_type: 'action',
+        action_type: 'chat.send_message',
+        action_config: {
+          conversation_id: '{{trigger.conversation_id}}',
+          content: 'Your appointment for {{trigger.service_name}} on {{trigger.start_time}} has been confirmed! 🎉\n\nProvider: {{trigger.staff_name}}\nDuration: {{trigger.duration}} minutes\n\nWe look forward to seeing you!',
+          sender_type: 'system',
+        },
+        name: 'Send Chat Confirmation',
+      },
+      {
+        step_type: 'action',
+        action_type: 'booking.create_reminder',
+        action_config: {
+          appointment_id: '{{trigger.appointment_id}}',
+          reminder_type: 'email',
+          remind_before_minutes: 1440,
+        },
+        name: 'Schedule 24h Reminder',
+      },
+    ],
+  },
+
+  // =========================================================
+  // CROSS-MODULE: LIVE CHAT → CRM
+  // =========================================================
+  {
+    id: 'chat-to-crm-contact',
+    name: 'New Chat → CRM Contact',
+    description: 'When a new chat conversation starts, find or create the visitor as a CRM contact and assign to an agent',
+    category: 'Customer Success',
+    icon: 'MessageCircle',
+    complexity: 'intermediate',
+    estimatedSetupTime: '10 minutes',
+    tags: ['chat', 'crm', 'contact', 'cross-module'],
+    trigger: {
+      type: 'event',
+      config: { event_type: 'chat.conversation.created' },
+    },
+    steps: [
+      {
+        step_type: 'condition',
+        condition_config: {
+          operator: 'and',
+          conditions: [
+            { field: '{{trigger.visitor_email}}', operator: 'exists', value: true },
+          ],
+        },
+        name: 'Has Email?',
+      },
+      {
+        step_type: 'action',
+        action_type: 'crm.find_contact',
+        action_config: {
+          field: 'email',
+          value: '{{trigger.visitor_email}}',
+        },
+        name: 'Find Existing Contact',
+      },
+      {
+        step_type: 'condition',
+        condition_config: {
+          operator: 'and',
+          conditions: [
+            { field: '{{steps.Find Existing Contact.found}}', operator: 'equals', value: false },
+          ],
+        },
+        name: 'Is New Visitor?',
+      },
+      {
+        step_type: 'action',
+        action_type: 'crm.create_contact',
+        action_config: {
+          email: '{{trigger.visitor_email}}',
+          first_name: '{{trigger.visitor_name}}',
+          tags: ['chat-visitor', 'website'],
+        },
+        name: 'Create CRM Contact',
+      },
+      {
+        step_type: 'action',
+        action_type: 'crm.log_activity',
+        action_config: {
+          contact_email: '{{trigger.visitor_email}}',
+          activity_type: 'note',
+          subject: 'Live chat conversation started',
+          description: 'Customer initiated a chat conversation. Page: {{trigger.page_url}}',
+        },
+        name: 'Log Chat Activity',
+      },
+    ],
+  },
+  {
+    id: 'chat-resolved-satisfaction',
+    name: 'Chat Resolved → Satisfaction Follow-Up',
+    description: 'When a chat is resolved, send a follow-up email asking for feedback and log the resolution in CRM',
+    category: 'Customer Success',
+    icon: 'ThumbsUp',
+    complexity: 'intermediate',
+    estimatedSetupTime: '10 minutes',
+    tags: ['chat', 'satisfaction', 'feedback', 'email', 'cross-module'],
+    trigger: {
+      type: 'event',
+      config: { event_type: 'chat.conversation.resolved' },
+    },
+    steps: [
+      {
+        step_type: 'condition',
+        condition_config: {
+          operator: 'and',
+          conditions: [
+            { field: '{{trigger.customer_email}}', operator: 'exists', value: true },
+          ],
+        },
+        name: 'Has Customer Email?',
+      },
+      {
+        step_type: 'action',
+        action_type: 'flow.delay',
+        action_config: {
+          duration: '1h',
+        },
+        name: 'Wait 1 Hour',
+      },
+      {
+        step_type: 'action',
+        action_type: 'email.send',
+        action_config: {
+          to: '{{trigger.customer_email}}',
+          subject: 'How was your experience?',
+          body: 'Hi {{trigger.customer_name}},\n\nThank you for chatting with us today! We hope we were able to help.\n\nWe\'d love to hear how your experience was. Your feedback helps us improve.\n\nWas your issue resolved? Simply reply to this email and let us know.\n\nThank you!',
+        },
+        name: 'Send Satisfaction Email',
+      },
+      {
+        step_type: 'action',
+        action_type: 'crm.log_activity',
+        action_config: {
+          contact_email: '{{trigger.customer_email}}',
+          activity_type: 'note',
+          subject: 'Chat conversation resolved',
+          description: 'Chat resolved by {{trigger.agent_name}}. Duration: {{trigger.duration_minutes}} minutes. Satisfaction follow-up sent.',
+        },
+        name: 'Log Resolution in CRM',
+      },
+    ],
+  },
+
+  // =========================================================
+  // CROSS-MODULE: LOW STOCK → MULTI-CHANNEL ALERT
+  // =========================================================
+  {
+    id: 'low-stock-multi-alert',
+    name: 'Low Stock → Slack + Email Alert',
+    description: 'When inventory drops below threshold, alert the team via Slack, email, and in-app notification',
+    category: 'E-Commerce',
+    icon: 'AlertTriangle',
+    complexity: 'intermediate',
+    estimatedSetupTime: '10 minutes',
+    tags: ['inventory', 'stock', 'alert', 'slack', 'email', 'cross-module'],
+    trigger: {
+      type: 'event',
+      config: { event_type: 'ecommerce.inventory.low_stock' },
+    },
+    steps: [
+      {
+        step_type: 'action',
+        action_type: 'notification.send_slack',
+        action_config: {
+          channel: '#inventory-alerts',
+          message: '⚠️ Low Stock Alert!\n\nProduct: {{trigger.product_name}}\nSKU: {{trigger.sku}}\nCurrent Stock: {{trigger.current_quantity}}\nThreshold: {{trigger.threshold}}\n\nPlease reorder soon.',
+        },
+        name: 'Alert Slack Channel',
+      },
+      {
+        step_type: 'action',
+        action_type: 'email.send',
+        action_config: {
+          to: '{{trigger.alert_email}}',
+          subject: '⚠️ Low Stock: {{trigger.product_name}} ({{trigger.current_quantity}} remaining)',
+          body: 'The following product is running low on stock:\n\nProduct: {{trigger.product_name}}\nSKU: {{trigger.sku}}\nCurrent Quantity: {{trigger.current_quantity}}\nReorder Threshold: {{trigger.threshold}}\n\nPlease review and reorder as needed.',
+        },
+        name: 'Send Email Alert',
+      },
+      {
+        step_type: 'action',
+        action_type: 'notification.in_app',
+        action_config: {
+          title: 'Low Stock Warning',
+          message: '{{trigger.product_name}} ({{trigger.sku}}) has only {{trigger.current_quantity}} units remaining.',
+          type: 'warning',
+        },
+        name: 'In-App Notification',
+      },
+    ],
+    requiredConnections: ['slack'],
+  },
+
+  // =========================================================
+  // CROSS-MODULE: REFUND → CRM + NOTIFICATIONS
+  // =========================================================
+  {
+    id: 'refund-processed-workflow',
+    name: 'Refund Processed → CRM & Notifications',
+    description: 'When a refund is processed, update CRM, email the customer, and alert the finance team',
+    category: 'E-Commerce',
+    icon: 'RotateCcw',
+    complexity: 'intermediate',
+    estimatedSetupTime: '10 minutes',
+    tags: ['refund', 'crm', 'email', 'notification', 'cross-module'],
+    trigger: {
+      type: 'event',
+      config: { event_type: 'ecommerce.refund.created' },
+    },
+    steps: [
+      {
+        step_type: 'action',
+        action_type: 'email.send',
+        action_config: {
+          to: '{{trigger.customer_email}}',
+          subject: 'Refund Processed for Order #{{trigger.order_number}}',
+          body: 'Hi {{trigger.customer_first_name}},\n\nYour refund of ${{trigger.refund_amount}} for order #{{trigger.order_number}} has been processed.\n\nReason: {{trigger.refund_reason}}\n\nPlease allow 5-10 business days for the refund to appear in your account.\n\nIf you have any questions, don\'t hesitate to reach out.',
+        },
+        name: 'Email Customer',
+      },
+      {
+        step_type: 'action',
+        action_type: 'crm.log_activity',
+        action_config: {
+          contact_email: '{{trigger.customer_email}}',
+          activity_type: 'note',
+          subject: 'Refund processed — ${{trigger.refund_amount}}',
+          description: 'Refund of ${{trigger.refund_amount}} processed for order #{{trigger.order_number}}. Reason: {{trigger.refund_reason}}.',
+        },
+        name: 'Log Refund in CRM',
+      },
+      {
+        step_type: 'action',
+        action_type: 'notification.in_app',
+        action_config: {
+          title: 'Refund Processed',
+          message: 'Refund of ${{trigger.refund_amount}} for order #{{trigger.order_number}} has been processed.',
+          type: 'info',
+        },
+        name: 'Notify Finance Team',
+      },
+    ],
+  },
+
+  // =========================================================
+  // CROSS-MODULE: DEAL CLOSED → ORDER CREATION
+  // =========================================================
+  {
+    id: 'deal-won-to-quote',
+    name: 'Deal Won → Send Quote',
+    description: 'When a CRM deal is moved to Won stage, automatically send the associated quote to the customer',
+    category: 'Lead Management',
+    icon: 'Trophy',
+    complexity: 'intermediate',
+    estimatedSetupTime: '10 minutes',
+    tags: ['deal', 'quote', 'crm', 'ecommerce', 'cross-module'],
+    trigger: {
+      type: 'event',
+      config: { event_type: 'crm.deal.stage_changed' },
+    },
+    steps: [
+      {
+        step_type: 'condition',
+        condition_config: {
+          operator: 'and',
+          conditions: [
+            { field: '{{trigger.new_stage}}', operator: 'equals', value: 'won' },
+          ],
+        },
+        name: 'Deal Won?',
+      },
+      {
+        step_type: 'condition',
+        condition_config: {
+          operator: 'and',
+          conditions: [
+            { field: '{{trigger.quote_id}}', operator: 'exists', value: true },
+          ],
+        },
+        name: 'Has Quote?',
+      },
+      {
+        step_type: 'action',
+        action_type: 'ecommerce.send_quote',
+        action_config: {
+          quote_id: '{{trigger.quote_id}}',
+        },
+        name: 'Send Quote to Customer',
+      },
+      {
+        step_type: 'action',
+        action_type: 'crm.log_activity',
+        action_config: {
+          contact_email: '{{trigger.contact_email}}',
+          activity_type: 'note',
+          subject: 'Deal won — quote sent',
+          description: 'Deal "{{trigger.deal_title}}" was marked as won. Quote has been automatically sent to the customer.',
+        },
+        name: 'Log Activity',
+      },
+    ],
+  },
+
+  // =========================================================
+  // CROSS-MODULE: CHAT ESCALATION
+  // =========================================================
+  {
+    id: 'chat-vip-escalation',
+    name: 'VIP Customer Chat → Priority Escalation',
+    description: 'When a chat starts from a customer tagged as VIP in CRM, auto-assign to senior agent and notify the team',
+    category: 'Customer Success',
+    icon: 'Star',
+    complexity: 'advanced',
+    estimatedSetupTime: '15 minutes',
+    tags: ['chat', 'vip', 'escalation', 'crm', 'cross-module'],
+    trigger: {
+      type: 'event',
+      config: { event_type: 'chat.conversation.created' },
+    },
+    steps: [
+      {
+        step_type: 'condition',
+        condition_config: {
+          operator: 'and',
+          conditions: [
+            { field: '{{trigger.visitor_email}}', operator: 'exists', value: true },
+          ],
+        },
+        name: 'Has Email?',
+      },
+      {
+        step_type: 'action',
+        action_type: 'crm.find_contact',
+        action_config: {
+          field: 'email',
+          value: '{{trigger.visitor_email}}',
+        },
+        name: 'Find CRM Contact',
+      },
+      {
+        step_type: 'condition',
+        condition_config: {
+          operator: 'and',
+          conditions: [
+            { field: '{{steps.Find CRM Contact.tags}}', operator: 'contains', value: 'vip' },
+          ],
+        },
+        name: 'Is VIP?',
+      },
+      {
+        step_type: 'action',
+        action_type: 'chat.assign_conversation',
+        action_config: {
+          conversation_id: '{{trigger.conversation_id}}',
+          agent_id: '{{variables.senior_agent_id}}',
+        },
+        name: 'Assign to Senior Agent',
+      },
+      {
+        step_type: 'action',
+        action_type: 'chat.send_message',
+        action_config: {
+          conversation_id: '{{trigger.conversation_id}}',
+          content: 'Welcome back! As a valued customer, you\'ve been connected to our priority support team. How can we help you today?',
+          sender_type: 'system',
+        },
+        name: 'Send VIP Greeting',
+      },
+      {
+        step_type: 'action',
+        action_type: 'notification.in_app',
+        action_config: {
+          title: 'VIP Customer Chat',
+          message: '⭐ VIP customer {{trigger.visitor_name}} ({{trigger.visitor_email}}) has started a chat. Auto-assigned to priority support.',
+          type: 'warning',
+        },
+        name: 'Alert Team',
+      },
+    ],
+  },
 ]
 
 // ============================================================================
