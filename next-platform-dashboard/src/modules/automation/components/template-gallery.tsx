@@ -9,7 +9,7 @@
 
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect, useCallback } from "react"
 import { 
   Card, 
   CardContent, 
@@ -39,6 +39,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
+  Package,
+  Shield,
   icons
 } from "lucide-react"
 import { 
@@ -47,7 +49,13 @@ import {
   searchTemplates,
   type WorkflowTemplate 
 } from "../lib/templates"
-import { createWorkflowFromTemplate } from "../actions/automation-actions"
+import { STARTER_PACKS, type StarterPack } from "../lib/starter-packs"
+import { 
+  createWorkflowFromTemplate, 
+  installStarterPack, 
+  getInstalledPacks, 
+  uninstallPack 
+} from "../actions/automation-actions"
 
 // ============================================================================
 // TYPES
@@ -89,6 +97,66 @@ export function TemplateGallery({
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedTemplate, setSelectedTemplate] = useState<WorkflowTemplate | null>(null)
   const [isCreating, setIsCreating] = useState(false)
+
+  // Pack state
+  const [installedPackIds, setInstalledPackIds] = useState<Set<string>>(new Set())
+  const [installingPackId, setInstallingPackId] = useState<string | null>(null)
+  const [uninstallingPackId, setUninstallingPackId] = useState<string | null>(null)
+  const [expandedPackId, setExpandedPackId] = useState<string | null>(null)
+
+  const loadInstalledPacks = useCallback(async () => {
+    const result = await getInstalledPacks(siteId)
+    if (result.success && result.data) {
+      setInstalledPackIds(new Set(result.data.map((p) => p.packId)))
+    }
+  }, [siteId])
+
+  useEffect(() => {
+    loadInstalledPacks()
+  }, [loadInstalledPacks])
+
+  const handleInstallPack = async (pack: StarterPack) => {
+    setInstallingPackId(pack.id)
+    try {
+      const result = await installStarterPack(siteId, pack.id)
+      if (result.workflowsCreated > 0) {
+        toast.success(`Installed "${pack.name}" — ${result.workflowsCreated} workflows created`)
+        setInstalledPackIds((prev) => new Set([...prev, pack.id]))
+        onWorkflowCreated?.("")
+      } else if (result.errors.includes("Pack already installed")) {
+        toast.info("Pack is already installed")
+        setInstalledPackIds((prev) => new Set([...prev, pack.id]))
+      } else {
+        toast.error(result.errors[0] || "Failed to install pack")
+      }
+    } catch {
+      toast.error("An error occurred installing the pack")
+    } finally {
+      setInstallingPackId(null)
+    }
+  }
+
+  const handleUninstallPack = async (pack: StarterPack) => {
+    setUninstallingPackId(pack.id)
+    try {
+      const result = await uninstallPack(siteId, pack.id)
+      if (result.success) {
+        toast.success(`Uninstalled "${pack.name}" — ${result.workflowsDeleted} workflows removed`)
+        setInstalledPackIds((prev) => {
+          const next = new Set(prev)
+          next.delete(pack.id)
+          return next
+        })
+        onWorkflowCreated?.("")
+      } else {
+        toast.error(result.error || "Failed to uninstall pack")
+      }
+    } catch {
+      toast.error("An error occurred")
+    } finally {
+      setUninstallingPackId(null)
+    }
+  }
 
   const categories = useMemo(() => ['all', ...getTemplateCategories()], [])
   
@@ -176,6 +244,124 @@ export function TemplateGallery({
           ))}
         </TabsList>
       </Tabs>
+
+      {/* Starter Packs Section */}
+      {!search && selectedCategory === "all" && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Package className="h-5 w-5 text-primary" />
+            <h3 className="text-lg font-semibold">Starter Packs</h3>
+            <span className="text-sm text-muted-foreground">
+              — One-click workflow bundles
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {STARTER_PACKS.map((pack) => {
+              const isInstalled = installedPackIds.has(pack.id)
+              const isInstalling = installingPackId === pack.id
+              const isUninstalling = uninstallingPackId === pack.id
+              const isExpanded = expandedPackId === pack.id
+              const PackIcon = icons[pack.icon as keyof typeof icons]
+
+              return (
+                <Card 
+                  key={pack.id}
+                  className={`transition-shadow ${isExpanded ? "ring-2 ring-primary" : "hover:shadow-lg"}`}
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        {PackIcon && <PackIcon className="h-6 w-6 text-primary" />}
+                        <div>
+                          <CardTitle className="text-base flex items-center gap-2">
+                            {pack.name}
+                            {pack.isSystemPack && (
+                              <Badge variant="secondary" className="text-xs gap-1">
+                                <Shield className="h-3 w-3" />
+                                System
+                              </Badge>
+                            )}
+                          </CardTitle>
+                          <CardDescription className="text-xs mt-0.5">
+                            {pack.templateIds.length} workflows
+                          </CardDescription>
+                        </div>
+                      </div>
+                      <div>
+                        {isInstalled ? (
+                          <div className="flex items-center gap-2">
+                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 gap-1">
+                              <CheckCircle2 className="h-3 w-3" />
+                              Installed
+                            </Badge>
+                            {!pack.isSystemPack && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:text-destructive h-7 px-2 text-xs"
+                                onClick={() => handleUninstallPack(pack)}
+                                disabled={isUninstalling}
+                              >
+                                {isUninstalling ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  "Remove"
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                        ) : (
+                          <Button
+                            size="sm"
+                            onClick={() => handleInstallPack(pack)}
+                            disabled={isInstalling}
+                            className="h-7"
+                          >
+                            {isInstalling ? (
+                              <>
+                                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                Installing...
+                              </>
+                            ) : (
+                              "Install Pack"
+                            )}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-sm text-muted-foreground mb-3">
+                      {pack.description}
+                    </p>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 text-xs"
+                      onClick={() => setExpandedPackId(isExpanded ? null : pack.id)}
+                    >
+                      {isExpanded ? "Hide workflows" : "View workflows"}
+                    </Button>
+                    {isExpanded && (
+                      <div className="mt-3 space-y-1">
+                        {pack.templateIds.map((tid) => (
+                          <div
+                            key={tid}
+                            className="flex items-center gap-2 text-xs py-1 px-2 rounded bg-muted"
+                          >
+                            <Zap className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                            <span className="truncate">{tid}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Template Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

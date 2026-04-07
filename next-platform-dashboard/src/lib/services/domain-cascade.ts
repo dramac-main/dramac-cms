@@ -46,7 +46,7 @@ export interface DomainCascadeResult {
  * Main cascade handler — call this whenever a domain changes.
  */
 export async function handleDomainChange(
-  event: DomainChangeEvent
+  event: DomainChangeEvent,
 ): Promise<DomainCascadeResult> {
   const startTime = Date.now();
   const results: CascadeStepResult[] = [];
@@ -63,8 +63,8 @@ export async function handleDomainChange(
       await create301Redirect(
         event.siteId,
         event.previousDomain,
-        event.newDomain
-      )
+        event.newDomain,
+      ),
     );
   }
 
@@ -91,7 +91,7 @@ export async function handleDomainChange(
 // --- Individual Cascade Steps ---
 
 async function updateSiteRecord(
-  event: DomainChangeEvent
+  event: DomainChangeEvent,
 ): Promise<CascadeStepResult> {
   const start = Date.now();
   try {
@@ -117,7 +117,11 @@ async function updateSiteRecord(
         .eq("id", event.siteId);
     }
 
-    return { step: "update_site_record", success: true, duration: Date.now() - start };
+    return {
+      step: "update_site_record",
+      success: true,
+      duration: Date.now() - start,
+    };
   } catch (error) {
     return {
       step: "update_site_record",
@@ -128,9 +132,7 @@ async function updateSiteRecord(
   }
 }
 
-async function invalidateMetaCache(
-  siteId: string
-): Promise<CascadeStepResult> {
+async function invalidateMetaCache(siteId: string): Promise<CascadeStepResult> {
   const start = Date.now();
   try {
     // Invalidate any cached OG images and meta by updating the site's updated_at
@@ -140,7 +142,11 @@ async function invalidateMetaCache(
       .update({ updated_at: new Date().toISOString() })
       .eq("id", siteId);
 
-    return { step: "invalidate_meta_cache", success: true, duration: Date.now() - start };
+    return {
+      step: "invalidate_meta_cache",
+      success: true,
+      duration: Date.now() - start,
+    };
   } catch (error) {
     return {
       step: "invalidate_meta_cache",
@@ -154,7 +160,7 @@ async function invalidateMetaCache(
 async function create301Redirect(
   siteId: string,
   fromDomain: string,
-  toDomain: string
+  toDomain: string,
 ): Promise<CascadeStepResult> {
   const start = Date.now();
   try {
@@ -170,10 +176,14 @@ async function create301Redirect(
         preserve_path: true,
         active: true,
       },
-      { onConflict: "from_domain" }
+      { onConflict: "from_domain" },
     );
 
-    return { step: "create_301_redirect", success: true, duration: Date.now() - start };
+    return {
+      step: "create_301_redirect",
+      success: true,
+      duration: Date.now() - start,
+    };
   } catch (error) {
     return {
       step: "create_301_redirect",
@@ -185,7 +195,7 @@ async function create301Redirect(
 }
 
 async function configureVercelDomain(
-  event: DomainChangeEvent
+  event: DomainChangeEvent,
 ): Promise<CascadeStepResult> {
   const start = Date.now();
   const vercelToken = process.env.VERCEL_API_TOKEN;
@@ -195,7 +205,8 @@ async function configureVercelDomain(
     return {
       step: "configure_vercel_domain",
       success: true, // Non-fatal — skip in dev
-      error: "VERCEL_API_TOKEN or VERCEL_PROJECT_ID not set — skipping Vercel domain config",
+      error:
+        "VERCEL_API_TOKEN or VERCEL_PROJECT_ID not set — skipping Vercel domain config",
       duration: Date.now() - start,
     };
   }
@@ -208,7 +219,7 @@ async function configureVercelDomain(
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${vercelToken}` },
-        }
+        },
       );
     }
 
@@ -222,7 +233,7 @@ async function configureVercelDomain(
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ name: event.newDomain }),
-      }
+      },
     );
 
     if (!addResponse.ok) {
@@ -235,7 +246,11 @@ async function configureVercelDomain(
       };
     }
 
-    return { step: "configure_vercel_domain", success: true, duration: Date.now() - start };
+    return {
+      step: "configure_vercel_domain",
+      success: true,
+      duration: Date.now() - start,
+    };
   } catch (error) {
     return {
       step: "configure_vercel_domain",
@@ -247,7 +262,7 @@ async function configureVercelDomain(
 }
 
 async function notifyDomainChange(
-  event: DomainChangeEvent
+  event: DomainChangeEvent,
 ): Promise<CascadeStepResult> {
   const start = Date.now();
   try {
@@ -272,7 +287,11 @@ async function notifyDomainChange(
       });
     }
 
-    return { step: "notify_domain_change", success: true, duration: Date.now() - start };
+    return {
+      step: "notify_domain_change",
+      success: true,
+      duration: Date.now() - start,
+    };
   } catch (error) {
     return {
       step: "notify_domain_change",

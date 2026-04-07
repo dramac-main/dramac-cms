@@ -232,6 +232,15 @@ export async function checkMissedConversations(siteId: string): Promise<{
       .update({ status: 'waiting', updated_at: new Date().toISOString() })
       .in('id', ids)
 
+    // Emit automation events for missed conversations
+    const { logAutomationEvent } = await import('@/modules/automation/services/event-processor')
+    const { EVENT_REGISTRY } = await import('@/modules/automation/lib/event-types')
+    for (const conv of stale!) {
+      logAutomationEvent(siteId, EVENT_REGISTRY.live_chat.conversation.missed, {
+        conversationId: (conv as Record<string, unknown>).id,
+      }, { sourceModule: 'live-chat', sourceEntityType: 'conversation', sourceEntityId: (conv as Record<string, unknown>).id as string }).catch(err => console.error('[ChatRouting] Automation event error:', err))
+    }
+
     // Try to route them again
     let alerted = 0
     for (const conv of stale!) {

@@ -74,6 +74,7 @@ export const EVENT_REGISTRY = {
       completed: 'booking.appointment.completed',
       no_show: 'booking.appointment.no_show',
       reminder_sent: 'booking.appointment.reminder_sent',
+      payment_received: 'booking.appointment.payment_received',
     },
     availability: {
       updated: 'booking.availability.updated',
@@ -142,6 +143,23 @@ export const EVENT_REGISTRY = {
       delivered: 'ecommerce.order.delivered',
       cancelled: 'ecommerce.order.cancelled',
       refunded: 'ecommerce.order.refunded',
+      status_changed: 'ecommerce.order.status_changed',
+    },
+    payment: {
+      received: 'ecommerce.payment.received',
+      proof_uploaded: 'ecommerce.payment.proof_uploaded',
+      proof_rejected: 'ecommerce.payment.proof_rejected',
+      updated: 'ecommerce.payment.updated',
+    },
+    quote: {
+      created: 'ecommerce.quote.created',
+      sent: 'ecommerce.quote.sent',
+      resent: 'ecommerce.quote.resent',
+      reminder_sent: 'ecommerce.quote.reminder_sent',
+      accepted: 'ecommerce.quote.accepted',
+      rejected: 'ecommerce.quote.rejected',
+      amendment_requested: 'ecommerce.quote.amendment_requested',
+      converted_to_order: 'ecommerce.quote.converted_to_order',
     },
     cart: {
       abandoned: 'ecommerce.cart.abandoned',
@@ -248,6 +266,24 @@ export const EVENT_REGISTRY = {
   },
   
   // =========================================================
+  // LIVE CHAT MODULE (LC-01)
+  // Tables: mod_chat_conversations, mod_chat_messages, etc.
+  // =========================================================
+  live_chat: {
+    conversation: {
+      started: 'live-chat.conversation.started',
+      resolved: 'live-chat.conversation.resolved',
+      closed: 'live-chat.conversation.closed',
+      missed: 'live-chat.conversation.missed',
+      assigned: 'live-chat.conversation.assigned',
+    },
+    message: {
+      received: 'live-chat.message.received',
+      agent_mentioned: 'live-chat.message.agent_mentioned',
+    },
+  },
+  
+  // =========================================================
   // SYSTEM EVENTS
   // =========================================================
   system: {
@@ -336,6 +372,7 @@ export type EventType =
   | `form.${string}.${string}`
   | `accounting.${string}.${string}`
   | `ecommerce.${string}.${string}`
+  | `live-chat.${string}.${string}`
   | `domain.${string}.${string}`
   | `billing.${string}.${string}`
   | `system.${string}.${string}`
@@ -352,7 +389,8 @@ export const EVENT_CATEGORIES = [
   { id: 'booking', name: 'Booking', icon: 'Calendar', description: 'Appointment and scheduling events' },
   { id: 'form', name: 'Forms', icon: 'FileText', description: 'Form submission and creation events' },
   { id: 'accounting', name: 'Accounting', icon: 'CircleDollarSign', description: 'Invoice, payment, and expense events' },
-  { id: 'ecommerce', name: 'E-Commerce', icon: 'ShoppingCart', description: 'Order, cart, and product events' },
+  { id: 'ecommerce', name: 'E-Commerce', icon: 'ShoppingCart', description: 'Order, cart, product, and quote events' },
+  { id: 'live_chat', name: 'Live Chat', icon: 'MessageSquare', description: 'Conversation, message, and agent events' },
   { id: 'domain', name: 'Domains', icon: 'Globe', description: 'Domain registration, DNS, email, and transfer events' },
   { id: 'billing', name: 'Billing', icon: 'CreditCard', description: 'Subscription, payment, and usage events' },
   { id: 'system', name: 'System', icon: 'Settings', description: 'Webhook, schedule, and module events' },
@@ -404,6 +442,7 @@ export function getAllEventDefinitions(): EventDefinition[] {
     { id: EVENT_REGISTRY.booking.appointment.completed, category: 'booking', entity: 'appointment', action: 'completed', name: 'Appointment Completed', description: 'Triggered when an appointment is completed' },
     { id: EVENT_REGISTRY.booking.appointment.no_show, category: 'booking', entity: 'appointment', action: 'no_show', name: 'Appointment No-Show', description: 'Triggered when a client does not show up' },
     { id: EVENT_REGISTRY.booking.appointment.reminder_sent, category: 'booking', entity: 'appointment', action: 'reminder_sent', name: 'Reminder Sent', description: 'Triggered when an appointment reminder is sent' },
+    { id: EVENT_REGISTRY.booking.appointment.payment_received, category: 'booking', entity: 'appointment', action: 'payment_received', name: 'Booking Payment Received', description: 'Triggered when a booking payment is received' },
   )
   
   // Form Events
@@ -424,6 +463,30 @@ export function getAllEventDefinitions(): EventDefinition[] {
     { id: EVENT_REGISTRY.ecommerce.cart.abandoned, category: 'ecommerce', entity: 'cart', action: 'abandoned', name: 'Cart Abandoned', description: 'Triggered when a cart is abandoned' },
     { id: EVENT_REGISTRY.ecommerce.product.low_stock, category: 'ecommerce', entity: 'product', action: 'low_stock', name: 'Low Stock Alert', description: 'Triggered when product stock is low' },
     { id: EVENT_REGISTRY.ecommerce.product.out_of_stock, category: 'ecommerce', entity: 'product', action: 'out_of_stock', name: 'Out of Stock', description: 'Triggered when a product is out of stock' },
+    { id: EVENT_REGISTRY.ecommerce.order.status_changed, category: 'ecommerce', entity: 'order', action: 'status_changed', name: 'Order Status Changed', description: 'Triggered when an order status changes' },
+    { id: EVENT_REGISTRY.ecommerce.payment.received, category: 'ecommerce', entity: 'payment', action: 'received', name: 'Payment Received', description: 'Triggered when a payment is received for an order' },
+    { id: EVENT_REGISTRY.ecommerce.payment.proof_uploaded, category: 'ecommerce', entity: 'payment', action: 'proof_uploaded', name: 'Payment Proof Uploaded', description: 'Triggered when a customer uploads payment proof' },
+    { id: EVENT_REGISTRY.ecommerce.payment.proof_rejected, category: 'ecommerce', entity: 'payment', action: 'proof_rejected', name: 'Payment Proof Rejected', description: 'Triggered when uploaded payment proof is rejected' },
+    { id: EVENT_REGISTRY.ecommerce.payment.updated, category: 'ecommerce', entity: 'payment', action: 'updated', name: 'Payment Updated', description: 'Triggered when a payment record is updated' },
+    { id: EVENT_REGISTRY.ecommerce.quote.created, category: 'ecommerce', entity: 'quote', action: 'created', name: 'Quote Created', description: 'Triggered when a new quote is created' },
+    { id: EVENT_REGISTRY.ecommerce.quote.sent, category: 'ecommerce', entity: 'quote', action: 'sent', name: 'Quote Sent', description: 'Triggered when a quote is sent to a customer' },
+    { id: EVENT_REGISTRY.ecommerce.quote.resent, category: 'ecommerce', entity: 'quote', action: 'resent', name: 'Quote Resent', description: 'Triggered when a quote is resent to a customer' },
+    { id: EVENT_REGISTRY.ecommerce.quote.reminder_sent, category: 'ecommerce', entity: 'quote', action: 'reminder_sent', name: 'Quote Reminder Sent', description: 'Triggered when a quote reminder is sent' },
+    { id: EVENT_REGISTRY.ecommerce.quote.accepted, category: 'ecommerce', entity: 'quote', action: 'accepted', name: 'Quote Accepted', description: 'Triggered when a customer accepts a quote' },
+    { id: EVENT_REGISTRY.ecommerce.quote.rejected, category: 'ecommerce', entity: 'quote', action: 'rejected', name: 'Quote Rejected', description: 'Triggered when a customer rejects a quote' },
+    { id: EVENT_REGISTRY.ecommerce.quote.amendment_requested, category: 'ecommerce', entity: 'quote', action: 'amendment_requested', name: 'Quote Amendment Requested', description: 'Triggered when a customer requests changes to a quote' },
+    { id: EVENT_REGISTRY.ecommerce.quote.converted_to_order, category: 'ecommerce', entity: 'quote', action: 'converted_to_order', name: 'Quote Converted to Order', description: 'Triggered when a quote is converted into an order' },
+  )
+
+  // Live Chat Events
+  events.push(
+    { id: EVENT_REGISTRY.live_chat.conversation.started, category: 'live_chat', entity: 'conversation', action: 'started', name: 'Chat Started', description: 'Triggered when a new live chat conversation starts' },
+    { id: EVENT_REGISTRY.live_chat.conversation.resolved, category: 'live_chat', entity: 'conversation', action: 'resolved', name: 'Chat Resolved', description: 'Triggered when a live chat conversation is resolved' },
+    { id: EVENT_REGISTRY.live_chat.conversation.closed, category: 'live_chat', entity: 'conversation', action: 'closed', name: 'Chat Closed', description: 'Triggered when a live chat conversation is closed' },
+    { id: EVENT_REGISTRY.live_chat.conversation.missed, category: 'live_chat', entity: 'conversation', action: 'missed', name: 'Chat Missed', description: 'Triggered when a live chat conversation is missed (no agent response)' },
+    { id: EVENT_REGISTRY.live_chat.conversation.assigned, category: 'live_chat', entity: 'conversation', action: 'assigned', name: 'Chat Assigned', description: 'Triggered when a live chat conversation is assigned to an agent' },
+    { id: EVENT_REGISTRY.live_chat.message.received, category: 'live_chat', entity: 'message', action: 'received', name: 'Chat Message Received', description: 'Triggered when a new message is received in live chat' },
+    { id: EVENT_REGISTRY.live_chat.message.agent_mentioned, category: 'live_chat', entity: 'message', action: 'agent_mentioned', name: 'Agent Mentioned', description: 'Triggered when an agent is mentioned in a chat message' },
   )
   
   // Billing Events (Paddle - EM-59A)

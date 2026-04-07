@@ -38,7 +38,9 @@ import {
   CircleCheck,
   Settings,
   Undo2,
-  ArrowLeft
+  ArrowLeft,
+  LayoutGrid,
+  List
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -49,6 +51,13 @@ import { StepConfigPanel } from "./step-config-panel"
 import { useWorkflowBuilder } from "../../hooks/use-workflow-builder"
 import { triggerWorkflow } from "../../actions/automation-actions"
 import type { TriggerConfig, TriggerType, WorkflowStep } from "../../types/automation-types"
+
+// Phase 4 — Canvas imports
+import { AutomationCanvas } from "../canvas/AutomationCanvas"
+import { CanvasSidebar } from "../canvas/CanvasSidebar"
+import { NodeConfigPanel } from "../canvas/panels/NodeConfigPanel"
+import { TriggerConfigPanel } from "../canvas/panels/TriggerConfigPanel"
+import { WorkflowSettingsPanel } from "../canvas/panels/WorkflowSettingsPanel"
 
 // ============================================================================
 // TYPES
@@ -100,6 +109,7 @@ export function WorkflowBuilder({
 
   const [activeId, setActiveId] = useState<string | null>(null)
   const [showSettings, setShowSettings] = useState(false)
+  const [viewMode, setViewMode] = useState<"canvas" | "list">("canvas")
   const canvasRef = useRef<HTMLDivElement>(null)
 
   // Configure sensors for drag and drop
@@ -279,6 +289,19 @@ export function WorkflowBuilder({
             <Button 
               variant="outline" 
               size="sm"
+              onClick={() => setViewMode(viewMode === "canvas" ? "list" : "canvas")}
+              title={viewMode === "canvas" ? "Switch to list view" : "Switch to canvas view"}
+            >
+              {viewMode === "canvas" ? (
+                <List className="h-4 w-4 mr-2" />
+              ) : (
+                <LayoutGrid className="h-4 w-4 mr-2" />
+              )}
+              {viewMode === "canvas" ? "List" : "Canvas"}
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
               onClick={() => setShowSettings(!showSettings)}
             >
               <Settings className="h-4 w-4 mr-2" />
@@ -314,149 +337,206 @@ export function WorkflowBuilder({
 
         {/* Main Content */}
         <div className="flex flex-1 overflow-hidden">
-          {/* Left Sidebar - Trigger & Actions */}
-          <div className="w-64 border-r flex flex-col overflow-hidden bg-background">
-            <TriggerPanel
-              trigger={workflow?.trigger_config}
-              triggerType={workflow?.trigger_type}
-              onTriggerChange={handleTriggerChange}
-            />
-            <ActionPalette />
-          </div>
 
-          {/* Canvas */}
-          <div 
-            className="flex-1 overflow-auto bg-muted/30" 
-            ref={canvasRef}
-          >
-            <WorkflowCanvas
-              steps={steps}
-              selectedStepId={selectedStep?.id}
-              onStepClick={selectStep}
-              onStepDelete={deleteStep}
-              onStepDuplicate={handleDuplicateStep}
-            />
-          </div>
+          {/* ===== CANVAS VIEW (ReactFlow) ===== */}
+          {viewMode === "canvas" && (
+            <>
+              {/* Left Sidebar — Drag Palette */}
+              <CanvasSidebar />
 
-          {/* Right Sidebar - Step Config */}
-          {selectedStep && (
-            <div className="w-80 border-l overflow-hidden bg-background">
-              <StepConfigPanel
-                step={selectedStep}
-                onUpdate={updateStep}
-                onClose={() => selectStep(null)}
-              />
-            </div>
+              {/* ReactFlow Canvas */}
+              <div className="flex-1 overflow-hidden" ref={canvasRef}>
+                <AutomationCanvas
+                  steps={steps}
+                  triggerConfig={workflow?.trigger_config}
+                  triggerType={workflow?.trigger_type}
+                  selectedStepId={selectedStep?.id}
+                  onStepClick={selectStep}
+                  onStepDelete={deleteStep}
+                  onStepDuplicate={handleDuplicateStep}
+                  onAddStep={addStep}
+                  onUpdateStep={updateStep}
+                />
+              </div>
+
+              {/* Right Sidebar — Config panels */}
+              {selectedStep && (
+                <NodeConfigPanel
+                  step={selectedStep}
+                  onUpdate={updateStep}
+                  onDelete={deleteStep}
+                  onDuplicate={handleDuplicateStep}
+                  onClose={() => selectStep(null)}
+                />
+              )}
+
+              {showSettings && !selectedStep && workflow && (
+                <WorkflowSettingsPanel
+                  workflow={workflow}
+                  onUpdate={updateWorkflowData}
+                  onClose={() => setShowSettings(false)}
+                />
+              )}
+
+              {!selectedStep && !showSettings && (
+                <TriggerConfigPanel
+                  trigger={workflow?.trigger_config}
+                  triggerType={workflow?.trigger_type}
+                  onTriggerChange={handleTriggerChange}
+                  onClose={() => {}}
+                />
+              )}
+            </>
           )}
 
-          {/* Settings Panel */}
-          {showSettings && !selectedStep && (
-            <div className="w-80 border-l overflow-y-auto bg-background p-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold">Workflow Settings</h3>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => setShowSettings(false)}
-                >
-                  <Undo2 className="h-4 w-4" />
-                </Button>
+          {/* ===== LIST VIEW (Legacy DndContext) ===== */}
+          {viewMode === "list" && (
+            <>
+              {/* Left Sidebar - Trigger & Actions */}
+              <div className="w-64 border-r flex flex-col overflow-hidden bg-background">
+                <TriggerPanel
+                  trigger={workflow?.trigger_config}
+                  triggerType={workflow?.trigger_type}
+                  onTriggerChange={handleTriggerChange}
+                />
+                <ActionPalette />
               </div>
 
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Description</label>
-                  <Input
-                    value={workflow?.description || ''}
-                    onChange={(e) => updateWorkflowData({ description: e.target.value })}
-                    placeholder="What does this workflow do?"
+              {/* Canvas */}
+              <div
+                className="flex-1 overflow-auto bg-muted/30"
+                ref={canvasRef}
+              >
+                <WorkflowCanvas
+                  steps={steps}
+                  selectedStepId={selectedStep?.id}
+                  onStepClick={selectStep}
+                  onStepDelete={deleteStep}
+                  onStepDuplicate={handleDuplicateStep}
+                />
+              </div>
+
+              {/* Right Sidebar - Step Config */}
+              {selectedStep && (
+                <div className="w-80 border-l overflow-hidden bg-background">
+                  <StepConfigPanel
+                    step={selectedStep}
+                    onUpdate={updateStep}
+                    onClose={() => selectStep(null)}
                   />
                 </div>
+              )}
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Category</label>
-                  <Input
-                    value={workflow?.category || ''}
-                    onChange={(e) => updateWorkflowData({ category: e.target.value })}
-                    placeholder="e.g., Marketing, Sales"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Icon</label>
-                  <Input
-                    value={workflow?.icon || 'Zap'}
-                    onChange={(e) => updateWorkflowData({ icon: e.target.value })}
-                    placeholder="Icon name"
-                    maxLength={20}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="text-sm font-medium">Active</label>
-                    <p className="text-xs text-muted-foreground">
-                      Enable workflow execution
-                    </p>
-                  </div>
-                  <Button
-                    variant={workflow?.is_active ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => updateWorkflowData({ is_active: !workflow?.is_active })}
-                  >
-                    {workflow?.is_active ? "Active" : "Inactive"}
-                  </Button>
-                </div>
-
-                <div className="pt-4 border-t space-y-4">
-                  <h4 className="text-sm font-medium">Execution Settings</h4>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm">Max executions per hour</label>
-                    <Input
-                      type="number"
-                      min={1}
-                      value={workflow?.max_executions_per_hour || 100}
-                      onChange={(e) => updateWorkflowData({ 
-                        max_executions_per_hour: Number(e.target.value) 
-                      })}
-                    />
+              {/* Settings Panel */}
+              {showSettings && !selectedStep && (
+                <div className="w-80 border-l overflow-y-auto bg-background p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold">Workflow Settings</h3>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => setShowSettings(false)}
+                    >
+                      <Undo2 className="h-4 w-4" />
+                    </Button>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm">Timeout (seconds)</label>
-                    <Input
-                      type="number"
-                      min={10}
-                      value={workflow?.timeout_seconds || 300}
-                      onChange={(e) => updateWorkflowData({ 
-                        timeout_seconds: Number(e.target.value) 
-                      })}
-                    />
-                  </div>
-                </div>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Description</label>
+                      <Input
+                        value={workflow?.description || ''}
+                        onChange={(e) => updateWorkflowData({ description: e.target.value })}
+                        placeholder="What does this workflow do?"
+                      />
+                    </div>
 
-                {workflow?.id && (
-                  <div className="pt-4 border-t">
-                    <h4 className="text-sm font-medium mb-2">Statistics</h4>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div className="p-2 bg-muted rounded">
-                        <div className="text-muted-foreground text-xs">Total Runs</div>
-                        <div className="font-semibold">{workflow.total_runs || 0}</div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Category</label>
+                      <Input
+                        value={workflow?.category || ''}
+                        onChange={(e) => updateWorkflowData({ category: e.target.value })}
+                        placeholder="e.g., Marketing, Sales"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Icon</label>
+                      <Input
+                        value={workflow?.icon || 'Zap'}
+                        onChange={(e) => updateWorkflowData({ icon: e.target.value })}
+                        placeholder="Icon name"
+                        maxLength={20}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="text-sm font-medium">Active</label>
+                        <p className="text-xs text-muted-foreground">
+                          Enable workflow execution
+                        </p>
                       </div>
-                      <div className="p-2 bg-muted rounded">
-                        <div className="text-muted-foreground text-xs">Success Rate</div>
-                        <div className="font-semibold">
-                          {workflow.total_runs 
-                            ? Math.round((workflow.successful_runs / workflow.total_runs) * 100)
-                            : 0}%
-                        </div>
+                      <Button
+                        variant={workflow?.is_active ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => updateWorkflowData({ is_active: !workflow?.is_active })}
+                      >
+                        {workflow?.is_active ? "Active" : "Inactive"}
+                      </Button>
+                    </div>
+
+                    <div className="pt-4 border-t space-y-4">
+                      <h4 className="text-sm font-medium">Execution Settings</h4>
+                      
+                      <div className="space-y-2">
+                        <label className="text-sm">Max executions per hour</label>
+                        <Input
+                          type="number"
+                          min={1}
+                          value={workflow?.max_executions_per_hour || 100}
+                          onChange={(e) => updateWorkflowData({ 
+                            max_executions_per_hour: Number(e.target.value) 
+                          })}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm">Timeout (seconds)</label>
+                        <Input
+                          type="number"
+                          min={10}
+                          value={workflow?.timeout_seconds || 300}
+                          onChange={(e) => updateWorkflowData({ 
+                            timeout_seconds: Number(e.target.value) 
+                          })}
+                        />
                       </div>
                     </div>
+
+                    {workflow?.id && (
+                      <div className="pt-4 border-t">
+                        <h4 className="text-sm font-medium mb-2">Statistics</h4>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div className="p-2 bg-muted rounded">
+                            <div className="text-muted-foreground text-xs">Total Runs</div>
+                            <div className="font-semibold">{workflow.total_runs || 0}</div>
+                          </div>
+                          <div className="p-2 bg-muted rounded">
+                            <div className="text-muted-foreground text-xs">Success Rate</div>
+                            <div className="font-semibold">
+                              {workflow.total_runs 
+                                ? Math.round((workflow.successful_runs / workflow.total_runs) * 100)
+                                : 0}%
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

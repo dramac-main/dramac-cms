@@ -22,6 +22,9 @@ import {
   notifyChatQuoteAccepted,
   notifyChatQuoteRejected,
 } from "@/modules/live-chat/lib/chat-event-bridge";
+import { logAutomationEvent } from "@/modules/automation/services/event-processor";
+import { EVENT_REGISTRY } from "@/modules/automation/lib/event-types";
+import { dispatchNotification, dispatchChatNotification } from "@/lib/notifications/automation-aware-dispatcher";
 import { requireQuoteAccess } from "./quote-portal-auth";
 import { revalidatePath } from "next/cache";
 import type {
@@ -231,44 +234,59 @@ export async function sendQuote(
       .single();
     const businessName = storeSettings?.store_name || "";
 
-    await sendBrandedEmail(quote.agency_id || null, {
-      to: {
-        email: quote.customer_email,
-        name: quote.customer_name || undefined,
-      },
+    await dispatchNotification({
       siteId: input.site_id,
-      emailType: "quote_sent_customer",
-      data: {
-        customerName: quote.customer_name || "Customer",
-        customerEmail: quote.customer_email,
-        quoteNumber: quote.quote_number,
-        subject: input.subject,
-        message: input.message,
-        totalAmount: formatted,
-        expiryDate: quote.valid_until
-          ? new Date(quote.valid_until).toLocaleDateString("en-US")
-          : undefined,
-        viewQuoteUrl: portalUrl,
-        businessName,
-      },
+      eventType: "ecommerce.quote.sent",
+      notificationFunction: () => sendBrandedEmail(quote.agency_id || null, {
+        to: {
+          email: quote.customer_email,
+          name: quote.customer_name || undefined,
+        },
+        siteId: input.site_id,
+        emailType: "quote_sent_customer",
+        data: {
+          customerName: quote.customer_name || "Customer",
+          customerEmail: quote.customer_email,
+          quoteNumber: quote.quote_number,
+          subject: input.subject,
+          message: input.message,
+          totalAmount: formatted,
+          expiryDate: quote.valid_until
+            ? new Date(quote.valid_until).toLocaleDateString("en-US")
+            : undefined,
+          viewQuoteUrl: portalUrl,
+          businessName,
+        },
+      }),
     });
 
     // Notify active chat conversation about the sent quote
     if (quote.customer_email) {
       try {
-        await notifyChatQuoteSent(
-          input.site_id,
-          quote.customer_email,
-          quote.quote_number,
-          formatted,
-          portalUrl,
-        );
+        await dispatchChatNotification({
+          siteId: input.site_id,
+          eventType: "ecommerce.quote.sent",
+          chatFunction: () => notifyChatQuoteSent(
+            input.site_id,
+            quote.customer_email,
+            quote.quote_number,
+            formatted,
+            portalUrl,
+          ),
+        });
       } catch {
         // Chat notification is best-effort
       }
     }
 
     revalidatePath(`/sites/${input.site_id}/ecommerce`);
+
+    // Emit automation event for quote sent
+    logAutomationEvent(input.site_id, EVENT_REGISTRY.ecommerce.quote.sent, {
+      quoteId: quote.id, quoteNumber: quote.quote_number,
+      customerEmail: quote.customer_email, customerName: quote.customer_name,
+      total: quote.total, currency: quote.currency,
+    }, { sourceModule: 'ecommerce', sourceEntityType: 'quote', sourceEntityId: quote.id }).catch(err => console.error('[QuoteWorkflow] Automation event error:', err));
 
     return { success: true, quote: updatedQuote };
   } catch (error) {
@@ -342,29 +360,40 @@ export async function resendQuote(
       .single();
     const storeName = siteSettings?.store_name || "";
 
-    await sendBrandedEmail(quote.agency_id || null, {
-      to: {
-        email: quote.customer_email,
-        name: quote.customer_name || undefined,
-      },
+    await dispatchNotification({
       siteId: siteId,
-      emailType: "quote_sent_customer",
-      data: {
-        customerName: quote.customer_name || "Customer",
-        customerEmail: quote.customer_email,
-        quoteNumber: quote.quote_number,
-        subject,
-        message,
-        totalAmount: formatted,
-        expiryDate: quote.valid_until
-          ? new Date(quote.valid_until).toLocaleDateString("en-US")
-          : undefined,
-        viewQuoteUrl: portalUrl,
-        businessName: storeName,
-      },
+      eventType: "ecommerce.quote.sent",
+      notificationFunction: () => sendBrandedEmail(quote.agency_id || null, {
+        to: {
+          email: quote.customer_email,
+          name: quote.customer_name || undefined,
+        },
+        siteId: siteId,
+        emailType: "quote_sent_customer",
+        data: {
+          customerName: quote.customer_name || "Customer",
+          customerEmail: quote.customer_email,
+          quoteNumber: quote.quote_number,
+          subject,
+          message,
+          totalAmount: formatted,
+          expiryDate: quote.valid_until
+            ? new Date(quote.valid_until).toLocaleDateString("en-US")
+            : undefined,
+          viewQuoteUrl: portalUrl,
+          businessName: storeName,
+        },
+      }),
     });
 
     revalidatePath(`/sites/${siteId}/ecommerce`);
+
+    // Emit automation event for quote resent
+    logAutomationEvent(siteId, EVENT_REGISTRY.ecommerce.quote.resent, {
+      quoteId, quoteNumber: quote.quote_number,
+      customerEmail: quote.customer_email, customerName: quote.customer_name,
+      total: quote.total, currency: quote.currency,
+    }, { sourceModule: 'ecommerce', sourceEntityType: 'quote', sourceEntityId: quoteId }).catch(err => console.error('[QuoteWorkflow] Automation event error:', err));
 
     return { success: true };
   } catch (error) {
@@ -426,27 +455,38 @@ export async function sendQuoteReminder(
       .single();
     const reminderBusinessName = reminderSettings?.store_name || "";
 
-    await sendBrandedEmail(quote.agency_id || null, {
-      to: {
-        email: quote.customer_email,
-        name: quote.customer_name || undefined,
-      },
+    await dispatchNotification({
       siteId: siteId,
-      emailType: "quote_reminder_customer",
-      data: {
-        customerName: quote.customer_name || "Customer",
-        quoteNumber: quote.quote_number,
-        message,
-        totalAmount: formatted,
-        expiryDate: quote.valid_until
-          ? new Date(quote.valid_until).toLocaleDateString("en-US")
-          : undefined,
-        viewQuoteUrl: portalUrl,
-        businessName: reminderBusinessName,
-      },
+      eventType: "ecommerce.quote.reminder_sent",
+      notificationFunction: () => sendBrandedEmail(quote.agency_id || null, {
+        to: {
+          email: quote.customer_email,
+          name: quote.customer_name || undefined,
+        },
+        siteId: siteId,
+        emailType: "quote_reminder_customer",
+        data: {
+          customerName: quote.customer_name || "Customer",
+          quoteNumber: quote.quote_number,
+          message,
+          totalAmount: formatted,
+          expiryDate: quote.valid_until
+            ? new Date(quote.valid_until).toLocaleDateString("en-US")
+            : undefined,
+          viewQuoteUrl: portalUrl,
+          businessName: reminderBusinessName,
+        },
+      }),
     });
 
     revalidatePath(`/sites/${siteId}/ecommerce`);
+
+    // Emit automation event for quote reminder sent
+    logAutomationEvent(siteId, EVENT_REGISTRY.ecommerce.quote.reminder_sent, {
+      quoteId, quoteNumber: quote.quote_number,
+      customerEmail: quote.customer_email, customerName: quote.customer_name,
+      total: quote.total, currency: quote.currency,
+    }, { sourceModule: 'ecommerce', sourceEntityType: 'quote', sourceEntityId: quoteId }).catch(err => console.error('[QuoteWorkflow] Automation event error:', err));
 
     return { success: true };
   } catch (error) {
@@ -643,24 +683,40 @@ export async function acceptQuote(
       quote.currency || DEFAULT_CURRENCY,
     );
 
+    // Emit automation event for quote accepted
+    logAutomationEvent(quote.site_id, EVENT_REGISTRY.ecommerce.quote.accepted, {
+      quoteId: quote.id, quoteNumber: quote.quote_number,
+      customerEmail: quote.customer_email, customerName: quote.customer_name,
+      total: quote.total, currency: quote.currency,
+      acceptedByName: input.accepted_by_name, acceptedByEmail: input.accepted_by_email,
+    }, { sourceModule: 'ecommerce', sourceEntityType: 'quote', sourceEntityId: quote.id }).catch(err => console.error('[QuoteWorkflow] Automation event error:', err));
+
     if (quote.site_id) {
-      notifyQuoteAccepted(
-        quote.site_id,
-        quote.quote_number,
-        quote.customer_email || "",
-        quote.customer_name || "Customer",
-        formatted,
-      );
+      dispatchNotification({
+        siteId: quote.site_id,
+        eventType: "ecommerce.quote.accepted",
+        notificationFunction: () => notifyQuoteAccepted(
+          quote.site_id,
+          quote.quote_number,
+          quote.customer_email || "",
+          quote.customer_name || "Customer",
+          formatted,
+        ),
+      }).catch(() => {});
 
       // Notify active chat conversation about the accepted quote
       if (quote.customer_email) {
         try {
-          await notifyChatQuoteAccepted(
-            quote.site_id,
-            quote.customer_email,
-            quote.quote_number,
-            formatted,
-          );
+          await dispatchChatNotification({
+            siteId: quote.site_id,
+            eventType: "ecommerce.quote.accepted",
+            chatFunction: () => notifyChatQuoteAccepted(
+              quote.site_id,
+              quote.customer_email,
+              quote.quote_number,
+              formatted,
+            ),
+          });
         } catch {
           // Chat notification is best-effort
         }
@@ -745,25 +801,41 @@ export async function rejectQuote(
     });
 
     // Send rejection notifications (in-app + email to owner)
+    // Emit automation event for quote rejected
+    logAutomationEvent(quote.site_id, EVENT_REGISTRY.ecommerce.quote.rejected, {
+      quoteId: quote.id, quoteNumber: quote.quote_number,
+      customerEmail: quote.customer_email, customerName: quote.customer_name,
+      total: quote.total, currency: quote.currency,
+      rejectionReason: input.rejection_reason,
+    }, { sourceModule: 'ecommerce', sourceEntityType: 'quote', sourceEntityId: quote.id }).catch(err => console.error('[QuoteWorkflow] Automation event error:', err));
+
     if (quote.site_id) {
-      notifyQuoteRejected(
-        quote.site_id,
-        quote.quote_number,
-        quote.customer_email || "",
-        quote.customer_name || "Customer",
-        input.rejection_reason,
-      );
+      dispatchNotification({
+        siteId: quote.site_id,
+        eventType: "ecommerce.quote.rejected",
+        notificationFunction: () => notifyQuoteRejected(
+          quote.site_id,
+          quote.quote_number,
+          quote.customer_email || "",
+          quote.customer_name || "Customer",
+          input.rejection_reason,
+        ),
+      }).catch(() => {});
     }
 
     // Notify active chat conversation about the rejection
     if (quote.customer_email && quote.site_id) {
       try {
-        await notifyChatQuoteRejected(
-          quote.site_id,
-          quote.customer_email,
-          quote.quote_number,
-          input.rejection_reason,
-        );
+        await dispatchChatNotification({
+          siteId: quote.site_id,
+          eventType: "ecommerce.quote.rejected",
+          chatFunction: () => notifyChatQuoteRejected(
+            quote.site_id,
+            quote.customer_email,
+            quote.quote_number,
+            input.rejection_reason,
+          ),
+        });
       } catch {
         // Chat notification is best-effort
       }
@@ -864,14 +936,19 @@ export async function requestQuoteAmendment(
     // Notify active chat conversation (customer-facing confirmation)
     if (quote.customer_email && quote.site_id) {
       try {
-        const { notifyChatQuoteAmendmentRequested } =
-          await import("@/modules/live-chat/lib/chat-event-bridge");
-        await notifyChatQuoteAmendmentRequested(
-          quote.site_id,
-          quote.customer_email,
-          quote.quote_number,
-          input.amendment_notes,
-        );
+        await dispatchChatNotification({
+          siteId: quote.site_id,
+          eventType: "ecommerce.quote.amendment_requested",
+          chatFunction: () => import("@/modules/live-chat/lib/chat-event-bridge")
+            .then(({ notifyChatQuoteAmendmentRequested }) =>
+              notifyChatQuoteAmendmentRequested(
+                quote.site_id,
+                quote.customer_email,
+                quote.quote_number,
+                input.amendment_notes,
+              ),
+            ),
+        });
       } catch {
         // Chat notification is best-effort
       }
@@ -880,21 +957,34 @@ export async function requestQuoteAmendment(
     // Notify store owner (in-app + email)
     if (quote.site_id) {
       try {
-        const { notifyQuoteAmendmentRequested } =
-          await import("@/lib/services/business-notifications");
-        await notifyQuoteAmendmentRequested(
-          quote.site_id,
-          quote.quote_number,
-          quote.customer_email || "",
-          quote.customer_name || "Customer",
-          input.amendment_notes,
-        );
+        await dispatchNotification({
+          siteId: quote.site_id,
+          eventType: "ecommerce.quote.amendment_requested",
+          notificationFunction: () => import("@/lib/services/business-notifications")
+            .then(({ notifyQuoteAmendmentRequested }) =>
+              notifyQuoteAmendmentRequested(
+                quote.site_id,
+                quote.quote_number,
+                quote.customer_email || "",
+                quote.customer_name || "Customer",
+                input.amendment_notes,
+              ),
+            ),
+        });
       } catch {
         // Business notification is best-effort
       }
     }
 
     revalidatePath("/ecommerce");
+
+    // Emit automation event for quote amendment requested
+    logAutomationEvent(quote.site_id, EVENT_REGISTRY.ecommerce.quote.amendment_requested, {
+      quoteId: quote.id, quoteNumber: quote.quote_number,
+      customerEmail: quote.customer_email, customerName: quote.customer_name,
+      total: quote.total, currency: quote.currency,
+      amendmentNotes: input.amendment_notes,
+    }, { sourceModule: 'ecommerce', sourceEntityType: 'quote', sourceEntityId: quote.id }).catch(err => console.error('[QuoteWorkflow] Automation event error:', err));
 
     return { success: true, quote: updatedQuote };
   } catch (error) {
@@ -1135,47 +1225,61 @@ export async function convertQuoteToOrder(
     // notifyNewOrder expects prices in cents (divides by 100 internally)
     // Quote prices are already in cents — pass directly
     const currency = quote.currency || DEFAULT_CURRENCY;
-    await notifyNewOrder({
+    await dispatchNotification({
       siteId: input.site_id,
-      orderId: newOrder.id,
-      orderNumber: orderNumber,
-      customerEmail: quote.customer_email,
-      customerName: quote.customer_name || "Customer",
-      items:
-        quote.items?.map((item: QuoteItem) => ({
-          name: item.name,
-          quantity: item.quantity,
-          unitPrice: item.unit_price,
-        })) || [],
-      subtotal: quote.subtotal || 0,
-      shipping: quote.shipping_amount || 0,
-      tax: quote.tax_amount || 0,
-      total: quote.total || 0,
-      currency,
-      paymentStatus: "pending",
-      paymentProvider: "manual",
+      eventType: "ecommerce.quote.converted_to_order",
+      notificationFunction: () => notifyNewOrder({
+        siteId: input.site_id,
+        orderId: newOrder.id,
+        orderNumber: orderNumber,
+        customerEmail: quote.customer_email,
+        customerName: quote.customer_name || "Customer",
+        items:
+          quote.items?.map((item: QuoteItem) => ({
+            name: item.name,
+            quantity: item.quantity,
+            unitPrice: item.unit_price,
+          })) || [],
+        subtotal: quote.subtotal || 0,
+        shipping: quote.shipping_amount || 0,
+        tax: quote.tax_amount || 0,
+        total: quote.total || 0,
+        currency,
+        paymentStatus: "pending",
+        paymentProvider: "manual",
+      }),
     });
 
     // Notify active chat conversation about quote → order conversion (async)
     if (quote.customer_email) {
       // Quote totals are in main currency unit (not cents) — no /100 needed
       const totalFormatted = formatCurrency(quote.total || 0, currency);
-      import("@/modules/live-chat/lib/chat-event-bridge")
-        .then(({ notifyChatQuoteConverted }) =>
-          notifyChatQuoteConverted(
-            input.site_id,
-            quote.customer_email,
-            quote.quote_number,
-            orderNumber,
-            totalFormatted,
+      dispatchChatNotification({
+        siteId: input.site_id,
+        eventType: "ecommerce.quote.converted_to_order",
+        chatFunction: () => import("@/modules/live-chat/lib/chat-event-bridge")
+          .then(({ notifyChatQuoteConverted }) =>
+            notifyChatQuoteConverted(
+              input.site_id,
+              quote.customer_email,
+              quote.quote_number,
+              orderNumber,
+              totalFormatted,
+            ),
           ),
-        )
-        .catch((err) =>
-          console.error("[QuoteWorkflow] Chat notification error:", err),
-        );
+      }).catch((err) =>
+        console.error("[QuoteWorkflow] Chat notification error:", err),
+      );
     }
 
     revalidatePath(`/sites/${input.site_id}/ecommerce`);
+
+    // Emit automation event for quote converted to order
+    logAutomationEvent(input.site_id, EVENT_REGISTRY.ecommerce.quote.converted_to_order, {
+      quoteId: quote.id, quoteNumber: quote.quote_number, orderId: newOrder.id, orderNumber,
+      customerEmail: quote.customer_email, customerName: quote.customer_name,
+      total: quote.total, currency,
+    }, { sourceModule: 'ecommerce', sourceEntityType: 'quote', sourceEntityId: quote.id }).catch(err => console.error('[QuoteWorkflow] Automation event error:', err));
 
     return { success: true, order: newOrder };
   } catch (error) {

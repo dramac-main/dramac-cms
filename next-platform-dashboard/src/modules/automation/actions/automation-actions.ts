@@ -29,6 +29,14 @@ import type {
   TriggerConfig,
 } from "../types/automation-types";
 
+import {
+  STARTER_PACKS,
+  getStarterPackById,
+  getPacksForModules,
+  getPacksForNewModule,
+} from "../lib/starter-packs";
+import { ALL_WORKFLOW_TEMPLATES } from "../lib/templates";
+
 // Type helper for Supabase Json compatibility
 type Json =
   | string
@@ -2020,5 +2028,307 @@ export async function createWorkflowFromTemplate(
       error:
         error instanceof Error ? error.message : "Failed to create workflow",
     };
+  }
+}
+
+// ============================================================================
+// STARTER PACK SERVER ACTIONS
+// ============================================================================
+
+/**
+ * Install a starter pack — creates all workflows from the pack's templates
+ */
+export async function installStarterPack(
+  siteId: string,
+  packId: string,
+): Promise<{
+  success: boolean;
+  workflowsCreated: number;
+  errors: string[];
+}> {
+  try {
+    const supabase = await createClient();
+    const errors: string[] = [];
+    let workflowsCreated = 0;
+
+    // 1. Load pack definition
+    const pack = getStarterPackById(packId);
+    if (!pack) {
+      return { success: false, workflowsCreated: 0, errors: ["Pack not found: " + packId] };
+    }
+
+    // 2. Check if pack already installed for this site
+    const { data: existing } = await (supabase as any)
+      .from("automation_workflows")
+      .select("id")
+      .eq("site_id", siteId)
+      .eq("pack_id", packId)
+      .limit(1);
+
+    if (existing && existing.length > 0) {
+      return { success: true, workflowsCreated: 0, errors: ["Pack already installed"] };
+    }
+
+    // 3. Create a workflow for each template in the pack
+    for (const templateId of pack.templateIds) {
+      const template = ALL_WORKFLOW_TEMPLATES.find((t) => t.id === templateId);
+      if (!template) {
+        errors.push(`Template not found: ${templateId}`);
+        continue;
+      }
+
+      // Create workflow from template
+      const result = await createWorkflowFromTemplate(siteId, {
+        name: template.name,
+        description: template.description,
+        trigger: template.trigger,
+        steps: template.steps.map((s) => ({
+          name: s.name,
+          step_type: s.step_type,
+          action_type: s.action_type,
+          config: s.action_config || s.condition_config || s.delay_config || {},
+        })),
+      });
+
+      if (!result.success || !result.data) {
+        errors.push(`Failed to create workflow: ${templateId} — ${result.error}`);
+        continue;
+      }
+
+      const workflow = result.data;
+
+      // Mark workflow with pack + system metadata
+      await (supabase as any)
+        .from("automation_workflows")
+        .update({
+          is_system: pack.isSystemPack,
+          pack_id: pack.id,
+          system_event_type: template.systemEventType || null,
+        })
+        .eq("id", workflow.id);
+
+      // Activate immediately if the pack requires it
+      if (pack.activateOnInstall) {
+        await activateWorkflow(workflow.id);
+      }
+
+      workflowsCreated++;
+    }
+
+    revalidatePath("/automation");
+    return {
+      success: errors.length === 0,
+      workflowsCreated,
+      errors,
+    };
+  } catch (error) {
+    console.error("[Automation] Install starter pack exception:", error);
+    return {
+      success: false,
+      workflowsCreated: 0,
+      errors: [error instanceof Error ? error.message : "Unknown error"],
+    };
+  }
+}
+
+/**
+ * Get installed packs for a site — returns pack IDs and workflow counts
+ */
+export async function getInstalledPacks(
+  siteId: string,
+): Promise<{
+  success: boolean;
+  data?: Array<{
+    packId: string;
+    workflowCount: number;
+    activeCount: number;
+    isSystem: boolean;
+  }>;
+  error?: string;
+}> {
+  try {
+    const supabase = await createClient();
+
+    const { data: workflows, error } = await (supabase as any)
+      .from("automation_workflows")
+      .select("id, pack_id, is_active, is_system")
+      .eq("site_id", siteId)
+      .not("pack_id", "is", null);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    // Group by pack_id
+    const packMap = new Map<
+      string,
+      { workflowCount: number; activeCount: number; isSystem: boolean }
+    >();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const wf of (workflows || []) as any[]) {
+      const packId = wf.pack_id as string;
+      const existing = packMap.get(packId) || {
+        workflowCount: 0,
+        activeCount: 0,
+        isSystem: !!wf.is_system,
+      };
+      existing.workflowCount++;
+      if (wf.is_active) existing.activeCount++;
+      packMap.set(packId, existing);
+    }
+
+    const data = Array.from(packMap.entries()).map(([packId, stats]) => ({
+      packId,
+      ...stats,
+    }));
+
+    return { success: true, data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch packs",
+    };
+  }
+}
+
+/**
+ * Uninstall a non-system starter pack — deletes all workflows in the pack
+ */
+export async function uninstallPack(
+  siteId: string,
+  packId: string,
+): Promise<{ success: boolean; workflowsDeleted: number; error?: string }> {
+  try {
+    const supabase = await createClient();
+
+    // Verify the pack is not a system pack
+    const pack = getStarterPackById(packId);
+    if (pack?.isSystemPack) {
+      return {
+        success: false,
+        workflowsDeleted: 0,
+        error: "System packs cannot be uninstalled",
+      };
+    }
+
+    // Get all workflows belonging to this pack for this site
+    const { data: workflows, error: fetchError } = await (supabase as any)
+      .from("automation_workflows")
+      .select("id")
+      .eq("site_id", siteId)
+      .eq("pack_id", packId);
+
+    if (fetchError) {
+      return { success: false, workflowsDeleted: 0, error: fetchError.message };
+    }
+
+    if (!workflows || workflows.length === 0) {
+      return { success: true, workflowsDeleted: 0 };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const workflowIds = (workflows as any[]).map((w: any) => w.id);
+
+    // Delete event subscriptions first
+    await (supabase as any)
+      .from("automation_event_subscriptions")
+      .delete()
+      .in("workflow_id", workflowIds);
+
+    // Delete workflow steps
+    await (supabase as any)
+      .from("workflow_steps")
+      .delete()
+      .in("workflow_id", workflowIds);
+
+    // Delete the workflows
+    const { error: deleteError } = await (supabase as any)
+      .from("automation_workflows")
+      .delete()
+      .in("id", workflowIds);
+
+    if (deleteError) {
+      return { success: false, workflowsDeleted: 0, error: deleteError.message };
+    }
+
+    revalidatePath("/automation");
+    return { success: true, workflowsDeleted: workflowIds.length };
+  } catch (error) {
+    return {
+      success: false,
+      workflowsDeleted: 0,
+      error: error instanceof Error ? error.message : "Failed to uninstall pack",
+    };
+  }
+}
+
+/**
+ * Install default automation packs for a newly created site.
+ * Called from installCoreModules() in sites.ts after the automation module is installed.
+ */
+export async function installDefaultAutomationPacks(
+  siteId: string,
+): Promise<void> {
+  try {
+    const supabase = await createClient();
+
+    // Get all installed module slugs for this site
+    const { data: installations } = await (supabase as any)
+      .from("site_module_installations")
+      .select("module:modules_v2!inner(slug)")
+      .eq("site_id", siteId)
+      .eq("is_enabled", true);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const installedSlugs: string[] = ((installations || []) as any[])
+      .map((i) => {
+        const mod = i.module as unknown as { slug: string } | null;
+        return mod?.slug;
+      })
+      .filter(Boolean) as string[];
+
+    // Get all packs that should be auto-installed for these modules
+    const packsToInstall = getPacksForModules(installedSlugs);
+
+    for (const pack of packsToInstall) {
+      const result = await installStarterPack(siteId, pack.id);
+      if (result.workflowsCreated > 0) {
+        console.log(
+          `[Automation] Auto-installed pack "${pack.name}" for site ${siteId}: ${result.workflowsCreated} workflows`,
+        );
+      }
+    }
+  } catch (error) {
+    // Non-fatal — don't block site creation
+    console.error("[Automation] Error installing default packs:", error);
+  }
+}
+
+/**
+ * Auto-install packs when a new module is added to an existing site.
+ * Called from the module installation flow.
+ */
+export async function autoInstallPacksForModule(
+  siteId: string,
+  moduleSlug: string,
+): Promise<void> {
+  try {
+    const packsToInstall = getPacksForNewModule(moduleSlug);
+
+    for (const pack of packsToInstall) {
+      const result = await installStarterPack(siteId, pack.id);
+      if (result.workflowsCreated > 0) {
+        console.log(
+          `[Automation] Auto-installed pack "${pack.name}" for module "${moduleSlug}" on site ${siteId}: ${result.workflowsCreated} workflows`,
+        );
+      }
+    }
+  } catch (error) {
+    // Non-fatal
+    console.error(
+      `[Automation] Error auto-installing packs for module ${moduleSlug}:`,
+      error,
+    );
   }
 }

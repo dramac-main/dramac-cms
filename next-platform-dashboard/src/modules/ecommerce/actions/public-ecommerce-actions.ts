@@ -19,6 +19,8 @@ import {
   notifyPaymentProofUploaded,
 } from "@/lib/services/business-notifications";
 import { logAutomationEvent } from "@/modules/automation/services/event-processor";
+import { EVENT_REGISTRY } from "@/modules/automation/lib/event-types";
+import { dispatchNotification, dispatchChatNotification } from "@/lib/notifications/automation-aware-dispatcher";
 import { getImageUrl } from "../lib/image-utils";
 import type {
   Product,
@@ -1282,28 +1284,32 @@ export async function createPublicOrderFromCart(
         unitPrice: item.unit_price,
       }));
 
-      await notifyNewOrder({
+      await dispatchNotification({
         siteId: input.site_id,
-        orderId: order.id,
-        orderNumber,
-        customerName:
-          input.customer_name ||
-          `${input.shipping_address?.first_name || ""} ${input.shipping_address?.last_name || ""}`.trim() ||
-          input.customer_email?.split("@")[0] ||
-          "Customer",
-        customerEmail: input.customer_email,
-        customerPhone: input.customer_phone || undefined,
-        items: notificationItems,
-        subtotal: input.subtotal,
-        shipping: input.shipping || 0,
-        tax: input.tax || 0,
-        total: input.total,
-        currency: input.currency,
-        paymentStatus: input.payment_status || "pending",
-        paymentProvider: input.payment_provider || undefined,
-        shippingAddress: input.shipping_address
-          ? `${input.shipping_address.address_line_1 || ""}${input.shipping_address.address_line_2 ? ", " + input.shipping_address.address_line_2 : ""}, ${input.shipping_address.city || ""} ${input.shipping_address.state || ""} ${input.shipping_address.postal_code || ""}, ${input.shipping_address.country || ""}`
-          : undefined,
+        eventType: "ecommerce.order.created",
+        notificationFunction: () => notifyNewOrder({
+          siteId: input.site_id,
+          orderId: order.id,
+          orderNumber,
+          customerName:
+            input.customer_name ||
+            `${input.shipping_address?.first_name || ""} ${input.shipping_address?.last_name || ""}`.trim() ||
+            input.customer_email?.split("@")[0] ||
+            "Customer",
+          customerEmail: input.customer_email,
+          customerPhone: input.customer_phone || undefined,
+          items: notificationItems,
+          subtotal: input.subtotal,
+          shipping: input.shipping || 0,
+          tax: input.tax || 0,
+          total: input.total,
+          currency: input.currency,
+          paymentStatus: input.payment_status || "pending",
+          paymentProvider: input.payment_provider || undefined,
+          shippingAddress: input.shipping_address
+            ? `${input.shipping_address.address_line_1 || ""}${input.shipping_address.address_line_2 ? ", " + input.shipping_address.address_line_2 : ""}, ${input.shipping_address.city || ""} ${input.shipping_address.state || ""} ${input.shipping_address.postal_code || ""}, ${input.shipping_address.country || ""}`
+            : undefined,
+        }),
       }).catch((err) =>
         console.error("[Ecom Public] Notification error:", err),
       );
@@ -1322,25 +1328,29 @@ export async function createPublicOrderFromCart(
     }
   } else {
     // No cart — still fire notification
-    await notifyNewOrder({
+    await dispatchNotification({
       siteId: input.site_id,
-      orderId: order.id,
-      orderNumber,
-      customerName:
-        input.customer_name ||
-        `${input.shipping_address?.first_name || ""} ${input.shipping_address?.last_name || ""}`.trim() ||
-        input.customer_email?.split("@")[0] ||
-        "Customer",
-      customerEmail: input.customer_email,
-      customerPhone: input.customer_phone || undefined,
-      items: [],
-      subtotal: input.subtotal,
-      shipping: input.shipping || 0,
-      tax: input.tax || 0,
-      total: input.total,
-      currency: input.currency,
-      paymentStatus: input.payment_status || "pending",
-      paymentProvider: input.payment_provider || undefined,
+      eventType: "ecommerce.order.created",
+      notificationFunction: () => notifyNewOrder({
+        siteId: input.site_id,
+        orderId: order.id,
+        orderNumber,
+        customerName:
+          input.customer_name ||
+          `${input.shipping_address?.first_name || ""} ${input.shipping_address?.last_name || ""}`.trim() ||
+          input.customer_email?.split("@")[0] ||
+          "Customer",
+        customerEmail: input.customer_email,
+        customerPhone: input.customer_phone || undefined,
+        items: [],
+        subtotal: input.subtotal,
+        shipping: input.shipping || 0,
+        tax: input.tax || 0,
+        total: input.total,
+        currency: input.currency,
+        paymentStatus: input.payment_status || "pending",
+        paymentProvider: input.payment_provider || undefined,
+      }),
     }).catch((err) => console.error("[Ecom Public] Notification error:", err));
 
     // Add order timeline entry
@@ -1775,29 +1785,44 @@ export async function uploadPaymentProof(input: {
       (order.total || 0) / 100,
       order.currency || "ZMW",
     );
-    await notifyPaymentProofUploaded(
-      input.siteId,
-      order.order_number,
-      order.customer_email || "",
-      order.customer_name || "Customer",
-      totalFormatted,
-      input.fileName,
-    );
+
+    // Emit automation event for payment proof upload
+    logAutomationEvent(input.siteId, EVENT_REGISTRY.ecommerce.payment.proof_uploaded, {
+      orderId: order.id, orderNumber: order.order_number,
+      customerEmail: order.customer_email, customerName: order.customer_name,
+      fileName: input.fileName, total: order.total, currency: order.currency,
+    }, { sourceModule: 'ecommerce', sourceEntityType: 'order', sourceEntityId: order.id }).catch(err => console.error('[PaymentProof] Automation event error:', err));
+
+    await dispatchNotification({
+      siteId: input.siteId,
+      eventType: "ecommerce.payment.proof_uploaded",
+      notificationFunction: () => notifyPaymentProofUploaded(
+        input.siteId,
+        order.order_number,
+        order.customer_email || "",
+        order.customer_name || "Customer",
+        totalFormatted,
+        input.fileName,
+      ),
+    });
 
     // Notify active chat conversation (async — don't block the response)
     if (order.customer_email) {
-      import("@/modules/live-chat/lib/chat-event-bridge")
-        .then(({ notifyChatPaymentProofUploaded }) =>
-          notifyChatPaymentProofUploaded(
-            input.siteId,
-            order.customer_email,
-            order.order_number,
-            input.fileName,
+      dispatchChatNotification({
+        siteId: input.siteId,
+        eventType: "ecommerce.payment.proof_uploaded",
+        chatFunction: () => import("@/modules/live-chat/lib/chat-event-bridge")
+          .then(({ notifyChatPaymentProofUploaded }) =>
+            notifyChatPaymentProofUploaded(
+              input.siteId,
+              order.customer_email,
+              order.order_number,
+              input.fileName,
+            ),
           ),
-        )
-        .catch((err) =>
-          console.error("[PaymentProof] Chat notification error:", err),
-        );
+      }).catch((err) =>
+        console.error("[PaymentProof] Chat notification error:", err),
+      );
     }
 
     return { success: true };

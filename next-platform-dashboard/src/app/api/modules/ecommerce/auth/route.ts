@@ -48,7 +48,8 @@ function isAllowedOrigin(origin: string): boolean | "check-custom-domain" {
     // Dashboard app
     if (APP_ORIGIN && origin === APP_ORIGIN) return true;
     // Localhost for development
-    if (url.hostname === "localhost" || url.hostname === "127.0.0.1") return true;
+    if (url.hostname === "localhost" || url.hostname === "127.0.0.1")
+      return true;
     // Storefront subdomains (e.g. mystore.sites.dramacagency.com)
     if (url.hostname.endsWith(`.${STOREFRONT_BASE_DOMAIN}`)) return true;
     if (url.hostname === STOREFRONT_BASE_DOMAIN) return true;
@@ -97,18 +98,42 @@ function generateToken(): string {
 
 // ── Password validation ────────────────────────────────────────────────────
 const COMMON_PASSWORDS = new Set([
-  "password", "12345678", "123456789", "1234567890", "qwerty123",
-  "password1", "iloveyou", "princess", "sunshine", "letmein",
-  "football", "monkey123", "shadow12", "master12", "dragon12",
-  "trustno1", "whatever", "qwerty12", "abc12345", "welcome1",
-  "login123", "admin123", "passw0rd", "password123", "p@ssw0rd",
-  "changeme", "qwertyui", "asd123456", "baseball1",
+  "password",
+  "12345678",
+  "123456789",
+  "1234567890",
+  "qwerty123",
+  "password1",
+  "iloveyou",
+  "princess",
+  "sunshine",
+  "letmein",
+  "football",
+  "monkey123",
+  "shadow12",
+  "master12",
+  "dragon12",
+  "trustno1",
+  "whatever",
+  "qwerty12",
+  "abc12345",
+  "welcome1",
+  "login123",
+  "admin123",
+  "passw0rd",
+  "password123",
+  "p@ssw0rd",
+  "changeme",
+  "qwertyui",
+  "asd123456",
+  "baseball1",
 ]);
 
 function validateEmail(email: string): string | null {
   if (!email || typeof email !== "string") return "Email is required";
   if (email.length > 254) return "Email is too long";
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return "Invalid email format";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))
+    return "Invalid email format";
   return null;
 }
 
@@ -116,7 +141,8 @@ function validatePassword(password: string): string | null {
   if (!password || typeof password !== "string") return "Password is required";
   if (password.length < 8) return "Password must be at least 8 characters";
   if (password.length > 128) return "Password must be at most 128 characters";
-  if (COMMON_PASSWORDS.has(password.toLowerCase())) return "This password is too common. Please choose a stronger password.";
+  if (COMMON_PASSWORDS.has(password.toLowerCase()))
+    return "This password is too common. Please choose a stronger password.";
   return null;
 }
 
@@ -153,7 +179,9 @@ async function createSession(
 ): Promise<string> {
   const token = generateToken();
   const tokenHash = hashToken(token);
-  const ttl = meta?.isMagicLink ? 60 * 60 * 1000 : SESSION_TTL_DAYS * 24 * 60 * 60 * 1000;
+  const ttl = meta?.isMagicLink
+    ? 60 * 60 * 1000
+    : SESSION_TTL_DAYS * 24 * 60 * 60 * 1000;
   const expiresAt = new Date(Date.now() + ttl).toISOString();
 
   await (supabase as any).from(SESSIONS).insert({
@@ -195,7 +223,8 @@ export async function POST(request: NextRequest) {
 
   // For unknown origins, defer decision until after we have a DB client
   // to check custom_domain. Build headers optimistically for known origins.
-  const corsHeaders = corsAllowed === true ? getCorsHeaders(origin) : getCorsHeaders(origin);
+  const corsHeaders =
+    corsAllowed === true ? getCorsHeaders(origin) : getCorsHeaders(origin);
 
   try {
     // Rate limit: 15 requests/minute per IP
@@ -252,7 +281,9 @@ export async function POST(request: NextRequest) {
         ) {
           corsAllowed = true;
         }
-      } catch { /* invalid origin URL */ }
+      } catch {
+        /* invalid origin URL */
+      }
       if (corsAllowed !== true) {
         return NextResponse.json(
           { error: "Origin not allowed" },
@@ -301,7 +332,10 @@ export async function POST(request: NextRequest) {
       // Prevent email enumeration: same generic error whether account exists or not
       if (existing && existing.password_set_at) {
         return NextResponse.json(
-          { error: "Unable to complete registration. Please try signing in or use a different email." },
+          {
+            error:
+              "Unable to complete registration. Please try signing in or use a different email.",
+          },
           { status: 409, headers: corsHeaders },
         );
       }
@@ -380,7 +414,13 @@ export async function POST(request: NextRequest) {
       if (!loginRl.allowed) {
         return NextResponse.json(
           { error: "Too many login attempts. Please try again later." },
-          { status: 429, headers: { ...corsHeaders, "Retry-After": String(Math.ceil(loginRl.retryAfterMs / 1000)) } },
+          {
+            status: 429,
+            headers: {
+              ...corsHeaders,
+              "Retry-After": String(Math.ceil(loginRl.retryAfterMs / 1000)),
+            },
+          },
         );
       }
 
@@ -395,11 +435,22 @@ export async function POST(request: NextRequest) {
       const emailLower = email.toLowerCase().trim();
 
       // Per-email rate limit (5/15min — prevents brute-forcing specific accounts)
-      const emailRl = PUBLIC_RATE_LIMITS.loginByEmail.check(`${siteId}:${emailLower}`);
+      const emailRl = PUBLIC_RATE_LIMITS.loginByEmail.check(
+        `${siteId}:${emailLower}`,
+      );
       if (!emailRl.allowed) {
         return NextResponse.json(
-          { error: "Too many login attempts for this account. Please try again later." },
-          { status: 429, headers: { ...corsHeaders, "Retry-After": String(Math.ceil(emailRl.retryAfterMs / 1000)) } },
+          {
+            error:
+              "Too many login attempts for this account. Please try again later.",
+          },
+          {
+            status: 429,
+            headers: {
+              ...corsHeaders,
+              "Retry-After": String(Math.ceil(emailRl.retryAfterMs / 1000)),
+            },
+          },
         );
       }
 
@@ -419,7 +470,10 @@ export async function POST(request: NextRequest) {
       }
 
       // Verify password via bcrypt (site-scoped, no global auth.users dependency)
-      const passwordValid = await bcrypt.compare(password, customer.password_hash);
+      const passwordValid = await bcrypt.compare(
+        password,
+        customer.password_hash,
+      );
 
       if (!passwordValid) {
         return NextResponse.json(

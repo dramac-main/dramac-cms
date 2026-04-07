@@ -12,6 +12,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendBrandedEmail } from "@/lib/email/send-branded-email";
 import { notifyNewQuote } from "@/lib/services/business-notifications";
 import { notifyChatQuoteRequested } from "@/modules/live-chat/lib/chat-event-bridge";
+import { logAutomationEvent } from "@/modules/automation/services/event-processor";
+import { EVENT_REGISTRY } from "@/modules/automation/lib/event-types";
+import { dispatchNotification, dispatchChatNotification } from "@/lib/notifications/automation-aware-dispatcher";
 import { DEFAULT_CURRENCY } from "@/lib/locale-config";
 import { revalidatePath } from "next/cache";
 import type {
@@ -236,6 +239,13 @@ export async function createQuote(
         performedByName: userName,
       },
     );
+
+    // Emit automation event for quote creation
+    logAutomationEvent(input.site_id, EVENT_REGISTRY.ecommerce.quote.created, {
+      quoteId: quote.id, quoteNumber, customerEmail: input.customer_email,
+      customerName: input.customer_name, customerCompany: input.customer_company,
+      total: quote.total, currency: quote.currency,
+    }, { sourceModule: 'ecommerce', sourceEntityType: 'quote', sourceEntityId: quote.id }).catch(err => console.error('[Quote] Automation event error:', err));
 
     // NOTE: Notification is sent AFTER items are added (from the client hook)
     // to ensure correct item count and details in emails
@@ -1214,34 +1224,42 @@ export async function notifyQuoteCreated(
       ? `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/quote/${quote.access_token}`
       : undefined;
 
-    await notifyNewQuote({
+    await dispatchNotification({
       siteId: quote.site_id,
-      quoteId: quote.id,
-      quoteNumber: quote.quote_number,
-      customerName: quote.customer_name || "Customer",
-      customerEmail: quote.customer_email || "",
-      customerPhone: quote.customer_phone || "",
-      companyName: quote.customer_company || "",
-      itemCount: quoteItems.length,
-      total: quote.total || 0,
-      currency: quote.currency || DEFAULT_CURRENCY,
-      portalUrl,
-      items: quoteItems.map((item: Record<string, unknown>) => ({
-        name: String(item.name || "Item"),
-        quantity: Number(item.quantity || 1),
-        unitPrice: Number(item.unit_price || 0),
-      })),
+      eventType: "ecommerce.quote.created",
+      notificationFunction: () => notifyNewQuote({
+        siteId: quote.site_id,
+        quoteId: quote.id,
+        quoteNumber: quote.quote_number,
+        customerName: quote.customer_name || "Customer",
+        customerEmail: quote.customer_email || "",
+        customerPhone: quote.customer_phone || "",
+        companyName: quote.customer_company || "",
+        itemCount: quoteItems.length,
+        total: quote.total || 0,
+        currency: quote.currency || DEFAULT_CURRENCY,
+        portalUrl,
+        items: quoteItems.map((item: Record<string, unknown>) => ({
+          name: String(item.name || "Item"),
+          quantity: Number(item.quantity || 1),
+          unitPrice: Number(item.unit_price || 0),
+        })),
+      }),
     });
 
     // Also notify active chat conversation if customer is chatting
     if (quote.customer_email) {
       try {
-        await notifyChatQuoteRequested(
-          quote.site_id,
-          quote.customer_email,
-          quote.quote_number,
-          quoteItems.length,
-        );
+        await dispatchChatNotification({
+          siteId: quote.site_id,
+          eventType: "ecommerce.quote.created",
+          chatFunction: () => notifyChatQuoteRequested(
+            quote.site_id,
+            quote.customer_email,
+            quote.quote_number,
+            quoteItems.length,
+          ),
+        });
       } catch {
         // Chat notification is best-effort
       }

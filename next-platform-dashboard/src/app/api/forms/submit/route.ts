@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { headers } from "next/headers";
 import { sendBrandedEmail } from "@/lib/email/send-branded-email";
+import { logAutomationEvent } from "@/modules/automation/services/event-processor";
+import { EVENT_REGISTRY } from "@/modules/automation/lib/event-types";
+import { dispatchNotification } from "@/lib/notifications/automation-aware-dispatcher";
 
 // Type for the admin Supabase client
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -207,14 +210,26 @@ export async function POST(request: NextRequest) {
 
     // Send notifications (async, don't wait)
     if (formSettings.notify_on_submission && !isSpam) {
-      sendNotifications(
-        supabase,
-        submission,
-        formSettings,
-        site.agency_id,
-      ).catch((err) => {
+      dispatchNotification({
+        siteId,
+        eventType: "form.submission.received",
+        notificationFunction: () => sendNotifications(
+          supabase,
+          submission,
+          formSettings,
+          site.agency_id,
+        ),
+      }).catch((err) => {
         console.error("[FormSubmit] Notification error:", err);
       });
+    }
+
+    // Emit automation event for form submission
+    if (!isSpam) {
+      logAutomationEvent(siteId, EVENT_REGISTRY.form.submission.received, {
+        formId, submissionId: submission.id, formName: ('form_name' in formSettings ? formSettings.form_name : null) || 'Unknown Form',
+        data: cleanedData, pageUrl: referer,
+      }, { sourceModule: 'forms', sourceEntityType: 'submission', sourceEntityId: submission.id }).catch(err => console.error('[FormSubmit] Automation event error:', err));
     }
 
     // Trigger webhooks (async, don't wait)

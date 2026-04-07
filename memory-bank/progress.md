@@ -26,27 +26,59 @@
 - **BOOKING AUTO-CHAT + STOREFRONT MODERNIZATION — Full booking→chat pipeline (postMessage→embed→ChatWidget→conversations API), modernized success screens with summary cards/reference/status/chat button, storefront UI modernization (transitions, responsive clamp, improved layouts) (5 files)** ✅
 
 - **CRM FORM UNIFICATION — CONTACT FORMS MODULE REMOVAL + FORM REWIRING (3 code files + DB cleanup + 1 render file rewired)** ✅
+- **AUTOMATION MODULE CROSS-MODULE INTEGRATION — 3 new executor categories (ecommerce/booking/chat, 20 actions), 19 action type definitions, 14 cross-module workflow templates (36 total) (3 files, 778 insertions)** ✅
+- **AUTOMATION OVERHAUL MASTER PLAN — Comprehensive 6-phase AI prompt document covering event emissions, system templates, starter packs, ReactFlow canvas, migration safety, testing (AUTOMATION-OVERHAUL-PROMPT.md)** ✅
+
+- **AUTOMATION OVERHAUL — ALL 6 PHASES COMPLETE (Event Emissions, 27 System Templates, 7 Starter Packs, ReactFlow Canvas, Migration Safety/Fallback, DB Migrations + Verification)** ✅
 
 ---
 
-## Latest Update: CRM Overhaul Complete + TypeScript Clean ✅ (commit 833135b7)
+## Latest Update: Automation Module Overhaul — All 6 Phases Complete ✅
 
 ### What Was Done
 
-Full CRM overhaul completed across prior sessions (form builder, cross-module wiring, reports, studio, AI designer). This session fixed all 34 remaining TypeScript errors across 10 files and pushed clean to main.
+Full implementation of the AUTOMATION-OVERHAUL-PROMPT.md spec (1244 lines, 6 phases). Transforms the automation module into the single source of truth for all customer-facing communications.
 
-**34 TypeScript Errors Fixed:**
-- Type definition gaps: EmailType, NotificationType, openAuthDialog mode, authDialogMode state
-- Supabase codegen gaps: `as never` cast for module tables, query result casting
-- Variable hoisting: `toResponsive` in converter.ts
-- Type narrowing: entrance cast, String() for unknown metadata, ProductImage filter cast
-- Recharts v3 compat: removed explicit type annotations on Tooltip formatter params
-- Template completeness: Partial<Record<...>>, added branded template for quote_amendment_requested_owner
-- ReactNode coercion: `unknown && JSX` → `unknown ? JSX : null` ternary pattern
+**Phase 1 — Event Emission Layer:** ~22 new EventDefinition entries in event-types.ts for ecommerce, booking, chat events.
 
-**Commit:** `833135b7` — pushed to origin/main
+**Phase 2 — System Workflow Templates:** 27 system workflow templates (BOOKING[8], ORDER[8], QUOTE[7], FORM[1], CHAT[3]) in system-templates.ts. 3 new action types in executor: email.send_branded_template, chat.send_system_message, notification.in_app_targeted.
+
+**Phase 3 — Automation Starter Packs:** 7 StarterPack definitions (3 auto-install, 4 manual). Server actions for install/uninstall/auto-install. Pack Gallery UI in template-gallery.tsx. DB: automation_installed_packs table + system columns on automation_workflows.
+
+**Phase 4 — ReactFlow Canvas Builder:** @xyflow/react 12.10.2 + @dagrejs/dagre 3.0.0. 7 node types, 2 edge types, AutomationCanvas with dagre auto-layout, CanvasSidebar (15 palette items), CanvasControls, 3 config panels (Node, Trigger, WorkflowSettings). Canvas/list toggle in workflow-builder.tsx (canvas default). Position data in dedicated DB columns (Warning #6 resolved).
+
+**Phase 5 — Migration Safety/Fallback:** automation-aware-dispatcher.ts with hasActiveSystemWorkflow(), dispatchNotification(), dispatchChatNotification(). 8 notification files wrapped (~85 dispatch points). Return types widened for flexibility.
+
+**Phase 6 — Testing & Verification:** TypeScript 0 errors. DB migrations applied: position_x/position_y on workflow_steps, automation_installed_packs table, is_system on automation_event_subscriptions. Runtime tests (8B-8E) documented for manual verification.
+
+**Files Created:** ~25 new files across canvas/, canvas/nodes/, canvas/edges/, canvas/panels/, canvas/utils/, lib/, services/
+**Files Modified:** ~10 files (workflow-builder.tsx, automation-actions.ts, template-gallery.tsx, action-executor.ts, event-types.ts, automation-types.ts, 8 notification files)
+**DB Migrations:** 4 applied (Phase 3 system columns, Phase 6 positions, installed_packs table, event_subscriptions is_system)
+**TypeScript:** Zero errors throughout
 
 ---
+
+## Previous Update: Automation Module — Cross-Module Integration Complete ✅ (commit aeafa126)
+
+### What Was Done
+
+Full cross-module automation wiring. The automation module now has 10 action executor categories, 11 action type registry categories, and 36 workflow templates. All actions are connected to real module server functions.
+
+**New Action Categories in Executor:**
+
+- E-Commerce (10 actions): order status, notes, shipments, refunds, stock, quote status/send/remind/convert
+- Booking (5 actions): create/update/cancel appointments, status updates, reminders
+- Chat (5 actions): send messages, assign/resolve/close conversations, update tags
+
+**14 New Cross-Module Templates:** Order→CRM, shipped notifications, quote lifecycle (accept→order, reminder drip, rejected→review), booking→CRM, booking cancellation follow-up, booking→chat confirmation, chat→CRM contact, chat resolved→satisfaction, low stock alerts, refund→CRM, deal won→quote, VIP chat escalation
+
+**9 TypeScript Errors Fixed:** Proper type casts for InventoryMovementType, QuoteStatus, AppointmentStatus, CancelledBy, ReminderType, MessageContentType; `customer_notes` vs `notes`; `result.order?.id` vs `result.data?.order_id`; complexity `simple` vs `beginner`
+
+**Commits:** `53e1a3a6` (action types registry) + `aeafa126` (templates + executor fixes) — pushed to origin/main
+
+---
+
+## Previous Update: CRM Overhaul Complete + TypeScript Clean ✅ (commit 833135b7)
 
 ## Previous Update: CRM Form Unification ✅
 

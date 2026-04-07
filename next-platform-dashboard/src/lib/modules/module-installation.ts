@@ -164,6 +164,30 @@ export async function installModuleOnSite(
     // Continue - installation succeeded, hook is optional
   }
 
+  // Auto-install automation starter packs for this module (non-blocking)
+  try {
+    // Resolve module slug
+    const { data: modRow } = await db
+      .from("modules_v2")
+      .select("slug")
+      .eq("id", moduleId)
+      .single();
+
+    if (modRow?.slug) {
+      const { autoInstallPacksForModule } = await import(
+        "@/modules/automation/actions/automation-actions"
+      );
+      autoInstallPacksForModule(siteId, modRow.slug).catch((err: unknown) =>
+        console.error(
+          `[ModuleInstallation] Auto-install packs error for ${modRow.slug}:`,
+          err,
+        ),
+      );
+    }
+  } catch {
+    // Non-fatal — automation packs are optional
+  }
+
   return { success: true, installationId: installation.id };
 }
 

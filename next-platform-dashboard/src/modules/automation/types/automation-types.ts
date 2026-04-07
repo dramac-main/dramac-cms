@@ -181,6 +181,10 @@ export interface WorkflowStep {
   max_retries: number
   retry_delay_seconds: number
   
+  // Canvas position (dedicated columns)
+  position_x?: number | null
+  position_y?: number | null
+
   // Metadata
   name?: string | null
   description?: string | null
