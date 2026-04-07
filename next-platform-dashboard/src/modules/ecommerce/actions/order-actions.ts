@@ -273,21 +273,11 @@ export async function updateOrderStatus(
 
   // Send customer notification email for relevant status changes
   const emailType = STATUS_EMAIL_MAP[status];
-  if (emailType) {
-    dispatchNotification({
-      siteId,
-      eventType: `ecommerce.order.${status}`,
-      notificationFunction: () =>
-        sendOrderEmail(orderId, emailType, userId, userName),
-    }).catch((err) =>
-      console.error("[OrderActions] Email notification error:", err),
-    );
-  }
 
-  // Emit automation event
-  logAutomationEvent(
+  // 1. Emit automation event FIRST
+  await logAutomationEvent(
     siteId,
-    "ecommerce.order.status_changed",
+    EVENT_REGISTRY.ecommerce.order.status_changed,
     {
       order_id: orderId,
       new_status: status,
@@ -302,6 +292,18 @@ export async function updateOrderStatus(
   ).catch((err) =>
     console.error("[OrderActions] Automation event error:", err),
   );
+
+  // 2. Dispatch notification — skips hardcoded if automation handles it
+  if (emailType) {
+    await dispatchNotification({
+      siteId,
+      eventType: `ecommerce.order.${status}`,
+      notificationFunction: () =>
+        sendOrderEmail(orderId, emailType, userId, userName),
+    }).catch((err) =>
+      console.error("[OrderActions] Email notification error:", err),
+    );
+  }
 
   // Notify active chat conversation about the status change (async — don't block)
   supabase
@@ -642,7 +644,7 @@ export async function updatePaymentProofStatus(
 
   // Emit automation events for payment proof review
   if (status === "approved") {
-    logAutomationEvent(
+    await logAutomationEvent(
       siteId,
       EVENT_REGISTRY.ecommerce.payment.received,
       {
@@ -659,7 +661,7 @@ export async function updatePaymentProofStatus(
       console.error("[OrderActions] Automation event error:", err),
     );
   } else if (status === "rejected") {
-    logAutomationEvent(
+    await logAutomationEvent(
       siteId,
       EVENT_REGISTRY.ecommerce.payment.proof_rejected,
       {
@@ -757,7 +759,7 @@ export async function updatePaymentProofStatus(
             ),
         }).catch(() => {});
 
-        // Send rejection email to customer
+        // Send rejection email to customer via dispatcher
         const adminClient = createAdminClient();
         const { data: site } = await adminClient
           .from("sites")
@@ -775,20 +777,25 @@ export async function updatePaymentProofStatus(
             ? `${siteUrl}/order-confirmation?order=${orderId}`
             : undefined;
 
-          sendBrandedEmail(site.agency_id, {
-            to: {
-              email: orderData.customer_email,
-              name: orderData.customer_name || undefined,
-            },
-            emailType: "payment_proof_rejected_customer",
+          await dispatchNotification({
             siteId,
-            data: {
-              customerName: orderData.customer_name || "Customer",
-              orderNumber: orderData.order_number,
-              total: totalStr,
-              orderUrl,
-              businessName: site.name || "Our Store",
-            },
+            eventType: "ecommerce.payment.proof_rejected",
+            notificationFunction: () =>
+              sendBrandedEmail(site.agency_id!, {
+                to: {
+                  email: orderData.customer_email,
+                  name: orderData.customer_name || undefined,
+                },
+                emailType: "payment_proof_rejected_customer",
+                siteId,
+                data: {
+                  customerName: orderData.customer_name || "Customer",
+                  orderNumber: orderData.order_number,
+                  total: totalStr,
+                  orderUrl,
+                  businessName: site.name || "Our Store",
+                },
+              }),
           }).catch(() => {});
         }
       }
@@ -898,7 +905,29 @@ export async function processRefund(
 
     // Send refund notification to customer
     if (order?.customer_email && refundData) {
-      dispatchNotification({
+      // 1. Emit automation event FIRST
+      await logAutomationEvent(
+        order.site_id,
+        EVENT_REGISTRY.ecommerce.order.refunded,
+        {
+          order_id: orderId,
+          refund_id: refundId,
+          refund_amount: refundData.amount,
+          reason: refundData.reason,
+          customer_email: order.customer_email,
+          order_number: order.order_number,
+        },
+        {
+          sourceModule: "ecommerce",
+          sourceEntityType: "order",
+          sourceEntityId: orderId,
+        },
+      ).catch((err) =>
+        console.error("[OrderActions] Automation event error:", err),
+      );
+
+      // 2. Dispatch notification — skips hardcoded if automation handles it
+      await dispatchNotification({
         siteId: order.site_id,
         eventType: "ecommerce.order.refunded",
         notificationFunction: () =>
@@ -920,27 +949,6 @@ export async function processRefund(
         console.error("[OrderActions] Refund notification error:", err),
       );
     }
-
-    // Emit automation event for refund
-    logAutomationEvent(
-      order?.site_id || "",
-      "ecommerce.order.refunded",
-      {
-        order_id: orderId,
-        refund_id: refundId,
-        refund_amount: refundData?.amount,
-        reason: refundData?.reason,
-        customer_email: order?.customer_email,
-        order_number: order?.order_number,
-      },
-      {
-        sourceModule: "ecommerce",
-        sourceEntityType: "order",
-        sourceEntityId: orderId,
-      },
-    ).catch((err) =>
-      console.error("[OrderActions] Automation event error:", err),
-    );
   }
 
   return true;

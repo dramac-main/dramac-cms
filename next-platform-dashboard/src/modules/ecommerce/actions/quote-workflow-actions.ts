@@ -237,6 +237,28 @@ export async function sendQuote(
       .single();
     const businessName = storeSettings?.store_name || "";
 
+    // 1. Emit automation event FIRST
+    await logAutomationEvent(
+      input.site_id,
+      EVENT_REGISTRY.ecommerce.quote.sent,
+      {
+        quoteId: quote.id,
+        quoteNumber: quote.quote_number,
+        customerEmail: quote.customer_email,
+        customerName: quote.customer_name,
+        total: quote.total,
+        currency: quote.currency,
+      },
+      {
+        sourceModule: "ecommerce",
+        sourceEntityType: "quote",
+        sourceEntityId: quote.id,
+      },
+    ).catch((err) =>
+      console.error("[QuoteWorkflow] Automation event error:", err),
+    );
+
+    // 2. Dispatch notification — skips hardcoded if automation handles it
     await dispatchNotification({
       siteId: input.site_id,
       eventType: "ecommerce.quote.sent",
@@ -264,7 +286,7 @@ export async function sendQuote(
         }),
     });
 
-    // Notify active chat conversation about the sent quote
+    // 3. Notify active chat conversation about the sent quote (non-blocking)
     if (quote.customer_email) {
       try {
         await dispatchChatNotification({
@@ -285,27 +307,6 @@ export async function sendQuote(
     }
 
     revalidatePath(`/sites/${input.site_id}/ecommerce`);
-
-    // Emit automation event for quote sent
-    logAutomationEvent(
-      input.site_id,
-      EVENT_REGISTRY.ecommerce.quote.sent,
-      {
-        quoteId: quote.id,
-        quoteNumber: quote.quote_number,
-        customerEmail: quote.customer_email,
-        customerName: quote.customer_name,
-        total: quote.total,
-        currency: quote.currency,
-      },
-      {
-        sourceModule: "ecommerce",
-        sourceEntityType: "quote",
-        sourceEntityId: quote.id,
-      },
-    ).catch((err) =>
-      console.error("[QuoteWorkflow] Automation event error:", err),
-    );
 
     return { success: true, quote: updatedQuote };
   } catch (error) {
@@ -379,6 +380,28 @@ export async function resendQuote(
       .single();
     const storeName = siteSettings?.store_name || "";
 
+    // 1. Emit automation event FIRST
+    await logAutomationEvent(
+      siteId,
+      EVENT_REGISTRY.ecommerce.quote.resent,
+      {
+        quoteId,
+        quoteNumber: quote.quote_number,
+        customerEmail: quote.customer_email,
+        customerName: quote.customer_name,
+        total: quote.total,
+        currency: quote.currency,
+      },
+      {
+        sourceModule: "ecommerce",
+        sourceEntityType: "quote",
+        sourceEntityId: quoteId,
+      },
+    ).catch((err) =>
+      console.error("[QuoteWorkflow] Automation event error:", err),
+    );
+
+    // 2. Dispatch notification — skips hardcoded if automation handles it
     await dispatchNotification({
       siteId: siteId,
       eventType: "ecommerce.quote.sent",
@@ -407,27 +430,6 @@ export async function resendQuote(
     });
 
     revalidatePath(`/sites/${siteId}/ecommerce`);
-
-    // Emit automation event for quote resent
-    logAutomationEvent(
-      siteId,
-      EVENT_REGISTRY.ecommerce.quote.resent,
-      {
-        quoteId,
-        quoteNumber: quote.quote_number,
-        customerEmail: quote.customer_email,
-        customerName: quote.customer_name,
-        total: quote.total,
-        currency: quote.currency,
-      },
-      {
-        sourceModule: "ecommerce",
-        sourceEntityType: "quote",
-        sourceEntityId: quoteId,
-      },
-    ).catch((err) =>
-      console.error("[QuoteWorkflow] Automation event error:", err),
-    );
 
     return { success: true };
   } catch (error) {
@@ -489,6 +491,28 @@ export async function sendQuoteReminder(
       .single();
     const reminderBusinessName = reminderSettings?.store_name || "";
 
+    // 1. Emit automation event FIRST
+    await logAutomationEvent(
+      siteId,
+      EVENT_REGISTRY.ecommerce.quote.reminder_sent,
+      {
+        quoteId,
+        quoteNumber: quote.quote_number,
+        customerEmail: quote.customer_email,
+        customerName: quote.customer_name,
+        total: quote.total,
+        currency: quote.currency,
+      },
+      {
+        sourceModule: "ecommerce",
+        sourceEntityType: "quote",
+        sourceEntityId: quoteId,
+      },
+    ).catch((err) =>
+      console.error("[QuoteWorkflow] Automation event error:", err),
+    );
+
+    // 2. Dispatch notification — skips hardcoded if automation handles it
     await dispatchNotification({
       siteId: siteId,
       eventType: "ecommerce.quote.reminder_sent",
@@ -515,27 +539,6 @@ export async function sendQuoteReminder(
     });
 
     revalidatePath(`/sites/${siteId}/ecommerce`);
-
-    // Emit automation event for quote reminder sent
-    logAutomationEvent(
-      siteId,
-      EVENT_REGISTRY.ecommerce.quote.reminder_sent,
-      {
-        quoteId,
-        quoteNumber: quote.quote_number,
-        customerEmail: quote.customer_email,
-        customerName: quote.customer_name,
-        total: quote.total,
-        currency: quote.currency,
-      },
-      {
-        sourceModule: "ecommerce",
-        sourceEntityType: "quote",
-        sourceEntityId: quoteId,
-      },
-    ).catch((err) =>
-      console.error("[QuoteWorkflow] Automation event error:", err),
-    );
 
     return { success: true };
   } catch (error) {
@@ -732,8 +735,8 @@ export async function acceptQuote(
       quote.currency || DEFAULT_CURRENCY,
     );
 
-    // Emit automation event for quote accepted
-    logAutomationEvent(
+    // 1. Emit automation event FIRST (awaited)
+    await logAutomationEvent(
       quote.site_id,
       EVENT_REGISTRY.ecommerce.quote.accepted,
       {
@@ -755,8 +758,9 @@ export async function acceptQuote(
       console.error("[QuoteWorkflow] Automation event error:", err),
     );
 
+    // 2. Dispatch notification — skips hardcoded if automation handles it
     if (quote.site_id) {
-      dispatchNotification({
+      await dispatchNotification({
         siteId: quote.site_id,
         eventType: "ecommerce.quote.accepted",
         notificationFunction: () =>
@@ -866,9 +870,8 @@ export async function rejectQuote(
       },
     });
 
-    // Send rejection notifications (in-app + email to owner)
-    // Emit automation event for quote rejected
-    logAutomationEvent(
+    // 1. Emit automation event FIRST (awaited)
+    await logAutomationEvent(
       quote.site_id,
       EVENT_REGISTRY.ecommerce.quote.rejected,
       {
@@ -889,8 +892,9 @@ export async function rejectQuote(
       console.error("[QuoteWorkflow] Automation event error:", err),
     );
 
+    // 2. Dispatch notification — skips hardcoded if automation handles it
     if (quote.site_id) {
-      dispatchNotification({
+      await dispatchNotification({
         siteId: quote.site_id,
         eventType: "ecommerce.quote.rejected",
         notificationFunction: () =>
@@ -1015,7 +1019,31 @@ export async function requestQuoteAmendment(
       },
     });
 
-    // Notify active chat conversation (customer-facing confirmation)
+    // 1. Emit automation event FIRST
+    if (quote.site_id) {
+      await logAutomationEvent(
+        quote.site_id,
+        EVENT_REGISTRY.ecommerce.quote.amendment_requested,
+        {
+          quoteId: quote.id,
+          quoteNumber: quote.quote_number,
+          customerEmail: quote.customer_email,
+          customerName: quote.customer_name,
+          total: quote.total,
+          currency: quote.currency,
+          amendmentNotes: input.amendment_notes,
+        },
+        {
+          sourceModule: "ecommerce",
+          sourceEntityType: "quote",
+          sourceEntityId: quote.id,
+        },
+      ).catch((err) =>
+        console.error("[QuoteWorkflow] Automation event error:", err),
+      );
+    }
+
+    // 2. Notify active chat conversation (customer-facing confirmation, non-blocking)
     if (quote.customer_email && quote.site_id) {
       try {
         await dispatchChatNotification({
@@ -1037,7 +1065,7 @@ export async function requestQuoteAmendment(
       }
     }
 
-    // Notify store owner (in-app + email)
+    // 3. Notify store owner — skips hardcoded if automation handles it
     if (quote.site_id) {
       try {
         await dispatchNotification({
@@ -1061,28 +1089,6 @@ export async function requestQuoteAmendment(
     }
 
     revalidatePath("/ecommerce");
-
-    // Emit automation event for quote amendment requested
-    logAutomationEvent(
-      quote.site_id,
-      EVENT_REGISTRY.ecommerce.quote.amendment_requested,
-      {
-        quoteId: quote.id,
-        quoteNumber: quote.quote_number,
-        customerEmail: quote.customer_email,
-        customerName: quote.customer_name,
-        total: quote.total,
-        currency: quote.currency,
-        amendmentNotes: input.amendment_notes,
-      },
-      {
-        sourceModule: "ecommerce",
-        sourceEntityType: "quote",
-        sourceEntityId: quote.id,
-      },
-    ).catch((err) =>
-      console.error("[QuoteWorkflow] Automation event error:", err),
-    );
 
     return { success: true, quote: updatedQuote };
   } catch (error) {
@@ -1319,10 +1325,33 @@ export async function convertQuoteToOrder(
       metadata: { quote_id: quote.id, quote_number: quote.quote_number },
     });
 
-    // Notify business owner + customer about the new order
+    // 1. Emit automation event FIRST
+    const currency = quote.currency || DEFAULT_CURRENCY;
+    await logAutomationEvent(
+      input.site_id,
+      EVENT_REGISTRY.ecommerce.quote.converted_to_order,
+      {
+        quoteId: quote.id,
+        quoteNumber: quote.quote_number,
+        orderId: newOrder.id,
+        orderNumber,
+        customerEmail: quote.customer_email,
+        customerName: quote.customer_name,
+        total: quote.total,
+        currency,
+      },
+      {
+        sourceModule: "ecommerce",
+        sourceEntityType: "quote",
+        sourceEntityId: quote.id,
+      },
+    ).catch((err) =>
+      console.error("[QuoteWorkflow] Automation event error:", err),
+    );
+
+    // 2. Notify business owner + customer — skips hardcoded if automation handles it
     // notifyNewOrder expects prices in cents (divides by 100 internally)
     // Quote prices are already in cents — pass directly
-    const currency = quote.currency || DEFAULT_CURRENCY;
     await dispatchNotification({
       siteId: input.site_id,
       eventType: "ecommerce.quote.converted_to_order",
@@ -1349,7 +1378,7 @@ export async function convertQuoteToOrder(
         }),
     });
 
-    // Notify active chat conversation about quote → order conversion (async)
+    // 3. Notify active chat conversation about quote → order conversion (non-blocking)
     if (quote.customer_email) {
       // Quote totals are in main currency unit (not cents) — no /100 needed
       const totalFormatted = formatCurrency(quote.total || 0, currency);
@@ -1373,29 +1402,6 @@ export async function convertQuoteToOrder(
     }
 
     revalidatePath(`/sites/${input.site_id}/ecommerce`);
-
-    // Emit automation event for quote converted to order
-    logAutomationEvent(
-      input.site_id,
-      EVENT_REGISTRY.ecommerce.quote.converted_to_order,
-      {
-        quoteId: quote.id,
-        quoteNumber: quote.quote_number,
-        orderId: newOrder.id,
-        orderNumber,
-        customerEmail: quote.customer_email,
-        customerName: quote.customer_name,
-        total: quote.total,
-        currency,
-      },
-      {
-        sourceModule: "ecommerce",
-        sourceEntityType: "quote",
-        sourceEntityId: quote.id,
-      },
-    ).catch((err) =>
-      console.error("[QuoteWorkflow] Automation event error:", err),
-    );
 
     return { success: true, order: newOrder };
   } catch (error) {

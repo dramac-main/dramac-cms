@@ -208,21 +208,10 @@ export async function POST(request: NextRequest) {
       siteId,
     );
 
-    // Send notifications (async, don't wait)
-    if (formSettings.notify_on_submission && !isSpam) {
-      dispatchNotification({
-        siteId,
-        eventType: "form.submission.received",
-        notificationFunction: () =>
-          sendNotifications(supabase, submission, formSettings, site.agency_id),
-      }).catch((err) => {
-        console.error("[FormSubmit] Notification error:", err);
-      });
-    }
-
-    // Emit automation event for form submission
+    // Send notifications via automation-first pipeline
     if (!isSpam) {
-      logAutomationEvent(
+      // 1. Emit automation event FIRST
+      await logAutomationEvent(
         siteId,
         EVENT_REGISTRY.form.submission.received,
         {
@@ -242,6 +231,18 @@ export async function POST(request: NextRequest) {
       ).catch((err) =>
         console.error("[FormSubmit] Automation event error:", err),
       );
+
+      // 2. Dispatch notification — skips hardcoded if automation handles it
+      if (formSettings.notify_on_submission) {
+        await dispatchNotification({
+          siteId,
+          eventType: "form.submission.received",
+          notificationFunction: () =>
+            sendNotifications(supabase, submission, formSettings, site.agency_id),
+        }).catch((err) => {
+          console.error("[FormSubmit] Notification error:", err);
+        });
+      }
     }
 
     // Trigger webhooks (async, don't wait)

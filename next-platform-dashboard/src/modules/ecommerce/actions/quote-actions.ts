@@ -243,8 +243,8 @@ export async function createQuote(
       },
     );
 
-    // Emit automation event for quote creation
-    logAutomationEvent(
+    // 1. Emit automation event FIRST (awaited)
+    await logAutomationEvent(
       input.site_id,
       EVENT_REGISTRY.ecommerce.quote.created,
       {

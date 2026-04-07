@@ -1280,7 +1280,30 @@ export async function createPublicOrderFromCart(
         await incrementDiscountUsageAdmin(input.site_id, input.discount_code);
       }
 
-      // Send notifications (awaited to ensure completion in serverless)
+      // 1. Emit automation event FIRST (before dispatcher checks for active workflows)
+      await logAutomationEvent(
+        input.site_id,
+        EVENT_REGISTRY.ecommerce.order.created,
+        {
+          order_id: order.id,
+          order_number: orderNumber,
+          customer_email: input.customer_email,
+          customer_name: input.customer_name,
+          total: input.total,
+          subtotal: input.subtotal,
+          currency: input.currency,
+          payment_provider: input.payment_provider,
+          payment_status: input.payment_status || "pending",
+          status: input.status || "pending",
+        },
+        {
+          sourceModule: "ecommerce",
+          sourceEntityType: "order",
+          sourceEntityId: order.id,
+        },
+      ).catch((err) => console.error("[Ecom Public] Automation event error:", err));
+
+      // 2. Send notifications — dispatcher skips hardcoded if automation handles it
       const notificationItems = cart.items.map((item: CartItem) => ({
         name: item.product?.name || "Unknown Product",
         quantity: item.quantity,
@@ -1331,7 +1354,31 @@ export async function createPublicOrderFromCart(
       });
     }
   } else {
-    // No cart — still fire notification
+    // No cart — still emit automation event first, then fire notification
+    // 1. Emit automation event FIRST
+    await logAutomationEvent(
+      input.site_id,
+      EVENT_REGISTRY.ecommerce.order.created,
+      {
+        order_id: order.id,
+        order_number: orderNumber,
+        customer_email: input.customer_email,
+        customer_name: input.customer_name,
+        total: input.total,
+        subtotal: input.subtotal,
+        currency: input.currency,
+        payment_provider: input.payment_provider,
+        payment_status: input.payment_status || "pending",
+        status: input.status || "pending",
+      },
+      {
+        sourceModule: "ecommerce",
+        sourceEntityType: "order",
+        sourceEntityId: order.id,
+      },
+    ).catch((err) => console.error("[Ecom Public] Automation event error:", err));
+
+    // 2. Dispatch notification — skips hardcoded if automation handles it
     await dispatchNotification({
       siteId: input.site_id,
       eventType: "ecommerce.order.created",
@@ -1370,29 +1417,6 @@ export async function createPublicOrderFromCart(
       },
     });
   }
-
-  // Emit automation event for order creation
-  logAutomationEvent(
-    input.site_id,
-    "ecommerce.order.created",
-    {
-      order_id: order.id,
-      order_number: orderNumber,
-      customer_email: input.customer_email,
-      customer_name: input.customer_name,
-      total: input.total,
-      subtotal: input.subtotal,
-      currency: input.currency,
-      payment_provider: input.payment_provider,
-      payment_status: input.payment_status || "pending",
-      status: input.status || "pending",
-    },
-    {
-      sourceModule: "ecommerce",
-      sourceEntityType: "order",
-      sourceEntityId: order.id,
-    },
-  ).catch((err) => console.error("[Ecom Public] Automation event error:", err));
 
   // Bridge to CRM: create contact + deal (non-blocking)
   import("@/modules/crm/actions/crm-bridge")
@@ -1791,8 +1815,8 @@ export async function uploadPaymentProof(input: {
       order.currency || "ZMW",
     );
 
-    // Emit automation event for payment proof upload
-    logAutomationEvent(
+    // 1. Emit automation event FIRST
+    await logAutomationEvent(
       input.siteId,
       EVENT_REGISTRY.ecommerce.payment.proof_uploaded,
       {
