@@ -86,7 +86,7 @@ const ECOMMERCE_COMMUNICATIONS_PACK: StarterPack = {
     "system-quote-amendment",
     "system-quote-converted",
   ],
-  autoInstallForModules: ["ecommod01"],
+  autoInstallForModules: ["ecommerce"],
   activateOnInstall: true,
   isSystemPack: true,
   category: "system",
