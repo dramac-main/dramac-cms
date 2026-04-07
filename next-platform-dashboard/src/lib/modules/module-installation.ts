@@ -2,11 +2,11 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUserId } from "@/lib/auth/permissions";
-import { 
-  executeInstallHook, 
-  executeUninstallHook, 
-  executeEnableHook, 
-  executeDisableHook 
+import {
+  executeInstallHook,
+  executeUninstallHook,
+  executeEnableHook,
+  executeDisableHook,
 } from "./hooks/module-hooks-registry";
 
 // Initialize hooks on module load
@@ -45,14 +45,14 @@ export interface UpdateSettingsResult {
 /**
  * Install a module on a site.
  * Works for both catalog and studio modules.
- * 
+ *
  * This is a simplified installation for site-level modules that doesn't
  * require agency subscription checks (for free modules or direct installs).
  */
 export async function installModuleOnSite(
   siteId: string,
   moduleId: string,
-  initialSettings?: Record<string, unknown>
+  initialSettings?: Record<string, unknown>,
 ): Promise<InstallResult> {
   const supabase = await createClient();
   const userId = await getCurrentUserId();
@@ -148,19 +148,32 @@ export async function installModuleOnSite(
 
   // Execute the install hook for this module (if registered)
   try {
-    const hookResult = await executeInstallHook(moduleId, siteId, mergedSettings);
-    
+    const hookResult = await executeInstallHook(
+      moduleId,
+      siteId,
+      mergedSettings,
+    );
+
     if (!hookResult.success) {
-      console.warn(`[ModuleInstallation] Install hook warning for ${moduleId}:`, hookResult.errors);
+      console.warn(
+        `[ModuleInstallation] Install hook warning for ${moduleId}:`,
+        hookResult.errors,
+      );
       // Don't fail the installation if the hook fails, just log it
     } else {
-      console.log(`[ModuleInstallation] Install hook executed for ${moduleId}`, {
-        pagesCreated: hookResult.pagesCreated?.length ?? 0,
-        navItemsAdded: hookResult.navItemsAdded?.length ?? 0,
-      });
+      console.log(
+        `[ModuleInstallation] Install hook executed for ${moduleId}`,
+        {
+          pagesCreated: hookResult.pagesCreated?.length ?? 0,
+          navItemsAdded: hookResult.navItemsAdded?.length ?? 0,
+        },
+      );
     }
   } catch (hookError) {
-    console.error(`[ModuleInstallation] Install hook error for ${moduleId}:`, hookError);
+    console.error(
+      `[ModuleInstallation] Install hook error for ${moduleId}:`,
+      hookError,
+    );
     // Continue - installation succeeded, hook is optional
   }
 
@@ -174,9 +187,8 @@ export async function installModuleOnSite(
       .single();
 
     if (modRow?.slug) {
-      const { autoInstallPacksForModule } = await import(
-        "@/modules/automation/actions/automation-actions"
-      );
+      const { autoInstallPacksForModule } =
+        await import("@/modules/automation/actions/automation-actions");
       autoInstallPacksForModule(siteId, modRow.slug).catch((err: unknown) =>
         console.error(
           `[ModuleInstallation] Auto-install packs error for ${modRow.slug}:`,
@@ -200,7 +212,7 @@ export async function installModuleOnSite(
  */
 export async function uninstallModuleFromSite(
   siteId: string,
-  moduleId: string
+  moduleId: string,
 ): Promise<UninstallResult> {
   const supabase = await createClient();
   const userId = await getCurrentUserId();
@@ -226,17 +238,26 @@ export async function uninstallModuleFromSite(
   // Execute the uninstall hook first (before removing from database)
   try {
     const hookResult = await executeUninstallHook(moduleId, siteId);
-    
+
     if (!hookResult.success) {
-      console.warn(`[ModuleInstallation] Uninstall hook warning for ${moduleId}:`, hookResult.errors);
+      console.warn(
+        `[ModuleInstallation] Uninstall hook warning for ${moduleId}:`,
+        hookResult.errors,
+      );
     } else {
-      console.log(`[ModuleInstallation] Uninstall hook executed for ${moduleId}`, {
-        pagesRemoved: hookResult.pagesRemoved?.length ?? 0,
-        navItemsRemoved: hookResult.navItemsRemoved?.length ?? 0,
-      });
+      console.log(
+        `[ModuleInstallation] Uninstall hook executed for ${moduleId}`,
+        {
+          pagesRemoved: hookResult.pagesRemoved?.length ?? 0,
+          navItemsRemoved: hookResult.navItemsRemoved?.length ?? 0,
+        },
+      );
     }
   } catch (hookError) {
-    console.error(`[ModuleInstallation] Uninstall hook error for ${moduleId}:`, hookError);
+    console.error(
+      `[ModuleInstallation] Uninstall hook error for ${moduleId}:`,
+      hookError,
+    );
     // Continue - we still want to remove the installation record
   }
 
@@ -251,7 +272,9 @@ export async function uninstallModuleFromSite(
     return { success: false, error: deleteError.message };
   }
 
-  console.log(`[ModuleInstallation] Uninstalled module ${moduleId} from site ${siteId}`);
+  console.log(
+    `[ModuleInstallation] Uninstalled module ${moduleId} from site ${siteId}`,
+  );
 
   return { success: true };
 }
@@ -266,7 +289,7 @@ export async function uninstallModuleFromSite(
 export async function updateModuleSettings(
   siteId: string,
   moduleId: string,
-  settings: Record<string, unknown>
+  settings: Record<string, unknown>,
 ): Promise<UpdateSettingsResult> {
   const supabase = await createClient();
   const userId = await getCurrentUserId();
@@ -305,7 +328,7 @@ export async function updateModuleSettings(
 export async function toggleModuleEnabled(
   siteId: string,
   moduleId: string,
-  enabled: boolean
+  enabled: boolean,
 ): Promise<UpdateSettingsResult> {
   const supabase = await createClient();
   const userId = await getCurrentUserId();
@@ -343,20 +366,33 @@ export async function toggleModuleEnabled(
     if (enabled) {
       const hookResult = await executeEnableHook(moduleId, siteId);
       if (!hookResult.success) {
-        console.warn(`[ModuleInstallation] Enable hook warning for ${moduleId}:`, hookResult.error);
+        console.warn(
+          `[ModuleInstallation] Enable hook warning for ${moduleId}:`,
+          hookResult.error,
+        );
       } else {
-        console.log(`[ModuleInstallation] Enable hook executed for ${moduleId}`);
+        console.log(
+          `[ModuleInstallation] Enable hook executed for ${moduleId}`,
+        );
       }
     } else {
       const hookResult = await executeDisableHook(moduleId, siteId);
       if (!hookResult.success) {
-        console.warn(`[ModuleInstallation] Disable hook warning for ${moduleId}:`, hookResult.error);
+        console.warn(
+          `[ModuleInstallation] Disable hook warning for ${moduleId}:`,
+          hookResult.error,
+        );
       } else {
-        console.log(`[ModuleInstallation] Disable hook executed for ${moduleId}`);
+        console.log(
+          `[ModuleInstallation] Disable hook executed for ${moduleId}`,
+        );
       }
     }
   } catch (hookError) {
-    console.error(`[ModuleInstallation] Toggle hook error for ${moduleId}:`, hookError);
+    console.error(
+      `[ModuleInstallation] Toggle hook error for ${moduleId}:`,
+      hookError,
+    );
     // Continue - the toggle succeeded, hook is optional
   }
 
@@ -396,19 +432,21 @@ export async function getSiteModules(siteId: string): Promise<{
 
   return {
     success: true,
-    modules: (installations || []).map((i: {
-      id: string;
-      module_id: string;
-      settings: Record<string, unknown>;
-      is_enabled: boolean;
-      installed_at: string;
-    }) => ({
-      installationId: i.id,
-      moduleId: i.module_id,
-      settings: i.settings || {},
-      isEnabled: i.is_enabled,
-      installedAt: i.installed_at,
-    })),
+    modules: (installations || []).map(
+      (i: {
+        id: string;
+        module_id: string;
+        settings: Record<string, unknown>;
+        is_enabled: boolean;
+        installed_at: string;
+      }) => ({
+        installationId: i.id,
+        moduleId: i.module_id,
+        settings: i.settings || {},
+        isEnabled: i.is_enabled,
+        installedAt: i.installed_at,
+      }),
+    ),
   };
 }
 
@@ -421,7 +459,7 @@ export async function getSiteModules(siteId: string): Promise<{
  */
 export async function isModuleInstalledOnSite(
   siteId: string,
-  moduleId: string
+  moduleId: string,
 ): Promise<boolean> {
   const supabase = await createClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

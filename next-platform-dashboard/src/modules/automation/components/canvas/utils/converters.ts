@@ -6,7 +6,10 @@
  */
 
 import type { Node, Edge } from "@xyflow/react";
-import type { WorkflowStep, TriggerConfig } from "../../../types/automation-types";
+import type {
+  WorkflowStep,
+  TriggerConfig,
+} from "../../../types/automation-types";
 
 // ============================================================================
 // CONSTANTS
@@ -69,8 +72,7 @@ export function stepsToNodesAndEdges(
   // 2. Step nodes
   sorted.forEach((step, index) => {
     const hasPersistedPosition =
-      step.position_x != null &&
-      step.position_y != null;
+      step.position_x != null && step.position_y != null;
 
     nodes.push({
       id: step.id,
@@ -154,7 +156,10 @@ export function stepsToNodesAndEdges(
 export function extractNodePositions(
   nodes: Node[],
 ): Map<string, { position_x: number; position_y: number }> {
-  const positions = new Map<string, { position_x: number; position_y: number }>();
+  const positions = new Map<
+    string,
+    { position_x: number; position_y: number }
+  >();
 
   for (const node of nodes) {
     // Skip trigger and end nodes

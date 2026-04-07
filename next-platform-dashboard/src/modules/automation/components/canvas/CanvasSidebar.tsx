@@ -186,9 +186,7 @@ const PALETTE_ITEMS: PaletteItem[] = [
 ];
 
 // Group items by category
-const CATEGORIES = Array.from(
-  new Set(PALETTE_ITEMS.map((i) => i.category)),
-);
+const CATEGORIES = Array.from(new Set(PALETTE_ITEMS.map((i) => i.category)));
 
 export function CanvasSidebar() {
   const [search, setSearch] = useState("");
@@ -201,10 +199,7 @@ export function CanvasSidebar() {
       )
     : PALETTE_ITEMS;
 
-  const onDragStart = (
-    e: React.DragEvent,
-    item: PaletteItem,
-  ) => {
+  const onDragStart = (e: React.DragEvent, item: PaletteItem) => {
     e.dataTransfer.setData("application/reactflow-type", item.stepType);
     e.dataTransfer.setData("application/reactflow-action", item.actionType);
     e.dataTransfer.setData("application/reactflow-name", item.name);

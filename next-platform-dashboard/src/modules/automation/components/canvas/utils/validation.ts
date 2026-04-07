@@ -18,7 +18,11 @@ export interface ValidationResult {
 }
 
 export interface ValidationError {
-  type: "missing_trigger" | "orphaned_node" | "missing_connection" | "cycle_detected";
+  type:
+    | "missing_trigger"
+    | "orphaned_node"
+    | "missing_connection"
+    | "cycle_detected";
   nodeId?: string;
   message: string;
 }
@@ -96,11 +100,7 @@ export function validateGraph(nodes: Node[], edges: Edge[]): ValidationResult {
 
   // Check for dead-end action nodes (no outgoing edge, not end node)
   for (const node of nodes) {
-    if (
-      node.id === END_NODE_ID ||
-      node.type === "end" ||
-      node.type === "note"
-    )
+    if (node.id === END_NODE_ID || node.type === "end" || node.type === "note")
       continue;
 
     const outs = outgoing.get(node.id) || [];
@@ -115,7 +115,8 @@ export function validateGraph(nodes: Node[], edges: Edge[]): ValidationResult {
 
   // Empty workflow warning
   const stepNodes = nodes.filter(
-    (n) => n.id !== TRIGGER_NODE_ID && n.id !== END_NODE_ID && n.type !== "note",
+    (n) =>
+      n.id !== TRIGGER_NODE_ID && n.id !== END_NODE_ID && n.type !== "note",
   );
   if (stepNodes.length === 0) {
     warnings.push({

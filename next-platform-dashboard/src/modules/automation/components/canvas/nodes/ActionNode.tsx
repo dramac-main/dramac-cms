@@ -49,9 +49,7 @@ function getConfigSummary(step: WorkflowStep): string {
   if (step.description) return step.description;
   if (step.action_type) {
     const parts = step.action_type.split(".");
-    return parts
-      .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
-      .join(" → ");
+    return parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(" → ");
   }
   return "Configure action";
 }

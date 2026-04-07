@@ -62,10 +62,7 @@ function ConditionSection({
   const addCondition = () => {
     onUpdate({
       ...config,
-      conditions: [
-        ...conditions,
-        { field: "", operator: "equals", value: "" },
-      ],
+      conditions: [...conditions, { field: "", operator: "equals", value: "" }],
     });
   };
 
@@ -214,9 +211,7 @@ function DelaySection({
           />
           <Select
             value={unit}
-            onValueChange={(u) =>
-              onUpdate({ ...config, value: `${num}${u}` })
-            }
+            onValueChange={(u) => onUpdate({ ...config, value: `${num}${u}` })}
           >
             <SelectTrigger className="w-28 h-8 text-xs">
               <SelectValue />
@@ -398,9 +393,7 @@ export function NodeConfigPanel({
               <Label className="text-xs">Name</Label>
               <Input
                 value={step.name || ""}
-                onChange={(e) =>
-                  onUpdate(step.id, { name: e.target.value })
-                }
+                onChange={(e) => onUpdate(step.id, { name: e.target.value })}
                 placeholder="Step name..."
                 className="h-8 text-xs"
               />
@@ -432,9 +425,7 @@ export function NodeConfigPanel({
             {/* Action-specific inputs from ACTION_REGISTRY */}
             {actionDef && (
               <div className="space-y-3 pt-3 border-t">
-                <h4 className="text-xs font-medium">
-                  {actionDef.name}
-                </h4>
+                <h4 className="text-xs font-medium">{actionDef.name}</h4>
                 <p className="text-[11px] text-muted-foreground">
                   {actionDef.description}
                 </p>
@@ -462,9 +453,9 @@ export function NodeConfigPanel({
                     {inputCfg.type === "string" && (
                       <Input
                         value={
-                          (localConfig as Record<string, unknown>)[
+                          ((localConfig as Record<string, unknown>)[
                             key
-                          ] as string || ""
+                          ] as string) || ""
                         }
                         onChange={(e) =>
                           handleConfigChange(key, e.target.value)
@@ -498,9 +489,9 @@ export function NodeConfigPanel({
                     {inputCfg.type === "enum" && (
                       <Select
                         value={
-                          (localConfig as Record<string, unknown>)[
+                          ((localConfig as Record<string, unknown>)[
                             key
-                          ] as string || ""
+                          ] as string) || ""
                         }
                         onValueChange={(v) => handleConfigChange(key, v)}
                       >
@@ -520,9 +511,9 @@ export function NodeConfigPanel({
                     {inputCfg.type === "boolean" && (
                       <Switch
                         checked={
-                          (localConfig as Record<string, unknown>)[
+                          ((localConfig as Record<string, unknown>)[
                             key
-                          ] as boolean || false
+                          ] as boolean) || false
                         }
                         onCheckedChange={(c) => handleConfigChange(key, c)}
                       />
@@ -562,9 +553,7 @@ export function NodeConfigPanel({
             {step.step_type === "condition" && (
               <ConditionSection
                 config={step.condition_config || {}}
-                onUpdate={(cfg) =>
-                  onUpdate(step.id, { condition_config: cfg })
-                }
+                onUpdate={(cfg) => onUpdate(step.id, { condition_config: cfg })}
               />
             )}
 
@@ -572,9 +561,7 @@ export function NodeConfigPanel({
             {step.step_type === "delay" && (
               <DelaySection
                 config={step.delay_config || {}}
-                onUpdate={(cfg) =>
-                  onUpdate(step.id, { delay_config: cfg })
-                }
+                onUpdate={(cfg) => onUpdate(step.id, { delay_config: cfg })}
               />
             )}
 
@@ -582,9 +569,7 @@ export function NodeConfigPanel({
             {step.step_type === "loop" && (
               <LoopSection
                 config={step.loop_config || {}}
-                onUpdate={(cfg) =>
-                  onUpdate(step.id, { loop_config: cfg })
-                }
+                onUpdate={(cfg) => onUpdate(step.id, { loop_config: cfg })}
               />
             )}
           </TabsContent>

@@ -298,9 +298,8 @@ async function installCoreModules(
 
       // Step 4: For Automation — auto-install default starter packs
       if (mod.slug === "automation") {
-        const { installDefaultAutomationPacks } = await import(
-          "@/modules/automation/actions/automation-actions"
-        );
+        const { installDefaultAutomationPacks } =
+          await import("@/modules/automation/actions/automation-actions");
         await installDefaultAutomationPacks(siteId).catch((err: unknown) =>
           console.error("[Sites] Failed to install automation packs:", err),
         );

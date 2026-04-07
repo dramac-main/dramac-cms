@@ -14,7 +14,10 @@ import { sendBrandedEmail } from "@/lib/email/send-branded-email";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logAutomationEvent } from "@/modules/automation/services/event-processor";
 import { EVENT_REGISTRY } from "@/modules/automation/lib/event-types";
-import { dispatchNotification, dispatchChatNotification } from "@/lib/notifications/automation-aware-dispatcher";
+import {
+  dispatchNotification,
+  dispatchChatNotification,
+} from "@/lib/notifications/automation-aware-dispatcher";
 import { adjustStock } from "./inventory-actions";
 import { VALID_TRANSITIONS, STATUS_EMAIL_MAP } from "../lib/order-constants";
 import type {
@@ -274,7 +277,8 @@ export async function updateOrderStatus(
     dispatchNotification({
       siteId,
       eventType: `ecommerce.order.${status}`,
-      notificationFunction: () => sendOrderEmail(orderId, emailType, userId, userName),
+      notificationFunction: () =>
+        sendOrderEmail(orderId, emailType, userId, userName),
     }).catch((err) =>
       console.error("[OrderActions] Email notification error:", err),
     );
@@ -315,14 +319,15 @@ export async function updateOrderStatus(
           dispatchChatNotification({
             siteId,
             eventType: `ecommerce.order.${status}`,
-            chatFunction: () => import("@/modules/live-chat/lib/chat-event-bridge")
-              .then(({ notifyChatOrderStatusChanged }) =>
-                notifyChatOrderStatusChanged(
-                  siteId,
-                  orderData.customer_email,
-                  orderData.order_number,
-                  status,
-                ),
+            chatFunction: () =>
+              import("@/modules/live-chat/lib/chat-event-bridge").then(
+                ({ notifyChatOrderStatusChanged }) =>
+                  notifyChatOrderStatusChanged(
+                    siteId,
+                    orderData.customer_email,
+                    orderData.order_number,
+                    status,
+                  ),
               ),
           }).catch((err) =>
             console.error("[OrderActions] Chat notification error:", err),
@@ -637,13 +642,38 @@ export async function updatePaymentProofStatus(
 
   // Emit automation events for payment proof review
   if (status === "approved") {
-    logAutomationEvent(siteId, EVENT_REGISTRY.ecommerce.payment.received, {
-      orderId, paymentMethod: 'manual_proof', reviewedBy: userName,
-    }, { sourceModule: 'ecommerce', sourceEntityType: 'order', sourceEntityId: orderId }).catch(err => console.error('[OrderActions] Automation event error:', err));
+    logAutomationEvent(
+      siteId,
+      EVENT_REGISTRY.ecommerce.payment.received,
+      {
+        orderId,
+        paymentMethod: "manual_proof",
+        reviewedBy: userName,
+      },
+      {
+        sourceModule: "ecommerce",
+        sourceEntityType: "order",
+        sourceEntityId: orderId,
+      },
+    ).catch((err) =>
+      console.error("[OrderActions] Automation event error:", err),
+    );
   } else if (status === "rejected") {
-    logAutomationEvent(siteId, EVENT_REGISTRY.ecommerce.payment.proof_rejected, {
-      orderId, reviewedBy: userName,
-    }, { sourceModule: 'ecommerce', sourceEntityType: 'order', sourceEntityId: orderId }).catch(err => console.error('[OrderActions] Automation event error:', err));
+    logAutomationEvent(
+      siteId,
+      EVENT_REGISTRY.ecommerce.payment.proof_rejected,
+      {
+        orderId,
+        reviewedBy: userName,
+      },
+      {
+        sourceModule: "ecommerce",
+        sourceEntityType: "order",
+        sourceEntityId: orderId,
+      },
+    ).catch((err) =>
+      console.error("[OrderActions] Automation event error:", err),
+    );
   }
 
   await addTimelineEvent(orderId, {
@@ -691,16 +721,17 @@ export async function updatePaymentProofStatus(
         dispatchNotification({
           siteId,
           eventType: "ecommerce.payment.received",
-          notificationFunction: () => import("@/lib/services/business-notifications")
-            .then(({ notifyPaymentReceived }) =>
-              notifyPaymentReceived(
-                siteId,
-                orderData.order_number,
-                orderData.customer_email,
-                orderData.customer_name || "Customer",
-                totalStr,
-                "Manual (Payment Proof)",
-              ),
+          notificationFunction: () =>
+            import("@/lib/services/business-notifications").then(
+              ({ notifyPaymentReceived }) =>
+                notifyPaymentReceived(
+                  siteId,
+                  orderData.order_number,
+                  orderData.customer_email,
+                  orderData.customer_name || "Customer",
+                  totalStr,
+                  "Manual (Payment Proof)",
+                ),
             ),
         }).catch(() => {});
       } else {
@@ -708,19 +739,21 @@ export async function updatePaymentProofStatus(
         dispatchChatNotification({
           siteId,
           eventType: "ecommerce.payment.proof_rejected",
-          chatFunction: () => import("@/modules/live-chat/lib/chat-event-bridge")
-            .then(({ findActiveConversation, sendProactiveMessage }) =>
-              findActiveConversation(siteId, orderData.customer_email)
-                .then((conv) => {
-                  if (!conv) return;
-                  return sendProactiveMessage(
-                    siteId,
-                    conv.conversationId,
-                    `Your payment proof for order ${orderData.order_number} could not be verified. ` +
-                      `Please upload a new proof of payment on your order page, or contact us for help.`,
-                    conv.assistantName,
-                  );
-                }),
+          chatFunction: () =>
+            import("@/modules/live-chat/lib/chat-event-bridge").then(
+              ({ findActiveConversation, sendProactiveMessage }) =>
+                findActiveConversation(siteId, orderData.customer_email).then(
+                  (conv) => {
+                    if (!conv) return;
+                    return sendProactiveMessage(
+                      siteId,
+                      conv.conversationId,
+                      `Your payment proof for order ${orderData.order_number} could not be verified. ` +
+                        `Please upload a new proof of payment on your order page, or contact us for help.`,
+                      conv.assistantName,
+                    );
+                  },
+                ),
             ),
         }).catch(() => {});
 
@@ -868,16 +901,20 @@ export async function processRefund(
       dispatchNotification({
         siteId: order.site_id,
         eventType: "ecommerce.order.refunded",
-        notificationFunction: () => import("@/lib/services/business-notifications")
-          .then(({ notifyRefundIssued }) =>
-            notifyRefundIssued(
-              order.site_id,
-              order.order_number,
-              order.customer_email,
-              order.customer_name || "Customer",
-              formatCurrency(refundData.amount / 100, order.currency || "USD"),
-              refundData.reason || undefined,
-            ),
+        notificationFunction: () =>
+          import("@/lib/services/business-notifications").then(
+            ({ notifyRefundIssued }) =>
+              notifyRefundIssued(
+                order.site_id,
+                order.order_number,
+                order.customer_email,
+                order.customer_name || "Customer",
+                formatCurrency(
+                  refundData.amount / 100,
+                  order.currency || "USD",
+                ),
+                refundData.reason || undefined,
+              ),
           ),
       }).catch((err) =>
         console.error("[OrderActions] Refund notification error:", err),

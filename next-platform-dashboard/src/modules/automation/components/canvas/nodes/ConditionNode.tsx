@@ -18,7 +18,10 @@ type ConditionNodeData = {
 
 type ConditionNodeType = Node<ConditionNodeData, "condition">;
 
-function ConditionNodeComponent({ data, selected }: NodeProps<ConditionNodeType>) {
+function ConditionNodeComponent({
+  data,
+  selected,
+}: NodeProps<ConditionNodeType>) {
   const step = data.step;
   const condCount = step?.condition_config?.conditions?.length || 0;
   const operator = step?.condition_config?.operator || "and";

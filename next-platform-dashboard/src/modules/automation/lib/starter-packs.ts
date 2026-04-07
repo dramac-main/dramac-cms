@@ -193,9 +193,7 @@ export const STARTER_PACKS: StarterPack[] = [
 /**
  * Get a starter pack by ID
  */
-export function getStarterPackById(
-  packId: string,
-): StarterPack | undefined {
+export function getStarterPackById(packId: string): StarterPack | undefined {
   return STARTER_PACKS.find((p) => p.id === packId);
 }
 
@@ -237,9 +235,7 @@ export function getPacksForModules(
  * Get packs that should auto-install when a specific module is added.
  * Used when a new module is installed on an existing site.
  */
-export function getPacksForNewModule(
-  moduleSlug: string,
-): StarterPack[] {
+export function getPacksForNewModule(moduleSlug: string): StarterPack[] {
   return STARTER_PACKS.filter((p) => {
     if (!p.isSystemPack) return false;
     if (!p.autoInstallForModules) return false;

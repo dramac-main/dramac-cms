@@ -656,7 +656,8 @@ const ORDER_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
         action_type: "notification.in_app_targeted",
         action_config: {
           title: "Order Delivered",
-          message: "Order #{{trigger.orderNumber}} was delivered to {{trigger.customerName}}",
+          message:
+            "Order #{{trigger.orderNumber}} was delivered to {{trigger.customerName}}",
           type: "success",
           target_role: "owner",
         },
@@ -1477,8 +1478,7 @@ const FORM_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
         action_type: "notification.in_app_targeted",
         action_config: {
           title: "New Form Submission",
-          message:
-            'New submission on "{{trigger.formName}}"',
+          message: 'New submission on "{{trigger.formName}}"',
           type: "info",
           target_role: "owner",
         },
@@ -1551,8 +1551,7 @@ const CHAT_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
         action_type: "notification.in_app_targeted",
         action_config: {
           title: "Missed Chat",
-          message:
-            "A customer chat was missed — no agent responded in time",
+          message: "A customer chat was missed — no agent responded in time",
           type: "warning",
           target_role: "owner",
           link: "/live-chat/{{trigger.conversationId}}",

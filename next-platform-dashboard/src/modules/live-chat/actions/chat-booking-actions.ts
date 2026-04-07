@@ -27,7 +27,10 @@ import {
 } from "@/modules/live-chat/lib/chat-event-bridge";
 import { logAutomationEvent } from "@/modules/automation/services/event-processor";
 import { EVENT_REGISTRY } from "@/modules/automation/lib/event-types";
-import { dispatchNotification, dispatchChatNotification } from "@/lib/notifications/automation-aware-dispatcher";
+import {
+  dispatchNotification,
+  dispatchChatNotification,
+} from "@/lib/notifications/automation-aware-dispatcher";
 
 const BOOKING_PREFIX = "mod_bookmod01";
 
@@ -269,9 +272,25 @@ export async function updateBookingStatusFromChat(
   };
 
   if (newStatus === "confirmed") {
-    logAutomationEvent(siteId, EVENT_REGISTRY.booking.appointment.confirmed, {
-      appointmentId: bookingId, serviceName, customerName, customerEmail, startTime: startTime.toISOString(), staffName,
-    }, { sourceModule: 'booking', sourceEntityType: 'appointment', sourceEntityId: bookingId }).catch(err => console.error('[ChatBooking] Automation event error:', err));
+    logAutomationEvent(
+      siteId,
+      EVENT_REGISTRY.booking.appointment.confirmed,
+      {
+        appointmentId: bookingId,
+        serviceName,
+        customerName,
+        customerEmail,
+        startTime: startTime.toISOString(),
+        staffName,
+      },
+      {
+        sourceModule: "booking",
+        sourceEntityType: "appointment",
+        sourceEntityId: bookingId,
+      },
+    ).catch((err) =>
+      console.error("[ChatBooking] Automation event error:", err),
+    );
     // Email notifications
     dispatchNotification({
       siteId,
@@ -285,21 +304,38 @@ export async function updateBookingStatusFromChat(
       dispatchChatNotification({
         siteId,
         eventType: "booking.appointment.confirmed",
-        chatFunction: () => notifyChatBookingConfirmed(
-          siteId,
-          customerEmail,
-          serviceName,
-          startFmt,
-          timeFmt,
-        ),
+        chatFunction: () =>
+          notifyChatBookingConfirmed(
+            siteId,
+            customerEmail,
+            serviceName,
+            startFmt,
+            timeFmt,
+          ),
       }).catch((err) =>
         console.error("[ChatBooking] Chat confirm notify error:", err),
       );
     }
   } else if (newStatus === "completed") {
-    logAutomationEvent(siteId, EVENT_REGISTRY.booking.appointment.completed, {
-      appointmentId: bookingId, serviceName, customerName, customerEmail, startTime: startTime.toISOString(), staffName,
-    }, { sourceModule: 'booking', sourceEntityType: 'appointment', sourceEntityId: bookingId }).catch(err => console.error('[ChatBooking] Automation event error:', err));
+    logAutomationEvent(
+      siteId,
+      EVENT_REGISTRY.booking.appointment.completed,
+      {
+        appointmentId: bookingId,
+        serviceName,
+        customerName,
+        customerEmail,
+        startTime: startTime.toISOString(),
+        staffName,
+      },
+      {
+        sourceModule: "booking",
+        sourceEntityType: "appointment",
+        sourceEntityId: bookingId,
+      },
+    ).catch((err) =>
+      console.error("[ChatBooking] Automation event error:", err),
+    );
     dispatchNotification({
       siteId,
       eventType: "booking.appointment.completed",
@@ -311,34 +347,53 @@ export async function updateBookingStatusFromChat(
       dispatchChatNotification({
         siteId,
         eventType: "booking.appointment.completed",
-        chatFunction: () => notifyChatBookingCompleted(siteId, customerEmail, serviceName),
-      }).catch(
-        (err) =>
-          console.error("[ChatBooking] Chat complete notify error:", err),
+        chatFunction: () =>
+          notifyChatBookingCompleted(siteId, customerEmail, serviceName),
+      }).catch((err) =>
+        console.error("[ChatBooking] Chat complete notify error:", err),
       );
     }
   } else if (newStatus === "cancelled") {
-    logAutomationEvent(siteId, EVENT_REGISTRY.booking.appointment.cancelled, {
-      appointmentId: bookingId, serviceName, customerName, customerEmail, startTime: startTime.toISOString(), staffName,
-      reason: options?.cancellationReason?.trim() || 'Cancelled via live chat',
-    }, { sourceModule: 'booking', sourceEntityType: 'appointment', sourceEntityId: bookingId }).catch(err => console.error('[ChatBooking] Automation event error:', err));
+    logAutomationEvent(
+      siteId,
+      EVENT_REGISTRY.booking.appointment.cancelled,
+      {
+        appointmentId: bookingId,
+        serviceName,
+        customerName,
+        customerEmail,
+        startTime: startTime.toISOString(),
+        staffName,
+        reason:
+          options?.cancellationReason?.trim() || "Cancelled via live chat",
+      },
+      {
+        sourceModule: "booking",
+        sourceEntityType: "appointment",
+        sourceEntityId: bookingId,
+      },
+    ).catch((err) =>
+      console.error("[ChatBooking] Automation event error:", err),
+    );
     dispatchNotification({
       siteId,
       eventType: "booking.appointment.cancelled",
-      notificationFunction: () => notifyBookingCancelled({
-        siteId,
-        appointmentId: bookingId,
-        serviceName,
-        servicePrice,
-        serviceDuration,
-        staffName,
-        customerName,
-        customerEmail,
-        startTime,
-        cancelledBy: "staff",
-        reason: options?.cancellationReason?.trim() || "Cancelled via live chat",
-        currency,
-      }),
+      notificationFunction: () =>
+        notifyBookingCancelled({
+          siteId,
+          appointmentId: bookingId,
+          serviceName,
+          servicePrice,
+          serviceDuration,
+          staffName,
+          customerName,
+          customerEmail,
+          startTime,
+          cancelledBy: "staff",
+          reason:
+            options?.cancellationReason?.trim() || "Cancelled via live chat",
+          currency,
+        }),
     }).catch((err) =>
       console.error("[ChatBooking] Cancel notification error:", err),
     );
@@ -346,20 +401,37 @@ export async function updateBookingStatusFromChat(
       dispatchChatNotification({
         siteId,
         eventType: "booking.appointment.cancelled",
-        chatFunction: () => notifyChatBookingCancelled(
-          siteId,
-          customerEmail,
-          serviceName,
-          options?.cancellationReason?.trim(),
-        ),
+        chatFunction: () =>
+          notifyChatBookingCancelled(
+            siteId,
+            customerEmail,
+            serviceName,
+            options?.cancellationReason?.trim(),
+          ),
       }).catch((err) =>
         console.error("[ChatBooking] Chat cancel notify error:", err),
       );
     }
   } else if (newStatus === "no_show") {
-    logAutomationEvent(siteId, EVENT_REGISTRY.booking.appointment.no_show, {
-      appointmentId: bookingId, serviceName, customerName, customerEmail, startTime: startTime.toISOString(), staffName,
-    }, { sourceModule: 'booking', sourceEntityType: 'appointment', sourceEntityId: bookingId }).catch(err => console.error('[ChatBooking] Automation event error:', err));
+    logAutomationEvent(
+      siteId,
+      EVENT_REGISTRY.booking.appointment.no_show,
+      {
+        appointmentId: bookingId,
+        serviceName,
+        customerName,
+        customerEmail,
+        startTime: startTime.toISOString(),
+        staffName,
+      },
+      {
+        sourceModule: "booking",
+        sourceEntityType: "appointment",
+        sourceEntityId: bookingId,
+      },
+    ).catch((err) =>
+      console.error("[ChatBooking] Automation event error:", err),
+    );
     dispatchNotification({
       siteId,
       eventType: "booking.appointment.no_show",
@@ -436,28 +508,47 @@ export async function updateBookingPaymentFromChat(
       ? new Date(appointment.end_time)
       : undefined;
 
-    logAutomationEvent(siteId, EVENT_REGISTRY.booking.appointment.payment_received, {
-      appointmentId: bookingId, serviceName, servicePrice, customerName, customerEmail, startTime: startTime.toISOString(), staffName, currency,
-    }, { sourceModule: 'booking', sourceEntityType: 'appointment', sourceEntityId: bookingId }).catch(err => console.error('[ChatBooking] Automation event error:', err));
+    logAutomationEvent(
+      siteId,
+      EVENT_REGISTRY.booking.appointment.payment_received,
+      {
+        appointmentId: bookingId,
+        serviceName,
+        servicePrice,
+        customerName,
+        customerEmail,
+        startTime: startTime.toISOString(),
+        staffName,
+        currency,
+      },
+      {
+        sourceModule: "booking",
+        sourceEntityType: "appointment",
+        sourceEntityId: bookingId,
+      },
+    ).catch((err) =>
+      console.error("[ChatBooking] Automation event error:", err),
+    );
 
     dispatchNotification({
       siteId,
       eventType: "booking.appointment.payment_received",
-      notificationFunction: () => notifyBookingPaymentReceived({
-        siteId,
-        appointmentId: bookingId,
-        serviceName,
-        servicePrice,
-        serviceDuration,
-        staffName,
-        customerName,
-        customerEmail,
-        startTime,
-        endTime,
-        currency,
-        paymentStatus: "paid",
-        changedBy: "Agent",
-      }),
+      notificationFunction: () =>
+        notifyBookingPaymentReceived({
+          siteId,
+          appointmentId: bookingId,
+          serviceName,
+          servicePrice,
+          serviceDuration,
+          staffName,
+          customerName,
+          customerEmail,
+          startTime,
+          endTime,
+          currency,
+          paymentStatus: "paid",
+          changedBy: "Agent",
+        }),
     }).catch((err) =>
       console.error("[ChatBooking] Payment notification error:", err),
     );
@@ -470,12 +561,13 @@ export async function updateBookingPaymentFromChat(
       dispatchChatNotification({
         siteId,
         eventType: "booking.appointment.payment_received",
-        chatFunction: () => notifyChatBookingPaymentConfirmed(
-          siteId,
-          customerEmail,
-          serviceName,
-          priceStr,
-        ),
+        chatFunction: () =>
+          notifyChatBookingPaymentConfirmed(
+            siteId,
+            customerEmail,
+            serviceName,
+            priceStr,
+          ),
       }).catch((err) =>
         console.error("[ChatBooking] Chat payment notify error:", err),
       );

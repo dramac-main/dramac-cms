@@ -23,7 +23,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { X, Zap, Clock, Globe, MousePointer, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import { EVENT_REGISTRY } from "../../../lib/event-types";
-import type { TriggerConfig, TriggerType } from "../../../types/automation-types";
+import type {
+  TriggerConfig,
+  TriggerType,
+} from "../../../types/automation-types";
 
 // ============================================================================
 // TYPES
@@ -83,7 +86,12 @@ export function TriggerConfigPanel({
           <Zap className="h-4 w-4 text-yellow-500" />
           Trigger
         </h3>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={onClose}
+        >
           <X className="h-3.5 w-3.5" />
         </Button>
       </div>
@@ -273,9 +281,15 @@ export function TriggerConfigPanel({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="UTC">UTC</SelectItem>
-                    <SelectItem value="America/New_York">Eastern (ET)</SelectItem>
-                    <SelectItem value="America/Chicago">Central (CT)</SelectItem>
-                    <SelectItem value="America/Los_Angeles">Pacific (PT)</SelectItem>
+                    <SelectItem value="America/New_York">
+                      Eastern (ET)
+                    </SelectItem>
+                    <SelectItem value="America/Chicago">
+                      Central (CT)
+                    </SelectItem>
+                    <SelectItem value="America/Los_Angeles">
+                      Pacific (PT)
+                    </SelectItem>
                     <SelectItem value="Europe/London">London (GMT)</SelectItem>
                     <SelectItem value="Asia/Tokyo">Tokyo (JST)</SelectItem>
                   </SelectContent>
@@ -295,9 +309,7 @@ export function TriggerConfigPanel({
                   onChange={(e) =>
                     update(
                       "endpoint_path",
-                      e.target.value
-                        .replace(/[^a-z0-9-]/gi, "-")
-                        .toLowerCase(),
+                      e.target.value.replace(/[^a-z0-9-]/gi, "-").toLowerCase(),
                     )
                   }
                   className="h-8 text-xs"

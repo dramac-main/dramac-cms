@@ -108,17 +108,11 @@ export async function dispatchChatNotification(params: {
 
     await chatFunction();
   } catch (error) {
-    console.error(
-      "[Dispatcher] Chat dispatch error, calling fallback:",
-      error,
-    );
+    console.error("[Dispatcher] Chat dispatch error, calling fallback:", error);
     try {
       await chatFunction();
     } catch (fallbackError) {
-      console.error(
-        "[Dispatcher] Chat fallback also failed:",
-        fallbackError,
-      );
+      console.error("[Dispatcher] Chat fallback also failed:", fallbackError);
     }
   }
 }

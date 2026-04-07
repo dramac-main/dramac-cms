@@ -1,70 +1,71 @@
 /**
  * TemplateGallery Component
- * 
+ *
  * Phase EM-57B: Automation Engine - Visual Builder & Advanced Features
- * 
+ *
  * Gallery for browsing and installing pre-built workflow templates.
  * Allows users to quickly start with common automation patterns.
  */
 
-"use client"
+"use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react"
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { toast } from "sonner"
-import { 
-  Search, 
-  Clock, 
-  Zap, 
-  ArrowRight, 
+import { useState, useMemo, useEffect, useCallback } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
+import {
+  Search,
+  Clock,
+  Zap,
+  ArrowRight,
   CheckCircle2,
   AlertCircle,
   Loader2,
   Package,
   Shield,
-  icons
-} from "lucide-react"
-import { 
-  WORKFLOW_TEMPLATES, 
-  getTemplateCategories, 
+  icons,
+} from "lucide-react";
+import {
+  ALL_WORKFLOW_TEMPLATES,
+  getTemplateCategories,
   searchTemplates,
-  type WorkflowTemplate 
-} from "../lib/templates"
-import { STARTER_PACKS, type StarterPack } from "../lib/starter-packs"
-import { 
-  createWorkflowFromTemplate, 
-  installStarterPack, 
-  getInstalledPacks, 
-  uninstallPack 
-} from "../actions/automation-actions"
+  type WorkflowTemplate,
+} from "../lib/templates";
+import { STARTER_PACKS, type StarterPack } from "../lib/starter-packs";
+import {
+  createWorkflowFromTemplate,
+  installStarterPack,
+  getInstalledPacks,
+  uninstallPack,
+  ensureSystemPacksInstalled,
+} from "../actions/automation-actions";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 interface TemplateGalleryProps {
-  siteId: string
-  onWorkflowCreated?: (workflowId: string) => void
-  onSelect?: (template: WorkflowTemplate) => void
+  siteId: string;
+  onWorkflowCreated?: (workflowId: string) => void;
+  onSelect?: (template: WorkflowTemplate) => void;
 }
 
 // ============================================================================
@@ -73,14 +74,14 @@ interface TemplateGalleryProps {
 
 function getComplexityColor(complexity: string): string {
   switch (complexity) {
-    case "simple": 
-      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-    case "intermediate": 
-      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-    case "advanced": 
-      return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-    default: 
-      return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+    case "simple":
+      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+    case "intermediate":
+      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+    case "advanced":
+      return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+    default:
+      return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
   }
 }
 
@@ -88,126 +89,139 @@ function getComplexityColor(complexity: string): string {
 // COMPONENT
 // ============================================================================
 
-export function TemplateGallery({ 
-  siteId, 
+export function TemplateGallery({
+  siteId,
   onWorkflowCreated,
-  onSelect 
+  onSelect,
 }: TemplateGalleryProps) {
-  const [search, setSearch] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("all")
-  const [selectedTemplate, setSelectedTemplate] = useState<WorkflowTemplate | null>(null)
-  const [isCreating, setIsCreating] = useState(false)
+  const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<WorkflowTemplate | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
 
   // Pack state
-  const [installedPackIds, setInstalledPackIds] = useState<Set<string>>(new Set())
-  const [installingPackId, setInstallingPackId] = useState<string | null>(null)
-  const [uninstallingPackId, setUninstallingPackId] = useState<string | null>(null)
-  const [expandedPackId, setExpandedPackId] = useState<string | null>(null)
+  const [installedPackIds, setInstalledPackIds] = useState<Set<string>>(
+    new Set(),
+  );
+  const [installingPackId, setInstallingPackId] = useState<string | null>(null);
+  const [uninstallingPackId, setUninstallingPackId] = useState<string | null>(
+    null,
+  );
+  const [expandedPackId, setExpandedPackId] = useState<string | null>(null);
 
   const loadInstalledPacks = useCallback(async () => {
-    const result = await getInstalledPacks(siteId)
+    // Ensure system packs are installed (idempotent — skips if already present)
+    await ensureSystemPacksInstalled(siteId);
+    const result = await getInstalledPacks(siteId);
     if (result.success && result.data) {
-      setInstalledPackIds(new Set(result.data.map((p) => p.packId)))
+      setInstalledPackIds(new Set(result.data.map((p) => p.packId)));
     }
-  }, [siteId])
+  }, [siteId]);
 
   useEffect(() => {
-    loadInstalledPacks()
-  }, [loadInstalledPacks])
+    loadInstalledPacks();
+  }, [loadInstalledPacks]);
 
   const handleInstallPack = async (pack: StarterPack) => {
-    setInstallingPackId(pack.id)
+    setInstallingPackId(pack.id);
     try {
-      const result = await installStarterPack(siteId, pack.id)
+      const result = await installStarterPack(siteId, pack.id);
       if (result.workflowsCreated > 0) {
-        toast.success(`Installed "${pack.name}" — ${result.workflowsCreated} workflows created`)
-        setInstalledPackIds((prev) => new Set([...prev, pack.id]))
-        onWorkflowCreated?.("")
+        toast.success(
+          `Installed "${pack.name}" — ${result.workflowsCreated} workflows created`,
+        );
+        setInstalledPackIds((prev) => new Set([...prev, pack.id]));
+        onWorkflowCreated?.("");
       } else if (result.errors.includes("Pack already installed")) {
-        toast.info("Pack is already installed")
-        setInstalledPackIds((prev) => new Set([...prev, pack.id]))
+        toast.info("Pack is already installed");
+        setInstalledPackIds((prev) => new Set([...prev, pack.id]));
       } else {
-        toast.error(result.errors[0] || "Failed to install pack")
+        toast.error(result.errors[0] || "Failed to install pack");
       }
     } catch {
-      toast.error("An error occurred installing the pack")
+      toast.error("An error occurred installing the pack");
     } finally {
-      setInstallingPackId(null)
+      setInstallingPackId(null);
     }
-  }
+  };
 
   const handleUninstallPack = async (pack: StarterPack) => {
-    setUninstallingPackId(pack.id)
+    setUninstallingPackId(pack.id);
     try {
-      const result = await uninstallPack(siteId, pack.id)
+      const result = await uninstallPack(siteId, pack.id);
       if (result.success) {
-        toast.success(`Uninstalled "${pack.name}" — ${result.workflowsDeleted} workflows removed`)
+        toast.success(
+          `Uninstalled "${pack.name}" — ${result.workflowsDeleted} workflows removed`,
+        );
         setInstalledPackIds((prev) => {
-          const next = new Set(prev)
-          next.delete(pack.id)
-          return next
-        })
-        onWorkflowCreated?.("")
+          const next = new Set(prev);
+          next.delete(pack.id);
+          return next;
+        });
+        onWorkflowCreated?.("");
       } else {
-        toast.error(result.error || "Failed to uninstall pack")
+        toast.error(result.error || "Failed to uninstall pack");
       }
     } catch {
-      toast.error("An error occurred")
+      toast.error("An error occurred");
     } finally {
-      setUninstallingPackId(null)
+      setUninstallingPackId(null);
     }
-  }
+  };
 
-  const categories = useMemo(() => ['all', ...getTemplateCategories()], [])
-  
+  const categories = useMemo(() => ["all", ...getTemplateCategories()], []);
+
   const filteredTemplates = useMemo(() => {
-    let templates = search 
-      ? searchTemplates(search)
-      : WORKFLOW_TEMPLATES
+    let templates = search ? searchTemplates(search) : ALL_WORKFLOW_TEMPLATES;
 
     if (selectedCategory !== "all") {
-      templates = templates.filter(t => t.category === selectedCategory)
+      templates = templates.filter((t) => t.category === selectedCategory);
     }
 
-    return templates
-  }, [search, selectedCategory])
+    return templates;
+  }, [search, selectedCategory]);
 
   const handleUseTemplate = async (template: WorkflowTemplate) => {
     if (onSelect) {
       // If onSelect is provided, just pass the template (for embedding in builder)
-      onSelect(template)
-      setSelectedTemplate(null)
-      return
+      onSelect(template);
+      setSelectedTemplate(null);
+      return;
     }
 
-    setIsCreating(true)
+    setIsCreating(true);
     try {
       // Transform template to match server action expected format
       const templateData = {
         name: template.name,
         description: template.description,
         trigger: template.trigger,
-        steps: template.steps.map(step => ({
+        steps: template.steps.map((step) => ({
           name: step.name,
           step_type: step.step_type,
           action_type: step.action_type,
-          config: step.action_config || step.condition_config || step.delay_config || {},
+          config:
+            step.action_config ||
+            step.condition_config ||
+            step.delay_config ||
+            {},
         })),
-      }
-      const result = await createWorkflowFromTemplate(siteId, templateData)
+      };
+      const result = await createWorkflowFromTemplate(siteId, templateData);
       if (result.success && result.data) {
-        toast.success("Workflow created from template!")
-        onWorkflowCreated?.(result.data.id)
+        toast.success("Workflow created from template!");
+        onWorkflowCreated?.(result.data.id);
       } else {
-        toast.error(result.error || "Failed to create workflow")
+        toast.error(result.error || "Failed to create workflow");
       }
     } catch (_error) {
-      toast.error("An error occurred")
+      toast.error("An error occurred");
     } finally {
-      setIsCreating(false)
-      setSelectedTemplate(null)
+      setIsCreating(false);
+      setSelectedTemplate(null);
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -234,12 +248,8 @@ export function TemplateGallery({
       <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
         <TabsList className="flex-wrap h-auto gap-1">
           {categories.map((cat) => (
-            <TabsTrigger 
-              key={cat} 
-              value={cat}
-              className="capitalize"
-            >
-              {cat === 'all' ? 'All Templates' : cat}
+            <TabsTrigger key={cat} value={cat} className="capitalize">
+              {cat === "all" ? "All Templates" : cat}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -257,26 +267,31 @@ export function TemplateGallery({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {STARTER_PACKS.map((pack) => {
-              const isInstalled = installedPackIds.has(pack.id)
-              const isInstalling = installingPackId === pack.id
-              const isUninstalling = uninstallingPackId === pack.id
-              const isExpanded = expandedPackId === pack.id
-              const PackIcon = icons[pack.icon as keyof typeof icons]
+              const isInstalled = installedPackIds.has(pack.id);
+              const isInstalling = installingPackId === pack.id;
+              const isUninstalling = uninstallingPackId === pack.id;
+              const isExpanded = expandedPackId === pack.id;
+              const PackIcon = icons[pack.icon as keyof typeof icons];
 
               return (
-                <Card 
+                <Card
                   key={pack.id}
                   className={`transition-shadow ${isExpanded ? "ring-2 ring-primary" : "hover:shadow-lg"}`}
                 >
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
-                        {PackIcon && <PackIcon className="h-6 w-6 text-primary" />}
+                        {PackIcon && (
+                          <PackIcon className="h-6 w-6 text-primary" />
+                        )}
                         <div>
                           <CardTitle className="text-base flex items-center gap-2">
                             {pack.name}
                             {pack.isSystemPack && (
-                              <Badge variant="secondary" className="text-xs gap-1">
+                              <Badge
+                                variant="secondary"
+                                className="text-xs gap-1"
+                              >
                                 <Shield className="h-3 w-3" />
                                 System
                               </Badge>
@@ -338,7 +353,9 @@ export function TemplateGallery({
                       variant="link"
                       size="sm"
                       className="h-auto p-0 text-xs"
-                      onClick={() => setExpandedPackId(isExpanded ? null : pack.id)}
+                      onClick={() =>
+                        setExpandedPackId(isExpanded ? null : pack.id)
+                      }
                     >
                       {isExpanded ? "Hide workflows" : "View workflows"}
                     </Button>
@@ -357,7 +374,7 @@ export function TemplateGallery({
                     )}
                   </CardContent>
                 </Card>
-              )
+              );
             })}
           </div>
         </div>
@@ -366,8 +383,8 @@ export function TemplateGallery({
       {/* Template Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredTemplates.map((template) => (
-          <Card 
-            key={template.id} 
+          <Card
+            key={template.id}
             className="hover:shadow-lg transition-shadow cursor-pointer group"
             onClick={() => setSelectedTemplate(template)}
           >
@@ -375,8 +392,11 @@ export function TemplateGallery({
               <div className="flex items-start justify-between">
                 <div className="text-3xl">
                   {(() => {
-                    const LucideIcon = icons[template.icon as keyof typeof icons]
-                    return LucideIcon ? <LucideIcon className="h-8 w-8" /> : null
+                    const LucideIcon =
+                      icons[template.icon as keyof typeof icons];
+                    return LucideIcon ? (
+                      <LucideIcon className="h-8 w-8" />
+                    ) : null;
                   })()}
                 </div>
                 <Badge className={getComplexityColor(template.complexity)}>
@@ -421,16 +441,21 @@ export function TemplateGallery({
       {filteredTemplates.length === 0 && (
         <div className="text-center py-12">
           <div className="mb-2">
-            {(() => { const Icon = icons['Search']; return Icon ? <Icon className="h-10 w-10 mx-auto text-muted-foreground" /> : null })()}
+            {(() => {
+              const Icon = icons["Search"];
+              return Icon ? (
+                <Icon className="h-10 w-10 mx-auto text-muted-foreground" />
+              ) : null;
+            })()}
           </div>
           <p className="text-muted-foreground">
             No templates found matching your search.
           </p>
-          <Button 
-            variant="link" 
+          <Button
+            variant="link"
             onClick={() => {
-              setSearch("")
-              setSelectedCategory("all")
+              setSearch("");
+              setSelectedCategory("all");
             }}
           >
             Clear filters
@@ -439,20 +464,28 @@ export function TemplateGallery({
       )}
 
       {/* Template Preview Dialog */}
-      <Dialog open={!!selectedTemplate} onOpenChange={() => setSelectedTemplate(null)}>
+      <Dialog
+        open={!!selectedTemplate}
+        onOpenChange={() => setSelectedTemplate(null)}
+      >
         {selectedTemplate && (
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
             <DialogHeader>
               <div className="flex items-center gap-3">
                 <div>
                   {(() => {
-                    const LucideIcon = icons[selectedTemplate.icon as keyof typeof icons]
-                    return LucideIcon ? <LucideIcon className="h-10 w-10" /> : null
+                    const LucideIcon =
+                      icons[selectedTemplate.icon as keyof typeof icons];
+                    return LucideIcon ? (
+                      <LucideIcon className="h-10 w-10" />
+                    ) : null;
                   })()}
                 </div>
                 <div>
                   <DialogTitle>{selectedTemplate.name}</DialogTitle>
-                  <DialogDescription>{selectedTemplate.description}</DialogDescription>
+                  <DialogDescription>
+                    {selectedTemplate.description}
+                  </DialogDescription>
                 </div>
               </div>
             </DialogHeader>
@@ -467,7 +500,8 @@ export function TemplateGallery({
                   </h4>
                   <div className="p-3 bg-muted rounded-md text-sm">
                     <code className="text-primary">
-                      {(selectedTemplate.trigger.config.event_type as string) || selectedTemplate.trigger.type}
+                      {(selectedTemplate.trigger.config.event_type as string) ||
+                        selectedTemplate.trigger.type}
                     </code>
                   </div>
                 </div>
@@ -477,8 +511,8 @@ export function TemplateGallery({
                   <h4 className="font-medium mb-2">Workflow Steps</h4>
                   <div className="space-y-2">
                     {selectedTemplate.steps.map((step, index) => (
-                      <div 
-                        key={index} 
+                      <div
+                        key={index}
                         className="flex items-center gap-3 p-3 border rounded-md"
                       >
                         <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-medium flex-shrink-0">
@@ -487,8 +521,8 @@ export function TemplateGallery({
                         <div className="flex-1 min-w-0">
                           <div className="font-medium text-sm">{step.name}</div>
                           <div className="text-xs text-muted-foreground truncate">
-                            {step.step_type === "action" 
-                              ? step.action_type 
+                            {step.step_type === "action"
+                              ? step.action_type
                               : step.step_type}
                           </div>
                         </div>
@@ -498,46 +532,55 @@ export function TemplateGallery({
                 </div>
 
                 {/* Required Connections */}
-                {selectedTemplate.requiredConnections && 
-                 selectedTemplate.requiredConnections.length > 0 && (
-                  <div>
-                    <h4 className="font-medium mb-2 flex items-center gap-2">
-                      <AlertCircle className="h-4 w-4 text-amber-500" />
-                      Required Connections
-                    </h4>
-                    <div className="flex gap-2">
-                      {selectedTemplate.requiredConnections.map((conn) => (
-                        <Badge key={conn} variant="outline" className="capitalize">
-                          {conn}
-                        </Badge>
-                      ))}
+                {selectedTemplate.requiredConnections &&
+                  selectedTemplate.requiredConnections.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-2 flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-amber-500" />
+                        Required Connections
+                      </h4>
+                      <div className="flex gap-2">
+                        {selectedTemplate.requiredConnections.map((conn) => (
+                          <Badge
+                            key={conn}
+                            variant="outline"
+                            className="capitalize"
+                          >
+                            {conn}
+                          </Badge>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        You&apos;ll need to connect these services before the
+                        workflow can run.
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      You&apos;ll need to connect these services before the workflow can run.
-                    </p>
-                  </div>
-                )}
+                  )}
 
                 {/* Config Variables */}
-                {selectedTemplate.configVariables && 
-                 selectedTemplate.configVariables.length > 0 && (
-                  <div>
-                    <h4 className="font-medium mb-2">Configuration Required</h4>
-                    <div className="space-y-2">
-                      {selectedTemplate.configVariables.map((variable) => (
-                        <div 
-                          key={variable.key} 
-                          className="flex items-center justify-between p-2 bg-muted rounded-md text-sm"
-                        >
-                          <span>{variable.label}</span>
-                          {variable.required && (
-                            <Badge variant="destructive" className="text-xs">Required</Badge>
-                          )}
-                        </div>
-                      ))}
+                {selectedTemplate.configVariables &&
+                  selectedTemplate.configVariables.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-2">
+                        Configuration Required
+                      </h4>
+                      <div className="space-y-2">
+                        {selectedTemplate.configVariables.map((variable) => (
+                          <div
+                            key={variable.key}
+                            className="flex items-center justify-between p-2 bg-muted rounded-md text-sm"
+                          >
+                            <span>{variable.label}</span>
+                            {variable.required && (
+                              <Badge variant="destructive" className="text-xs">
+                                Required
+                              </Badge>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Tags */}
                 <div>
@@ -562,13 +605,13 @@ export function TemplateGallery({
             </ScrollArea>
 
             <DialogFooter className="border-t pt-4">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setSelectedTemplate(null)}
               >
                 Cancel
               </Button>
-              <Button 
+              <Button
                 onClick={() => handleUseTemplate(selectedTemplate)}
                 disabled={isCreating}
               >
@@ -589,5 +632,5 @@ export function TemplateGallery({
         )}
       </Dialog>
     </div>
-  )
+  );
 }

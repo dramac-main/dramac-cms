@@ -949,7 +949,8 @@ async function executeChatAction(
         const conversationId = config.conversation_id as string;
         const eventType = config.event_type as ChatMessageEventType;
         const customMessage = config.custom_message as string | undefined;
-        const placeholders = (config.placeholders as Record<string, string>) || {};
+        const placeholders =
+          (config.placeholders as Record<string, string>) || {};
 
         // Resolve the message from DB template or use hardcoded default
         const defaultMessage = customMessage || `System event: ${eventType}`;
@@ -964,7 +965,11 @@ async function executeChatAction(
         if (!resolvedMessage) {
           return {
             status: "completed",
-            output: { success: true, skipped: true, reason: "template_disabled" },
+            output: {
+              success: true,
+              skipped: true,
+              reason: "template_disabled",
+            },
           };
         }
 
@@ -975,7 +980,8 @@ async function executeChatAction(
           senderType: "system",
           senderName: "System",
           content: resolvedMessage,
-          contentType: "text" as import("@/modules/live-chat/types").MessageContentType,
+          contentType:
+            "text" as import("@/modules/live-chat/types").MessageContentType,
           isInternalNote: false,
         });
 
@@ -984,12 +990,19 @@ async function executeChatAction(
         }
         return {
           status: "completed",
-          output: { message_id: result.message?.id, resolved_message: resolvedMessage, success: true },
+          output: {
+            message_id: result.message?.id,
+            resolved_message: resolvedMessage,
+            success: true,
+          },
         };
       } catch (error) {
         return {
           status: "failed",
-          error: error instanceof Error ? error.message : "Failed to send system message",
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to send system message",
         };
       }
     }
@@ -1098,7 +1111,10 @@ async function executeEmailAction(
       try {
         const siteId = context.execution?.siteId;
         if (!siteId) {
-          return { status: "failed", error: "Site ID not available in context" };
+          return {
+            status: "failed",
+            error: "Site ID not available in context",
+          };
         }
 
         // Resolve the agency ID from the site
@@ -1110,7 +1126,10 @@ async function executeEmailAction(
           .single();
 
         if (!site?.agency_id) {
-          return { status: "failed", error: "Could not resolve agency for site" };
+          return {
+            status: "failed",
+            error: "Could not resolve agency for site",
+          };
         }
 
         const emailType = config.email_type as EmailType;
@@ -1135,7 +1154,10 @@ async function executeEmailAction(
       } catch (error) {
         return {
           status: "failed",
-          error: error instanceof Error ? error.message : "Failed to send branded email",
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to send branded email",
         };
       }
     }
@@ -1324,7 +1346,11 @@ async function executeNotificationAction(
       }
 
       try {
-        const targetRole = config.target_role as "owner" | "agent" | "all" | undefined;
+        const targetRole = config.target_role as
+          | "owner"
+          | "agent"
+          | "all"
+          | undefined;
         const targetUserId = config.target_user_id as string | undefined;
         const title = config.title as string;
         const message = config.message as string;
@@ -1345,8 +1371,11 @@ async function executeNotificationAction(
           if (site?.user_id) userIds = [site.user_id];
         } else if (targetRole === "agent") {
           // Get from trigger data if available (e.g. assigned agent)
-          const triggerData = context.trigger as Record<string, unknown> | undefined;
-          const agentId = (triggerData?.agent_id ?? triggerData?.assigned_agent_id) as string | undefined;
+          const triggerData = context.trigger as
+            | Record<string, unknown>
+            | undefined;
+          const agentId = (triggerData?.agent_id ??
+            triggerData?.assigned_agent_id) as string | undefined;
           if (agentId) userIds = [agentId];
         } else if (targetRole === "all") {
           // Notify all team members for this site's agency
@@ -1361,12 +1390,21 @@ async function executeNotificationAction(
               .select("user_id")
               .eq("agency_id", site.agency_id)
               .eq("status", "active");
-            userIds = (members || []).map((m: { user_id: string }) => m.user_id);
+            userIds = (members || []).map(
+              (m: { user_id: string }) => m.user_id,
+            );
           }
         }
 
         if (userIds.length === 0) {
-          return { status: "completed", output: { success: true, notifications_sent: 0, reason: "no_recipients" } };
+          return {
+            status: "completed",
+            output: {
+              success: true,
+              notifications_sent: 0,
+              reason: "no_recipients",
+            },
+          };
         }
 
         const notifications = userIds.map((uid) => ({
@@ -1392,7 +1430,10 @@ async function executeNotificationAction(
       } catch (error) {
         return {
           status: "failed",
-          error: error instanceof Error ? error.message : "Failed to send targeted notification",
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to send targeted notification",
         };
       }
     }

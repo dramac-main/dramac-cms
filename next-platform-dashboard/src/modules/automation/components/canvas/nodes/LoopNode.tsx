@@ -45,7 +45,9 @@ function LoopNodeComponent({ data, selected }: NodeProps<LoopNodeType>) {
           </div>
           <div className="truncate text-xs text-muted-foreground">
             Max {maxIter} iterations
-            {step?.loop_config?.source ? ` over ${step.loop_config.source}` : ""}
+            {step?.loop_config?.source
+              ? ` over ${step.loop_config.source}`
+              : ""}
           </div>
         </div>
       </div>

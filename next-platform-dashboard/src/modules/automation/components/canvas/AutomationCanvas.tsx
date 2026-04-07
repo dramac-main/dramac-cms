@@ -35,7 +35,11 @@ import { DefaultEdge } from "./edges/DefaultEdge";
 import { LoopbackEdge } from "./edges/LoopbackEdge";
 import { CanvasControls } from "./CanvasControls";
 
-import { stepsToNodesAndEdges, extractNodePositions, TRIGGER_NODE_ID } from "./utils/converters";
+import {
+  stepsToNodesAndEdges,
+  extractNodePositions,
+  TRIGGER_NODE_ID,
+} from "./utils/converters";
 import { applyDagreLayout } from "./utils/layout";
 
 import type { WorkflowStep, TriggerConfig } from "../../types/automation-types";
@@ -72,7 +76,12 @@ interface AutomationCanvasProps {
   onStepDelete: (stepId: string) => void;
   onStepDuplicate?: (step: WorkflowStep) => void;
   onAddStep: (step: Partial<WorkflowStep>) => void;
-  onUpdateStep?: (stepId: string, updates: Partial<Pick<WorkflowStep, 'action_config' | 'position_x' | 'position_y'>>) => void;
+  onUpdateStep?: (
+    stepId: string,
+    updates: Partial<
+      Pick<WorkflowStep, "action_config" | "position_x" | "position_y">
+    >,
+  ) => void;
 }
 
 // ============================================================================
@@ -101,9 +110,7 @@ function CanvasInner({
     });
 
     // Check if any node has persisted positions
-    const hasPositions = steps.some(
-      (s) => s.position_x != null,
-    );
+    const hasPositions = steps.some((s) => s.position_x != null);
 
     const layoutNodes = hasPositions ? nodes : applyDagreLayout(nodes, edges);
     return { initialNodes: layoutNodes, initialEdges: edges };
@@ -120,9 +127,7 @@ function CanvasInner({
       triggerType,
     });
 
-    const hasPositions = steps.some(
-      (s) => s.position_x != null,
-    );
+    const hasPositions = steps.some((s) => s.position_x != null);
     const layoutNodes = hasPositions
       ? newNodes
       : applyDagreLayout(newNodes, newEdges);
@@ -134,7 +139,10 @@ function CanvasInner({
 
   // Fit view on initial load
   useEffect(() => {
-    const timer = setTimeout(() => fitView({ padding: 0.2, duration: 300 }), 100);
+    const timer = setTimeout(
+      () => fitView({ padding: 0.2, duration: 300 }),
+      100,
+    );
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -143,10 +151,7 @@ function CanvasInner({
   const onConnect = useCallback(
     (connection: Connection) => {
       setEdges((eds) =>
-        addEdge(
-          { ...connection, type: "default-edge", animated: false },
-          eds,
-        ),
+        addEdge({ ...connection, type: "default-edge", animated: false }, eds),
       );
     },
     [setEdges],
@@ -188,7 +193,9 @@ function CanvasInner({
       event.preventDefault();
 
       const stepType = event.dataTransfer.getData("application/reactflow-type");
-      const actionType = event.dataTransfer.getData("application/reactflow-action");
+      const actionType = event.dataTransfer.getData(
+        "application/reactflow-action",
+      );
       const name = event.dataTransfer.getData("application/reactflow-name");
 
       if (!stepType) return;

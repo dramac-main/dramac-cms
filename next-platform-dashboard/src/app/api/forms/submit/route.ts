@@ -213,12 +213,8 @@ export async function POST(request: NextRequest) {
       dispatchNotification({
         siteId,
         eventType: "form.submission.received",
-        notificationFunction: () => sendNotifications(
-          supabase,
-          submission,
-          formSettings,
-          site.agency_id,
-        ),
+        notificationFunction: () =>
+          sendNotifications(supabase, submission, formSettings, site.agency_id),
       }).catch((err) => {
         console.error("[FormSubmit] Notification error:", err);
       });
@@ -226,10 +222,26 @@ export async function POST(request: NextRequest) {
 
     // Emit automation event for form submission
     if (!isSpam) {
-      logAutomationEvent(siteId, EVENT_REGISTRY.form.submission.received, {
-        formId, submissionId: submission.id, formName: ('form_name' in formSettings ? formSettings.form_name : null) || 'Unknown Form',
-        data: cleanedData, pageUrl: referer,
-      }, { sourceModule: 'forms', sourceEntityType: 'submission', sourceEntityId: submission.id }).catch(err => console.error('[FormSubmit] Automation event error:', err));
+      logAutomationEvent(
+        siteId,
+        EVENT_REGISTRY.form.submission.received,
+        {
+          formId,
+          submissionId: submission.id,
+          formName:
+            ("form_name" in formSettings ? formSettings.form_name : null) ||
+            "Unknown Form",
+          data: cleanedData,
+          pageUrl: referer,
+        },
+        {
+          sourceModule: "forms",
+          sourceEntityType: "submission",
+          sourceEntityId: submission.id,
+        },
+      ).catch((err) =>
+        console.error("[FormSubmit] Automation event error:", err),
+      );
     }
 
     // Trigger webhooks (async, don't wait)
@@ -389,7 +401,10 @@ async function sendNotifications(
   }
 
   if (emails.length === 0) {
-    console.log("[FormSubmit] No notification recipients found for submission:", submission.id);
+    console.log(
+      "[FormSubmit] No notification recipients found for submission:",
+      submission.id,
+    );
     return;
   }
 

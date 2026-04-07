@@ -21,7 +21,10 @@ import {
 } from "@/lib/services/business-notifications";
 import { logAutomationEvent } from "@/modules/automation/services/event-processor";
 import { EVENT_REGISTRY } from "@/modules/automation/lib/event-types";
-import { dispatchNotification, dispatchChatNotification } from "@/lib/notifications/automation-aware-dispatcher";
+import {
+  dispatchNotification,
+  dispatchChatNotification,
+} from "@/lib/notifications/automation-aware-dispatcher";
 import type {
   Product,
   ProductInput,
@@ -1296,7 +1299,38 @@ export async function createOrderFromCart(
       await dispatchNotification({
         siteId: input.site_id,
         eventType: "ecommerce.order.created",
-        notificationFunction: () => notifyNewOrder({
+        notificationFunction: () =>
+          notifyNewOrder({
+            siteId: input.site_id,
+            orderId: order.id,
+            orderNumber,
+            customerName:
+              input.customer_name ||
+              `${input.shipping_address?.first_name || ""} ${input.shipping_address?.last_name || ""}`.trim() ||
+              input.customer_email?.split("@")[0] ||
+              "Customer",
+            customerEmail: input.customer_email,
+            customerPhone: input.customer_phone || undefined,
+            items: notificationItems,
+            subtotal: input.subtotal,
+            shipping: input.shipping || 0,
+            tax: input.tax || 0,
+            total: input.total,
+            currency: input.currency,
+            paymentStatus: input.payment_status || "pending",
+            shippingAddress: input.shipping_address
+              ? `${input.shipping_address.address_line_1 || ""}${input.shipping_address.address_line_2 ? ", " + input.shipping_address.address_line_2 : ""}, ${input.shipping_address.city || ""} ${input.shipping_address.state || ""} ${input.shipping_address.postal_code || ""}, ${input.shipping_address.country || ""}`
+              : undefined,
+          }),
+      }).catch((err) => console.error("[Ecommerce] Notification error:", err));
+    }
+  } else {
+    // No cart - still send notification with available data
+    await dispatchNotification({
+      siteId: input.site_id,
+      eventType: "ecommerce.order.created",
+      notificationFunction: () =>
+        notifyNewOrder({
           siteId: input.site_id,
           orderId: order.id,
           orderNumber,
@@ -1307,43 +1341,14 @@ export async function createOrderFromCart(
             "Customer",
           customerEmail: input.customer_email,
           customerPhone: input.customer_phone || undefined,
-          items: notificationItems,
+          items: [],
           subtotal: input.subtotal,
           shipping: input.shipping || 0,
           tax: input.tax || 0,
           total: input.total,
           currency: input.currency,
           paymentStatus: input.payment_status || "pending",
-          shippingAddress: input.shipping_address
-            ? `${input.shipping_address.address_line_1 || ""}${input.shipping_address.address_line_2 ? ", " + input.shipping_address.address_line_2 : ""}, ${input.shipping_address.city || ""} ${input.shipping_address.state || ""} ${input.shipping_address.postal_code || ""}, ${input.shipping_address.country || ""}`
-            : undefined,
         }),
-      }).catch((err) => console.error("[Ecommerce] Notification error:", err));
-    }
-  } else {
-    // No cart - still send notification with available data
-    await dispatchNotification({
-      siteId: input.site_id,
-      eventType: "ecommerce.order.created",
-      notificationFunction: () => notifyNewOrder({
-        siteId: input.site_id,
-        orderId: order.id,
-        orderNumber,
-        customerName:
-          input.customer_name ||
-          `${input.shipping_address?.first_name || ""} ${input.shipping_address?.last_name || ""}`.trim() ||
-          input.customer_email?.split("@")[0] ||
-          "Customer",
-        customerEmail: input.customer_email,
-        customerPhone: input.customer_phone || undefined,
-        items: [],
-        subtotal: input.subtotal,
-        shipping: input.shipping || 0,
-        tax: input.tax || 0,
-        total: input.total,
-        currency: input.currency,
-        paymentStatus: input.payment_status || "pending",
-      }),
     }).catch((err) => console.error("[Ecommerce] Notification error:", err));
   }
 
@@ -1528,28 +1533,56 @@ export async function updateOrderStatus(
   const order = data as Order;
 
   // Emit automation event for any status change
-  logAutomationEvent(siteId, EVENT_REGISTRY.ecommerce.order.status_changed, {
-    orderId, orderNumber: order.order_number, status, previousStatus: order.status,
-    customerEmail: order.customer_email, customerName: order.customer_name,
-    total: order.total, currency: order.currency,
-  }, { sourceModule: 'ecommerce', sourceEntityType: 'order', sourceEntityId: orderId }).catch(err => console.error('[Ecommerce] Automation event error:', err));
+  logAutomationEvent(
+    siteId,
+    EVENT_REGISTRY.ecommerce.order.status_changed,
+    {
+      orderId,
+      orderNumber: order.order_number,
+      status,
+      previousStatus: order.status,
+      customerEmail: order.customer_email,
+      customerName: order.customer_name,
+      total: order.total,
+      currency: order.currency,
+    },
+    {
+      sourceModule: "ecommerce",
+      sourceEntityType: "order",
+      sourceEntityId: orderId,
+    },
+  ).catch((err) => console.error("[Ecommerce] Automation event error:", err));
 
   // Send cancellation notification when order is cancelled
   if (status === "cancelled" && order.customer_email) {
-    logAutomationEvent(siteId, EVENT_REGISTRY.ecommerce.order.cancelled, {
-      orderId, orderNumber: order.order_number, customerEmail: order.customer_email,
-      customerName: order.customer_name, total: order.total, currency: order.currency,
-    }, { sourceModule: 'ecommerce', sourceEntityType: 'order', sourceEntityId: orderId }).catch(err => console.error('[Ecommerce] Automation event error:', err));
+    logAutomationEvent(
+      siteId,
+      EVENT_REGISTRY.ecommerce.order.cancelled,
+      {
+        orderId,
+        orderNumber: order.order_number,
+        customerEmail: order.customer_email,
+        customerName: order.customer_name,
+        total: order.total,
+        currency: order.currency,
+      },
+      {
+        sourceModule: "ecommerce",
+        sourceEntityType: "order",
+        sourceEntityId: orderId,
+      },
+    ).catch((err) => console.error("[Ecommerce] Automation event error:", err));
     dispatchNotification({
       siteId,
       eventType: "ecommerce.order.cancelled",
-      notificationFunction: () => notifyOrderCancelled(
-        siteId,
-        order.order_number,
-        order.customer_email,
-        order.customer_name || "Customer",
-        formatCurrency(order.total / 100, order.currency || DEFAULT_CURRENCY),
-      ),
+      notificationFunction: () =>
+        notifyOrderCancelled(
+          siteId,
+          order.order_number,
+          order.customer_email,
+          order.customer_name || "Customer",
+          formatCurrency(order.total / 100, order.currency || DEFAULT_CURRENCY),
+        ),
     }).catch((err) =>
       console.error("[Ecommerce] Cancellation notification error:", err),
     );
@@ -1557,21 +1590,35 @@ export async function updateOrderStatus(
 
   // Send shipping notification when order is shipped
   if (status === "shipped" && order.customer_email) {
-    logAutomationEvent(siteId, EVENT_REGISTRY.ecommerce.order.shipped, {
-      orderId, orderNumber: order.order_number, customerEmail: order.customer_email,
-      customerName: order.customer_name, trackingNumber: order.tracking_number, trackingUrl: order.tracking_url,
-    }, { sourceModule: 'ecommerce', sourceEntityType: 'order', sourceEntityId: orderId }).catch(err => console.error('[Ecommerce] Automation event error:', err));
+    logAutomationEvent(
+      siteId,
+      EVENT_REGISTRY.ecommerce.order.shipped,
+      {
+        orderId,
+        orderNumber: order.order_number,
+        customerEmail: order.customer_email,
+        customerName: order.customer_name,
+        trackingNumber: order.tracking_number,
+        trackingUrl: order.tracking_url,
+      },
+      {
+        sourceModule: "ecommerce",
+        sourceEntityType: "order",
+        sourceEntityId: orderId,
+      },
+    ).catch((err) => console.error("[Ecommerce] Automation event error:", err));
     dispatchNotification({
       siteId,
       eventType: "ecommerce.order.shipped",
-      notificationFunction: () => notifyOrderShipped(
-        siteId,
-        order.order_number,
-        order.customer_email,
-        order.customer_name || "Customer",
-        order.tracking_number || undefined,
-        order.tracking_url || undefined,
-      ),
+      notificationFunction: () =>
+        notifyOrderShipped(
+          siteId,
+          order.order_number,
+          order.customer_email,
+          order.customer_name || "Customer",
+          order.tracking_number || undefined,
+          order.tracking_url || undefined,
+        ),
     }).catch((err) =>
       console.error("[Ecommerce] Shipping notification error:", err),
     );
@@ -1616,14 +1663,15 @@ export async function updateOrderPaymentStatus(
     dispatchChatNotification({
       siteId,
       eventType: "ecommerce.payment.received",
-      chatFunction: () => import("@/modules/live-chat/lib/chat-event-bridge")
-        .then(({ notifyChatPaymentConfirmed }) =>
-          notifyChatPaymentConfirmed(
-            siteId,
-            order.customer_email!,
-            order.order_number,
-            totalFormatted,
-          ),
+      chatFunction: () =>
+        import("@/modules/live-chat/lib/chat-event-bridge").then(
+          ({ notifyChatPaymentConfirmed }) =>
+            notifyChatPaymentConfirmed(
+              siteId,
+              order.customer_email!,
+              order.order_number,
+              totalFormatted,
+            ),
         ),
     }).catch((err) =>
       console.error("[Ecommerce] Chat payment notification error:", err),
@@ -1670,14 +1718,15 @@ export async function updateOrderFulfillment(
     dispatchNotification({
       siteId,
       eventType: "ecommerce.order.shipped",
-      notificationFunction: () => notifyOrderShipped(
-        siteId,
-        order.order_number,
-        order.customer_email,
-        order.customer_name,
-        trackingNumber,
-        trackingUrl,
-      ),
+      notificationFunction: () =>
+        notifyOrderShipped(
+          siteId,
+          order.order_number,
+          order.customer_email,
+          order.customer_name,
+          trackingNumber,
+          trackingUrl,
+        ),
     }).catch((err) =>
       console.error("[Ecommerce] Shipping notification error:", err),
     );
@@ -1708,22 +1757,36 @@ export async function markOrderDelivered(
   const order = data as Order;
 
   // Emit automation event for delivered
-  logAutomationEvent(siteId, EVENT_REGISTRY.ecommerce.order.delivered, {
-    orderId, orderNumber: order.order_number, customerEmail: order.customer_email,
-    customerName: order.customer_name, total: order.total, currency: order.currency,
-  }, { sourceModule: 'ecommerce', sourceEntityType: 'order', sourceEntityId: orderId }).catch(err => console.error('[Ecommerce] Automation event error:', err));
+  logAutomationEvent(
+    siteId,
+    EVENT_REGISTRY.ecommerce.order.delivered,
+    {
+      orderId,
+      orderNumber: order.order_number,
+      customerEmail: order.customer_email,
+      customerName: order.customer_name,
+      total: order.total,
+      currency: order.currency,
+    },
+    {
+      sourceModule: "ecommerce",
+      sourceEntityType: "order",
+      sourceEntityId: orderId,
+    },
+  ).catch((err) => console.error("[Ecommerce] Automation event error:", err));
 
   // Send delivery notification to customer + owner
   if (order.customer_email) {
     dispatchNotification({
       siteId,
       eventType: "ecommerce.order.delivered",
-      notificationFunction: () => notifyOrderDelivered(
-        siteId,
-        order.order_number,
-        order.customer_email,
-        order.customer_name || "Customer",
-      ),
+      notificationFunction: () =>
+        notifyOrderDelivered(
+          siteId,
+          order.order_number,
+          order.customer_email,
+          order.customer_name || "Customer",
+        ),
     }).catch((err) =>
       console.error("[Ecommerce] Delivery notification error:", err),
     );

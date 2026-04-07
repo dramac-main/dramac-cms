@@ -1180,9 +1180,7 @@ export async function createConnection(
 /**
  * Get all connections for a site
  */
-export async function getConnections(
-  siteId: string,
-): Promise<{
+export async function getConnections(siteId: string): Promise<{
   success: boolean;
   data?: AutomationConnection[];
   error?: string;
@@ -2054,7 +2052,11 @@ export async function installStarterPack(
     // 1. Load pack definition
     const pack = getStarterPackById(packId);
     if (!pack) {
-      return { success: false, workflowsCreated: 0, errors: ["Pack not found: " + packId] };
+      return {
+        success: false,
+        workflowsCreated: 0,
+        errors: ["Pack not found: " + packId],
+      };
     }
 
     // 2. Check if pack already installed for this site
@@ -2066,7 +2068,11 @@ export async function installStarterPack(
       .limit(1);
 
     if (existing && existing.length > 0) {
-      return { success: true, workflowsCreated: 0, errors: ["Pack already installed"] };
+      return {
+        success: true,
+        workflowsCreated: 0,
+        errors: ["Pack already installed"],
+      };
     }
 
     // 3. Create a workflow for each template in the pack
@@ -2091,7 +2097,9 @@ export async function installStarterPack(
       });
 
       if (!result.success || !result.data) {
-        errors.push(`Failed to create workflow: ${templateId} — ${result.error}`);
+        errors.push(
+          `Failed to create workflow: ${templateId} — ${result.error}`,
+        );
         continue;
       }
 
@@ -2134,9 +2142,7 @@ export async function installStarterPack(
 /**
  * Get installed packs for a site — returns pack IDs and workflow counts
  */
-export async function getInstalledPacks(
-  siteId: string,
-): Promise<{
+export async function getInstalledPacks(siteId: string): Promise<{
   success: boolean;
   data?: Array<{
     packId: string;
@@ -2249,7 +2255,11 @@ export async function uninstallPack(
       .in("id", workflowIds);
 
     if (deleteError) {
-      return { success: false, workflowsDeleted: 0, error: deleteError.message };
+      return {
+        success: false,
+        workflowsDeleted: 0,
+        error: deleteError.message,
+      };
     }
 
     revalidatePath("/automation");
@@ -2258,7 +2268,8 @@ export async function uninstallPack(
     return {
       success: false,
       workflowsDeleted: 0,
-      error: error instanceof Error ? error.message : "Failed to uninstall pack",
+      error:
+        error instanceof Error ? error.message : "Failed to uninstall pack",
     };
   }
 }
@@ -2331,4 +2342,54 @@ export async function autoInstallPacksForModule(
       error,
     );
   }
+}
+
+/**
+ * Ensure all required system packs are installed for a site.
+ * Safety net for existing sites created before auto-install was wired in.
+ * Called from the automation gallery on page load — idempotent (skips already-installed).
+ */
+export async function ensureSystemPacksInstalled(
+  siteId: string,
+): Promise<{ installed: string[]; alreadyInstalled: string[] }> {
+  const installed: string[] = [];
+  const alreadyInstalled: string[] = [];
+
+  try {
+    const supabase = await createClient();
+
+    // Get all installed module slugs for this site
+    const { data: installations } = await (supabase as any)
+      .from("site_module_installations")
+      .select("module:modules_v2!inner(slug)")
+      .eq("site_id", siteId)
+      .eq("is_enabled", true);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const installedSlugs: string[] = ((installations || []) as any[])
+      .map((i) => {
+        const mod = i.module as unknown as { slug: string } | null;
+        return mod?.slug;
+      })
+      .filter(Boolean) as string[];
+
+    // Get all system packs that should be installed for these modules
+    const packsToInstall = getPacksForModules(installedSlugs);
+
+    for (const pack of packsToInstall) {
+      const result = await installStarterPack(siteId, pack.id);
+      if (result.workflowsCreated > 0) {
+        installed.push(pack.id);
+        console.log(
+          `[Automation] ensureSystemPacks: installed "${pack.name}" for site ${siteId}: ${result.workflowsCreated} workflows`,
+        );
+      } else if (result.errors.includes("Pack already installed")) {
+        alreadyInstalled.push(pack.id);
+      }
+    }
+  } catch (error) {
+    console.error("[Automation] ensureSystemPacksInstalled error:", error);
+  }
+
+  return { installed, alreadyInstalled };
 }

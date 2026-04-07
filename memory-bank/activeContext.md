@@ -7,21 +7,25 @@
 **Full Automation Module Overhaul implemented from AUTOMATION-OVERHAUL-PROMPT.md (6 phases, 1244-line spec):**
 
 #### Phase 1 — Event Emission Layer ✅
+
 - ~22 new EventDefinition entries in event-types.ts (ecommerce, booking, chat events)
 - `logAutomationEvent()` fire-and-forget emission integrated across modules
 
 #### Phase 2 — System Workflow Templates (A+B+C) ✅
+
 - 27 system workflow templates in system-templates.ts (BOOKING[8], ORDER[8], QUOTE[7], FORM[1], CHAT[3])
 - 3 new action types in action-executor.ts: email.send_branded_template, chat.send_system_message, notification.in_app_targeted
 - Templates with `isSystem`, `systemEventType`, `defaultActive`, `pack` fields
 
 #### Phase 3 — Automation Starter Packs ✅
+
 - 7 StarterPack definitions in starter-packs.ts (3 auto-install, 4 manual)
 - installStarterPack, getInstalledPacks, uninstallPack, installDefaultAutomationPacks, autoInstallPacksForModule
 - Pack Gallery section in template-gallery.tsx with install/uninstall UI
 - DB: automation_installed_packs table + is_system/pack_id/system_event_type on automation_workflows
 
 #### Phase 4 — ReactFlow Canvas Builder ✅
+
 - @xyflow/react 12.10.2 + @dagrejs/dagre 3.0.0 installed
 - 7 node types: TriggerNode, ActionNode, ConditionNode, DelayNode, LoopNode, EndNode, NoteNode
 - 2 edge types: DefaultEdge (smooth step + delete button), LoopbackEdge (dashed bezier)
@@ -33,11 +37,13 @@
 - Position data stored in dedicated position_x/position_y DB columns (not action_config)
 
 #### Phase 5 — Migration Safety/Fallback ✅
+
 - automation-aware-dispatcher.ts: hasActiveSystemWorkflow(), dispatchNotification(), dispatchChatNotification()
 - 8 notification files wrapped (85+ dispatch points): booking-actions, chat-booking-actions, ecommerce-actions, order-actions, public-ecommerce-actions, quote-actions, quote-workflow-actions, forms/submit/route.ts
 - Return types widened to Promise<unknown> for wrapped functions
 
 #### Phase 6 — Testing & Verification ✅
+
 - TypeScript: 0 errors (npx tsc --noEmit clean)
 - DB migrations applied: position_x/position_y on workflow_steps, automation_installed_packs table, is_system on automation_event_subscriptions
 - Critical Warning #6 resolved: position data uses dedicated columns, not action_config

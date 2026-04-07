@@ -75,7 +75,12 @@ export function WorkflowSettingsPanel({
           <Settings className="h-4 w-4" />
           Workflow Settings
         </h3>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={onClose}
+        >
           <X className="h-3.5 w-3.5" />
         </Button>
       </div>
@@ -196,9 +201,7 @@ export function WorkflowSettingsPanel({
               </div>
               <Switch
                 checked={workflow.is_active}
-                onCheckedChange={(checked) =>
-                  onUpdate({ is_active: checked })
-                }
+                onCheckedChange={(checked) => onUpdate({ is_active: checked })}
               />
             </div>
 
@@ -211,9 +214,7 @@ export function WorkflowSettingsPanel({
               </div>
               <Switch
                 checked={workflow.run_once}
-                onCheckedChange={(checked) =>
-                  onUpdate({ run_once: checked })
-                }
+                onCheckedChange={(checked) => onUpdate({ run_once: checked })}
               />
             </div>
 
