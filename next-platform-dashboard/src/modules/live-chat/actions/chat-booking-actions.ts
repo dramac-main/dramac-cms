@@ -27,6 +27,7 @@ import {
 } from "@/modules/live-chat/lib/chat-event-bridge";
 import { logAutomationEvent } from "@/modules/automation/services/event-processor";
 import { EVENT_REGISTRY } from "@/modules/automation/lib/event-types";
+import { formatDate, formatTime } from "@/lib/locale-config";
 import {
   dispatchNotification,
   dispatchChatNotification,
@@ -281,6 +282,8 @@ export async function updateBookingStatusFromChat(
         customerName,
         customerEmail,
         startTime: startTime.toISOString(),
+        start_date_formatted: formatDate(startTime),
+        start_time_formatted: formatTime(startTime),
         staffName,
       },
       {
@@ -326,6 +329,8 @@ export async function updateBookingStatusFromChat(
         customerName,
         customerEmail,
         startTime: startTime.toISOString(),
+        start_date_formatted: formatDate(startTime),
+        start_time_formatted: formatTime(startTime),
         staffName,
       },
       {
@@ -363,6 +368,8 @@ export async function updateBookingStatusFromChat(
         customerName,
         customerEmail,
         startTime: startTime.toISOString(),
+        start_date_formatted: formatDate(startTime),
+        start_time_formatted: formatTime(startTime),
         staffName,
         reason:
           options?.cancellationReason?.trim() || "Cancelled via live chat",

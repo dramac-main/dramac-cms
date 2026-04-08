@@ -9,7 +9,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { DEFAULT_CURRENCY, DEFAULT_TIMEZONE } from "@/lib/locale-config";
+import { DEFAULT_CURRENCY, DEFAULT_TIMEZONE, formatDate, formatTime } from "@/lib/locale-config";
 import {
   notifyNewBooking,
   notifyBookingCancelled,
@@ -798,6 +798,8 @@ export async function updateAppointment(
           customerName: updated.customer_name,
           customerEmail: updated.customer_email,
           startTime: start.toISOString(),
+          start_date_formatted: formatDate(start),
+          start_time_formatted: formatTime(start),
           staffName,
         },
         {
@@ -839,6 +841,8 @@ export async function updateAppointment(
           customerName: updated.customer_name,
           customerEmail: updated.customer_email,
           startTime: start.toISOString(),
+          start_date_formatted: formatDate(start),
+          start_time_formatted: formatTime(start),
           staffName,
         },
         {
@@ -878,6 +882,8 @@ export async function updateAppointment(
           customerName: updated.customer_name,
           customerEmail: updated.customer_email,
           startTime: start.toISOString(),
+          start_date_formatted: formatDate(start),
+          start_time_formatted: formatTime(start),
           staffName,
         },
         {
@@ -945,6 +951,8 @@ export async function cancelAppointment(
       customerName: appointment.customer_name,
       customerEmail: appointment.customer_email,
       startTime: appointment.start_time,
+      start_date_formatted: formatDate(appointment.start_time),
+      start_time_formatted: formatTime(appointment.start_time),
       cancelledBy: cancelledBy,
       cancellationReason: reason,
     },

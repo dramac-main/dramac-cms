@@ -15,6 +15,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyNewBooking } from "@/lib/services/business-notifications";
 import { logAutomationEvent } from "@/modules/automation/services/event-processor";
+import { formatDate, formatTime } from "@/lib/locale-config";
 import type {
   Service,
   Staff,
@@ -630,6 +631,8 @@ export async function createPublicAppointment(
         customer_phone: input.customerPhone,
         start_time: input.startTime.toISOString(),
         end_time: input.endTime.toISOString(),
+        start_date_formatted: formatDate(input.startTime),
+        start_time_formatted: formatTime(input.startTime),
         status,
         price: service.price,
         currency: service.currency,

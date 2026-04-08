@@ -1087,19 +1087,34 @@ async function executeEmailAction(
         let brandingReplyTo = getEmailReplyTo();
         let html = wrapEmailBody(body, subject);
 
-        // Resolve site → agency branding if available
+        // Resolve site → agency branding, then overlay site-level name/colors
+        // so customer-facing emails show the SITE name (e.g. "Luxe Serenity Spa")
+        // instead of the agency name (e.g. "Jacktest Ltd").
         if (siteId) {
           try {
             const adminSupa = createAdminClient() as AutomationDB;
             const { data: site } = await adminSupa
               .from("sites")
-              .select("agency_id")
+              .select("agency_id, name, settings")
               .eq("id", siteId)
               .single();
 
             if (site?.agency_id) {
               const agencyBranding = await getAgencyBranding(site.agency_id);
-              const branding = buildEmailBranding(agencyBranding);
+              let branding = buildEmailBranding(agencyBranding);
+
+              // Apply site-level overrides (name, colors, logo) for customer-facing context
+              if (site.name) {
+                const siteSettings = (site.settings || {}) as Record<string, unknown>;
+                branding = applySiteBranding(branding, {
+                  name: site.name,
+                  primary_color: siteSettings.primary_color as string | undefined,
+                  accent_color: siteSettings.accent_color as string | undefined,
+                  secondary_color: siteSettings.secondary_color as string | undefined,
+                  logo_url: siteSettings.logo_url as string | undefined,
+                  support_email: siteSettings.support_email as string | undefined,
+                });
+              }
 
               if (branding.from_name) {
                 brandingFrom = `${branding.from_name} <noreply@${process.env.EMAIL_DOMAIN || "app.dramacagency.com"}>`;
