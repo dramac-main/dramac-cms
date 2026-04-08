@@ -20,6 +20,18 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email/send-email";
 import { sendBrandedEmail } from "@/lib/email/send-branded-email";
+import {
+  resend,
+  isEmailEnabled,
+  getEmailFrom,
+  getEmailReplyTo,
+} from "@/lib/email/resend-client";
+import {
+  buildEmailBranding,
+  applySiteBranding,
+  type SiteBrandingData,
+} from "@/lib/email/email-branding";
+import { getAgencyBranding } from "@/lib/queries/branding";
 import type { EmailType } from "@/lib/email/email-types";
 import type { ExecutionContext, ActionResult } from "../types/automation-types";
 import { resolveChatMessage } from "@/modules/live-chat/lib/chat-template-resolver";
@@ -1024,29 +1036,77 @@ async function executeEmailAction(
   switch (action) {
     case "send": {
       try {
-        // Automation can send custom emails - cast type for flexibility
-        const result = await sendEmail({
-          to: {
-            email: config.to as string,
-            name: (config.to_name as string) || undefined,
-          },
-          type: "welcome" as const, // Use a valid type - the data determines actual content
-          data: {
-            subject: config.subject as string,
-            body: config.body as string,
-            from_name: (config.from_name as string) || undefined,
-          },
+        if (!isEmailEnabled()) {
+          return { status: "completed", output: { skipped: true, reason: "email_not_configured" } };
+        }
+
+        const siteId = context.execution?.siteId;
+        const to = config.to as string;
+        const toName = config.to_name as string | undefined;
+        const subject = config.subject as string;
+        const body = config.body as string;
+        const fromName = config.from_name as string | undefined;
+
+        if (!to) {
+          return { status: "failed", error: "No recipient email resolved (check trigger variables)" };
+        }
+        if (!subject) {
+          return { status: "failed", error: "Email subject is required" };
+        }
+        if (!body) {
+          return { status: "failed", error: "Email body is required" };
+        }
+
+        // Build branded HTML wrapper
+        let brandingFrom = fromName ? `${fromName} <noreply@${process.env.EMAIL_DOMAIN || "app.dramacagency.com"}>` : getEmailFrom();
+        let brandingReplyTo = getEmailReplyTo();
+        let html = wrapEmailBody(body, subject);
+
+        // Resolve site → agency branding if available
+        if (siteId) {
+          try {
+            const adminSupa = createAdminClient() as AutomationDB;
+            const { data: site } = await adminSupa
+              .from("sites")
+              .select("agency_id")
+              .eq("id", siteId)
+              .single();
+
+            if (site?.agency_id) {
+              const agencyBranding = await getAgencyBranding(site.agency_id);
+              const branding = buildEmailBranding(agencyBranding);
+
+              if (branding.from_name) {
+                brandingFrom = `${branding.from_name} <noreply@${process.env.EMAIL_DOMAIN || "app.dramacagency.com"}>`;
+              }
+              if (branding.reply_to) {
+                brandingReplyTo = branding.reply_to;
+              }
+
+              html = wrapBrandedEmailBody(body, subject, branding);
+            }
+          } catch {
+            // Non-fatal — send without branding
+          }
+        }
+
+        const toFormatted = toName ? `${toName} <${to}>` : to;
+
+        const { data: emailResult, error: emailError } = await resend.emails.send({
+          from: brandingFrom,
+          to: [toFormatted],
+          replyTo: brandingReplyTo,
+          subject,
+          html,
+          text: body.replace(/<[^>]+>/g, ""), // Strip HTML for text version
         });
 
-        if (!result.success) {
-          return {
-            status: "failed",
-            error: result.error || "Failed to send email",
-          };
+        if (emailError) {
+          return { status: "failed", error: emailError.message };
         }
         return {
           status: "completed",
-          output: { success: true, message_id: result.messageId },
+          output: { success: true, message_id: emailResult?.id },
         };
       } catch (error) {
         return {
@@ -1172,6 +1232,44 @@ async function executeEmailAction(
     default:
       return { status: "failed", error: `Unknown email action: ${action}` };
   }
+}
+
+// ============================================================================
+// EMAIL HTML WRAPPERS
+// ============================================================================
+
+/**
+ * Wrap email body in a minimal responsive HTML template (no branding)
+ */
+function wrapEmailBody(body: string, _subject: string): string {
+  const hasHtml = /<[a-z][\s\S]*>/i.test(body);
+  const content = hasHtml ? body : body.replace(/\n/g, "<br>");
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f9fafb"><div style="max-width:600px;margin:0 auto;padding:32px 24px;background:#ffffff">${content}</div></body></html>`;
+}
+
+/**
+ * Wrap email body in a branded HTML template using the agency/site branding
+ */
+function wrapBrandedEmailBody(
+  body: string,
+  _subject: string,
+  branding: { company_name: string; primary_color?: string; logo_url?: string; from_name?: string },
+): string {
+  const hasHtml = /<[a-z][\s\S]*>/i.test(body);
+  const content = hasHtml ? body : body.replace(/\n/g, "<br>");
+  const color = branding.primary_color || "#2563eb";
+  const name = branding.company_name || branding.from_name || "";
+  const logo = branding.logo_url
+    ? `<img src="${branding.logo_url}" alt="${name}" style="max-height:48px;max-width:200px;margin-bottom:16px">`
+    : "";
+  const header = name || logo
+    ? `<div style="text-align:center;padding:24px 0 16px;border-bottom:2px solid ${color}">${logo}${name && !logo ? `<h2 style="margin:0;color:${color};font-size:20px">${name}</h2>` : ""}</div>`
+    : "";
+  const footer = name
+    ? `<div style="text-align:center;padding:16px 0 0;border-top:1px solid #e5e7eb;margin-top:24px;color:#6b7280;font-size:12px">&copy; ${new Date().getFullYear()} ${name}</div>`
+    : "";
+
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f9fafb"><div style="max-width:600px;margin:0 auto;padding:0;background:#ffffff;border-radius:8px;overflow:hidden">${header}<div style="padding:24px">${content}</div>${footer}</div></body></html>`;
 }
 
 async function executeNotificationAction(

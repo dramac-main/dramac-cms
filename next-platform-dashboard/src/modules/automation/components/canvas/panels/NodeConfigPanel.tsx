@@ -22,8 +22,9 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { X, Info, AlertCircle, Copy, Trash2 } from "lucide-react";
+import { X, Info, AlertCircle, Copy, Trash2, Braces } from "lucide-react";
 import { ACTION_REGISTRY } from "../../../lib/action-types";
+import { VariablePicker } from "./VariablePicker";
 import type {
   WorkflowStep,
   WorkflowStepUpdate,
@@ -39,6 +40,7 @@ import type {
 
 interface NodeConfigPanelProps {
   step: WorkflowStep;
+  eventType?: string;
   onUpdate: (stepId: string, updates: WorkflowStepUpdate) => void;
   onDelete: (stepId: string) => void;
   onDuplicate?: (step: WorkflowStep) => void;
@@ -304,6 +306,7 @@ function LoopSection({
 
 export function NodeConfigPanel({
   step,
+  eventType,
   onUpdate,
   onDelete,
   onDuplicate,
@@ -451,22 +454,34 @@ export function NodeConfigPanel({
                     </Label>
 
                     {inputCfg.type === "string" && (
-                      <Input
-                        value={
-                          ((localConfig as Record<string, unknown>)[
-                            key
-                          ] as string) || ""
-                        }
-                        onChange={(e) =>
-                          handleConfigChange(key, e.target.value)
-                        }
-                        placeholder={
-                          inputCfg.placeholder ||
-                          (inputCfg.default as string) ||
-                          ""
-                        }
-                        className="h-8 text-xs"
-                      />
+                      <div className="flex items-center gap-1">
+                        <Input
+                          value={
+                            ((localConfig as Record<string, unknown>)[
+                              key
+                            ] as string) || ""
+                          }
+                          onChange={(e) =>
+                            handleConfigChange(key, e.target.value)
+                          }
+                          placeholder={
+                            inputCfg.placeholder ||
+                            (inputCfg.default as string) ||
+                            ""
+                          }
+                          className="h-8 text-xs"
+                        />
+                        <VariablePicker
+                          eventType={eventType}
+                          onInsert={(token) => {
+                            const cur =
+                              ((localConfig as Record<string, unknown>)[
+                                key
+                              ] as string) || "";
+                            handleConfigChange(key, cur + token);
+                          }}
+                        />
+                      </div>
                     )}
 
                     {inputCfg.type === "number" && (
@@ -542,7 +557,7 @@ export function NodeConfigPanel({
 
                     <p className="text-[10px] text-muted-foreground flex items-center gap-1">
                       <Info className="h-2.5 w-2.5" />
-                      {"{{trigger.field}}"} for dynamic values
+                      Use the <Braces className="inline h-2.5 w-2.5" /> button to insert variables
                     </p>
                   </div>
                 ))}

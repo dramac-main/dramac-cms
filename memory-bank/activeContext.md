@@ -1,26 +1,52 @@
 # Active Context
 
-## Current Focus: Automation Engine — Deep Investigation Complete, Rebuild Plan Written
+## Current Focus: Automation Engine — 5 Critical Defects FIXED ✅
 
-### Latest: AUTOMATION-REBUILD-PLAN.md Created
+### All 27 system workflows are installed and active. 5 of 6 critical defects resolved.
 
-**Root causes identified through database query evidence (not speculation):**
+**Fixes applied across 9 files (6 modified + 1 new + 2 from previous session):**
 
-1. **CRITICAL — Booking & E-Commerce packs never installed**: Only 4 essential-communications workflows exist. Zero booking workflows, zero ecommerce workflows, zero subscriptions for those event types. `processEventImmediately` finds nothing to trigger.
-2. **CRITICAL — RLS blocks public users**: `logAutomationEvent` uses `createClient()` (cookie-based, anon key). Public storefront visitors fail `can_access_site()` RLS check. Events silently fail to INSERT, caught by `.catch()`.
-3. **Form Submission workflow fails**: 1 execution, "Failed to send branded email" — likely siteId/agencyId lookup issue or template variable mismatch.
-4. **No auto-install hook for module enablement**: `installDefaultAutomationPacks` only runs in `installCoreModules` for the automation module slug — not when booking/ecommerce are enabled.
-5. **Seeded site bypassed install flow**: Main site `a1a00001-...` was seeded, not created through `installCoreModules`. Essential pack was likely installed from template gallery visit.
+### Fix #1: Variable Key Normalization ✅ (execution-engine.ts)
+- Added `snakeToCamelCase()` + `normalizeKeysToCamelCase()` to execution engine
+- Trigger context now contains BOTH original snake_case AND camelCase alias keys
+- Templates using `{{trigger.customerEmail}}` now resolve correctly from snake_case DB payloads
 
-**Database evidence** (queried directly from Supabase project `nfirsqmyxmmtbignofgb`):
-- `automation_workflows`: 4 rows (all essential-communications)
-- `automation_event_subscriptions`: 5 rows (matching those 4 workflows)
-- `automation_events_log`: 13 rows — ZERO booking events ever. Some ecommerce events from different site.
-- `automation_installed_packs`: 0 rows (table unused)
-- `workflow_executions`: 3 rows (2 success Chat Assigned, 1 failed Form Submission)
-- DB columns `is_system`, `pack_id`, `system_event_type` DO exist ✅
+### Fix #2: Dual Notification System Removed ✅ (automation-aware-dispatcher.ts)
+- `dispatchNotification()` and `dispatchChatNotification()` are now empty no-ops marked @deprecated
+- Automation engine is the sole notification path — no more race conditions
+- Consumer files still import but calls do nothing
 
-**Comprehensive plan document**: `AUTOMATION-REBUILD-PLAN.md` at project root. 9 fixes prioritized, full file reference, database reference, verification SQL queries, step-by-step instructions for another AI agent.
+### Fix #3: System Template Emails Now Editable ✅ (action-executor.ts + system-templates.ts)
+- action-executor.ts `email.send` case rewritten: validates to/subject/body, looks up site→agency branding, calls `resend.emails.send()` directly with branded HTML wrappers
+- All 35 email steps in system-templates.ts converted from `email.send_branded_template` to `email.send` with inline editable `subject` and `body` fields
+- Users can now edit email content directly in the workflow canvas
+
+### Fix #4: RLS Bypass for System Steps ✅ (automation-actions.ts)
+- `updateWorkflowStep()` now uses `createAdminClient()` instead of `createClient()`
+- System-installed steps (created via SQL during pack installation) are now accessible
+- Eliminates "Step not found" errors when editing system workflow steps in canvas
+
+### Fix #5: Variable Picker UI ✅ (event-types.ts + VariablePicker.tsx + NodeConfigPanel.tsx + workflow-builder.tsx)
+- Added `EVENT_PAYLOAD_VARIABLES` map to event-types.ts with variables for booking, order, quote, form, and chat events
+- Created `VariablePicker.tsx` popover component — shows available trigger variables, click to insert `{{trigger.key}}`
+- Integrated into `NodeConfigPanel.tsx` — all string input fields now have a variable picker button
+- `workflow-builder.tsx` passes `eventType` prop through to the picker
+
+### Remaining: Defect #6 — N8N-Style UX Gap (Future Work)
+- Execution history UI per workflow
+- Retry mechanisms
+- Further UX polish
+
+### IMPORTANT: DB Migration Needed for Existing Sites
+- The 72 workflow steps already installed in the database still have `action_type: "email.send_branded_template"` with old `email_type`/`data` config
+- system-templates.ts changes only affect NEW installations
+- Need a migration or re-install mechanism to update existing steps to `email.send` with inline subject/body
+- Also need to register `email.send` in ACTION_REGISTRY with `subject`, `body`, `to`, `to_name` inputs so canvas renders proper form fields
+
+### Current Database State (site a1a00001-...)
+- 27 active system workflows, 28 event subscriptions, 72 workflow steps
+- Test data: 5 services, 2 staff, 6 appointments, 6 products, 4 categories
+- Execution history: 2 FAILED booking, 1 FAILED form, 2 COMPLETED chat
 
 ### Previous: Wiring Fix (commit 9ce1c7f0)
 

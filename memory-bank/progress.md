@@ -34,46 +34,28 @@
 
 ---
 
-## Latest Update: Automation Wiring Fix — Notifications Flow Through Automation-First Pipeline ✅
+## Latest Update: Automation Engine — 5 Critical Defects Fixed ✅ (April 2026)
 
-### What Was Done
+### What Was Fixed
 
-**Root Cause:** All 6 automation phases were correctly implemented, but the call order in notification sites was backwards — `dispatchNotification()` fired BEFORE `logAutomationEvent()`, so the dispatcher never detected active workflows. The automation engine was 100% real but never triggered.
+All 5 actionable defects from the deep audit have been resolved across 9 files (6 modified, 1 new):
 
-**Fix:** Across 6 files, swapped call order so `await logAutomationEvent(...)` fires FIRST (creates event + immediately processes matching workflow subscriptions), then `await dispatchNotification(...)` fires SECOND (checks for active system workflow → finds one → skips hardcoded). Also:
+1. **Fix #1 — Variable Key Normalization** (execution-engine.ts): Added `snakeToCamelCase()` + `normalizeKeysToCamelCase()` so trigger context has BOTH snake_case and camelCase keys. Templates like `{{trigger.customerEmail}}` now resolve from snake_case DB payloads.
 
-- Added 1 missing event emission (booking.appointment.created)
-- Added 1 missing import (notifyNewBooking)
-- Wrapped 1 direct sendBrandedEmail bypass in dispatchNotification (payment proof rejection)
-- Awaited all previously fire-and-forget logAutomationEvent calls
+2. **Fix #2 — Dual Notification System Removed** (automation-aware-dispatcher.ts): `dispatchNotification()` and `dispatchChatNotification()` made empty no-ops. Automation engine is sole notification path — no more race conditions where hardcoded notification gets skipped but automation also fails.
 
-**Files:** booking-actions.ts, public-ecommerce-actions.ts, order-actions.ts, quote-actions.ts, quote-workflow-actions.ts, forms/submit/route.ts
-**Result:** Frontend behavior identical. Automation module is now the single source of truth.
+3. **Fix #3 — System Template Emails Now Editable** (action-executor.ts + system-templates.ts): `email.send` case in executor rewritten to call `resend.emails.send()` directly with branded HTML wrappers. All 35 email steps converted from `email.send_branded_template` to `email.send` with inline editable `subject`/`body` fields.
 
----
+4. **Fix #4 — RLS Bypass for System Steps** (automation-actions.ts): `updateWorkflowStep()` uses `createAdminClient()` to bypass RLS on SQL-created rows — fixes "Step not found" canvas error.
 
-## Previous Update: Automation Module Overhaul — All 6 Phases Complete ✅
+5. **Fix #5 — Variable Picker UI** (event-types.ts + VariablePicker.tsx + NodeConfigPanel.tsx + workflow-builder.tsx): `EVENT_PAYLOAD_VARIABLES` map with variables for all event types, `VariablePicker` popover component, integrated into all string inputs in NodeConfigPanel.
 
-### What Was Done
+### Known Follow-Up Items
+- 72 existing DB workflow steps still use `email.send_branded_template` — need migration to `email.send`
+- `email.send` not yet registered in ACTION_REGISTRY with proper input schema for canvas form rendering
+- Defect #6 (N8N-style UX) deferred: execution history UI, retry mechanisms, further polish
 
-Full implementation of the AUTOMATION-OVERHAUL-PROMPT.md spec (1244 lines, 6 phases). Transforms the automation module into the single source of truth for all customer-facing communications.
-
-**Phase 1 — Event Emission Layer:** ~22 new EventDefinition entries in event-types.ts for ecommerce, booking, chat events.
-
-**Phase 2 — System Workflow Templates:** 27 system workflow templates (BOOKING[8], ORDER[8], QUOTE[7], FORM[1], CHAT[3]) in system-templates.ts. 3 new action types in executor: email.send_branded_template, chat.send_system_message, notification.in_app_targeted.
-
-**Phase 3 — Automation Starter Packs:** 7 StarterPack definitions (3 auto-install, 4 manual). Server actions for install/uninstall/auto-install. Pack Gallery UI in template-gallery.tsx. DB: automation_installed_packs table + system columns on automation_workflows.
-
-**Phase 4 — ReactFlow Canvas Builder:** @xyflow/react 12.10.2 + @dagrejs/dagre 3.0.0. 7 node types, 2 edge types, AutomationCanvas with dagre auto-layout, CanvasSidebar (15 palette items), CanvasControls, 3 config panels (Node, Trigger, WorkflowSettings). Canvas/list toggle in workflow-builder.tsx (canvas default). Position data in dedicated DB columns (Warning #6 resolved).
-
-**Phase 5 — Migration Safety/Fallback:** automation-aware-dispatcher.ts with hasActiveSystemWorkflow(), dispatchNotification(), dispatchChatNotification(). 8 notification files wrapped (~85 dispatch points). Return types widened for flexibility.
-
-**Phase 6 — Testing & Verification:** TypeScript 0 errors. DB migrations applied: position_x/position_y on workflow_steps, automation_installed_packs table, is_system on automation_event_subscriptions. Runtime tests (8B-8E) documented for manual verification.
-
-**Files Created:** ~25 new files across canvas/, canvas/nodes/, canvas/edges/, canvas/panels/, canvas/utils/, lib/, services/
-**Files Modified:** ~10 files (workflow-builder.tsx, automation-actions.ts, template-gallery.tsx, action-executor.ts, event-types.ts, automation-types.ts, 8 notification files)
-**DB Migrations:** 4 applied (Phase 3 system columns, Phase 6 positions, installed_packs table, event_subscriptions is_system)
-**TypeScript:** Zero errors throughout
+### Previous: Automation Deep Audit — 6 Critical Defects Found (April 8, 2026)
 
 ---
 

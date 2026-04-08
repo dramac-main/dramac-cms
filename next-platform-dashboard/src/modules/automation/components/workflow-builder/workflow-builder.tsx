@@ -393,6 +393,7 @@ export function WorkflowBuilder({
               {selectedStep && (
                 <NodeConfigPanel
                   step={selectedStep}
+                  eventType={(workflow?.trigger_config as Record<string, unknown>)?.event_type as string | undefined}
                   onUpdate={updateStep}
                   onDelete={deleteStep}
                   onDuplicate={handleDuplicateStep}

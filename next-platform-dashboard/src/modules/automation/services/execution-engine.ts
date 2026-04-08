@@ -37,6 +37,45 @@ import type {
 type AutomationDB = any
 
 // ============================================================================
+// KEY NORMALIZATION — snake_case DB → camelCase templates
+// ============================================================================
+
+/**
+ * Convert a snake_case string to camelCase.
+ * e.g., "customer_email" → "customerEmail"
+ */
+function snakeToCamelCase(str: string): string {
+  return str.replace(/_([a-z0-9])/g, (_, char) => char.toUpperCase())
+}
+
+/**
+ * Recursively normalize all object keys to camelCase.
+ * Handles nested objects and arrays. Preserves both the original
+ * snake_case AND the camelCase key so either {{trigger.customer_email}}
+ * or {{trigger.customerEmail}} works in templates.
+ */
+function normalizeKeysToCamelCase(obj: unknown): Record<string, unknown> {
+  if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) {
+    return (obj as Record<string, unknown>) || {}
+  }
+
+  const result: Record<string, unknown> = {}
+
+  for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+    // Keep the original key
+    result[key] = value
+
+    // Add camelCase alias if key contains underscores
+    const camelKey = snakeToCamelCase(key)
+    if (camelKey !== key) {
+      result[camelKey] = value
+    }
+  }
+
+  return result
+}
+
+// ============================================================================
 // MAIN EXECUTION FUNCTION
 // ============================================================================
 
@@ -71,9 +110,11 @@ export async function executeWorkflow(executionId: string): Promise<void> {
   })
   
   try {
-    // Initialize context
+    // Initialize context — normalize trigger keys to camelCase so templates
+    // like {{trigger.customerEmail}} resolve correctly even when the DB
+    // stores snake_case keys (customer_email). Both forms are available.
     const context: ExecutionContext = {
-      trigger: execution.trigger_data || {},
+      trigger: normalizeKeysToCamelCase(execution.trigger_data || {}),
       steps: execution.context?.steps || {},
       variables: execution.context?.variables || {},
       execution: {

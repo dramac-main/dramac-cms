@@ -1599,3 +1599,233 @@ export function parseEventType(
     action: parts[2],
   };
 }
+
+// ============================================================================
+// EVENT PAYLOAD VARIABLES
+// ============================================================================
+
+export interface EventVariable {
+  key: string;
+  label: string;
+  type: "string" | "number" | "boolean" | "object";
+}
+
+/**
+ * Known trigger variables for each event type.
+ * Used by the variable picker UI so users can insert {{trigger.field}} tokens.
+ */
+const EVENT_PAYLOAD_VARIABLES: Record<string, EventVariable[]> = {
+  // --- Common to most events ---
+  _common: [
+    { key: "siteId", label: "Site ID", type: "string" },
+    { key: "ownerEmail", label: "Owner Email", type: "string" },
+    { key: "timestamp", label: "Timestamp", type: "string" },
+  ],
+
+  // --- Booking events ---
+  "booking.appointment.created": [
+    { key: "customerName", label: "Customer Name", type: "string" },
+    { key: "customerEmail", label: "Customer Email", type: "string" },
+    { key: "serviceName", label: "Service Name", type: "string" },
+    { key: "startTime", label: "Start Time", type: "string" },
+    { key: "staffName", label: "Staff Name", type: "string" },
+    { key: "servicePrice", label: "Service Price", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "conversationId", label: "Conversation ID", type: "string" },
+    { key: "appointmentId", label: "Appointment ID", type: "string" },
+  ],
+  "booking.appointment.confirmed": [
+    { key: "customerName", label: "Customer Name", type: "string" },
+    { key: "customerEmail", label: "Customer Email", type: "string" },
+    { key: "serviceName", label: "Service Name", type: "string" },
+    { key: "startTime", label: "Start Time", type: "string" },
+    { key: "staffName", label: "Staff Name", type: "string" },
+    { key: "conversationId", label: "Conversation ID", type: "string" },
+  ],
+  "booking.appointment.cancelled": [
+    { key: "customerName", label: "Customer Name", type: "string" },
+    { key: "customerEmail", label: "Customer Email", type: "string" },
+    { key: "serviceName", label: "Service Name", type: "string" },
+    { key: "startTime", label: "Start Time", type: "string" },
+    { key: "cancellationReason", label: "Cancellation Reason", type: "string" },
+    { key: "conversationId", label: "Conversation ID", type: "string" },
+  ],
+  "booking.appointment.completed": [
+    { key: "customerName", label: "Customer Name", type: "string" },
+    { key: "customerEmail", label: "Customer Email", type: "string" },
+    { key: "serviceName", label: "Service Name", type: "string" },
+    { key: "conversationId", label: "Conversation ID", type: "string" },
+  ],
+  "booking.appointment.no_show": [
+    { key: "customerName", label: "Customer Name", type: "string" },
+    { key: "customerEmail", label: "Customer Email", type: "string" },
+    { key: "serviceName", label: "Service Name", type: "string" },
+    { key: "startTime", label: "Start Time", type: "string" },
+  ],
+  "booking.appointment.payment_received": [
+    { key: "customerName", label: "Customer Name", type: "string" },
+    { key: "customerEmail", label: "Customer Email", type: "string" },
+    { key: "serviceName", label: "Service Name", type: "string" },
+    { key: "servicePrice", label: "Amount", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "conversationId", label: "Conversation ID", type: "string" },
+  ],
+  "booking.appointment.reminder_sent": [
+    { key: "customerName", label: "Customer Name", type: "string" },
+    { key: "customerEmail", label: "Customer Email", type: "string" },
+    { key: "serviceName", label: "Service Name", type: "string" },
+    { key: "startTime", label: "Start Time", type: "string" },
+    { key: "staffName", label: "Staff Name", type: "string" },
+  ],
+
+  // --- Order events ---
+  "ecommerce.order.created": [
+    { key: "customerName", label: "Customer Name", type: "string" },
+    { key: "customerEmail", label: "Customer Email", type: "string" },
+    { key: "orderNumber", label: "Order Number", type: "string" },
+    { key: "total", label: "Total", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "items", label: "Items", type: "object" },
+  ],
+  "ecommerce.order.shipped": [
+    { key: "customerName", label: "Customer Name", type: "string" },
+    { key: "customerEmail", label: "Customer Email", type: "string" },
+    { key: "orderNumber", label: "Order Number", type: "string" },
+    { key: "trackingNumber", label: "Tracking Number", type: "string" },
+    { key: "carrier", label: "Carrier", type: "string" },
+    { key: "conversationId", label: "Conversation ID", type: "string" },
+  ],
+  "ecommerce.order.delivered": [
+    { key: "customerName", label: "Customer Name", type: "string" },
+    { key: "customerEmail", label: "Customer Email", type: "string" },
+    { key: "orderNumber", label: "Order Number", type: "string" },
+    { key: "conversationId", label: "Conversation ID", type: "string" },
+  ],
+  "ecommerce.order.cancelled": [
+    { key: "customerName", label: "Customer Name", type: "string" },
+    { key: "customerEmail", label: "Customer Email", type: "string" },
+    { key: "orderNumber", label: "Order Number", type: "string" },
+    { key: "reason", label: "Reason", type: "string" },
+    { key: "conversationId", label: "Conversation ID", type: "string" },
+  ],
+  "ecommerce.order.refunded": [
+    { key: "customerName", label: "Customer Name", type: "string" },
+    { key: "customerEmail", label: "Customer Email", type: "string" },
+    { key: "orderNumber", label: "Order Number", type: "string" },
+    { key: "refundAmount", label: "Refund Amount", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "conversationId", label: "Conversation ID", type: "string" },
+  ],
+  "ecommerce.payment.received": [
+    { key: "customerName", label: "Customer Name", type: "string" },
+    { key: "customerEmail", label: "Customer Email", type: "string" },
+    { key: "orderNumber", label: "Order Number", type: "string" },
+    { key: "amount", label: "Amount", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "conversationId", label: "Conversation ID", type: "string" },
+  ],
+  "ecommerce.payment.proof_uploaded": [
+    { key: "customerEmail", label: "Customer Email", type: "string" },
+    { key: "orderNumber", label: "Order Number", type: "string" },
+    { key: "fileName", label: "File Name", type: "string" },
+    { key: "total", label: "Total", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "conversationId", label: "Conversation ID", type: "string" },
+  ],
+  "ecommerce.product.low_stock": [
+    { key: "productName", label: "Product Name", type: "string" },
+    { key: "currentStock", label: "Current Stock", type: "number" },
+    { key: "threshold", label: "Threshold", type: "number" },
+  ],
+
+  // --- Quote events ---
+  "ecommerce.quote.created": [
+    { key: "customerName", label: "Customer Name", type: "string" },
+    { key: "customerEmail", label: "Customer Email", type: "string" },
+    { key: "quoteNumber", label: "Quote Number", type: "string" },
+    { key: "total", label: "Total", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "conversationId", label: "Conversation ID", type: "string" },
+  ],
+  "ecommerce.quote.sent": [
+    { key: "customerName", label: "Customer Name", type: "string" },
+    { key: "customerEmail", label: "Customer Email", type: "string" },
+    { key: "quoteNumber", label: "Quote Number", type: "string" },
+    { key: "total", label: "Total", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "validUntil", label: "Valid Until", type: "string" },
+    { key: "conversationId", label: "Conversation ID", type: "string" },
+  ],
+  "ecommerce.quote.reminder_sent": [
+    { key: "customerName", label: "Customer Name", type: "string" },
+    { key: "customerEmail", label: "Customer Email", type: "string" },
+    { key: "quoteNumber", label: "Quote Number", type: "string" },
+    { key: "total", label: "Total", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "validUntil", label: "Valid Until", type: "string" },
+  ],
+  "ecommerce.quote.accepted": [
+    { key: "customerName", label: "Customer Name", type: "string" },
+    { key: "customerEmail", label: "Customer Email", type: "string" },
+    { key: "quoteNumber", label: "Quote Number", type: "string" },
+    { key: "total", label: "Total", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "acceptedByName", label: "Accepted By", type: "string" },
+    { key: "conversationId", label: "Conversation ID", type: "string" },
+  ],
+  "ecommerce.quote.rejected": [
+    { key: "customerName", label: "Customer Name", type: "string" },
+    { key: "quoteNumber", label: "Quote Number", type: "string" },
+    { key: "rejectionReason", label: "Rejection Reason", type: "string" },
+    { key: "conversationId", label: "Conversation ID", type: "string" },
+  ],
+  "ecommerce.quote.amendment_requested": [
+    { key: "customerName", label: "Customer Name", type: "string" },
+    { key: "quoteNumber", label: "Quote Number", type: "string" },
+    { key: "amendmentNotes", label: "Amendment Notes", type: "string" },
+    { key: "conversationId", label: "Conversation ID", type: "string" },
+  ],
+  "ecommerce.quote.converted_to_order": [
+    { key: "customerName", label: "Customer Name", type: "string" },
+    { key: "customerEmail", label: "Customer Email", type: "string" },
+    { key: "quoteNumber", label: "Quote Number", type: "string" },
+    { key: "orderNumber", label: "Order Number", type: "string" },
+    { key: "total", label: "Total", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "conversationId", label: "Conversation ID", type: "string" },
+  ],
+
+  // --- Form events ---
+  "form.submission.received": [
+    { key: "formName", label: "Form Name", type: "string" },
+    { key: "data", label: "Submission Data", type: "object" },
+    { key: "pageUrl", label: "Page URL", type: "string" },
+  ],
+
+  // --- Live Chat events ---
+  "live_chat.message.received": [
+    { key: "visitorName", label: "Visitor Name", type: "string" },
+    { key: "messagePreview", label: "Message Preview", type: "string" },
+    { key: "conversationId", label: "Conversation ID", type: "string" },
+  ],
+  "live_chat.conversation.missed": [
+    { key: "visitorName", label: "Visitor Name", type: "string" },
+    { key: "conversationId", label: "Conversation ID", type: "string" },
+  ],
+  "live_chat.conversation.assigned": [
+    { key: "visitorName", label: "Visitor Name", type: "string" },
+    { key: "conversationId", label: "Conversation ID", type: "string" },
+  ],
+};
+
+/**
+ * Get available trigger variables for a given event type.
+ * Returns the event-specific variables merged with common variables.
+ */
+export function getEventVariables(eventType: string): EventVariable[] {
+  const common = EVENT_PAYLOAD_VARIABLES._common || [];
+  const specific = EVENT_PAYLOAD_VARIABLES[eventType] || [];
+  // Merge: specific first, then common (avoid duplicates by key)
+  const seen = new Set(specific.map((v) => v.key));
+  return [...specific, ...common.filter((v) => !seen.has(v.key))];
+}

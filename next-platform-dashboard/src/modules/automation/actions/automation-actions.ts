@@ -18,6 +18,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { emitEvent } from "@/lib/modules/module-events";
 import type {
@@ -755,7 +756,9 @@ export async function updateWorkflowStep(
       };
     }
 
-    const supabase = await createClient();
+    // Use admin client to bypass RLS — system-installed steps may not
+    // be accessible via the user session client.
+    const supabase = createAdminClient();
 
     // Build update object with proper type casting
     const updateData: Record<string, unknown> = {};
