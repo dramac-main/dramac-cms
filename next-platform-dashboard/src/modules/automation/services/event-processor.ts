@@ -139,13 +139,15 @@ async function handleEvent(
       }
     }
 
-    // Queue workflow execution
+    // Queue workflow execution — pass the actual event type (e.g. "booking.appointment.created")
+    // so downstream steps (notifications, etc.) can derive the correct DB type.
     await queueWorkflowExecution(
       workflow.id,
       siteId,
       "event",
       event.id,
       event.payload,
+      event.event_type,
     );
 
     triggeredCount++;
@@ -172,6 +174,7 @@ export async function queueWorkflowExecution(
   triggerType: string,
   triggerEventId: string | null,
   triggerData: Record<string, unknown>,
+  eventType?: string,
 ): Promise<string> {
   const supabase = createAdminClient() as AutomationDB;
 
@@ -190,7 +193,14 @@ export async function queueWorkflowExecution(
       trigger_type: triggerType,
       trigger_event_id: triggerEventId,
       trigger_data: triggerData,
-      context: { trigger: triggerData, steps: {}, variables: {} },
+      context: {
+        trigger: triggerData,
+        steps: {},
+        variables: {},
+        // Store the original event type (e.g. "booking.appointment.created")
+        // so the execution engine can pass it as triggerType to action handlers.
+        eventType: eventType || undefined,
+      },
       steps_total: stepsCount || 0,
     })
     .select("id")
@@ -352,6 +362,7 @@ async function processEventImmediately(
       "event",
       event.id,
       event.payload,
+      event.event_type,
     );
 
     // CRITICAL: Actually execute the workflow (don't just queue it!)

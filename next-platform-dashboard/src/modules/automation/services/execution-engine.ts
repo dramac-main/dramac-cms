@@ -115,11 +115,14 @@ export async function executeWorkflow(executionId: string): Promise<void> {
     // Initialize context — normalize trigger keys to camelCase so templates
     // like {{trigger.customerEmail}} resolve correctly even when the DB
     // stores snake_case keys (customer_email). Both forms are available.
+    // Prefer the specific event type (e.g. "booking.appointment.created")
+    // stored in context.eventType over the generic trigger_type ("event").
+    const storedEventType = (execution.context as Record<string, unknown> | null)?.eventType as string | undefined;
     const context: ExecutionContext = {
       trigger: normalizeKeysToCamelCase(execution.trigger_data || {}),
       steps: execution.context?.steps || {},
       variables: execution.context?.variables || {},
-      triggerType: execution.trigger_type || undefined,
+      triggerType: storedEventType || execution.trigger_type || undefined,
       execution: {
         id: executionId,
         workflowId: execution.workflow_id,
