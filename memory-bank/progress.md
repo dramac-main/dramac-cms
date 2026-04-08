@@ -34,7 +34,29 @@
 
 ---
 
-## Latest Update: Automation Engine — ALL Gaps Fully Implemented ✅ (April 2026)
+## Latest Update: Automation Engine Runtime Fixes ✅ (April 2026)
+
+### Session: Post-AUTOMATION-TESTING-WALKTHROUGH Verification
+
+Thorough runtime verification of all 27 active system workflows revealed and fixed 8 bugs:
+
+1. **Notification type constraint violation** — `mapEventToNotificationType()` added to action-executor.ts
+2. **Missing triggerType in ExecutionContext** — Added to types + execution-engine context init
+3. **EVENT_REGISTRY hyphen/underscore mismatch** — `live-chat.*` → `live_chat.*` in event-types.ts
+4. **Hardcoded event string mismatches** — 3 strings fixed in conversation-actions.ts
+5. **Missing logAutomationEvent for chat.assigned** — Added to `assignConversation()`
+6. **Missing logAutomationEvent for message.received** — Added to visitor message API route
+7. **send_system_message handler crash on missing conversation** — UUID validation guard added
+8. **email.send unclear error on unresolved variables** — `{{` check added to `to` field
+
+**DB Changes:** Removed duplicate subscription, changed 18 chat steps to `on_error: "continue"`
+**Files Modified:** 7 (automation-types, execution-engine, action-executor, event-types, conversation-actions, messages/route, AUTOMATION-TESTING-WALKTHROUGH.md)
+**TypeScript:** 0 errors (verified 4 times across session)
+**Status:** Ready for git commit + push, then live testing
+
+---
+
+## Previous Update: Automation Engine — ALL Gaps Fully Implemented ✅ (April 2026)
 
 ### Session 2 Changes (on top of 5-defect fix from commit bbfd8cdf)
 

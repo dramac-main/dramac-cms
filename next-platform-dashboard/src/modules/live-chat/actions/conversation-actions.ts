@@ -274,7 +274,7 @@ export async function createConversation(data: {
     // Emit automation event for new conversation
     logAutomationEvent(
       data.siteId,
-      "live-chat.conversation.started",
+      "live_chat.conversation.started",
       {
         conversation_id: conversation.id,
         visitor_id: data.visitorId,
@@ -382,6 +382,22 @@ export async function assignConversation(
     } catch {
       // Non-fatal — don't fail the assignment if notification fails
     }
+
+    // Emit automation event for chat assignment
+    logAutomationEvent(
+      conv.site_id,
+      "live_chat.conversation.assigned",
+      {
+        conversation_id: conversationId,
+        agent_id: agentId,
+        assigned_agent_id: agentId,
+      },
+      {
+        sourceModule: "live-chat",
+        sourceEntityType: "conversation",
+        sourceEntityId: conversationId,
+      },
+    ).catch((err) => console.error("[LiveChat] Automation event error:", err));
 
     revalidatePath(liveChatPath(conv.site_id));
     return { success: true, error: null };
@@ -564,7 +580,7 @@ export async function resolveConversation(
     // Emit automation event for resolved conversation
     logAutomationEvent(
       conv.site_id,
-      "live-chat.conversation.resolved",
+      "live_chat.conversation.resolved",
       {
         conversation_id: conversationId,
         resolution_time_seconds: resolutionTime,
@@ -650,7 +666,7 @@ export async function closeConversation(
     // Emit automation event for closed conversation
     logAutomationEvent(
       conv.site_id,
-      "live-chat.conversation.closed",
+      "live_chat.conversation.closed",
       {
         conversation_id: conversationId,
         assigned_agent_id: conv.assigned_agent_id,

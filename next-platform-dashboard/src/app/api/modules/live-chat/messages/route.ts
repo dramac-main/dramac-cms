@@ -172,6 +172,27 @@ export async function POST(request: NextRequest) {
       agentUserId: convForNotify.assigned_agent_id || undefined,
     }).catch((err) => console.error("[LiveChat] Notification error:", err));
 
+    // Emit automation event for new visitor message
+    import("@/modules/automation/services/event-processor")
+      .then(({ logAutomationEvent }) =>
+        logAutomationEvent(
+          convForNotify.site_id,
+          "live_chat.message.received",
+          {
+            conversation_id: conversationId,
+            visitor_name: visitorData?.name || "Visitor",
+            message_text: content,
+            assigned_agent_id: convForNotify.assigned_agent_id || null,
+          },
+          {
+            sourceModule: "live-chat",
+            sourceEntityType: "message",
+            sourceEntityId: message.id,
+          },
+        ),
+      )
+      .catch((err) => console.error("[LiveChat] Automation event error:", err));
+
     // Send web push to assigned agent (or all site agents)
     import("@/lib/actions/web-push")
       .then(({ sendPushToUser, sendPushToSiteAgents }) => {

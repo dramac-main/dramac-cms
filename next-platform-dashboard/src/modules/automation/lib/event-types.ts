@@ -271,15 +271,15 @@ export const EVENT_REGISTRY = {
   // =========================================================
   live_chat: {
     conversation: {
-      started: "live-chat.conversation.started",
-      resolved: "live-chat.conversation.resolved",
-      closed: "live-chat.conversation.closed",
-      missed: "live-chat.conversation.missed",
-      assigned: "live-chat.conversation.assigned",
+      started: "live_chat.conversation.started",
+      resolved: "live_chat.conversation.resolved",
+      closed: "live_chat.conversation.closed",
+      missed: "live_chat.conversation.missed",
+      assigned: "live_chat.conversation.assigned",
     },
     message: {
-      received: "live-chat.message.received",
-      agent_mentioned: "live-chat.message.agent_mentioned",
+      received: "live_chat.message.received",
+      agent_mentioned: "live_chat.message.agent_mentioned",
     },
   },
 

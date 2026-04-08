@@ -959,6 +959,23 @@ async function executeChatAction(
     case "send_system_message": {
       try {
         const conversationId = config.conversation_id as string;
+
+        // Skip if conversationId is missing or still an unresolved variable
+        if (
+          !conversationId ||
+          conversationId.startsWith("{{") ||
+          !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(conversationId)
+        ) {
+          return {
+            status: "completed",
+            output: {
+              success: true,
+              skipped: true,
+              reason: "no_conversation_context",
+            },
+          };
+        }
+
         const eventType = config.event_type as ChatMessageEventType;
         const customMessage = config.custom_message as string | undefined;
         const placeholders =
@@ -1050,10 +1067,10 @@ async function executeEmailAction(
         const body = config.body as string;
         const fromName = config.from_name as string | undefined;
 
-        if (!to) {
+        if (!to || to.includes("{{")) {
           return {
             status: "failed",
-            error: "No recipient email resolved (check trigger variables)",
+            error: `No recipient email resolved (got: ${to || "empty"})`,
           };
         }
         if (!subject) {
@@ -1292,6 +1309,57 @@ function wrapBrandedEmailBody(
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f9fafb"><div style="max-width:600px;margin:0 auto;padding:0;background:#ffffff;border-radius:8px;overflow:hidden">${header}<div style="padding:24px">${content}</div>${footer}</div></body></html>`;
 }
 
+/**
+ * Map an automation event type to a valid notification DB type.
+ * The notifications table has a check constraint (valid_type) that only
+ * accepts specific types. Workflow step configs often use generic labels
+ * like "info"/"warning"/"success" — this maps the triggering event to
+ * the proper DB-friendly notification type.
+ */
+function mapEventToNotificationType(triggerType?: string): string {
+  if (!triggerType) return "system";
+
+  // Specific overrides first — checked against the full event type string
+  // so "booking.appointment.confirmed" matches "appointment.confirmed"
+  if (triggerType.includes("appointment.confirmed")) return "booking_confirmed";
+  if (triggerType.includes("appointment.cancelled")) return "booking_cancelled";
+  if (triggerType.includes("order.shipped")) return "order_shipped";
+  if (triggerType.includes("order.delivered")) return "order_delivered";
+  if (triggerType.includes("order.cancelled")) return "order_cancelled";
+  if (triggerType.includes("order.refunded")) return "refund_issued";
+  if (triggerType.includes("quote.accepted")) return "quote_accepted";
+  if (triggerType.includes("quote.rejected")) return "quote_rejected";
+  if (triggerType.includes("product.low_stock")) return "low_stock";
+  if (triggerType.includes("conversation.missed")) return "chat_missed";
+  if (triggerType.includes("conversation.assigned")) return "chat_assigned";
+
+  const prefix = triggerType.split(".").slice(0, 2).join(".");
+
+  const mapping: Record<string, string> = {
+    // Booking
+    "booking.appointment": "new_booking",
+    // E-commerce
+    "ecommerce.order": "new_order",
+    "ecommerce.payment": "payment_received",
+    "ecommerce.refund": "refund_issued",
+    "ecommerce.product": "low_stock",
+    "ecommerce.quote": "new_quote_request",
+    // Live chat
+    "live_chat.message": "chat_message",
+    "chat.message": "chat_message",
+    "chat.assigned": "chat_assigned",
+    "chat.missed": "chat_missed",
+    "chat.rating": "chat_rating",
+    // Forms (singular "form", not "forms")
+    "form.submission": "form_submission",
+    "forms.submission": "form_submission",
+  };
+
+  if (mapping[prefix]) return mapping[prefix];
+
+  return "system";
+}
+
 async function executeNotificationAction(
   action: string,
   config: Record<string, unknown>,
@@ -1302,13 +1370,30 @@ async function executeNotificationAction(
 
   switch (action) {
     case "in_app": {
+      const inAppRawType = (config.type as string) || "info";
+      const VALID_IN_APP_TYPES = new Set([
+        "welcome", "site_published", "site_updated", "client_created",
+        "client_updated", "team_invite", "team_joined", "team_left",
+        "payment_success", "payment_failed", "subscription_renewed",
+        "subscription_cancelled", "comment_added", "mention",
+        "security_alert", "system", "new_booking", "booking_confirmed",
+        "booking_cancelled", "new_order", "order_shipped",
+        "order_delivered", "order_cancelled", "refund_issued", "low_stock",
+        "payment_received", "new_quote_request", "quote_accepted",
+        "quote_rejected", "form_submission", "chat_message",
+        "chat_assigned", "chat_missed", "chat_rating",
+      ]);
+      const inAppType = VALID_IN_APP_TYPES.has(inAppRawType)
+        ? inAppRawType
+        : mapEventToNotificationType(context.triggerType);
+
       const { data, error } = await supabase
         .from("notifications")
         .insert({
           user_id: config.user_id,
           title: config.title,
           message: config.message,
-          type: config.type || "info",
+          type: inAppType,
           link: config.link || null,
           read: false,
         })
@@ -1479,8 +1564,27 @@ async function executeNotificationAction(
         const targetUserId = config.target_user_id as string | undefined;
         const title = config.title as string;
         const message = config.message as string;
-        const type = (config.type as string) || "info";
+        const rawType = (config.type as string) || "info";
         const link = (config.link as string) || null;
+
+        // Map generic types ("info", "warning", "success") to DB-valid
+        // notification types based on the triggering event. If the config
+        // already specifies a specific type (e.g. "new_booking"), use it.
+        const VALID_DB_TYPES = new Set([
+          "welcome", "site_published", "site_updated", "client_created",
+          "client_updated", "team_invite", "team_joined", "team_left",
+          "payment_success", "payment_failed", "subscription_renewed",
+          "subscription_cancelled", "comment_added", "mention",
+          "security_alert", "system", "new_booking", "booking_confirmed",
+          "booking_cancelled", "new_order", "order_shipped",
+          "order_delivered", "order_cancelled", "refund_issued", "low_stock",
+          "payment_received", "new_quote_request", "quote_accepted",
+          "quote_rejected", "form_submission", "chat_message",
+          "chat_assigned", "chat_missed", "chat_rating",
+        ]);
+        const type = VALID_DB_TYPES.has(rawType)
+          ? rawType
+          : mapEventToNotificationType(context.triggerType);
 
         let userIds: string[] = [];
 

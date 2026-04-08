@@ -119,6 +119,7 @@ export async function executeWorkflow(executionId: string): Promise<void> {
       trigger: normalizeKeysToCamelCase(execution.trigger_data || {}),
       steps: execution.context?.steps || {},
       variables: execution.context?.variables || {},
+      triggerType: execution.trigger_type || undefined,
       execution: {
         id: executionId,
         workflowId: execution.workflow_id,

@@ -314,6 +314,7 @@ export interface ExecutionContext {
   trigger: Record<string, unknown>;
   steps: Record<string, unknown>;
   variables: Record<string, unknown>;
+  triggerType?: string;
   execution?: {
     id: string;
     workflowId: string;

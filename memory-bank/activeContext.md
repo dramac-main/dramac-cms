@@ -1,114 +1,69 @@
 # Active Context
 
-## Current Focus: Automation Engine — ALL Defects & Gaps FULLY RESOLVED ✅
+## Current Focus: Automation Engine Runtime Fixes — COMPLETE ✅
 
-### 5 critical defects (commit bbfd8cdf) + 7 remaining gaps now all implemented.
+### Session: Post-Verification Bug Fixes (April 2026)
 
-**Session 2 — Comprehensive Implementation (7 changes across 8 files):**
+After the prior session's deep analysis and AUTOMATION-TESTING-WALKTHROUGH.md creation, this session fixed all runtime bugs discovered during thorough verification of the 27 active system workflows.
 
-### Gap #1: Register Missing Action Types ✅ (action-types.ts)
+### Bugs Fixed (7 files modified + DB changes):
 
-- Added `notification.in_app_targeted` to ACTION_REGISTRY — targeted in-app notification with title, message, type, target_role (owner/agent/all), target_user_id, link inputs
-- Added `chat.send_system_message` to ACTION_REGISTRY — system chat message with conversation_id, event_type, custom_message, placeholders inputs
-- Both handlers already existed in action-executor.ts but were unregistered — canvas couldn't render config forms
+**1. Notification Type Constraint Violation** (action-executor.ts)
+- Root Cause: Workflow step configs use `type: "info"/"warning"/"success"` but DB constraint only allows 34 specific types
+- Fix: Added `mapEventToNotificationType()` function that maps triggering events to valid DB types. Both `in_app` and `in_app_targeted` handlers now check against `VALID_DB_TYPES` set first, then fall back to event-based mapping.
 
-### Gap #2: Retry Mechanism Implemented ✅ (execution-engine.ts)
+**2. ExecutionContext Missing triggerType** (automation-types.ts + execution-engine.ts)
+- Added `triggerType?: string` to `ExecutionContext` interface
+- Set from `execution.trigger_type` during context initialization
+- Allows action handlers to know what event triggered the workflow
 
-- Added `executeStepWithRetry()` wrapper function that honors `max_retries`, `retry_delay_seconds`, and `on_error: "retry"` from WorkflowStep
-- Step execution loop now calls `executeStepWithRetry` instead of `executeStep` directly
-- Retry attempts tracked via `attempt_number` field in step_execution_logs
-- Fixed delay between retries using `retry_delay_seconds` (default 5s)
+**3. EVENT_REGISTRY Hyphen/Underscore Mismatch** (event-types.ts)
+- Changed all `live-chat.*` entries to `live_chat.*` to match DB subscriptions
+- DB subscriptions used underscores (from system templates), but EVENT_REGISTRY used hyphens
 
-### Gap #3: Paused Execution Resumption via Cron ✅ (api/cron/route.ts)
+**4. Hardcoded Event Strings Mismatch** (conversation-actions.ts)
+- Fixed 3 hardcoded `"live-chat.*"` strings to `"live_chat.*"` in startConversation, resolveConversation, closeConversation
 
-- `resumePausedExecutions()` (which already existed in execution-engine.ts but was never called) now integrated into the unified cron handler
-- Called directly (not via HTTP dispatch) after all other cron tasks
-- Resumes up to 50 paused executions per cron cycle where `resume_at <= now()`
+**5. Missing logAutomationEvent for live_chat.conversation.assigned** (conversation-actions.ts)
+- `assignConversation()` notified via chat but never fired the automation event
+- Added `logAutomationEvent("live_chat.conversation.assigned", ...)` call
 
-### Gap #4: DB Migration for Existing Steps ✅ (automation-actions.ts)
+**6. Missing logAutomationEvent for live_chat.message.received** (messages/route.ts)
+- Visitor message API endpoint didn't emit automation event
+- Added dynamic import + `logAutomationEvent("live_chat.message.received", ...)` call
 
-- New server action `upgradeSystemWorkflowSteps(siteId)` — matches system workflows by `system_event_type` to current templates
-- Detects steps with stale action_types (`email.send_branded_template`, `email.send_branded`, `email.send_system`)
-- Deletes old steps and re-creates from current template definitions (which use `email.send`)
-- Idempotent — safe to call multiple times, skips workflows that are already current
+**7. chat.send_system_message Handler — Missing Conversation Guard** (action-executor.ts)
+- Many workflows (booking/order/quote) have system message as final step using `{{trigger.conversationId}}`
+- If event has no conversation context, the unresolved variable would cause DB error
+- Added UUID validation guard — skips gracefully with `reason: "no_conversation_context"`
 
-### Gap #5: Execution History Panel in Workflow Builder ✅ (workflow-builder.tsx + execution-history-panel.tsx)
+**8. email.send Handler — Unresolved Variable Guard** (action-executor.ts)
+- Added check for `{{` in `to` field to give clearer error message when variables don't resolve
 
-- New `ExecutionHistoryPanel` component — shows last 20 executions with status, duration, step count, error preview
-- "History" button added to workflow builder header (visible only for saved workflows)
-- Panel replaces right sidebar in both canvas and list view modes
-- Each execution links to full detail page (/automation/executions/[id])
-- Refresh button, "View all" link when > 20 executions
+### DB Changes:
+- Deleted duplicate subscription for `live_chat.conversation.assigned` (id: `c7ae6672-eec1-409b-89b0-68dace7461f8`)
+- Changed all 18 `chat.send_system_message` steps from `on_error: "fail"` to `on_error: "continue"` (system messages are best-effort; shouldn't fail entire workflow)
 
-### Gap #6: Pre-existing TS Error Fixed ✅ (action-executor.ts)
+### Verification:
+- TypeScript: 0 errors (verified 4 times)
+- All 21 notification steps map correctly to valid DB types
+- All 27 DB subscriptions use consistent underscore format
+- All 36 email steps properly reference `{{trigger.customerEmail}}` or `{{trigger.ownerEmail}}`
+- All 3 action types verified: `email.send`, `notification.in_app_targeted`, `chat.send_system_message`
 
-- `wrapBrandedEmailBody()` parameter type updated to accept `EmailBranding` (which has `agency_name`) instead of requiring `company_name`
-- This was a pre-existing error from the email branding system update
+### Files Modified (7 total):
+1. `src/modules/automation/types/automation-types.ts` — triggerType field
+2. `src/modules/automation/services/execution-engine.ts` — triggerType in context
+3. `src/modules/automation/services/action-executor.ts` — mapEventToNotificationType, handler fixes, guards
+4. `src/modules/automation/lib/event-types.ts` — hyphen→underscore
+5. `src/modules/live-chat/actions/conversation-actions.ts` — event strings + assigned event
+6. `src/app/api/modules/live-chat/messages/route.ts` — message.received event
+7. `AUTOMATION-TESTING-WALKTHROUGH.md` — created in prior session (unchanged)
 
-### Gap #7: Module Exports Updated ✅ (automation/index.ts)
-
-- `upgradeSystemWorkflowSteps` exported from automation module barrel
-
-### TypeScript: 0 Errors ✅
-
-- `npx tsc --noEmit` passes clean with all changes
-
-### NEXT STEPS (For User)
-
-1. **Run the DB migration**: Call `upgradeSystemWorkflowSteps(siteId)` for the test site (or wire it into the automation gallery page load alongside `ensureSystemPacksInstalled`)
-2. **Deploy to Vercel**: All changes are ready for production
-3. **Verify**: Open a system workflow in the canvas builder — email steps should now show `email.send` with editable subject/body fields, and the History button should show execution history
-
-### Previous Session: 5 Critical Defects FIXED ✅ (commit bbfd8cdf)
-
-#### Phase 1 — Event Emission Layer ✅
-
-- ~22 new EventDefinition entries in event-types.ts (ecommerce, booking, chat events)
-- `logAutomationEvent()` fire-and-forget emission integrated across modules
-
-#### Phase 2 — System Workflow Templates (A+B+C) ✅
-
-- 27 system workflow templates in system-templates.ts (BOOKING[8], ORDER[8], QUOTE[7], FORM[1], CHAT[3])
-- 3 new action types in action-executor.ts: email.send_branded_template, chat.send_system_message, notification.in_app_targeted
-- Templates with `isSystem`, `systemEventType`, `defaultActive`, `pack` fields
-
-#### Phase 3 — Automation Starter Packs ✅
-
-- 7 StarterPack definitions in starter-packs.ts (3 auto-install, 4 manual)
-- installStarterPack, getInstalledPacks, uninstallPack, installDefaultAutomationPacks, autoInstallPacksForModule
-- Pack Gallery section in template-gallery.tsx with install/uninstall UI
-- DB: automation_installed_packs table + is_system/pack_id/system_event_type on automation_workflows
-
-#### Phase 4 — ReactFlow Canvas Builder ✅
-
-- @xyflow/react 12.10.2 + @dagrejs/dagre 3.0.0 installed
-- 7 node types: TriggerNode, ActionNode, ConditionNode, DelayNode, LoopNode, EndNode, NoteNode
-- 2 edge types: DefaultEdge (smooth step + delete button), LoopbackEdge (dashed bezier)
-- AutomationCanvas.tsx: ReactFlow wrapper with dagre auto-layout, drag-and-drop, MiniMap, Background
-- CanvasSidebar.tsx: 15 palette items, 6 categories, native HTML drag/drop
-- CanvasControls.tsx: zoom, fit, auto-layout, lock/unlock
-- 3 config panels: NodeConfigPanel, TriggerConfigPanel, WorkflowSettingsPanel
-- workflow-builder.tsx: canvas/list toggle (canvas default), conditional rendering
-- Position data stored in dedicated position_x/position_y DB columns (not action_config)
-
-#### Phase 5 — Migration Safety/Fallback ✅
-
-- automation-aware-dispatcher.ts: hasActiveSystemWorkflow(), dispatchNotification(), dispatchChatNotification()
-- 8 notification files wrapped (85+ dispatch points): booking-actions, chat-booking-actions, ecommerce-actions, order-actions, public-ecommerce-actions, quote-actions, quote-workflow-actions, forms/submit/route.ts
-- Return types widened to Promise<unknown> for wrapped functions
-
-#### Phase 6 — Testing & Verification ✅
-
-- TypeScript: 0 errors (npx tsc --noEmit clean)
-- DB migrations applied: position_x/position_y on workflow_steps, automation_installed_packs table, is_system on automation_event_subscriptions
-- Critical Warning #6 resolved: position data uses dedicated columns, not action_config
-- Runtime testing (8B-8E) requires running dev server — documented for manual verification
-
----
-
-## Previous Focus: Automation Module — Cross-Module Integration Complete ✅ (commit aeafa126)
-
-### What Was Done
+### Next Steps:
+- Git commit and push all changes
+- Live testing using AUTOMATION-TESTING-WALKTHROUGH.md scenarios
+- Monitor workflow executions for any remaining edge cases
 
 **Full cross-module automation wiring: 3 new action executor categories (ecommerce, booking, chat) with 20 real actions connected to live server functions, 19 action type definitions with full input/output schemas, and 14 production-quality cross-module workflow templates.**
 
