@@ -964,7 +964,9 @@ async function executeChatAction(
         if (
           !conversationId ||
           conversationId.startsWith("{{") ||
-          !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(conversationId)
+          !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+            conversationId,
+          )
         ) {
           return {
             status: "completed",
@@ -1105,14 +1107,23 @@ async function executeEmailAction(
 
               // Apply site-level overrides (name, colors, logo) for customer-facing context
               if (site.name) {
-                const siteSettings = (site.settings || {}) as Record<string, unknown>;
+                const siteSettings = (site.settings || {}) as Record<
+                  string,
+                  unknown
+                >;
                 branding = applySiteBranding(branding, {
                   name: site.name,
-                  primary_color: siteSettings.primary_color as string | undefined,
+                  primary_color: siteSettings.primary_color as
+                    | string
+                    | undefined,
                   accent_color: siteSettings.accent_color as string | undefined,
-                  secondary_color: siteSettings.secondary_color as string | undefined,
+                  secondary_color: siteSettings.secondary_color as
+                    | string
+                    | undefined,
                   logo_url: siteSettings.logo_url as string | undefined,
-                  support_email: siteSettings.support_email as string | undefined,
+                  support_email: siteSettings.support_email as
+                    | string
+                    | undefined,
                 });
               }
 
@@ -1218,11 +1229,11 @@ async function executeEmailAction(
           };
         }
 
-        // Resolve the agency ID from the site
+        // Resolve the agency ID and site name from the site
         const supabase = createAdminClient() as AutomationDB;
         const { data: site } = await supabase
           .from("sites")
-          .select("agency_id")
+          .select("agency_id, name, domain")
           .eq("id", siteId)
           .single();
 
@@ -1237,6 +1248,47 @@ async function executeEmailAction(
         const to = config.to as string;
         const toName = config.to_name as string | undefined;
         const data = (config.data as Record<string, unknown>) || {};
+
+        // Auto-inject businessName from site if not already in data
+        if (!data.businessName && site.name) {
+          data.businessName = site.name;
+        }
+
+        // Auto-inject dashboardUrl for owner-facing templates
+        if (!data.dashboardUrl) {
+          const baseUrl = site.domain
+            ? `https://${site.domain}`
+            : `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}`;
+          data.dashboardUrl = `${baseUrl}/dashboard/booking`;
+        }
+
+        // Normalize paymentRequired to boolean
+        if (data.paymentRequired !== undefined) {
+          data.paymentRequired = data.paymentRequired === "pending" || data.paymentRequired === true;
+        }
+
+        // Format price with currency if available
+        if (data.price !== undefined && !String(data.price).includes("$") && !String(data.price).includes("€")) {
+          const price = Number(data.price);
+          if (!isNaN(price)) {
+            const currency = (context.trigger?.currency as string) || "USD";
+            try {
+              data.price = new Intl.NumberFormat("en-US", { style: "currency", currency }).format(price);
+            } catch {
+              data.price = `$${price.toFixed(2)}`;
+            }
+          }
+        }
+
+        // Format duration if it's a number
+        if (data.duration !== undefined) {
+          const mins = Number(data.duration);
+          if (!isNaN(mins) && mins > 0) {
+            data.duration = mins >= 60
+              ? `${Math.floor(mins / 60)}h ${mins % 60 ? `${mins % 60}min` : ""}`
+              : `${mins} min`;
+          }
+        }
 
         if (!to) {
           return {
@@ -1309,7 +1361,8 @@ function wrapBrandedEmailBody(
   const hasHtml = /<[a-z][\s\S]*>/i.test(body);
   const content = hasHtml ? body : body.replace(/\n/g, "<br>");
   const color = branding.primary_color || "#2563eb";
-  const name = branding.agency_name || branding.company_name || branding.from_name || "";
+  const name =
+    branding.agency_name || branding.company_name || branding.from_name || "";
   const logo = branding.logo_url
     ? `<img src="${branding.logo_url}" alt="${name}" style="max-height:48px;max-width:200px;margin-bottom:16px">`
     : "";
@@ -1387,16 +1440,40 @@ async function executeNotificationAction(
     case "in_app": {
       const inAppRawType = (config.type as string) || "info";
       const VALID_IN_APP_TYPES = new Set([
-        "welcome", "site_published", "site_updated", "client_created",
-        "client_updated", "team_invite", "team_joined", "team_left",
-        "payment_success", "payment_failed", "subscription_renewed",
-        "subscription_cancelled", "comment_added", "mention",
-        "security_alert", "system", "new_booking", "booking_confirmed",
-        "booking_cancelled", "new_order", "order_shipped",
-        "order_delivered", "order_cancelled", "refund_issued", "low_stock",
-        "payment_received", "new_quote_request", "quote_accepted",
-        "quote_rejected", "form_submission", "chat_message",
-        "chat_assigned", "chat_missed", "chat_rating",
+        "welcome",
+        "site_published",
+        "site_updated",
+        "client_created",
+        "client_updated",
+        "team_invite",
+        "team_joined",
+        "team_left",
+        "payment_success",
+        "payment_failed",
+        "subscription_renewed",
+        "subscription_cancelled",
+        "comment_added",
+        "mention",
+        "security_alert",
+        "system",
+        "new_booking",
+        "booking_confirmed",
+        "booking_cancelled",
+        "new_order",
+        "order_shipped",
+        "order_delivered",
+        "order_cancelled",
+        "refund_issued",
+        "low_stock",
+        "payment_received",
+        "new_quote_request",
+        "quote_accepted",
+        "quote_rejected",
+        "form_submission",
+        "chat_message",
+        "chat_assigned",
+        "chat_missed",
+        "chat_rating",
       ]);
       const inAppType = VALID_IN_APP_TYPES.has(inAppRawType)
         ? inAppRawType
@@ -1586,16 +1663,40 @@ async function executeNotificationAction(
         // notification types based on the triggering event. If the config
         // already specifies a specific type (e.g. "new_booking"), use it.
         const VALID_DB_TYPES = new Set([
-          "welcome", "site_published", "site_updated", "client_created",
-          "client_updated", "team_invite", "team_joined", "team_left",
-          "payment_success", "payment_failed", "subscription_renewed",
-          "subscription_cancelled", "comment_added", "mention",
-          "security_alert", "system", "new_booking", "booking_confirmed",
-          "booking_cancelled", "new_order", "order_shipped",
-          "order_delivered", "order_cancelled", "refund_issued", "low_stock",
-          "payment_received", "new_quote_request", "quote_accepted",
-          "quote_rejected", "form_submission", "chat_message",
-          "chat_assigned", "chat_missed", "chat_rating",
+          "welcome",
+          "site_published",
+          "site_updated",
+          "client_created",
+          "client_updated",
+          "team_invite",
+          "team_joined",
+          "team_left",
+          "payment_success",
+          "payment_failed",
+          "subscription_renewed",
+          "subscription_cancelled",
+          "comment_added",
+          "mention",
+          "security_alert",
+          "system",
+          "new_booking",
+          "booking_confirmed",
+          "booking_cancelled",
+          "new_order",
+          "order_shipped",
+          "order_delivered",
+          "order_cancelled",
+          "refund_issued",
+          "low_stock",
+          "payment_received",
+          "new_quote_request",
+          "quote_accepted",
+          "quote_rejected",
+          "form_submission",
+          "chat_message",
+          "chat_assigned",
+          "chat_missed",
+          "chat_rating",
         ]);
         const type = VALID_DB_TYPES.has(rawType)
           ? rawType

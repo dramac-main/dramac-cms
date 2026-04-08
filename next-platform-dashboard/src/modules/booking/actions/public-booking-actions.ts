@@ -13,7 +13,6 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { notifyNewBooking } from "@/lib/services/business-notifications";
 import { logAutomationEvent } from "@/modules/automation/services/event-processor";
 import { formatDate, formatTime } from "@/lib/locale-config";
 import type {
@@ -596,27 +595,8 @@ export async function createPublicAppointment(
       staffName = staff?.name;
     }
 
-    // Send notifications to business owner + customer (async, non-blocking)
-    notifyNewBooking({
-      siteId,
-      appointmentId: appointment?.id || "",
-      serviceName: service.name || "Service",
-      servicePrice: service.price || 0,
-      serviceDuration: service.duration_minutes || 30,
-      staffName,
-      customerName: input.customerName,
-      customerEmail: input.customerEmail,
-      customerPhone: input.customerPhone,
-      startTime: input.startTime,
-      endTime: input.endTime,
-      status: status as "pending" | "confirmed",
-      currency: service.currency,
-      paymentStatus,
-    }).catch((err) =>
-      console.error("[Booking Public] Notification error:", err),
-    );
-
     // Emit automation event for appointment creation
+    // (All notifications are handled by automation workflows — no direct calls)
     logAutomationEvent(
       siteId,
       "booking.appointment.created",
@@ -636,6 +616,9 @@ export async function createPublicAppointment(
         status,
         price: service.price,
         currency: service.currency,
+        duration_minutes: service.duration_minutes || 30,
+        payment_status: paymentStatus,
+        payment_amount: paymentAmount,
       },
       {
         sourceModule: "booking",
