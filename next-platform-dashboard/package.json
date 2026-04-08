@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "admin:create": "npx tsx scripts/create-super-admin.ts",
-    "admin:promote": "npx tsx scripts/create-super-admin.ts"
+    "admin:promote": "npx tsx scripts/create-super-admin.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:automation": "vitest run src/modules/automation"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.12",
@@ -122,6 +125,7 @@
     "playwright": "^1.58.2",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.3"
   }
 }

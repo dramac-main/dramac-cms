@@ -851,6 +851,55 @@ export async function resumePausedExecutions(): Promise<{
   return { resumed, errors };
 }
 
+/**
+ * Resume workflow executions stuck in "running" status.
+ *
+ * An execution can get stuck if the serverless function was killed mid-run
+ * (e.g., Vercel timeout). The engine uses checkpointing (current_step_index),
+ * so resuming picks up from the last completed step.
+ *
+ * Criteria: status = "running" AND started_at older than the cutoff (default 5 min).
+ */
+export async function resumeStuckExecutions(
+  cutoffMinutes: number = 5,
+): Promise<{ resumed: number; errors: string[] }> {
+  const supabase = createAdminClient() as AutomationDB;
+  const errors: string[] = [];
+  let resumed = 0;
+
+  const cutoff = new Date(
+    Date.now() - cutoffMinutes * 60 * 1000,
+  ).toISOString();
+
+  const { data: executions, error: fetchError } = await supabase
+    .from("workflow_executions")
+    .select("id")
+    .eq("status", "running")
+    .lt("started_at", cutoff)
+    .limit(20);
+
+  if (fetchError || !executions?.length) {
+    return { resumed: 0, errors: fetchError ? [fetchError.message] : [] };
+  }
+
+  console.log(
+    `[Automation] Found ${executions.length} stuck executions to resume`,
+  );
+
+  for (const exec of executions) {
+    try {
+      await executeWorkflow(exec.id);
+      resumed++;
+    } catch (err) {
+      errors.push(
+        `Execution ${exec.id}: ${err instanceof Error ? err.message : "Unknown error"}`,
+      );
+    }
+  }
+
+  return { resumed, errors };
+}
+
 // ============================================================================
 // EXECUTION STATUS QUERIES
 // ============================================================================

@@ -137,6 +137,7 @@ export {
 export {
   executeWorkflow,
   resumePausedExecutions,
+  resumeStuckExecutions,
 } from './services/execution-engine'
 
 // Action executor (for internal use)

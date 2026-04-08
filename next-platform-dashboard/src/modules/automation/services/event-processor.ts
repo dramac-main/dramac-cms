@@ -13,7 +13,6 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { executeWorkflow } from "./execution-engine";
 import type {
   AutomationEventLog,
   EventSubscription,
@@ -30,6 +29,50 @@ import type {
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AutomationDB = any;
+
+// ============================================================================
+// INTERNAL EXECUTION TRIGGER
+// ============================================================================
+
+/**
+ * Trigger a workflow execution via the internal API endpoint.
+ * This creates a NEW serverless function invocation with its own lifecycle
+ * (maxDuration: 300s), so the execution isn't killed when the caller returns.
+ * Fire-and-forget — does not block the caller.
+ */
+function triggerExecutionViaAPI(
+  executionId: string,
+  workflowName: string,
+): void {
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3000");
+  const cronSecret = process.env.CRON_SECRET;
+
+  fetch(`${baseUrl}/api/automation/execute`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(cronSecret ? { Authorization: `Bearer ${cronSecret}` } : {}),
+    },
+    body: JSON.stringify({ executionId }),
+  })
+    .then(async (res) => {
+      if (res.ok) {
+        console.log(`[Automation] ✅ Workflow ${workflowName} completed`);
+      } else {
+        const body = await res.text().catch(() => "");
+        console.error(
+          `[Automation] ❌ Execution API returned ${res.status}: ${body}`,
+        );
+      }
+    })
+    .catch((err) => {
+      console.error(`[Automation] ❌ Failed to call execution API:`, err);
+    });
+}
 
 // ============================================================================
 // EVENT PROCESSING
@@ -365,28 +408,14 @@ async function processEventImmediately(
       event.event_type,
     );
 
-    // CRITICAL: Actually execute the workflow (don't just queue it!)
+    // Trigger execution via internal API endpoint so the workflow runs in
+    // its own serverless function invocation (maxDuration: 300s). Without
+    // this, the fire-and-forget promise gets killed when Vercel tears down
+    // the caller's function after the HTTP response is sent.
     console.log(
-      `[Automation] Executing workflow ${workflow.name} (execution: ${executionId})`,
+      `[Automation] Triggering workflow ${workflow.name} via internal API (execution: ${executionId})`,
     );
-    try {
-      // Execute in background - don't await to avoid blocking the CRM action
-      executeWorkflow(executionId)
-        .then(() => {
-          console.log(`[Automation] ✅ Workflow ${workflow.name} completed`);
-        })
-        .catch((execError) => {
-          console.error(
-            `[Automation] ❌ Workflow ${workflow.name} failed:`,
-            execError,
-          );
-        });
-    } catch (execError) {
-      console.error(
-        `[Automation] Failed to start workflow execution:`,
-        execError,
-      );
-    }
+    triggerExecutionViaAPI(executionId, workflow.name);
 
     triggeredCount++;
 

@@ -20,7 +20,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { resumePausedExecutions } from '@/modules/automation/services/execution-engine';
+import { resumePausedExecutions, resumeStuckExecutions } from '@/modules/automation/services/execution-engine';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,6 +64,13 @@ export async function GET(request: NextRequest) {
     results['automationResume'] = await resumePausedExecutions();
   } catch (err) {
     errors.push(`automationResume: ${err instanceof Error ? err.message : 'unknown'}`);
+  }
+
+  // Resume stuck automation executions (killed by function timeout)
+  try {
+    results['automationStuckRecovery'] = await resumeStuckExecutions();
+  } catch (err) {
+    errors.push(`automationStuckRecovery: ${err instanceof Error ? err.message : 'unknown'}`);
   }
 
   if (errors.length > 0) {
