@@ -1233,7 +1233,7 @@ async function executeEmailAction(
         const supabase = createAdminClient() as AutomationDB;
         const { data: site } = await supabase
           .from("sites")
-          .select("agency_id, name, domain")
+          .select("agency_id, name, subdomain")
           .eq("id", siteId)
           .single();
 
@@ -1256,8 +1256,8 @@ async function executeEmailAction(
 
         // Auto-inject dashboardUrl for owner-facing templates
         if (!data.dashboardUrl) {
-          const baseUrl = site.domain
-            ? `https://${site.domain}`
+          const baseUrl = site.subdomain
+            ? `https://${site.subdomain}.sites.dramacagency.com`
             : `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}`;
           data.dashboardUrl = `${baseUrl}/dashboard/booking`;
         }
