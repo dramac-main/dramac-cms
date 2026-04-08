@@ -15,7 +15,7 @@
 
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { executeAction } from './action-executor'
 import type { 
   ExecutionContext, 
@@ -44,7 +44,7 @@ type AutomationDB = any
  * Execute a workflow from an execution record
  */
 export async function executeWorkflow(executionId: string): Promise<void> {
-  const supabase = await createClient() as AutomationDB
+  const supabase = createAdminClient() as AutomationDB
   
   // Get execution details
   const { data: execution, error: execError } = await supabase
@@ -82,6 +82,37 @@ export async function executeWorkflow(executionId: string): Promise<void> {
         siteId: execution.site_id,
         startedAt: new Date().toISOString(),
       },
+    }
+
+    // Enrich trigger data with site-level context (ownerEmail, etc.)
+    // so templates can reference {{trigger.ownerEmail}} without each emitter providing it
+    if (execution.site_id && !context.trigger.ownerEmail) {
+      try {
+        const { data: site } = await supabase
+          .from('sites')
+          .select('agency_id')
+          .eq('id', execution.site_id)
+          .single()
+        if (site?.agency_id) {
+          const { data: agency } = await supabase
+            .from('agencies')
+            .select('owner_id')
+            .eq('id', site.agency_id)
+            .single()
+          if (agency?.owner_id) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('email')
+              .eq('id', agency.owner_id)
+              .single()
+            if (profile?.email) {
+              context.trigger.ownerEmail = profile.email
+            }
+          }
+        }
+      } catch {
+        // Non-fatal — ownerEmail just won't be available
+      }
     }
     
     // Load workflow variables
@@ -196,7 +227,7 @@ async function executeStep(
   step: WorkflowStep,
   context: ExecutionContext
 ): Promise<ActionResult> {
-  const supabase = await createClient() as AutomationDB
+  const supabase = createAdminClient() as AutomationDB
   const startTime = Date.now()
   
   // Create step log
@@ -567,7 +598,7 @@ async function updateExecutionStatus(
   status: string,
   extra: Record<string, unknown> = {}
 ): Promise<void> {
-  const supabase = await createClient() as AutomationDB
+  const supabase = createAdminClient() as AutomationDB
   await supabase
     .from('workflow_executions')
     .update({ status, ...extra })
@@ -592,7 +623,7 @@ async function completeExecution(
   context: ExecutionContext,
   status: 'completed' | 'failed'
 ): Promise<void> {
-  const supabase = await createClient() as AutomationDB
+  const supabase = createAdminClient() as AutomationDB
   const duration = context.execution?.startedAt 
     ? Date.now() - new Date(context.execution.startedAt).getTime()
     : 0
@@ -621,7 +652,7 @@ async function completeExecution(
  * Fail execution with error
  */
 async function failExecution(executionId: string, error: string, context: ExecutionContext): Promise<void> {
-  const supabase = await createClient() as AutomationDB
+  const supabase = createAdminClient() as AutomationDB
   
   const duration = context.execution?.startedAt
     ? Date.now() - new Date(context.execution.startedAt).getTime()
@@ -655,7 +686,7 @@ async function failExecution(executionId: string, error: string, context: Execut
  * Resume paused executions that are ready
  */
 export async function resumePausedExecutions(): Promise<{ resumed: number; errors: string[] }> {
-  const supabase = await createClient() as AutomationDB
+  const supabase = createAdminClient() as AutomationDB
   const errors: string[] = []
   let resumed = 0
   
@@ -695,7 +726,7 @@ export async function resumePausedExecutions(): Promise<{ resumed: number; error
  * Get execution by ID with full details
  */
 export async function getExecution(executionId: string): Promise<WorkflowExecution | null> {
-  const supabase = await createClient() as AutomationDB
+  const supabase = createAdminClient() as AutomationDB
   
   const { data, error } = await supabase
     .from('workflow_executions')

@@ -1285,15 +1285,15 @@ export async function createPublicOrderFromCart(
         input.site_id,
         EVENT_REGISTRY.ecommerce.order.created,
         {
-          order_id: order.id,
-          order_number: orderNumber,
-          customer_email: input.customer_email,
-          customer_name: input.customer_name,
+          orderId: order.id,
+          orderNumber: orderNumber,
+          customerEmail: input.customer_email,
+          customerName: input.customer_name,
           total: input.total,
           subtotal: input.subtotal,
           currency: input.currency,
-          payment_provider: input.payment_provider,
-          payment_status: input.payment_status || "pending",
+          paymentProvider: input.payment_provider,
+          paymentStatus: input.payment_status || "pending",
           status: input.status || "pending",
         },
         {
@@ -1301,7 +1301,9 @@ export async function createPublicOrderFromCart(
           sourceEntityType: "order",
           sourceEntityId: order.id,
         },
-      ).catch((err) => console.error("[Ecom Public] Automation event error:", err));
+      ).catch((err) =>
+        console.error("[Ecom Public] Automation event error:", err),
+      );
 
       // 2. Send notifications — dispatcher skips hardcoded if automation handles it
       const notificationItems = cart.items.map((item: CartItem) => ({
@@ -1360,15 +1362,15 @@ export async function createPublicOrderFromCart(
       input.site_id,
       EVENT_REGISTRY.ecommerce.order.created,
       {
-        order_id: order.id,
-        order_number: orderNumber,
-        customer_email: input.customer_email,
-        customer_name: input.customer_name,
+        orderId: order.id,
+        orderNumber: orderNumber,
+        customerEmail: input.customer_email,
+        customerName: input.customer_name,
         total: input.total,
         subtotal: input.subtotal,
         currency: input.currency,
-        payment_provider: input.payment_provider,
-        payment_status: input.payment_status || "pending",
+        paymentProvider: input.payment_provider,
+        paymentStatus: input.payment_status || "pending",
         status: input.status || "pending",
       },
       {
@@ -1376,7 +1378,9 @@ export async function createPublicOrderFromCart(
         sourceEntityType: "order",
         sourceEntityId: order.id,
       },
-    ).catch((err) => console.error("[Ecom Public] Automation event error:", err));
+    ).catch((err) =>
+      console.error("[Ecom Public] Automation event error:", err),
+    );
 
     // 2. Dispatch notification — skips hardcoded if automation handles it
     await dispatchNotification({
@@ -1459,12 +1463,12 @@ export async function updatePublicOrderStatus(
   // Emit automation event for status change
   logAutomationEvent(
     siteId,
-    "ecommerce.order.status_changed",
+    EVENT_REGISTRY.ecommerce.order.status_changed,
     {
-      order_id: orderId,
-      new_status: status,
-      order_number: (data as Order).order_number,
-      customer_email: (data as Order).customer_email,
+      orderId: orderId,
+      newStatus: status,
+      orderNumber: (data as Order).order_number,
+      customerEmail: (data as Order).customer_email,
     },
     {
       sourceModule: "ecommerce",
@@ -1510,13 +1514,13 @@ export async function updatePublicOrderPaymentStatus(
   // Emit automation event for payment status change
   logAutomationEvent(
     siteId,
-    "ecommerce.order.payment_updated",
+    EVENT_REGISTRY.ecommerce.payment.received,
     {
-      order_id: orderId,
-      payment_status: paymentStatus,
-      transaction_id: transactionId,
-      order_number: (data as Order).order_number,
-      customer_email: (data as Order).customer_email,
+      orderId: orderId,
+      paymentStatus: paymentStatus,
+      transactionId: transactionId,
+      orderNumber: (data as Order).order_number,
+      customerEmail: (data as Order).customer_email,
       total: (data as Order).total,
       currency: (data as Order).currency,
     },

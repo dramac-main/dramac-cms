@@ -17,7 +17,7 @@
 
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email/send-email";
 import { sendBrandedEmail } from "@/lib/email/send-branded-email";
 import type { EmailType } from "@/lib/email/email-types";
@@ -126,7 +126,7 @@ async function executeCrmAction(
   config: Record<string, unknown>,
   context: ExecutionContext,
 ): Promise<ActionResult> {
-  const supabase = (await createClient()) as AutomationDB;
+  const supabase = createAdminClient() as AutomationDB;
   const siteId = context.execution?.siteId;
 
   if (!siteId) {
@@ -1118,7 +1118,7 @@ async function executeEmailAction(
         }
 
         // Resolve the agency ID from the site
-        const supabase = (await createClient()) as AutomationDB;
+        const supabase = createAdminClient() as AutomationDB;
         const { data: site } = await supabase
           .from("sites")
           .select("agency_id")
@@ -1137,6 +1137,13 @@ async function executeEmailAction(
         const toName = config.to_name as string | undefined;
         const data = (config.data as Record<string, unknown>) || {};
 
+        if (!to) {
+          return {
+            status: "failed",
+            error: "No recipient email resolved (check that {{trigger.ownerEmail}} or the 'to' field is available)",
+          };
+        }
+
         const result = await sendBrandedEmail(site.agency_id, {
           to: { email: to, name: toName },
           emailType,
@@ -1145,7 +1152,7 @@ async function executeEmailAction(
         });
 
         if (!result.success) {
-          return { status: "failed", error: "Failed to send branded email" };
+          return { status: "failed", error: result.error || "Failed to send branded email" };
         }
         return {
           status: "completed",
@@ -1172,7 +1179,7 @@ async function executeNotificationAction(
   config: Record<string, unknown>,
   context: ExecutionContext,
 ): Promise<ActionResult> {
-  const supabase = (await createClient()) as AutomationDB;
+  const supabase = createAdminClient() as AutomationDB;
   const siteId = context.execution?.siteId;
 
   switch (action) {
@@ -1362,13 +1369,20 @@ async function executeNotificationAction(
         if (targetUserId) {
           userIds = [targetUserId];
         } else if (targetRole === "owner" || !targetRole) {
-          // Resolve site owner
+          // Resolve site owner via agency
           const { data: site } = await supabase
             .from("sites")
-            .select("user_id")
+            .select("agency_id")
             .eq("id", siteId)
             .single();
-          if (site?.user_id) userIds = [site.user_id];
+          if (site?.agency_id) {
+            const { data: agency } = await supabase
+              .from("agencies")
+              .select("owner_id")
+              .eq("id", site.agency_id)
+              .single();
+            if (agency?.owner_id) userIds = [agency.owner_id];
+          }
         } else if (targetRole === "agent") {
           // Get from trigger data if available (e.g. assigned agent)
           const triggerData = context.trigger as
@@ -1528,7 +1542,7 @@ async function executeDataAction(
   config: Record<string, unknown>,
   context: ExecutionContext,
 ): Promise<ActionResult> {
-  const supabase = (await createClient()) as AutomationDB;
+  const supabase = createAdminClient() as AutomationDB;
   const siteId = context.execution?.siteId;
 
   const moduleName = config.module as string;

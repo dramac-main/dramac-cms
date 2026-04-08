@@ -296,17 +296,19 @@ async function installCoreModules(
         );
       }
 
-      // Step 4: For Automation — auto-install default starter packs
-      if (mod.slug === "automation") {
-        const { installDefaultAutomationPacks } =
-          await import("@/modules/automation/actions/automation-actions");
-        await installDefaultAutomationPacks(siteId).catch((err: unknown) =>
-          console.error("[Sites] Failed to install automation packs:", err),
-        );
-      }
     } catch (err) {
       console.error(`[Sites] Failed to install core module ${mod.slug}:`, err);
     }
+  }
+
+  // Step 4: Install automation starter packs AFTER all modules are installed
+  // (so getPacksForModules can find booking, ecommerce, etc.)
+  try {
+    const { installDefaultAutomationPacks } =
+      await import("@/modules/automation/actions/automation-actions");
+    await installDefaultAutomationPacks(siteId);
+  } catch (err) {
+    console.error("[Sites] Failed to install automation packs:", err);
   }
 }
 

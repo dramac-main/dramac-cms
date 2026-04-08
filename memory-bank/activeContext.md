@@ -1,10 +1,49 @@
 # Active Context
 
-## Current Focus: Automation Overhaul — ALL 6 PHASES COMPLETE ✅
+## Current Focus: Automation Engine — Deep Investigation Complete, Rebuild Plan Written
 
-### Latest
+### Latest: AUTOMATION-REBUILD-PLAN.md Created
 
-**Full Automation Module Overhaul implemented from AUTOMATION-OVERHAUL-PROMPT.md (6 phases, 1244-line spec):**
+**Root causes identified through database query evidence (not speculation):**
+
+1. **CRITICAL — Booking & E-Commerce packs never installed**: Only 4 essential-communications workflows exist. Zero booking workflows, zero ecommerce workflows, zero subscriptions for those event types. `processEventImmediately` finds nothing to trigger.
+2. **CRITICAL — RLS blocks public users**: `logAutomationEvent` uses `createClient()` (cookie-based, anon key). Public storefront visitors fail `can_access_site()` RLS check. Events silently fail to INSERT, caught by `.catch()`.
+3. **Form Submission workflow fails**: 1 execution, "Failed to send branded email" — likely siteId/agencyId lookup issue or template variable mismatch.
+4. **No auto-install hook for module enablement**: `installDefaultAutomationPacks` only runs in `installCoreModules` for the automation module slug — not when booking/ecommerce are enabled.
+5. **Seeded site bypassed install flow**: Main site `a1a00001-...` was seeded, not created through `installCoreModules`. Essential pack was likely installed from template gallery visit.
+
+**Database evidence** (queried directly from Supabase project `nfirsqmyxmmtbignofgb`):
+- `automation_workflows`: 4 rows (all essential-communications)
+- `automation_event_subscriptions`: 5 rows (matching those 4 workflows)
+- `automation_events_log`: 13 rows — ZERO booking events ever. Some ecommerce events from different site.
+- `automation_installed_packs`: 0 rows (table unused)
+- `workflow_executions`: 3 rows (2 success Chat Assigned, 1 failed Form Submission)
+- DB columns `is_system`, `pack_id`, `system_event_type` DO exist ✅
+
+**Comprehensive plan document**: `AUTOMATION-REBUILD-PLAN.md` at project root. 9 fixes prioritized, full file reference, database reference, verification SQL queries, step-by-step instructions for another AI agent.
+
+### Previous: Wiring Fix (commit 9ce1c7f0)
+
+**Root Cause Found & Fixed:** The automation engine, templates, action executor, and dispatcher were all correctly implemented. The ONLY problem was notification wiring order — hardcoded notifications fired BEFORE automation events were logged, so the dispatcher never detected active workflows.
+
+**Fix Pattern Applied Across 6 Files:**
+
+1. `await logAutomationEvent(...)` — FIRST (creates event + immediately processes matching subscriptions → triggers workflow execution → sends real email via action executor)
+2. `await dispatchNotification(...)` — SECOND (queries for active system workflows → finds one from step 1 → SKIPS hardcoded notification)
+3. Non-blocking chat notification — THIRD
+
+**Files Fixed:**
+
+- **booking-actions.ts**: Added missing `notifyNewBooking` import, fixed `createAppointment()` (added event + notification dispatch), fixed confirmed/completed/no_show (added await), fixed `cancelAppointment()` (swapped order)
+- **public-ecommerce-actions.ts**: Fixed `checkoutCart()` (moved event before both dispatch branches, added event in no-cart branch too), awaited payment proof upload event
+- **order-actions.ts**: Fixed `updateOrderStatus()` (swap + await), fixed payment proof rejection (wrapped direct `sendBrandedEmail` in `dispatchNotification`), fixed refund (swap + await + moved inside customer email guard)
+- **quote-actions.ts**: Awaited `createQuoteAction` event emission
+- **quote-workflow-actions.ts**: Fixed sendQuote, resendQuote, sendQuoteReminder, requestAmendment, convertQuoteToOrder (all swap + await). Awaited acceptQuote + rejectQuote events.
+- **forms/submit/route.ts**: Swapped order (event first, dispatch second), restructured isSpam guard
+
+**Result:** When a system workflow is active for an event type, the automation engine processes it BEFORE the dispatcher checks — so `dispatchNotification` correctly skips the hardcoded notification. When no workflow exists, hardcoded fires as fallback. Frontend behavior is IDENTICAL.
+
+### Previous: Automation Overhaul — ALL 6 PHASES COMPLETE ✅
 
 #### Phase 1 — Event Emission Layer ✅
 

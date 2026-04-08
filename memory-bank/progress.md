@@ -30,10 +30,29 @@
 - **AUTOMATION OVERHAUL MASTER PLAN — Comprehensive 6-phase AI prompt document covering event emissions, system templates, starter packs, ReactFlow canvas, migration safety, testing (AUTOMATION-OVERHAUL-PROMPT.md)** ✅
 
 - **AUTOMATION OVERHAUL — ALL 6 PHASES COMPLETE (Event Emissions, 27 System Templates, 7 Starter Packs, ReactFlow Canvas, Migration Safety/Fallback, DB Migrations + Verification)** ✅
+- **AUTOMATION WIRING FIX — ALL NOTIFICATIONS FLOW THROUGH AUTOMATION-FIRST PIPELINE (6 files, 349 insertions, 244 deletions, commit 9ce1c7f0)** ✅
 
 ---
 
-## Latest Update: Automation Module Overhaul — All 6 Phases Complete ✅
+## Latest Update: Automation Wiring Fix — Notifications Flow Through Automation-First Pipeline ✅
+
+### What Was Done
+
+**Root Cause:** All 6 automation phases were correctly implemented, but the call order in notification sites was backwards — `dispatchNotification()` fired BEFORE `logAutomationEvent()`, so the dispatcher never detected active workflows. The automation engine was 100% real but never triggered.
+
+**Fix:** Across 6 files, swapped call order so `await logAutomationEvent(...)` fires FIRST (creates event + immediately processes matching workflow subscriptions), then `await dispatchNotification(...)` fires SECOND (checks for active system workflow → finds one → skips hardcoded). Also:
+
+- Added 1 missing event emission (booking.appointment.created)
+- Added 1 missing import (notifyNewBooking)
+- Wrapped 1 direct sendBrandedEmail bypass in dispatchNotification (payment proof rejection)
+- Awaited all previously fire-and-forget logAutomationEvent calls
+
+**Files:** booking-actions.ts, public-ecommerce-actions.ts, order-actions.ts, quote-actions.ts, quote-workflow-actions.ts, forms/submit/route.ts
+**Result:** Frontend behavior identical. Automation module is now the single source of truth.
+
+---
+
+## Previous Update: Automation Module Overhaul — All 6 Phases Complete ✅
 
 ### What Was Done
 

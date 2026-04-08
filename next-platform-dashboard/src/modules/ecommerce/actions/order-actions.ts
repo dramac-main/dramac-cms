@@ -279,10 +279,10 @@ export async function updateOrderStatus(
     siteId,
     EVENT_REGISTRY.ecommerce.order.status_changed,
     {
-      order_id: orderId,
-      new_status: status,
-      previous_status: currentOrder.status,
-      changed_by: userName,
+      orderId: orderId,
+      newStatus: status,
+      previousStatus: currentOrder.status,
+      changedBy: userName,
     },
     {
       sourceModule: "ecommerce",
@@ -497,13 +497,13 @@ export async function addOrderShipment(
   // Emit automation event for shipment
   logAutomationEvent(
     siteId,
-    "ecommerce.order.shipped",
+    EVENT_REGISTRY.ecommerce.order.shipped,
     {
-      order_id: orderId,
-      shipment_id: data.id,
+      orderId: orderId,
+      shipmentId: data.id,
       carrier: shipment.carrier,
-      tracking_number: shipment.tracking_number,
-      tracking_url: shipment.tracking_url,
+      trackingNumber: shipment.tracking_number,
+      trackingUrl: shipment.tracking_url,
     },
     {
       sourceModule: "ecommerce",
@@ -910,12 +910,12 @@ export async function processRefund(
         order.site_id,
         EVENT_REGISTRY.ecommerce.order.refunded,
         {
-          order_id: orderId,
-          refund_id: refundId,
-          refund_amount: refundData.amount,
+          orderId: orderId,
+          refundId: refundId,
+          refundAmount: refundData.amount,
           reason: refundData.reason,
-          customer_email: order.customer_email,
-          order_number: order.order_number,
+          customerEmail: order.customer_email,
+          orderNumber: order.order_number,
         },
         {
           sourceModule: "ecommerce",

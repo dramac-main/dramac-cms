@@ -238,7 +238,12 @@ export async function POST(request: NextRequest) {
           siteId,
           eventType: "form.submission.received",
           notificationFunction: () =>
-            sendNotifications(supabase, submission, formSettings, site.agency_id),
+            sendNotifications(
+              supabase,
+              submission,
+              formSettings,
+              site.agency_id,
+            ),
         }).catch((err) => {
           console.error("[FormSubmit] Notification error:", err);
         });

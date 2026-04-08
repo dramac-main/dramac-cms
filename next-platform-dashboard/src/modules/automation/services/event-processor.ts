@@ -12,7 +12,7 @@
 
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { executeWorkflow } from "./execution-engine";
 import type {
   AutomationEventLog,
@@ -45,7 +45,7 @@ export async function processPendingEvents(
   siteId: string,
   batchSize: number = 100,
 ): Promise<{ processed: number; triggered: number; errors: string[] }> {
-  const supabase = (await createClient()) as AutomationDB;
+  const supabase = createAdminClient() as AutomationDB;
   const errors: string[] = [];
   let triggeredCount = 0;
 
@@ -98,7 +98,7 @@ async function handleEvent(
   siteId: string,
   event: AutomationEventLog,
 ): Promise<{ workflowsTriggered: number }> {
-  const supabase = (await createClient()) as AutomationDB;
+  const supabase = createAdminClient() as AutomationDB;
 
   // Find workflows subscribed to this event
   const { data: subscriptions } = await supabase
@@ -173,7 +173,7 @@ export async function queueWorkflowExecution(
   triggerEventId: string | null,
   triggerData: Record<string, unknown>,
 ): Promise<string> {
-  const supabase = (await createClient()) as AutomationDB;
+  const supabase = createAdminClient() as AutomationDB;
 
   // Count total steps in workflow
   const { count: stepsCount } = await supabase
@@ -223,7 +223,7 @@ export async function logAutomationEvent(
   workflowsTriggered?: number;
   error?: string;
 }> {
-  const supabase = (await createClient()) as AutomationDB;
+  const supabase = createAdminClient() as AutomationDB;
 
   // Log the event
   const { data, error } = await supabase
@@ -287,7 +287,7 @@ async function processEventImmediately(
   siteId: string,
   event: AutomationEventLog,
 ): Promise<{ workflowsTriggered: number }> {
-  const supabase = (await createClient()) as AutomationDB;
+  const supabase = createAdminClient() as AutomationDB;
 
   // Find workflows subscribed to this event type that are active
   const { data: subscriptions, error } = await supabase
@@ -486,7 +486,7 @@ export async function processScheduledJobs(): Promise<{
   executed: number;
   errors: string[];
 }> {
-  const supabase = (await createClient()) as AutomationDB;
+  const supabase = createAdminClient() as AutomationDB;
   const errors: string[] = [];
   let executed = 0;
 
@@ -625,7 +625,7 @@ export async function processIncomingWebhook(
   payload: Record<string, unknown>,
   headers: Record<string, string>,
 ): Promise<{ success: boolean; executionId?: string; error?: string }> {
-  const supabase = (await createClient()) as AutomationDB;
+  const supabase = createAdminClient() as AutomationDB;
 
   // Find the webhook endpoint
   const { data: endpoint, error: fetchError } = await supabase

@@ -2059,27 +2059,29 @@ export async function installStarterPack(
       };
     }
 
-    // 2. Check if pack already installed for this site
+    // 2. Check which templates from this pack are already installed
     const { data: existing } = await (supabase as any)
       .from("automation_workflows")
-      .select("id")
+      .select("id, system_event_type")
       .eq("site_id", siteId)
-      .eq("pack_id", packId)
-      .limit(1);
+      .eq("pack_id", packId);
 
-    if (existing && existing.length > 0) {
-      return {
-        success: true,
-        workflowsCreated: 0,
-        errors: ["Pack already installed"],
-      };
-    }
+    const installedEventTypes = new Set(
+      (existing || [])
+        .map((w: { system_event_type: string | null }) => w.system_event_type)
+        .filter(Boolean),
+    );
 
-    // 3. Create a workflow for each template in the pack
+    // 3. Create a workflow for each MISSING template in the pack
     for (const templateId of pack.templateIds) {
       const template = ALL_WORKFLOW_TEMPLATES.find((t) => t.id === templateId);
       if (!template) {
         errors.push(`Template not found: ${templateId}`);
+        continue;
+      }
+
+      // Skip if this template's workflow already exists
+      if (template.systemEventType && installedEventTypes.has(template.systemEventType)) {
         continue;
       }
 
