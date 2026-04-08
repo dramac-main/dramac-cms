@@ -578,6 +578,58 @@ export const ACTION_REGISTRY = {
         },
       },
     },
+    in_app_targeted: {
+      id: "notification.in_app_targeted",
+      name: "Targeted In-App Notification",
+      description:
+        "Send in-app notification to specific users by role (owner, agent, all)",
+      category: "notification",
+      icon: "BellRing",
+      inputs: {
+        title: {
+          type: "string" as const,
+          required: true,
+          description: "Notification title",
+        },
+        message: {
+          type: "string" as const,
+          required: true,
+          description: "Notification message",
+        },
+        type: {
+          type: "enum" as const,
+          values: ["info", "success", "warning", "error"],
+          required: false,
+          description: "Notification type",
+        },
+        target_role: {
+          type: "enum" as const,
+          values: ["owner", "agent", "all"],
+          required: false,
+          description: "Target role to notify (defaults to owner)",
+        },
+        target_user_id: {
+          type: "string" as const,
+          required: false,
+          description: "Specific user ID to notify (overrides target_role)",
+        },
+        link: {
+          type: "string" as const,
+          required: false,
+          description: "Link URL for the notification",
+        },
+      },
+      outputs: {
+        notification_ids: {
+          type: "array" as const,
+          description: "Created notification IDs",
+        },
+        notified_count: {
+          type: "number" as const,
+          description: "Number of users notified",
+        },
+      },
+    },
   },
 
   // =========================================================
@@ -2210,6 +2262,50 @@ export const ACTION_REGISTRY = {
           description: "Whether tags were updated",
         },
         tags: { type: "array" as const, description: "Updated tags" },
+      },
+    },
+    send_system_message: {
+      id: "chat.send_system_message",
+      name: "Send System Message",
+      description:
+        "Send a system message in a chat using a configurable template",
+      category: "chat",
+      icon: "Bot",
+      inputs: {
+        conversation_id: {
+          type: "string" as const,
+          required: true,
+          description: "Conversation ID",
+        },
+        event_type: {
+          type: "string" as const,
+          required: true,
+          description: "Chat message event type (e.g. welcome, agent_joined)",
+        },
+        custom_message: {
+          type: "string" as const,
+          required: false,
+          description: "Custom message (overrides template)",
+        },
+        placeholders: {
+          type: "object" as const,
+          required: false,
+          description: "Placeholder values for the message template",
+        },
+      },
+      outputs: {
+        message_id: {
+          type: "string" as const,
+          description: "Sent message ID",
+        },
+        success: {
+          type: "boolean" as const,
+          description: "Whether message was sent",
+        },
+        skipped: {
+          type: "boolean" as const,
+          description: "Whether message was skipped (template disabled)",
+        },
       },
     },
   },

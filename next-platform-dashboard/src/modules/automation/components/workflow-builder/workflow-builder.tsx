@@ -41,6 +41,7 @@ import {
   ArrowLeft,
   LayoutGrid,
   List,
+  History,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -55,6 +56,7 @@ import type {
   TriggerType,
   WorkflowStep,
 } from "../../types/automation-types";
+import { ExecutionHistoryPanel } from "./execution-history-panel";
 
 // Phase 4 — Canvas imports
 import { AutomationCanvas } from "../canvas/AutomationCanvas";
@@ -113,6 +115,7 @@ export function WorkflowBuilder({
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [viewMode, setViewMode] = useState<"canvas" | "list">("canvas");
   const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -338,6 +341,16 @@ export function WorkflowBuilder({
               <Settings className="h-4 w-4 mr-2" />
               Settings
             </Button>
+            {workflow?.id && (
+              <Button
+                variant={showHistory ? "secondary" : "outline"}
+                size="sm"
+                onClick={() => setShowHistory(!showHistory)}
+              >
+                <History className="h-4 w-4 mr-2" />
+                History
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -389,11 +402,23 @@ export function WorkflowBuilder({
                 />
               </div>
 
-              {/* Right Sidebar — Config panels */}
-              {selectedStep && (
+              {/* Right Sidebar — Execution History */}
+              {showHistory && workflow?.id && (
+                <ExecutionHistoryPanel
+                  workflowId={workflow.id}
+                  siteId={siteId}
+                  onClose={() => setShowHistory(false)}
+                />
+              )}
+
+              {/* Right Sidebar — Config panels (hidden when history is open) */}
+              {!showHistory && selectedStep && (
                 <NodeConfigPanel
                   step={selectedStep}
-                  eventType={(workflow?.trigger_config as Record<string, unknown>)?.event_type as string | undefined}
+                  eventType={
+                    (workflow?.trigger_config as Record<string, unknown>)
+                      ?.event_type as string | undefined
+                  }
                   onUpdate={updateStep}
                   onDelete={deleteStep}
                   onDuplicate={handleDuplicateStep}
@@ -401,7 +426,7 @@ export function WorkflowBuilder({
                 />
               )}
 
-              {showSettings && !selectedStep && workflow && (
+              {!showHistory && showSettings && !selectedStep && workflow && (
                 <WorkflowSettingsPanel
                   workflow={workflow}
                   onUpdate={updateWorkflowData}
@@ -409,7 +434,7 @@ export function WorkflowBuilder({
                 />
               )}
 
-              {!selectedStep && !showSettings && (
+              {!showHistory && !selectedStep && !showSettings && (
                 <TriggerConfigPanel
                   trigger={workflow?.trigger_config}
                   triggerType={workflow?.trigger_type}
@@ -444,8 +469,17 @@ export function WorkflowBuilder({
                 />
               </div>
 
-              {/* Right Sidebar - Step Config */}
-              {selectedStep && (
+              {/* Right Sidebar — Execution History */}
+              {showHistory && workflow?.id && (
+                <ExecutionHistoryPanel
+                  workflowId={workflow.id}
+                  siteId={siteId}
+                  onClose={() => setShowHistory(false)}
+                />
+              )}
+
+              {/* Right Sidebar - Step Config (hidden when history is open) */}
+              {!showHistory && selectedStep && (
                 <div className="w-80 border-l overflow-hidden bg-background">
                   <StepConfigPanel
                     step={selectedStep}
@@ -456,7 +490,7 @@ export function WorkflowBuilder({
               )}
 
               {/* Settings Panel */}
-              {showSettings && !selectedStep && (
+              {!showHistory && showSettings && !selectedStep && (
                 <div className="w-80 border-l overflow-y-auto bg-background p-4 space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold">Workflow Settings</h3>

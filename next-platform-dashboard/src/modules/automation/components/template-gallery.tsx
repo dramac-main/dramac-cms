@@ -56,6 +56,7 @@ import {
   getInstalledPacks,
   uninstallPack,
   ensureSystemPacksInstalled,
+  upgradeSystemWorkflowSteps,
 } from "../actions/automation-actions";
 
 // ============================================================================
@@ -113,6 +114,10 @@ export function TemplateGallery({
   const loadInstalledPacks = useCallback(async () => {
     // Ensure system packs are installed (idempotent — skips if already present)
     await ensureSystemPacksInstalled(siteId);
+    // Upgrade existing workflow steps to latest action types
+    await upgradeSystemWorkflowSteps(siteId).catch((err) =>
+      console.error("[Automation] upgradeSystemWorkflowSteps error:", err)
+    );
     const result = await getInstalledPacks(siteId);
     if (result.success && result.data) {
       setInstalledPackIds(new Set(result.data.map((p) => p.packId)));

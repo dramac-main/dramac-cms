@@ -1037,7 +1037,10 @@ async function executeEmailAction(
     case "send": {
       try {
         if (!isEmailEnabled()) {
-          return { status: "completed", output: { skipped: true, reason: "email_not_configured" } };
+          return {
+            status: "completed",
+            output: { skipped: true, reason: "email_not_configured" },
+          };
         }
 
         const siteId = context.execution?.siteId;
@@ -1048,7 +1051,10 @@ async function executeEmailAction(
         const fromName = config.from_name as string | undefined;
 
         if (!to) {
-          return { status: "failed", error: "No recipient email resolved (check trigger variables)" };
+          return {
+            status: "failed",
+            error: "No recipient email resolved (check trigger variables)",
+          };
         }
         if (!subject) {
           return { status: "failed", error: "Email subject is required" };
@@ -1058,7 +1064,9 @@ async function executeEmailAction(
         }
 
         // Build branded HTML wrapper
-        let brandingFrom = fromName ? `${fromName} <noreply@${process.env.EMAIL_DOMAIN || "app.dramacagency.com"}>` : getEmailFrom();
+        let brandingFrom = fromName
+          ? `${fromName} <noreply@${process.env.EMAIL_DOMAIN || "app.dramacagency.com"}>`
+          : getEmailFrom();
         let brandingReplyTo = getEmailReplyTo();
         let html = wrapEmailBody(body, subject);
 
@@ -1092,14 +1100,15 @@ async function executeEmailAction(
 
         const toFormatted = toName ? `${toName} <${to}>` : to;
 
-        const { data: emailResult, error: emailError } = await resend.emails.send({
-          from: brandingFrom,
-          to: [toFormatted],
-          replyTo: brandingReplyTo,
-          subject,
-          html,
-          text: body.replace(/<[^>]+>/g, ""), // Strip HTML for text version
-        });
+        const { data: emailResult, error: emailError } =
+          await resend.emails.send({
+            from: brandingFrom,
+            to: [toFormatted],
+            replyTo: brandingReplyTo,
+            subject,
+            html,
+            text: body.replace(/<[^>]+>/g, ""), // Strip HTML for text version
+          });
 
         if (emailError) {
           return { status: "failed", error: emailError.message };
@@ -1200,7 +1209,8 @@ async function executeEmailAction(
         if (!to) {
           return {
             status: "failed",
-            error: "No recipient email resolved (check that {{trigger.ownerEmail}} or the 'to' field is available)",
+            error:
+              "No recipient email resolved (check that {{trigger.ownerEmail}} or the 'to' field is available)",
           };
         }
 
@@ -1212,7 +1222,10 @@ async function executeEmailAction(
         });
 
         if (!result.success) {
-          return { status: "failed", error: result.error || "Failed to send branded email" };
+          return {
+            status: "failed",
+            error: result.error || "Failed to send branded email",
+          };
         }
         return {
           status: "completed",
@@ -1253,18 +1266,25 @@ function wrapEmailBody(body: string, _subject: string): string {
 function wrapBrandedEmailBody(
   body: string,
   _subject: string,
-  branding: { company_name: string; primary_color?: string; logo_url?: string; from_name?: string },
+  branding: {
+    agency_name?: string;
+    company_name?: string;
+    primary_color?: string;
+    logo_url?: string | null;
+    from_name?: string;
+  },
 ): string {
   const hasHtml = /<[a-z][\s\S]*>/i.test(body);
   const content = hasHtml ? body : body.replace(/\n/g, "<br>");
   const color = branding.primary_color || "#2563eb";
-  const name = branding.company_name || branding.from_name || "";
+  const name = branding.agency_name || branding.company_name || branding.from_name || "";
   const logo = branding.logo_url
     ? `<img src="${branding.logo_url}" alt="${name}" style="max-height:48px;max-width:200px;margin-bottom:16px">`
     : "";
-  const header = name || logo
-    ? `<div style="text-align:center;padding:24px 0 16px;border-bottom:2px solid ${color}">${logo}${name && !logo ? `<h2 style="margin:0;color:${color};font-size:20px">${name}</h2>` : ""}</div>`
-    : "";
+  const header =
+    name || logo
+      ? `<div style="text-align:center;padding:24px 0 16px;border-bottom:2px solid ${color}">${logo}${name && !logo ? `<h2 style="margin:0;color:${color};font-size:20px">${name}</h2>` : ""}</div>`
+      : "";
   const footer = name
     ? `<div style="text-align:center;padding:16px 0 0;border-top:1px solid #e5e7eb;margin-top:24px;color:#6b7280;font-size:12px">&copy; ${new Date().getFullYear()} ${name}</div>`
     : "";

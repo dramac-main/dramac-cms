@@ -16,7 +16,7 @@ import {
   bootstrapLiveChatAgent,
   getSiteOwnerUserId,
 } from "@/modules/live-chat/lib/bootstrap-agent";
-import { ensureSystemPacksInstalled } from "@/modules/automation/actions/automation-actions";
+import { ensureSystemPacksInstalled, upgradeSystemWorkflowSteps } from "@/modules/automation/actions/automation-actions";
 
 type RouteContext = { params: Promise<{ siteId: string }> };
 
@@ -243,6 +243,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
     if (installed.length > 0 || neededSlugs.has("booking") || neededSlugs.has("ecommerce")) {
       await ensureSystemPacksInstalled(siteId).catch((err) =>
         console.error("[AutoInstall] Failed to install automation packs:", err),
+      );
+      await upgradeSystemWorkflowSteps(siteId).catch((err) =>
+        console.error("[AutoInstall] Failed to upgrade workflow steps:", err),
       );
     }
 

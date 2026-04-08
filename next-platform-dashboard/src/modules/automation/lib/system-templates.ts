@@ -53,7 +53,8 @@ const BOOKING_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
         action_type: "email.send",
         action_config: {
           to: "{{trigger.ownerEmail}}",
-          subject: "New Booking — {{trigger.serviceName}} with {{trigger.customerName}}",
+          subject:
+            "New Booking — {{trigger.serviceName}} with {{trigger.customerName}}",
           body: "A new booking has been created.\n\nCustomer: {{trigger.customerName}} ({{trigger.customerEmail}})\nService: {{trigger.serviceName}}\nDate: {{trigger.startTime}}\nStaff: {{trigger.staffName}}",
         },
         name: "Email Owner — New Booking",
@@ -121,7 +122,8 @@ const BOOKING_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
         action_type: "email.send",
         action_config: {
           to: "{{trigger.ownerEmail}}",
-          subject: "Booking Confirmed — {{trigger.serviceName}} with {{trigger.customerName}}",
+          subject:
+            "Booking Confirmed — {{trigger.serviceName}} with {{trigger.customerName}}",
           body: "A booking has been confirmed.\n\nCustomer: {{trigger.customerName}}\nService: {{trigger.serviceName}}\nDate: {{trigger.startTime}}",
         },
         name: "Email Owner — Booking Confirmed",
@@ -176,7 +178,8 @@ const BOOKING_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
         action_type: "email.send",
         action_config: {
           to: "{{trigger.ownerEmail}}",
-          subject: "Booking Cancelled — {{trigger.serviceName}} with {{trigger.customerName}}",
+          subject:
+            "Booking Cancelled — {{trigger.serviceName}} with {{trigger.customerName}}",
           body: "A booking has been cancelled.\n\nCustomer: {{trigger.customerName}}\nService: {{trigger.serviceName}}\nDate: {{trigger.startTime}}\nReason: {{trigger.cancellationReason}}",
         },
         name: "Email Owner — Booking Cancelled",
@@ -244,7 +247,8 @@ const BOOKING_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
         action_type: "email.send",
         action_config: {
           to: "{{trigger.ownerEmail}}",
-          subject: "Appointment Complete — {{trigger.serviceName}} with {{trigger.customerName}}",
+          subject:
+            "Appointment Complete — {{trigger.serviceName}} with {{trigger.customerName}}",
           body: "An appointment has been completed.\n\nCustomer: {{trigger.customerName}}\nService: {{trigger.serviceName}}",
         },
         name: "Email Owner — Appointment Complete",
@@ -331,7 +335,8 @@ const BOOKING_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
         action_type: "email.send",
         action_config: {
           to: "{{trigger.ownerEmail}}",
-          subject: "Payment Received — {{trigger.serviceName}} from {{trigger.customerName}}",
+          subject:
+            "Payment Received — {{trigger.serviceName}} from {{trigger.customerName}}",
           body: "A payment has been received.\n\nCustomer: {{trigger.customerName}}\nService: {{trigger.serviceName}}\nAmount: {{trigger.currency}} {{trigger.servicePrice}}",
         },
         name: "Email Owner — Payment Received",
@@ -465,7 +470,8 @@ const ORDER_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
         action_type: "email.send",
         action_config: {
           to: "{{trigger.ownerEmail}}",
-          subject: "New Order — #{{trigger.orderNumber}} from {{trigger.customerName}}",
+          subject:
+            "New Order — #{{trigger.orderNumber}} from {{trigger.customerName}}",
           body: "A new order has been placed.\n\nOrder: #{{trigger.orderNumber}}\nCustomer: {{trigger.customerName}} ({{trigger.customerEmail}})\nTotal: {{trigger.currency}} {{trigger.total}}",
         },
         name: "Email Owner — New Order",
@@ -631,7 +637,8 @@ const ORDER_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
         action_type: "email.send",
         action_config: {
           to: "{{trigger.ownerEmail}}",
-          subject: "Order Cancelled — #{{trigger.orderNumber}} from {{trigger.customerName}}",
+          subject:
+            "Order Cancelled — #{{trigger.orderNumber}} from {{trigger.customerName}}",
           body: "An order has been cancelled.\n\nOrder: #{{trigger.orderNumber}}\nCustomer: {{trigger.customerName}}\nReason: {{trigger.reason}}",
         },
         name: "Email Owner — Order Cancelled",
@@ -906,7 +913,8 @@ const QUOTE_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
         action_type: "email.send",
         action_config: {
           to: "{{trigger.ownerEmail}}",
-          subject: "New Quote Request — #{{trigger.quoteNumber}} from {{trigger.customerName}}",
+          subject:
+            "New Quote Request — #{{trigger.quoteNumber}} from {{trigger.customerName}}",
           body: "A new quote has been requested.\n\nQuote: #{{trigger.quoteNumber}}\nCustomer: {{trigger.customerName}} ({{trigger.customerEmail}})\nTotal: {{trigger.currency}} {{trigger.total}}",
         },
         name: "Email Owner — Quote Request",
@@ -1240,7 +1248,8 @@ const QUOTE_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
         action_type: "email.send",
         action_config: {
           to: "{{trigger.ownerEmail}}",
-          subject: "Quote Converted to Order — #{{trigger.quoteNumber}} → #{{trigger.orderNumber}}",
+          subject:
+            "Quote Converted to Order — #{{trigger.quoteNumber}} → #{{trigger.orderNumber}}",
           body: "A quote has been converted to an order.\n\nQuote: #{{trigger.quoteNumber}}\nOrder: #{{trigger.orderNumber}}\nCustomer: {{trigger.customerName}}\nTotal: {{trigger.currency}} {{trigger.total}}",
         },
         name: "Email Owner — Quote Converted to Order",

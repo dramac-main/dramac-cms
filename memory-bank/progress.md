@@ -34,28 +34,29 @@
 
 ---
 
-## Latest Update: Automation Engine — 5 Critical Defects Fixed ✅ (April 2026)
+## Latest Update: Automation Engine — ALL Gaps Fully Implemented ✅ (April 2026)
 
-### What Was Fixed
+### Session 2 Changes (on top of 5-defect fix from commit bbfd8cdf)
 
-All 5 actionable defects from the deep audit have been resolved across 9 files (6 modified, 1 new):
+7 remaining automation engine gaps fully resolved across 8 files:
 
-1. **Fix #1 — Variable Key Normalization** (execution-engine.ts): Added `snakeToCamelCase()` + `normalizeKeysToCamelCase()` so trigger context has BOTH snake_case and camelCase keys. Templates like `{{trigger.customerEmail}}` now resolve from snake_case DB payloads.
+1. **ACTION_REGISTRY gaps** (action-types.ts): Registered `notification.in_app_targeted` and `chat.send_system_message` — handlers existed in executor but were missing from the registry, so canvas couldn't render config forms.
 
-2. **Fix #2 — Dual Notification System Removed** (automation-aware-dispatcher.ts): `dispatchNotification()` and `dispatchChatNotification()` made empty no-ops. Automation engine is sole notification path — no more race conditions where hardcoded notification gets skipped but automation also fails.
+2. **Retry mechanism** (execution-engine.ts): New `executeStepWithRetry()` function honors `max_retries`, `retry_delay_seconds`, and `on_error: "retry"`. Tracks `attempt_number` in step logs.
 
-3. **Fix #3 — System Template Emails Now Editable** (action-executor.ts + system-templates.ts): `email.send` case in executor rewritten to call `resend.emails.send()` directly with branded HTML wrappers. All 35 email steps converted from `email.send_branded_template` to `email.send` with inline editable `subject`/`body` fields.
+3. **Paused execution resumption** (api/cron/route.ts): `resumePausedExecutions()` now called from unified cron handler — resumes up to 50 paused executions per cycle.
 
-4. **Fix #4 — RLS Bypass for System Steps** (automation-actions.ts): `updateWorkflowStep()` uses `createAdminClient()` to bypass RLS on SQL-created rows — fixes "Step not found" canvas error.
+4. **DB migration for 72 steps** (automation-actions.ts): New `upgradeSystemWorkflowSteps(siteId)` server action — matches system workflows to current templates, replaces stale `email.send_branded_template` steps with `email.send`.
 
-5. **Fix #5 — Variable Picker UI** (event-types.ts + VariablePicker.tsx + NodeConfigPanel.tsx + workflow-builder.tsx): `EVENT_PAYLOAD_VARIABLES` map with variables for all event types, `VariablePicker` popover component, integrated into all string inputs in NodeConfigPanel.
+5. **Execution history in builder** (workflow-builder.tsx + execution-history-panel.tsx): New `ExecutionHistoryPanel` component with "History" button in builder header. Shows last 20 executions with status, duration, errors. Links to full detail page.
 
-### Known Follow-Up Items
-- 72 existing DB workflow steps still use `email.send_branded_template` — need migration to `email.send`
-- `email.send` not yet registered in ACTION_REGISTRY with proper input schema for canvas form rendering
-- Defect #6 (N8N-style UX) deferred: execution history UI, retry mechanisms, further polish
+6. **Pre-existing TS error fixed** (action-executor.ts): `wrapBrandedEmailBody()` parameter type updated to accept `EmailBranding` with `agency_name`.
 
-### Previous: Automation Deep Audit — 6 Critical Defects Found (April 8, 2026)
+7. **Module exports** (automation/index.ts): `upgradeSystemWorkflowSteps` exported.
+
+**TypeScript: 0 errors** (`npx tsc --noEmit` clean)
+
+### What Was Fixed (Previous Session — commit bbfd8cdf)
 
 ---
 

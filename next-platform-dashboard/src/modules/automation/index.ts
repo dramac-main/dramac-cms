@@ -118,6 +118,7 @@ export {
   // Phase EM-57B additions
   getAutomationAnalytics,
   createWorkflowFromTemplate,
+  upgradeSystemWorkflowSteps,
 } from './actions/automation-actions'
 
 // ============================================================================

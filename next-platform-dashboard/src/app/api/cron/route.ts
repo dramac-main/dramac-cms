@@ -16,9 +16,11 @@
  * - Social media publish queue
  * - Social media sync
  * - Abandoned cart recovery (e-commerce)
+ * - Resume paused automation workflows
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { resumePausedExecutions } from '@/modules/automation/services/execution-engine';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,6 +58,13 @@ export async function GET(request: NextRequest) {
   await dispatch('socialPublish',            '/api/social/publish');
   await dispatch('socialSync',               '/api/social/sync');
   await dispatch('abandonedCarts',           '/api/cron/abandoned-carts');
+
+  // Resume paused automation workflows (delay steps, waiting steps)
+  try {
+    results['automationResume'] = await resumePausedExecutions();
+  } catch (err) {
+    errors.push(`automationResume: ${err instanceof Error ? err.message : 'unknown'}`);
+  }
 
   if (errors.length > 0) {
     results.errors = errors;

@@ -557,7 +557,8 @@ export function NodeConfigPanel({
 
                     <p className="text-[10px] text-muted-foreground flex items-center gap-1">
                       <Info className="h-2.5 w-2.5" />
-                      Use the <Braces className="inline h-2.5 w-2.5" /> button to insert variables
+                      Use the <Braces className="inline h-2.5 w-2.5" /> button
+                      to insert variables
                     </p>
                   </div>
                 ))}

@@ -2084,7 +2084,10 @@ export async function installStarterPack(
       }
 
       // Skip if this template's workflow already exists
-      if (template.systemEventType && installedEventTypes.has(template.systemEventType)) {
+      if (
+        template.systemEventType &&
+        installedEventTypes.has(template.systemEventType)
+      ) {
         continue;
       }
 
@@ -2397,4 +2400,130 @@ export async function ensureSystemPacksInstalled(
   }
 
   return { installed, alreadyInstalled };
+}
+
+// ============================================================================
+// UPGRADE SYSTEM WORKFLOW STEPS
+// ============================================================================
+
+/**
+ * Upgrade existing system workflow steps to match current template definitions.
+ * This handles the migration from old action_types (e.g. email.send_branded_template)
+ * to current ones (email.send), and ensures step configs match the latest templates.
+ *
+ * Safe to call multiple times — idempotent. Only touches system workflows.
+ */
+export async function upgradeSystemWorkflowSteps(
+  siteId: string,
+): Promise<{
+  success: boolean;
+  upgraded: number;
+  skipped: number;
+  errors: string[];
+}> {
+  const errors: string[] = [];
+  let upgraded = 0;
+  let skipped = 0;
+
+  try {
+    const supabase = await createClient();
+
+    // Get all system workflows for this site
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: workflows, error: fetchError } = await (supabase as any)
+      .from("automation_workflows")
+      .select("id, system_event_type, name")
+      .eq("site_id", siteId)
+      .eq("is_system", true);
+
+    if (fetchError) {
+      return { success: false, upgraded: 0, skipped: 0, errors: [fetchError.message] };
+    }
+
+    if (!workflows || workflows.length === 0) {
+      return { success: true, upgraded: 0, skipped: 0, errors: [] };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const wf of workflows as any[]) {
+      const eventType = wf.system_event_type as string | null;
+      if (!eventType) {
+        skipped++;
+        continue;
+      }
+
+      // Find the matching template
+      const template = ALL_WORKFLOW_TEMPLATES.find(
+        (t) => t.systemEventType === eventType,
+      );
+      if (!template) {
+        skipped++;
+        continue;
+      }
+
+      // Get existing steps
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: existingSteps } = await (supabase as any)
+        .from("workflow_steps")
+        .select("id, action_type")
+        .eq("workflow_id", wf.id);
+
+      // Check if any step uses a stale action_type
+      const hasStaleSteps = (existingSteps || []).some(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (s: any) =>
+          s.action_type === "email.send_branded_template" ||
+          s.action_type === "email.send_branded" ||
+          s.action_type === "email.send_system",
+      );
+
+      if (!hasStaleSteps) {
+        skipped++;
+        continue;
+      }
+
+      // Delete old steps
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any)
+        .from("workflow_steps")
+        .delete()
+        .eq("workflow_id", wf.id);
+
+      // Re-create from current template
+      const newSteps = template.steps.map((step, index) => ({
+        workflow_id: wf.id,
+        name: step.name,
+        step_type: step.step_type,
+        action_type: step.action_type || null,
+        action_config: (step.action_config ||
+          step.condition_config ||
+          step.delay_config ||
+          {}) as unknown as Json,
+        position: index + 1,
+        is_active: true,
+      }));
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: insertError } = await (supabase as any)
+        .from("workflow_steps")
+        .insert(newSteps);
+
+      if (insertError) {
+        errors.push(`Workflow "${wf.name}": ${insertError.message}`);
+        continue;
+      }
+
+      upgraded++;
+    }
+
+    revalidatePath("/automation");
+    return { success: errors.length === 0, upgraded, skipped, errors };
+  } catch (error) {
+    return {
+      success: false,
+      upgraded,
+      skipped,
+      errors: [error instanceof Error ? error.message : "Unknown error"],
+    };
+  }
 }

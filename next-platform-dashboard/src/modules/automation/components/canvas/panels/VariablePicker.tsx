@@ -43,11 +43,7 @@ export function VariablePicker({ eventType, onInsert }: VariablePickerProps) {
           <Braces className="h-3.5 w-3.5" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent
-        className="w-64 p-0"
-        side="left"
-        align="start"
-      >
+      <PopoverContent className="w-64 p-0" side="left" align="start">
         <div className="px-3 py-2 border-b">
           <p className="text-xs font-medium">Trigger Variables</p>
         </div>
