@@ -2075,6 +2075,105 @@ export async function notifyQuoteRejected(
   }
 }
 
+// =============================================================================
+// BOOKING PAYMENT PROOF NOTIFICATIONS
+// =============================================================================
+
+/**
+ * Send notification when a customer uploads payment proof for a booking.
+ * 1. In-app notification to business owner
+ * 2. Email to business owner
+ */
+export async function notifyBookingPaymentProofUploaded(
+  siteId: string,
+  serviceName: string,
+  customerEmail: string,
+  customerName: string,
+  amountFormatted: string,
+  fileName?: string,
+): Promise<void> {
+  try {
+    const supabase = createAdminClient();
+    const { data: site } = await supabase
+      .from("sites")
+      .select("name, agency_id")
+      .eq("id", siteId)
+      .single();
+
+    if (!site?.agency_id) return;
+
+    const { data: agency } = await supabase
+      .from("agencies")
+      .select("owner_id")
+      .eq("id", site.agency_id)
+      .single();
+
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"}/dashboard/sites/${siteId}/booking?view=appointments`;
+
+    // In-app notification to business owner
+    if (
+      agency?.owner_id &&
+      (await shouldSendInApp(
+        siteId,
+        "payment_proof_uploaded_owner" as NotificationTemplateType,
+      ))
+    ) {
+      await createNotification({
+        userId: agency.owner_id,
+        type: "payment_received",
+        title: `Booking Payment Proof: ${serviceName}`,
+        message: `${customerName} has uploaded payment proof for their ${serviceName} booking (${amountFormatted}). Please review and verify.`,
+        link: dashboardUrl,
+        metadata: { serviceName, siteId },
+      });
+    }
+
+    // Email to business owner
+    if (
+      agency?.owner_id &&
+      (await shouldSendEmail(
+        siteId,
+        "payment_proof_uploaded_owner" as NotificationTemplateType,
+      ))
+    ) {
+      const { data: ownerProfile } = await supabase
+        .from("profiles")
+        .select("email, full_name")
+        .eq("id", agency.owner_id)
+        .single();
+
+      if (ownerProfile?.email) {
+        await sendBrandedEmail(site.agency_id, {
+          to: {
+            email: ownerProfile.email,
+            name: ownerProfile.full_name || undefined,
+          },
+          emailType: "payment_proof_uploaded_owner",
+          siteId,
+          data: {
+            serviceName,
+            customerName,
+            customerEmail,
+            total: amountFormatted,
+            fileName: fileName || "Receipt",
+            businessName: site?.name || "Business",
+            dashboardUrl,
+          },
+        });
+      }
+    }
+
+    console.log(
+      `[BusinessNotify] Booking payment proof notification sent for ${serviceName}`,
+    );
+  } catch (error) {
+    console.error(
+      "[BusinessNotify] Error sending booking payment proof notification:",
+      error,
+    );
+  }
+}
+
 /**
  * Send notifications when a customer requests changes to a quote:
  * 1. In-app notification to business owner

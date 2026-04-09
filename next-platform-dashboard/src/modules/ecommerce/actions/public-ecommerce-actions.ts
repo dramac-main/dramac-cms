@@ -1437,6 +1437,33 @@ export async function createPublicOrderFromCart(
     )
     .catch((err) => console.error("[Ecom Public] CRM bridge error:", err));
 
+  // Auto-create chat conversation for the order (non-blocking)
+  // Ensures a conversation exists before the customer even opens the chat widget
+  if (input.customer_email) {
+    const customerName =
+      input.customer_name ||
+      `${input.shipping_address?.first_name || ""} ${input.shipping_address?.last_name || ""}`.trim() ||
+      input.customer_email.split("@")[0] ||
+      "Customer";
+    const totalFormatted = `${input.currency || "USD"} ${((input.total || 0) / 100).toFixed(2)}`;
+
+    import("@/modules/live-chat/lib/chat-event-bridge")
+      .then(({ createConversationForEntity }) =>
+        createConversationForEntity(input.site_id, {
+          entityType: "order",
+          customerName,
+          customerEmail: input.customer_email,
+          orderNumber,
+          orderTotal: totalFormatted,
+          paymentStatus: input.payment_status || "pending",
+          paymentProvider: input.payment_provider || undefined,
+        }),
+      )
+      .catch((err) =>
+        console.error("[Ecom Public] Auto-chat creation error:", err),
+      );
+  }
+
   return order as Order;
 }
 

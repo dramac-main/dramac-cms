@@ -44,7 +44,14 @@ export interface CustomerContext {
     status: string;
     paymentStatus: string;
     price: number;
+    paymentAmount: number;
     currency: string;
+    paymentProof: {
+      hasProof: boolean;
+      status: string | null;
+      fileName: string | null;
+      uploadedAt: string | null;
+    };
   }>;
   recentQuotes: Array<{
     id: string;
@@ -96,11 +103,11 @@ export async function getCustomerContext(
       .order("order_number", { ascending: false })
       .limit(5),
 
-    // Recent bookings (last 5)
+    // Recent bookings (last 5) — include metadata for payment proof info
     supabase
       .from("mod_bookmod01_appointments")
       .select(
-        "id, start_time, end_time, status, payment_status, customer_name, service:mod_bookmod01_services(name, price, currency), staff:mod_bookmod01_staff(name)",
+        "id, start_time, end_time, status, payment_status, payment_amount, customer_name, metadata, service:mod_bookmod01_services(name, price, currency), staff:mod_bookmod01_staff(name)",
       )
       .eq("site_id", siteId)
       .eq("customer_email", email)
@@ -222,17 +229,30 @@ export async function getCustomerContext(
       };
     }),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    recentBookings: bookings.map((b: any) => ({
-      id: b.id,
-      serviceName: b.service?.name || "Unknown Service",
-      staffName: b.staff?.name || null,
-      startTime: b.start_time,
-      endTime: b.end_time,
-      status: b.status,
-      paymentStatus: b.payment_status || "not_required",
-      price: b.service?.price || 0,
-      currency: b.service?.currency || DEFAULT_CURRENCY,
-    })),
+    recentBookings: bookings.map((b: any) => {
+      const bMeta = (b.metadata || {}) as Record<string, unknown>;
+      const bProof = bMeta.payment_proof as
+        | { status?: string; file_name?: string; uploaded_at?: string }
+        | undefined;
+      return {
+        id: b.id,
+        serviceName: b.service?.name || "Unknown Service",
+        staffName: b.staff?.name || null,
+        startTime: b.start_time,
+        endTime: b.end_time,
+        status: b.status,
+        paymentStatus: b.payment_status || "not_required",
+        price: b.service?.price || 0,
+        paymentAmount: b.payment_amount || 0,
+        currency: b.service?.currency || DEFAULT_CURRENCY,
+        paymentProof: {
+          hasProof: !!bProof,
+          status: bProof?.status || null,
+          fileName: bProof?.file_name || null,
+          uploadedAt: bProof?.uploaded_at || null,
+        },
+      };
+    }),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     recentQuotes: quotes.map((q: any) => ({
       id: q.id,
@@ -288,7 +308,17 @@ export function formatCustomerContext(ctx: CustomerContext): string {
         b.paymentStatus !== "not_required"
           ? `, payment: ${b.paymentStatus}`
           : "";
-      return `- ${b.serviceName}${b.staffName ? ` with ${b.staffName}` : ""}: ${b.status}${payPart}, ${timePart}${isPast ? " (past)" : ""}`;
+      const amountPart =
+        b.paymentAmount > 0
+          ? `, ${b.currency} ${(b.paymentAmount / 100).toFixed(2)}`
+          : b.price > 0
+            ? `, ${b.currency} ${(b.price / 100).toFixed(2)}`
+            : "";
+      let line = `- ${b.serviceName}${b.staffName ? ` with ${b.staffName}` : ""}: ${b.status}${payPart}${amountPart}, ${timePart}${isPast ? " (past)" : ""}`;
+      if (b.paymentProof.hasProof) {
+        line += ` | Payment proof: ${b.paymentProof.status} (${b.paymentProof.fileName}, uploaded ${b.paymentProof.uploadedAt ? new Date(b.paymentProof.uploadedAt).toLocaleDateString() : "unknown"})`;
+      }
+      return line;
     });
     parts.push(`RECENT BOOKINGS:\n${bookingLines.join("\n")}`);
   }

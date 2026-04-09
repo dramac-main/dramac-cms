@@ -274,12 +274,9 @@ export function WorkflowBuilder({
   );
 
   // Handle step delete with confirmation
-  const confirmDeleteStep = useCallback(
-    (stepId: string) => {
-      setStepToDelete(stepId);
-    },
-    [],
-  );
+  const confirmDeleteStep = useCallback((stepId: string) => {
+    setStepToDelete(stepId);
+  }, []);
   const handleConfirmDelete = useCallback(() => {
     if (stepToDelete) {
       deleteStep(stepToDelete);
@@ -715,8 +712,9 @@ export function WorkflowBuilder({
         open={showTestDialog}
         onOpenChange={setShowTestDialog}
         eventType={
-          (workflow?.trigger_config as Record<string, unknown>)
-            ?.event_type as string | undefined
+          (workflow?.trigger_config as Record<string, unknown>)?.event_type as
+            | string
+            | undefined
         }
         isRunning={isTestRunning}
         onRunTest={handleTestRun}

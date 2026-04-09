@@ -190,6 +190,65 @@ export async function generateAutoResponse(
     const proofUploaded = pendingManualOrder?.paymentProof?.hasProof || false;
     const proofStatus = pendingManualOrder?.paymentProof?.status || null;
 
+    // ── Check for pending booking payment ──────────────────────────────────
+    // If conversation was created for a booking that requires payment, detect
+    // it here so the AI can guide the customer through payment just like orders.
+    const targetBookingId = convMeta.booking_id as string | undefined;
+    const bookingPaymentActive = !!convMeta.payment_guidance_active;
+
+    let pendingPaymentBooking: {
+      id: string;
+      serviceName: string;
+      paymentAmount: number;
+      currency: string;
+      paymentStatus: string;
+      startTime: string;
+      paymentProof: {
+        hasProof: boolean;
+        status: string | null;
+        fileName: string | null;
+        uploadedAt: string | null;
+      };
+    } | null = null;
+
+    if (targetBookingId && bookingPaymentActive && !pendingManualOrder) {
+      // Fetch booking details directly (may not be in customerCtx if newly created)
+      const { data: appointment } = await supabase
+        .from("mod_bookmod01_appointments")
+        .select(
+          "id, payment_status, payment_amount, start_time, metadata, service:mod_bookmod01_services(name, price, currency)",
+        )
+        .eq("site_id", siteId)
+        .eq("id", targetBookingId)
+        .single();
+
+      if (
+        appointment &&
+        appointment.payment_status === "pending" &&
+        (appointment.payment_amount > 0 || appointment.service?.price > 0)
+      ) {
+        const meta = (appointment.metadata || {}) as Record<string, unknown>;
+        const proof = meta.payment_proof as
+          | { status?: string; file_name?: string; uploaded_at?: string }
+          | undefined;
+        pendingPaymentBooking = {
+          id: appointment.id,
+          serviceName: appointment.service?.name || "Appointment",
+          paymentAmount:
+            appointment.payment_amount || appointment.service?.price || 0,
+          currency: appointment.service?.currency || "ZMW",
+          paymentStatus: appointment.payment_status,
+          startTime: appointment.start_time,
+          paymentProof: {
+            hasProof: !!proof,
+            status: proof?.status || null,
+            fileName: proof?.file_name || null,
+            uploadedAt: proof?.uploaded_at || null,
+          },
+        };
+      }
+    }
+
     // Check for active quotations — include ALL non-terminal statuses
     const activeQuotes =
       customerCtx?.recentQuotes?.filter((q) =>
@@ -202,9 +261,9 @@ export async function generateAutoResponse(
     // All quotes the customer has (for CUSTOMER HISTORY context)
     const allQuotes = customerCtx?.recentQuotes || [];
 
-    // Fetch store payment instructions when relevant
+    // Fetch store payment instructions when relevant (orders OR bookings with payment)
     let paymentInstructions: string | null = null;
-    if (pendingManualOrder) {
+    if (pendingManualOrder || pendingPaymentBooking) {
       const { data: ecomSettings } = await supabase
         .from("mod_ecommod01_settings")
         .select("manual_payment_instructions, store_name, currency")
@@ -269,6 +328,71 @@ export async function generateAutoResponse(
           selectedMethodDetails = `${matchedMethod.label}:\n${matchedMethod.details}`;
           console.log(
             "[AI Responder] User selected payment method:",
+            matchedMethod.label,
+          );
+        }
+      }
+    }
+
+    // ── BOOKING PAYMENT: Payment method selection buttons ──────────────────
+    // Same interactive flow as orders — show payment method buttons for bookings
+    // that require payment. Uses the same ecommerce payment methods (shared business config).
+    let bookingSelectedMethodDetails: string | null = null;
+    const bookingProofUploaded =
+      pendingPaymentBooking?.paymentProof?.hasProof || false;
+    const bookingProofStatus =
+      pendingPaymentBooking?.paymentProof?.status || null;
+
+    if (pendingPaymentBooking && paymentInstructions) {
+      const parsedMethods = parsePaymentMethods(paymentInstructions);
+
+      // Check if we already sent a payment_method_select for THIS booking
+      const existingButtonMsg = previousMessages.find(
+        (m: Record<string, unknown>) => {
+          if (m.content_type !== "payment_method_select") return false;
+          try {
+            const data = JSON.parse(m.content as string);
+            return data.bookingId === pendingPaymentBooking!.id;
+          } catch {
+            return false;
+          }
+        },
+      );
+
+      if (!existingButtonMsg && parsedMethods && parsedMethods.length >= 2) {
+        // First time — send interactive buttons for booking payment
+        const amountFormatted = `${pendingPaymentBooking.currency} ${pendingPaymentBooking.paymentAmount.toFixed(2)}`;
+        const selectContent = JSON.stringify({
+          text: `To confirm your ${pendingPaymentBooking.serviceName} booking, a payment of ${amountFormatted} is required. Please choose your preferred payment method:`,
+          bookingId: pendingPaymentBooking.id,
+          bookingAmount: amountFormatted,
+          buttons: parsedMethods.map((m) => ({
+            id: m.id,
+            label: m.label,
+          })),
+        });
+
+        return {
+          response: selectContent,
+          confidence: 1.0,
+          shouldHandoff: false,
+          assistantName: aiAssistantName,
+          contentType: "payment_method_select",
+        };
+      }
+
+      // Buttons were already sent — check if the user selected a specific method
+      if (existingButtonMsg && parsedMethods && parsedMethods.length >= 2) {
+        const lowerVisitorMsg = visitorMessage.toLowerCase();
+        const matchedMethod = parsedMethods.find(
+          (m) =>
+            lowerVisitorMsg.includes(m.label.toLowerCase()) ||
+            lowerVisitorMsg.includes(m.id.replace(/_/g, " ")),
+        );
+        if (matchedMethod) {
+          bookingSelectedMethodDetails = `${matchedMethod.label}:\n${matchedMethod.details}`;
+          console.log(
+            "[AI Responder] User selected booking payment method:",
             matchedMethod.label,
           );
         }
@@ -393,6 +517,37 @@ ${selectedMethodDetails ? "" : "6. Be conversational and friendly — like a hel
     : ""
 }
 ${
+  pendingPaymentBooking && !pendingManualOrder
+    ? `
+BOOKING PAYMENT GUIDANCE MODE — ACTIVE:
+The customer has a booking that requires payment to confirm. Your primary job is to help them complete payment.
+
+BOOKING DETAILS:
+- Service: ${pendingPaymentBooking.serviceName}
+- Payment amount: ${pendingPaymentBooking.currency} ${pendingPaymentBooking.paymentAmount.toFixed(2)}
+- Payment status: Pending
+- Appointment: ${new Date(pendingPaymentBooking.startTime).toLocaleDateString()} at ${new Date(pendingPaymentBooking.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+${bookingProofUploaded ? `\nPAYMENT PROOF STATUS:\n- Proof uploaded: Yes (${pendingPaymentBooking.paymentProof.fileName})\n- Proof status: ${bookingProofStatus}\n- Uploaded at: ${pendingPaymentBooking.paymentProof.uploadedAt ? new Date(pendingPaymentBooking.paymentProof.uploadedAt).toLocaleString() : "unknown"}\n\nThe customer has ALREADY uploaded payment proof. Acknowledge this! Let them know the business is reviewing it. Do NOT ask them to upload proof again.` : ""}
+
+${bookingSelectedMethodDetails ? `SELECTED PAYMENT METHOD:\nThe customer has chosen a specific payment method. Share ONLY these details:\n${bookingSelectedMethodDetails}\n\nDo NOT mention other payment methods. Only share the details above.` : paymentInstructions ? `PAYMENT INSTRUCTIONS:\n${paymentInstructions}` : "No specific payment instructions configured. Ask the customer to contact the business for payment details."}
+
+HOW TO GUIDE THE CUSTOMER:
+${
+  bookingSelectedMethodDetails
+    ? `1. Acknowledge their payment method choice
+2. Share the payment details above clearly — use simple numbered steps
+3. Tell them to mention their booking for ${pendingPaymentBooking.serviceName} as the payment reference
+4. Keep it short and clear — only the selected method, nothing else`
+    : `1. Greet them warmly and confirm their booking and payment amount
+2. Share the payment instructions in simple, clear language — break it into numbered steps
+3. Tell them to mention their booking for ${pendingPaymentBooking.serviceName} as the payment reference`
+}
+${bookingProofUploaded ? `${bookingSelectedMethodDetails ? "5" : "4"}. Their proof is ALREADY uploaded — acknowledge it and reassure them\n${bookingSelectedMethodDetails ? "6" : "5"}. Let them know the business will verify and confirm their booking` : `${bookingSelectedMethodDetails ? "5" : "4"}. After they pay, tell them they can upload proof of payment in the chat\n${bookingSelectedMethodDetails ? "6" : "5"}. Reassure them that once payment is verified, their booking will be confirmed`}
+${bookingSelectedMethodDetails ? "" : "6. Be conversational and friendly\n7. Keep each message short and easy to follow"}
+`
+    : ""
+}
+${
   activeQuotes.length > 0
     ? `
 ACTIVE QUOTATIONS:
@@ -463,7 +618,7 @@ Previous conversations: ${visitorInfo?.total_conversations || 0}${customerCtx ? 
     let matchedArticleId: string | undefined;
 
     // Payment guidance mode — high confidence since we have all the context
-    if (pendingManualOrder) {
+    if (pendingManualOrder || pendingPaymentBooking) {
       confidence = 0.95;
     }
 
@@ -519,7 +674,7 @@ Previous conversations: ${visitorInfo?.total_conversations || 0}${customerCtx ? 
       shouldHandoff: confidence < CONFIDENCE_THRESHOLD,
       matchedArticleId,
       assistantName: aiAssistantName,
-      ...(selectedMethodDetails && {
+      ...((selectedMethodDetails || bookingSelectedMethodDetails) && {
         contentType: "payment_upload_prompt" as const,
       }),
     };

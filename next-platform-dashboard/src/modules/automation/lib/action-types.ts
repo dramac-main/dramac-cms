@@ -519,7 +519,8 @@ export const ACTION_REGISTRY = {
           required: false,
           description:
             "Custom email body text to prepend to the branded template. HTML supported. Supports variables.",
-          placeholder: "Hi {{trigger.customerName}}, thank you for booking with us!",
+          placeholder:
+            "Hi {{trigger.customerName}}, thank you for booking with us!",
         },
       },
       outputs: {

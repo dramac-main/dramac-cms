@@ -1,8 +1,8 @@
 /**
  * WorkflowBuilderEnhanced Component
- * 
+ *
  * PHASE-UI-12A: Automation Workflow Builder UI
- * 
+ *
  * Main enhanced workflow builder integrating all UI-12A components:
  * - Three-panel layout (palette, canvas, config)
  * - Keyboard shortcuts support
@@ -10,9 +10,9 @@
  * - Test mode toggle
  */
 
-"use client"
+"use client";
 
-import { useState, useCallback, useRef, useEffect } from "react"
+import { useState, useCallback, useRef, useEffect } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -22,46 +22,39 @@ import {
   DragStartEvent,
   DragEndEvent,
   closestCenter,
-} from "@dnd-kit/core"
+} from "@dnd-kit/core";
 import {
   SortableContext,
   verticalListSortingStrategy,
   useSortable,
-} from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
-import { motion, AnimatePresence } from "framer-motion"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
+} from "@/components/ui/sheet";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
-} from "@/components/ui/resizable"
-import { useDroppable } from "@dnd-kit/core"
-import { toast } from "sonner"
-import {
-  Plus,
-  Search,
-  Loader2,
-  Play,
-  Square,
-  Settings,
-} from "lucide-react"
+} from "@/components/ui/resizable";
+import { useDroppable } from "@dnd-kit/core";
+import { toast } from "sonner";
+import { Plus, Search, Loader2, Play, Square, Settings } from "lucide-react";
 
-import { useWorkflowBuilder } from "../hooks/use-workflow-builder"
-import { triggerWorkflow } from "../actions/automation-actions"
-import { TriggerPanel } from "./workflow-builder/trigger-panel"
-import { ActionPalette } from "./workflow-builder/action-palette"
-import { StepConfigPanel } from "./workflow-builder/step-config-panel"
+import { useWorkflowBuilder } from "../hooks/use-workflow-builder";
+import { triggerWorkflow } from "../actions/automation-actions";
+import { TriggerPanel } from "./workflow-builder/trigger-panel";
+import { ActionPalette } from "./workflow-builder/action-palette";
+import { StepConfigPanel } from "./workflow-builder/step-config-panel";
 
 import {
   WorkflowHeader,
@@ -70,19 +63,23 @@ import {
   ActionSearchPalette,
   TriggerCard,
   StepConnectionLine,
-} from "./ui"
+} from "./ui";
 
-import type { TriggerConfig, TriggerType, WorkflowStep } from "../types/automation-types"
+import type {
+  TriggerConfig,
+  TriggerType,
+  WorkflowStep,
+} from "../types/automation-types";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 interface WorkflowBuilderEnhancedProps {
-  workflowId?: string
-  siteId: string
-  onSave?: (workflow: unknown) => void
-  onClose?: () => void
+  workflowId?: string;
+  siteId: string;
+  onSave?: (workflow: unknown) => void;
+  onClose?: () => void;
 }
 
 // ============================================================================
@@ -100,15 +97,15 @@ function SortableStepItem({
   onToggleActive,
   onConfigure,
 }: {
-  step: WorkflowStep
-  isSelected: boolean
-  isFirst: boolean
-  isLast: boolean
-  onSelect: () => void
-  onDelete: () => void
-  onDuplicate: () => void
-  onToggleActive: () => void
-  onConfigure: () => void
+  step: WorkflowStep;
+  isSelected: boolean;
+  isFirst: boolean;
+  isLast: boolean;
+  onSelect: () => void;
+  onDelete: () => void;
+  onDuplicate: () => void;
+  onToggleActive: () => void;
+  onConfigure: () => void;
 }) {
   const {
     attributes,
@@ -120,13 +117,13 @@ function SortableStepItem({
   } = useSortable({
     id: step.id,
     data: { type: "step", step },
-  })
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-  }
+  };
 
   return (
     <div ref={setNodeRef} style={style}>
@@ -152,7 +149,7 @@ function SortableStepItem({
         dragHandleProps={{ ...attributes, ...listeners }}
       />
     </div>
-  )
+  );
 }
 
 // ============================================================================
@@ -162,19 +159,19 @@ function SortableStepItem({
 function DroppableCanvas({ children }: { children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({
     id: "canvas",
-  })
+  });
 
   return (
     <div
       ref={setNodeRef}
       className={cn(
         "flex-1 min-h-[400px] p-6 transition-colors rounded-lg",
-        isOver && "bg-primary/5 ring-2 ring-dashed ring-primary/30"
+        isOver && "bg-primary/5 ring-2 ring-dashed ring-primary/30",
       )}
     >
       {children}
     </div>
-  )
+  );
 }
 
 // ============================================================================
@@ -189,8 +186,8 @@ export function WorkflowBuilderEnhanced({
 }: WorkflowBuilderEnhancedProps) {
   // Error handler
   const handleError = useCallback((err: string) => {
-    toast.error(err)
-  }, [])
+    toast.error(err);
+  }, []);
 
   // Workflow builder hook
   const {
@@ -213,15 +210,15 @@ export function WorkflowBuilderEnhanced({
   } = useWorkflowBuilder(workflowId, siteId, {
     onSave: onSave as ((workflow: unknown) => void) | undefined,
     onError: handleError,
-  })
+  });
 
   // Local state
-  const [activeId, setActiveId] = useState<string | null>(null)
-  const [showTriggerPanel, setShowTriggerPanel] = useState(false)
-  const [showActionSearch, setShowActionSearch] = useState(false)
-  const [showMiniMap, _setShowMiniMap] = useState(true)
-  const [lastSaved, setLastSaved] = useState<Date | null>(null)
-  const canvasRef = useRef<HTMLDivElement>(null)
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [showTriggerPanel, setShowTriggerPanel] = useState(false);
+  const [showActionSearch, setShowActionSearch] = useState(false);
+  const [showMiniMap, _setShowMiniMap] = useState(true);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
 
   // DnD sensors
   const sensors = useSensors(
@@ -229,41 +226,41 @@ export function WorkflowBuilderEnhanced({
       activationConstraint: {
         distance: 8,
       },
-    })
-  )
+    }),
+  );
 
   // Handle save - declared before useEffect that uses it
   const handleSave = useCallback(async () => {
-    const success = await saveWorkflow()
+    const success = await saveWorkflow();
     if (success) {
-      setLastSaved(new Date())
-      toast.success("Workflow saved successfully")
+      setLastSaved(new Date());
+      toast.success("Workflow saved successfully");
     }
-  }, [saveWorkflow])
+  }, [saveWorkflow]);
 
   // Keyboard shortcuts
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       // Cmd/Ctrl + K - Open action search
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        setShowActionSearch(true)
+        e.preventDefault();
+        setShowActionSearch(true);
       }
       // Cmd/Ctrl + S - Save
       if (e.key === "s" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        handleSave()
+        e.preventDefault();
+        handleSave();
       }
       // Escape - Deselect step
       if (e.key === "Escape") {
-        selectStep(null)
-        setShowActionSearch(false)
+        selectStep(null);
+        setShowActionSearch(false);
       }
-    }
+    };
 
-    document.addEventListener("keydown", down)
-    return () => document.removeEventListener("keydown", down)
-  }, [selectStep, handleSave])
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
+  }, [selectStep, handleSave]);
 
   // ---- Browser navigation guard (unsaved changes) ----
   useEffect(() => {
@@ -278,44 +275,47 @@ export function WorkflowBuilderEnhanced({
   // Handle trigger changes
   const handleTriggerChange = useCallback(
     (config: TriggerConfig, type: TriggerType) => {
-      setTrigger({ ...config })
-      updateWorkflowData({ trigger_type: type, trigger_config: config })
-      setShowTriggerPanel(false)
+      setTrigger({ ...config });
+      updateWorkflowData({ trigger_type: type, trigger_config: config });
+      setShowTriggerPanel(false);
     },
-    [setTrigger, updateWorkflowData]
-  )
+    [setTrigger, updateWorkflowData],
+  );
 
   // Handle drag start
   const handleDragStart = useCallback((event: DragStartEvent) => {
-    setActiveId(event.active.id as string)
-  }, [])
+    setActiveId(event.active.id as string);
+  }, []);
 
   // Handle drag end
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
-      const { active, over } = event
-      setActiveId(null)
+      const { active, over } = event;
+      setActiveId(null);
 
-      if (!over) return
+      if (!over) return;
 
       // Drop from palette onto canvas
-      if (active.data.current?.type === "palette-item" && over.id === "canvas") {
-        const actionType = active.data.current.actionType
-        const actionName = active.data.current.name
+      if (
+        active.data.current?.type === "palette-item" &&
+        over.id === "canvas"
+      ) {
+        const actionType = active.data.current.actionType;
+        const actionName = active.data.current.name;
 
-        let stepType: WorkflowStep["step_type"] = "action"
-        if (actionType.startsWith("flow.delay")) stepType = "delay"
-        if (actionType.startsWith("flow.condition")) stepType = "condition"
-        if (actionType.startsWith("flow.loop")) stepType = "loop"
-        if (actionType.startsWith("flow.stop")) stepType = "stop"
+        let stepType: WorkflowStep["step_type"] = "action";
+        if (actionType.startsWith("flow.delay")) stepType = "delay";
+        if (actionType.startsWith("flow.condition")) stepType = "condition";
+        if (actionType.startsWith("flow.loop")) stepType = "loop";
+        if (actionType.startsWith("flow.stop")) stepType = "stop";
 
         addStep({
           step_type: stepType,
           action_type: actionType,
           name: actionName,
-        })
+        });
 
-        toast.success(`Added "${actionName}" step`)
+        toast.success(`Added "${actionName}" step`);
       }
 
       // Reorder steps
@@ -323,46 +323,46 @@ export function WorkflowBuilderEnhanced({
         active.data.current?.type === "step" &&
         over.data.current?.type === "step"
       ) {
-        const oldIndex = steps.findIndex((s) => s.id === active.id)
-        const newIndex = steps.findIndex((s) => s.id === over.id)
+        const oldIndex = steps.findIndex((s) => s.id === active.id);
+        const newIndex = steps.findIndex((s) => s.id === over.id);
         if (oldIndex !== newIndex && oldIndex !== -1 && newIndex !== -1) {
-          reorderSteps(oldIndex, newIndex)
+          reorderSteps(oldIndex, newIndex);
         }
       }
     },
-    [steps, addStep, reorderSteps]
-  )
+    [steps, addStep, reorderSteps],
+  );
 
   // Handle action selection from search palette
   const handleActionSelect = useCallback(
     (action: { id: string; name: string }) => {
-      let stepType: WorkflowStep["step_type"] = "action"
-      if (action.id.startsWith("flow.delay")) stepType = "delay"
-      if (action.id.startsWith("flow.condition")) stepType = "condition"
-      if (action.id.startsWith("flow.loop")) stepType = "loop"
-      if (action.id.startsWith("flow.stop")) stepType = "stop"
+      let stepType: WorkflowStep["step_type"] = "action";
+      if (action.id.startsWith("flow.delay")) stepType = "delay";
+      if (action.id.startsWith("flow.condition")) stepType = "condition";
+      if (action.id.startsWith("flow.loop")) stepType = "loop";
+      if (action.id.startsWith("flow.stop")) stepType = "stop";
 
       addStep({
         step_type: stepType,
         action_type: action.id,
         name: action.name,
-      })
+      });
 
-      toast.success(`Added "${action.name}" step`)
+      toast.success(`Added "${action.name}" step`);
     },
-    [addStep]
-  )
+    [addStep],
+  );
 
   // Handle step toggle active
   const handleToggleStepActive = useCallback(
     (stepId: string) => {
-      const step = steps.find((s) => s.id === stepId)
+      const step = steps.find((s) => s.id === stepId);
       if (step) {
-        updateStep(stepId, { is_active: !step.is_active })
+        updateStep(stepId, { is_active: !step.is_active });
       }
     },
-    [steps, updateStep]
-  )
+    [steps, updateStep],
+  );
 
   // Loading state
   if (isLoading) {
@@ -373,10 +373,10 @@ export function WorkflowBuilderEnhanced({
           <p className="text-muted-foreground">Loading workflow...</p>
         </div>
       </div>
-    )
+    );
   }
 
-  const sortedSteps = [...steps].sort((a, b) => a.position - b.position)
+  const sortedSteps = [...steps].sort((a, b) => a.position - b.position);
 
   return (
     <div className="flex flex-col h-full">
@@ -393,22 +393,47 @@ export function WorkflowBuilderEnhanced({
         onActiveChange={(active) => updateWorkflowData({ is_active: active })}
         onSave={handleSave}
         onTest={async () => {
-          if (!workflow?.id) { toast.error("Save the workflow first"); return }
-          if (isDirty) { toast.error("Save your changes before testing"); return }
+          if (!workflow?.id) {
+            toast.error("Save the workflow first");
+            return;
+          }
+          if (isDirty) {
+            toast.error("Save your changes before testing");
+            return;
+          }
           try {
-            const result = await triggerWorkflow(workflow.id, { test: true, source: 'enhanced_builder_test' })
-            if (!result.success) throw new Error(result.error || 'Test failed')
-            toast.success(`Test run started (${result.executionId?.slice(0, 8)}...)`)
-          } catch (e) { toast.error(e instanceof Error ? e.message : 'Test failed') }
+            const result = await triggerWorkflow(workflow.id, {
+              test: true,
+              source: "enhanced_builder_test",
+            });
+            if (!result.success) throw new Error(result.error || "Test failed");
+            toast.success(
+              `Test run started (${result.executionId?.slice(0, 8)}...)`,
+            );
+          } catch (e) {
+            toast.error(e instanceof Error ? e.message : "Test failed");
+          }
         }}
         onRun={async () => {
-          if (!workflow?.id) { toast.error("Save the workflow first"); return }
-          if (isDirty) { toast.error("Save your changes before running"); return }
+          if (!workflow?.id) {
+            toast.error("Save the workflow first");
+            return;
+          }
+          if (isDirty) {
+            toast.error("Save your changes before running");
+            return;
+          }
           try {
-            const result = await triggerWorkflow(workflow.id, { source: 'manual_run' })
-            if (!result.success) throw new Error(result.error || 'Run failed')
-            toast.success(`Workflow triggered (${result.executionId?.slice(0, 8)}...)`)
-          } catch (e) { toast.error(e instanceof Error ? e.message : 'Run failed') }
+            const result = await triggerWorkflow(workflow.id, {
+              source: "manual_run",
+            });
+            if (!result.success) throw new Error(result.error || "Run failed");
+            toast.success(
+              `Workflow triggered (${result.executionId?.slice(0, 8)}...)`,
+            );
+          } catch (e) {
+            toast.error(e instanceof Error ? e.message : "Run failed");
+          }
         }}
       />
 
@@ -468,8 +493,8 @@ export function WorkflowBuilderEnhanced({
                     selectedStepId={selectedStep?.id}
                     triggerType={workflow?.trigger_type}
                     onStepClick={(id) => {
-                      const step = steps.find((s) => s.id === id)
-                      if (step) selectStep(step)
+                      const step = steps.find((s) => s.id === id);
+                      if (step) selectStep(step);
                     }}
                   />
                 </div>
@@ -511,8 +536,8 @@ export function WorkflowBuilderEnhanced({
                           isLast={index === sortedSteps.length - 1}
                           onSelect={() => selectStep(step)}
                           onDelete={() => {
-                            deleteStep(step.id)
-                            toast.success("Step deleted")
+                            deleteStep(step.id);
+                            toast.success("Step deleted");
                           }}
                           onDuplicate={() => {
                             addStep({
@@ -520,8 +545,8 @@ export function WorkflowBuilderEnhanced({
                               action_type: step.action_type,
                               action_config: { ...step.action_config },
                               name: `${step.name || "Step"} (Copy)`,
-                            })
-                            toast.success("Step duplicated")
+                            });
+                            toast.success("Step duplicated");
                           }}
                           onToggleActive={() => handleToggleStepActive(step.id)}
                           onConfigure={() => selectStep(step)}
@@ -604,8 +629,11 @@ export function WorkflowBuilderEnhanced({
                         Select a step to configure
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Or press <kbd className="px-1 py-0.5 rounded bg-muted text-xs">⌘K</kbd> to
-                        add a new step
+                        Or press{" "}
+                        <kbd className="px-1 py-0.5 rounded bg-muted text-xs">
+                          ⌘K
+                        </kbd>{" "}
+                        to add a new step
                       </p>
                     </div>
                   </motion.div>
@@ -651,5 +679,5 @@ export function WorkflowBuilderEnhanced({
         onSelectAction={handleActionSelect}
       />
     </div>
-  )
+  );
 }

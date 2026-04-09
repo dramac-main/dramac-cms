@@ -583,3 +583,239 @@ export async function updateBookingPaymentFromChat(
 
   return {};
 }
+// =============================================================================
+// REVIEW BOOKING PAYMENT PROOF
+// =============================================================================
+
+/**
+ * Approve or reject payment proof for a booking appointment.
+ * Called from the live chat dashboard when the agent reviews the uploaded proof.
+ *
+ * - approved: sets payment_status to "paid", emits payment_received event,
+ *   sends confirmation notifications and chat message.
+ * - rejected: emits proof_rejected event, sends rejection message in chat.
+ */
+export async function updateBookingPaymentProofStatus(
+  siteId: string,
+  bookingId: string,
+  status: "approved" | "rejected",
+  options?: { reason?: string },
+): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const hasAccess = await verifyUserSiteAccess(user.id, siteId);
+  if (!hasAccess) return { error: "Access denied" };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any;
+
+  // Fetch booking with service details
+  const { data: appointment, error: fetchErr } = await db
+    .from(`${BOOKING_PREFIX}_appointments`)
+    .select(
+      `
+      id, payment_status, payment_amount, customer_name, customer_email, metadata, start_time,
+      service:${BOOKING_PREFIX}_services(name, price, currency, duration_minutes),
+      staff:${BOOKING_PREFIX}_staff(name)
+    `,
+    )
+    .eq("site_id", siteId)
+    .eq("id", bookingId)
+    .single();
+
+  if (fetchErr || !appointment) {
+    return { error: "Booking not found" };
+  }
+
+  const existingMeta = (appointment.metadata || {}) as Record<string, unknown>;
+  const proof = existingMeta.payment_proof as
+    | Record<string, unknown>
+    | undefined;
+  if (!proof) {
+    return { error: "No payment proof uploaded for this booking" };
+  }
+
+  const serviceName = appointment.service?.name || "Appointment";
+  const customerEmail = appointment.customer_email || "";
+  const customerName = appointment.customer_name || "Customer";
+  const currency = appointment.service?.currency || "ZMW";
+  const paymentAmount =
+    appointment.payment_amount || appointment.service?.price || 0;
+  const priceStr = `${currency} ${paymentAmount.toFixed(2)}`;
+
+  if (status === "approved") {
+    // Mark payment as paid and update proof status
+    const updatedMetadata = {
+      ...existingMeta,
+      payment_proof: {
+        ...proof,
+        status: "confirmed",
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: user.id,
+      },
+    };
+
+    await db
+      .from(`${BOOKING_PREFIX}_appointments`)
+      .update({
+        payment_status: "paid",
+        metadata: updatedMetadata,
+      })
+      .eq("id", bookingId);
+
+    // Emit payment_received automation event
+    const startTime = new Date(appointment.start_time);
+    logAutomationEvent(
+      siteId,
+      EVENT_REGISTRY.booking.appointment.payment_received,
+      {
+        appointmentId: bookingId,
+        serviceName,
+        customerName,
+        customerEmail,
+        startTime: startTime.toISOString(),
+        start_date_formatted: formatDate(startTime),
+        start_time_formatted: formatTime(startTime),
+        paymentAmount,
+        currency,
+        staffName: appointment.staff?.name,
+      },
+      {
+        sourceModule: "booking",
+        sourceEntityType: "appointment",
+        sourceEntityId: bookingId,
+      },
+    ).catch((err) =>
+      console.error(
+        "[ChatBooking] Payment proof approval automation error:",
+        err,
+      ),
+    );
+
+    // Also emit proof_approved event
+    logAutomationEvent(
+      siteId,
+      EVENT_REGISTRY.booking.payment.proof_approved,
+      {
+        appointmentId: bookingId,
+        serviceName,
+        customerName,
+        customerEmail,
+        paymentAmount,
+        currency,
+      },
+      {
+        sourceModule: "booking",
+        sourceEntityType: "appointment",
+        sourceEntityId: bookingId,
+      },
+    ).catch((err) =>
+      console.error("[ChatBooking] Proof approved event error:", err),
+    );
+
+    // Send payment confirmation notifications
+    dispatchNotification({
+      siteId,
+      eventType: "booking.appointment.payment_received",
+      notificationFunction: () =>
+        notifyBookingPaymentReceived({
+          siteId,
+          appointmentId: bookingId,
+          serviceName,
+          servicePrice: paymentAmount,
+          serviceDuration: appointment.service?.duration_minutes || 30,
+          staffName: appointment.staff?.name,
+          customerName,
+          customerEmail,
+          startTime,
+          currency,
+          paymentStatus: "paid",
+          changedBy: "Agent",
+        }),
+    }).catch((err) =>
+      console.error("[ChatBooking] Payment confirm notification error:", err),
+    );
+
+    // Send chat confirmation message
+    if (customerEmail) {
+      dispatchChatNotification({
+        siteId,
+        eventType: "booking.appointment.payment_received",
+        chatFunction: () =>
+          notifyChatBookingPaymentConfirmed(
+            siteId,
+            customerEmail,
+            serviceName,
+            priceStr,
+          ),
+      }).catch((err) =>
+        console.error(
+          "[ChatBooking] Chat payment confirm notify error:",
+          err,
+        ),
+      );
+    }
+  } else {
+    // Rejected — update proof status
+    const updatedMetadata = {
+      ...existingMeta,
+      payment_proof: {
+        ...proof,
+        status: "rejected",
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: user.id,
+        rejection_reason: options?.reason || undefined,
+      },
+    };
+
+    await db
+      .from(`${BOOKING_PREFIX}_appointments`)
+      .update({ metadata: updatedMetadata })
+      .eq("id", bookingId);
+
+    // Emit proof_rejected event
+    logAutomationEvent(
+      siteId,
+      EVENT_REGISTRY.booking.payment.proof_rejected,
+      {
+        appointmentId: bookingId,
+        serviceName,
+        customerName,
+        customerEmail,
+        reason: options?.reason || "Payment proof could not be verified",
+      },
+      {
+        sourceModule: "booking",
+        sourceEntityType: "appointment",
+        sourceEntityId: bookingId,
+      },
+    ).catch((err) =>
+      console.error("[ChatBooking] Proof rejected event error:", err),
+    );
+
+    // Send rejection message in chat
+    if (customerEmail) {
+      import("@/modules/live-chat/lib/chat-event-bridge")
+        .then(({ notifyChatBookingPaymentRejected }) =>
+          notifyChatBookingPaymentRejected(
+            siteId,
+            customerEmail,
+            serviceName,
+            options?.reason,
+          ),
+        )
+        .catch((err) =>
+          console.error(
+            "[ChatBooking] Chat payment reject notify error:",
+            err,
+          ),
+        );
+    }
+  }
+
+  return {};
+}

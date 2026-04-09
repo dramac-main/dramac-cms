@@ -1,56 +1,56 @@
 # Active Context
 
-## Current Focus: Automation Engine Live Integration Testing — IN PROGRESS 🔄
+## Current Focus: Automation Test Run UX + Email Editability — COMPLETE ✅
 
-### Session: Live Deployment Bug Fixes & End-to-End Testing (April 2026)
+### Session: Industry-Standard Test Run + Email Overrides (April 2026) — commit 47688ebc
 
-User performed live booking tests on Luxe Serenity Spa storefront. Multiple runtime bugs found and fixed through iterative testing.
+User tested "Test Run" on Booking Created Notifications workflow. Found multiple UX issues:
+- Test ran with empty trigger data → emails had blank merge fields, chat step skipped
+- "Step not found" error appeared for stale step references
+- Email content (subject/body) was not editable in the workflow builder
+- User wanted industry-standard test run UX (like HubSpot/Zapier)
 
-### Bugs Found & Fixed This Session:
+### Changes Made (7 files, +665 -10):
 
-**1. triggerType Literal "event" Bug** (event-processor.ts) — commit c25bc6d5
-- `queueWorkflowExecution()` was called with literal string `"event"` instead of actual event type
-- Fixed to pass the real event type (e.g., "booking.appointment.created")
+**1. TestRunDialog Component** (NEW — `test-run-dialog.tsx`, ~400 lines)
+- Industry-standard test run experience — collects sample trigger data before execution
+- `getSampleFieldsForEvent(eventType)` returns appropriate form fields per event type
+- Covers: booking.appointment.*, crm.contact.*, crm.deal.*, form.submission.*, ecommerce.order.*, ecommerce.quote.*, live_chat.*, and generic fallback
+- Pre-fills with realistic sample data (e.g., "Jane Doe", "jane@example.com")
 
-**2. Vercel Serverless Lifecycle Issue** (event-processor.ts + new API route) — commit 1f0c044d
-- `executeWorkflow()` was fire-and-forget (no await) inside `processEventImmediately()`
-- On Vercel, after HTTP response returns, function gets CPU-throttled/killed
-- Execution took 10+ minutes instead of seconds, and never marked as "completed"
-- **Fix**: Created `/api/automation/execute` route with `maxDuration: 300` (5 min)
-- Added `triggerExecutionViaAPI()` helper that makes internal fetch to new endpoint
-- Added `resumeStuckExecutions()` safety net in cron handler
-- Result: Execution now completes in **6 seconds** (was 10+ minutes)
+**2. Workflow Builder Integration** (workflow-builder.tsx)
+- Test Run button now opens TestRunDialog instead of calling triggerWorkflow directly
+- Sample data flows: dialog → handleTestRun() → triggerWorkflow(sampleData)
 
-**3. Email Branding Mismatch** (action-executor.ts) — commit f9224dd6
-- Automation emails showed agency name "Jacktest Ltd" instead of site name "Luxe Serenity Spa & Retreat"
-- Root: `getAgencyBranding()` was called but `applySiteBranding()` overlay was never applied
-- **Fix**: email.send handler now selects site name + settings, calls `applySiteBranding()` overlay
+**3. "Step Not Found" Error Handling** (use-workflow-builder.ts)
+- Catches stale step errors, reloads steps from DB, refreshes selectedStep
+- Shows user-friendly message instead of cryptic error
 
-**4. Raw ISO Date Formatting** (multiple files) — commit f9224dd6
-- Automation emails showed "2026-04-30T10:00:00.000Z" instead of "30 Apr 2026 at 12:00 PM"
-- **Fix**: Added `start_date_formatted` and `start_time_formatted` fields to ALL booking event emitters
-- Updated all system templates and all DB workflow step configs to use new fields
-- Files modified: public-booking-actions.ts, booking-actions.ts, chat-booking-actions.ts, system-templates.ts
-- DB: Bulk-updated ALL workflow steps across all sites to use new formatted date fields
+**4. Email Subject/Body Override Fields** (action-types.ts)
+- Added `subject_override` and `body_override` fields to `email.send_branded_template` in ACTION_REGISTRY
+- Users can now customize email content per workflow step
 
-### Deployment History:
-- c25bc6d5 — triggerType fix
-- 1f0c044d — execution lifecycle fix (verified: 6s execution)
-- f9224dd6 — branding + date formatting fix (currently BUILDING on Vercel)
+**5. Email Override Execution** (action-executor.ts + send-branded-email.ts)
+- `action-executor.ts`: Passes subjectOverride/bodyOverride from step config to sendBrandedEmail()
+- `send-branded-email.ts`: Expanded SendBrandedEmailOptions, applies overrides after template resolution
+- New `substituteMergeVarsSimple()` helper for {{key}} → value substitution
 
-### Verification Results:
-- ✅ Workflow executes in 6 seconds (4/4 steps complete)
-- ✅ Emails delivered to harpinsltd@gmail.com
-- ✅ In-app notifications created correctly
-- ✅ Chat step gracefully skipped (no conversation context)
-- 🔄 Branding + date formatting fix awaiting deployment verification
-- ❌ Ecommerce order flow not yet tested
+**6. Chat Step Test-Mode Feedback** (action-executor.ts)
+- Detailed skip reasons: "Chat steps require a real conversation ID. During test runs, provide a conversation ID in the test data dialog, or leave blank to skip."
+
+**7. triggerWorkflow eventType Storage** (automation-actions.ts)
+- Now fetches trigger_config, extracts eventType from dialog data or workflow config
+- Stores eventType in execution context for template resolution
+
+### Verification:
+- ✅ 0 TypeScript errors
+- ✅ 189/189 tests pass
+- ✅ Committed (47688ebc) and pushed to main
 
 ### Next Steps:
-- Verify f9224dd6 deployment is READY
-- User retests booking — email should show "Luxe Serenity Spa & Retreat" + "30 Apr 2026 at 12:00 PM"
+- Verify Vercel deployment of 47688ebc
+- User retests Test Run on Booking Created Notifications workflow
 - Test ecommerce order flow on storefront
-- Update progress.md
 
 ## Previous Focus: Automation Engine Runtime Fixes — COMPLETE ✅
 

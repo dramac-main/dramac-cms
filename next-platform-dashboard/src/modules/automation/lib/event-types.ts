@@ -76,6 +76,11 @@ export const EVENT_REGISTRY = {
       reminder_sent: "booking.appointment.reminder_sent",
       payment_received: "booking.appointment.payment_received",
     },
+    payment: {
+      proof_uploaded: "booking.payment.proof_uploaded",
+      proof_approved: "booking.payment.proof_approved",
+      proof_rejected: "booking.payment.proof_rejected",
+    },
     availability: {
       updated: "booking.availability.updated",
       blocked: "booking.availability.blocked",

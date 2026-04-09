@@ -484,8 +484,8 @@ export function TestRunDialog({
           </DialogTitle>
           <DialogDescription>
             Provide sample data to test this workflow end-to-end. All steps will
-            execute using this data — emails will be sent, notifications created,
-            etc.
+            execute using this data — emails will be sent, notifications
+            created, etc.
           </DialogDescription>
         </DialogHeader>
 
@@ -502,9 +502,7 @@ export function TestRunDialog({
               <div key={field.key} className="space-y-1">
                 <Label className="text-xs flex items-center gap-1">
                   {field.label}
-                  {field.required && (
-                    <span className="text-red-500">*</span>
-                  )}
+                  {field.required && <span className="text-red-500">*</span>}
                 </Label>
                 <Input
                   type={field.type || "text"}

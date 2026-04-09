@@ -126,6 +126,383 @@ export async function sendProactiveMessage(
 }
 
 // =============================================================================
+// AUTO-CREATE CONVERSATION FOR ENTITIES (Orders / Bookings)
+// =============================================================================
+
+/**
+ * Entity context passed when auto-creating a conversation server-side.
+ */
+export interface EntityConversationContext {
+  /** The entity type: order, booking, or quote */
+  entityType: "order" | "booking" | "quote";
+  /** Customer info */
+  customerName: string;
+  customerEmail: string;
+  /** Order-specific */
+  orderNumber?: string;
+  orderTotal?: string;
+  paymentStatus?: string;
+  paymentProvider?: string;
+  /** Booking-specific */
+  bookingId?: string;
+  serviceName?: string;
+  bookingDate?: string;
+  bookingTime?: string;
+  bookingStatus?: string;
+  paymentAmount?: string;
+  currency?: string;
+  /** Quote-specific */
+  quoteNumber?: string;
+}
+
+/**
+ * Auto-create (or find existing) chat conversation for an order or booking.
+ * Called from server actions after entity creation — ensures a conversation
+ * exists before the customer even opens the chat widget.
+ *
+ * Returns the conversationId, or null if creation failed.
+ */
+export async function createConversationForEntity(
+  siteId: string,
+  ctx: EntityConversationContext,
+): Promise<string | null> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = createAdminClient() as any;
+
+  try {
+    // 1. Find or create visitor by email
+    let visitorId: string;
+    const { data: existingVisitor } = await supabase
+      .from("mod_chat_visitors")
+      .select("id")
+      .eq("site_id", siteId)
+      .eq("email", ctx.customerEmail)
+      .limit(1)
+      .single();
+
+    if (existingVisitor) {
+      visitorId = existingVisitor.id;
+    } else {
+      const { data: newVisitor, error: visitorErr } = await supabase
+        .from("mod_chat_visitors")
+        .insert({
+          site_id: siteId,
+          name: ctx.customerName,
+          email: ctx.customerEmail,
+          first_seen_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
+          total_conversations: 0,
+          total_messages: 0,
+        })
+        .select("id")
+        .single();
+
+      if (visitorErr || !newVisitor) {
+        console.error(
+          "[ChatEventBridge] Failed to create visitor:",
+          visitorErr,
+        );
+        return null;
+      }
+      visitorId = newVisitor.id;
+    }
+
+    // 2. Check for existing active conversation with this entity
+    let existingConvId: string | null = null;
+
+    if (ctx.entityType === "order" && ctx.orderNumber) {
+      const { data: conversations } = await supabase
+        .from("mod_chat_conversations")
+        .select("id, metadata")
+        .eq("site_id", siteId)
+        .eq("visitor_id", visitorId)
+        .in("status", ["active", "open", "waiting"])
+        .order("created_at", { ascending: false });
+
+      existingConvId =
+        conversations?.find(
+          (c: { metadata: Record<string, unknown> }) =>
+            c.metadata?.order_number === ctx.orderNumber,
+        )?.id || null;
+    } else if (ctx.entityType === "booking" && ctx.bookingId) {
+      const { data: conversations } = await supabase
+        .from("mod_chat_conversations")
+        .select("id, metadata")
+        .eq("site_id", siteId)
+        .eq("visitor_id", visitorId)
+        .in("status", ["active", "open", "waiting"])
+        .order("created_at", { ascending: false });
+
+      existingConvId =
+        conversations?.find(
+          (c: { metadata: Record<string, unknown> }) =>
+            c.metadata?.booking_id === ctx.bookingId,
+        )?.id || null;
+    }
+
+    if (existingConvId) {
+      console.log(
+        `[ChatEventBridge] Reusing existing conversation ${existingConvId} for ${ctx.entityType}`,
+      );
+      return existingConvId;
+    }
+
+    // 3. Build metadata based on entity type
+    let metadata: Record<string, unknown> = {};
+    let subject = "";
+    let tags: string[] = [];
+
+    if (ctx.entityType === "order") {
+      metadata = {
+        order_number: ctx.orderNumber,
+        payment_guidance_active:
+          ctx.paymentStatus === "pending" &&
+          (!ctx.paymentProvider ||
+            ctx.paymentProvider === "manual" ||
+            ctx.paymentProvider === "bank_transfer"),
+      };
+      subject = `Order ${ctx.orderNumber}`;
+      tags = ["order", "payment"];
+    } else if (ctx.entityType === "booking") {
+      const paymentRequired =
+        ctx.paymentAmount && parseFloat(ctx.paymentAmount) > 0;
+      metadata = {
+        booking_id: ctx.bookingId,
+        booking_guidance_active: true,
+        service_name: ctx.serviceName || null,
+        booking_date: ctx.bookingDate || null,
+        booking_time: ctx.bookingTime || null,
+        booking_status: ctx.bookingStatus || "pending",
+        payment_guidance_active:
+          paymentRequired && ctx.paymentStatus === "pending",
+        payment_amount: ctx.paymentAmount || null,
+        currency: ctx.currency || null,
+      };
+      subject = `Booking: ${ctx.serviceName || "Appointment"}`;
+      tags = paymentRequired ? ["booking", "payment"] : ["booking"];
+    }
+
+    // 4. Create conversation
+    const { data: conversation, error: convErr } = await supabase
+      .from("mod_chat_conversations")
+      .insert({
+        site_id: siteId,
+        visitor_id: visitorId,
+        status: "active",
+        priority: "medium",
+        subject,
+        tags,
+        metadata,
+        source: "system",
+        last_message_at: new Date().toISOString(),
+        last_message_by: "system",
+        last_message_text: "Conversation started automatically",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .select("id")
+      .single();
+
+    if (convErr || !conversation) {
+      console.error(
+        "[ChatEventBridge] Failed to create conversation:",
+        convErr,
+      );
+      return null;
+    }
+
+    // 5. Update visitor conversation count
+    await supabase.rpc("increment_field", {
+      table_name: "mod_chat_visitors",
+      field_name: "total_conversations",
+      row_id: visitorId,
+      increment_by: 1,
+    }).catch(() => {
+      // RPC may not exist — try direct update
+      supabase
+        .from("mod_chat_visitors")
+        .update({
+          total_conversations: (existingVisitor?.total_conversations || 0) + 1,
+          last_seen_at: new Date().toISOString(),
+        })
+        .eq("id", visitorId)
+        .then(() => {});
+    });
+
+    // 6. Auto-assign to available agent
+    const { data: agents } = await supabase
+      .from("mod_chat_agents")
+      .select("id, display_name, current_chat_count, max_concurrent_chats")
+      .eq("site_id", siteId)
+      .eq("is_active", true)
+      .eq("status", "online")
+      .order("current_chat_count", { ascending: true });
+
+    const availableAgent = (agents || []).find(
+      (a: { current_chat_count: number; max_concurrent_chats: number }) =>
+        a.current_chat_count < (a.max_concurrent_chats || 5),
+    );
+
+    if (availableAgent) {
+      await supabase
+        .from("mod_chat_conversations")
+        .update({
+          assigned_agent_id: availableAgent.id,
+          status: "active",
+        })
+        .eq("id", conversation.id);
+
+      // Increment agent chat count
+      await supabase
+        .from("mod_chat_agents")
+        .update({
+          current_chat_count: (availableAgent.current_chat_count || 0) + 1,
+        })
+        .eq("id", availableAgent.id);
+    }
+
+    // 7. Send initial greeting message
+    const { data: settings } = await supabase
+      .from("mod_chat_widget_settings")
+      .select("ai_assistant_name, company_name")
+      .eq("site_id", siteId)
+      .single();
+    const assistantName = settings?.ai_assistant_name || "Chiko";
+    const companyName = settings?.company_name || "our team";
+
+    let greeting: string;
+    if (ctx.entityType === "order") {
+      const isManualPayment =
+        !ctx.paymentProvider ||
+        ctx.paymentProvider === "manual" ||
+        ctx.paymentProvider === "bank_transfer";
+      greeting =
+        ctx.paymentStatus === "pending" && isManualPayment
+          ? `Hi ${ctx.customerName}! 👋 Thank you for your order ${ctx.orderNumber} (${ctx.orderTotal}). ` +
+            `I'm here to help you complete your payment. Let me show you the available payment options!`
+          : `Hi ${ctx.customerName}! 👋 Thank you for placing your order ${ctx.orderNumber} with ${companyName}. ` +
+            `I'm here if you have any questions about your order!`;
+    } else {
+      const paymentRequired =
+        ctx.paymentAmount && parseFloat(ctx.paymentAmount) > 0;
+      greeting =
+        paymentRequired && ctx.paymentStatus === "pending"
+          ? `Hi ${ctx.customerName}! 👋 Thank you for booking ${ctx.serviceName}` +
+            `${ctx.bookingDate ? ` on ${ctx.bookingDate}` : ""}${ctx.bookingTime ? ` at ${ctx.bookingTime}` : ""}. ` +
+            `A payment of ${ctx.currency || ""} ${ctx.paymentAmount} is required to confirm your booking. ` +
+            `I'll help you complete the payment — let me show you the available options!`
+          : `Hi ${ctx.customerName}! 👋 Your booking for ${ctx.serviceName}` +
+            `${ctx.bookingDate ? ` on ${ctx.bookingDate}` : ""}${ctx.bookingTime ? ` at ${ctx.bookingTime}` : ""} ` +
+            `has been received! I'm here if you have any questions. 😊`;
+    }
+
+    await supabase.from("mod_chat_messages").insert({
+      conversation_id: conversation.id,
+      site_id: siteId,
+      sender_type: "ai",
+      sender_name: assistantName,
+      content: greeting,
+      content_type: "text",
+      status: "sent",
+      is_ai_generated: true,
+      ai_confidence: 1.0,
+      is_internal_note: false,
+    });
+
+    // Update last message
+    await supabase
+      .from("mod_chat_conversations")
+      .update({
+        last_message_text: greeting.substring(0, 255),
+        last_message_at: new Date().toISOString(),
+        last_message_by: "ai",
+      })
+      .eq("id", conversation.id);
+
+    console.log(
+      `[ChatEventBridge] Auto-created conversation ${conversation.id} for ${ctx.entityType} (${ctx.entityType === "order" ? ctx.orderNumber : ctx.bookingId})`,
+    );
+    return conversation.id;
+  } catch (err) {
+    console.error(
+      "[ChatEventBridge] createConversationForEntity error:",
+      err,
+    );
+    return null;
+  }
+}
+
+// =============================================================================
+// BOOKING PAYMENT-SPECIFIC NOTIFICATIONS
+// =============================================================================
+
+/**
+ * Notify chat when booking payment proof has been uploaded.
+ */
+export async function notifyChatBookingPaymentProofUploaded(
+  siteId: string,
+  customerEmail: string,
+  serviceName: string,
+  fileName: string,
+): Promise<void> {
+  const conv = await findActiveConversation(siteId, customerEmail);
+  if (!conv) return;
+
+  const defaultMessage =
+    `I can see you've uploaded your payment proof (${fileName}) for your ${serviceName} booking. ` +
+    `The store owner will review it and verify your payment. ` +
+    `This usually takes a short while — I'll keep you updated! 😊`;
+
+  const message = await resolveChatMessage(
+    siteId,
+    "booking_payment_proof_uploaded" as ChatMessageEventType,
+    { service_name: serviceName, file_name: fileName },
+    defaultMessage,
+  );
+  if (!message) return;
+
+  await sendProactiveMessage(
+    siteId,
+    conv.conversationId,
+    message,
+    conv.assistantName,
+  );
+}
+
+/**
+ * Notify chat when booking payment proof has been rejected.
+ */
+export async function notifyChatBookingPaymentRejected(
+  siteId: string,
+  customerEmail: string,
+  serviceName: string,
+  reason?: string,
+): Promise<void> {
+  const conv = await findActiveConversation(siteId, customerEmail);
+  if (!conv) return;
+
+  const reasonPart = reason ? ` Reason: ${reason}.` : "";
+  const defaultMessage =
+    `Your payment proof for the ${serviceName} booking could not be verified.${reasonPart} ` +
+    `Please upload a new proof of payment or contact us for assistance.`;
+
+  const message = await resolveChatMessage(
+    siteId,
+    "booking_payment_rejected" as ChatMessageEventType,
+    { service_name: serviceName, reason: reasonPart },
+    defaultMessage,
+  );
+  if (!message) return;
+
+  await sendProactiveMessage(
+    siteId,
+    conv.conversationId,
+    message,
+    conv.assistantName,
+  );
+}
+
+// =============================================================================
 // EVENT-SPECIFIC MESSAGES
 // =============================================================================
 
@@ -610,7 +987,38 @@ export async function bridgeChatImageAsPaymentProof(
     }
 
     if (!order) {
-      // No pending manual order — this image isn't payment proof
+      // No pending manual order — check for a booking with pending payment
+      const linkedBookingId = convMeta.booking_id as string | undefined;
+      if (linkedBookingId) {
+        const { data: appointment } = await supabase
+          .from("mod_bookmod01_appointments")
+          .select(
+            "id, payment_status, payment_amount, customer_email, customer_name, metadata, service:mod_bookmod01_services(name, price, currency)",
+          )
+          .eq("site_id", siteId)
+          .eq("id", linkedBookingId)
+          .eq("payment_status", "pending")
+          .single();
+
+        if (
+          appointment &&
+          (appointment.payment_amount > 0 || appointment.service?.price > 0)
+        ) {
+          // This is a booking payment proof — bridge it!
+          return bridgeChatImageAsBookingPaymentProof(
+            supabase,
+            siteId,
+            conversationId,
+            appointment,
+            fileUrl,
+            fileName,
+            fileSize,
+            fileMimeType,
+          );
+        }
+      }
+
+      // No pending order or booking with payment — skip
       return false;
     }
 
@@ -785,6 +1193,206 @@ export async function bridgeChatImageAsPaymentProof(
     return true;
   } catch (err) {
     console.error("[ChatPaymentBridge] Unexpected error:", err);
+    return false;
+  }
+}
+
+/**
+ * Bridge a chat-uploaded image as booking payment proof.
+ * Mirrors the order proof bridging logic but for appointments.
+ */
+async function bridgeChatImageAsBookingPaymentProof(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
+  siteId: string,
+  conversationId: string,
+  appointment: {
+    id: string;
+    payment_status: string;
+    payment_amount: number;
+    customer_email: string;
+    customer_name: string;
+    metadata: Record<string, unknown> | null;
+    service: { name: string; price: number; currency: string } | null;
+  },
+  fileUrl: string,
+  fileName: string,
+  fileSize: number,
+  fileMimeType: string,
+): Promise<boolean> {
+  try {
+    // 1. Intent check
+    const { data: recentMsgs } = await supabase
+      .from("mod_chat_messages")
+      .select("content")
+      .eq("conversation_id", conversationId)
+      .eq("sender_type", "visitor")
+      .eq("content_type", "text")
+      .order("created_at", { ascending: false })
+      .limit(5);
+
+    const recentVisitorTexts = (recentMsgs || []).map(
+      (m: { content: string }) => m.content || "",
+    );
+
+    if (!isLikelyPaymentProof(fileName, recentVisitorTexts)) {
+      console.log(
+        "[ChatPaymentBridge] Booking file upload shows no payment context — skipping bridge.",
+        { fileName, appointmentId: appointment.id },
+      );
+      return false;
+    }
+
+    // 2. Check if proof is already confirmed — don't overwrite
+    const existingMeta = (appointment.metadata || {}) as Record<
+      string,
+      unknown
+    >;
+    const existingProof = existingMeta.payment_proof as
+      | { status?: string }
+      | undefined;
+    if (existingProof?.status === "confirmed") {
+      console.log(
+        "[ChatPaymentBridge] Payment already confirmed for booking",
+        appointment.id,
+        "— skipping",
+      );
+      return false;
+    }
+
+    // 3. Download file from chat-attachments public URL
+    const fileResponse = await fetch(fileUrl);
+    if (!fileResponse.ok) {
+      console.error(
+        "[ChatPaymentBridge] Failed to download file from chat-attachments:",
+        fileResponse.status,
+      );
+      return false;
+    }
+    const fileBuffer = Buffer.from(await fileResponse.arrayBuffer());
+
+    // 4. Upload to payment-proofs bucket
+    const extMap: Record<string, string> = {
+      "image/jpeg": "jpg",
+      "image/png": "png",
+      "image/webp": "webp",
+      "image/gif": "gif",
+      "image/heic": "heic",
+      "application/pdf": "pdf",
+    };
+    const ext = extMap[fileMimeType] || "bin";
+    const storagePath = `${siteId}/booking-${appointment.id}/${Date.now()}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("payment-proofs")
+      .upload(storagePath, fileBuffer, {
+        contentType: fileMimeType,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error(
+        "[ChatPaymentBridge] Failed to upload booking proof to payment-proofs:",
+        uploadError,
+      );
+      return false;
+    }
+
+    // 5. Update appointment metadata with proof info
+    const updatedMetadata = {
+      ...existingMeta,
+      payment_proof: {
+        storage_path: storagePath,
+        file_name: fileName,
+        content_type: fileMimeType,
+        file_size: fileSize,
+        uploaded_at: new Date().toISOString(),
+        status: "pending_review",
+        source: "live_chat",
+      },
+    };
+
+    await supabase
+      .from("mod_bookmod01_appointments")
+      .update({ metadata: updatedMetadata })
+      .eq("id", appointment.id);
+
+    // 6. Send proactive chat acknowledgment message
+    const serviceName = appointment.service?.name || "your service";
+    const { data: widgetSettings } = await supabase
+      .from("mod_chat_widget_settings")
+      .select("ai_assistant_name")
+      .eq("site_id", siteId)
+      .single();
+    const assistantName = widgetSettings?.ai_assistant_name || "Chiko";
+
+    const bridgeDefaultMessage =
+      `I can see you've uploaded your payment proof (${fileName}) for your ${serviceName} booking. ` +
+      `The store owner will now review it and verify your payment. ` +
+      `This usually takes a short while — I'll keep you updated! 😊`;
+
+    const bridgeMessage = await resolveChatMessage(
+      siteId,
+      "booking_payment_proof_uploaded" as ChatMessageEventType,
+      { service_name: serviceName, file_name: fileName },
+      bridgeDefaultMessage,
+    );
+    if (bridgeMessage) {
+      await sendProactiveMessage(
+        siteId,
+        conversationId,
+        bridgeMessage,
+        assistantName,
+      );
+    }
+
+    // 7. Notify business owner
+    const amount = appointment.payment_amount || appointment.service?.price || 0;
+    const currency = appointment.service?.currency || "ZMW";
+    const amountFormatted = `${currency} ${(amount / 100).toFixed(2)}`;
+
+    try {
+      const { notifyBookingPaymentProofUploaded } = await import(
+        "@/lib/services/business-notifications"
+      );
+      await notifyBookingPaymentProofUploaded(
+        siteId,
+        serviceName,
+        appointment.customer_email || "",
+        appointment.customer_name || "Customer",
+        amountFormatted,
+        fileName,
+      );
+    } catch (notifyErr) {
+      console.error(
+        "[ChatPaymentBridge] Booking business notification error:",
+        notifyErr,
+      );
+    }
+
+    // 8. Emit automation event
+    try {
+      const { emitAutomationEvent } = await import(
+        "@/modules/automation/lib/automation-engine"
+      );
+      await emitAutomationEvent(siteId, "booking.payment.proof_uploaded", {
+        booking_id: appointment.id,
+        service_name: serviceName,
+        customer_email: appointment.customer_email,
+        customer_name: appointment.customer_name,
+        file_name: fileName,
+        amount: amountFormatted,
+      });
+    } catch {
+      // Automation engine may not be available — non-critical
+    }
+
+    console.log(
+      `[ChatPaymentBridge] Successfully bridged chat image as payment proof for booking ${appointment.id}`,
+    );
+    return true;
+  } catch (err) {
+    console.error("[ChatPaymentBridge] Booking proof bridge error:", err);
     return false;
   }
 }

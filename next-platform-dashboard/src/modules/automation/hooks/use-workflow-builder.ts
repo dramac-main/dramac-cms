@@ -1,8 +1,8 @@
 /**
  * useWorkflowBuilder Hook
- * 
+ *
  * Phase EM-57B: Automation Engine - Visual Builder & Advanced Features
- * 
+ *
  * Custom hook for managing workflow builder state including:
  * - Workflow CRUD operations
  * - Step management
@@ -11,64 +11,64 @@
  * - Auto-save functionality
  */
 
-"use client"
+"use client";
 
-import { useState, useCallback, useEffect, useRef } from 'react'
-import { toast } from 'sonner'
-import { 
-  getWorkflow, 
-  createWorkflow, 
-  updateWorkflow, 
+import { useState, useCallback, useEffect, useRef } from "react";
+import { toast } from "sonner";
+import {
+  getWorkflow,
+  createWorkflow,
+  updateWorkflow,
   getWorkflowSteps,
   createWorkflowStep,
   updateWorkflowStep,
   deleteWorkflowStep,
   reorderWorkflowSteps,
-} from '../actions/automation-actions'
-import type { 
-  Workflow, 
-  WorkflowStep, 
+} from "../actions/automation-actions";
+import type {
+  Workflow,
+  WorkflowStep,
   TriggerConfig,
   WorkflowUpdate,
-  WorkflowStepUpdate 
-} from '../types/automation-types'
+  WorkflowStepUpdate,
+} from "../types/automation-types";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 export interface UseWorkflowBuilderOptions {
-  autoSave?: boolean
-  autoSaveDelay?: number
-  onSave?: (workflow: Workflow) => void
-  onError?: (error: string) => void
+  autoSave?: boolean;
+  autoSaveDelay?: number;
+  onSave?: (workflow: Workflow) => void;
+  onError?: (error: string) => void;
 }
 
 export interface UseWorkflowBuilderReturn {
   // State
-  workflow: Workflow | null
-  steps: WorkflowStep[]
-  selectedStep: WorkflowStep | null
-  isDirty: boolean
-  isLoading: boolean
-  isSaving: boolean
-  error: string | null
-  
+  workflow: Workflow | null;
+  steps: WorkflowStep[];
+  selectedStep: WorkflowStep | null;
+  isDirty: boolean;
+  isLoading: boolean;
+  isSaving: boolean;
+  error: string | null;
+
   // Workflow actions
-  setTrigger: (trigger: TriggerConfig) => void
-  updateWorkflowData: (updates: WorkflowUpdate) => void
-  saveWorkflow: () => Promise<boolean>
-  
+  setTrigger: (trigger: TriggerConfig) => void;
+  updateWorkflowData: (updates: WorkflowUpdate) => void;
+  saveWorkflow: () => Promise<boolean>;
+
   // Step actions
-  addStep: (step: Partial<WorkflowStep>) => void
-  updateStep: (stepId: string, updates: WorkflowStepUpdate) => void
-  deleteStep: (stepId: string) => void
-  reorderSteps: (oldIndex: number, newIndex: number) => void
-  selectStep: (step: WorkflowStep | null) => void
-  
+  addStep: (step: Partial<WorkflowStep>) => void;
+  updateStep: (stepId: string, updates: WorkflowStepUpdate) => void;
+  deleteStep: (stepId: string) => void;
+  reorderSteps: (oldIndex: number, newIndex: number) => void;
+  selectStep: (step: WorkflowStep | null) => void;
+
   // Utility
-  resetBuilder: () => void
-  loadWorkflow: (workflowId: string) => Promise<void>
+  resetBuilder: () => void;
+  loadWorkflow: (workflowId: string) => Promise<void>;
 }
 
 // ============================================================================
@@ -76,16 +76,16 @@ export interface UseWorkflowBuilderReturn {
 // ============================================================================
 
 const DEFAULT_WORKFLOW: Partial<Workflow> = {
-  name: 'Untitled Workflow',
-  description: '',
-  trigger_type: 'event',
+  name: "Untitled Workflow",
+  description: "",
+  trigger_type: "event",
   trigger_config: {},
   is_active: false,
-  icon: 'Zap',
-  color: '#6366f1',
-  category: 'general',
+  icon: "Zap",
+  color: "#6366f1",
+  category: "general",
   tags: [],
-}
+};
 
 // ============================================================================
 // HOOK IMPLEMENTATION
@@ -94,145 +94,145 @@ const DEFAULT_WORKFLOW: Partial<Workflow> = {
 export function useWorkflowBuilder(
   workflowId: string | undefined,
   siteId: string,
-  options: UseWorkflowBuilderOptions = {}
+  options: UseWorkflowBuilderOptions = {},
 ): UseWorkflowBuilderReturn {
-  const {
-    autoSave = false,
-    autoSaveDelay = 2000,
-    onSave,
-    onError,
-  } = options
+  const { autoSave = false, autoSaveDelay = 2000, onSave, onError } = options;
 
   // Core state
-  const [workflow, setWorkflow] = useState<Workflow | null>(null)
-  const [steps, setSteps] = useState<WorkflowStep[]>([])
-  const [selectedStep, setSelectedStep] = useState<WorkflowStep | null>(null)
-  
+  const [workflow, setWorkflow] = useState<Workflow | null>(null);
+  const [steps, setSteps] = useState<WorkflowStep[]>([]);
+  const [selectedStep, setSelectedStep] = useState<WorkflowStep | null>(null);
+
   // UI state
-  const [isDirty, setIsDirty] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  
+  const [isDirty, setIsDirty] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   // Refs for auto-save and callbacks
-  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null)
-  const pendingChangesRef = useRef<WorkflowUpdate | null>(null)
-  const onErrorRef = useRef(onError)
-  const onSaveRef = useRef(onSave)
-  
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingChangesRef = useRef<WorkflowUpdate | null>(null);
+  const onErrorRef = useRef(onError);
+  const onSaveRef = useRef(onSave);
+
   // Keep refs updated
   useEffect(() => {
-    onErrorRef.current = onError
-    onSaveRef.current = onSave
-  }, [onError, onSave])
+    onErrorRef.current = onError;
+    onSaveRef.current = onSave;
+  }, [onError, onSave]);
 
   // ============================================================================
   // LOAD WORKFLOW
   // ============================================================================
 
   const loadWorkflow = useCallback(async (id: string) => {
-    setIsLoading(true)
-    setError(null)
-    
+    setIsLoading(true);
+    setError(null);
+
     try {
       // Load workflow
-      const workflowResult = await getWorkflow(id)
+      const workflowResult = await getWorkflow(id);
       if (!workflowResult.success || !workflowResult.data) {
-        throw new Error(workflowResult.error || 'Failed to load workflow')
+        throw new Error(workflowResult.error || "Failed to load workflow");
       }
-      setWorkflow(workflowResult.data)
-      
+      setWorkflow(workflowResult.data);
+
       // Load steps
-      const stepsResult = await getWorkflowSteps(id)
+      const stepsResult = await getWorkflowSteps(id);
       if (stepsResult.success && stepsResult.data) {
-        setSteps(stepsResult.data.sort((a, b) => a.position - b.position))
+        setSteps(stepsResult.data.sort((a, b) => a.position - b.position));
       }
-      
-      setIsDirty(false)
+
+      setIsDirty(false);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to load workflow'
-      setError(message)
-      onErrorRef.current?.(message)
+      const message =
+        err instanceof Error ? err.message : "Failed to load workflow";
+      setError(message);
+      onErrorRef.current?.(message);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, []) // No dependencies - uses refs for callbacks
+  }, []); // No dependencies - uses refs for callbacks
 
   // Load workflow on mount if ID provided
   useEffect(() => {
     if (workflowId) {
-      loadWorkflow(workflowId)
+      loadWorkflow(workflowId);
     } else {
       // Create new workflow state
       setWorkflow({
         ...DEFAULT_WORKFLOW,
         site_id: siteId,
-      } as Workflow)
-      setSteps([])
-      setIsDirty(false)
+      } as Workflow);
+      setSteps([]);
+      setIsDirty(false);
     }
-  }, [workflowId, siteId, loadWorkflow])
+  }, [workflowId, siteId, loadWorkflow]);
 
   // ============================================================================
   // AUTO-SAVE
   // ============================================================================
 
   useEffect(() => {
-    if (!autoSave || !isDirty || !workflow?.id) return
+    if (!autoSave || !isDirty || !workflow?.id) return;
 
     if (autoSaveTimerRef.current) {
-      clearTimeout(autoSaveTimerRef.current)
+      clearTimeout(autoSaveTimerRef.current);
     }
 
     autoSaveTimerRef.current = setTimeout(async () => {
       if (pendingChangesRef.current) {
-        await saveWorkflow()
+        await saveWorkflow();
       }
-    }, autoSaveDelay)
+    }, autoSaveDelay);
 
     return () => {
       if (autoSaveTimerRef.current) {
-        clearTimeout(autoSaveTimerRef.current)
+        clearTimeout(autoSaveTimerRef.current);
       }
-    }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoSave, autoSaveDelay, isDirty, workflow?.id])
+  }, [autoSave, autoSaveDelay, isDirty, workflow?.id]);
 
   // ============================================================================
   // WORKFLOW ACTIONS
   // ============================================================================
 
   const setTrigger = useCallback((triggerConfig: TriggerConfig) => {
-    setWorkflow(prev => {
-      if (!prev) return prev
+    setWorkflow((prev) => {
+      if (!prev) return prev;
       return {
         ...prev,
         trigger_config: triggerConfig,
-        trigger_type: triggerConfig.event_type ? 'event' : 
-                      triggerConfig.cron ? 'schedule' : 
-                      triggerConfig.endpoint_path ? 'webhook' : 'manual',
-      }
-    })
-    setIsDirty(true)
-  }, [])
+        trigger_type: triggerConfig.event_type
+          ? "event"
+          : triggerConfig.cron
+            ? "schedule"
+            : triggerConfig.endpoint_path
+              ? "webhook"
+              : "manual",
+      };
+    });
+    setIsDirty(true);
+  }, []);
 
   const updateWorkflowData = useCallback((updates: WorkflowUpdate) => {
-    setWorkflow(prev => {
-      if (!prev) return prev
-      return { ...prev, ...updates }
-    })
-    pendingChangesRef.current = { ...pendingChangesRef.current, ...updates }
-    setIsDirty(true)
-  }, [])
+    setWorkflow((prev) => {
+      if (!prev) return prev;
+      return { ...prev, ...updates };
+    });
+    pendingChangesRef.current = { ...pendingChangesRef.current, ...updates };
+    setIsDirty(true);
+  }, []);
 
   const saveWorkflow = useCallback(async (): Promise<boolean> => {
-    if (!workflow) return false
-    
-    setIsSaving(true)
-    setError(null)
-    
+    if (!workflow) return false;
+
+    setIsSaving(true);
+    setError(null);
+
     try {
-      let savedWorkflow: Workflow
+      let savedWorkflow: Workflow;
 
       if (workflow.id) {
         // Update existing workflow - include is_active!
@@ -242,253 +242,300 @@ export function useWorkflowBuilder(
           trigger_type: workflow.trigger_type,
           trigger_config: workflow.trigger_config,
           is_active: workflow.is_active,
-        })
-        
+        });
+
         if (!result.success || !result.data) {
-          throw new Error(result.error || 'Failed to update workflow')
+          throw new Error(result.error || "Failed to update workflow");
         }
-        savedWorkflow = result.data
+        savedWorkflow = result.data;
       } else {
         // Create new workflow
         const result = await createWorkflow(siteId, {
-          name: workflow.name || 'Untitled Workflow',
+          name: workflow.name || "Untitled Workflow",
           description: workflow.description || undefined,
           trigger_type: workflow.trigger_type,
           trigger_config: workflow.trigger_config,
-        })
-        
+        });
+
         if (!result.success || !result.data) {
-          throw new Error(result.error || 'Failed to create workflow')
+          throw new Error(result.error || "Failed to create workflow");
         }
-        savedWorkflow = result.data
+        savedWorkflow = result.data;
       }
-      
-      setWorkflow(savedWorkflow)
-      setIsDirty(false)
-      pendingChangesRef.current = null
-      onSaveRef.current?.(savedWorkflow)
-      
-      return true
+
+      setWorkflow(savedWorkflow);
+      setIsDirty(false);
+      pendingChangesRef.current = null;
+      onSaveRef.current?.(savedWorkflow);
+
+      return true;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to save workflow'
-      setError(message)
-      onErrorRef.current?.(message)
-      return false
+      const message =
+        err instanceof Error ? err.message : "Failed to save workflow";
+      setError(message);
+      onErrorRef.current?.(message);
+      return false;
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }, [workflow, siteId]) // Removed onSave, onError - using refs
+  }, [workflow, siteId]); // Removed onSave, onError - using refs
 
   // ============================================================================
   // STEP ACTIONS
   // ============================================================================
 
-  const addStep = useCallback(async (stepData: Partial<WorkflowStep>) => {
-    if (!workflow?.id) {
-      // Workflow not saved yet, save it first
-      const saved = await saveWorkflow()
-      if (!saved) {
-        toast.error('Please save the workflow first')
-        return
-      }
-    }
-
-    const stepToCreate = {
-      action_type: stepData.action_type || 'crm.update_contact',
-      action_config: stepData.action_config || {},
-      condition_config: (stepData.condition_config || undefined) as Record<string, unknown> | undefined,
-      delay_config: (stepData.delay_config || undefined) as Record<string, unknown> | undefined,
-      position: steps.length + 1,
-      on_error: 'fail' as const,
-      max_retries: 3,
-      retry_delay_seconds: 60,
-    }
-
-    // Optimistic update with temp step
-    const tempId = `temp-${Date.now()}`
-    const tempStep: WorkflowStep = { 
-      id: tempId,
-      workflow_id: workflow!.id,
-      name: stepData.name || 'New Step',
-      step_type: stepData.step_type || 'action',
-      position: stepToCreate.position,
-      action_type: stepToCreate.action_type,
-      action_config: stepToCreate.action_config,
-      condition_config: stepData.condition_config || { operator: 'and', conditions: [] },
-      delay_config: stepData.delay_config || { type: 'fixed', value: '0s' },
-      loop_config: { source: '', itemVariable: 'item', maxIterations: 100 },
-      parallel_config: { branches: [], waitForAll: true },
-      input_mapping: {},
-      output_key: null,
-      on_error: stepToCreate.on_error,
-      error_branch_step_id: null,
-      max_retries: stepToCreate.max_retries,
-      retry_delay_seconds: stepToCreate.retry_delay_seconds,
-      description: null,
-      is_active: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }
-    setSteps(prev => [...prev, tempStep])
-
-    try {
-      const result = await createWorkflowStep(workflow!.id, stepToCreate)
-      if (!result.success || !result.data) {
-        throw new Error(result.error || 'Failed to create step')
-      }
-      
-      // Replace temp step with real step
-      setSteps(prev => prev.map(s => s.id === tempId ? result.data! : s))
-    } catch (err) {
-      // Rollback optimistic update
-      setSteps(prev => prev.filter(s => s.id !== tempId))
-      const message = err instanceof Error ? err.message : 'Failed to add step'
-      toast.error(message)
-    }
-  }, [workflow, steps.length, saveWorkflow])
-
-  const updateStep = useCallback(async (stepId: string, updates: WorkflowStepUpdate) => {
-    // Skip server update for temporary steps (not yet saved to DB)
-    const isTempStep = stepId.startsWith('temp-')
-    
-    // Optimistic update (always do this even for temp steps)
-    setSteps(prev => prev.map(s => 
-      s.id === stepId ? { ...s, ...updates } : s
-    ))
-    
-    // Update selected step if it's the one being updated
-    setSelectedStep(prev => 
-      prev?.id === stepId ? { ...prev, ...updates } : prev
-    )
-
-    // Don't call server for temporary steps - they don't exist in DB yet
-    if (isTempStep) {
-      console.log('[Workflow Builder] Skipping server update for temporary step:', stepId)
-      return
-    }
-
-    // Convert updates to server format (null -> undefined for optional fields)
-    const serverUpdates: Partial<{
-      action_type: string
-      action_config: Record<string, unknown>
-      position: number
-      condition_config: Record<string, unknown>
-      delay_config: Record<string, unknown>
-      name: string
-      description: string
-      is_active: boolean
-      on_error: 'fail' | 'continue' | 'retry' | 'branch'
-      max_retries: number
-      retry_delay_seconds: number
-      input_mapping: Record<string, unknown>
-      output_key: string
-    }> = {}
-    
-    if (updates.action_type) serverUpdates.action_type = updates.action_type
-    if (updates.action_config) serverUpdates.action_config = updates.action_config
-    if (updates.position !== undefined) serverUpdates.position = updates.position
-    if (updates.condition_config) serverUpdates.condition_config = updates.condition_config as Record<string, unknown>
-    if (updates.delay_config) serverUpdates.delay_config = updates.delay_config as Record<string, unknown>
-    if (updates.name !== undefined) serverUpdates.name = updates.name || ''
-    if (updates.description !== undefined) serverUpdates.description = updates.description || ''
-    if (updates.is_active !== undefined) serverUpdates.is_active = updates.is_active
-    if (updates.on_error) serverUpdates.on_error = updates.on_error
-    if (updates.max_retries !== undefined) serverUpdates.max_retries = updates.max_retries
-    if (updates.retry_delay_seconds !== undefined) serverUpdates.retry_delay_seconds = updates.retry_delay_seconds
-    if (updates.input_mapping) serverUpdates.input_mapping = updates.input_mapping
-    if (updates.output_key !== undefined) serverUpdates.output_key = updates.output_key || ''
-
-    try {
-      const result = await updateWorkflowStep(stepId, serverUpdates)
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to update step')
-      }
-    } catch (err) {
-      // Rollback - reload steps
-      if (workflow?.id) {
-        const stepsResult = await getWorkflowSteps(workflow.id)
-        if (stepsResult.success && stepsResult.data) {
-          setSteps(stepsResult.data)
-          // If the selected step was stale, clear selection
-          if (selectedStep?.id === stepId) {
-            const reloaded = stepsResult.data.find(s => s.id === stepId)
-            setSelectedStep(reloaded || null)
-          }
+  const addStep = useCallback(
+    async (stepData: Partial<WorkflowStep>) => {
+      if (!workflow?.id) {
+        // Workflow not saved yet, save it first
+        const saved = await saveWorkflow();
+        if (!saved) {
+          toast.error("Please save the workflow first");
+          return;
         }
       }
-      const message = err instanceof Error ? err.message : 'Failed to update step'
-      // Show a user-friendly message for stale step IDs
-      if (message.includes('Step not found')) {
-        toast.error('This step was updated externally. The workflow has been refreshed.')
-      } else {
-        toast.error(message)
-      }
-    }
-  }, [workflow?.id])
 
-  const deleteStep = useCallback(async (stepId: string) => {
-    // Optimistic update
-    const deletedStep = steps.find(s => s.id === stepId)
-    setSteps(prev => prev.filter(s => s.id !== stepId))
-    
-    if (selectedStep?.id === stepId) {
-      setSelectedStep(null)
-    }
+      const stepToCreate = {
+        action_type: stepData.action_type || "crm.update_contact",
+        action_config: stepData.action_config || {},
+        condition_config: (stepData.condition_config || undefined) as
+          | Record<string, unknown>
+          | undefined,
+        delay_config: (stepData.delay_config || undefined) as
+          | Record<string, unknown>
+          | undefined,
+        position: steps.length + 1,
+        on_error: "fail" as const,
+        max_retries: 3,
+        retry_delay_seconds: 60,
+      };
 
-    try {
-      const result = await deleteWorkflowStep(stepId)
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to delete step')
-      }
-    } catch (err) {
-      // Rollback - add back deleted step
-      if (deletedStep) {
-        setSteps(prev => {
-          const newSteps = [...prev, deletedStep]
-          return newSteps.sort((a, b) => a.position - b.position)
-        })
-      }
-      const message = err instanceof Error ? err.message : 'Failed to delete step'
-      toast.error(message)
-    }
-  }, [steps, selectedStep?.id])
+      // Optimistic update with temp step
+      const tempId = `temp-${Date.now()}`;
+      const tempStep: WorkflowStep = {
+        id: tempId,
+        workflow_id: workflow!.id,
+        name: stepData.name || "New Step",
+        step_type: stepData.step_type || "action",
+        position: stepToCreate.position,
+        action_type: stepToCreate.action_type,
+        action_config: stepToCreate.action_config,
+        condition_config: stepData.condition_config || {
+          operator: "and",
+          conditions: [],
+        },
+        delay_config: stepData.delay_config || { type: "fixed", value: "0s" },
+        loop_config: { source: "", itemVariable: "item", maxIterations: 100 },
+        parallel_config: { branches: [], waitForAll: true },
+        input_mapping: {},
+        output_key: null,
+        on_error: stepToCreate.on_error,
+        error_branch_step_id: null,
+        max_retries: stepToCreate.max_retries,
+        retry_delay_seconds: stepToCreate.retry_delay_seconds,
+        description: null,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      setSteps((prev) => [...prev, tempStep]);
 
-  const reorderSteps = useCallback(async (oldIndex: number, newIndex: number) => {
-    if (!workflow?.id) return
-    
-    // Optimistic update
-    const newSteps = [...steps]
-    const [movedStep] = newSteps.splice(oldIndex, 1)
-    newSteps.splice(newIndex, 0, movedStep)
-    
-    // Update positions
-    const updatedSteps = newSteps.map((step, index) => ({
-      ...step,
-      position: index,
-    }))
-    
-    setSteps(updatedSteps)
+      try {
+        const result = await createWorkflowStep(workflow!.id, stepToCreate);
+        if (!result.success || !result.data) {
+          throw new Error(result.error || "Failed to create step");
+        }
 
-    try {
-      const stepIds = updatedSteps.map(s => s.id)
-      const result = await reorderWorkflowSteps(workflow.id, stepIds)
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to reorder steps')
+        // Replace temp step with real step
+        setSteps((prev) =>
+          prev.map((s) => (s.id === tempId ? result.data! : s)),
+        );
+      } catch (err) {
+        // Rollback optimistic update
+        setSteps((prev) => prev.filter((s) => s.id !== tempId));
+        const message =
+          err instanceof Error ? err.message : "Failed to add step";
+        toast.error(message);
       }
-    } catch (err) {
-      // Rollback - restore original order
-      const stepsResult = await getWorkflowSteps(workflow.id)
-      if (stepsResult.success && stepsResult.data) {
-        setSteps(stepsResult.data.sort((a, b) => a.position - b.position))
+    },
+    [workflow, steps.length, saveWorkflow],
+  );
+
+  const updateStep = useCallback(
+    async (stepId: string, updates: WorkflowStepUpdate) => {
+      // Skip server update for temporary steps (not yet saved to DB)
+      const isTempStep = stepId.startsWith("temp-");
+
+      // Optimistic update (always do this even for temp steps)
+      setSteps((prev) =>
+        prev.map((s) => (s.id === stepId ? { ...s, ...updates } : s)),
+      );
+
+      // Update selected step if it's the one being updated
+      setSelectedStep((prev) =>
+        prev?.id === stepId ? { ...prev, ...updates } : prev,
+      );
+
+      // Don't call server for temporary steps - they don't exist in DB yet
+      if (isTempStep) {
+        console.log(
+          "[Workflow Builder] Skipping server update for temporary step:",
+          stepId,
+        );
+        return;
       }
-      const message = err instanceof Error ? err.message : 'Failed to reorder steps'
-      toast.error(message)
-    }
-  }, [workflow?.id, steps])
+
+      // Convert updates to server format (null -> undefined for optional fields)
+      const serverUpdates: Partial<{
+        action_type: string;
+        action_config: Record<string, unknown>;
+        position: number;
+        condition_config: Record<string, unknown>;
+        delay_config: Record<string, unknown>;
+        name: string;
+        description: string;
+        is_active: boolean;
+        on_error: "fail" | "continue" | "retry" | "branch";
+        max_retries: number;
+        retry_delay_seconds: number;
+        input_mapping: Record<string, unknown>;
+        output_key: string;
+      }> = {};
+
+      if (updates.action_type) serverUpdates.action_type = updates.action_type;
+      if (updates.action_config)
+        serverUpdates.action_config = updates.action_config;
+      if (updates.position !== undefined)
+        serverUpdates.position = updates.position;
+      if (updates.condition_config)
+        serverUpdates.condition_config = updates.condition_config as Record<
+          string,
+          unknown
+        >;
+      if (updates.delay_config)
+        serverUpdates.delay_config = updates.delay_config as Record<
+          string,
+          unknown
+        >;
+      if (updates.name !== undefined) serverUpdates.name = updates.name || "";
+      if (updates.description !== undefined)
+        serverUpdates.description = updates.description || "";
+      if (updates.is_active !== undefined)
+        serverUpdates.is_active = updates.is_active;
+      if (updates.on_error) serverUpdates.on_error = updates.on_error;
+      if (updates.max_retries !== undefined)
+        serverUpdates.max_retries = updates.max_retries;
+      if (updates.retry_delay_seconds !== undefined)
+        serverUpdates.retry_delay_seconds = updates.retry_delay_seconds;
+      if (updates.input_mapping)
+        serverUpdates.input_mapping = updates.input_mapping;
+      if (updates.output_key !== undefined)
+        serverUpdates.output_key = updates.output_key || "";
+
+      try {
+        const result = await updateWorkflowStep(stepId, serverUpdates);
+        if (!result.success) {
+          throw new Error(result.error || "Failed to update step");
+        }
+      } catch (err) {
+        // Rollback - reload steps
+        if (workflow?.id) {
+          const stepsResult = await getWorkflowSteps(workflow.id);
+          if (stepsResult.success && stepsResult.data) {
+            setSteps(stepsResult.data);
+            // If the selected step was stale, clear selection
+            if (selectedStep?.id === stepId) {
+              const reloaded = stepsResult.data.find((s) => s.id === stepId);
+              setSelectedStep(reloaded || null);
+            }
+          }
+        }
+        const message =
+          err instanceof Error ? err.message : "Failed to update step";
+        // Show a user-friendly message for stale step IDs
+        if (message.includes("Step not found")) {
+          toast.error(
+            "This step was updated externally. The workflow has been refreshed.",
+          );
+        } else {
+          toast.error(message);
+        }
+      }
+    },
+    [workflow?.id],
+  );
+
+  const deleteStep = useCallback(
+    async (stepId: string) => {
+      // Optimistic update
+      const deletedStep = steps.find((s) => s.id === stepId);
+      setSteps((prev) => prev.filter((s) => s.id !== stepId));
+
+      if (selectedStep?.id === stepId) {
+        setSelectedStep(null);
+      }
+
+      try {
+        const result = await deleteWorkflowStep(stepId);
+        if (!result.success) {
+          throw new Error(result.error || "Failed to delete step");
+        }
+      } catch (err) {
+        // Rollback - add back deleted step
+        if (deletedStep) {
+          setSteps((prev) => {
+            const newSteps = [...prev, deletedStep];
+            return newSteps.sort((a, b) => a.position - b.position);
+          });
+        }
+        const message =
+          err instanceof Error ? err.message : "Failed to delete step";
+        toast.error(message);
+      }
+    },
+    [steps, selectedStep?.id],
+  );
+
+  const reorderSteps = useCallback(
+    async (oldIndex: number, newIndex: number) => {
+      if (!workflow?.id) return;
+
+      // Optimistic update
+      const newSteps = [...steps];
+      const [movedStep] = newSteps.splice(oldIndex, 1);
+      newSteps.splice(newIndex, 0, movedStep);
+
+      // Update positions
+      const updatedSteps = newSteps.map((step, index) => ({
+        ...step,
+        position: index,
+      }));
+
+      setSteps(updatedSteps);
+
+      try {
+        const stepIds = updatedSteps.map((s) => s.id);
+        const result = await reorderWorkflowSteps(workflow.id, stepIds);
+        if (!result.success) {
+          throw new Error(result.error || "Failed to reorder steps");
+        }
+      } catch (err) {
+        // Rollback - restore original order
+        const stepsResult = await getWorkflowSteps(workflow.id);
+        if (stepsResult.success && stepsResult.data) {
+          setSteps(stepsResult.data.sort((a, b) => a.position - b.position));
+        }
+        const message =
+          err instanceof Error ? err.message : "Failed to reorder steps";
+        toast.error(message);
+      }
+    },
+    [workflow?.id, steps],
+  );
 
   const selectStep = useCallback((step: WorkflowStep | null) => {
-    setSelectedStep(step)
-  }, [])
+    setSelectedStep(step);
+  }, []);
 
   // ============================================================================
   // UTILITY
@@ -498,13 +545,13 @@ export function useWorkflowBuilder(
     setWorkflow({
       ...DEFAULT_WORKFLOW,
       site_id: siteId,
-    } as Workflow)
-    setSteps([])
-    setSelectedStep(null)
-    setIsDirty(false)
-    setError(null)
-    pendingChangesRef.current = null
-  }, [siteId])
+    } as Workflow);
+    setSteps([]);
+    setSelectedStep(null);
+    setIsDirty(false);
+    setError(null);
+    pendingChangesRef.current = null;
+  }, [siteId]);
 
   // ============================================================================
   // RETURN
@@ -519,21 +566,21 @@ export function useWorkflowBuilder(
     isLoading,
     isSaving,
     error,
-    
+
     // Workflow actions
     setTrigger,
     updateWorkflowData,
     saveWorkflow,
-    
+
     // Step actions
     addStep,
     updateStep,
     deleteStep,
     reorderSteps,
     selectStep,
-    
+
     // Utility
     resetBuilder,
     loadWorkflow,
-  }
+  };
 }

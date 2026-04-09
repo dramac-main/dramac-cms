@@ -34,22 +34,22 @@
 
 ---
 
-## Latest Update: Automation Engine Live Integration Testing 🔄 (April 2026)
+## Latest Update: Automation Test Run UX + Email Editability ✅ (April 2026) — commit 47688ebc
 
-### Session: Live Deployment Bug Fixes (4 bugs fixed, 3 commits)
+### Session: Industry-Standard Test Run + Email Overrides (7 files, +665 -10)
 
-User performed real booking tests on Luxe Serenity Spa storefront (https://luxe-serenity.sites.dramacagency.com/booking).
+User tested "Test Run" on Booking Created Notifications workflow. Found empty trigger data, "Step not found" error, no email editability. All fixed:
 
-1. **triggerType literal "event" bug** — `queueWorkflowExecution` passed `"event"` instead of actual event type (commit c25bc6d5)
-2. **Vercel serverless lifecycle** — fire-and-forget `executeWorkflow()` killed by function teardown. Created `/api/automation/execute` internal endpoint with `maxDuration: 300`. Execution: 10+ min → 6 seconds (commit 1f0c044d)
-3. **Email branding mismatch** — `applySiteBranding()` overlay was never called; emails showed "Jacktest Ltd" instead of site name. Fixed in action-executor.ts (commit f9224dd6)
-4. **Raw ISO date formatting** — Emails showed "2026-04-30T10:00:00.000Z" instead of "30 Apr 2026 at 12:00 PM". Added `start_date_formatted`/`start_time_formatted` to all booking event emitters + updated all templates + all DB workflow steps (commit f9224dd6)
+1. **TestRunDialog** (NEW) — Industry-standard test run UX, collects sample trigger data per event type before execution (booking, CRM, forms, e-commerce, live chat, fallback)
+2. **Workflow builder** — Test Run button opens dialog instead of direct execution
+3. **"Step not found" error** — Graceful handling with auto-reload from DB
+4. **Email subject/body override fields** — Added to ACTION_REGISTRY for `email.send_branded_template`, plumbed through action-executor → send-branded-email
+5. **Chat step test-mode** — Detailed skip reasons explaining conversation ID requirement
+6. **triggerWorkflow** — Now stores eventType in execution context from dialog data or workflow trigger_config
 
-### Awaiting:
+**TypeScript:** 0 errors | **Tests:** 189/189 pass | **Committed:** 47688ebc, pushed to main
 
-- f9224dd6 deployment verification (currently BUILDING)
-- User retest with branding + date fix
-- Ecommerce order flow testing
+### Previous: Automation Engine Live Integration Testing ✅ (3 commits: c25bc6d5, 1f0c044d, f9224dd6)
 
 ### Previous: Automation Engine Runtime Fixes ✅ (8 bugs fixed)
 

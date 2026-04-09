@@ -649,7 +649,35 @@ export async function createPublicAppointment(
         );
     }
 
-    return { success: true, appointmentId: appointment?.id, status };
+    // Auto-create chat conversation for the booking (non-blocking)
+    // Ensures a conversation exists before the customer opens the chat widget.
+    // For bookings with payment required, this triggers the interactive payment flow.
+    if (input.customerEmail) {
+      const dateStr = formatDate(input.startTime);
+      const timeStr = formatTime(input.startTime);
+
+      import("@/modules/live-chat/lib/chat-event-bridge")
+        .then(({ createConversationForEntity }) =>
+          createConversationForEntity(siteId, {
+            entityType: "booking",
+            customerName: input.customerName,
+            customerEmail: input.customerEmail,
+            bookingId: appointment?.id,
+            serviceName: service.name || "Appointment",
+            bookingDate: dateStr,
+            bookingTime: timeStr,
+            bookingStatus: status,
+            paymentStatus,
+            paymentAmount: paymentAmount ? String(paymentAmount) : undefined,
+            currency: service.currency,
+          }),
+        )
+        .catch((err) =>
+          console.error("[Booking Public] Auto-chat creation error:", err),
+        );
+    }
+
+    return { success: true, appointmentId: appointment?.id, status, paymentStatus, paymentAmount: paymentAmount || 0, currency: service.currency || "ZMW" };
   } catch (err) {
     console.error(
       "[Booking Public] createPublicAppointment unexpected error:",
@@ -659,6 +687,193 @@ export async function createPublicAppointment(
       success: false,
       error: "An unexpected error occurred. Please try again.",
     };
+  }
+}
+
+// =============================================================================
+// BOOKING PAYMENT PROOF UPLOAD
+// =============================================================================
+
+/**
+ * Upload payment proof for a booking that requires advance payment.
+ * Mirrors the e-commerce uploadPaymentProof() flow but for appointments.
+ *
+ * 1. Validates the booking exists and needs payment
+ * 2. Uploads proof to payment-proofs storage bucket
+ * 3. Updates appointment metadata with proof info
+ * 4. Emits automation event
+ * 5. Notifies business owner + chat
+ */
+export async function uploadBookingPaymentProof(input: {
+  siteId: string;
+  appointmentId: string;
+  fileName: string;
+  fileBase64: string;
+  contentType: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = getPublicClient();
+
+    // Validate inputs
+    if (!input.siteId || !input.appointmentId || !input.fileBase64) {
+      return { success: false, error: "Missing required fields" };
+    }
+
+    // Validate content type
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/heic",
+      "application/pdf",
+    ];
+    if (!allowedTypes.includes(input.contentType)) {
+      return {
+        success: false,
+        error: "Invalid file type. Allowed: JPEG, PNG, WebP, HEIC, PDF",
+      };
+    }
+
+    // Verify appointment exists, belongs to site, and payment is pending
+    const { data: appointment, error: apptError } = await supabase
+      .from(`${TABLE_PREFIX}_appointments`)
+      .select(
+        "id, payment_status, payment_amount, customer_email, customer_name, metadata, service:mod_bookmod01_services(name, price, currency)",
+      )
+      .eq("id", input.appointmentId)
+      .eq("site_id", input.siteId)
+      .single();
+
+    if (apptError || !appointment) {
+      return { success: false, error: "Booking not found" };
+    }
+
+    if (appointment.payment_status === "paid") {
+      return { success: false, error: "Payment already confirmed" };
+    }
+
+    // Decode base64 to buffer
+    const fileBuffer = Buffer.from(input.fileBase64, "base64");
+
+    // Enforce 3 MB limit
+    if (fileBuffer.length > 3 * 1024 * 1024) {
+      return { success: false, error: "File too large. Maximum 3 MB." };
+    }
+
+    // Determine file extension
+    const extMap: Record<string, string> = {
+      "image/jpeg": "jpg",
+      "image/png": "png",
+      "image/webp": "webp",
+      "image/heic": "heic",
+      "application/pdf": "pdf",
+    };
+    const ext = extMap[input.contentType] || "bin";
+
+    // Upload to payment-proofs bucket (booking sub-path)
+    const storagePath = `${input.siteId}/booking-${input.appointmentId}/${Date.now()}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from("payment-proofs")
+      .upload(storagePath, fileBuffer, {
+        contentType: input.contentType,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error("[BookingPaymentProof] Upload error:", uploadError);
+      return { success: false, error: "Failed to upload file" };
+    }
+
+    // Update appointment metadata with proof info
+    const existingMetadata =
+      (appointment.metadata as Record<string, unknown>) || {};
+    const updatedMetadata = {
+      ...existingMetadata,
+      payment_proof: {
+        storage_path: storagePath,
+        file_name: input.fileName,
+        content_type: input.contentType,
+        file_size: fileBuffer.length,
+        uploaded_at: new Date().toISOString(),
+        status: "pending_review",
+      },
+    };
+
+    await supabase
+      .from(`${TABLE_PREFIX}_appointments`)
+      .update({ metadata: updatedMetadata })
+      .eq("id", appointment.id);
+
+    // Emit automation event
+    const serviceName = appointment.service?.name || "Appointment";
+    const currency = appointment.service?.currency || "ZMW";
+    const paymentAmount =
+      appointment.payment_amount || appointment.service?.price || 0;
+
+    logAutomationEvent(
+      input.siteId,
+      "booking.payment.proof_uploaded",
+      {
+        appointmentId: appointment.id,
+        serviceName,
+        customerEmail: appointment.customer_email,
+        customerName: appointment.customer_name,
+        fileName: input.fileName,
+        paymentAmount,
+        currency,
+      },
+      {
+        sourceModule: "booking",
+        sourceEntityType: "appointment",
+        sourceEntityId: appointment.id,
+      },
+    ).catch((err) =>
+      console.error("[BookingPaymentProof] Automation event error:", err),
+    );
+
+    // Notify business owner
+    try {
+      const { notifyBookingPaymentProofUploaded } = await import(
+        "@/lib/services/business-notifications"
+      );
+      await notifyBookingPaymentProofUploaded(
+        input.siteId,
+        serviceName,
+        appointment.customer_email || "",
+        appointment.customer_name || "Customer",
+        `${currency} ${paymentAmount.toFixed(2)}`,
+        input.fileName,
+      );
+    } catch (notifyErr) {
+      console.error(
+        "[BookingPaymentProof] Business notification error:",
+        notifyErr,
+      );
+    }
+
+    // Notify active chat conversation (async)
+    if (appointment.customer_email) {
+      import("@/modules/live-chat/lib/chat-event-bridge")
+        .then(({ notifyChatBookingPaymentProofUploaded }) =>
+          notifyChatBookingPaymentProofUploaded(
+            input.siteId,
+            appointment.customer_email,
+            serviceName,
+            input.fileName,
+          ),
+        )
+        .catch((err) =>
+          console.error(
+            "[BookingPaymentProof] Chat notification error:",
+            err,
+          ),
+        );
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("[BookingPaymentProof] Unexpected error:", error);
+    return { success: false, error: "An unexpected error occurred" };
   }
 }
 
