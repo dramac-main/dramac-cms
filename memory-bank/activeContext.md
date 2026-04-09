@@ -1,10 +1,10 @@
 # Active Context
 
-## Current Focus: Client Portal Overhaul — ALL 15 PHASES COMPLETE ✅
+## Current Focus: Client Portal Overhaul — ALL 15 PHASES COMPLETE + VERIFIED ✅
 
 ### Summary
 
-Transformed the client portal from a passive site viewer into a full business operations center. Implemented across 4 sessions with 15 phases covering auth, navigation, module pages, dashboard, security, and TypeScript verification.
+Transformed the client portal from a passive site viewer into a full business operations center. Implemented across 5 sessions with 15 phases covering auth, navigation, module pages, dashboard, security, and TypeScript verification. Final comprehensive audit verified all phases complete with 3 gap fixes applied.
 
 ### What Was Built (15 Phases)
 
@@ -59,6 +59,13 @@ Transformed the client portal from a passive site viewer into a full business op
 - Regenerated src/types/database.ts (580K chars) from Supabase with all new columns
 - Zero portal-related TS errors (only 4 pre-existing errors in automation/live-chat modules)
 
+**Final Comprehensive Audit (Session 5):**
+
+- Ran full spec-vs-code audit across all 15 phases
+- Fixed 4A: Portal user agent auto-creation (bootstrapLiveChatAgent now accepts role/display options, portal users created as "agent" role)
+- Fixed 6E/13B: Portal mode adaptations — EcommerceDashboard hides settings/developer/embed/marketing tabs + skips onboarding in portal; BookingDashboard hides settings/embed tabs
+- Verified 8B: CRM agencyId correctly handled (dashboard service uses agencyId for KPIs; CRMDashboard component uses siteId via CRMProvider — both correct)
+
 ### Key Technical Decisions
 
 - `src/types/database.ts` is the file used by Supabase client (NOT `src/lib/supabase/database.types.ts`)
@@ -88,6 +95,10 @@ Transformed the client portal from a passive site viewer into a full business op
 - src/types/database.ts (regenerated)
 - src/components/clients/client-portal-settings.tsx
 - src/config/index.ts
+- src/modules/live-chat/lib/bootstrap-agent.ts (portal agent role support)
+- src/modules/ecommerce/components/ecommerce-dashboard.tsx (portal mode: skip onboarding, pass portalMode to sidebar)
+- src/modules/ecommerce/components/layout/ecommerce-sidebar.tsx (hide admin tabs in portal)
+- src/modules/booking/components/booking-dashboard.tsx (hide settings/embed tabs in portal)
 
 ### Next Steps
 
