@@ -430,6 +430,9 @@ export async function createPublicAppointment(
   appointmentId?: string;
   status?: string;
   error?: string;
+  paymentStatus?: string;
+  paymentAmount?: number;
+  currency?: string;
 }> {
   try {
     const supabase = getPublicClient();
@@ -583,6 +586,67 @@ export async function createPublicAppointment(
         error: "Failed to create appointment. Please try again.",
       };
     }
+
+    // ── Auto-create guest customer record ─────────────────────────────────
+    // Ensures a mod_ecommod01_customers record exists so the visitor can
+    // create an account via BookingAccountNudge on the success screen.
+    // Mirrors the e-commerce guest customer auto-creation pattern.
+    if (input.customerEmail) {
+      try {
+        const ECOM_PREFIX = "mod_ecommod01";
+        const custEmail = input.customerEmail.toLowerCase();
+
+        // Get the site's agency_id
+        const { data: site } = await supabase
+          .from("sites")
+          .select("agency_id")
+          .eq("id", siteId)
+          .single();
+
+        // Try to find existing customer with this email for this site
+        const { data: existingCustomer } = await supabase
+          .from(`${ECOM_PREFIX}_customers`)
+          .select("id")
+          .eq("site_id", siteId)
+          .eq("email", custEmail)
+          .maybeSingle();
+
+        if (existingCustomer) {
+          // Update last-seen and phone if provided
+          await supabase
+            .from(`${ECOM_PREFIX}_customers`)
+            .update({
+              last_seen_at: new Date().toISOString(),
+              ...(input.customerPhone ? { phone: input.customerPhone } : {}),
+            })
+            .eq("id", existingCustomer.id);
+        } else {
+          // Parse name into first/last
+          const nameParts = (input.customerName || "").trim().split(/\s+/);
+          const firstName =
+            nameParts[0] || custEmail.split("@")[0] || "Guest";
+          const lastName = nameParts.slice(1).join(" ") || "";
+
+          await supabase.from(`${ECOM_PREFIX}_customers`).insert({
+            site_id: siteId,
+            agency_id: site?.agency_id,
+            first_name: firstName,
+            last_name: lastName,
+            email: custEmail,
+            phone: input.customerPhone || null,
+            is_guest: true,
+            status: "active",
+          });
+        }
+      } catch (custErr) {
+        // Non-critical — don't fail the booking if customer record creation fails
+        console.error(
+          "[Booking Public] Guest customer auto-create error:",
+          custErr,
+        );
+      }
+    }
+    // ── End guest customer auto-create ────────────────────────────────────
 
     // Get staff name if assigned
     let staffName: string | undefined;
