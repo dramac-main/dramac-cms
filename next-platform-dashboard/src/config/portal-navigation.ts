@@ -68,9 +68,9 @@ export function getPortalNavigationGroups(
 ): NavGroup[] {
   const hasModule = (slug: string) => installedModules.includes(slug);
 
-  // Helper to build site-scoped URLs
-  const siteUrl = (path: string) =>
-    siteId ? `/portal/sites/${siteId}/${path}` : `/portal/${path}`;
+  // Helper to build site-scoped URLs (returns null when no site context)
+  const siteUrl = (path: string): string | null =>
+    siteId ? `/portal/sites/${siteId}/${path}` : null;
 
   // === Main Group ===
   const mainItems: NavItem[] = [
@@ -80,79 +80,81 @@ export function getPortalNavigationGroups(
     { title: "Email", href: "/portal/email", icon: Mail },
   ];
 
-  // === Operations Group (only if any operational module is installed + permitted) ===
+  // === Operations Group (requires site context + module installed + permission) ===
   const operationsItems: NavItem[] = [];
 
-  if (hasModule("live-chat") && permissions.canManageLiveChat) {
-    operationsItems.push({
-      title: "Live Chat",
-      href: siteUrl("live-chat"),
-      icon: MessageCircle,
-    });
-  }
+  if (siteId) {
+    if (hasModule("live-chat") && permissions.canManageLiveChat) {
+      operationsItems.push({
+        title: "Live Chat",
+        href: siteUrl("live-chat")!,
+        icon: MessageCircle,
+      });
+    }
 
-  if (hasModule("ecommerce") && permissions.canManageOrders) {
-    operationsItems.push({
-      title: "Orders",
-      href: siteUrl("orders"),
-      icon: ShoppingCart,
-    });
-  }
+    if (hasModule("ecommerce") && permissions.canManageOrders) {
+      operationsItems.push({
+        title: "Orders",
+        href: siteUrl("orders")!,
+        icon: ShoppingCart,
+      });
+    }
 
-  if (hasModule("booking") && permissions.canManageBookings) {
-    operationsItems.push({
-      title: "Bookings",
-      href: siteUrl("bookings"),
-      icon: CalendarDays,
-    });
-  }
+    if (hasModule("booking") && permissions.canManageBookings) {
+      operationsItems.push({
+        title: "Bookings",
+        href: siteUrl("bookings")!,
+        icon: CalendarDays,
+      });
+    }
 
-  if (hasModule("ecommerce") && permissions.canManageProducts) {
-    operationsItems.push({
-      title: "Products",
-      href: siteUrl("products"),
-      icon: Package,
-    });
-  }
+    if (hasModule("ecommerce") && permissions.canManageProducts) {
+      operationsItems.push({
+        title: "Products",
+        href: siteUrl("products")!,
+        icon: Package,
+      });
+    }
 
-  if (hasModule("ecommerce") && permissions.canManageQuotes) {
-    operationsItems.push({
-      title: "Quotes",
-      href: siteUrl("quotes"),
-      icon: Receipt,
-    });
-  }
+    if (hasModule("ecommerce") && permissions.canManageQuotes) {
+      operationsItems.push({
+        title: "Quotes",
+        href: siteUrl("quotes")!,
+        icon: Receipt,
+      });
+    }
 
-  if (hasModule("crm") && permissions.canManageCrm) {
-    operationsItems.push({
-      title: "CRM",
-      href: siteUrl("crm"),
-      icon: Users,
-    });
-  }
+    if (hasModule("crm") && permissions.canManageCrm) {
+      operationsItems.push({
+        title: "CRM",
+        href: siteUrl("crm")!,
+        icon: Users,
+      });
+    }
 
-  if (hasModule("ecommerce") && permissions.canManageCustomers) {
-    operationsItems.push({
-      title: "Customers",
-      href: siteUrl("customers"),
-      icon: UserCog,
-    });
-  }
+    if (hasModule("ecommerce") && permissions.canManageCustomers) {
+      operationsItems.push({
+        title: "Customers",
+        href: siteUrl("customers")!,
+        icon: UserCog,
+      });
+    }
 
-  if (hasModule("automation") && permissions.canManageAutomation) {
-    operationsItems.push({
-      title: "Automation",
-      href: siteUrl("automation"),
-      icon: Zap,
-    });
-  }
+    if (hasModule("automation") && permissions.canManageAutomation) {
+      operationsItems.push({
+        title: "Automation",
+        href: siteUrl("automation")!,
+        icon: Zap,
+      });
+    }
 
-  if (hasModule("live-chat") && permissions.canManageAgents) {
-    operationsItems.push({
-      title: "Chat Agents",
-      href: siteUrl("chat-agents"),
-      icon: Bot,
-    });
+    if (hasModule("live-chat") && permissions.canManageAgents) {
+      operationsItems.push({
+        title: "Chat Agents",
+        href: siteUrl("chat-agents")!,
+        icon: Bot,
+      });
+    }
   }
 
   // === Content Group ===

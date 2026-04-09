@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { SidebarProvider } from "@/components/layout/sidebar-context";
 import { Sidebar } from "@/components/layout/sidebar-modern";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
@@ -116,6 +117,12 @@ export function PortalLayoutClient({
 /**
  * Inner layout component that has access to sidebar context
  */
+/**
+ * Extract siteId from the current URL path.
+ * Matches /portal/sites/{uuid}/... pattern.
+ */
+const SITE_PATH_REGEX = /^\/portal\/sites\/([0-9a-f-]{36})/i;
+
 function PortalLayoutInner({
   children,
   user,
@@ -131,6 +138,11 @@ function PortalLayoutInner({
   enableSwipeGestures: boolean;
 }) {
   const isMobile = useBreakpointDown("md");
+  const pathname = usePathname();
+
+  // Resolve siteId: prefer URL context (multi-site aware), fallback to single-site shortcut
+  const urlSiteId = pathname ? SITE_PATH_REGEX.exec(pathname)?.[1] : undefined;
+  const activeSiteId = urlSiteId || singleSiteId;
 
   // Get permissions from user
   const permissions: PortalUserPermissions = {
@@ -148,11 +160,12 @@ function PortalLayoutInner({
   };
 
   // Get navigation groups based on permissions and installed modules
+  // activeSiteId ensures correct site-scoped URLs for Operations links
   const portalNavGroups = getPortalNavigationGroups(
     permissions,
     installedModules || [],
     openTicketCount || 0,
-    singleSiteId,
+    activeSiteId,
   );
 
   // Content to render

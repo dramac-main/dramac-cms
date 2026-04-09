@@ -1,6 +1,6 @@
-"use server";
+﻿"use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export interface PortalSite {
   id: string;
@@ -37,7 +37,7 @@ export interface PortalSiteDetail extends PortalSite {
  * Get all sites for a client
  */
 export async function getClientSites(clientId: string): Promise<PortalSite[]> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("sites")
@@ -89,7 +89,7 @@ export async function getClientSite(
   clientId: string,
   siteId: string,
 ): Promise<PortalSiteDetail | null> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data: site, error } = await supabase
     .from("sites")
@@ -146,7 +146,7 @@ export async function getPortalAnalytics(
   clientId: string,
   siteId?: string,
 ): Promise<PortalAnalytics> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   // Get client's sites
   const siteQuery = supabase
@@ -234,7 +234,7 @@ export async function getClientInfo(clientId: string): Promise<{
   agencyId: string;
   agencyName: string;
 } | null> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("clients")
@@ -275,7 +275,7 @@ export async function getSitePermissions(
   canViewAnalytics: boolean;
   canPublish: boolean;
 } | null> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   // First check site-specific permissions
   const { data: sitePerms } = await supabase
@@ -319,12 +319,12 @@ export async function getSitePermissions(
 
 /**
  * Get deduplicated list of installed module slugs across all of a client's sites.
- * Used to drive portal navigation — only show nav items for installed modules.
+ * Used to drive portal navigation â€” only show nav items for installed modules.
  */
 export async function getClientInstalledModules(
   clientId: string,
 ): Promise<{ slugs: string[]; siteIds: string[] }> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   // Get all site IDs for this client
   const { data: sites } = await supabase

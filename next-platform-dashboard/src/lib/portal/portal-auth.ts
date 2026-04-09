@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 
@@ -32,15 +33,16 @@ export interface PortalUser {
  */
 export async function getPortalUser(): Promise<PortalUser | null> {
   const supabase = await createClient();
+  const admin = createAdminClient();
 
-  // Get authenticated user
+  // Get authenticated user (requires session cookies)
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  // Find client linked to this user
-  const { data: client, error } = await supabase
+  // Find client linked to this user (admin client bypasses RLS for portal users)
+  const { data: client, error } = await admin
     .from("clients")
     .select(
       `
@@ -74,7 +76,7 @@ export async function getPortalUser(): Promise<PortalUser | null> {
   }
 
   // Update last login (fire and forget)
-  supabase
+  admin
     .from("clients")
     .update({ portal_last_login: new Date().toISOString() })
     .eq("id", client.id)
@@ -144,6 +146,7 @@ export async function getPortalSession(): Promise<{
 
   if (impersonation.isImpersonating && impersonation.clientId) {
     const supabase = await createClient();
+    const admin = createAdminClient();
 
     // Verify the impersonating user belongs to the same agency as the client
     const {
@@ -151,7 +154,7 @@ export async function getPortalSession(): Promise<{
     } = await supabase.auth.getUser();
     let agencyFilter: string | null = null;
     if (authUser) {
-      const { data: profile } = await supabase
+      const { data: profile } = await admin
         .from("profiles")
         .select("agency_id")
         .eq("id", authUser.id)
@@ -159,7 +162,7 @@ export async function getPortalSession(): Promise<{
       agencyFilter = profile?.agency_id || null;
     }
 
-    let query = supabase
+    let query = admin
       .from("clients")
       .select(
         `
@@ -286,9 +289,10 @@ export async function sendMagicLink(
   email: string,
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
+  const admin = createAdminClient();
 
-  // First verify this email has portal access
-  const { data: client } = await supabase
+  // First verify this email has portal access (admin client bypasses RLS)
+  const { data: client } = await admin
     .from("clients")
     .select("id, portal_user_id, has_portal_access")
     .eq("email", email)
@@ -357,9 +361,9 @@ export async function portalSignOut(): Promise<void> {
  * Check if email has portal access
  */
 export async function checkPortalAccess(email: string): Promise<boolean> {
-  const supabase = await createClient();
+  const admin = createAdminClient();
 
-  const { data } = await supabase
+  const { data } = await admin
     .from("clients")
     .select("id")
     .eq("email", email)
@@ -379,9 +383,10 @@ export async function createPortalAccount(
   password: string,
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
+  const admin = createAdminClient();
 
-  // Check if client already has portal access
-  const { data: existingClient } = await supabase
+  // Check if client already has portal access (admin client bypasses RLS)
+  const { data: existingClient } = await admin
     .from("clients")
     .select("id, portal_user_id")
     .eq("id", clientId)
@@ -410,8 +415,8 @@ export async function createPortalAccount(
     };
   }
 
-  // Link to client
-  const { error: updateError } = await supabase
+  // Link to client (admin client bypasses RLS)
+  const { error: updateError } = await admin
     .from("clients")
     .update({
       portal_user_id: authData.user.id,
@@ -446,7 +451,7 @@ export async function updatePortalPermissions(
     canManageCustomers?: boolean;
   },
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
+  const admin = createAdminClient();
 
   const updateData: Record<string, boolean | undefined> = {};
   if (permissions.canViewAnalytics !== undefined)
@@ -474,7 +479,7 @@ export async function updatePortalPermissions(
   if (permissions.canManageCustomers !== undefined)
     updateData.can_manage_customers = permissions.canManageCustomers;
 
-  const { error } = await supabase
+  const { error } = await admin
     .from("clients")
     .update(updateData)
     .eq("id", clientId);
@@ -493,9 +498,10 @@ export async function resetPortalPassword(
   email: string,
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
+  const admin = createAdminClient();
 
-  // Verify this email has portal access
-  const { data: client } = await supabase
+  // Verify this email has portal access (admin client bypasses RLS)
+  const { data: client } = await admin
     .from("clients")
     .select("id, portal_user_id")
     .eq("email", email)
@@ -531,14 +537,14 @@ export async function updateClientSettings(settings: {
     return { success: false, error: "Not authenticated" };
   }
 
-  const supabase = await createClient();
+  const admin = createAdminClient();
 
   const updateData: Record<string, string> = {};
   if (settings.name) updateData.name = settings.name;
   if (settings.phone) updateData.phone = settings.phone;
   if (settings.company) updateData.company = settings.company;
 
-  const { error } = await supabase
+  const { error } = await admin
     .from("clients")
     .update(updateData)
     .eq("id", user.clientId);

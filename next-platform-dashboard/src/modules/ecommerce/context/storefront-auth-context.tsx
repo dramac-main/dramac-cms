@@ -63,9 +63,7 @@ export interface AuthContextValue {
     email: string,
   ) => Promise<{ error: string | null; message?: string }>;
   /** Send a 6-digit verification code to the email for ownership proof */
-  sendVerificationCode: (
-    email: string,
-  ) => Promise<{ error: string | null }>;
+  sendVerificationCode: (email: string) => Promise<{ error: string | null }>;
   /** Verify the 6-digit code and get a verificationToken for set-password */
   verifyEmailCode: (
     email: string,
@@ -136,9 +134,9 @@ export function StorefrontAuthProvider({
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
-  const [authDialogMode, setAuthDialogMode] = useState<"login" | "register" | "set-password">(
-    "login",
-  );
+  const [authDialogMode, setAuthDialogMode] = useState<
+    "login" | "register" | "set-password"
+  >("login");
 
   const storageKey = `dramac_customer_token_${siteId}`;
   const base =
@@ -459,11 +457,12 @@ export function StorefrontAuthProvider({
   );
 
   // ── Google Sign-In ──
-  const googleClientId = typeof window !== "undefined"
-    ? (window as any).__NEXT_DATA__?.props?.pageProps?.googleClientId
-      || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
-      || ""
-    : process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+  const googleClientId =
+    typeof window !== "undefined"
+      ? (window as any).__NEXT_DATA__?.props?.pageProps?.googleClientId ||
+        process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
+        ""
+      : process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
   const googleAuthAvailable = !!googleClientId;
 
   const loginWithGoogle = useCallback(() => {
@@ -503,10 +502,13 @@ export function StorefrontAuthProvider({
     window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
   }, [googleClientId, siteId]);
 
-  const openAuthDialog = useCallback((mode?: "login" | "register" | "set-password") => {
-    setAuthDialogMode(mode || "login");
-    setAuthDialogOpen(true);
-  }, []);
+  const openAuthDialog = useCallback(
+    (mode?: "login" | "register" | "set-password") => {
+      setAuthDialogMode(mode || "login");
+      setAuthDialogOpen(true);
+    },
+    [],
+  );
 
   const closeAuthDialog = useCallback(() => {
     setAuthDialogOpen(false);

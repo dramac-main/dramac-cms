@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { PortalUser } from "./portal-auth";
 import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
@@ -37,7 +37,7 @@ export async function getEffectivePermissions(
   clientId: string,
   siteId: string,
 ): Promise<EffectivePortalPermissions> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   // Fetch client-level permissions and site-level overrides in parallel
   const [clientResult, sitePermResult] = await Promise.all([
@@ -158,7 +158,7 @@ export async function verifyPortalModuleAccess(
   site: { id: string; name: string; agencyId: string };
   permissions: EffectivePortalPermissions;
 }> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   // 1. Verify the site belongs to this client
   const { data: site, error: siteError } = await supabase

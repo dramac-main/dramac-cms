@@ -112,10 +112,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (!siteId || !returnUrl || !nonce) {
-    return NextResponse.json(
-      { error: "Incomplete state" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Incomplete state" }, { status: 400 });
   }
 
   // ── Validate siteId format ──
@@ -128,9 +125,7 @@ export async function GET(request: NextRequest) {
   // ── Look up site ──
   const { data: site } = await (supabase as any)
     .from("sites")
-    .select(
-      "id, subdomain, custom_domain, custom_domain_verified, agency_id",
-    )
+    .select("id, subdomain, custom_domain, custom_domain_verified, agency_id")
     .eq("id", siteId)
     .single();
 
@@ -155,10 +150,7 @@ export async function GET(request: NextRequest) {
       );
     }
   } catch {
-    return NextResponse.json(
-      { error: "Invalid return URL" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Invalid return URL" }, { status: 400 });
   }
 
   // ── Validate Google OAuth is configured ──
@@ -166,7 +158,9 @@ export async function GET(request: NextRequest) {
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
-    console.error("[Google OAuth] GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not set");
+    console.error(
+      "[Google OAuth] GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not set",
+    );
     const url = new URL(returnUrl);
     url.searchParams.set("google_auth_error", "not_configured");
     return NextResponse.redirect(url.toString());
@@ -297,8 +291,7 @@ export async function GET(request: NextRequest) {
         site_id: siteId,
         agency_id: site.agency_id,
         email: emailLower,
-        first_name:
-          userInfo.given_name || emailLower.split("@")[0],
+        first_name: userInfo.given_name || emailLower.split("@")[0],
         last_name: userInfo.family_name || "",
         avatar_url: userInfo.picture || null,
         google_id: userInfo.id,
