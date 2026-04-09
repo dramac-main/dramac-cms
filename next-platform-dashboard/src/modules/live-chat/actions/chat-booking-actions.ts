@@ -27,7 +27,7 @@ import {
 } from "@/modules/live-chat/lib/chat-event-bridge";
 import { logAutomationEvent } from "@/modules/automation/services/event-processor";
 import { EVENT_REGISTRY } from "@/modules/automation/lib/event-types";
-import { formatDate, formatTime } from "@/lib/locale-config";
+import { formatDate, formatTime, DEFAULT_CURRENCY } from "@/lib/locale-config";
 import {
   dispatchNotification,
   dispatchChatNotification,
@@ -563,7 +563,7 @@ export async function updateBookingPaymentFromChat(
     if (customerEmail) {
       const priceStr =
         servicePrice > 0
-          ? `${currency || "USD"} ${servicePrice.toFixed(2)}`
+          ? `${currency || DEFAULT_CURRENCY} ${servicePrice.toFixed(2)}`
           : "your payment";
       dispatchChatNotification({
         siteId,
@@ -642,7 +642,7 @@ export async function updateBookingPaymentProofStatus(
   const serviceName = appointment.service?.name || "Appointment";
   const customerEmail = appointment.customer_email || "";
   const customerName = appointment.customer_name || "Customer";
-  const currency = appointment.service?.currency || "ZMW";
+  const currency = appointment.service?.currency || DEFAULT_CURRENCY;
   const paymentAmount =
     appointment.payment_amount || appointment.service?.price || 0;
   const priceStr = `${currency} ${paymentAmount.toFixed(2)}`;

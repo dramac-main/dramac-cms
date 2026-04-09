@@ -262,14 +262,27 @@ export async function generateAutoResponse(
     const allQuotes = customerCtx?.recentQuotes || [];
 
     // Fetch store payment instructions when relevant (orders OR bookings with payment)
+    // For bookings: check booking module's own instructions FIRST, then fall back to ecommerce
     let paymentInstructions: string | null = null;
     if (pendingManualOrder || pendingPaymentBooking) {
-      const { data: ecomSettings } = await supabase
-        .from("mod_ecommod01_settings")
-        .select("manual_payment_instructions, store_name, currency")
-        .eq("site_id", siteId)
-        .single();
-      paymentInstructions = ecomSettings?.manual_payment_instructions || null;
+      // If there's a pending booking, check booking-specific instructions first
+      if (pendingPaymentBooking) {
+        const { data: bookingSettings } = await supabase
+          .from("mod_bookmod01_settings")
+          .select("manual_payment_instructions")
+          .eq("site_id", siteId)
+          .single();
+        paymentInstructions = bookingSettings?.manual_payment_instructions || null;
+      }
+      // Fall back to ecommerce settings (always needed for orders, fallback for bookings)
+      if (!paymentInstructions) {
+        const { data: ecomSettings } = await supabase
+          .from("mod_ecommod01_settings")
+          .select("manual_payment_instructions, store_name, currency")
+          .eq("site_id", siteId)
+          .single();
+        paymentInstructions = ecomSettings?.manual_payment_instructions || null;
+      }
     }
 
     // ── PHASE LC-12: Payment method selection buttons ─────────────────────

@@ -235,7 +235,9 @@ export function WorkflowBuilder({
     setShowTestDialog(true);
   };
 
-  const handleTestRun = async (sampleData: Record<string, unknown>): Promise<string | null> => {
+  const handleTestRun = async (
+    sampleData: Record<string, unknown>,
+  ): Promise<string | null> => {
     if (!workflow?.id) return null;
     setIsTestRunning(true);
     try {

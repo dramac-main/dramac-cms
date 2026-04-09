@@ -354,6 +354,7 @@ export interface BookingSettings {
   // Payment
   require_payment: boolean
   payment_provider?: string | null
+  manual_payment_instructions?: string | null
   
   // Notifications
   notification_email?: string | null

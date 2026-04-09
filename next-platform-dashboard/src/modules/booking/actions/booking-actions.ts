@@ -1289,6 +1289,7 @@ export async function updateSettings(
     "logo_url",
     "require_payment",
     "payment_provider",
+    "manual_payment_instructions",
     "notification_email",
     "auto_create_crm_contact",
   ] as const;

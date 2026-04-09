@@ -1293,7 +1293,7 @@ export async function getTestRunEntities(
 
     // Extract data safely from settled promises
     const extract = (r: PromiseSettledResult<{ data: unknown }>) =>
-      r.status === "fulfilled" ? ((r.value?.data as unknown[]) || []) : [];
+      r.status === "fulfilled" ? (r.value?.data as unknown[]) || [] : [];
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const rawContacts = extract(contactsResult) as any[];
@@ -1374,9 +1374,8 @@ export async function triggerWorkflow(
     // so the execution engine can use it for template resolution
     const eventType =
       (triggerData?.eventType as string) ||
-      (
-        workflow.trigger_config as Record<string, unknown> | null
-      )?.event_type as string | undefined;
+      ((workflow.trigger_config as Record<string, unknown> | null)
+        ?.event_type as string | undefined);
 
     // Create execution
     const { data: execution, error: createError } = await supabase
@@ -1387,9 +1386,7 @@ export async function triggerWorkflow(
         trigger_type: "manual",
         trigger_data: (triggerData || {}) as unknown as Json,
         status: "pending",
-        context: (eventType
-          ? { eventType }
-          : {}) as unknown as Json,
+        context: (eventType ? { eventType } : {}) as unknown as Json,
       })
       .select("id")
       .single();
@@ -2700,9 +2697,7 @@ export async function ensureSystemPacksInstalled(
  *
  * Safe to call multiple times — idempotent. Only touches system workflows.
  */
-export async function upgradeSystemWorkflowSteps(
-  siteId: string,
-): Promise<{
+export async function upgradeSystemWorkflowSteps(siteId: string): Promise<{
   success: boolean;
   upgraded: number;
   skipped: number;
@@ -2724,7 +2719,12 @@ export async function upgradeSystemWorkflowSteps(
       .eq("is_system", true);
 
     if (fetchError) {
-      return { success: false, upgraded: 0, skipped: 0, errors: [fetchError.message] };
+      return {
+        success: false,
+        upgraded: 0,
+        skipped: 0,
+        errors: [fetchError.message],
+      };
     }
 
     if (!workflows || workflows.length === 0) {

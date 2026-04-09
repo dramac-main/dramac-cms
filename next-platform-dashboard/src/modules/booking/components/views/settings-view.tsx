@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -40,6 +41,8 @@ import {
   Save,
   Check,
   DollarSign,
+  Building2,
+  MessageCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { DEFAULT_CURRENCY, getCurrencySymbol } from "@/lib/locale-config";
@@ -130,6 +133,7 @@ export function SettingsView({ className }: SettingsViewProps) {
     reminder_hours: [24, 2],
     accent_color: "",
     require_payment: false,
+    manual_payment_instructions: "",
     auto_create_crm_contact: true,
     notification_email: "",
   });
@@ -152,6 +156,7 @@ export function SettingsView({ className }: SettingsViewProps) {
         reminder_hours: settings.reminder_hours || [24, 2],
         accent_color: settings.accent_color || "",
         require_payment: settings.require_payment ?? false,
+        manual_payment_instructions: settings.manual_payment_instructions || "",
         auto_create_crm_contact: settings.auto_create_crm_contact ?? true,
         notification_email: settings.notification_email || "",
       });
@@ -790,27 +795,64 @@ export function SettingsView({ className }: SettingsViewProps) {
                           </div>
                           <div>
                             <p className="text-sm font-medium">
-                              Collect Payment
+                              Chat Opens Automatically
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              Collect payment via your preferred method (cash,
-                              bank transfer, mobile money, etc.)
+                              A live chat conversation opens for the customer with Chiko (AI assistant) guiding them through payment
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                          <div className="flex items-center justify-center h-6 w-6 rounded-full bg-purple-500/20 text-purple-600 text-xs font-bold shrink-0 mt-0.5">
+                            3
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">
+                              Customer Pays &amp; Uploads Proof
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Customer selects a payment method, pays, and uploads proof of payment in the chat
                             </p>
                           </div>
                         </div>
                         <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
                           <div className="flex items-center justify-center h-6 w-6 rounded-full bg-green-500/20 text-green-600 text-xs font-bold shrink-0 mt-0.5">
-                            3
+                            4
                           </div>
                           <div>
-                            <p className="text-sm font-medium">Update Status</p>
+                            <p className="text-sm font-medium">Review &amp; Confirm</p>
                             <p className="text-xs text-muted-foreground">
-                              Mark payment as &quot;Paid&quot; from the
-                              appointment detail panel or live chat
+                              Review the payment proof in Live Chat and mark payment as &quot;Paid&quot; to confirm the booking
                             </p>
                           </div>
                         </div>
                       </div>
+                    </div>
+
+                    {/* Manual Payment Instructions */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4 text-muted-foreground" />
+                        <Label className="text-base">Payment Instructions</Label>
+                      </div>
+                      <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-900 flex gap-2">
+                        <MessageCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                        <p className="text-xs text-amber-700 dark:text-amber-300">
+                          Chiko (the AI chat assistant) will share these instructions with customers when guiding them through payment. Include your bank details, mobile money numbers, or other payment methods. Use clear formatting — each method on its own line.
+                        </p>
+                      </div>
+                      <Textarea
+                        value={formData.manual_payment_instructions || ""}
+                        onChange={(e) =>
+                          handleChange("manual_payment_instructions", e.target.value)
+                        }
+                        placeholder={`Bank Transfer:\nBank: Zambia National Commercial Bank\nAccount: 1234567890\nBranch: Cairo Road, Lusaka\nSwift: ZNCOZMLU\n\nMobile Money:\nMTN: 097XXXXXXX\nAirtel: 096XXXXXXX\n\nPlease use your booking reference as the payment reference.`}
+                        rows={10}
+                        className="font-mono text-sm"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Tip: List each payment method with a clear label and details. Chiko will present them as interactive buttons for the customer to choose from.
+                      </p>
                     </div>
 
                     {/* Payment Statuses Guide */}
@@ -853,8 +895,8 @@ export function SettingsView({ className }: SettingsViewProps) {
                     <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                       <p className="text-sm text-blue-700 dark:text-blue-300">
                         <strong>Coming Soon:</strong> Online payment gateway
-                        integration (Stripe, PayPal, mobile money) for automatic
-                        payment collection during booking.
+                        integration (Flutterwave, Pesapal, DPO, Paddle) for
+                        automatic payment collection during booking.
                       </p>
                     </div>
                   </>

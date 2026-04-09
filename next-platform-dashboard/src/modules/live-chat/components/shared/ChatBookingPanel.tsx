@@ -49,7 +49,7 @@ import {
   DollarSign,
 } from "lucide-react";
 import { toast } from "sonner";
-import { formatCurrency } from "@/lib/locale-config";
+import { formatCurrency, DEFAULT_CURRENCY } from "@/lib/locale-config";
 import {
   getBookingContextForChat,
   updateBookingStatusFromChat,
@@ -481,7 +481,7 @@ export function ChatBookingPanel({
               <p className="text-sm font-medium">
                 {formatCurrency(
                   booking.paymentAmount,
-                  booking.service?.currency || "USD",
+                  booking.service?.currency || DEFAULT_CURRENCY,
                 )}
               </p>
             </div>

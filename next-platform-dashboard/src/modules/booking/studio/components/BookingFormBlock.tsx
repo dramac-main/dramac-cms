@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import type { ComponentDefinition } from "@/types/studio";
 import { useCreateBooking } from "../../hooks/useCreateBooking";
+import { DEFAULT_CURRENCY } from "@/lib/locale-config";
 import { useStorefrontAuth } from "@/modules/ecommerce/context/storefront-auth-context";
 import { Button } from "@/components/ui/button";
 import {
@@ -429,7 +430,7 @@ export function BookingFormBlock({
   const [lastBookingId, setLastBookingId] = useState<string | null>(null);
   const [bookingPaymentRequired, setBookingPaymentRequired] = useState(false);
   const [bookingPaymentAmount, setBookingPaymentAmount] = useState(0);
-  const [bookingCurrency, setBookingCurrency] = useState("ZMW");
+  const [bookingCurrency, setBookingCurrency] = useState(DEFAULT_CURRENCY);
 
   const auth = useStorefrontAuth();
 
@@ -584,7 +585,7 @@ export function BookingFormBlock({
           setBookingPaymentRequired(true);
           setBookingPaymentAmount(result.payment_amount || 0);
           setBookingCurrency(
-            (result.metadata as Record<string, string>)?.currency || "ZMW",
+            (result.metadata as Record<string, string>)?.currency || DEFAULT_CURRENCY,
           );
         }
       } else {

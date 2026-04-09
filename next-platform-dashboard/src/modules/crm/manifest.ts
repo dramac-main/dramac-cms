@@ -7,6 +7,7 @@
  */
 
 import type { ModuleManifest } from '../_types'
+import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 
 export const CRMModuleManifest: ModuleManifest = {
   // Module Identity
@@ -140,8 +141,8 @@ export const CRMModuleManifest: ModuleManifest = {
         type: 'string',
         title: 'Default Currency',
         description: 'Default currency for deal values',
-        default: 'USD',
-        enum: ['USD', 'EUR', 'GBP', 'ZAR', 'CAD', 'AUD']
+        default: DEFAULT_CURRENCY,
+        enum: ['ZMW', 'USD', 'EUR', 'GBP', 'ZAR', 'CAD', 'AUD', 'KES', 'NGN', 'TZS', 'GHS', 'BWP', 'MWK', 'MZN', 'INR', 'JPY', 'CNY']
       },
       enableEmailTracking: {
         type: 'boolean',

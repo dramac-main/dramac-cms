@@ -465,8 +465,7 @@ function getSampleFieldsForEvent(
         key: "paymentStatus",
         label: "Payment Status",
         placeholder: "pending",
-        defaultValue:
-          eventType === "ecommerce.order.paid" ? "paid" : "pending",
+        defaultValue: eventType === "ecommerce.order.paid" ? "paid" : "pending",
         autoFrom: "order",
       },
       {
@@ -897,8 +896,8 @@ function EntitySelector({
         <div className="rounded-md border border-dashed border-amber-500/40 bg-amber-500/5 p-3 text-xs text-amber-600 dark:text-amber-400 flex items-start gap-2">
           <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
           <span>
-            No forms found. Create forms in the CRM module first, or type
-            sample data below.
+            No forms found. Create forms in the CRM module first, or type sample
+            data below.
           </span>
         </div>
       );
@@ -1147,10 +1146,7 @@ function ExecutionResultsPanel({
                       {step.stepName}
                     </span>
                     {step.actionType !== "unknown" && (
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] shrink-0"
-                      >
+                      <Badge variant="outline" className="text-[10px] shrink-0">
                         {step.actionType}
                       </Badge>
                     )}
@@ -1232,9 +1228,7 @@ export function TestRunDialog({
         }
       })
       .catch((err) => {
-        setEntitiesError(
-          err instanceof Error ? err.message : "Failed to load",
-        );
+        setEntitiesError(err instanceof Error ? err.message : "Failed to load");
       })
       .finally(() => setEntitiesLoading(false));
   }, [open, siteId, eventType]);
@@ -1428,13 +1422,9 @@ export function TestRunDialog({
                       onClick={() => {
                         setEntitiesLoading(true);
                         setEntitiesError(null);
-                        getTestRunEntities(
-                          siteId,
-                          getEventCategory(eventType),
-                        )
+                        getTestRunEntities(siteId, getEventCategory(eventType))
                           .then((res) => {
-                            if (res.success && res.data)
-                              setEntities(res.data);
+                            if (res.success && res.data) setEntities(res.data);
                           })
                           .finally(() => setEntitiesLoading(false));
                       }}
@@ -1476,9 +1466,7 @@ export function TestRunDialog({
                     <Input
                       type={field.type || "text"}
                       value={formData[field.key] || ""}
-                      onChange={(e) =>
-                        handleChange(field.key, e.target.value)
-                      }
+                      onChange={(e) => handleChange(field.key, e.target.value)}
                       placeholder={field.placeholder}
                       className="h-8 text-sm"
                       step={field.type === "number" ? "0.01" : undefined}

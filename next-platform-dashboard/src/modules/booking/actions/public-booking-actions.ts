@@ -14,7 +14,7 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logAutomationEvent } from "@/modules/automation/services/event-processor";
-import { formatDate, formatTime } from "@/lib/locale-config";
+import { formatDate, formatTime, DEFAULT_CURRENCY } from "@/lib/locale-config";
 import type {
   Service,
   Staff,
@@ -683,7 +683,7 @@ export async function createPublicAppointment(
       status,
       paymentStatus,
       paymentAmount: paymentAmount || 0,
-      currency: service.currency || "ZMW",
+      currency: service.currency || DEFAULT_CURRENCY,
     };
   } catch (err) {
     console.error(
@@ -813,7 +813,7 @@ export async function uploadBookingPaymentProof(input: {
 
     // Emit automation event
     const serviceName = appointment.service?.name || "Appointment";
-    const currency = appointment.service?.currency || "ZMW";
+    const currency = appointment.service?.currency || DEFAULT_CURRENCY;
     const paymentAmount =
       appointment.payment_amount || appointment.service?.price || 0;
 

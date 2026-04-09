@@ -9,11 +9,13 @@ User saw hardcoded sample data in TestRunDialog ("Sample Service", "50.00", "USD
 ### Changes Made (3 files, +1421 -145):
 
 **1. getTestRunEntities() server action** (automation-actions.ts)
+
 - Fetches 8 entity types in parallel via Promise.allSettled(): services, staff, products, orders, contacts, forms, conversations, quotes
 - Resolves siteCurrency from ecommerce settings and ownerEmail from sites→agencies→profiles chain
 - Filters by event category to only fetch relevant entities
 
 **2. TestRunDialog complete rewrite** (test-run-dialog.tsx, ~1200 lines)
+
 - EntitySelector component: dropdowns for all 5 event categories (booking services+staff, CRM contacts, ecommerce orders+quotes, forms definitions, live_chat conversations)
 - Auto-populates related fields when entity selected (e.g., select service → fills price, duration, currency, endTime, paymentStatus)
 - ExecutionResultsPanel: polls getExecutionDetails(executionId) every 2s, shows overall pass/fail with step count badge, per-step status/action/duration/error
@@ -23,21 +25,25 @@ User saw hardcoded sample data in TestRunDialog ("Sample Service", "50.00", "USD
 - "auto" badge on auto-populated fields, hasRequiredMissing validation
 
 **3. workflow-builder.tsx updates**
+
 - handleTestRun returns Promise<string|null> (executionId) instead of void
 - Dialog stays open after run for results tab viewing
 - Passes siteId prop to TestRunDialog
 
 ### Also committed (b29b9c8d):
+
 - Booking payment flow type fixes (public-booking-actions, useCreateBooking, BookingFormBlock)
 - Live-chat event bridge updates (chat-booking-actions, chat-event-bridge)
 - Memory bank sync
 
 ### Verification:
+
 - ✅ 0 TypeScript errors in modified files (5 pre-existing in booking/chat files)
 - ✅ 189/189 automation tests pass
 - ✅ Committed (40098a0d + b29b9c8d) and pushed to main
 
 ### Next Steps:
+
 - Verify Vercel deployment
 - Test the TestRunDialog with real data on live site
 - Fix 5 pre-existing TS errors in booking/chat files (paymentStatus type, chat-event-bridge import)
