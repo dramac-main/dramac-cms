@@ -71,6 +71,10 @@ export interface AuthContextValue {
     email: string,
     code: string,
   ) => Promise<{ error: string | null; verificationToken?: string }>;
+  /** Redirect to Google Sign-In */
+  loginWithGoogle: () => void;
+  /** Whether Google Sign-In is configured and available */
+  googleAuthAvailable: boolean;
   /** Open the auth dialog (login/register) */
   openAuthDialog: (mode?: "login" | "register" | "set-password") => void;
   /** Close the auth dialog */
@@ -96,6 +100,8 @@ const AuthContext = createContext<AuthContextValue>({
   requestMagicLink: async () => ({ error: null }),
   sendVerificationCode: async () => ({ error: null }),
   verifyEmailCode: async () => ({ error: null }),
+  loginWithGoogle: () => {},
+  googleAuthAvailable: false,
   openAuthDialog: () => {},
   closeAuthDialog: () => {},
   authDialogOpen: false,
@@ -160,6 +166,49 @@ export function StorefrontAuthProvider({
     // Check for magic link token in URL (?magic_token=...)
     const urlParams = new URLSearchParams(window.location.search);
     const magicToken = urlParams.get("magic_token");
+    // Check for Google auth exchange token (?google_auth_token=...)
+    const googleAuthToken = urlParams.get("google_auth_token");
+    const googleAuthNonce = urlParams.get("google_auth_nonce");
+    const googleAuthError = urlParams.get("google_auth_error");
+
+    // Clean Google error params from URL
+    if (googleAuthError) {
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete("google_auth_error");
+      window.history.replaceState({}, "", cleanUrl.toString());
+      // Silently ignore — user cancelled or Google returned an error
+      // Fall through to normal session restore below
+    }
+
+    // Handle Google auth exchange token (same mechanism as magic links)
+    if (googleAuthToken) {
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete("google_auth_token");
+      cleanUrl.searchParams.delete("google_auth_nonce");
+      window.history.replaceState({}, "", cleanUrl.toString());
+
+      // Verify nonce matches what we stored before redirect (CSRF protection)
+      const storedNonce = sessionStorage.getItem("google_auth_nonce");
+      if (storedNonce && googleAuthNonce && storedNonce !== googleAuthNonce) {
+        console.warn("[Auth] Google auth nonce mismatch — possible CSRF");
+        setIsLoading(false);
+        return;
+      }
+      sessionStorage.removeItem("google_auth_nonce");
+
+      // Exchange the short-lived token for a full session (reuses magic link mechanism)
+      callAuth({ action: "session", token: googleAuthToken })
+        .then((data) => {
+          if (data?.customer) {
+            const sessionToken = data.token || googleAuthToken;
+            saveSession(sessionToken, data.customer);
+            mergeGuestCart(data.customer.id);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setIsLoading(false));
+      return;
+    }
 
     if (magicToken) {
       // Clean the magic_token from the URL to prevent reuse / bookmarking
@@ -409,6 +458,51 @@ export function StorefrontAuthProvider({
     [callAuth],
   );
 
+  // ── Google Sign-In ──
+  const googleClientId = typeof window !== "undefined"
+    ? (window as any).__NEXT_DATA__?.props?.pageProps?.googleClientId
+      || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+      || ""
+    : process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+  const googleAuthAvailable = !!googleClientId;
+
+  const loginWithGoogle = useCallback(() => {
+    if (!googleClientId) {
+      console.warn("[Auth] Google Sign-In not configured");
+      return;
+    }
+
+    // Generate and store nonce for CSRF protection
+    const nonce = crypto.randomUUID();
+    sessionStorage.setItem("google_auth_nonce", nonce);
+
+    // Build state payload
+    const state = btoa(
+      JSON.stringify({
+        siteId,
+        returnUrl: window.location.origin + window.location.pathname,
+        nonce,
+      }),
+    );
+
+    // Google OAuth redirect URI — always the centralized app domain
+    const appDomain =
+      process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com";
+    const redirectUri = `${appDomain}/api/auth/google/callback`;
+
+    const params = new URLSearchParams({
+      client_id: googleClientId,
+      redirect_uri: redirectUri,
+      response_type: "code",
+      scope: "openid email profile",
+      state,
+      prompt: "select_account",
+      access_type: "online",
+    });
+
+    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+  }, [googleClientId, siteId]);
+
   const openAuthDialog = useCallback((mode?: "login" | "register" | "set-password") => {
     setAuthDialogMode(mode || "login");
     setAuthDialogOpen(true);
@@ -433,6 +527,8 @@ export function StorefrontAuthProvider({
         requestMagicLink,
         sendVerificationCode,
         verifyEmailCode,
+        loginWithGoogle,
+        googleAuthAvailable,
         openAuthDialog,
         closeAuthDialog,
         authDialogOpen,
