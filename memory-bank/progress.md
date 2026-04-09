@@ -34,9 +34,50 @@
 
 ---
 
-## Latest Update: Production-Fidelity TestRunDialog ✅ (April 2026) — commit 40098a0d
+## Latest Update: Client Portal Overhaul — ALL 15 PHASES COMPLETE ✅ (April 2026)
 
-### Session: Real Database Entities in Test Dialog (3 files, +1421 -145)
+### Enterprise Portal Transformation (4 sessions, 15 phases, ~30 files)
+
+Transformed the client portal from a passive site viewer into a full business operations center with module-aware navigation, permission-gated access, operational KPI dashboards, and comprehensive security.
+
+**Key deliverables:**
+
+- 9 new DB permission columns on `clients` table + `client_site_permissions` table
+- Complete portal auth system (portal-auth.ts, portal-permissions.ts, portal-context.tsx)
+- Module registry + dynamic navigation based on permissions + installed modules
+- 11 portal route pages for Live Chat, E-Commerce (orders/products/quotes/customers), Booking, CRM, Automation, Chat Agents
+- Dashboard redesign with parallel KPI fetching from 5 modules
+- Site detail enhancement with module operation cards
+- 6 CRITICAL cross-agency security vulnerabilities fixed in clients.ts
+- Defense-in-depth agency check on impersonation flow
+- Supabase types regenerated (580K chars) — zero portal TS errors
+- tsc requires `NODE_OPTIONS="--max-old-space-size=8192"` due to large types file
+
+## Previous Update: Email Recipient Routing Fix ✅ (April 2026) — commit cdd20df0
+
+### Critical Bug Fix (1 file, +311 -590)
+
+All 19 notification functions were emailing the agency owner instead of the actual business/site owner (client). Created `resolveBusinessOwner()` helper that checks `sites.client_id → clients.email` first, falls back to agency owner. In-app notifications still go to agency owner (dashboard access).
+
+## Previous Update: Email OTP Verification for Storefront Account Creation ✅ (April 2026) — commit 2bba73ce
+
+### Session: Production Security Hardening (8 files, +860 -159)
+
+Closed critical security gap: guest account nudge components allowed password claiming without email ownership proof.
+
+**Implemented:**
+
+- DB table `mod_ecommod01_email_verifications` (SHA-256, 10-min expiry, 5 attempts)
+- Auth API: `send-verification-code`, `verify-email-code` actions + `set-password` now requires OTP token for email-only guests
+- Email templates (standard + branded) for verification codes
+- StorefrontAuthProvider: `sendVerificationCode()`, `verifyEmailCode()` methods
+- All 3 account nudge components (Booking, E-Commerce, Quote) rewritten to 3-step OTP flow
+
+**Also this session:**
+
+- Booking payment parity fixes (commit 9841f9e8)
+- Step toggle toast feedback + OFF badge (commit c07a5cc9)
+- Booking guest customer auto-creation (commit 7dca76ab)
 
 Complete TestRunDialog rewrite for production parity. EntitySelector dropdowns for all 5 event categories, auto-populating fields from real database entities. ExecutionResultsPanel with step-by-step validation. Snake_case aliases for all trigger data. Zero hardcoded sample data. Also committed booking/chat type fixes (b29b9c8d).
 

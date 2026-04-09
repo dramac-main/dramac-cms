@@ -421,12 +421,12 @@ export function NodeConfigPanel({
               <Switch
                 checked={step.is_active}
                 onCheckedChange={(checked) => {
-                  onUpdate(step.id, { is_active: checked })
+                  onUpdate(step.id, { is_active: checked });
                   toast.success(
                     checked
-                      ? `"${step.name || 'Step'}" enabled — will run during execution`
-                      : `"${step.name || 'Step'}" disabled — will be skipped during execution`,
-                  )
+                      ? `"${step.name || "Step"}" enabled — will run during execution`
+                      : `"${step.name || "Step"}" disabled — will be skipped during execution`,
+                  );
                 }}
               />
             </div>

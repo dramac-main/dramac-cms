@@ -41,14 +41,16 @@ export async function getClientSites(clientId: string): Promise<PortalSite[]> {
 
   const { data, error } = await supabase
     .from("sites")
-    .select(`
+    .select(
+      `
       id, 
       name, 
       subdomain, 
       custom_domain, 
       published, 
       updated_at
-    `)
+    `,
+    )
     .eq("client_id", clientId)
     .order("name");
 
@@ -58,14 +60,14 @@ export async function getClientSites(clientId: string): Promise<PortalSite[]> {
   }
 
   // Get page counts separately
-  const siteIds = data.map(s => s.id);
+  const siteIds = data.map((s) => s.id);
   const { data: pageCounts } = await supabase
     .from("pages")
     .select("site_id")
     .in("site_id", siteIds);
 
   const pageCountMap = new Map<string, number>();
-  pageCounts?.forEach(p => {
+  pageCounts?.forEach((p) => {
     pageCountMap.set(p.site_id, (pageCountMap.get(p.site_id) || 0) + 1);
   });
 
@@ -85,20 +87,22 @@ export async function getClientSites(clientId: string): Promise<PortalSite[]> {
  */
 export async function getClientSite(
   clientId: string,
-  siteId: string
+  siteId: string,
 ): Promise<PortalSiteDetail | null> {
   const supabase = await createClient();
 
   const { data: site, error } = await supabase
     .from("sites")
-    .select(`
+    .select(
+      `
       id, 
       name, 
       subdomain, 
       custom_domain, 
       published, 
       updated_at
-    `)
+    `,
+    )
     .eq("id", siteId)
     .eq("client_id", clientId)
     .single();
@@ -123,7 +127,7 @@ export async function getClientSite(
     isPublished: site.published ?? false,
     lastUpdatedAt: site.updated_at,
     pageCount: pages?.length || 0,
-    pages: (pages || []).map(p => ({
+    pages: (pages || []).map((p) => ({
       id: p.id,
       title: p.name,
       slug: p.slug,
@@ -140,7 +144,7 @@ export async function getClientSite(
  */
 export async function getPortalAnalytics(
   clientId: string,
-  siteId?: string
+  siteId?: string,
 ): Promise<PortalAnalytics> {
   const supabase = await createClient();
 
@@ -166,7 +170,7 @@ export async function getPortalAnalytics(
     };
   }
 
-  const siteIds = sites.map(s => s.id);
+  const siteIds = sites.map((s) => s.id);
 
   // Try to get real analytics from site_analytics table (if it exists)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -189,8 +193,8 @@ export async function getPortalAnalytics(
   const totalSubmissions = submissions?.length || 0;
 
   // Build top pages from actual site pages
-  const topPages = (pages || []).slice(0, 5).map(p => ({
-    page: p.slug || `/${p.name?.toLowerCase().replace(/\s+/g, '-') || ''}`,
+  const topPages = (pages || []).slice(0, 5).map((p) => ({
+    page: p.slug || `/${p.name?.toLowerCase().replace(/\s+/g, "-") || ""}`,
     views: 0, // No real page view tracking yet
   }));
 
@@ -201,9 +205,11 @@ export async function getPortalAnalytics(
     const date = new Date(today);
     date.setDate(date.getDate() - i);
     const dateStr = date.toISOString().split("T")[0];
-    const daySubmissions = (submissions || []).filter((s: { created_at: string }) => {
-      return s.created_at?.startsWith(dateStr);
-    });
+    const daySubmissions = (submissions || []).filter(
+      (s: { created_at: string }) => {
+        return s.created_at?.startsWith(dateStr);
+      },
+    );
     visitsByDay.push({ date: dateStr, visits: daySubmissions.length });
   }
 
@@ -232,13 +238,15 @@ export async function getClientInfo(clientId: string): Promise<{
 
   const { data, error } = await supabase
     .from("clients")
-    .select(`
+    .select(
+      `
       name,
       company,
       email,
       agency_id,
       agencies(name)
-    `)
+    `,
+    )
     .eq("id", clientId)
     .single();
 
@@ -260,7 +268,7 @@ export async function getClientInfo(clientId: string): Promise<{
  */
 export async function getSitePermissions(
   clientId: string,
-  siteId: string
+  siteId: string,
 ): Promise<{
   canView: boolean;
   canEditContent: boolean;
@@ -303,4 +311,54 @@ export async function getSitePermissions(
     canViewAnalytics: client.can_view_analytics ?? true,
     canPublish: false,
   };
+}
+
+// =============================================================================
+// INSTALLED MODULES
+// =============================================================================
+
+/**
+ * Get deduplicated list of installed module slugs across all of a client's sites.
+ * Used to drive portal navigation — only show nav items for installed modules.
+ */
+export async function getClientInstalledModules(
+  clientId: string,
+): Promise<{ slugs: string[]; siteIds: string[] }> {
+  const supabase = await createClient();
+
+  // Get all site IDs for this client
+  const { data: sites } = await supabase
+    .from("sites")
+    .select("id")
+    .eq("client_id", clientId);
+
+  if (!sites || sites.length === 0) {
+    return { slugs: [], siteIds: [] };
+  }
+
+  const siteIds = sites.map((s) => s.id);
+
+  // Get all enabled module installations for these sites
+  const { data: installations } = await supabase
+    .from("site_module_installations")
+    .select("module_id")
+    .in("site_id", siteIds)
+    .eq("is_enabled", true);
+
+  if (!installations || installations.length === 0) {
+    return { slugs: [], siteIds };
+  }
+
+  // Deduplicate module IDs
+  const moduleIds = [...new Set(installations.map((i) => i.module_id))];
+
+  // Resolve slugs from modules_v2
+  const { data: modules } = await supabase
+    .from("modules_v2")
+    .select("slug")
+    .in("id", moduleIds);
+
+  const slugs = [...new Set((modules || []).map((m) => m.slug))];
+
+  return { slugs, siteIds };
 }

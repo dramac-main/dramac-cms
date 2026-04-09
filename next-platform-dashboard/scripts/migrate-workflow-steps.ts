@@ -15,7 +15,9 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
-  console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local");
+  console.error(
+    "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local",
+  );
   process.exit(1);
 }
 
@@ -41,7 +43,9 @@ async function migrate() {
     process.exit(1);
   }
 
-  const uniqueSiteIds = [...new Set((sites || []).map((s: { site_id: string }) => s.site_id))];
+  const uniqueSiteIds = [
+    ...new Set((sites || []).map((s: { site_id: string }) => s.site_id)),
+  ];
   console.log(`Found ${uniqueSiteIds.length} site(s) with system workflows.\n`);
 
   let totalUpgraded = 0;
@@ -70,7 +74,7 @@ async function migrate() {
       }
 
       const template = SYSTEM_WORKFLOW_TEMPLATES.find(
-        (t) => t.systemEventType === eventType
+        (t) => t.systemEventType === eventType,
       );
       if (!template) {
         totalSkipped++;
@@ -83,8 +87,9 @@ async function migrate() {
         .select("id, action_type")
         .eq("workflow_id", wf.id);
 
-      const hasStale = (existingSteps || []).some((s: { action_type: string }) =>
-        STALE_ACTION_TYPES.includes(s.action_type)
+      const hasStale = (existingSteps || []).some(
+        (s: { action_type: string }) =>
+          STALE_ACTION_TYPES.includes(s.action_type),
       );
 
       if (!hasStale) {
@@ -109,7 +114,11 @@ async function migrate() {
         name: step.name,
         step_type: step.step_type,
         action_type: step.action_type || null,
-        action_config: step.action_config || step.condition_config || step.delay_config || {},
+        action_config:
+          step.action_config ||
+          step.condition_config ||
+          step.delay_config ||
+          {},
         position: index + 1,
         is_active: true,
       }));
@@ -119,7 +128,9 @@ async function migrate() {
         .insert(newSteps);
 
       if (insertErr) {
-        errors.push(`Workflow "${wf.name}": insert failed — ${insertErr.message}`);
+        errors.push(
+          `Workflow "${wf.name}": insert failed — ${insertErr.message}`,
+        );
         continue;
       }
 

@@ -9,6 +9,7 @@
 
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useIsPortalView } from "@/lib/portal/portal-context";
 import { CalendarView } from "./views/calendar-view";
 import { AppointmentsView } from "./views/appointments-view";
 import { ServicesView } from "./views/services-view";
@@ -88,6 +89,7 @@ function BookingDashboardContent({ initialView }: { initialView?: string }) {
   const [showCreateService, setShowCreateService] = useState(false);
   const [showCreateStaff, setShowCreateStaff] = useState(false);
   const [showCreateAppointment, setShowCreateAppointment] = useState(false);
+  const isPortal = useIsPortalView();
 
   // Detail sheets state
   const [selectedAppointment, setSelectedAppointment] =
@@ -314,14 +316,18 @@ function BookingDashboardContent({ initialView }: { initialView?: string }) {
                 <BarChart3 className="h-4 w-4" />
                 Analytics
               </TabsTrigger>
-              <TabsTrigger value="settings" className="gap-2">
-                <Settings className="h-4 w-4" />
-                Settings
-              </TabsTrigger>
-              <TabsTrigger value="embed" className="gap-2">
-                <Code className="h-4 w-4" />
-                Embed
-              </TabsTrigger>
+              {!isPortal && (
+                <TabsTrigger value="settings" className="gap-2">
+                  <Settings className="h-4 w-4" />
+                  Settings
+                </TabsTrigger>
+              )}
+              {!isPortal && (
+                <TabsTrigger value="embed" className="gap-2">
+                  <Code className="h-4 w-4" />
+                  Embed
+                </TabsTrigger>
+              )}
             </TabsList>
           </div>
 

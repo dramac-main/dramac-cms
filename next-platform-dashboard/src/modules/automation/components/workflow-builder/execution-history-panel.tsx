@@ -15,7 +15,10 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { getWorkflowExecutions } from "../../actions/automation-actions";
-import type { WorkflowExecution, ExecutionStatus } from "../../types/automation-types";
+import type {
+  WorkflowExecution,
+  ExecutionStatus,
+} from "../../types/automation-types";
 
 interface ExecutionHistoryPanelProps {
   workflowId: string;
@@ -27,7 +30,11 @@ const statusConfig: Record<
   ExecutionStatus,
   { icon: typeof CheckCircle2; label: string; color: string }
 > = {
-  completed: { icon: CheckCircle2, label: "Completed", color: "text-green-600" },
+  completed: {
+    icon: CheckCircle2,
+    label: "Completed",
+    color: "text-green-600",
+  },
   failed: { icon: CircleX, label: "Failed", color: "text-red-600" },
   running: { icon: Loader2, label: "Running", color: "text-blue-600" },
   pending: { icon: Clock, label: "Pending", color: "text-yellow-600" },

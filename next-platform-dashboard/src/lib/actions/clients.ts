@@ -2,7 +2,10 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { createClientSchema, updateClientSchema } from "@/lib/validations/client";
+import {
+  createClientSchema,
+  updateClientSchema,
+} from "@/lib/validations/client";
 import type { ClientFilters } from "@/types/client";
 
 // Get all clients for the current organization
@@ -10,7 +13,9 @@ export async function getClients(filters?: ClientFilters) {
   const supabase = await createClient();
 
   // Get current user's organization
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
   const { data: profile } = await supabase
@@ -24,15 +29,19 @@ export async function getClients(filters?: ClientFilters) {
   // Build query
   let query = supabase
     .from("clients")
-    .select(`
+    .select(
+      `
       *,
       sites:sites(count)
-    `)
+    `,
+    )
     .eq("agency_id", profile.agency_id);
 
   // Apply filters
   if (filters?.search) {
-    query = query.or(`name.ilike.%${filters.search}%,email.ilike.%${filters.search}%,company.ilike.%${filters.search}%`);
+    query = query.or(
+      `name.ilike.%${filters.search}%,email.ilike.%${filters.search}%,company.ilike.%${filters.search}%`,
+    );
   }
 
   if (filters?.status && filters.status !== "all") {
@@ -60,16 +69,29 @@ export async function getClients(filters?: ClientFilters) {
 export async function getClient(clientId: string) {
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("agency_id")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile?.agency_id) throw new Error("No organization found");
 
   const { data, error } = await supabase
     .from("clients")
-    .select(`
+    .select(
+      `
       *,
       sites(*)
-    `)
+    `,
+    )
     .eq("id", clientId)
+    .eq("agency_id", profile.agency_id)
     .single();
 
   if (error) throw error;
@@ -87,7 +109,9 @@ export async function createClientAction(formData: unknown) {
   const supabase = await createClient();
 
   // Get current user's organization
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated" };
 
   const { data: profile } = await supabase
@@ -126,10 +150,24 @@ export async function updateClientAction(clientId: string, formData: unknown) {
 
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("agency_id")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile?.agency_id) return { error: "No organization found" };
+
   const { data, error } = await supabase
     .from("clients")
     .update(validated.data)
     .eq("id", clientId)
+    .eq("agency_id", profile.agency_id)
     .select()
     .single();
 
@@ -146,6 +184,29 @@ export async function updateClientAction(clientId: string, formData: unknown) {
 export async function deleteClientAction(clientId: string) {
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("agency_id")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile?.agency_id) return { error: "No organization found" };
+
+  // Verify client belongs to this agency
+  const { data: client } = await supabase
+    .from("clients")
+    .select("id")
+    .eq("id", clientId)
+    .eq("agency_id", profile.agency_id)
+    .single();
+
+  if (!client) return { error: "Client not found" };
+
   // Check if client has sites
   const { data: sites } = await supabase
     .from("sites")
@@ -154,13 +215,16 @@ export async function deleteClientAction(clientId: string) {
     .limit(1);
 
   if (sites && sites.length > 0) {
-    return { error: "Cannot delete client with existing sites. Delete sites first." };
+    return {
+      error: "Cannot delete client with existing sites. Delete sites first.",
+    };
   }
 
   const { error } = await supabase
     .from("clients")
     .delete()
-    .eq("id", clientId);
+    .eq("id", clientId)
+    .eq("agency_id", profile.agency_id);
 
   if (error) {
     return { error: error.message };
@@ -174,10 +238,24 @@ export async function deleteClientAction(clientId: string) {
 export async function inviteClientToPortal(clientId: string) {
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("agency_id")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile?.agency_id) return { error: "No organization found" };
+
   const { data: client } = await supabase
     .from("clients")
     .select("id, email, name, agency_id")
     .eq("id", clientId)
+    .eq("agency_id", profile.agency_id)
     .single();
 
   if (!client) {
@@ -213,20 +291,40 @@ export async function inviteClientToPortal(clientId: string) {
 export async function revokeClientPortalAccess(clientId: string) {
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("agency_id")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile?.agency_id) return { error: "No organization found" };
+
   const { error } = await supabase
     .from("clients")
     .update({
       has_portal_access: false,
       portal_user_id: null,
     })
-    .eq("id", clientId);
+    .eq("id", clientId)
+    .eq("agency_id", profile.agency_id);
 
   if (error) {
     return { error: error.message };
   }
 
   // Log activity
-  await logClientActivity(clientId, "portal.access_revoked", "client", clientId, {});
+  await logClientActivity(
+    clientId,
+    "portal.access_revoked",
+    "client",
+    clientId,
+    {},
+  );
 
   revalidatePath(`/dashboard/clients/${clientId}`);
   return { success: true };
@@ -236,11 +334,25 @@ export async function revokeClientPortalAccess(clientId: string) {
 export async function impersonateClient(clientId: string) {
   const supabase = await createClient();
 
-  // Verify client exists and has portal access
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("agency_id")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile?.agency_id) return { error: "No organization found" };
+
+  // Verify client exists, belongs to this agency, and has portal access
   const { data: client } = await supabase
     .from("clients")
     .select("id, name, has_portal_access")
     .eq("id", clientId)
+    .eq("agency_id", profile.agency_id)
     .single();
 
   if (!client) {
@@ -254,7 +366,7 @@ export async function impersonateClient(clientId: string) {
   // Store impersonation state in cookies for middleware to pick up
   const { cookies } = await import("next/headers");
   const cookieStore = await cookies();
-  
+
   cookieStore.set("impersonating_client_id", client.id, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
@@ -270,9 +382,9 @@ export async function impersonateClient(clientId: string) {
 export async function stopImpersonatingClient() {
   const { cookies } = await import("next/headers");
   const cookieStore = await cookies();
-  
+
   cookieStore.delete("impersonating_client_id");
-  
+
   revalidatePath("/");
   return { success: true };
 }
@@ -280,11 +392,11 @@ export async function stopImpersonatingClient() {
 // Helper to log client activity (placeholder - activity_logs table pending)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function logClientActivity(
-  _clientId: string, 
-  _action: string, 
-  _entityType: string, 
-  _entityId: string, 
-  _metadata: Record<string, unknown>
+  _clientId: string,
+  _action: string,
+  _entityType: string,
+  _entityId: string,
+  _metadata: Record<string, unknown>,
 ) {
   // Activity logging will be implemented when activity_logs table is created
   // This is a placeholder that doesn't fail the calling action

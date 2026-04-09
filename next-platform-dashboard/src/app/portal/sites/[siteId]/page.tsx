@@ -11,6 +11,14 @@ import {
   Eye,
   Clock,
   TrendingUp,
+  MessageCircle,
+  ShoppingCart,
+  Package,
+  FileQuestion,
+  CalendarDays,
+  Contact,
+  Zap,
+  ArrowRight,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { DOMAINS } from "@/lib/constants/domains";
@@ -20,6 +28,9 @@ import {
   getPortalAnalytics,
   getSitePermissions,
 } from "@/lib/portal/portal-service";
+import { getEffectivePermissions } from "@/lib/portal/portal-permissions";
+import { getSiteModuleCounts } from "@/lib/portal/portal-dashboard-service";
+import { getInstalledModulesForSite } from "@/lib/studio/registry/module-discovery";
 import { getSiteUrl, getSiteDomain } from "@/lib/utils/site-url";
 import { formatDistanceToNow, format } from "date-fns";
 import {
@@ -36,6 +47,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 interface PortalSiteDetailPageProps {
   params: Promise<{ siteId: string }>;
 }
+
+const moduleIcons: Record<string, typeof Globe> = {
+  "live-chat": MessageCircle,
+  "ecommerce-orders": ShoppingCart,
+  "ecommerce-products": Package,
+  "ecommerce-quotes": FileQuestion,
+  booking: CalendarDays,
+  crm: Contact,
+  automation: Zap,
+};
 
 export async function generateMetadata({
   params,
@@ -67,11 +88,25 @@ export default async function PortalSiteDetailPage({
     notFound();
   }
 
-  // Get permissions and analytics
-  const [permissions, analytics] = await Promise.all([
-    getSitePermissions(user.clientId, siteId),
-    user.canViewAnalytics ? getPortalAnalytics(user.clientId, siteId) : null,
-  ]);
+  // Get permissions, analytics, and module data in parallel
+  const [permissions, analytics, effectivePerms, installedModules] =
+    await Promise.all([
+      getSitePermissions(user.clientId, siteId),
+      user.canViewAnalytics ? getPortalAnalytics(user.clientId, siteId) : null,
+      getEffectivePermissions(user.clientId, siteId),
+      getInstalledModulesForSite(siteId),
+    ]);
+
+  // Get installed module slugs
+  const installedSlugs = installedModules.map((m) => m.slug);
+
+  // Fetch module counts for the cards
+  const moduleCounts = await getSiteModuleCounts(
+    siteId,
+    effectivePerms,
+    user.agencyId,
+    installedSlugs,
+  );
 
   const url = site.subdomain
     ? getSiteUrl(site.subdomain, site.customDomain)
@@ -215,6 +250,40 @@ export default async function PortalSiteDetailPage({
               </>
             )}
           </div>
+
+          {/* Module Access Cards */}
+          {moduleCounts.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold">Module Operations</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {moduleCounts.map((mod) => {
+                  const IconComponent = moduleIcons[mod.slug] || Zap;
+                  return (
+                    <Link key={mod.slug} href={mod.href} className="group">
+                      <Card className="transition-colors hover:bg-muted/50">
+                        <CardContent className="pt-6">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 bg-primary/10 rounded-lg">
+                                <IconComponent className="h-5 w-5 text-primary" />
+                              </div>
+                              <div>
+                                <p className="font-medium">{mod.label}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {mod.count} {mod.countLabel}
+                                </p>
+                              </div>
+                            </div>
+                            <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Site Info */}
           <Card>

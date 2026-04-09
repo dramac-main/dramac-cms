@@ -1,8 +1,8 @@
 /**
  * Portal Navigation Configuration
- * 
+ *
  * Dynamic navigation items for the client portal sidebar.
- * Navigation varies based on user permissions.
+ * Navigation varies based on user permissions and installed modules.
  */
 
 import {
@@ -19,6 +19,14 @@ import {
   Server,
   Mail,
   Bell,
+  ShoppingCart,
+  Package,
+  CalendarDays,
+  Users,
+  Zap,
+  UserCog,
+  Receipt,
+  Bot,
   type LucideIcon,
 } from "lucide-react";
 import type { NavGroup, NavItem } from "./navigation";
@@ -33,109 +41,172 @@ export interface PortalNavItem {
 export interface PortalUserPermissions {
   canViewAnalytics: boolean;
   canViewInvoices: boolean;
+  canManageLiveChat: boolean;
+  canManageOrders: boolean;
+  canManageProducts: boolean;
+  canManageBookings: boolean;
+  canManageCrm: boolean;
+  canManageAutomation: boolean;
+  canManageQuotes: boolean;
+  canManageAgents: boolean;
+  canManageCustomers: boolean;
 }
 
 /**
- * Get portal navigation based on user permissions
+ * Get portal navigation based on user permissions and installed modules
  * @param permissions - User's portal permissions
+ * @param installedModules - Array of module slugs installed on the client's site(s)
  * @param openTicketCount - Number of open support tickets (for badge)
- * @returns Array of navigation items grouped by category
- */
-export function getPortalNavigation(
-  permissions: PortalUserPermissions,
-  openTicketCount: number = 0
-): { main: PortalNavItem[]; features: PortalNavItem[]; support: PortalNavItem[] } {
-  const mainLinks: PortalNavItem[] = [
-    { href: "/portal", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/portal/sites", label: "My Sites", icon: Globe },
-    { href: "/portal/domains", label: "Domains", icon: Server },
-    { href: "/portal/email", label: "Email", icon: Mail },
-  ];
-
-  const featureLinks: PortalNavItem[] = [];
-
-  // Analytics (conditional)
-  if (permissions.canViewAnalytics) {
-    featureLinks.push({
-      href: "/portal/analytics",
-      label: "Analytics",
-      icon: BarChart3,
-    });
-  }
-
-  // Always available features
-  featureLinks.push(
-    { href: "/portal/media", label: "Media", icon: Image },
-    { href: "/portal/submissions", label: "Form Submissions", icon: Inbox },
-    { href: "/portal/blog", label: "Blog Posts", icon: BookOpen },
-    { href: "/portal/seo", label: "SEO", icon: Search },
-    { href: "/portal/notifications", label: "Notifications", icon: Bell }
-  );
-
-  const supportLinks: PortalNavItem[] = [
-    {
-      href: "/portal/support",
-      label: "Support",
-      icon: MessageCircle,
-      badge: openTicketCount > 0 ? openTicketCount : undefined,
-    },
-  ];
-
-  // Invoices (conditional)
-  if (permissions.canViewInvoices) {
-    supportLinks.push({
-      href: "/portal/invoices",
-      label: "Invoices",
-      icon: FileText,
-    });
-  }
-
-  supportLinks.push({
-    href: "/portal/settings",
-    label: "Settings",
-    icon: Settings,
-  });
-
-  return { main: mainLinks, features: featureLinks, support: supportLinks };
-}
-
-/**
- * Convert portal navigation to NavGroup format for unified sidebar
- * @param permissions - User's portal permissions
- * @param openTicketCount - Number of open support tickets (for badge)
+ * @param siteId - If client has exactly one site, nav links go directly to that site
  * @returns Navigation groups compatible with the unified Sidebar component
  */
 export function getPortalNavigationGroups(
   permissions: PortalUserPermissions,
-  openTicketCount: number = 0
+  installedModules: string[],
+  openTicketCount: number = 0,
+  siteId?: string,
 ): NavGroup[] {
-  const nav = getPortalNavigation(permissions, openTicketCount);
-  
-  const toNavItems = (items: PortalNavItem[]): NavItem[] =>
-    items.map((item) => ({
-      title: item.label,
-      href: item.href,
-      icon: item.icon,
-      badge: item.badge,
-    }));
+  const hasModule = (slug: string) => installedModules.includes(slug);
 
-  const groups: NavGroup[] = [
-    {
-      items: toNavItems(nav.main),
-    },
+  // Helper to build site-scoped URLs
+  const siteUrl = (path: string) =>
+    siteId ? `/portal/sites/${siteId}/${path}` : `/portal/${path}`;
+
+  // === Main Group ===
+  const mainItems: NavItem[] = [
+    { title: "Dashboard", href: "/portal", icon: LayoutDashboard },
+    { title: "My Sites", href: "/portal/sites", icon: Globe },
+    { title: "Domains", href: "/portal/domains", icon: Server },
+    { title: "Email", href: "/portal/email", icon: Mail },
   ];
 
-  if (nav.features.length > 0) {
-    groups.push({
-      title: "Features",
-      items: toNavItems(nav.features),
+  // === Operations Group (only if any operational module is installed + permitted) ===
+  const operationsItems: NavItem[] = [];
+
+  if (hasModule("live-chat") && permissions.canManageLiveChat) {
+    operationsItems.push({
+      title: "Live Chat",
+      href: siteUrl("live-chat"),
+      icon: MessageCircle,
     });
   }
 
-  groups.push({
-    title: "Support",
-    items: toNavItems(nav.support),
+  if (hasModule("ecommerce") && permissions.canManageOrders) {
+    operationsItems.push({
+      title: "Orders",
+      href: siteUrl("orders"),
+      icon: ShoppingCart,
+    });
+  }
+
+  if (hasModule("booking") && permissions.canManageBookings) {
+    operationsItems.push({
+      title: "Bookings",
+      href: siteUrl("bookings"),
+      icon: CalendarDays,
+    });
+  }
+
+  if (hasModule("ecommerce") && permissions.canManageProducts) {
+    operationsItems.push({
+      title: "Products",
+      href: siteUrl("products"),
+      icon: Package,
+    });
+  }
+
+  if (hasModule("ecommerce") && permissions.canManageQuotes) {
+    operationsItems.push({
+      title: "Quotes",
+      href: siteUrl("quotes"),
+      icon: Receipt,
+    });
+  }
+
+  if (hasModule("crm") && permissions.canManageCrm) {
+    operationsItems.push({
+      title: "CRM",
+      href: siteUrl("crm"),
+      icon: Users,
+    });
+  }
+
+  if (hasModule("ecommerce") && permissions.canManageCustomers) {
+    operationsItems.push({
+      title: "Customers",
+      href: siteUrl("customers"),
+      icon: UserCog,
+    });
+  }
+
+  if (hasModule("automation") && permissions.canManageAutomation) {
+    operationsItems.push({
+      title: "Automation",
+      href: siteUrl("automation"),
+      icon: Zap,
+    });
+  }
+
+  if (hasModule("live-chat") && permissions.canManageAgents) {
+    operationsItems.push({
+      title: "Chat Agents",
+      href: siteUrl("chat-agents"),
+      icon: Bot,
+    });
+  }
+
+  // === Content Group ===
+  const contentItems: NavItem[] = [];
+
+  if (permissions.canViewAnalytics) {
+    contentItems.push({
+      title: "Analytics",
+      href: "/portal/analytics",
+      icon: BarChart3,
+    });
+  }
+
+  contentItems.push(
+    { title: "Media", href: "/portal/media", icon: Image },
+    { title: "Form Submissions", href: "/portal/submissions", icon: Inbox },
+    { title: "Blog Posts", href: "/portal/blog", icon: BookOpen },
+    { title: "SEO", href: "/portal/seo", icon: Search },
+  );
+
+  // === Support Group ===
+  const supportItems: NavItem[] = [
+    {
+      title: "Support",
+      href: "/portal/support",
+      icon: MessageCircle,
+      badge: openTicketCount > 0 ? openTicketCount : undefined,
+    },
+    { title: "Notifications", href: "/portal/notifications", icon: Bell },
+  ];
+
+  if (permissions.canViewInvoices) {
+    supportItems.push({
+      title: "Invoices",
+      href: "/portal/invoices",
+      icon: FileText,
+    });
+  }
+
+  supportItems.push({
+    title: "Settings",
+    href: "/portal/settings",
+    icon: Settings,
   });
+
+  // === Build Groups ===
+  const groups: NavGroup[] = [{ items: mainItems }];
+
+  if (operationsItems.length > 0) {
+    groups.push({ title: "Operations", items: operationsItems });
+  }
+
+  groups.push({ title: "Content", items: contentItems });
+  groups.push({ title: "Support", items: supportItems });
 
   return groups;
 }

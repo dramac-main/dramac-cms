@@ -1,8 +1,8 @@
 /**
  * StepConfigPanel Component
- * 
+ *
  * Phase EM-57B: Automation Engine - Visual Builder & Advanced Features
- * 
+ *
  * Right panel for configuring the selected workflow step including:
  * - Step name and description
  * - Action-specific settings
@@ -10,40 +10,40 @@
  * - Error handling configuration
  */
 
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { X, Info, AlertCircle } from "lucide-react"
-import { toast } from "sonner"
-import { ACTION_REGISTRY } from "../../lib/action-types"
-import type { 
-  WorkflowStep, 
-  WorkflowStepUpdate, 
-  ConditionConfig, 
-  DelayConfig 
-} from "../../types/automation-types"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { X, Info, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
+import { ACTION_REGISTRY } from "../../lib/action-types";
+import type {
+  WorkflowStep,
+  WorkflowStepUpdate,
+  ConditionConfig,
+  DelayConfig,
+} from "../../types/automation-types";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 interface StepConfigPanelProps {
-  step: WorkflowStep
-  onUpdate: (stepId: string, updates: WorkflowStepUpdate) => void
-  onClose: () => void
+  step: WorkflowStep;
+  onUpdate: (stepId: string, updates: WorkflowStepUpdate) => void;
+  onClose: () => void;
 }
 
 // ============================================================================
@@ -51,33 +51,36 @@ interface StepConfigPanelProps {
 // ============================================================================
 
 interface ConditionConfigProps {
-  config: ConditionConfig
-  onUpdate: (config: ConditionConfig) => void
+  config: ConditionConfig;
+  onUpdate: (config: ConditionConfig) => void;
 }
 
 function ConditionConfigSection({ config, onUpdate }: ConditionConfigProps) {
-  const conditions = config.conditions || []
-  const operator = config.operator || 'and'
+  const conditions = config.conditions || [];
+  const operator = config.operator || "and";
 
   const addCondition = () => {
     onUpdate({
       ...config,
-      conditions: [...conditions, { field: '', operator: 'equals', value: '' }],
-    })
-  }
+      conditions: [...conditions, { field: "", operator: "equals", value: "" }],
+    });
+  };
 
   const updateCondition = (index: number, updates: Record<string, unknown>) => {
-    const newConditions = [...conditions]
-    newConditions[index] = { ...newConditions[index], ...updates } as typeof conditions[0]
-    onUpdate({ ...config, conditions: newConditions })
-  }
+    const newConditions = [...conditions];
+    newConditions[index] = {
+      ...newConditions[index],
+      ...updates,
+    } as (typeof conditions)[0];
+    onUpdate({ ...config, conditions: newConditions });
+  };
 
   const removeCondition = (index: number) => {
     onUpdate({
       ...config,
       conditions: conditions.filter((_, i) => i !== index),
-    })
-  }
+    });
+  };
 
   return (
     <div className="space-y-4 pt-4 border-t">
@@ -85,7 +88,9 @@ function ConditionConfigSection({ config, onUpdate }: ConditionConfigProps) {
         <h4 className="font-medium">Conditions</h4>
         <Select
           value={operator}
-          onValueChange={(value) => onUpdate({ ...config, operator: value as 'and' | 'or' })}
+          onValueChange={(value) =>
+            onUpdate({ ...config, operator: value as "and" | "or" })
+          }
         >
           <SelectTrigger className="w-24 h-8">
             <SelectValue />
@@ -101,13 +106,15 @@ function ConditionConfigSection({ config, onUpdate }: ConditionConfigProps) {
         <div key={index} className="flex gap-2 items-start">
           <Input
             placeholder="Field ({{trigger.status}})"
-            value={cond.field || ''}
+            value={cond.field || ""}
             onChange={(e) => updateCondition(index, { field: e.target.value })}
             className="flex-1"
           />
           <Select
-            value={cond.operator || 'equals'}
-            onValueChange={(value) => updateCondition(index, { operator: value })}
+            value={cond.operator || "equals"}
+            onValueChange={(value) =>
+              updateCondition(index, { operator: value })
+            }
           >
             <SelectTrigger className="w-28">
               <SelectValue />
@@ -125,7 +132,7 @@ function ConditionConfigSection({ config, onUpdate }: ConditionConfigProps) {
           </Select>
           <Input
             placeholder="Value"
-            value={cond.value as string || ''}
+            value={(cond.value as string) || ""}
             onChange={(e) => updateCondition(index, { value: e.target.value })}
             className="flex-1"
           />
@@ -140,11 +147,16 @@ function ConditionConfigSection({ config, onUpdate }: ConditionConfigProps) {
         </div>
       ))}
 
-      <Button variant="outline" size="sm" onClick={addCondition} className="w-full">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={addCondition}
+        className="w-full"
+      >
         + Add Condition
       </Button>
     </div>
-  )
+  );
 }
 
 // ============================================================================
@@ -152,22 +164,22 @@ function ConditionConfigSection({ config, onUpdate }: ConditionConfigProps) {
 // ============================================================================
 
 interface DelayConfigProps {
-  config: DelayConfig
-  onUpdate: (config: DelayConfig) => void
+  config: DelayConfig;
+  onUpdate: (config: DelayConfig) => void;
 }
 
 function DelayConfigSection({ config, onUpdate }: DelayConfigProps) {
-  const delayType = config.type || 'fixed'
+  const delayType = config.type || "fixed";
 
   // Parse the value to get number and unit
   const parseValue = (val?: string) => {
-    if (!val) return { num: '5', unit: 'm' }
-    const match = val.match(/^(\d+)([smhd])$/)
-    if (match) return { num: match[1], unit: match[2] }
-    return { num: '5', unit: 'm' }
-  }
+    if (!val) return { num: "5", unit: "m" };
+    const match = val.match(/^(\d+)([smhd])$/);
+    if (match) return { num: match[1], unit: match[2] };
+    return { num: "5", unit: "m" };
+  };
 
-  const { num, unit } = parseValue(config.value)
+  const { num, unit } = parseValue(config.value);
 
   return (
     <div className="space-y-4 pt-4 border-t">
@@ -177,7 +189,9 @@ function DelayConfigSection({ config, onUpdate }: DelayConfigProps) {
         <Label>Delay Type</Label>
         <Select
           value={delayType}
-          onValueChange={(value) => onUpdate({ ...config, type: value as DelayConfig['type'] })}
+          onValueChange={(value) =>
+            onUpdate({ ...config, type: value as DelayConfig["type"] })
+          }
         >
           <SelectTrigger>
             <SelectValue />
@@ -190,7 +204,7 @@ function DelayConfigSection({ config, onUpdate }: DelayConfigProps) {
         </Select>
       </div>
 
-      {delayType === 'fixed' && (
+      {delayType === "fixed" && (
         <div className="space-y-2">
           <Label>Duration</Label>
           <div className="flex gap-2">
@@ -199,14 +213,14 @@ function DelayConfigSection({ config, onUpdate }: DelayConfigProps) {
               min={1}
               value={num}
               onChange={(e) => {
-                onUpdate({ ...config, value: `${e.target.value}${unit}` })
+                onUpdate({ ...config, value: `${e.target.value}${unit}` });
               }}
               className="w-20"
             />
             <Select
               value={unit}
               onValueChange={(newUnit) => {
-                onUpdate({ ...config, value: `${num}${newUnit}` })
+                onUpdate({ ...config, value: `${num}${newUnit}` });
               }}
             >
               <SelectTrigger className="w-32">
@@ -223,12 +237,12 @@ function DelayConfigSection({ config, onUpdate }: DelayConfigProps) {
         </div>
       )}
 
-      {delayType === 'until' && (
+      {delayType === "until" && (
         <div className="space-y-2">
           <Label>Wait Until</Label>
           <Input
             type="datetime-local"
-            value={config.value || ''}
+            value={config.value || ""}
             onChange={(e) => onUpdate({ ...config, value: e.target.value })}
           />
           <p className="text-xs text-muted-foreground">
@@ -237,12 +251,12 @@ function DelayConfigSection({ config, onUpdate }: DelayConfigProps) {
         </div>
       )}
 
-      {delayType === 'expression' && (
+      {delayType === "expression" && (
         <div className="space-y-2">
           <Label>Expression</Label>
           <Input
             placeholder="{{trigger.scheduled_date - 1d}}"
-            value={config.value || ''}
+            value={config.value || ""}
             onChange={(e) => onUpdate({ ...config, value: e.target.value })}
             className="font-mono"
           />
@@ -252,53 +266,60 @@ function DelayConfigSection({ config, onUpdate }: DelayConfigProps) {
         </div>
       )}
     </div>
-  )
+  );
 }
 
 // ============================================================================
 // STEP CONFIG PANEL COMPONENT
 // ============================================================================
 
-export function StepConfigPanel({ step, onUpdate, onClose }: StepConfigPanelProps) {
-  const [localConfig, setLocalConfig] = useState(step.action_config || {})
-  const [lastStepId, setLastStepId] = useState(step.id)
+export function StepConfigPanel({
+  step,
+  onUpdate,
+  onClose,
+}: StepConfigPanelProps) {
+  const [localConfig, setLocalConfig] = useState(step.action_config || {});
+  const [lastStepId, setLastStepId] = useState(step.id);
 
   // Sync local config when step changes (avoiding setState in effect)
   if (step.id !== lastStepId) {
-    setLastStepId(step.id)
-    setLocalConfig(step.action_config || {})
+    setLastStepId(step.id);
+    setLocalConfig(step.action_config || {});
   }
 
   const handleConfigChange = (key: string, value: unknown) => {
-    const newConfig = { ...localConfig, [key]: value }
-    setLocalConfig(newConfig)
-    onUpdate(step.id, { action_config: newConfig })
-  }
+    const newConfig = { ...localConfig, [key]: value };
+    setLocalConfig(newConfig);
+    onUpdate(step.id, { action_config: newConfig });
+  };
 
   // Get action definition from registry
   const getActionDef = (): {
-    id: string
-    name: string
-    description: string
-    icon: string
-    inputs: Record<string, {
-      type: string
-      required?: boolean
-      default?: unknown
-      values?: readonly string[]
-      placeholder?: string
-    }>
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+    inputs: Record<
+      string,
+      {
+        type: string;
+        required?: boolean;
+        default?: unknown;
+        values?: readonly string[];
+        placeholder?: string;
+      }
+    >;
   } | null => {
-    if (!step.action_type) return null
-    const parts = step.action_type.split('.')
-    if (parts.length < 2) return null
-    const [category, action] = parts
+    if (!step.action_type) return null;
+    const parts = step.action_type.split(".");
+    if (parts.length < 2) return null;
+    const [category, action] = parts;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const registry = ACTION_REGISTRY as any
-    return registry[category]?.[action] ?? null
-  }
+    const registry = ACTION_REGISTRY as any;
+    return registry[category]?.[action] ?? null;
+  };
 
-  const actionDef = getActionDef()
+  const actionDef = getActionDef();
 
   return (
     <div className="h-full flex flex-col">
@@ -324,7 +345,7 @@ export function StepConfigPanel({ step, onUpdate, onClose }: StepConfigPanelProp
             <div className="space-y-2">
               <Label>Step Name</Label>
               <Input
-                value={step.name || ''}
+                value={step.name || ""}
                 onChange={(e) => onUpdate(step.id, { name: e.target.value })}
                 placeholder="Give this step a name..."
               />
@@ -334,8 +355,10 @@ export function StepConfigPanel({ step, onUpdate, onClose }: StepConfigPanelProp
             <div className="space-y-2">
               <Label>Description (Optional)</Label>
               <Textarea
-                value={String(step.description || '')}
-                onChange={(e) => onUpdate(step.id, { description: e.target.value })}
+                value={String(step.description || "")}
+                onChange={(e) =>
+                  onUpdate(step.id, { description: e.target.value })
+                }
                 placeholder="What does this step do?"
                 rows={2}
               />
@@ -352,12 +375,12 @@ export function StepConfigPanel({ step, onUpdate, onClose }: StepConfigPanelProp
               <Switch
                 checked={step.is_active}
                 onCheckedChange={(checked) => {
-                  onUpdate(step.id, { is_active: checked })
+                  onUpdate(step.id, { is_active: checked });
                   toast.success(
                     checked
-                      ? `"${step.name || 'Step'}" enabled — will run during execution`
-                      : `"${step.name || 'Step'}" disabled — will be skipped during execution`,
-                  )
+                      ? `"${step.name || "Step"}" enabled — will run during execution`
+                      : `"${step.name || "Step"}" disabled — will be skipped during execution`,
+                  );
                 }}
               />
             </div>
@@ -375,35 +398,61 @@ export function StepConfigPanel({ step, onUpdate, onClose }: StepConfigPanelProp
                 {/* Render inputs based on action definition */}
                 {Object.entries(actionDef.inputs || {}).map(
                   ([key, inputConfig]) => {
-                    const config = inputConfig
-                    
+                    const config = inputConfig;
+
                     return (
                       <div key={key} className="space-y-2">
                         <Label className="flex items-center gap-1">
-                          {key.replace(/_/g, ' ')}
-                          {config.required && <span className="text-red-500">*</span>}
+                          {key.replace(/_/g, " ")}
+                          {config.required && (
+                            <span className="text-red-500">*</span>
+                          )}
                         </Label>
 
-                        {config.type === 'string' && (
+                        {config.type === "string" && (
                           <Input
-                            value={(localConfig as Record<string, unknown>)[key] as string || ''}
-                            onChange={(e) => handleConfigChange(key, e.target.value)}
-                            placeholder={config.placeholder || config.default as string || `Enter ${key}...`}
+                            value={
+                              ((localConfig as Record<string, unknown>)[
+                                key
+                              ] as string) || ""
+                            }
+                            onChange={(e) =>
+                              handleConfigChange(key, e.target.value)
+                            }
+                            placeholder={
+                              config.placeholder ||
+                              (config.default as string) ||
+                              `Enter ${key}...`
+                            }
                           />
                         )}
 
-                        {config.type === 'number' && (
+                        {config.type === "number" && (
                           <Input
                             type="number"
-                            value={(localConfig as Record<string, unknown>)[key] as number ?? config.default as number ?? ''}
-                            onChange={(e) => handleConfigChange(key, Number(e.target.value))}
+                            value={
+                              ((localConfig as Record<string, unknown>)[
+                                key
+                              ] as number) ??
+                              (config.default as number) ??
+                              ""
+                            }
+                            onChange={(e) =>
+                              handleConfigChange(key, Number(e.target.value))
+                            }
                           />
                         )}
 
-                        {config.type === 'enum' && (
+                        {config.type === "enum" && (
                           <Select
-                            value={(localConfig as Record<string, unknown>)[key] as string || ''}
-                            onValueChange={(value) => handleConfigChange(key, value)}
+                            value={
+                              ((localConfig as Record<string, unknown>)[
+                                key
+                              ] as string) || ""
+                            }
+                            onValueChange={(value) =>
+                              handleConfigChange(key, value)
+                            }
                           >
                             <SelectTrigger>
                               <SelectValue placeholder={`Select ${key}...`} />
@@ -418,29 +467,46 @@ export function StepConfigPanel({ step, onUpdate, onClose }: StepConfigPanelProp
                           </Select>
                         )}
 
-                        {config.type === 'boolean' && (
+                        {config.type === "boolean" && (
                           <div className="flex items-center gap-2">
                             <Switch
-                              checked={(localConfig as Record<string, unknown>)[key] as boolean || false}
-                              onCheckedChange={(checked) => handleConfigChange(key, checked)}
+                              checked={
+                                ((localConfig as Record<string, unknown>)[
+                                  key
+                                ] as boolean) || false
+                              }
+                              onCheckedChange={(checked) =>
+                                handleConfigChange(key, checked)
+                              }
                             />
                             <span className="text-sm text-muted-foreground">
-                              {(localConfig as Record<string, unknown>)[key] ? 'Enabled' : 'Disabled'}
+                              {(localConfig as Record<string, unknown>)[key]
+                                ? "Enabled"
+                                : "Disabled"}
                             </span>
                           </div>
                         )}
 
-                        {(config.type === 'object' || config.type === 'array') && (
+                        {(config.type === "object" ||
+                          config.type === "array") && (
                           <Textarea
-                            value={JSON.stringify((localConfig as Record<string, unknown>)[key] || (config.type === 'array' ? [] : {}), null, 2)}
+                            value={JSON.stringify(
+                              (localConfig as Record<string, unknown>)[key] ||
+                                (config.type === "array" ? [] : {}),
+                              null,
+                              2,
+                            )}
                             onChange={(e) => {
                               try {
-                                handleConfigChange(key, JSON.parse(e.target.value))
+                                handleConfigChange(
+                                  key,
+                                  JSON.parse(e.target.value),
+                                );
                               } catch {
                                 // Invalid JSON, ignore
                               }
                             }}
-                            placeholder={config.type === 'array' ? '[]' : '{}'}
+                            placeholder={config.type === "array" ? "[]" : "{}"}
                             rows={4}
                             className="font-mono text-xs"
                           />
@@ -449,28 +515,34 @@ export function StepConfigPanel({ step, onUpdate, onClose }: StepConfigPanelProp
                         {/* Variable hint */}
                         <p className="text-xs text-muted-foreground flex items-center gap-1">
                           <Info className="h-3 w-3" />
-                          Use {'{{trigger.field}}'} for dynamic values
+                          Use {"{{trigger.field}}"} for dynamic values
                         </p>
                       </div>
-                    )
-                  }
+                    );
+                  },
                 )}
               </div>
             )}
 
             {/* Condition step config */}
-            {(step.step_type === 'condition' || step.action_type === 'flow.condition') && (
+            {(step.step_type === "condition" ||
+              step.action_type === "flow.condition") && (
               <ConditionConfigSection
                 config={step.condition_config || {}}
-                onUpdate={(config) => onUpdate(step.id, { condition_config: config })}
+                onUpdate={(config) =>
+                  onUpdate(step.id, { condition_config: config })
+                }
               />
             )}
 
             {/* Delay step config */}
-            {(step.step_type === 'delay' || step.action_type === 'flow.delay') && (
+            {(step.step_type === "delay" ||
+              step.action_type === "flow.delay") && (
               <DelayConfigSection
                 config={step.delay_config || {}}
-                onUpdate={(config) => onUpdate(step.id, { delay_config: config })}
+                onUpdate={(config) =>
+                  onUpdate(step.id, { delay_config: config })
+                }
               />
             )}
           </TabsContent>
@@ -480,13 +552,16 @@ export function StepConfigPanel({ step, onUpdate, onClose }: StepConfigPanelProp
             <div className="space-y-2">
               <Label>Input Mapping</Label>
               <p className="text-xs text-muted-foreground">
-                Map data from trigger or previous steps to this step&apos;s inputs
+                Map data from trigger or previous steps to this step&apos;s
+                inputs
               </p>
               <Textarea
                 value={JSON.stringify(step.input_mapping || {}, null, 2)}
                 onChange={(e) => {
                   try {
-                    onUpdate(step.id, { input_mapping: JSON.parse(e.target.value) })
+                    onUpdate(step.id, {
+                      input_mapping: JSON.parse(e.target.value),
+                    });
                   } catch {
                     // Invalid JSON
                   }
@@ -503,8 +578,10 @@ export function StepConfigPanel({ step, onUpdate, onClose }: StepConfigPanelProp
                 Store this step&apos;s output for use in later steps
               </p>
               <Input
-                value={step.output_key || ''}
-                onChange={(e) => onUpdate(step.id, { output_key: e.target.value })}
+                value={step.output_key || ""}
+                onChange={(e) =>
+                  onUpdate(step.id, { output_key: e.target.value })
+                }
                 placeholder="step_1_result"
               />
             </div>
@@ -515,10 +592,30 @@ export function StepConfigPanel({ step, onUpdate, onClose }: StepConfigPanelProp
                 Available Variables
               </h4>
               <div className="text-xs text-muted-foreground space-y-1">
-                <p><code className="bg-background px-1 rounded">{'{{trigger.*}}'}</code> - Trigger event data</p>
-                <p><code className="bg-background px-1 rounded">{'{{steps.StepName.*}}'}</code> - Previous step outputs</p>
-                <p><code className="bg-background px-1 rounded">{'{{variables.*}}'}</code> - Workflow variables</p>
-                <p><code className="bg-background px-1 rounded">{'{{now}}'}</code> - Current timestamp</p>
+                <p>
+                  <code className="bg-background px-1 rounded">
+                    {"{{trigger.*}}"}
+                  </code>{" "}
+                  - Trigger event data
+                </p>
+                <p>
+                  <code className="bg-background px-1 rounded">
+                    {"{{steps.StepName.*}}"}
+                  </code>{" "}
+                  - Previous step outputs
+                </p>
+                <p>
+                  <code className="bg-background px-1 rounded">
+                    {"{{variables.*}}"}
+                  </code>{" "}
+                  - Workflow variables
+                </p>
+                <p>
+                  <code className="bg-background px-1 rounded">
+                    {"{{now}}"}
+                  </code>{" "}
+                  - Current timestamp
+                </p>
               </div>
             </div>
           </TabsContent>
@@ -528,8 +625,12 @@ export function StepConfigPanel({ step, onUpdate, onClose }: StepConfigPanelProp
             <div className="space-y-2">
               <Label>On Error</Label>
               <Select
-                value={step.on_error || 'fail'}
-                onValueChange={(value) => onUpdate(step.id, { on_error: value as WorkflowStep['on_error'] })}
+                value={step.on_error || "fail"}
+                onValueChange={(value) =>
+                  onUpdate(step.id, {
+                    on_error: value as WorkflowStep["on_error"],
+                  })
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -557,7 +658,7 @@ export function StepConfigPanel({ step, onUpdate, onClose }: StepConfigPanelProp
               </Select>
             </div>
 
-            {step.on_error === 'retry' && (
+            {step.on_error === "retry" && (
               <>
                 <div className="space-y-2">
                   <Label>Max Retries</Label>
@@ -566,7 +667,9 @@ export function StepConfigPanel({ step, onUpdate, onClose }: StepConfigPanelProp
                     min={1}
                     max={10}
                     value={step.max_retries || 3}
-                    onChange={(e) => onUpdate(step.id, { max_retries: Number(e.target.value) })}
+                    onChange={(e) =>
+                      onUpdate(step.id, { max_retries: Number(e.target.value) })
+                    }
                   />
                 </div>
 
@@ -577,7 +680,9 @@ export function StepConfigPanel({ step, onUpdate, onClose }: StepConfigPanelProp
                     min={1}
                     value={step.retry_delay_seconds || 60}
                     onChange={(e) =>
-                      onUpdate(step.id, { retry_delay_seconds: Number(e.target.value) })
+                      onUpdate(step.id, {
+                        retry_delay_seconds: Number(e.target.value),
+                      })
                     }
                   />
                   <p className="text-xs text-muted-foreground">
@@ -593,14 +698,22 @@ export function StepConfigPanel({ step, onUpdate, onClose }: StepConfigPanelProp
                 Error Handling Tips
               </h4>
               <ul className="text-xs text-amber-700 dark:text-amber-300 mt-2 space-y-1 list-disc list-inside">
-                <li>Use &quot;Continue&quot; for non-critical steps like logging</li>
-                <li>Use &quot;Retry&quot; for external API calls that may fail temporarily</li>
-                <li>Use &quot;Stop&quot; for critical steps where failure means the workflow should abort</li>
+                <li>
+                  Use &quot;Continue&quot; for non-critical steps like logging
+                </li>
+                <li>
+                  Use &quot;Retry&quot; for external API calls that may fail
+                  temporarily
+                </li>
+                <li>
+                  Use &quot;Stop&quot; for critical steps where failure means
+                  the workflow should abort
+                </li>
               </ul>
             </div>
           </TabsContent>
         </Tabs>
       </div>
     </div>
-  )
+  );
 }

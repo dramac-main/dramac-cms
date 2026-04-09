@@ -54,6 +54,7 @@ interface EcommerceSidebarProps {
   lowStockCount?: number
   isCollapsed?: boolean
   onCollapsedChange?: (collapsed: boolean) => void
+  portalMode?: boolean
 }
 
 // ============================================================================
@@ -108,10 +109,17 @@ export function EcommerceSidebar({
   pendingOrders = 0,
   lowStockCount = 0,
   isCollapsed = false,
-  onCollapsedChange
+  onCollapsedChange,
+  portalMode = false
 }: EcommerceSidebarProps) {
   const [_hoveredItem, setHoveredItem] = useState<string | null>(null)
-  const navItems = getNavItems(pendingOrders, lowStockCount)
+  const allNavItems = getNavItems(pendingOrders, lowStockCount)
+
+  // In portal mode, hide admin-only views (settings, developer, embed, marketing)
+  const PORTAL_HIDDEN_VIEWS: EcommerceView[] = ['settings', 'developer', 'embed', 'marketing']
+  const navItems = portalMode
+    ? allNavItems.filter(item => !PORTAL_HIDDEN_VIEWS.includes(item.id))
+    : allNavItems
 
   return (
     <TooltipProvider delayDuration={0}>

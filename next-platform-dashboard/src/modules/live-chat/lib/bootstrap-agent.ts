@@ -21,6 +21,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export async function bootstrapLiveChatAgent(
   siteId: string,
   userId: string,
+  options?: { displayName?: string; email?: string; role?: "admin" | "agent" },
 ): Promise<string | null> {
   const supabase = createAdminClient();
 
@@ -42,7 +43,11 @@ export async function bootstrapLiveChatAgent(
     .single();
 
   const displayName =
-    profile?.name || profile?.full_name || profile?.email || "Site Owner";
+    options?.displayName ||
+    profile?.name ||
+    profile?.full_name ||
+    profile?.email ||
+    "Agent";
 
   const { data: agent, error } = await (supabase as any)
     .from("mod_chat_agents")
@@ -50,9 +55,9 @@ export async function bootstrapLiveChatAgent(
       site_id: siteId,
       user_id: userId,
       display_name: displayName,
-      email: profile?.email || null,
+      email: options?.email || profile?.email || null,
       avatar_url: profile?.avatar_url || null,
-      role: "admin",
+      role: options?.role || "admin",
       status: "online",
       is_active: true,
       max_concurrent_chats: 5,

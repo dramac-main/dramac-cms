@@ -1,25 +1,46 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { Globe, MessageCircle, ArrowRight, BarChart3, Users, ExternalLink } from "lucide-react";
+import {
+  Globe,
+  MessageCircle,
+  ArrowRight,
+  BarChart3,
+  Users,
+  ExternalLink,
+  ShoppingCart,
+  CalendarDays,
+  Contact,
+  Zap,
+  Clock,
+  Package,
+  TrendingUp,
+  ArrowUpRight,
+  ArrowDownRight,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { requirePortalAuth, getPortalSession } from "@/lib/portal/portal-auth";
-import { getClientSites, getPortalAnalytics, getClientInfo } from "@/lib/portal/portal-service";
+import { requirePortalAuth } from "@/lib/portal/portal-auth";
+import {
+  getClientSites,
+  getPortalAnalytics,
+  getClientInfo,
+} from "@/lib/portal/portal-service";
 import { getClientTickets, getTicketStats } from "@/lib/portal/support-service";
+import { getEffectivePermissions } from "@/lib/portal/portal-permissions";
+import { getPortalDashboardData } from "@/lib/portal/portal-dashboard-service";
 import { getSiteUrl, getSiteDomain } from "@/lib/utils/site-url";
 import { formatDistanceToNow } from "date-fns";
 import { PageHeader } from "@/components/layout/page-header";
 
 export const metadata: Metadata = {
   title: "Dashboard | Client Portal",
-  description: "View your websites and manage your account",
+  description: "Manage your business operations",
 };
 
 export default async function PortalDashboard() {
   const user = await requirePortalAuth();
-  const session = await getPortalSession();
-  
+
   const [clientInfo, sites, tickets, ticketStats] = await Promise.all([
     getClientInfo(user.clientId),
     getClientSites(user.clientId),
@@ -27,12 +48,31 @@ export default async function PortalDashboard() {
     getTicketStats(user.clientId),
   ]);
 
-  // Get analytics only if user has permission
-  const analytics = user.canViewAnalytics 
-    ? await getPortalAnalytics(user.clientId) 
+  const siteIds = sites.map((s) => s.id);
+  const primarySiteId = siteIds[0];
+
+  // Get effective permissions for the primary site (used for dashboard KPI visibility)
+  const permissions = primarySiteId
+    ? await getEffectivePermissions(user.clientId, primarySiteId)
     : null;
 
+  // Fetch module KPIs and analytics in parallel
+  const [dashboardData, analytics] = await Promise.all([
+    permissions
+      ? getPortalDashboardData(siteIds, permissions, user.agencyId)
+      : Promise.resolve(null),
+    user.canViewAnalytics ? getPortalAnalytics(user.clientId) : null,
+  ]);
+
   const openTickets = ticketStats.open + ticketStats.inProgress;
+
+  // Check if any module data is available
+  const hasModuleData =
+    dashboardData?.liveChat ||
+    dashboardData?.ecommerce ||
+    dashboardData?.bookings ||
+    dashboardData?.crm ||
+    dashboardData?.automation;
 
   return (
     <div className="space-y-8">
@@ -40,13 +80,13 @@ export default async function PortalDashboard() {
       <PageHeader
         title={`Welcome back, ${user.fullName.split(" ")[0]}!`}
         description={
-          clientInfo?.companyName 
-            ? `Here's an overview of ${clientInfo.companyName}'s sites with ${clientInfo.agencyName}`
-            : `Here's an overview of your sites with ${clientInfo?.agencyName || "your agency"}`
+          clientInfo?.companyName
+            ? `Here's an overview of ${clientInfo.companyName}'s operations`
+            : `Here's your business operations overview`
         }
       />
 
-      {/* Quick Stats */}
+      {/* Primary Stats Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-6">
@@ -91,7 +131,9 @@ export default async function PortalDashboard() {
                   <p className="text-3xl font-bold">
                     {analytics.uniqueVisitors.toLocaleString()}
                   </p>
-                  <p className="text-sm text-muted-foreground">Unique Visitors</p>
+                  <p className="text-sm text-muted-foreground">
+                    Unique Visitors
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -101,8 +143,12 @@ export default async function PortalDashboard() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className={`p-3 rounded-full ${openTickets > 0 ? "bg-orange-500/10" : "bg-muted"}`}>
-                <MessageCircle className={`h-6 w-6 ${openTickets > 0 ? "text-orange-600" : "text-muted-foreground"}`} />
+              <div
+                className={`p-3 rounded-full ${openTickets > 0 ? "bg-orange-500/10" : "bg-muted"}`}
+              >
+                <MessageCircle
+                  className={`h-6 w-6 ${openTickets > 0 ? "text-orange-600" : "text-muted-foreground"}`}
+                />
               </div>
               <div>
                 <p className="text-3xl font-bold">{openTickets}</p>
@@ -112,6 +158,306 @@ export default async function PortalDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Module KPI Cards */}
+      {hasModuleData && (
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold">Operations Overview</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {/* Live Chat Card */}
+            {dashboardData?.liveChat && primarySiteId && (
+              <Card className="relative overflow-hidden">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Live Chat
+                  </CardTitle>
+                  <MessageCircle className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-3xl font-bold">
+                      {dashboardData.liveChat.activeConversations}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      active chats
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Pending</span>
+                      <span className="font-medium">
+                        {dashboardData.liveChat.pendingConversations}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Today</span>
+                      <span className="font-medium">
+                        {dashboardData.liveChat.todayConversations}
+                      </span>
+                    </div>
+                    <div className="flex justify-between col-span-2">
+                      <span className="text-muted-foreground">
+                        Avg Response
+                      </span>
+                      <span className="font-medium">
+                        {dashboardData.liveChat.avgResponseTime < 60
+                          ? `${dashboardData.liveChat.avgResponseTime}s`
+                          : `${Math.floor(dashboardData.liveChat.avgResponseTime / 60)}m ${dashboardData.liveChat.avgResponseTime % 60}s`}
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    asChild
+                  >
+                    <Link href={`/portal/sites/${primarySiteId}/live-chat`}>
+                      View Open Chats
+                      <ArrowRight className="h-4 w-4 ml-1" />
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* E-Commerce Card */}
+            {dashboardData?.ecommerce && primarySiteId && (
+              <Card className="relative overflow-hidden">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Orders
+                  </CardTitle>
+                  <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-3xl font-bold">
+                      {dashboardData.ecommerce.totalOrders}
+                    </p>
+                    <p className="text-sm text-muted-foreground">this month</p>
+                    {dashboardData.ecommerce.revenueChange !== 0 && (
+                      <div
+                        className={`flex items-center text-xs ${dashboardData.ecommerce.revenueChange > 0 ? "text-green-600" : "text-red-600"}`}
+                      >
+                        {dashboardData.ecommerce.revenueChange > 0 ? (
+                          <ArrowUpRight className="h-3 w-3" />
+                        ) : (
+                          <ArrowDownRight className="h-3 w-3" />
+                        )}
+                        {Math.abs(
+                          dashboardData.ecommerce.revenueChange,
+                        ).toFixed(0)}
+                        %
+                      </div>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Pending</span>
+                      <span className="font-medium">
+                        {dashboardData.ecommerce.pendingOrders}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Revenue</span>
+                      <span className="font-medium">
+                        K
+                        {dashboardData.ecommerce.totalRevenue.toLocaleString(
+                          "en-ZM",
+                          {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0,
+                          },
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    asChild
+                  >
+                    <Link href={`/portal/sites/${primarySiteId}/orders`}>
+                      Pending Orders
+                      <ArrowRight className="h-4 w-4 ml-1" />
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Bookings Card */}
+            {dashboardData?.bookings && primarySiteId && (
+              <Card className="relative overflow-hidden">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Bookings
+                  </CardTitle>
+                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-3xl font-bold">
+                      {dashboardData.bookings.todayAppointments}
+                    </p>
+                    <p className="text-sm text-muted-foreground">today</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">This Week</span>
+                      <span className="font-medium">
+                        {dashboardData.bookings.upcomingThisWeek}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Pending</span>
+                      <span className="font-medium">
+                        {dashboardData.bookings.pendingAppointments}
+                      </span>
+                    </div>
+                    <div className="flex justify-between col-span-2">
+                      <span className="text-muted-foreground">Confirmed</span>
+                      <span className="font-medium">
+                        {dashboardData.bookings.confirmedAppointments}
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    asChild
+                  >
+                    <Link href={`/portal/sites/${primarySiteId}/bookings`}>
+                      Today&apos;s Bookings
+                      <ArrowRight className="h-4 w-4 ml-1" />
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* CRM Card */}
+            {dashboardData?.crm && primarySiteId && (
+              <Card className="relative overflow-hidden">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    CRM
+                  </CardTitle>
+                  <Contact className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-3xl font-bold">
+                      {dashboardData.crm.totalContacts}
+                    </p>
+                    <p className="text-sm text-muted-foreground">contacts</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Open Deals</span>
+                      <span className="font-medium">
+                        {dashboardData.crm.totalDeals}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Won (Month)</span>
+                      <span className="font-medium">
+                        {dashboardData.crm.dealsWonThisMonth}
+                      </span>
+                    </div>
+                    <div className="flex justify-between col-span-2">
+                      <span className="text-muted-foreground">
+                        Pipeline Value
+                      </span>
+                      <span className="font-medium">
+                        K
+                        {dashboardData.crm.pipelineValue.toLocaleString(
+                          "en-ZM",
+                          {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0,
+                          },
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    asChild
+                  >
+                    <Link href={`/portal/sites/${primarySiteId}/crm`}>
+                      View Contacts
+                      <ArrowRight className="h-4 w-4 ml-1" />
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Automation Card */}
+            {dashboardData?.automation && primarySiteId && (
+              <Card className="relative overflow-hidden">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Automation
+                  </CardTitle>
+                  <Zap className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-3xl font-bold">
+                      {dashboardData.automation.activeWorkflows}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      active workflows
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Runs Today</span>
+                      <span className="font-medium">
+                        {dashboardData.automation.executionsToday}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Total Runs</span>
+                      <span className="font-medium">
+                        {dashboardData.automation.totalExecutions}
+                      </span>
+                    </div>
+                    <div className="flex justify-between col-span-2">
+                      <span className="text-muted-foreground">
+                        Success Rate
+                      </span>
+                      <span className="font-medium">
+                        {dashboardData.automation.totalExecutions > 0
+                          ? `${Math.round((dashboardData.automation.successfulExecutions / dashboardData.automation.totalExecutions) * 100)}%`
+                          : "N/A"}
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    asChild
+                  >
+                    <Link href={`/portal/sites/${primarySiteId}/automation`}>
+                      View Workflows
+                      <ArrowRight className="h-4 w-4 ml-1" />
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Sites */}
       <Card>
@@ -128,7 +474,7 @@ export default async function PortalDashboard() {
           {sites.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {sites.slice(0, 4).map((site) => {
-                const url = site.subdomain 
+                const url = site.subdomain
                   ? getSiteUrl(site.subdomain, site.customDomain)
                   : null;
                 const domain = site.subdomain
@@ -150,7 +496,10 @@ export default async function PortalDashboard() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <p className="font-medium truncate">{site.name}</p>
-                          <Badge variant={site.isPublished ? "default" : "secondary"} className="shrink-0">
+                          <Badge
+                            variant={site.isPublished ? "default" : "secondary"}
+                            className="shrink-0"
+                          >
                             {site.isPublished ? "Live" : "Draft"}
                           </Badge>
                         </div>
@@ -160,7 +509,9 @@ export default async function PortalDashboard() {
                           </p>
                         )}
                         <p className="text-xs text-muted-foreground mt-1">
-                          {site.pageCount} pages {site.lastUpdatedAt && `• Updated ${formatDistanceToNow(new Date(site.lastUpdatedAt), { addSuffix: true })}`}
+                          {site.pageCount} pages{" "}
+                          {site.lastUpdatedAt &&
+                            `• Updated ${formatDistanceToNow(new Date(site.lastUpdatedAt), { addSuffix: true })}`}
                         </p>
                       </div>
                     </Link>
@@ -171,11 +522,7 @@ export default async function PortalDashboard() {
                         className="shrink-0"
                         asChild
                       >
-                        <a
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
+                        <a href={url} target="_blank" rel="noopener noreferrer">
                           <ExternalLink className="h-4 w-4 text-muted-foreground" />
                         </a>
                       </Button>
@@ -189,7 +536,7 @@ export default async function PortalDashboard() {
               <Globe className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold">No Sites Yet</h3>
               <p className="text-muted-foreground mt-1">
-                Your websites will appear here once they're set up.
+                Your websites will appear here once they&apos;re set up.
               </p>
             </div>
           )}
@@ -202,9 +549,7 @@ export default async function PortalDashboard() {
           <CardTitle>Recent Support Tickets</CardTitle>
           <div className="flex gap-2">
             <Button variant="default" size="sm" asChild>
-              <Link href="/portal/support/new">
-                New Ticket
-              </Link>
+              <Link href="/portal/support/new">New Ticket</Link>
             </Button>
             <Button variant="outline" size="sm" asChild>
               <Link href="/portal/support">View All</Link>
@@ -225,7 +570,9 @@ export default async function PortalDashboard() {
                       <p className="font-medium truncate">{ticket.subject}</p>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {ticket.ticketNumber} • {ticket.category || "general"} {ticket.createdAt && `• ${formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })}`}
+                      {ticket.ticketNumber} • {ticket.category || "general"}{" "}
+                      {ticket.createdAt &&
+                        `• ${formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })}`}
                     </p>
                   </div>
                   <Badge
@@ -233,17 +580,17 @@ export default async function PortalDashboard() {
                       ticket.status === "open"
                         ? "default"
                         : ticket.status === "in_progress"
-                        ? "secondary"
-                        : ticket.status === "resolved"
-                        ? "outline"
-                        : "secondary"
+                          ? "secondary"
+                          : ticket.status === "resolved"
+                            ? "outline"
+                            : "secondary"
                     }
                     className={
                       ticket.status === "open"
                         ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
                         : ticket.status === "resolved"
-                        ? "bg-green-100 text-green-800 hover:bg-green-100"
-                        : ""
+                          ? "bg-green-100 text-green-800 hover:bg-green-100"
+                          : ""
                     }
                   >
                     {(ticket.status || "open").replace("_", " ")}

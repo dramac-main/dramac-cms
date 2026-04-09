@@ -1,53 +1,111 @@
 # Active Context
 
-## Current Focus: Production-Fidelity TestRunDialog — COMPLETE ✅
+## Current Focus: Client Portal Overhaul — ALL 15 PHASES COMPLETE ✅
 
-### Session: Real Database Entities in Test Dialog (April 2026) — commit 40098a0d
+### Summary
 
-User saw hardcoded sample data in TestRunDialog ("Sample Service", "50.00", "USD") and requested all fields use REAL data from the database. Goal: "if everything works perfectly in test, that means in production it works perfectly as well, guaranteed."
+Transformed the client portal from a passive site viewer into a full business operations center. Implemented across 4 sessions with 15 phases covering auth, navigation, module pages, dashboard, security, and TypeScript verification.
 
-### Changes Made (3 files, +1421 -145):
+### What Was Built (15 Phases)
 
-**1. getTestRunEntities() server action** (automation-actions.ts)
+**Phase 1A-F (DB + Auth + Permissions):**
 
-- Fetches 8 entity types in parallel via Promise.allSettled(): services, staff, products, orders, contacts, forms, conversations, quotes
-- Resolves siteCurrency from ecommerce settings and ownerEmail from sites→agencies→profiles chain
-- Filters by event category to only fetch relevant entities
+- Added 9 permission columns to `clients` table (can_manage_live_chat, can_manage_orders, can_manage_products, can_manage_bookings, can_manage_crm, can_manage_automation, can_manage_quotes, can_manage_agents, can_manage_customers)
+- Created `client_site_permissions` table for override permissions per-site
+- portal-auth.ts: `getPortalUser()`, `getPortalSession()`, `getImpersonationState()`, `requirePortalAuth()`
+- portal-permissions.ts: `getEffectivePermissions()`, `verifyPortalModuleAccess()` (3-layer: site ownership → module installed → permission check)
+- client-portal-settings.tsx: Admin UI for managing all 12 client permissions
 
-**2. TestRunDialog complete rewrite** (test-run-dialog.tsx, ~1200 lines)
+**Phase 12 (Module Registry):**
 
-- EntitySelector component: dropdowns for all 5 event categories (booking services+staff, CRM contacts, ecommerce orders+quotes, forms definitions, live_chat conversations)
-- Auto-populates related fields when entity selected (e.g., select service → fills price, duration, currency, endTime, paymentStatus)
-- ExecutionResultsPanel: polls getExecutionDetails(executionId) every 2s, shows overall pass/fail with step count badge, per-step status/action/duration/error
-- Tabbed UI: "Configure & Run" / "Results" tabs
-- Snake_case aliases for all trigger data (30 camelCase→snake_case pairs) for production parity
-- Zero hardcoded sample data — all fields populated from real entities
-- "auto" badge on auto-populated fields, hasRequiredMissing validation
+- portal-module-registry.ts: Central registry mapping module slugs to portal routes, permissions, icons, labels
+- module-discovery.ts integration for installed module detection
 
-**3. workflow-builder.tsx updates**
+**Phase 2 (Navigation + Layout):**
 
-- handleTestRun returns Promise<string|null> (executionId) instead of void
-- Dialog stays open after run for results tab viewing
-- Passes siteId prop to TestRunDialog
+- portal-navigation.ts: `getPortalNavigationGroups()` — dynamic nav based on permissions + installed modules
+- portal-layout-client.tsx: Client-side layout with sidebar, mobile menu, impersonation banner
+- portal/layout.tsx: Server layout fetching session, sites, permissions, installed modules
 
-### Also committed (b29b9c8d):
+**Phase 13 (Portal Context):**
 
-- Booking payment flow type fixes (public-booking-actions, useCreateBooking, BookingFormBlock)
-- Live-chat event bridge updates (chat-booking-actions, chat-event-bridge)
-- Memory bank sync
+- portal-context.tsx: React context providing user, sites, permissions, impersonation state
 
-### Verification:
+**Phases 3-9 (Module Route Pages — 11 pages total):**
 
-- ✅ 0 TypeScript errors in modified files (5 pre-existing in booking/chat files)
-- ✅ 189/189 automation tests pass
-- ✅ Committed (40098a0d + b29b9c8d) and pushed to main
+- live-chat/page.tsx, live-chat/conversations/page.tsx, live-chat/conversations/[conversationId]/page.tsx
+- chat-agents/page.tsx
+- orders/page.tsx, products/page.tsx, quotes/page.tsx, customers/page.tsx
+- bookings/page.tsx, crm/page.tsx, automation/page.tsx
 
-### Next Steps:
+**Phase 10 (Dashboard Redesign):**
 
-- Verify Vercel deployment
-- Test the TestRunDialog with real data on live site
-- Fix 5 pre-existing TS errors in booking/chat files (paymentStatus type, chat-event-bridge import)
-- Test full booking payment flow on storefront
+- portal-dashboard-service.ts: `getPortalDashboardData()` aggregates KPIs from 5 modules in parallel
+- portal/page.tsx: Full rewrite with Operations Overview showing conditional module KPI cards
+
+**Phase 11 (Site Detail Enhancement):**
+
+- `getSiteModuleCounts()` in portal-dashboard-service.ts for per-site module card counts
+- portal/sites/[siteId]/page.tsx: Module Operations grid with live counts
+
+**Phase 14 (Security Audit + Fixes):**
+
+- Fixed 6 CRITICAL cross-agency vulnerabilities in clients.ts (getClient, updateClientAction, deleteClientAction, inviteClientToPortal, revokeClientPortalAccess, impersonateClient) — all now verify agency_id
+- Added defense-in-depth agency check to getPortalSession impersonation flow
+- Portal-side code verified secure: all routes use requirePortalAuth(), all queries scoped by client_id
+
+**Phase 15 (TypeScript Verification):**
+
+- Regenerated src/types/database.ts (580K chars) from Supabase with all new columns
+- Zero portal-related TS errors (only 4 pre-existing errors in automation/live-chat modules)
+
+### Key Technical Decisions
+
+- `src/types/database.ts` is the file used by Supabase client (NOT `src/lib/supabase/database.types.ts`)
+- tsc requires `NODE_OPTIONS="--max-old-space-size=8192"` due to large types file
+- Currency: ZMW with `K` prefix formatting (en-ZM locale)
+- CRM stats require agencyId (not just siteId): `getAgencyCRMStats(agencyId, siteIds[])`
+
+### Files Created/Modified
+
+**New files (this overhaul):**
+
+- src/lib/portal/portal-auth.ts
+- src/lib/portal/portal-permissions.ts
+- src/lib/portal/portal-module-registry.ts
+- src/lib/portal/portal-navigation.ts
+- src/lib/portal/portal-dashboard-service.ts
+- src/lib/portal/portal-context.tsx
+- src/components/portal/portal-layout-client.tsx
+- src/components/portal/portal-sidebar.tsx
+- src/app/portal/layout.tsx (rewritten)
+- src/app/portal/page.tsx (rewritten)
+- 11 portal route pages under src/app/portal/sites/[siteId]/
+
+**Modified files:**
+
+- src/lib/actions/clients.ts (security fixes)
+- src/types/database.ts (regenerated)
+- src/components/clients/client-portal-settings.tsx
+- src/config/index.ts
+
+### Next Steps
+
+- Deploy and test end-to-end
+- Verify impersonation works across all module pages
+- Test permission matrix (enable/disable each permission and verify nav + page access)
+
+## Previous Focus: Email OTP Verification — COMPLETE ✅ (commit 2bba73ce)
+
+Mirror e-commerce guest customer auto-creation pattern in booking module so BookingAccountNudge works.
+
+## Previous Focus: Step Toggle Feedback — COMPLETE ✅ (commit c07a5cc9)
+
+Toast notifications on step enable/disable toggle + OFF badge on canvas nodes.
+
+## Previous Focus: Booking Payment Parity — COMPLETE ✅ (commit 9841f9e8)
+
+Fixed 7 gaps between booking and e-commerce payment systems.
 
 ## Previous Focus: Interactive Booking Payment Chat Flow — COMPLETE ✅ (commit 9df131f1)
 

@@ -1,8 +1,8 @@
 /**
  * WorkflowCanvas Component
- * 
+ *
  * Phase EM-57B: Automation Engine - Visual Builder & Advanced Features
- * 
+ *
  * Visual canvas displaying the workflow steps with:
  * - Start/End nodes
  * - Draggable and reorderable steps
@@ -10,45 +10,45 @@
  * - Drop zone for new actions
  */
 
-"use client"
+"use client";
 
-import { useDroppable } from "@dnd-kit/core"
-import { 
-  SortableContext, 
-  verticalListSortingStrategy, 
-  useSortable 
-} from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
-import { Card } from "@/components/ui/card"
-import { 
-  Trash2, 
-  GripVertical, 
-  ChevronDown, 
-  Play, 
+import { useDroppable } from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { Card } from "@/components/ui/card";
+import {
+  Trash2,
+  GripVertical,
+  ChevronDown,
+  Play,
   MoreVertical,
   Copy,
   Settings,
-  icons
-} from "lucide-react"
+  icons,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import type { WorkflowStep } from "../../types/automation-types"
+} from "@/components/ui/dropdown-menu";
+import type { WorkflowStep } from "../../types/automation-types";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 interface WorkflowCanvasProps {
-  steps: WorkflowStep[]
-  selectedStepId?: string
-  onStepClick: (step: WorkflowStep | null) => void
-  onStepDelete: (stepId: string) => void
-  onStepDuplicate?: (step: WorkflowStep) => void
+  steps: WorkflowStep[];
+  selectedStepId?: string;
+  onStepClick: (step: WorkflowStep | null) => void;
+  onStepDelete: (stepId: string) => void;
+  onStepDuplicate?: (step: WorkflowStep) => void;
 }
 
 // ============================================================================
@@ -56,68 +56,75 @@ interface WorkflowCanvasProps {
 // ============================================================================
 
 function getStepIcon(step: WorkflowStep): string {
-  if (step.step_type === 'condition') return 'GitBranch'
-  if (step.step_type === 'delay') return 'Timer'
-  if (step.step_type === 'loop') return 'Repeat'
-  if (step.step_type === 'stop') return 'StopCircle'
-  if (step.step_type === 'transform') return 'RefreshCw'
-  if (step.step_type === 'filter') return 'Search'
-  
+  if (step.step_type === "condition") return "GitBranch";
+  if (step.step_type === "delay") return "Timer";
+  if (step.step_type === "loop") return "Repeat";
+  if (step.step_type === "stop") return "StopCircle";
+  if (step.step_type === "transform") return "RefreshCw";
+  if (step.step_type === "filter") return "Search";
+
   if (step.action_type) {
-    if (step.action_type.startsWith('crm')) return 'User'
-    if (step.action_type.startsWith('email')) return 'Mail'
-    if (step.action_type.startsWith('notification.send_sms')) return 'Smartphone'
-    if (step.action_type.startsWith('notification.send_slack')) return 'MessageSquare'
-    if (step.action_type.startsWith('notification.send_discord')) return 'Gamepad2'
-    if (step.action_type.startsWith('notification')) return 'Bell'
-    if (step.action_type.startsWith('webhook')) return 'Globe'
-    if (step.action_type.startsWith('data')) return 'Database'
-    if (step.action_type.startsWith('transform')) return 'RefreshCw'
-    if (step.action_type.startsWith('ai')) return 'Bot'
-    if (step.action_type.startsWith('integration')) return 'Link'
-    if (step.action_type.startsWith('flow.delay')) return 'Timer'
-    if (step.action_type.startsWith('flow.condition')) return 'GitBranch'
-    if (step.action_type.startsWith('flow.loop')) return 'Repeat'
-    if (step.action_type.startsWith('flow.stop')) return 'StopCircle'
+    if (step.action_type.startsWith("crm")) return "User";
+    if (step.action_type.startsWith("email")) return "Mail";
+    if (step.action_type.startsWith("notification.send_sms"))
+      return "Smartphone";
+    if (step.action_type.startsWith("notification.send_slack"))
+      return "MessageSquare";
+    if (step.action_type.startsWith("notification.send_discord"))
+      return "Gamepad2";
+    if (step.action_type.startsWith("notification")) return "Bell";
+    if (step.action_type.startsWith("webhook")) return "Globe";
+    if (step.action_type.startsWith("data")) return "Database";
+    if (step.action_type.startsWith("transform")) return "RefreshCw";
+    if (step.action_type.startsWith("ai")) return "Bot";
+    if (step.action_type.startsWith("integration")) return "Link";
+    if (step.action_type.startsWith("flow.delay")) return "Timer";
+    if (step.action_type.startsWith("flow.condition")) return "GitBranch";
+    if (step.action_type.startsWith("flow.loop")) return "Repeat";
+    if (step.action_type.startsWith("flow.stop")) return "StopCircle";
   }
-  
-  return 'Zap'
+
+  return "Zap";
 }
 
 function getStepColor(step: WorkflowStep): string {
   switch (step.step_type) {
-    case 'condition':
-      return 'border-l-yellow-500'
-    case 'delay':
-      return 'border-l-blue-500'
-    case 'loop':
-      return 'border-l-purple-500'
-    case 'stop':
-      return 'border-l-red-500'
-    case 'transform':
-    case 'filter':
-      return 'border-l-orange-500'
+    case "condition":
+      return "border-l-yellow-500";
+    case "delay":
+      return "border-l-blue-500";
+    case "loop":
+      return "border-l-purple-500";
+    case "stop":
+      return "border-l-red-500";
+    case "transform":
+    case "filter":
+      return "border-l-orange-500";
     default:
-      if (step.action_type?.startsWith('ai')) return 'border-l-violet-500'
-      if (step.action_type?.startsWith('email') || step.action_type?.startsWith('notification')) {
-        return 'border-l-green-500'
+      if (step.action_type?.startsWith("ai")) return "border-l-violet-500";
+      if (
+        step.action_type?.startsWith("email") ||
+        step.action_type?.startsWith("notification")
+      ) {
+        return "border-l-green-500";
       }
-      return 'border-l-primary'
+      return "border-l-primary";
   }
 }
 
 function formatActionName(step: WorkflowStep): string {
-  if (step.name) return step.name
-  
+  if (step.name) return step.name;
+
   if (step.action_type) {
-    const parts = step.action_type.split('.')
-    const action = parts[parts.length - 1]
-    return action.split('_').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ')
+    const parts = step.action_type.split(".");
+    const action = parts[parts.length - 1];
+    return action
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   }
-  
-  return step.step_type.charAt(0).toUpperCase() + step.step_type.slice(1)
+
+  return step.step_type.charAt(0).toUpperCase() + step.step_type.slice(1);
 }
 
 // ============================================================================
@@ -125,11 +132,11 @@ function formatActionName(step: WorkflowStep): string {
 // ============================================================================
 
 interface SortableStepProps {
-  step: WorkflowStep
-  isSelected: boolean
-  onClick: () => void
-  onDelete: () => void
-  onDuplicate?: () => void
+  step: WorkflowStep;
+  isSelected: boolean;
+  onClick: () => void;
+  onDelete: () => void;
+  onDuplicate?: () => void;
 }
 
 function SortableStep({
@@ -149,13 +156,13 @@ function SortableStep({
   } = useSortable({
     id: step.id,
     data: { type: "step", step },
-  })
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-  }
+  };
 
   return (
     <div ref={setNodeRef} style={style} className="relative group">
@@ -184,9 +191,13 @@ function SortableStep({
           {/* Icon */}
           <div className="flex-shrink-0">
             {(() => {
-              const iconName = getStepIcon(step)
-              const LucideIcon = icons[iconName as keyof typeof icons]
-              return LucideIcon ? <LucideIcon className="h-5 w-5" /> : <span>{iconName}</span>
+              const iconName = getStepIcon(step);
+              const LucideIcon = icons[iconName as keyof typeof icons];
+              return LucideIcon ? (
+                <LucideIcon className="h-5 w-5" />
+              ) : (
+                <span>{iconName}</span>
+              );
             })()}
           </div>
 
@@ -219,20 +230,22 @@ function SortableStep({
                 Configure
               </DropdownMenuItem>
               {onDuplicate && (
-                <DropdownMenuItem onClick={(e) => {
-                  e.stopPropagation()
-                  onDuplicate()
-                }}>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDuplicate();
+                  }}
+                >
                   <Copy className="h-4 w-4 mr-2" />
                   Duplicate
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
                 onClick={(e) => {
-                  e.stopPropagation()
-                  onDelete()
+                  e.stopPropagation();
+                  onDelete();
                 }}
               >
                 <Trash2 className="h-4 w-4 mr-2" />
@@ -243,15 +256,18 @@ function SortableStep({
         </div>
 
         {/* Status indicators */}
-        {step.on_error === 'retry' && (
+        {step.on_error === "retry" && (
           <div className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
-            {(() => { const Icon = icons['RefreshCw']; return Icon ? <Icon className="h-3 w-3" /> : null })()}
+            {(() => {
+              const Icon = icons["RefreshCw"];
+              return Icon ? <Icon className="h-3 w-3" /> : null;
+            })()}
             <span>Retry on error ({step.max_retries}x)</span>
           </div>
         )}
       </Card>
     </div>
-  )
+  );
 }
 
 // ============================================================================
@@ -267,7 +283,7 @@ export function WorkflowCanvas({
 }: WorkflowCanvasProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: "canvas",
-  })
+  });
 
   return (
     <div
@@ -283,7 +299,9 @@ export function WorkflowCanvas({
         <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center text-white shadow-lg">
           <Play className="h-6 w-6" />
         </div>
-        <div className="text-xs font-medium mt-2 text-muted-foreground">Start</div>
+        <div className="text-xs font-medium mt-2 text-muted-foreground">
+          Start
+        </div>
         {steps.length > 0 && <div className="w-0.5 h-4 bg-border mt-2" />}
       </div>
 
@@ -301,13 +319,15 @@ export function WorkflowCanvas({
                 isSelected={step.id === selectedStepId}
                 onClick={() => onStepClick(step)}
                 onDelete={() => onStepDelete(step.id)}
-                onDuplicate={onStepDuplicate ? () => onStepDuplicate(step) : undefined}
+                onDuplicate={
+                  onStepDuplicate ? () => onStepDuplicate(step) : undefined
+                }
               />
             ))}
           </div>
         </SortableContext>
       ) : (
-        <div 
+        <div
           className={`
             border-2 border-dashed rounded-lg p-8 text-center 
             transition-colors w-full max-w-md
@@ -315,7 +335,12 @@ export function WorkflowCanvas({
           `}
         >
           <div className="mb-2">
-            {(() => { const Icon = icons['Inbox']; return Icon ? <Icon className="h-10 w-10 mx-auto text-muted-foreground" /> : null })()}
+            {(() => {
+              const Icon = icons["Inbox"];
+              return Icon ? (
+                <Icon className="h-10 w-10 mx-auto text-muted-foreground" />
+              ) : null;
+            })()}
           </div>
           <p className="text-muted-foreground font-medium">
             Drag actions here to build your workflow
@@ -333,16 +358,20 @@ export function WorkflowCanvas({
           <div className="w-10 h-10 rounded-full bg-muted border-2 flex items-center justify-center">
             <ChevronDown className="h-5 w-5 text-muted-foreground" />
           </div>
-          <div className="text-xs font-medium mt-2 text-muted-foreground">End</div>
+          <div className="text-xs font-medium mt-2 text-muted-foreground">
+            End
+          </div>
         </div>
       )}
 
       {/* Drop hint when dragging */}
       {isOver && steps.length > 0 && (
         <div className="mt-4 p-4 border-2 border-dashed border-primary rounded-lg text-center">
-          <p className="text-sm text-primary font-medium">Drop here to add step</p>
+          <p className="text-sm text-primary font-medium">
+            Drop here to add step
+          </p>
         </div>
       )}
     </div>
-  )
+  );
 }

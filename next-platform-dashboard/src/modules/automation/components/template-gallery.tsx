@@ -116,7 +116,7 @@ export function TemplateGallery({
     await ensureSystemPacksInstalled(siteId);
     // Upgrade existing workflow steps to latest action types
     await upgradeSystemWorkflowSteps(siteId).catch((err) =>
-      console.error("[Automation] upgradeSystemWorkflowSteps error:", err)
+      console.error("[Automation] upgradeSystemWorkflowSteps error:", err),
     );
     const result = await getInstalledPacks(siteId);
     if (result.success && result.data) {

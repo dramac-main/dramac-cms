@@ -16,7 +16,10 @@ import {
   bootstrapLiveChatAgent,
   getSiteOwnerUserId,
 } from "@/modules/live-chat/lib/bootstrap-agent";
-import { ensureSystemPacksInstalled, upgradeSystemWorkflowSteps } from "@/modules/automation/actions/automation-actions";
+import {
+  ensureSystemPacksInstalled,
+  upgradeSystemWorkflowSteps,
+} from "@/modules/automation/actions/automation-actions";
 
 type RouteContext = { params: Promise<{ siteId: string }> };
 
@@ -240,7 +243,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
     // After all modules are installed, ensure automation packs are installed
     // This handles booking-communications and ecommerce-communications packs
     // that depend on those modules being present in site_module_installations
-    if (installed.length > 0 || neededSlugs.has("booking") || neededSlugs.has("ecommerce")) {
+    if (
+      installed.length > 0 ||
+      neededSlugs.has("booking") ||
+      neededSlugs.has("ecommerce")
+    ) {
       await ensureSystemPacksInstalled(siteId).catch((err) =>
         console.error("[AutoInstall] Failed to install automation packs:", err),
       );

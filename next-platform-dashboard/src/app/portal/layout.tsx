@@ -1,5 +1,8 @@
 import { getPortalSession } from "@/lib/portal/portal-auth";
-import { getClientInfo } from "@/lib/portal/portal-service";
+import {
+  getClientInfo,
+  getClientInstalledModules,
+} from "@/lib/portal/portal-service";
 import { getUnreadNotificationCount } from "@/lib/portal/notification-service";
 import { getTicketStats } from "@/lib/portal/support-service";
 import { PortalHeader } from "@/components/portal/portal-header";
@@ -69,16 +72,23 @@ export default async function PortalLayout({
     return children;
   }
 
-  const [clientInfo, unreadCount, ticketStats] = await Promise.all([
-    getClientInfo(session.user.clientId),
-    session.isImpersonating
-      ? Promise.resolve(0)
-      : getUnreadNotificationCount(session.user.clientId),
-    getTicketStats(session.user.clientId),
-  ]);
+  const [clientInfo, unreadCount, ticketStats, modulesData] = await Promise.all(
+    [
+      getClientInfo(session.user.clientId),
+      session.isImpersonating
+        ? Promise.resolve(0)
+        : getUnreadNotificationCount(session.user.clientId),
+      getTicketStats(session.user.clientId),
+      getClientInstalledModules(session.user.clientId),
+    ],
+  );
 
   const openTicketCount = ticketStats.open + ticketStats.inProgress;
   const agencyId = clientInfo?.agencyId;
+  const installedModules = modulesData.slugs;
+  // If client has exactly one site, nav links go directly to that site
+  const singleSiteId =
+    modulesData.siteIds.length === 1 ? modulesData.siteIds[0] : undefined;
 
   // Server-side branding fetch — eliminates color flash on portal load
   // Same pattern as dashboard layout: SSR inject CSS vars before hydration
@@ -89,6 +99,8 @@ export default async function PortalLayout({
       user={session.user}
       openTicketCount={openTicketCount}
       isImpersonating={session.isImpersonating}
+      installedModules={installedModules}
+      singleSiteId={singleSiteId}
       headerComponent={
         <PortalHeader
           user={session.user}

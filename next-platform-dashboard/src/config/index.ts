@@ -1,27 +1,31 @@
 /**
  * Configuration Barrel Export
- * 
+ *
  * Central export point for all configuration files.
  * Import from '@/config' for cleaner imports.
  */
 
 // Layout constants
-export { LAYOUT, combineLayout, type LayoutKey, type LayoutValue } from './layout';
+export {
+  LAYOUT,
+  combineLayout,
+  type LayoutKey,
+  type LayoutValue,
+} from "./layout";
 
 // Navigation configs
-export { adminNavigationItems, type AdminNavItem } from './admin-navigation';
-export { 
-  settingsNavigation, 
+export { adminNavigationItems, type AdminNavItem } from "./admin-navigation";
+export {
+  settingsNavigation,
   getFlatSettingsNav,
-  type SettingsNavSection, 
-  type SettingsNavItem 
-} from './settings-navigation';
-export { 
-  getPortalNavigation,
+  type SettingsNavSection,
+  type SettingsNavItem,
+} from "./settings-navigation";
+export {
   getPortalNavigationGroups,
   type PortalNavItem,
-  type PortalUserPermissions 
-} from './portal-navigation';
+  type PortalUserPermissions,
+} from "./portal-navigation";
 
 // Re-export existing navigation config
-export * from './navigation';
+export * from "./navigation";

@@ -27,6 +27,7 @@ import { SettingsView } from './views/settings-view'
 import { EmbedCodeGenerator } from './views/embed-code-view'
 import { CommandPalette } from './command-palette'
 import { EcommerceProvider, useEcommerce } from '../context/ecommerce-context'
+import { useIsPortalView } from '@/lib/portal/portal-context'
 import { CreateProductDialog } from './dialogs/create-product-dialog'
 import { CreateCategoryDialog } from './dialogs/create-category-dialog'
 import { CreateDiscountDialog } from './dialogs/create-discount-dialog'
@@ -118,6 +119,7 @@ function EcommerceDashboardContent({
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [focusOrderId, setFocusOrderId] = useState<string | null>(null)
+  const isPortal = useIsPortalView()
   
   // Dialog states
   const [showCreateProduct, setShowCreateProduct] = useState(false)
@@ -167,7 +169,7 @@ function EcommerceDashboardContent({
   }
 
   // Loading onboarding check
-  if (showOnboarding === null) {
+  if (showOnboarding === null && !isPortal) {
     return (
       <div className="flex items-center justify-center h-screen">
         <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -175,8 +177,8 @@ function EcommerceDashboardContent({
     )
   }
 
-  // Show onboarding wizard if not completed
-  if (showOnboarding) {
+  // Show onboarding wizard if not completed (skip in portal mode)
+  if (showOnboarding && !isPortal) {
     return (
       <div className="min-h-screen bg-background">
         <OnboardingWizard
@@ -203,6 +205,7 @@ function EcommerceDashboardContent({
         lowStockCount={lowStockProducts}
         isCollapsed={sidebarCollapsed}
         onCollapsedChange={setSidebarCollapsed}
+        portalMode={isPortal}
       />
 
       {/* Main Content */}
