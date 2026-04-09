@@ -1071,6 +1071,283 @@ export async function retryExecution(
   }
 }
 
+// ============================================================================
+// TEST RUN — REAL ENTITY DATA
+// ============================================================================
+
+/**
+ * Fetch real entities from the site's database for test run dialog.
+ * Returns services, staff, products, recent orders, recent contacts,
+ * forms, conversations, and site currency — so the test dialog can
+ * present real data instead of hardcoded sample values.
+ *
+ * Inspired by HubSpot "Test with real sample data" and Make.com
+ * "Choose existing data" patterns.
+ */
+export async function getTestRunEntities(
+  siteId: string,
+  eventCategory?: string,
+): Promise<{
+  success: boolean;
+  data?: {
+    services: Array<{
+      id: string;
+      name: string;
+      price: number;
+      currency: string;
+      duration_minutes: number;
+      require_payment: boolean;
+    }>;
+    staff: Array<{ id: string; name: string; email?: string }>;
+    products: Array<{
+      id: string;
+      name: string;
+      base_price: number;
+      sku?: string;
+      status: string;
+    }>;
+    orders: Array<{
+      id: string;
+      order_number: string;
+      customer_name: string;
+      customer_email: string;
+      total: number;
+      currency: string;
+      status: string;
+      payment_status: string;
+      payment_provider?: string;
+    }>;
+    contacts: Array<{
+      id: string;
+      first_name: string;
+      last_name: string;
+      email: string;
+      phone?: string;
+      company_name?: string;
+    }>;
+    forms: Array<{ id: string; name: string; slug: string }>;
+    conversations: Array<{
+      id: string;
+      visitor_name: string;
+      visitor_email: string;
+      status: string;
+      channel: string;
+    }>;
+    quotes: Array<{
+      id: string;
+      quote_number: string;
+      customer_name: string;
+      customer_email: string;
+      total: number;
+      currency: string;
+      status: string;
+    }>;
+    siteCurrency: string;
+    ownerEmail: string;
+  };
+  error?: string;
+}> {
+  try {
+    const supabase = await createClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
+
+    // Resolve owner email for the site
+    let ownerEmail = "";
+    try {
+      const { data: site } = await db
+        .from("sites")
+        .select("agency_id")
+        .eq("id", siteId)
+        .single();
+      if (site?.agency_id) {
+        const { data: agency } = await db
+          .from("agencies")
+          .select("owner_id")
+          .eq("id", site.agency_id)
+          .single();
+        if (agency?.owner_id) {
+          const { data: profile } = await db
+            .from("profiles")
+            .select("email")
+            .eq("id", agency.owner_id)
+            .single();
+          ownerEmail = profile?.email || "";
+        }
+      }
+    } catch {
+      // Non-fatal
+    }
+
+    // Resolve site currency from ecommerce settings
+    let siteCurrency = "ZMW";
+    try {
+      const { data: ecomSettings } = await db
+        .from("mod_ecommod01_settings")
+        .select("currency")
+        .eq("site_id", siteId)
+        .single();
+      if (ecomSettings?.currency) siteCurrency = ecomSettings.currency;
+    } catch {
+      // Non-fatal — fallback to ZMW
+    }
+
+    // Fetch entities in parallel (only what's needed for the event category)
+    const [
+      servicesResult,
+      staffResult,
+      productsResult,
+      ordersResult,
+      contactsResult,
+      formsResult,
+      conversationsResult,
+      quotesResult,
+    ] = await Promise.allSettled([
+      // Booking services
+      !eventCategory || eventCategory === "booking"
+        ? db
+            .from("mod_bookmod01_services")
+            .select(
+              "id, name, price, currency, duration_minutes, require_payment",
+            )
+            .eq("site_id", siteId)
+            .eq("is_active", true)
+            .order("sort_order", { ascending: true })
+            .limit(50)
+        : Promise.resolve({ data: [] }),
+      // Booking staff
+      !eventCategory || eventCategory === "booking"
+        ? db
+            .from("mod_bookmod01_staff")
+            .select("id, name, email")
+            .eq("site_id", siteId)
+            .eq("is_active", true)
+            .order("name", { ascending: true })
+            .limit(50)
+        : Promise.resolve({ data: [] }),
+      // E-commerce products
+      !eventCategory || eventCategory === "ecommerce"
+        ? db
+            .from("mod_ecommod01_products")
+            .select("id, name, base_price, sku, status")
+            .eq("site_id", siteId)
+            .eq("status", "active")
+            .order("created_at", { ascending: false })
+            .limit(50)
+        : Promise.resolve({ data: [] }),
+      // Recent orders
+      !eventCategory || eventCategory === "ecommerce"
+        ? db
+            .from("mod_ecommod01_orders")
+            .select(
+              "id, order_number, customer_name, customer_email, total, currency, status, payment_status, payment_provider",
+            )
+            .eq("site_id", siteId)
+            .order("created_at", { ascending: false })
+            .limit(20)
+        : Promise.resolve({ data: [] }),
+      // CRM contacts
+      !eventCategory || eventCategory === "crm"
+        ? db
+            .from("mod_crmmod01_contacts")
+            .select(
+              "id, first_name, last_name, email, phone, company:mod_crmmod01_companies(name)",
+            )
+            .eq("site_id", siteId)
+            .order("created_at", { ascending: false })
+            .limit(30)
+        : Promise.resolve({ data: [] }),
+      // Forms
+      !eventCategory || eventCategory === "form"
+        ? db
+            .from("mod_crmmod01_form_definitions")
+            .select("id, name, slug")
+            .eq("site_id", siteId)
+            .neq("status", "archived")
+            .order("created_at", { ascending: false })
+            .limit(30)
+        : Promise.resolve({ data: [] }),
+      // Live chat conversations
+      !eventCategory || eventCategory === "live_chat"
+        ? db
+            .from("mod_chat_conversations")
+            .select(
+              "id, status, channel, visitor:mod_chat_visitors(name, email)",
+            )
+            .eq("site_id", siteId)
+            .order("created_at", { ascending: false })
+            .limit(20)
+        : Promise.resolve({ data: [] }),
+      // Quotes
+      !eventCategory || eventCategory === "ecommerce"
+        ? db
+            .from("mod_ecommod01_quotes")
+            .select(
+              "id, quote_number, customer_name, customer_email, total, currency, status",
+            )
+            .eq("site_id", siteId)
+            .order("created_at", { ascending: false })
+            .limit(20)
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    // Extract data safely from settled promises
+    const extract = (r: PromiseSettledResult<{ data: unknown }>) =>
+      r.status === "fulfilled" ? ((r.value?.data as unknown[]) || []) : [];
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rawContacts = extract(contactsResult) as any[];
+    const contacts = rawContacts.map((c) => ({
+      id: c.id,
+      first_name: c.first_name || "",
+      last_name: c.last_name || "",
+      email: c.email || "",
+      phone: c.phone || undefined,
+      company_name: c.company?.name || undefined,
+    }));
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rawConversations = extract(conversationsResult) as any[];
+    const conversations = rawConversations.map((c) => ({
+      id: c.id,
+      visitor_name: c.visitor?.name || "Unknown",
+      visitor_email: c.visitor?.email || "",
+      status: c.status || "open",
+      channel: c.channel || "web",
+    }));
+
+    return {
+      success: true,
+      data: {
+        services: extract(servicesResult) as typeof data.services,
+        staff: extract(staffResult) as typeof data.staff,
+        products: extract(productsResult) as typeof data.products,
+        orders: extract(ordersResult) as typeof data.orders,
+        contacts,
+        forms: extract(formsResult) as typeof data.forms,
+        conversations,
+        quotes: extract(quotesResult) as typeof data.quotes,
+        siteCurrency,
+        ownerEmail,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch test run entities",
+    };
+  }
+}
+
+// We need `data` type reference for the extract helper above
+const data = undefined as unknown as NonNullable<
+  Awaited<ReturnType<typeof getTestRunEntities>>["data"]
+>;
+void data; // Prevent unused warning
+
 /**
  * Manually trigger a workflow execution
  */

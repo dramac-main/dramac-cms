@@ -235,8 +235,8 @@ export function WorkflowBuilder({
     setShowTestDialog(true);
   };
 
-  const handleTestRun = async (sampleData: Record<string, unknown>) => {
-    if (!workflow?.id) return;
+  const handleTestRun = async (sampleData: Record<string, unknown>): Promise<string | null> => {
+    if (!workflow?.id) return null;
     setIsTestRunning(true);
     try {
       const result = await triggerWorkflow(workflow.id, sampleData);
@@ -246,11 +246,12 @@ export function WorkflowBuilder({
       toast.success(
         `Test run started (Execution: ${result.executionId?.slice(0, 8)}...)`,
       );
-      setShowTestDialog(false);
+      return result.executionId || null;
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Test run failed";
       toast.error(message);
+      return null;
     } finally {
       setIsTestRunning(false);
     }
@@ -716,6 +717,7 @@ export function WorkflowBuilder({
             | string
             | undefined
         }
+        siteId={siteId}
         isRunning={isTestRunning}
         onRunTest={handleTestRun}
       />
