@@ -46,6 +46,16 @@ export interface SendBrandedEmailOptions {
    * (booking confirmations, order confirmations, etc.)
    */
   siteId?: string;
+  /**
+   * Custom subject line — overrides the template's default subject.
+   * Supports merge variables like {{customerName}}.
+   */
+  subjectOverride?: string;
+  /**
+   * Custom body text to prepend to the branded template body.
+   * HTML supported. Supports merge variables.
+   */
+  bodyOverride?: string;
 }
 
 /**
@@ -110,12 +120,27 @@ export async function sendBrandedEmail(
     }
 
     // 3. Render template (checks site-owner customizations first, falls back to hardcoded)
-    const { subject, html, text } = await resolveEmailTemplate(
+    let { subject, html, text } = await resolveEmailTemplate(
       options.emailType,
       options.data,
       branding,
       options.siteId,
     );
+
+    // 3b. Apply user overrides from workflow step config (if provided)
+    if (options.subjectOverride) {
+      // Simple merge-variable substitution for the override
+      subject = substituteMergeVarsSimple(options.subjectOverride, options.data);
+    }
+    if (options.bodyOverride) {
+      const overrideHtml = substituteMergeVarsSimple(options.bodyOverride, options.data);
+      // Prepend the custom body to the template content
+      html = html.replace(
+        /(<div[^>]*style="[^"]*padding:\s*24px[^"]*"[^>]*>)/i,
+        `$1<div style="margin-bottom:16px">${overrideHtml}</div>`,
+      );
+      text = `${overrideHtml.replace(/<[^>]+>/g, "")}\n\n${text}`;
+    }
 
     // 4. Format recipients
     const toArray = Array.isArray(options.to) ? options.to : [options.to];
@@ -171,6 +196,21 @@ export async function sendBrandedEmail(
         error instanceof Error ? error.message : "Unknown error sending email",
     };
   }
+}
+
+/**
+ * Simple merge-variable substitution for user-provided overrides.
+ * Replaces {{key}} placeholders with values from the data object.
+ */
+function substituteMergeVarsSimple(
+  template: string,
+  data: Record<string, unknown>,
+): string {
+  return template.replace(/\{\{(\w+)\}\}/g, (_match, key: string) => {
+    return data[key] !== undefined && data[key] !== null
+      ? String(data[key])
+      : "";
+  });
 }
 
 /**

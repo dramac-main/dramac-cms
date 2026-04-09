@@ -1084,7 +1084,7 @@ export async function triggerWorkflow(
     // Get workflow to validate it's active or in test mode
     const { data: workflow, error: fetchError } = await supabase
       .from("automation_workflows")
-      .select("site_id, is_active, trigger_type")
+      .select("site_id, is_active, trigger_type, trigger_config")
       .eq("id", workflowId)
       .single();
 
@@ -1093,6 +1093,14 @@ export async function triggerWorkflow(
     }
 
     // Allow manual trigger even if not active (for testing)
+    // Store the event type from trigger data or workflow config in context
+    // so the execution engine can use it for template resolution
+    const eventType =
+      (triggerData?.eventType as string) ||
+      (
+        workflow.trigger_config as Record<string, unknown> | null
+      )?.event_type as string | undefined;
+
     // Create execution
     const { data: execution, error: createError } = await supabase
       .from("workflow_executions")
@@ -1102,7 +1110,9 @@ export async function triggerWorkflow(
         trigger_type: "manual",
         trigger_data: (triggerData || {}) as unknown as Json,
         status: "pending",
-        context: {} as unknown as Json,
+        context: (eventType
+          ? { eventType }
+          : {}) as unknown as Json,
       })
       .select("id")
       .single();

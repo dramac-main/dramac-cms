@@ -968,12 +968,16 @@ async function executeChatAction(
             conversationId,
           )
         ) {
+          const isTestRun = context.trigger?.test === true;
           return {
             status: "completed",
             output: {
               success: true,
               skipped: true,
               reason: "no_conversation_context",
+              detail: isTestRun
+                ? "Chat steps require a real conversation ID. During test runs, provide a conversation ID in the test data dialog, or leave blank to skip."
+                : "No valid conversation ID available — chat step skipped.",
             },
           };
         }
@@ -1312,6 +1316,8 @@ async function executeEmailAction(
           emailType,
           data,
           siteId,
+          subjectOverride: config.subject_override as string | undefined,
+          bodyOverride: config.body_override as string | undefined,
         });
 
         if (!result.success) {

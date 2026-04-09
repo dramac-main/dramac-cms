@@ -59,6 +59,7 @@ import { TriggerPanel } from "./trigger-panel";
 import { ActionPalette } from "./action-palette";
 import { WorkflowCanvas } from "./workflow-canvas";
 import { StepConfigPanel } from "./step-config-panel";
+import { TestRunDialog } from "./test-run-dialog";
 import { useWorkflowBuilder } from "../../hooks/use-workflow-builder";
 import { triggerWorkflow } from "../../actions/automation-actions";
 import type {
@@ -220,7 +221,9 @@ export function WorkflowBuilder({
 
   // Handle test run
   const [isTestRunning, setIsTestRunning] = useState(false);
-  const handleTestRun = async () => {
+  const [showTestDialog, setShowTestDialog] = useState(false);
+
+  const openTestRunDialog = () => {
     if (!workflow?.id) {
       toast.error("Please save the workflow first");
       return;
@@ -229,18 +232,21 @@ export function WorkflowBuilder({
       toast.error("Please save your changes before running a test");
       return;
     }
+    setShowTestDialog(true);
+  };
+
+  const handleTestRun = async (sampleData: Record<string, unknown>) => {
+    if (!workflow?.id) return;
     setIsTestRunning(true);
     try {
-      const result = await triggerWorkflow(workflow.id, {
-        test: true,
-        source: "builder_test_run",
-      });
+      const result = await triggerWorkflow(workflow.id, sampleData);
       if (!result.success) {
         throw new Error(result.error || "Test run failed");
       }
       toast.success(
         `Test run started (Execution: ${result.executionId?.slice(0, 8)}...)`,
       );
+      setShowTestDialog(false);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Test run failed";
@@ -390,7 +396,7 @@ export function WorkflowBuilder({
             <Button
               variant="outline"
               size="sm"
-              onClick={handleTestRun}
+              onClick={openTestRunDialog}
               disabled={!workflow?.id || isTestRunning}
             >
               {isTestRunning ? (
@@ -703,6 +709,18 @@ export function WorkflowBuilder({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Test Run Dialog */}
+      <TestRunDialog
+        open={showTestDialog}
+        onOpenChange={setShowTestDialog}
+        eventType={
+          (workflow?.trigger_config as Record<string, unknown>)
+            ?.event_type as string | undefined
+        }
+        isRunning={isTestRunning}
+        onRunTest={handleTestRun}
+      />
     </DndContext>
   );
 }

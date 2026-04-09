@@ -507,6 +507,20 @@ export const ACTION_REGISTRY = {
           description:
             "Template data (e.g. serviceName, customerName, price). Uses trigger data by default if omitted.",
         },
+        subject_override: {
+          type: "string" as const,
+          required: false,
+          description:
+            "Custom email subject (overrides the template default). Supports variables like {{trigger.customerName}}.",
+          placeholder: "Your booking for {{trigger.serviceName}} is confirmed!",
+        },
+        body_override: {
+          type: "string" as const,
+          required: false,
+          description:
+            "Custom email body text to prepend to the branded template. HTML supported. Supports variables.",
+          placeholder: "Hi {{trigger.customerName}}, thank you for booking with us!",
+        },
       },
       outputs: {
         message_id: {

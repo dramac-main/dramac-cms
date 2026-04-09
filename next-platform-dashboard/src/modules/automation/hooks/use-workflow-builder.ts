@@ -409,10 +409,20 @@ export function useWorkflowBuilder(
         const stepsResult = await getWorkflowSteps(workflow.id)
         if (stepsResult.success && stepsResult.data) {
           setSteps(stepsResult.data)
+          // If the selected step was stale, clear selection
+          if (selectedStep?.id === stepId) {
+            const reloaded = stepsResult.data.find(s => s.id === stepId)
+            setSelectedStep(reloaded || null)
+          }
         }
       }
       const message = err instanceof Error ? err.message : 'Failed to update step'
-      toast.error(message)
+      // Show a user-friendly message for stale step IDs
+      if (message.includes('Step not found')) {
+        toast.error('This step was updated externally. The workflow has been refreshed.')
+      } else {
+        toast.error(message)
+      }
     }
   }, [workflow?.id])
 
