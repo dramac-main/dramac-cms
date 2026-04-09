@@ -1,56 +1,101 @@
 # Active Context
 
-## Current Focus: Automation Test Run UX + Email Editability — COMPLETE ✅
+## Current Focus: Interactive Booking Payment Chat Flow — COMPLETE ✅
 
-### Session: Industry-Standard Test Run + Email Overrides (April 2026) — commit 47688ebc
+### Session: Auto-Conversation + Booking Payment via Chat (April 2026) — commit 9df131f1
 
-User tested "Test Run" on Booking Created Notifications workflow. Found multiple UX issues:
-- Test ran with empty trigger data → emails had blank merge fields, chat step skipped
-- "Step not found" error appeared for stale step references
-- Email content (subject/body) was not editable in the workflow builder
-- User wanted industry-standard test run UX (like HubSpot/Zapier)
+User requested that live chat should auto-open for EVERY booking and order as an interactive sales process. For bookings with payment required, the chat should follow the same interactive payment flow as e-commerce (select payment method → view details → pay → upload proof → business reviews).
 
-### Changes Made (7 files, +665 -10):
+### Changes Made (12 files, +2272 -737):
 
-**1. TestRunDialog Component** (NEW — `test-run-dialog.tsx`, ~400 lines)
-- Industry-standard test run experience — collects sample trigger data before execution
-- `getSampleFieldsForEvent(eventType)` returns appropriate form fields per event type
-- Covers: booking.appointment.*, crm.contact.*, crm.deal.*, form.submission.*, ecommerce.order.*, ecommerce.quote.*, live_chat.*, and generic fallback
-- Pre-fills with realistic sample data (e.g., "Jane Doe", "jane@example.com")
+**1. createConversationForEntity()** (chat-event-bridge.ts, ~200 lines NEW)
 
-**2. Workflow Builder Integration** (workflow-builder.tsx)
-- Test Run button now opens TestRunDialog instead of calling triggerWorkflow directly
-- Sample data flows: dialog → handleTestRun() → triggerWorkflow(sampleData)
+- Core function that creates a chat conversation for any entity (order, booking, quote)
+- Finds/creates visitor, checks for existing entity conversation, sets proper metadata
+- Sets `payment_guidance_active: true` when manual payment or booking payment is required
+- Auto-assigns best available agent
 
-**3. "Step Not Found" Error Handling** (use-workflow-builder.ts)
-- Catches stale step errors, reloads steps from DB, refreshes selectedStep
-- Shows user-friendly message instead of cryptic error
+**2. Auto-Chat on Order Creation** (public-ecommerce-actions.ts)
 
-**4. Email Subject/Body Override Fields** (action-types.ts)
-- Added `subject_override` and `body_override` fields to `email.send_branded_template` in ACTION_REGISTRY
-- Users can now customize email content per workflow step
+- After CRM bridge in `createPublicOrderFromCart()`, auto-creates chat conversation via non-blocking call
 
-**5. Email Override Execution** (action-executor.ts + send-branded-email.ts)
-- `action-executor.ts`: Passes subjectOverride/bodyOverride from step config to sendBrandedEmail()
-- `send-branded-email.ts`: Expanded SendBrandedEmailOptions, applies overrides after template resolution
-- New `substituteMergeVarsSimple()` helper for {{key}} → value substitution
+**3. Auto-Chat on Booking Creation** (public-booking-actions.ts)
 
-**6. Chat Step Test-Mode Feedback** (action-executor.ts)
-- Detailed skip reasons: "Chat steps require a real conversation ID. During test runs, provide a conversation ID in the test data dialog, or leave blank to skip."
+- After CRM bridge in `createPublicAppointment()`, auto-creates chat conversation
+- Passes payment context (paymentStatus, paymentAmount, currency) when require_payment is active
+- Server action now returns `paymentStatus`, `paymentAmount`, `currency` to client
 
-**7. triggerWorkflow eventType Storage** (automation-actions.ts)
-- Now fetches trigger_config, extracts eventType from dialog data or workflow config
-- Stores eventType in execution context for template resolution
+**4. Booking Payment Events** (event-types.ts)
+
+- Added `booking.payment.proof_uploaded`, `booking.payment.proof_approved`, `booking.payment.proof_rejected`
+
+**5. AI Responder Booking Payment Guidance** (ai-responder.ts, major multi-part edit)
+
+- Detects pending-payment bookings from conversation metadata (`booking_id` + `payment_guidance_active`)
+- Shows interactive payment method selection buttons (`payment_method_select` content type)
+- Tracks `bookingSelectedMethodDetails` and `bookingProofUploaded`/`bookingProofStatus`
+- BOOKING PAYMENT GUIDANCE MODE system prompt section with step-by-step instructions
+- Confidence 0.95 when booking payment guidance active
+
+**6. uploadBookingPaymentProof()** (public-booking-actions.ts, ~160 lines NEW)
+
+- Validates booking, uploads to `payment-proofs/{siteId}/booking-{appointmentId}/`
+- Updates appointment metadata, emits automation event, notifies business, sends chat notification
+
+**7. updateBookingPaymentProofStatus()** (chat-booking-actions.ts, ~200 lines NEW)
+
+- Approve: sets payment_status="paid", emits proof_approved + payment_received events, sends confirmation
+- Reject: marks as rejected with reason, emits proof_rejected event, sends rejection message in chat
+
+**8. Chat Image Bridge for Bookings** (chat-event-bridge.ts)
+
+- `bridgeChatImageAsPaymentProof()` now checks for bookings when no order found
+- New `bridgeChatImageAsBookingPaymentProof()` helper: intent check, download, re-upload, metadata update, notifications, automation event
+
+**9. Booking Payment Notifications** (chat-event-bridge.ts + business-notifications.ts)
+
+- `notifyChatBookingPaymentProofUploaded()` and `notifyChatBookingPaymentRejected()` for chat messages
+- `notifyBookingPaymentProofUploaded()` for in-app + email notification to business owner
+
+**10. Customer Context Bridge** (customer-context-bridge.ts)
+
+- Booking query now includes `metadata` and `payment_amount` columns
+- `recentBookings` type extended with `paymentAmount` and `paymentProof` fields
+- `formatCustomerContext()` shows booking payment proof status and amounts
+
+**11. BookingFormBlock Success Screen** (BookingFormBlock.tsx)
+
+- Detects payment-required bookings from result (`payment_status`, `payment_amount`)
+- Shows "Payment Required" badge, warning banner with amount, "Complete Payment via Chat" CTA
+- Auto-opens chat immediately (500ms) for payment-required bookings vs 3s for normal
+- Chat context includes `paymentRequired`, `paymentAmount`, `currency`
+
+**12. useCreateBooking Hook** (useCreateBooking.ts)
+
+- Now captures `paymentStatus`, `paymentAmount`, `currency` from server action result
+- Passes to Appointment object for UI consumption
+
+### Design Decisions:
+
+- Bookings reuse the SAME payment methods as e-commerce (same business, same `mod_ecommod01_settings`)
+- `parsePaymentMethods()` utility shared between order and booking payment flows
+- Payment proof storage path: `{siteId}/booking-{appointmentId}/{timestamp}.ext`
+- Non-blocking auto-chat creation (`.catch()` pattern) — booking/order creation never fails due to chat
 
 ### Verification:
+
 - ✅ 0 TypeScript errors
-- ✅ 189/189 tests pass
-- ✅ Committed (47688ebc) and pushed to main
+- ✅ 189/189 automation tests pass
+- ✅ Committed (9df131f1) and pushed to main
 
 ### Next Steps:
-- Verify Vercel deployment of 47688ebc
-- User retests Test Run on Booking Created Notifications workflow
-- Test ecommerce order flow on storefront
+
+- Verify Vercel deployment of 9df131f1
+- Test full booking payment flow on storefront (create booking → chat opens → select payment method → upload proof → business reviews)
+- Test full order payment flow on storefront
+- Consider adding booking payment proof review UI in live chat dashboard (approve/reject buttons)
+
+## Previous Focus: Automation Test Run UX + Email Editability — COMPLETE ✅ (commit 47688ebc)
 
 ## Previous Focus: Automation Engine Runtime Fixes — COMPLETE ✅
 
@@ -61,42 +106,52 @@ After the prior session's deep analysis and AUTOMATION-TESTING-WALKTHROUGH.md cr
 ### Bugs Fixed (7 files modified + DB changes):
 
 **1. Notification Type Constraint Violation** (action-executor.ts)
+
 - Root Cause: Workflow step configs use `type: "info"/"warning"/"success"` but DB constraint only allows 34 specific types
 - Fix: Added `mapEventToNotificationType()` function that maps triggering events to valid DB types. Both `in_app` and `in_app_targeted` handlers now check against `VALID_DB_TYPES` set first, then fall back to event-based mapping.
 
 **2. ExecutionContext Missing triggerType** (automation-types.ts + execution-engine.ts)
+
 - Added `triggerType?: string` to `ExecutionContext` interface
 - Set from `execution.trigger_type` during context initialization
 - Allows action handlers to know what event triggered the workflow
 
 **3. EVENT_REGISTRY Hyphen/Underscore Mismatch** (event-types.ts)
+
 - Changed all `live-chat.*` entries to `live_chat.*` to match DB subscriptions
 - DB subscriptions used underscores (from system templates), but EVENT_REGISTRY used hyphens
 
 **4. Hardcoded Event Strings Mismatch** (conversation-actions.ts)
+
 - Fixed 3 hardcoded `"live-chat.*"` strings to `"live_chat.*"` in startConversation, resolveConversation, closeConversation
 
 **5. Missing logAutomationEvent for live_chat.conversation.assigned** (conversation-actions.ts)
+
 - `assignConversation()` notified via chat but never fired the automation event
 - Added `logAutomationEvent("live_chat.conversation.assigned", ...)` call
 
 **6. Missing logAutomationEvent for live_chat.message.received** (messages/route.ts)
+
 - Visitor message API endpoint didn't emit automation event
 - Added dynamic import + `logAutomationEvent("live_chat.message.received", ...)` call
 
 **7. chat.send_system_message Handler — Missing Conversation Guard** (action-executor.ts)
+
 - Many workflows (booking/order/quote) have system message as final step using `{{trigger.conversationId}}`
 - If event has no conversation context, the unresolved variable would cause DB error
 - Added UUID validation guard — skips gracefully with `reason: "no_conversation_context"`
 
 **8. email.send Handler — Unresolved Variable Guard** (action-executor.ts)
+
 - Added check for `{{` in `to` field to give clearer error message when variables don't resolve
 
 ### DB Changes:
+
 - Deleted duplicate subscription for `live_chat.conversation.assigned` (id: `c7ae6672-eec1-409b-89b0-68dace7461f8`)
 - Changed all 18 `chat.send_system_message` steps from `on_error: "fail"` to `on_error: "continue"` (system messages are best-effort; shouldn't fail entire workflow)
 
 ### Verification:
+
 - TypeScript: 0 errors (verified 4 times)
 - All 21 notification steps map correctly to valid DB types
 - All 27 DB subscriptions use consistent underscore format
@@ -104,6 +159,7 @@ After the prior session's deep analysis and AUTOMATION-TESTING-WALKTHROUGH.md cr
 - All 3 action types verified: `email.send`, `notification.in_app_targeted`, `chat.send_system_message`
 
 ### Files Modified (7 total):
+
 1. `src/modules/automation/types/automation-types.ts` — triggerType field
 2. `src/modules/automation/services/execution-engine.ts` — triggerType in context
 3. `src/modules/automation/services/action-executor.ts` — mapEventToNotificationType, handler fixes, guards
@@ -113,6 +169,7 @@ After the prior session's deep analysis and AUTOMATION-TESTING-WALKTHROUGH.md cr
 7. `AUTOMATION-TESTING-WALKTHROUGH.md` — created in prior session (unchanged)
 
 ### Next Steps:
+
 - Git commit and push all changes
 - Live testing using AUTOMATION-TESTING-WALKTHROUGH.md scenarios
 - Monitor workflow executions for any remaining edge cases

@@ -34,7 +34,13 @@
 
 ---
 
-## Latest Update: Automation Test Run UX + Email Editability ✅ (April 2026) — commit 47688ebc
+## Latest Update: Interactive Booking Payment Chat Flow ✅ (April 2026) — commit 9df131f1
+
+### Session: Auto-Conversation + Booking Payment via Chat (12 files, +2272 -737)
+
+Every order and booking now auto-creates a chat conversation on the server side. Bookings with payment required get the full interactive payment flow: AI shows payment method selection buttons, guides through proof upload, business reviews in dashboard — identical to the e-commerce manual payment flow. BookingFormBlock success screen now differentiates payment-required bookings with immediate chat open and prominent CTA. Customer context bridge enriched with booking payment data.
+
+## Previous Update: Automation Test Run UX + Email Editability ✅ (April 2026) — commit 47688ebc
 
 ### Session: Industry-Standard Test Run + Email Overrides (7 files, +665 -10)
 

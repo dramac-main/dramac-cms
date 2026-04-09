@@ -577,10 +577,15 @@ export function BookingFormBlock({
           result.status === "confirmed" ? "confirmed" : "pending",
         );
         setLastBookingId(result.id || null);
-        if (result.payment_status === "pending" && (result.payment_amount || 0) > 0) {
+        if (
+          result.payment_status === "pending" &&
+          (result.payment_amount || 0) > 0
+        ) {
           setBookingPaymentRequired(true);
           setBookingPaymentAmount(result.payment_amount || 0);
-          setBookingCurrency((result.metadata as Record<string, string>)?.currency || "ZMW");
+          setBookingCurrency(
+            (result.metadata as Record<string, string>)?.currency || "ZMW",
+          );
         }
       } else {
         // Demo mode (Studio editor only) — simulate delay
@@ -628,7 +633,16 @@ export function BookingFormBlock({
       },
       window.location.origin,
     );
-  }, [lastBookingId, formData.email, startTime, serviceId, bookingStatus, bookingPaymentRequired, bookingPaymentAmount, bookingCurrency]);
+  }, [
+    lastBookingId,
+    formData.email,
+    startTime,
+    serviceId,
+    bookingStatus,
+    bookingPaymentRequired,
+    bookingPaymentAmount,
+    bookingCurrency,
+  ]);
 
   useEffect(() => {
     if (!isSuccess || !lastBookingId || !siteId) return;
@@ -647,7 +661,13 @@ export function BookingFormBlock({
       openChatWithBookingContext();
     }, delay);
     return () => clearTimeout(timer);
-  }, [isSuccess, lastBookingId, siteId, openChatWithBookingContext, bookingPaymentRequired]);
+  }, [
+    isSuccess,
+    lastBookingId,
+    siteId,
+    openChatWithBookingContext,
+    bookingPaymentRequired,
+  ]);
 
   const renderField = (
     field: string,
@@ -764,7 +784,11 @@ export function BookingFormBlock({
         ? "Your appointment request has been submitted and is awaiting confirmation. You\u2019ll receive an email once confirmed."
         : successMessage;
     const displayColor = pc;
-    const statusColor = isPaymentPending ? brandPalette.warning : isPending ? brandPalette.warning : brandPalette.success;
+    const statusColor = isPaymentPending
+      ? brandPalette.warning
+      : isPending
+        ? brandPalette.warning
+        : brandPalette.success;
     const DisplayIcon = isPending ? Clock : CircleCheck;
     const formattedDate = startTime
       ? new Date(startTime).toLocaleDateString("en-US", {
@@ -885,7 +909,11 @@ export function BookingFormBlock({
               }}
             >
               <DisplayIcon style={{ width: 12, height: 12 }} />
-              {isPaymentPending ? "Payment Required" : isPending ? "Awaiting Confirmation" : "Confirmed"}
+              {isPaymentPending
+                ? "Payment Required"
+                : isPending
+                  ? "Awaiting Confirmation"
+                  : "Confirmed"}
             </span>
           </div>
 
@@ -977,7 +1005,8 @@ export function BookingFormBlock({
                   color: darken(brandPalette.warning, 0.3),
                 }}
               >
-                Payment Required — {bookingCurrency} {(bookingPaymentAmount / 100).toFixed(2)}
+                Payment Required — {bookingCurrency}{" "}
+                {(bookingPaymentAmount / 100).toFixed(2)}
               </p>
               <p
                 style={{
@@ -1004,7 +1033,9 @@ export function BookingFormBlock({
             gap: 6,
             padding: "9px 18px",
             borderRadius: buttonBorderRadius,
-            backgroundColor: bookingPaymentRequired ? displayColor : "transparent",
+            backgroundColor: bookingPaymentRequired
+              ? displayColor
+              : "transparent",
             color: bookingPaymentRequired ? btnTxt : displayColor,
             border: `1.5px solid ${displayColor}${bookingPaymentRequired ? "" : "40"}`,
             fontSize: "13px",
@@ -1015,7 +1046,9 @@ export function BookingFormBlock({
           }}
         >
           <MessageCircle style={{ width: 15, height: 15 }} />
-          {bookingPaymentRequired ? "Complete Payment via Chat" : "Questions? Chat with us"}
+          {bookingPaymentRequired
+            ? "Complete Payment via Chat"
+            : "Questions? Chat with us"}
         </button>
 
         {/* Account nudge for guests */}

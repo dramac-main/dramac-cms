@@ -312,22 +312,25 @@ export async function createConversationForEntity(
     }
 
     // 5. Update visitor conversation count
-    await supabase.rpc("increment_field", {
-      table_name: "mod_chat_visitors",
-      field_name: "total_conversations",
-      row_id: visitorId,
-      increment_by: 1,
-    }).catch(() => {
-      // RPC may not exist — try direct update
-      supabase
-        .from("mod_chat_visitors")
-        .update({
-          total_conversations: (existingVisitor?.total_conversations || 0) + 1,
-          last_seen_at: new Date().toISOString(),
-        })
-        .eq("id", visitorId)
-        .then(() => {});
-    });
+    await supabase
+      .rpc("increment_field", {
+        table_name: "mod_chat_visitors",
+        field_name: "total_conversations",
+        row_id: visitorId,
+        increment_by: 1,
+      })
+      .catch(() => {
+        // RPC may not exist — try direct update
+        supabase
+          .from("mod_chat_visitors")
+          .update({
+            total_conversations:
+              (existingVisitor?.total_conversations || 0) + 1,
+            last_seen_at: new Date().toISOString(),
+          })
+          .eq("id", visitorId)
+          .then(() => {});
+      });
 
     // 6. Auto-assign to available agent
     const { data: agents } = await supabase
@@ -424,10 +427,7 @@ export async function createConversationForEntity(
     );
     return conversation.id;
   } catch (err) {
-    console.error(
-      "[ChatEventBridge] createConversationForEntity error:",
-      err,
-    );
+    console.error("[ChatEventBridge] createConversationForEntity error:", err);
     return null;
   }
 }
@@ -1347,14 +1347,14 @@ async function bridgeChatImageAsBookingPaymentProof(
     }
 
     // 7. Notify business owner
-    const amount = appointment.payment_amount || appointment.service?.price || 0;
+    const amount =
+      appointment.payment_amount || appointment.service?.price || 0;
     const currency = appointment.service?.currency || "ZMW";
     const amountFormatted = `${currency} ${(amount / 100).toFixed(2)}`;
 
     try {
-      const { notifyBookingPaymentProofUploaded } = await import(
-        "@/lib/services/business-notifications"
-      );
+      const { notifyBookingPaymentProofUploaded } =
+        await import("@/lib/services/business-notifications");
       await notifyBookingPaymentProofUploaded(
         siteId,
         serviceName,
@@ -1372,9 +1372,8 @@ async function bridgeChatImageAsBookingPaymentProof(
 
     // 8. Emit automation event
     try {
-      const { emitAutomationEvent } = await import(
-        "@/modules/automation/lib/automation-engine"
-      );
+      const { emitAutomationEvent } =
+        await import("@/modules/automation/lib/automation-engine");
       await emitAutomationEvent(siteId, "booking.payment.proof_uploaded", {
         booking_id: appointment.id,
         service_name: serviceName,

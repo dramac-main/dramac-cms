@@ -677,7 +677,14 @@ export async function createPublicAppointment(
         );
     }
 
-    return { success: true, appointmentId: appointment?.id, status, paymentStatus, paymentAmount: paymentAmount || 0, currency: service.currency || "ZMW" };
+    return {
+      success: true,
+      appointmentId: appointment?.id,
+      status,
+      paymentStatus,
+      paymentAmount: paymentAmount || 0,
+      currency: service.currency || "ZMW",
+    };
   } catch (err) {
     console.error(
       "[Booking Public] createPublicAppointment unexpected error:",
@@ -833,9 +840,8 @@ export async function uploadBookingPaymentProof(input: {
 
     // Notify business owner
     try {
-      const { notifyBookingPaymentProofUploaded } = await import(
-        "@/lib/services/business-notifications"
-      );
+      const { notifyBookingPaymentProofUploaded } =
+        await import("@/lib/services/business-notifications");
       await notifyBookingPaymentProofUploaded(
         input.siteId,
         serviceName,
@@ -863,10 +869,7 @@ export async function uploadBookingPaymentProof(input: {
           ),
         )
         .catch((err) =>
-          console.error(
-            "[BookingPaymentProof] Chat notification error:",
-            err,
-          ),
+          console.error("[BookingPaymentProof] Chat notification error:", err),
         );
     }
 

@@ -753,10 +753,7 @@ export async function updateBookingPaymentProofStatus(
             priceStr,
           ),
       }).catch((err) =>
-        console.error(
-          "[ChatBooking] Chat payment confirm notify error:",
-          err,
-        ),
+        console.error("[ChatBooking] Chat payment confirm notify error:", err),
       );
     }
   } else {
@@ -809,10 +806,7 @@ export async function updateBookingPaymentProofStatus(
           ),
         )
         .catch((err) =>
-          console.error(
-            "[ChatBooking] Chat payment reject notify error:",
-            err,
-          ),
+          console.error("[ChatBooking] Chat payment reject notify error:", err),
         );
     }
   }
