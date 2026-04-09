@@ -1264,16 +1264,24 @@ async function executeEmailAction(
 
         // Normalize paymentRequired to boolean
         if (data.paymentRequired !== undefined) {
-          data.paymentRequired = data.paymentRequired === "pending" || data.paymentRequired === true;
+          data.paymentRequired =
+            data.paymentRequired === "pending" || data.paymentRequired === true;
         }
 
         // Format price with currency if available
-        if (data.price !== undefined && !String(data.price).includes("$") && !String(data.price).includes("€")) {
+        if (
+          data.price !== undefined &&
+          !String(data.price).includes("$") &&
+          !String(data.price).includes("€")
+        ) {
           const price = Number(data.price);
           if (!isNaN(price)) {
             const currency = (context.trigger?.currency as string) || "USD";
             try {
-              data.price = new Intl.NumberFormat("en-US", { style: "currency", currency }).format(price);
+              data.price = new Intl.NumberFormat("en-US", {
+                style: "currency",
+                currency,
+              }).format(price);
             } catch {
               data.price = `$${price.toFixed(2)}`;
             }
@@ -1284,9 +1292,10 @@ async function executeEmailAction(
         if (data.duration !== undefined) {
           const mins = Number(data.duration);
           if (!isNaN(mins) && mins > 0) {
-            data.duration = mins >= 60
-              ? `${Math.floor(mins / 60)}h ${mins % 60 ? `${mins % 60}min` : ""}`
-              : `${mins} min`;
+            data.duration =
+              mins >= 60
+                ? `${Math.floor(mins / 60)}h ${mins % 60 ? `${mins % 60}min` : ""}`
+                : `${mins} min`;
           }
         }
 

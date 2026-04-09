@@ -117,7 +117,9 @@ export async function executeWorkflow(executionId: string): Promise<void> {
     // stores snake_case keys (customer_email). Both forms are available.
     // Prefer the specific event type (e.g. "booking.appointment.created")
     // stored in context.eventType over the generic trigger_type ("event").
-    const storedEventType = (execution.context as Record<string, unknown> | null)?.eventType as string | undefined;
+    const storedEventType = (
+      execution.context as Record<string, unknown> | null
+    )?.eventType as string | undefined;
     const context: ExecutionContext = {
       trigger: normalizeKeysToCamelCase(execution.trigger_data || {}),
       steps: execution.context?.steps || {},
@@ -284,8 +286,7 @@ async function executeStepWithRetry(
   step: WorkflowStep,
   context: ExecutionContext,
 ): Promise<ActionResult> {
-  const maxRetries =
-    step.on_error === "retry" ? (step.max_retries || 0) : 0;
+  const maxRetries = step.on_error === "retry" ? step.max_retries || 0 : 0;
   const retryDelay = (step.retry_delay_seconds || 5) * 1000; // ms
 
   let lastResult = await executeStep(executionId, step, context, 1);
@@ -867,9 +868,7 @@ export async function resumeStuckExecutions(
   const errors: string[] = [];
   let resumed = 0;
 
-  const cutoff = new Date(
-    Date.now() - cutoffMinutes * 60 * 1000,
-  ).toISOString();
+  const cutoff = new Date(Date.now() - cutoffMinutes * 60 * 1000).toISOString();
 
   const { data: executions, error: fetchError } = await supabase
     .from("workflow_executions")

@@ -1,8 +1,8 @@
 /**
  * Automation Module - Index
- * 
+ *
  * Phase EM-57A: Automation Engine - Core Infrastructure
- * 
+ *
  * Barrel export file for the Automation module. This file exposes all
  * public APIs and types for use by other modules and components.
  */
@@ -11,7 +11,7 @@
 // MODULE MANIFEST
 // ============================================================================
 
-export { default as automationManifest, moduleMetadata } from './manifest'
+export { default as automationManifest, moduleMetadata } from "./manifest";
 
 // ============================================================================
 // TYPES
@@ -29,22 +29,22 @@ export type {
   WebhookEndpoint,
   WorkflowVariable,
   EventSubscription,
-  
+
   // Configuration types
   TriggerConfig,
   ConditionConfig,
   DelayConfig,
-  
+
   // Runtime types
   ExecutionContext,
   ActionResult,
-  
+
   // Enum types
   TriggerType,
   ExecutionStatus,
   StepStatus,
   ConnectionStatus,
-} from './types/automation-types'
+} from "./types/automation-types";
 
 // ============================================================================
 // EVENT TYPES REGISTRY
@@ -55,7 +55,7 @@ export {
   getAllEventDefinitions,
   getEventsByCategory,
   type EventDefinition,
-} from './lib/event-types'
+} from "./lib/event-types";
 
 // ============================================================================
 // ACTION TYPES REGISTRY
@@ -66,7 +66,7 @@ export {
   getAllActionDefinitions,
   getActionsByCategory,
   type ActionDefinition,
-} from './lib/action-types'
+} from "./lib/action-types";
 
 // ============================================================================
 // SERVER ACTIONS - WORKFLOW MANAGEMENT
@@ -81,45 +81,45 @@ export {
   deleteWorkflow,
   activateWorkflow,
   pauseWorkflow,
-  
+
   // Step management
   createWorkflowStep,
   getWorkflowSteps,
   updateWorkflowStep,
   deleteWorkflowStep,
   reorderWorkflowSteps,
-  
+
   // Execution management
   getWorkflowExecutions,
   getExecutionDetails,
   cancelExecution,
   retryExecution,
   triggerWorkflow,
-  
+
   // Connection management
   createConnection,
   getConnections,
   updateConnection,
   deleteConnection,
   testConnection,
-  
+
   // Webhook management
   createWebhookEndpoint,
   getWebhookEndpoints,
   deleteWebhookEndpoint,
-  
+
   // Event subscriptions
   subscribeToEvent,
   unsubscribeFromEvent,
-  
+
   // Statistics
   getAutomationStats,
-  
+
   // Phase EM-57B additions
   getAutomationAnalytics,
   createWorkflowFromTemplate,
   upgradeSystemWorkflowSteps,
-} from './actions/automation-actions'
+} from "./actions/automation-actions";
 
 // ============================================================================
 // SERVICES - FOR INTERNAL/BACKGROUND USE
@@ -131,19 +131,17 @@ export {
   logAutomationEvent,
   processScheduledJobs,
   processIncomingWebhook,
-} from './services/event-processor'
+} from "./services/event-processor";
 
 // Execution engine (for background workers)
 export {
   executeWorkflow,
   resumePausedExecutions,
   resumeStuckExecutions,
-} from './services/execution-engine'
+} from "./services/execution-engine";
 
 // Action executor (for internal use)
-export {
-  executeAction,
-} from './services/action-executor'
+export { executeAction } from "./services/action-executor";
 
 // ============================================================================
 // PHASE EM-57B: VISUAL BUILDER & ADVANCED FEATURES
@@ -157,7 +155,7 @@ export {
   getTemplatesByCategory,
   searchTemplates,
   type WorkflowTemplate,
-} from './lib/templates'
+} from "./lib/templates";
 
 // Visual Builder Components
 export {
@@ -166,21 +164,24 @@ export {
   ActionPalette,
   WorkflowCanvas,
   StepConfigPanel,
-} from './components/workflow-builder'
+} from "./components/workflow-builder";
 
 // Additional UI Components
-export { TemplateGallery } from './components/template-gallery'
-export { AnalyticsDashboard } from './components/analytics-dashboard'
-export { ConnectionSetup, type ServiceConnection } from './components/connection-setup'
-export { CreateWorkflowDialog } from './components/create-workflow-dialog'
-export { CreateWorkflowButton } from './components/create-workflow-button'
-export { WorkflowListCard } from './components/workflow-list-card'
+export { TemplateGallery } from "./components/template-gallery";
+export { AnalyticsDashboard } from "./components/analytics-dashboard";
+export {
+  ConnectionSetup,
+  type ServiceConnection,
+} from "./components/connection-setup";
+export { CreateWorkflowDialog } from "./components/create-workflow-dialog";
+export { CreateWorkflowButton } from "./components/create-workflow-button";
+export { WorkflowListCard } from "./components/workflow-list-card";
 
 // ============================================================================
 // PHASE-UI-12A: ENHANCED WORKFLOW BUILDER UI
 // ============================================================================
 
-export { WorkflowBuilderEnhanced } from './components/WorkflowBuilderEnhanced'
+export { WorkflowBuilderEnhanced } from "./components/WorkflowBuilderEnhanced";
 export {
   WorkflowStepCard,
   WorkflowMiniMap,
@@ -189,13 +190,13 @@ export {
   StepConnectionLine,
   HorizontalConnectionLine,
   WorkflowHeader,
-} from './components/ui'
+} from "./components/ui";
 
 // ============================================================================
 // PHASE-UI-12B: AUTOMATION LOGS & ANALYTICS UI
 // ============================================================================
 
-export { AnalyticsDashboardEnhanced } from './components/AnalyticsDashboardEnhanced'
+export { AnalyticsDashboardEnhanced } from "./components/AnalyticsDashboardEnhanced";
 export {
   ExecutionTimeline,
   ExecutionLogCard,
@@ -207,10 +208,10 @@ export {
   WorkflowPerformanceChart,
   ExecutionFilterBar,
   type ExecutionFilters,
-} from './components/ui'
+} from "./components/ui";
 
 // Hooks
-export { useWorkflowBuilder } from './hooks/use-workflow-builder'
+export { useWorkflowBuilder } from "./hooks/use-workflow-builder";
 
 // AI Actions Service
 export {
@@ -223,4 +224,4 @@ export {
   translateText,
   suggestWorkflowImprovements,
   type AIActionResult,
-} from './services/ai-actions'
+} from "./services/ai-actions";

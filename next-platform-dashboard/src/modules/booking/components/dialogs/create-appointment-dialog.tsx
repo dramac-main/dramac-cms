@@ -28,6 +28,14 @@ import {
 import { CalendarIcon, Clock, User, Mail, Phone, FileText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useBooking } from '../../context/booking-context'
+
+/** Format a Date as YYYY-MM-DD using the local timezone (avoids UTC shift from toISOString) */
+function toLocalDateStr(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
 import { toast } from 'sonner'
 
 // Time slots for the select
@@ -100,8 +108,8 @@ export function CreateAppointmentDialog({
       setServiceId(preselectedServiceId || '')
       setStaffId(preselectedStaffId || '')
       setDateStr(preselectedDate 
-        ? preselectedDate.toISOString().split('T')[0] 
-        : new Date().toISOString().split('T')[0]
+        ? toLocalDateStr(preselectedDate) 
+        : toLocalDateStr(new Date())
       )
       setStartTime('09:00')
       setCustomerName('')
@@ -267,7 +275,7 @@ export function CreateAppointmentDialog({
                   type="date"
                   value={dateStr}
                   onChange={(e) => setDateStr(e.target.value)}
-                  min={new Date().toISOString().split('T')[0]}
+                  min={toLocalDateStr(new Date())}
                   required
                 />
               </div>

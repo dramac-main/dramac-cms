@@ -63,6 +63,15 @@ import type { Appointment, AppointmentStatus } from "../../types/booking-types";
 import { toast } from "sonner";
 
 import { DEFAULT_LOCALE } from "@/lib/locale-config";
+
+/** Format a Date as YYYY-MM-DD using the local timezone (avoids UTC shift from toISOString) */
+function toLocalDateStr(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 interface AppointmentsViewProps {
   searchQuery?: string;
   onAppointmentClick?: (appointment: Appointment) => void;
@@ -87,9 +96,9 @@ const DATE_FILTERS = [
   { value: "past", label: "Past" },
 ];
 
-// Helper to extract date string from ISO timestamp
+// Helper to extract local date string from ISO timestamp
 function getDateFromTimestamp(timestamp: string): string {
-  return timestamp.split("T")[0];
+  return toLocalDateStr(new Date(timestamp));
 }
 
 // Helper to extract time string from ISO timestamp
@@ -121,11 +130,11 @@ function getDateFilterRange(
   filter: string,
 ): { start: string; end: string } | null {
   const today = new Date();
-  const todayStr = today.toISOString().split("T")[0];
+  const todayStr = toLocalDateStr(today);
 
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowStr = tomorrow.toISOString().split("T")[0];
+  const tomorrowStr = toLocalDateStr(tomorrow);
 
   const startOfWeek = new Date(today);
   startOfWeek.setDate(today.getDate() - today.getDay());
@@ -147,26 +156,27 @@ function getDateFilterRange(
       return { start: tomorrowStr, end: tomorrowStr };
     case "this-week":
       return {
-        start: startOfWeek.toISOString().split("T")[0],
-        end: endOfWeek.toISOString().split("T")[0],
+        start: toLocalDateStr(startOfWeek),
+        end: toLocalDateStr(endOfWeek),
       };
     case "next-week":
       return {
-        start: startOfNextWeek.toISOString().split("T")[0],
-        end: endOfNextWeek.toISOString().split("T")[0],
+        start: toLocalDateStr(startOfNextWeek),
+        end: toLocalDateStr(endOfNextWeek),
       };
     case "this-month":
       return {
-        start: startOfMonth.toISOString().split("T")[0],
-        end: endOfMonth.toISOString().split("T")[0],
+        start: toLocalDateStr(startOfMonth),
+        end: toLocalDateStr(endOfMonth),
       };
-    case "past":
+    case "past": {
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
       return {
         start: "2000-01-01",
-        end: new Date(today.setDate(today.getDate() - 1))
-          .toISOString()
-          .split("T")[0],
+        end: toLocalDateStr(yesterday),
       };
+    }
     default:
       return null;
   }

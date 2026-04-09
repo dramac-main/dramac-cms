@@ -25,6 +25,15 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+/** Format a Date as YYYY-MM-DD using the local timezone (avoids UTC shift from toISOString) */
+function toLocalDateStr(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 import type {
   Appointment,
   Staff,
@@ -133,10 +142,11 @@ export function CalendarView({
 
   // Get appointments for a specific date and hour
   const getAppointmentsForSlot = (date: Date, hour: number): Appointment[] => {
-    const dateStr = date.toISOString().split("T")[0];
+    const dateStr = toLocalDateStr(date);
     return filteredAppointments.filter((apt) => {
-      const aptDate = apt.start_time.split("T")[0];
-      const aptHour = new Date(apt.start_time).getHours();
+      const aptLocal = new Date(apt.start_time);
+      const aptDate = toLocalDateStr(aptLocal);
+      const aptHour = aptLocal.getHours();
       return aptDate === dateStr && aptHour === hour;
     });
   };

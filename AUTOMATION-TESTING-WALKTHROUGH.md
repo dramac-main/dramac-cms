@@ -18,6 +18,7 @@ Every test scenario below follows this pattern:
 5. **You verify** each output at the checkpoints below
 
 **Where to monitor everything:**
+
 - **Automation Dashboard** → `/dashboard/sites/{siteId}/automation` — workflow list with execution counts
 - **Executions Tab** → Click "Executions" tab — see all runs with status (completed/failed/running)
 - **Execution Detail** → Click any execution — see each step's status, input/output, errors
@@ -93,14 +94,14 @@ Customer clicks "Book" on storefront
 
 ### Verification Checklist:
 
-| # | Check | Where to Look | Expected Result |
-|---|-------|--------------|----------------|
-| 1 | **Customer confirmation email** | Customer's email inbox | Subject: "Booking Confirmation — {Service Name}". Body includes service name, date, staff name, and thank you message. |
-| 2 | **Owner alert email** | Owner/agency email inbox | Subject: "New Booking — {Service} with {Customer}". Body includes customer name, email, service, date, staff. |
-| 3 | **In-app notification** | 🔔 Bell icon (top-right) | "New Booking" — "{Customer} booked {Service} for {Date}" |
-| 4 | **Chat system message** | Live Chat → conversation for this booking | System message like "Booking created: {Service} for {Customer} on {Date}" |
-| 5 | **Execution record** | Automation → Executions tab | Status: ✅ Completed. Workflow: "Booking Created Notifications". Click to see 4/4 steps completed. |
-| 6 | **Execution count** | Automation → Workflows list | "Booking Created Notifications" row should show execution count increased by 1 |
+| #   | Check                           | Where to Look                             | Expected Result                                                                                                        |
+| --- | ------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Customer confirmation email** | Customer's email inbox                    | Subject: "Booking Confirmation — {Service Name}". Body includes service name, date, staff name, and thank you message. |
+| 2   | **Owner alert email**           | Owner/agency email inbox                  | Subject: "New Booking — {Service} with {Customer}". Body includes customer name, email, service, date, staff.          |
+| 3   | **In-app notification**         | 🔔 Bell icon (top-right)                  | "New Booking" — "{Customer} booked {Service} for {Date}"                                                               |
+| 4   | **Chat system message**         | Live Chat → conversation for this booking | System message like "Booking created: {Service} for {Customer} on {Date}"                                              |
+| 5   | **Execution record**            | Automation → Executions tab               | Status: ✅ Completed. Workflow: "Booking Created Notifications". Click to see 4/4 steps completed.                     |
+| 6   | **Execution count**             | Automation → Workflows list               | "Booking Created Notifications" row should show execution count increased by 1                                         |
 
 ### If Something Fails:
 
@@ -139,12 +140,12 @@ Admin clicks "Confirm"
 
 ### Verification Checklist:
 
-| # | Check | Where to Look | Expected Result |
-|---|-------|--------------|----------------|
-| 1 | **Customer email** | Their inbox | "Your Booking is Confirmed — {Service}" |
-| 2 | **Owner email** | Owner inbox | "Booking Confirmed — {Service} with {Customer}" |
-| 3 | **In-app notification** | 🔔 Bell icon | "Booking Confirmed" notification |
-| 4 | **Execution** | Automation → Executions | "Booking Confirmed Notifications" — Completed |
+| #   | Check                   | Where to Look           | Expected Result                                 |
+| --- | ----------------------- | ----------------------- | ----------------------------------------------- |
+| 1   | **Customer email**      | Their inbox             | "Your Booking is Confirmed — {Service}"         |
+| 2   | **Owner email**         | Owner inbox             | "Booking Confirmed — {Service} with {Customer}" |
+| 3   | **In-app notification** | 🔔 Bell icon            | "Booking Confirmed" notification                |
+| 4   | **Execution**           | Automation → Executions | "Booking Confirmed Notifications" — Completed   |
 
 ---
 
@@ -180,12 +181,12 @@ Customer completes checkout
 
 ### Verification Checklist:
 
-| # | Check | Where to Look | Expected Result |
-|---|-------|--------------|----------------|
-| 1 | **Customer order confirmation email** | Customer inbox | Subject: "Order Confirmation — #{OrderNumber}". Body: items, total, thank you. |
-| 2 | **Owner new order email** | Owner inbox | Subject: "New Order — #{OrderNumber} from {Customer}". Body: customer details, total. |
-| 3 | **In-app notification** | 🔔 Bell icon | "New Order Received" — "Order #{OrderNumber} — {Total}" |
-| 4 | **Execution** | Automation → Executions | "Order Created Notifications" — Completed, 3/3 steps |
+| #   | Check                                 | Where to Look           | Expected Result                                                                       |
+| --- | ------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------- |
+| 1   | **Customer order confirmation email** | Customer inbox          | Subject: "Order Confirmation — #{OrderNumber}". Body: items, total, thank you.        |
+| 2   | **Owner new order email**             | Owner inbox             | Subject: "New Order — #{OrderNumber} from {Customer}". Body: customer details, total. |
+| 3   | **In-app notification**               | 🔔 Bell icon            | "New Order Received" — "Order #{OrderNumber} — {Total}"                               |
+| 4   | **Execution**                         | Automation → Executions | "Order Created Notifications" — Completed, 3/3 steps                                  |
 
 ---
 
@@ -221,12 +222,12 @@ Admin marks order as shipped
 
 ### Verification Checklist:
 
-| # | Check | Where to Look | Expected Result |
-|---|-------|--------------|----------------|
-| 1 | **Customer shipping email** | Customer inbox | Subject: "Your Order Has Shipped — #{OrderNumber}". Body: tracking number, tracking URL. |
-| 2 | **In-app notification** | 🔔 Bell icon | "Order Shipped" with tracking info |
-| 3 | **Chat system message** | Live Chat conversation | System message about order shipped |
-| 4 | **Execution** | Automation → Executions | "Order Shipped Notifications" — Completed |
+| #   | Check                       | Where to Look           | Expected Result                                                                          |
+| --- | --------------------------- | ----------------------- | ---------------------------------------------------------------------------------------- |
+| 1   | **Customer shipping email** | Customer inbox          | Subject: "Your Order Has Shipped — #{OrderNumber}". Body: tracking number, tracking URL. |
+| 2   | **In-app notification**     | 🔔 Bell icon            | "Order Shipped" with tracking info                                                       |
+| 3   | **Chat system message**     | Live Chat conversation  | System message about order shipped                                                       |
+| 4   | **Execution**               | Automation → Executions | "Order Shipped Notifications" — Completed                                                |
 
 ---
 
@@ -258,12 +259,12 @@ Admin cancels order
 
 ### Verification Checklist:
 
-| # | Check | Where to Look | Expected Result |
-|---|-------|--------------|----------------|
-| 1 | **Customer cancellation email** | Customer inbox | "Order Cancelled — #{OrderNumber}" |
-| 2 | **Owner cancellation email** | Owner inbox | Order cancelled notification |
-| 3 | **In-app notification (warning)** | 🔔 Bell icon | Warning-type "Order Cancelled" notification |
-| 4 | **Chat system message** | Live Chat | System message about cancellation |
+| #   | Check                             | Where to Look  | Expected Result                             |
+| --- | --------------------------------- | -------------- | ------------------------------------------- |
+| 1   | **Customer cancellation email**   | Customer inbox | "Order Cancelled — #{OrderNumber}"          |
+| 2   | **Owner cancellation email**      | Owner inbox    | Order cancelled notification                |
+| 3   | **In-app notification (warning)** | 🔔 Bell icon   | Warning-type "Order Cancelled" notification |
+| 4   | **Chat system message**           | Live Chat      | System message about cancellation           |
 
 ---
 
@@ -275,6 +276,7 @@ Admin cancels order
 ### What You Do:
 
 **Part A — Customer uploads proof:**
+
 1. On the storefront, place an order with **manual payment** method
 2. After checkout, go to **My Account → Orders**
 3. Click on the pending order
@@ -282,6 +284,7 @@ Admin cancels order
 5. Upload a screenshot/image of a payment receipt
 
 **Part B — Admin approves proof:**
+
 1. Go to **Dashboard → Orders**
 2. Open the order — you should see the uploaded proof
 3. Click **"Approve Payment"**
@@ -289,6 +292,7 @@ Admin cancels order
 ### What Should Happen:
 
 **Part A (proof uploaded):**
+
 ```
 Customer uploads proof
   └─► "Payment Proof Uploaded Notifications" workflow
@@ -298,6 +302,7 @@ Customer uploads proof
 ```
 
 **Part B (payment approved):**
+
 ```
 Admin approves payment
   └─► "Payment Received Notifications" workflow
@@ -308,13 +313,13 @@ Admin approves payment
 
 ### Verification Checklist:
 
-| # | Check | Expected Result |
-|---|-------|----------------|
-| 1 | Owner gets email about proof uploaded | Email: "Payment proof uploaded for Order #{Number}" |
-| 2 | Owner gets in-app notification | 🔔 "Payment Proof Uploaded" |
-| 3 | Customer gets email when approved | Email: "Payment Confirmed for Order #{Number}" |
-| 4 | Owner gets success notification | 🔔 "Payment Received" (green/success type) |
-| 5 | Two executions appear | "Payment Proof Uploaded" + "Payment Received" — both completed |
+| #   | Check                                 | Expected Result                                                |
+| --- | ------------------------------------- | -------------------------------------------------------------- |
+| 1   | Owner gets email about proof uploaded | Email: "Payment proof uploaded for Order #{Number}"            |
+| 2   | Owner gets in-app notification        | 🔔 "Payment Proof Uploaded"                                    |
+| 3   | Customer gets email when approved     | Email: "Payment Confirmed for Order #{Number}"                 |
+| 4   | Owner gets success notification       | 🔔 "Payment Received" (green/success type)                     |
+| 5   | Two executions appear                 | "Payment Proof Uploaded" + "Payment Received" — both completed |
 
 ---
 
@@ -458,11 +463,11 @@ If auto-assigned to an agent:
 
 ### Verification Checklist:
 
-| # | Check | Where to Look | Expected Result |
-|---|-------|--------------|----------------|
-| 1 | **Chat appears in dashboard** | Live Chat inbox | New conversation from visitor |
-| 2 | **Agent assigned notification** | 🔔 Bell icon (agent/owner) | "Chat Assigned" notification with link to conversation |
-| 3 | **Execution** | Automation → Executions | "Chat Assigned Notification" — Completed |
+| #   | Check                           | Where to Look              | Expected Result                                        |
+| --- | ------------------------------- | -------------------------- | ------------------------------------------------------ |
+| 1   | **Chat appears in dashboard**   | Live Chat inbox            | New conversation from visitor                          |
+| 2   | **Agent assigned notification** | 🔔 Bell icon (agent/owner) | "Chat Assigned" notification with link to conversation |
+| 3   | **Execution**                   | Automation → Executions    | "Chat Assigned Notification" — Completed               |
 
 **Note:** The "New Chat Message Notification" workflow (`live_chat.message.received`) fires for subsequent messages, not the first one. Send a second message to test it.
 
@@ -492,10 +497,10 @@ Visitor sends follow-up message
 
 ### Verification Checklist:
 
-| # | Check | Expected |
-|---|-------|----------|
-| 1 | Agent in-app notification | 🔔 "New Chat Message" — click goes to conversation |
-| 2 | Execution | "New Chat Message Notification" — Completed |
+| #   | Check                     | Expected                                           |
+| --- | ------------------------- | -------------------------------------------------- |
+| 1   | Agent in-app notification | 🔔 "New Chat Message" — click goes to conversation |
+| 2   | Execution                 | "New Chat Message Notification" — Completed        |
 
 ---
 
@@ -521,10 +526,10 @@ Routing engine detects timeout
 
 ### Verification Checklist:
 
-| # | Check | Expected |
-|---|-------|----------|
-| 1 | Owner email | "Missed Chat — A visitor didn't get a response" |
-| 2 | In-app notification (warning) | 🔔 "Missed Chat" with warning badge |
+| #   | Check                         | Expected                                        |
+| --- | ----------------------------- | ----------------------------------------------- |
+| 1   | Owner email                   | "Missed Chat — A visitor didn't get a response" |
+| 2   | In-app notification (warning) | 🔔 "Missed Chat" with warning badge             |
 
 ---
 
@@ -556,12 +561,12 @@ Public POST /api/forms/submit
 
 ### Verification Checklist:
 
-| # | Check | Expected |
-|---|-------|----------|
-| 1 | Owner email | "New Form Submission — {FormName}" with submitted data |
-| 2 | In-app notification | 🔔 "New Form Submission" |
-| 3 | Execution | "Form Submission Notification" — Completed |
-| 4 | CRM contact created | Check CRM → Contacts for new entry (if form-to-CRM template installed) |
+| #   | Check               | Expected                                                               |
+| --- | ------------------- | ---------------------------------------------------------------------- |
+| 1   | Owner email         | "New Form Submission — {FormName}" with submitted data                 |
+| 2   | In-app notification | 🔔 "New Form Submission"                                               |
+| 3   | Execution           | "Form Submission Notification" — Completed                             |
+| 4   | CRM contact created | Check CRM → Contacts for new entry (if form-to-CRM template installed) |
 
 ---
 
@@ -577,11 +582,11 @@ Public POST /api/forms/submit
 
 ### Verification Checklist:
 
-| # | Check | Expected |
-|---|-------|----------|
-| 1 | Customer email | "Your appointment has been completed — {Service}" |
-| 2 | Owner email | "Booking Completed — {Service} for {Customer}" |
-| 3 | Chat system message | Completion notification in booking chat |
+| #   | Check               | Expected                                          |
+| --- | ------------------- | ------------------------------------------------- |
+| 1   | Customer email      | "Your appointment has been completed — {Service}" |
+| 2   | Owner email         | "Booking Completed — {Service} for {Customer}"    |
+| 3   | Chat system message | Completion notification in booking chat           |
 
 ---
 
@@ -596,11 +601,11 @@ Public POST /api/forms/submit
 
 ### Verification Checklist:
 
-| # | Check | Expected |
-|---|-------|----------|
-| 1 | Customer email | "Payment Received — {Service}" with amount and currency |
-| 2 | In-app notification | 🔔 "Booking Payment Received" |
-| 3 | Chat system message | Payment confirmation in chat |
+| #   | Check               | Expected                                                |
+| --- | ------------------- | ------------------------------------------------------- |
+| 1   | Customer email      | "Payment Received — {Service}" with amount and currency |
+| 2   | In-app notification | 🔔 "Booking Payment Received"                           |
+| 3   | Chat system message | Payment confirmation in chat                            |
 
 ---
 
@@ -630,14 +635,14 @@ Public POST /api/forms/submit
 
 ### Verification Checklist:
 
-| # | Check | When | Expected |
-|---|-------|------|----------|
-| 1 | Customer cancellation email | Immediately | "Booking Cancelled — {Service}" |
-| 2 | Owner cancellation email | Immediately | Cancellation alert |
-| 3 | In-app notification (warning) | Immediately | "Booking Cancelled" |
-| 4 | Chat system message | Immediately | Cancellation in chat |
-| 5 | Follow-up email | ~1 hour later | "Would you like to rebook?" |
-| 6 | Two executions | | "Cancelled Notifications" = Completed. "Cancelled Follow-Up" = Paused (waiting for delay) |
+| #   | Check                         | When          | Expected                                                                                  |
+| --- | ----------------------------- | ------------- | ----------------------------------------------------------------------------------------- |
+| 1   | Customer cancellation email   | Immediately   | "Booking Cancelled — {Service}"                                                           |
+| 2   | Owner cancellation email      | Immediately   | Cancellation alert                                                                        |
+| 3   | In-app notification (warning) | Immediately   | "Booking Cancelled"                                                                       |
+| 4   | Chat system message           | Immediately   | Cancellation in chat                                                                      |
+| 5   | Follow-up email               | ~1 hour later | "Would you like to rebook?"                                                               |
+| 6   | Two executions                |               | "Cancelled Notifications" = Completed. "Cancelled Follow-Up" = Paused (waiting for delay) |
 
 **Note:** The follow-up workflow pauses after the delay step. The daily cron at `/api/cron` resumes paused workflows. If testing, you may need to wait or manually trigger the cron.
 
@@ -655,10 +660,10 @@ Public POST /api/forms/submit
 
 ### Verification Checklist:
 
-| # | Check | Expected |
-|---|-------|----------|
-| 1 | Owner email | "Low Stock Alert — {Product Name} is running low ({quantity} remaining)" |
-| 2 | In-app notification (warning) | 🔔 "Low Stock" warning |
+| #   | Check                         | Expected                                                                 |
+| --- | ----------------------------- | ------------------------------------------------------------------------ |
+| 1   | Owner email                   | "Low Stock Alert — {Product Name} is running low ({quantity} remaining)" |
+| 2   | In-app notification (warning) | 🔔 "Low Stock" warning                                                   |
 
 ---
 
@@ -674,11 +679,11 @@ Public POST /api/forms/submit
 
 ### Verification Checklist:
 
-| # | Check | Expected |
-|---|-------|----------|
-| 1 | Customer email | "Refund Issued for Order #{Number}" |
-| 2 | In-app notification | 🔔 "Refund Issued" |
-| 3 | Chat system message | Refund notification in order chat |
+| #   | Check               | Expected                            |
+| --- | ------------------- | ----------------------------------- |
+| 1   | Customer email      | "Refund Issued for Order #{Number}" |
+| 2   | In-app notification | 🔔 "Refund Issued"                  |
+| 3   | Chat system message | Refund notification in order chat   |
 
 ---
 
@@ -686,35 +691,35 @@ Public POST /api/forms/submit
 
 After running through all scenarios above, go to the **Automation → Executions** tab and verify this master list:
 
-| Workflow | Expected Trigger | Steps | Status |
-|----------|-----------------|-------|--------|
-| Booking Created Notifications | Scenario 1 (storefront booking) | 4 | ✅ Completed |
-| Booking Confirmed Notifications | Scenario 2 (admin confirms) | 3 | ✅ Completed |
-| Order Created Notifications | Scenario 3 (storefront checkout) | 3 | ✅ Completed |
-| Order Shipped Notifications | Scenario 4 (admin ships) | 3 | ✅ Completed |
-| Order Cancelled Notifications | Scenario 5 (admin cancels) | 4 | ✅ Completed |
-| Payment Proof Uploaded Notifications | Scenario 6A (upload proof) | 3 | ✅ Completed |
-| Payment Received Notifications | Scenario 6B (approve proof) | 3 | ✅ Completed |
-| Quote Created Notifications | Scenario 7A | 4 | ✅ Completed |
-| Quote Sent Notifications | Scenario 7B | 2 | ✅ Completed |
-| Quote Reminder Email | Scenario 7C | 1 | ✅ Completed |
-| Quote Accepted Notifications | Scenario 7D | 4 | ✅ Completed |
-| Quote Converted to Order Notifications | Scenario 7E | 4 | ✅ Completed |
-| Quote Rejected Notifications | Scenario 7F (alt) | 3 | ✅ Completed |
-| Quote Amendment Requested Notifications | Scenario 7G (alt) | 3 | ✅ Completed |
-| Chat Assigned Notification | Scenario 8 | 1 | ✅ Completed |
-| New Chat Message Notification | Scenario 9 | 1 | ✅ Completed |
-| Missed Chat Notification | Scenario 10 | 2 | ✅ Completed |
-| Form Submission Notification | Scenario 11 | 2 | ✅ Completed |
-| Booking Completed Notifications | Scenario 12 | 3 | ✅ Completed |
-| Booking Payment Received Notifications | Scenario 13 | 3 | ✅ Completed |
-| Booking Cancelled Notifications | Scenario 14 | 4 | ✅ Completed |
-| Booking Cancelled Follow-Up | Scenario 14 (delayed) | 4 | ⏸️ Paused → Completed |
-| Booking No-Show Notification | (mark as no-show) | 1 | ✅ Completed |
-| Booking Reminder | (reminder trigger) | 1 | ✅ Completed |
-| Low Stock Alert | Scenario 15 | 2 | ✅ Completed |
-| Refund Issued Notifications | Scenario 16 | 3 | ✅ Completed |
-| Order Delivered Notifications | (mark delivered) | 3 | ✅ Completed |
+| Workflow                                | Expected Trigger                 | Steps | Status                |
+| --------------------------------------- | -------------------------------- | ----- | --------------------- |
+| Booking Created Notifications           | Scenario 1 (storefront booking)  | 4     | ✅ Completed          |
+| Booking Confirmed Notifications         | Scenario 2 (admin confirms)      | 3     | ✅ Completed          |
+| Order Created Notifications             | Scenario 3 (storefront checkout) | 3     | ✅ Completed          |
+| Order Shipped Notifications             | Scenario 4 (admin ships)         | 3     | ✅ Completed          |
+| Order Cancelled Notifications           | Scenario 5 (admin cancels)       | 4     | ✅ Completed          |
+| Payment Proof Uploaded Notifications    | Scenario 6A (upload proof)       | 3     | ✅ Completed          |
+| Payment Received Notifications          | Scenario 6B (approve proof)      | 3     | ✅ Completed          |
+| Quote Created Notifications             | Scenario 7A                      | 4     | ✅ Completed          |
+| Quote Sent Notifications                | Scenario 7B                      | 2     | ✅ Completed          |
+| Quote Reminder Email                    | Scenario 7C                      | 1     | ✅ Completed          |
+| Quote Accepted Notifications            | Scenario 7D                      | 4     | ✅ Completed          |
+| Quote Converted to Order Notifications  | Scenario 7E                      | 4     | ✅ Completed          |
+| Quote Rejected Notifications            | Scenario 7F (alt)                | 3     | ✅ Completed          |
+| Quote Amendment Requested Notifications | Scenario 7G (alt)                | 3     | ✅ Completed          |
+| Chat Assigned Notification              | Scenario 8                       | 1     | ✅ Completed          |
+| New Chat Message Notification           | Scenario 9                       | 1     | ✅ Completed          |
+| Missed Chat Notification                | Scenario 10                      | 2     | ✅ Completed          |
+| Form Submission Notification            | Scenario 11                      | 2     | ✅ Completed          |
+| Booking Completed Notifications         | Scenario 12                      | 3     | ✅ Completed          |
+| Booking Payment Received Notifications  | Scenario 13                      | 3     | ✅ Completed          |
+| Booking Cancelled Notifications         | Scenario 14                      | 4     | ✅ Completed          |
+| Booking Cancelled Follow-Up             | Scenario 14 (delayed)            | 4     | ⏸️ Paused → Completed |
+| Booking No-Show Notification            | (mark as no-show)                | 1     | ✅ Completed          |
+| Booking Reminder                        | (reminder trigger)               | 1     | ✅ Completed          |
+| Low Stock Alert                         | Scenario 15                      | 2     | ✅ Completed          |
+| Refund Issued Notifications             | Scenario 16                      | 3     | ✅ Completed          |
+| Order Delivered Notifications           | (mark delivered)                 | 3     | ✅ Completed          |
 
 ---
 
@@ -733,6 +738,7 @@ Based on actual execution records in the database:
 **Impact:** Workflow runs steps 1-2 (emails) successfully, then FAILS at step 3 (notification), preventing step 4 (chat message) from running.
 
 **Fix Required:** Either:
+
 - A) Update the action executor to map event types to allowed notification types (e.g., `booking.appointment.created` → `new_booking`)
 - B) Update the DB check constraint to accept `info`, `warning`, `success`
 - **Recommended: Option A** — map properly so the existing notification rendering (which uses the type for icon/color) works correctly.
@@ -761,6 +767,7 @@ Based on actual execution records in the database:
 If you want to check the automation state directly in the database:
 
 ### Check recent executions:
+
 ```sql
 SELECT we.id, aw.name, we.status, we.error, we.created_at
 FROM workflow_executions we
@@ -770,6 +777,7 @@ LIMIT 20;
 ```
 
 ### Check event log:
+
 ```sql
 SELECT id, event_type, payload->>'customerEmail' as email, processed, created_at
 FROM automation_events_log
@@ -778,6 +786,7 @@ LIMIT 20;
 ```
 
 ### Check step execution details:
+
 ```sql
 SELECT sel.*, ws.action_type, ws.name as step_name
 FROM step_execution_logs sel
@@ -787,6 +796,7 @@ ORDER BY sel.started_at;
 ```
 
 ### Check installed packs:
+
 ```sql
 SELECT * FROM automation_installed_packs
 ORDER BY installed_at;
@@ -799,6 +809,7 @@ ORDER BY installed_at;
 The automation engine pipeline is **architecturally complete** — events are emitted from all modules (booking, e-commerce, live chat, forms, CRM), workflows are matched and executed, and actions (email, notification, chat) are dispatched. The **email sending** (Resend) and **chat system messages** work. The **in-app notification** step has a DB constraint mismatch that needs a code fix before ALL 27 workflows can run end-to-end without errors.
 
 **Recommended testing order:**
+
 1. Start with **Scenario 8** (Live Chat) — the Chat Assigned workflow already runs cleanly
 2. Then **Scenario 1** (Booking) — emails will send, notification will fail but you can verify emails work
 3. Then **Scenario 3** (Order) — same pattern

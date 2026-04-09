@@ -1,6 +1,58 @@
 # Active Context
 
-## Current Focus: Automation Engine Runtime Fixes — COMPLETE ✅
+## Current Focus: Automation Engine Live Integration Testing — IN PROGRESS 🔄
+
+### Session: Live Deployment Bug Fixes & End-to-End Testing (April 2026)
+
+User performed live booking tests on Luxe Serenity Spa storefront. Multiple runtime bugs found and fixed through iterative testing.
+
+### Bugs Found & Fixed This Session:
+
+**1. triggerType Literal "event" Bug** (event-processor.ts) — commit c25bc6d5
+- `queueWorkflowExecution()` was called with literal string `"event"` instead of actual event type
+- Fixed to pass the real event type (e.g., "booking.appointment.created")
+
+**2. Vercel Serverless Lifecycle Issue** (event-processor.ts + new API route) — commit 1f0c044d
+- `executeWorkflow()` was fire-and-forget (no await) inside `processEventImmediately()`
+- On Vercel, after HTTP response returns, function gets CPU-throttled/killed
+- Execution took 10+ minutes instead of seconds, and never marked as "completed"
+- **Fix**: Created `/api/automation/execute` route with `maxDuration: 300` (5 min)
+- Added `triggerExecutionViaAPI()` helper that makes internal fetch to new endpoint
+- Added `resumeStuckExecutions()` safety net in cron handler
+- Result: Execution now completes in **6 seconds** (was 10+ minutes)
+
+**3. Email Branding Mismatch** (action-executor.ts) — commit f9224dd6
+- Automation emails showed agency name "Jacktest Ltd" instead of site name "Luxe Serenity Spa & Retreat"
+- Root: `getAgencyBranding()` was called but `applySiteBranding()` overlay was never applied
+- **Fix**: email.send handler now selects site name + settings, calls `applySiteBranding()` overlay
+
+**4. Raw ISO Date Formatting** (multiple files) — commit f9224dd6
+- Automation emails showed "2026-04-30T10:00:00.000Z" instead of "30 Apr 2026 at 12:00 PM"
+- **Fix**: Added `start_date_formatted` and `start_time_formatted` fields to ALL booking event emitters
+- Updated all system templates and all DB workflow step configs to use new fields
+- Files modified: public-booking-actions.ts, booking-actions.ts, chat-booking-actions.ts, system-templates.ts
+- DB: Bulk-updated ALL workflow steps across all sites to use new formatted date fields
+
+### Deployment History:
+- c25bc6d5 — triggerType fix
+- 1f0c044d — execution lifecycle fix (verified: 6s execution)
+- f9224dd6 — branding + date formatting fix (currently BUILDING on Vercel)
+
+### Verification Results:
+- ✅ Workflow executes in 6 seconds (4/4 steps complete)
+- ✅ Emails delivered to harpinsltd@gmail.com
+- ✅ In-app notifications created correctly
+- ✅ Chat step gracefully skipped (no conversation context)
+- 🔄 Branding + date formatting fix awaiting deployment verification
+- ❌ Ecommerce order flow not yet tested
+
+### Next Steps:
+- Verify f9224dd6 deployment is READY
+- User retests booking — email should show "Luxe Serenity Spa & Retreat" + "30 Apr 2026 at 12:00 PM"
+- Test ecommerce order flow on storefront
+- Update progress.md
+
+## Previous Focus: Automation Engine Runtime Fixes — COMPLETE ✅
 
 ### Session: Post-Verification Bug Fixes (April 2026)
 

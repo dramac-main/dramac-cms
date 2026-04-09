@@ -14,7 +14,7 @@
 
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -30,6 +30,16 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Save,
   Play,
@@ -117,7 +127,18 @@ export function WorkflowBuilder({
   const [showSettings, setShowSettings] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [viewMode, setViewMode] = useState<"canvas" | "list">("canvas");
+  const [stepToDelete, setStepToDelete] = useState<string | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
+
+  // ---- Browser navigation guard (unsaved changes) ----
+  useEffect(() => {
+    if (!isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
 
   // Configure sensors for drag and drop
   const sensors = useSensors(
@@ -245,6 +266,21 @@ export function WorkflowBuilder({
     },
     [addStep],
   );
+
+  // Handle step delete with confirmation
+  const confirmDeleteStep = useCallback(
+    (stepId: string) => {
+      setStepToDelete(stepId);
+    },
+    [],
+  );
+  const handleConfirmDelete = useCallback(() => {
+    if (stepToDelete) {
+      deleteStep(stepToDelete);
+      setStepToDelete(null);
+      toast.success("Step deleted");
+    }
+  }, [stepToDelete, deleteStep]);
 
   // Loading state
   if (isLoading) {
@@ -395,7 +431,7 @@ export function WorkflowBuilder({
                   triggerType={workflow?.trigger_type}
                   selectedStepId={selectedStep?.id}
                   onStepClick={selectStep}
-                  onStepDelete={deleteStep}
+                  onStepDelete={confirmDeleteStep}
                   onStepDuplicate={handleDuplicateStep}
                   onAddStep={addStep}
                   onUpdateStep={updateStep}
@@ -420,7 +456,7 @@ export function WorkflowBuilder({
                       ?.event_type as string | undefined
                   }
                   onUpdate={updateStep}
-                  onDelete={deleteStep}
+                  onDelete={confirmDeleteStep}
                   onDuplicate={handleDuplicateStep}
                   onClose={() => selectStep(null)}
                 />
@@ -464,7 +500,7 @@ export function WorkflowBuilder({
                   steps={steps}
                   selectedStepId={selectedStep?.id}
                   onStepClick={selectStep}
-                  onStepDelete={deleteStep}
+                  onStepDelete={confirmDeleteStep}
                   onStepDuplicate={handleDuplicateStep}
                 />
               </div>
@@ -640,6 +676,33 @@ export function WorkflowBuilder({
           </Card>
         )}
       </DragOverlay>
+
+      {/* Step Delete Confirmation Dialog */}
+      <AlertDialog
+        open={!!stepToDelete}
+        onOpenChange={(open) => {
+          if (!open) setStepToDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Step</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this step? This action cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DndContext>
   );
 }

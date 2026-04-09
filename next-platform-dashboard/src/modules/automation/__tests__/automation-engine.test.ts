@@ -92,7 +92,11 @@ function resolveVariables(value: unknown, context: ExecutionContext): unknown {
   });
 }
 
-function evaluateOperator(left: unknown, operator: string, right: unknown): boolean {
+function evaluateOperator(
+  left: unknown,
+  operator: string,
+  right: unknown,
+): boolean {
   switch (operator) {
     case "equals":
     case "eq":
@@ -184,20 +188,45 @@ function mapEventToNotificationType(triggerType?: string): string {
 
 // DB check constraint — the notifications table only allows these 34 types
 const VALID_DB_TYPES = new Set([
-  "welcome", "site_published", "site_updated", "client_created",
-  "client_updated", "team_invite", "team_joined", "team_left",
-  "payment_success", "payment_failed", "subscription_renewed",
-  "subscription_cancelled", "comment_added", "mention",
-  "security_alert", "system", "new_booking", "booking_confirmed",
-  "booking_cancelled", "new_order", "order_shipped",
-  "order_delivered", "order_cancelled", "refund_issued", "low_stock",
-  "payment_received", "new_quote_request", "quote_accepted",
-  "quote_rejected", "form_submission", "chat_message",
-  "chat_assigned", "chat_missed", "chat_rating",
+  "welcome",
+  "site_published",
+  "site_updated",
+  "client_created",
+  "client_updated",
+  "team_invite",
+  "team_joined",
+  "team_left",
+  "payment_success",
+  "payment_failed",
+  "subscription_renewed",
+  "subscription_cancelled",
+  "comment_added",
+  "mention",
+  "security_alert",
+  "system",
+  "new_booking",
+  "booking_confirmed",
+  "booking_cancelled",
+  "new_order",
+  "order_shipped",
+  "order_delivered",
+  "order_cancelled",
+  "refund_issued",
+  "low_stock",
+  "payment_received",
+  "new_quote_request",
+  "quote_accepted",
+  "quote_rejected",
+  "form_submission",
+  "chat_message",
+  "chat_assigned",
+  "chat_missed",
+  "chat_rating",
 ]);
 
 // UUID v4 regex (same as used in send_system_message guard)
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // ============================================================================
 // 1. EVENT_REGISTRY CONSISTENCY TESTS
@@ -211,7 +240,9 @@ describe("EVENT_REGISTRY Consistency", () => {
       results.push(obj);
     } else if (typeof obj === "object" && obj !== null) {
       for (const [key, value] of Object.entries(obj)) {
-        results.push(...collectEventStrings(value, prefix ? `${prefix}.${key}` : key));
+        results.push(
+          ...collectEventStrings(value, prefix ? `${prefix}.${key}` : key),
+        );
       }
     }
     return results;
@@ -241,7 +272,7 @@ describe("EVENT_REGISTRY Consistency", () => {
 
   it("should have all live_chat events using underscores", () => {
     const chatEvents = allEvents.filter(
-      (e) => e.startsWith("live_chat.") || e.startsWith("live-chat.")
+      (e) => e.startsWith("live_chat.") || e.startsWith("live-chat."),
     );
     const hyphenated = chatEvents.filter((e) => e.includes("-"));
     expect(hyphenated).toEqual([]);
@@ -362,62 +393,98 @@ describe("mapEventToNotificationType", () => {
   // Specific override tests
   describe("specific overrides", () => {
     it("maps booking.appointment.confirmed → booking_confirmed", () => {
-      expect(mapEventToNotificationType("booking.appointment.confirmed")).toBe("booking_confirmed");
+      expect(mapEventToNotificationType("booking.appointment.confirmed")).toBe(
+        "booking_confirmed",
+      );
     });
     it("maps booking.appointment.cancelled → booking_cancelled", () => {
-      expect(mapEventToNotificationType("booking.appointment.cancelled")).toBe("booking_cancelled");
+      expect(mapEventToNotificationType("booking.appointment.cancelled")).toBe(
+        "booking_cancelled",
+      );
     });
     it("maps ecommerce.order.shipped → order_shipped", () => {
-      expect(mapEventToNotificationType("ecommerce.order.shipped")).toBe("order_shipped");
+      expect(mapEventToNotificationType("ecommerce.order.shipped")).toBe(
+        "order_shipped",
+      );
     });
     it("maps ecommerce.order.delivered → order_delivered", () => {
-      expect(mapEventToNotificationType("ecommerce.order.delivered")).toBe("order_delivered");
+      expect(mapEventToNotificationType("ecommerce.order.delivered")).toBe(
+        "order_delivered",
+      );
     });
     it("maps ecommerce.order.cancelled → order_cancelled", () => {
-      expect(mapEventToNotificationType("ecommerce.order.cancelled")).toBe("order_cancelled");
+      expect(mapEventToNotificationType("ecommerce.order.cancelled")).toBe(
+        "order_cancelled",
+      );
     });
     it("maps ecommerce.order.refunded → refund_issued", () => {
-      expect(mapEventToNotificationType("ecommerce.order.refunded")).toBe("refund_issued");
+      expect(mapEventToNotificationType("ecommerce.order.refunded")).toBe(
+        "refund_issued",
+      );
     });
     it("maps ecommerce.quote.accepted → quote_accepted", () => {
-      expect(mapEventToNotificationType("ecommerce.quote.accepted")).toBe("quote_accepted");
+      expect(mapEventToNotificationType("ecommerce.quote.accepted")).toBe(
+        "quote_accepted",
+      );
     });
     it("maps ecommerce.quote.rejected → quote_rejected", () => {
-      expect(mapEventToNotificationType("ecommerce.quote.rejected")).toBe("quote_rejected");
+      expect(mapEventToNotificationType("ecommerce.quote.rejected")).toBe(
+        "quote_rejected",
+      );
     });
     it("maps ecommerce.product.low_stock → low_stock", () => {
-      expect(mapEventToNotificationType("ecommerce.product.low_stock")).toBe("low_stock");
+      expect(mapEventToNotificationType("ecommerce.product.low_stock")).toBe(
+        "low_stock",
+      );
     });
     it("maps live_chat.conversation.missed → chat_missed", () => {
-      expect(mapEventToNotificationType("live_chat.conversation.missed")).toBe("chat_missed");
+      expect(mapEventToNotificationType("live_chat.conversation.missed")).toBe(
+        "chat_missed",
+      );
     });
     it("maps live_chat.conversation.assigned → chat_assigned", () => {
-      expect(mapEventToNotificationType("live_chat.conversation.assigned")).toBe("chat_assigned");
+      expect(
+        mapEventToNotificationType("live_chat.conversation.assigned"),
+      ).toBe("chat_assigned");
     });
   });
 
   // Prefix-based mapping tests
   describe("prefix-based mappings", () => {
     it("maps booking.appointment.created → new_booking", () => {
-      expect(mapEventToNotificationType("booking.appointment.created")).toBe("new_booking");
+      expect(mapEventToNotificationType("booking.appointment.created")).toBe(
+        "new_booking",
+      );
     });
     it("maps booking.appointment.completed → new_booking", () => {
-      expect(mapEventToNotificationType("booking.appointment.completed")).toBe("new_booking");
+      expect(mapEventToNotificationType("booking.appointment.completed")).toBe(
+        "new_booking",
+      );
     });
     it("maps ecommerce.order.created → new_order", () => {
-      expect(mapEventToNotificationType("ecommerce.order.created")).toBe("new_order");
+      expect(mapEventToNotificationType("ecommerce.order.created")).toBe(
+        "new_order",
+      );
     });
     it("maps ecommerce.payment.received → payment_received", () => {
-      expect(mapEventToNotificationType("ecommerce.payment.received")).toBe("payment_received");
+      expect(mapEventToNotificationType("ecommerce.payment.received")).toBe(
+        "payment_received",
+      );
     });
     it("maps ecommerce.quote.created → new_quote_request", () => {
-      expect(mapEventToNotificationType("ecommerce.quote.created")).toBe("new_quote_request");
+      expect(mapEventToNotificationType("ecommerce.quote.created")).toBe(
+        "new_quote_request",
+      );
     });
     it("maps live_chat.message.received → chat_message", () => {
-      expect(mapEventToNotificationType("live_chat.message.received")).toBe("chat_message");
+      expect(mapEventToNotificationType("live_chat.message.received")).toBe(
+        "chat_message",
+      );
     });
     it("maps form.submission.received → form_submission", () => {
-      expect(mapEventToNotificationType("form.submission.received")).toBe("form_submission");
+      expect(mapEventToNotificationType("form.submission.received")).toBe(
+        "form_submission",
+      );
     });
   });
 
@@ -427,10 +494,14 @@ describe("mapEventToNotificationType", () => {
       expect(mapEventToNotificationType("crm.contact.created")).toBe("system");
     });
     it("maps billing.subscription.created → system", () => {
-      expect(mapEventToNotificationType("billing.subscription.created")).toBe("system");
+      expect(mapEventToNotificationType("billing.subscription.created")).toBe(
+        "system",
+      );
     });
     it("maps totally.unknown.event → system", () => {
-      expect(mapEventToNotificationType("totally.unknown.event")).toBe("system");
+      expect(mapEventToNotificationType("totally.unknown.event")).toBe(
+        "system",
+      );
     });
   });
 
@@ -439,19 +510,29 @@ describe("mapEventToNotificationType", () => {
     it("conversation.missed override beats live_chat prefix", () => {
       // Without specific override, live_chat.conversation would get prefix mapping.
       // conversation.missed must return chat_missed, not a prefix-based mapping.
-      expect(mapEventToNotificationType("live_chat.conversation.missed")).toBe("chat_missed");
+      expect(mapEventToNotificationType("live_chat.conversation.missed")).toBe(
+        "chat_missed",
+      );
     });
     it("conversation.assigned override beats live_chat prefix", () => {
-      expect(mapEventToNotificationType("live_chat.conversation.assigned")).toBe("chat_assigned");
+      expect(
+        mapEventToNotificationType("live_chat.conversation.assigned"),
+      ).toBe("chat_assigned");
     });
     it("order.cancelled override beats ecommerce.order prefix", () => {
-      expect(mapEventToNotificationType("ecommerce.order.cancelled")).toBe("order_cancelled");
+      expect(mapEventToNotificationType("ecommerce.order.cancelled")).toBe(
+        "order_cancelled",
+      );
     });
     it("order.shipped override beats ecommerce.order prefix", () => {
-      expect(mapEventToNotificationType("ecommerce.order.shipped")).toBe("order_shipped");
+      expect(mapEventToNotificationType("ecommerce.order.shipped")).toBe(
+        "order_shipped",
+      );
     });
     it("appointment.confirmed beats booking.appointment prefix", () => {
-      expect(mapEventToNotificationType("booking.appointment.confirmed")).toBe("booking_confirmed");
+      expect(mapEventToNotificationType("booking.appointment.confirmed")).toBe(
+        "booking_confirmed",
+      );
     });
   });
 });
@@ -539,11 +620,15 @@ describe("resolveVariables", () => {
   };
 
   it("should resolve a full variable reference", () => {
-    expect(resolveVariables("{{trigger.customerEmail}}", context)).toBe("john@example.com");
+    expect(resolveVariables("{{trigger.customerEmail}}", context)).toBe(
+      "john@example.com",
+    );
   });
 
   it("should resolve nested path references", () => {
-    expect(resolveVariables("{{trigger.nested.deep.value}}", context)).toBe("found_it");
+    expect(resolveVariables("{{trigger.nested.deep.value}}", context)).toBe(
+      "found_it",
+    );
   });
 
   it("should resolve numeric values (preserve type for full match)", () => {
@@ -556,11 +641,15 @@ describe("resolveVariables", () => {
   });
 
   it("should resolve step output references", () => {
-    expect(resolveVariables("{{steps.step1.notification_id}}", context)).toBe("notif-123");
+    expect(resolveVariables("{{steps.step1.notification_id}}", context)).toBe(
+      "notif-123",
+    );
   });
 
   it("should resolve variable references", () => {
-    expect(resolveVariables("{{variables.site_name}}", context)).toBe("Luxe Spa");
+    expect(resolveVariables("{{variables.site_name}}", context)).toBe(
+      "Luxe Spa",
+    );
   });
 
   it("should resolve execution metadata", () => {
@@ -568,16 +657,24 @@ describe("resolveVariables", () => {
   });
 
   it("should resolve inline variables within text", () => {
-    expect(resolveVariables("Hello {{trigger.customerName}}, your order {{trigger.orderNumber}} is confirmed", context))
-      .toBe("Hello John Doe, your order ORD-001 is confirmed");
+    expect(
+      resolveVariables(
+        "Hello {{trigger.customerName}}, your order {{trigger.orderNumber}} is confirmed",
+        context,
+      ),
+    ).toBe("Hello John Doe, your order ORD-001 is confirmed");
   });
 
   it("should keep unresolved variables as-is", () => {
-    expect(resolveVariables("{{trigger.nonExistent}}", context)).toBe("{{trigger.nonExistent}}");
+    expect(resolveVariables("{{trigger.nonExistent}}", context)).toBe(
+      "{{trigger.nonExistent}}",
+    );
   });
 
   it("should keep unresolved inline variables as-is", () => {
-    expect(resolveVariables("Hi {{trigger.missing}}", context)).toBe("Hi {{trigger.missing}}");
+    expect(resolveVariables("Hi {{trigger.missing}}", context)).toBe(
+      "Hi {{trigger.missing}}",
+    );
   });
 
   it("should handle non-string values (passthrough)", () => {
@@ -600,13 +697,19 @@ describe("resolveVariables", () => {
   });
 
   it("should resolve arrays recursively", () => {
-    const arr = ["{{trigger.customerEmail}}", "literal", "{{trigger.orderNumber}}"];
+    const arr = [
+      "{{trigger.customerEmail}}",
+      "literal",
+      "{{trigger.orderNumber}}",
+    ];
     const result = resolveVariables(arr, context) as string[];
     expect(result).toEqual(["john@example.com", "literal", "ORD-001"]);
   });
 
   it("should handle whitespace in variable paths", () => {
-    expect(resolveVariables("{{ trigger.customerEmail }}", context)).toBe("john@example.com");
+    expect(resolveVariables("{{ trigger.customerEmail }}", context)).toBe(
+      "john@example.com",
+    );
   });
 
   it("should JSON-stringify objects in inline replacements", () => {
@@ -757,12 +860,18 @@ describe("evaluateOperator", () => {
 
     it("not_contains", () => {
       expect(evaluateOperator("hello world", "not_contains", "foo")).toBe(true);
-      expect(evaluateOperator("hello world", "not_contains", "world")).toBe(false);
+      expect(evaluateOperator("hello world", "not_contains", "world")).toBe(
+        false,
+      );
     });
 
     it("starts_with", () => {
-      expect(evaluateOperator("hello world", "starts_with", "hello")).toBe(true);
-      expect(evaluateOperator("hello world", "starts_with", "world")).toBe(false);
+      expect(evaluateOperator("hello world", "starts_with", "hello")).toBe(
+        true,
+      );
+      expect(evaluateOperator("hello world", "starts_with", "world")).toBe(
+        false,
+      );
     });
 
     it("ends_with", () => {
@@ -771,7 +880,9 @@ describe("evaluateOperator", () => {
     });
 
     it("matches (regex)", () => {
-      expect(evaluateOperator("order-123", "matches", "^order-\\d+$")).toBe(true);
+      expect(evaluateOperator("order-123", "matches", "^order-\\d+$")).toBe(
+        true,
+      );
       expect(evaluateOperator("ord", "matches", "^order-\\d+$")).toBe(false);
     });
 
@@ -878,9 +989,15 @@ describe("UUID validation (send_system_message guard)", () => {
 // ============================================================================
 
 describe("Email send validation guard", () => {
-  function validateEmail(to: string | undefined): { valid: boolean; error?: string } {
+  function validateEmail(to: string | undefined): {
+    valid: boolean;
+    error?: string;
+  } {
     if (!to || to.includes("{{")) {
-      return { valid: false, error: `No recipient email resolved (got: ${to || "empty"})` };
+      return {
+        valid: false,
+        error: `No recipient email resolved (got: ${to || "empty"})`,
+      };
     }
     return { valid: true };
   }
@@ -977,7 +1094,13 @@ describe("System template event coverage", () => {
   });
 
   it("no system event maps to an invalid notification type", () => {
-    const invalidTypes = ["info", "warning", "success", "error", "notification"];
+    const invalidTypes = [
+      "info",
+      "warning",
+      "success",
+      "error",
+      "notification",
+    ];
     for (const event of systemWorkflowEventTypes) {
       const mapped = mapEventToNotificationType(event);
       expect(invalidTypes).not.toContain(mapped);
@@ -1005,7 +1128,10 @@ describe("Workflow step config compatibility", () => {
     currency: "USD",
   };
 
-  function buildContext(triggerData: Record<string, unknown>, eventType: string): ExecutionContext {
+  function buildContext(
+    triggerData: Record<string, unknown>,
+    eventType: string,
+  ): ExecutionContext {
     return {
       trigger: normalizeKeysToCamelCase(triggerData),
       steps: {},
@@ -1022,36 +1148,65 @@ describe("Workflow step config compatibility", () => {
 
   describe("email.send step configs", () => {
     it("should resolve customerEmail for customer-facing emails", () => {
-      const context = buildContext(sampleTriggerData, "booking.appointment.created");
-      const config = { to: "{{trigger.customerEmail}}", subject: "Booking Confirmed" };
-      const resolved = resolveVariables(config, context) as Record<string, unknown>;
+      const context = buildContext(
+        sampleTriggerData,
+        "booking.appointment.created",
+      );
+      const config = {
+        to: "{{trigger.customerEmail}}",
+        subject: "Booking Confirmed",
+      };
+      const resolved = resolveVariables(config, context) as Record<
+        string,
+        unknown
+      >;
       expect(resolved.to).toBe("jane@spa.com");
       // Must NOT contain {{ since we check for it
       expect(String(resolved.to).includes("{{")).toBe(false);
     });
 
     it("should resolve ownerEmail for owner-facing emails", () => {
-      const context = buildContext(sampleTriggerData, "booking.appointment.created");
-      const config = { to: "{{trigger.ownerEmail}}", subject: "New Booking Alert" };
-      const resolved = resolveVariables(config, context) as Record<string, unknown>;
+      const context = buildContext(
+        sampleTriggerData,
+        "booking.appointment.created",
+      );
+      const config = {
+        to: "{{trigger.ownerEmail}}",
+        subject: "New Booking Alert",
+      };
+      const resolved = resolveVariables(config, context) as Record<
+        string,
+        unknown
+      >;
       expect(resolved.to).toBe("drake@luxespa.com");
     });
 
     it("should resolve template variables in subject and body", () => {
-      const context = buildContext(sampleTriggerData, "booking.appointment.created");
+      const context = buildContext(
+        sampleTriggerData,
+        "booking.appointment.created",
+      );
       const config = {
         to: "{{trigger.customerEmail}}",
         subject: "Your booking for {{trigger.serviceName}} is confirmed",
         body: "Dear {{trigger.customerName}}, your appointment on {{trigger.startTime}} is confirmed.",
       };
-      const resolved = resolveVariables(config, context) as Record<string, unknown>;
-      expect(resolved.subject).toBe("Your booking for Aromatherapy Massage is confirmed");
+      const resolved = resolveVariables(config, context) as Record<
+        string,
+        unknown
+      >;
+      expect(resolved.subject).toBe(
+        "Your booking for Aromatherapy Massage is confirmed",
+      );
       expect(resolved.body).toContain("Jane Doe");
       expect(resolved.body).toContain("2026-04-10T14:00:00Z");
     });
 
     it("should make both snake_case and camelCase available via normalization", () => {
-      const context = buildContext(sampleTriggerData, "ecommerce.order.created");
+      const context = buildContext(
+        sampleTriggerData,
+        "ecommerce.order.created",
+      );
       // snake_case reference
       const resolved1 = resolveVariables("{{trigger.customer_email}}", context);
       expect(resolved1).toBe("jane@spa.com");
@@ -1063,31 +1218,48 @@ describe("Workflow step config compatibility", () => {
 
   describe("chat.send_system_message step configs", () => {
     it("should resolve conversation_id when available", () => {
-      const context = buildContext(sampleTriggerData, "booking.appointment.created");
+      const context = buildContext(
+        sampleTriggerData,
+        "booking.appointment.created",
+      );
       const config = {
         conversation_id: "{{trigger.conversationId}}",
         event_type: "booking_created",
       };
-      const resolved = resolveVariables(config, context) as Record<string, unknown>;
-      expect(resolved.conversation_id).toBe("a1a00001-0001-4000-b000-000000000001");
+      const resolved = resolveVariables(config, context) as Record<
+        string,
+        unknown
+      >;
+      expect(resolved.conversation_id).toBe(
+        "a1a00001-0001-4000-b000-000000000001",
+      );
       expect(UUID_REGEX.test(resolved.conversation_id as string)).toBe(true);
     });
 
     it("should leave unresolved when no conversationId in trigger", () => {
       const triggerNoConv = { customer_email: "test@test.com" };
-      const context = buildContext(triggerNoConv, "booking.appointment.created");
+      const context = buildContext(
+        triggerNoConv,
+        "booking.appointment.created",
+      );
       const config = {
         conversation_id: "{{trigger.conversationId}}",
         event_type: "booking_created",
       };
-      const resolved = resolveVariables(config, context) as Record<string, unknown>;
+      const resolved = resolveVariables(config, context) as Record<
+        string,
+        unknown
+      >;
       expect(resolved.conversation_id).toBe("{{trigger.conversationId}}");
       // UUID guard should catch this
       expect(UUID_REGEX.test(resolved.conversation_id as string)).toBe(false);
     });
 
     it("should resolve placeholders for system messages", () => {
-      const context = buildContext(sampleTriggerData, "booking.appointment.created");
+      const context = buildContext(
+        sampleTriggerData,
+        "booking.appointment.created",
+      );
       const config = {
         event_type: "booking_created",
         placeholders: {
@@ -1096,7 +1268,10 @@ describe("Workflow step config compatibility", () => {
           date: "{{trigger.startTime}}",
         },
       };
-      const resolved = resolveVariables(config, context) as Record<string, unknown>;
+      const resolved = resolveVariables(config, context) as Record<
+        string,
+        unknown
+      >;
       const placeholders = resolved.placeholders as Record<string, string>;
       expect(placeholders.service_name).toBe("Aromatherapy Massage");
       expect(placeholders.customer_name).toBe("Jane Doe");
@@ -1106,16 +1281,25 @@ describe("Workflow step config compatibility", () => {
 
   describe("notification.in_app_targeted step configs", () => {
     it("should resolve notification title and message", () => {
-      const context = buildContext(sampleTriggerData, "booking.appointment.created");
+      const context = buildContext(
+        sampleTriggerData,
+        "booking.appointment.created",
+      );
       const config = {
         target_role: "owner",
         title: "New Booking: {{trigger.serviceName}}",
-        message: "{{trigger.customerName}} booked {{trigger.serviceName}} for {{trigger.startTime}}",
+        message:
+          "{{trigger.customerName}} booked {{trigger.serviceName}} for {{trigger.startTime}}",
         type: "info",
       };
-      const resolved = resolveVariables(config, context) as Record<string, unknown>;
+      const resolved = resolveVariables(config, context) as Record<
+        string,
+        unknown
+      >;
       expect(resolved.title).toBe("New Booking: Aromatherapy Massage");
-      expect(resolved.message).toContain("Jane Doe booked Aromatherapy Massage");
+      expect(resolved.message).toContain(
+        "Jane Doe booked Aromatherapy Massage",
+      );
       // The "info" type should get mapped by handler since it's not in VALID_DB_TYPES
       expect(VALID_DB_TYPES.has(resolved.type as string)).toBe(false);
       // But the event-to-type mapping should provide a valid fallback
@@ -1406,7 +1590,10 @@ describe("End-to-end workflow simulation", () => {
 
       if (scenario.hasCustomerEmail) {
         it("should resolve customerEmail", () => {
-          const resolved = resolveVariables("{{trigger.customerEmail}}", context);
+          const resolved = resolveVariables(
+            "{{trigger.customerEmail}}",
+            context,
+          );
           expect(resolved).not.toBe("{{trigger.customerEmail}}");
           expect(typeof resolved).toBe("string");
           expect((resolved as string).includes("@")).toBe(true);
@@ -1415,13 +1602,19 @@ describe("End-to-end workflow simulation", () => {
 
       if (scenario.hasConversation) {
         it("should resolve conversationId as valid UUID", () => {
-          const resolved = resolveVariables("{{trigger.conversationId}}", context);
+          const resolved = resolveVariables(
+            "{{trigger.conversationId}}",
+            context,
+          );
           expect(typeof resolved).toBe("string");
           expect(UUID_REGEX.test(resolved as string)).toBe(true);
         });
       } else {
         it("should fail UUID check when no conversation context", () => {
-          const resolved = resolveVariables("{{trigger.conversationId}}", context);
+          const resolved = resolveVariables(
+            "{{trigger.conversationId}}",
+            context,
+          );
           // Either unresolved template or undefined
           if (typeof resolved === "string") {
             expect(UUID_REGEX.test(resolved)).toBe(false);
@@ -1467,7 +1660,9 @@ describe("Edge cases and regressions", () => {
     expect(normalized.serviceName).toBe("Massage");
     expect(normalized.startTime).toBe("2026-01-01T00:00:00Z");
     expect(normalized.cancellationReason).toBe("Weather");
-    expect(normalized.conversationId).toBe("11111111-1111-4111-b111-111111111111");
+    expect(normalized.conversationId).toBe(
+      "11111111-1111-4111-b111-111111111111",
+    );
   });
 
   it("resolveVariables should handle deeply nested configs", () => {
@@ -1486,7 +1681,10 @@ describe("Edge cases and regressions", () => {
       variables: {},
     };
     const config = { to: "static@email.com", subject: "Static Subject" };
-    const resolved = resolveVariables(config, context) as Record<string, unknown>;
+    const resolved = resolveVariables(config, context) as Record<
+      string,
+      unknown
+    >;
     expect(resolved.to).toBe("static@email.com");
     expect(resolved.subject).toBe("Static Subject");
   });
@@ -1507,20 +1705,30 @@ describe("Edge cases and regressions", () => {
   it("order.refunded has higher priority than order prefix for notification type", () => {
     // The issue was ecommerce.order.refunded should map to refund_issued (specific override)
     // NOT new_order (prefix mapping for ecommerce.order)
-    expect(mapEventToNotificationType("ecommerce.order.refunded")).toBe("refund_issued");
-    expect(mapEventToNotificationType("ecommerce.order.refunded")).not.toBe("new_order");
+    expect(mapEventToNotificationType("ecommerce.order.refunded")).toBe(
+      "refund_issued",
+    );
+    expect(mapEventToNotificationType("ecommerce.order.refunded")).not.toBe(
+      "new_order",
+    );
   });
 
   it("ecommerce.product.low_stock maps to low_stock (not a prefix fallback)", () => {
-    expect(mapEventToNotificationType("ecommerce.product.low_stock")).toBe("low_stock");
+    expect(mapEventToNotificationType("ecommerce.product.low_stock")).toBe(
+      "low_stock",
+    );
   });
 
   it("forms.submission (plural) also maps correctly", () => {
-    expect(mapEventToNotificationType("forms.submission.received")).toBe("form_submission");
+    expect(mapEventToNotificationType("forms.submission.received")).toBe(
+      "form_submission",
+    );
   });
 
   it("chat.message prefix (legacy) maps correctly", () => {
-    expect(mapEventToNotificationType("chat.message.received")).toBe("chat_message");
+    expect(mapEventToNotificationType("chat.message.received")).toBe(
+      "chat_message",
+    );
   });
 });
 
@@ -1561,7 +1769,11 @@ describe("Complete notification mapping coverage", () => {
   ];
 
   it("ALL system event types produce valid notification types", () => {
-    const results: Array<{ event: string; notificationType: string; valid: boolean }> = [];
+    const results: Array<{
+      event: string;
+      notificationType: string;
+      valid: boolean;
+    }> = [];
 
     for (const event of allSystemEventTypes) {
       const notificationType = mapEventToNotificationType(event);

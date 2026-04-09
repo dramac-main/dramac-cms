@@ -9,7 +9,12 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { DEFAULT_CURRENCY, DEFAULT_TIMEZONE, formatDate, formatTime } from "@/lib/locale-config";
+import {
+  DEFAULT_CURRENCY,
+  DEFAULT_TIMEZONE,
+  formatDate,
+  formatTime,
+} from "@/lib/locale-config";
 import {
   notifyNewBooking,
   notifyBookingCancelled,

@@ -265,6 +265,16 @@ export function WorkflowBuilderEnhanced({
     return () => document.removeEventListener("keydown", down)
   }, [selectStep, handleSave])
 
+  // ---- Browser navigation guard (unsaved changes) ----
+  useEffect(() => {
+    if (!isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
+
   // Handle trigger changes
   const handleTriggerChange = useCallback(
     (config: TriggerConfig, type: TriggerType) => {

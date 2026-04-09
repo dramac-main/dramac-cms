@@ -34,20 +34,24 @@
 
 ---
 
-## Latest Update: Automation Engine Runtime Fixes ✅ (April 2026)
+## Latest Update: Automation Engine Live Integration Testing 🔄 (April 2026)
 
-### Session: Post-AUTOMATION-TESTING-WALKTHROUGH Verification
+### Session: Live Deployment Bug Fixes (4 bugs fixed, 3 commits)
 
-Thorough runtime verification of all 27 active system workflows revealed and fixed 8 bugs:
+User performed real booking tests on Luxe Serenity Spa storefront (https://luxe-serenity.sites.dramacagency.com/booking).
 
-1. **Notification type constraint violation** — `mapEventToNotificationType()` added to action-executor.ts
-2. **Missing triggerType in ExecutionContext** — Added to types + execution-engine context init
-3. **EVENT_REGISTRY hyphen/underscore mismatch** — `live-chat.*` → `live_chat.*` in event-types.ts
-4. **Hardcoded event string mismatches** — 3 strings fixed in conversation-actions.ts
-5. **Missing logAutomationEvent for chat.assigned** — Added to `assignConversation()`
-6. **Missing logAutomationEvent for message.received** — Added to visitor message API route
-7. **send_system_message handler crash on missing conversation** — UUID validation guard added
-8. **email.send unclear error on unresolved variables** — `{{` check added to `to` field
+1. **triggerType literal "event" bug** — `queueWorkflowExecution` passed `"event"` instead of actual event type (commit c25bc6d5)
+2. **Vercel serverless lifecycle** — fire-and-forget `executeWorkflow()` killed by function teardown. Created `/api/automation/execute` internal endpoint with `maxDuration: 300`. Execution: 10+ min → 6 seconds (commit 1f0c044d)
+3. **Email branding mismatch** — `applySiteBranding()` overlay was never called; emails showed "Jacktest Ltd" instead of site name. Fixed in action-executor.ts (commit f9224dd6)
+4. **Raw ISO date formatting** — Emails showed "2026-04-30T10:00:00.000Z" instead of "30 Apr 2026 at 12:00 PM". Added `start_date_formatted`/`start_time_formatted` to all booking event emitters + updated all templates + all DB workflow steps (commit f9224dd6)
+
+### Awaiting:
+
+- f9224dd6 deployment verification (currently BUILDING)
+- User retest with branding + date fix
+- Ecommerce order flow testing
+
+### Previous: Automation Engine Runtime Fixes ✅ (8 bugs fixed)
 
 **DB Changes:** Removed duplicate subscription, changed 18 chat steps to `on_error: "continue"`
 **Files Modified:** 7 (automation-types, execution-engine, action-executor, event-types, conversation-actions, messages/route, AUTOMATION-TESTING-WALKTHROUGH.md)
