@@ -205,7 +205,10 @@ export function BookingWidget({
           <input
             type="date"
             style={styles.input}
-            min={new Date().toISOString().split("T")[0]}
+            min={(() => {
+              const d = new Date();
+              return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+            })()}
             onChange={(e) => setSelectedDate(new Date(e.target.value))}
           />
           {selectedDate && (

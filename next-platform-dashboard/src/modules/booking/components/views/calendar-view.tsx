@@ -25,6 +25,12 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type {
+  Appointment,
+  Staff,
+  AppointmentStatus,
+} from "../../types/booking-types";
+import { DEFAULT_LOCALE } from "@/lib/locale-config";
 
 /** Format a Date as YYYY-MM-DD using the local timezone (avoids UTC shift from toISOString) */
 function toLocalDateStr(date: Date): string {
@@ -33,14 +39,6 @@ function toLocalDateStr(date: Date): string {
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
-
-import type {
-  Appointment,
-  Staff,
-  AppointmentStatus,
-} from "../../types/booking-types";
-
-import { DEFAULT_LOCALE } from "@/lib/locale-config";
 interface CalendarViewProps {
   onAppointmentClick?: (appointment: Appointment) => void;
   onSlotClick?: (date: Date, time: string) => void;

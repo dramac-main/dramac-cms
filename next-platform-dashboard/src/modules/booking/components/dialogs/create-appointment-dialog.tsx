@@ -28,6 +28,7 @@ import {
 import { CalendarIcon, Clock, User, Mail, Phone, FileText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useBooking } from '../../context/booking-context'
+import { toast } from 'sonner'
 
 /** Format a Date as YYYY-MM-DD using the local timezone (avoids UTC shift from toISOString) */
 function toLocalDateStr(date: Date): string {
@@ -36,7 +37,6 @@ function toLocalDateStr(date: Date): string {
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
-import { toast } from 'sonner'
 
 // Time slots for the select
 const generateTimeSlots = () => {
