@@ -23,6 +23,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { X, Info, AlertCircle, Copy, Trash2, Braces } from "lucide-react";
+import { toast } from "sonner";
 import { ACTION_REGISTRY } from "../../../lib/action-types";
 import { VariablePicker } from "./VariablePicker";
 import type {
@@ -419,9 +420,14 @@ export function NodeConfigPanel({
               <Label className="text-xs">Enabled</Label>
               <Switch
                 checked={step.is_active}
-                onCheckedChange={(checked) =>
+                onCheckedChange={(checked) => {
                   onUpdate(step.id, { is_active: checked })
-                }
+                  toast.success(
+                    checked
+                      ? `"${step.name || 'Step'}" enabled — will run during execution`
+                      : `"${step.name || 'Step'}" disabled — will be skipped during execution`,
+                  )
+                }}
               />
             </div>
 

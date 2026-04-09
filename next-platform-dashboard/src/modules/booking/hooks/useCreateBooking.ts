@@ -86,7 +86,10 @@ export function useCreateBooking(siteId: string): UseCreateBookingResult {
             | "paid",
           payment_amount: result.paymentAmount || 0,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          metadata: { source: "online", currency: result.currency || DEFAULT_CURRENCY },
+          metadata: {
+            source: "online",
+            currency: result.currency || DEFAULT_CURRENCY,
+          },
           custom_fields: {},
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),

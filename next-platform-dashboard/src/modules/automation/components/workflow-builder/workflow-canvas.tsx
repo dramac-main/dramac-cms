@@ -192,8 +192,13 @@ function SortableStep({
 
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <div className="font-medium text-sm truncate">
+            <div className="font-medium text-sm truncate flex items-center gap-1.5">
               {formatActionName(step)}
+              {!step.is_active && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-normal shrink-0">
+                  OFF
+                </span>
+              )}
             </div>
             <div className="text-xs text-muted-foreground truncate">
               {step.description || step.action_type || step.step_type}

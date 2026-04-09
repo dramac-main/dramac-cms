@@ -585,7 +585,8 @@ export function BookingFormBlock({
           setBookingPaymentRequired(true);
           setBookingPaymentAmount(result.payment_amount || 0);
           setBookingCurrency(
-            (result.metadata as Record<string, string>)?.currency || DEFAULT_CURRENCY,
+            (result.metadata as Record<string, string>)?.currency ||
+              DEFAULT_CURRENCY,
           );
         }
       } else {

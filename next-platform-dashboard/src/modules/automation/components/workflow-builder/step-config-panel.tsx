@@ -27,6 +27,7 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { X, Info, AlertCircle } from "lucide-react"
+import { toast } from "sonner"
 import { ACTION_REGISTRY } from "../../lib/action-types"
 import type { 
   WorkflowStep, 
@@ -343,14 +344,21 @@ export function StepConfigPanel({ step, onUpdate, onClose }: StepConfigPanelProp
             {/* Active toggle */}
             <div className="flex items-center justify-between">
               <div>
-                <Label>Step Enabled</Label>
+                <Label>Enabled</Label>
                 <p className="text-xs text-muted-foreground">
                   Disabled steps are skipped during execution
                 </p>
               </div>
               <Switch
                 checked={step.is_active}
-                onCheckedChange={(checked) => onUpdate(step.id, { is_active: checked })}
+                onCheckedChange={(checked) => {
+                  onUpdate(step.id, { is_active: checked })
+                  toast.success(
+                    checked
+                      ? `"${step.name || 'Step'}" enabled — will run during execution`
+                      : `"${step.name || 'Step'}" disabled — will be skipped during execution`,
+                  )
+                }}
               />
             </div>
 

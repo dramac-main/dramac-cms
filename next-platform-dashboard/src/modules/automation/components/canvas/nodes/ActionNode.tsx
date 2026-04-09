@@ -78,8 +78,13 @@ function ActionNodeComponent({ data, selected }: NodeProps<ActionNodeType>) {
           <Icon className="h-4 w-4 text-blue-500" />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-medium text-foreground">
+          <div className="truncate text-sm font-medium text-foreground flex items-center gap-1.5">
             {data.label || "Action"}
+            {isInactive && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-normal shrink-0">
+                OFF
+              </span>
+            )}
           </div>
           <div className="truncate text-xs text-muted-foreground">
             {step ? getConfigSummary(step) : ""}
