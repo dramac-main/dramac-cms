@@ -126,6 +126,8 @@ function GuestAccountNudge({
   email,
   siteId,
   setPassword,
+  sendVerificationCode,
+  verifyEmailCode,
   openAuthDialog,
 }: {
   email: string;
@@ -133,16 +135,85 @@ function GuestAccountNudge({
   setPassword: (
     password: string,
     email?: string,
+    verificationToken?: string,
   ) => Promise<{ error: string | null }>;
+  sendVerificationCode: (email: string) => Promise<{ error: string | null }>;
+  verifyEmailCode: (
+    email: string,
+    code: string,
+  ) => Promise<{ error: string | null; verificationToken?: string }>;
   openAuthDialog?: (mode?: "login" | "register" | "set-password") => void;
 }) {
+  const [step, setStep] = React.useState<
+    "send" | "verify" | "password" | "done"
+  >("send");
+  const [code, setCode] = React.useState("");
+  const [verificationToken, setVerificationToken] = React.useState("");
   const [password, setPass] = React.useState("");
   const [confirm, setConfirm] = React.useState("");
-  const [saving, setSaving] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
-  const [done, setDone] = React.useState(false);
+  const [cooldown, setCooldown] = React.useState(0);
 
-  if (done) {
+  React.useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldown]);
+
+  const handleSendCode = async () => {
+    setLoading(true);
+    setError("");
+    const result = await sendVerificationCode(email);
+    setLoading(false);
+    if (result.error) {
+      setError(result.error);
+    } else {
+      setStep("verify");
+      setCooldown(60);
+    }
+  };
+
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (code.length !== 6) {
+      setError("Please enter the 6-digit code");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    const result = await verifyEmailCode(email, code);
+    setLoading(false);
+    if (result.error) {
+      setError(result.error);
+    } else if (result.verificationToken) {
+      setVerificationToken(result.verificationToken);
+      setStep("password");
+    }
+  };
+
+  const handleSetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+    if (password !== confirm) {
+      setError("Passwords don't match");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    const result = await setPassword(password, email, verificationToken);
+    setLoading(false);
+    if (result.error) {
+      setError(result.error);
+    } else {
+      setStep("done");
+    }
+  };
+
+  if (step === "done") {
     return (
       <Card className="border-success/30 bg-success/5">
         <CardContent className="py-6 text-center">
@@ -157,27 +228,6 @@ function GuestAccountNudge({
     );
   }
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters");
-      return;
-    }
-    if (password !== confirm) {
-      setError("Passwords don't match");
-      return;
-    }
-    setSaving(true);
-    setError("");
-    const result = await setPassword(password, email);
-    setSaving(false);
-    if (result.error) {
-      setError(result.error);
-    } else {
-      setDone(true);
-    }
-  };
-
   return (
     <Card className="border-primary/30 bg-primary/5">
       <CardContent className="py-6">
@@ -190,36 +240,117 @@ function GuestAccountNudge({
               Create an account to track your orders
             </h3>
             <p className="text-sm text-muted-foreground mt-1 mb-4">
-              Set a password for <strong>{email}</strong> to sign in anytime and
-              view your order history, manage addresses, and check out faster.
+              Verify <strong>{email}</strong> to create your account and sign in
+              anytime to view your order history, manage addresses, and check out
+              faster.
             </p>
-            <form onSubmit={handleCreate} className="space-y-3 max-w-sm">
-              <input
-                type="password"
-                placeholder="Create a password (min 8 chars)"
-                value={password}
-                onChange={(e) => setPass(e.target.value)}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                minLength={8}
-                required
-                autoComplete="new-password"
-              />
-              <input
-                type="password"
-                placeholder="Confirm password"
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                minLength={8}
-                required
-                autoComplete="new-password"
-              />
-              {error && <p className="text-sm text-destructive">{error}</p>}
-              <Button type="submit" size="sm" disabled={saving}>
-                {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                Create Account
-              </Button>
-            </form>
+
+            {/* Step 1: Send verification code */}
+            {step === "send" && (
+              <div className="space-y-3 max-w-sm">
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleSendCode}
+                  disabled={loading}
+                >
+                  {loading && (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  )}
+                  Send Verification Code
+                </Button>
+                {error && <p className="text-sm text-destructive">{error}</p>}
+              </div>
+            )}
+
+            {/* Step 2: Enter verification code */}
+            {step === "verify" && (
+              <form
+                onSubmit={handleVerifyCode}
+                className="space-y-3 max-w-sm"
+              >
+                <p className="text-sm text-muted-foreground">
+                  We sent a 6-digit code to <strong>{email}</strong>
+                </p>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  placeholder="Enter 6-digit code"
+                  value={code}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, "").slice(0, 6);
+                    setCode(v);
+                  }}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground tracking-widest text-center font-mono focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  maxLength={6}
+                  required
+                  autoComplete="one-time-code"
+                  autoFocus
+                />
+                {error && <p className="text-sm text-destructive">{error}</p>}
+                <div className="flex items-center gap-3">
+                  <Button type="submit" size="sm" disabled={loading}>
+                    {loading && (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    )}
+                    Verify
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={handleSendCode}
+                    disabled={loading || cooldown > 0}
+                    className="text-xs text-primary hover:underline disabled:opacity-50 disabled:no-underline"
+                  >
+                    {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend code"}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Step 3: Set password */}
+            {step === "password" && (
+              <form
+                onSubmit={handleSetPassword}
+                className="space-y-3 max-w-sm"
+              >
+                <div className="flex items-center gap-1.5 mb-2">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                  <span className="text-xs text-success font-medium">
+                    Email verified
+                  </span>
+                </div>
+                <input
+                  type="password"
+                  placeholder="Create a password (min 8 chars)"
+                  value={password}
+                  onChange={(e) => setPass(e.target.value)}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  minLength={8}
+                  required
+                  autoComplete="new-password"
+                  autoFocus
+                />
+                <input
+                  type="password"
+                  placeholder="Confirm password"
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  minLength={8}
+                  required
+                  autoComplete="new-password"
+                />
+                {error && <p className="text-sm text-destructive">{error}</p>}
+                <Button type="submit" size="sm" disabled={loading}>
+                  {loading && (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  )}
+                  Create Account
+                </Button>
+              </form>
+            )}
+
             {openAuthDialog && (
               <p className="text-sm text-muted-foreground mt-3">
                 Already have an account?{" "}
@@ -1200,6 +1331,8 @@ export function OrderConfirmationBlock({
             email={order.email}
             siteId={storefront.siteId}
             setPassword={auth.setPassword}
+            sendVerificationCode={auth.sendVerificationCode}
+            verifyEmailCode={auth.verifyEmailCode}
             openAuthDialog={auth.openAuthDialog}
           />
         )}

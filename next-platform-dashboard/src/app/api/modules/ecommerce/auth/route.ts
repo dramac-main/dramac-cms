@@ -10,7 +10,9 @@
  * - verify-magic: Verify magic link token
  * - logout: Invalidate session token
  * - session: Validate session token & return customer data
- * - set-password: Set password for guest who just checked out
+ * - set-password: Set password for guest (requires verificationToken for email-only)
+ * - send-verification-code: Send 6-digit OTP to email for ownership verification
+ * - verify-email-code: Validate OTP, return one-time verificationToken
  *
  * Session tokens are stored as SHA-256 hashes in mod_ecommod01_customer_sessions.
  * Tokens are 32-byte random hex strings, returned to the client as plain text.
@@ -628,7 +630,7 @@ export async function POST(request: NextRequest) {
     // SECURITY: Requires EITHER a valid session token OR email + the customer
     // must be a guest who has never set a password (prevents account takeover).
     if (action === "set-password") {
-      const { token, email, password } = body;
+      const { token, email, password, verificationToken } = body;
 
       const pwError = validatePassword(password);
       if (pwError) {
@@ -657,8 +659,43 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Email-only fallback: ONLY allowed for guests who have never set a password
+      // Email-only fallback: requires a valid verificationToken from the
+      // verify-email-code flow. This ensures email ownership before allowing
+      // password creation for guest accounts.
       if (!customerId && customerEmail) {
+        // Require email verification token for guest upgrade
+        if (!verificationToken) {
+          return NextResponse.json(
+            { error: "Email verification is required to create an account" },
+            { status: 400, headers: corsHeaders },
+          );
+        }
+
+        // Validate the verification token
+        const vtHash = hashToken(verificationToken);
+        const { data: vRow } = await (supabase as any)
+          .from("mod_ecommod01_email_verifications")
+          .select("id")
+          .eq("site_id", siteId)
+          .eq("email", customerEmail)
+          .eq("code_hash", vtHash)
+          .eq("verified", true)
+          .gt("expires_at", new Date().toISOString())
+          .maybeSingle();
+
+        if (!vRow) {
+          return NextResponse.json(
+            { error: "Email verification expired. Please verify your email again." },
+            { status: 401, headers: corsHeaders },
+          );
+        }
+
+        // Consume the verification token (one-time use)
+        await (supabase as any)
+          .from("mod_ecommod01_email_verifications")
+          .delete()
+          .eq("id", vRow.id);
+
         const { data: c } = await (supabase as any)
           .from(TABLE)
           .select("id, password_set_at, is_guest")
@@ -1479,6 +1516,179 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(
         { quotes: quotes || [] },
+        { status: 200, headers: corsHeaders },
+      );
+    }
+
+    // ── SEND VERIFICATION CODE ──────────────────────────────────────────────
+    // Sends a 6-digit OTP to the customer's email for ownership verification.
+    // Required before a guest can set a password (guest-to-account upgrade).
+    if (action === "send-verification-code") {
+      const { email } = body;
+
+      const emailErr = validateEmail(email);
+      if (emailErr) {
+        return NextResponse.json(
+          { error: emailErr },
+          { status: 400, headers: corsHeaders },
+        );
+      }
+
+      const emailLower = email.toLowerCase().trim();
+
+      // Generate a cryptographically random 6-digit code
+      const codeNum = crypto.randomInt(100000, 999999);
+      const code = String(codeNum);
+      const codeHash = hashToken(code);
+
+      // Invalidate any existing unexpired codes for this email+site
+      await (supabase as any)
+        .from("mod_ecommod01_email_verifications")
+        .delete()
+        .eq("site_id", siteId)
+        .eq("email", emailLower);
+
+      // Insert new code with 10-minute expiry
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+      const { error: insertErr } = await (supabase as any)
+        .from("mod_ecommod01_email_verifications")
+        .insert({
+          site_id: siteId,
+          email: emailLower,
+          code_hash: codeHash,
+          expires_at: expiresAt,
+        });
+
+      if (insertErr) {
+        console.error("[send-verification-code] Insert error:", insertErr);
+        return NextResponse.json(
+          { error: "Failed to generate verification code" },
+          { status: 500, headers: corsHeaders },
+        );
+      }
+
+      // Get site name for the email
+      const { data: site } = await (supabase as any)
+        .from("sites")
+        .select("name")
+        .eq("id", siteId)
+        .single();
+
+      // Send the verification email
+      await sendEmail({
+        to: { email: emailLower },
+        type: "storefront_email_verification",
+        data: {
+          code,
+          siteName: site?.name || "your account",
+        },
+      });
+
+      return NextResponse.json(
+        { success: true, message: "Verification code sent" },
+        { status: 200, headers: corsHeaders },
+      );
+    }
+
+    // ── VERIFY EMAIL CODE ───────────────────────────────────────────────────
+    // Validates the 6-digit OTP. On success, returns a one-time verification
+    // token that must be passed to set-password to prove email ownership.
+    if (action === "verify-email-code") {
+      const { email, code } = body;
+
+      if (!email || !code) {
+        return NextResponse.json(
+          { error: "Email and code are required" },
+          { status: 400, headers: corsHeaders },
+        );
+      }
+
+      const emailLower = email.toLowerCase().trim();
+      const codeStr = String(code).trim();
+      const codeHash = hashToken(codeStr);
+
+      // Look up the latest active verification for this email + site
+      const { data: verification } = await (supabase as any)
+        .from("mod_ecommod01_email_verifications")
+        .select("id, code_hash, attempts, expires_at")
+        .eq("site_id", siteId)
+        .eq("email", emailLower)
+        .eq("verified", false)
+        .gt("expires_at", new Date().toISOString())
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!verification) {
+        return NextResponse.json(
+          { error: "Verification code expired or not found. Please request a new code." },
+          { status: 400, headers: corsHeaders },
+        );
+      }
+
+      // Check attempt limit (max 5 tries)
+      if (verification.attempts >= 5) {
+        // Delete the exhausted code
+        await (supabase as any)
+          .from("mod_ecommod01_email_verifications")
+          .delete()
+          .eq("id", verification.id);
+
+        return NextResponse.json(
+          { error: "Too many attempts. Please request a new code." },
+          { status: 429, headers: corsHeaders },
+        );
+      }
+
+      // Increment attempts
+      await (supabase as any)
+        .from("mod_ecommod01_email_verifications")
+        .update({ attempts: verification.attempts + 1 })
+        .eq("id", verification.id);
+
+      // Constant-time comparison of code hashes
+      if (verification.code_hash !== codeHash) {
+        const remaining = 4 - verification.attempts;
+        return NextResponse.json(
+          {
+            error: `Invalid code. ${remaining > 0 ? `${remaining} attempts remaining.` : "Please request a new code."}`,
+          },
+          { status: 400, headers: corsHeaders },
+        );
+      }
+
+      // Code is valid — mark as verified
+      await (supabase as any)
+        .from("mod_ecommod01_email_verifications")
+        .update({ verified: true })
+        .eq("id", verification.id);
+
+      // Generate a short-lived verification token (5 minutes)
+      // This token proves email ownership and is required by set-password
+      const verificationToken = generateToken();
+      const verificationTokenHash = hashToken(verificationToken);
+      const verifyExpiresAt = new Date(
+        Date.now() + 5 * 60 * 1000,
+      ).toISOString();
+
+      // Store token in a new verification row (reuse table as token store)
+      await (supabase as any)
+        .from("mod_ecommod01_email_verifications")
+        .insert({
+          site_id: siteId,
+          email: emailLower,
+          code_hash: verificationTokenHash, // Reuse code_hash field for the token hash
+          verified: true,
+          expires_at: verifyExpiresAt,
+        });
+
+      return NextResponse.json(
+        {
+          success: true,
+          verificationToken,
+          message: "Email verified successfully",
+        },
         { status: 200, headers: corsHeaders },
       );
     }

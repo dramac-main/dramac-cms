@@ -182,6 +182,35 @@ This link expires in 1 hour and can only be used once. If you didn't request thi
     `.trim(),
   },
 
+  storefront_email_verification: {
+    subject: (data) =>
+      `${data.code} is your verification code${data.siteName ? ` for ${data.siteName}` : ""}`,
+    html: (data) =>
+      wrapHtml(`
+      <h1 style="${STYLES.heading}">Verify Your Email</h1>
+      <p style="${STYLES.text}">Use this code to verify your email address${data.siteName ? ` on <strong>${data.siteName}</strong>` : ""}:</p>
+      <div style="margin: 24px 0; text-align: center;">
+        <span style="display: inline-block; font-size: 36px; font-weight: 700; letter-spacing: 8px; font-family: monospace; color: #1e293b; background: #f1f5f9; border-radius: 8px; padding: 16px 32px;">
+          ${data.code}
+        </span>
+      </div>
+      <p style="${STYLES.text}">Enter this code on the page where you requested it.</p>
+      <p style="${STYLES.muted}">
+        This code expires in 10 minutes. If you didn't request this, you can safely ignore this email.
+      </p>
+    `),
+    text: (data) =>
+      `
+Verify Your Email
+
+Your verification code${data.siteName ? ` for ${data.siteName}` : ""} is: ${data.code}
+
+Enter this code on the page where you requested it.
+
+This code expires in 10 minutes. If you didn't request this, you can safely ignore this email.
+    `.trim(),
+  },
+
   // ============================================
   // TEAM EMAILS
   // ============================================

@@ -1266,6 +1266,23 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
     text: (data) =>
       `Sign In to Your Account\n\nWe received a request to sign in to your account${data.siteName ? ` on ${data.siteName}` : ""}.\n\nSign in here: ${data.loginUrl}\n\nThis link expires in 1 hour and can only be used once.`,
   },
+  storefront_email_verification: {
+    subject: (data) =>
+      `${data.code} is your verification code${data.siteName ? ` for ${data.siteName}` : ""}`,
+    html: (data, b) =>
+      baseEmailTemplate(
+        b,
+        `<h1 style="${EMAIL_STYLES.heading}">Verify Your Email</h1>
+        <p style="${EMAIL_STYLES.text}">Use the code below to verify your email address${data.siteName ? ` on <strong>${data.siteName}</strong>` : ""}:</p>
+        <div style="text-align: center; margin: 32px 0;">
+          <span style="font-family: 'Courier New', monospace; font-size: 36px; font-weight: bold; letter-spacing: 8px; color: ${b.primary_color || "#2563eb"}; background: #f3f4f6; padding: 16px 32px; border-radius: 8px; display: inline-block;">${data.code}</span>
+        </div>
+        <p style="${EMAIL_STYLES.muted}">This code expires in 10 minutes. If you didn't request this, you can safely ignore this email.</p>`,
+        "Verify your email",
+      ),
+    text: (data) =>
+      `Verify Your Email\n\nYour verification code is: ${data.code}\n\nThis code expires in 10 minutes. If you didn't request this, you can safely ignore this email.`,
+  },
   team_invitation,
   team_member_joined,
   site_published,

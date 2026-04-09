@@ -55,12 +55,22 @@ export interface AuthContextValue {
   setPassword: (
     password: string,
     email?: string,
+    verificationToken?: string,
   ) => Promise<{ error: string | null }>;
   refreshCustomer: () => Promise<void>;
   /** Request a magic login link for password recovery */
   requestMagicLink: (
     email: string,
   ) => Promise<{ error: string | null; message?: string }>;
+  /** Send a 6-digit verification code to the email for ownership proof */
+  sendVerificationCode: (
+    email: string,
+  ) => Promise<{ error: string | null }>;
+  /** Verify the 6-digit code and get a verificationToken for set-password */
+  verifyEmailCode: (
+    email: string,
+    code: string,
+  ) => Promise<{ error: string | null; verificationToken?: string }>;
   /** Open the auth dialog (login/register) */
   openAuthDialog: (mode?: "login" | "register" | "set-password") => void;
   /** Close the auth dialog */
@@ -84,6 +94,8 @@ const AuthContext = createContext<AuthContextValue>({
   setPassword: async () => ({ error: null }),
   refreshCustomer: async () => {},
   requestMagicLink: async () => ({ error: null }),
+  sendVerificationCode: async () => ({ error: null }),
+  verifyEmailCode: async () => ({ error: null }),
   openAuthDialog: () => {},
   closeAuthDialog: () => {},
   authDialogOpen: false,
@@ -312,12 +324,14 @@ export function StorefrontAuthProvider({
     async (
       password: string,
       email?: string,
+      verificationToken?: string,
     ): Promise<{ error: string | null }> => {
       const data = await callAuth({
         action: "set-password",
         token,
         email,
         password,
+        verificationToken,
       });
       if (data?.error) return { error: data.error };
       if (data?.token && data?.customer) {
@@ -335,6 +349,45 @@ export function StorefrontAuthProvider({
       setCustomer(data.customer);
     }
   }, [callAuth, token]);
+
+  const sendVerificationCode = useCallback(
+    async (email: string): Promise<{ error: string | null }> => {
+      try {
+        const data = await callAuth({
+          action: "send-verification-code",
+          email,
+        });
+        if (data?.error) return { error: data.error };
+        return { error: null };
+      } catch {
+        return { error: "Failed to send verification code. Please try again." };
+      }
+    },
+    [callAuth],
+  );
+
+  const verifyEmailCode = useCallback(
+    async (
+      email: string,
+      code: string,
+    ): Promise<{ error: string | null; verificationToken?: string }> => {
+      try {
+        const data = await callAuth({
+          action: "verify-email-code",
+          email,
+          code,
+        });
+        if (data?.error) return { error: data.error };
+        return {
+          error: null,
+          verificationToken: data?.verificationToken,
+        };
+      } catch {
+        return { error: "Verification failed. Please try again." };
+      }
+    },
+    [callAuth],
+  );
 
   const requestMagicLink = useCallback(
     async (
@@ -378,6 +431,8 @@ export function StorefrontAuthProvider({
         setPassword,
         refreshCustomer,
         requestMagicLink,
+        sendVerificationCode,
+        verifyEmailCode,
         openAuthDialog,
         closeAuthDialog,
         authDialogOpen,

@@ -11,6 +11,7 @@ export type EmailType =
   | "password_reset"
   | "email_changed"
   | "storefront_magic_link"
+  | "storefront_email_verification"
   // Team
   | "team_invitation"
   | "team_member_joined"
