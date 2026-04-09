@@ -34,7 +34,13 @@
 
 ---
 
-## Latest Update: Interactive Booking Payment Chat Flow ✅ (April 2026) — commit 9df131f1
+## Latest Update: Production-Fidelity TestRunDialog ✅ (April 2026) — commit 40098a0d
+
+### Session: Real Database Entities in Test Dialog (3 files, +1421 -145)
+
+Complete TestRunDialog rewrite for production parity. EntitySelector dropdowns for all 5 event categories, auto-populating fields from real database entities. ExecutionResultsPanel with step-by-step validation. Snake_case aliases for all trigger data. Zero hardcoded sample data. Also committed booking/chat type fixes (b29b9c8d).
+
+## Previous Update: Interactive Booking Payment Chat Flow ✅ (April 2026) — commit 9df131f1
 
 ### Session: Auto-Conversation + Booking Payment via Chat (12 files, +2272 -737)
 

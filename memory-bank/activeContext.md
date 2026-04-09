@@ -1,10 +1,49 @@
 # Active Context
 
-## Current Focus: Interactive Booking Payment Chat Flow — COMPLETE ✅
+## Current Focus: Production-Fidelity TestRunDialog — COMPLETE ✅
 
-### Session: Auto-Conversation + Booking Payment via Chat (April 2026) — commit 9df131f1
+### Session: Real Database Entities in Test Dialog (April 2026) — commit 40098a0d
 
-User requested that live chat should auto-open for EVERY booking and order as an interactive sales process. For bookings with payment required, the chat should follow the same interactive payment flow as e-commerce (select payment method → view details → pay → upload proof → business reviews).
+User saw hardcoded sample data in TestRunDialog ("Sample Service", "50.00", "USD") and requested all fields use REAL data from the database. Goal: "if everything works perfectly in test, that means in production it works perfectly as well, guaranteed."
+
+### Changes Made (3 files, +1421 -145):
+
+**1. getTestRunEntities() server action** (automation-actions.ts)
+- Fetches 8 entity types in parallel via Promise.allSettled(): services, staff, products, orders, contacts, forms, conversations, quotes
+- Resolves siteCurrency from ecommerce settings and ownerEmail from sites→agencies→profiles chain
+- Filters by event category to only fetch relevant entities
+
+**2. TestRunDialog complete rewrite** (test-run-dialog.tsx, ~1200 lines)
+- EntitySelector component: dropdowns for all 5 event categories (booking services+staff, CRM contacts, ecommerce orders+quotes, forms definitions, live_chat conversations)
+- Auto-populates related fields when entity selected (e.g., select service → fills price, duration, currency, endTime, paymentStatus)
+- ExecutionResultsPanel: polls getExecutionDetails(executionId) every 2s, shows overall pass/fail with step count badge, per-step status/action/duration/error
+- Tabbed UI: "Configure & Run" / "Results" tabs
+- Snake_case aliases for all trigger data (30 camelCase→snake_case pairs) for production parity
+- Zero hardcoded sample data — all fields populated from real entities
+- "auto" badge on auto-populated fields, hasRequiredMissing validation
+
+**3. workflow-builder.tsx updates**
+- handleTestRun returns Promise<string|null> (executionId) instead of void
+- Dialog stays open after run for results tab viewing
+- Passes siteId prop to TestRunDialog
+
+### Also committed (b29b9c8d):
+- Booking payment flow type fixes (public-booking-actions, useCreateBooking, BookingFormBlock)
+- Live-chat event bridge updates (chat-booking-actions, chat-event-bridge)
+- Memory bank sync
+
+### Verification:
+- ✅ 0 TypeScript errors in modified files (5 pre-existing in booking/chat files)
+- ✅ 189/189 automation tests pass
+- ✅ Committed (40098a0d + b29b9c8d) and pushed to main
+
+### Next Steps:
+- Verify Vercel deployment
+- Test the TestRunDialog with real data on live site
+- Fix 5 pre-existing TS errors in booking/chat files (paymentStatus type, chat-event-bridge import)
+- Test full booking payment flow on storefront
+
+## Previous Focus: Interactive Booking Payment Chat Flow — COMPLETE ✅ (commit 9df131f1)
 
 ### Changes Made (12 files, +2272 -737):
 
