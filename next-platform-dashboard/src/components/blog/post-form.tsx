@@ -274,7 +274,7 @@ export function PostForm({
                 post?.slug && (
                   <Button type="button" variant="outline" size="sm" asChild>
                     <a
-                      href={`/blog/${subdomain}/${post.slug}`}
+                      href={`https://${subdomain}.${process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com"}/blog/${post.slug}`}
                       target="_blank"
                       rel="noopener noreferrer"
                     >

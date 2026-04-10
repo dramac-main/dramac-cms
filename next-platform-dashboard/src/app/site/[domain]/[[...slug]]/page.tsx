@@ -512,7 +512,7 @@ async function processData(
 
       const blogInfo = await getSiteBlogInfo(site.id);
 
-      if (blogInfo.hasBlog) {
+      if (blogInfo.hasPosts) {
         if (stripped === "blog") {
           // Blog listing page
           const { posts } = await getPublishedPosts(site.id, { limit: 50 });

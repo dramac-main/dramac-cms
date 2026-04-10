@@ -273,7 +273,9 @@ export async function getPortalMedia(
 
   // Show assets that belong to this site OR agency-level assets (site_id is null)
   if (agencyId) {
-    query = query.or(`site_id.eq.${siteId},and(site_id.is.null,agency_id.eq.${agencyId})`);
+    query = query.or(
+      `site_id.eq.${siteId},and(site_id.is.null,agency_id.eq.${agencyId})`,
+    );
   } else {
     query = query.eq("site_id", siteId);
   }
@@ -418,7 +420,7 @@ export async function getPortalMediaStats(siteId?: string): Promise<{
 
   if (agencyId) {
     assetQuery = assetQuery.or(
-      `site_id.in.(${siteIds.join(",")}),and(site_id.is.null,agency_id.eq.${agencyId})`
+      `site_id.in.(${siteIds.join(",")}),and(site_id.is.null,agency_id.eq.${agencyId})`,
     );
   } else {
     assetQuery = assetQuery.in("site_id", siteIds);
@@ -507,7 +509,8 @@ export async function discoverSiteImages(
       if (content?.content) {
         const contentStr = JSON.stringify(content.content);
         // Extract image URLs from JSON (Unsplash, Supabase, etc.)
-        const urlRegex = /https?:\/\/[^"\\]+\.(?:jpg|jpeg|png|gif|webp|svg|avif)(?:\?[^"\\]*)?\b/gi;
+        const urlRegex =
+          /https?:\/\/[^"\\]+\.(?:jpg|jpeg|png|gif|webp|svg|avif)(?:\?[^"\\]*)?\b/gi;
         const matches = contentStr.match(urlRegex) || [];
         for (const url of matches) {
           if (!seenUrls.has(url)) {

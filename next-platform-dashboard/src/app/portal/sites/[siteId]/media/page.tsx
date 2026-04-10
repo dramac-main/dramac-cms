@@ -181,7 +181,8 @@ export default function PortalSiteMediaPage({
           </h1>
           <p className="text-muted-foreground mt-1">
             {total} uploaded {total === 1 ? "file" : "files"}
-            {siteImages.length > 0 && ` · ${siteImages.length} site ${siteImages.length === 1 ? "image" : "images"}`}
+            {siteImages.length > 0 &&
+              ` · ${siteImages.length} site ${siteImages.length === 1 ? "image" : "images"}`}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -338,7 +339,8 @@ export default function PortalSiteMediaPage({
               Images Used on Your Site
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
-              These images are referenced in your site&apos;s pages and blog posts.
+              These images are referenced in your site&apos;s pages and blog
+              posts.
             </p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">

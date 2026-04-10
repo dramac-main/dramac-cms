@@ -7,6 +7,7 @@ import {
   isSuperAdmin,
 } from "@/lib/auth/permissions";
 import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
 import type { Json } from "@/types/database";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -595,6 +596,9 @@ export async function createPost(
     );
   }
 
+  // Revalidate blog pages so live site reflects new post
+  revalidatePath(`/site/${siteId}`, "layout");
+
   return { success: true, postId: data.id };
 }
 
@@ -734,6 +738,17 @@ export async function updatePost(
     );
   }
 
+  // Revalidate blog pages so live site reflects the changes
+  // Get the post's site_id for revalidation
+  const { data: updatedPost } = await supabase
+    .from("blog_posts")
+    .select("site_id")
+    .eq("id", postId)
+    .single();
+  if (updatedPost) {
+    revalidatePath(`/site/${updatedPost.site_id}`, "layout");
+  }
+
   return { success: true };
 }
 
@@ -766,6 +781,9 @@ export async function deletePost(
   if (error) {
     return { success: false, error: "Failed to delete post" };
   }
+
+  // Revalidate blog pages after deletion
+  revalidatePath(`/site/${post.site_id}`, "layout");
 
   return { success: true };
 }

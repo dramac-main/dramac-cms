@@ -2,7 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { User, Mail, Phone, Building, Key, Bell, Shield } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +16,10 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { updateClientSettings, changePortalPassword } from "@/lib/portal/portal-auth";
+import {
+  updateClientSettings,
+  changePortalPassword,
+} from "@/lib/portal/portal-auth";
 import { PageHeader } from "@/components/layout/page-header";
 import { createClient } from "@/lib/supabase/client";
 
@@ -32,7 +41,7 @@ export default function PortalSettingsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
   const [isProfileLoading, setIsProfileLoading] = useState(true);
-  
+
   const [formData, setFormData] = useState<SettingsFormData>({
     name: "",
     email: "",
@@ -58,10 +67,13 @@ export default function PortalSettingsPage() {
     async function loadProfile() {
       try {
         const supabase = createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (user) {
           setFormData({
-            name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? "",
+            name:
+              user.user_metadata?.full_name ?? user.user_metadata?.name ?? "",
             email: user.email ?? "",
             phone: user.user_metadata?.phone ?? "",
             company: user.user_metadata?.company ?? "",
@@ -132,7 +144,11 @@ export default function PortalSettingsPage() {
         toast.error(result.error);
       } else {
         toast.success("Password changed successfully");
-        setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
+        setPasswords({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
       }
     } catch {
       toast.error("Failed to change password");
@@ -141,7 +157,10 @@ export default function PortalSettingsPage() {
     }
   }
 
-  async function handleNotificationChange(key: keyof NotificationSettings, value: boolean) {
+  async function handleNotificationChange(
+    key: keyof NotificationSettings,
+    value: boolean,
+  ) {
     const updated = { ...notifications, [key]: value };
     setNotifications(updated);
 
@@ -179,9 +198,7 @@ export default function PortalSettingsPage() {
             <User className="h-5 w-5 text-primary" />
             <CardTitle>Profile Information</CardTitle>
           </div>
-          <CardDescription>
-            Update your personal information
-          </CardDescription>
+          <CardDescription>Update your personal information</CardDescription>
         </CardHeader>
         <CardContent>
           {isProfileLoading ? (
@@ -208,69 +225,81 @@ export default function PortalSettingsPage() {
               </div>
             </div>
           ) : (
-          <form onSubmit={handleProfileSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Your name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <div className="relative">
+            <form onSubmit={handleProfileSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name</Label>
                   <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    disabled
-                    className="pr-10"
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, name: e.target.value }))
+                    }
+                    placeholder="Your name"
                   />
-                  <Mail className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Contact support to change your email
-                </p>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address</Label>
+                  <div className="relative">
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      disabled
+                      className="pr-10"
+                    />
+                    <Mail className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Contact support to change your email
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <div className="relative">
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                    placeholder="+260 97X XXX XXX"
-                  />
-                  <Phone className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <div className="relative">
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          phone: e.target.value,
+                        }))
+                      }
+                      placeholder="+260 97X XXX XXX"
+                    />
+                    <Phone className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="company">Company Name</Label>
+                  <div className="relative">
+                    <Input
+                      id="company"
+                      value={formData.company}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          company: e.target.value,
+                        }))
+                      }
+                      placeholder="Your company"
+                    />
+                    <Building className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  </div>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="company">Company Name</Label>
-                <div className="relative">
-                  <Input
-                    id="company"
-                    value={formData.company}
-                    onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
-                    placeholder="Your company"
-                  />
-                  <Building className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                </div>
-              </div>
-            </div>
 
-            <div className="flex justify-end">
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Saving..." : "Save Changes"}
-              </Button>
-            </div>
-          </form>
+              <div className="flex justify-end">
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            </form>
           )}
         </CardContent>
       </Card>
@@ -282,9 +311,7 @@ export default function PortalSettingsPage() {
             <Key className="h-5 w-5 text-primary" />
             <CardTitle>Change Password</CardTitle>
           </div>
-          <CardDescription>
-            Update your account password
-          </CardDescription>
+          <CardDescription>Update your account password</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handlePasswordSubmit} className="space-y-4">
@@ -294,7 +321,12 @@ export default function PortalSettingsPage() {
                 id="currentPassword"
                 type="password"
                 value={passwords.currentPassword}
-                onChange={(e) => setPasswords(prev => ({ ...prev, currentPassword: e.target.value }))}
+                onChange={(e) =>
+                  setPasswords((prev) => ({
+                    ...prev,
+                    currentPassword: e.target.value,
+                  }))
+                }
                 placeholder="Enter current password"
               />
             </div>
@@ -308,7 +340,12 @@ export default function PortalSettingsPage() {
                   id="newPassword"
                   type="password"
                   value={passwords.newPassword}
-                  onChange={(e) => setPasswords(prev => ({ ...prev, newPassword: e.target.value }))}
+                  onChange={(e) =>
+                    setPasswords((prev) => ({
+                      ...prev,
+                      newPassword: e.target.value,
+                    }))
+                  }
                   placeholder="At least 8 characters"
                 />
               </div>
@@ -318,7 +355,12 @@ export default function PortalSettingsPage() {
                   id="confirmPassword"
                   type="password"
                   value={passwords.confirmPassword}
-                  onChange={(e) => setPasswords(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  onChange={(e) =>
+                    setPasswords((prev) => ({
+                      ...prev,
+                      confirmPassword: e.target.value,
+                    }))
+                  }
                   placeholder="Confirm new password"
                 />
               </div>
@@ -354,7 +396,9 @@ export default function PortalSettingsPage() {
             </div>
             <Switch
               checked={notifications.emailNotifications}
-              onCheckedChange={(checked) => handleNotificationChange("emailNotifications", checked)}
+              onCheckedChange={(checked) =>
+                handleNotificationChange("emailNotifications", checked)
+              }
             />
           </div>
 
@@ -369,7 +413,9 @@ export default function PortalSettingsPage() {
             </div>
             <Switch
               checked={notifications.ticketUpdates}
-              onCheckedChange={(checked) => handleNotificationChange("ticketUpdates", checked)}
+              onCheckedChange={(checked) =>
+                handleNotificationChange("ticketUpdates", checked)
+              }
             />
           </div>
 
@@ -384,7 +430,9 @@ export default function PortalSettingsPage() {
             </div>
             <Switch
               checked={notifications.siteAlerts}
-              onCheckedChange={(checked) => handleNotificationChange("siteAlerts", checked)}
+              onCheckedChange={(checked) =>
+                handleNotificationChange("siteAlerts", checked)
+              }
             />
           </div>
 
@@ -399,7 +447,9 @@ export default function PortalSettingsPage() {
             </div>
             <Switch
               checked={notifications.marketingEmails}
-              onCheckedChange={(checked) => handleNotificationChange("marketingEmails", checked)}
+              onCheckedChange={(checked) =>
+                handleNotificationChange("marketingEmails", checked)
+              }
             />
           </div>
         </CardContent>
@@ -425,7 +475,8 @@ export default function PortalSettingsPage() {
               <div>
                 <p className="font-medium">Two-Factor Authentication</p>
                 <p className="text-sm text-muted-foreground">
-                  Two-factor authentication is a planned feature. Your account is protected by your password and session management.
+                  Two-factor authentication is a planned feature. Your account
+                  is protected by your password and session management.
                 </p>
               </div>
             </div>

@@ -1,30 +1,43 @@
 # Active Context
 
-## Current Focus: Blog System Production-Ready Overhaul — PLANNED (next session)
+## Current Focus: Portal Media Library + Blog Nav + Settings Fix — COMPLETE ✅ (commit 30353a82)
 
-### Problem
-Blog pages only work on `*.sites.dramacagency.com/blog/*`. Custom domains are broken (company.com/blog → 404). Blog has generic hardcoded header/footer instead of the site's actual Navbar/Footer. BlogPreview component can't fetch live data. Featured posts exist in DB but are unusable. Blog is disconnected from the site rendering pipeline.
+### What Was Done
 
-### Solution Architecture
-Follow the ecommerce virtual page pattern — blog pages generated on-the-fly in the site renderer (`/site/[domain]/[[...slug]]`). Posts are server-fetched and embedded in page template props. Site's actual Navbar/Footer injected automatically. Works on ALL domains (subdomain + custom domain). Full plan saved to `/memories/repo/blog-system-overhaul-plan.md`.
+**Portal Media Library Fix:**
+- Fixed `getPortalMedia()` query: was only checking `site_id = X`, now includes agency-level assets where `site_id IS NULL`
+- Same fix applied to `getPortalMediaStats()`
+- Added `discoverSiteImages()` function that scans `page_content` JSONB and `blog_posts.featured_image_url` for image URLs (Unsplash, Supabase, etc.)
+- Synced 5 untracked storage files from `storage.objects` → `assets` table via SQL
+- Updated media page UI with "Images Used on Your Site" discovery section
 
-### Key Implementation Items (8 phases)
-1. Blog data API (`blog-api.ts`) + REST endpoints (`/api/blog/[siteId]`)
-2. Blog page templates (`blog-templates.ts`) — like ecommerce page-templates.ts
-3. BlogListingSection + BlogPostView render components in renders.tsx
-4. Site renderer virtual page generation for `blog` and `blog/*` slugs
-5. Proxy update — route client site blogs through site renderer
-6. SmartNav blog link auto-injection when published posts exist
-7. `isFeatured` in `createPost()` + featured toggle in PostForm UI
-8. BlogPreview live data (latest/featured) via client-side API fetching
+**Settings Page Company Save Fix:**
+- Fixed `handleProfileSubmit` to include `company: formData.company` (was missing)
+- Enhanced `updateClientSettings()` to also persist name/phone/company to Supabase Auth user_metadata
 
-### Build Fix Commits (this session)
-- commit `06d62eae` — MyAccountBlock JSX fragment + automation-engine module
-- Fixed Vercel build failure from commit `0cc8a306`
+**Blog System (from prior session + nav fix this session):**
+- Full blog system: API endpoints, templates, renders, registry, proxy routing, smart navigation
+- CRITICAL FIX: `blogInfo.hasBlog` → `blogInfo.hasPosts` property name mismatch in page.tsx
+- This was preventing `_hasBlog` flag from being set, so blog nav links never appeared
+
+**Portal Audit Results:**
+- Support page: ✅ Fully functional
+- Notifications page: ✅ Fully functional
+- Invoices page: ⚠️ Uses subscriptions as mock invoices (Paddle integration structural limitation)
+- Settings page: ✅ Fixed (company field now saves)
+
+### Files Modified (commit 30353a82 — 21 files, 1808 insertions)
+1. `portal-media-service.ts` — Expanded query + discoverSiteImages()
+2. `portal/sites/[siteId]/media/page.tsx` — Site images discovery UI
+3. `portal/settings/page.tsx` — Company field save fix
+4. `portal-auth.ts` — Auth metadata sync
+5. `site/[domain]/[[...slug]]/page.tsx` — Blog nav hasBlog→hasPosts fix
+6. Blog system files: blog-api.ts, blog-templates.ts, renders.tsx, core-components.ts, proxy.ts, smart-navigation.ts, API routes
+7. Email/team files: email-types.ts, notification-prefs.ts, templates.ts, branded-templates.ts, portal-team-service.ts, team/page.tsx
 
 ---
 
-## Previous Focus: Blog Branding + Media Tracking + Team Presets — COMPLETE ✅ (commit 0cc8a306)
+## Previous Focus: Blog System Production-Ready Overhaul — PLANNED (implemented above)
 
 ### What Was Done
 

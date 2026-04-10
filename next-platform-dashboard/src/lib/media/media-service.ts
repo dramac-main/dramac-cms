@@ -93,9 +93,29 @@ async function getUserAgencyContext(): Promise<UserContext | null> {
     .eq("id", userId)
     .single();
 
+  let agencyId = profile?.agency_id || null;
+
+  // For super admins, verify the agency exists; fall back to first real agency
+  if (superAdmin && agencyId) {
+    const { data: agency } = await supabase
+      .from("agencies")
+      .select("id")
+      .eq("id", agencyId)
+      .single();
+    if (!agency) {
+      const { data: firstAgency } = await supabase
+        .from("agencies")
+        .select("id")
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .single();
+      agencyId = firstAgency?.id || null;
+    }
+  }
+
   return {
     userId,
-    agencyId: profile?.agency_id || null,
+    agencyId,
     role,
     isSuperAdmin: superAdmin,
   };
