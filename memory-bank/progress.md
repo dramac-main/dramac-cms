@@ -34,7 +34,20 @@
 
 ---
 
-## Latest Update: Portal Site-Scoped Content Management ✅ (commit c57dcd05)
+## Latest Update: Storefront Auth Deep Audit & Magic Link Fix ✅ (commit 6071ff3d)
+
+### Critical Bug: Magic link emails only sent to password-based customers
+- Root cause: Guard condition `if (!customer || !customer.password_set_at)` silently skipped Google OAuth and guest customers
+- Fix: Changed to `if (!customer)` — now sends magic link to any existing customer
+- Added: URL fallback from site DB data when origin/referer headers missing
+- Added: `email_verified = true` when magic link consumed (proves email ownership)
+- All 15+ auth actions verified correct end-to-end
+
+### Also: `/privacy` and `/terms` public routes (commit cffb7405, 79e3b9a9)
+
+---
+
+## Previous Update: Portal Site-Scoped Content Management ✅ (commit c57dcd05)
 
 ### Content Editing + Site-Scoped Navigation (18 files, 1980 insertions, 310 deletions)
 

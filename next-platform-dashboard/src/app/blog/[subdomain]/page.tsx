@@ -3,7 +3,7 @@ import Image from "next/image";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Badge } from "@/components/ui/badge";
 
-import { DEFAULT_LOCALE } from '@/lib/locale-config'
+import { DEFAULT_LOCALE } from "@/lib/locale-config";
 // Create a Supabase admin client for public blog access (no auth cookies)
 function getSupabaseClient() {
   return createAdminClient();
@@ -11,21 +11,25 @@ function getSupabaseClient() {
 
 async function getSiteBySubdomain(subdomain: string) {
   const supabase = getSupabaseClient();
-  
-  const { data } = await supabase
+
+  const { data, error } = await supabase
     .from("sites")
     .select("*")
     .eq("subdomain", subdomain)
     .eq("published", true)
     .single();
 
+  if (error) {
+    console.error("[PublicBlog] getSiteBySubdomain error:", error.message, { subdomain });
+  }
+
   return data;
 }
 
 async function getBlogPosts(siteId: string) {
   const supabase = getSupabaseClient();
-  
-  const { data } = await supabase
+
+  const { data, error } = await supabase
     .from("blog_posts")
     .select(
       `
@@ -34,11 +38,15 @@ async function getBlogPosts(siteId: string) {
       categories:blog_post_categories(
         category:blog_categories(id, name, slug, color)
       )
-    `
+    `,
     )
     .eq("site_id", siteId)
     .eq("status", "published")
     .order("published_at", { ascending: false });
+
+  if (error) {
+    console.error("[PublicBlog] getBlogPosts error:", error.message, { siteId });
+  }
 
   return data || [];
 }
@@ -55,7 +63,9 @@ export default async function PublicBlogPage({
     return (
       <div className="max-w-4xl mx-auto py-12 px-4 text-center">
         <h1 className="text-2xl font-bold mb-4">Site Not Found</h1>
-        <p className="text-gray-600">The site you are looking for does not exist or is not published.</p>
+        <p className="text-gray-600">
+          The site you are looking for does not exist or is not published.
+        </p>
       </div>
     );
   }
@@ -69,9 +79,15 @@ export default async function PublicBlogPage({
 
       <div className="space-y-12">
         {posts.map((post) => {
-          const author = post.author as { full_name: string; avatar_url?: string } | null;
-          const categoriesRaw = (post.categories as Array<{ category: { name: string; color: string } }>) || [];
-          const categories = categoriesRaw.filter(c => c.category);
+          const author = post.author as {
+            full_name: string;
+            avatar_url?: string;
+          } | null;
+          const categoriesRaw =
+            (post.categories as Array<{
+              category: { name: string; color: string };
+            }>) || [];
+          const categories = categoriesRaw.filter((c) => c.category);
 
           return (
             <article key={post.id} className="group">
@@ -110,7 +126,9 @@ export default async function PublicBlogPage({
                 </h2>
 
                 {post.excerpt && (
-                  <p className="text-gray-600 mt-2 line-clamp-2">{post.excerpt}</p>
+                  <p className="text-gray-600 mt-2 line-clamp-2">
+                    {post.excerpt}
+                  </p>
                 )}
 
                 <div className="flex items-center gap-4 mt-4 text-sm text-gray-500">
@@ -126,7 +144,11 @@ export default async function PublicBlogPage({
                   <span>{author?.full_name || "Unknown Author"}</span>
                   <span>•</span>
                   <span>
-                    {new Date(String(post.published_at || post.created_at || new Date())).toLocaleDateString(DEFAULT_LOCALE, {
+                    {new Date(
+                      String(
+                        post.published_at || post.created_at || new Date(),
+                      ),
+                    ).toLocaleDateString(DEFAULT_LOCALE, {
                       month: "long",
                       day: "numeric",
                       year: "numeric",
@@ -158,7 +180,7 @@ export async function generateMetadata({
 }) {
   const { subdomain } = await params;
   const site = await getSiteBySubdomain(subdomain);
-  
+
   if (!site) {
     return { title: "Blog Not Found" };
   }

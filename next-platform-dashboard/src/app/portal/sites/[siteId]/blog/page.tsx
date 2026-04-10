@@ -19,18 +19,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   getPosts,
   getUserPermissions,
   getBlogStats,
   type BlogPost,
 } from "@/lib/blog/post-service";
-import { getPortalSiteSubdomain } from "@/lib/portal/portal-media-service";
+import { getPortalSiteSubdomain, getPortalSitePublishStatus } from "@/lib/portal/portal-media-service";
 import { DEFAULT_LOCALE } from "@/lib/locale-config";
 
 const statusColors: Record<string, string> = {
-  published: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-  draft: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+  published:
+    "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+  draft:
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
   scheduled: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
   archived: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400",
 };
@@ -58,11 +61,13 @@ export default function PortalSiteBlogPage({
     draft: number;
   }>({ total: 0, published: 0, draft: 0 });
   const [subdomain, setSubdomain] = useState<string | null>(null);
+  const [sitePublished, setSitePublished] = useState(true);
 
   useEffect(() => {
     getUserPermissions().then(setPermissions);
     getBlogStats(siteId).then(setStats);
     getPortalSiteSubdomain(siteId).then(setSubdomain);
+    getPortalSitePublishStatus(siteId).then(setSitePublished);
   }, [siteId]);
 
   const loadPosts = useCallback(async () => {
@@ -89,6 +94,15 @@ export default function PortalSiteBlogPage({
 
   return (
     <div className="space-y-6">
+      {/* Site not published warning */}
+      {!sitePublished && (
+        <Alert>
+          <AlertDescription>
+            Your site is not yet published. Blog posts won&apos;t be publicly accessible until the site is published.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -159,10 +173,7 @@ export default function PortalSiteBlogPage({
       ) : (
         <div className="space-y-3">
           {posts.map((post) => (
-            <Card
-              key={post.id}
-              className="hover:shadow-md transition-shadow"
-            >
+            <Card key={post.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-4">
                 <div className="flex gap-4">
                   {post.featuredImageUrl && (
@@ -196,7 +207,7 @@ export default function PortalSiteBlogPage({
                         >
                           {post.status}
                         </Badge>
-                        {post.status === "published" && subdomain && (
+                        {post.status === "published" && subdomain && sitePublished && (
                           <Button variant="ghost" size="icon" asChild>
                             <a
                               href={`/blog/${subdomain}/${post.slug}`}

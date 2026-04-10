@@ -1,7 +1,7 @@
 import { use } from "react";
 import { notFound } from "next/navigation";
 import { PostForm } from "@/components/blog/post-form";
-import { getPost, getUserPermissions } from "@/lib/blog/post-service";
+import { getPost, getUserPermissions, getSitePublicInfo } from "@/lib/blog/post-service";
 
 export default function EditPostPage({
   params,
@@ -20,9 +20,10 @@ async function EditPostContent({
   siteId: string; 
   postId: string;
 }) {
-  const [post, permissions] = await Promise.all([
+  const [post, permissions, siteInfo] = await Promise.all([
     getPost(postId),
     getUserPermissions(),
+    getSitePublicInfo(siteId),
   ]);
 
   if (!post) {
@@ -39,7 +40,9 @@ async function EditPostContent({
       <PostForm 
         siteId={siteId} 
         post={post} 
-        canPublish={permissions.canPublish} 
+        canPublish={permissions.canPublish}
+        subdomain={siteInfo?.subdomain}
+        sitePublished={siteInfo?.isPublished}
       />
     </div>
   );

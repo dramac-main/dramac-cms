@@ -741,6 +741,27 @@ export async function getBlogStats(siteId: string): Promise<{
   };
 }
 
+/**
+ * Get site info for blog display (subdomain + published status)
+ */
+export async function getSitePublicInfo(siteId: string): Promise<{
+  subdomain: string | null;
+  isPublished: boolean;
+} | null> {
+  if (!(await canAccessSiteBlog(siteId))) {
+    return null;
+  }
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("sites")
+    .select("subdomain, published")
+    .eq("id", siteId)
+    .single();
+
+  return data ? { subdomain: data.subdomain, isPublished: data.published } : null;
+}
+
 function mapToPost(data: Record<string, unknown>): BlogPost {
   const author = data.author as { full_name: string; avatar_url: string } | null;
   const categoriesRaw = (data.categories as Array<{ category: Record<string, unknown> }>) || [];

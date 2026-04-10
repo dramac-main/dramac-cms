@@ -1,7 +1,7 @@
 import { use } from "react";
 import { notFound, redirect } from "next/navigation";
 import { PostForm } from "@/components/blog/post-form";
-import { getPost, getUserPermissions } from "@/lib/blog/post-service";
+import { getPost, getUserPermissions, getSitePublicInfo } from "@/lib/blog/post-service";
 import { getPortalAgencyId } from "@/lib/portal/portal-media-service";
 
 export default function PortalEditPostPage({
@@ -21,10 +21,11 @@ async function EditPostContent({
   siteId: string;
   postId: string;
 }) {
-  const [post, permissions, agencyId] = await Promise.all([
+  const [post, permissions, agencyId, siteInfo] = await Promise.all([
     getPost(postId),
     getUserPermissions(),
     getPortalAgencyId(),
+    getSitePublicInfo(siteId),
   ]);
 
   if (!permissions.canEditContent) {
@@ -47,6 +48,8 @@ async function EditPostContent({
         canPublish={permissions.canPublish}
         basePath={`/portal/sites/${siteId}/blog`}
         agencyId={agencyId || undefined}
+        subdomain={siteInfo?.subdomain}
+        sitePublished={siteInfo?.isPublished}
       />
     </div>
   );

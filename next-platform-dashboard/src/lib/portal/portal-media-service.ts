@@ -42,7 +42,9 @@ async function getPortalClientId(): Promise<string | null> {
 /**
  * Determine file type from MIME type
  */
-function getFileTypeFromMime(mimeType: string): "image" | "video" | "document" | "other" {
+function getFileTypeFromMime(
+  mimeType: string,
+): "image" | "video" | "document" | "other" {
   if (mimeType.startsWith("image/")) return "image";
   if (mimeType.startsWith("video/")) return "video";
   if (
@@ -67,7 +69,9 @@ function mapToPortalMediaFile(data: Record<string, unknown>): PortalMediaFile {
     siteId: (data.site_id as string) || null,
     fileName: data.file_name as string,
     originalName: (data.name as string) || (data.file_name as string),
-    fileType: (data.file_type as "image" | "video" | "document" | "other") || getFileTypeFromMime(mimeType),
+    fileType:
+      (data.file_type as "image" | "video" | "document" | "other") ||
+      getFileTypeFromMime(mimeType),
     mimeType,
     fileSize: (data.size as number) || 0,
     publicUrl: (data.url as string) || "",
@@ -107,7 +111,9 @@ export async function getPortalAgencyId(): Promise<string | null> {
  * Get the subdomain for a portal site (for blog preview URLs).
  * Only returns if the site belongs to the current portal client.
  */
-export async function getPortalSiteSubdomain(siteId: string): Promise<string | null> {
+export async function getPortalSiteSubdomain(
+  siteId: string,
+): Promise<string | null> {
   const clientId = await getPortalClientId();
   if (!clientId) return null;
 
@@ -123,9 +129,32 @@ export async function getPortalSiteSubdomain(siteId: string): Promise<string | n
 }
 
 /**
+ * Check if a portal client's site is published.
+ * Returns false if the site is not found or not published.
+ */
+export async function getPortalSitePublishStatus(
+  siteId: string,
+): Promise<boolean> {
+  const clientId = await getPortalClientId();
+  if (!clientId) return false;
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("sites")
+    .select("published")
+    .eq("id", siteId)
+    .eq("client_id", clientId)
+    .single();
+
+  return data?.published ?? false;
+}
+
+/**
  * Delete a portal media file (only if the site belongs to the client)
  */
-export async function deletePortalMedia(fileId: string): Promise<{ success: boolean; error?: string }> {
+export async function deletePortalMedia(
+  fileId: string,
+): Promise<{ success: boolean; error?: string }> {
   const clientId = await getPortalClientId();
   if (!clientId) return { success: false, error: "Not authenticated" };
 
@@ -203,7 +232,7 @@ export async function getPortalMedia(
   siteId: string,
   filters: PortalMediaFilters = {},
   page = 1,
-  limit = 24
+  limit = 24,
 ): Promise<{ files: PortalMediaFile[]; total: number }> {
   const clientId = await getPortalClientId();
   if (!clientId) {
@@ -236,7 +265,9 @@ export async function getPortalMedia(
 
   // Apply filters
   if (filters.search) {
-    query = query.or(`name.ilike.%${filters.search}%,file_name.ilike.%${filters.search}%,alt_text.ilike.%${filters.search}%`);
+    query = query.or(
+      `name.ilike.%${filters.search}%,file_name.ilike.%${filters.search}%,alt_text.ilike.%${filters.search}%`,
+    );
   }
 
   if (filters.fileType) {
@@ -249,7 +280,9 @@ export async function getPortalMedia(
         query = query.ilike("mime_type", "video/%");
         break;
       case "document":
-        query = query.or("mime_type.ilike.%pdf%,mime_type.ilike.%document%,mime_type.ilike.%text/%");
+        query = query.or(
+          "mime_type.ilike.%pdf%,mime_type.ilike.%document%,mime_type.ilike.%text/%",
+        );
         break;
       case "other":
         query = query
@@ -282,7 +315,7 @@ export async function getPortalMedia(
  * Only returns if the file belongs to a site the client owns
  */
 export async function getPortalMediaFile(
-  fileId: string
+  fileId: string,
 ): Promise<PortalMediaFile | null> {
   const clientId = await getPortalClientId();
   if (!clientId) {
@@ -314,9 +347,7 @@ export async function getPortalMediaFile(
 /**
  * Get media stats for a client's sites
  */
-export async function getPortalMediaStats(
-  siteId?: string
-): Promise<{
+export async function getPortalMediaStats(siteId?: string): Promise<{
   totalFiles: number;
   totalSize: number;
   byType: { type: string; count: number }[];
@@ -350,7 +381,7 @@ export async function getPortalMediaStats(
       .from("sites")
       .select("id")
       .eq("client_id", clientId);
-    siteIds = sites?.map(s => s.id) || [];
+    siteIds = sites?.map((s) => s.id) || [];
   }
 
   if (siteIds.length === 0) {
@@ -372,7 +403,7 @@ export async function getPortalMediaStats(
 
   // Count by type
   const typeCounts = new Map<string, number>();
-  assets.forEach(a => {
+  assets.forEach((a) => {
     const type = getFileTypeFromMime(a.mime_type || "");
     typeCounts.set(type, (typeCounts.get(type) || 0) + 1);
   });

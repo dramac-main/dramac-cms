@@ -41,7 +41,10 @@ import {
   deletePortalMedia,
   type PortalMediaFile,
 } from "@/lib/portal/portal-media-service";
-import { MediaUploadZone, type UploadedFile } from "@/components/media/media-upload-zone";
+import {
+  MediaUploadZone,
+  type UploadedFile,
+} from "@/components/media/media-upload-zone";
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return "0 B";
@@ -169,10 +172,7 @@ export default function PortalSiteMediaPage({
         </div>
         <div className="flex items-center gap-2">
           {agencyId && (
-            <Button
-              size="sm"
-              onClick={() => setShowUpload(!showUpload)}
-            >
+            <Button size="sm" onClick={() => setShowUpload(!showUpload)}>
               <Upload className="h-4 w-4 mr-2" />
               Upload Files
             </Button>
@@ -316,10 +316,7 @@ export default function PortalSiteMediaPage({
       )}
 
       {/* Preview Dialog */}
-      <Dialog
-        open={!!previewFile}
-        onOpenChange={() => setPreviewFile(null)}
-      >
+      <Dialog open={!!previewFile} onOpenChange={() => setPreviewFile(null)}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle className="truncate">
@@ -372,9 +369,7 @@ export default function PortalSiteMediaPage({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() =>
-                      window.open(previewFile.publicUrl, "_blank")
-                    }
+                    onClick={() => window.open(previewFile.publicUrl, "_blank")}
                   >
                     <Download className="h-4 w-4 mr-2" />
                     Download

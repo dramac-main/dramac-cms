@@ -1,58 +1,88 @@
 # Active Context
 
-## Current Focus: Platform-Wide UI Fixes + Blog Data Fix — COMPLETE ✅ (commit 41eb8a8e)
+## Current Focus: Storefront Auth Deep Audit & Magic Link Fix — COMPLETE ✅ (commit 6071ff3d)
 
 ### What Was Done
 
-Fixed permissions dialog scroll bug (platform-wide), improved touch targets across all core UI components, consolidated global CSS, and fixed site builder blog data source.
+Comprehensive deep dive into the entire storefront auth system after user reported magic links not working. Found and fixed 3 bugs, verified all 15+ auth actions are correct.
+
+### Bugs Fixed (route.ts — auth API)
+
+1. **CRITICAL: Magic link didn't send emails to OAuth/guest customers** — Guard condition `if (!customer || !customer.password_set_at)` silently skipped email for Google OAuth users and guest customers. Changed to `if (!customer)` only — now any existing customer gets the magic link email.
+2. **Magic link URL fallback** — If `origin`/`referer` headers are missing, now constructs URL from site's `subdomain` or `custom_domain` in the database.
+3. **Email verified on magic link consumption** — When a user clicks a magic link, that proves email ownership. Now sets `email_verified: true` in the session action's magic link consumption code.
+4. **Stale header comment** — Removed reference to non-existent `verify-magic` action (magic link verification goes through the `session` action).
+
+### Auth Flows Verified Working
+
+- Register (email+password) ✅
+- Login (email+password) ✅
+- Session validation + 30-day rolling expiry (7-day window) ✅
+- Magic link send (all customer types) ✅ (FIXED)
+- Magic link consume → new session + email verified ✅ (FIXED)
+- Google OAuth callback → exchange token → session ✅
+- Set password (guest upgrade with email verification) ✅
+- Change password (authenticated users) ✅
+- Logout (session deletion) ✅
+- Email verification (6-digit OTP) ✅
+- Get orders/order detail/addresses/bookings/quotes ✅
+- Update profile / address CRUD ✅
+
+### Also Committed This Session
+
+- `/privacy` and `/terms` pages made publicly accessible in proxy.ts (cffb7405)
+- `PUBLIC_PATHS` array refactor for maintainability (79e3b9a9)
+
+### Remaining Note
+
+- User needs to add privacy/terms URLs to Google Cloud Console OAuth consent screen and click "Publish App" to take OAuth out of testing mode
+
+## Previous Focus: Portal Enhancements — Media Upload, Blog Picker, Team Management — COMPLETE ✅ (commit 33f73567)
+
+### What Was Done
+
+Comprehensive portal improvements: scroll fix (flex-based), media upload/delete for portal, blog featured image picker via MediaPickerDialog, blog preview links, and full team/staff management system with DB, service, and UI.
 
 ### Changes Made
 
-**ScrollArea (scroll-area.tsx):**
+**ScrollArea (scroll-area.tsx) — Definitive Fix:**
 
-- Added `min-h-0` to Root — fixes scroll in ALL flex containers platform-wide
-- Added `overscroll-contain` to Viewport for scroll containment
-- Root cause: flex children have implicit `min-height: auto`, preventing ScrollArea from shrinking below content size
+- Root: `flex flex-col` container (was just `relative overflow-hidden min-h-0`)
+- Viewport: `min-h-0 w-full` + `style={{ flex: "1 1 auto" }}` (was `h-full w-full`)
+- Previous `min-h-0`-only approach was insufficient; flex layout enables proper height resolution
+- Safe because Radix ScrollBar/Corner use `position: absolute`
 
-**Dialog (dialog.tsx):**
+**Portal Media Upload (portal-media-service.ts, media page.tsx):**
 
-- Fixed mobile full-screen: `max-sm:h-full` → `max-sm:h-dvh max-sm:max-h-dvh` (respects dynamic viewport height)
-- Added proper mobile positioning: `max-sm:translate-x-0 max-sm:translate-y-0 max-sm:top-0 max-sm:left-0`
-- Expanded close button: `rounded-sm` → `flex h-8 w-8 items-center justify-center rounded-md` (32px touch target)
+- Added `getPortalAgencyId()` server action (clients → agency_id)
+- Added `getPortalSiteSubdomain()` server action (for blog preview URLs)
+- Added `deletePortalMedia()` server action (ownership verification via site.client_id)
+- Media page: Upload button + MediaUploadZone, delete button in preview dialog
 
-**Sheet (sheet.tsx):**
+**Blog Featured Image Picker (post-form.tsx, blog pages):**
 
-- Expanded close button touch target to match Dialog (32px)
+- PostForm: `agencyId` prop, `MediaPickerDialog` integration, "Browse" button
+- Dashed placeholder now clickable → opens media library picker
+- Both new/edit blog pages pass agencyId via `getPortalAgencyId()`
 
-**Switch (switch.tsx):**
+**Blog Preview Links (blog page.tsx):**
 
-- Added `relative` + `before:absolute before:-inset-2 before:content-[''] before:rounded-lg` for invisible expanded touch area
-- Visual size unchanged (24×44px), effective tap area now ~40×60px
+- Published posts show "View" button (ExternalLink icon) → `/blog/[subdomain]/[slug]`
+- Subdomain fetched via `getPortalSiteSubdomain(siteId)` on mount
 
-**globals.css:**
+**Portal Team Management (NEW):**
 
-- Merged duplicate `@layer base` blocks
-- Added `touch-action: manipulation` + `-webkit-tap-highlight-color: transparent` on `html` (removes 300ms tap delay globally)
-- Added `overscroll-behavior-y: contain` on `body`
-- Added `overscroll-behavior: contain` on all Radix dialog/alert-dialog overlays
-- Added thinner scrollbars on touch devices (`@media (pointer: coarse)`)
-
-**AgentPermissionsEditor:**
-
-- Fixed `max-h-[85vh]` → `max-h-dvh sm:max-h-[85vh]` (full screen on mobile, 85vh on desktop)
-
-**Site Builder Blog Data (builder.ts):**
-
-- `fetchBlogPosts()` now queries real `blog_posts` table instead of `sites.settings.blog_posts` mock data
-- Uses same join pattern as post-service.ts: `author:profiles(full_name)`
-- Filters to published posts only, ordered by published_at desc
+- DB: `portal_team_members` table with full schema, RLS, indexes, triggers (migration applied)
+- Service: `portal-team-service.ts` — full CRUD, stats, departments, duplicate email handling
+- UI: `src/app/portal/team/page.tsx` — member list, add/edit dialog with permissions, delete, status toggle
+- Nav: "Team" item added to Main group in `portal-navigation.ts`
 
 ### Previous Context
 
+- Platform-wide UI fixes + blog data fix — commit 41eb8a8e
 - Portal site-scoped content management — commit c57dcd05
 - Portal live-chat crash fix — commit b0149aa4
 - Portal 404s fix — commit b8132696
-- Consider adding media upload capability for portal editors in future
 
 ## Previous Focus: Client Portal Overhaul — ALL 15 PHASES COMPLETE + VERIFIED ✅
 

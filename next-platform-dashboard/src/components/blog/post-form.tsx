@@ -5,7 +5,16 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { Loader2, Save, Eye, Send, ArrowLeft, ImageIcon, X } from "lucide-react";
+import {
+  Loader2,
+  Save,
+  Eye,
+  Send,
+  ArrowLeft,
+  ImageIcon,
+  X,
+  ExternalLink,
+} from "lucide-react";
 import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
@@ -39,8 +48,14 @@ const postFormSchema = z.object({
   excerpt: z.string().max(500, "Excerpt is too long").optional(),
   featuredImageUrl: z.string().url().optional().or(z.literal("")),
   featuredImageAlt: z.string().max(200).optional(),
-  metaTitle: z.string().max(70, "Meta title should be under 70 characters").optional(),
-  metaDescription: z.string().max(160, "Meta description should be under 160 characters").optional(),
+  metaTitle: z
+    .string()
+    .max(70, "Meta title should be under 70 characters")
+    .optional(),
+  metaDescription: z
+    .string()
+    .max(160, "Meta description should be under 160 characters")
+    .optional(),
   ogImageUrl: z.string().url().optional().or(z.literal("")),
   canonicalUrl: z.string().url().optional().or(z.literal("")),
   allowComments: z.boolean(),
@@ -57,20 +72,34 @@ interface PostFormProps {
   basePath?: string;
   /** Agency ID for media picker. When provided, shows media library picker for featured image. */
   agencyId?: string;
+  /** Site subdomain for "View Live" link. */
+  subdomain?: string | null;
+  /** Whether the site is published (controls "View Live" link visibility). */
+  sitePublished?: boolean;
 }
 
-export function PostForm({ siteId, post, canPublish = true, basePath, agencyId }: PostFormProps) {
+export function PostForm({
+  siteId,
+  post,
+  canPublish = true,
+  basePath,
+  agencyId,
+  subdomain,
+  sitePublished = false,
+}: PostFormProps) {
   const blogBasePath = basePath || `/dashboard/sites/${siteId}/blog`;
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [categories, setCategories] = useState<BlogCategory[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
-    post?.categories.map(c => c.id) || []
+    post?.categories.map((c) => c.id) || [],
   );
   const [tags, setTags] = useState<string[]>(post?.tags || []);
   const [tagInput, setTagInput] = useState("");
-  const [content, setContent] = useState<Record<string, unknown>>(post?.content || {});
+  const [content, setContent] = useState<Record<string, unknown>>(
+    post?.content || {},
+  );
   const [contentHtml, setContentHtml] = useState(post?.contentHtml || "");
   const [showMediaPicker, setShowMediaPicker] = useState(false);
 
@@ -100,7 +129,10 @@ export function PostForm({ siteId, post, canPublish = true, basePath, agencyId }
     loadCategories();
   }, [loadCategories]);
 
-  const handleContentChange = (newContent: Record<string, unknown>, html: string) => {
+  const handleContentChange = (
+    newContent: Record<string, unknown>,
+    html: string,
+  ) => {
     setContent(newContent);
     setContentHtml(html);
   };
@@ -129,18 +161,21 @@ export function PostForm({ siteId, post, canPublish = true, basePath, agencyId }
   };
 
   const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter(t => t !== tagToRemove));
+    setTags(tags.filter((t) => t !== tagToRemove));
   };
 
   const toggleCategory = (categoryId: string) => {
-    setSelectedCategories(prev =>
+    setSelectedCategories((prev) =>
       prev.includes(categoryId)
-        ? prev.filter(id => id !== categoryId)
-        : [...prev, categoryId]
+        ? prev.filter((id) => id !== categoryId)
+        : [...prev, categoryId],
     );
   };
 
-  const onSubmit = async (values: PostFormValues, status: "draft" | "published" = "draft") => {
+  const onSubmit = async (
+    values: PostFormValues,
+    status: "draft" | "published" = "draft",
+  ) => {
     if (status === "published") {
       setPublishing(true);
     } else {
@@ -176,13 +211,13 @@ export function PostForm({ siteId, post, canPublish = true, basePath, agencyId }
 
       if (result.success) {
         toast.success(
-          status === "published" 
-            ? "Post published successfully!" 
-            : post 
-              ? "Post saved!" 
-              : "Draft created!"
+          status === "published"
+            ? "Post published successfully!"
+            : post
+              ? "Post saved!"
+              : "Draft created!",
         );
-        
+
         if (!post && result.postId) {
           router.push(`${blogBasePath}/${result.postId}`);
         } else {
@@ -224,14 +259,36 @@ export function PostForm({ siteId, post, canPublish = true, basePath, agencyId }
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Posts
             </Button>
-            
+
             <div className="flex items-center gap-2">
               {currentStatus !== "draft" && (
                 <Badge variant="secondary" className="mr-2">
-                  {currentStatus.charAt(0).toUpperCase() + currentStatus.slice(1)}
+                  {currentStatus.charAt(0).toUpperCase() +
+                    currentStatus.slice(1)}
                 </Badge>
               )}
-              
+
+              {currentStatus === "published" &&
+                subdomain &&
+                sitePublished &&
+                post?.slug && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    asChild
+                  >
+                    <a
+                      href={`/blog/${subdomain}/${post.slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      View Live
+                    </a>
+                  </Button>
+                )}
+
               <Button
                 type="button"
                 variant="outline"
@@ -245,7 +302,7 @@ export function PostForm({ siteId, post, canPublish = true, basePath, agencyId }
                 )}
                 Save Draft
               </Button>
-              
+
               {canPublish && (
                 <Button
                   type="button"
@@ -288,7 +345,7 @@ export function PostForm({ siteId, post, canPublish = true, basePath, agencyId }
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="slug"
@@ -356,15 +413,21 @@ export function PostForm({ siteId, post, canPublish = true, basePath, agencyId }
             <div className="space-y-6">
               <Tabs defaultValue="settings">
                 <TabsList className="w-full">
-                  <TabsTrigger value="settings" className="flex-1">Settings</TabsTrigger>
-                  <TabsTrigger value="seo" className="flex-1">SEO</TabsTrigger>
+                  <TabsTrigger value="settings" className="flex-1">
+                    Settings
+                  </TabsTrigger>
+                  <TabsTrigger value="seo" className="flex-1">
+                    SEO
+                  </TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value="settings" className="mt-4 space-y-6">
                   {/* Featured Image */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-base">Featured Image</CardTitle>
+                      <CardTitle className="text-base">
+                        Featured Image
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <FormField
@@ -395,11 +458,17 @@ export function PostForm({ siteId, post, canPublish = true, basePath, agencyId }
                                 ) : (
                                   <div
                                     className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
-                                    onClick={() => agencyId ? setShowMediaPicker(true) : undefined}
+                                    onClick={() =>
+                                      agencyId
+                                        ? setShowMediaPicker(true)
+                                        : undefined
+                                    }
                                   >
                                     <ImageIcon className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                                     <p className="text-sm text-muted-foreground">
-                                      {agencyId ? "Click to browse media library" : "Enter image URL below"}
+                                      {agencyId
+                                        ? "Click to browse media library"
+                                        : "Enter image URL below"}
                                     </p>
                                   </div>
                                 )}
@@ -427,7 +496,7 @@ export function PostForm({ siteId, post, canPublish = true, basePath, agencyId }
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={form.control}
                         name="featuredImageAlt"
@@ -435,7 +504,10 @@ export function PostForm({ siteId, post, canPublish = true, basePath, agencyId }
                           <FormItem>
                             <FormLabel>Alt Text</FormLabel>
                             <FormControl>
-                              <Input {...field} placeholder="Image description..." />
+                              <Input
+                                {...field}
+                                placeholder="Image description..."
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -501,11 +573,15 @@ export function PostForm({ siteId, post, canPublish = true, basePath, agencyId }
                             }
                           }}
                         />
-                        <Button type="button" variant="secondary" onClick={addTag}>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={addTag}
+                        >
                           Add
                         </Button>
                       </div>
-                      
+
                       {tags.length > 0 && (
                         <div className="flex flex-wrap gap-1">
                           {tags.map((tag) => (
@@ -550,9 +626,9 @@ export function PostForm({ siteId, post, canPublish = true, basePath, agencyId }
                           </FormItem>
                         )}
                       />
-                      
+
                       <Separator />
-                      
+
                       <FormField
                         control={form.control}
                         name="allowComments"
@@ -576,7 +652,7 @@ export function PostForm({ siteId, post, canPublish = true, basePath, agencyId }
                     </CardContent>
                   </Card>
                 </TabsContent>
-                
+
                 <TabsContent value="seo" className="mt-4">
                   <PostSeoPanel form={form} title={form.watch("title")} />
                 </TabsContent>
@@ -593,8 +669,8 @@ export function PostForm({ siteId, post, canPublish = true, basePath, agencyId }
           onClose={() => setShowMediaPicker(false)}
           onSelect={(file) => {
             const selected = Array.isArray(file) ? file[0] : file;
-            if (selected?.url) {
-              form.setValue("featuredImageUrl", selected.url);
+            if (selected?.publicUrl) {
+              form.setValue("featuredImageUrl", selected.publicUrl);
             }
             setShowMediaPicker(false);
           }}

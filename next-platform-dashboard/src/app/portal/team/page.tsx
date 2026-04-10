@@ -70,10 +70,14 @@ import {
   type CreateTeamMemberInput,
 } from "@/lib/portal/portal-team-service";
 
-const statusConfig: Record<string, { label: string; variant: string; icon: typeof UserCheck }> = {
+const statusConfig: Record<
+  string,
+  { label: string; variant: string; icon: typeof UserCheck }
+> = {
   active: {
     label: "Active",
-    variant: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+    variant:
+      "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
     icon: UserCheck,
   },
   invited: {
@@ -124,9 +128,7 @@ const permissionGroups = [
   },
   {
     label: "Finance",
-    permissions: [
-      { key: "canViewInvoices", label: "View Invoices" },
-    ],
+    permissions: [{ key: "canViewInvoices", label: "View Invoices" }],
   },
 ];
 
@@ -151,16 +153,27 @@ export default function PortalTeamPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [departments, setDepartments] = useState<string[]>([]);
-  const [stats, setStats] = useState({ total: 0, active: 0, invited: 0, inactive: 0 });
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    invited: 0,
+    inactive: 0,
+  });
 
   // Dialog states
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [editingMember, setEditingMember] = useState<PortalTeamMember | null>(null);
-  const [deletingMember, setDeletingMember] = useState<PortalTeamMember | null>(null);
+  const [editingMember, setEditingMember] = useState<PortalTeamMember | null>(
+    null,
+  );
+  const [deletingMember, setDeletingMember] = useState<PortalTeamMember | null>(
+    null,
+  );
   const [saving, setSaving] = useState(false);
 
   // Form state
-  const [formData, setFormData] = useState<CreateTeamMemberInput & Record<string, unknown>>({
+  const [formData, setFormData] = useState<
+    CreateTeamMemberInput & Record<string, unknown>
+  >({
     name: "",
     email: "",
     role: "member",
@@ -175,7 +188,10 @@ export default function PortalTeamPage() {
     setLoading(true);
     try {
       const [membersResult, statsResult, deptResult] = await Promise.all([
-        getPortalTeamMembers({ search: search || undefined, status: statusFilter }),
+        getPortalTeamMembers({
+          search: search || undefined,
+          status: statusFilter,
+        }),
         getPortalTeamStats(),
         getPortalTeamDepartments(),
       ]);
@@ -333,10 +349,17 @@ export default function PortalTeamPage() {
     }
   };
 
-  const handleStatusChange = async (member: PortalTeamMember, newStatus: "active" | "inactive") => {
-    const result = await updatePortalTeamMember(member.id, { status: newStatus });
+  const handleStatusChange = async (
+    member: PortalTeamMember,
+    newStatus: "active" | "inactive",
+  ) => {
+    const result = await updatePortalTeamMember(member.id, {
+      status: newStatus,
+    });
     if (result.success) {
-      toast.success(`${member.name} ${newStatus === "active" ? "activated" : "deactivated"}`);
+      toast.success(
+        `${member.name} ${newStatus === "active" ? "activated" : "deactivated"}`,
+      );
       loadData();
     } else {
       toast.error(result.error || "Failed to update status");
@@ -408,19 +431,25 @@ export default function PortalTeamPage() {
         </Card>
         <Card>
           <CardContent className="pt-4 pb-3 px-4">
-            <div className="text-2xl font-bold text-green-600">{stats.active}</div>
+            <div className="text-2xl font-bold text-green-600">
+              {stats.active}
+            </div>
             <p className="text-xs text-muted-foreground">Active</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-3 px-4">
-            <div className="text-2xl font-bold text-blue-600">{stats.invited}</div>
+            <div className="text-2xl font-bold text-blue-600">
+              {stats.invited}
+            </div>
             <p className="text-xs text-muted-foreground">Invited</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-3 px-4">
-            <div className="text-2xl font-bold text-gray-500">{stats.inactive}</div>
+            <div className="text-2xl font-bold text-gray-500">
+              {stats.inactive}
+            </div>
             <p className="text-xs text-muted-foreground">Inactive</p>
           </CardContent>
         </Card>
@@ -483,15 +512,22 @@ export default function PortalTeamPage() {
             const status = statusConfig[member.status] || statusConfig.active;
             const StatusIcon = status.icon;
             return (
-              <Card key={member.id} className="hover:shadow-sm transition-shadow">
+              <Card
+                key={member.id}
+                className="hover:shadow-sm transition-shadow"
+              >
                 <CardContent className="p-4">
                   <div className="flex items-center gap-4">
                     <Avatar className="h-10 w-10">
-                      <AvatarFallback className="text-sm">{getInitials(member.name)}</AvatarFallback>
+                      <AvatarFallback className="text-sm">
+                        {getInitials(member.name)}
+                      </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold truncate">{member.name}</h3>
+                        <h3 className="font-semibold truncate">
+                          {member.name}
+                        </h3>
                         <Badge className={status.variant}>
                           <StatusIcon className="h-3 w-3 mr-1" />
                           {status.label}
@@ -506,10 +542,15 @@ export default function PortalTeamPage() {
                           {member.email}
                         </span>
                         {member.jobTitle && (
-                          <span className="hidden sm:inline truncate">{member.jobTitle}</span>
+                          <span className="hidden sm:inline truncate">
+                            {member.jobTitle}
+                          </span>
                         )}
                         {member.department && (
-                          <Badge variant="secondary" className="text-xs hidden sm:inline-flex">
+                          <Badge
+                            variant="secondary"
+                            className="text-xs hidden sm:inline-flex"
+                          >
                             {member.department}
                           </Badge>
                         )}
@@ -526,17 +567,25 @@ export default function PortalTeamPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openEditDialog(member)}>
+                        <DropdownMenuItem
+                          onClick={() => openEditDialog(member)}
+                        >
                           <Pencil className="h-4 w-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
                         {member.status === "active" ? (
-                          <DropdownMenuItem onClick={() => handleStatusChange(member, "inactive")}>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleStatusChange(member, "inactive")
+                            }
+                          >
                             <UserX className="h-4 w-4 mr-2" />
                             Deactivate
                           </DropdownMenuItem>
                         ) : (
-                          <DropdownMenuItem onClick={() => handleStatusChange(member, "active")}>
+                          <DropdownMenuItem
+                            onClick={() => handleStatusChange(member, "active")}
+                          >
                             <UserCheck className="h-4 w-4 mr-2" />
                             Activate
                           </DropdownMenuItem>
@@ -583,7 +632,9 @@ export default function PortalTeamPage() {
                     id="name"
                     placeholder="Full name"
                     value={(formData.name as string) || ""}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, name: e.target.value }))
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -593,14 +644,21 @@ export default function PortalTeamPage() {
                     type="email"
                     placeholder="email@example.com"
                     value={(formData.email as string) || ""}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        email: e.target.value,
+                      }))
+                    }
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="role">Role</Label>
                   <Select
                     value={(formData.role as string) || "member"}
-                    onValueChange={(v) => setFormData((prev) => ({ ...prev, role: v }))}
+                    onValueChange={(v) =>
+                      setFormData((prev) => ({ ...prev, role: v }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -620,7 +678,12 @@ export default function PortalTeamPage() {
                     id="phone"
                     placeholder="Phone number"
                     value={(formData.phone as string) || ""}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        phone: e.target.value,
+                      }))
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -629,7 +692,12 @@ export default function PortalTeamPage() {
                     id="jobTitle"
                     placeholder="e.g. Front Desk Manager"
                     value={(formData.jobTitle as string) || ""}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, jobTitle: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        jobTitle: e.target.value,
+                      }))
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -638,7 +706,12 @@ export default function PortalTeamPage() {
                     id="department"
                     placeholder="e.g. Operations, Marketing"
                     value={(formData.department as string) || ""}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, department: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        department: e.target.value,
+                      }))
+                    }
                     list="department-suggestions"
                   />
                   {departments.length > 0 && (
@@ -697,14 +770,20 @@ export default function PortalTeamPage() {
                             key={perm.key}
                             className="flex items-center justify-between"
                           >
-                            <Label htmlFor={perm.key} className="text-sm cursor-pointer">
+                            <Label
+                              htmlFor={perm.key}
+                              className="text-sm cursor-pointer"
+                            >
                               {perm.label}
                             </Label>
                             <Switch
                               id={perm.key}
                               checked={!!formData[perm.key]}
                               onCheckedChange={(v) =>
-                                setFormData((prev) => ({ ...prev, [perm.key]: v }))
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  [perm.key]: v,
+                                }))
                               }
                             />
                           </div>
@@ -724,14 +803,20 @@ export default function PortalTeamPage() {
                   id="notes"
                   placeholder="Optional notes about this team member..."
                   value={(formData.notes as string) || ""}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, notes: e.target.value }))
+                  }
                 />
               </div>
             </div>
           </ScrollArea>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddDialog(false)} disabled={saving}>
+            <Button
+              variant="outline"
+              onClick={() => setShowAddDialog(false)}
+              disabled={saving}
+            >
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={saving}>
@@ -743,14 +828,17 @@ export default function PortalTeamPage() {
       </Dialog>
 
       {/* Delete Confirmation */}
-      <AlertDialog open={!!deletingMember} onOpenChange={() => setDeletingMember(null)}>
+      <AlertDialog
+        open={!!deletingMember}
+        onOpenChange={() => setDeletingMember(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Remove Team Member</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to remove{" "}
-              <strong>{deletingMember?.name}</strong> from your team? This action
-              cannot be undone.
+              <strong>{deletingMember?.name}</strong> from your team? This
+              action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -92,6 +92,25 @@ export async function proxy(request: NextRequest) {
   // Route client site subdomains FIRST - before any auth checks
   if (isClientSite) {
     const subdomain = hostname.replace(`.${baseDomain}`, "");
+
+    // Blog routes on client sites → rewrite to centralized /blog/[subdomain]/...
+    if (pathname === "/blog" || pathname.startsWith("/blog/")) {
+      const blogPath =
+        pathname === "/blog"
+          ? `/blog/${subdomain}`
+          : `/blog/${subdomain}${pathname.slice("/blog".length)}`;
+      const url = request.nextUrl.clone();
+      url.pathname = blogPath;
+      if (DEBUG)
+        console.log(
+          "[proxy] ✅ Client site blog rewrite:",
+          hostname + pathname,
+          "→",
+          url.pathname,
+        );
+      return NextResponse.rewrite(url);
+    }
+
     const url = request.nextUrl.clone();
     url.pathname = `/site/${subdomain}${pathname}`;
     if (DEBUG)
@@ -185,7 +204,9 @@ export async function proxy(request: NextRequest) {
 
   // Public marketing/legal pages — no auth required
   const PUBLIC_PATHS = ["/blog", "/pricing", "/privacy", "/terms"];
-  if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
+  if (
+    PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))
+  ) {
     if (DEBUG) console.log("[proxy] → Public page, passing through:", pathname);
     return NextResponse.next();
   }

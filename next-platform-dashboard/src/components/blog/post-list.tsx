@@ -53,6 +53,8 @@ interface PostListProps {
   canEdit?: boolean;
   canDelete?: boolean;
   canPublish?: boolean;
+  subdomain?: string | null;
+  sitePublished?: boolean;
 }
 
 const statusConfig = {
@@ -81,6 +83,8 @@ export function PostList({
   canEdit = true,
   canDelete = true,
   canPublish = true,
+  subdomain,
+  sitePublished = false,
 }: PostListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -300,10 +304,10 @@ export function PostList({
                     </DropdownMenuItem>
                   )}
                   
-                  {post.status === "published" && (
+                  {post.status === "published" && subdomain && sitePublished && (
                     <DropdownMenuItem asChild>
                       <a 
-                        href={`/dashboard/sites/${siteId}/preview/blog/${post.slug}`} 
+                        href={`/blog/${subdomain}/${post.slug}`} 
                         target="_blank"
                         rel="noopener noreferrer"
                       >

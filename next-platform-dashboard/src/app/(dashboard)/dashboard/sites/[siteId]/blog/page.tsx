@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Plus, FileText, Loader2, Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Select,
   SelectContent,
@@ -14,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { PostList } from "@/components/blog/post-list";
-import { getPosts, getBlogStats, getUserPermissions, type BlogPost } from "@/lib/blog/post-service";
+import { getPosts, getBlogStats, getUserPermissions, getSitePublicInfo, type BlogPost } from "@/lib/blog/post-service";
 import { getCategories, type BlogCategory } from "@/lib/blog/category-service";
 
 export default function BlogPostsPage({
@@ -35,22 +36,25 @@ export default function BlogPostsPage({
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [page, setPage] = useState(1);
+  const [siteInfo, setSiteInfo] = useState<{ subdomain: string | null; isPublished: boolean } | null>(null);
 
-  // Load initial data (categories, stats, permissions)
+  // Load initial data (categories, stats, permissions, site info)
   useEffect(() => {
     let cancelled = false;
     
     const fetchInitialData = async () => {
-      const [categoriesData, statsData, perms] = await Promise.all([
+      const [categoriesData, statsData, perms, site] = await Promise.all([
         getCategories(siteId),
         getBlogStats(siteId),
         getUserPermissions(),
+        getSitePublicInfo(siteId),
       ]);
       
       if (!cancelled) {
         setCategories(categoriesData);
         setStats(statsData);
         setPermissions(perms);
+        setSiteInfo(site);
       }
     };
     
@@ -93,6 +97,15 @@ export default function BlogPostsPage({
 
   return (
     <div className="space-y-6">
+      {/* Site not published warning */}
+      {siteInfo && !siteInfo.isPublished && (
+        <Alert>
+          <AlertDescription>
+            Your site is not yet published. Blog posts won&apos;t be publicly accessible until the site is published.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -206,6 +219,8 @@ export default function BlogPostsPage({
               canEdit={true}
               canDelete={permissions.canDelete}
               canPublish={permissions.canPublish}
+              subdomain={siteInfo?.subdomain}
+              sitePublished={siteInfo?.isPublished}
             />
           )}
         </CardContent>

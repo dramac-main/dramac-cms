@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-import { DEFAULT_LOCALE } from '@/lib/locale-config'
+import { DEFAULT_LOCALE } from "@/lib/locale-config";
 // Create a Supabase admin client for public blog access (no auth cookies)
 function getSupabaseClient() {
   return createAdminClient();
@@ -13,21 +13,25 @@ function getSupabaseClient() {
 
 async function getSiteBySubdomain(subdomain: string) {
   const supabase = getSupabaseClient();
-  
-  const { data } = await supabase
+
+  const { data, error } = await supabase
     .from("sites")
     .select("*")
     .eq("subdomain", subdomain)
     .eq("published", true)
     .single();
 
+  if (error) {
+    console.error("[PublicBlog] getSiteBySubdomain error:", error.message, { subdomain });
+  }
+
   return data;
 }
 
 async function getPostBySlug(siteId: string, slug: string) {
   const supabase = getSupabaseClient();
-  
-  const { data } = await supabase
+
+  const { data, error } = await supabase
     .from("blog_posts")
     .select(
       `
@@ -36,20 +40,24 @@ async function getPostBySlug(siteId: string, slug: string) {
       categories:blog_post_categories(
         category:blog_categories(id, name, slug, color)
       )
-    `
+    `,
     )
     .eq("site_id", siteId)
     .eq("slug", slug)
     .eq("status", "published")
     .single();
 
+  if (error) {
+    console.error("[PublicBlog] getPostBySlug error:", error.message, { siteId, slug });
+  }
+
   return data;
 }
 
 async function getRelatedPosts(siteId: string, postId: string, limit = 3) {
   const supabase = getSupabaseClient();
-  
-  const { data } = await supabase
+
+  const { data, error } = await supabase
     .from("blog_posts")
     .select("id, title, slug, featured_image_url, published_at")
     .eq("site_id", siteId)
@@ -57,6 +65,10 @@ async function getRelatedPosts(siteId: string, postId: string, limit = 3) {
     .neq("id", postId)
     .order("published_at", { ascending: false })
     .limit(limit);
+
+  if (error) {
+    console.error("[PublicBlog] getRelatedPosts error:", error.message, { siteId });
+  }
 
   return data || [];
 }
@@ -81,9 +93,15 @@ export default async function PublicPostPage({
 
   const relatedPosts = await getRelatedPosts(site.id, post.id);
 
-  const author = post.author as { full_name: string; avatar_url?: string } | null;
-  const categoriesRaw = (post.categories as Array<{ category: { name: string; slug: string; color: string } }>) || [];
-  const categories = categoriesRaw.filter(c => c.category);
+  const author = post.author as {
+    full_name: string;
+    avatar_url?: string;
+  } | null;
+  const categoriesRaw =
+    (post.categories as Array<{
+      category: { name: string; slug: string; color: string };
+    }>) || [];
+  const categories = categoriesRaw.filter((c) => c.category);
 
   return (
     <article className="max-w-3xl mx-auto py-12 px-4">
@@ -134,10 +152,14 @@ export default async function PublicPostPage({
             </div>
           )}
           <div>
-            <p className="font-medium text-gray-900">{author?.full_name || "Unknown Author"}</p>
+            <p className="font-medium text-gray-900">
+              {author?.full_name || "Unknown Author"}
+            </p>
             <div className="flex items-center gap-2 text-sm">
               <span>
-                {new Date(String(post.published_at || post.created_at || new Date())).toLocaleDateString(DEFAULT_LOCALE, {
+                {new Date(
+                  String(post.published_at || post.created_at || new Date()),
+                ).toLocaleDateString(DEFAULT_LOCALE, {
                   month: "long",
                   day: "numeric",
                   year: "numeric",
@@ -210,7 +232,9 @@ export default async function PublicPostPage({
                   {relatedPost.title}
                 </h3>
                 <p className="text-sm text-gray-500 mt-1">
-                  {new Date(String(relatedPost.published_at || new Date())).toLocaleDateString(DEFAULT_LOCALE, {
+                  {new Date(
+                    String(relatedPost.published_at || new Date()),
+                  ).toLocaleDateString(DEFAULT_LOCALE, {
                     month: "short",
                     day: "numeric",
                   })}

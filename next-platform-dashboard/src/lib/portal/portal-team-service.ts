@@ -112,9 +112,11 @@ function mapToTeamMember(data: Record<string, unknown>): PortalTeamMember {
 /**
  * Get all team members for the current portal client
  */
-export async function getPortalTeamMembers(
-  filters?: { search?: string; status?: string; department?: string },
-): Promise<{ members: PortalTeamMember[]; total: number }> {
+export async function getPortalTeamMembers(filters?: {
+  search?: string;
+  status?: string;
+  department?: string;
+}): Promise<{ members: PortalTeamMember[]; total: number }> {
   const clientId = await getPortalClientId();
   if (!clientId) return { members: [], total: 0 };
 
@@ -218,7 +220,10 @@ export async function createPortalTeamMember(
 
   if (error) {
     if (error.code === "23505") {
-      return { success: false, error: "A team member with this email already exists" };
+      return {
+        success: false,
+        error: "A team member with this email already exists",
+      };
     }
     console.error("[PortalTeamService] Error creating team member:", error);
     return { success: false, error: "Failed to add team member" };
@@ -242,24 +247,39 @@ export async function updatePortalTeamMember(
   // Build update object, only including provided fields
   const updateData: Record<string, unknown> = {};
   if (input.name !== undefined) updateData.name = input.name;
-  if (input.email !== undefined) updateData.email = input.email.toLowerCase().trim();
+  if (input.email !== undefined)
+    updateData.email = input.email.toLowerCase().trim();
   if (input.role !== undefined) updateData.role = input.role;
   if (input.phone !== undefined) updateData.phone = input.phone || null;
-  if (input.jobTitle !== undefined) updateData.job_title = input.jobTitle || null;
-  if (input.department !== undefined) updateData.department = input.department || null;
+  if (input.jobTitle !== undefined)
+    updateData.job_title = input.jobTitle || null;
+  if (input.department !== undefined)
+    updateData.department = input.department || null;
   if (input.status !== undefined) updateData.status = input.status;
-  if (input.canViewAnalytics !== undefined) updateData.can_view_analytics = input.canViewAnalytics;
-  if (input.canEditContent !== undefined) updateData.can_edit_content = input.canEditContent;
-  if (input.canViewInvoices !== undefined) updateData.can_view_invoices = input.canViewInvoices;
-  if (input.canManageLiveChat !== undefined) updateData.can_manage_live_chat = input.canManageLiveChat;
-  if (input.canManageOrders !== undefined) updateData.can_manage_orders = input.canManageOrders;
-  if (input.canManageProducts !== undefined) updateData.can_manage_products = input.canManageProducts;
-  if (input.canManageBookings !== undefined) updateData.can_manage_bookings = input.canManageBookings;
-  if (input.canManageCrm !== undefined) updateData.can_manage_crm = input.canManageCrm;
-  if (input.canManageAutomation !== undefined) updateData.can_manage_automation = input.canManageAutomation;
-  if (input.canManageQuotes !== undefined) updateData.can_manage_quotes = input.canManageQuotes;
-  if (input.canManageAgents !== undefined) updateData.can_manage_agents = input.canManageAgents;
-  if (input.canManageCustomers !== undefined) updateData.can_manage_customers = input.canManageCustomers;
+  if (input.canViewAnalytics !== undefined)
+    updateData.can_view_analytics = input.canViewAnalytics;
+  if (input.canEditContent !== undefined)
+    updateData.can_edit_content = input.canEditContent;
+  if (input.canViewInvoices !== undefined)
+    updateData.can_view_invoices = input.canViewInvoices;
+  if (input.canManageLiveChat !== undefined)
+    updateData.can_manage_live_chat = input.canManageLiveChat;
+  if (input.canManageOrders !== undefined)
+    updateData.can_manage_orders = input.canManageOrders;
+  if (input.canManageProducts !== undefined)
+    updateData.can_manage_products = input.canManageProducts;
+  if (input.canManageBookings !== undefined)
+    updateData.can_manage_bookings = input.canManageBookings;
+  if (input.canManageCrm !== undefined)
+    updateData.can_manage_crm = input.canManageCrm;
+  if (input.canManageAutomation !== undefined)
+    updateData.can_manage_automation = input.canManageAutomation;
+  if (input.canManageQuotes !== undefined)
+    updateData.can_manage_quotes = input.canManageQuotes;
+  if (input.canManageAgents !== undefined)
+    updateData.can_manage_agents = input.canManageAgents;
+  if (input.canManageCustomers !== undefined)
+    updateData.can_manage_customers = input.canManageCustomers;
   if (input.notes !== undefined) updateData.notes = input.notes || null;
 
   const { error } = await supabase
@@ -270,7 +290,10 @@ export async function updatePortalTeamMember(
 
   if (error) {
     if (error.code === "23505") {
-      return { success: false, error: "A team member with this email already exists" };
+      return {
+        success: false,
+        error: "A team member with this email already exists",
+      };
     }
     console.error("[PortalTeamService] Error updating team member:", error);
     return { success: false, error: "Failed to update team member" };
