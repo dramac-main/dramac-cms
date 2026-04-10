@@ -131,8 +131,12 @@ function mapToMediaFile(data: Record<string, unknown>): MediaFile {
     agencyId: data.agency_id as string,
     folderId: (data.folder_id as string) || null,
     fileName: data.file_name as string,
-    originalName: (data.original_name as string) || (data.name as string) || (data.file_name as string),
-    fileType: (data.file_type as "image" | "video" | "document" | "other") || "other",
+    originalName:
+      (data.original_name as string) ||
+      (data.name as string) ||
+      (data.file_name as string),
+    fileType:
+      (data.file_type as "image" | "video" | "document" | "other") || "other",
     mimeType: data.mime_type as string,
     fileSize: (data.size as number) || 0,
     publicUrl: (data.url as string) || "",
@@ -191,7 +195,7 @@ export async function getMediaFiles(
   agencyId: string,
   filters: MediaFilters = {},
   page = 1,
-  limit = 50
+  limit = 50,
 ): Promise<{ files: MediaFile[]; total: number }> {
   const context = await getUserAgencyContext();
   if (!context) {
@@ -245,7 +249,9 @@ export async function getMediaFiles(
   // Apply search filter
   if (filters.search) {
     const searchTerm = `%${filters.search}%`;
-    query = query.or(`name.ilike.${searchTerm},original_name.ilike.${searchTerm},alt_text.ilike.${searchTerm}`);
+    query = query.or(
+      `name.ilike.${searchTerm},original_name.ilike.${searchTerm},alt_text.ilike.${searchTerm}`,
+    );
   }
 
   // Apply tags filter
@@ -314,7 +320,7 @@ export async function updateMediaFile(
     tags?: string[];
     folderId?: string | null;
     name?: string;
-  }
+  },
 ): Promise<{ success: boolean; error?: string }> {
   const context = await getUserAgencyContext();
   if (!context) {
@@ -366,7 +372,7 @@ export async function updateMediaFile(
  * Agency members CANNOT delete files
  */
 export async function deleteMediaFile(
-  fileId: string
+  fileId: string,
 ): Promise<{ success: boolean; error?: string }> {
   const context = await getUserAgencyContext();
   if (!context) {
@@ -401,9 +407,12 @@ export async function deleteMediaFile(
     const { error: storageError } = await supabase.storage
       .from("media")
       .remove([file.storage_path]);
-    
+
     if (storageError) {
-      console.warn("[MediaService] Failed to delete from storage:", storageError);
+      console.warn(
+        "[MediaService] Failed to delete from storage:",
+        storageError,
+      );
       // Continue anyway - the DB record should still be deleted
     }
   }
@@ -427,7 +436,7 @@ export async function deleteMediaFile(
  * Bulk delete media files
  */
 export async function deleteMediaFiles(
-  fileIds: string[]
+  fileIds: string[],
 ): Promise<{ success: boolean; deleted: number; errors: string[] }> {
   const errors: string[] = [];
   let deleted = 0;
@@ -455,7 +464,9 @@ export async function deleteMediaFiles(
 /**
  * Get all folders for an agency
  */
-export async function getMediaFolders(agencyId: string): Promise<MediaFolder[]> {
+export async function getMediaFolders(
+  agencyId: string,
+): Promise<MediaFolder[]> {
   const context = await getUserAgencyContext();
   if (!context) return [];
 
@@ -473,7 +484,7 @@ export async function getMediaFolders(agencyId: string): Promise<MediaFolder[]> 
       `
       *,
       file_count:assets(count)
-    `
+    `,
     )
     .eq("agency_id", agencyId)
     .order("name");
@@ -489,7 +500,9 @@ export async function getMediaFolders(agencyId: string): Promise<MediaFolder[]> 
 /**
  * Get folder by ID
  */
-export async function getMediaFolder(folderId: string): Promise<MediaFolder | null> {
+export async function getMediaFolder(
+  folderId: string,
+): Promise<MediaFolder | null> {
   const context = await getUserAgencyContext();
   if (!context) return null;
 
@@ -502,7 +515,7 @@ export async function getMediaFolder(folderId: string): Promise<MediaFolder | nu
       `
       *,
       file_count:assets(count)
-    `
+    `,
     )
     .eq("id", folderId)
     .single();
@@ -526,7 +539,7 @@ export async function getMediaFolder(folderId: string): Promise<MediaFolder | nu
 export async function createFolder(
   agencyId: string,
   name: string,
-  parentId?: string
+  parentId?: string,
 ): Promise<{ success: boolean; folder?: MediaFolder; error?: string }> {
   const context = await getUserAgencyContext();
   if (!context) {
@@ -588,7 +601,7 @@ export async function createFolder(
  */
 export async function updateFolder(
   folderId: string,
-  updates: { name?: string; parentId?: string | null }
+  updates: { name?: string; parentId?: string | null },
 ): Promise<{ success: boolean; error?: string }> {
   const context = await getUserAgencyContext();
   if (!context) {
@@ -651,7 +664,7 @@ export async function updateFolder(
  * Delete folder - requires admin/owner role
  */
 export async function deleteFolder(
-  folderId: string
+  folderId: string,
 ): Promise<{ success: boolean; error?: string }> {
   const context = await getUserAgencyContext();
   if (!context) {
@@ -732,7 +745,7 @@ export async function trackMediaUsage(
   assetId: string,
   entityType: string,
   entityId: string,
-  fieldName?: string
+  fieldName?: string,
 ): Promise<{ success: boolean; error?: string }> {
   const context = await getUserAgencyContext();
   if (!context) {
@@ -763,7 +776,7 @@ export async function trackMediaUsage(
 export async function removeMediaUsage(
   assetId: string,
   entityType: string,
-  entityId: string
+  entityId: string,
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
 
@@ -908,7 +921,7 @@ export async function getMediaStats(agencyId: string): Promise<{
  */
 export async function moveFilesToFolder(
   fileIds: string[],
-  folderId: string | null
+  folderId: string | null,
 ): Promise<{ success: boolean; error?: string }> {
   const context = await getUserAgencyContext();
   if (!context) {

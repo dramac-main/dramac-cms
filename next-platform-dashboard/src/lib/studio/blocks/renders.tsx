@@ -30629,7 +30629,9 @@ export function BlogListingSectionRender({
   className = "",
 }: BlogListingSectionProps) {
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [activeCategory, setActiveCategory] = React.useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = React.useState<string | null>(
+    null,
+  );
   const [currentPage, setCurrentPage] = React.useState(1);
 
   const formatDate = (dateStr: string | null) => {
@@ -30643,7 +30645,10 @@ export function BlogListingSectionRender({
 
   // Extract unique categories
   const allCategories = React.useMemo(() => {
-    const catMap = new Map<string, { id: string; name: string; slug: string; color: string }>();
+    const catMap = new Map<
+      string,
+      { id: string; name: string; slug: string; color: string }
+    >();
     posts.forEach((p) => {
       p.categories.forEach((c) => {
         if (!catMap.has(c.id)) catMap.set(c.id, c);
@@ -30665,7 +30670,9 @@ export function BlogListingSectionRender({
       );
     }
     if (activeCategory) {
-      result = result.filter((p) => p.categories.some((c) => c.id === activeCategory));
+      result = result.filter((p) =>
+        p.categories.some((c) => c.id === activeCategory),
+      );
     }
     return result;
   }, [posts, searchQuery, activeCategory]);
@@ -30712,7 +30719,12 @@ export function BlogListingSectionRender({
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
               </svg>
               <input
                 type="text"
@@ -30732,7 +30744,10 @@ export function BlogListingSectionRender({
                   className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
                   style={
                     activeCategory === null
-                      ? { backgroundColor: "var(--brand-primary, #3b82f6)", color: "#ffffff" }
+                      ? {
+                          backgroundColor: "var(--brand-primary, #3b82f6)",
+                          color: "#ffffff",
+                        }
                       : { backgroundColor: "#f3f4f6", color: "#6b7280" }
                   }
                 >
@@ -30741,12 +30756,23 @@ export function BlogListingSectionRender({
                 {allCategories.map((cat) => (
                   <button
                     key={cat.id}
-                    onClick={() => setActiveCategory(activeCategory === cat.id ? null : cat.id)}
+                    onClick={() =>
+                      setActiveCategory(
+                        activeCategory === cat.id ? null : cat.id,
+                      )
+                    }
                     className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
                     style={
                       activeCategory === cat.id
-                        ? { backgroundColor: cat.color || "var(--brand-primary, #3b82f6)", color: "#ffffff" }
-                        : { backgroundColor: `${cat.color || "#3b82f6"}15`, color: cat.color || "#6b7280" }
+                        ? {
+                            backgroundColor:
+                              cat.color || "var(--brand-primary, #3b82f6)",
+                            color: "#ffffff",
+                          }
+                        : {
+                            backgroundColor: `${cat.color || "#3b82f6"}15`,
+                            color: cat.color || "#6b7280",
+                          }
                     }
                   >
                     {cat.name}
@@ -30785,12 +30811,26 @@ export function BlogListingSectionRender({
         {filteredPosts.length === 0 && posts.length > 0 && (
           <div className="text-center py-16">
             <div className="w-14 h-14 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-              <svg className="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <svg
+                className="w-7 h-7 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
               </svg>
             </div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-1">No matching articles</h2>
-            <p className="text-gray-500 text-sm">Try a different search term or category.</p>
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">
+              No matching articles
+            </h2>
+            <p className="text-gray-500 text-sm">
+              Try a different search term or category.
+            </p>
           </div>
         )}
 
@@ -30800,7 +30840,10 @@ export function BlogListingSectionRender({
             href={`/blog/${featured.slug}`}
             className="block mb-12 group no-underline"
           >
-            <article className="grid md:grid-cols-2 gap-8 rounded-2xl overflow-hidden shadow-lg border border-gray-100 hover:shadow-xl transition-shadow" style={{ backgroundColor: "var(--brand-card-bg, #ffffff)" }}>
+            <article
+              className="grid md:grid-cols-2 gap-8 rounded-2xl overflow-hidden shadow-lg border border-gray-100 hover:shadow-xl transition-shadow"
+              style={{ backgroundColor: "var(--brand-card-bg, #ffffff)" }}
+            >
               {featured.featuredImageUrl && (
                 <div className="aspect-[4/3] md:aspect-auto overflow-hidden">
                   <img
@@ -30867,7 +30910,10 @@ export function BlogListingSectionRender({
                 href={`/blog/${post.slug}`}
                 className="block group no-underline"
               >
-                <article className="h-full rounded-xl overflow-hidden shadow-md border border-gray-100 hover:shadow-lg transition-shadow" style={{ backgroundColor: "var(--brand-card-bg, #ffffff)" }}>
+                <article
+                  className="h-full rounded-xl overflow-hidden shadow-md border border-gray-100 hover:shadow-lg transition-shadow"
+                  style={{ backgroundColor: "var(--brand-card-bg, #ffffff)" }}
+                >
                   {post.featuredImageUrl && (
                     <div className="aspect-video overflow-hidden">
                       <img
@@ -30933,8 +30979,18 @@ export function BlogListingSectionRender({
               className="px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               style={{ color: "var(--brand-primary, #3b82f6)" }}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
             </button>
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
@@ -30944,7 +31000,10 @@ export function BlogListingSectionRender({
                 className="w-10 h-10 rounded-lg text-sm font-medium transition-colors"
                 style={
                   currentPage === page
-                    ? { backgroundColor: "var(--brand-primary, #3b82f6)", color: "#ffffff" }
+                    ? {
+                        backgroundColor: "var(--brand-primary, #3b82f6)",
+                        color: "#ffffff",
+                      }
                     : { color: "#6b7280" }
                 }
               >
@@ -30957,8 +31016,18 @@ export function BlogListingSectionRender({
               className="px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               style={{ color: "var(--brand-primary, #3b82f6)" }}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </button>
           </div>
@@ -30967,7 +31036,8 @@ export function BlogListingSectionRender({
         {/* Results count */}
         {(searchQuery || activeCategory) && filteredPosts.length > 0 && (
           <p className="text-center text-sm text-gray-400 mt-4">
-            Showing {filteredPosts.length} {filteredPosts.length === 1 ? "article" : "articles"}
+            Showing {filteredPosts.length}{" "}
+            {filteredPosts.length === 1 ? "article" : "articles"}
           </p>
         )}
       </div>
@@ -31032,15 +31102,25 @@ function BlogTableOfContents({ contentHtml }: { contentHtml: string }) {
   if (headings.length === 0) return null;
 
   return (
-    <nav className="mb-10 p-5 rounded-xl border border-gray-200" style={{ backgroundColor: "var(--brand-card-bg, #f9fafb)" }}>
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">Table of Contents</h2>
+    <nav
+      className="mb-10 p-5 rounded-xl border border-gray-200"
+      style={{ backgroundColor: "var(--brand-card-bg, #f9fafb)" }}
+    >
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">
+        Table of Contents
+      </h2>
       <ul className="space-y-1.5">
         {headings.map((h) => (
           <li key={h.index} style={{ paddingLeft: h.level === 3 ? "1rem" : 0 }}>
             <a
               href={`#${h.id}`}
               className="text-sm hover:opacity-80 transition-opacity no-underline"
-              style={{ color: h.level === 2 ? "var(--brand-text, #374151)" : "var(--brand-muted-fg, #6b7280)" }}
+              style={{
+                color:
+                  h.level === 2
+                    ? "var(--brand-text, #374151)"
+                    : "var(--brand-muted-fg, #6b7280)",
+              }}
             >
               {h.text}
             </a>
@@ -31053,7 +31133,10 @@ function BlogTableOfContents({ contentHtml }: { contentHtml: string }) {
 
 function BlogShareButtons({ title, slug }: { title: string; slug: string }) {
   const [copied, setCopied] = React.useState(false);
-  const pageUrl = typeof window !== "undefined" ? window.location.href : `/blog/${slug}`;
+  const [pageUrl, setPageUrl] = React.useState(`/blog/${slug}`);
+  React.useEffect(() => {
+    setPageUrl(window.location.href);
+  }, []);
   const encodedUrl = encodeURIComponent(pageUrl);
   const encodedTitle = encodeURIComponent(title);
 
@@ -31077,7 +31160,11 @@ function BlogShareButtons({ title, slug }: { title: string; slug: string }) {
         className="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-gray-100"
         aria-label="Share on X"
       >
-        <svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="currentColor">
+        <svg
+          className="w-4 h-4 text-gray-500"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
           <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
         </svg>
       </a>
@@ -31089,7 +31176,11 @@ function BlogShareButtons({ title, slug }: { title: string; slug: string }) {
         className="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-gray-100"
         aria-label="Share on Facebook"
       >
-        <svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="currentColor">
+        <svg
+          className="w-4 h-4 text-gray-500"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
           <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
         </svg>
       </a>
@@ -31101,7 +31192,11 @@ function BlogShareButtons({ title, slug }: { title: string; slug: string }) {
         className="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-gray-100"
         aria-label="Share on LinkedIn"
       >
-        <svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="currentColor">
+        <svg
+          className="w-4 h-4 text-gray-500"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
           <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
         </svg>
       </a>
@@ -31112,12 +31207,32 @@ function BlogShareButtons({ title, slug }: { title: string; slug: string }) {
         aria-label="Copy link"
       >
         {copied ? (
-          <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          <svg
+            className="w-4 h-4 text-green-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
           </svg>
         ) : (
-          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+          <svg
+            className="w-4 h-4 text-gray-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+            />
           </svg>
         )}
       </button>
@@ -31126,14 +31241,19 @@ function BlogShareButtons({ title, slug }: { title: string; slug: string }) {
 }
 
 function addHeadingIds(html: string): string {
-  return html.replace(/<h([23])([^>]*)>([\s\S]*?)<\/h\1>/gi, (_match, level, attrs, text) => {
-    const plainText = text.replace(/<[^>]+>/g, "").trim();
-    const id = plainText
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
-    return `<h${level}${attrs} id="${id}">${text}</h${level}>`;
-  });
+  return html.replace(
+    /<h([23])([^>]*)>([\s\S]*?)<\/h\1>/gi,
+    (_match, level, attrs, text) => {
+      // Skip headings that already have an id attribute
+      if (/\bid\s*=/.test(attrs)) return _match;
+      const plainText = text.replace(/<[^>]+>/g, "").trim();
+      const id = plainText
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+      return `<h${level}${attrs} id="${id}">${text}</h${level}>`;
+    },
+  );
 }
 
 export function BlogPostViewRender({
@@ -31159,7 +31279,9 @@ export function BlogPostViewRender({
     });
   };
 
-  const processedHtml = post.contentHtml ? addHeadingIds(post.contentHtml) : null;
+  const processedHtml = post.contentHtml
+    ? addHeadingIds(post.contentHtml)
+    : null;
 
   return (
     <section
@@ -31169,11 +31291,52 @@ export function BlogPostViewRender({
       <div className="max-w-screen-md mx-auto">
         {/* Breadcrumbs */}
         <nav className="flex items-center gap-2 text-sm text-gray-400 mb-6">
-          <a href="/" className="hover:opacity-80 transition-opacity no-underline" style={{ color: "var(--brand-primary, #3b82f6)" }}>Home</a>
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-          <a href="/blog" className="hover:opacity-80 transition-opacity no-underline" style={{ color: "var(--brand-primary, #3b82f6)" }}>Blog</a>
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-          <span className="truncate max-w-[200px]" style={{ color: "var(--brand-muted-fg, #6b7280)" }}>{post.title}</span>
+          <a
+            href="/"
+            className="hover:opacity-80 transition-opacity no-underline"
+            style={{ color: "var(--brand-primary, #3b82f6)" }}
+          >
+            Home
+          </a>
+          <svg
+            className="w-3.5 h-3.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+          <a
+            href="/blog"
+            className="hover:opacity-80 transition-opacity no-underline"
+            style={{ color: "var(--brand-primary, #3b82f6)" }}
+          >
+            Blog
+          </a>
+          <svg
+            className="w-3.5 h-3.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+          <span
+            className="truncate max-w-[200px]"
+            style={{ color: "var(--brand-muted-fg, #6b7280)" }}
+          >
+            {post.title}
+          </span>
         </nav>
 
         {/* Post Header */}
@@ -31218,7 +31381,9 @@ export function BlogPostViewRender({
                   ) : (
                     <div
                       className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium text-white"
-                      style={{ backgroundColor: "var(--brand-primary, #3b82f6)" }}
+                      style={{
+                        backgroundColor: "var(--brand-primary, #3b82f6)",
+                      }}
                     >
                       {post.authorName.charAt(0).toUpperCase()}
                     </div>
@@ -31316,8 +31481,13 @@ export function BlogPostViewRender({
                 </div>
               )}
               <div>
-                <p className="text-xs uppercase tracking-wide text-gray-400 mb-1">Written by</p>
-                <h3 className="text-lg font-bold" style={{ color: "var(--brand-text, #111827)" }}>
+                <p className="text-xs uppercase tracking-wide text-gray-400 mb-1">
+                  Written by
+                </p>
+                <h3
+                  className="text-lg font-bold"
+                  style={{ color: "var(--brand-text, #111827)" }}
+                >
                   {post.authorName}
                 </h3>
               </div>
@@ -31348,7 +31518,10 @@ export function BlogPostViewRender({
                 href={`/blog/${rp.slug}`}
                 className="block group no-underline"
               >
-                <article className="h-full rounded-xl overflow-hidden shadow-md border border-gray-100 hover:shadow-lg transition-shadow" style={{ backgroundColor: "var(--brand-card-bg, #ffffff)" }}>
+                <article
+                  className="h-full rounded-xl overflow-hidden shadow-md border border-gray-100 hover:shadow-lg transition-shadow"
+                  style={{ backgroundColor: "var(--brand-card-bg, #ffffff)" }}
+                >
                   {rp.featuredImageUrl && (
                     <div className="aspect-video overflow-hidden">
                       <img

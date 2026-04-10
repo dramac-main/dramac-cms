@@ -31,7 +31,8 @@ export default async function PublicPostPage({
 }
 import { redirect } from "next/navigation";
 
-const BASE_DOMAIN = process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
+const BASE_DOMAIN =
+  process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
 
 /**
  * Old blog post page � redirects to the site-domain blog post.

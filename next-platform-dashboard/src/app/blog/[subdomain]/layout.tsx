@@ -33,7 +33,8 @@ export default async function BlogLayout({
 }
 import { redirect } from "next/navigation";
 
-const BASE_DOMAIN = process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
+const BASE_DOMAIN =
+  process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
 
 /**
  * Old blog layout � redirects to the site-domain blog.

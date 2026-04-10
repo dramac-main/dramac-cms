@@ -515,7 +515,7 @@ async function processData(
       if (blogInfo.hasPosts) {
         if (stripped === "blog") {
           // Blog listing page
-          const { posts } = await getPublishedPosts(site.id, { limit: 50 });
+          const { posts } = await getPublishedPosts(site.id, { limit: 200 });
           page = {
             id: `virtual-blog-${site.id}`,
             slug: "/blog",
