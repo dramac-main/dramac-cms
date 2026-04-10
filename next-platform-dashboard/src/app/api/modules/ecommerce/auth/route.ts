@@ -6,8 +6,7 @@
  * Handles all customer auth operations via `action` field:
  * - register: Create account (email + password)
  * - login: Email + password login
- * - magic-link: Send magic link email
- * - verify-magic: Verify magic link token
+ * - magic-link: Send magic link email (works for any existing customer)
  * - logout: Invalidate session token
  * - session: Validate session token & return customer data
  * - set-password: Set password for guest (requires verificationToken for email-only)
@@ -558,6 +557,15 @@ export async function POST(request: NextRequest) {
           );
         }
 
+        // Magic link proves email ownership — mark verified
+        if (!mlCustomer.email_verified) {
+          await (supabase as any)
+            .from(TABLE)
+            .update({ email_verified: true })
+            .eq("id", mlCustomer.id);
+          mlCustomer.email_verified = true;
+        }
+
         // Issue a new long-lived session (not a magic link)
         const newToken = await createSession(
           supabase,
@@ -802,6 +810,9 @@ export async function POST(request: NextRequest) {
     }
 
     // ── MAGIC LINK (send) ────────────────────────────────────────────────────
+    // Sends a single-use login link to any existing customer (password-based,
+    // Google OAuth, or even guest accounts). Always returns success to prevent
+    // email enumeration.
     if (action === "magic-link") {
       const { email } = body;
 
@@ -814,16 +825,16 @@ export async function POST(request: NextRequest) {
 
       const emailLower = email.toLowerCase().trim();
 
-      // Check if customer exists with an account (not just a guest)
+      // Check if any customer exists with this email on this site
       const { data: customer } = await (supabase as any)
         .from(TABLE)
-        .select("id, password_set_at")
+        .select("id")
         .eq("site_id", siteId)
         .eq("email", emailLower)
         .maybeSingle();
 
-      // Always return success to prevent email enumeration
-      if (!customer || !customer.password_set_at) {
+      // No customer found → silently return success (prevents email enumeration)
+      if (!customer) {
         return NextResponse.json(
           {
             success: true,
@@ -840,12 +851,27 @@ export async function POST(request: NextRequest) {
         isMagicLink: true,
       });
 
-      // Build magic link URL using the request origin (storefront's domain)
-      const origin =
+      // Build magic link URL — use origin header, fall back to site's known domain
+      let storefrontOrigin =
         request.headers.get("origin") ||
         request.headers.get("referer")?.replace(/\/[^/]*$/, "") ||
         "";
-      const loginUrl = `${origin}/account?magic_token=${magicToken}`;
+
+      // If origin/referer headers are missing, construct URL from site data
+      if (!storefrontOrigin) {
+        const { data: siteForDomain } = await (supabase as any)
+          .from("sites")
+          .select("subdomain, custom_domain, custom_domain_verified")
+          .eq("id", siteId)
+          .single();
+        if (siteForDomain?.custom_domain && siteForDomain.custom_domain_verified) {
+          storefrontOrigin = `https://${siteForDomain.custom_domain}`;
+        } else if (siteForDomain?.subdomain) {
+          storefrontOrigin = `https://${siteForDomain.subdomain}.${DOMAINS.SITES_BASE}`;
+        }
+      }
+
+      const loginUrl = `${storefrontOrigin}/account?magic_token=${magicToken}`;
 
       // Get site name for the email
       const { data: site } = await (supabase as any)
