@@ -622,7 +622,10 @@ async function fetchFAQ(
 }
 
 /**
- * Fetch blog posts
+ * Fetch blog posts from the blog_posts table (the real source of truth).
+ *
+ * Previously this read from sites.settings.blog_posts which was never populated
+ * by the blog editor. The real blog data lives in the blog_posts table.
  */
 async function fetchBlogPosts(
   supabase: SupabaseClient,
@@ -630,35 +633,32 @@ async function fetchBlogPosts(
   limit?: number,
 ): Promise<BlogPost[]> {
   try {
-    const { data } = await supabase
-      .from("sites")
-      .select("settings")
-      .eq("id", siteId)
-      .single();
+    const { data, error } = await supabase
+      .from("blog_posts")
+      .select("id, site_id, title, excerpt, content, featured_image_url, tags, status, published_at, author:profiles(full_name)")
+      .eq("site_id", siteId)
+      .eq("status", "published")
+      .order("published_at", { ascending: false })
+      .limit(limit || 10);
 
-    if (data?.settings && typeof data.settings === "object") {
-      const settings = data.settings as Record<string, unknown>;
-      const blog = settings.blog_posts as
-        | Array<Record<string, unknown>>
-        | undefined;
-      if (Array.isArray(blog)) {
-        const items = blog.slice(0, limit || 10);
-        return items.map((b) => ({
-          id: (b.id as string) ?? "",
-          site_id: siteId,
-          title: (b.title as string) ?? "",
-          excerpt: (b.excerpt as string) ?? undefined,
-          content: (b.content as string) ?? undefined,
-          featured_image: (b.featured_image as string) ?? undefined,
-          category: (b.category as string) ?? undefined,
-          author: (b.author as string) ?? undefined,
-          published_at: (b.published_at as string) ?? undefined,
-          status: (b.status as string) ?? undefined,
-        }));
-      }
-    }
+    if (error || !data) return [];
+
+    return data.map((post: Record<string, unknown>) => ({
+      id: (post.id as string) ?? "",
+      site_id: siteId,
+      title: (post.title as string) ?? "",
+      excerpt: (post.excerpt as string) ?? undefined,
+      content: (post.content as string) ?? undefined,
+      featured_image: (post.featured_image_url as string) ?? undefined,
+      category: Array.isArray(post.tags) && post.tags.length > 0
+        ? (post.tags[0] as string)
+        : undefined,
+      author: (post.author as Record<string, unknown> | null)?.full_name as string ?? undefined,
+      published_at: (post.published_at as string) ?? undefined,
+      status: (post.status as string) ?? undefined,
+    }));
   } catch {
-    // Silently fail
+    // Silently fail - blog data is optional for site builder context
   }
   return [];
 }

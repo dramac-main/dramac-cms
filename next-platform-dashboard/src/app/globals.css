@@ -397,7 +397,15 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-behavior: smooth;
   }
 
   body {
@@ -405,6 +413,15 @@
     font-feature-settings:
       "rlig" 1,
       "calt" 1;
+    overscroll-behavior-y: contain;
+  }
+
+  /* Prevent overscroll on modal/dialog overlays */
+  [data-radix-dialog-overlay],
+  [data-radix-alert-dialog-overlay],
+  [role="dialog"],
+  [data-state="open"][role="dialog"] {
+    overscroll-behavior: contain;
   }
 
   /* Focus styles */
@@ -433,6 +450,14 @@
 
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-muted-foreground/50;
+  }
+
+  /* Hide scrollbar on touch devices for cleaner look */
+  @media (pointer: coarse) {
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
   }
 }
 
@@ -583,15 +608,6 @@
 
   .no-scrollbar::-webkit-scrollbar {
     display: none;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
   }
 }
 
