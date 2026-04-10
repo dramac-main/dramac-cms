@@ -63,6 +63,7 @@ export interface AuthContextValue {
   /** Request a magic login link for password recovery */
   requestMagicLink: (
     email: string,
+    intent?: "login" | "reset_password",
   ) => Promise<{ error: string | null; message?: string }>;
   /** Send a 6-digit verification code to the email for ownership proof */
   sendVerificationCode: (email: string) => Promise<{ error: string | null }>;
@@ -80,12 +81,19 @@ export interface AuthContextValue {
     newPassword: string,
     currentPassword?: string,
   ) => Promise<{ error: string | null; message?: string }>;
+  /** Reset password using a magic link token (dedicated reset flow) */
+  resetPassword: (
+    resetToken: string,
+    newPassword: string,
+  ) => Promise<{ error: string | null; message?: string }>;
+  /** Pending magic link token for password reset (set when intent=reset_password) */
+  pendingResetToken: string | null;
   /** Open the auth dialog (login/register) */
-  openAuthDialog: (mode?: "login" | "register" | "set-password") => void;
+  openAuthDialog: (mode?: "login" | "register" | "set-password" | "reset-password") => void;
   /** Close the auth dialog */
   closeAuthDialog: () => void;
   authDialogOpen: boolean;
-  authDialogMode: "login" | "register" | "set-password";
+  authDialogMode: "login" | "register" | "set-password" | "reset-password";
 }
 
 // ============================================================================
@@ -108,6 +116,8 @@ const AuthContext = createContext<AuthContextValue>({
   loginWithGoogle: () => {},
   googleAuthAvailable: false,
   changePassword: async () => ({ error: null }),
+  resetPassword: async () => ({ error: null }),
+  pendingResetToken: null,
   openAuthDialog: () => {},
   closeAuthDialog: () => {},
   authDialogOpen: false,
@@ -143,8 +153,11 @@ export function StorefrontAuthProvider({
   const [isLoading, setIsLoading] = useState(true);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [authDialogMode, setAuthDialogMode] = useState<
-    "login" | "register" | "set-password"
+    "login" | "register" | "set-password" | "reset-password"
   >("login");
+  const [pendingResetToken, setPendingResetToken] = useState<string | null>(
+    null,
+  );
 
   const storageKey = `dramac_customer_token_${siteId}`;
   const base =
@@ -220,10 +233,22 @@ export function StorefrontAuthProvider({
     }
 
     if (magicToken) {
-      // Clean the magic_token from the URL to prevent reuse / bookmarking
+      // Clean the magic_token (and intent) from the URL to prevent reuse / bookmarking
       const cleanUrl = new URL(window.location.href);
+      const resetIntent = urlParams.get("intent") === "reset_password";
       cleanUrl.searchParams.delete("magic_token");
+      cleanUrl.searchParams.delete("intent");
       window.history.replaceState({}, "", cleanUrl.toString());
+
+      // If this is a password reset intent, don't consume the token yet.
+      // Store it and show the dedicated reset form.
+      if (resetIntent) {
+        setPendingResetToken(magicToken);
+        setAuthDialogMode("reset-password");
+        setAuthDialogOpen(true);
+        setIsLoading(false);
+        return;
+      }
 
       // Validate the magic token — server consumes it and returns a new long-lived token
       callAuth({ action: "session", token: magicToken })
@@ -455,9 +480,14 @@ export function StorefrontAuthProvider({
   const requestMagicLink = useCallback(
     async (
       email: string,
+      intent?: "login" | "reset_password",
     ): Promise<{ error: string | null; message?: string }> => {
       try {
-        const data = await callAuth({ action: "magic-link", email });
+        const data = await callAuth({
+          action: "magic-link",
+          email,
+          intent,
+        });
         if (data?.error) return { error: data.error };
         return {
           error: null,
@@ -494,6 +524,35 @@ export function StorefrontAuthProvider({
       }
     },
     [callAuth, token],
+  );
+
+  const resetPassword = useCallback(
+    async (
+      resetToken: string,
+      newPassword: string,
+    ): Promise<{ error: string | null; message?: string }> => {
+      try {
+        const data = await callAuth({
+          action: "reset-password",
+          token: resetToken,
+          newPassword,
+        });
+        if (data?.error) return { error: data.error };
+        if (data?.token && data?.customer) {
+          saveSession(data.token, data.customer);
+          mergeGuestCart(data.customer.id);
+        }
+        // Clear the pending reset token
+        setPendingResetToken(null);
+        return {
+          error: null,
+          message: data?.message || "Password has been reset successfully.",
+        };
+      } catch {
+        return { error: "Something went wrong. Please try again." };
+      }
+    },
+    [callAuth, saveSession, mergeGuestCart],
   );
 
   // ── Google Sign-In ──
@@ -543,7 +602,7 @@ export function StorefrontAuthProvider({
   }, [googleClientId, siteId]);
 
   const openAuthDialog = useCallback(
-    (mode?: "login" | "register" | "set-password") => {
+    (mode?: "login" | "register" | "set-password" | "reset-password") => {
       setAuthDialogMode(mode || "login");
       setAuthDialogOpen(true);
     },
@@ -572,6 +631,8 @@ export function StorefrontAuthProvider({
         loginWithGoogle,
         googleAuthAvailable,
         changePassword,
+        resetPassword,
+        pendingResetToken,
         openAuthDialog,
         closeAuthDialog,
         authDialogOpen,

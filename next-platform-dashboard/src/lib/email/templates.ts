@@ -182,6 +182,35 @@ This link expires in 1 hour and can only be used once. If you didn't request thi
     `.trim(),
   },
 
+  storefront_password_reset: {
+    subject: (data) => `Reset your password for ${data.siteName || "your account"}`,
+    html: (data) =>
+      wrapHtml(`
+      <h1 style="${STYLES.heading}">Reset Your Password</h1>
+      <p style="${STYLES.text}">We received a request to reset your password${data.siteName ? ` on <strong>${data.siteName}</strong>` : ""}.</p>
+      <p style="${STYLES.text}">Click the button below to set a new password:</p>
+      <p style="margin: 24px 0;">
+        <a href="${data.loginUrl}" style="${STYLES.button}">
+          Reset Password
+        </a>
+      </p>
+      <p style="${STYLES.muted}">
+        This link expires in 1 hour and can only be used once. If you didn't request this, you can safely ignore this email — your password will remain unchanged.
+      </p>
+    `),
+    text: (data) =>
+      `
+Reset Your Password
+
+We received a request to reset your password${data.siteName ? ` on ${data.siteName}` : ""}.
+
+Click the link below to set a new password:
+${data.loginUrl}
+
+This link expires in 1 hour and can only be used once. If you didn't request this, you can safely ignore this email — your password will remain unchanged.
+    `.trim(),
+  },
+
   storefront_email_verification: {
     subject: (data) =>
       `${data.code} is your verification code${data.siteName ? ` for ${data.siteName}` : ""}`,

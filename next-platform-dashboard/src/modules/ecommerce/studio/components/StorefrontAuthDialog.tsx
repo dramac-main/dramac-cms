@@ -14,14 +14,14 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { X, Loader2, Mail, Lock, Eye, EyeOff, ShoppingBag } from "lucide-react";
+import { X, Loader2, Mail, Lock, Eye, EyeOff, ShoppingBag, KeyRound } from "lucide-react";
 import { useStorefrontAuth } from "../../context/storefront-auth-context";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-type DialogMode = "login" | "register" | "set-password";
+type DialogMode = "login" | "register" | "set-password" | "reset-password";
 
 interface StorefrontAuthDialogProps {
   /** Initial mode; if provided overrides the context authDialogMode */
@@ -209,7 +209,7 @@ function LoginForm({
     }
     setLoading(true);
     setError("");
-    const result = await requestMagicLink(email);
+    const result = await requestMagicLink(email, "reset_password");
     setLoading(false);
     if (result.error) {
       setError(result.error);
@@ -229,7 +229,7 @@ function LoginForm({
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               If an account exists for <strong>{email}</strong>, we&apos;ve sent
-              a login link. Check your inbox and spam folder.
+              a password reset link. Check your inbox and spam folder.
             </p>
           </div>
         ) : (
@@ -260,7 +260,7 @@ function LoginForm({
               className="w-full rounded-md bg-primary px-4 py-2.5 min-h-11 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              Send Login Link
+              Send Reset Link
             </button>
           </>
         )}
@@ -541,6 +541,118 @@ function SetPasswordForm({
 }
 
 // ============================================================================
+// RESET PASSWORD FORM (dedicated flow via magic link token)
+// ============================================================================
+
+function ResetPasswordForm({ onSuccess }: { onSuccess: () => void }) {
+  const { resetPassword, pendingResetToken } = useStorefrontAuth();
+  const [password, setPasswordVal] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!password) {
+      setError("Please enter a new password.");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (!/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+      setError(
+        "Password must include at least one uppercase letter and one number.",
+      );
+      return;
+    }
+    if (password !== confirm) {
+      setError("Passwords do not match.");
+      return;
+    }
+    if (!pendingResetToken) {
+      setError(
+        "Reset token has expired. Please request a new password reset link.",
+      );
+      return;
+    }
+    setLoading(true);
+    setError("");
+    const result = await resetPassword(pendingResetToken, password);
+    setLoading(false);
+    if (result.error) {
+      setError(result.error);
+    } else {
+      setSuccess(true);
+      // Auto-close after a brief success message
+      setTimeout(() => onSuccess(), 1500);
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="rounded-md bg-success/10 border border-success/20 px-4 py-6 text-center">
+        <KeyRound className="h-8 w-8 text-success mx-auto mb-2" />
+        <p className="text-sm font-medium text-foreground">
+          Password reset successfully!
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">
+          You&apos;re now signed in. Redirecting&hellip;
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Choose a new password for your account.
+      </p>
+      <InputField
+        id="reset-password"
+        label="New Password"
+        type="password"
+        value={password}
+        onChange={setPasswordVal}
+        placeholder="At least 8 characters"
+        autoComplete="new-password"
+        disabled={loading}
+      />
+      <InputField
+        id="reset-confirm"
+        label="Confirm Password"
+        type="password"
+        value={confirm}
+        onChange={setConfirm}
+        placeholder="Repeat your password"
+        autoComplete="new-password"
+        disabled={loading}
+      />
+      <p className="text-xs text-muted-foreground -mt-2">
+        Must be 8+ characters with at least one uppercase letter and one number.
+      </p>
+
+      {error && (
+        <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {error}
+        </p>
+      )}
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full rounded-md bg-primary px-4 py-2.5 min-h-11 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60 flex items-center justify-center gap-2"
+      >
+        {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+        Reset Password
+      </button>
+    </form>
+  );
+}
+
+// ============================================================================
 // DIALOG
 // ============================================================================
 
@@ -610,12 +722,14 @@ export function StorefrontAuthDialog({
     login: "Sign In",
     register: "Create Store Account",
     "set-password": "Save Your Account",
+    "reset-password": "Reset Your Password",
   };
 
   const subtitles: Record<DialogMode, string> = {
     login: "Welcome back! Sign in to your store account.",
     register: "Create a free account to manage orders, quotes & more.",
     "set-password": "Set a password to access your account anytime.",
+    "reset-password": "Choose a new password for your account.",
   };
 
   return (
@@ -657,6 +771,9 @@ export function StorefrontAuthDialog({
             {activeMode === "set-password" && (
               <Mail className="h-5 w-5 text-primary" />
             )}
+            {activeMode === "reset-password" && (
+              <KeyRound className="h-5 w-5 text-primary" />
+            )}
           </div>
           <div>
             <h2 className="text-lg font-semibold text-foreground">
@@ -668,8 +785,8 @@ export function StorefrontAuthDialog({
           </div>
         </div>
 
-        {/* Tabs for login / register (not for set-password) */}
-        {activeMode !== "set-password" && (
+        {/* Tabs for login / register (not for set-password or reset-password) */}
+        {activeMode !== "set-password" && activeMode !== "reset-password" && (
           <div className="mb-5 flex rounded-lg bg-muted p-1" role="tablist">
             <button
               type="button"
@@ -739,6 +856,9 @@ export function StorefrontAuthDialog({
             guestToken={guestToken}
             onSuccess={handleSuccess}
           />
+        )}
+        {activeMode === "reset-password" && (
+          <ResetPasswordForm onSuccess={handleSuccess} />
         )}
       </div>
     </>

@@ -11,6 +11,7 @@ export type EmailType =
   | "password_reset"
   | "email_changed"
   | "storefront_magic_link"
+  | "storefront_password_reset"
   | "storefront_email_verification"
   // Team
   | "team_invitation"
@@ -91,6 +92,7 @@ export function isValidEmailType(type: string): type is EmailType {
     "password_reset",
     "email_changed",
     "storefront_magic_link",
+    "storefront_password_reset",
     "team_invitation",
     "team_member_joined",
     "site_published",

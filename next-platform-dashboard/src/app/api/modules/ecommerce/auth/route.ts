@@ -7,6 +7,7 @@
  * - register: Create account (email + password)
  * - login: Email + password login
  * - magic-link: Send magic link email (works for any existing customer)
+ * - reset-password: Reset password using a magic link token (dedicated forgot-password flow)
  * - logout: Invalidate session token
  * - session: Validate session token & return customer data
  * - set-password: Set password for guest (requires verificationToken for email-only)
@@ -819,8 +820,10 @@ export async function POST(request: NextRequest) {
     // Sends a single-use login link to any existing customer (password-based,
     // Google OAuth, or even guest accounts). Always returns success to prevent
     // email enumeration.
+    // Optional `intent`: "reset_password" sends a reset-specific email and URL.
     if (action === "magic-link") {
-      const { email } = body;
+      const { email, intent } = body;
+      const isResetIntent = intent === "reset_password";
 
       if (!email) {
         return NextResponse.json(
@@ -880,7 +883,9 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      const loginUrl = `${storefrontOrigin}/account?magic_token=${magicToken}`;
+      const loginUrl = isResetIntent
+        ? `${storefrontOrigin}/account?magic_token=${magicToken}&intent=reset_password`
+        : `${storefrontOrigin}/account?magic_token=${magicToken}`;
 
       // Get site name for the email
       const { data: site } = await (supabase as any)
@@ -889,12 +894,15 @@ export async function POST(request: NextRequest) {
         .eq("id", siteId)
         .single();
 
-      // Send the magic link email
+      // Send the appropriate email based on intent
       await sendEmail({
         to: { email: emailLower },
-        type: "storefront_magic_link",
+        type: isResetIntent
+          ? "storefront_password_reset"
+          : "storefront_magic_link",
         data: {
           loginUrl,
+          resetUrl: loginUrl,
           siteName: site?.name || "your store",
         },
       });
@@ -903,6 +911,109 @@ export async function POST(request: NextRequest) {
         {
           success: true,
           message: "If an account exists, a login link has been sent.",
+        },
+        { status: 200, headers: corsHeaders },
+      );
+    }
+
+    // ── RESET PASSWORD (dedicated forgot-password flow) ─────────────────────
+    // Takes a magic link token + new password. Consumes the token, resets the
+    // password, and returns a new session. This is the Shopify-style dedicated
+    // reset flow — no full account access, just password reset.
+    if (action === "reset-password") {
+      const { token: resetToken, newPassword } = body;
+
+      if (!resetToken) {
+        return NextResponse.json(
+          { error: "Reset token is required" },
+          { status: 400, headers: corsHeaders },
+        );
+      }
+
+      const pwError = validatePassword(newPassword);
+      if (pwError) {
+        return NextResponse.json(
+          { error: pwError },
+          { status: 400, headers: corsHeaders },
+        );
+      }
+
+      // Validate the magic link token
+      const resetTokenHash = hashToken(resetToken);
+      const { data: resetSession } = await (supabase as any)
+        .from(SESSIONS)
+        .select("customer_id, is_magic_link")
+        .eq("token_hash", resetTokenHash)
+        .eq("site_id", siteId)
+        .gt("expires_at", new Date().toISOString())
+        .single();
+
+      if (!resetSession || !resetSession.is_magic_link) {
+        return NextResponse.json(
+          {
+            error:
+              "This reset link has expired or already been used. Please request a new one.",
+          },
+          { status: 401, headers: corsHeaders },
+        );
+      }
+
+      // Consume the magic link token (single-use)
+      await (supabase as any)
+        .from(SESSIONS)
+        .delete()
+        .eq("token_hash", resetTokenHash);
+
+      // Look up customer
+      const { data: resetCustomer } = await (supabase as any)
+        .from(TABLE)
+        .select("*")
+        .eq("id", resetSession.customer_id)
+        .eq("site_id", siteId)
+        .single();
+
+      if (!resetCustomer) {
+        return NextResponse.json(
+          { error: "Account not found" },
+          { status: 404, headers: corsHeaders },
+        );
+      }
+
+      // Hash and save the new password
+      const resetPasswordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+
+      await (supabase as any)
+        .from(TABLE)
+        .update({
+          password_hash: resetPasswordHash,
+          password_set_at: new Date().toISOString(),
+          email_verified: true, // Magic link proves email ownership
+          is_guest: false,
+        })
+        .eq("id", resetCustomer.id)
+        .eq("site_id", siteId);
+
+      // Issue a new long-lived session
+      const newSessionToken = await createSession(
+        supabase,
+        resetCustomer.id,
+        siteId,
+        { userAgent: ua, ip },
+      );
+
+      // Refetch the updated customer
+      const { data: updatedResetCustomer } = await (supabase as any)
+        .from(TABLE)
+        .select("*")
+        .eq("id", resetCustomer.id)
+        .single();
+
+      return NextResponse.json(
+        {
+          success: true,
+          token: newSessionToken,
+          customer: safeCustomer(updatedResetCustomer || resetCustomer),
+          message: "Password has been reset successfully.",
         },
         { status: 200, headers: corsHeaders },
       );

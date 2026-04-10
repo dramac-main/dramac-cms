@@ -1266,6 +1266,21 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
     text: (data) =>
       `Sign In to Your Account\n\nWe received a request to sign in to your account${data.siteName ? ` on ${data.siteName}` : ""}.\n\nSign in here: ${data.loginUrl}\n\nThis link expires in 1 hour and can only be used once.`,
   },
+  storefront_password_reset: {
+    subject: (data) => `Reset your password for ${data.siteName || "your account"}`,
+    html: (data, b) =>
+      baseEmailTemplate(
+        b,
+        `<h1 style="${EMAIL_STYLES.heading}">Reset Your Password</h1>
+        <p style="${EMAIL_STYLES.text}">We received a request to reset your password${data.siteName ? ` on <strong>${data.siteName}</strong>` : ""}.</p>
+        <p style="${EMAIL_STYLES.text}">Click the button below to set a new password:</p>
+        ${emailButton(b, String(data.loginUrl), "Reset Password")}
+        <p style="${EMAIL_STYLES.muted}">This link expires in 1 hour and can only be used once. If you didn't request this, you can safely ignore this email — your password will remain unchanged.</p>`,
+        "Reset your password",
+      ),
+    text: (data) =>
+      `Reset Your Password\n\nWe received a request to reset your password${data.siteName ? ` on ${data.siteName}` : ""}.\n\nReset your password here: ${data.loginUrl}\n\nThis link expires in 1 hour and can only be used once.`,
+  },
   storefront_email_verification: {
     subject: (data) =>
       `${data.code} is your verification code${data.siteName ? ` for ${data.siteName}` : ""}`,

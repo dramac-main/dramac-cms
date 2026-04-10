@@ -1281,7 +1281,7 @@ function ForgotPasswordLink({ email }: { email: string }) {
   if (sent) {
     return (
       <span className="text-success font-medium">
-        Login link sent — check your email
+        Reset link sent — check your email
       </span>
     );
   }
@@ -1292,13 +1292,13 @@ function ForgotPasswordLink({ email }: { email: string }) {
       disabled={sending}
       onClick={async () => {
         setSending(true);
-        await requestMagicLink(email);
+        await requestMagicLink(email, "reset_password");
         setSending(false);
         setSent(true);
       }}
       className="text-primary hover:underline font-medium disabled:opacity-60"
     >
-      {sending ? "Sending…" : "Get a login link"}
+      {sending ? "Sending…" : "Get a password reset link"}
     </button>
   );
 }
