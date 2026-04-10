@@ -11,10 +11,12 @@ interface PageProps {
   params: Promise<{ siteId: string }>;
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { siteId } = await params;
   const supabase = createAdminClient();
-  
+
   const { data: site } = await supabase
     .from("sites")
     .select("name")
@@ -93,7 +95,7 @@ export default async function SiteAppsPage({ params }: PageProps) {
       .eq("status", "active");
 
     const moduleMap = new Map((modules || []).map((m) => [m.id, m]));
-    
+
     installedModules = rawInstallations
       .filter((i) => moduleMap.has(i.module_id))
       .map((i) => {
@@ -118,8 +120,8 @@ export default async function SiteAppsPage({ params }: PageProps) {
         <div className="space-y-6">
           {/* Header */}
           <div>
-            <Link 
-              href={`/portal/sites/${siteId}`} 
+            <Link
+              href={`/portal/sites/${siteId}`}
               className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-4"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -140,7 +142,7 @@ export default async function SiteAppsPage({ params }: PageProps) {
 
           {/* Apps Grid */}
           {installedModules.length === 0 ? (
-            <EmptyAppsState 
+            <EmptyAppsState
               title="No Site Apps"
               description="There are no apps installed specifically for this site. Contact your agency to add site-level functionality."
               showBrowseButton={false}

@@ -1,18 +1,23 @@
 /**
  * E-Commerce Sidebar Navigation
- * 
+ *
  * Phase ECOM-01: Dashboard Redesign
- * 
+ *
  * Provides main navigation for the e-commerce dashboard
  */
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
+import { useState } from "react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
 import {
   Home,
   Package,
@@ -31,72 +36,75 @@ import {
   Code2,
   CodeXml,
   MessageSquareText,
-  LayoutTemplate
-} from 'lucide-react'
-import type { EcommerceView } from '../../types/ecommerce-types'
+  LayoutTemplate,
+} from "lucide-react";
+import type { EcommerceView } from "../../types/ecommerce-types";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 interface NavItemConfig {
-  id: EcommerceView
-  label: string
-  icon: typeof Home
-  badge?: number
-  badgeVariant?: 'default' | 'destructive' | 'secondary'
+  id: EcommerceView;
+  label: string;
+  icon: typeof Home;
+  badge?: number;
+  badgeVariant?: "default" | "destructive" | "secondary";
 }
 
 interface EcommerceSidebarProps {
-  activeView: EcommerceView
-  onViewChange: (view: EcommerceView) => void
-  pendingOrders?: number
-  lowStockCount?: number
-  isCollapsed?: boolean
-  onCollapsedChange?: (collapsed: boolean) => void
-  portalMode?: boolean
+  activeView: EcommerceView;
+  onViewChange: (view: EcommerceView) => void;
+  pendingOrders?: number;
+  lowStockCount?: number;
+  isCollapsed?: boolean;
+  onCollapsedChange?: (collapsed: boolean) => void;
+  portalMode?: boolean;
 }
 
 // ============================================================================
 // NAV ITEMS CONFIG
 // ============================================================================
 
-function getNavItems(pendingOrders: number, lowStockCount: number): NavItemConfig[] {
+function getNavItems(
+  pendingOrders: number,
+  lowStockCount: number,
+): NavItemConfig[] {
   return [
-    { id: 'home', label: 'Dashboard', icon: Home },
-    { 
-      id: 'products', 
-      label: 'Products', 
+    { id: "home", label: "Dashboard", icon: Home },
+    {
+      id: "products",
+      label: "Products",
       icon: Package,
       badge: lowStockCount > 0 ? lowStockCount : undefined,
-      badgeVariant: 'destructive' as const
+      badgeVariant: "destructive" as const,
     },
-    { 
-      id: 'orders', 
-      label: 'Orders', 
+    {
+      id: "orders",
+      label: "Orders",
       icon: ShoppingCart,
       badge: pendingOrders > 0 ? pendingOrders : undefined,
-      badgeVariant: 'destructive' as const
+      badgeVariant: "destructive" as const,
     },
-    { id: 'customers', label: 'Customers', icon: Users },
-    { id: 'categories', label: 'Categories', icon: FolderTree },
-    { 
-      id: 'inventory', 
-      label: 'Inventory', 
+    { id: "customers", label: "Customers", icon: Users },
+    { id: "categories", label: "Categories", icon: FolderTree },
+    {
+      id: "inventory",
+      label: "Inventory",
       icon: Warehouse,
       badge: lowStockCount > 0 ? lowStockCount : undefined,
-      badgeVariant: 'destructive' as const
+      badgeVariant: "destructive" as const,
     },
-    { id: 'discounts', label: 'Discounts', icon: Percent },
-    { id: 'quotes', label: 'Quotes', icon: FileText },
-    { id: 'reviews', label: 'Reviews', icon: MessageSquareText },
-    { id: 'templates', label: 'Templates', icon: LayoutTemplate },
-    { id: 'marketing', label: 'Marketing', icon: Megaphone },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { id: 'embed', label: 'Embed', icon: CodeXml },
-    { id: 'developer', label: 'Developer', icon: Code2 },
-    { id: 'settings', label: 'Settings', icon: Settings },
-  ]
+    { id: "discounts", label: "Discounts", icon: Percent },
+    { id: "quotes", label: "Quotes", icon: FileText },
+    { id: "reviews", label: "Reviews", icon: MessageSquareText },
+    { id: "templates", label: "Templates", icon: LayoutTemplate },
+    { id: "marketing", label: "Marketing", icon: Megaphone },
+    { id: "analytics", label: "Analytics", icon: BarChart3 },
+    { id: "embed", label: "Embed", icon: CodeXml },
+    { id: "developer", label: "Developer", icon: Code2 },
+    { id: "settings", label: "Settings", icon: Settings },
+  ];
 }
 
 // ============================================================================
@@ -110,38 +118,49 @@ export function EcommerceSidebar({
   lowStockCount = 0,
   isCollapsed = false,
   onCollapsedChange,
-  portalMode = false
+  portalMode = false,
 }: EcommerceSidebarProps) {
-  const [_hoveredItem, setHoveredItem] = useState<string | null>(null)
-  const allNavItems = getNavItems(pendingOrders, lowStockCount)
+  const [_hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const allNavItems = getNavItems(pendingOrders, lowStockCount);
 
   // In portal mode, hide admin-only views (settings, developer, embed, marketing)
-  const PORTAL_HIDDEN_VIEWS: EcommerceView[] = ['settings', 'developer', 'embed', 'marketing']
+  const PORTAL_HIDDEN_VIEWS: EcommerceView[] = [
+    "settings",
+    "developer",
+    "embed",
+    "marketing",
+  ];
   const navItems = portalMode
-    ? allNavItems.filter(item => !PORTAL_HIDDEN_VIEWS.includes(item.id))
-    : allNavItems
+    ? allNavItems.filter((item) => !PORTAL_HIDDEN_VIEWS.includes(item.id))
+    : allNavItems;
 
   return (
     <TooltipProvider delayDuration={0}>
       <aside
         className={cn(
-          'flex flex-col h-full border-r bg-card transition-all duration-300',
-          isCollapsed ? 'w-16' : 'w-64'
+          "flex flex-col h-full border-r bg-card transition-all duration-300",
+          isCollapsed ? "w-16" : "w-64",
         )}
       >
         {/* Store Header */}
         <div className="flex items-center h-14 px-4 border-b">
-          <div className={cn(
-            'flex items-center gap-3 overflow-hidden',
-            isCollapsed && 'justify-center'
-          )}>
+          <div
+            className={cn(
+              "flex items-center gap-3 overflow-hidden",
+              isCollapsed && "justify-center",
+            )}
+          >
             <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground">
               <Store className="h-4 w-4" />
             </div>
             {!isCollapsed && (
               <div className="flex flex-col min-w-0">
-                <span className="font-semibold text-sm truncate">E-Commerce</span>
-                <span className="text-xs text-muted-foreground truncate">Store Dashboard</span>
+                <span className="font-semibold text-sm truncate">
+                  E-Commerce
+                </span>
+                <span className="text-xs text-muted-foreground truncate">
+                  Store Dashboard
+                </span>
               </div>
             )}
           </div>
@@ -151,29 +170,35 @@ export function EcommerceSidebar({
         <ScrollArea className="flex-1 py-4">
           <nav className="space-y-1 px-2">
             {navItems.map((item) => {
-              const Icon = item.icon
-              const isActive = activeView === item.id
-              
+              const Icon = item.icon;
+              const isActive = activeView === item.id;
+
               const button = (
                 <Button
                   key={item.id}
-                  variant={isActive ? 'secondary' : 'ghost'}
+                  variant={isActive ? "secondary" : "ghost"}
                   className={cn(
-                    'w-full justify-start gap-3 h-10 relative',
-                    isCollapsed && 'justify-center px-2',
-                    isActive && 'bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary'
+                    "w-full justify-start gap-3 h-10 relative",
+                    isCollapsed && "justify-center px-2",
+                    isActive &&
+                      "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary",
                   )}
                   onClick={() => onViewChange(item.id)}
                   onMouseEnter={() => setHoveredItem(item.id)}
                   onMouseLeave={() => setHoveredItem(null)}
                 >
-                  <Icon className={cn('h-4 w-4 flex-shrink-0', isActive && 'text-primary')} />
+                  <Icon
+                    className={cn(
+                      "h-4 w-4 flex-shrink-0",
+                      isActive && "text-primary",
+                    )}
+                  />
                   {!isCollapsed && (
                     <>
                       <span className="flex-1 text-left">{item.label}</span>
                       {item.badge !== undefined && (
-                        <Badge 
-                          variant={item.badgeVariant || 'secondary'}
+                        <Badge
+                          variant={item.badgeVariant || "secondary"}
                           className="ml-auto h-5 px-1.5 text-xs"
                         >
                           {item.badge}
@@ -182,15 +207,15 @@ export function EcommerceSidebar({
                     </>
                   )}
                   {isCollapsed && item.badge !== undefined && (
-                    <Badge 
-                      variant={item.badgeVariant || 'secondary'}
+                    <Badge
+                      variant={item.badgeVariant || "secondary"}
                       className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]"
                     >
-                      {item.badge > 9 ? '9+' : item.badge}
+                      {item.badge > 9 ? "9+" : item.badge}
                     </Badge>
                   )}
                 </Button>
-              )
+              );
 
               if (isCollapsed) {
                 return (
@@ -198,19 +223,25 @@ export function EcommerceSidebar({
                     <TooltipTrigger asChild>
                       <div className="relative">{button}</div>
                     </TooltipTrigger>
-                    <TooltipContent side="right" className="flex items-center gap-2">
+                    <TooltipContent
+                      side="right"
+                      className="flex items-center gap-2"
+                    >
                       {item.label}
                       {item.badge !== undefined && (
-                        <Badge variant={item.badgeVariant || 'secondary'} className="h-5">
+                        <Badge
+                          variant={item.badgeVariant || "secondary"}
+                          className="h-5"
+                        >
                           {item.badge}
                         </Badge>
                       )}
                     </TooltipContent>
                   </Tooltip>
-                )
+                );
               }
 
-              return button
+              return button;
             })}
           </nav>
         </ScrollArea>
@@ -220,7 +251,7 @@ export function EcommerceSidebar({
           <Button
             variant="ghost"
             size="sm"
-            className={cn('w-full', isCollapsed && 'px-2')}
+            className={cn("w-full", isCollapsed && "px-2")}
             onClick={() => onCollapsedChange?.(!isCollapsed)}
           >
             {isCollapsed ? (
@@ -235,5 +266,5 @@ export function EcommerceSidebar({
         </div>
       </aside>
     </TooltipProvider>
-  )
+  );
 }

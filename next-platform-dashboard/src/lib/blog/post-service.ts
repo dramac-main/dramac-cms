@@ -49,6 +49,8 @@ interface UserBlogContext {
   accessibleSiteIds: string[] | null; // null = all (super admin)
   isPortalUser: boolean;
   portalClientId: string | null;
+  portalCanEditContent: boolean;
+  portalCanPublish: boolean;
 }
 
 /**
@@ -64,10 +66,10 @@ async function getUserBlogContext(): Promise<UserBlogContext> {
   const portalClientId = cookieStore.get("impersonating_client_id")?.value || null;
   
   if (portalClientId) {
-    // Portal user - get their accessible sites
+    // Portal user - get their accessible sites + content editing permissions
     const { data: client } = await supabase
       .from("clients")
-      .select("id, has_portal_access")
+      .select("id, has_portal_access, can_edit_content")
       .eq("id", portalClientId)
       .single();
     
@@ -78,7 +80,9 @@ async function getUserBlogContext(): Promise<UserBlogContext> {
         agencyRole: null, 
         accessibleSiteIds: [], 
         isPortalUser: true, 
-        portalClientId 
+        portalClientId,
+        portalCanEditContent: false,
+        portalCanPublish: false,
       };
     }
     
@@ -88,12 +92,14 @@ async function getUserBlogContext(): Promise<UserBlogContext> {
       .eq("client_id", portalClientId);
     
     return {
-      userId: null,
+      userId,
       role: "client",
       agencyRole: null,
       accessibleSiteIds: sites?.map(s => s.id) || [],
       isPortalUser: true,
-      portalClientId
+      portalClientId,
+      portalCanEditContent: client.can_edit_content ?? false,
+      portalCanPublish: false, // Portal clients create drafts; agency publishes
     };
   }
   
@@ -104,7 +110,9 @@ async function getUserBlogContext(): Promise<UserBlogContext> {
       agencyRole: null, 
       accessibleSiteIds: [], 
       isPortalUser: false, 
-      portalClientId: null 
+      portalClientId: null,
+      portalCanEditContent: false,
+      portalCanPublish: false,
     };
   }
   
@@ -116,7 +124,9 @@ async function getUserBlogContext(): Promise<UserBlogContext> {
       agencyRole: null, 
       accessibleSiteIds: null, 
       isPortalUser: false, 
-      portalClientId: null 
+      portalClientId: null,
+      portalCanEditContent: false,
+      portalCanPublish: false,
     };
   }
   
@@ -134,7 +144,9 @@ async function getUserBlogContext(): Promise<UserBlogContext> {
       agencyRole: null, 
       accessibleSiteIds: [], 
       isPortalUser: false, 
-      portalClientId: null 
+      portalClientId: null,
+      portalCanEditContent: false,
+      portalCanPublish: false,
     };
   }
   
@@ -150,7 +162,9 @@ async function getUserBlogContext(): Promise<UserBlogContext> {
     agencyRole: membership.role,
     accessibleSiteIds: sites?.map(s => s.id) || [],
     isPortalUser: false,
-    portalClientId: null
+    portalClientId: null,
+    portalCanEditContent: false,
+    portalCanPublish: false,
   };
 }
 
@@ -180,7 +194,18 @@ export async function canPublishPosts(): Promise<boolean> {
  */
 async function canEditPost(postId: string): Promise<boolean> {
   const context = await getUserBlogContext();
-  if (context.isPortalUser) return false;
+  if (context.isPortalUser && !context.portalCanEditContent) return false;
+  if (context.isPortalUser && context.portalCanEditContent) {
+    // Portal clients can only edit posts on their own sites that they authored
+    const supabase = await createClient();
+    const { data: post } = await supabase.from("blog_posts")
+      .select("author_id, site_id")
+      .eq("id", postId)
+      .single();
+    if (!post) return false;
+    if (!context.accessibleSiteIds?.includes(post.site_id)) return false;
+    return post.author_id === context.userId;
+  }
   if (context.accessibleSiteIds === null) return true; // Super admin
   if (context.agencyRole === "owner" || context.agencyRole === "admin") return true;
   
@@ -223,6 +248,7 @@ export async function getUserPermissions(): Promise<{
   canPublish: boolean;
   canDelete: boolean;
   canManageCategories: boolean;
+  canEditContent: boolean;
   isPortalUser: boolean;
 }> {
   const context = await getUserBlogContext();
@@ -230,6 +256,7 @@ export async function getUserPermissions(): Promise<{
     canPublish: !context.isPortalUser && context.agencyRole !== "member",
     canDelete: !context.isPortalUser && context.agencyRole !== "member",
     canManageCategories: !context.isPortalUser && context.agencyRole !== "member",
+    canEditContent: context.isPortalUser ? context.portalCanEditContent : true,
     isPortalUser: context.isPortalUser,
   };
 }
@@ -264,8 +291,14 @@ export async function getPosts(
     .eq("site_id", siteId)
     .order("created_at", { ascending: false });
 
-  // Portal users can only see published posts
-  if (context.isPortalUser) {
+  // Portal users: editors see published + their own drafts; others see published only
+  if (context.isPortalUser && context.portalCanEditContent && context.userId) {
+    // Can see published posts + their own drafts
+    query = query.or(`status.eq.published,and(author_id.eq.${context.userId},status.neq.archived)`);
+    if (filters.status) {
+      query = query.eq("status", filters.status);
+    }
+  } else if (context.isPortalUser) {
     query = query.eq("status", "published");
   } else if (filters.status) {
     query = query.eq("status", filters.status);
@@ -332,9 +365,14 @@ export async function getPost(postId: string): Promise<BlogPost | null> {
     return null;
   }
   
-  // Portal users can only view published posts
+  // Portal users: editors can view their own drafts; others see published only
   const context = await getUserBlogContext();
-  if (context.isPortalUser && data.status !== "published") {
+  if (context.isPortalUser && context.portalCanEditContent && context.userId) {
+    // Editor can see published + own non-archived posts
+    if (data.status !== "published" && data.author_id !== context.userId) {
+      return null;
+    }
+  } else if (context.isPortalUser && data.status !== "published") {
     return null;
   }
 
@@ -394,13 +432,17 @@ export async function createPost(
   }
   
   const context = await getUserBlogContext();
-  if (context.isPortalUser) {
+  if (context.isPortalUser && !context.portalCanEditContent) {
     return { success: false, error: "Portal users cannot create posts" };
   }
   
+  // Portal clients with canEditContent can only create drafts
   // Members can only create drafts
   let effectiveStatus = post.status || "draft";
-  if (context.agencyRole === "member" && effectiveStatus !== "draft") {
+  if (context.isPortalUser && effectiveStatus !== "draft") {
+    effectiveStatus = "draft";
+    console.log("[PostService] Portal user attempted to publish - forcing draft status");
+  } else if (context.agencyRole === "member" && effectiveStatus !== "draft") {
     effectiveStatus = "draft";
     console.log("[PostService] Member attempted to publish - forcing draft status");
   }

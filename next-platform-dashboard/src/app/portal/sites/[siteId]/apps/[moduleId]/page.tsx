@@ -1,7 +1,13 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { ArrowLeft, Settings, Maximize2, ExternalLink, icons } from "lucide-react";
+import {
+  ArrowLeft,
+  Settings,
+  Maximize2,
+  ExternalLink,
+  icons,
+} from "lucide-react";
 import { resolveIconName } from "@/lib/utils/icon-map";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -12,7 +18,9 @@ interface PageProps {
   params: Promise<{ siteId: string; moduleId: string }>;
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { moduleId } = await params;
   const supabase = createAdminClient();
 
@@ -80,7 +88,9 @@ export default async function SiteModuleLauncherPage({ params }: PageProps) {
   // They should be in the manifest JSONB field
   const { data: moduleData } = await supabase
     .from("modules_v2")
-    .select("id, name, slug, description, icon, category, manifest, settings_schema")
+    .select(
+      "id, name, slug, description, icon, category, manifest, settings_schema",
+    )
     .eq("id", moduleId)
     .eq("status", "active")
     .single();
@@ -111,20 +121,26 @@ export default async function SiteModuleLauncherPage({ params }: PageProps) {
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
-          
+
           <div className="flex items-center gap-2">
-            <span className="text-2xl">{(() => {
-              const iconName = moduleData.icon ? resolveIconName(moduleData.icon) : null;
-              if (iconName) {
-                const LucideIcon = icons[iconName as keyof typeof icons];
-                return LucideIcon ? <LucideIcon className="h-6 w-6" /> : <span>{moduleData.icon || 'Package'}</span>;
-              }
-              return <span>{moduleData.icon || 'Package'}</span>;
-            })()}</span>
+            <span className="text-2xl">
+              {(() => {
+                const iconName = moduleData.icon
+                  ? resolveIconName(moduleData.icon)
+                  : null;
+                if (iconName) {
+                  const LucideIcon = icons[iconName as keyof typeof icons];
+                  return LucideIcon ? (
+                    <LucideIcon className="h-6 w-6" />
+                  ) : (
+                    <span>{moduleData.icon || "Package"}</span>
+                  );
+                }
+                return <span>{moduleData.icon || "Package"}</span>;
+              })()}
+            </span>
             <div>
-              <h1 className="font-semibold">
-                {moduleData.name}
-              </h1>
+              <h1 className="font-semibold">{moduleData.name}</h1>
               <p className="text-xs text-muted-foreground">
                 {site.name} • {moduleData.category || "App"}
               </p>
@@ -139,7 +155,12 @@ export default async function SiteModuleLauncherPage({ params }: PageProps) {
             </Button>
           )}
           {externalUrl && (
-            <Button variant="ghost" size="icon" asChild title="Open in New Window">
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              title="Open in New Window"
+            >
               <a href={externalUrl} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="h-4 w-4" />
               </a>
@@ -153,14 +174,19 @@ export default async function SiteModuleLauncherPage({ params }: PageProps) {
 
       {/* App Content */}
       <div className="flex-1 overflow-hidden">
-        <AppLauncher 
+        <AppLauncher
           module={{
             id: moduleData.id,
             name: moduleData.name,
             description: moduleData.description,
             icon: moduleData.icon || "Package",
             slug: moduleData.slug || "",
-            runtime_type: runtimeType as "iframe" | "embedded" | "external" | "native" | undefined,
+            runtime_type: runtimeType as
+              | "iframe"
+              | "embedded"
+              | "external"
+              | "native"
+              | undefined,
             app_url: appUrl,
             external_url: externalUrl,
             entry_component: entryComponent,

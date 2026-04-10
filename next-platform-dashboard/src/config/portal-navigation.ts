@@ -40,6 +40,7 @@ export interface PortalNavItem {
 
 export interface PortalUserPermissions {
   canViewAnalytics: boolean;
+  canEditContent: boolean;
   canViewInvoices: boolean;
   canManageLiveChat: boolean;
   canManageOrders: boolean;
@@ -157,23 +158,31 @@ export function getPortalNavigationGroups(
     }
   }
 
-  // === Content Group ===
+  // === Content Group (requires site context; editing items require canEditContent) ===
   const contentItems: NavItem[] = [];
 
-  if (permissions.canViewAnalytics) {
-    contentItems.push({
-      title: "Analytics",
-      href: "/portal/analytics",
-      icon: BarChart3,
-    });
-  }
+  if (siteId) {
+    if (permissions.canViewAnalytics) {
+      contentItems.push({
+        title: "Analytics",
+        href: siteUrl("analytics")!,
+        icon: BarChart3,
+      });
+    }
 
-  contentItems.push(
-    { title: "Media", href: "/portal/media", icon: Image },
-    { title: "Form Submissions", href: "/portal/submissions", icon: Inbox },
-    { title: "Blog Posts", href: "/portal/blog", icon: BookOpen },
-    { title: "SEO", href: "/portal/seo", icon: Search },
-  );
+    if (permissions.canEditContent) {
+      contentItems.push(
+        { title: "Pages", href: siteUrl("pages")!, icon: FileText },
+        { title: "Blog Posts", href: siteUrl("blog")!, icon: BookOpen },
+        { title: "Media", href: siteUrl("media")!, icon: Image },
+      );
+    }
+
+    contentItems.push(
+      { title: "Form Submissions", href: siteUrl("submissions")!, icon: Inbox },
+      { title: "SEO", href: siteUrl("seo")!, icon: Search },
+    );
+  }
 
   // === Support Group ===
   const supportItems: NavItem[] = [

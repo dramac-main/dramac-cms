@@ -63,6 +63,7 @@ export function PortalSidebar({
     canManageQuotes: user.canManageQuotes,
     canManageAgents: user.canManageAgents,
     canManageCustomers: user.canManageCustomers,
+    canEditContent: user.canEditContent,
   };
 
   // Get navigation groups based on permissions

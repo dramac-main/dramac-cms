@@ -1,159 +1,173 @@
 /**
  * E-Commerce Dashboard Main Component
- * 
+ *
  * Phase ECOM-01: Dashboard Redesign
  * Phase ECOM-53: Onboarding Wizard Integration
- * 
+ *
  * The main dashboard shell with sidebar navigation
  */
-'use client'
+"use client";
 
-import { useState, useCallback, useEffect } from 'react'
-import { EcommerceSidebar, EcommerceHeader } from './layout'
-import { HomeView } from './views/home-view'
-import { ProductsView } from './views/products-view'
-import { OrdersView } from './views/orders-view'
-import { CustomersView } from './views/customers-view'
-import { CategoriesView } from './views/categories-view'
-import { DiscountsView } from './views/discounts-view'
-import { QuotesView } from './views/quotes-view'
-import { ReviewsView } from './views/reviews-view'
-import { TemplatesView } from './views/templates-view'
-import { InventoryView } from './views/inventory-view'
-import { AnalyticsView } from './views/analytics-view'
-import { MarketingView } from './views/marketing-view'
-import { DeveloperSettingsView } from './views/developer-settings-view'
-import { SettingsView } from './views/settings-view'
-import { EmbedCodeGenerator } from './views/embed-code-view'
-import { CommandPalette } from './command-palette'
-import { EcommerceProvider, useEcommerce } from '../context/ecommerce-context'
-import { useIsPortalView } from '@/lib/portal/portal-context'
-import { CreateProductDialog } from './dialogs/create-product-dialog'
-import { CreateCategoryDialog } from './dialogs/create-category-dialog'
-import { CreateDiscountDialog } from './dialogs/create-discount-dialog'
-import { ViewProductDialog } from './dialogs/view-product-dialog'
-import { OnboardingWizard } from './onboarding/OnboardingWizard'
-import { Button } from '@/components/ui/button'
-import { RefreshCw } from 'lucide-react'
-import type { EcommerceView, EcommerceSettings, Product } from '../types/ecommerce-types'
+import { useState, useCallback, useEffect } from "react";
+import { EcommerceSidebar, EcommerceHeader } from "./layout";
+import { HomeView } from "./views/home-view";
+import { ProductsView } from "./views/products-view";
+import { OrdersView } from "./views/orders-view";
+import { CustomersView } from "./views/customers-view";
+import { CategoriesView } from "./views/categories-view";
+import { DiscountsView } from "./views/discounts-view";
+import { QuotesView } from "./views/quotes-view";
+import { ReviewsView } from "./views/reviews-view";
+import { TemplatesView } from "./views/templates-view";
+import { InventoryView } from "./views/inventory-view";
+import { AnalyticsView } from "./views/analytics-view";
+import { MarketingView } from "./views/marketing-view";
+import { DeveloperSettingsView } from "./views/developer-settings-view";
+import { SettingsView } from "./views/settings-view";
+import { EmbedCodeGenerator } from "./views/embed-code-view";
+import { CommandPalette } from "./command-palette";
+import { EcommerceProvider, useEcommerce } from "../context/ecommerce-context";
+import { useIsPortalView } from "@/lib/portal/portal-context";
+import { CreateProductDialog } from "./dialogs/create-product-dialog";
+import { CreateCategoryDialog } from "./dialogs/create-category-dialog";
+import { CreateDiscountDialog } from "./dialogs/create-discount-dialog";
+import { ViewProductDialog } from "./dialogs/view-product-dialog";
+import { OnboardingWizard } from "./onboarding/OnboardingWizard";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
+import type {
+  EcommerceView,
+  EcommerceSettings,
+  Product,
+} from "../types/ecommerce-types";
 
 // ============================================================================
 // DASHBOARD PROPS
 // ============================================================================
 
 interface EcommerceDashboardProps {
-  siteId: string
-  agencyId: string
-  userId?: string
-  userName?: string
-  settings?: EcommerceSettings | null
-  initialView?: string
+  siteId: string;
+  agencyId: string;
+  userId?: string;
+  userName?: string;
+  settings?: EcommerceSettings | null;
+  initialView?: string;
 }
 
 // ============================================================================
 // DASHBOARD CONTENT
 // ============================================================================
 
-function EcommerceDashboardContent({ 
+function EcommerceDashboardContent({
   siteId,
   agencyId,
   userId,
-  userName = 'Store Manager',
+  userName = "Store Manager",
   initialView,
-  settings
-}: { 
-  siteId: string
-  agencyId: string
-  userId?: string
-  userName?: string
-  initialView?: string 
-  settings?: EcommerceSettings | null
+  settings,
+}: {
+  siteId: string;
+  agencyId: string;
+  userId?: string;
+  userName?: string;
+  initialView?: string;
+  settings?: EcommerceSettings | null;
 }) {
-  const { 
-    products,
-    orders,
-    error, 
-    isLoading,
-    refresh
-  } = useEcommerce()
+  const { products, orders, error, isLoading, refresh } = useEcommerce();
 
   // Onboarding state - initially null while loading
-  const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null)
-  
+  const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
+
   // Check onboarding status from site_module_installations on mount
   useEffect(() => {
     async function checkOnboarding() {
       try {
-        const { getOnboardingStatus } = await import('../actions/onboarding-actions')
-        const result = await getOnboardingStatus(siteId)
+        const { getOnboardingStatus } =
+          await import("../actions/onboarding-actions");
+        const result = await getOnboardingStatus(siteId);
         if (result.success && result.status) {
-          setShowOnboarding(!result.status.completed)
+          setShowOnboarding(!result.status.completed);
         } else {
           // If we can't determine, default to showing onboarding
-          setShowOnboarding(true)
+          setShowOnboarding(true);
         }
       } catch (err) {
-        console.error('Failed to check onboarding status:', err)
-        setShowOnboarding(true)
+        console.error("Failed to check onboarding status:", err);
+        setShowOnboarding(true);
       }
     }
-    checkOnboarding()
-  }, [siteId])
+    checkOnboarding();
+  }, [siteId]);
 
   // State
   const [activeView, setActiveView] = useState<EcommerceView>(() => {
     if (initialView) {
       const validViews: EcommerceView[] = [
-        'home', 'products', 'orders', 'customers', 'categories', 
-        'discounts', 'quotes', 'reviews', 'templates', 'inventory', 'analytics', 'marketing',
-        'developer', 'settings', 'embed'
-      ]
+        "home",
+        "products",
+        "orders",
+        "customers",
+        "categories",
+        "discounts",
+        "quotes",
+        "reviews",
+        "templates",
+        "inventory",
+        "analytics",
+        "marketing",
+        "developer",
+        "settings",
+        "embed",
+      ];
       if (validViews.includes(initialView as EcommerceView)) {
-        return initialView as EcommerceView
+        return initialView as EcommerceView;
       }
     }
-    return 'home'
-  })
-  
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
-  const [focusOrderId, setFocusOrderId] = useState<string | null>(null)
-  const isPortal = useIsPortalView()
-  
+    return "home";
+  });
+
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [focusOrderId, setFocusOrderId] = useState<string | null>(null);
+  const isPortal = useIsPortalView();
+
   // Dialog states
-  const [showCreateProduct, setShowCreateProduct] = useState(false)
-  const [showCreateCategory, setShowCreateCategory] = useState(false)
-  const [showCreateDiscount, setShowCreateDiscount] = useState(false)
-  const [viewingProduct, setViewingProduct] = useState<Product | null>(null)
-  const [showViewProduct, setShowViewProduct] = useState(false)
+  const [showCreateProduct, setShowCreateProduct] = useState(false);
+  const [showCreateCategory, setShowCreateCategory] = useState(false);
+  const [showCreateDiscount, setShowCreateDiscount] = useState(false);
+  const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
+  const [showViewProduct, setShowViewProduct] = useState(false);
 
   // Calculate stats for sidebar badges
-  const pendingOrders = orders.filter(o => o.status === 'pending').length
-  const lowStockProducts = products.filter(p => 
-    p.track_inventory && p.quantity <= p.low_stock_threshold
-  ).length
+  const pendingOrders = orders.filter((o) => o.status === "pending").length;
+  const lowStockProducts = products.filter(
+    (p) => p.track_inventory && p.quantity <= p.low_stock_threshold,
+  ).length;
 
   // Handlers
   const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true)
-    await refresh()
-    setIsRefreshing(false)
-  }, [refresh])
+    setIsRefreshing(true);
+    await refresh();
+    setIsRefreshing(false);
+  }, [refresh]);
 
-  const handleViewProduct = useCallback((productId: string) => {
-    const product = products.find(p => p.id === productId)
-    if (product) {
-      setViewingProduct(product)
-      setShowViewProduct(true)
-    }
-  }, [products])
+  const handleViewProduct = useCallback(
+    (productId: string) => {
+      const product = products.find((p) => p.id === productId);
+      if (product) {
+        setViewingProduct(product);
+        setShowViewProduct(true);
+      }
+    },
+    [products],
+  );
 
   const handleViewOrder = useCallback((orderId: string) => {
     // Set the order to focus on, then navigate to orders view
-    setFocusOrderId(orderId)
-    setActiveView('orders')
-  }, [])
+    setFocusOrderId(orderId);
+    setActiveView("orders");
+  }, []);
 
   // Error state
   if (error) {
@@ -165,7 +179,7 @@ function EcommerceDashboardContent({
           Retry
         </Button>
       </div>
-    )
+    );
   }
 
   // Loading onboarding check
@@ -174,7 +188,7 @@ function EcommerceDashboardContent({
       <div className="flex items-center justify-center h-screen">
         <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   // Show onboarding wizard if not completed (skip in portal mode)
@@ -184,15 +198,15 @@ function EcommerceDashboardContent({
         <OnboardingWizard
           siteId={siteId}
           onComplete={() => {
-            setShowOnboarding(false)
-            refresh() // Refresh data after onboarding
+            setShowOnboarding(false);
+            refresh(); // Refresh data after onboarding
           }}
           onSkip={() => {
-            setShowOnboarding(false)
+            setShowOnboarding(false);
           }}
         />
       </div>
-    )
+    );
   }
 
   return (
@@ -217,108 +231,87 @@ function EcommerceDashboardContent({
           onCreateProduct={() => setShowCreateProduct(true)}
           onCreateCategory={() => setShowCreateCategory(true)}
           onCreateDiscount={() => setShowCreateDiscount(true)}
-          onOpenSettings={() => setActiveView('settings')}
+          onOpenSettings={() => setActiveView("settings")}
           onRefresh={handleRefresh}
           isRefreshing={isRefreshing || isLoading}
         />
 
         {/* Content Area */}
         <main className="flex-1 overflow-auto p-6">
-          {activeView === 'home' && (
+          {activeView === "home" && (
             <HomeView
               siteId={siteId}
               onViewOrder={handleViewOrder}
               onViewProduct={handleViewProduct}
-              onNavigateToOrders={() => setActiveView('orders')}
-              onNavigateToProducts={() => setActiveView('products')}
+              onNavigateToOrders={() => setActiveView("orders")}
+              onNavigateToProducts={() => setActiveView("products")}
             />
           )}
 
-          {activeView === 'products' && (
-            <ProductsView 
-              onCreateProduct={() => setShowCreateProduct(true)}
-            />
+          {activeView === "products" && (
+            <ProductsView onCreateProduct={() => setShowCreateProduct(true)} />
           )}
 
-          {activeView === 'orders' && (
+          {activeView === "orders" && (
             <OrdersView
-              userId={userId || ''}
+              userId={userId || ""}
               userName={userName}
               focusOrderId={focusOrderId}
               onFocusOrderHandled={() => setFocusOrderId(null)}
             />
           )}
 
-          {activeView === 'customers' && (
+          {activeView === "customers" && (
             <CustomersView
               siteId={siteId}
               agencyId={agencyId}
-              userId={userId || ''}
+              userId={userId || ""}
               userName={userName}
             />
           )}
 
-          {activeView === 'categories' && (
-            <CategoriesView 
+          {activeView === "categories" && (
+            <CategoriesView
               onCreateCategory={() => setShowCreateCategory(true)}
             />
           )}
 
-          {activeView === 'discounts' && (
-            <DiscountsView 
+          {activeView === "discounts" && (
+            <DiscountsView
               onCreateDiscount={() => setShowCreateDiscount(true)}
             />
           )}
 
-          {activeView === 'quotes' && (
-            <QuotesView 
+          {activeView === "quotes" && (
+            <QuotesView
               siteId={siteId}
               agencyId={agencyId}
-              userId={userId || ''}
+              userId={userId || ""}
               userName={userName}
             />
           )}
 
-          {activeView === 'reviews' && (
-            <ReviewsView />
+          {activeView === "reviews" && <ReviewsView />}
+
+          {activeView === "templates" && <TemplatesView />}
+
+          {activeView === "inventory" && (
+            <InventoryView siteId={siteId} agencyId={agencyId} />
           )}
 
-          {activeView === 'templates' && (
-            <TemplatesView />
+          {activeView === "analytics" && <AnalyticsView />}
+
+          {activeView === "marketing" && <MarketingView siteId={siteId} />}
+
+          {activeView === "developer" && (
+            <DeveloperSettingsView siteId={siteId} agencyId={agencyId} />
           )}
 
-          {activeView === 'inventory' && (
-            <InventoryView 
-              siteId={siteId}
-              agencyId={agencyId}
-            />
+          {activeView === "embed" && (
+            <EmbedCodeGenerator siteId={siteId} agencyId={agencyId} />
           )}
 
-          {activeView === 'analytics' && (
-            <AnalyticsView />
-          )}
-
-          {activeView === 'marketing' && (
-            <MarketingView 
-              siteId={siteId}
-            />
-          )}
-
-          {activeView === 'developer' && (
-            <DeveloperSettingsView 
-              siteId={siteId}
-              agencyId={agencyId}
-            />
-          )}
-
-          {activeView === 'embed' && (
-            <EmbedCodeGenerator
-              siteId={siteId}
-              agencyId={agencyId}
-            />
-          )}
-
-          {activeView === 'settings' && (
+          {activeView === "settings" && (
             <SettingsView siteId={siteId} agencyId={agencyId} />
           )}
         </main>
@@ -361,32 +354,31 @@ function EcommerceDashboardContent({
         />
       )}
     </div>
-  )
+  );
 }
 
 // ============================================================================
 // MAIN DASHBOARD WRAPPER
 // ============================================================================
 
-export function EcommerceDashboard({ 
-  siteId, 
+export function EcommerceDashboard({
+  siteId,
   agencyId,
   userId,
   userName,
-  settings, 
-  initialView 
+  settings,
+  initialView,
 }: EcommerceDashboardProps) {
   return (
     <EcommerceProvider siteId={siteId} agencyId={agencyId}>
-      <EcommerceDashboardContent 
+      <EcommerceDashboardContent
         siteId={siteId}
         agencyId={agencyId}
         userId={userId}
         userName={userName}
         settings={settings}
-        initialView={initialView} 
+        initialView={initialView}
       />
     </EcommerceProvider>
-  )
+  );
 }
-

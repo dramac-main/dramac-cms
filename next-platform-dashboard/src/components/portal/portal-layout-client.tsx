@@ -147,6 +147,7 @@ function PortalLayoutInner({
   // Get permissions from user
   const permissions: PortalUserPermissions = {
     canViewAnalytics: user.canViewAnalytics,
+    canEditContent: user.canEditContent,
     canViewInvoices: user.canViewInvoices,
     canManageLiveChat: user.canManageLiveChat,
     canManageOrders: user.canManageOrders,

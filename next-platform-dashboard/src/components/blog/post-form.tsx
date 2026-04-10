@@ -51,9 +51,12 @@ interface PostFormProps {
   siteId: string;
   post?: BlogPost;
   canPublish?: boolean;
+  /** Base path for navigation (e.g. "/portal/sites/{siteId}/blog"). Defaults to dashboard route. */
+  basePath?: string;
 }
 
-export function PostForm({ siteId, post, canPublish = true }: PostFormProps) {
+export function PostForm({ siteId, post, canPublish = true, basePath }: PostFormProps) {
+  const blogBasePath = basePath || `/dashboard/sites/${siteId}/blog`;
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
@@ -176,7 +179,7 @@ export function PostForm({ siteId, post, canPublish = true }: PostFormProps) {
         );
         
         if (!post && result.postId) {
-          router.push(`/dashboard/sites/${siteId}/blog/${result.postId}`);
+          router.push(`${blogBasePath}/${result.postId}`);
         } else {
           router.refresh();
         }
@@ -211,7 +214,7 @@ export function PostForm({ siteId, post, canPublish = true }: PostFormProps) {
             <Button
               type="button"
               variant="ghost"
-              onClick={() => router.push(`/dashboard/sites/${siteId}/blog`)}
+              onClick={() => router.push(blogBasePath)}
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Posts
