@@ -183,9 +183,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Public marketing pages
-  if (pathname === "/pricing" || pathname.startsWith("/pricing/")) {
-    if (DEBUG) console.log("[proxy] → Public pricing page, passing through");
+  // Public marketing/legal pages
+  if (
+    pathname === "/pricing" || pathname.startsWith("/pricing/") ||
+    pathname === "/privacy" ||
+    pathname === "/terms"
+  ) {
+    if (DEBUG) console.log("[proxy] → Public page, passing through:", pathname);
     return NextResponse.next();
   }
 
