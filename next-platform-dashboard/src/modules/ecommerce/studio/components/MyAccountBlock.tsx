@@ -26,6 +26,9 @@ import {
   FileText,
   Clock,
   X,
+  Eye,
+  EyeOff,
+  Lock,
 } from "lucide-react";
 import {
   useStorefrontAuth,
@@ -1161,6 +1164,7 @@ function ProfileTab({
   };
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
@@ -1261,6 +1265,196 @@ function ProfileTab({
         Save Changes
       </button>
     </form>
+
+    {/* Change Password Section */}
+    <ChangePasswordSection customer={customer} />
+    </>
+  );
+}
+
+function ChangePasswordSection({ customer }: { customer: StorefrontCustomer }) {
+  const { changePassword } = useStorefrontAuth();
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSuccess(false);
+
+    if (!newPassword) {
+      setError("Please enter a new password.");
+      return;
+    }
+    if (newPassword.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    if (customer.hasPassword && !currentPassword) {
+      setError("Please enter your current password.");
+      return;
+    }
+
+    setLoading(true);
+    const result = await changePassword(
+      newPassword,
+      customer.hasPassword ? currentPassword : undefined,
+    );
+    setLoading(false);
+
+    if (result.error) {
+      setError(result.error);
+    } else {
+      setSuccess(true);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setTimeout(() => setSuccess(false), 4000);
+    }
+  };
+
+  return (
+    <div className="mt-8 max-w-md border-t border-border pt-6">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary"
+      >
+        <Lock className="h-4 w-4" />
+        {customer.hasPassword ? "Change Password" : "Set a Password"}
+        <ChevronRight
+          className={`h-4 w-4 transition-transform ${isOpen ? "rotate-90" : ""}`}
+        />
+      </button>
+
+      {isOpen && (
+        <form onSubmit={handleSubmit} className="mt-4 space-y-3">
+          {!customer.hasPassword && (
+            <p className="text-sm text-muted-foreground">
+              You signed in via magic link or Google. Set a password to sign in
+              with email and password next time.
+            </p>
+          )}
+
+          {customer.hasPassword && (
+            <div className="space-y-1">
+              <label
+                htmlFor="cp-current"
+                className="block text-sm font-medium text-foreground"
+              >
+                Current Password
+              </label>
+              <div className="relative">
+                <input
+                  id="cp-current"
+                  type={showCurrent ? "text" : "password"}
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  autoComplete="current-password"
+                  disabled={loading}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onClick={() => setShowCurrent(!showCurrent)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showCurrent ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-1">
+            <label
+              htmlFor="cp-new"
+              className="block text-sm font-medium text-foreground"
+            >
+              New Password
+            </label>
+            <div className="relative">
+              <input
+                id="cp-new"
+                type={showNew ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="At least 8 characters"
+                autoComplete="new-password"
+                disabled={loading}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+              <button
+                type="button"
+                tabIndex={-1}
+                onClick={() => setShowNew(!showNew)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showNew ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label
+              htmlFor="cp-confirm"
+              className="block text-sm font-medium text-foreground"
+            >
+              Confirm New Password
+            </label>
+            <input
+              id="cp-confirm"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Repeat new password"
+              autoComplete="new-password"
+              disabled={loading}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+
+          {error && (
+            <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {error}
+            </p>
+          )}
+          {success && (
+            <p className="rounded-md bg-success/5 px-3 py-2 text-sm text-success">
+              Password updated successfully.
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60 flex items-center gap-2 min-h-11"
+          >
+            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+            {customer.hasPassword ? "Update Password" : "Set Password"}
+          </button>
+        </form>
+      )}
+    </div>
   );
 }
 

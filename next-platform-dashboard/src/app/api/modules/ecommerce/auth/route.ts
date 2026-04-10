@@ -1693,6 +1693,98 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // ── CHANGE PASSWORD (authenticated) ─────────────────────────────────────
+    // For logged-in customers to change their password.
+    // Requires: token, newPassword
+    // If customer already has a password: also requires currentPassword
+    // If customer has no password (magic link / Google user): just sets it
+    if (action === "change-password") {
+      const { token, currentPassword, newPassword } = body;
+
+      if (!token) {
+        return NextResponse.json(
+          { error: "Authentication required" },
+          { status: 401, headers: corsHeaders },
+        );
+      }
+
+      const pwError = validatePassword(newPassword);
+      if (pwError) {
+        return NextResponse.json(
+          { error: pwError },
+          { status: 400, headers: corsHeaders },
+        );
+      }
+
+      const tokenHash = hashToken(token);
+      const { data: session } = await (supabase as any)
+        .from(SESSIONS)
+        .select("customer_id")
+        .eq("token_hash", tokenHash)
+        .eq("site_id", siteId)
+        .gt("expires_at", new Date().toISOString())
+        .single();
+
+      if (!session) {
+        return NextResponse.json(
+          { error: "Session expired. Please sign in again." },
+          { status: 401, headers: corsHeaders },
+        );
+      }
+
+      const { data: customer } = await (supabase as any)
+        .from(TABLE)
+        .select("id, password_hash, password_set_at")
+        .eq("id", session.customer_id)
+        .eq("site_id", siteId)
+        .single();
+
+      if (!customer) {
+        return NextResponse.json(
+          { error: "Customer not found" },
+          { status: 404, headers: corsHeaders },
+        );
+      }
+
+      // If customer already has a password, verify current password first
+      if (customer.password_set_at && customer.password_hash) {
+        if (!currentPassword) {
+          return NextResponse.json(
+            { error: "Current password is required" },
+            { status: 400, headers: corsHeaders },
+          );
+        }
+
+        const currentValid = await bcrypt.compare(
+          currentPassword,
+          customer.password_hash,
+        );
+        if (!currentValid) {
+          return NextResponse.json(
+            { error: "Current password is incorrect" },
+            { status: 401, headers: corsHeaders },
+          );
+        }
+      }
+
+      // Hash and save new password
+      const newPasswordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+
+      await (supabase as any)
+        .from(TABLE)
+        .update({
+          password_hash: newPasswordHash,
+          password_set_at: new Date().toISOString(),
+        })
+        .eq("id", customer.id)
+        .eq("site_id", siteId);
+
+      return NextResponse.json(
+        { success: true, message: "Password updated successfully" },
+        { status: 200, headers: corsHeaders },
+      );
+    }
+
     return NextResponse.json(
       { error: `Unknown action: ${action}` },
       { status: 400, headers: corsHeaders },

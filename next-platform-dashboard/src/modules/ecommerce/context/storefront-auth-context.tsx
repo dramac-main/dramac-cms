@@ -73,6 +73,11 @@ export interface AuthContextValue {
   loginWithGoogle: () => void;
   /** Whether Google Sign-In is configured and available */
   googleAuthAvailable: boolean;
+  /** Change password for authenticated customer */
+  changePassword: (
+    newPassword: string,
+    currentPassword?: string,
+  ) => Promise<{ error: string | null; message?: string }>;
   /** Open the auth dialog (login/register) */
   openAuthDialog: (mode?: "login" | "register" | "set-password") => void;
   /** Close the auth dialog */
@@ -100,6 +105,7 @@ const AuthContext = createContext<AuthContextValue>({
   verifyEmailCode: async () => ({ error: null }),
   loginWithGoogle: () => {},
   googleAuthAvailable: false,
+  changePassword: async () => ({ error: null }),
   openAuthDialog: () => {},
   closeAuthDialog: () => {},
   authDialogOpen: false,
@@ -456,6 +462,30 @@ export function StorefrontAuthProvider({
     [callAuth],
   );
 
+  const changePassword = useCallback(
+    async (
+      newPassword: string,
+      currentPassword?: string,
+    ): Promise<{ error: string | null; message?: string }> => {
+      try {
+        const data = await callAuth({
+          action: "change-password",
+          token,
+          currentPassword,
+          newPassword,
+        });
+        if (data?.error) return { error: data.error };
+        return {
+          error: null,
+          message: data?.message || "Password updated successfully",
+        };
+      } catch {
+        return { error: "Something went wrong. Please try again." };
+      }
+    },
+    [callAuth, token],
+  );
+
   // ── Google Sign-In ──
   const googleClientId =
     typeof window !== "undefined"
@@ -531,6 +561,7 @@ export function StorefrontAuthProvider({
         verifyEmailCode,
         loginWithGoogle,
         googleAuthAvailable,
+        changePassword,
         openAuthDialog,
         closeAuthDialog,
         authDialogOpen,
