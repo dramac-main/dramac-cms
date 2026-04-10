@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { sendBrandedEmail } from "@/lib/email/send-branded-email";
 
 // ============================================
 // TYPES
@@ -179,7 +180,7 @@ export async function getPortalTeamMember(
 }
 
 /**
- * Create a new team member
+ * Create a new team member and send invitation email
  */
 export async function createPortalTeamMember(
   input: CreateTeamMemberInput,
@@ -199,7 +200,7 @@ export async function createPortalTeamMember(
       phone: input.phone || null,
       job_title: input.jobTitle || null,
       department: input.department || null,
-      status: input.status || "active",
+      status: "invited",
       can_view_analytics: input.canViewAnalytics || false,
       can_edit_content: input.canEditContent || false,
       can_view_invoices: input.canViewInvoices || false,
@@ -213,7 +214,7 @@ export async function createPortalTeamMember(
       can_manage_agents: input.canManageAgents || false,
       can_manage_customers: input.canManageCustomers || false,
       notes: input.notes || null,
-      invited_at: input.status === "invited" ? new Date().toISOString() : null,
+      invited_at: new Date().toISOString(),
     })
     .select()
     .single();
@@ -227,6 +228,39 @@ export async function createPortalTeamMember(
     }
     console.error("[PortalTeamService] Error creating team member:", error);
     return { success: false, error: "Failed to add team member" };
+  }
+
+  // Send invitation email
+  try {
+    // Get client info for the email
+    const { data: client } = await supabase
+      .from("clients")
+      .select("name, company, agency_id")
+      .eq("id", clientId)
+      .single();
+
+    const agencyId = client?.agency_id || null;
+    const businessName = client?.company || client?.name || "the team";
+    const inviterName = client?.name || "Your team admin";
+    const portalUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "https://app.dramacagency.com"}/portal/login`;
+
+    await sendBrandedEmail(agencyId, {
+      to: { email: input.email.toLowerCase().trim(), name: input.name },
+      emailType: "portal_team_invitation",
+      data: {
+        inviterName,
+        businessName,
+        role: input.role || "member",
+        portalUrl,
+        memberName: input.name,
+      },
+    });
+  } catch (emailError) {
+    // Don't fail the member creation if email fails
+    console.error(
+      "[PortalTeamService] Failed to send invitation email:",
+      emailError,
+    );
   }
 
   return { success: true, member: mapToTeamMember(data) };
@@ -377,5 +411,114 @@ export async function getPortalTeamStats(): Promise<{
     active: data.filter((m) => m.status === "active").length,
     invited: data.filter((m) => m.status === "invited").length,
     inactive: data.filter((m) => m.status === "inactive").length,
+  };
+}
+
+/**
+ * Resend invitation email to a team member
+ */
+export async function resendPortalTeamInvitation(
+  memberId: string,
+): Promise<{ success: boolean; error?: string }> {
+  const clientId = await getPortalClientId();
+  if (!clientId) return { success: false, error: "Not authenticated" };
+
+  const supabase = await createClient();
+
+  // Get the member
+  const { data: member } = await supabase
+    .from("portal_team_members")
+    .select("*")
+    .eq("id", memberId)
+    .eq("client_id", clientId)
+    .single();
+
+  if (!member) return { success: false, error: "Team member not found" };
+
+  // Get client info for email
+  const { data: client } = await supabase
+    .from("clients")
+    .select("name, company, agency_id")
+    .eq("id", clientId)
+    .single();
+
+  const agencyId = client?.agency_id || null;
+  const businessName = client?.company || client?.name || "the team";
+  const inviterName = client?.name || "Your team admin";
+  const portalUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "https://app.dramacagency.com"}/portal/login`;
+
+  try {
+    await sendBrandedEmail(agencyId, {
+      to: { email: member.email, name: member.name },
+      emailType: "portal_team_invitation",
+      data: {
+        inviterName,
+        businessName,
+        role: member.role || "member",
+        portalUrl,
+        memberName: member.name,
+      },
+    });
+
+    // Update invited_at timestamp
+    await supabase
+      .from("portal_team_members")
+      .update({ invited_at: new Date().toISOString() })
+      .eq("id", memberId)
+      .eq("client_id", clientId);
+
+    return { success: true };
+  } catch (error) {
+    console.error("[PortalTeamService] Failed to resend invitation:", error);
+    return { success: false, error: "Failed to send invitation email" };
+  }
+}
+
+/**
+ * Get the portal owner (client) as a virtual team member.
+ * The portal owner is always included as the first team member with "owner" role.
+ */
+export async function getPortalOwner(): Promise<PortalTeamMember | null> {
+  const clientId = await getPortalClientId();
+  if (!clientId) return null;
+
+  const supabase = await createClient();
+
+  const { data: client } = await supabase
+    .from("clients")
+    .select("id, name, email, company, phone, created_at")
+    .eq("id", clientId)
+    .single();
+
+  if (!client) return null;
+
+  return {
+    id: `owner-${client.id}`,
+    clientId: client.id,
+    name: client.name || "Account Owner",
+    email: client.email || "",
+    role: "owner",
+    phone: client.phone || null,
+    jobTitle: "Account Owner",
+    department: null,
+    avatarUrl: null,
+    status: "active",
+    canViewAnalytics: true,
+    canEditContent: true,
+    canViewInvoices: true,
+    canManageLiveChat: true,
+    canManageOrders: true,
+    canManageProducts: true,
+    canManageBookings: true,
+    canManageCrm: true,
+    canManageAutomation: true,
+    canManageQuotes: true,
+    canManageAgents: true,
+    canManageCustomers: true,
+    notes: null,
+    invitedAt: null,
+    lastActiveAt: null,
+    createdAt: client.created_at,
+    updatedAt: client.created_at,
   };
 }

@@ -299,6 +299,38 @@ They now have access to your team's projects and can start collaborating right a
     `.trim(),
   },
 
+  portal_team_invitation: {
+    subject: (data) => `You've been invited to join ${data.businessName}`,
+    html: (data) =>
+      wrapHtml(`
+      <h1 style="${STYLES.heading}">You're Invited!</h1>
+      <p style="${STYLES.text}">
+        <strong>${data.inviterName}</strong> has invited you to join the <strong>${data.businessName}</strong> team as a <strong>${data.role}</strong>.
+      </p>
+      <p style="${STYLES.text}">
+        You can access the client portal to collaborate on projects, manage content, and more.
+      </p>
+      <p style="margin: 24px 0;">
+        <a href="${data.portalUrl}" style="${STYLES.button}">
+          Access Portal
+        </a>
+      </p>
+      <p style="${STYLES.muted}">
+        If you don't recognize this invitation, you can safely ignore this email.
+      </p>
+    `),
+    text: (data) =>
+      `
+You're Invited!
+
+${data.inviterName} has invited you to join the ${data.businessName} team as a ${data.role}.
+
+Access the portal: ${data.portalUrl}
+
+If you don't recognize this invitation, you can safely ignore this email.
+    `.trim(),
+  },
+
   // ============================================
   // SITE EMAILS
   // ============================================

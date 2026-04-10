@@ -1335,7 +1335,11 @@ function ChangePasswordSection({ customer }: { customer: StorefrontCustomer }) {
     }
     // If customer has a password AND they didn't come in via magic link,
     // require the current password for security
-    if (customer.hasPassword && !customer.canResetPassword && !currentPassword) {
+    if (
+      customer.hasPassword &&
+      !customer.canResetPassword &&
+      !currentPassword
+    ) {
       setError("Please enter your current password.");
       return;
     }

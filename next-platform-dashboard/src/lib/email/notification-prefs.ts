@@ -1,6 +1,6 @@
 /**
  * Notification Preferences Check
- * 
+ *
  * Phase WL-02: Before sending any email, check if the user has opted out.
  * Maps email types to notification preference categories.
  */
@@ -14,14 +14,23 @@ import type { NotificationPreferences } from "@/types/notifications";
  * If an email type is not in this map, it's always sent (e.g., password reset).
  */
 const EMAIL_TYPE_TO_PREF_CATEGORY: Partial<
-  Record<EmailType, keyof Pick<NotificationPreferences, 
-    "email_marketing" | "email_security" | "email_updates" | "email_team" | "email_billing"
-  >>
+  Record<
+    EmailType,
+    keyof Pick<
+      NotificationPreferences,
+      | "email_marketing"
+      | "email_security"
+      | "email_updates"
+      | "email_team"
+      | "email_billing"
+    >
+  >
 > = {
   // Always sent (not in map): password_reset, email_changed
   welcome: "email_updates",
   team_invitation: "email_team",
   team_member_joined: "email_team",
+  portal_team_invitation: "email_team",
   site_published: "email_updates",
   domain_connected: "email_updates",
   subscription_created: "email_billing",
@@ -39,15 +48,15 @@ const EMAIL_TYPE_TO_PREF_CATEGORY: Partial<
 
 /**
  * Check if a user has opted out of a specific email type.
- * 
+ *
  * @returns true if email should be sent, false if user opted out
  */
 export async function shouldSendEmail(
   userId: string,
-  emailType: EmailType
+  emailType: EmailType,
 ): Promise<boolean> {
   const prefCategory = EMAIL_TYPE_TO_PREF_CATEGORY[emailType];
-  
+
   // If no preference category mapped, always send (critical/security emails)
   if (!prefCategory) {
     return true;
@@ -57,7 +66,9 @@ export async function shouldSendEmail(
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from("notification_preferences")
-      .select("email_marketing, email_security, email_updates, email_team, email_billing")
+      .select(
+        "email_marketing, email_security, email_updates, email_team, email_billing",
+      )
       .eq("user_id", userId)
       .single();
 

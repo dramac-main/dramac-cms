@@ -112,6 +112,22 @@ const team_member_joined: BrandedTemplate = {
     `New Team Member\n\n${data.memberName} has joined ${data.agencyName || b.agency_name}.`,
 };
 
+const portal_team_invitation: BrandedTemplate = {
+  subject: (data) => `You've been invited to join ${data.businessName}`,
+  html: (data, b) =>
+    baseEmailTemplate(
+      b,
+      `<h1 style="${EMAIL_STYLES.heading}">You're Invited!</h1>
+      <p style="${EMAIL_STYLES.text}"><strong>${data.inviterName}</strong> has invited you to join the <strong>${data.businessName}</strong> team as a <strong>${data.role}</strong>.</p>
+      <p style="${EMAIL_STYLES.text}">You can access the client portal to collaborate on projects, manage content, and more.</p>
+      ${emailButton(b, String(data.portalUrl), "Access Portal")}
+      <p style="${EMAIL_STYLES.muted}">If you don't recognize this invitation, you can safely ignore this email.</p>`,
+      `${data.inviterName} invited you to join ${data.businessName}`,
+    ),
+  text: (data) =>
+    `You're Invited!\n\n${data.inviterName} invited you to join ${data.businessName} as a ${data.role}.\n\nAccess the portal: ${data.portalUrl}`,
+};
+
 // ============================================================================
 // SITE TEMPLATES
 // ============================================================================
@@ -1301,6 +1317,7 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
   },
   team_invitation,
   team_member_joined,
+  portal_team_invitation,
   site_published,
   domain_connected,
   subscription_created,

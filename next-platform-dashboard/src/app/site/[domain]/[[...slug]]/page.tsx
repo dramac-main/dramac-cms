@@ -175,6 +175,46 @@ export async function generateMetadata({
     }
   }
 
+  // Enhance metadata for blog post pages
+  if (normalizedSlug.startsWith("blog/") && data.site.id) {
+    try {
+      const { getPublishedPost } = await import("@/lib/blog/blog-api");
+      const postSlug = normalizedSlug.replace("blog/", "");
+      const post = await getPublishedPost(data.site.id, postSlug);
+
+      if (post) {
+        const postTitle = post.title;
+        const postDesc =
+          post.excerpt || `Read ${post.title} on ${data.site.name}.`;
+        const postImage = post.featuredImageUrl;
+
+        metadata.title = postTitle;
+        metadata.description = postDesc;
+        metadata.openGraph = {
+          title: postTitle,
+          description: postDesc,
+          images: postImage ? [postImage] : undefined,
+          type: "article",
+          siteName: data.site.name,
+          ...(post.publishedAt && {
+            publishedTime: post.publishedAt,
+          }),
+          ...(post.authorName && {
+            authors: [post.authorName],
+          }),
+        };
+        metadata.twitter = {
+          card: postImage ? "summary_large_image" : "summary",
+          title: postTitle,
+          description: postDesc,
+          images: postImage ? [postImage] : undefined,
+        };
+      }
+    } catch {
+      // Fall through to default metadata
+    }
+  }
+
   return metadata;
 }
 
@@ -451,6 +491,72 @@ async function processData(
       }
     }
 
+    // ────────────────────────────────────────────────────────────────────────
+    // DYNAMIC BLOG PAGE GENERATION
+    //
+    // When the site has published blog posts, generate virtual pages for:
+    //   - /blog              → Blog listing page with all posts
+    //   - /blog/[post-slug]  → Individual blog post page
+    //
+    // Uses the same virtual page pattern as ecommerce above.
+    // ────────────────────────────────────────────────────────────────────────
+    if (!page && (stripped === "blog" || stripped.startsWith("blog/"))) {
+      const {
+        getPublishedPosts,
+        getPublishedPost,
+        getRelatedPosts,
+        getSiteBlogInfo,
+      } = await import("@/lib/blog/blog-api");
+      const { createBlogListingTemplate, createBlogPostTemplate } =
+        await import("@/lib/blog/blog-templates");
+
+      const blogInfo = await getSiteBlogInfo(site.id);
+
+      if (blogInfo.hasBlog) {
+        if (stripped === "blog") {
+          // Blog listing page
+          const { posts } = await getPublishedPosts(site.id, { limit: 50 });
+          page = {
+            id: `virtual-blog-${site.id}`,
+            slug: "/blog",
+            name: "Blog",
+            is_homepage: false,
+            seo_title: `Blog — ${site.name}`,
+            seo_description: `Read the latest posts from ${site.name}.`,
+            seo_image: null,
+            page_content: [
+              {
+                content: createBlogListingTemplate(posts, {
+                  name: site.name,
+                  subdomain: site.subdomain,
+                }),
+              },
+            ],
+          };
+        } else {
+          // Single blog post: /blog/[slug]
+          const postSlug = stripped.replace("blog/", "");
+          const post = await getPublishedPost(site.id, postSlug);
+          if (post) {
+            const relatedPosts = await getRelatedPosts(site.id, post.id, 3);
+            page = {
+              id: `virtual-blog-post-${post.id}`,
+              slug: `/${stripped}`,
+              name: post.title,
+              is_homepage: false,
+              seo_title: post.title,
+              seo_description:
+                post.excerpt || `Read ${post.title} on ${site.name}.`,
+              seo_image: post.featuredImageUrl,
+              page_content: [
+                { content: createBlogPostTemplate(post, relatedPosts) },
+              ],
+            };
+          }
+        }
+      }
+    }
+
     // Shared module pages — /account is available for ANY module (ecommerce or booking)
     // because customer accounts are shared across all commerce/booking features.
     if (!page && siteHasAnyModule && stripped === "account") {
@@ -658,6 +764,18 @@ async function processData(
     }
   } catch (err) {
     console.error("[SitePage] Error fetching modules:", err);
+  }
+
+  // Check if this site has published blog posts → set runtime flag for
+  // smart navigation to inject Blog links into Navbar/Footer.
+  try {
+    const { getSiteBlogInfo } = await import("@/lib/blog/blog-api");
+    const blogInfo = await getSiteBlogInfo(site.id);
+    if (blogInfo.hasPosts) {
+      (siteSettings as Record<string, unknown>)._hasBlog = true;
+    }
+  } catch {
+    // Blog check failed — skip nav injection
   }
 
   return {

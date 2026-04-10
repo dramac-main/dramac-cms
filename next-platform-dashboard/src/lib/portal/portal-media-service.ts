@@ -254,14 +254,29 @@ export async function getPortalMedia(
     return { files: [], total: 0 };
   }
 
+  // Get the agency_id for this site so we can also show agency-level assets
+  const { data: siteDetail } = await supabase
+    .from("sites")
+    .select("agency_id")
+    .eq("id", siteId)
+    .single();
+
+  const agencyId = siteDetail?.agency_id;
+
   const offset = (page - 1) * limit;
 
-  // Build query for assets
+  // Build query for assets — include both site-specific AND agency-level assets
   let query = supabase
     .from("assets")
     .select("*", { count: "exact" })
-    .eq("site_id", siteId)
     .order("created_at", { ascending: false });
+
+  // Show assets that belong to this site OR agency-level assets (site_id is null)
+  if (agencyId) {
+    query = query.or(`site_id.eq.${siteId},and(site_id.is.null,agency_id.eq.${agencyId})`);
+  } else {
+    query = query.eq("site_id", siteId);
+  }
 
   // Apply filters
   if (filters.search) {
@@ -388,11 +403,28 @@ export async function getPortalMediaStats(siteId?: string): Promise<{
     return { totalFiles: 0, totalSize: 0, byType: [] };
   }
 
-  // Get all assets for these sites
-  const { data: assets, count } = await supabase
+  // Get the agency_id for the client
+  const { data: clientData } = await supabase
+    .from("clients")
+    .select("agency_id")
+    .eq("id", clientId)
+    .single();
+  const agencyId = clientData?.agency_id;
+
+  // Get all assets for these sites + agency-level assets
+  let assetQuery = supabase
     .from("assets")
-    .select("size, mime_type", { count: "exact" })
-    .in("site_id", siteIds);
+    .select("size, mime_type", { count: "exact" });
+
+  if (agencyId) {
+    assetQuery = assetQuery.or(
+      `site_id.in.(${siteIds.join(",")}),and(site_id.is.null,agency_id.eq.${agencyId})`
+    );
+  } else {
+    assetQuery = assetQuery.in("site_id", siteIds);
+  }
+
+  const { data: assets, count } = await assetQuery;
 
   if (!assets) {
     return { totalFiles: 0, totalSize: 0, byType: [] };
@@ -418,4 +450,100 @@ export async function getPortalMediaStats(siteId?: string): Promise<{
     totalSize,
     byType,
   };
+}
+
+// ============================================
+// SITE IMAGES DISCOVERY
+// ============================================
+
+export interface DiscoveredImage {
+  url: string;
+  source: "page" | "blog";
+  pageName?: string;
+  postTitle?: string;
+}
+
+/**
+ * Discover all image URLs used on a site (from page content and blog posts).
+ * Returns unique image URLs found in the site's content.
+ */
+export async function discoverSiteImages(
+  siteId: string,
+): Promise<DiscoveredImage[]> {
+  const clientId = await getPortalClientId();
+  if (!clientId) return [];
+
+  const supabase = await createClient();
+
+  // Verify this site belongs to the client
+  const { data: site } = await supabase
+    .from("sites")
+    .select("id, client_id")
+    .eq("id", siteId)
+    .eq("client_id", clientId)
+    .single();
+
+  if (!site) return [];
+
+  const images: DiscoveredImage[] = [];
+  const seenUrls = new Set<string>();
+
+  // 1. Scan page content for image URLs
+  const { data: pages } = await supabase
+    .from("pages")
+    .select("id, name")
+    .eq("site_id", siteId);
+
+  if (pages) {
+    for (const page of pages) {
+      const { data: content } = await supabase
+        .from("page_content")
+        .select("content")
+        .eq("page_id", page.id)
+        .order("version", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (content?.content) {
+        const contentStr = JSON.stringify(content.content);
+        // Extract image URLs from JSON (Unsplash, Supabase, etc.)
+        const urlRegex = /https?:\/\/[^"\\]+\.(?:jpg|jpeg|png|gif|webp|svg|avif)(?:\?[^"\\]*)?\b/gi;
+        const matches = contentStr.match(urlRegex) || [];
+        for (const url of matches) {
+          if (!seenUrls.has(url)) {
+            seenUrls.add(url);
+            images.push({ url, source: "page", pageName: page.name });
+          }
+        }
+        // Also match Unsplash URLs without file extensions
+        const unsplashRegex = /https:\/\/images\.unsplash\.com\/[^"\\]+/gi;
+        const unsplashMatches = contentStr.match(unsplashRegex) || [];
+        for (const url of unsplashMatches) {
+          if (!seenUrls.has(url)) {
+            seenUrls.add(url);
+            images.push({ url, source: "page", pageName: page.name });
+          }
+        }
+      }
+    }
+  }
+
+  // 2. Scan blog posts for featured images
+  const { data: posts } = await (supabase as any)
+    .from("blog_posts")
+    .select("title, featured_image_url")
+    .eq("site_id", siteId)
+    .not("featured_image_url", "is", null);
+
+  if (posts) {
+    for (const post of posts) {
+      const url = post.featured_image_url as string;
+      if (url && !seenUrls.has(url)) {
+        seenUrls.add(url);
+        images.push({ url, source: "blog", postTitle: post.title as string });
+      }
+    }
+  }
+
+  return images;
 }

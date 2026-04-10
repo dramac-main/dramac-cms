@@ -39,7 +39,9 @@ import {
   getPortalMedia,
   getPortalAgencyId,
   deletePortalMedia,
+  discoverSiteImages,
   type PortalMediaFile,
+  type DiscoveredImage,
 } from "@/lib/portal/portal-media-service";
 import {
   MediaUploadZone,
@@ -86,6 +88,8 @@ export default function PortalSiteMediaPage({
   const [agencyId, setAgencyId] = useState<string | null>(null);
   const [showUpload, setShowUpload] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [siteImages, setSiteImages] = useState<DiscoveredImage[]>([]);
+  const [siteImagesLoading, setSiteImagesLoading] = useState(true);
 
   const loadMedia = useCallback(
     async (showRefreshing = false) => {
@@ -121,6 +125,15 @@ export default function PortalSiteMediaPage({
   useEffect(() => {
     getPortalAgencyId().then(setAgencyId);
   }, []);
+
+  // Load discovered site images (from page content + blog posts)
+  useEffect(() => {
+    setSiteImagesLoading(true);
+    discoverSiteImages(siteId)
+      .then(setSiteImages)
+      .catch(() => setSiteImages([]))
+      .finally(() => setSiteImagesLoading(false));
+  }, [siteId]);
 
   useEffect(() => {
     setPage(1);
@@ -167,7 +180,8 @@ export default function PortalSiteMediaPage({
             Media Library
           </h1>
           <p className="text-muted-foreground mt-1">
-            {total} {total === 1 ? "file" : "files"}
+            {total} uploaded {total === 1 ? "file" : "files"}
+            {siteImages.length > 0 && ` · ${siteImages.length} site ${siteImages.length === 1 ? "image" : "images"}`}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -313,6 +327,46 @@ export default function PortalSiteMediaPage({
             </div>
           )}
         </>
+      )}
+
+      {/* Site Images Discovery Section */}
+      {!siteImagesLoading && siteImages.length > 0 && (
+        <div className="space-y-4">
+          <div className="border-t pt-6">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Eye className="h-5 w-5" />
+              Images Used on Your Site
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              These images are referenced in your site&apos;s pages and blog posts.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            {siteImages.map((img, idx) => (
+              <Card
+                key={idx}
+                className="overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
+                onClick={() => window.open(img.url, "_blank")}
+              >
+                <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden">
+                  <img
+                    src={img.url}
+                    alt={img.pageName || img.postTitle || "Site image"}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <CardContent className="p-2">
+                  <p className="text-xs font-medium truncate">
+                    {img.pageName || img.postTitle || "Image"}
+                  </p>
+                  <Badge variant="outline" className="text-[10px] mt-1">
+                    {img.source === "page" ? "Page" : "Blog"}
+                  </Badge>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Preview Dialog */}

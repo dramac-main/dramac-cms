@@ -93,14 +93,11 @@ export async function proxy(request: NextRequest) {
   if (isClientSite) {
     const subdomain = hostname.replace(`.${baseDomain}`, "");
 
-    // Blog routes on client sites → rewrite to centralized /blog/[subdomain]/...
+    // Blog routes on client sites → rewrite through site renderer
+    // The site renderer generates virtual blog pages with Navbar/Footer injection
     if (pathname === "/blog" || pathname.startsWith("/blog/")) {
-      const blogPath =
-        pathname === "/blog"
-          ? `/blog/${subdomain}`
-          : `/blog/${subdomain}${pathname.slice("/blog".length)}`;
       const url = request.nextUrl.clone();
-      url.pathname = blogPath;
+      url.pathname = `/site/${subdomain}${pathname}`;
       if (DEBUG)
         console.log(
           "[proxy] ✅ Client site blog rewrite:",

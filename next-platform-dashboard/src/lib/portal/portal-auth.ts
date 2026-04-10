@@ -553,6 +553,16 @@ export async function updateClientSettings(settings: {
     return { success: false, error: "Failed to update settings" };
   }
 
+  // Also update Supabase Auth user metadata so settings load correctly
+  const supabase = await createClient();
+  await supabase.auth.updateUser({
+    data: {
+      ...(settings.name && { full_name: settings.name }),
+      ...(settings.phone && { phone: settings.phone }),
+      ...(settings.company && { company: settings.company }),
+    },
+  });
+
   return { success: true };
 }
 

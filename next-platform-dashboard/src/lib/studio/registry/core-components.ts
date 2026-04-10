@@ -89,6 +89,8 @@ import {
   LogoCloudRender,
   ComparisonTableRender,
   BlogPreviewRender,
+  BlogListingSectionRender,
+  BlogPostViewRender,
   // 3D Effects (Phase 31)
   CardFlip3DRender,
   TiltCardRender,
@@ -27511,6 +27513,82 @@ const effectsComponents: ComponentDefinition[] = [
         "Add CTA link to blog index page",
       ],
     },
+  }),
+
+  // ---------------------------------------------------------------------------
+  // BlogListingSection — Virtual page blog listing (auto-generated)
+  // ---------------------------------------------------------------------------
+  defineComponent({
+    type: "BlogListingSection",
+    label: "Blog Listing Section",
+    category: "marketing",
+    description:
+      "Full blog listing page with featured hero post, post grid, and empty state. Auto-generated for virtual /blog pages.",
+    icon: "LayoutList",
+    render: BlogListingSectionRender,
+    fields: {
+      posts: {
+        type: "text",
+        label: "Posts Data",
+        description: "JSON-encoded published posts array (auto-populated)",
+        defaultValue: "[]",
+      },
+      siteName: {
+        type: "text",
+        label: "Site Name",
+        description: "The site name displayed in the header",
+        defaultValue: "Blog",
+      },
+      siteSubdomain: {
+        type: "text",
+        label: "Site Subdomain",
+        description: "Subdomain for building post links",
+        defaultValue: "",
+      },
+    },
+    fieldGroups: [
+      {
+        id: "data",
+        label: "Data",
+        icon: "Database",
+        fields: ["posts", "siteName", "siteSubdomain"],
+      },
+    ],
+  }),
+
+  // ---------------------------------------------------------------------------
+  // BlogPostView — Virtual page single blog post (auto-generated)
+  // ---------------------------------------------------------------------------
+  defineComponent({
+    type: "BlogPostView",
+    label: "Blog Post View",
+    category: "marketing",
+    description:
+      "Full blog post view with featured image, content, author info, tags, and related posts. Auto-generated for virtual /blog/[slug] pages.",
+    icon: "FileText",
+    render: BlogPostViewRender,
+    fields: {
+      post: {
+        type: "text",
+        label: "Post Data",
+        description: "JSON-encoded blog post object (auto-populated)",
+        defaultValue: "{}",
+      },
+      relatedPosts: {
+        type: "text",
+        label: "Related Posts",
+        description: "JSON-encoded related posts array (auto-populated)",
+        defaultValue: "[]",
+      },
+    },
+    fieldGroups: [
+      {
+        id: "data",
+        label: "Data",
+        icon: "Database",
+        fields: ["post", "relatedPosts"],
+      },
+    ],
   }),
 ];
 

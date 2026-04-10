@@ -95,6 +95,7 @@ export default function PortalSettingsPage() {
       const result = await updateClientSettings({
         name: formData.name,
         phone: formData.phone,
+        company: formData.company,
       });
 
       if (result.error) {

@@ -30112,6 +30112,8 @@ export interface BlogPreviewProps {
   ctaColor?: string;
   paddingY?: "sm" | "md" | "lg" | "xl";
   paddingX?: "sm" | "md" | "lg" | "xl";
+  /** Site ID — auto-injected by StudioRenderer for live data fetching */
+  siteId?: string;
   id?: string;
   className?: string;
 }
@@ -30122,7 +30124,7 @@ export function BlogPreviewRender({
   badge,
   badgeColor,
   headerAlign = "center",
-  posts = [],
+  posts: staticPosts = [],
   variant = "grid",
   columns = 3,
   showAuthor = true,
@@ -30146,9 +30148,52 @@ export function BlogPreviewRender({
   ctaColor,
   paddingY = "lg",
   paddingX = "md",
+  siteId,
   id,
   className = "",
 }: BlogPreviewProps) {
+  // Live data: fetch real blog posts from the API when siteId is available
+  const [livePosts, setLivePosts] = React.useState<BlogPost[] | null>(null);
+  React.useEffect(() => {
+    if (!siteId) return;
+    let cancelled = false;
+    fetch(`/api/blog/${siteId}?limit=6`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled || !data?.posts?.length) return;
+        setLivePosts(
+          data.posts.map(
+            (p: Record<string, unknown>) =>
+              ({
+                title: p.title as string,
+                excerpt: p.excerpt as string,
+                image: p.featuredImageUrl as string,
+                author: p.authorName as string,
+                date: p.publishedAt
+                  ? new Date(p.publishedAt as string).toLocaleDateString(
+                      "en-US",
+                      { month: "short", day: "numeric", year: "numeric" },
+                    )
+                  : undefined,
+                category: Array.isArray(p.categories)
+                  ? ((p.categories[0] as Record<string, unknown>)
+                      ?.name as string)
+                  : undefined,
+                readTime: p.readingTimeMinutes
+                  ? `${p.readingTimeMinutes} min read`
+                  : undefined,
+                link: `/blog/${p.slug as string}`,
+              }) as BlogPost,
+          ),
+        );
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [siteId]);
+
+  const posts = livePosts || staticPosts;
   const dark = isDarkBackground(backgroundColor);
   const resolvedTitleColor = titleColor || (dark ? "#f8fafc" : "#111827");
   const resolvedExcerptColor = excerptColor || (dark ? "#94a3b8" : "#6b7280");
@@ -30545,6 +30590,489 @@ export function BlogPreviewRender({
           </div>
         )}
       </div>
+    </section>
+  );
+}
+
+// =====================================================
+// BLOG LISTING SECTION — Virtual page for /blog
+// =====================================================
+
+interface BlogListingPost {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  featuredImageUrl: string | null;
+  featuredImageAlt: string | null;
+  authorName: string | null;
+  publishedAt: string | null;
+  readingTimeMinutes: number;
+  isFeatured: boolean;
+  categories: { id: string; name: string; slug: string; color: string }[];
+}
+
+export interface BlogListingSectionProps {
+  posts?: BlogListingPost[];
+  siteName?: string;
+  siteSubdomain?: string | null;
+  id?: string;
+  className?: string;
+}
+
+export function BlogListingSectionRender({
+  posts = [],
+  siteName = "Blog",
+  id,
+  className = "",
+}: BlogListingSectionProps) {
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return "";
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const featured = posts.find((p) => p.isFeatured);
+  const regularPosts = posts.filter((p) => p !== featured);
+
+  return (
+    <section
+      id={id}
+      className={`w-full py-12 md:py-16 lg:py-20 px-4 md:px-6 ${className}`}
+    >
+      <div className="max-w-screen-xl mx-auto">
+        {/* Page Header */}
+        <div className="text-center mb-12 md:mb-16">
+          <h1
+            className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4"
+            style={{ color: "var(--brand-text, #111827)" }}
+          >
+            Blog
+          </h1>
+          <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+            Latest articles and news from {siteName}
+          </p>
+        </div>
+
+        {posts.length === 0 && (
+          <div className="text-center py-20">
+            <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <svg
+                className="w-8 h-8 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+                />
+              </svg>
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              No posts yet
+            </h2>
+            <p className="text-gray-500">Check back soon for new articles.</p>
+          </div>
+        )}
+
+        {/* Featured Post Hero */}
+        {featured && (
+          <a
+            href={`/blog/${featured.slug}`}
+            className="block mb-12 group no-underline"
+          >
+            <article className="grid md:grid-cols-2 gap-8 rounded-2xl overflow-hidden bg-white shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+              {featured.featuredImageUrl && (
+                <div className="aspect-[4/3] md:aspect-auto overflow-hidden">
+                  <img
+                    src={featured.featuredImageUrl}
+                    alt={featured.featuredImageAlt || featured.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+              )}
+              <div className="p-6 md:p-8 flex flex-col justify-center">
+                <div className="flex items-center gap-2 mb-3">
+                  <span
+                    className="text-xs font-semibold uppercase tracking-wide"
+                    style={{ color: "var(--brand-primary, #3b82f6)" }}
+                  >
+                    Featured
+                  </span>
+                  {featured.categories[0] && (
+                    <>
+                      <span className="text-gray-300">·</span>
+                      <span className="text-xs font-medium text-gray-500">
+                        {featured.categories[0].name}
+                      </span>
+                    </>
+                  )}
+                </div>
+                <h2
+                  className="text-2xl md:text-3xl font-bold mb-3 group-hover:opacity-80 transition-opacity"
+                  style={{ color: "var(--brand-text, #111827)" }}
+                >
+                  {featured.title}
+                </h2>
+                {featured.excerpt && (
+                  <p className="text-gray-500 mb-4 line-clamp-3">
+                    {featured.excerpt}
+                  </p>
+                )}
+                <div className="flex items-center gap-3 text-sm text-gray-400">
+                  {featured.authorName && <span>{featured.authorName}</span>}
+                  {featured.publishedAt && (
+                    <>
+                      {featured.authorName && <span>·</span>}
+                      <span>{formatDate(featured.publishedAt)}</span>
+                    </>
+                  )}
+                  {featured.readingTimeMinutes > 0 && (
+                    <>
+                      <span>·</span>
+                      <span>{featured.readingTimeMinutes} min read</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </article>
+          </a>
+        )}
+
+        {/* Post Grid */}
+        {regularPosts.length > 0 && (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {regularPosts.map((post) => (
+              <a
+                key={post.id}
+                href={`/blog/${post.slug}`}
+                className="block group no-underline"
+              >
+                <article className="h-full rounded-xl overflow-hidden bg-white shadow-md border border-gray-100 hover:shadow-lg transition-shadow">
+                  {post.featuredImageUrl && (
+                    <div className="aspect-video overflow-hidden">
+                      <img
+                        src={post.featuredImageUrl}
+                        alt={post.featuredImageAlt || post.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
+                  <div className="p-5">
+                    {post.categories[0] && (
+                      <span
+                        className="inline-block text-xs font-semibold uppercase tracking-wide mb-2"
+                        style={{
+                          color:
+                            post.categories[0].color ||
+                            "var(--brand-primary, #3b82f6)",
+                        }}
+                      >
+                        {post.categories[0].name}
+                      </span>
+                    )}
+                    <h3
+                      className="text-lg font-bold mb-2 line-clamp-2 group-hover:opacity-80 transition-opacity"
+                      style={{ color: "var(--brand-text, #111827)" }}
+                    >
+                      {post.title}
+                    </h3>
+                    {post.excerpt && (
+                      <p className="text-sm text-gray-500 mb-3 line-clamp-3">
+                        {post.excerpt}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-2 text-xs text-gray-400">
+                      {post.authorName && <span>{post.authorName}</span>}
+                      {post.publishedAt && (
+                        <>
+                          {post.authorName && <span>·</span>}
+                          <span>{formatDate(post.publishedAt)}</span>
+                        </>
+                      )}
+                      {post.readingTimeMinutes > 0 && (
+                        <>
+                          <span>·</span>
+                          <span>{post.readingTimeMinutes} min</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </article>
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+// =====================================================
+// BLOG POST VIEW — Virtual page for /blog/[slug]
+// =====================================================
+
+interface BlogPostData {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  contentHtml: string | null;
+  featuredImageUrl: string | null;
+  featuredImageAlt: string | null;
+  authorName: string | null;
+  authorAvatarUrl: string | null;
+  publishedAt: string | null;
+  readingTimeMinutes: number;
+  isFeatured: boolean;
+  categories: { id: string; name: string; slug: string; color: string }[];
+  tags: string[];
+}
+
+interface RelatedPost {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  featuredImageUrl: string | null;
+  publishedAt: string | null;
+  readingTimeMinutes: number;
+  categories: { id: string; name: string; slug: string; color: string }[];
+}
+
+export interface BlogPostViewProps {
+  post?: BlogPostData;
+  relatedPosts?: RelatedPost[];
+  id?: string;
+  className?: string;
+}
+
+export function BlogPostViewRender({
+  post,
+  relatedPosts = [],
+  id,
+  className = "",
+}: BlogPostViewProps) {
+  if (!post) {
+    return (
+      <section className="w-full py-20 text-center">
+        <p className="text-gray-500">Post not found.</p>
+      </section>
+    );
+  }
+
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return "";
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  return (
+    <section
+      id={id}
+      className={`w-full py-8 md:py-12 px-4 md:px-6 ${className}`}
+    >
+      <div className="max-w-screen-md mx-auto">
+        {/* Back to Blog */}
+        <a
+          href="/blog"
+          className="inline-flex items-center gap-1 text-sm font-medium mb-8 hover:opacity-80 transition-opacity no-underline"
+          style={{ color: "var(--brand-primary, #3b82f6)" }}
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+          Back to Blog
+        </a>
+
+        {/* Post Header */}
+        <header className="mb-8">
+          {/* Categories */}
+          {post.categories.length > 0 && (
+            <div className="flex items-center gap-2 mb-4">
+              {post.categories.map((cat) => (
+                <span
+                  key={cat.id}
+                  className="inline-block px-3 py-1 rounded-full text-xs font-semibold"
+                  style={{
+                    backgroundColor: `${cat.color || "var(--brand-primary, #3b82f6)"}20`,
+                    color: cat.color || "var(--brand-primary, #3b82f6)",
+                  }}
+                >
+                  {cat.name}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Title */}
+          <h1
+            className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 leading-tight"
+            style={{ color: "var(--brand-text, #111827)" }}
+          >
+            {post.title}
+          </h1>
+
+          {/* Meta Row */}
+          <div className="flex items-center gap-4 text-sm text-gray-500 mb-6">
+            {post.authorName && (
+              <div className="flex items-center gap-2">
+                {post.authorAvatarUrl && (
+                  <img
+                    src={post.authorAvatarUrl}
+                    alt={post.authorName}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                )}
+                <span className="font-medium">{post.authorName}</span>
+              </div>
+            )}
+            {post.publishedAt && (
+              <>
+                {post.authorName && <span className="text-gray-300">·</span>}
+                <span>{formatDate(post.publishedAt)}</span>
+              </>
+            )}
+            {post.readingTimeMinutes > 0 && (
+              <>
+                <span className="text-gray-300">·</span>
+                <span>{post.readingTimeMinutes} min read</span>
+              </>
+            )}
+          </div>
+        </header>
+
+        {/* Featured Image */}
+        {post.featuredImageUrl && (
+          <div className="rounded-xl overflow-hidden mb-8 aspect-video">
+            <img
+              src={post.featuredImageUrl}
+              alt={post.featuredImageAlt || post.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
+
+        {/* Post Content */}
+        {post.contentHtml && (
+          <div
+            className="prose prose-lg max-w-none
+              prose-headings:font-bold
+              prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4
+              prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+              prose-p:text-gray-600 prose-p:leading-relaxed
+              prose-a:font-medium prose-a:no-underline hover:prose-a:underline
+              prose-img:rounded-lg
+              prose-blockquote:border-l-4 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-500
+              prose-code:bg-gray-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm"
+            style={
+              {
+                "--tw-prose-links": "var(--brand-primary, #3b82f6)",
+                "--tw-prose-headings": "var(--brand-text, #111827)",
+                borderColor: "var(--brand-primary, #3b82f6)",
+              } as React.CSSProperties
+            }
+            dangerouslySetInnerHTML={{ __html: post.contentHtml }}
+          />
+        )}
+
+        {/* Tags */}
+        {post.tags.length > 0 && (
+          <div className="mt-10 pt-6 border-t border-gray-200">
+            <div className="flex flex-wrap gap-2">
+              {post.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-block px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm"
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Related Posts */}
+      {relatedPosts.length > 0 && (
+        <div className="max-w-screen-xl mx-auto mt-16 pt-12 border-t border-gray-200">
+          <h2
+            className="text-2xl font-bold mb-8 text-center"
+            style={{ color: "var(--brand-text, #111827)" }}
+          >
+            Related Posts
+          </h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {relatedPosts.map((rp) => (
+              <a
+                key={rp.id}
+                href={`/blog/${rp.slug}`}
+                className="block group no-underline"
+              >
+                <article className="h-full rounded-xl overflow-hidden bg-white shadow-md border border-gray-100 hover:shadow-lg transition-shadow">
+                  {rp.featuredImageUrl && (
+                    <div className="aspect-video overflow-hidden">
+                      <img
+                        src={rp.featuredImageUrl}
+                        alt={rp.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
+                  <div className="p-4">
+                    {rp.categories[0] && (
+                      <span
+                        className="text-xs font-semibold uppercase tracking-wide mb-1 block"
+                        style={{ color: "var(--brand-primary, #3b82f6)" }}
+                      >
+                        {rp.categories[0].name}
+                      </span>
+                    )}
+                    <h3
+                      className="text-base font-bold line-clamp-2 group-hover:opacity-80 transition-opacity"
+                      style={{ color: "var(--brand-text, #111827)" }}
+                    >
+                      {rp.title}
+                    </h3>
+                    <div className="flex items-center gap-2 text-xs text-gray-400 mt-2">
+                      {rp.publishedAt && (
+                        <span>{formatDate(rp.publishedAt)}</span>
+                      )}
+                      {rp.readingTimeMinutes > 0 && (
+                        <>
+                          <span>·</span>
+                          <span>{rp.readingTimeMinutes} min</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </article>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   );
 }

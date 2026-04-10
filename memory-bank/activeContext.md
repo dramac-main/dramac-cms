@@ -1,6 +1,30 @@
 # Active Context
 
-## Current Focus: Blog Branding + Media Tracking + Team Presets — COMPLETE ✅ (commit 0cc8a306)
+## Current Focus: Blog System Production-Ready Overhaul — PLANNED (next session)
+
+### Problem
+Blog pages only work on `*.sites.dramacagency.com/blog/*`. Custom domains are broken (company.com/blog → 404). Blog has generic hardcoded header/footer instead of the site's actual Navbar/Footer. BlogPreview component can't fetch live data. Featured posts exist in DB but are unusable. Blog is disconnected from the site rendering pipeline.
+
+### Solution Architecture
+Follow the ecommerce virtual page pattern — blog pages generated on-the-fly in the site renderer (`/site/[domain]/[[...slug]]`). Posts are server-fetched and embedded in page template props. Site's actual Navbar/Footer injected automatically. Works on ALL domains (subdomain + custom domain). Full plan saved to `/memories/repo/blog-system-overhaul-plan.md`.
+
+### Key Implementation Items (8 phases)
+1. Blog data API (`blog-api.ts`) + REST endpoints (`/api/blog/[siteId]`)
+2. Blog page templates (`blog-templates.ts`) — like ecommerce page-templates.ts
+3. BlogListingSection + BlogPostView render components in renders.tsx
+4. Site renderer virtual page generation for `blog` and `blog/*` slugs
+5. Proxy update — route client site blogs through site renderer
+6. SmartNav blog link auto-injection when published posts exist
+7. `isFeatured` in `createPost()` + featured toggle in PostForm UI
+8. BlogPreview live data (latest/featured) via client-side API fetching
+
+### Build Fix Commits (this session)
+- commit `06d62eae` — MyAccountBlock JSX fragment + automation-engine module
+- Fixed Vercel build failure from commit `0cc8a306`
+
+---
+
+## Previous Focus: Blog Branding + Media Tracking + Team Presets — COMPLETE ✅ (commit 0cc8a306)
 
 ### What Was Done
 

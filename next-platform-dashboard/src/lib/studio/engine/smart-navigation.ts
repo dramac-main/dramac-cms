@@ -196,6 +196,33 @@ export const ECOMMERCE_FOOTER_ITEMS: SmartNavItem[] = [
 ];
 
 // ============================================================================
+// Constants — Blog nav items (injected when site has published posts)
+// ============================================================================
+
+export const BLOG_NAV_ITEMS: SmartNavItem[] = [
+  {
+    id: "blog-main",
+    label: "Blog",
+    href: "/blog",
+    icon: "newspaper",
+    position: "main",
+    sortOrder: 85, // Before Shop (100), after Services
+    moduleId: "blog",
+  },
+];
+
+export const BLOG_FOOTER_ITEMS: SmartNavItem[] = [
+  {
+    id: "blog-footer",
+    label: "Blog",
+    href: "/blog",
+    position: "footer",
+    sortOrder: 0, // First in footer
+    moduleId: "blog",
+  },
+];
+
+// ============================================================================
 // Navigation Assembly — merge static links + module-contributed items
 // ============================================================================
 
@@ -247,6 +274,13 @@ export function getModuleNavigation(
       mergeModuleItems(result.utility, ECOMMERCE_UTILITY_ITEMS);
       mergeModuleItems(result.footer, ECOMMERCE_FOOTER_ITEMS);
     }
+  }
+
+  // Blog nav items — injected when processData detects published posts
+  // and sets the _hasBlog runtime flag on siteSettings.
+  if (siteSettings && (siteSettings as Record<string, unknown>)._hasBlog) {
+    mergeModuleItems(result.main, BLOG_NAV_ITEMS);
+    mergeModuleItems(result.footer, BLOG_FOOTER_ITEMS);
   }
 
   // Sort each group by sortOrder

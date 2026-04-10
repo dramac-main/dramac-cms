@@ -16,6 +16,8 @@ import {
   Pencil,
   Trash2,
   X,
+  Send,
+  Crown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,6 +68,8 @@ import {
   createPortalTeamMember,
   updatePortalTeamMember,
   deletePortalTeamMember,
+  resendPortalTeamInvitation,
+  getPortalOwner,
   type PortalTeamMember,
   type CreateTeamMemberInput,
 } from "@/lib/portal/portal-team-service";
@@ -209,6 +213,7 @@ const rolePermissionPresets: Record<string, Record<string, boolean>> = {
 
 export default function PortalTeamPage() {
   const [members, setMembers] = useState<PortalTeamMember[]>([]);
+  const [owner, setOwner] = useState<PortalTeamMember | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -219,6 +224,7 @@ export default function PortalTeamPage() {
     invited: 0,
     inactive: 0,
   });
+  const [resending, setResending] = useState<string | null>(null);
 
   // Dialog states
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -247,17 +253,24 @@ export default function PortalTeamPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [membersResult, statsResult, deptResult] = await Promise.all([
-        getPortalTeamMembers({
-          search: search || undefined,
-          status: statusFilter,
-        }),
-        getPortalTeamStats(),
-        getPortalTeamDepartments(),
-      ]);
+      const [membersResult, statsResult, deptResult, ownerResult] =
+        await Promise.all([
+          getPortalTeamMembers({
+            search: search || undefined,
+            status: statusFilter,
+          }),
+          getPortalTeamStats(),
+          getPortalTeamDepartments(),
+          getPortalOwner(),
+        ]);
       setMembers(membersResult.members);
-      setStats(statsResult);
+      setStats({
+        ...statsResult,
+        total: statsResult.total + (ownerResult ? 1 : 0),
+        active: statsResult.active + (ownerResult ? 1 : 0),
+      });
       setDepartments(deptResult);
+      setOwner(ownerResult);
     } catch (error) {
       console.error("Failed to load team data:", error);
       toast.error("Failed to load team data");
@@ -361,7 +374,6 @@ export default function PortalTeamPage() {
           jobTitle: formData.jobTitle as string,
           department: formData.department as string,
           notes: formData.notes as string,
-          status: "active",
           canViewAnalytics: formData.canViewAnalytics as boolean,
           canEditContent: formData.canEditContent as boolean,
           canViewInvoices: formData.canViewInvoices as boolean,
@@ -406,6 +418,22 @@ export default function PortalTeamPage() {
       toast.error("An error occurred");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleResendInvitation = async (member: PortalTeamMember) => {
+    setResending(member.id);
+    try {
+      const result = await resendPortalTeamInvitation(member.id);
+      if (result.success) {
+        toast.success(`Invitation resent to ${member.email}`);
+      } else {
+        toast.error(result.error || "Failed to resend invitation");
+      }
+    } catch {
+      toast.error("An error occurred");
+    } finally {
+      setResending(null);
     }
   };
 
@@ -568,6 +596,40 @@ export default function PortalTeamPage() {
         </Card>
       ) : (
         <div className="space-y-3">
+          {/* Portal Owner - always shown first */}
+          {owner && (statusFilter === "all" || statusFilter === "active") && (
+            <Card className="hover:shadow-sm transition-shadow border-primary/20 bg-primary/5">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-10 w-10 ring-2 ring-primary/30">
+                    <AvatarFallback className="text-sm bg-primary/10 text-primary">
+                      {getInitials(owner.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold truncate">{owner.name}</h3>
+                      <Badge className="bg-primary/10 text-primary border-primary/20">
+                        <Crown className="h-3 w-3 mr-1" />
+                        Owner
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1 truncate">
+                        <Mail className="h-3 w-3 shrink-0" />
+                        {owner.email}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Shield className="h-3 w-3" />
+                        All permissions
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {members.map((member) => {
             const status = statusConfig[member.status] || statusConfig.active;
             const StatusIcon = status.icon;
@@ -633,6 +695,17 @@ export default function PortalTeamPage() {
                           <Pencil className="h-4 w-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
+                        {member.status === "invited" && (
+                          <DropdownMenuItem
+                            disabled={resending === member.id}
+                            onClick={() => handleResendInvitation(member)}
+                          >
+                            <Send className="h-4 w-4 mr-2" />
+                            {resending === member.id
+                              ? "Sending..."
+                              : "Resend Invitation"}
+                          </DropdownMenuItem>
+                        )}
                         {member.status === "active" ? (
                           <DropdownMenuItem
                             onClick={() =>
@@ -642,14 +715,14 @@ export default function PortalTeamPage() {
                             <UserX className="h-4 w-4 mr-2" />
                             Deactivate
                           </DropdownMenuItem>
-                        ) : (
+                        ) : member.status !== "invited" ? (
                           <DropdownMenuItem
                             onClick={() => handleStatusChange(member, "active")}
                           >
                             <UserCheck className="h-4 w-4 mr-2" />
                             Activate
                           </DropdownMenuItem>
-                        )}
+                        ) : null}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           className="text-destructive"

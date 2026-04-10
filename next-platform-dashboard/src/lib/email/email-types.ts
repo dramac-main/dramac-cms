@@ -16,6 +16,7 @@ export type EmailType =
   // Team
   | "team_invitation"
   | "team_member_joined"
+  | "portal_team_invitation"
   // Sites
   | "site_published"
   | "domain_connected"
@@ -95,6 +96,7 @@ export function isValidEmailType(type: string): type is EmailType {
     "storefront_password_reset",
     "team_invitation",
     "team_member_joined",
+    "portal_team_invitation",
     "site_published",
     "domain_connected",
     "subscription_created",
@@ -161,6 +163,13 @@ export interface TeamInvitationData {
 export interface TeamMemberJoinedData {
   memberName: string;
   agencyName: string;
+}
+
+export interface PortalTeamInvitationData {
+  inviterName: string;
+  businessName: string;
+  role: string;
+  portalUrl: string;
 }
 
 export interface SitePublishedData {
