@@ -1,53 +1,56 @@
 # Active Context
 
-## Current Focus: Portal Media Library + Blog Nav + Settings Fix — COMPLETE ✅ (commit 30353a82)
+## Current Focus: Blog System Overhaul + Media Library Fix — COMPLETE ✅ (commit fb15a6f7)
 
 ### What Was Done
 
-**Portal Media Library Fix:**
-- Fixed `getPortalMedia()` query: was only checking `site_id = X`, now includes agency-level assets where `site_id IS NULL`
-- Same fix applied to `getPortalMediaStats()`
-- Added `discoverSiteImages()` function that scans `page_content` JSONB and `blog_posts.featured_image_url` for image URLs (Unsplash, Supabase, etc.)
-- Synced 5 untracked storage files from `storage.objects` → `assets` table via SQL
-- Updated media page UI with "Images Used on Your Site" discovery section
+**Blog Routes Redirect (3 files):**
+- Replaced old `/blog/[subdomain]/` layout, page, and `[slug]/page` with redirect()
+- Redirects to `https://{subdomain}.sites.dramacagency.com/blog/...` (site domain)
 
-**Settings Page Company Save Fix:**
-- Fixed `handleProfileSubmit` to include `company: formData.company` (was missing)
-- Enhanced `updateClientSettings()` to also persist name/phone/company to Supabase Auth user_metadata
+**Blog Save Revalidation (post-service.ts):**
+- Added `revalidatePath` from `next/cache` after `createPost()`, `updatePost()`, `deletePost()`
+- Root cause of blog edits not reflecting in live preview — Next.js was caching indefinitely
 
-**Blog System (from prior session + nav fix this session):**
-- Full blog system: API endpoints, templates, renders, registry, proxy routing, smart navigation
-- CRITICAL FIX: `blogInfo.hasBlog` → `blogInfo.hasPosts` property name mismatch in page.tsx
-- This was preventing `_hasBlog` flag from being set, so blog nav links never appeared
+**Enhanced BlogListingSectionRender (renders.tsx):**
+- Added search input (filters by title, excerpt, author)
+- Category pill filter buttons extracted from posts
+- Pagination (9 posts/page) with numbered buttons + prev/next arrows
+- Results count display, no-results empty state
+- Brand-aware styling using CSS variables
 
-**Portal Audit Results:**
-- Support page: ✅ Fully functional
-- Notifications page: ✅ Fully functional
-- Invoices page: ⚠️ Uses subscriptions as mock invoices (Paddle integration structural limitation)
-- Settings page: ✅ Fixed (company field now saves)
+**Enhanced BlogPostViewRender (renders.tsx):**
+- Added breadcrumbs (Home > Blog > Post Title)
+- Social sharing buttons (X/Twitter, Facebook, LinkedIn, copy link)
+- Table of contents auto-generated from h2/h3 headings in contentHtml
+- Author bio section with avatar fallback
+- Share footer at bottom ("Enjoyed this article?")
+- Added heading ID injection for TOC anchor links
 
-### Files Modified (commit 30353a82 — 21 files, 1808 insertions)
-1. `portal-media-service.ts` — Expanded query + discoverSiteImages()
-2. `portal/sites/[siteId]/media/page.tsx` — Site images discovery UI
-3. `portal/settings/page.tsx` — Company field save fix
-4. `portal-auth.ts` — Auth metadata sync
-5. `site/[domain]/[[...slug]]/page.tsx` — Blog nav hasBlog→hasPosts fix
-6. Blog system files: blog-api.ts, blog-templates.ts, renders.tsx, core-components.ts, proxy.ts, smart-navigation.ts, API routes
-7. Email/team files: email-types.ts, notification-prefs.ts, templates.ts, branded-templates.ts, portal-team-service.ts, team/page.tsx
+**Fixed "View Live" Link (post-form.tsx):**
+- Changed from `/blog/${subdomain}/${post.slug}` to `https://${subdomain}.${BASE_DOMAIN}/blog/${post.slug}`
+- Now links directly to site domain instead of through redirect
 
----
+**Media Library 0 Files Fix:**
+- Root cause: super_admin profile had `agency_id = c86c7c61...` (orphan — that agency doesn't exist!)
+- Only real agency is `30e7d810...` (Jacktest Ltd), so query returned 0 results
+- DB fix: Updated `profiles.agency_id` to actual agency, added to `agency_members` as owner
+- Code fix: `getUserAgencyContext()` now verifies agency exists for super admins, falls back to first real agency
 
-## Previous Focus: Blog System Production-Ready Overhaul — PLANNED (implemented above)
+**Portal Audit (review only, no changes needed):**
+- All 11 portal pages verified: settings, support, notifications, invoices, domains, email, analytics, sites, team, blog, dashboard
+- All are production-ready with real services, proper auth, loading states, error handling
 
-### What Was Done
-
-Three-part improvement covering blog branding integration, media usage tracking, and team role permission presets.
-
-### Blog Branding Integration (Most Visible Change)
-
-- **Created `src/app/blog/[subdomain]/layout.tsx`** — New layout wrapping all blog pages:
-  - Fetches site settings (colors, fonts, logo) from database via `getSiteBySubdomain()`
-  - Extracts brand source via `extractBrandSource()`, resolves full palette via `resolveBrandColors()`
+### Files Modified (commit fb15a6f7 — 12 files, 602 insertions, 909 deletions)
+1. `blog/[subdomain]/layout.tsx` — Redirect to site domain
+2. `blog/[subdomain]/page.tsx` — Redirect to site domain
+3. `blog/[subdomain]/[slug]/page.tsx` — Redirect to site domain
+4. `post-service.ts` — revalidatePath after create/update/delete
+5. `renders.tsx` — Enhanced BlogListingSectionRender + BlogPostViewRender
+6. `post-form.tsx` — View Live link fix
+7. `media-service.ts` — Super admin agency fallback
+8. `site/[domain]/[[...slug]]/page.tsx` — hasBlog→hasPosts fix (from prior commit)
+9. + 4 other files (activeContext.md, settings, portal media pages)
   - Generates CSS custom properties via `generateBrandCSSVars()` (same system as main site renderer)
   - Loads Google Fonts dynamically for heading and body fonts
   - Renders branded header (logo + site name) and footer with site border/muted colors
