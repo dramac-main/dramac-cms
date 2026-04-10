@@ -34,7 +34,20 @@
 
 ---
 
-## Latest Update: Client Portal Overhaul — ALL 15 PHASES COMPLETE ✅ (April 2026)
+## Latest Update: Portal Site-Scoped Content Management ✅ (commit c57dcd05)
+
+### Content Editing + Site-Scoped Navigation (18 files, 1980 insertions, 310 deletions)
+
+Enabled portal clients to manage content for their sites with proper permission gating. All Content nav items are now site-scoped, blog editing is gated behind `canEditContent`, and 8 new site-scoped pages were created for blog, pages, media, SEO, analytics, and submissions.
+
+**Key deliverables:**
+- `canEditContent` permission wired into navigation, sidebar, and blog service
+- Portal clients create drafts only (can't publish directly), edit own posts
+- PostForm `basePath` prop for correct portal-context navigation
+- 8 new pages under `/portal/sites/[siteId]/`: blog (list/new/edit), pages, media, analytics, SEO, submissions
+- TypeScript clean (zero new errors)
+
+## Previous Update: Client Portal Overhaul — ALL 15 PHASES COMPLETE ✅ (April 2026)
 
 ### Enterprise Portal Transformation (4 sessions, 15 phases, ~30 files)
 

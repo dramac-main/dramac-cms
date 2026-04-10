@@ -1,6 +1,46 @@
 # Active Context
 
-## Current Focus: Client Portal Overhaul — ALL 15 PHASES COMPLETE + VERIFIED ✅
+## Current Focus: Portal Site-Scoped Content Management — COMPLETE ✅ (commit c57dcd05)
+
+### What Was Done
+
+Implemented site-scoped content management for the client portal, enabling clients with the `canEditContent` permission to manage blog posts, view pages, browse media, check SEO, view analytics, and manage form submissions — all scoped to a specific site.
+
+### Changes Made
+
+**Navigation (portal-navigation.ts, portal-layout-client.tsx, portal-sidebar.tsx):**
+- Added `canEditContent` to `PortalUserPermissions` interface
+- Made all Content nav items site-scoped (under `/portal/sites/{siteId}/...`)
+- Gated Pages, Blog Posts, Media behind `canEditContent` permission
+- Analytics gated on `canViewAnalytics`; SEO and Submissions visible to all
+
+**Blog Service (post-service.ts):**
+- Portal users with `canEditContent` can create posts (forced to draft status)
+- Portal editors can edit posts they authored on their accessible sites
+- Portal editors see published posts + their own drafts (not just published)
+- Added `portalCanEditContent` and `portalCanPublish` to `UserBlogContext`
+
+**PostForm (post-form.tsx):**
+- Added `basePath` prop for correct navigation in portal context
+- Portal blog pages pass `/portal/sites/{siteId}/blog` as basePath
+
+**8 New Site-Scoped Portal Pages:**
+- `/portal/sites/[siteId]/blog/page.tsx` — Blog management with search, pagination, create/edit
+- `/portal/sites/[siteId]/blog/new/page.tsx` — Create new post (server component wrapping PostForm)
+- `/portal/sites/[siteId]/blog/[postId]/page.tsx` — Edit post (server component wrapping PostForm)
+- `/portal/sites/[siteId]/pages/page.tsx` — Read-only page listing with external links
+- `/portal/sites/[siteId]/media/page.tsx` — Media browser with grid, preview, search, filters
+- `/portal/sites/[siteId]/analytics/page.tsx` — Per-site analytics with stats cards and top pages
+- `/portal/sites/[siteId]/seo/page.tsx` — SEO overview with per-page analysis and scoring
+- `/portal/sites/[siteId]/submissions/page.tsx` — Form submissions with filters, stats, export
+
+### Next Steps
+- Deploy and verify all new portal pages work in production
+- Test canEditContent permission toggle (enable/disable and verify nav + page access)
+- Test blog post create/edit flow from portal
+- Consider adding media upload capability for portal editors in future
+
+## Previous Focus: Client Portal Overhaul — ALL 15 PHASES COMPLETE + VERIFIED ✅
 
 ### Summary
 
