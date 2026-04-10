@@ -575,7 +575,13 @@ export async function POST(request: NextRequest) {
         );
 
         return NextResponse.json(
-          { customer: safeCustomer(mlCustomer), token: newToken },
+          {
+            customer: safeCustomer(mlCustomer),
+            token: newToken,
+            // Let the frontend know this was a magic link login so it can
+            // offer a password-reset grace window (no current password needed)
+            canResetPassword: true,
+          },
           { status: 200, headers: corsHeaders },
         );
       }
@@ -864,7 +870,10 @@ export async function POST(request: NextRequest) {
           .select("subdomain, custom_domain, custom_domain_verified")
           .eq("id", siteId)
           .single();
-        if (siteForDomain?.custom_domain && siteForDomain.custom_domain_verified) {
+        if (
+          siteForDomain?.custom_domain &&
+          siteForDomain.custom_domain_verified
+        ) {
           storefrontOrigin = `https://${siteForDomain.custom_domain}`;
         } else if (siteForDomain?.subdomain) {
           storefrontOrigin = `https://${siteForDomain.subdomain}.${DOMAINS.SITES_BASE}`;
@@ -1777,23 +1786,41 @@ export async function POST(request: NextRequest) {
       }
 
       // If customer already has a password, verify current password first
+      // EXCEPTION: If the session was created very recently (within 1 hour),
+      // the user likely just authenticated via magic link to reset their
+      // forgotten password. In that case, skip the current password check.
       if (customer.password_set_at && customer.password_hash) {
-        if (!currentPassword) {
+        // Check if this is a recent session (magic-link grace window)
+        const { data: sessionRow } = await (supabase as any)
+          .from(SESSIONS)
+          .select("created_at")
+          .eq("token_hash", tokenHash)
+          .single();
+
+        const sessionAge = sessionRow
+          ? Date.now() - new Date(sessionRow.created_at).getTime()
+          : Infinity;
+        const MAGIC_LINK_GRACE_MS = 60 * 60 * 1000; // 1 hour
+        const withinGraceWindow = sessionAge < MAGIC_LINK_GRACE_MS;
+
+        if (!currentPassword && !withinGraceWindow) {
           return NextResponse.json(
             { error: "Current password is required" },
             { status: 400, headers: corsHeaders },
           );
         }
 
-        const currentValid = await bcrypt.compare(
-          currentPassword,
-          customer.password_hash,
-        );
-        if (!currentValid) {
-          return NextResponse.json(
-            { error: "Current password is incorrect" },
-            { status: 401, headers: corsHeaders },
+        if (currentPassword) {
+          const currentValid = await bcrypt.compare(
+            currentPassword,
+            customer.password_hash,
           );
+          if (!currentValid) {
+            return NextResponse.json(
+              { error: "Current password is incorrect" },
+              { status: 401, headers: corsHeaders },
+            );
+          }
         }
       }
 

@@ -1272,6 +1272,37 @@ function ProfileTab({
   );
 }
 
+/** Small inline link that sends a magic link so the user can come back and reset password */
+function ForgotPasswordLink({ email }: { email: string }) {
+  const { requestMagicLink } = useStorefrontAuth();
+  const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+
+  if (sent) {
+    return (
+      <span className="text-success font-medium">
+        Login link sent — check your email
+      </span>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      disabled={sending}
+      onClick={async () => {
+        setSending(true);
+        await requestMagicLink(email);
+        setSending(false);
+        setSent(true);
+      }}
+      className="text-primary hover:underline font-medium disabled:opacity-60"
+    >
+      {sending ? "Sending…" : "Get a login link"}
+    </button>
+  );
+}
+
 function ChangePasswordSection({ customer }: { customer: StorefrontCustomer }) {
   const { changePassword } = useStorefrontAuth();
   const [currentPassword, setCurrentPassword] = useState("");
@@ -1282,7 +1313,8 @@ function ChangePasswordSection({ customer }: { customer: StorefrontCustomer }) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
+  // Auto-open when user logged in via magic link (they came here to reset)
+  const [isOpen, setIsOpen] = useState(!!customer.canResetPassword);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1301,7 +1333,9 @@ function ChangePasswordSection({ customer }: { customer: StorefrontCustomer }) {
       setError("Passwords do not match.");
       return;
     }
-    if (customer.hasPassword && !currentPassword) {
+    // If customer has a password AND they didn't come in via magic link,
+    // require the current password for security
+    if (customer.hasPassword && !customer.canResetPassword && !currentPassword) {
       setError("Please enter your current password.");
       return;
     }
@@ -1309,7 +1343,9 @@ function ChangePasswordSection({ customer }: { customer: StorefrontCustomer }) {
     setLoading(true);
     const result = await changePassword(
       newPassword,
-      customer.hasPassword ? currentPassword : undefined,
+      customer.hasPassword && !customer.canResetPassword
+        ? currentPassword
+        : undefined,
     );
     setLoading(false);
 
@@ -1332,7 +1368,11 @@ function ChangePasswordSection({ customer }: { customer: StorefrontCustomer }) {
         className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary"
       >
         <Lock className="h-4 w-4" />
-        {customer.hasPassword ? "Change Password" : "Set a Password"}
+        {customer.canResetPassword
+          ? "Reset Password"
+          : customer.hasPassword
+            ? "Change Password"
+            : "Set a Password"}
         <ChevronRight
           className={`h-4 w-4 transition-transform ${isOpen ? "rotate-90" : ""}`}
         />
@@ -1340,14 +1380,21 @@ function ChangePasswordSection({ customer }: { customer: StorefrontCustomer }) {
 
       {isOpen && (
         <form onSubmit={handleSubmit} className="mt-4 space-y-3">
-          {!customer.hasPassword && (
+          {customer.canResetPassword && customer.hasPassword && (
+            <p className="text-sm text-muted-foreground">
+              You signed in via a login link. You can reset your password
+              without entering the old one.
+            </p>
+          )}
+
+          {!customer.hasPassword && !customer.canResetPassword && (
             <p className="text-sm text-muted-foreground">
               You signed in via magic link or Google. Set a password to sign in
               with email and password next time.
             </p>
           )}
 
-          {customer.hasPassword && (
+          {customer.hasPassword && !customer.canResetPassword && (
             <div className="space-y-1">
               <label
                 htmlFor="cp-current"
@@ -1379,6 +1426,11 @@ function ChangePasswordSection({ customer }: { customer: StorefrontCustomer }) {
                 </button>
               </div>
             </div>
+
+            <p className="text-xs text-muted-foreground">
+              Forgot your current password?{" "}
+              <ForgotPasswordLink email={customer.email} />
+            </p>
           )}
 
           <div className="space-y-1">

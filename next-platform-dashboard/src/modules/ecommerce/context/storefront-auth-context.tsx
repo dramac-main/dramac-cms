@@ -37,6 +37,8 @@ export interface StorefrontCustomer {
   totalSpent: number;
   acceptsMarketing: boolean;
   createdAt: string;
+  /** True when the user just logged in via magic link (password reset grace window) */
+  canResetPassword?: boolean;
 }
 
 export interface AuthContextValue {
@@ -205,6 +207,9 @@ export function StorefrontAuthProvider({
         .then((data) => {
           if (data?.customer) {
             const sessionToken = data.token || googleAuthToken;
+            // Google auth also uses magic link mechanism, but we don't set
+            // canResetPassword — Google users can't forget a password they
+            // never set, and if they did set one it wasn't forgotten.
             saveSession(sessionToken, data.customer);
             mergeGuestCart(data.customer.id);
           }
@@ -226,6 +231,11 @@ export function StorefrontAuthProvider({
           if (data?.customer) {
             // Use the new token returned by the server (magic token is now consumed)
             const sessionToken = data.token || magicToken;
+            // If server says canResetPassword, pass it to the customer object
+            // so the UI can show the password reset form without current password
+            if (data.canResetPassword) {
+              data.customer.canResetPassword = true;
+            }
             saveSession(sessionToken, data.customer);
             // Merge guest cart (non-blocking)
             mergeGuestCart(data.customer.id);
