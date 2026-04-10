@@ -20,7 +20,7 @@ import {
   Zap,
   ArrowRight,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { DOMAINS } from "@/lib/constants/domains";
 import { requirePortalAuth } from "@/lib/portal/portal-auth";
 import {
@@ -62,7 +62,7 @@ export async function generateMetadata({
   params,
 }: PortalSiteDetailPageProps): Promise<Metadata> {
   const { siteId } = await params;
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data: site } = await supabase
     .from("sites")

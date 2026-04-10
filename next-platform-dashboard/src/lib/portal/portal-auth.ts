@@ -198,7 +198,7 @@ export async function getPortalSession(): Promise<{
     if (client) {
       return {
         user: {
-          userId: "", // No auth user ID in impersonation
+          userId: authUser?.id || "", // Admin's auth ID (the impersonator)
           clientId: client.id,
           email: client.email || "",
           fullName: client.name,

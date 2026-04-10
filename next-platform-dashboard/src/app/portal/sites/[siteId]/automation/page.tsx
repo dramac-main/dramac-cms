@@ -28,7 +28,7 @@ import {
   PauseCircle,
   type LucideIcon,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePortalAuth } from "@/lib/portal/portal-auth";
 import { verifyPortalModuleAccess } from "@/lib/portal/portal-permissions";
 import { PortalProvider } from "@/lib/portal/portal-context";
@@ -65,7 +65,7 @@ interface PortalAutomationStats {
 // ============================================================================
 
 async function getPortalWorkflows(siteId: string): Promise<PortalWorkflow[]> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("automation_workflows")
@@ -122,7 +122,7 @@ async function getPortalWorkflows(siteId: string): Promise<PortalWorkflow[]> {
 async function getPortalAutomationStats(
   siteId: string,
 ): Promise<PortalAutomationStats> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const [
     { count: totalWorkflows },

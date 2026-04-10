@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { Globe, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { requirePortalAuth } from "@/lib/portal/portal-auth";
@@ -13,7 +13,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { siteId } = await params;
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   
   const { data: site } = await supabase
     .from("sites")
@@ -31,7 +31,7 @@ export default async function SiteAppsPage({ params }: PageProps) {
   const { siteId } = await params;
   const portalUser = await requirePortalAuth();
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   // Get client info
   const { data: client } = await supabase

@@ -23,6 +23,12 @@ export async function bootstrapLiveChatAgent(
   userId: string,
   options?: { displayName?: string; email?: string; role?: "admin" | "agent" },
 ): Promise<string | null> {
+  // Guard: skip if userId is empty or not a valid UUID
+  if (!userId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
+    console.warn(`[LiveChat] bootstrapLiveChatAgent skipped — invalid userId: "${userId}"`);
+    return null;
+  }
+
   const supabase = createAdminClient();
 
   // Check if an agent already exists for this user on this site
