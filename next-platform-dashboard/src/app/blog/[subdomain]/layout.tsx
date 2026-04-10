@@ -61,7 +61,11 @@ export default async function BlogLayout({
     (settings.logo_url as string) || (theme.logoUrl as string) || "";
 
   // Generate CSS variables matching the site renderer pattern
-  const cssVars = generateBrandCSSVars(palette, fontHeading || null, fontBody || null);
+  const cssVars = generateBrandCSSVars(
+    palette,
+    fontHeading || null,
+    fontBody || null,
+  );
 
   // Build Google Fonts URL
   const fontsToLoad = [fontHeading, fontBody].filter(Boolean);

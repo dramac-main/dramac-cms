@@ -591,7 +591,7 @@ export async function createPost(
   // Track featured image in media_usage if set
   if (post.featuredImageUrl) {
     trackFeaturedImageUsage(supabase, post.featuredImageUrl, data.id).catch(
-      (err) => console.error("[PostService] Media usage tracking error:", err)
+      (err) => console.error("[PostService] Media usage tracking error:", err),
     );
   }
 
@@ -730,7 +730,7 @@ export async function updatePost(
   // Track featured image in media_usage if it was changed
   if (updates.featuredImageUrl) {
     trackFeaturedImageUsage(supabase, updates.featuredImageUrl, postId).catch(
-      (err) => console.error("[PostService] Media usage tracking error:", err)
+      (err) => console.error("[PostService] Media usage tracking error:", err),
     );
   }
 

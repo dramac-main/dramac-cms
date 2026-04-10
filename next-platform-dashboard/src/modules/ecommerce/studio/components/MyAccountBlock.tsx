@@ -1395,42 +1395,44 @@ function ChangePasswordSection({ customer }: { customer: StorefrontCustomer }) {
           )}
 
           {customer.hasPassword && !customer.canResetPassword && (
-            <div className="space-y-1">
-              <label
-                htmlFor="cp-current"
-                className="block text-sm font-medium text-foreground"
-              >
-                Current Password
-              </label>
-              <div className="relative">
-                <input
-                  id="cp-current"
-                  type={showCurrent ? "text" : "password"}
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  autoComplete="current-password"
-                  disabled={loading}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                />
-                <button
-                  type="button"
-                  tabIndex={-1}
-                  onClick={() => setShowCurrent(!showCurrent)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            <>
+              <div className="space-y-1">
+                <label
+                  htmlFor="cp-current"
+                  className="block text-sm font-medium text-foreground"
                 >
-                  {showCurrent ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
+                  Current Password
+                </label>
+                <div className="relative">
+                  <input
+                    id="cp-current"
+                    type={showCurrent ? "text" : "password"}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    autoComplete="current-password"
+                    disabled={loading}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    onClick={() => setShowCurrent(!showCurrent)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showCurrent ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <p className="text-xs text-muted-foreground">
-              Forgot your current password?{" "}
-              <ForgotPasswordLink email={customer.email} />
-            </p>
+              <p className="text-xs text-muted-foreground">
+                Forgot your current password?{" "}
+                <ForgotPasswordLink email={customer.email} />
+              </p>
+            </>
           )}
 
           <div className="space-y-1">

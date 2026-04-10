@@ -116,7 +116,7 @@ export default async function PublicPostPage({
       <Link
         href={`/blog/${subdomain}`}
         className="inline-flex items-center text-sm mb-8 transition-colors"
-        style={{ color: 'var(--muted-foreground, #6b7280)' }}
+        style={{ color: "var(--muted-foreground, #6b7280)" }}
       >
         <ArrowLeft className="h-4 w-4 mr-1" />
         Back to blog
@@ -141,10 +141,18 @@ export default async function PublicPostPage({
       )}
 
       {/* Title */}
-      <h1 className="text-4xl font-bold mb-4 leading-tight" style={{ fontFamily: 'var(--font-display, inherit)' }}>{post.title}</h1>
+      <h1
+        className="text-4xl font-bold mb-4 leading-tight"
+        style={{ fontFamily: "var(--font-display, inherit)" }}
+      >
+        {post.title}
+      </h1>
 
       {/* Meta */}
-      <div className="flex items-center gap-4 mb-8" style={{ color: 'var(--muted-foreground, #6b7280)' }}>
+      <div
+        className="flex items-center gap-4 mb-8"
+        style={{ color: "var(--muted-foreground, #6b7280)" }}
+      >
         <div className="flex items-center gap-3">
           {author?.avatar_url ? (
             <Image
@@ -155,12 +163,21 @@ export default async function PublicPostPage({
               className="rounded-full"
             />
           ) : (
-            <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium" style={{ backgroundColor: 'var(--muted, #e5e7eb)', color: 'var(--muted-foreground, #6b7280)' }}>
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium"
+              style={{
+                backgroundColor: "var(--muted, #e5e7eb)",
+                color: "var(--muted-foreground, #6b7280)",
+              }}
+            >
               {(author?.full_name || "U").charAt(0)}
             </div>
           )}
           <div>
-            <p className="font-medium" style={{ color: 'var(--foreground, #111827)' }}>
+            <p
+              className="font-medium"
+              style={{ color: "var(--foreground, #111827)" }}
+            >
               {author?.full_name || "Unknown Author"}
             </p>
             <div className="flex items-center gap-2 text-sm">
@@ -202,8 +219,16 @@ export default async function PublicPostPage({
 
       {/* Tags */}
       {post.tags && post.tags.length > 0 && (
-        <div className="mt-12 pt-8" style={{ borderTop: '1px solid var(--border, #e5e7eb)' }}>
-          <p className="text-sm mb-3" style={{ color: 'var(--muted-foreground, #6b7280)' }}>Tags:</p>
+        <div
+          className="mt-12 pt-8"
+          style={{ borderTop: "1px solid var(--border, #e5e7eb)" }}
+        >
+          <p
+            className="text-sm mb-3"
+            style={{ color: "var(--muted-foreground, #6b7280)" }}
+          >
+            Tags:
+          </p>
           <div className="flex flex-wrap gap-2">
             {post.tags.map((tag: string) => (
               <Badge key={tag} variant="outline">
@@ -216,8 +241,16 @@ export default async function PublicPostPage({
 
       {/* Related Posts */}
       {relatedPosts.length > 0 && (
-        <div className="mt-12 pt-8" style={{ borderTop: '1px solid var(--border, #e5e7eb)' }}>
-          <h2 className="text-2xl font-bold mb-6" style={{ fontFamily: 'var(--font-display, inherit)' }}>Related Posts</h2>
+        <div
+          className="mt-12 pt-8"
+          style={{ borderTop: "1px solid var(--border, #e5e7eb)" }}
+        >
+          <h2
+            className="text-2xl font-bold mb-6"
+            style={{ fontFamily: "var(--font-display, inherit)" }}
+          >
+            Related Posts
+          </h2>
           <div className="grid gap-6 md:grid-cols-3">
             {relatedPosts.map((relatedPost) => (
               <Link
@@ -236,10 +269,16 @@ export default async function PublicPostPage({
                     />
                   </div>
                 )}
-                <h3 className="font-medium transition-colors line-clamp-2" style={{ fontFamily: 'var(--font-display, inherit)' }}>
+                <h3
+                  className="font-medium transition-colors line-clamp-2"
+                  style={{ fontFamily: "var(--font-display, inherit)" }}
+                >
                   {relatedPost.title}
                 </h3>
-                <p className="text-sm mt-1" style={{ color: 'var(--muted-foreground, #6b7280)' }}>
+                <p
+                  className="text-sm mt-1"
+                  style={{ color: "var(--muted-foreground, #6b7280)" }}
+                >
                   {new Date(
                     String(relatedPost.published_at || new Date()),
                   ).toLocaleDateString(DEFAULT_LOCALE, {

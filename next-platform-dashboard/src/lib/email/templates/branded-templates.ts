@@ -1267,7 +1267,8 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
       `Sign In to Your Account\n\nWe received a request to sign in to your account${data.siteName ? ` on ${data.siteName}` : ""}.\n\nSign in here: ${data.loginUrl}\n\nThis link expires in 1 hour and can only be used once.`,
   },
   storefront_password_reset: {
-    subject: (data) => `Reset your password for ${data.siteName || "your account"}`,
+    subject: (data) =>
+      `Reset your password for ${data.siteName || "your account"}`,
     html: (data, b) =>
       baseEmailTemplate(
         b,

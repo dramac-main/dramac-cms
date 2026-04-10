@@ -14,7 +14,16 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { X, Loader2, Mail, Lock, Eye, EyeOff, ShoppingBag, KeyRound } from "lucide-react";
+import {
+  X,
+  Loader2,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ShoppingBag,
+  KeyRound,
+} from "lucide-react";
 import { useStorefrontAuth } from "../../context/storefront-auth-context";
 
 // ============================================================================

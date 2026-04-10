@@ -1,63 +1,57 @@
 # Active Context
 
-## Current Focus: Comprehensive Blog System Fix — COMPLETE ✅ (commit e06d17e6)
+## Current Focus: Blog Branding + Media Tracking + Team Presets — COMPLETE ✅ (commit 0cc8a306)
 
 ### What Was Done
 
-User reported blog 404 at `app.dramacagency.com/blog/luxe-serenity/5-morning-skincare-habits-that-actually-work`. Root cause was `is_published` column name (should be `published`). After fixing that (commit 5c7d4655), implemented comprehensive blog system improvements across 13 files.
+Three-part improvement covering blog branding integration, media usage tracking, and team role permission presets.
 
-### Core 404 Fix (commit 5c7d4655)
+### Blog Branding Integration (Most Visible Change)
 
-- `is_published` → `published` column name in blog route queries
-- Added `/blog` to PUBLIC_PATHS in proxy.ts
+- **Created `src/app/blog/[subdomain]/layout.tsx`** — New layout wrapping all blog pages:
+  - Fetches site settings (colors, fonts, logo) from database via `getSiteBySubdomain()`
+  - Extracts brand source via `extractBrandSource()`, resolves full palette via `resolveBrandColors()`
+  - Generates CSS custom properties via `generateBrandCSSVars()` (same system as main site renderer)
+  - Loads Google Fonts dynamically for heading and body fonts
+  - Renders branded header (logo + site name) and footer with site border/muted colors
+  - Injects prose CSS variable overrides for blog post content HTML styling
+- **Updated `src/app/blog/[subdomain]/page.tsx`** — Blog listing:
+  - Replaced all hardcoded `text-gray-500/600` with CSS variable inline styles
+  - Heading uses site heading font via `var(--font-display)`
+  - Blog title now shows "{site.name} Blog" instead of generic "Blog"
+- **Updated `src/app/blog/[subdomain]/[slug]/page.tsx`** — Blog post:
+  - All colors use `var(--foreground)`, `var(--muted-foreground)`, `var(--border)` etc.
+  - Headings use `var(--font-display)` for brand fonts
+  - Prose content wrapper uses `blog-prose` class with brand CSS variable overrides
+  - Borders/dividers themed with brand colors
 
-### Blog Public Routes — Error Handling
+### Media Usage Tracking
 
-- Added `{ error }` destructuring + `console.error` to all Supabase queries in both blog route files
-- Covers: `getSiteBySubdomain`, `getPostBySlug`, `getRelatedPosts`, `getBlogPosts`
+- **Added `trackFeaturedImageUsage()` helper** to `post-service.ts`:
+  - Looks up asset by matching `public_url` or `url` in assets table
+  - Records usage in `media_usage` table with entity_type "blog_post"
+  - Cleans up previous tracking before inserting new record
+  - Non-blocking: errors logged but don't break post save
+- **Wired into `createPost()` and `updatePost()`** — both now call tracker when featured image is set
 
-### Dashboard Blog Improvements
+### Team Role Permission Presets
 
-- **Fixed broken PostList "View" link** — was `/dashboard/sites/${siteId}/preview/blog/${slug}` (route doesn't exist), now correctly `/blog/${subdomain}/${slug}`
-- View link conditional on `post.status === "published" && subdomain && sitePublished`
-- Added site-publish warning banner when site is unpublished
-- `getSitePublicInfo(siteId)` server action added to post-service.ts
-- Dashboard blog page, edit page, and new page all pass `subdomain`/`sitePublished` to PostForm
+- **Added `rolePermissionPresets` map** to `portal/team/page.tsx`:
+  - Admin: all 12 permissions enabled
+  - Manager: 10 of 12 (excludes automation and agent management)
+  - Member: 3 of 12 (analytics, live chat, orders, bookings)
+  - Viewer: 2 of 12 (analytics and invoices only)
+- **Wired role selector** — when adding new team member, selecting a role auto-populates its default permissions (editing existing members doesn't auto-overwrite)
 
-### Portal Blog Improvements
+### Files Modified (5 changed + 1 new)
 
-- Added `getPortalSitePublishStatus(siteId)` to portal-media-service.ts
-- Warning banner when site not published
-- Conditional view links based on site published status
-- Portal edit page and new page pass `subdomain`/`sitePublished` to PostForm
+1. `src/app/blog/[subdomain]/layout.tsx` — **NEW** — Blog branding layout wrapper
+2. `src/app/blog/[subdomain]/page.tsx` — Brand colors/fonts for listing
+3. `src/app/blog/[subdomain]/[slug]/page.tsx` — Brand colors/fonts for post
+4. `src/lib/blog/post-service.ts` — `trackFeaturedImageUsage()` + wiring
+5. `src/app/portal/team/page.tsx` — Role permission presets + auto-apply
 
-### PostForm Enhancements
-
-- "View Live" button (ExternalLink icon) when post + site are published
-- Fixed `MediaFile.url` → `MediaFile.publicUrl` (pre-existing TS bug)
-
-### Proxy — Client Site Subdomain Blog Routing
-
-- `luxe-serenity.sites.dramacagency.com/blog/slug` now rewrites to `/blog/luxe-serenity/slug`
-- Previously rewrote to `/site/luxe-serenity/blog/slug` which had no blog handler
-
-### Files Modified (13 total)
-
-1. `src/app/blog/[subdomain]/[slug]/page.tsx` — error handling
-2. `src/app/blog/[subdomain]/page.tsx` — error handling
-3. `src/proxy.ts` — client-site subdomain blog rewriting
-4. `src/lib/blog/post-service.ts` — `getSitePublicInfo` server action
-5. `src/components/blog/post-list.tsx` — fixed View link, new props
-6. `src/components/blog/post-form.tsx` — View Live button, MediaFile fix
-7. `src/app/(dashboard)/dashboard/sites/[siteId]/blog/page.tsx` — warning banner, site info
-8. `src/app/(dashboard)/dashboard/sites/[siteId]/blog/[postId]/page.tsx` — pass site info to PostForm
-9. `src/app/(dashboard)/dashboard/sites/[siteId]/blog/new/page.tsx` — pass site info to PostForm
-10. `src/app/portal/sites/[siteId]/blog/page.tsx` — warning banner, conditional links
-11. `src/app/portal/sites/[siteId]/blog/[postId]/page.tsx` — pass site info to PostForm
-12. `src/app/portal/sites/[siteId]/blog/new/page.tsx` — pass site info to PostForm
-13. `src/lib/portal/portal-media-service.ts` — `getPortalSitePublishStatus`
-
-## Previous Focus: Portal Enhancements — Media Upload, Blog Picker, Team Management — COMPLETE ✅ (commit 33f73567)
+## Previous Focus: Comprehensive Blog System Fix — COMPLETE ✅ (commit e06d17e6)
 
 ### What Was Done
 

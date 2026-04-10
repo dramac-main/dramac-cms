@@ -183,7 +183,8 @@ This link expires in 1 hour and can only be used once. If you didn't request thi
   },
 
   storefront_password_reset: {
-    subject: (data) => `Reset your password for ${data.siteName || "your account"}`,
+    subject: (data) =>
+      `Reset your password for ${data.siteName || "your account"}`,
     html: (data) =>
       wrapHtml(`
       <h1 style="${STYLES.heading}">Reset Your Password</h1>

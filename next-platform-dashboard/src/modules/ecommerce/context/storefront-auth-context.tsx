@@ -89,7 +89,9 @@ export interface AuthContextValue {
   /** Pending magic link token for password reset (set when intent=reset_password) */
   pendingResetToken: string | null;
   /** Open the auth dialog (login/register) */
-  openAuthDialog: (mode?: "login" | "register" | "set-password" | "reset-password") => void;
+  openAuthDialog: (
+    mode?: "login" | "register" | "set-password" | "reset-password",
+  ) => void;
   /** Close the auth dialog */
   closeAuthDialog: () => void;
   authDialogOpen: boolean;

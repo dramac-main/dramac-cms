@@ -720,7 +720,11 @@ export default function PortalTeamPage() {
                       const preset = rolePermissionPresets[v];
                       if (preset && !editingMember) {
                         // When adding new member, auto-apply role permission preset
-                        setFormData((prev) => ({ ...prev, role: v, ...preset }));
+                        setFormData((prev) => ({
+                          ...prev,
+                          role: v,
+                          ...preset,
+                        }));
                       } else {
                         setFormData((prev) => ({ ...prev, role: v }));
                       }
