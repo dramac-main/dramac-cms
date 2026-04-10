@@ -13,7 +13,8 @@ export async function GET(
     .from("blog_posts")
     .select(
       `id, title, slug, excerpt, content_html, featured_image_url, featured_image_alt,
-       published_at, reading_time_minutes, is_featured, tags`,
+       published_at, reading_time_minutes, is_featured, tags,
+       author:profiles!author_id(full_name, name, avatar_url)`,
     )
     .eq("site_id", siteId)
     .eq("slug", slug)
@@ -24,6 +25,7 @@ export async function GET(
     return NextResponse.json({ error: "Post not found" }, { status: 404 });
   }
 
+  const author = data.author as Record<string, unknown> | null;
   const post = {
     id: data.id,
     title: data.title,
@@ -36,6 +38,12 @@ export async function GET(
     readingTimeMinutes: data.reading_time_minutes || 0,
     isFeatured: data.is_featured || false,
     tags: data.tags || [],
+    authorName: author
+      ? (author.full_name as string) || (author.name as string) || null
+      : null,
+    authorAvatarUrl: author
+      ? (author.avatar_url as string) || null
+      : null,
   };
 
   // Fetch categories

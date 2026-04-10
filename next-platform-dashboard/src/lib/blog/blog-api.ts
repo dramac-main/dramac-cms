@@ -35,6 +35,8 @@ export interface BlogListingOptions {
 // ============================================
 
 function mapPostRecord(row: Record<string, unknown>): PublicBlogPost {
+  // Author info comes from a joined profiles record (author_id FK)
+  const author = row.author as Record<string, unknown> | null;
   return {
     id: row.id as string,
     title: row.title as string,
@@ -43,8 +45,11 @@ function mapPostRecord(row: Record<string, unknown>): PublicBlogPost {
     contentHtml: (row.content_html as string) || null,
     featuredImageUrl: (row.featured_image_url as string) || null,
     featuredImageAlt: (row.featured_image_alt as string) || null,
-    authorName: (row.author_name as string) || null,
-    authorAvatarUrl: (row.author_avatar_url as string) || null,
+    authorName:
+      (author?.full_name as string) ||
+      (author?.name as string) ||
+      null,
+    authorAvatarUrl: (author?.avatar_url as string) || null,
     publishedAt: (row.published_at as string) || null,
     readingTimeMinutes: (row.reading_time_minutes as number) || 0,
     isFeatured: (row.is_featured as boolean) || false,
@@ -72,7 +77,8 @@ export async function getPublishedPosts(
     .from("blog_posts")
     .select(
       `id, title, slug, excerpt, featured_image_url, featured_image_alt,
-       published_at, reading_time_minutes, is_featured, tags`,
+       published_at, reading_time_minutes, is_featured, tags,
+       author:profiles!author_id(full_name, name, avatar_url)`,
       { count: "exact" },
     )
     .eq("site_id", siteId)
@@ -166,7 +172,8 @@ export async function getPublishedPost(
     .from("blog_posts")
     .select(
       `id, title, slug, excerpt, content_html, featured_image_url, featured_image_alt,
-       published_at, reading_time_minutes, is_featured, tags`,
+       published_at, reading_time_minutes, is_featured, tags,
+       author:profiles!author_id(full_name, name, avatar_url)`,
     )
     .eq("site_id", siteId)
     .eq("slug", slug)
@@ -222,7 +229,8 @@ export async function getRelatedPosts(
       .from("blog_posts")
       .select(
         `id, title, slug, excerpt, featured_image_url, featured_image_alt,
-         published_at, reading_time_minutes, is_featured, tags`,
+         published_at, reading_time_minutes, is_featured, tags,
+         author:profiles!author_id(full_name, name, avatar_url)`,
       )
       .eq("site_id", siteId)
       .eq("status", "published")
@@ -247,7 +255,8 @@ export async function getRelatedPosts(
       .from("blog_posts")
       .select(
         `id, title, slug, excerpt, featured_image_url, featured_image_alt,
-         published_at, reading_time_minutes, is_featured, tags`,
+         published_at, reading_time_minutes, is_featured, tags,
+         author:profiles!author_id(full_name, name, avatar_url)`,
       )
       .eq("site_id", siteId)
       .eq("status", "published")
@@ -264,7 +273,8 @@ export async function getRelatedPosts(
     .from("blog_posts")
     .select(
       `id, title, slug, excerpt, featured_image_url, featured_image_alt,
-       published_at, reading_time_minutes, is_featured, tags`,
+       published_at, reading_time_minutes, is_featured, tags,
+       author:profiles!author_id(full_name, name, avatar_url)`,
     )
     .eq("site_id", siteId)
     .eq("status", "published")

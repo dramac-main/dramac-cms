@@ -18,7 +18,8 @@ export async function GET(
     .from("blog_posts")
     .select(
       `id, title, slug, excerpt, featured_image_url, featured_image_alt,
-       published_at, reading_time_minutes, is_featured, tags`,
+       published_at, reading_time_minutes, is_featured, tags,
+       author:profiles!author_id(full_name, name, avatar_url)`,
       { count: "exact" },
     )
     .eq("site_id", siteId)
@@ -38,18 +39,27 @@ export async function GET(
     return NextResponse.json({ posts: [], total: 0 }, { status: 500 });
   }
 
-  const posts = (data || []).map((row: Record<string, unknown>) => ({
-    id: row.id,
-    title: row.title,
-    slug: row.slug,
-    excerpt: row.excerpt || null,
-    featuredImageUrl: row.featured_image_url || null,
-    featuredImageAlt: row.featured_image_alt || null,
-    publishedAt: row.published_at || null,
-    readingTimeMinutes: row.reading_time_minutes || 0,
-    isFeatured: row.is_featured || false,
-    tags: row.tags || [],
-  }));
+  const posts = (data || []).map((row: Record<string, unknown>) => {
+    const author = row.author as Record<string, unknown> | null;
+    return {
+      id: row.id,
+      title: row.title,
+      slug: row.slug,
+      excerpt: row.excerpt || null,
+      featuredImageUrl: row.featured_image_url || null,
+      featuredImageAlt: row.featured_image_alt || null,
+      publishedAt: row.published_at || null,
+      readingTimeMinutes: row.reading_time_minutes || 0,
+      isFeatured: row.is_featured || false,
+      tags: row.tags || [],
+      authorName: author
+        ? (author.full_name as string) || (author.name as string) || null
+        : null,
+      authorAvatarUrl: author
+        ? (author.avatar_url as string) || null
+        : null,
+    };
+  });
 
   return NextResponse.json({
     posts,

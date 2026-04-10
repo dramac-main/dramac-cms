@@ -499,8 +499,11 @@ async function processData(
     //   - /blog/[post-slug]  → Individual blog post page
     //
     // Uses the same virtual page pattern as ecommerce above.
+    // NOTE: Virtual blog pages ALWAYS override static "blog" pages from the DB
+    // because the virtual system renders live data (search, filtering, pagination)
+    // while static pages may contain stale or placeholder content.
     // ────────────────────────────────────────────────────────────────────────
-    if (!page && (stripped === "blog" || stripped.startsWith("blog/"))) {
+    if (stripped === "blog" || stripped.startsWith("blog/")) {
       const {
         getPublishedPosts,
         getPublishedPost,

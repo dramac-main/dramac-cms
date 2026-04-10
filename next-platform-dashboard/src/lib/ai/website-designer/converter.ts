@@ -777,6 +777,7 @@ function convertComponentToStudio(
     BlogGrid: "BlogPreview",
     BlogCards: "BlogPreview",
     BlogList: "BlogPreview",
+    BlogPostList: "BlogPreview",
     LatestPosts: "BlogPreview",
     RecentPosts: "BlogPreview",
     // Interactive components — Progress, Alert, CardFlip3D, GlassCard, ParticleBackground, ScrollAnimate
@@ -2709,9 +2710,18 @@ function transformPropsForStudio(
   if (type === "BlogPreview") {
     const posts =
       props.posts || props.articles || props.items || props.blogPosts || [];
+    // Remap props from legacy BlogPostList / alternative names
+    const variant =
+      props.variant || props.layout || props.displayMode || "grid";
     return {
       ...props,
       posts: Array.isArray(posts) ? posts : [],
+      variant,
+      // Remove legacy keys that don't belong on BlogPreview
+      layout: undefined,
+      displayMode: undefined,
+      showImage: undefined,
+      postsPerPage: undefined,
     };
   }
 
