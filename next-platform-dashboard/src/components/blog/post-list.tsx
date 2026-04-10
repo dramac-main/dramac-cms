@@ -45,7 +45,7 @@ import { updatePost, deletePost, type BlogPost } from "@/lib/blog/post-service";
 import { toast } from "sonner";
 import { useState } from "react";
 
-import { DEFAULT_LOCALE } from '@/lib/locale-config'
+import { DEFAULT_LOCALE } from "@/lib/locale-config";
 interface PostListProps {
   posts: BlogPost[];
   siteId: string;
@@ -58,27 +58,29 @@ interface PostListProps {
 }
 
 const statusConfig = {
-  draft: { 
-    label: "Draft", 
-    className: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200" 
+  draft: {
+    label: "Draft",
+    className: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
   },
-  scheduled: { 
-    label: "Scheduled", 
-    className: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400" 
+  scheduled: {
+    label: "Scheduled",
+    className:
+      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
   },
-  published: { 
-    label: "Published", 
-    className: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" 
+  published: {
+    label: "Published",
+    className:
+      "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
   },
-  archived: { 
-    label: "Archived", 
-    className: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" 
+  archived: {
+    label: "Archived",
+    className: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
   },
 };
 
-export function PostList({ 
-  posts, 
-  siteId, 
+export function PostList({
+  posts,
+  siteId,
   onRefresh,
   canEdit = true,
   canDelete = true,
@@ -88,10 +90,15 @@ export function PostList({
 }: PostListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const handleToggleFeatured = async (postId: string, currentValue: boolean) => {
+  const handleToggleFeatured = async (
+    postId: string,
+    currentValue: boolean,
+  ) => {
     const result = await updatePost(postId, { isFeatured: !currentValue });
     if (result.success) {
-      toast.success(currentValue ? "Removed from featured" : "Added to featured");
+      toast.success(
+        currentValue ? "Removed from featured" : "Added to featured",
+      );
       onRefresh();
     } else {
       toast.error(result.error || "Failed to update");
@@ -102,7 +109,7 @@ export function PostList({
     setDeletingId(postId);
     const result = await deletePost(postId);
     setDeletingId(null);
-    
+
     if (result.success) {
       toast.success("Post deleted successfully");
       onRefresh();
@@ -145,7 +152,9 @@ export function PostList({
       <div className="py-16 text-center">
         <p className="text-muted-foreground mb-4">No posts found</p>
         <Button asChild>
-          <Link href={`/dashboard/sites/${siteId}/blog/new`}>Create your first post</Link>
+          <Link href={`/dashboard/sites/${siteId}/blog/new`}>
+            Create your first post
+          </Link>
         </Button>
       </div>
     );
@@ -185,7 +194,7 @@ export function PostList({
                 </div>
               )}
             </TableCell>
-            
+
             {/* Title & Excerpt */}
             <TableCell>
               <div className="space-y-1">
@@ -207,7 +216,7 @@ export function PostList({
                 )}
               </div>
             </TableCell>
-            
+
             {/* Author */}
             <TableCell className="hidden md:table-cell">
               <div className="flex items-center gap-2">
@@ -229,7 +238,7 @@ export function PostList({
                 </span>
               </div>
             </TableCell>
-            
+
             {/* Categories */}
             <TableCell className="hidden lg:table-cell">
               <div className="flex flex-wrap gap-1">
@@ -238,8 +247,8 @@ export function PostList({
                     key={cat.id}
                     variant="secondary"
                     className="text-xs"
-                    style={{ 
-                      backgroundColor: `${cat.color}20`, 
+                    style={{
+                      backgroundColor: `${cat.color}20`,
                       color: cat.color,
                       borderColor: `${cat.color}40`,
                     }}
@@ -253,22 +262,26 @@ export function PostList({
                   </Badge>
                 )}
                 {post.categories.length === 0 && (
-                  <span className="text-xs text-muted-foreground">No categories</span>
+                  <span className="text-xs text-muted-foreground">
+                    No categories
+                  </span>
                 )}
               </div>
             </TableCell>
-            
+
             {/* Status */}
             <TableCell>
               <Badge
                 variant="secondary"
                 className={statusConfig[post.status].className}
               >
-                {post.status === "scheduled" && <Clock className="h-3 w-3 mr-1" />}
+                {post.status === "scheduled" && (
+                  <Clock className="h-3 w-3 mr-1" />
+                )}
                 {statusConfig[post.status].label}
               </Badge>
             </TableCell>
-            
+
             {/* Date */}
             <TableCell className="hidden sm:table-cell">
               <div className="text-sm text-muted-foreground">
@@ -284,7 +297,7 @@ export function PostList({
                 )}
               </div>
             </TableCell>
-            
+
             {/* Actions */}
             <TableCell>
               <DropdownMenu>
@@ -303,43 +316,51 @@ export function PostList({
                       </Link>
                     </DropdownMenuItem>
                   )}
-                  
-                  {post.status === "published" && subdomain && sitePublished && (
-                    <DropdownMenuItem asChild>
-                      <a 
-                        href={`/blog/${subdomain}/${post.slug}`} 
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        View
-                      </a>
-                    </DropdownMenuItem>
-                  )}
-                  
+
+                  {post.status === "published" &&
+                    subdomain &&
+                    sitePublished && (
+                      <DropdownMenuItem asChild>
+                        <a
+                          href={`/blog/${subdomain}/${post.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          View
+                        </a>
+                      </DropdownMenuItem>
+                    )}
+
                   {canPublish && (
                     <>
                       <DropdownMenuSeparator />
                       {post.status !== "published" && (
-                        <DropdownMenuItem onClick={() => handlePublish(post.id)}>
+                        <DropdownMenuItem
+                          onClick={() => handlePublish(post.id)}
+                        >
                           <Eye className="h-4 w-4 mr-2" />
                           Publish
                         </DropdownMenuItem>
                       )}
                       {post.status === "published" && (
-                        <DropdownMenuItem onClick={() => handleUnpublish(post.id)}>
+                        <DropdownMenuItem
+                          onClick={() => handleUnpublish(post.id)}
+                        >
                           <Eye className="h-4 w-4 mr-2" />
                           Unpublish
                         </DropdownMenuItem>
                       )}
                     </>
                   )}
-                  
+
                   {canEdit && (
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        onClick={() => handleToggleFeatured(post.id, post.isFeatured)}
+                        onClick={() =>
+                          handleToggleFeatured(post.id, post.isFeatured)
+                        }
                       >
                         {post.isFeatured ? (
                           <>
@@ -355,7 +376,7 @@ export function PostList({
                       </DropdownMenuItem>
                     </>
                   )}
-                  
+
                   {canDelete && (
                     <>
                       <DropdownMenuSeparator />
@@ -373,8 +394,8 @@ export function PostList({
                           <AlertDialogHeader>
                             <AlertDialogTitle>Delete Post</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Are you sure you want to delete &quot;{post.title}&quot;? 
-                              This action cannot be undone.
+                              Are you sure you want to delete &quot;{post.title}
+                              &quot;? This action cannot be undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
@@ -384,7 +405,9 @@ export function PostList({
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                               disabled={deletingId === post.id}
                             >
-                              {deletingId === post.id ? "Deleting..." : "Delete"}
+                              {deletingId === post.id
+                                ? "Deleting..."
+                                : "Delete"}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>

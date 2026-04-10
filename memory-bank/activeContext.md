@@ -1,41 +1,61 @@
 # Active Context
 
-## Current Focus: Storefront Auth Deep Audit & Magic Link Fix — COMPLETE ✅ (commit 6071ff3d)
+## Current Focus: Comprehensive Blog System Fix — COMPLETE ✅ (commit e06d17e6)
 
 ### What Was Done
 
-Comprehensive deep dive into the entire storefront auth system after user reported magic links not working. Found and fixed 3 bugs, verified all 15+ auth actions are correct.
+User reported blog 404 at `app.dramacagency.com/blog/luxe-serenity/5-morning-skincare-habits-that-actually-work`. Root cause was `is_published` column name (should be `published`). After fixing that (commit 5c7d4655), implemented comprehensive blog system improvements across 13 files.
 
-### Bugs Fixed (route.ts — auth API)
+### Core 404 Fix (commit 5c7d4655)
 
-1. **CRITICAL: Magic link didn't send emails to OAuth/guest customers** — Guard condition `if (!customer || !customer.password_set_at)` silently skipped email for Google OAuth users and guest customers. Changed to `if (!customer)` only — now any existing customer gets the magic link email.
-2. **Magic link URL fallback** — If `origin`/`referer` headers are missing, now constructs URL from site's `subdomain` or `custom_domain` in the database.
-3. **Email verified on magic link consumption** — When a user clicks a magic link, that proves email ownership. Now sets `email_verified: true` in the session action's magic link consumption code.
-4. **Stale header comment** — Removed reference to non-existent `verify-magic` action (magic link verification goes through the `session` action).
+- `is_published` → `published` column name in blog route queries
+- Added `/blog` to PUBLIC_PATHS in proxy.ts
 
-### Auth Flows Verified Working
+### Blog Public Routes — Error Handling
 
-- Register (email+password) ✅
-- Login (email+password) ✅
-- Session validation + 30-day rolling expiry (7-day window) ✅
-- Magic link send (all customer types) ✅ (FIXED)
-- Magic link consume → new session + email verified ✅ (FIXED)
-- Google OAuth callback → exchange token → session ✅
-- Set password (guest upgrade with email verification) ✅
-- Change password (authenticated users) ✅
-- Logout (session deletion) ✅
-- Email verification (6-digit OTP) ✅
-- Get orders/order detail/addresses/bookings/quotes ✅
-- Update profile / address CRUD ✅
+- Added `{ error }` destructuring + `console.error` to all Supabase queries in both blog route files
+- Covers: `getSiteBySubdomain`, `getPostBySlug`, `getRelatedPosts`, `getBlogPosts`
 
-### Also Committed This Session
+### Dashboard Blog Improvements
 
-- `/privacy` and `/terms` pages made publicly accessible in proxy.ts (cffb7405)
-- `PUBLIC_PATHS` array refactor for maintainability (79e3b9a9)
+- **Fixed broken PostList "View" link** — was `/dashboard/sites/${siteId}/preview/blog/${slug}` (route doesn't exist), now correctly `/blog/${subdomain}/${slug}`
+- View link conditional on `post.status === "published" && subdomain && sitePublished`
+- Added site-publish warning banner when site is unpublished
+- `getSitePublicInfo(siteId)` server action added to post-service.ts
+- Dashboard blog page, edit page, and new page all pass `subdomain`/`sitePublished` to PostForm
 
-### Remaining Note
+### Portal Blog Improvements
 
-- User needs to add privacy/terms URLs to Google Cloud Console OAuth consent screen and click "Publish App" to take OAuth out of testing mode
+- Added `getPortalSitePublishStatus(siteId)` to portal-media-service.ts
+- Warning banner when site not published
+- Conditional view links based on site published status
+- Portal edit page and new page pass `subdomain`/`sitePublished` to PostForm
+
+### PostForm Enhancements
+
+- "View Live" button (ExternalLink icon) when post + site are published
+- Fixed `MediaFile.url` → `MediaFile.publicUrl` (pre-existing TS bug)
+
+### Proxy — Client Site Subdomain Blog Routing
+
+- `luxe-serenity.sites.dramacagency.com/blog/slug` now rewrites to `/blog/luxe-serenity/slug`
+- Previously rewrote to `/site/luxe-serenity/blog/slug` which had no blog handler
+
+### Files Modified (13 total)
+
+1. `src/app/blog/[subdomain]/[slug]/page.tsx` — error handling
+2. `src/app/blog/[subdomain]/page.tsx` — error handling
+3. `src/proxy.ts` — client-site subdomain blog rewriting
+4. `src/lib/blog/post-service.ts` — `getSitePublicInfo` server action
+5. `src/components/blog/post-list.tsx` — fixed View link, new props
+6. `src/components/blog/post-form.tsx` — View Live button, MediaFile fix
+7. `src/app/(dashboard)/dashboard/sites/[siteId]/blog/page.tsx` — warning banner, site info
+8. `src/app/(dashboard)/dashboard/sites/[siteId]/blog/[postId]/page.tsx` — pass site info to PostForm
+9. `src/app/(dashboard)/dashboard/sites/[siteId]/blog/new/page.tsx` — pass site info to PostForm
+10. `src/app/portal/sites/[siteId]/blog/page.tsx` — warning banner, conditional links
+11. `src/app/portal/sites/[siteId]/blog/[postId]/page.tsx` — pass site info to PostForm
+12. `src/app/portal/sites/[siteId]/blog/new/page.tsx` — pass site info to PostForm
+13. `src/lib/portal/portal-media-service.ts` — `getPortalSitePublishStatus`
 
 ## Previous Focus: Portal Enhancements — Media Upload, Blog Picker, Team Management — COMPLETE ✅ (commit 33f73567)
 

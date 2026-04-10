@@ -1,7 +1,11 @@
 import { use } from "react";
 import { notFound } from "next/navigation";
 import { PostForm } from "@/components/blog/post-form";
-import { getPost, getUserPermissions, getSitePublicInfo } from "@/lib/blog/post-service";
+import {
+  getPost,
+  getUserPermissions,
+  getSitePublicInfo,
+} from "@/lib/blog/post-service";
 
 export default function EditPostPage({
   params,
@@ -13,11 +17,11 @@ export default function EditPostPage({
   return <EditPostContent siteId={siteId} postId={postId} />;
 }
 
-async function EditPostContent({ 
-  siteId, 
-  postId 
-}: { 
-  siteId: string; 
+async function EditPostContent({
+  siteId,
+  postId,
+}: {
+  siteId: string;
   postId: string;
 }) {
   const [post, permissions, siteInfo] = await Promise.all([
@@ -37,9 +41,9 @@ async function EditPostContent({
 
   return (
     <div className="max-w-6xl mx-auto">
-      <PostForm 
-        siteId={siteId} 
-        post={post} 
+      <PostForm
+        siteId={siteId}
+        post={post}
         canPublish={permissions.canPublish}
         subdomain={siteInfo?.subdomain}
         sitePublished={siteInfo?.isPublished}

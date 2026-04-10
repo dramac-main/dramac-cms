@@ -272,12 +272,7 @@ export function PostForm({
                 subdomain &&
                 sitePublished &&
                 post?.slug && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    asChild
-                  >
+                  <Button type="button" variant="outline" size="sm" asChild>
                     <a
                       href={`/blog/${subdomain}/${post.slug}`}
                       target="_blank"

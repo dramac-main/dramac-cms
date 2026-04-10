@@ -26,7 +26,10 @@ import {
   getBlogStats,
   type BlogPost,
 } from "@/lib/blog/post-service";
-import { getPortalSiteSubdomain, getPortalSitePublishStatus } from "@/lib/portal/portal-media-service";
+import {
+  getPortalSiteSubdomain,
+  getPortalSitePublishStatus,
+} from "@/lib/portal/portal-media-service";
 import { DEFAULT_LOCALE } from "@/lib/locale-config";
 
 const statusColors: Record<string, string> = {
@@ -98,7 +101,8 @@ export default function PortalSiteBlogPage({
       {!sitePublished && (
         <Alert>
           <AlertDescription>
-            Your site is not yet published. Blog posts won&apos;t be publicly accessible until the site is published.
+            Your site is not yet published. Blog posts won&apos;t be publicly
+            accessible until the site is published.
           </AlertDescription>
         </Alert>
       )}
@@ -207,18 +211,20 @@ export default function PortalSiteBlogPage({
                         >
                           {post.status}
                         </Badge>
-                        {post.status === "published" && subdomain && sitePublished && (
-                          <Button variant="ghost" size="icon" asChild>
-                            <a
-                              href={`/blog/${subdomain}/${post.slug}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              title="View published post"
-                            >
-                              <ExternalLink className="h-4 w-4" />
-                            </a>
-                          </Button>
-                        )}
+                        {post.status === "published" &&
+                          subdomain &&
+                          sitePublished && (
+                            <Button variant="ghost" size="icon" asChild>
+                              <a
+                                href={`/blog/${subdomain}/${post.slug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="View published post"
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </a>
+                            </Button>
+                          )}
                         {permissions.canEditContent && (
                           <Button variant="ghost" size="icon" asChild>
                             <Link

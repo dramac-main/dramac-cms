@@ -147,6 +147,66 @@ const defaultPermissions: Record<string, boolean> = {
   canManageCustomers: false,
 };
 
+// Role-based permission presets: selecting a role auto-populates sensible defaults
+const rolePermissionPresets: Record<string, Record<string, boolean>> = {
+  admin: {
+    canViewAnalytics: true,
+    canEditContent: true,
+    canViewInvoices: true,
+    canManageLiveChat: true,
+    canManageOrders: true,
+    canManageProducts: true,
+    canManageBookings: true,
+    canManageCrm: true,
+    canManageAutomation: true,
+    canManageQuotes: true,
+    canManageAgents: true,
+    canManageCustomers: true,
+  },
+  manager: {
+    canViewAnalytics: true,
+    canEditContent: true,
+    canViewInvoices: true,
+    canManageLiveChat: true,
+    canManageOrders: true,
+    canManageProducts: true,
+    canManageBookings: true,
+    canManageCrm: true,
+    canManageAutomation: false,
+    canManageQuotes: true,
+    canManageAgents: false,
+    canManageCustomers: true,
+  },
+  member: {
+    canViewAnalytics: true,
+    canEditContent: false,
+    canViewInvoices: false,
+    canManageLiveChat: true,
+    canManageOrders: true,
+    canManageProducts: false,
+    canManageBookings: true,
+    canManageCrm: false,
+    canManageAutomation: false,
+    canManageQuotes: false,
+    canManageAgents: false,
+    canManageCustomers: false,
+  },
+  viewer: {
+    canViewAnalytics: true,
+    canEditContent: false,
+    canViewInvoices: true,
+    canManageLiveChat: false,
+    canManageOrders: false,
+    canManageProducts: false,
+    canManageBookings: false,
+    canManageCrm: false,
+    canManageAutomation: false,
+    canManageQuotes: false,
+    canManageAgents: false,
+    canManageCustomers: false,
+  },
+};
+
 export default function PortalTeamPage() {
   const [members, setMembers] = useState<PortalTeamMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -656,9 +716,15 @@ export default function PortalTeamPage() {
                   <Label htmlFor="role">Role</Label>
                   <Select
                     value={(formData.role as string) || "member"}
-                    onValueChange={(v) =>
-                      setFormData((prev) => ({ ...prev, role: v }))
-                    }
+                    onValueChange={(v) => {
+                      const preset = rolePermissionPresets[v];
+                      if (preset && !editingMember) {
+                        // When adding new member, auto-apply role permission preset
+                        setFormData((prev) => ({ ...prev, role: v, ...preset }));
+                      } else {
+                        setFormData((prev) => ({ ...prev, role: v }));
+                      }
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue />

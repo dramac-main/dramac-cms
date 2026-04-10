@@ -1,9 +1,52 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUserId, getCurrentUserRole, isSuperAdmin } from "@/lib/auth/permissions";
+import {
+  getCurrentUserId,
+  getCurrentUserRole,
+  isSuperAdmin,
+} from "@/lib/auth/permissions";
 import { cookies } from "next/headers";
 import type { Json } from "@/types/database";
+
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+/**
+ * Track a blog post's featured image URL in the media_usage table.
+ * Looks up the asset by matching the public URL, then records usage.
+ * Non-blocking: errors are logged but don't break post save.
+ */
+async function trackFeaturedImageUsage(
+  supabase: SupabaseClient,
+  imageUrl: string,
+  postId: string,
+): Promise<void> {
+  // Find asset by matching public_url or url
+  const { data: asset } = await supabase
+    .from("assets")
+    .select("id")
+    .or(`public_url.eq.${imageUrl},url.eq.${imageUrl}`)
+    .limit(1)
+    .maybeSingle();
+
+  if (!asset) return; // Image not in assets table (e.g. external URL)
+
+  // Remove existing usage for this post's featured image
+  await (supabase as any)
+    .from("media_usage")
+    .delete()
+    .eq("entity_type", "blog_post")
+    .eq("entity_id", postId)
+    .eq("field_name", "featured_image");
+
+  // Insert new usage
+  await (supabase as any).from("media_usage").insert({
+    asset_id: asset.id,
+    entity_type: "blog_post",
+    entity_id: postId,
+    field_name: "featured_image",
+  });
+}
 
 export interface BlogPost {
   id: string;
@@ -61,10 +104,11 @@ async function getUserBlogContext(): Promise<UserBlogContext> {
   const userId = await getCurrentUserId();
   const role = await getCurrentUserRole();
   const cookieStore = await cookies();
-  
+
   // Check for portal user (client impersonation)
-  const portalClientId = cookieStore.get("impersonating_client_id")?.value || null;
-  
+  const portalClientId =
+    cookieStore.get("impersonating_client_id")?.value || null;
+
   if (portalClientId) {
     // Portal user - get their accessible sites + content editing permissions
     const { data: client } = await supabase
@@ -72,95 +116,95 @@ async function getUserBlogContext(): Promise<UserBlogContext> {
       .select("id, has_portal_access, can_edit_content")
       .eq("id", portalClientId)
       .single();
-    
+
     if (!client?.has_portal_access) {
-      return { 
-        userId: null, 
-        role: null, 
-        agencyRole: null, 
-        accessibleSiteIds: [], 
-        isPortalUser: true, 
+      return {
+        userId: null,
+        role: null,
+        agencyRole: null,
+        accessibleSiteIds: [],
+        isPortalUser: true,
         portalClientId,
         portalCanEditContent: false,
         portalCanPublish: false,
       };
     }
-    
+
     const { data: sites } = await supabase
       .from("sites")
       .select("id")
       .eq("client_id", portalClientId);
-    
+
     return {
       userId,
       role: "client",
       agencyRole: null,
-      accessibleSiteIds: sites?.map(s => s.id) || [],
+      accessibleSiteIds: sites?.map((s) => s.id) || [],
       isPortalUser: true,
       portalClientId,
       portalCanEditContent: client.can_edit_content ?? false,
       portalCanPublish: false, // Portal clients create drafts; agency publishes
     };
   }
-  
+
   if (!userId) {
-    return { 
-      userId: null, 
-      role: null, 
-      agencyRole: null, 
-      accessibleSiteIds: [], 
-      isPortalUser: false, 
+    return {
+      userId: null,
+      role: null,
+      agencyRole: null,
+      accessibleSiteIds: [],
+      isPortalUser: false,
       portalClientId: null,
       portalCanEditContent: false,
       portalCanPublish: false,
     };
   }
-  
+
   // Super admin can see all
   if (await isSuperAdmin()) {
-    return { 
-      userId, 
-      role: "super_admin", 
-      agencyRole: null, 
-      accessibleSiteIds: null, 
-      isPortalUser: false, 
+    return {
+      userId,
+      role: "super_admin",
+      agencyRole: null,
+      accessibleSiteIds: null,
+      isPortalUser: false,
       portalClientId: null,
       portalCanEditContent: false,
       portalCanPublish: false,
     };
   }
-  
+
   // Get user's agency membership
   const { data: membership } = await supabase
     .from("agency_members")
     .select("agency_id, role")
     .eq("user_id", userId)
     .single();
-  
+
   if (!membership) {
-    return { 
-      userId, 
-      role, 
-      agencyRole: null, 
-      accessibleSiteIds: [], 
-      isPortalUser: false, 
+    return {
+      userId,
+      role,
+      agencyRole: null,
+      accessibleSiteIds: [],
+      isPortalUser: false,
       portalClientId: null,
       portalCanEditContent: false,
       portalCanPublish: false,
     };
   }
-  
+
   // Get all sites in the agency
   const { data: sites } = await supabase
     .from("sites")
     .select("id, clients!inner(agency_id)")
     .eq("clients.agency_id", membership.agency_id);
-  
+
   return {
     userId,
     role,
     agencyRole: membership.role,
-    accessibleSiteIds: sites?.map(s => s.id) || [],
+    accessibleSiteIds: sites?.map((s) => s.id) || [],
     isPortalUser: false,
     portalClientId: null,
     portalCanEditContent: false,
@@ -198,7 +242,8 @@ async function canEditPost(postId: string): Promise<boolean> {
   if (context.isPortalUser && context.portalCanEditContent) {
     // Portal clients can only edit posts on their own sites that they authored
     const supabase = await createClient();
-    const { data: post } = await supabase.from("blog_posts")
+    const { data: post } = await supabase
+      .from("blog_posts")
       .select("author_id, site_id")
       .eq("id", postId)
       .single();
@@ -207,15 +252,17 @@ async function canEditPost(postId: string): Promise<boolean> {
     return post.author_id === context.userId;
   }
   if (context.accessibleSiteIds === null) return true; // Super admin
-  if (context.agencyRole === "owner" || context.agencyRole === "admin") return true;
-  
+  if (context.agencyRole === "owner" || context.agencyRole === "admin")
+    return true;
+
   // Members can only edit their own posts
   const supabase = await createClient();
-  const { data: post } = await supabase.from("blog_posts")
+  const { data: post } = await supabase
+    .from("blog_posts")
     .select("author_id, site_id")
     .eq("id", postId)
     .single();
-  
+
   if (!post) return false;
   if (!context.accessibleSiteIds?.includes(post.site_id)) return false;
   return post.author_id === context.userId;
@@ -255,7 +302,8 @@ export async function getUserPermissions(): Promise<{
   return {
     canPublish: !context.isPortalUser && context.agencyRole !== "member",
     canDelete: !context.isPortalUser && context.agencyRole !== "member",
-    canManageCategories: !context.isPortalUser && context.agencyRole !== "member",
+    canManageCategories:
+      !context.isPortalUser && context.agencyRole !== "member",
     canEditContent: context.isPortalUser ? context.portalCanEditContent : true,
     isPortalUser: context.isPortalUser,
   };
@@ -265,19 +313,20 @@ export async function getPosts(
   siteId: string,
   filters: PostFilters = {},
   page = 1,
-  limit = 20
+  limit = 20,
 ): Promise<{ posts: BlogPost[]; total: number }> {
   // Permission check
   if (!(await canAccessSiteBlog(siteId))) {
     console.error("[PostService] Access denied for site:", siteId);
     return { posts: [], total: 0 };
   }
-  
+
   const supabase = await createClient();
   const offset = (page - 1) * limit;
   const context = await getUserBlogContext();
 
-  let query = supabase.from("blog_posts")
+  let query = supabase
+    .from("blog_posts")
     .select(
       `
       *,
@@ -286,7 +335,7 @@ export async function getPosts(
         category:blog_categories(id, name, slug, color)
       )
     `,
-      { count: "exact" }
+      { count: "exact" },
     )
     .eq("site_id", siteId)
     .order("created_at", { ascending: false });
@@ -294,7 +343,9 @@ export async function getPosts(
   // Portal users: editors see published + their own drafts; others see published only
   if (context.isPortalUser && context.portalCanEditContent && context.userId) {
     // Can see published posts + their own drafts
-    query = query.or(`status.eq.published,and(author_id.eq.${context.userId},status.neq.archived)`);
+    query = query.or(
+      `status.eq.published,and(author_id.eq.${context.userId},status.neq.archived)`,
+    );
     if (filters.status) {
       query = query.eq("status", filters.status);
     }
@@ -309,17 +360,23 @@ export async function getPosts(
   }
 
   if (filters.search) {
-    query = query.or(`title.ilike.%${filters.search}%,excerpt.ilike.%${filters.search}%`);
+    query = query.or(
+      `title.ilike.%${filters.search}%,excerpt.ilike.%${filters.search}%`,
+    );
   }
 
   if (filters.categoryId) {
     // Filter by category through junction table
-    const { data: postIds } = await supabase.from("blog_post_categories")
+    const { data: postIds } = await supabase
+      .from("blog_post_categories")
       .select("post_id")
       .eq("category_id", filters.categoryId);
-    
+
     if (postIds && postIds.length > 0) {
-      query = query.in("id", postIds.map((p: { post_id: string }) => p.post_id));
+      query = query.in(
+        "id",
+        postIds.map((p: { post_id: string }) => p.post_id),
+      );
     } else {
       return { posts: [], total: 0 };
     }
@@ -343,7 +400,8 @@ export async function getPosts(
 export async function getPost(postId: string): Promise<BlogPost | null> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase.from("blog_posts")
+  const { data, error } = await supabase
+    .from("blog_posts")
     .select(
       `
       *,
@@ -351,7 +409,7 @@ export async function getPost(postId: string): Promise<BlogPost | null> {
       categories:blog_post_categories(
         category:blog_categories(id, name, slug, color)
       )
-    `
+    `,
     )
     .eq("id", postId)
     .single();
@@ -359,12 +417,12 @@ export async function getPost(postId: string): Promise<BlogPost | null> {
   if (error || !data) {
     return null;
   }
-  
+
   // Permission check
   if (!(await canAccessSiteBlog(data.site_id))) {
     return null;
   }
-  
+
   // Portal users: editors can view their own drafts; others see published only
   const context = await getUserBlogContext();
   if (context.isPortalUser && context.portalCanEditContent && context.userId) {
@@ -379,7 +437,10 @@ export async function getPost(postId: string): Promise<BlogPost | null> {
   return mapToPost(data);
 }
 
-export async function getPostBySlug(siteId: string, slug: string): Promise<BlogPost | null> {
+export async function getPostBySlug(
+  siteId: string,
+  slug: string,
+): Promise<BlogPost | null> {
   // Permission check
   if (!(await canAccessSiteBlog(siteId))) {
     return null;
@@ -387,7 +448,8 @@ export async function getPostBySlug(siteId: string, slug: string): Promise<BlogP
 
   const supabase = await createClient();
 
-  const { data, error } = await supabase.from("blog_posts")
+  const { data, error } = await supabase
+    .from("blog_posts")
     .select(
       `
       *,
@@ -395,7 +457,7 @@ export async function getPostBySlug(siteId: string, slug: string): Promise<BlogP
       categories:blog_post_categories(
         category:blog_categories(id, name, slug, color)
       )
-    `
+    `,
     )
     .eq("site_id", siteId)
     .eq("slug", slug)
@@ -424,27 +486,31 @@ export async function createPost(
     categoryIds?: string[];
     status?: "draft" | "scheduled" | "published";
     scheduledFor?: string;
-  }
+  },
 ): Promise<{ success: boolean; postId?: string; error?: string }> {
   // Permission check
   if (!(await canAccessSiteBlog(siteId))) {
     return { success: false, error: "Access denied" };
   }
-  
+
   const context = await getUserBlogContext();
   if (context.isPortalUser && !context.portalCanEditContent) {
     return { success: false, error: "Portal users cannot create posts" };
   }
-  
+
   // Portal clients with canEditContent can only create drafts
   // Members can only create drafts
   let effectiveStatus = post.status || "draft";
   if (context.isPortalUser && effectiveStatus !== "draft") {
     effectiveStatus = "draft";
-    console.log("[PostService] Portal user attempted to publish - forcing draft status");
+    console.log(
+      "[PostService] Portal user attempted to publish - forcing draft status",
+    );
   } else if (context.agencyRole === "member" && effectiveStatus !== "draft") {
     effectiveStatus = "draft";
-    console.log("[PostService] Member attempted to publish - forcing draft status");
+    console.log(
+      "[PostService] Member attempted to publish - forcing draft status",
+    );
   }
 
   const userId = await getCurrentUserId();
@@ -456,10 +522,15 @@ export async function createPost(
 
   // Generate slug from title if not provided
   const slug =
-    post.slug || post.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    post.slug ||
+    post.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
 
   // Check for duplicate slug
-  const { data: existing } = await supabase.from("blog_posts")
+  const { data: existing } = await supabase
+    .from("blog_posts")
     .select("id")
     .eq("site_id", siteId)
     .eq("slug", slug)
@@ -471,11 +542,15 @@ export async function createPost(
 
   // Calculate reading time
   const wordCount = post.contentHtml
-    ? post.contentHtml.replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean).length
+    ? post.contentHtml
+        .replace(/<[^>]+>/g, " ")
+        .split(/\s+/)
+        .filter(Boolean).length
     : 0;
   const readingTime = Math.max(1, Math.ceil(wordCount / 200));
 
-  const { data, error } = await supabase.from("blog_posts")
+  const { data, error } = await supabase
+    .from("blog_posts")
     .insert({
       site_id: siteId,
       author_id: userId,
@@ -491,7 +566,8 @@ export async function createPost(
       tags: post.tags || [],
       status: effectiveStatus,
       scheduled_for: post.scheduledFor,
-      published_at: effectiveStatus === "published" ? new Date().toISOString() : null,
+      published_at:
+        effectiveStatus === "published" ? new Date().toISOString() : null,
       reading_time_minutes: readingTime,
     })
     .select()
@@ -508,7 +584,14 @@ export async function createPost(
       post.categoryIds.map((catId) => ({
         post_id: data.id,
         category_id: catId,
-      }))
+      })),
+    );
+  }
+
+  // Track featured image in media_usage if set
+  if (post.featuredImageUrl) {
+    trackFeaturedImageUsage(supabase, post.featuredImageUrl, data.id).catch(
+      (err) => console.error("[PostService] Media usage tracking error:", err)
     );
   }
 
@@ -536,20 +619,29 @@ export async function updatePost(
     scheduledFor: string;
     isFeatured: boolean;
     allowComments: boolean;
-  }>
+  }>,
 ): Promise<{ success: boolean; error?: string }> {
   // Permission check - can user edit this post?
   if (!(await canEditPost(postId))) {
-    return { success: false, error: "Permission denied: Cannot edit this post" };
+    return {
+      success: false,
+      error: "Permission denied: Cannot edit this post",
+    };
   }
-  
+
   const context = await getUserBlogContext();
-  
+
   // Members cannot publish - force draft status
   let effectiveStatus = updates.status;
-  if (context.agencyRole === "member" && updates.status && updates.status !== "draft") {
+  if (
+    context.agencyRole === "member" &&
+    updates.status &&
+    updates.status !== "draft"
+  ) {
     effectiveStatus = "draft";
-    console.log("[PostService] Member attempted to change status - keeping draft");
+    console.log(
+      "[PostService] Member attempted to change status - keeping draft",
+    );
   }
 
   const supabase = await createClient();
@@ -565,37 +657,52 @@ export async function updatePost(
   if (updates.contentHtml !== undefined) {
     updateData.content_html = updates.contentHtml;
     // Recalculate reading time
-    const wordCount = updates.contentHtml.replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean).length;
+    const wordCount = updates.contentHtml
+      .replace(/<[^>]+>/g, " ")
+      .split(/\s+/)
+      .filter(Boolean).length;
     updateData.reading_time_minutes = Math.max(1, Math.ceil(wordCount / 200));
   }
-  if (updates.featuredImageUrl !== undefined) updateData.featured_image_url = updates.featuredImageUrl;
-  if (updates.featuredImageAlt !== undefined) updateData.featured_image_alt = updates.featuredImageAlt;
-  if (updates.metaTitle !== undefined) updateData.meta_title = updates.metaTitle;
-  if (updates.metaDescription !== undefined) updateData.meta_description = updates.metaDescription;
-  if (updates.metaKeywords !== undefined) updateData.meta_keywords = updates.metaKeywords;
-  if (updates.ogImageUrl !== undefined) updateData.og_image_url = updates.ogImageUrl;
-  if (updates.canonicalUrl !== undefined) updateData.canonical_url = updates.canonicalUrl;
+  if (updates.featuredImageUrl !== undefined)
+    updateData.featured_image_url = updates.featuredImageUrl;
+  if (updates.featuredImageAlt !== undefined)
+    updateData.featured_image_alt = updates.featuredImageAlt;
+  if (updates.metaTitle !== undefined)
+    updateData.meta_title = updates.metaTitle;
+  if (updates.metaDescription !== undefined)
+    updateData.meta_description = updates.metaDescription;
+  if (updates.metaKeywords !== undefined)
+    updateData.meta_keywords = updates.metaKeywords;
+  if (updates.ogImageUrl !== undefined)
+    updateData.og_image_url = updates.ogImageUrl;
+  if (updates.canonicalUrl !== undefined)
+    updateData.canonical_url = updates.canonicalUrl;
   if (updates.tags !== undefined) updateData.tags = updates.tags;
-  if (updates.isFeatured !== undefined) updateData.is_featured = updates.isFeatured;
-  if (updates.allowComments !== undefined) updateData.allow_comments = updates.allowComments;
-  if (updates.scheduledFor !== undefined) updateData.scheduled_for = updates.scheduledFor;
+  if (updates.isFeatured !== undefined)
+    updateData.is_featured = updates.isFeatured;
+  if (updates.allowComments !== undefined)
+    updateData.allow_comments = updates.allowComments;
+  if (updates.scheduledFor !== undefined)
+    updateData.scheduled_for = updates.scheduledFor;
 
   if (effectiveStatus !== undefined) {
     updateData.status = effectiveStatus;
     if (effectiveStatus === "published") {
       // Only set published_at if not already set
-      const { data: existingPost } = await supabase.from("blog_posts")
+      const { data: existingPost } = await supabase
+        .from("blog_posts")
         .select("published_at")
         .eq("id", postId)
         .single();
-      
+
       if (!existingPost?.published_at) {
         updateData.published_at = new Date().toISOString();
       }
     }
   }
 
-  const { error } = await supabase.from("blog_posts")
+  const { error } = await supabase
+    .from("blog_posts")
     .update(updateData)
     .eq("id", postId);
 
@@ -615,28 +722,41 @@ export async function updatePost(
         updates.categoryIds.map((catId) => ({
           post_id: postId,
           category_id: catId,
-        }))
+        })),
       );
     }
+  }
+
+  // Track featured image in media_usage if it was changed
+  if (updates.featuredImageUrl) {
+    trackFeaturedImageUsage(supabase, updates.featuredImageUrl, postId).catch(
+      (err) => console.error("[PostService] Media usage tracking error:", err)
+    );
   }
 
   return { success: true };
 }
 
-export async function deletePost(postId: string): Promise<{ success: boolean; error?: string }> {
+export async function deletePost(
+  postId: string,
+): Promise<{ success: boolean; error?: string }> {
   // Permission check - only owner/admin can delete
   if (!(await canDeletePosts())) {
-    return { success: false, error: "Permission denied: Only agency owners/admins can delete posts" };
+    return {
+      success: false,
+      error: "Permission denied: Only agency owners/admins can delete posts",
+    };
   }
 
   const supabase = await createClient();
 
   // Verify access to the post's site
-  const { data: post } = await supabase.from("blog_posts")
+  const { data: post } = await supabase
+    .from("blog_posts")
     .select("site_id")
     .eq("id", postId)
     .single();
-  
+
   if (!post || !(await canAccessSiteBlog(post.site_id))) {
     return { success: false, error: "Access denied" };
   }
@@ -657,25 +777,25 @@ export async function getPortalBlogSites(): Promise<{
   sites: Array<{ id: string; name: string; domain: string }>;
 }> {
   const context = await getUserBlogContext();
-  
+
   if (!context.isPortalUser || !context.portalClientId) {
     return { sites: [] };
   }
-  
+
   const supabase = await createClient();
-  
+
   const { data: sites } = await supabase
     .from("sites")
     .select("id, name, subdomain")
     .eq("client_id", context.portalClientId)
     .order("name");
-  
-  return { 
-    sites: (sites || []).map(s => ({ 
-      id: s.id, 
-      name: s.name, 
-      domain: s.subdomain 
-    })) 
+
+  return {
+    sites: (sites || []).map((s) => ({
+      id: s.id,
+      name: s.name,
+      domain: s.subdomain,
+    })),
   };
 }
 
@@ -684,7 +804,7 @@ export async function getPortalBlogSites(): Promise<{
  */
 export async function getRecentPosts(
   siteId: string,
-  limit = 5
+  limit = 5,
 ): Promise<BlogPost[]> {
   if (!(await canAccessSiteBlog(siteId))) {
     return [];
@@ -692,7 +812,8 @@ export async function getRecentPosts(
 
   const supabase = await createClient();
 
-  const { data } = await supabase.from("blog_posts")
+  const { data } = await supabase
+    .from("blog_posts")
     .select(
       `
       *,
@@ -700,7 +821,7 @@ export async function getRecentPosts(
       categories:blog_post_categories(
         category:blog_categories(id, name, slug, color)
       )
-    `
+    `,
     )
     .eq("site_id", siteId)
     .eq("status", "published")
@@ -726,18 +847,22 @@ export async function getBlogStats(siteId: string): Promise<{
 
   const supabase = await createClient();
 
-  const { data } = await supabase.from("blog_posts")
+  const { data } = await supabase
+    .from("blog_posts")
     .select("status")
     .eq("site_id", siteId);
 
   const posts = (data || []) as { status: string }[];
-  
+
   return {
     total: posts.length,
-    published: posts.filter((p: { status: string }) => p.status === "published").length,
+    published: posts.filter((p: { status: string }) => p.status === "published")
+      .length,
     draft: posts.filter((p: { status: string }) => p.status === "draft").length,
-    scheduled: posts.filter((p: { status: string }) => p.status === "scheduled").length,
-    archived: posts.filter((p: { status: string }) => p.status === "archived").length,
+    scheduled: posts.filter((p: { status: string }) => p.status === "scheduled")
+      .length,
+    archived: posts.filter((p: { status: string }) => p.status === "archived")
+      .length,
   };
 }
 
@@ -759,12 +884,18 @@ export async function getSitePublicInfo(siteId: string): Promise<{
     .eq("id", siteId)
     .single();
 
-  return data ? { subdomain: data.subdomain, isPublished: data.published } : null;
+  return data
+    ? { subdomain: data.subdomain, isPublished: data.published }
+    : null;
 }
 
 function mapToPost(data: Record<string, unknown>): BlogPost {
-  const author = data.author as { full_name: string; avatar_url: string } | null;
-  const categoriesRaw = (data.categories as Array<{ category: Record<string, unknown> }>) || [];
+  const author = data.author as {
+    full_name: string;
+    avatar_url: string;
+  } | null;
+  const categoriesRaw =
+    (data.categories as Array<{ category: Record<string, unknown> }>) || [];
 
   return {
     id: data.id as string,
@@ -792,7 +923,7 @@ function mapToPost(data: Record<string, unknown>): BlogPost {
     readingTimeMinutes: (data.reading_time_minutes as number) || 1,
     tags: (data.tags as string[]) || [],
     categories: categoriesRaw
-      .filter(c => c.category)
+      .filter((c) => c.category)
       .map((c) => ({
         id: c.category.id as string,
         name: c.category.name as string,

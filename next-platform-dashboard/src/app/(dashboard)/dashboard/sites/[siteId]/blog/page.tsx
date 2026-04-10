@@ -15,7 +15,13 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { PostList } from "@/components/blog/post-list";
-import { getPosts, getBlogStats, getUserPermissions, getSitePublicInfo, type BlogPost } from "@/lib/blog/post-service";
+import {
+  getPosts,
+  getBlogStats,
+  getUserPermissions,
+  getSitePublicInfo,
+  type BlogPost,
+} from "@/lib/blog/post-service";
 import { getCategories, type BlogCategory } from "@/lib/blog/category-service";
 
 export default function BlogPostsPage({
@@ -29,19 +35,33 @@ export default function BlogPostsPage({
   const [categories, setCategories] = useState<BlogCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
-  const [stats, setStats] = useState({ total: 0, published: 0, draft: 0, scheduled: 0, archived: 0 });
-  const [permissions, setPermissions] = useState({ canPublish: true, canDelete: true, canManageCategories: true, isPortalUser: false });
+  const [stats, setStats] = useState({
+    total: 0,
+    published: 0,
+    draft: 0,
+    scheduled: 0,
+    archived: 0,
+  });
+  const [permissions, setPermissions] = useState({
+    canPublish: true,
+    canDelete: true,
+    canManageCategories: true,
+    isPortalUser: false,
+  });
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [page, setPage] = useState(1);
-  const [siteInfo, setSiteInfo] = useState<{ subdomain: string | null; isPublished: boolean } | null>(null);
+  const [siteInfo, setSiteInfo] = useState<{
+    subdomain: string | null;
+    isPublished: boolean;
+  } | null>(null);
 
   // Load initial data (categories, stats, permissions, site info)
   useEffect(() => {
     let cancelled = false;
-    
+
     const fetchInitialData = async () => {
       const [categoriesData, statsData, perms, site] = await Promise.all([
         getCategories(siteId),
@@ -49,7 +69,7 @@ export default function BlogPostsPage({
         getUserPermissions(),
         getSitePublicInfo(siteId),
       ]);
-      
+
       if (!cancelled) {
         setCategories(categoriesData);
         setStats(statsData);
@@ -57,33 +77,41 @@ export default function BlogPostsPage({
         setSiteInfo(site);
       }
     };
-    
+
     fetchInitialData();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [siteId]);
 
   // Load posts when filters change
   useEffect(() => {
     let cancelled = false;
-    
+
     const fetchPosts = async () => {
       setLoading(true);
-      
-      const postsResult = await getPosts(siteId, {
-        status: statusFilter === "all" ? undefined : statusFilter,
-        categoryId: categoryFilter === "all" ? undefined : categoryFilter,
-        search: search || undefined,
-      }, page);
-      
+
+      const postsResult = await getPosts(
+        siteId,
+        {
+          status: statusFilter === "all" ? undefined : statusFilter,
+          categoryId: categoryFilter === "all" ? undefined : categoryFilter,
+          search: search || undefined,
+        },
+        page,
+      );
+
       if (!cancelled) {
         setPosts(postsResult.posts);
         setTotal(postsResult.total);
         setLoading(false);
       }
     };
-    
+
     fetchPosts();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [siteId, statusFilter, categoryFilter, search, page]);
 
   const handleSearch = () => {
@@ -101,7 +129,8 @@ export default function BlogPostsPage({
       {siteInfo && !siteInfo.isPublished && (
         <Alert>
           <AlertDescription>
-            Your site is not yet published. Blog posts won&apos;t be publicly accessible until the site is published.
+            Your site is not yet published. Blog posts won&apos;t be publicly
+            accessible until the site is published.
           </AlertDescription>
         </Alert>
       )}
@@ -118,7 +147,9 @@ export default function BlogPostsPage({
         <div className="flex gap-2">
           {permissions.canManageCategories && (
             <Button variant="outline" asChild>
-              <Link href={`/dashboard/sites/${siteId}/blog/categories`}>Categories</Link>
+              <Link href={`/dashboard/sites/${siteId}/blog/categories`}>
+                Categories
+              </Link>
             </Button>
           )}
           <Button asChild>
@@ -140,7 +171,9 @@ export default function BlogPostsPage({
         </Card>
         <Card>
           <CardContent className="pt-4 pb-4">
-            <p className="text-2xl font-bold text-green-600">{stats.published}</p>
+            <p className="text-2xl font-bold text-green-600">
+              {stats.published}
+            </p>
             <p className="text-sm text-muted-foreground">Published</p>
           </CardContent>
         </Card>
@@ -152,7 +185,9 @@ export default function BlogPostsPage({
         </Card>
         <Card>
           <CardContent className="pt-4 pb-4">
-            <p className="text-2xl font-bold text-yellow-600">{stats.scheduled}</p>
+            <p className="text-2xl font-bold text-yellow-600">
+              {stats.scheduled}
+            </p>
             <p className="text-sm text-muted-foreground">Scheduled</p>
           </CardContent>
         </Card>
@@ -171,7 +206,13 @@ export default function BlogPostsPage({
           />
         </div>
 
-        <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
+        <Select
+          value={statusFilter}
+          onValueChange={(v) => {
+            setStatusFilter(v);
+            setPage(1);
+          }}
+        >
           <SelectTrigger className="w-full sm:w-40">
             <Filter className="h-4 w-4 mr-2" />
             <SelectValue placeholder="All statuses" />
@@ -185,7 +226,13 @@ export default function BlogPostsPage({
           </SelectContent>
         </Select>
 
-        <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v); setPage(1); }}>
+        <Select
+          value={categoryFilter}
+          onValueChange={(v) => {
+            setCategoryFilter(v);
+            setPage(1);
+          }}
+        >
           <SelectTrigger className="w-full sm:w-40">
             <SelectValue placeholder="All categories" />
           </SelectTrigger>
@@ -212,9 +259,9 @@ export default function BlogPostsPage({
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : (
-            <PostList 
-              posts={posts} 
-              siteId={siteId} 
+            <PostList
+              posts={posts}
+              siteId={siteId}
               onRefresh={handleRefresh}
               canEdit={true}
               canDelete={permissions.canDelete}
@@ -231,7 +278,7 @@ export default function BlogPostsPage({
         <div className="flex justify-center gap-2">
           <Button
             variant="outline"
-            onClick={() => setPage(p => Math.max(1, p - 1))}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
           >
             Previous
@@ -241,7 +288,7 @@ export default function BlogPostsPage({
           </span>
           <Button
             variant="outline"
-            onClick={() => setPage(p => p + 1)}
+            onClick={() => setPage((p) => p + 1)}
             disabled={page >= Math.ceil(total / 20)}
           >
             Next

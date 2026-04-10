@@ -20,7 +20,9 @@ async function getSiteBySubdomain(subdomain: string) {
     .single();
 
   if (error) {
-    console.error("[PublicBlog] getSiteBySubdomain error:", error.message, { subdomain });
+    console.error("[PublicBlog] getSiteBySubdomain error:", error.message, {
+      subdomain,
+    });
   }
 
   return data;
@@ -45,7 +47,9 @@ async function getBlogPosts(siteId: string) {
     .order("published_at", { ascending: false });
 
   if (error) {
-    console.error("[PublicBlog] getBlogPosts error:", error.message, { siteId });
+    console.error("[PublicBlog] getBlogPosts error:", error.message, {
+      siteId,
+    });
   }
 
   return data || [];
@@ -63,7 +67,7 @@ export default async function PublicBlogPage({
     return (
       <div className="max-w-4xl mx-auto py-12 px-4 text-center">
         <h1 className="text-2xl font-bold mb-4">Site Not Found</h1>
-        <p className="text-gray-600">
+        <p style={{ color: 'var(--muted-foreground, #6b7280)' }}>
           The site you are looking for does not exist or is not published.
         </p>
       </div>
@@ -74,8 +78,12 @@ export default async function PublicBlogPage({
 
   return (
     <div className="max-w-4xl mx-auto py-12 px-4">
-      <h1 className="text-4xl font-bold mb-2">Blog</h1>
-      <p className="text-xl text-gray-600 mb-12">Latest news and articles</p>
+      <h1 className="text-4xl font-bold mb-2" style={{ fontFamily: 'var(--font-display, inherit)' }}>
+        {site.name} Blog
+      </h1>
+      <p className="text-xl mb-12" style={{ color: 'var(--muted-foreground, #6b7280)' }}>
+        Latest news and articles
+      </p>
 
       <div className="space-y-12">
         {posts.map((post) => {
@@ -121,17 +129,17 @@ export default async function PublicBlogPage({
                   </div>
                 )}
 
-                <h2 className="text-2xl font-bold group-hover:text-primary transition-colors">
+                <h2 className="text-2xl font-bold transition-colors" style={{ fontFamily: 'var(--font-display, inherit)' }}>
                   {post.title}
                 </h2>
 
                 {post.excerpt && (
-                  <p className="text-gray-600 mt-2 line-clamp-2">
+                  <p className="mt-2 line-clamp-2" style={{ color: 'var(--muted-foreground, #6b7280)' }}>
                     {post.excerpt}
                   </p>
                 )}
 
-                <div className="flex items-center gap-4 mt-4 text-sm text-gray-500">
+                <div className="flex items-center gap-4 mt-4 text-sm" style={{ color: 'var(--muted-foreground, #6b7280)' }}>
                   {author?.avatar_url && (
                     <Image
                       src={author.avatar_url}
@@ -165,8 +173,8 @@ export default async function PublicBlogPage({
 
       {posts.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">No posts published yet.</p>
-          <p className="text-gray-400 mt-2">Check back soon for new content!</p>
+          <p className="text-lg" style={{ color: 'var(--muted-foreground, #6b7280)' }}>No posts published yet.</p>
+          <p className="mt-2" style={{ color: 'var(--muted-foreground, #9ca3af)' }}>Check back soon for new content!</p>
         </div>
       )}
     </div>

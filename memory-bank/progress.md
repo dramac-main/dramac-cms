@@ -37,6 +37,7 @@
 ## Latest Update: Storefront Auth Deep Audit & Magic Link Fix ✅ (commit 6071ff3d)
 
 ### Critical Bug: Magic link emails only sent to password-based customers
+
 - Root cause: Guard condition `if (!customer || !customer.password_set_at)` silently skipped Google OAuth and guest customers
 - Fix: Changed to `if (!customer)` — now sends magic link to any existing customer
 - Added: URL fallback from site DB data when origin/referer headers missing
@@ -47,6 +48,26 @@
 
 ---
 
+## Previous Update: Comprehensive Blog System Fix ✅ (commit e06d17e6)
+
+### Blog 404 Root Cause (commit 5c7d4655)
+
+- `is_published` → `published` column name fix in blog route Supabase queries
+- Added `/blog` to PUBLIC_PATHS in proxy.ts
+
+### Comprehensive Blog Improvements (commit e06d17e6)
+
+- Error handling on all 5 blog public route queries
+- Fixed broken PostList "View" link (pointed to non-existent route)
+- Dashboard + Portal: site-publish warning banners, conditional view links
+- PostForm: "View Live" button, MediaFile.url→publicUrl fix
+- Proxy: client-site subdomain blog rewriting (_.sites.dramacagency.com/blog/_)
+- `getSitePublicInfo` + `getPortalSitePublishStatus` server actions
+- All 4 PostForm parent pages pass subdomain/sitePublished props
+- 13 files modified, 0 TypeScript errors, clean build
+
+---
+
 ## Previous Update: Portal Site-Scoped Content Management ✅ (commit c57dcd05)
 
 ### Content Editing + Site-Scoped Navigation (18 files, 1980 insertions, 310 deletions)
@@ -54,6 +75,7 @@
 Enabled portal clients to manage content for their sites with proper permission gating. All Content nav items are now site-scoped, blog editing is gated behind `canEditContent`, and 8 new site-scoped pages were created for blog, pages, media, SEO, analytics, and submissions.
 
 **Key deliverables:**
+
 - `canEditContent` permission wired into navigation, sidebar, and blog service
 - Portal clients create drafts only (can't publish directly), edit own posts
 - PostForm `basePath` prop for correct portal-context navigation

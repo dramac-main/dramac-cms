@@ -1,7 +1,11 @@
 import { use } from "react";
 import { notFound, redirect } from "next/navigation";
 import { PostForm } from "@/components/blog/post-form";
-import { getPost, getUserPermissions, getSitePublicInfo } from "@/lib/blog/post-service";
+import {
+  getPost,
+  getUserPermissions,
+  getSitePublicInfo,
+} from "@/lib/blog/post-service";
 import { getPortalAgencyId } from "@/lib/portal/portal-media-service";
 
 export default function PortalEditPostPage({
