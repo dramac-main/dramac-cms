@@ -77,6 +77,7 @@ export function getPortalNavigationGroups(
   const mainItems: NavItem[] = [
     { title: "Dashboard", href: "/portal", icon: LayoutDashboard },
     { title: "My Sites", href: "/portal/sites", icon: Globe },
+    { title: "Team", href: "/portal/team", icon: Users },
     { title: "Domains", href: "/portal/domains", icon: Server },
     { title: "Email", href: "/portal/email", icon: Mail },
   ];

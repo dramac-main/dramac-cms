@@ -685,7 +685,10 @@ export async function POST(request: NextRequest) {
 
         if (!vRow) {
           return NextResponse.json(
-            { error: "Email verification expired. Please verify your email again." },
+            {
+              error:
+                "Email verification expired. Please verify your email again.",
+            },
             { status: 401, headers: corsHeaders },
           );
         }
@@ -1622,7 +1625,10 @@ export async function POST(request: NextRequest) {
 
       if (!verification) {
         return NextResponse.json(
-          { error: "Verification code expired or not found. Please request a new code." },
+          {
+            error:
+              "Verification code expired or not found. Please request a new code.",
+          },
           { status: 400, headers: corsHeaders },
         );
       }
@@ -1673,15 +1679,13 @@ export async function POST(request: NextRequest) {
       ).toISOString();
 
       // Store token in a new verification row (reuse table as token store)
-      await (supabase as any)
-        .from("mod_ecommod01_email_verifications")
-        .insert({
-          site_id: siteId,
-          email: emailLower,
-          code_hash: verificationTokenHash, // Reuse code_hash field for the token hash
-          verified: true,
-          expires_at: verifyExpiresAt,
-        });
+      await (supabase as any).from("mod_ecommod01_email_verifications").insert({
+        site_id: siteId,
+        email: emailLower,
+        code_hash: verificationTokenHash, // Reuse code_hash field for the token hash
+        verified: true,
+        expires_at: verifyExpiresAt,
+      });
 
       return NextResponse.json(
         {

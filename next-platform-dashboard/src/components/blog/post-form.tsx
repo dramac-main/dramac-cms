@@ -29,6 +29,8 @@ import { PostEditor } from "./post-editor";
 import { PostSeoPanel } from "./post-seo-panel";
 import { createPost, updatePost, type BlogPost } from "@/lib/blog/post-service";
 import { getCategories, type BlogCategory } from "@/lib/blog/category-service";
+import { MediaPickerDialog } from "@/components/media/media-picker-dialog";
+import type { MediaFile } from "@/lib/media/media-service";
 import { toast } from "sonner";
 
 const postFormSchema = z.object({
@@ -53,9 +55,11 @@ interface PostFormProps {
   canPublish?: boolean;
   /** Base path for navigation (e.g. "/portal/sites/{siteId}/blog"). Defaults to dashboard route. */
   basePath?: string;
+  /** Agency ID for media picker. When provided, shows media library picker for featured image. */
+  agencyId?: string;
 }
 
-export function PostForm({ siteId, post, canPublish = true, basePath }: PostFormProps) {
+export function PostForm({ siteId, post, canPublish = true, basePath, agencyId }: PostFormProps) {
   const blogBasePath = basePath || `/dashboard/sites/${siteId}/blog`;
   const router = useRouter();
   const [saving, setSaving] = useState(false);
@@ -68,6 +72,7 @@ export function PostForm({ siteId, post, canPublish = true, basePath }: PostForm
   const [tagInput, setTagInput] = useState("");
   const [content, setContent] = useState<Record<string, unknown>>(post?.content || {});
   const [contentHtml, setContentHtml] = useState(post?.contentHtml || "");
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
 
   const form = useForm<PostFormValues>({
     resolver: zodResolver(postFormSchema),
@@ -388,17 +393,34 @@ export function PostForm({ siteId, post, canPublish = true, basePath }: PostForm
                                     </Button>
                                   </div>
                                 ) : (
-                                  <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                                  <div
+                                    className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                                    onClick={() => agencyId ? setShowMediaPicker(true) : undefined}
+                                  >
                                     <ImageIcon className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                                     <p className="text-sm text-muted-foreground">
-                                      Enter image URL below
+                                      {agencyId ? "Click to browse media library" : "Enter image URL below"}
                                     </p>
                                   </div>
                                 )}
-                                <Input
-                                  {...field}
-                                  placeholder="https://example.com/image.jpg"
-                                />
+                                <div className="flex gap-2">
+                                  <Input
+                                    {...field}
+                                    placeholder="https://example.com/image.jpg"
+                                    className="flex-1"
+                                  />
+                                  {agencyId && (
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => setShowMediaPicker(true)}
+                                    >
+                                      <ImageIcon className="h-4 w-4 mr-1" />
+                                      Browse
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                             </FormControl>
                             <FormMessage />
@@ -563,6 +585,25 @@ export function PostForm({ siteId, post, canPublish = true, basePath }: PostForm
           </div>
         </div>
       </form>
+
+      {/* Media Picker Dialog */}
+      {agencyId && (
+        <MediaPickerDialog
+          open={showMediaPicker}
+          onClose={() => setShowMediaPicker(false)}
+          onSelect={(file) => {
+            const selected = Array.isArray(file) ? file[0] : file;
+            if (selected?.url) {
+              form.setValue("featuredImageUrl", selected.url);
+            }
+            setShowMediaPicker(false);
+          }}
+          agencyId={agencyId}
+          siteId={siteId}
+          fileType="image"
+          title="Select Featured Image"
+        />
+      )}
     </Form>
   );
 }

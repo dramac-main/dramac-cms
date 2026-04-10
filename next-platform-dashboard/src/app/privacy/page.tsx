@@ -55,7 +55,9 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold">1. Information We Collect</h2>
+            <h2 className="text-2xl font-semibold">
+              1. Information We Collect
+            </h2>
 
             <h3 className="text-lg font-medium mt-4">
               1.1 Information You Provide
@@ -71,9 +73,9 @@ export default function PrivacyPolicyPage() {
                 other optional details you choose to provide.
               </li>
               <li>
-                <strong>Payment Information:</strong> Billing address and payment
-                method details, processed securely through our third-party
-                payment processors (Stripe, Paddle).
+                <strong>Payment Information:</strong> Billing address and
+                payment method details, processed securely through our
+                third-party payment processors (Stripe, Paddle).
               </li>
               <li>
                 <strong>Content:</strong> Website content, media, form
@@ -138,8 +140,8 @@ export default function PrivacyPolicyPage() {
                 messages.
               </li>
               <li>
-                Operate the multi-tenant infrastructure that hosts agency
-                sites, storefronts, and client portals.
+                Operate the multi-tenant infrastructure that hosts agency sites,
+                storefronts, and client portals.
               </li>
               <li>
                 Detect, prevent, and address fraud, abuse, and technical issues.
@@ -167,7 +169,9 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-2xl font-semibold">
               4. How We Share Your Information
             </h2>
-            <p>We do not sell your personal information. We may share data with:</p>
+            <p>
+              We do not sell your personal information. We may share data with:
+            </p>
             <ul className="list-disc pl-6 space-y-1">
               <li>
                 <strong>Service Providers:</strong> Infrastructure (Vercel,
@@ -193,17 +197,15 @@ export default function PrivacyPolicyPage() {
             <p>
               We retain your information for as long as your account is active
               or as needed to provide services. If you delete your account, we
-              will delete or anonymize your personal data within 30 days,
-              except where retention is required by law or for legitimate
-              business purposes (e.g., transaction records, audit logs).
+              will delete or anonymize your personal data within 30 days, except
+              where retention is required by law or for legitimate business
+              purposes (e.g., transaction records, audit logs).
             </p>
           </section>
 
           <section>
             <h2 className="text-2xl font-semibold">6. Data Security</h2>
-            <p>
-              We implement industry-standard security measures including:
-            </p>
+            <p>We implement industry-standard security measures including:</p>
             <ul className="list-disc pl-6 space-y-1">
               <li>Encryption in transit (TLS/HTTPS) and at rest.</li>
               <li>
@@ -231,15 +233,9 @@ export default function PrivacyPolicyPage() {
               <li>Access the personal data we hold about you.</li>
               <li>Correct inaccurate or incomplete personal data.</li>
               <li>Request deletion of your personal data.</li>
-              <li>
-                Object to or restrict certain processing of your data.
-              </li>
-              <li>
-                Export your data in a portable format.
-              </li>
-              <li>
-                Withdraw consent where processing is based on consent.
-              </li>
+              <li>Object to or restrict certain processing of your data.</li>
+              <li>Export your data in a portable format.</li>
+              <li>Withdraw consent where processing is based on consent.</li>
             </ul>
             <p>
               To exercise any of these rights, contact us at{" "}
@@ -258,8 +254,8 @@ export default function PrivacyPolicyPage() {
               8. Third-Party Authentication
             </h2>
             <p>
-              We offer sign-in through Google and may add other providers in
-              the future. When you use third-party authentication:
+              We offer sign-in through Google and may add other providers in the
+              future. When you use third-party authentication:
             </p>
             <ul className="list-disc pl-6 space-y-1">
               <li>
@@ -304,8 +300,8 @@ export default function PrivacyPolicyPage() {
             </h2>
             <p>
               Our platform is not directed to individuals under 16. We do not
-              knowingly collect personal data from children. If we learn that
-              we have collected data from a child under 16, we will delete it
+              knowingly collect personal data from children. If we learn that we
+              have collected data from a child under 16, we will delete it
               promptly.
             </p>
           </section>
@@ -365,7 +361,10 @@ export default function PrivacyPolicyPage() {
 
         {/* Footer */}
         <div className="mt-16 border-t pt-8 flex items-center justify-between text-sm text-muted-foreground">
-          <Link href="/terms" className="hover:text-foreground transition-colors">
+          <Link
+            href="/terms"
+            className="hover:text-foreground transition-colors"
+          >
             Terms of Service
           </Link>
           <span>

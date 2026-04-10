@@ -86,6 +86,86 @@ function mapToPortalMediaFile(data: Record<string, unknown>): PortalMediaFile {
 // ============================================
 
 /**
+ * Get the agency ID for the current portal client.
+ * Needed for media upload components.
+ */
+export async function getPortalAgencyId(): Promise<string | null> {
+  const clientId = await getPortalClientId();
+  if (!clientId) return null;
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("clients")
+    .select("agency_id")
+    .eq("id", clientId)
+    .single();
+
+  return data?.agency_id || null;
+}
+
+/**
+ * Get the subdomain for a portal site (for blog preview URLs).
+ * Only returns if the site belongs to the current portal client.
+ */
+export async function getPortalSiteSubdomain(siteId: string): Promise<string | null> {
+  const clientId = await getPortalClientId();
+  if (!clientId) return null;
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("sites")
+    .select("subdomain")
+    .eq("id", siteId)
+    .eq("client_id", clientId)
+    .single();
+
+  return data?.subdomain || null;
+}
+
+/**
+ * Delete a portal media file (only if the site belongs to the client)
+ */
+export async function deletePortalMedia(fileId: string): Promise<{ success: boolean; error?: string }> {
+  const clientId = await getPortalClientId();
+  if (!clientId) return { success: false, error: "Not authenticated" };
+
+  const supabase = await createClient();
+
+  // Get the file with its site to verify ownership
+  const { data: asset, error: fetchError } = await supabase
+    .from("assets")
+    .select("id, storage_path, site:sites!inner(client_id)")
+    .eq("id", fileId)
+    .single();
+
+  if (fetchError || !asset) {
+    return { success: false, error: "File not found" };
+  }
+
+  const siteData = asset.site as { client_id: string } | null;
+  if (!siteData || siteData.client_id !== clientId) {
+    return { success: false, error: "Access denied" };
+  }
+
+  // Delete from storage if path exists
+  if (asset.storage_path) {
+    await supabase.storage.from("media").remove([asset.storage_path]);
+  }
+
+  // Delete database record
+  const { error: deleteError } = await supabase
+    .from("assets")
+    .delete()
+    .eq("id", fileId);
+
+  if (deleteError) {
+    return { success: false, error: "Failed to delete file" };
+  }
+
+  return { success: true };
+}
+
+/**
  * Get sites that the portal client has access to (for site selector)
  */
 export async function getPortalMediaSites(): Promise<{

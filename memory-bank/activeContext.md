@@ -1,43 +1,57 @@
 # Active Context
 
-## Current Focus: Portal Site-Scoped Content Management — COMPLETE ✅ (commit c57dcd05)
+## Current Focus: Platform-Wide UI Fixes + Blog Data Fix — COMPLETE ✅ (commit 41eb8a8e)
 
 ### What Was Done
 
-Implemented site-scoped content management for the client portal, enabling clients with the `canEditContent` permission to manage blog posts, view pages, browse media, check SEO, view analytics, and manage form submissions — all scoped to a specific site.
+Fixed permissions dialog scroll bug (platform-wide), improved touch targets across all core UI components, consolidated global CSS, and fixed site builder blog data source.
 
 ### Changes Made
 
-**Navigation (portal-navigation.ts, portal-layout-client.tsx, portal-sidebar.tsx):**
-- Added `canEditContent` to `PortalUserPermissions` interface
-- Made all Content nav items site-scoped (under `/portal/sites/{siteId}/...`)
-- Gated Pages, Blog Posts, Media behind `canEditContent` permission
-- Analytics gated on `canViewAnalytics`; SEO and Submissions visible to all
+**ScrollArea (scroll-area.tsx):**
 
-**Blog Service (post-service.ts):**
-- Portal users with `canEditContent` can create posts (forced to draft status)
-- Portal editors can edit posts they authored on their accessible sites
-- Portal editors see published posts + their own drafts (not just published)
-- Added `portalCanEditContent` and `portalCanPublish` to `UserBlogContext`
+- Added `min-h-0` to Root — fixes scroll in ALL flex containers platform-wide
+- Added `overscroll-contain` to Viewport for scroll containment
+- Root cause: flex children have implicit `min-height: auto`, preventing ScrollArea from shrinking below content size
 
-**PostForm (post-form.tsx):**
-- Added `basePath` prop for correct navigation in portal context
-- Portal blog pages pass `/portal/sites/{siteId}/blog` as basePath
+**Dialog (dialog.tsx):**
 
-**8 New Site-Scoped Portal Pages:**
-- `/portal/sites/[siteId]/blog/page.tsx` — Blog management with search, pagination, create/edit
-- `/portal/sites/[siteId]/blog/new/page.tsx` — Create new post (server component wrapping PostForm)
-- `/portal/sites/[siteId]/blog/[postId]/page.tsx` — Edit post (server component wrapping PostForm)
-- `/portal/sites/[siteId]/pages/page.tsx` — Read-only page listing with external links
-- `/portal/sites/[siteId]/media/page.tsx` — Media browser with grid, preview, search, filters
-- `/portal/sites/[siteId]/analytics/page.tsx` — Per-site analytics with stats cards and top pages
-- `/portal/sites/[siteId]/seo/page.tsx` — SEO overview with per-page analysis and scoring
-- `/portal/sites/[siteId]/submissions/page.tsx` — Form submissions with filters, stats, export
+- Fixed mobile full-screen: `max-sm:h-full` → `max-sm:h-dvh max-sm:max-h-dvh` (respects dynamic viewport height)
+- Added proper mobile positioning: `max-sm:translate-x-0 max-sm:translate-y-0 max-sm:top-0 max-sm:left-0`
+- Expanded close button: `rounded-sm` → `flex h-8 w-8 items-center justify-center rounded-md` (32px touch target)
 
-### Next Steps
-- Deploy and verify all new portal pages work in production
-- Test canEditContent permission toggle (enable/disable and verify nav + page access)
-- Test blog post create/edit flow from portal
+**Sheet (sheet.tsx):**
+
+- Expanded close button touch target to match Dialog (32px)
+
+**Switch (switch.tsx):**
+
+- Added `relative` + `before:absolute before:-inset-2 before:content-[''] before:rounded-lg` for invisible expanded touch area
+- Visual size unchanged (24×44px), effective tap area now ~40×60px
+
+**globals.css:**
+
+- Merged duplicate `@layer base` blocks
+- Added `touch-action: manipulation` + `-webkit-tap-highlight-color: transparent` on `html` (removes 300ms tap delay globally)
+- Added `overscroll-behavior-y: contain` on `body`
+- Added `overscroll-behavior: contain` on all Radix dialog/alert-dialog overlays
+- Added thinner scrollbars on touch devices (`@media (pointer: coarse)`)
+
+**AgentPermissionsEditor:**
+
+- Fixed `max-h-[85vh]` → `max-h-dvh sm:max-h-[85vh]` (full screen on mobile, 85vh on desktop)
+
+**Site Builder Blog Data (builder.ts):**
+
+- `fetchBlogPosts()` now queries real `blog_posts` table instead of `sites.settings.blog_posts` mock data
+- Uses same join pattern as post-service.ts: `author:profiles(full_name)`
+- Filters to published posts only, ordered by published_at desc
+
+### Previous Context
+
+- Portal site-scoped content management — commit c57dcd05
+- Portal live-chat crash fix — commit b0149aa4
+- Portal 404s fix — commit b8132696
 - Consider adding media upload capability for portal editors in future
 
 ## Previous Focus: Client Portal Overhaul — ALL 15 PHASES COMPLETE + VERIFIED ✅

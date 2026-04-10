@@ -14,6 +14,8 @@ import {
   Eye,
   ZoomIn,
   ZoomOut,
+  Upload,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,8 +37,11 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   getPortalMedia,
+  getPortalAgencyId,
+  deletePortalMedia,
   type PortalMediaFile,
 } from "@/lib/portal/portal-media-service";
+import { MediaUploadZone, type UploadedFile } from "@/components/media/media-upload-zone";
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return "0 B";
@@ -75,6 +80,9 @@ export default function PortalSiteMediaPage({
   const [fileTypeFilter, setFileTypeFilter] = useState<string>("all");
   const [previewFile, setPreviewFile] = useState<PortalMediaFile | null>(null);
   const [zoom, setZoom] = useState(1);
+  const [agencyId, setAgencyId] = useState<string | null>(null);
+  const [showUpload, setShowUpload] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   const loadMedia = useCallback(
     async (showRefreshing = false) => {
@@ -108,8 +116,41 @@ export default function PortalSiteMediaPage({
   }, [loadMedia]);
 
   useEffect(() => {
+    getPortalAgencyId().then(setAgencyId);
+  }, []);
+
+  useEffect(() => {
     setPage(1);
   }, [search, fileTypeFilter]);
+
+  const handleUploadComplete = useCallback(
+    (_files: UploadedFile[]) => {
+      setShowUpload(false);
+      loadMedia(true);
+    },
+    [loadMedia],
+  );
+
+  const handleDelete = useCallback(
+    async (fileId: string) => {
+      setDeleting(fileId);
+      try {
+        const result = await deletePortalMedia(fileId);
+        if (result.success) {
+          toast.success("File deleted");
+          setPreviewFile(null);
+          loadMedia(true);
+        } else {
+          toast.error(result.error || "Failed to delete file");
+        }
+      } catch {
+        toast.error("Failed to delete file");
+      } finally {
+        setDeleting(null);
+      }
+    },
+    [loadMedia],
+  );
 
   const totalPages = Math.ceil(total / 24);
 
@@ -123,21 +164,45 @@ export default function PortalSiteMediaPage({
             Media Library
           </h1>
           <p className="text-muted-foreground mt-1">
-            {total} {total === 1 ? "file" : "files"} (read-only)
+            {total} {total === 1 ? "file" : "files"}
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => loadMedia(true)}
-          disabled={refreshing}
-        >
-          <RefreshCcw
-            className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
-          />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          {agencyId && (
+            <Button
+              size="sm"
+              onClick={() => setShowUpload(!showUpload)}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Upload Files
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => loadMedia(true)}
+            disabled={refreshing}
+          >
+            <RefreshCcw
+              className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
+            />
+            Refresh
+          </Button>
+        </div>
       </div>
+
+      {/* Upload Zone */}
+      {showUpload && agencyId && (
+        <Card>
+          <CardContent className="pt-6">
+            <MediaUploadZone
+              agencyId={agencyId}
+              siteId={siteId}
+              onUploadComplete={handleUploadComplete}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -313,6 +378,19 @@ export default function PortalSiteMediaPage({
                   >
                     <Download className="h-4 w-4 mr-2" />
                     Download
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={deleting === previewFile.id}
+                    onClick={() => handleDelete(previewFile.id)}
+                  >
+                    {deleting === previewFile.id ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4 mr-2" />
+                    )}
+                    Delete
                   </Button>
                 </div>
               </div>

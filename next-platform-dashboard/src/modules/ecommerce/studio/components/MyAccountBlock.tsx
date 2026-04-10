@@ -1165,109 +1165,109 @@ function ProfileTab({
 
   return (
     <>
-    <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
-      <div className="grid grid-cols-2 gap-3">
+      <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label
+              htmlFor="pf-first"
+              className="block text-sm font-medium text-foreground"
+            >
+              First Name
+            </label>
+            <input
+              id="pf-first"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+          <div className="space-y-1">
+            <label
+              htmlFor="pf-last"
+              className="block text-sm font-medium text-foreground"
+            >
+              Last Name
+            </label>
+            <input
+              id="pf-last"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+        </div>
+
         <div className="space-y-1">
-          <label
-            htmlFor="pf-first"
-            className="block text-sm font-medium text-foreground"
-          >
-            First Name
+          <label className="block text-sm font-medium text-foreground">
+            Email
           </label>
           <input
-            id="pf-first"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
+            value={customer.email}
+            disabled
+            className="w-full rounded-md border border-border bg-muted/50 px-3 py-2 text-sm text-muted-foreground cursor-not-allowed"
+          />
+          <p className="text-xs text-muted-foreground">
+            Email cannot be changed.
+          </p>
+        </div>
+
+        <div className="space-y-1">
+          <label
+            htmlFor="pf-phone"
+            className="block text-sm font-medium text-foreground"
+          >
+            Phone
+          </label>
+          <input
+            id="pf-phone"
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>
-        <div className="space-y-1">
-          <label
-            htmlFor="pf-last"
-            className="block text-sm font-medium text-foreground"
-          >
-            Last Name
-          </label>
+
+        <label className="flex items-start gap-3 cursor-pointer">
           <input
-            id="pf-last"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            type="checkbox"
+            checked={acceptsMarketing}
+            onChange={(e) => setAcceptsMarketing(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-input text-primary focus:ring-primary"
           />
-        </div>
-      </div>
-
-      <div className="space-y-1">
-        <label className="block text-sm font-medium text-foreground">
-          Email
+          <span className="text-sm text-muted-foreground">
+            Subscribe to emails about promotions and new products.
+          </span>
         </label>
-        <input
-          value={customer.email}
-          disabled
-          className="w-full rounded-md border border-border bg-muted/50 px-3 py-2 text-sm text-muted-foreground cursor-not-allowed"
-        />
-        <p className="text-xs text-muted-foreground">
-          Email cannot be changed.
-        </p>
-      </div>
 
-      <div className="space-y-1">
-        <label
-          htmlFor="pf-phone"
-          className="block text-sm font-medium text-foreground"
+        {error && (
+          <p
+            role="alert"
+            className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          >
+            {error}
+          </p>
+        )}
+        {success && (
+          <p
+            role="status"
+            className="rounded-md bg-success/5 px-3 py-2 text-sm text-success"
+          >
+            Profile updated successfully.
+          </p>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60 flex items-center gap-2 min-h-11"
         >
-          Phone
-        </label>
-        <input
-          id="pf-phone"
-          type="tel"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-        />
-      </div>
+          {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+          Save Changes
+        </button>
+      </form>
 
-      <label className="flex items-start gap-3 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={acceptsMarketing}
-          onChange={(e) => setAcceptsMarketing(e.target.checked)}
-          className="mt-0.5 h-4 w-4 rounded border-input text-primary focus:ring-primary"
-        />
-        <span className="text-sm text-muted-foreground">
-          Subscribe to emails about promotions and new products.
-        </span>
-      </label>
-
-      {error && (
-        <p
-          role="alert"
-          className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
-        >
-          {error}
-        </p>
-      )}
-      {success && (
-        <p
-          role="status"
-          className="rounded-md bg-success/5 px-3 py-2 text-sm text-success"
-        >
-          Profile updated successfully.
-        </p>
-      )}
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60 flex items-center gap-2 min-h-11"
-      >
-        {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-        Save Changes
-      </button>
-    </form>
-
-    {/* Change Password Section */}
-    <ChangePasswordSection customer={customer} />
+      {/* Change Password Section */}
+      <ChangePasswordSection customer={customer} />
     </>
   );
 }

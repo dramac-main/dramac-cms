@@ -99,9 +99,7 @@ export default function TermsOfServicePage() {
                 You are responsible for maintaining the security of your account
                 credentials.
               </li>
-              <li>
-                You must be at least 16 years old to use the Platform.
-              </li>
+              <li>You must be at least 16 years old to use the Platform.</li>
               <li>
                 One person or entity may not maintain more than one free
                 account.
@@ -114,9 +112,7 @@ export default function TermsOfServicePage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold">
-              3. Acceptable Use
-            </h2>
+            <h2 className="text-2xl font-semibold">3. Acceptable Use</h2>
             <p>You agree not to use the Platform to:</p>
             <ul className="list-disc pl-6 space-y-1">
               <li>
@@ -138,12 +134,10 @@ export default function TermsOfServicePage() {
                 violence or discrimination.
               </li>
               <li>
-                Impersonate another person or misrepresent your affiliation
-                with any entity.
+                Impersonate another person or misrepresent your affiliation with
+                any entity.
               </li>
-              <li>
-                Use the Platform to build a competing product or service.
-              </li>
+              <li>Use the Platform to build a competing product or service.</li>
               <li>
                 Exceed reasonable usage limits or intentionally overload our
                 infrastructure.
@@ -162,8 +156,8 @@ export default function TermsOfServicePage() {
             <ul className="list-disc pl-6 space-y-1">
               <li>
                 Ensuring their own compliance with applicable data protection
-                regulations (GDPR, CCPA, etc.) for the data they collect
-                through their storefronts.
+                regulations (GDPR, CCPA, etc.) for the data they collect through
+                their storefronts.
               </li>
               <li>
                 Providing their own privacy policies and terms to their
@@ -181,9 +175,7 @@ export default function TermsOfServicePage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold">
-              5. Intellectual Property
-            </h2>
+            <h2 className="text-2xl font-semibold">5. Intellectual Property</h2>
             <h3 className="text-lg font-medium mt-4">5.1 Platform Ownership</h3>
             <p>
               The Platform, including its code, design, features, documentation,
@@ -195,23 +187,21 @@ export default function TermsOfServicePage() {
             <h3 className="text-lg font-medium mt-4">5.2 Your Content</h3>
             <p>
               You retain ownership of Content you create or upload to the
-              Platform. By using the Platform, you grant us a limited license
-              to host, display, and transmit your Content solely to provide the
+              Platform. By using the Platform, you grant us a limited license to
+              host, display, and transmit your Content solely to provide the
               services you have requested.
             </p>
 
             <h3 className="text-lg font-medium mt-4">5.3 Modules</h3>
             <p>
-              Module developers retain ownership of their modules. Installing
-              a module grants you a license to use it according to the
+              Module developers retain ownership of their modules. Installing a
+              module grants you a license to use it according to the
               module&apos;s own terms and the Platform marketplace guidelines.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold">
-              6. Payment &amp; Billing
-            </h2>
+            <h2 className="text-2xl font-semibold">6. Payment &amp; Billing</h2>
             <ul className="list-disc pl-6 space-y-1">
               <li>
                 Paid plans are billed in advance on a monthly or annual basis.
@@ -241,10 +231,10 @@ export default function TermsOfServicePage() {
             <h2 className="text-2xl font-semibold">7. Service Availability</h2>
             <p>
               We strive to maintain high availability but do not guarantee
-              uninterrupted service. The Platform may be temporarily
-              unavailable for maintenance, updates, or circumstances beyond our
-              control. We are not liable for any loss or damage resulting from
-              service interruptions.
+              uninterrupted service. The Platform may be temporarily unavailable
+              for maintenance, updates, or circumstances beyond our control. We
+              are not liable for any loss or damage resulting from service
+              interruptions.
             </p>
           </section>
 
@@ -261,16 +251,13 @@ export default function TermsOfServicePage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold">
-              9. Third-Party Services
-            </h2>
+            <h2 className="text-2xl font-semibold">9. Third-Party Services</h2>
             <p>
               The Platform integrates with third-party services (domain
               registrars, payment processors, authentication providers, email
               services, etc.). We are not responsible for the availability,
-              accuracy, or practices of these third-party services. Your use
-              of third-party services is subject to their own terms and
-              policies.
+              accuracy, or practices of these third-party services. Your use of
+              third-party services is subject to their own terms and policies.
             </p>
           </section>
 
@@ -279,16 +266,16 @@ export default function TermsOfServicePage() {
               10. Limitation of Liability
             </h2>
             <p>
-              To the maximum extent permitted by law, {companyName} shall not
-              be liable for any indirect, incidental, special, consequential,
-              or punitive damages, including but not limited to loss of profits,
+              To the maximum extent permitted by law, {companyName} shall not be
+              liable for any indirect, incidental, special, consequential, or
+              punitive damages, including but not limited to loss of profits,
               data, business opportunities, or goodwill, arising from your use
               of the Platform.
             </p>
             <p>
-              Our total liability for any claim arising from these Terms or
-              your use of the Platform shall not exceed the amount you paid us
-              in the twelve (12) months preceding the claim.
+              Our total liability for any claim arising from these Terms or your
+              use of the Platform shall not exceed the amount you paid us in the
+              twelve (12) months preceding the claim.
             </p>
           </section>
 
@@ -298,8 +285,8 @@ export default function TermsOfServicePage() {
             </h2>
             <p>
               The Platform is provided &quot;as is&quot; and &quot;as
-              available&quot; without warranties of any kind, whether express
-              or implied, including but not limited to warranties of
+              available&quot; without warranties of any kind, whether express or
+              implied, including but not limited to warranties of
               merchantability, fitness for a particular purpose, and
               non-infringement.
             </p>
@@ -333,18 +320,15 @@ export default function TermsOfServicePage() {
               13. Changes to These Terms
             </h2>
             <p>
-              We may update these Terms from time to time. We will notify you
-              of material changes by posting the updated Terms on this page
-              and updating the effective date. Continued use of the Platform
-              after changes take effect constitutes acceptance of the revised
-              Terms.
+              We may update these Terms from time to time. We will notify you of
+              material changes by posting the updated Terms on this page and
+              updating the effective date. Continued use of the Platform after
+              changes take effect constitutes acceptance of the revised Terms.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold">
-              14. Governing Law
-            </h2>
+            <h2 className="text-2xl font-semibold">14. Governing Law</h2>
             <p>
               These Terms are governed by and construed in accordance with the
               laws of the jurisdiction in which {companyName} is registered,
@@ -354,9 +338,7 @@ export default function TermsOfServicePage() {
 
           <section>
             <h2 className="text-2xl font-semibold">15. Contact Us</h2>
-            <p>
-              If you have questions about these Terms, contact us at:
-            </p>
+            <p>If you have questions about these Terms, contact us at:</p>
             <p className="mt-2">
               <strong>{companyName}</strong>
               <br />

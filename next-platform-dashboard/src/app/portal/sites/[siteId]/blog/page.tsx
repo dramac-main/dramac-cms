@@ -12,6 +12,8 @@ import {
   Plus,
   Search,
   Edit,
+  Eye,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +25,7 @@ import {
   getBlogStats,
   type BlogPost,
 } from "@/lib/blog/post-service";
+import { getPortalSiteSubdomain } from "@/lib/portal/portal-media-service";
 import { DEFAULT_LOCALE } from "@/lib/locale-config";
 
 const statusColors: Record<string, string> = {
@@ -54,10 +57,12 @@ export default function PortalSiteBlogPage({
     published: number;
     draft: number;
   }>({ total: 0, published: 0, draft: 0 });
+  const [subdomain, setSubdomain] = useState<string | null>(null);
 
   useEffect(() => {
     getUserPermissions().then(setPermissions);
     getBlogStats(siteId).then(setStats);
+    getPortalSiteSubdomain(siteId).then(setSubdomain);
   }, [siteId]);
 
   const loadPosts = useCallback(async () => {
@@ -191,6 +196,18 @@ export default function PortalSiteBlogPage({
                         >
                           {post.status}
                         </Badge>
+                        {post.status === "published" && subdomain && (
+                          <Button variant="ghost" size="icon" asChild>
+                            <a
+                              href={`/blog/${subdomain}/${post.slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="View published post"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        )}
                         {permissions.canEditContent && (
                           <Button variant="ghost" size="icon" asChild>
                             <Link

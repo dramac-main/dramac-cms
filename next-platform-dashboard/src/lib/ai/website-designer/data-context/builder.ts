@@ -635,7 +635,9 @@ async function fetchBlogPosts(
   try {
     const { data, error } = await supabase
       .from("blog_posts")
-      .select("id, site_id, title, excerpt, content, featured_image_url, tags, status, published_at, author:profiles(full_name)")
+      .select(
+        "id, site_id, title, excerpt, content, featured_image_url, tags, status, published_at, author:profiles(full_name)",
+      )
       .eq("site_id", siteId)
       .eq("status", "published")
       .order("published_at", { ascending: false })
@@ -650,10 +652,13 @@ async function fetchBlogPosts(
       excerpt: (post.excerpt as string) ?? undefined,
       content: (post.content as string) ?? undefined,
       featured_image: (post.featured_image_url as string) ?? undefined,
-      category: Array.isArray(post.tags) && post.tags.length > 0
-        ? (post.tags[0] as string)
-        : undefined,
-      author: (post.author as Record<string, unknown> | null)?.full_name as string ?? undefined,
+      category:
+        Array.isArray(post.tags) && post.tags.length > 0
+          ? (post.tags[0] as string)
+          : undefined,
+      author:
+        ((post.author as Record<string, unknown> | null)
+          ?.full_name as string) ?? undefined,
       published_at: (post.published_at as string) ?? undefined,
       status: (post.status as string) ?? undefined,
     }));
