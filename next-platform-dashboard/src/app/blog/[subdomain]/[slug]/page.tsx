@@ -18,7 +18,7 @@ async function getSiteBySubdomain(subdomain: string) {
     .from("sites")
     .select("*")
     .eq("subdomain", subdomain)
-    .eq("is_published", true)
+    .eq("published", true)
     .single();
 
   return data;

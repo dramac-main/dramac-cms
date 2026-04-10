@@ -184,7 +184,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // Public marketing/legal pages — no auth required
-  const PUBLIC_PATHS = ["/pricing", "/privacy", "/terms"];
+  const PUBLIC_PATHS = ["/blog", "/pricing", "/privacy", "/terms"];
   if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
     if (DEBUG) console.log("[proxy] → Public page, passing through:", pathname);
     return NextResponse.next();
