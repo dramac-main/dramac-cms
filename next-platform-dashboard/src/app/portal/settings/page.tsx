@@ -19,9 +19,11 @@ import { toast } from "sonner";
 import {
   updateClientSettings,
   changePortalPassword,
+  getClientSettings,
+  getClientNotifications,
+  updateClientNotifications,
 } from "@/lib/portal/portal-auth";
 import { PageHeader } from "@/components/layout/page-header";
-import { createClient } from "@/lib/supabase/client";
 
 interface SettingsFormData {
   name: string;
@@ -62,34 +64,23 @@ export default function PortalSettingsPage() {
     confirmPassword: "",
   });
 
-  // Load real user data and notification prefs on mount
+  // Load real client data from clients table (not auth metadata)
   useEffect(() => {
     async function loadProfile() {
       try {
-        const supabase = createClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (user) {
+        const [settings, notifPrefs] = await Promise.all([
+          getClientSettings(),
+          getClientNotifications(),
+        ]);
+        if (settings) {
           setFormData({
-            name:
-              user.user_metadata?.full_name ?? user.user_metadata?.name ?? "",
-            email: user.email ?? "",
-            phone: user.user_metadata?.phone ?? "",
-            company: user.user_metadata?.company ?? "",
+            name: settings.name,
+            email: settings.email,
+            phone: settings.phone,
+            company: settings.company,
           });
-
-          // Load notification preferences from user metadata
-          const savedPrefs = user.user_metadata?.notification_preferences;
-          if (savedPrefs) {
-            setNotifications({
-              emailNotifications: savedPrefs.emailNotifications ?? true,
-              ticketUpdates: savedPrefs.ticketUpdates ?? true,
-              siteAlerts: savedPrefs.siteAlerts ?? true,
-              marketingEmails: savedPrefs.marketingEmails ?? false,
-            });
-          }
         }
+        setNotifications(notifPrefs);
       } catch {
         toast.error("Failed to load profile");
       } finally {
@@ -164,15 +155,10 @@ export default function PortalSettingsPage() {
     const updated = { ...notifications, [key]: value };
     setNotifications(updated);
 
-    // Persist to user metadata via Supabase Auth
     try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.updateUser({
-        data: { notification_preferences: updated },
-      });
-      if (error) {
-        toast.error("Failed to save preference");
-        // Revert
+      const result = await updateClientNotifications(updated);
+      if (!result.success) {
+        toast.error(result.error || "Failed to save preference");
         setNotifications(notifications);
         return;
       }

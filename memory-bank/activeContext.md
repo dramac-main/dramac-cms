@@ -1,6 +1,56 @@
 # Active Context
 
-## Current Focus: Blog System Overhaul + Media Library Fix — COMPLETE ✅ (commit fb15a6f7)
+## Current Focus: Deep Blog System Audit — 4 Critical Bugs Fixed ✅ (commit 937132b6)
+
+### What Was Done
+
+Comprehensive end-to-end audit of the blog system across all layers: AI Designer, Studio Builder, site renderer, proxy, API routes, blog-api.ts, component registry, and render components. Discovered and fixed 4 critical bugs.
+
+### Bugs Found & Fixed
+
+**Bug 1: BlogPostList — Unregistered Component Type**
+- All 3 showcase site blog pages store `"type": "BlogPostList"` in their page_content
+- `BlogPostList` does NOT exist in the component registry — renderer returns null
+- Fix: Added `BlogPostList: "BlogPreview"` to converter typeMap in `converter.ts`
+- Enhanced BlogPreview normalizer to remap legacy props (layout→variant, remove showImage/postsPerPage/displayMode)
+
+**Bug 2: Author Info Never Fetched**
+- `mapPostRecord()` in blog-api.ts reads `row.author_name`/`row.author_avatar_url` but these columns DON'T EXIST on blog_posts table
+- DB has `author_id` FK to profiles table (with full_name, name, avatar_url), but queries never joined
+- Fix: Updated mapPostRecord to use joined author object, added `author:profiles!author_id(full_name, name, avatar_url)` join to all 5 internal queries
+
+**Bug 3: Static Blog Pages Block Virtual Blog System**
+- Site renderer condition was `if (!page && (stripped === "blog" || ...))` — static "blog" pages in DB block virtual blog generation
+- All 3 showcase sites have static blog pages with broken BlogPostList component
+- Fix: Removed `!page` guard so virtual blog pages always take priority over static ones
+
+**Bug 4: API Routes Missing Author Joins**
+- REST API endpoints (`/api/blog/[siteId]/route.ts` and `[slug]/route.ts`) used by BlogPreviewRender's live data fetch didn't join profiles
+- Fix: Added author:profiles join and authorName/authorAvatarUrl to response payloads
+
+### Audit Findings (No Code Changes Needed)
+
+- ✅ AI Designer KNOWS about blog: prompts.ts detects "blog" keyword, blog page classification with guidance
+- ✅ Converter typeMap maps BlogGrid/BlogCards/BlogList/LatestPosts/RecentPosts → BlogPreview
+- ✅ component-metadata.ts has full BlogPreview metadata with keywords and AI guidelines
+- ✅ core-components.ts registers all 3 blog components (BlogPreview, BlogListingSection, BlogPostView)
+- ✅ 13 blog render components verified in renders.tsx (5 exported, 8 internal)
+- ✅ proxy.ts rewrites /blog routes correctly to /site/[subdomain]/blog
+- ✅ smart-navigation.ts injects blog nav items when _hasBlog flag set
+- ✅ blog-templates.ts creates correct Studio JSON for virtual blog pages
+
+### Files Modified (commit 937132b6 — 5 files, 63 insertions, 22 deletions)
+1. `src/lib/ai/website-designer/converter.ts` — BlogPostList type mapping + normalizer enhancement
+2. `src/lib/blog/blog-api.ts` — Author profiles join on all 5 queries + mapPostRecord fix
+3. `src/app/site/[domain]/[[...slug]]/page.tsx` — Virtual blog override (removed !page guard)
+4. `src/app/api/blog/[siteId]/route.ts` — Author profile join for listing API
+5. `src/app/api/blog/[siteId]/[slug]/route.ts` — Author profile join for single post API
+
+### DB Notes
+- All 9 showcase blog posts have `author_id = null` — author info won't display until assigned
+- profiles table: full_name, name, avatar_url available for join
+
+## Previous Focus: Blog System Overhaul + Media Library Fix — COMPLETE ✅ (commit fb15a6f7)
 
 ### What Was Done
 

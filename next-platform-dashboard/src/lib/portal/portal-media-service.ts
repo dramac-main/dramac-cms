@@ -254,31 +254,21 @@ export async function getPortalMedia(
     return { files: [], total: 0 };
   }
 
-  // Get the agency_id for this site so we can also show agency-level assets
+  // Get the agency_id for this site (used for upload context only)
   const { data: siteDetail } = await supabase
     .from("sites")
     .select("agency_id")
     .eq("id", siteId)
     .single();
 
-  const agencyId = siteDetail?.agency_id;
-
   const offset = (page - 1) * limit;
 
-  // Build query for assets — include both site-specific AND agency-level assets
+  // Build query for assets — only show site-specific assets
   let query = supabase
     .from("assets")
     .select("*", { count: "exact" })
-    .order("created_at", { ascending: false });
-
-  // Show assets that belong to this site OR agency-level assets (site_id is null)
-  if (agencyId) {
-    query = query.or(
-      `site_id.eq.${siteId},and(site_id.is.null,agency_id.eq.${agencyId})`,
-    );
-  } else {
-    query = query.eq("site_id", siteId);
-  }
+    .order("created_at", { ascending: false })
+    .eq("site_id", siteId);
 
   // Apply filters
   if (filters.search) {
@@ -405,26 +395,11 @@ export async function getPortalMediaStats(siteId?: string): Promise<{
     return { totalFiles: 0, totalSize: 0, byType: [] };
   }
 
-  // Get the agency_id for the client
-  const { data: clientData } = await supabase
-    .from("clients")
-    .select("agency_id")
-    .eq("id", clientId)
-    .single();
-  const agencyId = clientData?.agency_id;
-
-  // Get all assets for these sites + agency-level assets
-  let assetQuery = supabase
+  // Get all assets for these sites only (no agency-level assets)
+  const assetQuery = supabase
     .from("assets")
-    .select("size, mime_type", { count: "exact" });
-
-  if (agencyId) {
-    assetQuery = assetQuery.or(
-      `site_id.in.(${siteIds.join(",")}),and(site_id.is.null,agency_id.eq.${agencyId})`,
-    );
-  } else {
-    assetQuery = assetQuery.in("site_id", siteIds);
-  }
+    .select("size, mime_type", { count: "exact" })
+    .in("site_id", siteIds);
 
   const { data: assets, count } = await assetQuery;
 

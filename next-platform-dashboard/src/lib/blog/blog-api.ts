@@ -46,9 +46,7 @@ function mapPostRecord(row: Record<string, unknown>): PublicBlogPost {
     featuredImageUrl: (row.featured_image_url as string) || null,
     featuredImageAlt: (row.featured_image_alt as string) || null,
     authorName:
-      (author?.full_name as string) ||
-      (author?.name as string) ||
-      null,
+      (author?.full_name as string) || (author?.name as string) || null,
     authorAvatarUrl: (author?.avatar_url as string) || null,
     publishedAt: (row.published_at as string) || null,
     readingTimeMinutes: (row.reading_time_minutes as number) || 0,

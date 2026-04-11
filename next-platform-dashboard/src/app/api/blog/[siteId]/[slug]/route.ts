@@ -41,9 +41,7 @@ export async function GET(
     authorName: author
       ? (author.full_name as string) || (author.name as string) || null
       : null,
-    authorAvatarUrl: author
-      ? (author.avatar_url as string) || null
-      : null,
+    authorAvatarUrl: author ? (author.avatar_url as string) || null : null,
   };
 
   // Fetch categories

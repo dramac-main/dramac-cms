@@ -111,6 +111,55 @@ export async function getAgencyMembersForSite(
   }
 }
 
+/**
+ * Get portal team members for chat agent assignment.
+ * Used in portal context — returns client's team members instead of agency members.
+ */
+export async function getPortalTeamMembersForSite(
+  siteId: string,
+  clientId: string,
+): Promise<{ members: AgencyMember[]; error: string | null }> {
+  try {
+    const admin = createAdminClient();
+
+    // Verify this site belongs to the client
+    const { data: site, error: siteError } = await admin
+      .from("sites")
+      .select("id, client_id")
+      .eq("id", siteId)
+      .eq("client_id", clientId)
+      .single();
+
+    if (siteError || !site) {
+      return { members: [], error: "Site not found or access denied" };
+    }
+
+    // Get portal team members for this client
+    const { data: teamMembers, error: teamError } = await admin
+      .from("portal_team_members")
+      .select("id, name, email, avatar_url, role, status")
+      .eq("client_id", clientId)
+      .eq("status", "active");
+
+    if (teamError) {
+      return { members: [], error: "Failed to load team members" };
+    }
+
+    const result: AgencyMember[] = (teamMembers || []).map((m: any) => ({
+      userId: m.id,
+      name: m.name || null,
+      email: m.email,
+      avatarUrl: m.avatar_url || null,
+      role: m.role || "member",
+    }));
+
+    return { members: result, error: null };
+  } catch (error) {
+    console.error("[LiveChat] Error fetching portal team members:", error);
+    return { members: [], error: (error as Error).message };
+  }
+}
+
 export async function getAgents(
   siteId: string,
 ): Promise<{ agents: ChatAgent[]; error: string | null }> {

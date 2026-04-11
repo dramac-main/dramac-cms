@@ -525,6 +525,36 @@ export async function resetPortalPassword(
 }
 
 /**
+ * Get client profile settings (loads from clients table, NOT auth metadata).
+ * Works correctly for both real portal users and impersonation mode.
+ */
+export async function getClientSettings(): Promise<{
+  name: string;
+  email: string;
+  phone: string;
+  company: string;
+} | null> {
+  const session = await getPortalSession();
+  if (!session.user) return null;
+
+  const admin = createAdminClient();
+  const { data: client } = await admin
+    .from("clients")
+    .select("name, email, phone, company")
+    .eq("id", session.user.clientId)
+    .single();
+
+  if (!client) return null;
+
+  return {
+    name: client.name || "",
+    email: client.email || session.user.email || "",
+    phone: client.phone || "",
+    company: client.company || "",
+  };
+}
+
+/**
  * Update client settings/profile
  */
 export async function updateClientSettings(settings: {
@@ -532,8 +562,8 @@ export async function updateClientSettings(settings: {
   phone?: string;
   company?: string;
 }): Promise<{ success: boolean; error?: string }> {
-  const user = await getPortalUser();
-  if (!user) {
+  const session = await getPortalSession();
+  if (!session.user) {
     return { success: false, error: "Not authenticated" };
   }
 
@@ -547,21 +577,23 @@ export async function updateClientSettings(settings: {
   const { error } = await admin
     .from("clients")
     .update(updateData)
-    .eq("id", user.clientId);
+    .eq("id", session.user.clientId);
 
   if (error) {
     return { success: false, error: "Failed to update settings" };
   }
 
-  // Also update Supabase Auth user metadata so settings load correctly
-  const supabase = await createClient();
-  await supabase.auth.updateUser({
-    data: {
-      ...(settings.name && { full_name: settings.name }),
-      ...(settings.phone && { phone: settings.phone }),
-      ...(settings.company && { company: settings.company }),
-    },
-  });
+  // Only update auth metadata if NOT impersonating (avoid corrupting agency owner's metadata)
+  if (!session.isImpersonating) {
+    const supabase = await createClient();
+    await supabase.auth.updateUser({
+      data: {
+        ...(settings.name && { full_name: settings.name }),
+        ...(settings.phone && { phone: settings.phone }),
+        ...(settings.company && { company: settings.company }),
+      },
+    });
+  }
 
   return { success: true };
 }
@@ -583,6 +615,100 @@ export async function changePortalPassword(
       success: false,
       error: error.message || "Failed to change password",
     };
+  }
+
+  return { success: true };
+}
+
+/**
+ * Get notification preferences for the current portal client.
+ * Stored as JSON in clients.notes field.
+ */
+export async function getClientNotifications(): Promise<{
+  emailNotifications: boolean;
+  ticketUpdates: boolean;
+  siteAlerts: boolean;
+  marketingEmails: boolean;
+}> {
+  const defaults = {
+    emailNotifications: true,
+    ticketUpdates: true,
+    siteAlerts: true,
+    marketingEmails: false,
+  };
+
+  const session = await getPortalSession();
+  if (!session.user) return defaults;
+
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("clients")
+    .select("notes")
+    .eq("id", session.user.clientId)
+    .single();
+
+  if (data?.notes) {
+    try {
+      const parsed = JSON.parse(data.notes);
+      if (parsed?.notification_preferences) {
+        return {
+          emailNotifications:
+            parsed.notification_preferences.emailNotifications ?? true,
+          ticketUpdates: parsed.notification_preferences.ticketUpdates ?? true,
+          siteAlerts: parsed.notification_preferences.siteAlerts ?? true,
+          marketingEmails:
+            parsed.notification_preferences.marketingEmails ?? false,
+        };
+      }
+    } catch {
+      // notes is not JSON, ignore
+    }
+  }
+
+  return defaults;
+}
+
+/**
+ * Update notification preferences for the current portal client.
+ */
+export async function updateClientNotifications(prefs: {
+  emailNotifications: boolean;
+  ticketUpdates: boolean;
+  siteAlerts: boolean;
+  marketingEmails: boolean;
+}): Promise<{ success: boolean; error?: string }> {
+  const session = await getPortalSession();
+  if (!session.user) {
+    return { success: false, error: "Not authenticated" };
+  }
+
+  const admin = createAdminClient();
+
+  // Read existing notes to preserve other data
+  const { data: existing } = await admin
+    .from("clients")
+    .select("notes")
+    .eq("id", session.user.clientId)
+    .single();
+
+  let notesObj: Record<string, unknown> = {};
+  if (existing?.notes) {
+    try {
+      notesObj = JSON.parse(existing.notes);
+    } catch {
+      notesObj = { _legacy_notes: existing.notes };
+    }
+  }
+
+  notesObj.notification_preferences = prefs;
+
+  const { error } = await admin
+    .from("clients")
+    .update({ notes: JSON.stringify(notesObj) })
+    .eq("id", session.user.clientId);
+
+  if (error) {
+    return { success: false, error: "Failed to save preferences" };
   }
 
   return { success: true };

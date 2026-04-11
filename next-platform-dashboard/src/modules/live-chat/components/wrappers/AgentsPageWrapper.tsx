@@ -55,6 +55,7 @@ import {
   deleteAgent,
   updateAgentStatus,
   getAgencyMembersForSite,
+  getPortalTeamMembersForSite,
   inviteAndCreateAgent,
 } from "@/modules/live-chat/actions/agent-actions";
 import type { AgencyMember } from "@/modules/live-chat/actions/agent-actions";
@@ -70,6 +71,7 @@ import type {
   AgentPerformanceData,
   AgentRole,
 } from "@/modules/live-chat/types";
+import { usePortal } from "@/lib/portal/portal-context";
 
 interface AgentsPageWrapperProps {
   agents: ChatAgent[];
@@ -107,6 +109,7 @@ export function AgentsPageWrapper({
   const [agencyMembers, setAgencyMembers] = useState<AgencyMember[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
   const [addMode, setAddMode] = useState<"team" | "invite">("team");
+  const portalCtx = usePortal();
 
   // Sync state with server data when props change (e.g., after revalidation)
   useEffect(() => {
@@ -117,17 +120,24 @@ export function AgentsPageWrapper({
     setDepartments(initialDepartments);
   }, [initialDepartments]);
 
-  // Fetch agency members when Add Agent dialog opens
+  // Fetch team members when Add Agent dialog opens
+  // In portal context: load portal team members (client's team)
+  // In agency context: load agency members
   const loadAgencyMembers = useCallback(() => {
     setMembersLoading(true);
-    getAgencyMembersForSite(siteId)
+    const memberPromise =
+      portalCtx?.isPortalView && portalCtx.portalUser?.clientId
+        ? getPortalTeamMembersForSite(siteId, portalCtx.portalUser.clientId)
+        : getAgencyMembersForSite(siteId);
+
+    memberPromise
       .then(({ members }) => {
         // Filter out users already added as agents
         const existingUserIds = new Set(agents.map((a) => a.userId));
         setAgencyMembers(members.filter((m) => !existingUserIds.has(m.userId)));
       })
       .finally(() => setMembersLoading(false));
-  }, [siteId, agents]);
+  }, [siteId, agents, portalCtx]);
 
   // Add agent form state
   const [agentForm, setAgentForm] = useState({

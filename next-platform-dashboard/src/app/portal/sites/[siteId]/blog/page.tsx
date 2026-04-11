@@ -194,9 +194,14 @@ export default function PortalSiteBlogPage({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <h3 className="font-semibold text-base truncate">
-                          {post.title}
-                        </h3>
+                        <Link
+                          href={`/portal/sites/${siteId}/blog/${post.id}`}
+                          className="hover:underline"
+                        >
+                          <h3 className="font-semibold text-base truncate">
+                            {post.title}
+                          </h3>
+                        </Link>
                         {post.excerpt && (
                           <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                             {post.excerpt}

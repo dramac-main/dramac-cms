@@ -34,7 +34,33 @@
 
 ---
 
-## Latest Update: Storefront Auth Deep Audit & Magic Link Fix ✅ (commit 6071ff3d)
+## Latest Update: Deep Blog System Audit — 4 Critical Bugs Fixed ✅ (commit 937132b6)
+
+### Bug 1: BlogPostList → Unregistered Component Type
+
+- All 3 showcase sites store `"type": "BlogPostList"` in page_content — not in registry → renders nothing
+- Fix: Added `BlogPostList: "BlogPreview"` to converter typeMap + enhanced normalizer for legacy props
+
+### Bug 2: Author Info Never Fetched
+
+- blog-api.ts mapPostRecord read non-existent author_name/author_avatar_url columns (DB has author_id FK to profiles)
+- Fix: Added `author:profiles!author_id(full_name, name, avatar_url)` join to all 5 queries
+
+### Bug 3: Virtual Blog Pages Blocked by Static Pages
+
+- Condition `if (!page && ...)` meant static "blog" pages with broken BlogPostList blocked virtual system
+- Fix: Removed `!page` guard — virtual blog always takes priority
+
+### Bug 4: API Routes Missing Author Joins
+
+- REST API endpoints used by BlogPreviewRender lacked author joins
+- Fix: Added profiles join + authorName/authorAvatarUrl to response payloads
+
+### Audit Confirms Working: AI Designer blog awareness, proxy rewrites, smart-navigation, blog-templates, 13 render components, component metadata/registry
+
+---
+
+## Previous Update: Storefront Auth Deep Audit & Magic Link Fix ✅ (commit 6071ff3d)
 
 ### Critical Bug: Magic link emails only sent to password-based customers
 

@@ -1,7 +1,7 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { getPortalSession } from "@/lib/portal/portal-auth";
 import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 
 // ============================================
@@ -44,8 +44,9 @@ async function getPortalClientAgency(): Promise<{
   agencyId: string;
   paddleCustomerId: string | null;
 } | null> {
-  const cookieStore = await cookies();
-  const clientId = cookieStore.get("impersonating_client_id")?.value;
+  // Use portal session which handles both impersonation and real portal auth
+  const session = await getPortalSession();
+  const clientId = session.user?.clientId;
   
   if (!clientId) {
     return null;
