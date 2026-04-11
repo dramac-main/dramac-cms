@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { Json } from "@/types/database";
+import { sendBrandedEmail } from "@/lib/email/send-branded-email";
 
 export interface SupportTicket {
   id: string;
@@ -212,6 +213,41 @@ export async function createTicket(
     sender_name: clientName,
     message: ticket.description,
   });
+
+  // Notify agency via email
+  try {
+    // Find the agency that owns this client
+    const { data: clientRow } = await supabase
+      .from("clients")
+      .select("agency_id")
+      .eq("id", clientId)
+      .single();
+
+    if (clientRow?.agency_id) {
+      // Get ticket number from the created ticket
+      const { data: createdTicket } = await supabase
+        .from("support_tickets")
+        .select("ticket_number")
+        .eq("id", data.id)
+        .single();
+
+      await sendBrandedEmail(clientRow.agency_id, {
+        type: "support_ticket_created",
+        to: "agency", // resolved by sendBrandedEmail to agency owner
+        data: {
+          ticketNumber: createdTicket?.ticket_number || "",
+          subject: ticket.subject,
+          description: ticket.description,
+          clientName,
+          priority: ticket.priority || "normal",
+          dashboardUrl: `/dashboard/tickets/${data.id}`,
+        },
+      });
+    }
+  } catch (emailError) {
+    console.error("Failed to send ticket creation email:", emailError);
+    // Don't fail the ticket creation if email fails
+  }
 
   return { success: true, ticketId: data.id };
 }

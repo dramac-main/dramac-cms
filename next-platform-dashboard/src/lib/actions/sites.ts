@@ -294,6 +294,9 @@ async function installCoreModules(
         await bootstrapLiveChatAgent(siteId, userId).catch((err) =>
           console.error("[Sites] Failed to bootstrap live chat agent:", err),
         );
+        await seedDefaultDepartments(siteId).catch((err) =>
+          console.error("[Sites] Failed to seed default departments:", err),
+        );
       }
 
     } catch (err) {
@@ -313,6 +316,43 @@ async function installCoreModules(
 }
 
 // bootstrapLiveChatAgent is now imported from @/modules/live-chat/lib/bootstrap-agent
+
+/** Seed industry-standard departments when live-chat is first installed for a site. */
+async function seedDefaultDepartments(siteId: string): Promise<void> {
+  const supabase = createAdminClient();
+
+  // Check if departments already exist for this site
+  const { count } = await (supabase as any)
+    .from("mod_chat_departments")
+    .select("*", { count: "exact", head: true })
+    .eq("site_id", siteId);
+
+  if ((count || 0) > 0) return; // Already seeded
+
+  const departments = [
+    { name: "General", description: "General enquiries and information", is_default: true },
+    { name: "Sales", description: "Sales enquiries, pricing, and quotes" },
+    { name: "Support", description: "Technical support and troubleshooting" },
+    { name: "Billing", description: "Billing, invoices, and payment enquiries" },
+    { name: "Customer Service", description: "Customer service and account management" },
+  ];
+
+  for (let i = 0; i < departments.length; i++) {
+    const dept = departments[i];
+    await (supabase as any).from("mod_chat_departments").insert({
+      site_id: siteId,
+      name: dept.name,
+      description: dept.description,
+      is_default: dept.is_default || false,
+      is_active: true,
+      auto_assign: true,
+      max_concurrent_chats: 5,
+      sort_order: i,
+    });
+  }
+
+  console.log(`[Sites] Seeded ${departments.length} default departments for site ${siteId}`);
+}
 
 // Update site
 export async function updateSiteAction(siteId: string, formData: unknown) {

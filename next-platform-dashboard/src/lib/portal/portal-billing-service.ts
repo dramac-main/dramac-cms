@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getPortalSession } from "@/lib/portal/portal-auth";
-import { DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { DEFAULT_CURRENCY } from "@/lib/locale-config";
 
 // ============================================
 // TYPES
@@ -47,7 +47,7 @@ async function getPortalClientAgency(): Promise<{
   // Use portal session which handles both impersonation and real portal auth
   const session = await getPortalSession();
   const clientId = session.user?.clientId;
-  
+
   if (!clientId) {
     return null;
   }
@@ -77,7 +77,8 @@ async function getPortalClientAgency(): Promise<{
   return {
     clientId: client.id,
     agencyId: client.agency_id,
-    paddleCustomerId: (subscription as any)?.paddle_customer_id as string || null,
+    paddleCustomerId:
+      ((subscription as any)?.paddle_customer_id as string) || null,
   };
 }
 
@@ -111,7 +112,8 @@ async function getInvoicesFromDatabase(agencyId: string): Promise<{
   // Get subscription with order history
   const { data: subscriptions, error } = await supabase
     .from("subscriptions")
-    .select(`
+    .select(
+      `
       id,
       plan_id,
       status,
@@ -120,7 +122,8 @@ async function getInvoicesFromDatabase(agencyId: string): Promise<{
       created_at,
       current_period_start,
       current_period_end
-    `)
+    `,
+    )
     .eq("agency_id", agencyId)
     .order("created_at", { ascending: false });
 
@@ -208,7 +211,8 @@ export async function getPortalBillingOverview(): Promise<PortalBillingOverview>
 
   return {
     currentPlan: subscription ? getPlanName(subscription.plan_id) : null,
-    planStatus: subscription?.status as PortalBillingOverview["planStatus"] || null,
+    planStatus:
+      (subscription?.status as PortalBillingOverview["planStatus"]) || null,
     totalPaidThisYear,
     invoiceCount: count || 0,
     currency: DEFAULT_CURRENCY,
@@ -223,24 +227,24 @@ export async function getPortalBillingOverview(): Promise<PortalBillingOverview>
  */
 function getPlanName(planId: string | null): string {
   if (!planId) return "Unknown Plan";
-  
+
   // Map common plan IDs to display names
   const planNames: Record<string, string> = {
-    "starter": "Starter",
-    "pro": "Pro",
-    "enterprise": "Enterprise",
-    "free": "Free",
-    "trial": "Trial",
+    starter: "Starter",
+    pro: "Pro",
+    enterprise: "Enterprise",
+    free: "Free",
+    trial: "Trial",
   };
 
   const lowerPlanId = planId.toLowerCase();
-  
+
   for (const [key, name] of Object.entries(planNames)) {
     if (lowerPlanId.includes(key)) {
       return name;
     }
   }
-  
+
   // If no match, return the plan_id itself (formatted)
   return planId.charAt(0).toUpperCase() + planId.slice(1).replace(/_/g, " ");
 }
@@ -251,15 +255,15 @@ function getPlanName(planId: string | null): string {
  */
 function getPlanPrice(planId: string | null): number {
   if (!planId) return 0;
-  
+
   const lowerPlan = planId.toLowerCase();
-  
+
   // Monthly prices in cents
   if (lowerPlan.includes("starter")) return 2900; // $29/month
   if (lowerPlan.includes("pro")) return 9900; // $99/month
   if (lowerPlan.includes("enterprise")) return 0; // Custom pricing
   if (lowerPlan.includes("free") || lowerPlan.includes("trial")) return 0;
-  
+
   return 0;
 }
 

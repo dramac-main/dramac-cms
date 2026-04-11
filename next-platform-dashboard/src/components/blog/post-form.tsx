@@ -370,6 +370,8 @@ export function PostForm({
                     content={content}
                     onChange={handleContentChange}
                     placeholder="Write your post content..."
+                    agencyId={agencyId}
+                    siteId={siteId}
                   />
                 </CardContent>
               </Card>

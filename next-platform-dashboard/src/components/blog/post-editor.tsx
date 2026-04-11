@@ -6,6 +6,8 @@ import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
+import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
+import { common, createLowlight } from "lowlight";
 import { useCallback, useEffect, useState } from "react";
 import {
   Bold,
@@ -15,6 +17,7 @@ import {
   ListOrdered,
   Quote,
   Code,
+  Code2,
   Heading1,
   Heading2,
   Heading3,
@@ -27,12 +30,16 @@ import {
   Undo,
   Redo,
   Minus,
+  Upload,
+  FolderOpen,
+  Youtube,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -47,6 +54,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { MediaPickerDialog } from "@/components/media/media-picker-dialog";
+import type { MediaFile } from "@/lib/media/media-service";
+
+const lowlight = createLowlight(common);
 
 interface PostEditorProps {
   content: Record<string, unknown>;
@@ -54,6 +65,10 @@ interface PostEditorProps {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  /** Agency ID for media library access */
+  agencyId?: string;
+  /** Site ID for media library scoping */
+  siteId?: string;
 }
 
 export function PostEditor({
@@ -62,17 +77,30 @@ export function PostEditor({
   placeholder = "Start writing your post...",
   className,
   disabled = false,
+  agencyId,
+  siteId,
 }: PostEditorProps) {
   const [showImageDialog, setShowImageDialog] = useState(false);
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
+  const [imageAlt, setImageAlt] = useState("");
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
+  const [showEmbedDialog, setShowEmbedDialog] = useState(false);
+  const [embedUrl, setEmbedUrl] = useState("");
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
       StarterKit.configure({
         heading: {
           levels: [1, 2, 3],
+        },
+        codeBlock: false, // Use CodeBlockLowlight instead
+      }),
+      CodeBlockLowlight.configure({
+        lowlight,
+        HTMLAttributes: {
+          class: "bg-muted rounded-lg p-4 my-4 overflow-x-auto text-sm font-mono",
         },
       }),
       Image.configure({
@@ -126,6 +154,7 @@ export function PostEditor({
 
   const addImage = useCallback(() => {
     setImageUrl("");
+    setImageAlt("");
     setShowImageDialog(true);
   }, []);
 
@@ -344,6 +373,20 @@ export function PostEditor({
           
           <Tooltip>
             <TooltipTrigger asChild>
+              <Toggle
+                size="sm"
+                pressed={editor.isActive("codeBlock")}
+                onPressedChange={() => editor.chain().focus().toggleCodeBlock().run()}
+                disabled={disabled}
+              >
+                <Code2 className="h-4 w-4" />
+              </Toggle>
+            </TooltipTrigger>
+            <TooltipContent>Code Block</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
               <Button
                 type="button"
                 variant="ghost"
@@ -451,50 +494,215 @@ export function PostEditor({
               <TooltipContent>Remove Link</TooltipContent>
             </Tooltip>
           )}
+          
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                type="button"
+                variant="ghost" 
+                size="icon" 
+                onClick={() => {
+                  setEmbedUrl("");
+                  setShowEmbedDialog(true);
+                }}
+                disabled={disabled}
+              >
+                <Youtube className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Embed Video</TooltipContent>
+          </Tooltip>
+
+          {agencyId && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  type="button"
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => setShowMediaPicker(true)}
+                  disabled={disabled}
+                >
+                  <FolderOpen className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Media Library</TooltipContent>
+            </Tooltip>
+          )}
         </div>
 
         {/* Editor */}
         <EditorContent editor={editor} />
       </div>
 
-      {/* Image URL Dialog */}
+      {/* Image Dialog - Tabbed (URL / Media Library) */}
       <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Insert Image</DialogTitle>
           </DialogHeader>
+          <Tabs defaultValue={agencyId ? "media" : "url"}>
+            <TabsList className="w-full">
+              {agencyId && <TabsTrigger value="media" className="flex-1"><FolderOpen className="h-4 w-4 mr-2" />Media Library</TabsTrigger>}
+              <TabsTrigger value="url" className="flex-1"><Upload className="h-4 w-4 mr-2" />URL</TabsTrigger>
+            </TabsList>
+            {agencyId && (
+              <TabsContent value="media" className="space-y-2 mt-4">
+                <p className="text-sm text-muted-foreground">Select an image from your media library:</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    setShowImageDialog(false);
+                    setShowMediaPicker(true);
+                  }}
+                >
+                  <FolderOpen className="h-4 w-4 mr-2" />
+                  Open Media Library
+                </Button>
+              </TabsContent>
+            )}
+            <TabsContent value="url" className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label htmlFor="image-url">Image URL</Label>
+                <Input
+                  id="image-url"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      if (imageUrl && editor) {
+                        editor.chain().focus().setImage({ src: imageUrl, alt: imageAlt || undefined }).run();
+                        setShowImageDialog(false);
+                        setImageUrl("");
+                        setImageAlt("");
+                      }
+                    }
+                  }}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="image-alt">Alt Text</Label>
+                <Input
+                  id="image-alt"
+                  value={imageAlt}
+                  onChange={(e) => setImageAlt(e.target.value)}
+                  placeholder="Describe the image for accessibility"
+                />
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowImageDialog(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (imageUrl && editor) {
+                      editor.chain().focus().setImage({ src: imageUrl, alt: imageAlt || undefined }).run();
+                      setShowImageDialog(false);
+                      setImageUrl("");
+                      setImageAlt("");
+                    }
+                  }}
+                  disabled={!imageUrl}
+                >
+                  Insert
+                </Button>
+              </DialogFooter>
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
+
+      {/* Media Picker Dialog */}
+      {agencyId && (
+        <MediaPickerDialog
+          open={showMediaPicker}
+          onClose={() => setShowMediaPicker(false)}
+          agencyId={agencyId}
+          siteId={siteId}
+          fileType="image"
+          title="Select Image"
+          onSelect={(files: MediaFile[]) => {
+            if (files.length > 0 && editor) {
+              for (const file of files) {
+                editor.chain().focus().setImage({ 
+                  src: file.url, 
+                  alt: file.alt_text || file.original_name || "" 
+                }).run();
+              }
+            }
+            setShowMediaPicker(false);
+          }}
+        />
+      )}
+
+      {/* Embed Video Dialog */}
+      <Dialog open={showEmbedDialog} onOpenChange={setShowEmbedDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Embed Video</DialogTitle>
+          </DialogHeader>
           <div className="space-y-2">
-            <Label htmlFor="image-url">Image URL</Label>
+            <Label htmlFor="embed-url">YouTube or Vimeo URL</Label>
             <Input
-              id="image-url"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="https://example.com/image.jpg"
+              id="embed-url"
+              value={embedUrl}
+              onChange={(e) => setEmbedUrl(e.target.value)}
+              placeholder="https://www.youtube.com/watch?v=..."
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
-                  if (imageUrl && editor) {
-                    editor.chain().focus().setImage({ src: imageUrl }).run();
-                    setShowImageDialog(false);
+                  if (embedUrl && editor) {
+                    // Convert YouTube/Vimeo URLs to embed format
+                    let src = embedUrl;
+                    const ytMatch = embedUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+                    const vimeoMatch = embedUrl.match(/vimeo\.com\/(\d+)/);
+                    if (ytMatch) {
+                      src = `https://www.youtube.com/embed/${ytMatch[1]}`;
+                    } else if (vimeoMatch) {
+                      src = `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+                    }
+                    editor.chain().focus().insertContent(
+                      `<div data-type="embed" class="my-4"><iframe src="${src}" width="100%" height="400" frameborder="0" allowfullscreen style="border-radius:8px;aspect-ratio:16/9;width:100%;height:auto;"></iframe></div>`
+                    ).run();
+                    setShowEmbedDialog(false);
+                    setEmbedUrl("");
                   }
                 }
               }}
             />
+            <p className="text-xs text-muted-foreground">
+              Paste a YouTube or Vimeo video URL to embed it in your post.
+            </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowImageDialog(false)}>
+            <Button variant="outline" onClick={() => setShowEmbedDialog(false)}>
               Cancel
             </Button>
             <Button
               onClick={() => {
-                if (imageUrl && editor) {
-                  editor.chain().focus().setImage({ src: imageUrl }).run();
-                  setShowImageDialog(false);
+                if (embedUrl && editor) {
+                  let src = embedUrl;
+                  const ytMatch = embedUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+                  const vimeoMatch = embedUrl.match(/vimeo\.com\/(\d+)/);
+                  if (ytMatch) {
+                    src = `https://www.youtube.com/embed/${ytMatch[1]}`;
+                  } else if (vimeoMatch) {
+                    src = `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+                  }
+                  editor.chain().focus().insertContent(
+                    `<div data-type="embed" class="my-4"><iframe src="${src}" width="100%" height="400" frameborder="0" allowfullscreen style="border-radius:8px;aspect-ratio:16/9;width:100%;height:auto;"></iframe></div>`
+                  ).run();
+                  setShowEmbedDialog(false);
+                  setEmbedUrl("");
                 }
               }}
-              disabled={!imageUrl}
+              disabled={!embedUrl}
             >
-              Insert
+              Embed
             </Button>
           </DialogFooter>
         </DialogContent>

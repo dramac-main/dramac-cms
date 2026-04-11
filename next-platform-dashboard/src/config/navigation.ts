@@ -14,6 +14,7 @@ import {
   ArrowRightLeft,
   Server,
   Sliders,
+  Ticket,
   type LucideIcon,
 } from "lucide-react";
 
@@ -128,6 +129,11 @@ export const mainNavigation: NavGroup[] = [
 ];
 
 export const bottomNavigation: NavItem[] = [
+  {
+    title: "Support Tickets",
+    href: "/dashboard/tickets",
+    icon: Ticket,
+  },
   {
     title: "Help & Support",
     href: "/dashboard/support",

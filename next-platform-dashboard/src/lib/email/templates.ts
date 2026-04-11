@@ -1266,4 +1266,61 @@ ${data.dashboardUrl ? `View in dashboard: ${data.dashboardUrl}` : ""}
     text: (data) =>
       `Payment Proof Not Verified\n\nYour payment proof for order #${data.orderNumber || "N/A"} could not be verified.\nPlease upload a new proof of payment.\n\n${data.orderUrl ? `Upload: ${data.orderUrl}` : ""}`,
   },
+
+  // ============================================
+  // SUPPORT TICKETS
+  // ============================================
+
+  support_ticket_created: {
+    subject: (data) =>
+      `New Support Ticket: ${data.subject || "No subject"}`,
+    html: (data) =>
+      wrapHtml(`
+      <h1 style="${STYLES.heading}">🎫 New Support Ticket</h1>
+      <p style="${STYLES.text}">A client has submitted a new support ticket.</p>
+      <div style="background: #f0f9ff; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #3b82f6;">
+        <p style="margin: 4px 0; font-size: 13px;"><strong>Ticket:</strong> ${data.ticketNumber || "N/A"}</p>
+        <p style="margin: 4px 0; font-size: 13px;"><strong>Subject:</strong> ${data.subject || "N/A"}</p>
+        <p style="margin: 4px 0; font-size: 13px;"><strong>Client:</strong> ${data.clientName || "Unknown"}</p>
+        <p style="margin: 4px 0; font-size: 13px;"><strong>Priority:</strong> ${data.priority || "Normal"}</p>
+        <p style="margin: 8px 0 0 0; font-size: 13px;"><strong>Message:</strong> "${data.description || "No description"}"</p>
+      </div>
+      ${data.dashboardUrl ? `<p style="margin: 24px 0;"><a href="${data.dashboardUrl}" style="${STYLES.button}">View Ticket</a></p>` : ""}
+    `),
+    text: (data) =>
+      `New Support Ticket\n\nA client has submitted a new support ticket.\n\nTicket: ${data.ticketNumber || "N/A"}\nSubject: ${data.subject || "N/A"}\nClient: ${data.clientName || "Unknown"}\nPriority: ${data.priority || "Normal"}\nMessage: ${data.description || "No description"}\n\n${data.dashboardUrl ? `View: ${data.dashboardUrl}` : ""}`,
+  },
+
+  support_ticket_replied: {
+    subject: (data) =>
+      `Reply on Ticket ${data.ticketNumber || ""}: ${data.subject || ""}`,
+    html: (data) =>
+      wrapHtml(`
+      <h1 style="${STYLES.heading}">💬 New Reply on Your Ticket</h1>
+      <p style="${STYLES.text}">Hi ${data.clientName || "there"},</p>
+      <p style="${STYLES.text}">There's a new reply on your support ticket <strong>${data.ticketNumber || ""}</strong>.</p>
+      <div style="background: #f0fdf4; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #22c55e;">
+        <p style="margin: 4px 0; font-size: 13px;"><strong>From:</strong> ${data.agentName || "Support Team"}</p>
+        <p style="margin: 8px 0 0 0; font-size: 14px;">${data.message || ""}</p>
+      </div>
+      ${data.portalUrl ? `<p style="margin: 24px 0;"><a href="${data.portalUrl}" style="${STYLES.button}">View Ticket</a></p>` : ""}
+    `),
+    text: (data) =>
+      `New Reply on Your Ticket\n\nHi ${data.clientName || "there"},\n\nThere's a new reply on your support ticket ${data.ticketNumber || ""}.\n\nFrom: ${data.agentName || "Support Team"}\nMessage: ${data.message || ""}\n\n${data.portalUrl ? `View: ${data.portalUrl}` : ""}`,
+  },
+
+  support_ticket_closed: {
+    subject: (data) =>
+      `Ticket ${data.ticketNumber || ""} has been ${data.newStatus || "closed"}`,
+    html: (data) =>
+      wrapHtml(`
+      <h1 style="${STYLES.heading}">✅ Ticket ${data.newStatus === "resolved" ? "Resolved" : "Closed"}</h1>
+      <p style="${STYLES.text}">Hi ${data.clientName || "there"},</p>
+      <p style="${STYLES.text}">Your support ticket <strong>${data.ticketNumber || ""}</strong> ("${data.subject || ""}") has been marked as <strong>${data.newStatus || "closed"}</strong>.</p>
+      <p style="${STYLES.text}">If you still need help, you can reopen the ticket from your portal.</p>
+      ${data.portalUrl ? `<p style="margin: 24px 0;"><a href="${data.portalUrl}" style="${STYLES.button}">View Ticket</a></p>` : ""}
+    `),
+    text: (data) =>
+      `Ticket ${data.newStatus === "resolved" ? "Resolved" : "Closed"}\n\nHi ${data.clientName || "there"},\n\nYour support ticket ${data.ticketNumber || ""} ("${data.subject || ""}") has been marked as ${data.newStatus || "closed"}.\n\nIf you still need help, you can reopen the ticket from your portal.\n\n${data.portalUrl ? `View: ${data.portalUrl}` : ""}`,
+  },
 };

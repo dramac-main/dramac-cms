@@ -483,10 +483,15 @@ export async function createPost(
     featuredImageAlt?: string;
     metaTitle?: string;
     metaDescription?: string;
+    metaKeywords?: string[];
+    ogImageUrl?: string;
+    canonicalUrl?: string;
     tags?: string[];
     categoryIds?: string[];
     status?: "draft" | "scheduled" | "published";
     scheduledFor?: string;
+    allowComments?: boolean;
+    isFeatured?: boolean;
   },
 ): Promise<{ success: boolean; postId?: string; error?: string }> {
   // Permission check
@@ -570,6 +575,11 @@ export async function createPost(
       published_at:
         effectiveStatus === "published" ? new Date().toISOString() : null,
       reading_time_minutes: readingTime,
+      og_image_url: post.ogImageUrl || null,
+      canonical_url: post.canonicalUrl || null,
+      meta_keywords: post.metaKeywords || [],
+      allow_comments: post.allowComments ?? true,
+      is_featured: post.isFeatured ?? false,
     })
     .select()
     .single();

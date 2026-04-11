@@ -67,7 +67,11 @@ export type EmailType =
   | "domain_expiring"
   // Live Chat
   | "chat_transcript"
-  | "chat_missed_notification";
+  | "chat_missed_notification"
+  // Support Tickets
+  | "support_ticket_created"
+  | "support_ticket_replied"
+  | "support_ticket_closed";
 
 export interface EmailRecipient {
   email: string;
@@ -136,6 +140,9 @@ export function isValidEmailType(type: string): type is EmailType {
     "domain_expiring",
     "chat_transcript",
     "chat_missed_notification",
+    "support_ticket_created",
+    "support_ticket_replied",
+    "support_ticket_closed",
   ];
   return validTypes.includes(type as EmailType);
 }
