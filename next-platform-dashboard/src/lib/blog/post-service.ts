@@ -301,7 +301,9 @@ export async function getUserPermissions(): Promise<{
 }> {
   const context = await getUserBlogContext();
   return {
-    canPublish: !context.isPortalUser && context.agencyRole !== "member",
+    canPublish: context.isPortalUser
+      ? context.portalCanEditContent
+      : context.agencyRole !== "member",
     canDelete: !context.isPortalUser && context.agencyRole !== "member",
     canManageCategories:
       !context.isPortalUser && context.agencyRole !== "member",
@@ -892,6 +894,23 @@ export async function getBlogStats(siteId: string): Promise<{
     archived: posts.filter((p: { status: string }) => p.status === "archived")
       .length,
   };
+}
+
+/**
+ * Get the current user's agency ID (for dashboard media library access)
+ */
+export async function getUserAgencyIdForBlog(): Promise<string | null> {
+  const supabase = await createClient();
+  const userId = await getCurrentUserId();
+  if (!userId) return null;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("agency_id")
+    .eq("id", userId)
+    .single();
+
+  return profile?.agency_id || null;
 }
 
 /**

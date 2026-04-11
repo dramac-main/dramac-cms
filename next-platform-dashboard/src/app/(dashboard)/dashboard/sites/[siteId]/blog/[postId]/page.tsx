@@ -5,6 +5,7 @@ import {
   getPost,
   getUserPermissions,
   getSitePublicInfo,
+  getUserAgencyIdForBlog,
 } from "@/lib/blog/post-service";
 
 export default function EditPostPage({
@@ -24,10 +25,11 @@ async function EditPostContent({
   siteId: string;
   postId: string;
 }) {
-  const [post, permissions, siteInfo] = await Promise.all([
+  const [post, permissions, siteInfo, agencyId] = await Promise.all([
     getPost(postId),
     getUserPermissions(),
     getSitePublicInfo(siteId),
+    getUserAgencyIdForBlog(),
   ]);
 
   if (!post) {
@@ -47,6 +49,7 @@ async function EditPostContent({
         canPublish={permissions.canPublish}
         subdomain={siteInfo?.subdomain}
         sitePublished={siteInfo?.isPublished}
+        agencyId={agencyId || undefined}
       />
     </div>
   );

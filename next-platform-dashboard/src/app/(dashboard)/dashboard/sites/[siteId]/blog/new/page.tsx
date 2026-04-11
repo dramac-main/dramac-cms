@@ -1,6 +1,6 @@
 import { use } from "react";
 import { PostForm } from "@/components/blog/post-form";
-import { getUserPermissions, getSitePublicInfo } from "@/lib/blog/post-service";
+import { getUserPermissions, getSitePublicInfo, getUserAgencyIdForBlog } from "@/lib/blog/post-service";
 
 export default function NewPostPage({
   params,
@@ -13,9 +13,10 @@ export default function NewPostPage({
 }
 
 async function NewPostContent({ siteId }: { siteId: string }) {
-  const [permissions, siteInfo] = await Promise.all([
+  const [permissions, siteInfo, agencyId] = await Promise.all([
     getUserPermissions(),
     getSitePublicInfo(siteId),
+    getUserAgencyIdForBlog(),
   ]);
 
   return (
@@ -25,6 +26,7 @@ async function NewPostContent({ siteId }: { siteId: string }) {
         canPublish={permissions.canPublish}
         subdomain={siteInfo?.subdomain}
         sitePublished={siteInfo?.isPublished}
+        agencyId={agencyId || undefined}
       />
     </div>
   );

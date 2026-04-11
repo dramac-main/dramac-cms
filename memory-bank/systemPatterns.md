@@ -846,9 +846,9 @@ Platform
 
 The platform has TWO module registries for different purposes:
 
-| Registry | File | Purpose |
-|----------|------|---------|
-| **Built-in Registry** | `src/modules/_registry.ts` | `Map<string, ModuleManifest>` for the 4 core runtime modules (CRM, booking, ecommerce, live-chat). Social-media and automation use custom manifest types and register separately. |
+| Registry                 | File                                 | Purpose                                                                                                                                                                                             |
+| ------------------------ | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Built-in Registry**    | `src/modules/_registry.ts`           | `Map<string, ModuleManifest>` for the 4 core runtime modules (CRM, booking, ecommerce, live-chat). Social-media and automation use custom manifest types and register separately.                   |
 | **Marketplace Registry** | `src/lib/modules/module-registry.ts` | Static `ModuleRegistry` class wrapping `MODULE_CATALOG` for marketplace browsing (search, filter, sort, pagination). Server variant (`module-registry-server.ts`) loads from `modules_v2` DB table. |
 
 **Module Builder (Studio-Created Modules):**
