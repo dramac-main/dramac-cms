@@ -1,6 +1,6 @@
 # System Patterns: DRAMAC Architecture
 
-**Last Updated**: February 2026
+**Last Updated**: April 11, 2026
 
 ## Development Workflow
 
@@ -48,7 +48,7 @@ git push
 - **Hosting**: Vercel (platform), Supabase (data)
 - **UI**: Radix UI, Tailwind CSS, Framer Motion
 - **State**: Zustand, TanStack Query
-- **Editor**: DRAMAC Studio (iframe-based canvas, hybrid DnD) - Replacing Puck (Feb 2026)
+- **Editor**: DRAMAC Studio (iframe-based canvas, hybrid DnD)
 - **Rich Text**: TipTap
 - **Email**: Resend (transactional + auth SMTP)
 - **AI Models**: Claude Sonnet 4.6 (`claude-sonnet-4-6`), Haiku 4.5 (`claude-haiku-4-5-20251001`), Opus 4.6 (`claude-opus-4-6`)
@@ -689,10 +689,10 @@ dramac-cms/
 │   └── vscode-extension/    # VS Code extension
 └── next-platform-dashboard/
     ├── src/
-    │   ├── app/                    # Next.js 15 app router
+    │   ├── app/                    # Next.js 16 App Router
     │   │   ├── (auth)/            # Auth pages
     │   │   ├── (dashboard)/       # Main dashboard
-    │   │   ├── (client-portal)/   # Client-facing portal
+    │   │   ├── portal/            # Client-facing portal
     │   │   ├── (public)/          # Public pages (sites)
     │   │   └── api/               # API routes
     │   ├── components/            # React components
@@ -841,6 +841,36 @@ Platform
 - Cascade deletes for data integrity
 
 ### 2. Module Architecture
+
+**Dual Registry System:**
+
+The platform has TWO module registries for different purposes:
+
+| Registry | File | Purpose |
+|----------|------|---------|
+| **Built-in Registry** | `src/modules/_registry.ts` | `Map<string, ModuleManifest>` for the 4 core runtime modules (CRM, booking, ecommerce, live-chat). Social-media and automation use custom manifest types and register separately. |
+| **Marketplace Registry** | `src/lib/modules/module-registry.ts` | Static `ModuleRegistry` class wrapping `MODULE_CATALOG` for marketplace browsing (search, filter, sort, pagination). Server variant (`module-registry-server.ts`) loads from `modules_v2` DB table. |
+
+**Module Builder (Studio-Created Modules):**
+
+Super admins can create modules via `createModule()` in `src/lib/modules/module-builder.ts`. These write to the `module_source` table with: slug, name, renderCode, settingsSchema, apiRoutes, styles, dependencies, moduleType, dbIsolation, capabilities, resources, requirements.
+
+**Two Manifest Schemas:**
+
+1. **EM-05 Manifest** (`src/lib/modules/types/module-manifest.ts`) — Full marketplace manifest with `ModuleType`, `ModuleCategory`, `ModuleAuthor`, `ModuleDatabaseManifest`, `ModuleAPIManifest`, `ModuleUIManifest`, `ModulePermission[]`, screenshots, keywords, dependencies
+2. **Entry-Point Manifest** (`src/lib/modules/module-manifest.ts`) — Runtime manifest with `entryPoints` (siteHead/siteBody/dashboardWidget/portalPage/agencyPage), `hooks`, `permissions`, `apiRoutes`, `settingsSchema`, JSON Schema validation
+
+**Module Infrastructure (`src/lib/modules/` — 50+ files):**
+
+- `database/`, `module-schema-manager.ts` — Per-module DB schema isolation
+- `api/`, `module-api-proxy.ts` — API gateway & proxy for module routes
+- `auth/`, `permissions.ts` — Module auth & permissions
+- `ai-builder/` — AI-assisted module creation
+- `marketplace-service.ts`, `marketplace-search.ts` — Marketplace services
+- `module-installation.ts`, `module-loader.ts`, `module-deployer.ts` — Lifecycle management
+- `module-catalog-sync.ts`, `module-catalog.ts` — Static catalog ↔ `modules_v2` DB sync
+- `versioning/`, `module-versioning.ts` — Module versioning
+- `embed/`, `external/`, `api-mode/` — Module rendering modes
 
 **Module Marketplace Flow (IMPORTANT):**
 

@@ -9,15 +9,18 @@ build/
 out/
 *.tsbuildinfo
 
-# Testing
+# Testing & build output
 coverage/
 test-results*.txt
 test-output.json
-build-check*.txt
-build-error.txt
-build-stderr.txt
-build-stdout.txt
+build-*.txt
 tsc-*.txt
+
+# Data exports (may contain sensitive data)
+*.csv
+
+# Backup files
+*.bak
 
 # Environment
 .env

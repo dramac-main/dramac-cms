@@ -1,6 +1,6 @@
 # Tech Context: Technologies & Setup
 
-**Last Updated**: February 19, 2026
+**Last Updated**: April 11, 2026
 
 ## ⚠️ CRITICAL: Development Workflow
 
@@ -110,7 +110,7 @@
 - **@ai-sdk/anthropic**: 3.0.12 (Claude — **PRIMARY PROVIDER**)
 - **@ai-sdk/openai**: 3.0.26 (OpenAI — fallback only, not used for website generation)
 - **@anthropic-ai/sdk**: 0.71.2 (Anthropic API)
-- **AI Provider Config**: `config/ai-provider.ts` — centralized model selection via `getAIModel(task)`
+- **AI Provider Config**: `src/lib/ai/website-designer/config/ai-provider.ts` — centralized model selection via `getAIModel(task)`
 - **Claude Model IDs (Latest Feb 2026)**:
   - Sonnet 4.6: `claude-sonnet-4-6` (premium tier — used for all main AI Designer tasks)
   - Haiku 4.5: `claude-haiku-4-5-20251001` (fast tier — module analysis, responsive, design inspiration)
@@ -343,7 +343,7 @@ JWT_SECRET=your-secret-key
   - 6,000 minutes serverless execution
 - **Max request size**: 4.5 MB
 - **Max response size**: 4.5 MB
-- **Function timeout**: 10s (Hobby), 60s (Pro)
+- **Function timeout**: 60s (configured via `maxDuration = 60` in API routes)
 
 ## Architecture Decisions
 

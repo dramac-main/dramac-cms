@@ -1,313 +1,164 @@
-# Quick Reference: What's Implemented
+# Quick Reference: DRAMAC CMS Development
 
-**Last Updated**: January 23, 2026  
-**Progress**: 11/34 phases (32%) | Infrastructure 100% Complete ✅
-
----
-
-## ✅ What Works (Production Ready)
-
-### 1. Module System
-- Upload modules via Module Studio
-- Install modules to sites
-- Configure module settings
-- Render modules in pages
-- Semantic versioning (1.0.0, 1.1.0)
-- Module marketplace with search
-
-### 2. Database Architecture
-- Schema-per-module isolation (`mod_abc123`)
-- Automatic database provisioning
-- RLS policies for security
-- Multi-tenant data separation
-- CRUD operations per module
-
-### 3. API Gateway
-- Automatic routing: `/api/modules/:moduleId/*`
-- Request authentication
-- Rate limiting
-- CORS middleware
-- Request logging
-
-### 4. External Integration
-- Embed modules on any website (iframe)
-- JavaScript SDK for external sites
-- Domain verification (DNS + meta tag)
-- REST APIs for external access
-- Webhooks with HMAC signatures
-- OAuth 2.0 for third-party apps
-
-### 5. Marketplace
-- Advanced search and filtering
-- Module collections (Featured, Popular, New)
-- Category organization
-- Beta module support
-- Module ratings/reviews system
-- Analytics dashboard
-
-### 6. AI Features
-- Generate modules from natural language
-- Automated schema generation
-- Code scaffolding
-- Template system
+**Last Updated**: April 11, 2026  
+**Status**: Production-Ready — All Core Waves Complete
 
 ---
 
-## 🔧 Key Functions & Utilities
+## Development Commands
 
-### Module Naming (EM-05)
-```typescript
-import { generateModuleShortId, getModuleSchemaName } from '@/lib/modules/module-naming';
+```bash
+# Navigate to app
+cd next-platform-dashboard
 
-const shortId = generateModuleShortId(moduleId); // "a1b2c3d4"
-const schema = getModuleSchemaName(shortId);     // "mod_a1b2c3d4"
-```
+# Install dependencies
+pnpm install
 
-### Database Provisioning (EM-11)
-```typescript
-import { provisionModuleDatabase, deprovisionModuleDatabase } from '@/lib/modules/database';
+# Development server (run in separate terminal, NOT via Copilot)
+pnpm dev
 
-await provisionModuleDatabase(moduleId, siteId, tableDefinitions);
-await deprovisionModuleDatabase(moduleId, siteId);
-```
+# TypeScript check (requires extra memory for large types file)
+NODE_OPTIONS="--max-old-space-size=8192" npx tsc --noEmit --skipLibCheck
 
-### Module Data Access (EM-11)
-```typescript
-import { createModuleDataAccess } from '@/lib/modules/database';
+# Deploy (Vercel webhook is intermittent)
+npx vercel --prod --yes
 
-const dataAccess = createModuleDataAccess(context);
-await dataAccess.query('contacts').select('*');
-await dataAccess.insert('contacts', { name: 'John' });
-```
-
-### API Gateway (EM-12)
-```typescript
-import { createModuleApiGateway } from '@/lib/modules/api';
-
-const gateway = createModuleApiGateway(moduleId);
-const response = await gateway.handleRequest(request);
-```
-
-### Embed System (EM-30)
-```typescript
-import { generateEmbedCode } from '@/lib/modules/embed/embed-service';
-
-const embedCode = await generateEmbedCode(siteId, moduleId, options);
-```
-
-### External APIs (EM-31)
-```typescript
-import { externalApiMiddleware } from '@/lib/modules/external';
-
-const result = await externalApiMiddleware(request, response, {
-  allowedOrigins: ['https://example.com']
-});
+# Create super admin
+npx tsx scripts/create-super-admin.ts
 ```
 
 ---
 
-## 📁 Important File Locations
+## Key File Locations
 
-### Migrations
-- `migrations/phase-em01-module-lifecycle.sql` - Module system
-- `migrations/phase-em05-module-naming.sql` - Naming conventions
-- `migrations/phase-em10-module-type-system.sql` - Type system
-- `migrations/20260122_module_analytics.sql` - Analytics
-- `migrations/20260122_module_authentication.sql` - Auth
-- `migrations/em-23-ai-builder-schema.sql` - AI builder
-- `migrations/em-30-module-embed-tokens.sql` - Embed tokens
-- `migrations/em-31-external-domains.sql` - External integration
-
-### Core Services
-- `src/lib/modules/module-naming.ts` - ID & schema naming
-- `src/lib/modules/module-builder.ts` - Module creation
-- `src/lib/modules/module-catalog.ts` - Marketplace
-- `src/lib/modules/module-runtime-v2.ts` - Rendering
-- `src/lib/modules/module-schema-manager.ts` - Schema management
-
-### Database Services
-- `src/lib/modules/database/module-database-provisioner.ts`
-- `src/lib/modules/database/module-data-access.ts`
-- `src/lib/modules/database/index.ts` (barrel export)
-
-### API Services
-- `src/lib/modules/api/module-api-gateway.ts`
-- `src/lib/modules/api/route-registration.ts`
-- `src/lib/modules/api/index.ts` (barrel export)
-
-### External Integration
-- `src/lib/modules/external/domain-service.ts`
-- `src/lib/modules/external/oauth-service.ts`
-- `src/lib/modules/external/webhook-service.ts`
-- `src/lib/modules/external/cors-middleware.ts`
-- `src/lib/modules/external/embed-sdk.ts`
-- `src/lib/modules/external/index.ts` (barrel export)
-
-### Embed System
-- `src/lib/modules/embed/embed-service.ts`
-- `src/lib/modules/embed/embed-auth.ts`
-- `src/components/modules/embed/embed-code-generator.tsx`
-
-### Analytics
-- `src/lib/modules/analytics/module-analytics.ts`
-- `src/components/modules/analytics/module-analytics-dashboard.tsx`
+| Purpose                | Path                                                |
+| ---------------------- | --------------------------------------------------- |
+| App Routes             | `src/app/`                                          |
+| Components             | `src/components/` (500+)                            |
+| Server Actions         | `src/lib/actions/`                                  |
+| Module Implementations | `src/modules/` (6 modules)                          |
+| Studio Engine          | `src/lib/studio/engine/`                            |
+| Studio Components      | `src/components/studio/blocks/`                     |
+| AI Website Designer    | `src/lib/ai/website-designer/`                      |
+| Email System           | `src/lib/email/`                                    |
+| Database Types         | `src/types/database.ts` (580K+ chars)               |
+| Locale Config          | `src/lib/locale-config.ts`                          |
+| Navigation Config      | `src/config/navigation.ts`                          |
+| AI Provider Config     | `src/lib/ai/website-designer/config/ai-provider.ts` |
 
 ---
 
-## 🚫 What's NOT Built Yet
+## Critical Patterns
 
-### Wave 2: Developer Tools (ALL COMPLETE ✅)
-- ✅ EM-20: VS Code Extension (`packages/vscode-extension/`)
-- ✅ EM-21: CLI Tools (`packages/dramac-cli/`)
-- ✅ EM-22: Module Templates (`packages/sdk/templates/`)
+### Supabase snake_case → camelCase
 
-### Wave 3: Distribution (2 optional)
-- ⬜ EM-32: Custom Domains
-- ⬜ EM-33: API-Only Mode
+```typescript
+import { mapRecord, mapRecords } from "@/lib/map-db-record";
+// EVERY server action returning raw Supabase data MUST use this
+return { items: mapRecords<MyType>(data || []), error: null };
+```
 
-### Wave 4: Enterprise (all pending)
-- ⬜ EM-40: Multi-Tenant Architecture
-- ⬜ EM-41: Module Versioning & Rollback
-- ⬜ EM-42: Marketplace V2
-- ⬜ EM-43: Revenue Dashboard
+### Auth Guard (every server page)
 
-### Wave 5: Business Modules (ALL READY TO BUILD)
-- ⬜ EM-50: CRM Module
-- ⬜ EM-51: Booking Module
-- ⬜ EM-52: E-commerce Module
-- ⬜ EM-53: Live Chat Module
-- ⬜ EM-54: Social Media Module
-- ⬜ EM-55: Accounting Module
-- ⬜ EM-56: HR & Team Module
+```typescript
+const supabase = await createClient();
+const {
+  data: { user },
+} = await supabase.auth.getUser();
+if (!user) redirect("/login");
+```
 
-### Wave 6: Industry Verticals (all pending)
-- ⬜ EM-60: Hotel Management
-- ⬜ EM-61: Restaurant POS
-- ⬜ EM-62: Healthcare
-- ⬜ EM-63: Real Estate
-- ⬜ EM-64: Gym/Fitness
-- ⬜ EM-65: Salon/Spa
+### Getting Tenant ID
 
----
+```typescript
+const { data: site } = await supabase
+  .from("sites")
+  .select("agency_id")
+  .eq("id", siteId)
+  .single();
+const tenantId = site?.agency_id || "";
+```
 
-## 🎯 What to Build Next
+### Locale (NEVER hardcode USD/UTC)
 
-### Recommendation: EM-50 CRM Module
+```typescript
+import {
+  DEFAULT_CURRENCY,
+  DEFAULT_TIMEZONE,
+  formatCurrency,
+} from "@/lib/locale-config";
+// Zambia: ZMW, K symbol, Africa/Lusaka, 16% VAT
+```
 
-**Why CRM first?**
-1. Demonstrates full platform capabilities
-2. Flagship reference implementation
-3. High business value
-4. Validates architecture decisions
-5. Foundation for other modules (EM-55 Accounting integrates with it)
+### E-Commerce Prices (CENTS)
 
-**Estimated Time**: 2-3 weeks  
-**Complexity**: High (full CRUD, relationships, UI)  
-**Dependencies**: ✅ ALL SATISFIED
+```typescript
+// DB stores cents: K250.00 → 25000
+// Display: (price / 100).toFixed(2)
+// Save: Math.round(parseFloat(input) * 100)
+```
 
-**What it includes**:
-- Contacts management
-- Company/organization tracking
-- Deals & pipeline
-- Activities & notes
-- Email integration
-- Sales reporting
-- Custom fields
-- Import/export
+### AI Zod Schemas
 
-**Next after CRM**:
-1. EM-51: Booking Module (Calendly competitor)
-2. EM-55: Accounting Module (integrates with CRM deals)
-3. EM-52: E-commerce Module (high revenue potential)
+```typescript
+// ONLY use: z.number(), z.string(), z.array(), z.enum(), z.boolean(), z.object()
+// NEVER use: .int(), .min(), .max(), literal numeric unions
+```
 
 ---
 
-## 🧪 Testing Status
+## Module Auto-Install
 
-### What's Tested
-- ✅ Manual testing of module lifecycle
-- ✅ Database provisioning tested in dev
-- ✅ Marketplace search working
-- ✅ External embedding verified
+Core modules installed on every new site (`CORE_MODULE_SLUGS` in sites.ts):
 
-### What Needs Testing
-- ⬜ Automated unit tests
-- ⬜ Integration tests
-- ⬜ E2E tests with Playwright
-- ⬜ Load testing
-- ⬜ Security testing
+- **CRM** — contact management
+- **Automation** — event-driven workflows
+- **Live Chat** — customer conversations + AI
 
-### Recommendation
-Add Vitest + Playwright after building first business module (EM-50).
+E-Commerce and Booking: installed when AI Designer detects industry need.  
+Social Media: user-activated manually.
 
 ---
 
-## 📊 Database Tables
+## Email Pipelines
 
-### Core Platform
-- `module_source` - Module definitions
-- `modules_v2` - Module installations
-- `sites` - User sites
-- `users` - User accounts
-- `agencies` - Agency accounts
+| Pipeline                   | File                                             | Use For                             |
+| -------------------------- | ------------------------------------------------ | ----------------------------------- |
+| Platform (Dramac branding) | `send-email.ts` + `templates.ts`                 | Welcome, billing, password reset    |
+| Branded (site branding)    | `send-branded-email.ts` + `branded-templates.ts` | Booking confirmations, order emails |
 
-### Module System (EM-01, EM-02, EM-03)
-- `module_versions` - Version history
-- `module_collections` - Featured, Popular, etc.
-- `module_ratings` - User reviews
-- `module_analytics_events` - Usage tracking
-- `module_analytics_aggregates` - Pre-computed stats
-
-### Naming & Registry (EM-05)
-- `module_database_registry` - Tracks all module databases
-- `module_naming_conflicts` - Conflict detection
-
-### External Integration (EM-30, EM-31)
-- `module_embed_tokens` - Embed authentication
-- `external_domains` - Domain allowlist
-- `external_oauth_clients` - OAuth apps
-- `external_oauth_tokens` - OAuth access tokens
-- `external_webhooks` - Webhook subscriptions
-- `external_api_requests` - Request logs
-
-### AI Builder (EM-23)
-- `ai_module_generations` - Generation history
-- `ai_module_templates` - AI templates
-
-### Per-Module Schemas
-Each installed module gets its own schema: `mod_a1b2c3d4`, `mod_e5f6g7h8`, etc.
+**Important**: `createNotification()` is IN-APP ONLY — no email. Email sent by caller.
 
 ---
 
-## 🔒 Security Features
+## Automation Events
 
-### Implemented
-- ✅ Row Level Security (RLS) on all tables
-- ✅ Schema-per-module isolation
-- ✅ OAuth 2.0 with PKCE
-- ✅ Webhook HMAC signatures
-- ✅ Domain verification (DNS + meta tag)
-- ✅ Rate limiting on external APIs
-- ✅ CORS protection
-- ✅ Token hashing for sensitive data
+All modules emit via `logAutomationEvent()` — NON-BLOCKING (`.catch(() => {})`).
 
-### TODO
-- ⬜ Content Security Policy (CSP)
-- ⬜ Input sanitization library
-- ⬜ SQL injection prevention review
-- ⬜ XSS protection audit
-- ⬜ Penetration testing
+25+ event types: CRM (contact/deal CRUD), E-Commerce (order lifecycle), Booking (appointment lifecycle), Live Chat (conversation lifecycle).
 
 ---
 
-## 📞 Quick Links
+## Environment Variables
 
-- **Main Documentation**: [IMPLEMENTATION-ORDER.md](phases/enterprise-modules/IMPLEMENTATION-ORDER.md)
-- **Project Brief**: [memory-bank/projectbrief.md](memory-bank/projectbrief.md)
-- **Full Status**: [STATUS.md](STATUS.md)
-- **Active Work**: [memory-bank/activeContext.md](memory-bank/activeContext.md)
-- **Progress Log**: [memory-bank/progress.md](memory-bank/progress.md)
+```env
+# Required
+NEXT_PUBLIC_SUPABASE_URL=https://nfirsqmyxmmtbignofgb.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_APP_URL=
 
----
+# Billing
+PADDLE_API_KEY=
+PADDLE_WEBHOOK_SECRET=
+NEXT_PUBLIC_PADDLE_CLIENT_TOKEN=
 
-**Bottom Line**: All infrastructure is production-ready. You can start building business modules immediately! 🚀
+# AI
+ANTHROPIC_API_KEY=
+
+# Email
+RESEND_API_KEY=
+
+# Auth
+JWT_SECRET=
+```

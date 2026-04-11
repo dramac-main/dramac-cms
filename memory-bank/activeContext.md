@@ -1,5 +1,89 @@
 # Active Context
 
+**Last Updated**: April 11, 2026
+
+## Current State
+
+The DRAMAC CMS platform is **production-ready**. All core waves (1-5) are complete, including all 6 business modules, DRAMAC Studio, client portal, billing, domain/email systems, and AI website designer. The platform is deployed at https://app.dramacagency.com.
+
+## Most Recent Changes (Latest Commits)
+
+### Blog Editor Overhaul + Agency Support Tickets (commit 49bc38e4, afdd04d4)
+
+- Blog editor: CodeBlockLowlight syntax highlighting, media library image picker, YouTube/Vimeo embed, alt text
+- `createPost()` now includes 5 missing fields (metaKeywords, ogImageUrl, canonicalUrl, allowComments, isFeatured)
+- **New**: Agency support ticket system — `ticket-service.ts` (7 functions), `/dashboard/tickets` pages, stats/search/filters
+- 3 new email notification types for ticket lifecycle (created, replied, closed)
+- `seedDefaultDepartments()` — 5 industry departments auto-seeded on new site creation
+- Replaced `useToast` with Sonner across components
+
+### Portal Data Scoping Audit (commit 8aff52dd)
+
+- Comprehensive audit ensuring all portal queries scope to the correct client
+
+### Blog System Fixes (commits 937132b6, fb15a6f7, e06d17e6)
+
+- Fixed 3 critical bugs: unregistered BlogPostList component, missing author joins, virtual blog page priority
+- Blog route redirects to site domains, revalidation after create/update/delete
+- Enhanced BlogListingSectionRender (search, category filter, pagination)
+- Enhanced BlogPostViewRender (breadcrumbs, social sharing, TOC, author bio)
+- Blog branding integration, media tracking, publish-status awareness
+
+### Storefront Auth Fixes (commits 6071ff3d, multi-tenant auth)
+
+- Magic link now works for all customer types (password, OAuth, guest)
+- Dedicated password reset flow (industry-standard)
+- bcrypt-based multi-tenant storefront auth (replaced Supabase auth.users for isolation)
+
+## Current Architecture Summary
+
+### Route Structure
+
+```
+src/app/
+├── (auth)/           # Login, signup, forgot-password
+├── (dashboard)/      # Main agency dashboard (all management)
+├── portal/           # Client-facing business operations center
+├── (public)/         # Public site rendering, storefronts
+├── studio/           # DRAMAC Studio visual editor
+└── api/              # Webhooks, AI steps, modules, forms, public APIs
+```
+
+### Module Status
+
+| Module       | Files | DB Tables              | Status      |
+| ------------ | ----- | ---------------------- | ----------- |
+| CRM          | 60+   | 13 (mod*crmmod01*\*)   | ✅ Complete |
+| Booking      | 47    | 8 (mod*bookmod01*\*)   | ✅ Complete |
+| E-Commerce   | 130+  | 41+ (mod*ecommod01*\*) | ✅ Complete |
+| Live Chat    | 60+   | 9 (mod*chat*\*)        | ✅ Complete |
+| Social Media | 45+   | 5 platforms            | ✅ Complete |
+| Automation   | 32    | 27 workflows           | ✅ Complete |
+
+### Core Auto-Installed Modules
+
+`CORE_MODULE_SLUGS`: CRM, Automation, Live Chat (installed on every new site)
+
+### Key Technical Facts
+
+- All prices in **cents** (integers) — display with `/100` conversion
+- Supabase returns **snake_case** — always use `mapRecord()`/`mapRecords()`
+- Every server page needs auth guard with `redirect('/login')`
+- AI schemas must NOT use `.int()`, `.min()`, `.max()` (Claude rejects these)
+- `maxDuration = 60` on all AI API routes (Vercel function timeout)
+- Locale: Zambia-first (ZMW, K, Africa/Lusaka, 16% VAT)
+
+## What's Next (Potential Future Work)
+
+- Wave 6: Industry verticals (Hotel, Restaurant, Healthcare, Real Estate, Gym, Salon) — DB schemas ready
+- WhatsApp integration for Live Chat
+- Module versioning & rollback (DB schema ready)
+- Revenue dashboard (DB schema ready)
+- Custom domains for module-published sites (deferred)
+- Third-party developer onboarding to module marketplace
+
+# Active Context
+
 ## Current Focus: Blog Editor Overhaul + Agency Support Tickets + Email Notifications + Default Departments (commit afdd04d4)
 
 ### What Was Done
