@@ -1,7 +1,10 @@
 import { Metadata } from "next";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { TicketsDashboard } from "@/components/support/tickets-dashboard";
-import { getAgencyTickets, getAgencyTicketStats } from "@/lib/support/ticket-service";
+import {
+  getAgencyTickets,
+  getAgencyTicketStats,
+} from "@/lib/support/ticket-service";
 import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {

@@ -30,7 +30,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getAgencyTickets, type AgencyTicket } from "@/lib/support/ticket-service";
+import {
+  getAgencyTickets,
+  type AgencyTicket,
+} from "@/lib/support/ticket-service";
 import { formatDistanceToNow } from "date-fns";
 
 interface TicketsDashboardProps {
@@ -44,7 +47,14 @@ interface TicketsDashboardProps {
   };
 }
 
-const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: typeof Clock }> = {
+const statusConfig: Record<
+  string,
+  {
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+    icon: typeof Clock;
+  }
+> = {
   open: { label: "Open", variant: "destructive", icon: AlertCircle },
   in_progress: { label: "In Progress", variant: "default", icon: Clock },
   resolved: { label: "Resolved", variant: "secondary", icon: CheckCircle2 },
@@ -54,18 +64,31 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
 const priorityConfig: Record<string, { label: string; className: string }> = {
   low: { label: "Low", className: "text-muted-foreground" },
   normal: { label: "Normal", className: "text-foreground" },
-  high: { label: "High", className: "text-orange-600 dark:text-orange-400 font-medium" },
-  urgent: { label: "Urgent", className: "text-red-600 dark:text-red-400 font-bold" },
+  high: {
+    label: "High",
+    className: "text-orange-600 dark:text-orange-400 font-medium",
+  },
+  urgent: {
+    label: "Urgent",
+    className: "text-red-600 dark:text-red-400 font-bold",
+  },
 };
 
-export function TicketsDashboard({ initialTickets, stats }: TicketsDashboardProps) {
+export function TicketsDashboard({
+  initialTickets,
+  stats,
+}: TicketsDashboardProps) {
   const [tickets, setTickets] = useState(initialTickets);
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [isPending, startTransition] = useTransition();
 
-  function handleFilter(newStatus?: string, newPriority?: string, newSearch?: string) {
+  function handleFilter(
+    newStatus?: string,
+    newPriority?: string,
+    newSearch?: string,
+  ) {
     const s = newStatus ?? statusFilter;
     const p = newPriority ?? priorityFilter;
     const q = newSearch ?? search;
@@ -108,7 +131,9 @@ export function TicketsDashboard({ initialTickets, stats }: TicketsDashboardProp
               <AlertCircle className="h-3 w-3 text-red-500" />
               Open
             </CardDescription>
-            <CardTitle className="text-2xl text-red-600 dark:text-red-400">{stats.open}</CardTitle>
+            <CardTitle className="text-2xl text-red-600 dark:text-red-400">
+              {stats.open}
+            </CardTitle>
           </CardHeader>
         </Card>
         <Card className="border-blue-200 dark:border-blue-900">
@@ -117,7 +142,9 @@ export function TicketsDashboard({ initialTickets, stats }: TicketsDashboardProp
               <Clock className="h-3 w-3 text-blue-500" />
               In Progress
             </CardDescription>
-            <CardTitle className="text-2xl text-blue-600 dark:text-blue-400">{stats.inProgress}</CardTitle>
+            <CardTitle className="text-2xl text-blue-600 dark:text-blue-400">
+              {stats.inProgress}
+            </CardTitle>
           </CardHeader>
         </Card>
         <Card className="border-green-200 dark:border-green-900">
@@ -126,7 +153,9 @@ export function TicketsDashboard({ initialTickets, stats }: TicketsDashboardProp
               <CheckCircle2 className="h-3 w-3 text-green-500" />
               Resolved
             </CardDescription>
-            <CardTitle className="text-2xl text-green-600 dark:text-green-400">{stats.resolved}</CardTitle>
+            <CardTitle className="text-2xl text-green-600 dark:text-green-400">
+              {stats.resolved}
+            </CardTitle>
           </CardHeader>
         </Card>
         <Card>
@@ -196,7 +225,9 @@ export function TicketsDashboard({ initialTickets, stats }: TicketsDashboardProp
       {/* Ticket List */}
       <div className="space-y-2">
         {isPending && (
-          <div className="text-center py-4 text-muted-foreground">Loading...</div>
+          <div className="text-center py-4 text-muted-foreground">
+            Loading...
+          </div>
         )}
         {!isPending && tickets.length === 0 && (
           <Card>
@@ -213,8 +244,11 @@ export function TicketsDashboard({ initialTickets, stats }: TicketsDashboardProp
         )}
         {!isPending &&
           tickets.map((ticket) => {
-            const statusInfo = statusConfig[ticket.status || "open"] || statusConfig.open;
-            const priorityInfo = priorityConfig[ticket.priority || "normal"] || priorityConfig.normal;
+            const statusInfo =
+              statusConfig[ticket.status || "open"] || statusConfig.open;
+            const priorityInfo =
+              priorityConfig[ticket.priority || "normal"] ||
+              priorityConfig.normal;
             const StatusIcon = statusInfo.icon;
 
             return (
@@ -242,9 +276,7 @@ export function TicketsDashboard({ initialTickets, stats }: TicketsDashboardProp
                           <User className="h-3 w-3" />
                           {ticket.clientName || "Unknown Client"}
                         </span>
-                        {ticket.siteName && (
-                          <span>{ticket.siteName}</span>
-                        )}
+                        {ticket.siteName && <span>{ticket.siteName}</span>}
                         <span className="flex items-center gap-1">
                           <MessageSquare className="h-3 w-3" />
                           {ticket.messageCount}

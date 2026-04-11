@@ -1272,8 +1272,7 @@ ${data.dashboardUrl ? `View in dashboard: ${data.dashboardUrl}` : ""}
   // ============================================
 
   support_ticket_created: {
-    subject: (data) =>
-      `New Support Ticket: ${data.subject || "No subject"}`,
+    subject: (data) => `New Support Ticket: ${data.subject || "No subject"}`,
     html: (data) =>
       wrapHtml(`
       <h1 style="${STYLES.heading}">🎫 New Support Ticket</h1>

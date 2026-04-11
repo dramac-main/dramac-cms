@@ -298,7 +298,6 @@ async function installCoreModules(
           console.error("[Sites] Failed to seed default departments:", err),
         );
       }
-
     } catch (err) {
       console.error(`[Sites] Failed to install core module ${mod.slug}:`, err);
     }
@@ -330,11 +329,21 @@ async function seedDefaultDepartments(siteId: string): Promise<void> {
   if ((count || 0) > 0) return; // Already seeded
 
   const departments = [
-    { name: "General", description: "General enquiries and information", is_default: true },
+    {
+      name: "General",
+      description: "General enquiries and information",
+      is_default: true,
+    },
     { name: "Sales", description: "Sales enquiries, pricing, and quotes" },
     { name: "Support", description: "Technical support and troubleshooting" },
-    { name: "Billing", description: "Billing, invoices, and payment enquiries" },
-    { name: "Customer Service", description: "Customer service and account management" },
+    {
+      name: "Billing",
+      description: "Billing, invoices, and payment enquiries",
+    },
+    {
+      name: "Customer Service",
+      description: "Customer service and account management",
+    },
   ];
 
   for (let i = 0; i < departments.length; i++) {
@@ -351,7 +360,9 @@ async function seedDefaultDepartments(siteId: string): Promise<void> {
     });
   }
 
-  console.log(`[Sites] Seeded ${departments.length} default departments for site ${siteId}`);
+  console.log(
+    `[Sites] Seeded ${departments.length} default departments for site ${siteId}`,
+  );
 }
 
 // Update site

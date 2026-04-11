@@ -100,7 +100,8 @@ export function PostEditor({
       CodeBlockLowlight.configure({
         lowlight,
         HTMLAttributes: {
-          class: "bg-muted rounded-lg p-4 my-4 overflow-x-auto text-sm font-mono",
+          class:
+            "bg-muted rounded-lg p-4 my-4 overflow-x-auto text-sm font-mono",
         },
       }),
       Image.configure({
@@ -133,7 +134,7 @@ export function PostEditor({
           "[&_.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]",
           "[&_.is-editor-empty:first-child::before]:float-left",
           "[&_.is-editor-empty:first-child::before]:h-0",
-          "[&_.is-editor-empty:first-child::before]:pointer-events-none"
+          "[&_.is-editor-empty:first-child::before]:pointer-events-none",
         ),
       },
     },
@@ -147,7 +148,9 @@ export function PostEditor({
     if (editor && content && Object.keys(content).length > 0) {
       const currentContent = editor.getJSON();
       if (JSON.stringify(currentContent) !== JSON.stringify(content)) {
-        editor.commands.setContent(content as Parameters<typeof editor.commands.setContent>[0]);
+        editor.commands.setContent(
+          content as Parameters<typeof editor.commands.setContent>[0],
+        );
       }
     }
   }, [content, editor]);
@@ -182,7 +185,12 @@ export function PostEditor({
 
   return (
     <TooltipProvider>
-      <div className={cn("border rounded-lg overflow-hidden bg-background", className)}>
+      <div
+        className={cn(
+          "border rounded-lg overflow-hidden bg-background",
+          className,
+        )}
+      >
         {/* Toolbar */}
         <div className="border-b bg-muted/50 p-2 flex flex-wrap items-center gap-1 sticky top-0 z-10">
           {/* History */}
@@ -200,7 +208,7 @@ export function PostEditor({
             </TooltipTrigger>
             <TooltipContent>Undo (Ctrl+Z)</TooltipContent>
           </Tooltip>
-          
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -234,7 +242,7 @@ export function PostEditor({
             </TooltipTrigger>
             <TooltipContent>Heading 1</TooltipContent>
           </Tooltip>
-          
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Toggle
@@ -250,7 +258,7 @@ export function PostEditor({
             </TooltipTrigger>
             <TooltipContent>Heading 2</TooltipContent>
           </Tooltip>
-          
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Toggle
@@ -275,7 +283,9 @@ export function PostEditor({
               <Toggle
                 size="sm"
                 pressed={editor.isActive("bold")}
-                onPressedChange={() => editor.chain().focus().toggleBold().run()}
+                onPressedChange={() =>
+                  editor.chain().focus().toggleBold().run()
+                }
                 disabled={disabled}
               >
                 <Bold className="h-4 w-4" />
@@ -283,13 +293,15 @@ export function PostEditor({
             </TooltipTrigger>
             <TooltipContent>Bold (Ctrl+B)</TooltipContent>
           </Tooltip>
-          
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Toggle
                 size="sm"
                 pressed={editor.isActive("italic")}
-                onPressedChange={() => editor.chain().focus().toggleItalic().run()}
+                onPressedChange={() =>
+                  editor.chain().focus().toggleItalic().run()
+                }
                 disabled={disabled}
               >
                 <Italic className="h-4 w-4" />
@@ -297,13 +309,15 @@ export function PostEditor({
             </TooltipTrigger>
             <TooltipContent>Italic (Ctrl+I)</TooltipContent>
           </Tooltip>
-          
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Toggle
                 size="sm"
                 pressed={editor.isActive("strike")}
-                onPressedChange={() => editor.chain().focus().toggleStrike().run()}
+                onPressedChange={() =>
+                  editor.chain().focus().toggleStrike().run()
+                }
                 disabled={disabled}
               >
                 <Strikethrough className="h-4 w-4" />
@@ -311,13 +325,15 @@ export function PostEditor({
             </TooltipTrigger>
             <TooltipContent>Strikethrough</TooltipContent>
           </Tooltip>
-          
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Toggle
                 size="sm"
                 pressed={editor.isActive("code")}
-                onPressedChange={() => editor.chain().focus().toggleCode().run()}
+                onPressedChange={() =>
+                  editor.chain().focus().toggleCode().run()
+                }
                 disabled={disabled}
               >
                 <Code className="h-4 w-4" />
@@ -334,7 +350,9 @@ export function PostEditor({
               <Toggle
                 size="sm"
                 pressed={editor.isActive("bulletList")}
-                onPressedChange={() => editor.chain().focus().toggleBulletList().run()}
+                onPressedChange={() =>
+                  editor.chain().focus().toggleBulletList().run()
+                }
                 disabled={disabled}
               >
                 <List className="h-4 w-4" />
@@ -342,13 +360,15 @@ export function PostEditor({
             </TooltipTrigger>
             <TooltipContent>Bullet List</TooltipContent>
           </Tooltip>
-          
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Toggle
                 size="sm"
                 pressed={editor.isActive("orderedList")}
-                onPressedChange={() => editor.chain().focus().toggleOrderedList().run()}
+                onPressedChange={() =>
+                  editor.chain().focus().toggleOrderedList().run()
+                }
                 disabled={disabled}
               >
                 <ListOrdered className="h-4 w-4" />
@@ -356,13 +376,15 @@ export function PostEditor({
             </TooltipTrigger>
             <TooltipContent>Numbered List</TooltipContent>
           </Tooltip>
-          
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Toggle
                 size="sm"
                 pressed={editor.isActive("blockquote")}
-                onPressedChange={() => editor.chain().focus().toggleBlockquote().run()}
+                onPressedChange={() =>
+                  editor.chain().focus().toggleBlockquote().run()
+                }
                 disabled={disabled}
               >
                 <Quote className="h-4 w-4" />
@@ -370,13 +392,15 @@ export function PostEditor({
             </TooltipTrigger>
             <TooltipContent>Quote</TooltipContent>
           </Tooltip>
-          
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Toggle
                 size="sm"
                 pressed={editor.isActive("codeBlock")}
-                onPressedChange={() => editor.chain().focus().toggleCodeBlock().run()}
+                onPressedChange={() =>
+                  editor.chain().focus().toggleCodeBlock().run()
+                }
                 disabled={disabled}
               >
                 <Code2 className="h-4 w-4" />
@@ -408,7 +432,9 @@ export function PostEditor({
               <Toggle
                 size="sm"
                 pressed={editor.isActive({ textAlign: "left" })}
-                onPressedChange={() => editor.chain().focus().setTextAlign("left").run()}
+                onPressedChange={() =>
+                  editor.chain().focus().setTextAlign("left").run()
+                }
                 disabled={disabled}
               >
                 <AlignLeft className="h-4 w-4" />
@@ -416,13 +442,15 @@ export function PostEditor({
             </TooltipTrigger>
             <TooltipContent>Align Left</TooltipContent>
           </Tooltip>
-          
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Toggle
                 size="sm"
                 pressed={editor.isActive({ textAlign: "center" })}
-                onPressedChange={() => editor.chain().focus().setTextAlign("center").run()}
+                onPressedChange={() =>
+                  editor.chain().focus().setTextAlign("center").run()
+                }
                 disabled={disabled}
               >
                 <AlignCenter className="h-4 w-4" />
@@ -430,13 +458,15 @@ export function PostEditor({
             </TooltipTrigger>
             <TooltipContent>Align Center</TooltipContent>
           </Tooltip>
-          
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Toggle
                 size="sm"
                 pressed={editor.isActive({ textAlign: "right" })}
-                onPressedChange={() => editor.chain().focus().setTextAlign("right").run()}
+                onPressedChange={() =>
+                  editor.chain().focus().setTextAlign("right").run()
+                }
                 disabled={disabled}
               >
                 <AlignRight className="h-4 w-4" />
@@ -450,10 +480,10 @@ export function PostEditor({
           {/* Media */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button 
+              <Button
                 type="button"
-                variant="ghost" 
-                size="icon" 
+                variant="ghost"
+                size="icon"
                 onClick={addImage}
                 disabled={disabled}
               >
@@ -462,13 +492,13 @@ export function PostEditor({
             </TooltipTrigger>
             <TooltipContent>Insert Image</TooltipContent>
           </Tooltip>
-          
+
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button 
+              <Button
                 type="button"
                 variant={editor.isActive("link") ? "secondary" : "ghost"}
-                size="icon" 
+                size="icon"
                 onClick={addLink}
                 disabled={disabled}
               >
@@ -477,14 +507,14 @@ export function PostEditor({
             </TooltipTrigger>
             <TooltipContent>Add Link</TooltipContent>
           </Tooltip>
-          
+
           {editor.isActive("link") && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button 
+                <Button
                   type="button"
-                  variant="ghost" 
-                  size="icon" 
+                  variant="ghost"
+                  size="icon"
                   onClick={removeLink}
                   disabled={disabled}
                 >
@@ -494,13 +524,13 @@ export function PostEditor({
               <TooltipContent>Remove Link</TooltipContent>
             </Tooltip>
           )}
-          
+
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button 
+              <Button
                 type="button"
-                variant="ghost" 
-                size="icon" 
+                variant="ghost"
+                size="icon"
                 onClick={() => {
                   setEmbedUrl("");
                   setShowEmbedDialog(true);
@@ -516,10 +546,10 @@ export function PostEditor({
           {agencyId && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button 
+                <Button
                   type="button"
-                  variant="ghost" 
-                  size="icon" 
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setShowMediaPicker(true)}
                   disabled={disabled}
                 >
@@ -543,12 +573,22 @@ export function PostEditor({
           </DialogHeader>
           <Tabs defaultValue={agencyId ? "media" : "url"}>
             <TabsList className="w-full">
-              {agencyId && <TabsTrigger value="media" className="flex-1"><FolderOpen className="h-4 w-4 mr-2" />Media Library</TabsTrigger>}
-              <TabsTrigger value="url" className="flex-1"><Upload className="h-4 w-4 mr-2" />URL</TabsTrigger>
+              {agencyId && (
+                <TabsTrigger value="media" className="flex-1">
+                  <FolderOpen className="h-4 w-4 mr-2" />
+                  Media Library
+                </TabsTrigger>
+              )}
+              <TabsTrigger value="url" className="flex-1">
+                <Upload className="h-4 w-4 mr-2" />
+                URL
+              </TabsTrigger>
             </TabsList>
             {agencyId && (
               <TabsContent value="media" className="space-y-2 mt-4">
-                <p className="text-sm text-muted-foreground">Select an image from your media library:</p>
+                <p className="text-sm text-muted-foreground">
+                  Select an image from your media library:
+                </p>
                 <Button
                   type="button"
                   variant="outline"
@@ -575,7 +615,14 @@ export function PostEditor({
                     if (e.key === "Enter") {
                       e.preventDefault();
                       if (imageUrl && editor) {
-                        editor.chain().focus().setImage({ src: imageUrl, alt: imageAlt || undefined }).run();
+                        editor
+                          .chain()
+                          .focus()
+                          .setImage({
+                            src: imageUrl,
+                            alt: imageAlt || undefined,
+                          })
+                          .run();
                         setShowImageDialog(false);
                         setImageUrl("");
                         setImageAlt("");
@@ -594,13 +641,20 @@ export function PostEditor({
                 />
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setShowImageDialog(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowImageDialog(false)}
+                >
                   Cancel
                 </Button>
                 <Button
                   onClick={() => {
                     if (imageUrl && editor) {
-                      editor.chain().focus().setImage({ src: imageUrl, alt: imageAlt || undefined }).run();
+                      editor
+                        .chain()
+                        .focus()
+                        .setImage({ src: imageUrl, alt: imageAlt || undefined })
+                        .run();
                       setShowImageDialog(false);
                       setImageUrl("");
                       setImageAlt("");
@@ -628,10 +682,14 @@ export function PostEditor({
           onSelect={(files: MediaFile[]) => {
             if (files.length > 0 && editor) {
               for (const file of files) {
-                editor.chain().focus().setImage({ 
-                  src: file.url, 
-                  alt: file.alt_text || file.original_name || "" 
-                }).run();
+                editor
+                  .chain()
+                  .focus()
+                  .setImage({
+                    src: file.url,
+                    alt: file.alt_text || file.original_name || "",
+                  })
+                  .run();
               }
             }
             setShowMediaPicker(false);
@@ -658,16 +716,22 @@ export function PostEditor({
                   if (embedUrl && editor) {
                     // Convert YouTube/Vimeo URLs to embed format
                     let src = embedUrl;
-                    const ytMatch = embedUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+                    const ytMatch = embedUrl.match(
+                      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/,
+                    );
                     const vimeoMatch = embedUrl.match(/vimeo\.com\/(\d+)/);
                     if (ytMatch) {
                       src = `https://www.youtube.com/embed/${ytMatch[1]}`;
                     } else if (vimeoMatch) {
                       src = `https://player.vimeo.com/video/${vimeoMatch[1]}`;
                     }
-                    editor.chain().focus().insertContent(
-                      `<div data-type="embed" class="my-4"><iframe src="${src}" width="100%" height="400" frameborder="0" allowfullscreen style="border-radius:8px;aspect-ratio:16/9;width:100%;height:auto;"></iframe></div>`
-                    ).run();
+                    editor
+                      .chain()
+                      .focus()
+                      .insertContent(
+                        `<div data-type="embed" class="my-4"><iframe src="${src}" width="100%" height="400" frameborder="0" allowfullscreen style="border-radius:8px;aspect-ratio:16/9;width:100%;height:auto;"></iframe></div>`,
+                      )
+                      .run();
                     setShowEmbedDialog(false);
                     setEmbedUrl("");
                   }
@@ -686,16 +750,22 @@ export function PostEditor({
               onClick={() => {
                 if (embedUrl && editor) {
                   let src = embedUrl;
-                  const ytMatch = embedUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+                  const ytMatch = embedUrl.match(
+                    /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/,
+                  );
                   const vimeoMatch = embedUrl.match(/vimeo\.com\/(\d+)/);
                   if (ytMatch) {
                     src = `https://www.youtube.com/embed/${ytMatch[1]}`;
                   } else if (vimeoMatch) {
                     src = `https://player.vimeo.com/video/${vimeoMatch[1]}`;
                   }
-                  editor.chain().focus().insertContent(
-                    `<div data-type="embed" class="my-4"><iframe src="${src}" width="100%" height="400" frameborder="0" allowfullscreen style="border-radius:8px;aspect-ratio:16/9;width:100%;height:auto;"></iframe></div>`
-                  ).run();
+                  editor
+                    .chain()
+                    .focus()
+                    .insertContent(
+                      `<div data-type="embed" class="my-4"><iframe src="${src}" width="100%" height="400" frameborder="0" allowfullscreen style="border-radius:8px;aspect-ratio:16/9;width:100%;height:auto;"></iframe></div>`,
+                    )
+                    .run();
                   setShowEmbedDialog(false);
                   setEmbedUrl("");
                 }
@@ -726,9 +796,19 @@ export function PostEditor({
                   e.preventDefault();
                   if (editor) {
                     if (linkUrl === "") {
-                      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+                      editor
+                        .chain()
+                        .focus()
+                        .extendMarkRange("link")
+                        .unsetLink()
+                        .run();
                     } else {
-                      editor.chain().focus().extendMarkRange("link").setLink({ href: linkUrl }).run();
+                      editor
+                        .chain()
+                        .focus()
+                        .extendMarkRange("link")
+                        .setLink({ href: linkUrl })
+                        .run();
                     }
                     setShowLinkDialog(false);
                   }
@@ -747,9 +827,19 @@ export function PostEditor({
               onClick={() => {
                 if (editor) {
                   if (linkUrl === "") {
-                    editor.chain().focus().extendMarkRange("link").unsetLink().run();
+                    editor
+                      .chain()
+                      .focus()
+                      .extendMarkRange("link")
+                      .unsetLink()
+                      .run();
                   } else {
-                    editor.chain().focus().extendMarkRange("link").setLink({ href: linkUrl }).run();
+                    editor
+                      .chain()
+                      .focus()
+                      .extendMarkRange("link")
+                      .setLink({ href: linkUrl })
+                      .run();
                   }
                   setShowLinkDialog(false);
                 }

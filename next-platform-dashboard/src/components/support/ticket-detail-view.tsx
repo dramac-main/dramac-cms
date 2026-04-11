@@ -16,12 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -35,13 +30,20 @@ import {
   type AgencyTicketDetail,
 } from "@/lib/support/ticket-service";
 import { formatDistanceToNow, format } from "date-fns";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 interface TicketDetailViewProps {
   ticketDetail: AgencyTicketDetail;
 }
 
-const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: typeof Clock }> = {
+const statusConfig: Record<
+  string,
+  {
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+    icon: typeof Clock;
+  }
+> = {
   open: { label: "Open", variant: "destructive", icon: AlertCircle },
   in_progress: { label: "In Progress", variant: "default", icon: Clock },
   resolved: { label: "Resolved", variant: "secondary", icon: CheckCircle2 },
@@ -58,14 +60,14 @@ const priorityConfig: Record<string, { label: string; className: string }> = {
 export function TicketDetailView({ ticketDetail }: TicketDetailViewProps) {
   const { ticket, messages } = ticketDetail;
   const router = useRouter();
-  const { toast } = useToast();
   const [replyText, setReplyText] = useState("");
   const [isReplying, startReply] = useTransition();
   const [isUpdating, startUpdate] = useTransition();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const statusInfo = statusConfig[ticket.status || "open"] || statusConfig.open;
-  const priorityInfo = priorityConfig[ticket.priority || "normal"] || priorityConfig.normal;
+  const priorityInfo =
+    priorityConfig[ticket.priority || "normal"] || priorityConfig.normal;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -78,10 +80,10 @@ export function TicketDetailView({ ticketDetail }: TicketDetailViewProps) {
       const result = await replyToTicket(ticket.id, replyText.trim());
       if (result.success) {
         setReplyText("");
-        toast({ title: "Reply sent", description: "Your response has been sent to the client." });
+        toast.success("Reply sent to the client.");
         router.refresh();
       } else {
-        toast({ title: "Error", description: result.error || "Failed to send reply.", variant: "destructive" });
+        toast.error(result.error || "Failed to send reply.");
       }
     });
   }
@@ -90,13 +92,13 @@ export function TicketDetailView({ ticketDetail }: TicketDetailViewProps) {
     startUpdate(async () => {
       const result = await updateAgencyTicketStatus(
         ticket.id,
-        newStatus as "open" | "in_progress" | "resolved" | "closed"
+        newStatus as "open" | "in_progress" | "resolved" | "closed",
       );
       if (result.success) {
-        toast({ title: "Status updated", description: `Ticket marked as ${newStatus.replace("_", " ")}.` });
+        toast.success(`Ticket marked as ${newStatus.replace("_", " ")}.`);
         router.refresh();
       } else {
-        toast({ title: "Error", description: result.error || "Failed to update status.", variant: "destructive" });
+        toast.error(result.error || "Failed to update status.");
       }
     });
   }
@@ -147,12 +149,16 @@ export function TicketDetailView({ ticketDetail }: TicketDetailViewProps) {
           <span className="text-muted-foreground block">Client</span>
           <span className="font-medium">{ticket.clientName || "Unknown"}</span>
           {ticket.clientEmail && (
-            <span className="block text-xs text-muted-foreground">{ticket.clientEmail}</span>
+            <span className="block text-xs text-muted-foreground">
+              {ticket.clientEmail}
+            </span>
           )}
         </div>
         <div>
           <span className="text-muted-foreground block">Category</span>
-          <span className="font-medium capitalize">{ticket.category || "General"}</span>
+          <span className="font-medium capitalize">
+            {ticket.category || "General"}
+          </span>
         </div>
         <div>
           <span className="text-muted-foreground block">Site</span>

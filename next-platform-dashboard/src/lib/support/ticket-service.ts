@@ -97,7 +97,7 @@ export async function getAgencyTickets(options?: {
       site:sites(name),
       assigned:profiles(full_name)
     `,
-      { count: "exact" }
+      { count: "exact" },
     )
     .in("client_id", clientIds)
     .order("created_at", { ascending: false });
@@ -113,7 +113,7 @@ export async function getAgencyTickets(options?: {
   }
   if (options?.search) {
     query = query.or(
-      `subject.ilike.%${options.search}%,ticket_number.ilike.%${options.search}%`
+      `subject.ilike.%${options.search}%,ticket_number.ilike.%${options.search}%`,
     );
   }
   if (options?.limit) {
@@ -138,7 +138,7 @@ export async function getAgencyTickets(options?: {
   messageCounts?.forEach((m) => {
     messageCountMap.set(
       m.ticket_id,
-      (messageCountMap.get(m.ticket_id) || 0) + 1
+      (messageCountMap.get(m.ticket_id) || 0) + 1,
     );
   });
 
@@ -175,7 +175,7 @@ export async function getAgencyTickets(options?: {
  * Get a specific ticket with messages (agency side — no client_id filter)
  */
 export async function getAgencyTicket(
-  ticketId: string
+  ticketId: string,
 ): Promise<AgencyTicketDetail | null> {
   const ctx = await getAgencyContext();
   if (!ctx) return null;
@@ -189,7 +189,7 @@ export async function getAgencyTicket(
       *,
       site:sites(name),
       assigned:profiles(full_name)
-    `
+    `,
     )
     .eq("id", ticketId)
     .single();
@@ -253,7 +253,7 @@ export async function getAgencyTicket(
 export async function replyToTicket(
   ticketId: string,
   message: string,
-  attachments?: { url: string; name: string; type: string }[]
+  attachments?: { url: string; name: string; type: string }[],
 ): Promise<{ success: boolean; error?: string }> {
   const ctx = await getAgencyContext();
   if (!ctx) return { success: false, error: "Not authenticated" };
@@ -330,7 +330,7 @@ export async function replyToTicket(
  */
 export async function updateAgencyTicketStatus(
   ticketId: string,
-  status: "open" | "in_progress" | "resolved" | "closed"
+  status: "open" | "in_progress" | "resolved" | "closed",
 ): Promise<{ success: boolean; error?: string }> {
   const ctx = await getAgencyContext();
   if (!ctx) return { success: false, error: "Not authenticated" };
@@ -399,7 +399,7 @@ export async function updateAgencyTicketStatus(
  */
 export async function assignTicket(
   ticketId: string,
-  assignToUserId: string | null
+  assignToUserId: string | null,
 ): Promise<{ success: boolean; error?: string }> {
   const ctx = await getAgencyContext();
   if (!ctx) return { success: false, error: "Not authenticated" };
@@ -433,8 +433,7 @@ export async function getAgencyTicketStats(): Promise<{
   closed: number;
 }> {
   const ctx = await getAgencyContext();
-  if (!ctx)
-    return { total: 0, open: 0, inProgress: 0, resolved: 0, closed: 0 };
+  if (!ctx) return { total: 0, open: 0, inProgress: 0, resolved: 0, closed: 0 };
 
   const supabase = await createClient();
 

@@ -37,7 +37,12 @@ export interface TicketDetail {
   messages: TicketMessage[];
 }
 
-export type TicketCategory = "general" | "bug" | "feature" | "billing" | "content";
+export type TicketCategory =
+  | "general"
+  | "bug"
+  | "feature"
+  | "billing"
+  | "content";
 export type TicketPriority = "low" | "normal" | "high" | "urgent";
 export type TicketStatus = "open" | "in_progress" | "resolved" | "closed";
 
@@ -49,17 +54,19 @@ export async function getClientTickets(
   options?: {
     status?: TicketStatus | "all";
     limit?: number;
-  }
+  },
 ): Promise<SupportTicket[]> {
   const supabase = await createClient();
 
   let query = supabase
     .from("support_tickets")
-    .select(`
+    .select(
+      `
       *,
       site:sites(name),
       assigned:profiles(full_name)
-    `)
+    `,
+    )
     .eq("client_id", clientId)
     .order("created_at", { ascending: false });
 
@@ -79,15 +86,18 @@ export async function getClientTickets(
   }
 
   // Get message counts for all tickets
-  const ticketIds = data.map(t => t.id);
+  const ticketIds = data.map((t) => t.id);
   const { data: messageCounts } = await supabase
     .from("ticket_messages")
     .select("ticket_id")
     .in("ticket_id", ticketIds);
 
   const messageCountMap = new Map<string, number>();
-  messageCounts?.forEach(m => {
-    messageCountMap.set(m.ticket_id, (messageCountMap.get(m.ticket_id) || 0) + 1);
+  messageCounts?.forEach((m) => {
+    messageCountMap.set(
+      m.ticket_id,
+      (messageCountMap.get(m.ticket_id) || 0) + 1,
+    );
   });
 
   return data.map((t) => ({
@@ -101,7 +111,8 @@ export async function getClientTickets(
     siteId: t.site_id,
     siteName: (t.site as { name: string } | null)?.name || null,
     assignedTo: t.assigned_to,
-    assignedToName: (t.assigned as { full_name: string } | null)?.full_name || null,
+    assignedToName:
+      (t.assigned as { full_name: string } | null)?.full_name || null,
     createdAt: t.created_at,
     updatedAt: t.updated_at,
     resolvedAt: t.resolved_at,
@@ -114,17 +125,19 @@ export async function getClientTickets(
  */
 export async function getTicket(
   ticketId: string,
-  clientId: string
+  clientId: string,
 ): Promise<TicketDetail | null> {
   const supabase = await createClient();
 
   const { data: ticket, error } = await supabase
     .from("support_tickets")
-    .select(`
+    .select(
+      `
       *,
       site:sites(name),
       assigned:profiles(full_name)
-    `)
+    `,
+    )
     .eq("id", ticketId)
     .eq("client_id", clientId)
     .single();
@@ -151,7 +164,8 @@ export async function getTicket(
       siteId: ticket.site_id,
       siteName: (ticket.site as { name: string } | null)?.name || null,
       assignedTo: ticket.assigned_to,
-      assignedToName: (ticket.assigned as { full_name: string } | null)?.full_name || null,
+      assignedToName:
+        (ticket.assigned as { full_name: string } | null)?.full_name || null,
       createdAt: ticket.created_at,
       updatedAt: ticket.updated_at,
       resolvedAt: ticket.resolved_at,
@@ -163,7 +177,8 @@ export async function getTicket(
       senderId: m.sender_id,
       senderName: m.sender_name,
       message: m.message,
-      attachments: (m.attachments as { url: string; name: string; type: string }[]) || [],
+      attachments:
+        (m.attachments as { url: string; name: string; type: string }[]) || [],
       createdAt: m.created_at,
     })),
   };
@@ -181,7 +196,7 @@ export async function createTicket(
     priority?: TicketPriority;
     siteId?: string;
   },
-  clientName: string
+  clientName: string,
 ): Promise<{ success: boolean; ticketId?: string; error?: string }> {
   const supabase = await createClient();
 
@@ -263,7 +278,7 @@ export async function addTicketMessage(
     senderName: string;
     message: string;
     attachments?: { url: string; name: string; type: string }[];
-  }
+  },
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
   const supabase = await createClient();
 
@@ -300,7 +315,7 @@ export async function addTicketMessage(
 export async function updateTicketStatus(
   ticketId: string,
   clientId: string,
-  status: TicketStatus
+  status: TicketStatus,
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
 
@@ -347,6 +362,8 @@ export async function getTicketStats(clientId: string): Promise<{
     total: data.length,
     open: data.filter((t) => t.status === "open").length,
     inProgress: data.filter((t) => t.status === "in_progress").length,
-    resolved: data.filter((t) => t.status === "resolved" || t.status === "closed").length,
+    resolved: data.filter(
+      (t) => t.status === "resolved" || t.status === "closed",
+    ).length,
   };
 }
