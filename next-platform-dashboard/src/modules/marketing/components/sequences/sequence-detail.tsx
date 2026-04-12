@@ -14,6 +14,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Play,
   Pause,
   Archive,
@@ -105,25 +116,30 @@ export function SequenceDetail({
   const [isPending, startTransition] = useTransition();
   const [activeTab, setActiveTab] = useState("overview");
 
-  const seq = sequence as any;
-  const status = (seq.status || "draft") as SequenceStatus;
-  const steps = (seq.steps || []) as SequenceStep[];
+  const seq = sequence as Record<string, unknown>;
+  const status = (String(seq.status || "draft")) as SequenceStatus;
+  const steps = (Array.isArray(seq.steps) ? seq.steps : []) as SequenceStep[];
   const transitions = VALID_SEQUENCE_TRANSITIONS[status] || [];
   const basePath = `/dashboard/sites/${params.siteId}/marketing`;
 
+  const totalEnrolled = Number(seq.total_enrolled) || 0;
+  const totalConverted = Number(seq.total_converted) || 0;
+  const totalCompleted = Number(seq.total_completed) || 0;
   const conversionRate =
-    seq.total_enrolled > 0
-      ? ((seq.total_converted / seq.total_enrolled) * 100).toFixed(1)
+    totalEnrolled > 0
+      ? ((totalConverted / totalEnrolled) * 100).toFixed(1)
       : "0";
 
   function handleStatusChange(newStatus: SequenceStatus) {
     startTransition(async () => {
       try {
-        await updateSequenceStatus(siteId, seq.id, newStatus);
+        await updateSequenceStatus(siteId, String(seq.id), newStatus);
         router.refresh();
         toast.success(`Sequence ${newStatus}`);
-      } catch (err: any) {
-        toast.error(err.message || "Failed to update sequence status");
+      } catch (err: unknown) {
+        toast.error(
+          err instanceof Error ? err.message : "Failed to update sequence status",
+        );
       }
     });
   }
@@ -132,27 +148,27 @@ export function SequenceDetail({
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold tracking-tight">{seq.name}</h1>
+              <h1 className="text-2xl font-bold tracking-tight">{String(seq.name)}</h1>
               <Badge variant="secondary" className={STATUS_COLORS[status]}>
                 {SEQUENCE_STATUS_LABELS[status] || status}
               </Badge>
             </div>
             {seq.description && (
-              <p className="text-muted-foreground mt-1">{seq.description}</p>
+              <p className="text-muted-foreground mt-1">{String(seq.description)}</p>
             )}
             <p className="text-muted-foreground mt-1 text-sm">
-              Trigger: {(seq.trigger_type || "manual").replace(/_/g, " ")}
+              Trigger: {String(seq.trigger_type || "manual").replace(/_/g, " ")}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {status === "draft" && (
               <Button
                 variant="outline"
                 onClick={() =>
-                  router.push(`${basePath}/sequences/${seq.id}/edit`)
+                  router.push(`${basePath}/sequences/${String(seq.id)}/edit`)
                 }
               >
                 <Pencil className="mr-2 h-4 w-4" />
@@ -164,7 +180,38 @@ export function SequenceDetail({
                 icon: null,
                 variant: "outline" as const,
               };
-              return (
+              const isDestructive = t === "archived";
+              return isDestructive ? (
+                <AlertDialog key={t}>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant={config.variant}
+                      disabled={isPending}
+                    >
+                      {config.icon}
+                      {SEQUENCE_STATUS_LABELS[t]}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Archive this sequence?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Archiving will stop all active enrollments and prevent new
+                        subscribers from entering. This can be undone later.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        onClick={() => handleStatusChange(t)}
+                      >
+                        Archive
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              ) : (
                 <Button
                   key={t}
                   variant={config.variant}
@@ -190,7 +237,7 @@ export function SequenceDetail({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{seq.total_enrolled || 0}</p>
+            <p className="text-2xl font-bold">{totalEnrolled}</p>
           </CardContent>
         </Card>
         <Card>
@@ -201,7 +248,7 @@ export function SequenceDetail({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{seq.total_completed || 0}</p>
+            <p className="text-2xl font-bold">{totalCompleted}</p>
           </CardContent>
         </Card>
         <Card>
@@ -212,7 +259,7 @@ export function SequenceDetail({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{seq.total_converted || 0}</p>
+            <p className="text-2xl font-bold">{totalConverted}</p>
           </CardContent>
         </Card>
         <Card>
@@ -326,7 +373,7 @@ export function SequenceDetail({
                     </tr>
                   </thead>
                   <tbody>
-                    {enrollments.map((enrollment: any) => (
+                    {enrollments.map((enrollment) => (
                       <tr
                         key={enrollment.id}
                         className="border-b last:border-0"
@@ -347,9 +394,7 @@ export function SequenceDetail({
                             : "—"}
                         </td>
                         <td className="text-muted-foreground px-4 py-3 text-xs">
-                          {new Date(enrollment.enrolled_at).toLocaleDateString(
-                            "en-ZM",
-                          )}
+                          {new Date(enrollment.enrolled_at).toLocaleDateString()}
                         </td>
                         <td className="px-4 py-3 text-xs">
                           {(enrollment.steps_completed || []).length}

@@ -23,10 +23,17 @@ interface BlockRendererProps {
 export function BlockRenderer({ blocks, className }: BlockRendererProps) {
   if (blocks.length === 0) {
     return (
-      <div className={cn("flex items-center justify-center min-h-100 bg-muted/30 rounded-lg", className)}>
+      <div
+        className={cn(
+          "flex items-center justify-center min-h-100 bg-muted/30 rounded-lg",
+          className,
+        )}
+      >
         <div className="text-center text-muted-foreground">
           <p className="text-lg font-medium">No blocks to preview</p>
-          <p className="text-sm mt-1">Add blocks in the editor to see a live preview</p>
+          <p className="text-sm mt-1">
+            Add blocks in the editor to see a live preview
+          </p>
         </div>
       </div>
     );
@@ -152,7 +159,7 @@ function FeaturesBlock({ content }: { content: Record<string, unknown> }) {
           {heading}
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {items.map((item: any, i: number) => (
+          {items.map((item: Record<string, unknown>, i: number) => (
             <div key={i} className="text-center p-6 rounded-xl border bg-card">
               <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                 <span className="text-primary font-bold text-lg">
@@ -206,7 +213,7 @@ function TestimonialsBlock({ content }: { content: Record<string, unknown> }) {
           {heading}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {items.map((item: any, i: number) => (
+          {items.map((item: Record<string, unknown>, i: number) => (
             <div key={i} className="bg-card rounded-xl p-6 border shadow-sm">
               <div className="text-primary text-3xl mb-4">&ldquo;</div>
               <p className="text-muted-foreground italic mb-4">
@@ -214,7 +221,9 @@ function TestimonialsBlock({ content }: { content: Record<string, unknown> }) {
               </p>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
-                  {String(item.name || "?").charAt(0).toUpperCase()}
+                  {String(item.name || "?")
+                    .charAt(0)
+                    .toUpperCase()}
                 </div>
                 <div>
                   <p className="font-medium text-sm">
@@ -267,9 +276,7 @@ function OptinFormBlock({ content }: { content: Record<string, unknown> }) {
   const heading = String(content.heading || "Subscribe");
   const description = String(content.description || "");
   const buttonText = String(content.buttonText || "Subscribe");
-  const fields = Array.isArray(content.fields)
-    ? content.fields
-    : ["email"];
+  const fields = Array.isArray(content.fields) ? content.fields : ["email"];
 
   const fieldLabels: Record<string, string> = {
     email: "Email Address",
@@ -290,7 +297,7 @@ function OptinFormBlock({ content }: { content: Record<string, unknown> }) {
             </p>
           )}
           <div className="space-y-4">
-            {fields.map((field: any) => {
+            {fields.map((field: unknown) => {
               const name = String(field);
               return (
                 <div key={name}>
@@ -362,7 +369,11 @@ function VideoBlock({ content }: { content: Record<string, unknown> }) {
 function getEmbedUrl(url: string, type: string): string | null {
   if (!url) return null;
 
-  if (type === "youtube" || url.includes("youtube.com") || url.includes("youtu.be")) {
+  if (
+    type === "youtube" ||
+    url.includes("youtube.com") ||
+    url.includes("youtu.be")
+  ) {
     const match = url.match(
       /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]+)/,
     );
@@ -401,15 +412,15 @@ function GalleryBlock({ content }: { content: Record<string, unknown> }) {
               gridTemplateColumns: `repeat(${Math.min(columns, 4)}, minmax(0, 1fr))`,
             }}
           >
-            {images.map((img: any, i: number) => (
+            {images.map((img: Record<string, unknown> | string, i: number) => (
               <div
                 key={i}
                 className="aspect-square rounded-lg overflow-hidden border bg-muted"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={String(img.url || img)}
-                  alt={String(img.alt || `Image ${i + 1}`)}
+                  src={String(typeof img === "string" ? img : img.url || "")}
+                  alt={String(typeof img === "string" ? `Image ${i + 1}` : img.alt || `Image ${i + 1}`)}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -514,7 +525,7 @@ function FAQBlock({ content }: { content: Record<string, unknown> }) {
           {heading}
         </h2>
         <div className="space-y-3">
-          {items.map((item: any, i: number) => (
+          {items.map((item: Record<string, unknown>, i: number) => (
             <div key={i} className="border rounded-lg overflow-hidden">
               <button
                 className="flex items-center justify-between w-full p-4 text-left hover:bg-muted/50 transition-colors"
@@ -574,7 +585,7 @@ function PricingBlock({ content }: { content: Record<string, unknown> }) {
                 : "grid-cols-1 md:grid-cols-3",
           )}
         >
-          {plans.map((plan: any, i: number) => {
+          {plans.map((plan: Record<string, unknown>, i: number) => {
             const highlighted = plan.highlighted === true;
             return (
               <div
@@ -599,11 +610,8 @@ function PricingBlock({ content }: { content: Record<string, unknown> }) {
                 </p>
                 <ul className="space-y-3 flex-1">
                   {(Array.isArray(plan.features) ? plan.features : []).map(
-                    (feat: any, fi: number) => (
-                      <li
-                        key={fi}
-                        className="flex items-start gap-2 text-sm"
-                      >
+                    (feat: unknown, fi: number) => (
+                      <li key={fi} className="flex items-start gap-2 text-sm">
                         <span className="text-primary mt-0.5">✓</span>
                         <span>{String(feat)}</span>
                       </li>
@@ -642,7 +650,7 @@ function SocialProofBlock({ content }: { content: Record<string, unknown> }) {
       <div className="max-w-4xl mx-auto text-center">
         <h2 className="text-2xl md:text-3xl font-bold mb-10">{heading}</h2>
         <div className="flex flex-wrap items-center justify-center gap-8 md:gap-16">
-          {stats.map((stat: any, i: number) => (
+          {stats.map((stat: Record<string, unknown>, i: number) => (
             <div key={i} className="flex flex-col items-center">
               <span className="text-3xl md:text-4xl font-bold text-primary">
                 {String(stat.value || "0")}
@@ -706,7 +714,9 @@ function ImageBlock({ content }: { content: Record<string, unknown> }) {
           </figure>
         ) : (
           <div className="aspect-video rounded-xl bg-muted/50 border flex items-center justify-center">
-            <span className="text-muted-foreground text-sm">Image placeholder</span>
+            <span className="text-muted-foreground text-sm">
+              Image placeholder
+            </span>
           </div>
         )}
       </div>

@@ -360,10 +360,7 @@ export async function getSiteModuleCounts(
   }
 
   // Marketing
-  if (
-    installedSlugs.includes("marketing") &&
-    permissions.canManageMarketing
-  ) {
+  if (installedSlugs.includes("marketing") && permissions.canManageMarketing) {
     promises.push(
       fetchMarketingStats(siteId).then((data) => {
         results.push({

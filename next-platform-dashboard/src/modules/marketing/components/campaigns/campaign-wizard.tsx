@@ -134,7 +134,7 @@ export function CampaignWizard({ siteId }: CampaignWizardProps) {
         });
 
         if (sendImmediately) {
-          const result = await sendCampaignNow(siteId, (campaign as any).id);
+          const result = await sendCampaignNow(siteId, (campaign as Record<string, unknown>).id as string);
           if (!result.success) {
             setError(result.error || "Failed to send campaign");
             return;
@@ -144,11 +144,13 @@ export function CampaignWizard({ siteId }: CampaignWizardProps) {
           toast.success("Campaign saved as draft");
         }
 
+        const campaignId = (campaign as Record<string, unknown>).id as string;
         router.push(
-          `/dashboard/sites/${siteId}/marketing/campaigns/${(campaign as any).id}`,
+          `/dashboard/sites/${siteId}/marketing/campaigns/${campaignId}`,
         );
-      } catch (err: any) {
-        setError(err.message || "Failed to create campaign");
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Failed to create campaign";
+        setError(msg);
       }
     });
   }
@@ -511,10 +513,13 @@ export function CampaignWizard({ siteId }: CampaignWizardProps) {
                   <p className="text-xs font-medium text-muted-foreground mb-2">
                     Content Preview
                   </p>
-                  <div className="border rounded-lg p-4 bg-white text-black max-h-48 overflow-y-auto">
-                    <div
-                      dangerouslySetInnerHTML={{ __html: contentHtml }}
-                      className="prose prose-sm max-w-none **:text-black!"
+                  <div className="border rounded-lg bg-white overflow-hidden">
+                    <iframe
+                      srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;padding:16px;font-family:system-ui,sans-serif;font-size:14px;color:#333;}</style></head><body>${contentHtml}</body></html>`}
+                      sandbox=""
+                      title="Email content preview"
+                      className="w-full h-48 border-0"
+                      loading="lazy"
                     />
                   </div>
                 </div>

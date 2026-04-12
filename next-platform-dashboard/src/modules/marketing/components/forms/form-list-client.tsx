@@ -90,8 +90,8 @@ export function FormListClient({
       await deleteForm(id);
       router.refresh();
       toast.success("Form deleted");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to delete form");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete form");
     }
   }
 
@@ -231,7 +231,7 @@ export function FormListClient({
 
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Form actions">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>

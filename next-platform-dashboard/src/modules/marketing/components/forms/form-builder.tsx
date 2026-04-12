@@ -424,6 +424,7 @@ export function FormBuilder({ siteId, form, defaultTab }: FormBuilderProps) {
                         className="h-7 w-7"
                         onClick={() => moveField(index, "up")}
                         disabled={index === 0}
+                        aria-label="Move field up"
                       >
                         <ChevronUp className="h-3 w-3" />
                       </Button>
@@ -433,6 +434,7 @@ export function FormBuilder({ siteId, form, defaultTab }: FormBuilderProps) {
                         className="h-7 w-7"
                         onClick={() => moveField(index, "down")}
                         disabled={index === fields.length - 1}
+                        aria-label="Move field down"
                       >
                         <ChevronDown className="h-3 w-3" />
                       </Button>
@@ -441,6 +443,7 @@ export function FormBuilder({ siteId, form, defaultTab }: FormBuilderProps) {
                         size="icon"
                         className="h-7 w-7 text-destructive"
                         onClick={() => removeField(field.id)}
+                        aria-label="Remove field"
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>

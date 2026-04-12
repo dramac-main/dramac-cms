@@ -39,9 +39,7 @@ async function SMSCampaignsList({
         <div className="flex items-center gap-3">
           <MessageSquare className="h-6 w-6 text-primary" />
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              SMS Campaigns
-            </h1>
+            <h1 className="text-2xl font-bold tracking-tight">SMS Campaigns</h1>
             <p className="text-muted-foreground text-sm">
               Create and manage text message marketing campaigns
             </p>
@@ -88,8 +86,7 @@ async function SMSCampaignsList({
           <CardContent>
             <div className="space-y-3">
               {campaigns.map((campaign: any) => {
-                const status =
-                  (campaign.status as CampaignStatus) || "draft";
+                const status = (campaign.status as CampaignStatus) || "draft";
                 const config = CAMPAIGN_STATUS_CONFIG[status];
                 return (
                   <Link

@@ -143,6 +143,7 @@ export function ContentCalendar({ siteId }: ContentCalendarProps) {
               variant="outline"
               size="icon"
               onClick={() => navigateMonth(-1)}
+              aria-label="Previous month"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -157,6 +158,7 @@ export function ContentCalendar({ siteId }: ContentCalendarProps) {
               variant="outline"
               size="icon"
               onClick={() => navigateMonth(1)}
+              aria-label="Next month"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>

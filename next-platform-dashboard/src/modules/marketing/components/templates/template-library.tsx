@@ -37,6 +37,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Plus,
   Search,
   FileText,
@@ -80,12 +91,12 @@ export function TemplateLibrary({ siteId, templates }: TemplateLibraryProps) {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [previewTemplate, setPreviewTemplate] = useState<any | null>(null);
+  const [previewTemplate, setPreviewTemplate] = useState<EmailTemplate | null>(null);
 
   const basePath = `/dashboard/sites/${params.siteId}/marketing`;
 
   // Client-side filtering
-  const filtered = templates.filter((t: any) => {
+  const filtered = templates.filter((t) => {
     if (categoryFilter !== "all" && t.category !== categoryFilter) return false;
     if (
       search &&
@@ -102,21 +113,24 @@ export function TemplateLibrary({ siteId, templates }: TemplateLibraryProps) {
         await duplicateTemplate(siteId, templateId);
         router.refresh();
         toast.success("Template duplicated");
-      } catch (err: any) {
-        toast.error(err.message || "Failed to duplicate template");
+      } catch (err: unknown) {
+        toast.error(
+          err instanceof Error ? err.message : "Failed to duplicate template",
+        );
       }
     });
   }
 
-  function handleDelete(templateId: string, name: string) {
-    if (!confirm(`Delete template "${name}"?`)) return;
+  function handleDelete(templateId: string) {
     startTransition(async () => {
       try {
         await deleteTemplate(siteId, templateId);
         router.refresh();
         toast.success("Template deleted");
-      } catch (err: any) {
-        toast.error(err.message || "Failed to delete template");
+      } catch (err: unknown) {
+        toast.error(
+          err instanceof Error ? err.message : "Failed to delete template",
+        );
       }
     });
   }
@@ -197,7 +211,7 @@ export function TemplateLibrary({ siteId, templates }: TemplateLibraryProps) {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((template: any) => (
+          {filtered.map((template) => (
             <Card
               key={template.id}
               className="group overflow-hidden transition-shadow hover:shadow-md"
@@ -205,12 +219,12 @@ export function TemplateLibrary({ siteId, templates }: TemplateLibraryProps) {
               {/* Preview Thumbnail */}
               <div className="bg-muted relative h-36 overflow-hidden">
                 {template.content_html ? (
-                  <div
-                    className="pointer-events-none h-full w-full origin-top-left scale-[0.25] overflow-hidden"
+                  <iframe
+                    srcDoc={template.content_html}
+                    sandbox=""
+                    title={`Preview of ${template.name}`}
+                    className="pointer-events-none h-full w-full origin-top-left scale-[0.25]"
                     style={{ width: "400%", height: "400%" }}
-                    dangerouslySetInnerHTML={{
-                      __html: template.content_html,
-                    }}
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center">
@@ -251,6 +265,7 @@ export function TemplateLibrary({ siteId, templates }: TemplateLibraryProps) {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 shrink-0"
+                        aria-label={`Actions for ${template.name}`}
                       >
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
@@ -272,16 +287,38 @@ export function TemplateLibrary({ siteId, templates }: TemplateLibraryProps) {
                       {!template.is_system && (
                         <>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() =>
-                              handleDelete(template.id, template.name)
-                            }
-                            disabled={isPending}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onSelect={(e) => e.preventDefault()}
+                                disabled={isPending}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  Delete &ldquo;{template.name}&rdquo;?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This will permanently delete this email template.
+                                  Campaigns using it will not be affected.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  onClick={() => handleDelete(template.id)}
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </>
                       )}
                     </DropdownMenuContent>
@@ -321,11 +358,11 @@ export function TemplateLibrary({ siteId, templates }: TemplateLibraryProps) {
             <DialogTitle>{previewTemplate?.name}</DialogTitle>
           </DialogHeader>
           {previewTemplate?.content_html ? (
-            <div
-              className="rounded border p-4"
-              dangerouslySetInnerHTML={{
-                __html: previewTemplate.content_html,
-              }}
+            <iframe
+              srcDoc={previewTemplate.content_html}
+              sandbox=""
+              title={`Full preview of ${previewTemplate.name}`}
+              className="h-[60vh] w-full rounded border"
             />
           ) : (
             <div className="flex items-center justify-center py-12">
@@ -373,8 +410,10 @@ function CreateTemplateForm({
           contentJson: {},
         });
         onSuccess();
-      } catch (err: any) {
-        toast.error(err.message || "Failed to create template");
+      } catch (err: unknown) {
+        toast.error(
+          err instanceof Error ? err.message : "Failed to create template",
+        );
       }
     });
   }

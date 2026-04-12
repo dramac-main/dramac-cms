@@ -19,6 +19,7 @@ import {
   Eye,
   Send,
   Plus,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   CAMPAIGN_STATUS_CONFIG,
   CAMPAIGN_STATUS_LABELS,
@@ -87,8 +105,9 @@ export function CampaignListClient({
       await duplicateCampaign(siteId, campaignId);
       router.refresh();
       toast.success("Campaign duplicated");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to duplicate campaign");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to duplicate campaign";
+      toast.error(msg);
     }
   }
 
@@ -97,8 +116,9 @@ export function CampaignListClient({
       await deleteCampaign(siteId, campaignId);
       router.refresh();
       toast.success("Campaign deleted");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to delete campaign");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to delete campaign";
+      toast.error(msg);
     }
   }
 
@@ -175,9 +195,12 @@ export function CampaignListClient({
         </Card>
       ) : (
         <div className="space-y-2">
-          {campaigns.map((campaign: any) => {
+          {campaigns.map((campaign) => {
             const status = (campaign.status as CampaignStatus) || "draft";
             const config = CAMPAIGN_STATUS_CONFIG[status];
+            const c = campaign as Record<string, unknown>;
+            const totalSent = Number(c.total_sent) || 0;
+            const totalOpened = Number(c.total_opened) || 0;
             return (
               <Card
                 key={campaign.id}
@@ -188,29 +211,38 @@ export function CampaignListClient({
                     href={`${basePath}/${campaign.id}`}
                     className="flex-1 min-w-0"
                   >
-                    <div className="flex items-center gap-3">
-                      <Mail className="h-5 w-5 text-muted-foreground shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {campaign.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {campaign.subject_line || "No subject line"}
-                        </p>
+                    <TooltipProvider>
+                      <div className="flex items-center gap-3">
+                        <Mail className="h-5 w-5 text-muted-foreground shrink-0" />
+                        <div className="min-w-0">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <p className="text-sm font-medium truncate">
+                                {campaign.name}
+                              </p>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" align="start">
+                              {campaign.name}
+                            </TooltipContent>
+                          </Tooltip>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {String(c.subject_line || "No subject line")}
+                          </p>
+                        </div>
                       </div>
-                    </div>
+                    </TooltipProvider>
                   </Link>
 
                   <div className="flex items-center gap-3 ml-4">
-                    {(campaign.total_sent || 0) > 0 && (
+                    {totalSent > 0 && (
                       <div className="text-right hidden md:block">
                         <p className="text-xs text-muted-foreground">
                           <Send className="inline h-3 w-3 mr-1" />
-                          {campaign.total_sent?.toLocaleString()} sent
+                          {totalSent.toLocaleString()} sent
                         </p>
                         <p className="text-xs text-muted-foreground">
                           <Eye className="inline h-3 w-3 mr-1" />
-                          {campaign.total_opened?.toLocaleString()} opened
+                          {totalOpened.toLocaleString()} opened
                         </p>
                       </div>
                     )}
@@ -224,7 +256,12 @@ export function CampaignListClient({
 
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          aria-label={`Actions for ${campaign.name}`}
+                        >
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -242,13 +279,37 @@ export function CampaignListClient({
                           Duplicate
                         </DropdownMenuItem>
                         {status === "draft" && (
-                          <DropdownMenuItem
-                            onClick={() => handleDelete(campaign.id)}
-                            className="text-destructive"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onSelect={(e) => e.preventDefault()}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  Delete &ldquo;{campaign.name}&rdquo;?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This will permanently delete this draft campaign.
+                                  This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDelete(campaign.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         )}
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -272,9 +333,12 @@ export function CampaignListClient({
               if (currentStatus) params.set("status", currentStatus);
               if (currentSearch) params.set("search", currentSearch);
               params.set("page", String(currentPage - 1));
-              router.push(`${basePath}?${params.toString()}`);
+              startTransition(() => {
+                router.push(`${basePath}?${params.toString()}`);
+              });
             }}
           >
+            {isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
             Previous
           </Button>
           <span className="text-sm text-muted-foreground">
@@ -289,10 +353,13 @@ export function CampaignListClient({
               if (currentStatus) params.set("status", currentStatus);
               if (currentSearch) params.set("search", currentSearch);
               params.set("page", String(currentPage + 1));
-              router.push(`${basePath}?${params.toString()}`);
+              startTransition(() => {
+                router.push(`${basePath}?${params.toString()}`);
+              });
             }}
           >
             Next
+            {isPending ? <Loader2 className="h-3 w-3 animate-spin ml-1" /> : null}
           </Button>
         </div>
       )}

@@ -93,8 +93,8 @@ export function SMSWhatsAppSettings({ siteId }: SMSWhatsAppSettingsProps) {
         } else {
           setError(result.error || "Failed to save SMS settings");
         }
-      } catch (err: any) {
-        setError(err.message || "Failed to save SMS settings");
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Failed to save SMS settings");
       }
     });
   }
@@ -116,8 +116,8 @@ export function SMSWhatsAppSettings({ siteId }: SMSWhatsAppSettingsProps) {
         } else {
           setError(result.error || "Failed to save WhatsApp settings");
         }
-      } catch (err: any) {
-        setError(err.message || "Failed to save WhatsApp settings");
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Failed to save WhatsApp settings");
       }
     });
   }
@@ -209,6 +209,7 @@ export function SMSWhatsAppSettings({ siteId }: SMSWhatsAppSettingsProps) {
                     size="icon"
                     className="absolute right-1 top-1 h-7 w-7"
                     onClick={() => setShowSmsToken(!showSmsToken)}
+                    aria-label={showSmsToken ? "Hide token" : "Show token"}
                   >
                     {showSmsToken ? (
                       <EyeOff className="h-4 w-4" />
@@ -297,6 +298,7 @@ export function SMSWhatsAppSettings({ siteId }: SMSWhatsAppSettingsProps) {
                     size="icon"
                     className="absolute right-1 top-1 h-7 w-7"
                     onClick={() => setShowWaToken(!showWaToken)}
+                    aria-label={showWaToken ? "Hide token" : "Show token"}
                   >
                     {showWaToken ? (
                       <EyeOff className="h-4 w-4" />

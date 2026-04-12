@@ -28,6 +28,23 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Plus,
   Search,
   GitBranch,
@@ -40,6 +57,7 @@ import {
   Users,
   Mail,
   Clock,
+  Loader2,
 } from "lucide-react";
 import {
   SEQUENCE_STATUS_LABELS,
@@ -49,7 +67,7 @@ import {
   deleteSequence,
   updateSequenceStatus,
 } from "../../actions/sequence-actions";
-import type { Sequence, SequenceStatus } from "../../types/sequence-types";
+import type { Sequence, SequenceStatus, SequenceStep } from "../../types/sequence-types";
 
 interface SequenceListClientProps {
   siteId: string;
@@ -73,17 +91,17 @@ const STATUS_ACTION_ICONS: Record<string, React.ReactNode> = {
   draft: <GitBranch className="mr-2 h-4 w-4" />,
 };
 
-function getStepSummary(seq: any): {
+function getStepSummary(steps: SequenceStep[] | undefined): {
   emails: number;
   delays: number;
   conditions: number;
 } {
-  const steps = seq.steps || [];
+  const list = steps || [];
   return {
-    emails: steps.filter((s: any) => s.type === "email").length,
-    delays: steps.filter((s: any) => s.type === "delay").length,
-    conditions: steps.filter(
-      (s: any) => s.type === "condition" || s.type === "split",
+    emails: list.filter((s) => s.type === "email").length,
+    delays: list.filter((s) => s.type === "delay").length,
+    conditions: list.filter(
+      (s) => s.type === "condition" || s.type === "split",
     ).length,
   };
 }
@@ -128,21 +146,24 @@ export function SequenceListClient({
         await updateSequenceStatus(siteId, sequenceId, newStatus);
         router.refresh();
         toast.success(`Sequence ${newStatus}`);
-      } catch (err: any) {
-        toast.error(err.message || "Failed to update sequence status");
+      } catch (err: unknown) {
+        toast.error(
+          err instanceof Error ? err.message : "Failed to update sequence status",
+        );
       }
     });
   }
 
-  function handleDelete(sequenceId: string, name: string) {
-    if (!confirm(`Delete sequence "${name}"? This cannot be undone.`)) return;
+  function handleDelete(sequenceId: string) {
     startTransition(async () => {
       try {
         await deleteSequence(siteId, sequenceId);
         router.refresh();
         toast.success("Sequence deleted");
-      } catch (err: any) {
-        toast.error(err.message || "Failed to delete sequence");
+      } catch (err: unknown) {
+        toast.error(
+          err instanceof Error ? err.message : "Failed to delete sequence",
+        );
       }
     });
   }
@@ -209,8 +230,8 @@ export function SequenceListClient({
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {sequences.map((seq: any) => {
-            const summary = getStepSummary(seq);
+          {sequences.map((seq) => {
+            const summary = getStepSummary(seq.steps as SequenceStep[] | undefined);
             const status = (seq.status || "draft") as SequenceStatus;
             const transitions = VALID_SEQUENCE_TRANSITIONS[status] || [];
 
@@ -223,9 +244,18 @@ export function SequenceListClient({
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
                     <div className="min-w-0 flex-1">
-                      <CardTitle className="truncate text-base">
-                        {seq.name}
-                      </CardTitle>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <CardTitle className="truncate text-base">
+                              {seq.name}
+                            </CardTitle>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{seq.name}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                       {seq.description && (
                         <CardDescription className="mt-1 line-clamp-2">
                           {seq.description}
@@ -239,6 +269,7 @@ export function SequenceListClient({
                           size="icon"
                           className="h-8 w-8 shrink-0"
                           onClick={(e) => e.stopPropagation()}
+                          aria-label={`Actions for ${seq.name}`}
                         >
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
@@ -269,17 +300,41 @@ export function SequenceListClient({
                         {status === "draft" && (
                           <>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              className="text-destructive"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelete(seq.id, seq.name);
-                              }}
-                              disabled={isPending}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem
+                                  className="text-destructive"
+                                  onSelect={(e) => e.preventDefault()}
+                                  disabled={isPending}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>
+                                    Delete &ldquo;{seq.name}&rdquo;?
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will permanently delete the sequence and
+                                    all its steps. This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDelete(seq.id);
+                                    }}
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </>
                         )}
                       </DropdownMenuContent>
@@ -345,16 +400,19 @@ export function SequenceListClient({
           <Button
             variant="outline"
             size="sm"
-            disabled={page <= 1}
+            disabled={page <= 1 || isPending}
             onClick={() => {
-              const searchParams = new URLSearchParams();
-              if (search) searchParams.set("search", search);
-              if (statusFilter !== "all")
-                searchParams.set("status", statusFilter);
-              searchParams.set("page", String(page - 1));
-              router.push(`${basePath}?${searchParams.toString()}`);
+              startTransition(() => {
+                const searchParams = new URLSearchParams();
+                if (search) searchParams.set("search", search);
+                if (statusFilter !== "all")
+                  searchParams.set("status", statusFilter);
+                searchParams.set("page", String(page - 1));
+                router.push(`${basePath}?${searchParams.toString()}`);
+              });
             }}
           >
+            {isPending ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : null}
             Previous
           </Button>
           <span className="text-muted-foreground text-sm">
@@ -363,17 +421,20 @@ export function SequenceListClient({
           <Button
             variant="outline"
             size="sm"
-            disabled={page >= totalPages}
+            disabled={page >= totalPages || isPending}
             onClick={() => {
-              const searchParams = new URLSearchParams();
-              if (search) searchParams.set("search", search);
-              if (statusFilter !== "all")
-                searchParams.set("status", statusFilter);
-              searchParams.set("page", String(page + 1));
-              router.push(`${basePath}?${searchParams.toString()}`);
+              startTransition(() => {
+                const searchParams = new URLSearchParams();
+                if (search) searchParams.set("search", search);
+                if (statusFilter !== "all")
+                  searchParams.set("status", statusFilter);
+                searchParams.set("page", String(page + 1));
+                router.push(`${basePath}?${searchParams.toString()}`);
+              });
             }}
           >
             Next
+            {isPending ? <Loader2 className="ml-1 h-3 w-3 animate-spin" /> : null}
           </Button>
         </div>
       )}

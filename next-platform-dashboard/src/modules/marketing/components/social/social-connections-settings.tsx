@@ -127,8 +127,8 @@ export function SocialConnectionsSettings({
         );
         resetAddForm();
         router.refresh();
-      } catch (err: any) {
-        toast.error(err.message || "Failed to add connection");
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : "Failed to add connection");
       }
     });
   }
@@ -140,8 +140,8 @@ export function SocialConnectionsSettings({
         toast.success("Connection disconnected");
         setDisconnectId(null);
         router.refresh();
-      } catch (err: any) {
-        toast.error(err.message || "Failed to disconnect");
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : "Failed to disconnect");
       }
     });
   }
@@ -152,8 +152,8 @@ export function SocialConnectionsSettings({
         await deleteSocialConnection(connectionId, siteId);
         toast.success("Connection removed");
         router.refresh();
-      } catch (err: any) {
-        toast.error(err.message || "Failed to remove connection");
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : "Failed to remove connection");
       }
     });
   }

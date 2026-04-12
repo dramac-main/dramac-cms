@@ -472,9 +472,7 @@ export default async function PortalDashboard() {
                     <p className="text-3xl font-bold">
                       {dashboardData.marketing.activeSubscribers}
                     </p>
-                    <p className="text-sm text-muted-foreground">
-                      subscribers
-                    </p>
+                    <p className="text-sm text-muted-foreground">subscribers</p>
                   </div>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
                     <div className="flex justify-between col-span-2">

@@ -51,7 +51,7 @@ import type {
 
 interface SequenceBuilderProps {
   siteId: string;
-  existingSequence?: any; // For edit mode
+  existingSequence?: Record<string, unknown>; // For edit mode
 }
 
 const TRIGGER_LABELS: Record<SequenceTriggerType, string> = {
@@ -223,7 +223,7 @@ export function SequenceBuilder({
     startTransition(async () => {
       try {
         if (isEdit) {
-          await updateSequence(siteId, existingSequence.id, {
+          await updateSequence(siteId, existingSequence!.id as string, {
             name,
             description: description || undefined,
             triggerType,
@@ -250,8 +250,10 @@ export function SequenceBuilder({
         router.push(basePath);
         router.refresh();
         toast.success(isEdit ? "Sequence updated" : "Sequence created");
-      } catch (err: any) {
-        toast.error(err.message || "Failed to save sequence");
+      } catch (err: unknown) {
+        toast.error(
+          err instanceof Error ? err.message : "Failed to save sequence",
+        );
       }
     });
   }
@@ -517,7 +519,7 @@ export function SequenceBuilder({
                   >
                     {/* Step Header */}
                     <div className="flex items-center gap-2">
-                      <GripVertical className="text-muted-foreground h-4 w-4 shrink-0 cursor-grab" />
+                      <GripVertical className="text-muted-foreground h-4 w-4 shrink-0 cursor-grab" aria-hidden="true" />
                       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white dark:bg-muted shadow-sm">
                         {STEP_ICONS[step.type]}
                       </div>
@@ -537,6 +539,7 @@ export function SequenceBuilder({
                           className="h-7 w-7"
                           onClick={() => moveStep(step.id, "up")}
                           disabled={index === 0}
+                          aria-label="Move step up"
                         >
                           <ChevronUp className="h-3 w-3" />
                         </Button>
@@ -546,6 +549,7 @@ export function SequenceBuilder({
                           className="h-7 w-7"
                           onClick={() => moveStep(step.id, "down")}
                           disabled={index === steps.length - 1}
+                          aria-label="Move step down"
                         >
                           <ChevronDown className="h-3 w-3" />
                         </Button>
@@ -556,6 +560,7 @@ export function SequenceBuilder({
                           onClick={() =>
                             setExpandedStep(isExpanded ? null : step.id)
                           }
+                          aria-label={isExpanded ? "Collapse step" : "Expand step"}
                         >
                           {isExpanded ? (
                             <ChevronUp className="h-3 w-3" />
@@ -568,6 +573,7 @@ export function SequenceBuilder({
                           size="icon"
                           className="text-destructive h-7 w-7"
                           onClick={() => removeStep(step.id)}
+                          aria-label="Remove step"
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>

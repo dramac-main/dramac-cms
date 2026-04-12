@@ -36,6 +36,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Plus,
   Search,
   Users,
@@ -66,6 +77,7 @@ import type {
   Subscriber,
   SubscriberStatus,
   MailingList,
+  ListType,
 } from "../../types/campaign-types";
 
 interface SubscriberManagerProps {
@@ -123,29 +135,30 @@ export function SubscriberManager({
     router.push(`${basePath}/subscribers?${searchParams.toString()}`);
   }
 
-  function handleDelete(id: string, email: string) {
-    if (!confirm(`Delete subscriber "${email}"? This cannot be undone.`))
-      return;
+  function handleDelete(id: string) {
     startTransition(async () => {
       try {
         await deleteSubscriber(siteId, id);
         router.refresh();
         toast.success("Subscriber deleted");
-      } catch (err: any) {
-        toast.error(err.message || "Failed to delete subscriber");
+      } catch (err: unknown) {
+        toast.error(
+          err instanceof Error ? err.message : "Failed to delete subscriber",
+        );
       }
     });
   }
 
-  function handleDeleteList(id: string, name: string) {
-    if (!confirm(`Delete list "${name}"?`)) return;
+  function handleDeleteList(id: string) {
     startTransition(async () => {
       try {
         await deleteMailingList(siteId, id);
         router.refresh();
         toast.success("Mailing list deleted");
-      } catch (err: any) {
-        toast.error(err.message || "Failed to delete mailing list");
+      } catch (err: unknown) {
+        toast.error(
+          err instanceof Error ? err.message : "Failed to delete mailing list",
+        );
       }
     });
   }
@@ -283,7 +296,7 @@ export function SubscriberManager({
                     </tr>
                   </thead>
                   <tbody>
-                    {subscribers.map((sub: any) => (
+                    {subscribers.map((sub) => (
                       <tr
                         key={sub.id}
                         className="border-b last:border-0 hover:bg-muted/50"
@@ -343,7 +356,7 @@ export function SubscriberManager({
                           </div>
                         </td>
                         <td className="text-muted-foreground px-4 py-3 text-xs">
-                          {new Date(sub.created_at).toLocaleDateString("en-ZM")}
+                          {new Date(sub.created_at).toLocaleDateString()}
                         </td>
                         <td className="px-4 py-3">
                           <DropdownMenu>
@@ -352,6 +365,7 @@ export function SubscriberManager({
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8"
+                                aria-label={`Actions for ${sub.email}`}
                               >
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
@@ -365,14 +379,38 @@ export function SubscriberManager({
                                 <Tag className="mr-2 h-4 w-4" />
                                 Manage Tags
                               </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-destructive"
-                                onClick={() => handleDelete(sub.id, sub.email)}
-                                disabled={isPending}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <DropdownMenuItem
+                                    className="text-destructive"
+                                    onSelect={(e) => e.preventDefault()}
+                                    disabled={isPending}
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                      Delete subscriber?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This will permanently remove &ldquo;{sub.email}&rdquo;
+                                      and all their engagement data. This cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      onClick={() => handleDelete(sub.id)}
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </td>
@@ -460,7 +498,7 @@ export function SubscriberManager({
             </Card>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {mailingLists.map((list: any) => (
+              {mailingLists.map((list) => (
                 <Card key={list.id}>
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between">
@@ -478,19 +516,44 @@ export function SubscriberManager({
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
+                            aria-label={`Actions for ${list.name}`}
                           >
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() => handleDeleteList(list.id, list.name)}
-                            disabled={isPending}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onSelect={(e) => e.preventDefault()}
+                                disabled={isPending}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  Delete &ldquo;{list.name}&rdquo;?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This will permanently delete this mailing list.
+                                  Subscribers will not be removed.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  onClick={() => handleDeleteList(list.id)}
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -557,8 +620,10 @@ function AddSubscriberForm({
             : undefined,
         });
         onSuccess();
-      } catch (err: any) {
-        toast.error(err.message || "Failed to add subscriber");
+      } catch (err: unknown) {
+        toast.error(
+          err instanceof Error ? err.message : "Failed to add subscriber",
+        );
       }
     });
   }
@@ -687,8 +752,10 @@ function ImportForm({
       try {
         const res = await bulkImportSubscribers(siteId, records);
         setResult(res);
-      } catch (err: any) {
-        toast.error(err.message || "Failed to import subscribers");
+      } catch (err: unknown) {
+        toast.error(
+          err instanceof Error ? err.message : "Failed to import subscribers",
+        );
       }
     });
   }
@@ -758,11 +825,13 @@ function CreateListForm({
         await createMailingList(siteId, {
           name,
           description: description || undefined,
-          type: type as any,
+          type: type as ListType,
         });
         onSuccess();
-      } catch (err: any) {
-        toast.error(err.message || "Failed to create mailing list");
+      } catch (err: unknown) {
+        toast.error(
+          err instanceof Error ? err.message : "Failed to create mailing list",
+        );
       }
     });
   }

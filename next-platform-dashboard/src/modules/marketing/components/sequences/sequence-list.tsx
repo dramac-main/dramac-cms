@@ -5,6 +5,7 @@
  */
 import { getSequences } from "../../actions/sequence-actions";
 import { SequenceListClient } from "./sequence-list-client";
+import type { SequenceStatus } from "../../types";
 
 interface SequenceListProps {
   siteId: string;
@@ -17,7 +18,7 @@ export async function SequenceList({ siteId, filters }: SequenceListProps) {
   const offset = (page - 1) * limit;
 
   const { sequences, total } = await getSequences(siteId, {
-    status: filters?.status as any,
+    status: (filters?.status || undefined) as SequenceStatus | undefined,
     search: filters?.search || undefined,
     limit,
     offset,

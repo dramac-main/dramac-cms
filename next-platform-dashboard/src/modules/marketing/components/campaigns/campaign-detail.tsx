@@ -4,10 +4,11 @@
  *
  * Displays campaign info, status actions, and performance metrics.
  * Status-aware: draft shows edit, sent shows analytics.
+ * Secure: email preview uses sandboxed iframe to prevent XSS.
  */
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -21,15 +22,25 @@ import {
   Pause,
   Archive,
   Copy,
-  Edit,
   Users,
   Mail,
   BarChart3,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   CAMPAIGN_STATUS_CONFIG,
   VALID_CAMPAIGN_TRANSITIONS,
@@ -80,19 +91,19 @@ export function CampaignDetail({ siteId, campaign }: CampaignDetailProps) {
   const [isPending, startTransition] = useTransition();
   const [activeTab, setActiveTab] = useState("overview");
 
-  // Access snake_case properties at runtime
-  const c = campaign as any;
+  // Campaign fields - safe access with typed defaults
+  const c = campaign as Record<string, unknown>;
   const status = (c.status as CampaignStatus) || "draft";
   const config = CAMPAIGN_STATUS_CONFIG[status];
   const validTransitions = VALID_CAMPAIGN_TRANSITIONS[status] || [];
   const basePath = `/dashboard/sites/${siteId}/marketing/campaigns`;
 
-  const totalSent = c.total_sent || 0;
-  const totalDelivered = c.total_delivered || 0;
-  const totalOpened = c.total_opened || 0;
-  const totalClicked = c.total_clicked || 0;
-  const totalBounced = c.total_bounced || 0;
-  const totalUnsubscribed = c.total_unsubscribed || 0;
+  const totalSent = Number(c.total_sent) || 0;
+  const totalDelivered = Number(c.total_delivered) || 0;
+  const totalOpened = Number(c.total_opened) || 0;
+  const totalClicked = Number(c.total_clicked) || 0;
+  const totalBounced = Number(c.total_bounced) || 0;
+  const totalUnsubscribed = Number(c.total_unsubscribed) || 0;
 
   const openRate =
     totalDelivered > 0
@@ -103,14 +114,22 @@ export function CampaignDetail({ siteId, campaign }: CampaignDetailProps) {
   const bounceRate =
     totalSent > 0 ? ((totalBounced / totalSent) * 100).toFixed(1) : "0";
 
+  // Build sandboxed email preview HTML (XSS-safe)
+  const previewSrcDoc = useMemo(() => {
+    const html = typeof c.content_html === "string" ? c.content_html : "";
+    if (!html) return "";
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;padding:16px;font-family:system-ui,sans-serif;font-size:14px;color:#333;}</style></head><body>${html}</body></html>`;
+  }, [c.content_html]);
+
   async function handleStatusChange(newStatus: CampaignStatus) {
     startTransition(async () => {
       try {
-        await updateCampaignStatus(siteId, c.id, newStatus);
+        await updateCampaignStatus(siteId, c.id as string, newStatus);
         router.refresh();
         toast.success(`Campaign ${newStatus}`);
-      } catch (err: any) {
-        toast.error(err.message || "Failed to update campaign status");
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Failed to update campaign status";
+        toast.error(msg);
       }
     });
   }
@@ -118,52 +137,78 @@ export function CampaignDetail({ siteId, campaign }: CampaignDetailProps) {
   async function handleSend() {
     startTransition(async () => {
       try {
-        await sendCampaignNow(siteId, c.id);
+        await sendCampaignNow(siteId, c.id as string);
         router.refresh();
         toast.success("Campaign is now sending!");
-      } catch (err: any) {
-        toast.error(err.message || "Failed to send campaign");
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Failed to send campaign";
+        toast.error(msg);
       }
     });
   }
 
   async function handleDuplicate() {
     try {
-      const dup = await duplicateCampaign(siteId, c.id);
+      const dup = await duplicateCampaign(siteId, c.id as string);
       toast.success("Campaign duplicated");
-      router.push(`${basePath}/${(dup as any).id}`);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to duplicate campaign");
+      if (dup && typeof dup === "object" && "id" in dup) {
+        router.push(`${basePath}/${dup.id}`);
+      } else {
+        router.refresh();
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to duplicate campaign";
+      toast.error(msg);
     }
   }
+
+  const formatDate = (val: unknown) => {
+    if (!val) return null;
+    return new Date(String(val)).toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const formatDateTime = (val: unknown) => {
+    if (!val) return null;
+    return new Date(String(val)).toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-3">
-            <h2 className="text-xl font-semibold">{c.name}</h2>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h2 className="text-xl font-semibold truncate">{String(c.name || "Untitled")}</h2>
             <Badge
               variant="secondary"
-              className={`${config?.bgColor} ${config?.color}`}
+              className={`${config?.bgColor} ${config?.color} shrink-0`}
             >
               {config?.label || status}
             </Badge>
           </div>
           {c.subject_line && (
-            <p className="text-sm text-muted-foreground mt-1">
-              Subject: {c.subject_line}
+            <p className="text-sm text-muted-foreground mt-1 truncate">
+              Subject: {String(c.subject_line)}
             </p>
           )}
           {c.description && (
             <p className="text-sm text-muted-foreground mt-1">
-              {c.description}
+              {String(c.description)}
             </p>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0 flex-wrap">
           {status === "draft" && (
             <>
               <Button
@@ -175,10 +220,29 @@ export function CampaignDetail({ siteId, campaign }: CampaignDetailProps) {
                 <Clock className="mr-2 h-4 w-4" />
                 Schedule
               </Button>
-              <Button size="sm" onClick={handleSend} disabled={isPending}>
-                <Send className="mr-2 h-4 w-4" />
-                Send Now
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" disabled={isPending}>
+                    <Send className="mr-2 h-4 w-4" />
+                    Send Now
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Send Campaign Now?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will send the campaign to all targeted subscribers immediately.
+                      This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleSend}>
+                      Send Now
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </>
           )}
           {status === "sending" && (
@@ -222,7 +286,7 @@ export function CampaignDetail({ siteId, campaign }: CampaignDetailProps) {
 
       {/* Metrics */}
       {totalSent > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <MetricCard
             label="Emails Sent"
             value={totalSent.toLocaleString()}
@@ -272,38 +336,34 @@ export function CampaignDetail({ siteId, campaign }: CampaignDetailProps) {
         <TabsContent value="overview" className="mt-4">
           <Card>
             <CardContent className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">
                     From
                   </p>
                   <p className="text-sm">
-                    {c.from_name || "Default"} &lt;
-                    {c.from_email || "Default"}&gt;
+                    {String(c.from_name || "Default")} &lt;
+                    {String(c.from_email || "Default")}&gt;
                   </p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">
                     Reply To
                   </p>
-                  <p className="text-sm">{c.reply_to || "Same as sender"}</p>
+                  <p className="text-sm">{String(c.reply_to || "Same as sender")}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">
                     Type
                   </p>
-                  <p className="text-sm capitalize">{c.type || "email"}</p>
+                  <p className="text-sm capitalize">{String(c.type || "email")}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">
                     Created
                   </p>
                   <p className="text-sm">
-                    {new Date(c.created_at).toLocaleDateString("en-ZM", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
+                    {formatDate(c.created_at) || "Unknown"}
                   </p>
                 </div>
                 {c.scheduled_at && (
@@ -312,7 +372,7 @@ export function CampaignDetail({ siteId, campaign }: CampaignDetailProps) {
                       Scheduled For
                     </p>
                     <p className="text-sm">
-                      {new Date(c.scheduled_at).toLocaleString("en-ZM")}
+                      {formatDateTime(c.scheduled_at)}
                     </p>
                   </div>
                 )}
@@ -322,19 +382,19 @@ export function CampaignDetail({ siteId, campaign }: CampaignDetailProps) {
                       Completed At
                     </p>
                     <p className="text-sm">
-                      {new Date(c.completed_at).toLocaleString("en-ZM")}
+                      {formatDateTime(c.completed_at)}
                     </p>
                   </div>
                 )}
               </div>
 
-              {c.tags && c.tags.length > 0 && (
+              {Array.isArray(c.tags) && c.tags.length > 0 && (
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-2">
                     Tags
                   </p>
                   <div className="flex flex-wrap gap-1">
-                    {c.tags.map((tag: string) => (
+                    {(c.tags as string[]).map((tag: string) => (
                       <Badge key={tag} variant="outline" className="text-xs">
                         {tag}
                       </Badge>
@@ -343,15 +403,18 @@ export function CampaignDetail({ siteId, campaign }: CampaignDetailProps) {
                 </div>
               )}
 
-              {c.content_html && (
+              {typeof c.content_html === "string" && c.content_html && (
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-2">
                     Email Preview
                   </p>
-                  <div className="border rounded-lg p-4 bg-white max-h-96 overflow-y-auto">
-                    <div
-                      dangerouslySetInnerHTML={{ __html: c.content_html }}
-                      className="prose prose-sm max-w-none"
+                  <div className="border rounded-lg bg-white overflow-hidden">
+                    <iframe
+                      srcDoc={previewSrcDoc}
+                      sandbox=""
+                      title="Email content preview"
+                      className="w-full h-96 border-0"
+                      loading="lazy"
                     />
                   </div>
                 </div>
@@ -406,7 +469,7 @@ export function CampaignDetail({ siteId, campaign }: CampaignDetailProps) {
                     Total Recipients
                   </p>
                   <p className="text-lg font-semibold">
-                    {(c.total_recipients || 0).toLocaleString()}
+                    {(Number(c.total_recipients) || 0).toLocaleString()}
                   </p>
                 </div>
                 {c.audience_id && (
@@ -414,7 +477,7 @@ export function CampaignDetail({ siteId, campaign }: CampaignDetailProps) {
                     <p className="text-sm font-medium text-muted-foreground">
                       Audience ID
                     </p>
-                    <p className="text-sm font-mono">{c.audience_id}</p>
+                    <p className="text-sm font-mono">{String(c.audience_id)}</p>
                   </div>
                 )}
                 {c.segment_id && (
@@ -422,7 +485,7 @@ export function CampaignDetail({ siteId, campaign }: CampaignDetailProps) {
                     <p className="text-sm font-medium text-muted-foreground">
                       Segment ID
                     </p>
-                    <p className="text-sm font-mono">{c.segment_id}</p>
+                    <p className="text-sm font-mono">{String(c.segment_id)}</p>
                   </div>
                 )}
               </div>

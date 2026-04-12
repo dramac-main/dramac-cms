@@ -178,6 +178,7 @@ function BlockCard({
                 className="h-7 w-7"
                 onClick={onMoveUp}
                 disabled={index === 0}
+                aria-label="Move block up"
               >
                 <ChevronUp className="h-3 w-3" />
               </Button>
@@ -187,6 +188,7 @@ function BlockCard({
                 className="h-7 w-7"
                 onClick={onMoveDown}
                 disabled={index === totalBlocks - 1}
+                aria-label="Move block down"
               >
                 <ChevronDown className="h-3 w-3" />
               </Button>
@@ -195,6 +197,7 @@ function BlockCard({
                 size="icon"
                 className="h-7 w-7 text-destructive hover:text-destructive"
                 onClick={onRemove}
+                aria-label="Remove block"
               >
                 <Trash2 className="h-3 w-3" />
               </Button>
@@ -506,6 +509,7 @@ function FeaturesForm({
                   size="icon"
                   className="h-6 w-6 text-destructive"
                   onClick={() => removeItem(idx)}
+                  aria-label={`Remove feature ${idx + 1}`}
                 >
                   <X className="h-3 w-3" />
                 </Button>
@@ -623,6 +627,7 @@ function TestimonialsForm({
                   size="icon"
                   className="h-6 w-6 text-destructive"
                   onClick={() => removeItem(idx)}
+                  aria-label={`Remove testimonial ${idx + 1}`}
                 >
                   <X className="h-3 w-3" />
                 </Button>
@@ -931,6 +936,7 @@ function GalleryForm({
                   size="icon"
                   className="h-6 w-6 text-destructive"
                   onClick={() => removeItem(idx)}
+                  aria-label={`Remove image ${idx + 1}`}
                 >
                   <X className="h-3 w-3" />
                 </Button>
@@ -1093,6 +1099,7 @@ function FAQForm({
                   size="icon"
                   className="h-6 w-6 text-destructive"
                   onClick={() => removeItem(idx)}
+                  aria-label={`Remove question ${idx + 1}`}
                 >
                   <X className="h-3 w-3" />
                 </Button>
@@ -1231,6 +1238,7 @@ function PricingForm({
                     size="icon"
                     className="h-6 w-6 text-destructive"
                     onClick={() => removePlan(planIdx)}
+                    aria-label={`Remove plan ${planIdx + 1}`}
                   >
                     <X className="h-3 w-3" />
                   </Button>
@@ -1288,6 +1296,7 @@ function PricingForm({
                       size="icon"
                       className="h-6 w-6 shrink-0 text-destructive"
                       onClick={() => removeFeature(planIdx, featureIdx)}
+                      aria-label="Remove feature"
                     >
                       <X className="h-3 w-3" />
                     </Button>
@@ -1387,6 +1396,7 @@ function SocialProofForm({
               size="icon"
               className="h-7 w-7 shrink-0 text-destructive"
               onClick={() => removeStat(idx)}
+              aria-label={`Remove stat ${idx + 1}`}
             >
               <X className="h-3 w-3" />
             </Button>

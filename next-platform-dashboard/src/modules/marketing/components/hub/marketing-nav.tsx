@@ -2,10 +2,12 @@
  * Marketing Module Navigation
  *
  * Persistent horizontal sub-navigation for all marketing pages.
- * Modeled after the live-chat module's navigation pattern.
+ * Responsive: scrollable on small screens, full display on large.
+ * Active tab auto-scrolls into view on mount.
  */
 "use client";
 
+import { useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -15,7 +17,7 @@ import {
   Users,
   FileText,
   FormInput,
-  BarChart3,
+  Palette,
   Share2,
   CalendarDays,
   MessageSquare,
@@ -32,6 +34,8 @@ interface MarketingNavProps {
 export function MarketingNav({ siteId, basePath }: MarketingNavProps) {
   const pathname = usePathname();
   const base = basePath || `/dashboard/sites/${siteId}/marketing`;
+  const scrollRef = useRef<HTMLElement>(null);
+  const activeRef = useRef<HTMLAnchorElement>(null);
 
   const navItems = [
     {
@@ -57,7 +61,7 @@ export function MarketingNav({ siteId, basePath }: MarketingNavProps) {
     },
     {
       href: `${base}/landing-pages`,
-      label: "Landing Pages",
+      label: "Pages",
       icon: FileText,
     },
     {
@@ -68,7 +72,7 @@ export function MarketingNav({ siteId, basePath }: MarketingNavProps) {
     {
       href: `${base}/templates`,
       label: "Templates",
-      icon: BarChart3,
+      icon: Palette,
     },
     {
       href: `${base}/social`,
@@ -87,22 +91,53 @@ export function MarketingNav({ siteId, basePath }: MarketingNavProps) {
     },
   ];
 
+  // Auto-scroll active tab into view on mount/route change
+  useEffect(() => {
+    if (activeRef.current && scrollRef.current) {
+      const nav = scrollRef.current;
+      const active = activeRef.current;
+      const navRect = nav.getBoundingClientRect();
+      const activeRect = active.getBoundingClientRect();
+      if (
+        activeRect.left < navRect.left ||
+        activeRect.right > navRect.right
+      ) {
+        active.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      }
+    }
+  }, [pathname]);
+
   return (
-    <nav className="flex items-center gap-1">
+    <nav
+      ref={scrollRef}
+      className="flex items-center gap-1 overflow-x-auto scrollbar-none pb-px"
+      role="tablist"
+      aria-label="Marketing navigation"
+    >
       {navItems.map((item) => {
         const isActive = item.exact
           ? pathname === item.href
           : pathname.startsWith(item.href);
 
         return (
-          <Link key={item.href} href={item.href}>
+          <Link
+            key={item.href}
+            href={item.href}
+            ref={isActive ? activeRef : undefined}
+            role="tab"
+            aria-selected={isActive}
+            aria-current={isActive ? "page" : undefined}
+          >
             <Button
               variant={isActive ? "secondary" : "ghost"}
               size="sm"
-              className={cn("gap-2", isActive && "bg-secondary")}
+              className={cn(
+                "gap-1.5 whitespace-nowrap shrink-0 transition-all",
+                isActive && "bg-secondary font-medium shadow-sm",
+              )}
             >
-              <item.icon className="h-4 w-4" />
-              {item.label}
+              <item.icon className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">{item.label}</span>
             </Button>
           </Link>
         );

@@ -130,8 +130,8 @@ export function SocialPostComposer({
         );
         router.push(`/dashboard/sites/${siteId}/marketing/social`);
         router.refresh();
-      } catch (err: any) {
-        toast.error(err.message || "Failed to create post");
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : "Failed to create post");
       }
     });
   }

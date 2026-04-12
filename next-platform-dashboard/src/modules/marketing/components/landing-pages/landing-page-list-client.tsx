@@ -89,8 +89,8 @@ export function LandingPageListClient({
       await duplicateLandingPage(id);
       router.refresh();
       toast.success("Landing page duplicated");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to duplicate landing page");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to duplicate landing page");
     }
   }
 
@@ -99,8 +99,8 @@ export function LandingPageListClient({
       await deleteLandingPage(id);
       router.refresh();
       toast.success("Landing page deleted");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to delete landing page");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete landing page");
     }
   }
 
@@ -109,8 +109,8 @@ export function LandingPageListClient({
       await updateLandingPageStatus(id, "published");
       router.refresh();
       toast.success("Landing page published");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to publish landing page");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to publish landing page");
     }
   }
 
@@ -236,7 +236,7 @@ export function LandingPageListClient({
 
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Page actions">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>

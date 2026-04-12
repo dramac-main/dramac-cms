@@ -574,6 +574,7 @@ export function EmailEditor({ initialBlocks, onChange }: EmailEditorProps) {
             size="icon"
             onClick={undo}
             disabled={historyIndex <= 0}
+            aria-label="Undo"
           >
             <Undo2 className="h-4 w-4" />
           </Button>
@@ -582,6 +583,7 @@ export function EmailEditor({ initialBlocks, onChange }: EmailEditorProps) {
             size="icon"
             onClick={redo}
             disabled={historyIndex >= history.length - 1}
+            aria-label="Redo"
           >
             <Redo2 className="h-4 w-4" />
           </Button>
@@ -686,6 +688,7 @@ export function EmailEditor({ initialBlocks, onChange }: EmailEditorProps) {
                             moveBlock(block.id, "up");
                           }}
                           disabled={index === 0}
+                          aria-label="Move block up"
                         >
                           <ArrowUp className="h-3 w-3" />
                         </Button>
@@ -698,6 +701,7 @@ export function EmailEditor({ initialBlocks, onChange }: EmailEditorProps) {
                             moveBlock(block.id, "down");
                           }}
                           disabled={index === blocks.length - 1}
+                          aria-label="Move block down"
                         >
                           <ArrowDown className="h-3 w-3" />
                         </Button>
@@ -709,6 +713,7 @@ export function EmailEditor({ initialBlocks, onChange }: EmailEditorProps) {
                             e.stopPropagation();
                             removeBlock(block.id);
                           }}
+                          aria-label="Remove block"
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
@@ -718,11 +723,12 @@ export function EmailEditor({ initialBlocks, onChange }: EmailEditorProps) {
                       <div className="text-xs text-muted-foreground mb-1 capitalize">
                         {block.type}
                       </div>
-                      <div
-                        className="prose prose-sm max-w-none pointer-events-none"
-                        dangerouslySetInnerHTML={{
-                          __html: blockToHtml(block),
-                        }}
+                      <iframe
+                        srcDoc={blockToHtml(block)}
+                        sandbox=""
+                        title={`${block.type} block preview`}
+                        className="w-full border-0 pointer-events-none"
+                        style={{ height: "60px" }}
                       />
                     </div>
                   ))}
@@ -736,9 +742,12 @@ export function EmailEditor({ initialBlocks, onChange }: EmailEditorProps) {
       {viewMode === "preview" && (
         <div className="border rounded-lg bg-gray-200 p-4">
           <div className="max-w-[600px] mx-auto bg-white rounded shadow-sm">
-            <div
-              dangerouslySetInnerHTML={{ __html: html }}
-              className="prose prose-sm max-w-none"
+            <iframe
+              srcDoc={html}
+              sandbox=""
+              title="Email preview"
+              className="w-full border-0 rounded"
+              style={{ minHeight: "400px" }}
             />
           </div>
         </div>

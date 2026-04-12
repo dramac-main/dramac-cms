@@ -115,7 +115,7 @@ export async function updateSocialConnection(
 ): Promise<SocialConnection> {
   const supabase = await getModuleClient();
 
-  const updates: Record<string, any> = {};
+  const updates: Record<string, unknown> = {};
   if (input.accountName !== undefined) updates.account_name = input.accountName;
   if (input.accessToken !== undefined) updates.access_token = input.accessToken;
   if (input.refreshToken !== undefined)
@@ -260,7 +260,7 @@ export async function updateSocialPost(
 ): Promise<SocialPost> {
   const supabase = await getModuleClient();
 
-  const updates: Record<string, any> = { updated_at: new Date().toISOString() };
+  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (input.content !== undefined) updates.content = input.content;
   if (input.mediaUrls !== undefined) updates.media_urls = input.mediaUrls;
   if (input.platforms !== undefined) updates.platforms = input.platforms;

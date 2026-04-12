@@ -70,8 +70,8 @@ export function SocialPostsList({
         await deleteSocialPost(postId, siteId);
         toast.success("Post deleted");
         router.refresh();
-      } catch (err: any) {
-        toast.error(err.message || "Failed to delete");
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : "Failed to delete");
       }
     });
   }
@@ -161,7 +161,7 @@ export function SocialPostsList({
                 {/* Actions */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" disabled={isPending}>
+                    <Button variant="ghost" size="icon" disabled={isPending} aria-label="Post actions">
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>

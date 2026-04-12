@@ -93,8 +93,8 @@ async function getMarketingHubData(siteId: string) {
       bounceRate:
         totalSent > 0 ? Math.round((totalBounced / totalSent) * 1000) / 10 : 0,
     },
-    recentCampaigns: (recentCampaignsResult.data || []) as any[],
-    activeSequences: (activeSequencesResult.data || []) as any[],
+    recentCampaigns: recentCampaignsResult.data || [],
+    activeSequences: activeSequencesResult.data || [],
   };
 }
 

@@ -81,10 +81,10 @@ export function SMSCampaignComposer({ siteId }: SMSCampaignComposerProps) {
 
         toast.success("SMS campaign created");
         router.push(
-          `/dashboard/sites/${siteId}/marketing/campaigns/${(campaign as any).id}`,
+          `/dashboard/sites/${siteId}/marketing/campaigns/${(campaign as Record<string, unknown>).id}`,
         );
-      } catch (err: any) {
-        setError(err.message || "Failed to create SMS campaign");
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Failed to create SMS campaign");
       }
     });
   }

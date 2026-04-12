@@ -71,12 +71,13 @@ export function PortalAnalyticsDashboard({
         };
 
         for (const c of campaigns) {
-          agg.totalSent += (c as any).totalSent || 0;
-          agg.totalDelivered += (c as any).totalDelivered || 0;
-          agg.totalOpened += (c as any).totalOpened || 0;
-          agg.totalClicked += (c as any).totalClicked || 0;
-          agg.totalBounced += (c as any).totalBounced || 0;
-          agg.totalUnsubscribed += (c as any).totalUnsubscribed || 0;
+          const camp = c as Record<string, unknown>;
+          agg.totalSent += Number(camp.totalSent) || 0;
+          agg.totalDelivered += Number(camp.totalDelivered) || 0;
+          agg.totalOpened += Number(camp.totalOpened) || 0;
+          agg.totalClicked += Number(camp.totalClicked) || 0;
+          agg.totalBounced += Number(camp.totalBounced) || 0;
+          agg.totalUnsubscribed += Number(camp.totalUnsubscribed) || 0;
         }
 
         if (agg.totalDelivered > 0) {
