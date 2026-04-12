@@ -6,11 +6,28 @@
 
 The DRAMAC CMS platform is **production-ready**. All core waves (1-5) are complete, including all 6 business modules, DRAMAC Studio, client portal, billing, domain/email systems, and AI website designer. The platform is deployed at https://app.dramacagency.com.
 
-## Current Focus: Marketing Module — Bug Fix Session ✅
+## Current Focus: Marketing Module — Production Quality Sweep ✅
 
-### Status: Critical crash fixes applied and deployed (commit 01ece171)
+### Status: Toast notifications deployed across entire module (commit e81a210b)
 
-**Problem:** All marketing page cards (Subscribers, Campaigns, etc.) crashed with "An error occurred in the Server Components render." Root cause was a table name mismatch in `marketing-constants.ts` — `mod_mktmod01_mailing_lists` should have been `mod_mktmod01_lists`. Additionally, ALL list-fetching server actions threw unhandled errors on any Supabase error, causing page crashes.
+**Problem:** Marketing module had ~30 user actions with zero feedback — silent `router.refresh()`, empty `catch {}` blocks, and `alert()` calls. Not production quality.
+
+**Fixes Applied (commits 03e639a8 → e81a210b):**
+1. **useUnsavedChanges hook rewrite** — `beforeunload` now sets `e.returnValue` for Chrome/Edge; handlers register on mount
+2. **Save button spinners** — Added `Loader2` spinning icon to sequence-builder, form-builder, landing-page-editor
+3. **Form builder defaults** — New forms start with default Email field pre-added
+4. **Toast notification sweep** — 13 files, 30 actions, 75 insertions:
+   - Replaced all 14 `alert()` calls with `toast.error()`
+   - Added `toast.success()` after every create/update/delete/publish action
+   - Filled all 6 empty `catch {}` blocks with `toast.error()` feedback
+   - Added `toast.success()` before `router.push()` redirects on create flows
+   - Files: template-library, subscriber-manager, campaign-list-client, campaign-detail, campaign-wizard, sms-campaign-composer, sequence-list-client, sequence-detail, sequence-builder, form-list-client, form-builder, landing-page-list-client, landing-page-editor
+   - Uses existing sonner toast system (already installed + mounted at bottom-right with richColors)
+5. **Testing guide Part 5 rewritten** — Accurate step-by-step for form builder's 3 tabs
+
+### Previous: Critical crash fixes (commit 01ece171)
+
+**Problem:** All marketing page cards crashed with table name mismatch + unhandled errors.
 
 **Fixes Applied:**
 1. **Table name fix** — `MKT_TABLES.mailingLists` corrected from `"mod_mktmod01_mailing_lists"` to `"mod_mktmod01_lists"`

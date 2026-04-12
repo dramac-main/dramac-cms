@@ -107,7 +107,7 @@ export function FormBuilder({ siteId, form, defaultTab }: FormBuilderProps) {
     ] as FormField[];
   });
   const [trigger, setTrigger] = useState<FormTrigger | null>(
-    form?.trigger || null
+    form?.triggerConfig || null
   );
   const [successAction, setSuccessAction] = useState<SuccessAction>(
     form?.successAction || { type: "message", message: "Thank you!" }

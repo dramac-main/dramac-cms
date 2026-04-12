@@ -148,8 +148,7 @@ export interface MarketingForm {
   status: FormStatus;
   fields: FormField[];
   style: Record<string, unknown>;
-  trigger: FormTrigger | null;
-  triggerConfig?: FormTrigger | null;
+  triggerConfig: FormTrigger | null;
   successAction: SuccessAction;
   tagsToAdd: string[];
   sequenceToEnroll?: string | null;

@@ -131,7 +131,7 @@ export async function createForm(input: {
       name: input.name,
       form_type: input.formType,
       fields: input.fields,
-      trigger: input.trigger || null,
+      trigger_config: input.trigger || null,
       success_action: input.successAction || {
         type: "message",
         message: "Thank you!",
@@ -172,7 +172,7 @@ export async function updateForm(
   if (updates.name !== undefined) updateData.name = updates.name;
   if (updates.formType !== undefined) updateData.form_type = updates.formType;
   if (updates.fields !== undefined) updateData.fields = updates.fields;
-  if (updates.trigger !== undefined) updateData.trigger = updates.trigger;
+  if (updates.trigger !== undefined) updateData.trigger_config = updates.trigger;
   if (updates.successAction !== undefined)
     updateData.success_action = updates.successAction;
   if (updates.buttonText !== undefined)

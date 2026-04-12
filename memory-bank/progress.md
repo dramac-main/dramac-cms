@@ -188,7 +188,21 @@
 
 ---
 
-## Latest Update: Marketing Module Crash Fix ✅ (commit 01ece171)
+## Latest Update: Marketing Module Production Quality Sweep ✅ (commits 03e639a8 → e81a210b)
+
+### Toast Notification Sweep (commit e81a210b — 13 files, 75 insertions, 32 deletions)
+- Replaced all 14 `alert()` calls with `toast.error()` 
+- Added `toast.success()` after every create/update/delete/publish action (30 total)
+- Filled all 6 empty `catch {}` blocks with `toast.error()` feedback
+- Files: template-library, subscriber-manager, campaign-list/detail/wizard, sms-campaign-composer, sequence-list/detail/builder, form-list/builder, landing-page-list/editor
+
+### UX Polish (commit 03e639a8)
+- **useUnsavedChanges hook**: Fixed `beforeunload` for Chrome/Edge (`e.returnValue` required)
+- **Save button spinners**: Added `Loader2` animated spinner to 3 builder pages
+- **Form builder defaults**: New forms start with Email field pre-populated
+- **Testing guide Part 5**: Rewritten with accurate 3-tab flow
+
+### Previous Update: Marketing Module Crash Fix ✅ (commit 01ece171)
 
 ### Root Cause
 - `MKT_TABLES.mailingLists` was set to `"mod_mktmod01_mailing_lists"` but actual DB table is `"mod_mktmod01_lists"`
