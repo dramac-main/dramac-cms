@@ -9,6 +9,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
+import { toast } from "sonner";
 import {
   Save,
   Globe,
@@ -192,6 +193,7 @@ export function LandingPageEditor({
           setError(result.error);
         } else {
           router.refresh();
+          toast.success("Landing page saved");
         }
       } else {
         const result = await createLandingPage({
@@ -206,6 +208,7 @@ export function LandingPageEditor({
         if (result.error) {
           setError(result.error);
         } else if (result.landingPage) {
+          toast.success("Landing page created");
           router.push(
             `/dashboard/sites/${siteId}/marketing/landing-pages/${result.landingPage.id}`,
           );
@@ -222,6 +225,7 @@ export function LandingPageEditor({
         setError(result.error);
       } else {
         router.refresh();
+        toast.success("Landing page published!");
       }
     });
   }

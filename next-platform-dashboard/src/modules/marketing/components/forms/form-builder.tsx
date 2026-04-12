@@ -10,6 +10,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
+import { toast } from "sonner";
 import {
   Save,
   Plus,
@@ -218,6 +219,7 @@ export function FormBuilder({ siteId, form, defaultTab }: FormBuilderProps) {
           setError(result.error);
         } else {
           router.refresh();
+          toast.success("Form updated");
         }
       } else {
         const result = await createForm({
@@ -234,6 +236,7 @@ export function FormBuilder({ siteId, form, defaultTab }: FormBuilderProps) {
         if (result.error) {
           setError(result.error);
         } else if (result.form) {
+          toast.success("Form created");
           router.push(
             `/dashboard/sites/${siteId}/marketing/forms/${result.form.id}`
           );

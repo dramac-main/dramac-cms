@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -129,8 +130,9 @@ export function SubscriberManager({
       try {
         await deleteSubscriber(siteId, id);
         router.refresh();
+        toast.success("Subscriber deleted");
       } catch (err: any) {
-        alert(err.message);
+        toast.error(err.message || "Failed to delete subscriber");
       }
     });
   }
@@ -141,8 +143,9 @@ export function SubscriberManager({
       try {
         await deleteMailingList(siteId, id);
         router.refresh();
+        toast.success("Mailing list deleted");
       } catch (err: any) {
-        alert(err.message);
+        toast.error(err.message || "Failed to delete mailing list");
       }
     });
   }
@@ -175,6 +178,7 @@ export function SubscriberManager({
                   onSuccess={() => {
                     setShowImportDialog(false);
                     router.refresh();
+                    toast.success("Subscribers imported");
                   }}
                 />
               </DialogContent>
@@ -196,6 +200,7 @@ export function SubscriberManager({
                   onSuccess={() => {
                     setShowAddDialog(false);
                     router.refresh();
+                    toast.success("Subscriber added");
                   }}
                 />
               </DialogContent>
@@ -436,6 +441,7 @@ export function SubscriberManager({
                   onSuccess={() => {
                     setShowListDialog(false);
                     router.refresh();
+                    toast.success("Mailing list created");
                   }}
                 />
               </DialogContent>
@@ -552,7 +558,7 @@ function AddSubscriberForm({
         });
         onSuccess();
       } catch (err: any) {
-        alert(err.message);
+        toast.error(err.message || "Failed to add subscriber");
       }
     });
   }
@@ -671,7 +677,7 @@ function ImportForm({
   function handleImport() {
     const records = parseCsv(csvText);
     if (records.length === 0) {
-      alert("No valid records found. Ensure CSV has an 'email' column header.");
+      toast.error("No valid records found. Ensure CSV has an 'email' column header.");
       return;
     }
 
@@ -680,7 +686,7 @@ function ImportForm({
         const res = await bulkImportSubscribers(siteId, records);
         setResult(res);
       } catch (err: any) {
-        alert(err.message);
+        toast.error(err.message || "Failed to import subscribers");
       }
     });
   }
@@ -754,7 +760,7 @@ function CreateListForm({
         });
         onSuccess();
       } catch (err: any) {
-        alert(err.message);
+        toast.error(err.message || "Failed to create mailing list");
       }
     });
   }

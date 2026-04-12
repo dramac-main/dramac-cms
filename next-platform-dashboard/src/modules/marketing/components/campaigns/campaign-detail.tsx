@@ -10,6 +10,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
 import {
   Send,
   Eye,
@@ -107,8 +108,9 @@ export function CampaignDetail({ siteId, campaign }: CampaignDetailProps) {
       try {
         await updateCampaignStatus(siteId, c.id, newStatus);
         router.refresh();
-      } catch {
-        // Could add toast notification
+        toast.success(`Campaign ${newStatus}`);
+      } catch (err: any) {
+        toast.error(err.message || "Failed to update campaign status");
       }
     });
   }
@@ -118,8 +120,9 @@ export function CampaignDetail({ siteId, campaign }: CampaignDetailProps) {
       try {
         await sendCampaignNow(siteId, c.id);
         router.refresh();
-      } catch {
-        // Could add toast notification
+        toast.success("Campaign is now sending!");
+      } catch (err: any) {
+        toast.error(err.message || "Failed to send campaign");
       }
     });
   }
@@ -127,9 +130,10 @@ export function CampaignDetail({ siteId, campaign }: CampaignDetailProps) {
   async function handleDuplicate() {
     try {
       const dup = await duplicateCampaign(siteId, c.id);
+      toast.success("Campaign duplicated");
       router.push(`${basePath}/${(dup as any).id}`);
-    } catch {
-      // Silently handle
+    } catch (err: any) {
+      toast.error(err.message || "Failed to duplicate campaign");
     }
   }
 

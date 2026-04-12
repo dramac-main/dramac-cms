@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -126,8 +127,9 @@ export function SequenceListClient({
       try {
         await updateSequenceStatus(siteId, sequenceId, newStatus);
         router.refresh();
+        toast.success(`Sequence ${newStatus}`);
       } catch (err: any) {
-        alert(err.message);
+        toast.error(err.message || "Failed to update sequence status");
       }
     });
   }
@@ -138,8 +140,9 @@ export function SequenceListClient({
       try {
         await deleteSequence(siteId, sequenceId);
         router.refresh();
+        toast.success("Sequence deleted");
       } catch (err: any) {
-        alert(err.message);
+        toast.error(err.message || "Failed to delete sequence");
       }
     });
   }

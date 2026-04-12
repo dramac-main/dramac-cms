@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -120,8 +121,9 @@ export function SequenceDetail({
       try {
         await updateSequenceStatus(siteId, seq.id, newStatus);
         router.refresh();
+        toast.success(`Sequence ${newStatus}`);
       } catch (err: any) {
-        alert(err.message);
+        toast.error(err.message || "Failed to update sequence status");
       }
     });
   }

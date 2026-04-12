@@ -10,6 +10,7 @@
 import { useState, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
 import {
   ArrowLeft,
   Send,
@@ -78,6 +79,7 @@ export function SMSCampaignComposer({ siteId }: SMSCampaignComposerProps) {
             .filter(Boolean),
         });
 
+        toast.success("SMS campaign created");
         router.push(
           `/dashboard/sites/${siteId}/marketing/campaigns/${(campaign as any).id}`,
         );

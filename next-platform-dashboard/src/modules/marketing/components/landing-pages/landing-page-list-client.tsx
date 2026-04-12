@@ -9,6 +9,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   Search,
   FileText,
@@ -86,8 +87,9 @@ export function LandingPageListClient({
     try {
       await duplicateLandingPage(id);
       router.refresh();
-    } catch {
-      // Could add toast
+      toast.success("Landing page duplicated");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to duplicate landing page");
     }
   }
 
@@ -95,8 +97,9 @@ export function LandingPageListClient({
     try {
       await deleteLandingPage(id);
       router.refresh();
-    } catch {
-      // Could add toast
+      toast.success("Landing page deleted");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete landing page");
     }
   }
 
@@ -104,8 +107,9 @@ export function LandingPageListClient({
     try {
       await updateLandingPageStatus(id, "published");
       router.refresh();
-    } catch {
-      // Could add toast
+      toast.success("Landing page published");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to publish landing page");
     }
   }
 

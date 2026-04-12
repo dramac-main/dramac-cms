@@ -8,6 +8,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import {
   ChevronRight,
@@ -132,6 +133,9 @@ export function CampaignWizard({ siteId }: CampaignWizardProps) {
             setError(result.error || "Failed to send campaign");
             return;
           }
+          toast.success("Campaign created and sending!");
+        } else {
+          toast.success("Campaign saved as draft");
         }
 
         router.push(

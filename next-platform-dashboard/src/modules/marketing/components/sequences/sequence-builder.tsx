@@ -3,6 +3,7 @@
 import { useState, useCallback, useTransition } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -205,7 +206,7 @@ export function SequenceBuilder({
 
   function handleSave() {
     if (!name.trim()) {
-      alert("Please enter a sequence name");
+      toast.error("Please enter a sequence name");
       return;
     }
 
@@ -246,8 +247,9 @@ export function SequenceBuilder({
         }
         router.push(basePath);
         router.refresh();
+        toast.success(isEdit ? "Sequence updated" : "Sequence created");
       } catch (err: any) {
-        alert(err.message);
+        toast.error(err.message || "Failed to save sequence");
       }
     });
   }

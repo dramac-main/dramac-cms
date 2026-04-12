@@ -7,6 +7,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   Search,
   FormInput,
@@ -87,8 +88,9 @@ export function FormListClient({
     try {
       await deleteForm(id);
       router.refresh();
-    } catch {
-      // Could add toast
+      toast.success("Form deleted");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete form");
     }
   }
 

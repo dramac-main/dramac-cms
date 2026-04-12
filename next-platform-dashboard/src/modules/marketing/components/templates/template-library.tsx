@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -100,8 +101,9 @@ export function TemplateLibrary({ siteId, templates }: TemplateLibraryProps) {
       try {
         await duplicateTemplate(siteId, templateId);
         router.refresh();
+        toast.success("Template duplicated");
       } catch (err: any) {
-        alert(err.message);
+        toast.error(err.message || "Failed to duplicate template");
       }
     });
   }
@@ -112,8 +114,9 @@ export function TemplateLibrary({ siteId, templates }: TemplateLibraryProps) {
       try {
         await deleteTemplate(siteId, templateId);
         router.refresh();
+        toast.success("Template deleted");
       } catch (err: any) {
-        alert(err.message);
+        toast.error(err.message || "Failed to delete template");
       }
     });
   }
@@ -145,6 +148,7 @@ export function TemplateLibrary({ siteId, templates }: TemplateLibraryProps) {
                 onSuccess={() => {
                   setShowCreateDialog(false);
                   router.refresh();
+                  toast.success("Template created");
                 }}
               />
             </DialogContent>
@@ -370,7 +374,7 @@ function CreateTemplateForm({
         });
         onSuccess();
       } catch (err: any) {
-        alert(err.message);
+        toast.error(err.message || "Failed to create template");
       }
     });
   }

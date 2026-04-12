@@ -9,6 +9,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   Search,
   Mail,
@@ -84,8 +85,9 @@ export function CampaignListClient({
     try {
       await duplicateCampaign(siteId, campaignId);
       router.refresh();
-    } catch {
-      // Silently handle — could add toast
+      toast.success("Campaign duplicated");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to duplicate campaign");
     }
   }
 
@@ -93,8 +95,9 @@ export function CampaignListClient({
     try {
       await deleteCampaign(siteId, campaignId);
       router.refresh();
-    } catch {
-      // Silently handle
+      toast.success("Campaign deleted");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete campaign");
     }
   }
 
