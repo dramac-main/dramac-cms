@@ -429,12 +429,12 @@ export function SequenceBuilder({
             <CardContent className="space-y-4">
               <div>
                 <Label>Goal Type</Label>
-                <Select value={goalType} onValueChange={setGoalType}>
+                <Select value={goalType || "none"} onValueChange={(v) => setGoalType(v === "none" ? "" : v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="No goal" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No goal</SelectItem>
+                    <SelectItem value="none">No goal</SelectItem>
                     <SelectItem value="purchase">Purchase</SelectItem>
                     <SelectItem value="signup">Sign Up</SelectItem>
                     <SelectItem value="page_visit">Page Visit</SelectItem>
