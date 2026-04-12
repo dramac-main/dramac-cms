@@ -13,12 +13,6 @@ import { toast } from "sonner";
 import {
   Save,
   Globe,
-  Eye,
-  Plus,
-  Trash2,
-  GripVertical,
-  ChevronDown,
-  ChevronUp,
   Type,
   Image,
   ListChecks,
@@ -49,6 +43,7 @@ import {
   updateLandingPageStatus,
 } from "../../actions/landing-page-actions";
 import { LANDING_PAGE_TEMPLATES } from "../../data/landing-page-templates";
+import { BlockList } from "./block-editor";
 import type {
   LandingPage,
   LandingPageBlock,
@@ -355,60 +350,12 @@ export function LandingPageEditor({
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-2">
-              {blocks.map((block, index) => {
-                const blockType = BLOCK_TYPES.find(
-                  (bt) => bt.type === block.type,
-                );
-                const Icon = blockType?.icon || Type;
-                return (
-                  <Card key={block.id}>
-                    <CardContent className="flex items-center gap-3 p-3">
-                      <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <Icon className="h-4 w-4 text-primary shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium">
-                          {blockType?.label || block.type}
-                        </p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {(block.content?.heading as string) ||
-                            (block.content?.title as string) ||
-                            `Block ${index + 1}`}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => moveBlock(index, "up")}
-                          disabled={index === 0}
-                        >
-                          <ChevronUp className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => moveBlock(index, "down")}
-                          disabled={index === blocks.length - 1}
-                        >
-                          <ChevronDown className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-destructive"
-                          onClick={() => removeBlock(block.id)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+            <BlockList
+              blocks={blocks}
+              onUpdate={updateBlockContent}
+              onRemove={removeBlock}
+              onMove={moveBlock}
+            />
           )}
 
           {/* Add Block */}
