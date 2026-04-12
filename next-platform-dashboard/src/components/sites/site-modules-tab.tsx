@@ -146,7 +146,7 @@ export function SiteModulesTab({ siteId }: SiteModulesTabProps) {
                     {isEnabled && (
                       <>
                         {/* Open button for modules with dashboards */}
-                        {(module.slug === 'booking' || module.slug === 'crm' || module.slug === 'ecommerce' || module.slug === 'automation' || module.slug === 'social-media' || module.slug === 'ai-agents' || module.slug === 'live-chat') && (
+                        {(module.slug === 'booking' || module.slug === 'crm' || module.slug === 'ecommerce' || module.slug === 'automation' || module.slug === 'social-media' || module.slug === 'ai-agents' || module.slug === 'live-chat' || module.slug === 'marketing') && (
                           <Button 
                             variant="default" 
                             size="sm"

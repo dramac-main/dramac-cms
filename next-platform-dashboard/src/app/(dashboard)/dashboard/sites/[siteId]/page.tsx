@@ -15,7 +15,7 @@ import { ExportSiteButton } from "@/components/sites/export-site-button";
 import { SiteDetailOverflowMenu } from "@/components/sites/site-detail-overflow-menu";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Pencil, ExternalLink, BarChart3, MessageCircle, Calendar, ShoppingCart, Zap, Bot, Wand2 } from "lucide-react";
+import { Pencil, ExternalLink, BarChart3, MessageCircle, Calendar, ShoppingCart, Zap, Bot, Wand2, Mail } from "lucide-react";
 import { getSiteUrl, getSiteDomain } from "@/lib/utils/site-url";
 import { PLATFORM } from "@/lib/constants/platform";
 
@@ -52,6 +52,7 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
   const hasBooking = enabledModules.has("booking");
   const hasEcommerce = enabledModules.has("ecommerce");
   const hasLiveChat = enabledModules.has("live-chat");
+  const hasMarketing = enabledModules.has("marketing");
   
   // Build valid tabs list based on enabled modules
   const validTabs = ["overview", "pages", "blog", "modules", "analytics"];
@@ -62,6 +63,7 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
   if (hasLiveChat) validTabs.push("live-chat");
   if (hasAutomation) validTabs.push("automation");
   if (hasAIAgents) validTabs.push("ai-agents");
+  if (hasMarketing) validTabs.push("marketing");
   
   const defaultTab = tab && validTabs.includes(tab) ? tab : "overview";
 
@@ -118,6 +120,7 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
           {hasSocial && <TabsTrigger value="social">Social</TabsTrigger>}
           {hasAutomation && <TabsTrigger value="automation">Automation</TabsTrigger>}
           {hasAIAgents && <TabsTrigger value="ai-agents">AI Agents</TabsTrigger>}
+          {hasMarketing && <TabsTrigger value="marketing">Marketing</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="overview">
@@ -271,6 +274,28 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
                   <Button size="lg" className="mt-4">
                     <Bot className="mr-2 h-4 w-4" />
                     Open AI Agents Dashboard
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </TabsContent>
+        )}
+
+        {hasMarketing && (
+          <TabsContent value="marketing">
+            <div className="rounded-lg border bg-card p-8 text-center">
+              <div className="mx-auto max-w-md space-y-4">
+                <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Mail className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold">Marketing Suite</h3>
+                <p className="text-muted-foreground">
+                  Email campaigns, drip sequences, subscriber management, forms, landing pages, and multi-channel marketing.
+                </p>
+                <Link href={`/dashboard/sites/${site.id}/marketing`}>
+                  <Button size="lg" className="mt-4">
+                    <Mail className="mr-2 h-4 w-4" />
+                    Open Marketing Dashboard
                   </Button>
                 </Link>
               </div>
