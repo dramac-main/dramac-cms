@@ -1,398 +1,303 @@
-# Marketing Module — Testing Guide
+# Marketing Module — Walkthrough Testing Guide
 
-> **How to use:** Work through each section in order. Each step tells you exactly what to click, what to type, and what you should see. Check the box when it passes.
->
-> **Prerequisites:** Log in as an Agency Owner/Admin. Go to **Sites → pick any site → Marketing tab → Open Marketing Dashboard**.
+> Follow this step-by-step. Just do exactly what it says. If something breaks or doesn't match, that's a bug — note it and keep going.
 
 ---
 
-## 1. Marketing Hub (Main Dashboard)
+## Getting In
 
-**Route:** `/dashboard/sites/[siteId]/marketing`
+1. Log in to the dashboard
+2. Click **Sites** in the left sidebar
+3. Click on any site (e.g., "Jacktest Ltd")
+4. You should see tabs along the top: Overview, Pages, Blog, Modules, Analytics, etc.
+5. Click the **Marketing** tab
+6. You should see a card with a Mail icon, title "Marketing Suite", a short description, and an **"Open Marketing Dashboard"** button
+7. Click **"Open Marketing Dashboard"**
+8. ✅ You're now on the Marketing Hub — you should see stat cards (Campaigns, Subscribers, etc.) and quick action buttons
 
-- [ ] Page loads without errors
-- [ ] You see stat cards: Campaigns, Subscribers, Sequences, Forms (numbers may be 0)
-- [ ] "Recent Campaigns" section is visible (empty state or list)
-- [ ] Quick action buttons are visible (New Campaign, New Sequence, etc.)
-- [ ] Clicking each quick action button navigates to the correct page
+**Also verify the other way in:**
 
----
-
-## 2. Campaigns
-
-### 2a. Campaign List
-
-**Route:** `/dashboard/sites/[siteId]/marketing/campaigns`
-
-- [ ] Page loads — shows campaign table or empty state
-- [ ] "New Campaign" button is visible
-
-### 2b. Create a Campaign
-
-**Click "New Campaign"** → Route: `.../campaigns/new`
-
-- [ ] Campaign wizard loads without errors
-- [ ] Step 1 — Set campaign type (e.g., "Email"). Confirm type options appear
-- [ ] Step 2 — Enter subject line: `Test Campaign Subject`
-- [ ] Step 2 — Enter preview text: `This is a preview`
-- [ ] Step 3 — Select audience/list (or skip if none exist yet)
-- [ ] Step 4 — Choose "Send Later" or "Draft"
-- [ ] Click **Create** → redirected to campaign list or detail
-- [ ] New campaign appears in the list with status "Draft"
-
-### 2c. View Campaign Detail
-
-**Click the campaign you just created**
-
-- [ ] Detail page loads — shows subject, status, content
-- [ ] "Edit" or content editing area is accessible
-- [ ] "Send Test Email" button is visible (may require Resend config to actually send)
-- [ ] "Duplicate" action works — creates a copy in the campaign list
-- [ ] "Delete" action works — campaign is removed from the list
-
-### 2d. Campaign Actions
-
-- [ ] If a campaign is in Draft, you can "Schedule" it (picks a date/time)
-- [ ] If a campaign is Scheduled, you can "Pause" it
-- [ ] If a campaign is Paused, you can "Resume" it
+9. Go back to the site page, click the **Modules** tab
+10. Find "Marketing Suite" in the module list
+11. It should have an **"Open"** button, a **"Configure"** button, and a toggle
+12. Click **"Open"** — it should take you to the same Marketing Hub
 
 ---
 
-## 3. Subscribers
+## Part 1: Add Your First Subscriber
 
-**Route:** `/dashboard/sites/[siteId]/marketing/subscribers`
+1. From the Marketing Hub, click **Subscribers** (in the sidebar or a quick action)
+2. You should see a subscriber list (probably empty)
+3. Click **"Add Subscriber"**
+4. Type in:
+   - Email: `jack@testcompany.com`
+   - First Name: `Jack`
+   - Last Name: `Banda`
+5. Click **Save**
+6. ✅ Jack should appear in the list with status "Active"
+7. Click on Jack's row to open his details
+8. Look for a "Tags" section — add the tag: `vip`
+9. ✅ The tag `vip` should display on his record
+10. Go back to the subscriber list
 
-### 3a. Subscriber List
+**Add one more subscriber** (we'll need two for audiences later):
 
-- [ ] Page loads — shows subscriber table or empty state
-- [ ] Search bar is visible and functional
-
-### 3b. Add a Subscriber
-
-- [ ] Click "Add Subscriber" (or similar button)
-- [ ] Enter: Email `test@example.com`, First Name `Test`, Last Name `User`
-- [ ] Click Save → subscriber appears in the list with status "Active"
-
-### 3c. Tag a Subscriber
-
-- [ ] Click on the subscriber you just created
-- [ ] Add a tag: `vip`
-- [ ] The tag displays on the subscriber record
-
-### 3d. Delete a Subscriber
-
-- [ ] Select the subscriber → Delete
-- [ ] Subscriber is removed from the list
-
-### 3e. Bulk Import (Optional)
-
-- [ ] If there's an "Import" button, click it
-- [ ] Upload a CSV with columns: email, first_name, last_name
-- [ ] Imported subscribers appear in the list
+11. Click **"Add Subscriber"** again
+12. Type in:
+    - Email: `mary@testcompany.com`
+    - First Name: `Mary`
+    - Last Name: `Mwale`
+13. Click **Save**
+14. ✅ Both Jack and Mary should be in the list
 
 ---
 
-## 4. Email Templates
+## Part 2: Browse Email Templates
 
-**Route:** `/dashboard/sites/[siteId]/marketing/templates`
-
-- [ ] Page loads — shows template library (system templates + custom)
-- [ ] System templates are displayed (Welcome, Promotional, Newsletter, etc.)
-- [ ] You can preview a template
-- [ ] You can create a custom template (if "Create Template" button exists)
-- [ ] You can search/filter templates by category
+1. Click **Templates** in the marketing sidebar
+2. You should see a library of templates — system ones like Welcome, Promotional, Newsletter, etc.
+3. Click on any template to preview it
+4. ✅ Preview loads and shows the template layout
+5. Go back to the template list
 
 ---
 
-## 5. Sequences (Drip Automations)
+## Part 3: Create Your First Campaign
 
-### 5a. Sequence List
-
-**Route:** `/dashboard/sites/[siteId]/marketing/sequences`
-
-- [ ] Page loads — shows sequence table or empty state
-- [ ] "New Sequence" button is visible
-
-### 5b. Create a Sequence
-
-**Click "New Sequence"** → Route: `.../sequences/new`
-
-- [ ] Page loads WITHOUT the `Select.Item` error (this was the bug we just fixed)
-- [ ] **Sequence Details** card: Enter Name `Welcome Series`, Description `Welcome new subscribers`
-- [ ] **Trigger** card: Select trigger type "Manual Enrollment" (default)
-- [ ] **Trigger** card: Switch to "Tag Added" → a "Tag Name" input appears. Enter `new-customer`
-- [ ] **Trigger** card: Switch to "Form Submitted" → a "Form ID" input appears
-- [ ] **Trigger** card: Switch to "Custom Event" → an "Event Name" input appears
-- [ ] **Trigger** card: Switch back to "Manual Enrollment"
-- [ ] **Settings** card: Enter Enrollment Limit `100` → "No limit" placeholder shows when empty
-- [ ] **Settings** card: Toggle "Allow Re-enrollment" on and off
-- [ ] **Conversion Goal** card: Select "No goal" (default) — should display the placeholder "No goal"
-- [ ] **Conversion Goal** card: Select "Purchase" — no sub-fields appear except Window (hours)
-- [ ] **Conversion Goal** card: Select "Custom Event" → "Event Name" input appears
-- [ ] **Conversion Goal** card: Select "No goal" again — goal type clears properly
-
-### 5c. Add Steps to Sequence
-
-Still on the New Sequence page:
-
-- [ ] Click **+ Email** → an Email step card appears. Expand it → subject, preview text, template ID fields show
-- [ ] Click **+ Delay** → a Delay step card appears. Expand it → preset buttons (1 hour, 1 day, 1 week, etc.) and custom minutes input show
-- [ ] Click **+ SMS** → an SMS step card appears. Expand it → SMS message textarea with character counter shows
-- [ ] Click **+ WhatsApp** → a WhatsApp step card appears. Expand it → Template Name and Language Code fields show
-- [ ] Click **+ Condition** → a Condition step card appears. Expand it → Field, Operator, Value dropdowns show
-- [ ] Click **+ Action** → an Action step card appears. Expand it → Action Type dropdown (Add Tag, Remove Tag, Webhook, etc.) shows
-- [ ] Click **+ Split** → a Split step card appears
-- [ ] Steps can be **reordered** using up/down arrows
-- [ ] Steps can be **renamed** by editing the "Step Name" field
-- [ ] Steps can be **removed** using the trash icon
-- [ ] Step numbers update correctly after reorder/removal
-
-### 5d. Save the Sequence
-
-- [ ] Enter a name (required) and click **Create Sequence**
-- [ ] Redirected to the sequences list
-- [ ] New sequence appears in the list
-
-### 5e. Sequence Detail
-
-**Click the sequence you just created**
-
-- [ ] Detail page loads — shows steps, enrollment stats
-- [ ] You can edit the sequence (add/remove/reorder steps)
-- [ ] You can delete the sequence
+1. Click **Campaigns** in the sidebar
+2. You should see the campaign list (empty or with any previous ones)
+3. Click **"New Campaign"**
+4. The campaign wizard should load — follow the steps:
+   - **Type:** Select "Email"
+   - **Subject line:** Type `Welcome to Our Newsletter`
+   - **Preview text:** Type `Big things are coming your way`
+   - **Audience:** Pick any list or segment available (or skip if none)
+   - **Schedule:** Choose "Save as Draft"
+5. Click **Create**
+6. ✅ You should be redirected back to the campaign list
+7. ✅ Your new campaign should appear with status **"Draft"**
+8. Click on the campaign to open its detail page
+9. ✅ You should see the subject line, content area, and action buttons
+10. Look for these buttons and click each one:
+    - **"Send Test Email"** — click it (it may show an error if Resend isn't configured, that's OK — just confirm the button works and doesn't crash)
+    - **"Duplicate"** — click it, then go back to the list
+    - ✅ You should now see two campaigns (original + copy)
+11. Click the **duplicated** campaign → click **"Delete"**
+12. ✅ The duplicate is removed, only the original remains
 
 ---
 
-## 6. Forms (Opt-In / Lead Capture)
+## Part 4: Schedule & Manage a Campaign
 
-### 6a. Form List
-
-**Route:** `/dashboard/sites/[siteId]/marketing/forms`
-
-- [ ] Page loads — shows form table or empty state
-- [ ] "New Form" button is visible
-
-### 6b. Create a Form
-
-**Click "New Form"** → Route: `.../forms/new`
-
-- [ ] Form builder loads without errors
-- [ ] You can set a form name
-- [ ] You can add fields (email, name, text, select, checkbox)
-- [ ] You can configure success action (redirect URL or thank-you message)
-- [ ] Click Save → form appears in the form list
-
-### 6c. Form Detail
-
-**Click the form you created**
-
-- [ ] Detail page loads — shows form fields, submissions count
-- [ ] You can edit the form fields
-- [ ] You can view submissions (may be empty)
-- [ ] You can delete the form
+1. Open your "Welcome to Our Newsletter" campaign
+2. Look for a **"Schedule"** button
+3. Click it → pick any future date and time → confirm
+4. ✅ Campaign status should change to **"Scheduled"**
+5. Now click **"Pause"**
+6. ✅ Status should change to **"Paused"**
+7. Click **"Resume"**
+8. ✅ Status should go back to **"Scheduled"**
 
 ---
 
-## 7. Landing Pages
+## Part 5: Build a Drip Sequence
 
-### 7a. Landing Page List
+1. Click **Sequences** in the sidebar
+2. Click **"New Sequence"**
+3. ✅ The page should load without any errors (we just fixed a crash here)
 
-**Route:** `/dashboard/sites/[siteId]/marketing/landing-pages`
+**Fill in the details on the left side:**
 
-- [ ] Page loads — shows landing page table or empty state
-- [ ] "New Landing Page" button is visible
+4. **Name:** Type `Welcome Series`
+5. **Description:** Type `Onboards new subscribers over 7 days`
+6. **Trigger:** It should default to "Manual Enrollment" — leave it for now
+7. **Enrollment Limit:** Type `500`
+8. **Allow Re-enrollment:** Toggle it ON, then OFF again
 
-### 7b. Create a Landing Page
+**Test the Conversion Goal dropdown (this is what was broken):**
 
-**Click "New Landing Page"** → Route: `.../landing-pages/new`
+9. The **Conversion Goal** dropdown should show "No goal" by default
+10. Click it → select **"Purchase"** → a "Window (hours)" field should appear
+11. Click it → select **"Custom Event"** → an "Event Name" field should appear
+12. Click it → select **"No goal"** → the extra fields should disappear
+13. ✅ No crashes at any point
 
-- [ ] Editor loads without errors
-- [ ] You can set a page title: `Promo Page`
-- [ ] You can set a URL slug: `promo-page`
-- [ ] You can add content blocks (text, image, button, CTA, etc.)
-- [ ] You can configure SEO settings (title, description, keywords)
-- [ ] Click Save → page appears in the list with status "Draft"
+**Now build the workflow on the right side:**
 
-### 7c. Publish / Unpublish
+14. Click **+ Email** button at the bottom → a blue Email step card appears
+15. Click the expand arrow on the step → fill in:
+    - Step Name: `Welcome Email`
+    - Subject Line: `Welcome aboard, {{first_name}}!`
+16. Click **+ Delay** → an amber Delay step appears
+17. Expand it → click the **"1 day"** preset button
+18. Click **+ Email** → another Email step appears
+19. Expand it → set Subject Line: `Here's what you can do next`
+20. Click **+ Condition** → a purple Condition step appears
+21. Expand it → set Field: `Email Opened`, Operator: `Is True`
+22. Click **+ SMS** → a green SMS step appears
+23. Expand it → type a message: `Hey {{first_name}}, check your email!`
+24. ✅ You should now have 5 steps: Email → Delay → Email → Condition → SMS
 
-- [ ] On the landing page detail, click "Publish" → status changes to "Published"
-- [ ] Click "Unpublish" → status changes back to "Draft"
+**Test reorder and delete:**
 
-### 7d. Delete
+25. On the SMS step, click the **up arrow** twice — it should move up in the list
+26. Click the **down arrow** — it should move back down
+27. Click the **trash icon** on the SMS step → it should be removed
+28. ✅ You now have 4 steps, numbered 1–4 correctly
 
-- [ ] Delete the landing page → removed from the list
+**Save it:**
 
----
+29. Click **"Create Sequence"** at the top
+30. ✅ You should be redirected to the sequence list
+31. ✅ "Welcome Series" should appear in the list
 
-## 8. Social Media
+**Verify the detail page:**
 
-### 8a. Social Posts
-
-**Route:** `/dashboard/sites/[siteId]/marketing/social`
-
-- [ ] Page loads — shows social posts list or empty state
-- [ ] You can compose a new post
-- [ ] Platform selection is available (Facebook, Instagram, Twitter, TikTok)
-- [ ] You can type post content and schedule it
-
-### 8b. Content Calendar
-
-**Route:** `/dashboard/sites/[siteId]/marketing/twitter` (or social calendar route)
-
-- [ ] Calendar loads — shows month/week/day view
-- [ ] Scheduled posts appear on the calendar (if any)
-
-### 8c. Social Connections (Settings)
-
-- [ ] You can navigate to social connection settings
-- [ ] Connect/Disconnect buttons are visible for each platform
-- [ ] Platforms listed: Meta (Facebook/Instagram), Twitter, TikTok, LinkedIn
-
----
-
-## 9. SMS & WhatsApp
-
-**Route:** `/dashboard/sites/[siteId]/marketing/sms`
-
-- [ ] Page loads without errors
-- [ ] SMS composer is visible
-- [ ] You can type an SMS message — character counter updates
-- [ ] Segment count displays (160 chars per segment)
-- [ ] WhatsApp section is visible (template-based messaging)
-- [ ] Provider settings section is accessible (Twilio SID, Meta Business ID)
+32. Click on "Welcome Series" in the list
+33. ✅ The detail page loads showing your steps and enrollment stats
 
 ---
 
-## 10. Blog Marketing Integration
+## Part 6: Create an Opt-In Form
 
-> Test these from the Blog section of the site (if blog posts exist).
-
-- [ ] When editing a blog post, a "Share as Email" button is available
-- [ ] When editing a blog post, inline CTA block can be added
-- [ ] SEO score panel is visible on blog posts
-- [ ] Subscribe widget can be embedded in blog posts
-
----
-
-## 11. AI Marketing Features
-
-> These require AI API configuration (Claude API key). If not configured, test that the buttons exist and show appropriate error messages.
-
-### From Campaign Editor:
-
-- [ ] "AI Suggest Subject Lines" button exists
-- [ ] "AI Generate Preview Text" button exists
-- [ ] "AI Generate Content" button exists (generates email body from brief)
-- [ ] "AI Improve Text" button exists (rewrites selected text)
-
-### From Campaign Scheduling:
-
-- [ ] "AI Optimal Send Time" option exists (suggests best time based on engagement data)
-
-### From Audience Selection:
-
-- [ ] "AI Suggest Audiences" option exists
+1. Click **Forms** in the sidebar
+2. Click **"New Form"**
+3. ✅ The form builder loads
+4. Set the form name: `Newsletter Signup`
+5. Add these fields:
+   - Email (should be there by default)
+   - First Name
+6. Set the success message to: `Thanks for subscribing!`
+7. Click **Save**
+8. ✅ The form appears in the form list
+9. Click on it → the detail page shows fields and a submissions count (0)
 
 ---
 
-## 12. Analytics
+## Part 7: Create a Landing Page
 
-### Campaign Analytics (from Campaign Detail):
-
-- [ ] After sending a campaign, analytics section shows: sent, delivered, opened, clicked, bounced, unsubscribed counts
-- [ ] Open rate and click rate percentages display
-
-### Marketing Hub Stats:
-
-- [ ] Hub dashboard at `/marketing` shows aggregate stats
-- [ ] Stats update after creating campaigns/subscribers
-
----
-
-## 13. Client Portal Access
-
-> Log in as a **Client Portal User** (or switch to portal view).
-
-**Route:** `/portal/sites/[siteId]/marketing`
-
-- [ ] Marketing appears in portal sidebar navigation (if `canManageMarketing` permission is enabled)
-- [ ] Portal marketing hub loads — shows simplified dashboard
-- [ ] Portal campaigns page loads — can view campaigns
-- [ ] Portal subscribers page loads — can view/import subscribers
-- [ ] Portal sequences page loads — can view sequences
-- [ ] Portal forms page loads — can view forms and submissions
-- [ ] Portal analytics page loads — shows engagement metrics
+1. Click **Landing Pages** in the sidebar
+2. Click **"New Landing Page"**
+3. ✅ The editor loads
+4. Set the title: `Summer Sale`
+5. Set the slug: `summer-sale`
+6. Add a text block with: `50% off everything this week only`
+7. Add a button block or CTA
+8. Click **Save**
+9. ✅ The page appears in the list with status "Draft"
+10. Open it → click **"Publish"**
+11. ✅ Status changes to "Published"
+12. Click **"Unpublish"**
+13. ✅ Status changes back to "Draft"
 
 ---
 
-## 14. Super Admin
+## Part 8: Social Media
 
-> Log in as **Super Admin**.
-
-**Route:** `/admin/marketing`
-
-- [ ] Admin marketing health dashboard loads
-- [ ] Platform-wide email volume stats are visible
-- [ ] Top sites by volume are listed
-- [ ] Safety thresholds are displayed (bounce rate, complaint rate)
-- [ ] "Pause Marketing" action is available per site
-- [ ] "Resume Marketing" action is available for paused sites
-- [ ] Auto-safety enforcement status is visible
+1. Click **Social** in the sidebar (or navigate to the social posts page)
+2. ✅ Page loads — shows post list or empty state
+3. Try composing a new post:
+   - Type content: `Exciting news coming soon! Stay tuned 🚀`
+   - Select a platform (Facebook, Twitter, etc.) if available
+4. Look for a **Content Calendar** link or tab — click it
+5. ✅ A calendar view loads showing month/week/day options
+6. Look for **Social Connections** or settings
+7. ✅ You should see connect/disconnect buttons for platforms: Meta, Twitter, TikTok, LinkedIn
 
 ---
 
-## 15. Module Access & Navigation
+## Part 9: SMS & WhatsApp
 
-- [ ] On the site Modules tab, Marketing Suite shows with **"Open"** button, **"Configure"**, and **toggle**
-- [ ] Clicking "Open" navigates to `/dashboard/sites/[siteId]/marketing`
-- [ ] On the site detail page, the **Marketing** tab is visible when the module is enabled
-- [ ] Clicking the Marketing tab shows an "Open Marketing Dashboard" button
-- [ ] The button navigates to the marketing hub
-
----
-
-## 16. API Endpoints (Advanced)
-
-> Test with browser DevTools Network tab or a tool like Postman/curl.
-
-### Form Embed
-
-- [ ] `GET /api/marketing/forms/embed/[formId]` — returns embeddable form HTML
-
-### Form Submit
-
-- [ ] `POST /api/marketing/forms/submit/[formId]` with body `{ "email": "test@test.com" }` — returns success response
-
-### Tracking (if campaign sent)
-
-- [ ] `GET /api/marketing/track/open/[token]` — returns a 1x1 pixel (tracking pixel)
-- [ ] `GET /api/marketing/track/click/[token]` — redirects to target URL
-
-### Unsubscribe
-
-- [ ] `GET /api/marketing/unsubscribe/[token]` — shows unsubscribe confirmation page
+1. Navigate to the **SMS** section in marketing
+2. ✅ Page loads — you see an SMS composer
+3. Type a message: `Hi {{first_name}}, your order is ready for pickup!`
+4. ✅ Character counter updates as you type (should show count / 1600, and segment count)
+5. Look for WhatsApp settings — you should see fields for Template Name and provider config
+6. Look for provider settings — fields for Twilio SID, Auth Token, or Meta Business ID should exist
 
 ---
 
-## Quick Summary Checklist
+## Part 10: Check the Marketing Hub Stats
 
-| Area | Status |
-|------|--------|
-| Marketing Hub Dashboard | ☐ |
-| Campaigns CRUD | ☐ |
-| Campaign Send/Schedule/Pause | ☐ |
-| Subscribers CRUD + Tags | ☐ |
-| Subscriber Import | ☐ |
-| Email Templates | ☐ |
-| Sequences CRUD + Steps | ☐ |
-| Forms CRUD | ☐ |
-| Landing Pages CRUD + Publish | ☐ |
-| Social Media Posts + Calendar | ☐ |
-| SMS / WhatsApp Composer | ☐ |
-| Blog Marketing Integration | ☐ |
-| AI Features (buttons exist) | ☐ |
-| Analytics Display | ☐ |
-| Client Portal Access | ☐ |
-| Super Admin Health | ☐ |
-| Module Access (Open button + Tab) | ☐ |
-| API Endpoints | ☐ |
+1. Go back to the **Marketing Hub** (main marketing dashboard)
+2. ✅ The stat cards should now show updated numbers:
+   - Subscribers: **2** (Jack and Mary)
+   - Campaigns: **1** (the one you created)
+   - Sequences: **1** (Welcome Series)
+   - Forms: **1** (Newsletter Signup)
+3. ✅ Your campaign should appear under "Recent Campaigns"
+
+---
+
+## Part 11: AI Features (Quick Check)
+
+> These need API keys configured to actually work. Just verify the buttons exist.
+
+1. Go back to your campaign → open the editor
+2. Look for any of these AI buttons:
+   - **"AI Suggest Subject Lines"**
+   - **"AI Generate Preview Text"**
+   - **"AI Generate Content"**
+   - **"AI Improve Text"**
+3. ✅ At least some of these buttons should be visible
+4. Click one — it should either work (if API key is set) or show a helpful error message (not crash)
+
+---
+
+## Part 12: Client Portal View
+
+> You need a portal user with marketing permissions for this.
+
+1. Log out and log in as a **client portal user**, OR open the portal URL in an incognito window
+2. Navigate to the site's marketing section: **Portal → Marketing**
+3. ✅ Marketing should appear in the portal sidebar
+4. ✅ A simplified dashboard loads (fewer options than the agency view)
+5. Click through:
+   - **Campaigns** → can see the campaign list
+   - **Subscribers** → can see subscribers
+   - **Sequences** → can see sequences
+   - **Forms** → can see forms
+   - **Analytics** → shows engagement charts/stats
+6. ✅ All pages load without errors
+
+---
+
+## Part 13: Super Admin Health Check
+
+> You need to be a Super Admin for this.
+
+1. Log in as **Super Admin**
+2. Navigate to **Admin → Marketing** (or `/admin/marketing`)
+3. ✅ Platform health dashboard loads
+4. You should see:
+   - Email volume stats (platform-wide)
+   - Top sites by volume
+   - Safety thresholds (bounce rate, complaint rate limits)
+5. Look for **"Pause Marketing"** action next to a site — click it
+6. ✅ The site's marketing should show as paused
+7. Click **"Resume Marketing"**
+8. ✅ The site's marketing is active again
+
+---
+
+## Part 14: Clean Up
+
+1. Go back to the agency dashboard → Marketing
+2. Delete the test landing page ("Summer Sale")
+3. Delete the test form ("Newsletter Signup")
+4. Delete the test sequence ("Welcome Series")
+5. Delete the test campaign ("Welcome to Our Newsletter")
+6. Delete the test subscribers (Jack Banda, Mary Mwale)
+7. ✅ Everything deletes cleanly, no orphan data errors
+
+---
+
+## Done!
+
+If you made it through all 14 parts without any crashes or broken pages, the Marketing Module is working. Note any spots where:
+- A page crashed or showed an error
+- A button did nothing when clicked
+- Data didn't save or didn't show up
+- Navigation went to a 404 page
+
+Those are bugs to report.
