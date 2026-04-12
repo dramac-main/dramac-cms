@@ -19,6 +19,7 @@ import {
   Eye,
   Globe,
   BarChart3,
+  Plus,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -123,6 +124,12 @@ export function LandingPageListClient({
             {total} page{total !== 1 ? "s" : ""}
           </p>
         </div>
+        <Link href={`${basePath}/new`}>
+          <Button size="sm">
+            <Plus className="mr-2 h-4 w-4" />
+            New Landing Page
+          </Button>
+        </Link>
       </div>
 
       {/* Filters */}
@@ -168,6 +175,14 @@ export function LandingPageListClient({
                 ? "Try adjusting your filters"
                 : "Create your first landing page to capture leads"}
             </p>
+            {!currentStatus && !currentSearch && (
+              <Link href={`${basePath}/new`} className="mt-4">
+                <Button size="sm">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Landing Page
+                </Button>
+              </Link>
+            )}
           </CardContent>
         </Card>
       ) : (

@@ -18,6 +18,7 @@ import {
   Trash2,
   Eye,
   Send,
+  Plus,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -111,6 +112,12 @@ export function CampaignListClient({
             {total} campaign{total !== 1 ? "s" : ""}
           </p>
         </div>
+        <Link href={`${basePath}/new`}>
+          <Button size="sm">
+            <Plus className="mr-2 h-4 w-4" />
+            New Campaign
+          </Button>
+        </Link>
       </div>
 
       {/* Filters */}
@@ -156,6 +163,14 @@ export function CampaignListClient({
                 ? "Try adjusting your filters"
                 : "Create your first email campaign"}
             </p>
+            {!currentStatus && !currentSearch && (
+              <Link href={`${basePath}/new`} className="mt-4">
+                <Button size="sm">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Campaign
+                </Button>
+              </Link>
+            )}
           </CardContent>
         </Card>
       ) : (

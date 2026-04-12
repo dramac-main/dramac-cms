@@ -16,6 +16,7 @@ import {
   Eye,
   Code,
   BarChart3,
+  Plus,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -104,6 +105,12 @@ export function FormListClient({
             {total} form{total !== 1 ? "s" : ""}
           </p>
         </div>
+        <Link href={`${basePath}/new`}>
+          <Button size="sm">
+            <Plus className="mr-2 h-4 w-4" />
+            New Form
+          </Button>
+        </Link>
       </div>
 
       {/* Filters */}
@@ -166,6 +173,14 @@ export function FormListClient({
                 ? "Try adjusting your filters"
                 : "Create your first opt-in form to capture leads"}
             </p>
+            {!currentFormType && !currentStatus && !currentSearch && (
+              <Link href={`${basePath}/new`} className="mt-4">
+                <Button size="sm">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Form
+                </Button>
+              </Link>
+            )}
           </CardContent>
         </Card>
       ) : (
