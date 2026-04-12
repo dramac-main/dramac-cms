@@ -41,7 +41,7 @@ import { Badge } from "@/components/ui/badge";
 import { createCampaign } from "../../actions/campaign-actions";
 import { sendSMSCampaignBatch } from "../../actions/sms-actions";
 import { MARKETING_LIMITS } from "../../lib/marketing-constants";
-import { calculateSMSSegments } from "../../services/sms-provider";
+import { calculateSMSSegments } from "../../services/sms-utils";
 
 interface SMSCampaignComposerProps {
   siteId: string;
