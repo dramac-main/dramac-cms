@@ -33,6 +33,9 @@ const COMPONENT_MODULE_MAP: Record<string, string> = {
   Shop: "ecommerce",
   Store: "ecommerce",
   LiveChat: "live-chat",
+  Newsletter: "marketing",
+  OptIn: "marketing",
+  Marketing: "marketing",
 };
 
 // Feature IDs (from AI designer chip selection) → module slugs
@@ -42,6 +45,7 @@ const FEATURE_MODULE_MAP: Record<string, string> = {
   "live-chat": "live-chat",
   crm: "crm",
   automation: "automation",
+  marketing: "marketing",
 };
 
 export async function POST(request: NextRequest, context: RouteContext) {

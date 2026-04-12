@@ -16,6 +16,7 @@ import type {
   CRMConfig,
   AutomationConfig,
   SocialMediaConfig,
+  MarketingConfig,
   BusinessDataContext,
 } from "./types";
 
@@ -69,6 +70,8 @@ export class ModuleConfigurator {
         return this.configureAutomation(requirement);
       case "social-media":
         return this.configureSocialMedia(requirement);
+      case "marketing":
+        return this.configureMarketing(requirement);
       default:
         return requirement.suggestedConfig;
     }
@@ -319,6 +322,31 @@ Determine optimal booking configuration.
         feedDisplay: platforms.includes("instagram"),
       },
       components,
+    };
+  }
+
+  /**
+   * Configure Marketing module
+   */
+  private async configureMarketing(
+    requirement: ModuleRequirement,
+  ): Promise<MarketingConfig> {
+    const baseConfig = requirement.suggestedConfig as MarketingConfig;
+    const hasProducts = (this.businessContext.products?.length ?? 0) > 0;
+    const hasServices = (this.businessContext.services?.length ?? 0) > 0;
+
+    return {
+      ...baseConfig,
+      settings: {
+        ...baseConfig.settings,
+        newsletterEnabled: true,
+        optInFormEnabled: true,
+        emailCampaigns: true,
+        smsCampaigns: hasProducts || hasServices,
+        automatedSequences: hasProducts || hasServices,
+        subscriberSegmentation: hasProducts || hasServices,
+        sendingQuota: hasProducts ? 5000 : 1000,
+      },
     };
   }
 }

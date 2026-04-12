@@ -20,7 +20,8 @@ export type ModuleType =
   | "booking"
   | "crm"
   | "automation"
-  | "social-media";
+  | "social-media"
+  | "marketing";
 
 /**
  * Module requirement priority
@@ -183,6 +184,22 @@ export interface SocialMediaConfig extends ModuleConfig {
 }
 
 // =============================================================================
+// MARKETING CONFIG
+// =============================================================================
+
+export interface MarketingConfig extends ModuleConfig {
+  settings: {
+    newsletterEnabled: boolean;
+    optInFormEnabled: boolean;
+    emailCampaigns: boolean;
+    smsCampaigns: boolean;
+    automatedSequences: boolean;
+    subscriberSegmentation: boolean;
+    sendingQuota: number;
+  };
+}
+
+// =============================================================================
 // BUSINESS CONTEXT TYPE
 // =============================================================================
 
@@ -245,83 +262,83 @@ export interface IndustryModuleMapping {
 export const INDUSTRY_MODULE_MAPPING: Record<string, IndustryModuleMapping> = {
   restaurant: {
     required: ["booking"],
-    recommended: ["crm", "social-media", "automation"],
+    recommended: ["crm", "social-media", "automation", "marketing"],
   },
   ecommerce: {
     required: ["ecommerce"],
-    recommended: ["crm", "automation", "social-media"],
+    recommended: ["crm", "automation", "social-media", "marketing"],
   },
   saas: {
     required: ["crm"],
-    recommended: ["automation"],
+    recommended: ["automation", "marketing"],
   },
   healthcare: {
     required: ["booking", "crm"],
-    recommended: ["automation"],
+    recommended: ["automation", "marketing"],
   },
   "real-estate": {
     required: ["crm"],
-    recommended: ["automation", "social-media"],
+    recommended: ["automation", "social-media", "marketing"],
   },
   service: {
     required: ["booking", "crm"],
-    recommended: ["automation"],
+    recommended: ["automation", "marketing"],
   },
   barbershop: {
     required: ["booking"],
-    recommended: ["crm", "social-media"],
+    recommended: ["crm", "social-media", "marketing"],
   },
   salon: {
     required: ["booking"],
-    recommended: ["crm", "social-media"],
+    recommended: ["crm", "social-media", "marketing"],
   },
   spa: {
     required: ["booking"],
-    recommended: ["crm", "social-media"],
+    recommended: ["crm", "social-media", "marketing"],
   },
   beauty: {
     required: ["booking"],
-    recommended: ["crm", "social-media"],
+    recommended: ["crm", "social-media", "marketing"],
   },
   dental: {
     required: ["booking", "crm"],
-    recommended: ["automation"],
+    recommended: ["automation", "marketing"],
   },
   veterinary: {
     required: ["booking", "crm"],
-    recommended: ["automation"],
+    recommended: ["automation", "marketing"],
   },
   photography: {
     required: ["crm"],
-    recommended: ["social-media", "ecommerce"],
+    recommended: ["social-media", "ecommerce", "marketing"],
   },
   portfolio: {
     required: [],
-    recommended: ["crm", "social-media"],
+    recommended: ["crm", "social-media", "marketing"],
   },
   construction: {
     required: ["crm"],
-    recommended: ["automation"],
+    recommended: ["automation", "marketing"],
   },
   fitness: {
     required: ["booking"],
-    recommended: ["crm", "automation", "social-media"],
+    recommended: ["crm", "automation", "social-media", "marketing"],
   },
   education: {
     required: ["crm"],
-    recommended: ["automation", "social-media"],
+    recommended: ["automation", "social-media", "marketing"],
   },
   agency: {
     required: ["crm"],
-    recommended: ["automation", "social-media"],
+    recommended: ["automation", "social-media", "marketing"],
   },
   nonprofit: {
     required: ["crm"],
-    recommended: ["automation", "social-media"],
+    recommended: ["automation", "social-media", "marketing"],
   },
   general: {
     required: [],
-    recommended: ["crm", "social-media"],
+    recommended: ["crm", "social-media", "marketing"],
   },
 };
 

@@ -23,7 +23,7 @@ import { getDefaultModuleConfig } from "./default-configs";
 // =============================================================================
 
 const DetectedModuleSchema = z.object({
-  module: z.enum(["ecommerce", "booking", "crm", "automation", "social-media"]),
+  module: z.enum(["ecommerce", "booking", "crm", "automation", "social-media", "marketing"]),
   confidence: z.number().describe("Confidence score between 0 and 1"),
   reason: z.string(),
   features: z.array(z.string()),

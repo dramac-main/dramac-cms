@@ -37,6 +37,8 @@ export function getDefaultModuleConfig(
       return getDefaultAutomationConfig(features);
     case "social-media":
       return getDefaultSocialMediaConfig(features);
+    case "marketing":
+      return getDefaultMarketingConfig(features);
     default:
       return {
         enabled: true,
@@ -287,6 +289,40 @@ function getDefaultSocialMediaConfig(features?: string[]): SocialMediaConfig {
         placement: "global",
         position: "footer",
         props: {},
+      },
+    ],
+    pages: [],
+    integrations: [],
+  };
+}
+
+/**
+ * Default Marketing configuration
+ */
+function getDefaultMarketingConfig(features?: string[]): ModuleConfig {
+  const hasEcommerce = features?.includes("ecommerce") ?? false;
+
+  return {
+    enabled: true,
+    settings: {
+      sendingQuotaDaily: 1000,
+      sendingQuotaMonthly: 25000,
+      doubleOptInEnabled: false,
+      autoCleanBounces: true,
+      timezone: "Africa/Lusaka",
+      welcomeEmailEnabled: true,
+      abandonedCartEmail: hasEcommerce,
+    },
+    components: [
+      {
+        componentType: "Newsletter",
+        placement: "global",
+        position: "footer",
+        props: {
+          title: "Stay Updated",
+          description:
+            "Subscribe to our newsletter for updates and special offers.",
+        },
       },
     ],
     pages: [],
