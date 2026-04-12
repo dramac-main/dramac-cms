@@ -8,6 +8,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import {
   Save,
   Globe,
@@ -98,6 +99,10 @@ export function LandingPageEditor({
   );
 
   const isEdit = !!landingPage;
+
+  // Warn before navigating away with unsaved work
+  const hasUnsavedChanges = !!(title || description || blocks.length > 0);
+  useUnsavedChanges(hasUnsavedChanges && !isEdit);
 
   // Auto-generate slug from title
   function handleTitleChange(value: string) {

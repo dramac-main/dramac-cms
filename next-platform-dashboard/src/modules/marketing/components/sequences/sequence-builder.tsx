@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useTransition } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import {
   Card,
   CardContent,
@@ -126,6 +127,10 @@ export function SequenceBuilder({
     existingSequence?.steps || [],
   );
   const [expandedStep, setExpandedStep] = useState<string | null>(null);
+
+  // Warn before navigating away with unsaved work
+  const hasUnsavedChanges = !!(name || description || steps.length > 0);
+  useUnsavedChanges(hasUnsavedChanges);
 
   // Conversion goal
   const [goalType, setGoalType] = useState(

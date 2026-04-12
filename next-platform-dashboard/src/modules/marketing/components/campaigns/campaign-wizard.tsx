@@ -8,6 +8,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import {
   ChevronRight,
   ChevronLeft,
@@ -69,6 +70,10 @@ export function CampaignWizard({ siteId }: CampaignWizardProps) {
   const [audienceType, setAudienceType] = useState("all_subscribers");
   const [contentHtml, setContentHtml] = useState("");
   const [tags, setTags] = useState("");
+
+  // Warn before navigating away with unsaved work
+  const hasUnsavedChanges = !!(name || description || subjectLine || previewText || contentHtml);
+  useUnsavedChanges(hasUnsavedChanges);
 
   const currentStepIndex = STEPS.findIndex((s) => s.id === currentStep);
 

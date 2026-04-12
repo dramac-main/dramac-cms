@@ -9,6 +9,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import {
   Save,
   Plus,
@@ -97,6 +98,10 @@ export function FormBuilder({ siteId, form, defaultTab }: FormBuilderProps) {
   );
 
   const isEdit = !!form;
+
+  // Warn before navigating away with unsaved work
+  const hasUnsavedChanges = !!(name || description || fields.length > 0);
+  useUnsavedChanges(hasUnsavedChanges && !isEdit);
 
   // ─── Field Management ──────────────────────────────────────
 
