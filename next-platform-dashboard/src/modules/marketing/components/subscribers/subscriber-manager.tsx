@@ -677,7 +677,9 @@ function ImportForm({
   function handleImport() {
     const records = parseCsv(csvText);
     if (records.length === 0) {
-      toast.error("No valid records found. Ensure CSV has an 'email' column header.");
+      toast.error(
+        "No valid records found. Ensure CSV has an 'email' column header.",
+      );
       return;
     }
 

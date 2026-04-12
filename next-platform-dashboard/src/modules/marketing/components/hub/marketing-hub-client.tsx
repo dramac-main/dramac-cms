@@ -17,12 +17,13 @@ import {
   Eye,
   MousePointerClick,
   Zap,
-  Plus,
   ArrowRight,
   BarChart3,
-  GitBranch,
   FileText,
   FormInput,
+  Share2,
+  CalendarDays,
+  MessageSquare,
   Sparkles,
   Loader2,
   AlertTriangle,
@@ -93,27 +94,11 @@ export function MarketingHubClient({ siteId, data }: MarketingHubClientProps) {
   return (
     <div className="flex-1 p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Marketing Hub</h1>
-          <p className="text-muted-foreground">
-            Manage campaigns, sequences, and subscriber engagement
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Link href={`${basePath}/campaigns/new`}>
-            <Button size="sm">
-              <Plus className="mr-2 h-4 w-4" />
-              New Campaign
-            </Button>
-          </Link>
-          <Link href={`${basePath}/sequences/new`}>
-            <Button variant="outline" size="sm">
-              <GitBranch className="mr-2 h-4 w-4" />
-              New Sequence
-            </Button>
-          </Link>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Marketing Hub</h1>
+        <p className="text-muted-foreground">
+          Manage campaigns, sequences, and subscriber engagement
+        </p>
       </div>
 
       {/* Stats Grid */}
@@ -145,7 +130,7 @@ export function MarketingHubClient({ siteId, data }: MarketingHubClientProps) {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3">
         <Link href={`${basePath}/campaigns`}>
           <Card className="hover:border-primary/50 transition-colors cursor-pointer">
             <CardContent className="flex items-center gap-3 p-4">
@@ -214,6 +199,39 @@ export function MarketingHubClient({ siteId, data }: MarketingHubClientProps) {
               <div>
                 <p className="text-sm font-medium">Templates</p>
                 <p className="text-xs text-muted-foreground">Email library</p>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href={`${basePath}/social`}>
+          <Card className="hover:border-primary/50 transition-colors cursor-pointer">
+            <CardContent className="flex items-center gap-3 p-4">
+              <Share2 className="h-5 w-5 text-primary" />
+              <div>
+                <p className="text-sm font-medium">Social Media</p>
+                <p className="text-xs text-muted-foreground">Posts & connections</p>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href={`${basePath}/calendar`}>
+          <Card className="hover:border-primary/50 transition-colors cursor-pointer">
+            <CardContent className="flex items-center gap-3 p-4">
+              <CalendarDays className="h-5 w-5 text-primary" />
+              <div>
+                <p className="text-sm font-medium">Content Calendar</p>
+                <p className="text-xs text-muted-foreground">Plan & schedule</p>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href={`${basePath}/sms`}>
+          <Card className="hover:border-primary/50 transition-colors cursor-pointer">
+            <CardContent className="flex items-center gap-3 p-4">
+              <MessageSquare className="h-5 w-5 text-primary" />
+              <div>
+                <p className="text-sm font-medium">SMS Campaigns</p>
+                <p className="text-xs text-muted-foreground">Text messaging</p>
               </div>
             </CardContent>
           </Card>

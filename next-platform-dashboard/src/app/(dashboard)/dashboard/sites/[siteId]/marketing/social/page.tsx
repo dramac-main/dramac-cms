@@ -7,10 +7,8 @@
  */
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowLeft, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 import { PLATFORM } from "@/lib/constants/platform";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -53,39 +51,28 @@ export default async function SocialPage({
   const activeTab = tab === "connections" ? "connections" : "posts";
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="border-b px-6 py-3 flex items-center justify-between">
-        <Link href={`/dashboard/sites/${siteId}/marketing`}>
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Marketing Hub
-          </Button>
-        </Link>
-      </div>
+    <div className="flex-1 p-6">
+      <Tabs defaultValue={activeTab}>
+        <TabsList>
+          <TabsTrigger value="posts">Posts</TabsTrigger>
+          <TabsTrigger value="connections">
+            <Settings className="mr-2 h-4 w-4" />
+            Connections
+          </TabsTrigger>
+        </TabsList>
 
-      <div className="flex-1 p-6">
-        <Tabs defaultValue={activeTab}>
-          <TabsList>
-            <TabsTrigger value="posts">Posts</TabsTrigger>
-            <TabsTrigger value="connections">
-              <Settings className="mr-2 h-4 w-4" />
-              Connections
-            </TabsTrigger>
-          </TabsList>
+        <TabsContent value="posts" className="mt-6">
+          <Suspense fallback={<PostsSkeleton />}>
+            <SocialPostsLoader siteId={siteId} />
+          </Suspense>
+        </TabsContent>
 
-          <TabsContent value="posts" className="mt-6">
-            <Suspense fallback={<PostsSkeleton />}>
-              <SocialPostsLoader siteId={siteId} />
-            </Suspense>
-          </TabsContent>
-
-          <TabsContent value="connections" className="mt-6">
-            <Suspense fallback={<PostsSkeleton />}>
-              <ConnectionsLoader siteId={siteId} />
-            </Suspense>
-          </TabsContent>
-        </Tabs>
-      </div>
+        <TabsContent value="connections" className="mt-6">
+          <Suspense fallback={<PostsSkeleton />}>
+            <ConnectionsLoader siteId={siteId} />
+          </Suspense>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

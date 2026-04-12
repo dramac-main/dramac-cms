@@ -65,7 +65,7 @@ export function SiteModulesTab({ siteId }: SiteModulesTabProps) {
 
   const handleToggle = async (moduleId: string, currentlyEnabled: boolean) => {
     setTogglingId(moduleId);
-    
+
     try {
       if (currentlyEnabled) {
         await disableMutation.mutateAsync(moduleId);
@@ -75,7 +75,9 @@ export function SiteModulesTab({ siteId }: SiteModulesTabProps) {
         toast.success("Module enabled");
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to update module");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update module",
+      );
     } finally {
       setTogglingId(null);
     }
@@ -146,32 +148,43 @@ export function SiteModulesTab({ siteId }: SiteModulesTabProps) {
                     {isEnabled && (
                       <>
                         {/* Open button for modules with dashboards */}
-                        {(module.slug === 'booking' || module.slug === 'crm' || module.slug === 'ecommerce' || module.slug === 'automation' || module.slug === 'social-media' || module.slug === 'ai-agents' || module.slug === 'live-chat' || module.slug === 'marketing') && (
-                          <Button 
-                            variant="default" 
-                            size="sm"
-                            asChild
-                          >
-                            <Link href={`/dashboard/sites/${siteId}/${
-                              module.slug === 'crm' ? 'crm-module' : 
-                              module.slug === 'social-media' ? 'social' :
-                              module.slug === 'ai-agents' ? 'ai-agents' :
-                              module.slug === 'live-chat' ? 'live-chat' :
-                              module.slug
-                            }`}>
+                        {(module.slug === "booking" ||
+                          module.slug === "crm" ||
+                          module.slug === "ecommerce" ||
+                          module.slug === "automation" ||
+                          module.slug === "social-media" ||
+                          module.slug === "ai-agents" ||
+                          module.slug === "live-chat" ||
+                          module.slug === "marketing") && (
+                          <Button variant="default" size="sm" asChild>
+                            <Link
+                              href={`/dashboard/sites/${siteId}/${
+                                module.slug === "crm"
+                                  ? "crm-module"
+                                  : module.slug === "social-media"
+                                    ? "social"
+                                    : module.slug === "ai-agents"
+                                      ? "ai-agents"
+                                      : module.slug === "live-chat"
+                                        ? "live-chat"
+                                        : module.slug
+                              }`}
+                            >
                               <ExternalLink className="w-4 h-4 mr-1" />
                               Open
                             </Link>
                           </Button>
                         )}
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="sm"
-                          onClick={() => setConfiguringModule({
-                            id: module.id,
-                            name: module.name,
-                            settings: siteModule?.settings || {},
-                          })}
+                          onClick={() =>
+                            setConfiguringModule({
+                              id: module.id,
+                              name: module.name,
+                              settings: siteModule?.settings || {},
+                            })
+                          }
                         >
                           <Settings className="w-4 h-4 mr-1" />
                           Configure
@@ -191,7 +204,8 @@ export function SiteModulesTab({ siteId }: SiteModulesTabProps) {
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Badge variant="secondary">Enabled</Badge>
                     <span>
-                      Since {new Date(siteModule.enabled_at).toLocaleDateString()}
+                      Since{" "}
+                      {new Date(siteModule.enabled_at).toLocaleDateString()}
                     </span>
                   </div>
                 </CardContent>

@@ -5,10 +5,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { PLATFORM } from "@/lib/constants/platform";
-import { Button } from "@/components/ui/button";
 import {
   getSequence,
   getSequenceEnrollments,
@@ -31,21 +28,10 @@ export default async function SequenceDetailPage({
   const { siteId, sequenceId } = await params;
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="border-b px-6 py-3">
-        <Link href={`/dashboard/sites/${siteId}/marketing/sequences`}>
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Sequences
-          </Button>
-        </Link>
-      </div>
-
-      <div className="flex-1 p-6">
-        <Suspense fallback={<SequenceDetailSkeleton />}>
-          <SequenceDetailLoader siteId={siteId} sequenceId={sequenceId} />
-        </Suspense>
-      </div>
+    <div className="flex-1 p-6">
+      <Suspense fallback={<SequenceDetailSkeleton />}>
+        <SequenceDetailLoader siteId={siteId} sequenceId={sequenceId} />
+      </Suspense>
     </div>
   );
 }

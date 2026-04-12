@@ -7,14 +7,14 @@
 
 ## Session Plan
 
-| Session | Phases | Focus |
-|---------|--------|-------|
-| 1 | MKT-01 | Database foundation (MUST be first) |
-| 2 | MKT-02 + MKT-03 | Campaign engine + email analytics |
-| 3 | MKT-04 + MKT-05 | Drip sequences + marketing hub dashboard |
-| 4 | MKT-06 + MKT-07 | Landing pages, forms + blog enhancements |
-| 5 | MKT-08 + MKT-09 | SMS/WhatsApp channels + AI intelligence |
-| 6 | MKT-10 + MKT-11 + MKT-12 | Super admin + client portal + social media |
+| Session | Phases                   | Focus                                      |
+| ------- | ------------------------ | ------------------------------------------ |
+| 1       | MKT-01                   | Database foundation (MUST be first)        |
+| 2       | MKT-02 + MKT-03          | Campaign engine + email analytics          |
+| 3       | MKT-04 + MKT-05          | Drip sequences + marketing hub dashboard   |
+| 4       | MKT-06 + MKT-07          | Landing pages, forms + blog enhancements   |
+| 5       | MKT-08 + MKT-09          | SMS/WhatsApp channels + AI intelligence    |
+| 6       | MKT-10 + MKT-11 + MKT-12 | Super admin + client portal + social media |
 
 ---
 

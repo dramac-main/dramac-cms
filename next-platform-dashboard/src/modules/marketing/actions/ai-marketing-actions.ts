@@ -39,9 +39,7 @@ import type {
 
 // ─── Subject Lines ─────────────────────────────────────────
 
-export async function aiGenerateSubjectLines(
-  input: SubjectLineInput,
-): Promise<{
+export async function aiGenerateSubjectLines(input: SubjectLineInput): Promise<{
   success: boolean;
   data?: SubjectLineSuggestion[];
   error?: string;
@@ -63,7 +61,10 @@ export async function aiGeneratePreviewText(
   campaignGoal?: string,
 ): Promise<{ success: boolean; data?: string; error?: string }> {
   try {
-    const previewText = await generatePreviewText(subjectLine, campaignGoal || "");
+    const previewText = await generatePreviewText(
+      subjectLine,
+      campaignGoal || "",
+    );
     return { success: true, data: previewText };
   } catch (err: any) {
     console.error("[AIAction] Preview text error:", err);

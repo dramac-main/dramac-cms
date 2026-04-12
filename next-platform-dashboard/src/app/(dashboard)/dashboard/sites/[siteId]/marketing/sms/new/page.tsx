@@ -21,10 +21,8 @@ export default async function SMSCampaignPage({
   const { siteId } = await params;
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 p-6">
-        <SMSCampaignComposer siteId={siteId} />
-      </div>
+    <div className="flex-1 p-6">
+      <SMSCampaignComposer siteId={siteId} />
     </div>
   );
 }

@@ -23,7 +23,14 @@ import { getDefaultModuleConfig } from "./default-configs";
 // =============================================================================
 
 const DetectedModuleSchema = z.object({
-  module: z.enum(["ecommerce", "booking", "crm", "automation", "social-media", "marketing"]),
+  module: z.enum([
+    "ecommerce",
+    "booking",
+    "crm",
+    "automation",
+    "social-media",
+    "marketing",
+  ]),
   confidence: z.number().describe("Confidence score between 0 and 1"),
   reason: z.string(),
   features: z.array(z.string()),
@@ -43,7 +50,7 @@ const ModuleAnalysisSchema = z.object({
 export async function analyzeModuleRequirements(
   userPrompt: string,
   industry: string,
-  businessContext: BusinessDataContext
+  businessContext: BusinessDataContext,
 ): Promise<ModuleRequirement[]> {
   // Get industry defaults
   const industryDefaults =
@@ -109,7 +116,7 @@ Consider these signals:
   for (const detected of object.detectedModules) {
     if (!requirements.find((r) => r.module === detected.module)) {
       const isRecommended = industryDefaults.recommended.includes(
-        detected.module
+        detected.module,
       );
 
       requirements.push({
@@ -119,12 +126,12 @@ Consider these signals:
           detected.confidence > 0.7
             ? "high"
             : detected.confidence > 0.4
-            ? "medium"
-            : "low",
+              ? "medium"
+              : "low",
         reason: detected.reason,
         suggestedConfig: getDefaultModuleConfig(
           detected.module,
-          detected.features
+          detected.features,
         ),
       });
     }
@@ -154,20 +161,16 @@ Consider these signals:
  * Get modules that should be enabled by default
  */
 export function getRequiredModules(
-  requirements: ModuleRequirement[]
+  requirements: ModuleRequirement[],
 ): ModuleRequirement[] {
-  return requirements.filter(
-    (r) => r.required || r.priority === "high"
-  );
+  return requirements.filter((r) => r.required || r.priority === "high");
 }
 
 /**
  * Get optional/recommended modules
  */
 export function getOptionalModules(
-  requirements: ModuleRequirement[]
+  requirements: ModuleRequirement[],
 ): ModuleRequirement[] {
-  return requirements.filter(
-    (r) => !r.required && r.priority !== "high"
-  );
+  return requirements.filter((r) => !r.required && r.priority !== "high");
 }

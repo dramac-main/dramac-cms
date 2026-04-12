@@ -48,20 +48,24 @@ This document is the **single source of truth** for building the DRAMAC Marketin
 ## Table of Contents
 
 ### Foundation
+
 - **Phase MKT-01**: Database Foundation, Module Registration & Type System
 - **Phase MKT-02**: Email Campaign Engine (Builder, Sending, Templates)
 - **Phase MKT-03**: Email Analytics & Tracking (Opens, Clicks, Bounces)
 
 ### Core Marketing
+
 - **Phase MKT-04**: Drip Sequences & Marketing Automation Templates
 - **Phase MKT-05**: Marketing Hub Dashboard (Unified Analytics)
 - **Phase MKT-06**: Landing Pages & Conversion Funnels
 
 ### Content & Channels
+
 - **Phase MKT-07**: Blog Marketing Enhancement (CTAs, Lead Capture, RSS, Content-to-Email)
 - **Phase MKT-08**: SMS & WhatsApp Marketing (Multi-Channel Campaigns)
 
 ### Intelligence & Administration
+
 - **Phase MKT-09**: AI Marketing Intelligence (Subject Lines, Send Times, Personalization)
 - **Phase MKT-10**: Super Admin Platform Controls (Quotas, Deliverability, Abuse)
 - **Phase MKT-11**: Client Portal Marketing Views (Permission-Gated)
@@ -100,15 +104,15 @@ Super Admin (Platform operator — DRAMAC)
 
 The Marketing Module DEPENDS ON and INTEGRATES WITH:
 
-| Module | How Marketing Uses It |
-|---|---|
-| **CRM** (`mod_crmmod01_*`) | Contacts are the audience. Segments become targeting criteria. Tags used for personalization. Lead scores updated by engagement. |
-| **Automation** (`automation_*`) | Workflow engine processes drip sequences. Marketing events trigger workflows. Marketing actions available in workflow builder. |
-| **E-Commerce** (`mod_ecommod01_*`) | Abandoned cart data, purchase history for segmentation. Flash sales auto-create campaigns. Product recommendations in emails. |
-| **Live Chat** (`mod_chat_*`) | AI responder reads email engagement data. Chat events trigger marketing sequences. |
-| **Social Media** (social media module) | Campaign calendar syncs. Attribution tracking. Social posts can promote email campaigns. |
-| **Blog** (blog tables) | Content-to-email pipeline. Blog CTAs capture subscribers. RSS auto-newsletters. |
-| **Email System** (`src/lib/email/`) | Reuses Resend client, branding system, template rendering. Marketing adds bulk sending + tracking on top. |
+| Module                                 | How Marketing Uses It                                                                                                            |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| **CRM** (`mod_crmmod01_*`)             | Contacts are the audience. Segments become targeting criteria. Tags used for personalization. Lead scores updated by engagement. |
+| **Automation** (`automation_*`)        | Workflow engine processes drip sequences. Marketing events trigger workflows. Marketing actions available in workflow builder.   |
+| **E-Commerce** (`mod_ecommod01_*`)     | Abandoned cart data, purchase history for segmentation. Flash sales auto-create campaigns. Product recommendations in emails.    |
+| **Live Chat** (`mod_chat_*`)           | AI responder reads email engagement data. Chat events trigger marketing sequences.                                               |
+| **Social Media** (social media module) | Campaign calendar syncs. Attribution tracking. Social posts can promote email campaigns.                                         |
+| **Blog** (blog tables)                 | Content-to-email pipeline. Blog CTAs capture subscribers. RSS auto-newsletters.                                                  |
+| **Email System** (`src/lib/email/`)    | Reuses Resend client, branding system, template rendering. Marketing adds bulk sending + tracking on top.                        |
 
 ### Tech Stack Reference
 
@@ -181,6 +185,7 @@ The Marketing Module DEPENDS ON and INTEGRATES WITH:
 ### What Gets Added to Automation (NOT Replaced)
 
 **New event types** added to `src/modules/automation/lib/event-types.ts`:
+
 ```
 marketing.campaign.created
 marketing.campaign.started
@@ -203,6 +208,7 @@ marketing.funnel.converted
 ```
 
 **New action types** added to `src/modules/automation/lib/action-types.ts`:
+
 ```
 marketing.send_campaign        — Trigger a campaign send to an audience
 marketing.add_to_list          — Add contact to marketing list
@@ -222,6 +228,7 @@ marketing.send_sms             — Send SMS to contact
 
 **Who**: Agency owners, admins, members with `manage_marketing` permission  
 **What they can do**:
+
 - Full campaign management (create, edit, send, schedule, pause, cancel)
 - Email template design and management
 - Audience/list management
@@ -234,6 +241,7 @@ marketing.send_sms             — Send SMS to contact
 - Marketing settings (sending limits, default sender info, compliance)
 
 **Routes**:
+
 ```
 /dashboard/sites/[siteId]/marketing/                    — Overview dashboard
 /dashboard/sites/[siteId]/marketing/campaigns/          — Campaign list
@@ -255,6 +263,7 @@ marketing.send_sms             — Send SMS to contact
 
 **Who**: Clients with `can_manage_marketing` permission  
 **What they can do** (configurable per client):
+
 - View campaign performance (read-only by default)
 - View subscriber growth and list sizes
 - Create simple campaigns (if permitted)
@@ -263,6 +272,7 @@ marketing.send_sms             — Send SMS to contact
 - View conversion funnel reports
 
 **Routes**:
+
 ```
 /portal/sites/[siteId]/marketing/                       — Marketing overview
 /portal/sites/[siteId]/marketing/campaigns/             — Campaign list (view or full)
@@ -275,6 +285,7 @@ marketing.send_sms             — Send SMS to contact
 
 **Who**: Super admin only (`profiles.role === 'super_admin'`)  
 **What they can do**:
+
 - Platform-wide email sending dashboard
 - Per-agency sending quotas and throttle controls
 - Deliverability monitoring (bounce rates, spam complaints across all agencies)
@@ -284,6 +295,7 @@ marketing.send_sms             — Send SMS to contact
 - Resend account health metrics
 
 **Routes**:
+
 ```
 /admin/marketing/                                       — Platform email health dashboard
 /admin/marketing/sending/                               — Sending metrics & quotas
@@ -295,6 +307,7 @@ marketing.send_sms             — Send SMS to contact
 ### Public/Storefront (No Auth Required)
 
 **What visitors see**:
+
 - Email opt-in forms (embedded in pages, blog posts, popups)
 - Landing pages (funnel entry points)
 - Email preference center (`/unsubscribe?uid=...` — already exists, will be enhanced)
@@ -310,69 +323,83 @@ marketing.send_sms             — Send SMS to contact
 These existing files get NEW entries added. No existing functionality is removed or changed.
 
 #### 1. Automation Event Registry
+
 **File**: `src/modules/automation/lib/event-types.ts`  
 **Change**: Add `marketing` category with 18 new event types  
 **Risk**: Zero — additive array entries
 
 #### 2. Automation Action Types
+
 **File**: `src/modules/automation/lib/action-types.ts`  
 **Change**: Add `marketing` category with 8 new action types  
 **Risk**: Zero — additive array entries
 
 #### 3. Automation System Templates
+
 **File**: `src/modules/automation/lib/system-templates.ts`  
 **Change**: Add 15+ pre-built marketing workflow templates  
 **Risk**: Zero — additive array entries
 
 #### 4. Email Types
+
 **File**: `src/lib/email/email-types.ts`  
 **Change**: Add marketing email types (campaign_email, drip_email, sms_notification, etc.)  
 **Risk**: Zero — additive type union + interface additions
 
 #### 5. Email Templates
+
 **File**: `src/lib/email/templates.ts`  
 **Change**: Add marketing email template renderers  
 **Risk**: Zero — additive registry entries
 
 #### 6. Dashboard Navigation
+
 **File**: `src/config/navigation.ts`  
 **Change**: Add "Marketing" nav section under sites  
 **Risk**: Zero — additive nav items
 
 #### 7. Portal Navigation
+
 **File**: `src/config/portal-navigation.ts`  
 **Change**: Add marketing portal nav items, gated by `hasModule("marketing") && permissions.canManageMarketing`  
 **Risk**: Zero — follows exact same pattern as other modules
 
 #### 8. Roles & Permissions
+
 **File**: `src/types/roles.ts`  
 **Change**: Add `manage_marketing` permission  
 **Risk**: Zero — additive permission entry
 
 #### 9. Client Permissions
+
 **DB Migration**: Add `can_manage_marketing` boolean column to `clients` table  
 **Risk**: Zero — nullable column with default false
 
 #### 10. Module Catalog
+
 **File**: `src/lib/modules/module-catalog.ts`  
 **Change**: Add marketing module definition  
 **Risk**: Zero — additive catalog entry
 
 #### 11. Core Module Installation
+
 **File**: `src/lib/actions/sites.ts`  
 **Change**: Add `"marketing"` to `CORE_MODULE_SLUGS` array  
 **Risk**: Zero — marketing auto-installs alongside CRM, Automation, Live Chat
 
 #### 12. CRM Contacts Table
+
 **DB Migration**: Add 4 columns: `email_opt_in`, `sms_opt_in`, `marketing_consent_date`, `consent_source`  
 **Risk**: Zero — nullable columns, no existing data affected
 
 #### 13. Customer Context Bridge
+
 **File**: `src/modules/live-chat/lib/customer-context-bridge.ts`  
 **Change**: Add email engagement data to AI context object  
 **Risk**: Low — additive data enrichment
 
 #### 14. Blog Post Editor
+
 **File**: `src/components/blog/post-editor.tsx`  
 **Change**: Add CTA block and lead capture TipTap extensions to toolbar  
 **Risk**: Low — new toolbar buttons, existing functionality untouched
@@ -454,6 +481,7 @@ src/modules/marketing/
 ```
 
 **Dashboard Pages** (new):
+
 ```
 src/app/(dashboard)/dashboard/sites/[siteId]/marketing/
 ├── page.tsx                           — Marketing overview
@@ -478,6 +506,7 @@ src/app/(dashboard)/dashboard/sites/[siteId]/marketing/
 ```
 
 **Portal Pages** (new):
+
 ```
 src/app/portal/sites/[siteId]/marketing/
 ├── page.tsx                           — Marketing overview
@@ -489,6 +518,7 @@ src/app/portal/sites/[siteId]/marketing/
 ```
 
 **Admin Pages** (new):
+
 ```
 src/app/(dashboard)/admin/marketing/
 ├── page.tsx                           — Platform email health
@@ -499,6 +529,7 @@ src/app/(dashboard)/admin/marketing/
 ```
 
 **API Routes** (new):
+
 ```
 src/app/api/marketing/
 ├── track/
@@ -517,231 +548,241 @@ src/app/api/marketing/
 ## Phase MKT-01: Database Foundation, Module Registration & Type System
 
 ### Purpose
+
 Establish all database tables, RLS policies, TypeScript types, module registration, and permission wiring. This phase creates the skeleton that all subsequent phases build on.
 
 ### Database Tables (15 tables, all prefixed `mod_mktmod01_`)
 
 #### Table 1: `mod_mktmod01_campaigns`
+
 The core campaign entity. Supports email, SMS, and multi-channel campaigns.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | uuid | PK, default gen_random_uuid() | Campaign ID |
-| `site_id` | uuid | FK sites.id, NOT NULL | Site this campaign belongs to |
-| `name` | text | NOT NULL | Campaign name |
-| `description` | text | | Campaign description |
-| `type` | text | NOT NULL, CHECK (email, sms, whatsapp, multi_channel) | Campaign channel type |
-| `status` | text | NOT NULL, DEFAULT 'draft', CHECK (draft, scheduled, sending, sent, paused, cancelled, archived) | Campaign lifecycle |
-| `subject_line` | text | | Email subject line |
-| `preview_text` | text | | Email preview/preheader text |
-| `from_name` | text | | Sender name override |
-| `from_email` | text | | Sender email override |
-| `reply_to` | text | | Reply-to address |
-| `template_id` | uuid | FK mod_mktmod01_email_templates.id | Email template used |
-| `content_html` | text | | Rendered HTML content |
-| `content_text` | text | | Plain text fallback |
-| `content_json` | jsonb | | Structured content (blocks for builder) |
-| `audience_id` | uuid | FK mod_mktmod01_audiences.id | Target audience |
-| `segment_id` | uuid | | CRM segment ID (alternative to audience) |
-| `ab_test_enabled` | boolean | DEFAULT false | A/B testing active |
-| `ab_test_config` | jsonb | | A/B test variants (subject, content, send_time) |
-| `scheduled_at` | timestamptz | | When to send (null = manual) |
-| `started_at` | timestamptz | | When sending actually started |
-| `completed_at` | timestamptz | | When sending finished |
-| `total_recipients` | integer | DEFAULT 0 | Total contacts targeted |
-| `total_sent` | integer | DEFAULT 0 | Emails actually sent |
-| `total_delivered` | integer | DEFAULT 0 | Confirmed delivered |
-| `total_opened` | integer | DEFAULT 0 | Unique opens |
-| `total_clicked` | integer | DEFAULT 0 | Unique clicks |
-| `total_bounced` | integer | DEFAULT 0 | Hard + soft bounces |
-| `total_unsubscribed` | integer | DEFAULT 0 | Unsubscribes from this campaign |
-| `total_complained` | integer | DEFAULT 0 | Spam complaints |
-| `revenue_attributed` | integer | DEFAULT 0 | Revenue in CENTS attributed to this campaign |
-| `tags` | text[] | DEFAULT '{}' | Campaign tags for filtering |
-| `metadata` | jsonb | DEFAULT '{}' | Extensible metadata |
-| `created_by` | uuid | FK auth.users.id | User who created |
-| `created_at` | timestamptz | DEFAULT now() | |
-| `updated_at` | timestamptz | DEFAULT now() | |
+| Column               | Type        | Constraints                                                                                     | Description                                     |
+| -------------------- | ----------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `id`                 | uuid        | PK, default gen_random_uuid()                                                                   | Campaign ID                                     |
+| `site_id`            | uuid        | FK sites.id, NOT NULL                                                                           | Site this campaign belongs to                   |
+| `name`               | text        | NOT NULL                                                                                        | Campaign name                                   |
+| `description`        | text        |                                                                                                 | Campaign description                            |
+| `type`               | text        | NOT NULL, CHECK (email, sms, whatsapp, multi_channel)                                           | Campaign channel type                           |
+| `status`             | text        | NOT NULL, DEFAULT 'draft', CHECK (draft, scheduled, sending, sent, paused, cancelled, archived) | Campaign lifecycle                              |
+| `subject_line`       | text        |                                                                                                 | Email subject line                              |
+| `preview_text`       | text        |                                                                                                 | Email preview/preheader text                    |
+| `from_name`          | text        |                                                                                                 | Sender name override                            |
+| `from_email`         | text        |                                                                                                 | Sender email override                           |
+| `reply_to`           | text        |                                                                                                 | Reply-to address                                |
+| `template_id`        | uuid        | FK mod_mktmod01_email_templates.id                                                              | Email template used                             |
+| `content_html`       | text        |                                                                                                 | Rendered HTML content                           |
+| `content_text`       | text        |                                                                                                 | Plain text fallback                             |
+| `content_json`       | jsonb       |                                                                                                 | Structured content (blocks for builder)         |
+| `audience_id`        | uuid        | FK mod_mktmod01_audiences.id                                                                    | Target audience                                 |
+| `segment_id`         | uuid        |                                                                                                 | CRM segment ID (alternative to audience)        |
+| `ab_test_enabled`    | boolean     | DEFAULT false                                                                                   | A/B testing active                              |
+| `ab_test_config`     | jsonb       |                                                                                                 | A/B test variants (subject, content, send_time) |
+| `scheduled_at`       | timestamptz |                                                                                                 | When to send (null = manual)                    |
+| `started_at`         | timestamptz |                                                                                                 | When sending actually started                   |
+| `completed_at`       | timestamptz |                                                                                                 | When sending finished                           |
+| `total_recipients`   | integer     | DEFAULT 0                                                                                       | Total contacts targeted                         |
+| `total_sent`         | integer     | DEFAULT 0                                                                                       | Emails actually sent                            |
+| `total_delivered`    | integer     | DEFAULT 0                                                                                       | Confirmed delivered                             |
+| `total_opened`       | integer     | DEFAULT 0                                                                                       | Unique opens                                    |
+| `total_clicked`      | integer     | DEFAULT 0                                                                                       | Unique clicks                                   |
+| `total_bounced`      | integer     | DEFAULT 0                                                                                       | Hard + soft bounces                             |
+| `total_unsubscribed` | integer     | DEFAULT 0                                                                                       | Unsubscribes from this campaign                 |
+| `total_complained`   | integer     | DEFAULT 0                                                                                       | Spam complaints                                 |
+| `revenue_attributed` | integer     | DEFAULT 0                                                                                       | Revenue in CENTS attributed to this campaign    |
+| `tags`               | text[]      | DEFAULT '{}'                                                                                    | Campaign tags for filtering                     |
+| `metadata`           | jsonb       | DEFAULT '{}'                                                                                    | Extensible metadata                             |
+| `created_by`         | uuid        | FK auth.users.id                                                                                | User who created                                |
+| `created_at`         | timestamptz | DEFAULT now()                                                                                   |                                                 |
+| `updated_at`         | timestamptz | DEFAULT now()                                                                                   |                                                 |
 
 **Indexes**: `site_id`, `status`, `type`, `scheduled_at`, `created_at`  
 **RLS**: Agency members can CRUD for their sites. Clients read-only (if `can_manage_marketing`).
 
 #### Table 2: `mod_mktmod01_email_templates`
+
 Reusable email templates with drag-and-drop block structure.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | uuid | PK | Template ID |
-| `site_id` | uuid | FK sites.id | Site scope (NULL = global/platform template) |
-| `name` | text | NOT NULL | Template name |
-| `description` | text | | Template description |
-| `category` | text | DEFAULT 'custom', CHECK (welcome, promotional, newsletter, transactional, announcement, winback, seasonal, custom) | Template category |
-| `thumbnail_url` | text | | Preview image URL |
-| `content_json` | jsonb | NOT NULL | Block-based template structure |
-| `content_html` | text | | Pre-rendered HTML |
-| `content_text` | text | | Plain text version |
-| `subject_line` | text | | Default subject line |
-| `preview_text` | text | | Default preview text |
-| `merge_variables` | text[] | DEFAULT '{}' | Available merge vars (for UI hints) |
-| `is_system` | boolean | DEFAULT false | Platform-provided template |
-| `is_active` | boolean | DEFAULT true | Available for use |
-| `usage_count` | integer | DEFAULT 0 | Times used in campaigns |
-| `created_by` | uuid | | Creator |
-| `created_at` | timestamptz | DEFAULT now() | |
-| `updated_at` | timestamptz | DEFAULT now() | |
+| Column            | Type        | Constraints                                                                                                        | Description                                  |
+| ----------------- | ----------- | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------- |
+| `id`              | uuid        | PK                                                                                                                 | Template ID                                  |
+| `site_id`         | uuid        | FK sites.id                                                                                                        | Site scope (NULL = global/platform template) |
+| `name`            | text        | NOT NULL                                                                                                           | Template name                                |
+| `description`     | text        |                                                                                                                    | Template description                         |
+| `category`        | text        | DEFAULT 'custom', CHECK (welcome, promotional, newsletter, transactional, announcement, winback, seasonal, custom) | Template category                            |
+| `thumbnail_url`   | text        |                                                                                                                    | Preview image URL                            |
+| `content_json`    | jsonb       | NOT NULL                                                                                                           | Block-based template structure               |
+| `content_html`    | text        |                                                                                                                    | Pre-rendered HTML                            |
+| `content_text`    | text        |                                                                                                                    | Plain text version                           |
+| `subject_line`    | text        |                                                                                                                    | Default subject line                         |
+| `preview_text`    | text        |                                                                                                                    | Default preview text                         |
+| `merge_variables` | text[]      | DEFAULT '{}'                                                                                                       | Available merge vars (for UI hints)          |
+| `is_system`       | boolean     | DEFAULT false                                                                                                      | Platform-provided template                   |
+| `is_active`       | boolean     | DEFAULT true                                                                                                       | Available for use                            |
+| `usage_count`     | integer     | DEFAULT 0                                                                                                          | Times used in campaigns                      |
+| `created_by`      | uuid        |                                                                                                                    | Creator                                      |
+| `created_at`      | timestamptz | DEFAULT now()                                                                                                      |                                              |
+| `updated_at`      | timestamptz | DEFAULT now()                                                                                                      |                                              |
 
 **Indexes**: `site_id`, `category`, `is_system`, `is_active`
 
 #### Table 3: `mod_mktmod01_audiences`
+
 Reusable audience definitions for targeting. Can wrap CRM segments or define custom criteria.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | uuid | PK | Audience ID |
-| `site_id` | uuid | FK sites.id, NOT NULL | Site scope |
-| `name` | text | NOT NULL | Audience name |
-| `description` | text | | Audience description |
-| `type` | text | NOT NULL, CHECK (segment, list, all_subscribers, all_contacts, custom) | Audience source |
-| `crm_segment_id` | uuid | | CRM segment ID (if type=segment) |
-| `filter_criteria` | jsonb | | Custom filter rules (same format as CRM segment filters) |
-| `filter_logic` | text | DEFAULT 'and', CHECK (and, or) | How to combine filters |
-| `exclude_criteria` | jsonb | | Exclusion rules |
-| `contact_count` | integer | DEFAULT 0 | Cached count |
-| `last_evaluated_at` | timestamptz | | Last count refresh |
-| `is_active` | boolean | DEFAULT true | Available for use |
-| `created_by` | uuid | | |
-| `created_at` | timestamptz | DEFAULT now() | |
-| `updated_at` | timestamptz | DEFAULT now() | |
+| Column              | Type        | Constraints                                                            | Description                                              |
+| ------------------- | ----------- | ---------------------------------------------------------------------- | -------------------------------------------------------- |
+| `id`                | uuid        | PK                                                                     | Audience ID                                              |
+| `site_id`           | uuid        | FK sites.id, NOT NULL                                                  | Site scope                                               |
+| `name`              | text        | NOT NULL                                                               | Audience name                                            |
+| `description`       | text        |                                                                        | Audience description                                     |
+| `type`              | text        | NOT NULL, CHECK (segment, list, all_subscribers, all_contacts, custom) | Audience source                                          |
+| `crm_segment_id`    | uuid        |                                                                        | CRM segment ID (if type=segment)                         |
+| `filter_criteria`   | jsonb       |                                                                        | Custom filter rules (same format as CRM segment filters) |
+| `filter_logic`      | text        | DEFAULT 'and', CHECK (and, or)                                         | How to combine filters                                   |
+| `exclude_criteria`  | jsonb       |                                                                        | Exclusion rules                                          |
+| `contact_count`     | integer     | DEFAULT 0                                                              | Cached count                                             |
+| `last_evaluated_at` | timestamptz |                                                                        | Last count refresh                                       |
+| `is_active`         | boolean     | DEFAULT true                                                           | Available for use                                        |
+| `created_by`        | uuid        |                                                                        |                                                          |
+| `created_at`        | timestamptz | DEFAULT now()                                                          |                                                          |
+| `updated_at`        | timestamptz | DEFAULT now()                                                          |                                                          |
 
 **Indexes**: `site_id`, `type`, `crm_segment_id`
 
 #### Table 4: `mod_mktmod01_subscribers`
+
 Marketing email subscribers. Links to CRM contacts when possible.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | uuid | PK | Subscriber ID |
-| `site_id` | uuid | FK sites.id, NOT NULL | Site scope |
-| `email` | text | NOT NULL | Email address |
-| `first_name` | text | | |
-| `last_name` | text | | |
-| `phone` | text | | Phone for SMS |
-| `crm_contact_id` | uuid | | Linked CRM contact |
-| `status` | text | NOT NULL, DEFAULT 'active', CHECK (active, unsubscribed, bounced, complained, cleaned) | Subscriber health |
-| `email_opt_in` | boolean | DEFAULT true | Email marketing consent |
-| `sms_opt_in` | boolean | DEFAULT false | SMS marketing consent |
-| `consent_source` | text | | How they subscribed (form, import, api, manual, checkout, booking) |
-| `consent_date` | timestamptz | | When they consented |
-| `consent_ip` | text | | IP at consent time |
-| `tags` | text[] | DEFAULT '{}' | Subscriber tags |
-| `custom_fields` | jsonb | DEFAULT '{}' | Extensible custom data |
-| `engagement_score` | integer | DEFAULT 0 | 0-100, based on open/click history |
-| `last_email_sent_at` | timestamptz | | Last campaign email sent |
-| `last_email_opened_at` | timestamptz | | Last email opened |
-| `last_email_clicked_at` | timestamptz | | Last link clicked |
-| `total_emails_sent` | integer | DEFAULT 0 | |
-| `total_emails_opened` | integer | DEFAULT 0 | |
-| `total_emails_clicked` | integer | DEFAULT 0 | |
-| `bounce_count` | integer | DEFAULT 0 | |
-| `unsubscribed_at` | timestamptz | | When they unsubscribed (if applicable) |
-| `unsubscribe_reason` | text | | Reason for unsubscribing |
-| `created_at` | timestamptz | DEFAULT now() | |
-| `updated_at` | timestamptz | DEFAULT now() | |
+| Column                  | Type        | Constraints                                                                            | Description                                                        |
+| ----------------------- | ----------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `id`                    | uuid        | PK                                                                                     | Subscriber ID                                                      |
+| `site_id`               | uuid        | FK sites.id, NOT NULL                                                                  | Site scope                                                         |
+| `email`                 | text        | NOT NULL                                                                               | Email address                                                      |
+| `first_name`            | text        |                                                                                        |                                                                    |
+| `last_name`             | text        |                                                                                        |                                                                    |
+| `phone`                 | text        |                                                                                        | Phone for SMS                                                      |
+| `crm_contact_id`        | uuid        |                                                                                        | Linked CRM contact                                                 |
+| `status`                | text        | NOT NULL, DEFAULT 'active', CHECK (active, unsubscribed, bounced, complained, cleaned) | Subscriber health                                                  |
+| `email_opt_in`          | boolean     | DEFAULT true                                                                           | Email marketing consent                                            |
+| `sms_opt_in`            | boolean     | DEFAULT false                                                                          | SMS marketing consent                                              |
+| `consent_source`        | text        |                                                                                        | How they subscribed (form, import, api, manual, checkout, booking) |
+| `consent_date`          | timestamptz |                                                                                        | When they consented                                                |
+| `consent_ip`            | text        |                                                                                        | IP at consent time                                                 |
+| `tags`                  | text[]      | DEFAULT '{}'                                                                           | Subscriber tags                                                    |
+| `custom_fields`         | jsonb       | DEFAULT '{}'                                                                           | Extensible custom data                                             |
+| `engagement_score`      | integer     | DEFAULT 0                                                                              | 0-100, based on open/click history                                 |
+| `last_email_sent_at`    | timestamptz |                                                                                        | Last campaign email sent                                           |
+| `last_email_opened_at`  | timestamptz |                                                                                        | Last email opened                                                  |
+| `last_email_clicked_at` | timestamptz |                                                                                        | Last link clicked                                                  |
+| `total_emails_sent`     | integer     | DEFAULT 0                                                                              |                                                                    |
+| `total_emails_opened`   | integer     | DEFAULT 0                                                                              |                                                                    |
+| `total_emails_clicked`  | integer     | DEFAULT 0                                                                              |                                                                    |
+| `bounce_count`          | integer     | DEFAULT 0                                                                              |                                                                    |
+| `unsubscribed_at`       | timestamptz |                                                                                        | When they unsubscribed (if applicable)                             |
+| `unsubscribe_reason`    | text        |                                                                                        | Reason for unsubscribing                                           |
+| `created_at`            | timestamptz | DEFAULT now()                                                                          |                                                                    |
+| `updated_at`            | timestamptz | DEFAULT now()                                                                          |                                                                    |
 
 **Indexes**: `site_id + email` (UNIQUE), `status`, `crm_contact_id`, `engagement_score`  
 **CRITICAL**: UNIQUE constraint on `(site_id, email)` — one subscriber per email per site
 
 #### Table 5: `mod_mktmod01_lists`
+
 Marketing lists (manual subscriber groupings).
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | uuid | PK | List ID |
-| `site_id` | uuid | FK sites.id, NOT NULL | Site scope |
-| `name` | text | NOT NULL | List name |
-| `description` | text | | |
-| `type` | text | DEFAULT 'manual', CHECK (manual, import, form_capture, api) | How list was created |
-| `subscriber_count` | integer | DEFAULT 0 | Cached count |
-| `is_double_opt_in` | boolean | DEFAULT false | Requires email confirmation |
-| `welcome_email_template_id` | uuid | | Auto-send on subscribe |
-| `tags` | text[] | DEFAULT '{}' | |
-| `is_active` | boolean | DEFAULT true | |
-| `created_by` | uuid | | |
-| `created_at` | timestamptz | DEFAULT now() | |
-| `updated_at` | timestamptz | DEFAULT now() | |
+| Column                      | Type        | Constraints                                                 | Description                 |
+| --------------------------- | ----------- | ----------------------------------------------------------- | --------------------------- |
+| `id`                        | uuid        | PK                                                          | List ID                     |
+| `site_id`                   | uuid        | FK sites.id, NOT NULL                                       | Site scope                  |
+| `name`                      | text        | NOT NULL                                                    | List name                   |
+| `description`               | text        |                                                             |                             |
+| `type`                      | text        | DEFAULT 'manual', CHECK (manual, import, form_capture, api) | How list was created        |
+| `subscriber_count`          | integer     | DEFAULT 0                                                   | Cached count                |
+| `is_double_opt_in`          | boolean     | DEFAULT false                                               | Requires email confirmation |
+| `welcome_email_template_id` | uuid        |                                                             | Auto-send on subscribe      |
+| `tags`                      | text[]      | DEFAULT '{}'                                                |                             |
+| `is_active`                 | boolean     | DEFAULT true                                                |                             |
+| `created_by`                | uuid        |                                                             |                             |
+| `created_at`                | timestamptz | DEFAULT now()                                               |                             |
+| `updated_at`                | timestamptz | DEFAULT now()                                               |                             |
 
 **Indexes**: `site_id`, `is_active`
 
 #### Table 6: `mod_mktmod01_list_subscribers`
+
 Junction table linking subscribers to lists.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | uuid | PK | |
-| `list_id` | uuid | FK mod_mktmod01_lists.id, NOT NULL | |
-| `subscriber_id` | uuid | FK mod_mktmod01_subscribers.id, NOT NULL | |
-| `added_at` | timestamptz | DEFAULT now() | |
-| `source` | text | | How they were added (import, form, manual, api) |
+| Column          | Type        | Constraints                              | Description                                     |
+| --------------- | ----------- | ---------------------------------------- | ----------------------------------------------- |
+| `id`            | uuid        | PK                                       |                                                 |
+| `list_id`       | uuid        | FK mod_mktmod01_lists.id, NOT NULL       |                                                 |
+| `subscriber_id` | uuid        | FK mod_mktmod01_subscribers.id, NOT NULL |                                                 |
+| `added_at`      | timestamptz | DEFAULT now()                            |                                                 |
+| `source`        | text        |                                          | How they were added (import, form, manual, api) |
 
 **Indexes**: `list_id + subscriber_id` (UNIQUE), `subscriber_id`
 
 #### Table 7: `mod_mktmod01_campaign_sends`
+
 Individual send records for each email in a campaign. For tracking open/click per recipient.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | uuid | PK | Send record ID (also used as tracking ID) |
-| `campaign_id` | uuid | FK mod_mktmod01_campaigns.id, NOT NULL | |
-| `subscriber_id` | uuid | FK mod_mktmod01_subscribers.id, NOT NULL | |
-| `email` | text | NOT NULL | Email sent to (denormalized for speed) |
-| `status` | text | NOT NULL, DEFAULT 'queued', CHECK (queued, sent, delivered, opened, clicked, bounced, complained, unsubscribed, failed) | |
-| `resend_message_id` | text | | Resend API message ID for tracking |
-| `sent_at` | timestamptz | | When actually sent |
-| `delivered_at` | timestamptz | | When confirmed delivered |
-| `first_opened_at` | timestamptz | | First open time |
-| `last_opened_at` | timestamptz | | Most recent open |
-| `open_count` | integer | DEFAULT 0 | Total opens (including re-opens) |
-| `first_clicked_at` | timestamptz | | First click time |
-| `last_clicked_at` | timestamptz | | Most recent click |
-| `click_count` | integer | DEFAULT 0 | Total clicks |
-| `clicked_links` | jsonb | DEFAULT '[]' | Array of {url, clicked_at} |
-| `bounced_at` | timestamptz | | |
-| `bounce_type` | text | | hard, soft |
-| `bounce_reason` | text | | |
-| `unsubscribed_at` | timestamptz | | |
-| `complained_at` | timestamptz | | |
-| `ab_variant` | text | | A/B test variant identifier (A, B, etc.) |
-| `metadata` | jsonb | DEFAULT '{}' | |
-| `created_at` | timestamptz | DEFAULT now() | |
+| Column              | Type        | Constraints                                                                                                             | Description                               |
+| ------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| `id`                | uuid        | PK                                                                                                                      | Send record ID (also used as tracking ID) |
+| `campaign_id`       | uuid        | FK mod_mktmod01_campaigns.id, NOT NULL                                                                                  |                                           |
+| `subscriber_id`     | uuid        | FK mod_mktmod01_subscribers.id, NOT NULL                                                                                |                                           |
+| `email`             | text        | NOT NULL                                                                                                                | Email sent to (denormalized for speed)    |
+| `status`            | text        | NOT NULL, DEFAULT 'queued', CHECK (queued, sent, delivered, opened, clicked, bounced, complained, unsubscribed, failed) |                                           |
+| `resend_message_id` | text        |                                                                                                                         | Resend API message ID for tracking        |
+| `sent_at`           | timestamptz |                                                                                                                         | When actually sent                        |
+| `delivered_at`      | timestamptz |                                                                                                                         | When confirmed delivered                  |
+| `first_opened_at`   | timestamptz |                                                                                                                         | First open time                           |
+| `last_opened_at`    | timestamptz |                                                                                                                         | Most recent open                          |
+| `open_count`        | integer     | DEFAULT 0                                                                                                               | Total opens (including re-opens)          |
+| `first_clicked_at`  | timestamptz |                                                                                                                         | First click time                          |
+| `last_clicked_at`   | timestamptz |                                                                                                                         | Most recent click                         |
+| `click_count`       | integer     | DEFAULT 0                                                                                                               | Total clicks                              |
+| `clicked_links`     | jsonb       | DEFAULT '[]'                                                                                                            | Array of {url, clicked_at}                |
+| `bounced_at`        | timestamptz |                                                                                                                         |                                           |
+| `bounce_type`       | text        |                                                                                                                         | hard, soft                                |
+| `bounce_reason`     | text        |                                                                                                                         |                                           |
+| `unsubscribed_at`   | timestamptz |                                                                                                                         |                                           |
+| `complained_at`     | timestamptz |                                                                                                                         |                                           |
+| `ab_variant`        | text        |                                                                                                                         | A/B test variant identifier (A, B, etc.)  |
+| `metadata`          | jsonb       | DEFAULT '{}'                                                                                                            |                                           |
+| `created_at`        | timestamptz | DEFAULT now()                                                                                                           |                                           |
 
 **Indexes**: `campaign_id`, `subscriber_id`, `email`, `status`, `resend_message_id`  
 **CRITICAL**: This table can grow VERY large. Partition by month or add cleanup policy.
 
 #### Table 8: `mod_mktmod01_sequences`
+
 Drip email sequences (multi-step automated campaigns).
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | uuid | PK | Sequence ID |
-| `site_id` | uuid | FK sites.id, NOT NULL | |
-| `name` | text | NOT NULL | Sequence name |
-| `description` | text | | |
-| `trigger_type` | text | NOT NULL, CHECK (subscriber_added, tag_added, form_submitted, event, manual) | What starts the sequence |
-| `trigger_config` | jsonb | DEFAULT '{}' | Trigger-specific config (list_id, tag_name, form_id, event_type) |
-| `status` | text | DEFAULT 'draft', CHECK (draft, active, paused, archived) | |
-| `steps` | jsonb | NOT NULL, DEFAULT '[]' | Array of sequence steps (email, delay, condition, action) |
-| `automation_workflow_id` | uuid | | Linked automation workflow (generated) |
-| `total_enrolled` | integer | DEFAULT 0 | Total contacts that entered |
-| `total_completed` | integer | DEFAULT 0 | Completed all steps |
-| `total_converted` | integer | DEFAULT 0 | Hit conversion goal |
-| `conversion_goal` | jsonb | | {event_type, conditions} defining success |
-| `enrollment_limit` | integer | | Max contacts in sequence at once |
-| `re_enrollment` | boolean | DEFAULT false | Can contacts re-enter |
-| `created_by` | uuid | | |
-| `created_at` | timestamptz | DEFAULT now() | |
-| `updated_at` | timestamptz | DEFAULT now() | |
+| Column                   | Type        | Constraints                                                                  | Description                                                      |
+| ------------------------ | ----------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `id`                     | uuid        | PK                                                                           | Sequence ID                                                      |
+| `site_id`                | uuid        | FK sites.id, NOT NULL                                                        |                                                                  |
+| `name`                   | text        | NOT NULL                                                                     | Sequence name                                                    |
+| `description`            | text        |                                                                              |                                                                  |
+| `trigger_type`           | text        | NOT NULL, CHECK (subscriber_added, tag_added, form_submitted, event, manual) | What starts the sequence                                         |
+| `trigger_config`         | jsonb       | DEFAULT '{}'                                                                 | Trigger-specific config (list_id, tag_name, form_id, event_type) |
+| `status`                 | text        | DEFAULT 'draft', CHECK (draft, active, paused, archived)                     |                                                                  |
+| `steps`                  | jsonb       | NOT NULL, DEFAULT '[]'                                                       | Array of sequence steps (email, delay, condition, action)        |
+| `automation_workflow_id` | uuid        |                                                                              | Linked automation workflow (generated)                           |
+| `total_enrolled`         | integer     | DEFAULT 0                                                                    | Total contacts that entered                                      |
+| `total_completed`        | integer     | DEFAULT 0                                                                    | Completed all steps                                              |
+| `total_converted`        | integer     | DEFAULT 0                                                                    | Hit conversion goal                                              |
+| `conversion_goal`        | jsonb       |                                                                              | {event_type, conditions} defining success                        |
+| `enrollment_limit`       | integer     |                                                                              | Max contacts in sequence at once                                 |
+| `re_enrollment`          | boolean     | DEFAULT false                                                                | Can contacts re-enter                                            |
+| `created_by`             | uuid        |                                                                              |                                                                  |
+| `created_at`             | timestamptz | DEFAULT now()                                                                |                                                                  |
+| `updated_at`             | timestamptz | DEFAULT now()                                                                |                                                                  |
 
 **Step Structure** (in `steps` JSONB):
+
 ```json
 [
   {
@@ -778,47 +819,50 @@ Drip email sequences (multi-step automated campaigns).
 ```
 
 #### Table 9: `mod_mktmod01_sequence_enrollments`
+
 Tracks contacts currently enrolled in a drip sequence.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | uuid | PK | |
-| `sequence_id` | uuid | FK mod_mktmod01_sequences.id, NOT NULL | |
-| `subscriber_id` | uuid | FK mod_mktmod01_subscribers.id, NOT NULL | |
-| `current_step_id` | text | | Which step they're on |
-| `status` | text | DEFAULT 'active', CHECK (active, paused, completed, converted, exited, failed) | |
-| `enrolled_at` | timestamptz | DEFAULT now() | |
-| `next_step_at` | timestamptz | | When next step should execute |
-| `completed_at` | timestamptz | | |
-| `exit_reason` | text | | Why they left early |
-| `steps_completed` | jsonb | DEFAULT '[]' | Array of {step_id, completed_at, status} |
-| `metadata` | jsonb | DEFAULT '{}' | |
+| Column            | Type        | Constraints                                                                    | Description                              |
+| ----------------- | ----------- | ------------------------------------------------------------------------------ | ---------------------------------------- |
+| `id`              | uuid        | PK                                                                             |                                          |
+| `sequence_id`     | uuid        | FK mod_mktmod01_sequences.id, NOT NULL                                         |                                          |
+| `subscriber_id`   | uuid        | FK mod_mktmod01_subscribers.id, NOT NULL                                       |                                          |
+| `current_step_id` | text        |                                                                                | Which step they're on                    |
+| `status`          | text        | DEFAULT 'active', CHECK (active, paused, completed, converted, exited, failed) |                                          |
+| `enrolled_at`     | timestamptz | DEFAULT now()                                                                  |                                          |
+| `next_step_at`    | timestamptz |                                                                                | When next step should execute            |
+| `completed_at`    | timestamptz |                                                                                |                                          |
+| `exit_reason`     | text        |                                                                                | Why they left early                      |
+| `steps_completed` | jsonb       | DEFAULT '[]'                                                                   | Array of {step_id, completed_at, status} |
+| `metadata`        | jsonb       | DEFAULT '{}'                                                                   |                                          |
 
 **Indexes**: `sequence_id`, `subscriber_id`, `status`, `next_step_at`  
 **UNIQUE**: `(sequence_id, subscriber_id)` when `re_enrollment = false`
 
 #### Table 10: `mod_mktmod01_funnels`
+
 Landing page conversion funnels.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | uuid | PK | |
-| `site_id` | uuid | FK sites.id, NOT NULL | |
-| `name` | text | NOT NULL | Funnel name |
-| `description` | text | | |
-| `status` | text | DEFAULT 'draft', CHECK (draft, active, paused, archived) | |
-| `steps` | jsonb | NOT NULL, DEFAULT '[]' | Array of funnel steps |
-| `conversion_goal` | jsonb | | What counts as conversion |
-| `total_visitors` | integer | DEFAULT 0 | |
-| `total_conversions` | integer | DEFAULT 0 | |
-| `conversion_rate` | numeric(5,2) | DEFAULT 0 | Percentage |
-| `ab_test_enabled` | boolean | DEFAULT false | |
-| `ab_test_config` | jsonb | | Variant configurations |
-| `created_by` | uuid | | |
-| `created_at` | timestamptz | DEFAULT now() | |
-| `updated_at` | timestamptz | DEFAULT now() | |
+| Column              | Type         | Constraints                                              | Description               |
+| ------------------- | ------------ | -------------------------------------------------------- | ------------------------- |
+| `id`                | uuid         | PK                                                       |                           |
+| `site_id`           | uuid         | FK sites.id, NOT NULL                                    |                           |
+| `name`              | text         | NOT NULL                                                 | Funnel name               |
+| `description`       | text         |                                                          |                           |
+| `status`            | text         | DEFAULT 'draft', CHECK (draft, active, paused, archived) |                           |
+| `steps`             | jsonb        | NOT NULL, DEFAULT '[]'                                   | Array of funnel steps     |
+| `conversion_goal`   | jsonb        |                                                          | What counts as conversion |
+| `total_visitors`    | integer      | DEFAULT 0                                                |                           |
+| `total_conversions` | integer      | DEFAULT 0                                                |                           |
+| `conversion_rate`   | numeric(5,2) | DEFAULT 0                                                | Percentage                |
+| `ab_test_enabled`   | boolean      | DEFAULT false                                            |                           |
+| `ab_test_config`    | jsonb        |                                                          | Variant configurations    |
+| `created_by`        | uuid         |                                                          |                           |
+| `created_at`        | timestamptz  | DEFAULT now()                                            |                           |
+| `updated_at`        | timestamptz  | DEFAULT now()                                            |                           |
 
 **Funnel Step Structure**:
+
 ```json
 [
   {
@@ -843,110 +887,116 @@ Landing page conversion funnels.
 ```
 
 #### Table 11: `mod_mktmod01_funnel_visits`
+
 Tracking visitor progress through funnels.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | uuid | PK | |
-| `funnel_id` | uuid | FK mod_mktmod01_funnels.id, NOT NULL | |
-| `visitor_id` | text | NOT NULL | Anonymous visitor ID or subscriber ID |
-| `subscriber_id` | uuid | | Linked subscriber (after identification) |
-| `current_step_id` | text | | Current funnel step |
-| `status` | text | DEFAULT 'in_progress', CHECK (in_progress, completed, abandoned) | |
-| `steps_visited` | jsonb | DEFAULT '[]' | Array of {step_id, visited_at, time_spent_seconds} |
-| `source` | text | | Traffic source (utm_source or referrer) |
-| `utm_params` | jsonb | | Full UTM parameters |
-| `entered_at` | timestamptz | DEFAULT now() | |
-| `converted_at` | timestamptz | | |
-| `abandoned_at` | timestamptz | | |
-| `ip_address` | text | | For geographic analytics |
-| `user_agent` | text | | Device/browser info |
+| Column            | Type        | Constraints                                                      | Description                                        |
+| ----------------- | ----------- | ---------------------------------------------------------------- | -------------------------------------------------- |
+| `id`              | uuid        | PK                                                               |                                                    |
+| `funnel_id`       | uuid        | FK mod_mktmod01_funnels.id, NOT NULL                             |                                                    |
+| `visitor_id`      | text        | NOT NULL                                                         | Anonymous visitor ID or subscriber ID              |
+| `subscriber_id`   | uuid        |                                                                  | Linked subscriber (after identification)           |
+| `current_step_id` | text        |                                                                  | Current funnel step                                |
+| `status`          | text        | DEFAULT 'in_progress', CHECK (in_progress, completed, abandoned) |                                                    |
+| `steps_visited`   | jsonb       | DEFAULT '[]'                                                     | Array of {step_id, visited_at, time_spent_seconds} |
+| `source`          | text        |                                                                  | Traffic source (utm_source or referrer)            |
+| `utm_params`      | jsonb       |                                                                  | Full UTM parameters                                |
+| `entered_at`      | timestamptz | DEFAULT now()                                                    |                                                    |
+| `converted_at`    | timestamptz |                                                                  |                                                    |
+| `abandoned_at`    | timestamptz |                                                                  |                                                    |
+| `ip_address`      | text        |                                                                  | For geographic analytics                           |
+| `user_agent`      | text        |                                                                  | Device/browser info                                |
 
 **Indexes**: `funnel_id`, `visitor_id`, `status`, `entered_at`
 
 #### Table 12: `mod_mktmod01_campaign_links`
+
 Tracked links within campaign emails.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | uuid | PK | Link tracking ID |
-| `campaign_id` | uuid | FK mod_mktmod01_campaigns.id, NOT NULL | |
-| `original_url` | text | NOT NULL | Original destination URL |
-| `tracking_url` | text | NOT NULL | Decorated tracking URL |
-| `display_text` | text | | Link text in email |
-| `position` | integer | | Position in email (for heatmap) |
-| `total_clicks` | integer | DEFAULT 0 | |
-| `unique_clicks` | integer | DEFAULT 0 | |
-| `created_at` | timestamptz | DEFAULT now() | |
+| Column          | Type        | Constraints                            | Description                     |
+| --------------- | ----------- | -------------------------------------- | ------------------------------- |
+| `id`            | uuid        | PK                                     | Link tracking ID                |
+| `campaign_id`   | uuid        | FK mod_mktmod01_campaigns.id, NOT NULL |                                 |
+| `original_url`  | text        | NOT NULL                               | Original destination URL        |
+| `tracking_url`  | text        | NOT NULL                               | Decorated tracking URL          |
+| `display_text`  | text        |                                        | Link text in email              |
+| `position`      | integer     |                                        | Position in email (for heatmap) |
+| `total_clicks`  | integer     | DEFAULT 0                              |                                 |
+| `unique_clicks` | integer     | DEFAULT 0                              |                                 |
+| `created_at`    | timestamptz | DEFAULT now()                          |                                 |
 
 **Indexes**: `campaign_id`, `tracking_url`
 
 #### Table 13: `mod_mktmod01_settings`
+
 Per-site marketing settings.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | uuid | PK | |
-| `site_id` | uuid | FK sites.id, UNIQUE, NOT NULL | One settings row per site |
-| `default_from_name` | text | | Default sender name |
-| `default_from_email` | text | | Default sender email |
-| `default_reply_to` | text | | Default reply-to |
-| `sending_quota_daily` | integer | DEFAULT 1000 | Max emails per day |
-| `sending_quota_monthly` | integer | DEFAULT 25000 | Max emails per month |
-| `double_opt_in_enabled` | boolean | DEFAULT false | Require email confirmation for new subscribers |
-| `auto_clean_bounces` | boolean | DEFAULT true | Auto-remove hard bounced emails |
-| `auto_clean_complaints` | boolean | DEFAULT true | Auto-remove spam complainers |
-| `unsubscribe_page_url` | text | | Custom unsubscribe page |
-| `physical_address` | text | | Required by CAN-SPAM |
-| `company_name` | text | | Footer company name |
-| `gdpr_enabled` | boolean | DEFAULT false | Enable GDPR compliance features |
-| `consent_text` | text | | Custom consent message for forms |
-| `timezone` | text | DEFAULT 'Africa/Lusaka' | For scheduling |
-| `metadata` | jsonb | DEFAULT '{}' | |
-| `created_at` | timestamptz | DEFAULT now() | |
-| `updated_at` | timestamptz | DEFAULT now() | |
+| Column                  | Type        | Constraints                   | Description                                    |
+| ----------------------- | ----------- | ----------------------------- | ---------------------------------------------- |
+| `id`                    | uuid        | PK                            |                                                |
+| `site_id`               | uuid        | FK sites.id, UNIQUE, NOT NULL | One settings row per site                      |
+| `default_from_name`     | text        |                               | Default sender name                            |
+| `default_from_email`    | text        |                               | Default sender email                           |
+| `default_reply_to`      | text        |                               | Default reply-to                               |
+| `sending_quota_daily`   | integer     | DEFAULT 1000                  | Max emails per day                             |
+| `sending_quota_monthly` | integer     | DEFAULT 25000                 | Max emails per month                           |
+| `double_opt_in_enabled` | boolean     | DEFAULT false                 | Require email confirmation for new subscribers |
+| `auto_clean_bounces`    | boolean     | DEFAULT true                  | Auto-remove hard bounced emails                |
+| `auto_clean_complaints` | boolean     | DEFAULT true                  | Auto-remove spam complainers                   |
+| `unsubscribe_page_url`  | text        |                               | Custom unsubscribe page                        |
+| `physical_address`      | text        |                               | Required by CAN-SPAM                           |
+| `company_name`          | text        |                               | Footer company name                            |
+| `gdpr_enabled`          | boolean     | DEFAULT false                 | Enable GDPR compliance features                |
+| `consent_text`          | text        |                               | Custom consent message for forms               |
+| `timezone`              | text        | DEFAULT 'Africa/Lusaka'       | For scheduling                                 |
+| `metadata`              | jsonb       | DEFAULT '{}'                  |                                                |
+| `created_at`            | timestamptz | DEFAULT now()                 |                                                |
+| `updated_at`            | timestamptz | DEFAULT now()                 |                                                |
 
 #### Table 14: `mod_mktmod01_sending_stats`
+
 Daily sending statistics for quota tracking and platform monitoring.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | uuid | PK | |
-| `site_id` | uuid | FK sites.id, NOT NULL | |
-| `date` | date | NOT NULL | Calendar date |
-| `emails_sent` | integer | DEFAULT 0 | |
-| `emails_delivered` | integer | DEFAULT 0 | |
-| `emails_bounced` | integer | DEFAULT 0 | |
-| `emails_complained` | integer | DEFAULT 0 | |
-| `sms_sent` | integer | DEFAULT 0 | |
-| `sms_delivered` | integer | DEFAULT 0 | |
-| `sms_failed` | integer | DEFAULT 0 | |
+| Column              | Type    | Constraints           | Description   |
+| ------------------- | ------- | --------------------- | ------------- |
+| `id`                | uuid    | PK                    |               |
+| `site_id`           | uuid    | FK sites.id, NOT NULL |               |
+| `date`              | date    | NOT NULL              | Calendar date |
+| `emails_sent`       | integer | DEFAULT 0             |               |
+| `emails_delivered`  | integer | DEFAULT 0             |               |
+| `emails_bounced`    | integer | DEFAULT 0             |               |
+| `emails_complained` | integer | DEFAULT 0             |               |
+| `sms_sent`          | integer | DEFAULT 0             |               |
+| `sms_delivered`     | integer | DEFAULT 0             |               |
+| `sms_failed`        | integer | DEFAULT 0             |               |
 
 **Indexes**: `site_id + date` (UNIQUE), `date`
 
 #### Table 15: `mod_mktmod01_attribution`
+
 Campaign-to-revenue attribution tracking.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | uuid | PK | |
-| `site_id` | uuid | FK sites.id, NOT NULL | |
-| `campaign_id` | uuid | FK mod_mktmod01_campaigns.id | Source campaign |
-| `sequence_id` | uuid | FK mod_mktmod01_sequences.id | Source sequence |
-| `funnel_id` | uuid | FK mod_mktmod01_funnels.id | Source funnel |
-| `subscriber_id` | uuid | FK mod_mktmod01_subscribers.id | Contact who converted |
-| `attribution_type` | text | NOT NULL, CHECK (first_touch, last_touch, linear) | Attribution model |
-| `event_type` | text | NOT NULL | What happened (order_created, booking_created, deal_won, form_submitted) |
-| `event_id` | text | | ID of the attributed event |
-| `revenue` | integer | DEFAULT 0 | Revenue in CENTS |
-| `attributed_at` | timestamptz | DEFAULT now() | |
-| `touchpoint_window_hours` | integer | DEFAULT 168 | Hours between campaign interaction and conversion (default 7 days) |
+| Column                    | Type        | Constraints                                       | Description                                                              |
+| ------------------------- | ----------- | ------------------------------------------------- | ------------------------------------------------------------------------ |
+| `id`                      | uuid        | PK                                                |                                                                          |
+| `site_id`                 | uuid        | FK sites.id, NOT NULL                             |                                                                          |
+| `campaign_id`             | uuid        | FK mod_mktmod01_campaigns.id                      | Source campaign                                                          |
+| `sequence_id`             | uuid        | FK mod_mktmod01_sequences.id                      | Source sequence                                                          |
+| `funnel_id`               | uuid        | FK mod_mktmod01_funnels.id                        | Source funnel                                                            |
+| `subscriber_id`           | uuid        | FK mod_mktmod01_subscribers.id                    | Contact who converted                                                    |
+| `attribution_type`        | text        | NOT NULL, CHECK (first_touch, last_touch, linear) | Attribution model                                                        |
+| `event_type`              | text        | NOT NULL                                          | What happened (order_created, booking_created, deal_won, form_submitted) |
+| `event_id`                | text        |                                                   | ID of the attributed event                                               |
+| `revenue`                 | integer     | DEFAULT 0                                         | Revenue in CENTS                                                         |
+| `attributed_at`           | timestamptz | DEFAULT now()                                     |                                                                          |
+| `touchpoint_window_hours` | integer     | DEFAULT 168                                       | Hours between campaign interaction and conversion (default 7 days)       |
 
 **Indexes**: `site_id`, `campaign_id`, `sequence_id`, `subscriber_id`, `attributed_at`
 
 ### Module Registration
 
 **Add to `modules_v2` table**:
+
 ```sql
 INSERT INTO modules_v2 (id, slug, name, description, category, ...) VALUES (
   gen_random_uuid(),
@@ -959,6 +1009,7 @@ INSERT INTO modules_v2 (id, slug, name, description, category, ...) VALUES (
 ```
 
 **Add to CORE_MODULE_SLUGS** in `src/lib/actions/sites.ts`:
+
 ```typescript
 const CORE_MODULE_SLUGS = ["crm", "automation", "live-chat", "marketing"];
 ```
@@ -966,16 +1017,19 @@ const CORE_MODULE_SLUGS = ["crm", "automation", "live-chat", "marketing"];
 ### Permission Changes
 
 **Agency permissions** — add to `src/types/roles.ts`:
+
 ```typescript
-manage_marketing  // Full marketing module access
+manage_marketing; // Full marketing module access
 ```
 
 **Client portal** — add column to `clients` table:
+
 ```sql
 ALTER TABLE clients ADD COLUMN can_manage_marketing boolean DEFAULT false;
 ```
 
 **Client site permissions** — add column to `client_site_permissions` table:
+
 ```sql
 ALTER TABLE client_site_permissions ADD COLUMN can_manage_marketing boolean;
 ```
@@ -983,6 +1037,7 @@ ALTER TABLE client_site_permissions ADD COLUMN can_manage_marketing boolean;
 ### CRM Contact Enhancements
 
 Add marketing consent columns to CRM contacts:
+
 ```sql
 ALTER TABLE mod_crmmod01_contacts ADD COLUMN email_opt_in boolean DEFAULT false;
 ALTER TABLE mod_crmmod01_contacts ADD COLUMN sms_opt_in boolean DEFAULT false;
@@ -997,6 +1052,7 @@ Create comprehensive TypeScript interfaces in `src/modules/marketing/types/`. Ev
 ### RLS Policies
 
 Every table needs row-level security policies following the exact same pattern used by other modules:
+
 - Agency members: CRUD access for their agency's sites
 - Clients: Read-only (or based on `can_manage_marketing`)
 - Service role: Full access (for automation engine)
@@ -1031,9 +1087,10 @@ Every table needs row-level security policies following the exact same pattern u
 ### 2.1 Overview
 
 This phase builds the complete email campaign creation, management, and sending system. It includes:
+
 - Campaign builder with audience selection
 - Visual email template designer (drag-and-drop block editor)
-- Template library with pre-built industry templates  
+- Template library with pre-built industry templates
 - Sending engine with Resend bulk API integration
 - A/B testing framework for subject lines and content
 - Bounce/complaint webhook handlers
@@ -1050,6 +1107,7 @@ Route: /dashboard/sites/[siteId]/marketing/campaigns
 ```
 
 **Component Structure:**
+
 ```tsx
 // page.tsx - Server component
 // Fetches campaigns with stats summary
@@ -1064,18 +1122,21 @@ Route: /dashboard/sites/[siteId]/marketing/campaigns
 
 // Data fetch pattern (follows existing platform pattern):
 const { data: campaigns } = await supabase
-  .from('mod_mktmod01_campaigns')
-  .select(`
+  .from("mod_mktmod01_campaigns")
+  .select(
+    `
     *,
     mod_mktmod01_campaign_stats(*)
-  `)
-  .eq('site_id', siteId)
-  .order('created_at', { ascending: false });
+  `,
+  )
+  .eq("site_id", siteId)
+  .order("created_at", { ascending: false });
 ```
 
 **Status Badge Colors (follow existing design system):**
+
 - `draft` → gray
-- `scheduled` → blue  
+- `scheduled` → blue
 - `sending` → yellow/amber (animated pulse)
 - `sent` → green
 - `paused` → orange
@@ -1090,6 +1151,7 @@ Route: /dashboard/sites/[siteId]/marketing/campaigns/new
 **Multi-step wizard (follows existing platform wizard patterns):**
 
 **Step 1: Campaign Details**
+
 ```tsx
 // Fields:
 // - name: string (required) — internal campaign name
@@ -1108,6 +1170,7 @@ Route: /dashboard/sites/[siteId]/marketing/campaigns/new
 ```
 
 **Step 2: Audience Selection**
+
 ```tsx
 // Audience source options:
 // 1. "All Subscribers" — all contacts with email_subscribed = true
@@ -1134,6 +1197,7 @@ Route: /dashboard/sites/[siteId]/marketing/campaigns/new
 ```
 
 **Step 3: Email Content**
+
 ```tsx
 // Two options:
 // 1. "Design from scratch" → opens visual email editor
@@ -1144,6 +1208,7 @@ Route: /dashboard/sites/[siteId]/marketing/campaigns/new
 ```
 
 **Step 4: Review & Schedule**
+
 ```tsx
 // Summary of all settings
 // Send options:
@@ -1168,6 +1233,7 @@ Route: /dashboard/sites/[siteId]/marketing/campaigns/[campaignId]
 ```
 
 **Behavior by status:**
+
 - `draft` → full edit, same wizard UI
 - `scheduled` → edit allowed, can reschedule or cancel
 - `sending` → read-only, live progress display
@@ -1225,16 +1291,25 @@ email-editor/
 ```typescript
 // block-types.ts
 interface EmailBlock {
-  id: string;           // nanoid
+  id: string; // nanoid
   type: BlockType;
   properties: Record<string, unknown>;
-  children?: EmailBlock[];  // for ColumnsBlock
+  children?: EmailBlock[]; // for ColumnsBlock
 }
 
-type BlockType = 
-  | 'header' | 'text' | 'image' | 'button' | 'divider'
-  | 'columns' | 'product' | 'social' | 'footer' | 'spacer'
-  | 'video' | 'code';
+type BlockType =
+  | "header"
+  | "text"
+  | "image"
+  | "button"
+  | "divider"
+  | "columns"
+  | "product"
+  | "social"
+  | "footer"
+  | "spacer"
+  | "video"
+  | "code";
 
 // Campaign content_json structure:
 interface EmailContent {
@@ -1242,18 +1317,18 @@ interface EmailContent {
   globalStyles: {
     backgroundColor: string;
     fontFamily: string;
-    contentWidth: number;  // px, default 600
+    contentWidth: number; // px, default 600
   };
   blocks: EmailBlock[];
 }
 
 // Example TextBlock properties:
 interface TextBlockProps {
-  content: string;       // HTML string (sanitized)
+  content: string; // HTML string (sanitized)
   fontSize: number;
-  fontWeight: 'normal' | 'bold';
+  fontWeight: "normal" | "bold";
   color: string;
-  alignment: 'left' | 'center' | 'right';
+  alignment: "left" | "center" | "right";
   padding: { top: number; right: number; bottom: number; left: number };
 }
 
@@ -1264,7 +1339,7 @@ interface ButtonBlockProps {
   backgroundColor: string;
   textColor: string;
   borderRadius: number;
-  alignment: 'left' | 'center' | 'right';
+  alignment: "left" | "center" | "right";
   fullWidth: boolean;
   padding: { top: number; right: number; bottom: number; left: number };
 }
@@ -1291,7 +1366,10 @@ interface ButtonBlockProps {
 // These placeholders are replaced at send time with actual URLs
 //
 // Function signature:
-export function renderEmailHtml(content: EmailContent, brandColors?: BrandColors): string
+export function renderEmailHtml(
+  content: EmailContent,
+  brandColors?: BrandColors,
+): string;
 ```
 
 #### Editor Features
@@ -1325,20 +1403,20 @@ export interface EmailTemplate {
   name: string;
   description: string;
   category: TemplateCategory;
-  thumbnail: string;          // path to preview image
-  content: EmailContent;      // block JSON
+  thumbnail: string; // path to preview image
+  content: EmailContent; // block JSON
   tags: string[];
 }
 
-type TemplateCategory = 
-  | 'welcome'        // Welcome & onboarding
-  | 'newsletter'     // Regular newsletters
-  | 'promotion'      // Sales & promotions  
-  | 'announcement'   // Product/feature announcements
-  | 'event'          // Event invitations
-  | 'ecommerce'      // Order-related marketing
-  | 'reengagement'   // Win-back campaigns
-  | 'seasonal';      // Holiday/seasonal
+type TemplateCategory =
+  | "welcome" // Welcome & onboarding
+  | "newsletter" // Regular newsletters
+  | "promotion" // Sales & promotions
+  | "announcement" // Product/feature announcements
+  | "event" // Event invitations
+  | "ecommerce" // Order-related marketing
+  | "reengagement" // Win-back campaigns
+  | "seasonal"; // Holiday/seasonal
 
 // REQUIRED templates (minimum 15):
 // 1.  welcome-simple          — Clean welcome email
@@ -1383,14 +1461,14 @@ type TemplateCategory =
 // IMPORTANT: Uses existing Resend client from src/lib/email.ts
 // Do NOT create a new Resend instance — import the existing one
 
-import { resend } from '@/lib/email';
+import { resend } from "@/lib/email";
 
 interface SendingConfig {
-  batchSize: number;          // emails per batch (default: 100)
-  batchDelayMs: number;       // delay between batches (default: 1000ms)
-  maxConcurrent: number;      // concurrent API calls per batch (default: 10)
-  retryAttempts: number;      // retry failed sends (default: 3)
-  retryDelayMs: number;       // delay between retries (default: 5000ms)
+  batchSize: number; // emails per batch (default: 100)
+  batchDelayMs: number; // delay between batches (default: 1000ms)
+  maxConcurrent: number; // concurrent API calls per batch (default: 10)
+  retryAttempts: number; // retry failed sends (default: 3)
+  retryDelayMs: number; // delay between retries (default: 5000ms)
 }
 
 // Sending flow:
@@ -1413,34 +1491,34 @@ interface SendingConfig {
 export async function resolveAudience(
   supabase: SupabaseClient,
   siteId: string,
-  audienceFilter: AudienceFilter
+  audienceFilter: AudienceFilter,
 ): Promise<Contact[]> {
   // Base query: contacts for this site with email_subscribed = true
   let query = supabase
-    .from('mod_crm01_contacts')
-    .select('id, email, first_name, last_name, company, tags')
-    .eq('site_id', siteId)
-    .eq('email_subscribed', true)
-    .is('email_bounced_at', null);  // exclude bounced
+    .from("mod_crm01_contacts")
+    .select("id, email, first_name, last_name, company, tags")
+    .eq("site_id", siteId)
+    .eq("email_subscribed", true)
+    .is("email_bounced_at", null); // exclude bounced
 
   switch (audienceFilter.type) {
-    case 'all':
+    case "all":
       // No additional filters
       break;
-    case 'segment':
+    case "segment":
       // Resolve segment conditions from CRM
       // Apply segment filter logic
       break;
-    case 'tags':
+    case "tags":
       if (audienceFilter.tags?.include?.length) {
-        query = query.overlaps('tags', audienceFilter.tags.include);
+        query = query.overlaps("tags", audienceFilter.tags.include);
       }
       if (audienceFilter.tags?.exclude?.length) {
         // Filter out contacts with excluded tags
         // Use .not() with overlaps
       }
       break;
-    case 'custom':
+    case "custom":
       // Apply custom conditions dynamically
       // Each condition maps to a Supabase filter
       break;
@@ -1473,16 +1551,16 @@ export function personalizeEmail(
   html: string,
   contact: Contact,
   campaign: Campaign,
-  siteSettings: SiteSettings
+  siteSettings: SiteSettings,
 ): string {
   const tokens: Record<string, string> = {
-    first_name: contact.first_name || 'there',
-    last_name: contact.last_name || '',
-    full_name: contact.first_name 
-      ? `${contact.first_name} ${contact.last_name || ''}`.trim()
-      : 'there',
+    first_name: contact.first_name || "there",
+    last_name: contact.last_name || "",
+    full_name: contact.first_name
+      ? `${contact.first_name} ${contact.last_name || ""}`.trim()
+      : "there",
     email: contact.email,
-    company: contact.company || '',
+    company: contact.company || "",
     unsubscribe_url: generateUnsubscribeUrl(contact.id, campaign.id),
     tracking_pixel: generateTrackingPixelUrl(contact.id, campaign.id),
     site_name: siteSettings.site_name,
@@ -1498,9 +1576,8 @@ export function personalizeEmail(
   }
 
   // Replace click tracking: {{track_click:https://example.com}}
-  result = result.replace(
-    /\{\{track_click:(.*?)\}\}/g,
-    (_, url) => generateClickTrackingUrl(contact.id, campaign.id, url)
+  result = result.replace(/\{\{track_click:(.*?)\}\}/g, (_, url) =>
+    generateClickTrackingUrl(contact.id, campaign.id, url),
   );
 
   return result;
@@ -1513,62 +1590,73 @@ export function personalizeEmail(
 // sending-engine.ts
 export async function sendCampaign(
   campaignId: string,
-  siteId: string
+  siteId: string,
 ): Promise<void> {
-  const supabase = createServiceClient();  // Service role for bulk ops
-  
+  const supabase = createServiceClient(); // Service role for bulk ops
+
   // 1. Load campaign
   const campaign = await getCampaign(supabase, campaignId);
-  if (campaign.status !== 'scheduled' && campaign.status !== 'sending') {
+  if (campaign.status !== "scheduled" && campaign.status !== "sending") {
     throw new Error(`Cannot send campaign in ${campaign.status} status`);
   }
 
   // 2. Update status to sending
-  await updateCampaignStatus(supabase, campaignId, 'sending');
-  
+  await updateCampaignStatus(supabase, campaignId, "sending");
+
   // 3. Fire automation event
   await logAutomationEvent({
-    event_type: 'marketing.campaign.sending',
+    event_type: "marketing.campaign.sending",
     site_id: siteId,
-    metadata: { campaign_id: campaignId, campaign_name: campaign.name }
+    metadata: { campaign_id: campaignId, campaign_name: campaign.name },
   });
 
   // 4. Resolve audience
-  const contacts = await resolveAudience(supabase, siteId, campaign.audience_filter);
-  
+  const contacts = await resolveAudience(
+    supabase,
+    siteId,
+    campaign.audience_filter,
+  );
+
   // 5. Initialize stats
   await initializeCampaignStats(supabase, campaignId, contacts.length);
 
   // 6. Render base HTML
-  const baseHtml = renderEmailHtml(campaign.content_json, campaign.brand_colors);
-  
+  const baseHtml = renderEmailHtml(
+    campaign.content_json,
+    campaign.brand_colors,
+  );
+
   // 7. Load site settings for personalization
   const siteSettings = await getSiteSettings(supabase, siteId);
 
   // 8. Process in batches
   const config = getSendingConfig();
   const batches = chunkArray(contacts, config.batchSize);
-  
+
   let totalSent = 0;
   let totalFailed = 0;
 
   for (const batch of batches) {
     // Check if campaign was paused/cancelled
     const currentStatus = await getCampaignStatus(supabase, campaignId);
-    if (currentStatus === 'paused' || currentStatus === 'cancelled') {
+    if (currentStatus === "paused" || currentStatus === "cancelled") {
       break;
     }
 
     const results = await Promise.allSettled(
       batch.map(async (contact) => {
         const personalizedHtml = personalizeEmail(
-          baseHtml, contact, campaign, siteSettings
+          baseHtml,
+          contact,
+          campaign,
+          siteSettings,
         );
 
         // A/B test: select variant if applicable
-        const subject = campaign.campaign_type === 'ab_test'
-          ? selectABVariant(campaign, contact)
-          : campaign.subject_line;
+        const subject =
+          campaign.campaign_type === "ab_test"
+            ? selectABVariant(campaign, contact)
+            : campaign.subject_line;
 
         try {
           const result = await resend.emails.send({
@@ -1578,9 +1666,9 @@ export async function sendCampaign(
             html: personalizedHtml,
             replyTo: campaign.reply_to || undefined,
             headers: {
-              'X-Campaign-Id': campaignId,
-              'X-Contact-Id': contact.id,
-              'List-Unsubscribe': `<${generateUnsubscribeUrl(contact.id, campaignId)}>`,
+              "X-Campaign-Id": campaignId,
+              "X-Contact-Id": contact.id,
+              "List-Unsubscribe": `<${generateUnsubscribeUrl(contact.id, campaignId)}>`,
             },
           });
 
@@ -1590,8 +1678,11 @@ export async function sendCampaign(
             contact_id: contact.id,
             email: contact.email,
             resend_id: result.data?.id,
-            status: 'sent',
-            variant: campaign.campaign_type === 'ab_test' ? getVariantLabel(contact) : null,
+            status: "sent",
+            variant:
+              campaign.campaign_type === "ab_test"
+                ? getVariantLabel(contact)
+                : null,
           });
 
           totalSent++;
@@ -1602,14 +1693,15 @@ export async function sendCampaign(
             campaign_id: campaignId,
             contact_id: contact.id,
             email: contact.email,
-            status: 'failed',
-            error_message: error instanceof Error ? error.message : 'Unknown error',
+            status: "failed",
+            error_message:
+              error instanceof Error ? error.message : "Unknown error",
           });
 
           totalFailed++;
           return { success: false, contactId: contact.id, error };
         }
-      })
+      }),
     );
 
     // Update running stats
@@ -1622,19 +1714,25 @@ export async function sendCampaign(
   }
 
   // 9. Finalize campaign
-  const finalStatus = totalFailed === contacts.length ? 'failed' : 'sent';
-  await finalizeCampaign(supabase, campaignId, finalStatus, totalSent, totalFailed);
+  const finalStatus = totalFailed === contacts.length ? "failed" : "sent";
+  await finalizeCampaign(
+    supabase,
+    campaignId,
+    finalStatus,
+    totalSent,
+    totalFailed,
+  );
 
   // 10. Fire completion event
   await logAutomationEvent({
-    event_type: 'marketing.campaign.sent',
+    event_type: "marketing.campaign.sent",
     site_id: siteId,
     metadata: {
       campaign_id: campaignId,
       total_sent: totalSent,
       total_failed: totalFailed,
-      audience_size: contacts.length
-    }
+      audience_size: contacts.length,
+    },
   });
 }
 ```
@@ -1671,9 +1769,10 @@ export async function sendCampaign(
 export function selectABVariant(campaign: Campaign, contact: Contact): string {
   // Simple hash-based split
   const hash = simpleHash(contact.id);
-  const isVariantB = (hash % 100) < (campaign.ab_test_config?.split_percentage ?? 50);
-  return isVariantB 
-    ? campaign.ab_test_config!.variant_b_subject 
+  const isVariantB =
+    hash % 100 < (campaign.ab_test_config?.split_percentage ?? 50);
+  return isVariantB
+    ? campaign.ab_test_config!.variant_b_subject
     : campaign.subject_line;
 }
 ```
@@ -1687,8 +1786,8 @@ API Routes to create:
 
 POST   /api/sites/[siteId]/marketing/campaigns
   → Create new campaign
-  → Body: { name, subject_line, preview_text, from_name, from_email, 
-            reply_to, campaign_type, audience_filter, content_json, 
+  → Body: { name, subject_line, preview_text, from_name, from_email,
+            reply_to, campaign_type, audience_filter, content_json,
             ab_test_config?, scheduled_at? }
   → Returns: campaign object
 
@@ -1753,11 +1852,11 @@ GET    /api/sites/[siteId]/marketing/templates
 // Server actions for campaign operations (used by UI forms)
 // Follow existing platform pattern: 'use server' + revalidatePath
 
-'use server';
+"use server";
 
 export async function createCampaignAction(
   siteId: string,
-  data: CreateCampaignInput
+  data: CreateCampaignInput,
 ): Promise<ActionResult<Campaign>> {
   // 1. Verify auth + permission
   // 2. Validate input (zod schema)
@@ -1771,7 +1870,7 @@ export async function createCampaignAction(
 export async function updateCampaignAction(
   campaignId: string,
   siteId: string,
-  data: UpdateCampaignInput
+  data: UpdateCampaignInput,
 ): Promise<ActionResult<Campaign>> {
   // 1. Verify auth + permission
   // 2. Verify campaign is editable (draft or scheduled)
@@ -1783,7 +1882,7 @@ export async function updateCampaignAction(
 
 export async function sendCampaignAction(
   campaignId: string,
-  siteId: string
+  siteId: string,
 ): Promise<ActionResult<{ status: string }>> {
   // 1. Verify auth + permission
   // 2. Validate campaign is ready:
@@ -1798,7 +1897,7 @@ export async function sendCampaignAction(
 export async function sendTestEmailAction(
   campaignId: string,
   siteId: string,
-  testEmail: string
+  testEmail: string,
 ): Promise<ActionResult<{ sent: boolean }>> {
   // 1. Verify auth
   // 2. Load campaign
@@ -1809,7 +1908,7 @@ export async function sendTestEmailAction(
 
 export async function duplicateCampaignAction(
   campaignId: string,
-  siteId: string
+  siteId: string,
 ): Promise<ActionResult<Campaign>> {
   // 1. Verify auth
   // 2. Load source campaign
@@ -1840,55 +1939,55 @@ export async function duplicateCampaignAction(
 
 export async function POST(request: Request) {
   // 1. Verify Resend webhook signature
-  const signature = request.headers.get('svix-signature');
+  const signature = request.headers.get("svix-signature");
   // ... verify with svix library or manual HMAC
 
   const event = await request.json();
-  
+
   // 2. Check if this is a marketing email (has campaign headers)
-  const campaignId = event.data?.headers?.['X-Campaign-Id'];
+  const campaignId = event.data?.headers?.["X-Campaign-Id"];
   if (!campaignId) {
     // Handle as transactional email event (existing logic)
     return handleTransactionalEvent(event);
   }
 
   // 3. Handle marketing email event
-  const contactId = event.data?.headers?.['X-Contact-Id'];
-  
+  const contactId = event.data?.headers?.["X-Contact-Id"];
+
   switch (event.type) {
-    case 'email.delivered':
-      await updateEmailSendStatus(campaignId, contactId, 'delivered');
-      await incrementCampaignStat(campaignId, 'delivered_count');
+    case "email.delivered":
+      await updateEmailSendStatus(campaignId, contactId, "delivered");
+      await incrementCampaignStat(campaignId, "delivered_count");
       break;
 
-    case 'email.opened':
+    case "email.opened":
       // Note: may fire multiple times per contact
       await recordEmailOpen(campaignId, contactId);
       break;
 
-    case 'email.clicked':
+    case "email.clicked":
       await recordEmailClick(campaignId, contactId, event.data.click.link);
       break;
 
-    case 'email.bounced':
+    case "email.bounced":
       await handleBounce(campaignId, contactId, event.data.bounce);
       // Mark contact as bounced in CRM
       await markContactBounced(contactId);
       break;
 
-    case 'email.complained':
+    case "email.complained":
       await handleComplaint(campaignId, contactId);
       // Auto-unsubscribe contact
       await unsubscribeContact(contactId);
       // Fire automation event
       await logAutomationEvent({
-        event_type: 'marketing.contact.complained',
-        metadata: { campaign_id: campaignId, contact_id: contactId }
+        event_type: "marketing.contact.complained",
+        metadata: { campaign_id: campaignId, contact_id: contactId },
       });
       break;
   }
 
-  return new Response('OK', { status: 200 });
+  return new Response("OK", { status: 200 });
 }
 ```
 
@@ -1941,12 +2040,12 @@ export async function POST(request: Request) {
 // Implementation:
 export async function checkScheduledCampaigns() {
   const supabase = createServiceClient();
-  
+
   const { data: readyCampaigns } = await supabase
-    .from('mod_mktmod01_campaigns')
-    .select('id, site_id')
-    .eq('status', 'scheduled')
-    .lte('scheduled_at', new Date().toISOString());
+    .from("mod_mktmod01_campaigns")
+    .select("id, site_id")
+    .eq("status", "scheduled")
+    .lte("scheduled_at", new Date().toISOString());
 
   for (const campaign of readyCampaigns ?? []) {
     try {
@@ -1954,7 +2053,7 @@ export async function checkScheduledCampaigns() {
     } catch (error) {
       console.error(`Failed to send scheduled campaign ${campaign.id}:`, error);
       // Update status to 'failed' with error
-      await updateCampaignStatus(supabase, campaign.id, 'failed');
+      await updateCampaignStatus(supabase, campaign.id, "failed");
     }
   }
 }
@@ -2003,6 +2102,7 @@ export async function checkScheduledCampaigns() {
 ### 3.1 Overview
 
 This phase builds the complete analytics and tracking system for email campaigns. It includes:
+
 - Open tracking via invisible pixel
 - Click tracking via redirect proxy
 - Real-time campaign dashboard with live stats
@@ -2032,22 +2132,22 @@ This phase builds the complete analytics and tracking system for email campaigns
 
 export async function GET(
   request: Request,
-  { params }: { params: { token: string } }
+  { params }: { params: { token: string } },
 ) {
   try {
     const { campaignId, contactId, sendId } = decodeTrackingToken(params.token);
-    
+
     // Record open asynchronously (don't block pixel response)
     // Use waitUntil if available (Vercel Edge), otherwise fire-and-forget
     const recordPromise = recordOpen(campaignId, contactId, sendId, {
-      userAgent: request.headers.get('user-agent'),
-      ip: request.headers.get('x-forwarded-for'),
+      userAgent: request.headers.get("user-agent"),
+      ip: request.headers.get("x-forwarded-for"),
       timestamp: new Date(),
     });
 
     // Edge runtime: use waitUntil
     // Node runtime: fire and forget (or use after() from next/server)
-    if (typeof globalThis.waitUntil === 'function') {
+    if (typeof globalThis.waitUntil === "function") {
       globalThis.waitUntil(recordPromise);
     }
   } catch (e) {
@@ -2056,16 +2156,16 @@ export async function GET(
 
   // Return 1x1 transparent GIF
   const pixel = Buffer.from(
-    'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
-    'base64'
+    "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+    "base64",
   );
 
   return new Response(pixel, {
     headers: {
-      'Content-Type': 'image/gif',
-      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0',
+      "Content-Type": "image/gif",
+      "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+      Pragma: "no-cache",
+      Expires: "0",
     },
   });
 }
@@ -2074,26 +2174,26 @@ async function recordOpen(
   campaignId: string,
   contactId: string,
   sendId: string,
-  metadata: OpenMetadata
+  metadata: OpenMetadata,
 ) {
   const supabase = createServiceClient();
 
   // Check if first open (for unique open tracking)
   const { data: existingSend } = await supabase
-    .from('mod_mktmod01_email_sends')
-    .select('id, opened_at')
-    .eq('campaign_id', campaignId)
-    .eq('contact_id', contactId)
+    .from("mod_mktmod01_email_sends")
+    .select("id, opened_at")
+    .eq("campaign_id", campaignId)
+    .eq("contact_id", contactId)
     .single();
 
   if (!existingSend) return;
 
   // Record open event
-  await supabase.from('mod_mktmod01_email_events').insert({
+  await supabase.from("mod_mktmod01_email_events").insert({
     campaign_id: campaignId,
     contact_id: contactId,
     send_id: existingSend.id,
-    event_type: 'open',
+    event_type: "open",
     metadata: {
       user_agent: metadata.userAgent,
       ip: metadata.ip,
@@ -2103,27 +2203,27 @@ async function recordOpen(
   // Update first open time if not already set (unique open)
   if (!existingSend.opened_at) {
     await supabase
-      .from('mod_mktmod01_email_sends')
+      .from("mod_mktmod01_email_sends")
       .update({ opened_at: metadata.timestamp.toISOString() })
-      .eq('id', existingSend.id);
+      .eq("id", existingSend.id);
 
     // Increment unique open count in campaign stats
-    await supabase.rpc('increment_campaign_stat', {
+    await supabase.rpc("increment_campaign_stat", {
       p_campaign_id: campaignId,
-      p_stat: 'unique_opens',
+      p_stat: "unique_opens",
     });
 
     // Fire automation event for first open
     await logAutomationEvent({
-      event_type: 'marketing.email.opened',
+      event_type: "marketing.email.opened",
       metadata: { campaign_id: campaignId, contact_id: contactId },
     });
   }
 
   // Always increment total opens
-  await supabase.rpc('increment_campaign_stat', {
+  await supabase.rpc("increment_campaign_stat", {
     p_campaign_id: campaignId,
-    p_stat: 'total_opens',
+    p_stat: "total_opens",
   });
 }
 ```
@@ -2141,7 +2241,7 @@ CREATE OR REPLACE FUNCTION increment_campaign_stat(
 BEGIN
   -- Dynamic column update based on stat name
   -- Only allow known stat columns to prevent SQL injection
-  IF p_stat NOT IN ('unique_opens', 'total_opens', 'unique_clicks', 'total_clicks', 
+  IF p_stat NOT IN ('unique_opens', 'total_opens', 'unique_clicks', 'total_clicks',
                      'bounces', 'complaints', 'unsubscribes', 'delivered_count') THEN
     RAISE EXCEPTION 'Invalid stat column: %', p_stat;
   END IF;
@@ -2170,25 +2270,33 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 export async function GET(
   request: Request,
-  { params }: { params: { token: string } }
+  { params }: { params: { token: string } },
 ) {
   try {
-    const { campaignId, contactId, sendId, originalUrl } = decodeClickToken(params.token);
-    
+    const { campaignId, contactId, sendId, originalUrl } = decodeClickToken(
+      params.token,
+    );
+
     // Validate URL is safe to redirect to
     if (!isValidRedirectUrl(originalUrl)) {
-      return new Response('Invalid URL', { status: 400 });
+      return new Response("Invalid URL", { status: 400 });
     }
 
     // Record click asynchronously
-    const recordPromise = recordClick(campaignId, contactId, sendId, originalUrl, {
-      userAgent: request.headers.get('user-agent'),
-      ip: request.headers.get('x-forwarded-for'),
-      referer: request.headers.get('referer'),
-      timestamp: new Date(),
-    });
+    const recordPromise = recordClick(
+      campaignId,
+      contactId,
+      sendId,
+      originalUrl,
+      {
+        userAgent: request.headers.get("user-agent"),
+        ip: request.headers.get("x-forwarded-for"),
+        referer: request.headers.get("referer"),
+        timestamp: new Date(),
+      },
+    );
 
-    if (typeof globalThis.waitUntil === 'function') {
+    if (typeof globalThis.waitUntil === "function") {
       globalThis.waitUntil(recordPromise);
     }
 
@@ -2196,7 +2304,7 @@ export async function GET(
     return Response.redirect(originalUrl, 302);
   } catch (e) {
     // On any error, try to redirect to site homepage or return error
-    return new Response('Tracking error', { status: 500 });
+    return new Response("Tracking error", { status: 500 });
   }
 }
 
@@ -2204,9 +2312,10 @@ function isValidRedirectUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
     // Block dangerous protocols
-    if (!['http:', 'https:'].includes(parsed.protocol)) return false;
+    if (!["http:", "https:"].includes(parsed.protocol)) return false;
     // Block internal/localhost URLs
-    if (['localhost', '127.0.0.1', '0.0.0.0'].includes(parsed.hostname)) return false;
+    if (["localhost", "127.0.0.1", "0.0.0.0"].includes(parsed.hostname))
+      return false;
     return true;
   } catch {
     return false;
@@ -2218,16 +2327,16 @@ async function recordClick(
   contactId: string,
   sendId: string,
   url: string,
-  metadata: ClickMetadata
+  metadata: ClickMetadata,
 ) {
   const supabase = createServiceClient();
 
   // Record click event
-  await supabase.from('mod_mktmod01_email_events').insert({
+  await supabase.from("mod_mktmod01_email_events").insert({
     campaign_id: campaignId,
     contact_id: contactId,
     send_id: sendId,
-    event_type: 'click',
+    event_type: "click",
     metadata: {
       url,
       user_agent: metadata.userAgent,
@@ -2236,7 +2345,7 @@ async function recordClick(
   });
 
   // Update link stats
-  await supabase.from('mod_mktmod01_link_tracking').upsert(
+  await supabase.from("mod_mktmod01_link_tracking").upsert(
     {
       campaign_id: campaignId,
       url: url,
@@ -2244,9 +2353,9 @@ async function recordClick(
       unique_clicks: 1,
     },
     {
-      onConflict: 'campaign_id,url',
+      onConflict: "campaign_id,url",
       // On conflict, increment counters
-    }
+    },
   );
   // Note: Supabase upsert doesn't support increment on conflict directly
   // Use RPC or do read-then-update for link tracking
@@ -2254,36 +2363,36 @@ async function recordClick(
 
   // Check if first click by this contact (unique click)
   const { data: existingSend } = await supabase
-    .from('mod_mktmod01_email_sends')
-    .select('clicked_at')
-    .eq('campaign_id', campaignId)
-    .eq('contact_id', contactId)
+    .from("mod_mktmod01_email_sends")
+    .select("clicked_at")
+    .eq("campaign_id", campaignId)
+    .eq("contact_id", contactId)
     .single();
 
   if (existingSend && !existingSend.clicked_at) {
     // First click — update send record and increment unique clicks
     await supabase
-      .from('mod_mktmod01_email_sends')
+      .from("mod_mktmod01_email_sends")
       .update({ clicked_at: metadata.timestamp.toISOString() })
-      .eq('campaign_id', campaignId)
-      .eq('contact_id', contactId);
+      .eq("campaign_id", campaignId)
+      .eq("contact_id", contactId);
 
-    await supabase.rpc('increment_campaign_stat', {
+    await supabase.rpc("increment_campaign_stat", {
       p_campaign_id: campaignId,
-      p_stat: 'unique_clicks',
+      p_stat: "unique_clicks",
     });
 
     // Fire automation event for first click
     await logAutomationEvent({
-      event_type: 'marketing.email.clicked',
+      event_type: "marketing.email.clicked",
       metadata: { campaign_id: campaignId, contact_id: contactId, url },
     });
   }
 
   // Always increment total clicks
-  await supabase.rpc('increment_campaign_stat', {
+  await supabase.rpc("increment_campaign_stat", {
     p_campaign_id: campaignId,
-    p_stat: 'total_clicks',
+    p_stat: "total_clicks",
   });
 }
 ```
@@ -2377,7 +2486,7 @@ report/
 
 ```
 Use Recharts (already likely in project) or shadcn charts.
-Check existing dependencies first — use whatever charting 
+Check existing dependencies first — use whatever charting
 library the platform already uses. Do NOT add a new one.
 ```
 
@@ -2415,7 +2524,7 @@ interface MarketingAnalytics {
   averageOpenRate: number;
   averageClickRate: number;
   totalSubscribers: number;
-  newSubscribers: number;   // in date range
+  newSubscribers: number; // in date range
   totalUnsubscribes: number;
   bounceRate: number;
   complaintRate: number;
@@ -2446,13 +2555,13 @@ interface MarketingAnalytics {
 ```typescript
 // analytics-queries.ts
 // Aggregate queries for the analytics dashboard.
-// These should be efficient — consider creating database views 
+// These should be efficient — consider creating database views
 // or materialized summaries if queries become slow.
 
 export async function getMarketingAnalytics(
   supabase: SupabaseClient,
   siteId: string,
-  dateRange: { from: Date; to: Date }
+  dateRange: { from: Date; to: Date },
 ): Promise<MarketingAnalytics> {
   // Parallel queries for efficiency
   const [
@@ -2499,13 +2608,15 @@ export async function getMarketingAnalytics(
 //
 // Data query:
 const { data: contactEngagement } = await supabase
-  .from('mod_mktmod01_email_sends')
-  .select(`
+  .from("mod_mktmod01_email_sends")
+  .select(
+    `
     *,
     mod_mktmod01_campaigns (name, subject_line, sent_at)
-  `)
-  .eq('contact_id', contactId)
-  .order('sent_at', { ascending: false })
+  `,
+  )
+  .eq("contact_id", contactId)
+  .order("sent_at", { ascending: false })
   .limit(50);
 ```
 
@@ -2540,7 +2651,7 @@ const { data: contactEngagement } = await supabase
 
 export async function calculateEngagementScore(
   supabase: SupabaseClient,
-  contactId: string
+  contactId: string,
 ): Promise<number> {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -2549,11 +2660,11 @@ export async function calculateEngagementScore(
 
   // Get recent email interactions
   const { data: recentSends } = await supabase
-    .from('mod_mktmod01_email_sends')
-    .select('opened_at, clicked_at, status, sent_at')
-    .eq('contact_id', contactId)
-    .gte('sent_at', ninetyDaysAgo.toISOString())
-    .order('sent_at', { ascending: false });
+    .from("mod_mktmod01_email_sends")
+    .select("opened_at, clicked_at, status, sent_at")
+    .eq("contact_id", contactId)
+    .gte("sent_at", ninetyDaysAgo.toISOString())
+    .order("sent_at", { ascending: false });
 
   if (!recentSends || recentSends.length === 0) return 0;
 
@@ -2561,13 +2672,13 @@ export async function calculateEngagementScore(
 
   // Recent opens (last 30 days)
   const recentOpens = recentSends.filter(
-    s => s.opened_at && new Date(s.opened_at) >= thirtyDaysAgo
+    (s) => s.opened_at && new Date(s.opened_at) >= thirtyDaysAgo,
   );
   score += Math.min(recentOpens.length * 5, 25);
 
   // Recent clicks (last 30 days)
   const recentClicks = recentSends.filter(
-    s => s.clicked_at && new Date(s.clicked_at) >= thirtyDaysAgo
+    (s) => s.clicked_at && new Date(s.clicked_at) >= thirtyDaysAgo,
   );
   score += Math.min(recentClicks.length * 10, 30);
 
@@ -2577,12 +2688,12 @@ export async function calculateEngagementScore(
   if (lastSend?.clicked_at) score += 20;
 
   // Inactivity penalty
-  const hasRecentOpen = recentSends.some(s => s.opened_at);
+  const hasRecentOpen = recentSends.some((s) => s.opened_at);
   if (!hasRecentOpen) score -= 30;
 
   // Bounce/complaint check
-  if (recentSends.some(s => s.status === 'bounced')) score -= 50;
-  if (recentSends.some(s => s.status === 'complained')) return 0;
+  if (recentSends.some((s) => s.status === "bounced")) score -= 50;
+  if (recentSends.some((s) => s.status === "complained")) return 0;
 
   return Math.max(0, Math.min(100, score));
 }
@@ -2596,11 +2707,12 @@ export async function calculateEngagementScore(
 
 export async function exportCampaignReport(
   supabase: SupabaseClient,
-  campaignId: string
+  campaignId: string,
 ): Promise<string> {
   const { data: sends } = await supabase
-    .from('mod_mktmod01_email_sends')
-    .select(`
+    .from("mod_mktmod01_email_sends")
+    .select(
+      `
       email,
       status,
       sent_at,
@@ -2610,38 +2722,50 @@ export async function exportCampaignReport(
       bounced_at,
       variant,
       mod_crm01_contacts (first_name, last_name, company)
-    `)
-    .eq('campaign_id', campaignId);
+    `,
+    )
+    .eq("campaign_id", campaignId);
 
   // Generate CSV with columns:
-  // Email, First Name, Last Name, Company, Status, Sent At, 
+  // Email, First Name, Last Name, Company, Status, Sent At,
   // Delivered At, Opened At, Clicked At, Bounced At, Variant
-  
+
   const headers = [
-    'Email', 'First Name', 'Last Name', 'Company', 'Status',
-    'Sent At', 'Delivered At', 'Opened At', 'Clicked At', 
-    'Bounced At', 'Variant'
+    "Email",
+    "First Name",
+    "Last Name",
+    "Company",
+    "Status",
+    "Sent At",
+    "Delivered At",
+    "Opened At",
+    "Clicked At",
+    "Bounced At",
+    "Variant",
   ];
 
-  const rows = (sends ?? []).map(s => [
+  const rows = (sends ?? []).map((s) => [
     s.email,
-    s.mod_crm01_contacts?.first_name ?? '',
-    s.mod_crm01_contacts?.last_name ?? '',
-    s.mod_crm01_contacts?.company ?? '',
+    s.mod_crm01_contacts?.first_name ?? "",
+    s.mod_crm01_contacts?.last_name ?? "",
+    s.mod_crm01_contacts?.company ?? "",
     s.status,
-    s.sent_at ?? '',
-    s.delivered_at ?? '',
-    s.opened_at ?? '',
-    s.clicked_at ?? '',
-    s.bounced_at ?? '',
-    s.variant ?? '',
+    s.sent_at ?? "",
+    s.delivered_at ?? "",
+    s.opened_at ?? "",
+    s.clicked_at ?? "",
+    s.bounced_at ?? "",
+    s.variant ?? "",
   ]);
 
-  return [headers.join(','), ...rows.map(r => r.map(escapeCsv).join(','))].join('\n');
+  return [
+    headers.join(","),
+    ...rows.map((r) => r.map(escapeCsv).join(",")),
+  ].join("\n");
 }
 
 function escapeCsv(value: string): string {
-  if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
     return `"${value.replace(/"/g, '""')}"`;
   }
   return value;
@@ -2686,6 +2810,7 @@ function escapeCsv(value: string): string {
 ### 4.1 Overview
 
 This phase bridges the marketing module with the existing automation engine. It creates:
+
 - Drip sequence builder (multi-email automated sequences)
 - Pre-built marketing automation workflow templates
 - New marketing-specific automation triggers and actions
@@ -2728,37 +2853,51 @@ interface SequenceStep {
   id: string;
   sequence_id: string;
   step_order: number;
-  step_type: 'email' | 'delay' | 'condition' | 'action';
-  config: EmailStepConfig | DelayStepConfig | ConditionStepConfig | ActionStepConfig;
+  step_type: "email" | "delay" | "condition" | "action";
+  config:
+    | EmailStepConfig
+    | DelayStepConfig
+    | ConditionStepConfig
+    | ActionStepConfig;
 }
 
 interface EmailStepConfig {
   subject_line: string;
   preview_text?: string;
-  content_json: EmailContent;  // Same format as campaigns
-  from_name?: string;          // Override default
-  from_email?: string;         // Override default
+  content_json: EmailContent; // Same format as campaigns
+  from_name?: string; // Override default
+  from_email?: string; // Override default
 }
 
 interface DelayStepConfig {
   delay_amount: number;
-  delay_unit: 'minutes' | 'hours' | 'days' | 'weeks';
+  delay_unit: "minutes" | "hours" | "days" | "weeks";
   // Smart timing: if true, sends at optimal time for contact's timezone
   smart_timing: boolean;
 }
 
 interface ConditionStepConfig {
-  condition_type: 'opened_previous' | 'clicked_previous' | 'tag_has' | 
-                   'tag_missing' | 'field_equals' | 'engagement_score';
+  condition_type:
+    | "opened_previous"
+    | "clicked_previous"
+    | "tag_has"
+    | "tag_missing"
+    | "field_equals"
+    | "engagement_score";
   condition_value?: string;
   // Branch: contacts meeting condition continue, others skip to next matching step
-  true_next_step?: number;   // step_order to jump to
-  false_next_step?: number;  // step_order if condition fails
+  true_next_step?: number; // step_order to jump to
+  false_next_step?: number; // step_order if condition fails
 }
 
 interface ActionStepConfig {
-  action_type: 'add_tag' | 'remove_tag' | 'update_field' | 
-                'move_to_segment' | 'notify_team' | 'webhook';
+  action_type:
+    | "add_tag"
+    | "remove_tag"
+    | "update_field"
+    | "move_to_segment"
+    | "notify_team"
+    | "webhook";
   action_params: Record<string, unknown>;
 }
 ```
@@ -2775,7 +2914,7 @@ Route: /dashboard/sites/[siteId]/marketing/sequences
 
 ```
 Features:
-- List all sequences with: name, status (draft/active/paused), 
+- List all sequences with: name, status (draft/active/paused),
   enrolled contacts, completion rate, created date
 - Status filter tabs: All | Active | Draft | Paused
 - Create new sequence button
@@ -2869,15 +3008,17 @@ export async function processSequenceSteps() {
 
   // Find enrollments ready for next step
   const { data: readyEnrollments } = await supabase
-    .from('mod_mktmod01_sequence_enrollments')
-    .select(`
+    .from("mod_mktmod01_sequence_enrollments")
+    .select(
+      `
       *,
       mod_mktmod01_sequences (*),
       mod_mktmod01_sequence_steps (*)
-    `)
-    .eq('status', 'active')
-    .lte('next_step_at', new Date().toISOString())
-    .limit(100);  // Process in batches
+    `,
+    )
+    .eq("status", "active")
+    .lte("next_step_at", new Date().toISOString())
+    .limit(100); // Process in batches
 
   for (const enrollment of readyEnrollments ?? []) {
     try {
@@ -2891,12 +3032,15 @@ export async function processSequenceSteps() {
 
 async function processEnrollmentStep(
   supabase: SupabaseClient,
-  enrollment: SequenceEnrollment
+  enrollment: SequenceEnrollment,
 ) {
-  const steps = enrollment.mod_mktmod01_sequence_steps
-    .sort((a, b) => a.step_order - b.step_order);
-  
-  const currentStep = steps.find(s => s.step_order === enrollment.current_step);
+  const steps = enrollment.mod_mktmod01_sequence_steps.sort(
+    (a, b) => a.step_order - b.step_order,
+  );
+
+  const currentStep = steps.find(
+    (s) => s.step_order === enrollment.current_step,
+  );
   if (!currentStep) {
     // No more steps — complete the enrollment
     await completeEnrollment(supabase, enrollment.id);
@@ -2905,37 +3049,39 @@ async function processEnrollmentStep(
 
   // Check exit conditions first
   if (await shouldExitSequence(supabase, enrollment)) {
-    await exitEnrollment(supabase, enrollment.id, 'exit_condition_met');
+    await exitEnrollment(supabase, enrollment.id, "exit_condition_met");
     return;
   }
 
   switch (currentStep.step_type) {
-    case 'email':
+    case "email":
       await sendSequenceEmail(supabase, enrollment, currentStep);
       break;
-    case 'delay':
+    case "delay":
       // Delay step — just advance (the delay was already waited)
       break;
-    case 'condition':
+    case "condition":
       await evaluateCondition(supabase, enrollment, currentStep);
       return; // evaluateCondition handles its own step advancement
-    case 'action':
+    case "action":
       await executeAction(supabase, enrollment, currentStep);
       break;
   }
 
   // Advance to next step
-  const nextStep = steps.find(s => s.step_order === enrollment.current_step + 1);
+  const nextStep = steps.find(
+    (s) => s.step_order === enrollment.current_step + 1,
+  );
   if (nextStep) {
     const nextStepAt = calculateNextStepTime(nextStep);
     await supabase
-      .from('mod_mktmod01_sequence_enrollments')
+      .from("mod_mktmod01_sequence_enrollments")
       .update({
         current_step: nextStep.step_order,
         next_step_at: nextStepAt.toISOString(),
         last_step_at: new Date().toISOString(),
       })
-      .eq('id', enrollment.id);
+      .eq("id", enrollment.id);
   } else {
     await completeEnrollment(supabase, enrollment.id);
   }
@@ -2943,7 +3089,7 @@ async function processEnrollmentStep(
 
 function calculateNextStepTime(step: SequenceStep): Date {
   const now = new Date();
-  if (step.step_type === 'delay') {
+  if (step.step_type === "delay") {
     const config = step.config as DelayStepConfig;
     const ms = {
       minutes: 60_000,
@@ -2978,15 +3124,15 @@ export async function enrollContact(
   sequenceId: string,
   contactId: string,
   siteId: string,
-  triggerEvent?: string
+  triggerEvent?: string,
 ): Promise<void> {
   // 1. Check if already enrolled (prevent duplicates)
   const { data: existing } = await supabase
-    .from('mod_mktmod01_sequence_enrollments')
-    .select('id, status')
-    .eq('sequence_id', sequenceId)
-    .eq('contact_id', contactId)
-    .in('status', ['active', 'paused']);
+    .from("mod_mktmod01_sequence_enrollments")
+    .select("id, status")
+    .eq("sequence_id", sequenceId)
+    .eq("contact_id", contactId)
+    .in("status", ["active", "paused"]);
 
   if (existing && existing.length > 0) {
     return; // Already enrolled
@@ -2994,19 +3140,19 @@ export async function enrollContact(
 
   // 2. Get first step
   const { data: firstStep } = await supabase
-    .from('mod_mktmod01_sequence_steps')
-    .select('step_order')
-    .eq('sequence_id', sequenceId)
-    .order('step_order', { ascending: true })
+    .from("mod_mktmod01_sequence_steps")
+    .select("step_order")
+    .eq("sequence_id", sequenceId)
+    .order("step_order", { ascending: true })
     .limit(1)
     .single();
 
   // 3. Create enrollment
-  await supabase.from('mod_mktmod01_sequence_enrollments').insert({
+  await supabase.from("mod_mktmod01_sequence_enrollments").insert({
     sequence_id: sequenceId,
     contact_id: contactId,
     site_id: siteId,
-    status: 'active',
+    status: "active",
     current_step: firstStep?.step_order ?? 1,
     next_step_at: new Date().toISOString(), // Process immediately
     enrolled_at: new Date().toISOString(),
@@ -3015,7 +3161,7 @@ export async function enrollContact(
 
   // 4. Fire automation event
   await logAutomationEvent({
-    event_type: 'marketing.sequence.enrolled',
+    event_type: "marketing.sequence.enrolled",
     site_id: siteId,
     metadata: {
       sequence_id: sequenceId,
@@ -3036,24 +3182,24 @@ export async function enrollContact(
 // Add these to the EVENT_REGISTRY:
 
 // Marketing Events:
-'marketing.campaign.created'       // When a campaign is created
-'marketing.campaign.scheduled'     // When a campaign is scheduled
-'marketing.campaign.sending'       // When sending begins
-'marketing.campaign.sent'          // When sending completes
-'marketing.campaign.paused'        // When sending is paused
-'marketing.email.opened'           // When a contact opens an email (first time)
-'marketing.email.clicked'          // When a contact clicks a link (first time)
-'marketing.email.bounced'          // When an email bounces
-'marketing.contact.subscribed'     // When a contact subscribes
-'marketing.contact.unsubscribed'   // When a contact unsubscribes
-'marketing.contact.complained'     // When a contact marks as spam
-'marketing.sequence.enrolled'      // When contact enters a sequence
-'marketing.sequence.completed'     // When contact completes a sequence
-'marketing.sequence.exited'        // When contact exits early
-'marketing.form.submitted'         // When a marketing form is submitted
-'marketing.landing.visited'        // When a landing page is visited
-'marketing.landing.converted'      // When a landing page conversion happens
-'marketing.engagement.cold'        // When engagement score drops to cold
+"marketing.campaign.created"; // When a campaign is created
+"marketing.campaign.scheduled"; // When a campaign is scheduled
+"marketing.campaign.sending"; // When sending begins
+"marketing.campaign.sent"; // When sending completes
+"marketing.campaign.paused"; // When sending is paused
+"marketing.email.opened"; // When a contact opens an email (first time)
+"marketing.email.clicked"; // When a contact clicks a link (first time)
+"marketing.email.bounced"; // When an email bounces
+"marketing.contact.subscribed"; // When a contact subscribes
+"marketing.contact.unsubscribed"; // When a contact unsubscribes
+"marketing.contact.complained"; // When a contact marks as spam
+"marketing.sequence.enrolled"; // When contact enters a sequence
+"marketing.sequence.completed"; // When contact completes a sequence
+"marketing.sequence.exited"; // When contact exits early
+"marketing.form.submitted"; // When a marketing form is submitted
+"marketing.landing.visited"; // When a landing page is visited
+"marketing.landing.converted"; // When a landing page conversion happens
+"marketing.engagement.cold"; // When engagement score drops to cold
 ```
 
 #### New Action Types (add to `action-types.ts`)
@@ -3061,14 +3207,14 @@ export async function enrollContact(
 ```typescript
 // Add these to ACTION_TYPES:
 
-'marketing.send_campaign'          // Send a specific campaign to trigger contact
-'marketing.enroll_sequence'        // Enroll contact in a drip sequence
-'marketing.remove_from_sequence'   // Remove contact from a sequence
-'marketing.add_to_audience'        // Add contact to a campaign audience
-'marketing.update_engagement'      // Recalculate engagement score
-'marketing.subscribe'              // Set contact as subscribed
-'marketing.unsubscribe'            // Set contact as unsubscribed
-'marketing.send_sequence_email'    // Send a specific sequence step email
+"marketing.send_campaign"; // Send a specific campaign to trigger contact
+"marketing.enroll_sequence"; // Enroll contact in a drip sequence
+"marketing.remove_from_sequence"; // Remove contact from a sequence
+"marketing.add_to_audience"; // Add contact to a campaign audience
+"marketing.update_engagement"; // Recalculate engagement score
+"marketing.subscribe"; // Set contact as subscribed
+"marketing.unsubscribe"; // Set contact as unsubscribed
+"marketing.send_sequence_email"; // Send a specific sequence step email
 ```
 
 ### 4.8 Pre-Built Marketing Automation Templates
@@ -3081,249 +3227,250 @@ These are added to the existing automation template system (system-templates.ts 
 export const MARKETING_AUTOMATION_TEMPLATES = [
   // 1. Welcome Sequence
   {
-    id: 'mkt-welcome-sequence',
-    name: 'Welcome Email Sequence',
-    description: 'Automated 5-email onboarding sequence for new contacts',
-    category: 'marketing',
-    icon: 'Sparkles',
-    trigger: 'contact.created',
+    id: "mkt-welcome-sequence",
+    name: "Welcome Email Sequence",
+    description: "Automated 5-email onboarding sequence for new contacts",
+    category: "marketing",
+    icon: "Sparkles",
+    trigger: "contact.created",
     steps: [
-      { type: 'email', delay: 0, subject: 'Welcome to {{site_name}}!' },
-      { type: 'delay', days: 2 },
-      { type: 'email', subject: 'Getting Started Guide' },
-      { type: 'delay', days: 3 },
-      { type: 'condition', check: 'opened_previous' },
-      { type: 'email', subject: 'Top Features You Should Try' },
-      { type: 'delay', days: 5 },
-      { type: 'email', subject: 'How Can We Help?' },
-      { type: 'delay', days: 4 },
-      { type: 'email', subject: 'Special Offer Just for You' },
+      { type: "email", delay: 0, subject: "Welcome to {{site_name}}!" },
+      { type: "delay", days: 2 },
+      { type: "email", subject: "Getting Started Guide" },
+      { type: "delay", days: 3 },
+      { type: "condition", check: "opened_previous" },
+      { type: "email", subject: "Top Features You Should Try" },
+      { type: "delay", days: 5 },
+      { type: "email", subject: "How Can We Help?" },
+      { type: "delay", days: 4 },
+      { type: "email", subject: "Special Offer Just for You" },
     ],
   },
 
   // 2. Abandoned Cart Recovery
   {
-    id: 'mkt-abandoned-cart',
-    name: 'Abandoned Cart Recovery',
-    description: '3-email sequence to recover abandoned shopping carts',
-    category: 'marketing',
-    trigger: 'ecommerce.cart.abandoned',
+    id: "mkt-abandoned-cart",
+    name: "Abandoned Cart Recovery",
+    description: "3-email sequence to recover abandoned shopping carts",
+    category: "marketing",
+    trigger: "ecommerce.cart.abandoned",
     steps: [
-      { type: 'delay', hours: 1 },
-      { type: 'email', subject: 'You left something behind!' },
-      { type: 'delay', days: 1 },
-      { type: 'condition', check: 'converted', exitIfTrue: true },
-      { type: 'email', subject: 'Your cart is waiting' },
-      { type: 'delay', days: 2 },
-      { type: 'condition', check: 'converted', exitIfTrue: true },
-      { type: 'email', subject: 'Last chance: 10% off your cart' },
+      { type: "delay", hours: 1 },
+      { type: "email", subject: "You left something behind!" },
+      { type: "delay", days: 1 },
+      { type: "condition", check: "converted", exitIfTrue: true },
+      { type: "email", subject: "Your cart is waiting" },
+      { type: "delay", days: 2 },
+      { type: "condition", check: "converted", exitIfTrue: true },
+      { type: "email", subject: "Last chance: 10% off your cart" },
     ],
   },
 
   // 3. Post-Purchase Follow-Up
   {
-    id: 'mkt-post-purchase',
-    name: 'Post-Purchase Follow-Up',
-    description: 'Thank customers, request reviews, suggest related products',
-    category: 'marketing',
-    trigger: 'ecommerce.order.completed',
+    id: "mkt-post-purchase",
+    name: "Post-Purchase Follow-Up",
+    description: "Thank customers, request reviews, suggest related products",
+    category: "marketing",
+    trigger: "ecommerce.order.completed",
     steps: [
-      { type: 'delay', days: 1 },
-      { type: 'email', subject: 'Thank you for your order!' },
-      { type: 'delay', days: 7 },
-      { type: 'email', subject: 'How was your experience?' },
-      { type: 'delay', days: 14 },
-      { type: 'email', subject: 'You might also like...' },
+      { type: "delay", days: 1 },
+      { type: "email", subject: "Thank you for your order!" },
+      { type: "delay", days: 7 },
+      { type: "email", subject: "How was your experience?" },
+      { type: "delay", days: 14 },
+      { type: "email", subject: "You might also like..." },
     ],
   },
 
   // 4. Re-Engagement Campaign
   {
-    id: 'mkt-reengagement',
-    name: 'Re-Engagement / Win-Back',
-    description: 'Re-engage contacts who haven\'t opened emails in 60+ days',
-    category: 'marketing',
-    trigger: 'marketing.engagement.cold',
+    id: "mkt-reengagement",
+    name: "Re-Engagement / Win-Back",
+    description: "Re-engage contacts who haven't opened emails in 60+ days",
+    category: "marketing",
+    trigger: "marketing.engagement.cold",
     steps: [
-      { type: 'email', subject: 'We miss you, {{first_name}}!' },
-      { type: 'delay', days: 5 },
-      { type: 'condition', check: 'opened_previous' },
-      { type: 'email', subject: 'Here\'s what you\'ve been missing' },
-      { type: 'delay', days: 7 },
-      { type: 'condition', check: 'no_opens_after_sequence' },
-      { type: 'action', action: 'add_tag', tag: 'inactive' },
+      { type: "email", subject: "We miss you, {{first_name}}!" },
+      { type: "delay", days: 5 },
+      { type: "condition", check: "opened_previous" },
+      { type: "email", subject: "Here's what you've been missing" },
+      { type: "delay", days: 7 },
+      { type: "condition", check: "no_opens_after_sequence" },
+      { type: "action", action: "add_tag", tag: "inactive" },
     ],
   },
 
   // 5. Lead Nurture
   {
-    id: 'mkt-lead-nurture',
-    name: 'Lead Nurture Sequence',
-    description: 'Educate and warm up leads over 3 weeks',
-    category: 'marketing',
-    trigger: 'marketing.form.submitted',
+    id: "mkt-lead-nurture",
+    name: "Lead Nurture Sequence",
+    description: "Educate and warm up leads over 3 weeks",
+    category: "marketing",
+    trigger: "marketing.form.submitted",
     steps: [
-      { type: 'email', subject: 'Thanks for your interest!' },
-      { type: 'delay', days: 3 },
-      { type: 'email', subject: 'Understanding {{site_name}}' },
-      { type: 'delay', days: 4 },
-      { type: 'email', subject: 'Customer Success Story' },
-      { type: 'delay', days: 5 },
-      { type: 'email', subject: 'Ready to Take the Next Step?' },
+      { type: "email", subject: "Thanks for your interest!" },
+      { type: "delay", days: 3 },
+      { type: "email", subject: "Understanding {{site_name}}" },
+      { type: "delay", days: 4 },
+      { type: "email", subject: "Customer Success Story" },
+      { type: "delay", days: 5 },
+      { type: "email", subject: "Ready to Take the Next Step?" },
     ],
   },
 
   // 6. Birthday / Anniversary
   {
-    id: 'mkt-birthday',
-    name: 'Birthday / Anniversary Email',
-    description: 'Automated birthday or signup anniversary greeting',
-    category: 'marketing',
-    trigger: 'contact.anniversary',  // Custom trigger: fires on contact created_at anniversary
-    steps: [
-      { type: 'email', subject: 'Happy Birthday, {{first_name}}! 🎉' },
-    ],
+    id: "mkt-birthday",
+    name: "Birthday / Anniversary Email",
+    description: "Automated birthday or signup anniversary greeting",
+    category: "marketing",
+    trigger: "contact.anniversary", // Custom trigger: fires on contact created_at anniversary
+    steps: [{ type: "email", subject: "Happy Birthday, {{first_name}}! 🎉" }],
   },
 
   // 7. Newsletter Subscriber Double Opt-In
   {
-    id: 'mkt-double-optin',
-    name: 'Double Opt-In Confirmation',
-    description: 'Confirm subscription and welcome new subscribers',
-    category: 'marketing',
-    trigger: 'marketing.contact.subscribed',
+    id: "mkt-double-optin",
+    name: "Double Opt-In Confirmation",
+    description: "Confirm subscription and welcome new subscribers",
+    category: "marketing",
+    trigger: "marketing.contact.subscribed",
     steps: [
-      { type: 'email', subject: 'Confirm your subscription' },
-      { type: 'delay', days: 1 },
-      { type: 'condition', check: 'confirmed_subscription' },
-      { type: 'email', subject: 'You\'re in! Welcome to our newsletter' },
+      { type: "email", subject: "Confirm your subscription" },
+      { type: "delay", days: 1 },
+      { type: "condition", check: "confirmed_subscription" },
+      { type: "email", subject: "You're in! Welcome to our newsletter" },
     ],
   },
 
   // 8. Event Registration Follow-Up
   {
-    id: 'mkt-event-followup',
-    name: 'Event Registration Follow-Up',
-    description: 'Confirmation, reminders, and post-event follow-up',
-    category: 'marketing',
-    trigger: 'booking.confirmed',
+    id: "mkt-event-followup",
+    name: "Event Registration Follow-Up",
+    description: "Confirmation, reminders, and post-event follow-up",
+    category: "marketing",
+    trigger: "booking.confirmed",
     steps: [
-      { type: 'email', subject: 'Your registration is confirmed!' },
-      { type: 'delay', days_before_event: 1 },
-      { type: 'email', subject: 'Reminder: Event Tomorrow!' },
-      { type: 'delay', days_after_event: 1 },
-      { type: 'email', subject: 'Thanks for attending!' },
+      { type: "email", subject: "Your registration is confirmed!" },
+      { type: "delay", days_before_event: 1 },
+      { type: "email", subject: "Reminder: Event Tomorrow!" },
+      { type: "delay", days_after_event: 1 },
+      { type: "email", subject: "Thanks for attending!" },
     ],
   },
 
   // 9. Feedback Request
   {
-    id: 'mkt-feedback',
-    name: 'Feedback/NPS Survey',
-    description: 'Request feedback after interaction (service, purchase, support)',
-    category: 'marketing',
-    trigger: 'custom',  // Manually triggered or linked to various events
+    id: "mkt-feedback",
+    name: "Feedback/NPS Survey",
+    description:
+      "Request feedback after interaction (service, purchase, support)",
+    category: "marketing",
+    trigger: "custom", // Manually triggered or linked to various events
     steps: [
-      { type: 'delay', days: 2 },
-      { type: 'email', subject: 'We\'d love your feedback' },
-      { type: 'delay', days: 5 },
-      { type: 'condition', check: 'opened_previous', exitIfTrue: true },
-      { type: 'email', subject: 'Quick reminder: share your thoughts' },
+      { type: "delay", days: 2 },
+      { type: "email", subject: "We'd love your feedback" },
+      { type: "delay", days: 5 },
+      { type: "condition", check: "opened_previous", exitIfTrue: true },
+      { type: "email", subject: "Quick reminder: share your thoughts" },
     ],
   },
 
   // 10. Upsell / Cross-Sell
   {
-    id: 'mkt-upsell',
-    name: 'Upsell / Cross-Sell',
-    description: 'Recommend upgrades or related products based on purchase history',
-    category: 'marketing',
-    trigger: 'ecommerce.order.completed',
+    id: "mkt-upsell",
+    name: "Upsell / Cross-Sell",
+    description:
+      "Recommend upgrades or related products based on purchase history",
+    category: "marketing",
+    trigger: "ecommerce.order.completed",
     steps: [
-      { type: 'delay', days: 14 },
-      { type: 'email', subject: 'Upgrade your experience' },
-      { type: 'delay', days: 7 },
-      { type: 'condition', check: 'clicked_previous' },
-      { type: 'email', subject: 'Exclusive offer for loyal customers' },
+      { type: "delay", days: 14 },
+      { type: "email", subject: "Upgrade your experience" },
+      { type: "delay", days: 7 },
+      { type: "condition", check: "clicked_previous" },
+      { type: "email", subject: "Exclusive offer for loyal customers" },
     ],
   },
 
   // 11. Subscription Renewal Reminder
   {
-    id: 'mkt-renewal-reminder',
-    name: 'Subscription Renewal Reminder',
-    description: 'Remind customers before subscription expires',
-    category: 'marketing',
-    trigger: 'ecommerce.subscription.expiring',
+    id: "mkt-renewal-reminder",
+    name: "Subscription Renewal Reminder",
+    description: "Remind customers before subscription expires",
+    category: "marketing",
+    trigger: "ecommerce.subscription.expiring",
     steps: [
-      { type: 'email', subject: 'Your subscription expires in 30 days' },
-      { type: 'delay', days: 15 },
-      { type: 'email', subject: 'Don\'t lose access — renew now' },
-      { type: 'delay', days: 12 },
-      { type: 'email', subject: 'Last chance to renew!' },
+      { type: "email", subject: "Your subscription expires in 30 days" },
+      { type: "delay", days: 15 },
+      { type: "email", subject: "Don't lose access — renew now" },
+      { type: "delay", days: 12 },
+      { type: "email", subject: "Last chance to renew!" },
     ],
   },
 
   // 12. Course/Content Drip
   {
-    id: 'mkt-content-drip',
-    name: 'Content / Course Drip',
-    description: 'Deliver educational content over time (lessons, tips, guides)',
-    category: 'marketing',
-    trigger: 'marketing.form.submitted',
+    id: "mkt-content-drip",
+    name: "Content / Course Drip",
+    description:
+      "Deliver educational content over time (lessons, tips, guides)",
+    category: "marketing",
+    trigger: "marketing.form.submitted",
     steps: [
-      { type: 'email', subject: 'Lesson 1: Getting Started' },
-      { type: 'delay', days: 3 },
-      { type: 'email', subject: 'Lesson 2: Intermediate Concepts' },
-      { type: 'delay', days: 3 },
-      { type: 'email', subject: 'Lesson 3: Advanced Techniques' },
-      { type: 'delay', days: 3 },
-      { type: 'email', subject: 'Lesson 4: Putting It All Together' },
-      { type: 'delay', days: 3 },
-      { type: 'email', subject: 'Course Complete — What\'s Next?' },
+      { type: "email", subject: "Lesson 1: Getting Started" },
+      { type: "delay", days: 3 },
+      { type: "email", subject: "Lesson 2: Intermediate Concepts" },
+      { type: "delay", days: 3 },
+      { type: "email", subject: "Lesson 3: Advanced Techniques" },
+      { type: "delay", days: 3 },
+      { type: "email", subject: "Lesson 4: Putting It All Together" },
+      { type: "delay", days: 3 },
+      { type: "email", subject: "Course Complete — What's Next?" },
     ],
   },
 
   // 13. Referral Program
   {
-    id: 'mkt-referral',
-    name: 'Referral Program Invitation',
-    description: 'Invite happy customers to refer friends',
-    category: 'marketing',
-    trigger: 'ecommerce.order.completed',
+    id: "mkt-referral",
+    name: "Referral Program Invitation",
+    description: "Invite happy customers to refer friends",
+    category: "marketing",
+    trigger: "ecommerce.order.completed",
     steps: [
-      { type: 'delay', days: 21 },
-      { type: 'condition', check: 'engagement_score_above', value: 60 },
-      { type: 'email', subject: 'Share the love — refer a friend!' },
+      { type: "delay", days: 21 },
+      { type: "condition", check: "engagement_score_above", value: 60 },
+      { type: "email", subject: "Share the love — refer a friend!" },
     ],
   },
 
   // 14. Support Ticket Follow-Up
   {
-    id: 'mkt-support-followup',
-    name: 'Support Ticket Satisfaction',
-    description: 'Follow up after support ticket resolution',
-    category: 'marketing',
-    trigger: 'support.ticket.resolved',
+    id: "mkt-support-followup",
+    name: "Support Ticket Satisfaction",
+    description: "Follow up after support ticket resolution",
+    category: "marketing",
+    trigger: "support.ticket.resolved",
     steps: [
-      { type: 'delay', days: 1 },
-      { type: 'email', subject: 'Was your issue resolved?' },
+      { type: "delay", days: 1 },
+      { type: "email", subject: "Was your issue resolved?" },
     ],
   },
 
   // 15. Seasonal Campaign Planner
   {
-    id: 'mkt-seasonal',
-    name: 'Seasonal / Holiday Campaign',
-    description: 'Template for seasonal marketing pushes',
-    category: 'marketing',
-    trigger: 'manual',
+    id: "mkt-seasonal",
+    name: "Seasonal / Holiday Campaign",
+    description: "Template for seasonal marketing pushes",
+    category: "marketing",
+    trigger: "manual",
     steps: [
-      { type: 'email', subject: 'Our Holiday Sale is Here!' },
-      { type: 'delay', days: 3 },
-      { type: 'email', subject: 'Sale Extended — Last Chance!' },
-      { type: 'delay', days: 2 },
-      { type: 'email', subject: 'Final Hours: Don\'t Miss Out' },
+      { type: "email", subject: "Our Holiday Sale is Here!" },
+      { type: "delay", days: 3 },
+      { type: "email", subject: "Sale Extended — Last Chance!" },
+      { type: "delay", days: 2 },
+      { type: "email", subject: "Final Hours: Don't Miss Out" },
     ],
   },
 ];
@@ -3383,7 +3530,7 @@ export async function GET() {
   // 3. Process A/B test winners (from MKT-02)
   await checkABTestResults();
 
-  return new Response('OK');
+  return new Response("OK");
 }
 
 // vercel.json cron entry (already added, just confirm):
@@ -3514,15 +3661,15 @@ marketing/
 //
 // Uses Claude Haiku for fast, cost-effective insight generation
 
-import { generateWithAI } from '@/lib/ai';  // Existing AI helper
+import { generateWithAI } from "@/lib/ai"; // Existing AI helper
 
 export async function generateMarketingInsights(
-  siteId: string
+  siteId: string,
 ): Promise<MarketingInsight[]> {
   const supabase = createServiceClient();
 
   // Gather data points
-  const [stats, recentCampaigns, subscriberTrend, engagementDistribution] = 
+  const [stats, recentCampaigns, subscriberTrend, engagementDistribution] =
     await Promise.all([
       getAggregateCampaignStats(supabase, siteId, { days: 90 }),
       getRecentCampaigns(supabase, siteId, 20),
@@ -3539,7 +3686,7 @@ Data:
 - New subscribers (90d): ${subscriberTrend.newCount}
 - Unsubscribes (90d): ${subscriberTrend.unsubCount}
 - Best campaign: "${recentCampaigns[0]?.name}" (${recentCampaigns[0]?.openRate}% opens)
-- Worst campaign: "${recentCampaigns[recentCampaigns.length-1]?.name}" (${recentCampaigns[recentCampaigns.length-1]?.openRate}% opens)
+- Worst campaign: "${recentCampaigns[recentCampaigns.length - 1]?.name}" (${recentCampaigns[recentCampaigns.length - 1]?.openRate}% opens)
 - Engagement distribution: Cold ${engagementDistribution.cold}%, Warm ${engagementDistribution.warm}%, Hot ${engagementDistribution.hot}%
 - Best send day: ${stats.bestSendDay}
 - Best send hour: ${stats.bestSendHour}
@@ -3548,7 +3695,7 @@ Provide insights as JSON array: [{ "type": "positive|warning|suggestion", "text"
 Keep each insight under 100 characters. Be specific and actionable.`;
 
   const result = await generateWithAI({
-    model: 'haiku', // Fast model for insights
+    model: "haiku", // Fast model for insights
     prompt,
     maxTokens: 500,
   });
@@ -3557,7 +3704,7 @@ Keep each insight under 100 characters. Be specific and actionable.`;
 }
 
 interface MarketingInsight {
-  type: 'positive' | 'warning' | 'suggestion';
+  type: "positive" | "warning" | "suggestion";
   text: string;
 }
 ```
@@ -3569,14 +3716,14 @@ The marketing section uses a sub-navigation pattern consistent with other module
 ```typescript
 // Marketing sub-navigation items (added to dashboard navigation):
 const marketingNavItems = [
-  { label: 'Hub', href: '/marketing', icon: 'LayoutDashboard' },
-  { label: 'Campaigns', href: '/marketing/campaigns', icon: 'Mail' },
-  { label: 'Sequences', href: '/marketing/sequences', icon: 'GitBranch' },
-  { label: 'Templates', href: '/marketing/templates', icon: 'FileText' },
-  { label: 'Landing Pages', href: '/marketing/landing-pages', icon: 'Globe' },
-  { label: 'Forms', href: '/marketing/forms', icon: 'FormInput' },
-  { label: 'Analytics', href: '/marketing/analytics', icon: 'BarChart3' },
-  { label: 'Settings', href: '/marketing/settings', icon: 'Settings' },
+  { label: "Hub", href: "/marketing", icon: "LayoutDashboard" },
+  { label: "Campaigns", href: "/marketing/campaigns", icon: "Mail" },
+  { label: "Sequences", href: "/marketing/sequences", icon: "GitBranch" },
+  { label: "Templates", href: "/marketing/templates", icon: "FileText" },
+  { label: "Landing Pages", href: "/marketing/landing-pages", icon: "Globe" },
+  { label: "Forms", href: "/marketing/forms", icon: "FormInput" },
+  { label: "Analytics", href: "/marketing/analytics", icon: "BarChart3" },
+  { label: "Settings", href: "/marketing/settings", icon: "Settings" },
 ];
 
 // All routes are relative to /dashboard/sites/[siteId]/
@@ -3619,37 +3766,37 @@ export async function attributeRevenue(
   contactId: string,
   orderId: string,
   orderTotal: number,
-  siteId: string
+  siteId: string,
 ): Promise<void> {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
   // Find most recent campaign click within attribution window
   const { data: recentClick } = await supabase
-    .from('mod_mktmod01_email_sends')
-    .select('campaign_id, clicked_at')
-    .eq('contact_id', contactId)
-    .not('clicked_at', 'is', null)
-    .gte('clicked_at', sevenDaysAgo.toISOString())
-    .order('clicked_at', { ascending: false })
+    .from("mod_mktmod01_email_sends")
+    .select("campaign_id, clicked_at")
+    .eq("contact_id", contactId)
+    .not("clicked_at", "is", null)
+    .gte("clicked_at", sevenDaysAgo.toISOString())
+    .order("clicked_at", { ascending: false })
     .limit(1)
     .single();
 
   if (recentClick) {
     // Attribute revenue to campaign
-    await supabase.rpc('add_campaign_revenue', {
+    await supabase.rpc("add_campaign_revenue", {
       p_campaign_id: recentClick.campaign_id,
       p_amount: orderTotal,
     });
 
     // Log attribution
-    await supabase.from('mod_mktmod01_campaign_stats').update({
+    await supabase.from("mod_mktmod01_campaign_stats").update({
       // RPC function handles atomic increment
     });
 
     // Fire event for tracking
     await logAutomationEvent({
-      event_type: 'marketing.revenue.attributed',
+      event_type: "marketing.revenue.attributed",
       site_id: siteId,
       metadata: {
         campaign_id: recentClick.campaign_id,
@@ -3670,7 +3817,7 @@ Route: /dashboard/sites/[siteId]/marketing/settings
 
 ```typescript
 // Settings sections:
-// 
+//
 // 1. Email Defaults
 //    - Default from name
 //    - Default from email
@@ -3739,6 +3886,7 @@ Route: /dashboard/sites/[siteId]/marketing/settings
 ### 6.1 Overview
 
 Landing pages and opt-in forms are the primary lead capture tools. This phase builds:
+
 - Landing page builder with visual editor
 - Opt-in/signup form builder
 - Pop-up and embedded form widgets
@@ -3832,7 +3980,11 @@ Public URL: https://{site-domain}/lp/{slug}
 // 3. Store visit in mod_mktmod01_landing_page_visits (or inline in landing_pages stats)
 // 4. Fire: marketing.landing.visited event
 
-export default async function LandingPage({ params }: { params: { slug: string } }) {
+export default async function LandingPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
   // Look up landing page by slug
   // Must also resolve which site this belongs to (from domain or subdomain)
   // Render page blocks
@@ -3857,45 +4009,45 @@ Routes:
 ```typescript
 // Uses mod_mktmod01_forms table from Phase MKT-01
 
-type FormType = 
-  | 'inline'      // Embedded in page content
-  | 'popup'       // Modal popup (trigger: time delay, scroll %, exit intent)
-  | 'slide_in'    // Slide-in from bottom/side
-  | 'top_bar'     // Sticky banner at top of page
-  | 'full_page';  // Full-page overlay
+type FormType =
+  | "inline" // Embedded in page content
+  | "popup" // Modal popup (trigger: time delay, scroll %, exit intent)
+  | "slide_in" // Slide-in from bottom/side
+  | "top_bar" // Sticky banner at top of page
+  | "full_page"; // Full-page overlay
 
 interface FormConfig {
   type: FormType;
   fields: FormField[];
   style: FormStyle;
-  trigger: FormTrigger;          // When popup/slide-in appears
+  trigger: FormTrigger; // When popup/slide-in appears
   success_action: SuccessAction; // What happens after submit
-  tags_to_add: string[];         // Tags added to contact on submit
-  sequence_to_enroll?: string;   // Auto-enroll in drip sequence
-  double_optin: boolean;         // Require email confirmation
+  tags_to_add: string[]; // Tags added to contact on submit
+  sequence_to_enroll?: string; // Auto-enroll in drip sequence
+  double_optin: boolean; // Require email confirmation
 }
 
 interface FormField {
   name: string;
   label: string;
-  type: 'email' | 'text' | 'phone' | 'select' | 'checkbox' | 'hidden';
+  type: "email" | "text" | "phone" | "select" | "checkbox" | "hidden";
   required: boolean;
   placeholder?: string;
-  options?: string[];  // For select fields
+  options?: string[]; // For select fields
 }
 
 interface FormTrigger {
-  type: 'immediate' | 'time_delay' | 'scroll_percent' | 'exit_intent' | 'click';
-  delay_seconds?: number;    // For time_delay
-  scroll_percent?: number;   // For scroll_percent (e.g., 50)
+  type: "immediate" | "time_delay" | "scroll_percent" | "exit_intent" | "click";
+  delay_seconds?: number; // For time_delay
+  scroll_percent?: number; // For scroll_percent (e.g., 50)
   element_selector?: string; // For click trigger
   show_once_per_session: boolean;
   show_once_per_visitor: boolean;
 }
 
 interface SuccessAction {
-  type: 'message' | 'redirect' | 'close';
-  message?: string;      // Thank you message
+  type: "message" | "redirect" | "close";
+  message?: string; // Thank you message
   redirect_url?: string; // Redirect URL
 }
 ```
@@ -3970,7 +4122,7 @@ interface SuccessAction {
 
 export async function POST(
   request: Request,
-  { params }: { params: { formId: string } }
+  { params }: { params: { formId: string } },
 ) {
   // 1. Load form config
   // 2. Validate submission against form fields
@@ -3987,14 +4139,17 @@ export async function POST(
   // 11. Return success response
 
   // CORS headers:
-  return new Response(JSON.stringify({ success: true, message: form.success_action.message }), {
-    headers: {
-      'Access-Control-Allow-Origin': '*',  // Or restrict to site domain
-      'Access-Control-Allow-Methods': 'POST',
-      'Access-Control-Allow-Headers': 'Content-Type',
-      'Content-Type': 'application/json',
+  return new Response(
+    JSON.stringify({ success: true, message: form.success_action.message }),
+    {
+      headers: {
+        "Access-Control-Allow-Origin": "*", // Or restrict to site domain
+        "Access-Control-Allow-Methods": "POST",
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Content-Type": "application/json",
+      },
     },
-  });
+  );
 }
 ```
 
@@ -4008,11 +4163,11 @@ export async function POST(
 // - CRM contact records (first_touch_utm, last_touch_utm)
 
 interface UTMParams {
-  utm_source?: string;   // e.g., "google", "facebook", "newsletter"
-  utm_medium?: string;   // e.g., "cpc", "email", "social"
+  utm_source?: string; // e.g., "google", "facebook", "newsletter"
+  utm_medium?: string; // e.g., "cpc", "email", "social"
   utm_campaign?: string; // e.g., "summer-sale-2026"
-  utm_term?: string;     // e.g., search keyword
-  utm_content?: string;  // e.g., "header-banner" vs "footer-link"
+  utm_term?: string; // e.g., search keyword
+  utm_content?: string; // e.g., "header-banner" vs "footer-link"
 }
 
 // Auto-append UTM params to all marketing email links:
@@ -4058,6 +4213,7 @@ interface UTMParams {
 ### 7.1 Overview
 
 This phase enhances the existing blog system with marketing capabilities. It does NOT rebuild the blog — it adds marketing layers on top of what exists:
+
 - In-post CTA blocks (call-to-action embedded in blog posts)
 - Blog subscriber opt-in (newsletter signup on blog pages)
 - Content-to-email conversion (turn blog post into email campaign)
@@ -4075,21 +4231,25 @@ This phase enhances the existing blog system with marketing capabilities. It doe
 // Blog CTA Block: a styled card within blog content that drives action
 
 interface BlogCTABlock {
-  type: 'marketing_cta';
-  style: 'banner' | 'card' | 'inline' | 'sidebar';
+  type: "marketing_cta";
+  style: "banner" | "card" | "inline" | "sidebar";
   heading: string;
   body: string;
   button_text: string;
-  button_url: string;          // Link to landing page, form, or external URL
-  form_id?: string;            // Optional: embed an opt-in form instead of link
-  background_color?: string;   // Uses brand colors by default
+  button_url: string; // Link to landing page, form, or external URL
+  form_id?: string; // Optional: embed an opt-in form instead of link
+  background_color?: string; // Uses brand colors by default
   image_url?: string;
-  position: 'after_paragraph_2' | 'after_paragraph_5' | 'end_of_post' | 'custom';
+  position:
+    | "after_paragraph_2"
+    | "after_paragraph_5"
+    | "end_of_post"
+    | "custom";
 }
 
 // Predefined CTA templates:
 // - "Subscribe to Newsletter" banner
-// - "Download Free Guide" card  
+// - "Download Free Guide" card
 // - "Book a Consultation" card
 // - "Related Product" card (pulls from e-commerce)
 // - "Share This Post" social buttons
@@ -4121,10 +4281,10 @@ interface BlogCTABlock {
 
 export async function convertBlogToEmail(
   blogPostId: string,
-  siteId: string
+  siteId: string,
 ): Promise<Campaign> {
   const post = await getBlogPost(blogPostId);
-  
+
   // Convert blog HTML content to email blocks:
   // - Title → Header block
   // - Featured image → Image block
@@ -4132,17 +4292,17 @@ export async function convertBlogToEmail(
   // - Embedded images → Image blocks
   // - End → "Read full post on our blog" CTA button
   // - Footer → Standard email footer with unsubscribe
-  
+
   const emailContent = blogHtmlToEmailBlocks(post.content, post.featured_image);
-  
+
   const campaign = await createCampaign({
     site_id: siteId,
     name: `Blog: ${post.title}`,
     subject_line: post.title,
     preview_text: post.excerpt || post.meta_description,
     content_json: emailContent,
-    campaign_type: 'regular',
-    status: 'draft',
+    campaign_type: "regular",
+    status: "draft",
   });
 
   return campaign;
@@ -4156,9 +4316,9 @@ export async function convertBlogToEmail(
 // Analyzes post and provides marketing-focused SEO recommendations
 
 interface ContentScore {
-  overall: number;          // 0-100
-  readability: number;      // Flesch-Kincaid
-  seo_score: number;        // Keyword density, meta tags, headings
+  overall: number; // 0-100
+  readability: number; // Flesch-Kincaid
+  seo_score: number; // Keyword density, meta tags, headings
   engagement_potential: number; // Predicted shareability
   recommendations: string[];
 }
@@ -4233,6 +4393,7 @@ interface ContentScore {
 ### 8.1 Overview
 
 This phase adds SMS and WhatsApp as marketing channels. Rather than building full-featured SMS/WhatsApp campaign builders (which mirror email), this phase focuses on:
+
 - SMS/WhatsApp as steps within existing sequences and automations
 - SMS campaign sending (text-only, simpler than email)
 - WhatsApp template message sending (Meta Business API)
@@ -4249,15 +4410,19 @@ This phase adds SMS and WhatsApp as marketing channels. Rather than building ful
 // Abstract interface for SMS providers
 
 interface SMSProvider {
-  sendSMS(to: string, message: string, options?: SMSOptions): Promise<SMSSendResult>;
+  sendSMS(
+    to: string,
+    message: string,
+    options?: SMSOptions,
+  ): Promise<SMSSendResult>;
   getDeliveryStatus(messageId: string): Promise<DeliveryStatus>;
   getBalance(): Promise<number>;
 }
 
 interface SMSOptions {
-  from?: string;         // Sender ID or phone number
-  campaign_id?: string;  // For tracking
-  contact_id?: string;   // For tracking
+  from?: string; // Sender ID or phone number
+  campaign_id?: string; // For tracking
+  contact_id?: string; // For tracking
 }
 
 interface SMSSendResult {
@@ -4288,7 +4453,7 @@ interface WhatsAppProvider {
     to: string,
     templateName: string,
     language: string,
-    components: TemplateComponent[]
+    components: TemplateComponent[],
   ): Promise<WhatsAppSendResult>;
 
   sendTextMessage(to: string, text: string): Promise<WhatsAppSendResult>;
@@ -4298,7 +4463,7 @@ interface WhatsAppProvider {
 // 1. Approved business account
 // 2. Pre-approved message templates (for marketing messages)
 // 3. 24-hour window for freeform messages (only after user initiates)
-// 
+//
 // For marketing: ONLY template messages are allowed
 // Templates must be pre-approved by Meta before use
 ```
@@ -4309,12 +4474,12 @@ interface WhatsAppProvider {
 // Extend sequence step types to support SMS and WhatsApp:
 
 interface SMSStepConfig {
-  message: string;          // SMS text (max 160 chars for single, or multi-segment)
+  message: string; // SMS text (max 160 chars for single, or multi-segment)
   personalization: boolean; // Replace {{first_name}} etc.
 }
 
 interface WhatsAppStepConfig {
-  template_name: string;    // Pre-approved template
+  template_name: string; // Pre-approved template
   template_language: string;
   template_components: TemplateComponent[];
 }
@@ -4367,7 +4532,7 @@ Marketing Settings → SMS/WhatsApp section:
 SMS:
 - Provider: [Twilio ▼]
 - Account SID: [****]
-- Auth Token: [****]  
+- Auth Token: [****]
 - Phone Number: [+1234567890]
 - Daily SMS limit: [500]
 
@@ -4410,6 +4575,7 @@ WhatsApp:
 ### 9.1 Overview
 
 This phase adds AI-powered intelligence across the marketing module:
+
 - AI subject line generator (with A/B score prediction)
 - AI content writer for email campaigns
 - AI audience suggestion ("who should receive this?")
@@ -4426,7 +4592,7 @@ This phase adds AI-powered intelligence across the marketing module:
 // Generates subject line options with predicted performance
 
 export async function generateSubjectLines(
-  input: SubjectLineInput
+  input: SubjectLineInput,
 ): Promise<SubjectLineSuggestion[]> {
   const prompt = `Generate 5 email subject lines for a marketing campaign.
 
@@ -4434,8 +4600,8 @@ Campaign context:
 - Campaign goal: ${input.goal}
 - Target audience: ${input.audienceDescription}
 - Key message: ${input.keyMessage}
-- Brand voice: ${input.brandVoice || 'professional and friendly'}
-- Industry: ${input.industry || 'general'}
+- Brand voice: ${input.brandVoice || "professional and friendly"}
+- Industry: ${input.industry || "general"}
 
 For each subject line, provide:
 1. The subject line (max 60 characters)
@@ -4453,7 +4619,7 @@ Techniques to use across suggestions:
 Return as JSON array.`;
 
   const result = await generateWithAI({
-    model: 'haiku',
+    model: "haiku",
     prompt,
     maxTokens: 800,
   });
@@ -4469,7 +4635,7 @@ Return as JSON array.`;
 // Generates email body content given a brief
 
 export async function generateEmailContent(
-  input: EmailContentInput
+  input: EmailContentInput,
 ): Promise<EmailContent> {
   // Takes:
   // - Campaign goal/purpose
@@ -4492,7 +4658,7 @@ export async function generateEmailContent(
 // clicks "AI Improve", and gets a rewritten version
 export async function improveEmailText(
   currentText: string,
-  instruction: string  // e.g., "make it more persuasive", "shorten", "add urgency"
+  instruction: string, // e.g., "make it more persuasive", "shorten", "add urgency"
 ): Promise<string> {
   // Returns improved text
 }
@@ -4508,18 +4674,15 @@ export async function improveEmailText(
 export async function getOptimalSendTime(
   supabase: SupabaseClient,
   siteId: string,
-  contactId?: string  // Optional: optimize for specific contact
+  contactId?: string, // Optional: optimize for specific contact
 ): Promise<{ day: number; hour: number; confidence: number }> {
   // If contact-specific: analyze their personal open times
   // If general: analyze site-wide open patterns
-
   // Query: email_events where event_type = 'open'
   // Group by: day_of_week, hour_of_day
   // Find: peak engagement windows
-
   // Returns: recommended day (0=Sun, 6=Sat) and hour (0-23)
   // With confidence score (based on data volume)
-
   // If insufficient data (< 100 opens): return industry defaults
   // Default: Tuesday/Wednesday at 10 AM local time
 }
@@ -4537,7 +4700,7 @@ export async function getOptimalSendTime(
 export async function suggestAudience(
   campaignContent: EmailContent,
   campaignGoal: string,
-  siteId: string
+  siteId: string,
 ): Promise<AudienceSuggestion[]> {
   // 1. Analyze campaign content to understand topic/offer
   // 2. Look at CRM segments and contact attributes
@@ -4560,9 +4723,9 @@ export async function suggestAudience(
 // User describes what they want in plain text, AI creates the campaign
 
 export async function createCampaignFromBrief(
-  brief: string,  // e.g., "Send a sale announcement to all customers,
-                   //  20% off everything this weekend, urgent tone"
-  siteId: string
+  brief: string, // e.g., "Send a sale announcement to all customers,
+  //  20% off everything this weekend, urgent tone"
+  siteId: string,
 ): Promise<CampaignDraft> {
   // AI parses the brief and generates:
   // - Campaign name
@@ -4607,6 +4770,7 @@ export async function createCampaignFromBrief(
 ### 10.1 Overview
 
 Super admins need platform-wide visibility into email marketing health:
+
 - Email sending reputation monitoring
 - Cross-site marketing activity overview
 - Deliverability health dashboard
@@ -4664,7 +4828,6 @@ Route: /admin/marketing
 
 export async function checkPlatformHealth(): Promise<PlatformHealth> {
   // Run by admin cron or triggered by webhook events
-  
   // 1. Calculate rolling bounce rate (last 7 days)
   // 2. Calculate rolling complaint rate (last 7 days)
   // 3. If complaint rate > 0.3%:
@@ -4715,6 +4878,7 @@ export async function checkPlatformHealth(): Promise<PlatformHealth> {
 ### 11.1 Overview
 
 Client portal users (site owners/managers) get a permission-gated view of marketing features. They can:
+
 - View campaign reports (if `can_manage_marketing` permission)
 - Create and send campaigns (if `can_manage_marketing` permission)
 - View subscriber list
@@ -4747,7 +4911,7 @@ Client portal users (site owners/managers) get a permission-gated view of market
 export default async function PortalMarketingPage({ params }) {
   const { siteId } = params;
   const user = await getPortalUser();
-  
+
   // Check site access
   const siteAccess = await checkSiteAccess(user.id, siteId);
   if (!siteAccess) redirect('/portal');
@@ -4775,7 +4939,7 @@ Full campaign builder           → Same builder (if permitted)
 All analytics with raw data     → Simplified analytics (key metrics only)
 Sequence builder (full)         → Sequence list (view/pause only, no build)
 Landing page builder            → Landing page list + embed codes
-Form builder                    → Form list + embed codes  
+Form builder                    → Form list + embed codes
 AI insights (full)              → AI insights (read-only)
 Marketing settings              → Limited settings (from name, footer text)
 Admin safety controls           → NOT VISIBLE
@@ -4834,6 +4998,7 @@ Revenue attribution detailed    → Revenue attribution summary
 ### 12.1 Overview
 
 Social media integration adds:
+
 - Social media account connections (Facebook, Instagram, Twitter/X, LinkedIn)
 - Post scheduling from the marketing dashboard
 - Blog post auto-sharing to social channels
@@ -4852,14 +5017,14 @@ Social media integration adds:
 interface SocialConnection {
   id: string;
   site_id: string;
-  platform: 'facebook' | 'instagram' | 'twitter' | 'linkedin';
+  platform: "facebook" | "instagram" | "twitter" | "linkedin";
   account_name: string;
-  access_token: string;    // Encrypted in database
+  access_token: string; // Encrypted in database
   refresh_token?: string;
   token_expires_at?: string;
-  page_id?: string;        // Facebook Page ID
+  page_id?: string; // Facebook Page ID
   connected_at: string;
-  status: 'active' | 'expired' | 'disconnected';
+  status: "active" | "expired" | "disconnected";
 }
 
 // Connection flow:
@@ -4883,16 +5048,16 @@ Route: /dashboard/sites/[siteId]/marketing/social
 interface SocialPost {
   id: string;
   site_id: string;
-  content: string;              // Post text
-  media_urls?: string[];        // Attached images/videos
-  platforms: SocialPlatform[];  // Which platforms to post to
-  scheduled_at?: string;        // When to post (null = draft)
-  published_at?: string;        // When actually posted
-  status: 'draft' | 'scheduled' | 'published' | 'failed';
-  link_url?: string;            // Link to include
-  utm_params?: UTMParams;       // Auto-appended to links
-  campaign_id?: string;         // Associated email campaign (for coordination)
-  blog_post_id?: string;        // Associated blog post (for auto-sharing)
+  content: string; // Post text
+  media_urls?: string[]; // Attached images/videos
+  platforms: SocialPlatform[]; // Which platforms to post to
+  scheduled_at?: string; // When to post (null = draft)
+  published_at?: string; // When actually posted
+  status: "draft" | "scheduled" | "published" | "failed";
+  link_url?: string; // Link to include
+  utm_params?: UTMParams; // Auto-appended to links
+  campaign_id?: string; // Associated email campaign (for coordination)
+  blog_post_id?: string; // Associated blog post (for auto-sharing)
 }
 
 // Features:
@@ -4923,7 +5088,7 @@ Unified marketing calendar showing:
 Calendar view: Month | Week | Day
 Color coding by channel:
   📧 Blue = Email campaign
-  📱 Green = Social post  
+  📱 Green = Social post
   📝 Purple = Blog post
   🔄 Orange = Sequence email
   📄 Gray = Landing page
@@ -4940,7 +5105,7 @@ Click to view/edit any item.
 
 export async function autoShareBlogPost(
   blogPostId: string,
-  siteId: string
+  siteId: string,
 ): Promise<void> {
   const post = await getBlogPost(blogPostId);
   const connections = await getActiveSocialConnections(siteId);
@@ -4948,15 +5113,19 @@ export async function autoShareBlogPost(
   for (const connection of connections) {
     // Generate platform-specific content
     const content = await generateSocialContent(post, connection.platform);
-    
+
     await createSocialPost({
       site_id: siteId,
       content,
       platforms: [connection.platform],
       link_url: post.url,
-      utm_params: { utm_source: connection.platform, utm_medium: 'social', utm_campaign: 'blog-auto-share' },
+      utm_params: {
+        utm_source: connection.platform,
+        utm_medium: "social",
+        utm_campaign: "blog-auto-share",
+      },
       blog_post_id: blogPostId,
-      status: 'scheduled',
+      status: "scheduled",
       scheduled_at: new Date().toISOString(), // Post immediately, or stagger
     });
   }
@@ -4965,17 +5134,17 @@ export async function autoShareBlogPost(
 // AI generates platform-appropriate captions:
 async function generateSocialContent(
   post: BlogPost,
-  platform: SocialPlatform
+  platform: SocialPlatform,
 ): Promise<string> {
   const constraints = {
-    twitter: { maxLength: 280, style: 'concise with hashtags' },
-    facebook: { maxLength: 500, style: 'engaging and conversational' },
-    instagram: { maxLength: 2200, style: 'descriptive with hashtags' },
-    linkedin: { maxLength: 1300, style: 'professional and insightful' },
+    twitter: { maxLength: 280, style: "concise with hashtags" },
+    facebook: { maxLength: 500, style: "engaging and conversational" },
+    instagram: { maxLength: 2200, style: "descriptive with hashtags" },
+    linkedin: { maxLength: 1300, style: "professional and insightful" },
   };
 
   return generateWithAI({
-    model: 'haiku',
+    model: "haiku",
     prompt: `Write a ${platform} post promoting this blog article.
       Title: ${post.title}
       Summary: ${post.excerpt}
@@ -5030,7 +5199,9 @@ This section documents every integration point between the marketing module and 
 The following existing files require modifications. Changes are ADDITIVE only — never remove existing code.
 
 #### 1. Module Registry
+
 **File:** `src/modules/core/module-registry.ts` (or wherever `CORE_MODULE_SLUGS` is defined)
+
 ```
 Change: Add "marketing" to CORE_MODULE_SLUGS array
 Impact: Marketing module auto-installs when a new site is created
@@ -5038,7 +5209,9 @@ Pattern: Follow exactly how other modules (crm, ecommerce, blog, etc.) are regis
 ```
 
 #### 2. Roles & Permissions
+
 **File:** `src/lib/roles.ts`
+
 ```
 Change: Add 'manage_marketing' to agency role permissions array
 Impact: Agency users can access marketing features
@@ -5046,7 +5219,9 @@ Pattern: Copy how 'manage_crm' or 'manage_ecommerce' is added
 ```
 
 #### 3. Portal Permissions
+
 **File:** `src/lib/portal-permissions.ts`
+
 ```
 Change: Add 'can_manage_marketing' to available portal permissions
 Impact: Client portal users can be granted marketing access
@@ -5054,7 +5229,9 @@ Pattern: Copy how 'can_manage_ecommerce' is added
 ```
 
 #### 4. Dashboard Navigation
+
 **File:** `src/config/navigation.ts` (or wherever dashboard nav is configured)
+
 ```
 Change: Add marketing nav section with sub-items
 Impact: Marketing appears in dashboard sidebar
@@ -5063,7 +5240,9 @@ Pattern: Copy how CRM or E-Commerce nav section is structured
 ```
 
 #### 5. Portal Navigation
+
 **File:** `src/config/portal-navigation.ts`
+
 ```
 Change: Add marketing nav section (gated by can_manage_marketing)
 Impact: Marketing appears in portal sidebar for permitted users
@@ -5072,14 +5251,18 @@ Pattern: Copy how other gated portal sections work
 ```
 
 #### 6. Admin Navigation
+
 **File:** `src/config/admin-navigation.ts` (or admin layout)
+
 ```
 Change: Add marketing health/overview link
 Impact: Super admins see platform marketing health
 ```
 
 #### 7. Automation Event Registry
+
 **File:** `src/modules/automation/data/event-types.ts`
+
 ```
 Change: Add 18 new marketing.* event types to EVENT_REGISTRY
 Impact: Automation workflows can trigger on marketing events
@@ -5087,7 +5270,9 @@ Events listed in Phase MKT-04, Section 4.7
 ```
 
 #### 8. Automation Action Types
+
 **File:** `src/modules/automation/data/action-types.ts`
+
 ```
 Change: Add 8 new marketing.* action types to ACTION_TYPES
 Impact: Automation workflows can perform marketing actions
@@ -5095,7 +5280,9 @@ Actions listed in Phase MKT-04, Section 4.7
 ```
 
 #### 9. Automation System Templates
+
 **File:** `src/modules/automation/data/system-templates.ts`
+
 ```
 Change: Add 15 marketing automation workflow templates
 Impact: Users see marketing templates in automation template picker
@@ -5103,7 +5290,9 @@ Templates listed in Phase MKT-04, Section 4.8
 ```
 
 #### 10. CRM Contact Model
+
 **Database migration — new columns on mod_crm01_contacts:**
+
 ```sql
 ALTER TABLE mod_crm01_contacts ADD COLUMN email_subscribed BOOLEAN DEFAULT true;
 ALTER TABLE mod_crm01_contacts ADD COLUMN email_subscribed_at TIMESTAMPTZ;
@@ -5118,7 +5307,9 @@ ALTER TABLE mod_crm01_contacts ADD COLUMN whatsapp_subscribed BOOLEAN DEFAULT fa
 ```
 
 #### 11. Resend Webhook Handler
+
 **File:** `src/app/api/webhooks/resend/route.ts` (if it exists)
+
 ```
 Change: Add marketing email event handling alongside transactional
 Impact: Opens, clicks, bounces, complaints tracked for marketing emails
@@ -5127,7 +5318,9 @@ If this file doesn't exist: Create it fresh with both marketing and transactiona
 ```
 
 #### 12. Vercel Config
+
 **File:** `next-platform-dashboard/vercel.json`
+
 ```
 Change: Add cron job entry for marketing scheduler
 Addition: { "path": "/api/cron/marketing-scheduler", "schedule": "*/5 * * * *" }
@@ -5135,7 +5328,9 @@ Impact: Scheduled campaigns, sequence steps, and A/B tests process every 5 minut
 ```
 
 #### 13. E-Commerce Order Hook
+
 **File:** Where e-commerce order completion is processed
+
 ```
 Change: After order completes, call attributeRevenue() to check for marketing attribution
 Impact: Revenue from marketing-driven sales is tracked
@@ -5143,7 +5338,9 @@ Pattern: Fire-and-forget — don't block order process on attribution
 ```
 
 #### 14. Blog Post Publishing Hook
+
 **File:** Where blog post status changes to "published"
+
 ```
 Change: After publish, optionally trigger social auto-share
 Impact: Blog posts auto-shared to connected social accounts
@@ -5233,16 +5430,16 @@ Phase MKT-12:
 Test flows that span multiple modules:
 
 1. Full Campaign Flow:
-   Create campaign → set audience → design email → send → 
+   Create campaign → set audience → design email → send →
    verify emails sent → verify tracking works → verify stats update
 
 2. Sequence Enrollment Flow:
-   Create sequence → activate → trigger event → 
+   Create sequence → activate → trigger event →
    verify enrollment → verify step execution → verify completion
 
 3. Form to Sequence Flow:
-   Submit opt-in form → verify CRM contact created → 
-   verify tags added → verify sequence enrollment → 
+   Submit opt-in form → verify CRM contact created →
+   verify tags added → verify sequence enrollment →
    verify first email sent
 
 4. Revenue Attribution Flow:
@@ -5313,6 +5510,7 @@ Phase MKT-12  → Social Media Integration (needs MKT-05 + 07)
 ```
 
 **Phases that can be parallelized:**
+
 - MKT-06 can start alongside MKT-03 (both need only MKT-01)
 - MKT-10 and MKT-11 can be done in parallel (both read, don't overlap)
 - MKT-08 and MKT-09 can be done in parallel (different feature areas)
@@ -5325,7 +5523,7 @@ When starting a new session to implement a phase:
 
 1. **Read memory bank files** (required):
    - `/memory-bank/projectbrief.md`
-   - `/memory-bank/systemPatterns.md`  
+   - `/memory-bank/systemPatterns.md`
    - `/memory-bank/techContext.md`
    - `/memory-bank/activeContext.md`
    - `/memory-bank/progress.md`
@@ -5355,6 +5553,5 @@ When starting a new session to implement a phase:
 
 ---
 
-*End of PHASE-MKT-MASTER-GUIDE.md*
-*Total Phases: 12 | Estimated New Files: ~160 | Estimated Modified Files: ~14*
-
+_End of PHASE-MKT-MASTER-GUIDE.md_
+_Total Phases: 12 | Estimated New Files: ~160 | Estimated Modified Files: ~14_

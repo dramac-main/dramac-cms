@@ -359,7 +359,7 @@ export interface ModuleFeatureFlags {
  * Extract feature flags from business context
  */
 export function extractFeatureFlags(
-  context: BusinessDataContext
+  context: BusinessDataContext,
 ): ModuleFeatureFlags {
   return {
     hasProducts: (context.products?.length ?? 0) > 0,

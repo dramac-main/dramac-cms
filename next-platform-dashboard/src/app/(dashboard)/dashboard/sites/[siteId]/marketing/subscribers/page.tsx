@@ -4,10 +4,7 @@
  */
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { PLATFORM } from "@/lib/constants/platform";
-import { Button } from "@/components/ui/button";
 import { getSubscribers } from "@/modules/marketing/actions/subscriber-actions";
 import { getMailingLists } from "@/modules/marketing/actions/audience-actions";
 import { SubscriberManager } from "@/modules/marketing/components/subscribers/subscriber-manager";
@@ -31,21 +28,10 @@ export default async function SubscribersPage({
   const filters = await searchParams;
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="border-b px-6 py-3">
-        <Link href={`/dashboard/sites/${siteId}/marketing`}>
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Marketing Hub
-          </Button>
-        </Link>
-      </div>
-
-      <div className="flex-1 p-6">
-        <Suspense fallback={<SubscriberManagerSkeleton />}>
-          <SubscriberManagerLoader siteId={siteId} filters={filters} />
-        </Suspense>
-      </div>
+    <div className="flex-1 p-6">
+      <Suspense fallback={<SubscriberManagerSkeleton />}>
+        <SubscriberManagerLoader siteId={siteId} filters={filters} />
+      </Suspense>
     </div>
   );
 }

@@ -85,11 +85,13 @@ export function FormBuilder({ siteId, form, defaultTab }: FormBuilderProps) {
 
   // Form state
   const [name, setName] = useState(form?.name || "");
-  const [formType, setFormType] = useState<FormType>(form?.formType || "inline");
+  const [formType, setFormType] = useState<FormType>(
+    form?.formType || "inline",
+  );
   const [description, setDescription] = useState(form?.description || "");
   const [buttonText, setButtonText] = useState(form?.buttonText || "Submit");
   const [buttonColor, setButtonColor] = useState(
-    form?.buttonColor || "#2563eb"
+    form?.buttonColor || "#2563eb",
   );
   const [fields, setFields] = useState<FormField[]>(() => {
     if (form?.fields?.length) return form.fields;
@@ -107,10 +109,10 @@ export function FormBuilder({ siteId, form, defaultTab }: FormBuilderProps) {
     ] as FormField[];
   });
   const [trigger, setTrigger] = useState<FormTrigger | null>(
-    form?.triggerConfig || null
+    form?.triggerConfig || null,
   );
   const [successAction, setSuccessAction] = useState<SuccessAction>(
-    form?.successAction || { type: "message", message: "Thank you!" }
+    form?.successAction || { type: "message", message: "Thank you!" },
   );
 
   const isEdit = !!form;
@@ -173,9 +175,7 @@ export function FormBuilder({ siteId, form, defaultTab }: FormBuilderProps) {
   }
 
   function updateField(fieldId: string, updates: Partial<FormField>) {
-    setFields(
-      fields.map((f) => (f.id === fieldId ? { ...f, ...updates } : f))
-    );
+    setFields(fields.map((f) => (f.id === fieldId ? { ...f, ...updates } : f)));
   }
 
   function moveField(index: number, direction: "up" | "down") {
@@ -238,7 +238,7 @@ export function FormBuilder({ siteId, form, defaultTab }: FormBuilderProps) {
         } else if (result.form) {
           toast.success("Form created");
           router.push(
-            `/dashboard/sites/${siteId}/marketing/forms/${result.form.id}`
+            `/dashboard/sites/${siteId}/marketing/forms/${result.form.id}`,
           );
         }
       }
@@ -251,7 +251,7 @@ export function FormBuilder({ siteId, form, defaultTab }: FormBuilderProps) {
     if (!form) return;
     const code = await getFormEmbedCode(
       form.id,
-      typeof window !== "undefined" ? window.location.origin : ""
+      typeof window !== "undefined" ? window.location.origin : "",
     );
     setEmbedCode(code);
   }
@@ -392,7 +392,11 @@ export function FormBuilder({ siteId, form, defaultTab }: FormBuilderProps) {
                   <Button size="sm" onClick={addEmailField}>
                     Quick: Email Field
                   </Button>
-                  <Button size="sm" variant="secondary" onClick={addPhoneOptInField}>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={addPhoneOptInField}
+                  >
                     Quick: Phone + SMS Opt-In
                   </Button>
                   <Button variant="outline" size="sm" onClick={addField}>

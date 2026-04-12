@@ -77,8 +77,10 @@ const STEP_COLORS: Record<SequenceStepType, string> = {
   sms: "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950",
   whatsapp: "border-teal-200 bg-teal-50 dark:border-teal-800 dark:bg-teal-950",
   delay: "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950",
-  condition: "border-purple-200 bg-purple-50 dark:border-purple-800 dark:bg-purple-950",
-  action: "border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950",
+  condition:
+    "border-purple-200 bg-purple-50 dark:border-purple-800 dark:bg-purple-950",
+  action:
+    "border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950",
   split: "border-pink-200 bg-pink-50 dark:border-pink-800 dark:bg-pink-950",
 };
 
@@ -432,7 +434,10 @@ export function SequenceBuilder({
             <CardContent className="space-y-4">
               <div>
                 <Label>Goal Type</Label>
-                <Select value={goalType || "none"} onValueChange={(v) => setGoalType(v === "none" ? "" : v)}>
+                <Select
+                  value={goalType || "none"}
+                  onValueChange={(v) => setGoalType(v === "none" ? "" : v)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="No goal" />
                   </SelectTrigger>

@@ -123,7 +123,7 @@ The guide MUST follow this exact structure (matching the proven Marketing module
 
 ### Phase Definitions (THE CORE OF THE GUIDE)
   Break the implementation into 8-15 phases. Each phase MUST include:
-  
+
   **Phase [PREFIX]-XX: [Name]**
   - Purpose: What this phase achieves
   - Database Tables: Full schema with columns, types, constraints, defaults, descriptions, indexes, RLS rules
@@ -257,7 +257,9 @@ Please begin with Step 0 — read the memory bank and codebase, then proceed thr
 After running the prompt above, you get:
 
 ### 1. Master Implementation Guide (`/phases/PHASE-[PREFIX]-MASTER-GUIDE.md`)
+
 A 3,000–8,000 line document containing:
+
 - Full architecture design
 - Complete database schemas (every column, type, constraint)
 - All TypeScript interfaces
@@ -268,13 +270,16 @@ A 3,000–8,000 line document containing:
 - Testing requirements
 
 ### 2. Session Brief (`/phases/PHASE-[PREFIX]-SESSION-BRIEF.md`)
+
 A short document containing:
+
 - Session-to-phase mapping table
 - Universal prompt to paste into each implementation session
 - Context loss recovery prompts
 - Continuation session prompts
 
 ### 3. Implementation Flow
+
 ```
 Session 1: Paste session brief prompt → AI reads guide → Implements Phase 1 (DB + types)
 Session 2: Paste session brief prompt → AI reads guide → Implements Phases 2-3

@@ -13,6 +13,7 @@ The DRAMAC CMS platform is **production-ready**. All core waves (1-5) are comple
 **Problem:** Marketing module had ~30 user actions with zero feedback — silent `router.refresh()`, empty `catch {}` blocks, and `alert()` calls. Not production quality.
 
 **Fixes Applied (commits 03e639a8 → e81a210b):**
+
 1. **useUnsavedChanges hook rewrite** — `beforeunload` now sets `e.returnValue` for Chrome/Edge; handlers register on mount
 2. **Save button spinners** — Added `Loader2` spinning icon to sequence-builder, form-builder, landing-page-editor
 3. **Form builder defaults** — New forms start with default Email field pre-added
@@ -30,6 +31,7 @@ The DRAMAC CMS platform is **production-ready**. All core waves (1-5) are comple
 **Problem:** All marketing page cards crashed with table name mismatch + unhandled errors.
 
 **Fixes Applied:**
+
 1. **Table name fix** — `MKT_TABLES.mailingLists` corrected from `"mod_mktmod01_mailing_lists"` to `"mod_mktmod01_lists"`
 2. **Error boundary** — Created `marketing/error.tsx` as catch-all for all marketing routes
 3. **Hub dashboard resilience** — Try/catch with empty data fallback on `getMarketingHubData()`

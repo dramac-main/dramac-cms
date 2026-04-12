@@ -4,13 +4,16 @@
 
 ## How Navigation Works
 
-There is **no marketing sidebar**. Navigation works like this:
+The Marketing module has a **persistent navigation bar** at the top — similar to the Live Chat module. Here's what you see:
 
-- The **Marketing Hub** is the home page — it has 6 clickable cards that take you to each section
-- Each section page has a **back button** (top-left arrow) that takes you back to the Marketing Hub
-- The Hub also has two buttons at the top-right: **"New Campaign"** and **"New Sequence"**
+- **Sticky header** at the very top with:
+  - A **"Back to Site"** button (top-left) — takes you back to the site dashboard
+  - The module title **"Marketing"**
+  - Quick action buttons: **"New Campaign"** and **"New Sequence"** (top-right)
+- **Horizontal nav tabs** below the header with 10 sections: **Overview, Campaigns, Sequences, Subscribers, Landing Pages, Forms, Templates, Social, Calendar, SMS**
+- The nav highlights whichever section you're in — clicking any tab navigates directly
 
-Think of it as a hub-and-spoke pattern: Hub → Section → Back to Hub.
+You **never** need to type URLs manually. Every section is accessible from the nav bar at all times.
 
 ---
 
@@ -23,30 +26,35 @@ Think of it as a hub-and-spoke pattern: Hub → Section → Back to Hub.
 5. Click the **Marketing** tab
 6. You should see a card with a Mail icon, title "Marketing Suite", a short description, and an **"Open Marketing Dashboard"** button
 7. Click **"Open Marketing Dashboard"**
-8. ✅ You're now on the **Marketing Hub**
+8. ✅ You're now on the **Marketing Hub** (Overview page)
 
-**What you should see on the Marketing Hub:**
+**What you should see:**
 
-- **Top bar:** A back arrow button (goes to the site page) and the title "Marketing Hub" with subtitle "Manage campaigns, sequences, and subscriber engagement"
-- **Top-right buttons:** "New Campaign" (+ icon) and "New Sequence" (branch icon)
-- **4 stat cards:** Active Subscribers, Total Emails Sent, Open Rate, Click Rate
-- **6 Quick Action cards:** Campaigns, Sequences, Subscribers, Landing Pages, Opt-In Forms, Templates
-- **Recent Campaigns** section (with "View All" link)
-- **Active Sequences** section (with "View All" link)
+- **Sticky top bar:** "Back to Site" button (left), "Marketing" title, "New Campaign" and "New Sequence" buttons (right)
+- **Nav bar below:** Overview (active/highlighted), Campaigns, Sequences, Subscribers, Landing Pages, Forms, Templates, Social, Calendar, SMS
+- **Page content:**
+  - Title **"Marketing Hub"** with subtitle "Manage campaigns, sequences, and subscriber engagement"
+  - **4 stat cards:** Active Subscribers, Total Emails Sent, Open Rate, Click Rate
+  - **9 Quick Action cards** in a 3×3 grid: Campaigns, Sequences, Subscribers, Landing Pages, Opt-In Forms, Templates, Social Media, Content Calendar, SMS Campaigns
+  - **Recent Campaigns** section (with "View All" link)
+  - **Active Sequences** section (with "View All" link)
+  - **Performance Overview** section (open rate, click rate, bounce rate)
+  - **AI Insights** section with "Generate Insights" button
 
 **Also verify the other way in:**
 
-9. Go back to the site page (click the back arrow at the top), then click the **Modules** tab
-10. Find "Marketing Suite" in the module list
-11. It should have an **"Open"** button, a **"Configure"** button, and a toggle
-12. Click **"Open"** — it should take you to the same Marketing Hub
+9. Click **"Back to Site"** at the top-left to return to the site page
+10. Click the **Modules** tab
+11. Find "Marketing Suite" in the module list
+12. It should have an **"Open"** button, a **"Configure"** button, and a toggle
+13. Click **"Open"** — it should take you to the same Marketing Hub
 
 ---
 
 ## Part 1: Add Your First Subscriber
 
-1. From the Marketing Hub, click the **"Subscribers"** card (Users icon, shows "X active")
-2. ✅ The Subscribers page loads. Top-left has a back button labeled **"Marketing Hub"**
+1. Click **"Subscribers"** in the nav bar (or click the Subscribers card on the Hub)
+2. ✅ The Subscribers page loads. The nav bar highlights **"Subscribers"**
 3. You should see the title **"Subscribers"** with subtitle "Manage your email subscribers and mailing lists"
 4. There are two tabs: **"Subscribers (0)"** and **"Lists (0)"** — you should be on the Subscribers tab
 5. Click **"Add Subscriber"** (UserPlus icon, top-right)
@@ -66,13 +74,13 @@ Think of it as a hub-and-spoke pattern: Hub → Section → Back to Hub.
     - **Email:** `mary@testcompany.com`
     - **First Name:** `Mary`
     - **Last Name:** `Mwale`
-12. Click **"Add "**
+12. Click **"Add"**
 13. ✅ Both Jack and Mary should be in the table
 14. Try the search box — type `jack` in the **"Search by email or name..."** field
 15. ✅ Only Jack's row should show
 16. Clear the search box
 
-**Test the mailing listsSubscriber:**
+**Test the mailing lists:**
 
 17. Click the **"Lists"** tab
 18. You should see an empty state: "No mailing lists" / "Create lists to organize your subscribers"
@@ -83,30 +91,30 @@ Think of it as a hub-and-spoke pattern: Hub → Section → Back to Hub.
 21. Click create/save
 22. ✅ The "Newsletter" list appears as a card showing "0 subscribers"
 
-**Go back to the Hub:**
+**Verify hub update:**
 
-23. Click the **"Marketing Hub"** back button (top-left, arrow icon)
+23. Click **"Overview"** in the nav bar
 24. ✅ You're back on the Marketing Hub. The "Active Subscribers" stat card should show **2**
 
 ---
 
 ## Part 2: Browse Email Templates
 
-1. From the Marketing Hub, click the **"Templates"** card (BarChart3 icon, shows "Email library")
-2. ✅ The Email Templates page loads. Top-left has a back button labeled **"Marketing Hub"**
+1. Click **"Templates"** in the nav bar (or click the Templates card on the Hub)
+2. ✅ The Email Templates page loads. The nav bar highlights **"Templates"**
 3. You should see a template library — browse through what's available
 4. ✅ Page loads without errors
-5. Click the **"Marketing Hub"** back button to return
+5. Click **"Overview"** in the nav bar to return to the Hub
 
 ---
 
 ## Part 3: Create Your First Campaign
 
-1. From the Marketing Hub, click the **"Campaigns"** card (Mail icon, shows "X total")
-   - OR click the **"New Campaign"** button at the top-right of the Hub (this goes directly to the new campaign wizard)
-2. If you clicked the Campaigns card: ✅ The Campaigns list page loads. Top-left has **"Marketing Hub"** back button. Top-right has **"New Campaign"** (+ icon) button
-3. Click **"New Campaign"**
-4. ✅ The campaign wizard loads. Top-left has **"Back to Campaigns"** back button
+1. Click **"Campaigns"** in the nav bar (or click the Campaigns card on the Hub)
+   - OR click the **"New Campaign"** button in the top-right of the sticky header (this goes directly to the new campaign wizard)
+2. If you clicked the nav tab: ✅ The Campaigns list page loads. The nav bar highlights **"Campaigns"**
+3. Click **"New Campaign"** (+ icon, top-right of the page — or use the header button)
+4. ✅ The campaign wizard loads
 
 **The wizard has 4 steps shown at the top: Details → Audience → Content → Review**
 
@@ -151,27 +159,27 @@ Think of it as a hub-and-spoke pattern: Hub → Section → Back to Hub.
 **Test campaign actions:**
 
 25. Click on your campaign row to open the detail page
-26. ✅ The detail page loads with **"Back to Campaigns"** back button at top-left
+26. ✅ The detail page loads
 27. Look for a **three-dot menu** (⋮) or action buttons on the campaign
 28. Find and click **"Duplicate"** (Copy icon) — go back to the list
 29. ✅ You should see two campaigns now
 30. Click the duplicated campaign → from the three-dot menu, click **"Delete"** (Trash icon)
 31. ✅ Only the original remains
 
-**Go back to the Hub:**
+**Verify hub update:**
 
-32. Click **"Back to Campaigns"** → then click **"Marketing Hub"** back button
+32. Click **"Overview"** in the nav bar
 33. ✅ You're on the Hub. "Recent Campaigns" section should show your campaign
 
 ---
 
 ## Part 4: Build a Drip Sequence
 
-1. From the Marketing Hub, click the **"Sequences"** card (Zap icon, shows "X total")
-   - OR click the **"New Sequence"** button at the top-right of the Hub
-2. If you clicked the Sequences card: ✅ The Sequences list loads. Top-left has **"Marketing Hub"** back button. Top-right has **"New Sequence"** (+ icon) button
-3. Click **"New Sequence"**
-4. ✅ The page loads with **"Back to Sequences"** link at top-left and the title **"New Sequence"**. No crashes!
+1. Click **"Sequences"** in the nav bar (or click the Sequences card on the Hub)
+   - OR click the **"New Sequence"** button in the top-right of the sticky header
+2. If you clicked the nav tab: ✅ The Sequences list loads. The nav bar highlights **"Sequences"**
+3. Click **"New Sequence"** (+ icon)
+4. ✅ The sequence builder page loads. No crashes!
 
 **The sequence builder has a left panel (details) and a bottom section (steps).**
 
@@ -201,7 +209,7 @@ Think of it as a hub-and-spoke pattern: Hub → Section → Back to Hub.
 15. Click it → select **"Purchase"** → a "Window (hours)" field should appear
 16. Click it → select **"Custom Event"** → an "Event Name" field should appear
 17. Click it → select **"No goal"** → the extra fields disappear
-18. ✅ No crashes at any point — this was the Select.Item bug we fixed
+18. ✅ No crashes at any point
 
 **Build the workflow steps (bottom section):**
 
@@ -236,19 +244,19 @@ Think of it as a hub-and-spoke pattern: Hub → Section → Back to Hub.
 37. Click on "Welcome Series" in the list
 38. ✅ The detail page loads showing your steps
 
-**Go back to the Hub:**
+**Verify hub update:**
 
-39. Use the back button to go to Sequences list → then **"Marketing Hub"** back button
+39. Click **"Overview"** in the nav bar
 40. ✅ Hub should now show "Welcome Series" under "Active Sequences"
 
 ---
 
 ## Part 5: Create an Opt-In Form
 
-1. From the Marketing Hub, click the **"Opt-In Forms"** card (FormInput icon, shows "Embed & popup")
-2. ✅ The Opt-In Forms page loads. Top-left has **"Marketing Hub"** back button. Top-right has **"New Form"** (+ icon)
-3. Click **"New Form"**
-4. ✅ The form builder loads with **"Back to Forms"** back button
+1. Click **"Forms"** in the nav bar (or click the Opt-In Forms card on the Hub)
+2. ✅ The Opt-In Forms page loads. The nav bar highlights **"Forms"**
+3. Click **"New Form"** (+ icon)
+4. ✅ The form builder loads
 
 **The form builder has 3 tabs: Details, Fields, Behavior**
 
@@ -285,71 +293,138 @@ Think of it as a hub-and-spoke pattern: Hub → Section → Back to Hub.
 15. ✅ You should be redirected to the form detail page
 16. ✅ "Newsletter Signup" appears with the fields you configured
 
-**Go back to the Hub:**
+---
 
-17. Use the **"Back to Forms"** link → then **"Marketing Hub"** back button to return to the Hub
+## Part 6: Create a Landing Page (Deep Test)
+
+> The landing page editor is a full block-based page builder. Test it thoroughly.
+
+1. Click **"Landing Pages"** in the nav bar (or click the Landing Pages card on the Hub)
+2. ✅ The Landing Pages list loads. The nav bar highlights **"Landing Pages"**
+3. Click **"New Landing Page"** (+ icon)
+4. ✅ The landing page editor loads
+
+**The editor has 4 tabs: Content, Blocks, SEO, Templates**
+
+**Content tab (shows first):**
+
+5. Fill in:
+   - **Title:** `Summer Sale 2025`
+   - **Slug:** Should auto-generate to `summer-sale-2025` (or set it manually)
+   - **Description:** `Our biggest sale of the year`
+6. ✅ Verify the fields accept input without errors
+
+**Blocks tab — this is the page builder:**
+
+7. Click the **"Blocks"** tab
+8. You should see an empty state or a list of content blocks
+9. Look for an **"Add Block"** dropdown or button with block types:
+   - Hero, Features, Testimonials, CTA, Opt-In Form, Video, Gallery, Countdown, FAQ, Pricing, Social Proof
+10. Add a **Hero** block — fill in:
+    - **Heading:** `Summer Sale — 50% Off Everything`
+    - **Subheading:** `Limited time only`
+11. Add a **CTA** block — fill in:
+    - **Button Text:** `Shop Now`
+    - **Button Link:** `https://example.com/shop`
+12. Add a **Testimonials** block — enter some sample testimonial text
+13. Add an **FAQ** block — add a question/answer pair
+14. ✅ All blocks render in the editor without crashes
+15. Try reordering blocks if drag/drop or arrows are available
+16. Try deleting one block
+17. ✅ Block operations work smoothly
+
+**SEO tab:**
+
+18. Click the **"SEO"** tab
+19. You should see fields for:
+    - **Meta Title** (or auto-filled from the page title)
+    - **Meta Description**
+    - **OG Image** (optional)
+20. Fill in:
+    - **Meta Title:** `Summer Sale 2025 - 50% Off`
+    - **Meta Description:** `Don't miss our biggest sale of the year. 50% off everything.`
+21. ✅ SEO fields save correctly
+
+**Templates tab:**
+
+22. Click the **"Templates"** tab
+23. You should see pre-built landing page templates you can start from
+24. ✅ Template list loads (may be empty or have starter templates)
+
+**Save and publish:**
+
+25. Click **"Save"** (or "Save Draft")
+26. ✅ The page saves — you should see a success toast
+27. If there's a **"Publish"** button, click it
+28. ✅ The landing page status changes to published
+29. Go back to the Landing Pages list (click **"Landing Pages"** in the nav)
+30. ✅ "Summer Sale 2025" appears in the list with its status
 
 ---
 
-## Part 6: Create a Landing Page
+## Part 7: Social Media
 
-1. From the Marketing Hub, click the **"Landing Pages"** card (FileText icon, shows "Lead capture")
-2. ✅ The Landing Pages list loads. Top-left has **"Marketing Hub"** back button. Top-right has **"New Landing Page"** (+ icon)
-3. Click **"New Landing Page"**
-4. ✅ The editor loads with **"Back to Landing Pages"** back button
-5. Set the title: `Summer Sale`
-6. Add content: `50% off everything this week only`
-7. Click **Save**
-8. ✅ The page appears in the list
+> Social Media is now accessible directly from the nav bar — no URL typing needed.
 
-**Go back to the Hub:**
-
-9. Use back buttons to return to the Marketing Hub
-
----
-
-## Part 7: Social Media & Calendar
-
-**Social Media:**
-
-1. The Marketing Hub doesn't have a direct card for Social Media. Navigate to it via the URL: append `/social` to your marketing URL
-   - Example: `/dashboard/sites/YOUR-SITE-ID/marketing/social`
-2. ✅ The Social Media page loads. Top-left has **"Marketing Hub"** back button
+1. Click **"Social"** in the nav bar (or click the Social Media card on the Hub)
+2. ✅ The Social Media page loads. The nav bar highlights **"Social"**
 3. You should see two tabs: **"Posts"** and **"Connections"**
-4. Click the **"Connections"** tab → you should see platform connection options
-5. Click the **"Posts"** tab → compose area or empty state
 
-**Content Calendar:**
+**Posts tab:**
 
-6. Navigate to: append `/calendar` to your marketing URL
-   - Example: `/dashboard/sites/YOUR-SITE-ID/marketing/calendar`
-7. ✅ The Content Calendar page loads. Top-left has **"Marketing Hub"** back button
-8. ✅ Calendar view displays
+4. You should see an empty state or a list of social posts
+5. Look for a **"New Post"** or **"Create Post"** button
+6. If available, click it to go to the post composer
+7. ✅ The social post composer loads with platform selection options
 
-**Go back to the Hub:**
+**Connections tab:**
 
-9. Click the **"Marketing Hub"** back button
+8. Click the **"Connections"** tab
+9. ✅ You should see social platform connection options (Facebook, Twitter/X, LinkedIn, etc.)
+10. ✅ The connections settings page loads without errors
 
 ---
 
-## Part 8: SMS Campaign
+## Part 8: Content Calendar
 
-1. Navigate to the SMS composer: append `/sms/new` to your marketing URL
-   - Example: `/dashboard/sites/YOUR-SITE-ID/marketing/sms/new`
-2. ✅ The page loads showing the **"New SMS Campaign"** composer
-3. You should see a **"Back to Campaigns"** link at the top-left (inside the component, not in a header bar)
-4. Fill in:
-   - **Campaign Name** (if available)
+> Content Calendar is now accessible directly from the nav bar.
+
+1. Click **"Calendar"** in the nav bar (or click the Content Calendar card on the Hub)
+2. ✅ The Content Calendar page loads. The nav bar highlights **"Calendar"**
+3. ✅ You should see a month-view calendar showing your marketing content
+4. The calendar should show any campaigns, social posts, or sequences you've created
+5. Try clicking on different dates or navigating between months
+6. ✅ Calendar interactions work without errors
+
+---
+
+## Part 9: SMS Campaigns
+
+> SMS Campaigns is now accessible directly from the nav bar.
+
+1. Click **"SMS"** in the nav bar (or click the SMS Campaigns card on the Hub)
+2. ✅ The SMS Campaigns page loads. The nav bar highlights **"SMS"**
+3. You should see either:
+   - An empty state: "No SMS campaigns yet" with a "Create SMS Campaign" button
+   - Or a list of existing SMS campaigns
+4. Click **"New SMS Campaign"** (+ icon)
+5. ✅ The SMS composer loads with:
+   - **Campaign Name** field
+   - **Message** text area with character counter
+   - **Audience** selection
+6. Fill in:
+   - **Name:** `Order Ready Notification`
    - **SMS Message:** `Hi {{first_name}}, your order is ready for pickup!`
-5. ✅ Character counter updates as you type (shows count / 1600 and segment count)
-6. ✅ Helper text shows: "Use {{first_name}}, {{last_name}} for merge variables"
-7. Click the **"Back to Campaigns"** link to return to the campaigns list
+7. ✅ Character counter updates as you type (shows count / 1600 and segment count)
+8. ✅ Helper text shows personalization variables
+9. Click **"Save"** (or "Save as Draft")
+10. ✅ You're redirected — the campaign should appear in the campaigns list
 
 ---
 
-## Part 9: Check the Marketing Hub Stats
+## Part 10: Check the Marketing Hub Stats
 
-1. Navigate back to the Marketing Hub
+1. Click **"Overview"** in the nav bar
 2. ✅ The stat cards should reflect what you've created:
    - **Active Subscribers:** 2 (Jack and Mary)
 3. ✅ The Quick Action cards should show updated counts:
@@ -360,10 +435,17 @@ Think of it as a hub-and-spoke pattern: Hub → Section → Back to Hub.
 5. ✅ **"Active Sequences"** section should show your "Welcome Series"
 6. Try clicking **"View All"** next to Recent Campaigns → ✅ goes to the Campaigns list
 7. Try clicking **"View All"** next to Active Sequences → ✅ goes to the Sequences list
+8. ✅ All 9 Quick Action cards are clickable and go to the correct section
+
+**Test navigation round-trip:**
+
+9. Click each nav tab one by one: Campaigns, Sequences, Subscribers, Landing Pages, Forms, Templates, Social, Calendar, SMS
+10. ✅ Each page loads correctly and the nav highlights the active tab
+11. ✅ The "New Campaign" and "New Sequence" buttons in the header remain visible at all times
 
 ---
 
-## Part 10: Client Portal View
+## Part 11: Client Portal View
 
 > You need a portal user with marketing permissions. Portal has its own marketing pages at `/portal/sites/[siteId]/marketing/`.
 
@@ -382,7 +464,7 @@ Think of it as a hub-and-spoke pattern: Hub → Section → Back to Hub.
 
 ---
 
-## Part 11: Super Admin Health Check
+## Part 12: Super Admin Health Check
 
 > You need to be a Super Admin for this. Navigate to `/admin/marketing`.
 
@@ -394,17 +476,17 @@ Think of it as a hub-and-spoke pattern: Hub → Section → Back to Hub.
 
 ---
 
-## Part 12: Clean Up
+## Part 13: Clean Up
 
-1. Go to the Marketing Hub → click **"Campaigns"** card
+1. Click **"Campaigns"** in the nav bar
 2. Delete the test campaign ("Welcome to Our Newsletter")
-3. **"Marketing Hub"** back button → click **"Sequences"** card
+3. Click **"Sequences"** in the nav bar
 4. Delete the test sequence ("Welcome Series")
-5. **"Marketing Hub"** back button → click **"Landing Pages"** card
-6. Delete the test landing page ("Summer Sale")
-7. **"Marketing Hub"** back button → click **"Opt-In Forms"** card
+5. Click **"Landing Pages"** in the nav bar
+6. Delete the test landing page ("Summer Sale 2025")
+7. Click **"Forms"** in the nav bar
 8. Delete the test form ("Newsletter Signup")
-9. **"Marketing Hub"** back button → click **"Subscribers"** card
+9. Click **"Subscribers"** in the nav bar
 10. Delete Jack Banda and Mary Mwale
 11. ✅ Everything deletes cleanly
 
@@ -412,12 +494,13 @@ Think of it as a hub-and-spoke pattern: Hub → Section → Back to Hub.
 
 ## Done!
 
-If you made it through all 12 parts without crashes or broken pages, the Marketing Module is working. Note any spots where:
+If you made it through all 13 parts without crashes or broken pages, the Marketing Module is working. Note any spots where:
 
 - A page crashed or showed an error
 - A button did nothing when clicked
 - Data didn't save or didn't show up
 - Navigation went to a wrong page or 404
-- A back button was missing or went to the wrong place
+- The nav bar didn't highlight the correct tab
+- A quick action card on the Hub went to the wrong place
 
 Those are bugs to report.

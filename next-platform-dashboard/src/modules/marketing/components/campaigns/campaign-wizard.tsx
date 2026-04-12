@@ -73,7 +73,13 @@ export function CampaignWizard({ siteId }: CampaignWizardProps) {
   const [tags, setTags] = useState("");
 
   // Warn before navigating away with unsaved work
-  const hasUnsavedChanges = !!(name || description || subjectLine || previewText || contentHtml);
+  const hasUnsavedChanges = !!(
+    name ||
+    description ||
+    subjectLine ||
+    previewText ||
+    contentHtml
+  );
   useUnsavedChanges(hasUnsavedChanges);
 
   const currentStepIndex = STEPS.findIndex((s) => s.id === currentStep);
