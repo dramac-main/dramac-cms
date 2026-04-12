@@ -115,13 +115,14 @@ export function SocialPostComposer({
           platforms: selectedPlatforms,
           linkUrl: linkUrl.trim() || undefined,
           scheduledAt: scheduledAt || undefined,
-          utmParams: addUtm && linkUrl
-            ? {
-                utm_source: selectedPlatforms[0],
-                utm_medium: "social",
-                utm_campaign: "social-post",
-              }
-            : undefined,
+          utmParams:
+            addUtm && linkUrl
+              ? {
+                  utm_source: selectedPlatforms[0],
+                  utm_medium: "social",
+                  utm_campaign: "social-post",
+                }
+              : undefined,
         });
 
         toast.success(
@@ -148,9 +149,7 @@ export function SocialPostComposer({
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Platforms</CardTitle>
-          <CardDescription>
-            Select which platforms to post to
-          </CardDescription>
+          <CardDescription>Select which platforms to post to</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-3">

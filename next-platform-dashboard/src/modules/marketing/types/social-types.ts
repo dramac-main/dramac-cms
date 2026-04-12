@@ -157,10 +157,10 @@ export interface CalendarEvent {
 }
 
 export const CALENDAR_EVENT_COLORS: Record<CalendarEventType, string> = {
-  campaign: "#3B82F6",    // Blue
-  social: "#22C55E",      // Green
-  blog: "#A855F7",        // Purple
-  sequence: "#F97316",    // Orange
+  campaign: "#3B82F6", // Blue
+  social: "#22C55E", // Green
+  blog: "#A855F7", // Purple
+  sequence: "#F97316", // Orange
   landing_page: "#6B7280", // Gray
 };
 

@@ -83,7 +83,10 @@ export async function getSequences(
 
   const { data, error, count } = await query;
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("[Marketing] getSequences error:", error.message);
+    return { sequences: [], total: 0 };
+  }
 
   return { sequences: (data || []) as Sequence[], total: count || 0 };
 }

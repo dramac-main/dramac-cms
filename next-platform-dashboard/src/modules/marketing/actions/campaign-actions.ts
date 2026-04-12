@@ -83,7 +83,10 @@ export async function getCampaigns(
 
   const { data, error, count } = await query;
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("[Marketing] getCampaigns error:", error.message);
+    return { campaigns: [], total: 0 };
+  }
 
   return { campaigns: (data || []) as Campaign[], total: count || 0 };
 }

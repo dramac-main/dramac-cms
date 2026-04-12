@@ -20,7 +20,7 @@ export const MKT_TABLES = {
   emailTemplates: "mod_mktmod01_email_templates",
   audiences: "mod_mktmod01_audiences",
   subscribers: "mod_mktmod01_subscribers",
-  mailingLists: "mod_mktmod01_mailing_lists",
+  mailingLists: "mod_mktmod01_lists",
   listSubscribers: "mod_mktmod01_list_subscribers",
   campaignSends: "mod_mktmod01_campaign_sends",
   campaignLinks: "mod_mktmod01_campaign_links",

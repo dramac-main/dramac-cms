@@ -139,9 +139,7 @@ export async function generateMultiPlatformCaptions(
   platforms: SocialPlatform[],
 ): Promise<GenerateCaptionResult[]> {
   const results = await Promise.all(
-    platforms.map((platform) =>
-      generateSocialCaption({ ...input, platform }),
-    ),
+    platforms.map((platform) => generateSocialCaption({ ...input, platform })),
   );
 
   return results;

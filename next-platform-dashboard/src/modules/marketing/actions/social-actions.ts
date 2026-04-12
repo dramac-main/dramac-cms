@@ -54,7 +54,10 @@ export async function getSocialConnections(
     .eq("site_id", siteId)
     .order("connected_at", { ascending: false });
 
-  if (error) throw new Error(`Failed to fetch social connections: ${error.message}`);
+  if (error) {
+    console.error("[Marketing] getSocialConnections error:", error.message);
+    return [] as SocialConnection[];
+  }
 
   return mapRecords(data || []) as SocialConnection[];
 }
@@ -70,7 +73,8 @@ export async function getActiveSocialConnections(
     .eq("site_id", siteId)
     .eq("status", "active");
 
-  if (error) throw new Error(`Failed to fetch active connections: ${error.message}`);
+  if (error)
+    throw new Error(`Failed to fetch active connections: ${error.message}`);
 
   return mapRecords(data || []) as SocialConnection[];
 }
@@ -98,7 +102,8 @@ export async function createSocialConnection(
     .select()
     .single();
 
-  if (error) throw new Error(`Failed to create social connection: ${error.message}`);
+  if (error)
+    throw new Error(`Failed to create social connection: ${error.message}`);
 
   return mapRecord(data) as SocialConnection;
 }
@@ -113,8 +118,10 @@ export async function updateSocialConnection(
   const updates: Record<string, any> = {};
   if (input.accountName !== undefined) updates.account_name = input.accountName;
   if (input.accessToken !== undefined) updates.access_token = input.accessToken;
-  if (input.refreshToken !== undefined) updates.refresh_token = input.refreshToken;
-  if (input.tokenExpiresAt !== undefined) updates.token_expires_at = input.tokenExpiresAt;
+  if (input.refreshToken !== undefined)
+    updates.refresh_token = input.refreshToken;
+  if (input.tokenExpiresAt !== undefined)
+    updates.token_expires_at = input.tokenExpiresAt;
   if (input.status !== undefined) updates.status = input.status;
 
   const { data, error } = await supabase
@@ -125,7 +132,8 @@ export async function updateSocialConnection(
     .select()
     .single();
 
-  if (error) throw new Error(`Failed to update social connection: ${error.message}`);
+  if (error)
+    throw new Error(`Failed to update social connection: ${error.message}`);
 
   return mapRecord(data) as SocialConnection;
 }
@@ -142,7 +150,8 @@ export async function deleteSocialConnection(
     .eq("id", connectionId)
     .eq("site_id", siteId);
 
-  if (error) throw new Error(`Failed to delete social connection: ${error.message}`);
+  if (error)
+    throw new Error(`Failed to delete social connection: ${error.message}`);
 }
 
 export async function disconnectSocialConnection(
@@ -177,7 +186,8 @@ export async function getSocialPosts(
     .eq("site_id", siteId);
 
   if (options?.status) query = query.eq("status", options.status);
-  if (options?.platform) query = query.contains("platforms", [options.platform]);
+  if (options?.platform)
+    query = query.contains("platforms", [options.platform]);
 
   query = query
     .order("created_at", { ascending: false })
@@ -185,7 +195,10 @@ export async function getSocialPosts(
 
   const { data, error, count } = await query;
 
-  if (error) throw new Error(`Failed to fetch social posts: ${error.message}`);
+  if (error) {
+    console.error("[Marketing] getSocialPosts error:", error.message);
+    return { posts: [], total: 0 };
+  }
 
   return {
     posts: mapRecords(data || []) as SocialPost[],
@@ -323,12 +336,8 @@ export async function getCalendarEvents(
     .from(POSTS_TABLE)
     .select("id, content, scheduled_at, published_at, status")
     .eq("site_id", siteId)
-    .or(
-      `scheduled_at.gte.${startDate},published_at.gte.${startDate}`,
-    )
-    .or(
-      `scheduled_at.lte.${endDate},published_at.lte.${endDate}`,
-    );
+    .or(`scheduled_at.gte.${startDate},published_at.gte.${startDate}`)
+    .or(`scheduled_at.lte.${endDate},published_at.lte.${endDate}`);
 
   for (const p of socialPosts || []) {
     const date = p.scheduled_at || p.published_at;

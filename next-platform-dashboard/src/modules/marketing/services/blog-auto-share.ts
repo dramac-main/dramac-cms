@@ -43,7 +43,10 @@ export async function autoShareBlogPost(
     .single();
 
   if (!settings?.social_auto_share_enabled) {
-    return { created: 0, errors: ["Auto-share is disabled in marketing settings"] };
+    return {
+      created: 0,
+      errors: ["Auto-share is disabled in marketing settings"],
+    };
   }
 
   // Get active social connections
@@ -79,22 +82,20 @@ export async function autoShareBlogPost(
       });
 
       // Create social post
-      const { error } = await supabase
-        .from(MKT_TABLES.socialPosts)
-        .insert({
-          site_id: blogPost.siteId,
-          content: captionResult.caption,
-          platforms: [platform],
-          link_url: postUrl,
-          utm_params: {
-            utm_source: platform,
-            utm_medium: "social",
-            utm_campaign: "blog-auto-share",
-          },
-          blog_post_id: blogPost.id,
-          status: "scheduled",
-          scheduled_at: new Date().toISOString(),
-        });
+      const { error } = await supabase.from(MKT_TABLES.socialPosts).insert({
+        site_id: blogPost.siteId,
+        content: captionResult.caption,
+        platforms: [platform],
+        link_url: postUrl,
+        utm_params: {
+          utm_source: platform,
+          utm_medium: "social",
+          utm_campaign: "blog-auto-share",
+        },
+        blog_post_id: blogPost.id,
+        status: "scheduled",
+        scheduled_at: new Date().toISOString(),
+      });
 
       if (error) {
         errors.push(`${platform}: ${error.message}`);

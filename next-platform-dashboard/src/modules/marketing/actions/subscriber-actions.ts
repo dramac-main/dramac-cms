@@ -69,7 +69,10 @@ export async function getSubscribers(
 
   const { data, error, count } = await query;
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("[Marketing] getSubscribers error:", error.message);
+    return { subscribers: [], total: 0 };
+  }
   return { subscribers: (data || []) as Subscriber[], total: count || 0 };
 }
 

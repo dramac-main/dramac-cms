@@ -60,7 +60,10 @@ export async function getLandingPages(
   query = query.range(offset, offset + pageSize - 1);
 
   const { data, error, count } = await query;
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("[Marketing] getLandingPages error:", error.message);
+    return { landingPages: [], total: 0 };
+  }
 
   return {
     landingPages: mapRecords<LandingPage>(data || []),

@@ -64,8 +64,7 @@ export async function checkPlatformHealth(
   }
 
   const bounceRate = totalSent > 0 ? (totalBounced / totalSent) * 100 : 0;
-  const complaintRate =
-    totalSent > 0 ? (totalComplaints / totalSent) * 100 : 0;
+  const complaintRate = totalSent > 0 ? (totalComplaints / totalSent) * 100 : 0;
   const deliveryRate = totalSent > 0 ? (totalDelivered / totalSent) * 100 : 0;
   const reputationScore = calculateReputationScore(
     deliveryRate,
@@ -194,8 +193,7 @@ export async function getTopSitesByVolume(
 
   const pausedSet = new Set<string>();
   for (const setting of settingsData || []) {
-    const meta =
-      typeof setting.metadata === "object" ? setting.metadata : {};
+    const meta = typeof setting.metadata === "object" ? setting.metadata : {};
     if ((meta as any)?.marketingPaused) {
       pausedSet.add(setting.site_id);
     }
@@ -205,10 +203,8 @@ export async function getTopSitesByVolume(
   const result: SiteSendingVolume[] = [];
   for (const [siteId, agg] of siteMap.entries()) {
     const details = siteDetailsMap.get(siteId);
-    const bounceRate =
-      agg.sent > 0 ? (agg.bounced / agg.sent) * 100 : 0;
-    const complaintRate =
-      agg.sent > 0 ? (agg.complained / agg.sent) * 100 : 0;
+    const bounceRate = agg.sent > 0 ? (agg.bounced / agg.sent) * 100 : 0;
+    const complaintRate = agg.sent > 0 ? (agg.complained / agg.sent) * 100 : 0;
 
     let siteStatus: HealthStatus = "healthy";
     if (complaintRate >= 0.3 || bounceRate >= 5) siteStatus = "critical";
@@ -321,8 +317,7 @@ async function getPausedSiteIds(): Promise<string[]> {
 
   const paused: string[] = [];
   for (const setting of allSettings || []) {
-    const meta =
-      typeof setting.metadata === "object" ? setting.metadata : {};
+    const meta = typeof setting.metadata === "object" ? setting.metadata : {};
     if ((meta as any)?.marketingPaused) {
       paused.push(setting.site_id);
     }
@@ -405,8 +400,7 @@ export async function enforceAutoSafety(
 
   // Per-site bounce rate check
   for (const [siteId, agg] of siteMap.entries()) {
-    const siteBounceRate =
-      agg.sent > 0 ? (agg.bounced / agg.sent) * 100 : 0;
+    const siteBounceRate = agg.sent > 0 ? (agg.bounced / agg.sent) * 100 : 0;
     if (siteBounceRate >= thresholds.autoPauseBounceRate) {
       await pauseSiteMarketing(
         siteId,

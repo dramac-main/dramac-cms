@@ -11,10 +11,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -53,7 +50,8 @@ interface SocialPostsListProps {
 const STATUS_COLORS: Record<SocialPostStatus, string> = {
   draft: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
   scheduled: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-  published: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+  published:
+    "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
   failed: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
 };
 
@@ -125,7 +123,11 @@ export function SocialPostsList({
                   {/* Platform badges + status */}
                   <div className="flex items-center gap-2 flex-wrap">
                     {post.platforms?.map((platform) => (
-                      <Badge key={platform} variant="outline" className="text-xs">
+                      <Badge
+                        key={platform}
+                        variant="outline"
+                        className="text-xs"
+                      >
                         {SOCIAL_PLATFORM_LIMITS[platform]?.label || platform}
                       </Badge>
                     ))}
@@ -139,15 +141,13 @@ export function SocialPostsList({
                     {post.scheduledAt && (
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        Scheduled:{" "}
-                        {new Date(post.scheduledAt).toLocaleString()}
+                        Scheduled: {new Date(post.scheduledAt).toLocaleString()}
                       </span>
                     )}
                     {post.publishedAt && (
                       <span className="flex items-center gap-1">
                         <Send className="h-3 w-3" />
-                        Published:{" "}
-                        {new Date(post.publishedAt).toLocaleString()}
+                        Published: {new Date(post.publishedAt).toLocaleString()}
                       </span>
                     )}
                     {post.linkUrl && (

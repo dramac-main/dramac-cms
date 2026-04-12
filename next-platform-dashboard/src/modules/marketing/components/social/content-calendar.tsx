@@ -10,12 +10,7 @@
 
 import { useEffect, useState, useTransition, useCallback } from "react";
 import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -30,7 +25,10 @@ import {
   Loader2,
 } from "lucide-react";
 import { getCalendarEvents } from "@/modules/marketing/actions/social-actions";
-import type { CalendarEvent, CalendarEventType } from "@/modules/marketing/types/social-types";
+import type {
+  CalendarEvent,
+  CalendarEventType,
+} from "@/modules/marketing/types/social-types";
 
 interface ContentCalendarProps {
   siteId: string;
@@ -48,17 +46,20 @@ const EVENT_TYPE_CONFIG: Record<
   social: {
     label: "Social",
     icon: Share2,
-    className: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+    className:
+      "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
   },
   blog: {
     label: "Blog",
     icon: FileText,
-    className: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+    className:
+      "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
   },
   sequence: {
     label: "Sequence",
     icon: Zap,
-    className: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+    className:
+      "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
   },
   landing_page: {
     label: "Landing Page",

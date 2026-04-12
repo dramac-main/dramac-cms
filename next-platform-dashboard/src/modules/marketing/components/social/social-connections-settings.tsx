@@ -65,11 +65,23 @@ interface SocialConnectionsSettingsProps {
 
 const STATUS_CONFIG: Record<
   SocialConnectionStatus,
-  { label: string; icon: React.ElementType; variant: "default" | "secondary" | "destructive" }
+  {
+    label: string;
+    icon: React.ElementType;
+    variant: "default" | "secondary" | "destructive";
+  }
 > = {
   active: { label: "Connected", icon: CheckCircle2, variant: "default" },
-  expired: { label: "Token Expired", icon: AlertTriangle, variant: "secondary" },
-  disconnected: { label: "Disconnected", icon: XCircle, variant: "destructive" },
+  expired: {
+    label: "Token Expired",
+    icon: AlertTriangle,
+    variant: "secondary",
+  },
+  disconnected: {
+    label: "Disconnected",
+    icon: XCircle,
+    variant: "destructive",
+  },
 };
 
 export function SocialConnectionsSettings({
@@ -186,8 +198,7 @@ export function SocialConnectionsSettings({
           {connections.map((connection) => {
             const statusConfig = STATUS_CONFIG[connection.status];
             const StatusIcon = statusConfig.icon;
-            const platformConfig =
-              SOCIAL_PLATFORM_LIMITS[connection.platform];
+            const platformConfig = SOCIAL_PLATFORM_LIMITS[connection.platform];
 
             return (
               <Card key={connection.id}>
@@ -198,7 +209,10 @@ export function SocialConnectionsSettings({
                         <span className="font-medium">
                           {platformConfig.label}
                         </span>
-                        <Badge variant={statusConfig.variant} className="text-xs">
+                        <Badge
+                          variant={statusConfig.variant}
+                          className="text-xs"
+                        >
                           <StatusIcon className="mr-1 h-3 w-3" />
                           {statusConfig.label}
                         </Badge>
@@ -209,7 +223,9 @@ export function SocialConnectionsSettings({
                       {connection.connectedAt && (
                         <span className="text-xs text-muted-foreground">
                           Connected{" "}
-                          {new Date(connection.connectedAt).toLocaleDateString()}
+                          {new Date(
+                            connection.connectedAt,
+                          ).toLocaleDateString()}
                         </span>
                       )}
                     </div>
@@ -217,11 +233,7 @@ export function SocialConnectionsSettings({
 
                   <div className="flex items-center gap-2">
                     {connection.profileUrl && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        asChild
-                      >
+                      <Button variant="ghost" size="sm" asChild>
                         <a
                           href={connection.profileUrl}
                           target="_blank"
@@ -347,10 +359,7 @@ export function SocialConnectionsSettings({
       </Dialog>
 
       {/* Disconnect Confirmation */}
-      <Dialog
-        open={!!disconnectId}
-        onOpenChange={() => setDisconnectId(null)}
-      >
+      <Dialog open={!!disconnectId} onOpenChange={() => setDisconnectId(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Disconnect Account?</DialogTitle>
@@ -360,10 +369,7 @@ export function SocialConnectionsSettings({
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDisconnectId(null)}
-            >
+            <Button variant="outline" onClick={() => setDisconnectId(null)}>
               Cancel
             </Button>
             <Button

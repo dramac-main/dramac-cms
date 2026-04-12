@@ -10,7 +10,11 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { MKT_TABLES } from "../lib/marketing-constants";
-import type { SocialPost, SocialPlatform, UTMParams } from "../types/social-types";
+import type {
+  SocialPost,
+  SocialPlatform,
+  UTMParams,
+} from "../types/social-types";
 
 // ─── UTM Helpers ──────────────────────────────────────────────
 
@@ -21,16 +25,21 @@ export function appendUTMParams(url: string, utm?: UTMParams | null): string {
     const parsed = new URL(url);
     if (utm.utm_source) parsed.searchParams.set("utm_source", utm.utm_source);
     if (utm.utm_medium) parsed.searchParams.set("utm_medium", utm.utm_medium);
-    if (utm.utm_campaign) parsed.searchParams.set("utm_campaign", utm.utm_campaign);
+    if (utm.utm_campaign)
+      parsed.searchParams.set("utm_campaign", utm.utm_campaign);
     if (utm.utm_term) parsed.searchParams.set("utm_term", utm.utm_term);
-    if (utm.utm_content) parsed.searchParams.set("utm_content", utm.utm_content);
+    if (utm.utm_content)
+      parsed.searchParams.set("utm_content", utm.utm_content);
     return parsed.toString();
   } catch {
     return url;
   }
 }
 
-export function buildSocialUTM(platform: SocialPlatform, campaignName?: string): UTMParams {
+export function buildSocialUTM(
+  platform: SocialPlatform,
+  campaignName?: string,
+): UTMParams {
   return {
     utm_source: platform,
     utm_medium: "social",
@@ -113,9 +122,14 @@ export async function publishToSocialPlatforms(
   await supabase
     .from(MKT_TABLES.socialPosts)
     .update({
-      status: allSucceeded ? "published" : anySucceeded ? "published" : "failed",
+      status: allSucceeded
+        ? "published"
+        : anySucceeded
+          ? "published"
+          : "failed",
       published_at: anySucceeded ? new Date().toISOString() : null,
-      platform_post_ids: Object.keys(platformPostIds).length > 0 ? platformPostIds : null,
+      platform_post_ids:
+        Object.keys(platformPostIds).length > 0 ? platformPostIds : null,
       error_message: allSucceeded
         ? null
         : results

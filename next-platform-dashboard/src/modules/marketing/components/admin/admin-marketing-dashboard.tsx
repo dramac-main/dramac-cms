@@ -63,7 +63,11 @@ import {
 function HealthBadge({ status }: { status: HealthStatus }) {
   const config: Record<
     HealthStatus,
-    { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: typeof CheckCircle2 }
+    {
+      label: string;
+      variant: "default" | "secondary" | "destructive" | "outline";
+      icon: typeof CheckCircle2;
+    }
   > = {
     healthy: { label: "Good", variant: "default", icon: CheckCircle2 },
     warning: { label: "Warning", variant: "secondary", icon: AlertTriangle },
@@ -453,13 +457,13 @@ export function AdminMarketingDashboard() {
       {/* Pause Dialog */}
       <Dialog
         open={pauseDialog.open}
-        onOpenChange={(open) =>
-          setPauseDialog((prev) => ({ ...prev, open }))
-        }
+        onOpenChange={(open) => setPauseDialog((prev) => ({ ...prev, open }))}
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Pause Marketing for {pauseDialog.siteName}</DialogTitle>
+            <DialogTitle>
+              Pause Marketing for {pauseDialog.siteName}
+            </DialogTitle>
             <DialogDescription>
               This will prevent all marketing emails from being sent for this
               site. Existing scheduled campaigns will be held until resumed.

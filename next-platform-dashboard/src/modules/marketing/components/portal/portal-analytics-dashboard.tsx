@@ -129,9 +129,10 @@ export function PortalAnalyticsDashboard({
       title: "Delivered",
       value: stats.totalDelivered.toLocaleString(),
       icon: Mail,
-      description: stats.totalSent > 0
-        ? `${((stats.totalDelivered / stats.totalSent) * 100).toFixed(1)}% delivery rate`
-        : "No sends yet",
+      description:
+        stats.totalSent > 0
+          ? `${((stats.totalDelivered / stats.totalSent) * 100).toFixed(1)}% delivery rate`
+          : "No sends yet",
     },
     {
       title: "Open Rate",

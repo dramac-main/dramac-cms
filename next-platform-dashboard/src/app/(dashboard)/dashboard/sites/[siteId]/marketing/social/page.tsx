@@ -97,5 +97,7 @@ async function SocialPostsLoader({ siteId }: { siteId: string }) {
 
 async function ConnectionsLoader({ siteId }: { siteId: string }) {
   const connections = await getSocialConnections(siteId);
-  return <SocialConnectionsSettings siteId={siteId} connections={connections} />;
+  return (
+    <SocialConnectionsSettings siteId={siteId} connections={connections} />
+  );
 }

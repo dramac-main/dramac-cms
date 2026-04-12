@@ -63,7 +63,10 @@ export async function getTemplates(
 
   const { data, error } = await query;
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("[Marketing] getTemplates error:", error.message);
+    return [] as EmailTemplate[];
+  }
   return (data || []) as EmailTemplate[];
 }
 

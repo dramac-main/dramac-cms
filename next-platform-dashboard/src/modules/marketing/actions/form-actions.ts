@@ -64,7 +64,10 @@ export async function getForms(
   query = query.range(offset, offset + pageSize - 1);
 
   const { data, error, count } = await query;
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("[Marketing] getForms error:", error.message);
+    return { forms: [], total: 0 };
+  }
 
   return {
     forms: mapRecords<MarketingForm>(data || []),

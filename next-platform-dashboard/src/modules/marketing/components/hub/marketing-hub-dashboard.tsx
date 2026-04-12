@@ -101,7 +101,25 @@ async function getMarketingHubData(siteId: string) {
 export async function MarketingHubDashboard({
   siteId,
 }: MarketingHubDashboardProps) {
-  const data = await getMarketingHubData(siteId);
+  let data;
+  try {
+    data = await getMarketingHubData(siteId);
+  } catch (err) {
+    console.error("[MarketingHub] Failed to load hub data:", err);
+    data = {
+      stats: {
+        totalCampaigns: 0,
+        totalSequences: 0,
+        activeSubscribers: 0,
+        totalEmailsSent: 0,
+        openRate: 0,
+        clickRate: 0,
+        bounceRate: 0,
+      },
+      recentCampaigns: [],
+      activeSequences: [],
+    };
+  }
 
   return <MarketingHubClient siteId={siteId} data={data} />;
 }

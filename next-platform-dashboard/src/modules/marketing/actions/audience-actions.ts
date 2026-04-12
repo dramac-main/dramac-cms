@@ -169,7 +169,10 @@ export async function getMailingLists(siteId: string): Promise<MailingList[]> {
     .eq("site_id", siteId)
     .order("created_at", { ascending: false });
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("[Marketing] getMailingLists error:", error.message);
+    return [] as MailingList[];
+  }
   return (data || []) as MailingList[];
 }
 
