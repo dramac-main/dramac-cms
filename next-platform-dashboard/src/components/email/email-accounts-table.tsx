@@ -152,7 +152,7 @@ export function EmailAccountsTable({
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" aria-label={`Actions for ${account.email}`}>
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -169,7 +169,7 @@ export function EmailAccountsTable({
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => {
-                          window.open('https://control.titan.email', '_blank');
+                          window.open('https://control.titan.email', '_blank', 'noopener,noreferrer');
                         }}
                       >
                         <Key className="h-4 w-4 mr-2" />

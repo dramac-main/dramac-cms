@@ -51,7 +51,7 @@ export function EmailSettingsActions({
 
   function handleRenew() {
     startTransition(async () => {
-      const result = await renewBusinessEmailOrder(orderId, parseInt(renewMonths));
+      const result = await renewBusinessEmailOrder(orderId, parseInt(renewMonths, 10));
       if (result.success) {
         toast.success(`Email order renewed for ${renewMonths} months`);
         setShowRenewDialog(false);
@@ -197,7 +197,7 @@ export function EmailSettingsActions({
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Estimated cost</span>
                   <span className="font-medium">
-                    {formatCurrency((retailPrice / 12) * parseInt(renewMonths))}
+                    {formatCurrency((retailPrice / 12) * parseInt(renewMonths, 10))}
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground">

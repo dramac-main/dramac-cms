@@ -66,14 +66,18 @@ export default async function PortalDomainsPage() {
             return (
               <Card key={domain.id}>
                 <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                    <div className="space-y-1 min-w-0">
                       <CardTitle className="flex items-center gap-2">
-                        <Globe className="h-5 w-5" />
-                        {domain.domain_name}
+                        <Globe className="h-5 w-5 shrink-0" />
+                        <span className="truncate">{domain.domain_name}</span>
                       </CardTitle>
                       <CardDescription>
-                        Registered {formatDistanceToNow(new Date(domain.registration_date), { addSuffix: true })}
+                        {domain.registration_date
+                          ? `Registered ${formatDistanceToNow(new Date(domain.registration_date), { addSuffix: true })}`
+                          : domain.created_at
+                          ? `Added ${formatDistanceToNow(new Date(domain.created_at), { addSuffix: true })}`
+                          : 'Registration date unavailable'}
                       </CardDescription>
                     </div>
                     <Badge variant={
@@ -87,13 +91,15 @@ export default async function PortalDomainsPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Expiry Date</p>
                       <div className="flex items-center gap-2 mt-1">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                         <p className="text-sm">
-                          {new Date(domain.expiry_date).toLocaleDateString()}
+                          {domain.expiry_date
+                            ? new Date(domain.expiry_date).toLocaleDateString()
+                            : 'N/A'}
                         </p>
                         {isExpiringSoon && !isExpired && (
                           <AlertCircle className="h-4 w-4 text-amber-500" />
@@ -118,7 +124,7 @@ export default async function PortalDomainsPage() {
                     </div>
                   )}
 
-                  {isExpiringSoon && !isExpired && (
+                  {isExpiringSoon && !isExpired && domain.expiry_date && (
                     <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
                       <div className="flex items-start gap-2">
                         <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />

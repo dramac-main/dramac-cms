@@ -6,12 +6,17 @@ interface EmailWebmailLinkProps {
 }
 
 export function EmailWebmailLink({ domain }: EmailWebmailLinkProps) {
+  const webmailUrl = domain
+    ? `https://app.titan.email/?domain=${encodeURIComponent(domain)}`
+    : "https://app.titan.email";
+
   return (
     <Button variant="outline" asChild>
       <a 
-        href="https://app.titan.email" 
+        href={webmailUrl}
         target="_blank" 
         rel="noopener noreferrer"
+        aria-label={domain ? `Open webmail for ${domain}` : "Open Titan webmail"}
       >
         <ExternalLink className="h-4 w-4 mr-2" />
         Open Webmail

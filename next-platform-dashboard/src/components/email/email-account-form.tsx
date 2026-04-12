@@ -167,6 +167,7 @@ export function EmailAccountForm({ orderId, domainName, open, onOpenChange }: Em
                       <Input 
                         type={showPassword ? "text" : "password"}
                         placeholder="••••••••"
+                        autoComplete="new-password"
                         {...field} 
                       />
                     </FormControl>
@@ -176,6 +177,7 @@ export function EmailAccountForm({ orderId, domainName, open, onOpenChange }: Em
                       size="icon"
                       className="absolute right-0 top-0"
                       onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? (
                         <EyeOff className="h-4 w-4" />
@@ -202,6 +204,7 @@ export function EmailAccountForm({ orderId, domainName, open, onOpenChange }: Em
                     <Input 
                       type="password"
                       placeholder="••••••••"
+                      autoComplete="new-password"
                       {...field} 
                     />
                   </FormControl>

@@ -156,7 +156,7 @@ function resolvePlanMeta(key: string): PlanMeta {
   // Try to extract plan name from Titan Mail synthetic keys (titanmailglobal_<planId>)
   const titanMatch = key.match(/^titanmail(?:global|india)_(\d+)$/);
   if (titanMatch) {
-    const planId = parseInt(titanMatch[1]);
+    const planId = parseInt(titanMatch[1], 10);
     const PLAN_NAMES: Record<number, { name: string; storage: number }> = {
       1762: { name: 'Professional', storage: 5 },
       1761: { name: 'Professional', storage: 5 },
@@ -220,7 +220,7 @@ function resolvePlanMeta(key: string): PlanMeta {
  */
 function extractPlanId(key: string): number | null {
   const match = key.match(/^titanmail(?:global|india)_(\d+)$/);
-  return match ? parseInt(match[1]) : null;
+  return match ? parseInt(match[1], 10) : null;
 }
 
 // ============================================================================
@@ -274,8 +274,8 @@ function parsePlanPricing(data: Record<string, unknown>, planKey: string): Struc
 function findSlab(slabs: Record<string, SlabPricing>, accounts: number): string | null {
   for (const slab of Object.keys(slabs)) {
     const [minS, maxS] = slab.split('-');
-    const min = parseInt(minS);
-    const max = parseInt(maxS);
+    const min = parseInt(minS, 10);
+    const max = parseInt(maxS, 10);
     if (!isNaN(min) && !isNaN(max) && accounts >= min && accounts <= max) return slab;
   }
   return Object.keys(slabs)[0] || null;
@@ -431,8 +431,8 @@ export function EmailPurchaseWizard() {
     loadPricing();
   }, []);
 
-  const numberOfAccounts = parseInt(form.watch("numberOfAccounts") || "5");
-  const months = parseInt(form.watch("months") || "12");
+  const numberOfAccounts = parseInt(form.watch("numberOfAccounts") || "5", 10);
+  const months = parseInt(form.watch("months") || "12", 10);
 
   // Available billing periods for the selected plan
   const availableMonths = useMemo(() => {

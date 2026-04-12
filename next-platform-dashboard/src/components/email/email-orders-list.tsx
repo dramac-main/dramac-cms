@@ -62,7 +62,7 @@ export function EmailOrdersList({ orders }: EmailOrdersListProps) {
 }
 
 function EmailOrderCard({ order }: { order: EmailOrdersListProps['orders'][0] }) {
-  const accountUsage = (order.used_accounts / order.number_of_accounts) * 100;
+  const accountUsage = order.number_of_accounts > 0 ? (order.used_accounts / order.number_of_accounts) * 100 : 0;
   const expiryDate = new Date(order.expiry_date);
   const isExpiringSoon = expiryDate.getTime() - Date.now() < 30 * 24 * 60 * 60 * 1000;
   const isExpired = expiryDate < new Date();
@@ -114,7 +114,7 @@ function EmailOrderCard({ order }: { order: EmailOrdersListProps['orders'][0] })
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" aria-label={`Actions for ${order.domain_name}`}>
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>

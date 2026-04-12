@@ -8,7 +8,7 @@ interface EmailStorageUsageProps {
 export function EmailStorageUsage({ used, limit }: EmailStorageUsageProps) {
   const usedGB = used / (1024 * 1024 * 1024);
   const limitGB = limit / (1024 * 1024 * 1024);
-  const percentage = (used / limit) * 100;
+  const percentage = limit > 0 ? (used / limit) * 100 : 0;
 
   const getColorClass = () => {
     if (percentage >= 90) return "bg-destructive";
@@ -25,9 +25,10 @@ export function EmailStorageUsage({ used, limit }: EmailStorageUsageProps) {
       <Progress 
         value={percentage} 
         className="h-2"
+        aria-label={`Storage usage: ${percentage.toFixed(1)}%`}
       />
       <p className="text-xs text-muted-foreground">
-        {(100 - percentage).toFixed(1)}% storage remaining
+        {limit > 0 ? `${(100 - percentage).toFixed(1)}% storage remaining` : 'Storage limit unknown'}
       </p>
     </div>
   );
