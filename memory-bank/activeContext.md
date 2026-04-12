@@ -6,13 +6,20 @@
 
 The DRAMAC CMS platform is **production-ready**. All core waves (1-5) are complete, including all 6 business modules, DRAMAC Studio, client portal, billing, domain/email systems, and AI website designer. The platform is deployed at https://app.dramacagency.com.
 
-## Current Focus: Marketing Module — COMPLETE ✅
+## Current Focus: Marketing Module — Bug Fix Session ✅
 
-### Status: ALL 6 SESSIONS COMPLETE — MKT-01 through MKT-12 Done
+### Status: Critical crash fixes applied and deployed (commit 01ece171)
 
-All 12 marketing phases are fully implemented across 6 sessions. The marketing module is 100% complete.
+**Problem:** All marketing page cards (Subscribers, Campaigns, etc.) crashed with "An error occurred in the Server Components render." Root cause was a table name mismatch in `marketing-constants.ts` — `mod_mktmod01_mailing_lists` should have been `mod_mktmod01_lists`. Additionally, ALL list-fetching server actions threw unhandled errors on any Supabase error, causing page crashes.
 
-**Session 6 delivered:** MKT-10 (Super Admin Marketing View), MKT-11 (Client Portal Marketing Views), MKT-12 (Social Media Integration). This was the FINAL session.
+**Fixes Applied:**
+1. **Table name fix** — `MKT_TABLES.mailingLists` corrected from `"mod_mktmod01_mailing_lists"` to `"mod_mktmod01_lists"`
+2. **Error boundary** — Created `marketing/error.tsx` as catch-all for all marketing routes
+3. **Hub dashboard resilience** — Try/catch with empty data fallback on `getMarketingHubData()`
+4. **9 list functions made resilient** — All return empty data instead of throwing:
+   - `getCampaigns`, `getSequences`, `getSubscribers`, `getMailingLists`
+   - `getLandingPages`, `getForms`, `getTemplates`, `getSocialPosts`, `getSocialConnections`
+5. **Formatting cleanup** — Social components and services formatting normalized
 
 ### Implementation Plan: 6 Sessions
 

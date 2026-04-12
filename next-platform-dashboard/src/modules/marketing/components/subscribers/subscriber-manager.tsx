@@ -748,7 +748,7 @@ function CreateListForm({
   const [isPending, startTransition] = useTransition();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [type, setType] = useState("standard");
+  const [type, setType] = useState("manual");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

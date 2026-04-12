@@ -188,7 +188,20 @@
 
 ---
 
-## Latest Update: Blog Editor Overhaul + Agency Support Tickets + Email Notifications + Default Departments ✅ (commit afdd04d4)
+## Latest Update: Marketing Module Crash Fix ✅ (commit 01ece171)
+
+### Root Cause
+- `MKT_TABLES.mailingLists` was set to `"mod_mktmod01_mailing_lists"` but actual DB table is `"mod_mktmod01_lists"`
+- All 9 list-fetching server actions threw unhandled errors on any Supabase error, crashing pages
+
+### Fixes (10 files modified, 1 new)
+- **marketing-constants.ts**: Fixed `mailingLists` table name
+- **marketing/error.tsx** (NEW): Error boundary for all marketing routes
+- **marketing-hub-dashboard.tsx**: Try/catch with empty data fallback
+- **9 action files**: getCampaigns, getSequences, getSubscribers, getMailingLists, getLandingPages, getForms, getTemplates, getSocialPosts, getSocialConnections — all return empty data on error instead of throwing
+- Formatting cleanup in social components and services
+
+### Previous Update: Blog Editor Overhaul + Agency Support Tickets + Email Notifications + Default Departments ✅ (commit afdd04d4)
 
 ### Blog Editor
 
