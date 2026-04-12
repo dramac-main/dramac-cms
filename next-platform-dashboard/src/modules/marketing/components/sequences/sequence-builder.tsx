@@ -37,6 +37,7 @@ import {
   Save,
   Smartphone,
   MessageCircle,
+  Loader2,
 } from "lucide-react";
 import { SEQUENCE_STEP_TYPE_LABELS } from "../../lib/marketing-constants";
 import { createSequence, updateSequence } from "../../actions/sequence-actions";
@@ -260,7 +261,11 @@ export function SequenceBuilder({
             {isEdit ? "Edit Sequence" : "New Sequence"}
           </h1>
           <Button onClick={handleSave} disabled={isPending || !name.trim()}>
-            <Save className="mr-2 h-4 w-4" />
+            {isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 h-4 w-4" />
+            )}
             {isPending ? "Saving..." : isEdit ? "Update" : "Create"} Sequence
           </Button>
         </div>

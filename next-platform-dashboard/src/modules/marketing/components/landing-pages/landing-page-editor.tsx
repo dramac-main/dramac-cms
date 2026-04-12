@@ -26,6 +26,7 @@ import {
   Star,
   Clock,
   FormInput,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -252,7 +253,11 @@ export function LandingPageEditor({
             </Button>
           )}
           <Button size="sm" onClick={handleSave} disabled={isPending}>
-            <Save className="mr-2 h-4 w-4" />
+            {isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 h-4 w-4" />
+            )}
             {isPending ? "Saving..." : "Save"}
           </Button>
         </div>

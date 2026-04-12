@@ -249,15 +249,45 @@ Think of it as a hub-and-spoke pattern: Hub → Section → Back to Hub.
 2. ✅ The Opt-In Forms page loads. Top-left has **"Marketing Hub"** back button. Top-right has **"New Form"** (+ icon)
 3. Click **"New Form"**
 4. ✅ The form builder loads with **"Back to Forms"** back button
-5. Set the form name: `Newsletter Signup`
-6. Configure the form fields (Email should be there by default, add First Name if possible)
-7. Click **Save**
-8. ✅ You're back on the forms list, "Newsletter Signup" appears
-9. Click on it → the detail page loads
+
+**The form builder has 3 tabs: Details, Fields, Behavior**
+
+**Details tab (shows first):**
+
+5. Fill in:
+   - **Form Name:** `Newsletter Signup`
+   - **Form Type:** Leave as "Inline (embedded in page)"
+   - **Description:** `Main newsletter signup form`
+   - **Button Text:** Leave as "Submit" (or change to "Subscribe")
+   - **Button Color:** Leave default or pick a color
+
+**Fields tab:**
+
+6. Click the **"Fields"** tab
+7. ✅ An **Email Address** field is already there by default (type: email, required: ✅)
+8. Click **"+ Add Field"** at the bottom to add a custom field
+9. A new field card appears — configure it:
+   - **Type:** Select **"Text"**
+   - **Label:** Change to `First Name`
+   - **Placeholder:** Type `Your first name`
+   - Toggle **Required** on
+10. ✅ You should now have 2 fields: Email Address and First Name
+
+**Behavior tab (optional):**
+
+11. Click the **"Behavior"** tab
+12. You should see the **"Success Action"** section
+13. ✅ Default is "Show message" with "Thank you!" — leave as-is or customize
+
+**Save it:**
+
+14. Click **"Save"** (top-right, with save icon)
+15. ✅ You should be redirected to the form detail page
+16. ✅ "Newsletter Signup" appears with the fields you configured
 
 **Go back to the Hub:**
 
-10. Use back buttons to return to the Marketing Hub
+17. Use the **"Back to Forms"** link → then **"Marketing Hub"** back button to return to the Hub
 
 ---
 

@@ -20,6 +20,7 @@ import {
   Code,
   Copy,
   Check,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -89,7 +90,21 @@ export function FormBuilder({ siteId, form, defaultTab }: FormBuilderProps) {
   const [buttonColor, setButtonColor] = useState(
     form?.buttonColor || "#2563eb"
   );
-  const [fields, setFields] = useState<FormField[]>(form?.fields || []);
+  const [fields, setFields] = useState<FormField[]>(() => {
+    if (form?.fields?.length) return form.fields;
+    // New forms start with a default Email field
+    return [
+      {
+        id: crypto.randomUUID(),
+        name: "email",
+        type: "email",
+        label: "Email Address",
+        placeholder: "Enter your email",
+        required: true,
+        order: 0,
+      },
+    ] as FormField[];
+  });
   const [trigger, setTrigger] = useState<FormTrigger | null>(
     form?.trigger || null
   );
@@ -100,7 +115,7 @@ export function FormBuilder({ siteId, form, defaultTab }: FormBuilderProps) {
   const isEdit = !!form;
 
   // Warn before navigating away with unsaved work
-  const hasUnsavedChanges = !!(name || description || fields.length > 0);
+  const hasUnsavedChanges = !!(name || description);
   useUnsavedChanges(hasUnsavedChanges && !isEdit);
 
   // ─── Field Management ──────────────────────────────────────
@@ -260,7 +275,11 @@ export function FormBuilder({ siteId, form, defaultTab }: FormBuilderProps) {
           )}
         </div>
         <Button size="sm" onClick={handleSave} disabled={isPending}>
-          <Save className="mr-2 h-4 w-4" />
+          {isPending ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-2 h-4 w-4" />
+          )}
           {isPending ? "Saving..." : "Save"}
         </Button>
       </div>
