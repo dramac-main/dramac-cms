@@ -25,11 +25,13 @@ import { cn } from "@/lib/utils";
 
 interface MarketingNavProps {
   siteId: string;
+  /** Override the base path (defaults to /dashboard/sites/{siteId}/marketing) */
+  basePath?: string;
 }
 
-export function MarketingNav({ siteId }: MarketingNavProps) {
+export function MarketingNav({ siteId, basePath }: MarketingNavProps) {
   const pathname = usePathname();
-  const base = `/dashboard/sites/${siteId}/marketing`;
+  const base = basePath || `/dashboard/sites/${siteId}/marketing`;
 
   const navItems = [
     {

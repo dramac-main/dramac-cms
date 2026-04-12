@@ -22,6 +22,7 @@ import {
   Clock,
   FormInput,
   Loader2,
+  Eye,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,7 @@ import {
 } from "../../actions/landing-page-actions";
 import { LANDING_PAGE_TEMPLATES } from "../../data/landing-page-templates";
 import { BlockList } from "./block-editor";
+import { BlockRenderer } from "./block-renderer";
 import type {
   LandingPage,
   LandingPageBlock,
@@ -272,6 +274,10 @@ export function LandingPageEditor({
         <TabsList>
           <TabsTrigger value="content">Content</TabsTrigger>
           <TabsTrigger value="blocks">Page Blocks</TabsTrigger>
+          <TabsTrigger value="preview">
+            <Eye className="mr-1.5 h-4 w-4" />
+            Preview
+          </TabsTrigger>
           <TabsTrigger value="seo">SEO</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
         </TabsList>
@@ -380,6 +386,23 @@ export function LandingPageEditor({
                     </Button>
                   );
                 })}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Preview Tab */}
+        <TabsContent value="preview">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-base">Live Preview</CardTitle>
+              <Badge variant="outline" className="text-xs">
+                {blocks.length} block{blocks.length !== 1 ? "s" : ""}
+              </Badge>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="border-t rounded-b-lg overflow-hidden bg-white dark:bg-gray-950">
+                <BlockRenderer blocks={blocks} />
               </div>
             </CardContent>
           </Card>

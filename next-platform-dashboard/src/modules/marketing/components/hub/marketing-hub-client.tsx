@@ -209,7 +209,9 @@ export function MarketingHubClient({ siteId, data }: MarketingHubClientProps) {
               <Share2 className="h-5 w-5 text-primary" />
               <div>
                 <p className="text-sm font-medium">Social Media</p>
-                <p className="text-xs text-muted-foreground">Posts & connections</p>
+                <p className="text-xs text-muted-foreground">
+                  Posts & connections
+                </p>
               </div>
             </CardContent>
           </Card>

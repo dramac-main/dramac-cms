@@ -5,6 +5,8 @@ import { getDashboardStats } from "@/modules/ecommerce/actions/dashboard-actions
 import { getBookingStats } from "@/modules/booking/actions/booking-actions";
 import { getAgencyCRMStats } from "@/modules/crm/actions/agency-crm-stats";
 import { getAutomationStats } from "@/modules/automation/actions/automation-actions";
+import { getActiveSubscriberCount } from "@/modules/marketing/actions/subscriber-actions";
+import { getCampaigns } from "@/modules/marketing/actions/campaign-actions";
 import type { EffectivePortalPermissions } from "./portal-permissions";
 
 // =============================================================================
@@ -42,6 +44,10 @@ export interface PortalDashboardData {
     successfulExecutions: number;
     executionsToday: number;
   } | null;
+  marketing: {
+    activeSubscribers: number;
+    totalCampaigns: number;
+  } | null;
 }
 
 // =============================================================================
@@ -69,6 +75,7 @@ export async function getPortalDashboardData(
       bookings: null,
       crm: null,
       automation: null,
+      marketing: null,
     };
   }
 
@@ -79,6 +86,7 @@ export async function getPortalDashboardData(
     bookings: Promise<PortalDashboardData["bookings"]>;
     crm: Promise<PortalDashboardData["crm"]>;
     automation: Promise<PortalDashboardData["automation"]>;
+    marketing: Promise<PortalDashboardData["marketing"]>;
   } = {
     liveChat: permissions.canManageLiveChat
       ? fetchLiveChatStats(primarySiteId)
@@ -96,17 +104,22 @@ export async function getPortalDashboardData(
     automation: permissions.canManageAutomation
       ? fetchAutomationStats(primarySiteId)
       : Promise.resolve(null),
+    marketing: permissions.canManageMarketing
+      ? fetchMarketingStats(primarySiteId)
+      : Promise.resolve(null),
   };
 
-  const [liveChat, ecommerce, bookings, crm, automation] = await Promise.all([
-    promises.liveChat,
-    promises.ecommerce,
-    promises.bookings,
-    promises.crm,
-    promises.automation,
-  ]);
+  const [liveChat, ecommerce, bookings, crm, automation, marketing] =
+    await Promise.all([
+      promises.liveChat,
+      promises.ecommerce,
+      promises.bookings,
+      promises.crm,
+      promises.automation,
+      promises.marketing,
+    ]);
 
-  return { liveChat, ecommerce, bookings, crm, automation };
+  return { liveChat, ecommerce, bookings, crm, automation, marketing };
 }
 
 // =============================================================================
@@ -190,6 +203,23 @@ async function fetchAutomationStats(
       totalExecutions: result.data.total_executions,
       successfulExecutions: result.data.successful_executions,
       executionsToday: result.data.executions_today,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function fetchMarketingStats(
+  siteId: string,
+): Promise<PortalDashboardData["marketing"]> {
+  try {
+    const [subscriberCount, campaignResult] = await Promise.all([
+      getActiveSubscriberCount(siteId),
+      getCampaigns(siteId, { limit: 0 }),
+    ]);
+    return {
+      activeSubscribers: subscriberCount,
+      totalCampaigns: campaignResult.total,
     };
   } catch {
     return null;
@@ -329,6 +359,24 @@ export async function getSiteModuleCounts(
     );
   }
 
+  // Marketing
+  if (
+    installedSlugs.includes("marketing") &&
+    permissions.canManageMarketing
+  ) {
+    promises.push(
+      fetchMarketingStats(siteId).then((data) => {
+        results.push({
+          slug: "marketing",
+          label: "Marketing",
+          count: data?.activeSubscribers ?? 0,
+          countLabel: "subscribers",
+          href: `/portal/sites/${siteId}/marketing`,
+        });
+      }),
+    );
+  }
+
   await Promise.all(promises);
 
   // Sort by a predictable order
@@ -340,6 +388,7 @@ export async function getSiteModuleCounts(
     "booking",
     "crm",
     "automation",
+    "marketing",
   ];
   results.sort((a, b) => order.indexOf(a.slug) - order.indexOf(b.slug));
 

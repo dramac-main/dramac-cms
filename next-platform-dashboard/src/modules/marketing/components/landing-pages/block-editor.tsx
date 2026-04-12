@@ -152,7 +152,9 @@ function BlockCard({
     <Collapsible open={isExpanded} onOpenChange={onToggle}>
       <Card
         className={
-          isExpanded ? "border-primary/50 shadow-sm" : "hover:border-primary/30 transition-colors"
+          isExpanded
+            ? "border-primary/50 shadow-sm"
+            : "hover:border-primary/30 transition-colors"
         }
       >
         {/* Header — always visible */}
@@ -449,10 +451,7 @@ function FeaturesForm({
   function addItem() {
     onUpdate({
       ...content,
-      items: [
-        ...items,
-        { icon: "check", title: "", description: "" },
-      ],
+      items: [...items, { icon: "check", title: "", description: "" }],
     });
   }
 
@@ -792,7 +791,9 @@ function OptinFormForm({
               />
               <span>{f.label}</span>
               {f.value === "email" && (
-                <span className="text-xs text-muted-foreground">(required)</span>
+                <span className="text-xs text-muted-foreground">
+                  (required)
+                </span>
               )}
             </label>
           ))}
@@ -948,9 +949,7 @@ function GalleryForm({
               />
               <Input
                 value={item.description || ""}
-                onChange={(e) =>
-                  updateItem(idx, "description", e.target.value)
-                }
+                onChange={(e) => updateItem(idx, "description", e.target.value)}
                 placeholder="Description (optional)"
                 className="text-sm"
               />
@@ -992,7 +991,9 @@ function CountdownForm({
         <Input
           type="datetime-local"
           value={dateTimeLocal}
-          onChange={(e) => set("targetDate", new Date(e.target.value).toISOString())}
+          onChange={(e) =>
+            set("targetDate", new Date(e.target.value).toISOString())
+          }
         />
       </Field>
       <Field label="Style">
@@ -1238,17 +1239,13 @@ function PricingForm({
               <div className="grid grid-cols-2 gap-2">
                 <Input
                   value={plan.name}
-                  onChange={(e) =>
-                    updatePlan(planIdx, "name", e.target.value)
-                  }
+                  onChange={(e) => updatePlan(planIdx, "name", e.target.value)}
                   placeholder="Plan name"
                   className="text-sm"
                 />
                 <Input
                   value={plan.price}
-                  onChange={(e) =>
-                    updatePlan(planIdx, "price", e.target.value)
-                  }
+                  onChange={(e) => updatePlan(planIdx, "price", e.target.value)}
                   placeholder="$29/mo"
                   className="text-sm"
                 />

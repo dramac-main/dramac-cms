@@ -1,34 +1,33 @@
 /**
- * SMS Campaigns Page
- * Phase MKT-08: SMS & WhatsApp Channel Foundation
+ * Portal - SMS Campaigns
  *
- * Overview page for SMS campaigns with link to create new.
- * SMS campaigns are stored in the campaigns table with type='sms'.
+ * Permission: canManageMarketing
  */
 import { Suspense } from "react";
-import type { Metadata } from "next";
 import Link from "next/link";
 import { MessageSquare, Plus, ArrowRight } from "lucide-react";
-import { PLATFORM } from "@/lib/constants/platform";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { requirePortalAuth } from "@/lib/portal/portal-auth";
+import { verifyPortalModuleAccess } from "@/lib/portal/portal-permissions";
+import { PortalProvider } from "@/lib/portal/portal-context";
 import { getCampaigns } from "@/modules/marketing/actions/campaign-actions";
 import { CAMPAIGN_STATUS_CONFIG } from "@/modules/marketing/lib/marketing-constants";
 import type { CampaignStatus } from "@/modules/marketing/types";
 
-export const metadata: Metadata = {
-  title: `SMS Campaigns | ${PLATFORM.name}`,
-  description: "Manage SMS marketing campaigns",
-};
-
-interface SMSPageProps {
+interface PageProps {
   params: Promise<{ siteId: string }>;
 }
 
-async function SMSCampaignsList({ siteId }: { siteId: string }) {
-  const basePath = `/dashboard/sites/${siteId}/marketing`;
+async function SMSCampaignsList({
+  siteId,
+  basePath,
+}: {
+  siteId: string;
+  basePath: string;
+}) {
   const { campaigns } = await getCampaigns(siteId, {
     type: "sms",
     limit: 20,
@@ -40,13 +39,15 @@ async function SMSCampaignsList({ siteId }: { siteId: string }) {
         <div className="flex items-center gap-3">
           <MessageSquare className="h-6 w-6 text-primary" />
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">SMS Campaigns</h1>
+            <h1 className="text-2xl font-bold tracking-tight">
+              SMS Campaigns
+            </h1>
             <p className="text-muted-foreground text-sm">
               Create and manage text message marketing campaigns
             </p>
           </div>
         </div>
-        <Link href={`${basePath}/sms/new`}>
+        <Link href={`${basePath}/campaigns/new`}>
           <Button size="sm">
             <Plus className="mr-2 h-4 w-4" />
             New SMS Campaign
@@ -61,10 +62,9 @@ async function SMSCampaignsList({ siteId }: { siteId: string }) {
             <h3 className="text-lg font-medium mb-1">No SMS campaigns yet</h3>
             <p className="text-sm text-muted-foreground mb-4 text-center max-w-md">
               Create your first SMS campaign to reach subscribers via text
-              message. SMS campaigns support personalization, audience
-              targeting, and delivery tracking.
+              message.
             </p>
-            <Link href={`${basePath}/sms/new`}>
+            <Link href={`${basePath}/campaigns/new`}>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
                 Create SMS Campaign
@@ -88,7 +88,8 @@ async function SMSCampaignsList({ siteId }: { siteId: string }) {
           <CardContent>
             <div className="space-y-3">
               {campaigns.map((campaign: any) => {
-                const status = (campaign.status as CampaignStatus) || "draft";
+                const status =
+                  (campaign.status as CampaignStatus) || "draft";
                 const config = CAMPAIGN_STATUS_CONFIG[status];
                 return (
                   <Link
@@ -139,14 +140,49 @@ function SMSSkeleton() {
   );
 }
 
-export default async function SMSPage({ params }: SMSPageProps) {
+export default async function PortalSMSPage({ params }: PageProps) {
+  const user = await requirePortalAuth();
   const { siteId } = await params;
 
+  const { permissions } = await verifyPortalModuleAccess(
+    user,
+    siteId,
+    "marketing",
+    "canManageMarketing",
+  );
+
+  const basePath = `/portal/sites/${siteId}/marketing`;
+
   return (
-    <div className="flex-1 p-6">
-      <Suspense fallback={<SMSSkeleton />}>
-        <SMSCampaignsList siteId={siteId} />
-      </Suspense>
-    </div>
+    <PortalProvider
+      value={{
+        isPortalView: true,
+        portalUser: {
+          clientId: user.clientId,
+          fullName: user.fullName,
+          email: user.email,
+          agencyId: user.agencyId,
+        },
+        permissions: {
+          canManageLiveChat: permissions.canManageLiveChat,
+          canManageOrders: permissions.canManageOrders,
+          canManageProducts: permissions.canManageProducts,
+          canManageBookings: permissions.canManageBookings,
+          canManageCrm: permissions.canManageCrm,
+          canManageAutomation: permissions.canManageAutomation,
+          canManageQuotes: permissions.canManageQuotes,
+          canManageAgents: permissions.canManageAgents,
+          canManageCustomers: permissions.canManageCustomers,
+          canManageMarketing: permissions.canManageMarketing,
+        },
+        siteId,
+      }}
+    >
+      <div className="flex-1 p-6">
+        <Suspense fallback={<SMSSkeleton />}>
+          <SMSCampaignsList siteId={siteId} basePath={basePath} />
+        </Suspense>
+      </div>
+    </PortalProvider>
   );
 }

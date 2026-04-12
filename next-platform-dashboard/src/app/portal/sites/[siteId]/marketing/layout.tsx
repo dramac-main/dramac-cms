@@ -1,22 +1,21 @@
 /**
- * Marketing Module Layout
+ * Portal Marketing Module Layout
  *
- * Persistent navigation for all marketing pages.
- * Follows the same pattern as the live-chat module layout:
- * sticky header with back button, title, and horizontal nav tabs.
+ * Persistent navigation for all portal marketing pages.
+ * Mirrors the dashboard marketing layout but uses portal auth.
  */
 import { redirect, notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowLeft, Plus, GitBranch } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
-import { isModuleEnabledForSite } from "@/lib/actions/sites";
+import { requirePortalAuth } from "@/lib/portal/portal-auth";
+import { verifyPortalModuleAccess } from "@/lib/portal/portal-permissions";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Suspense } from "react";
 import { MarketingNav } from "@/modules/marketing/components/hub/marketing-nav";
 
-interface MarketingLayoutProps {
+interface PortalMarketingLayoutProps {
   children: ReactNode;
   params: Promise<{ siteId: string }>;
 }
@@ -24,50 +23,38 @@ interface MarketingLayoutProps {
 function NavSkeleton() {
   return (
     <div className="flex gap-2">
-      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
+      {[1, 2, 3, 4, 5, 6].map((i) => (
         <Skeleton key={i} className="h-8 w-20" />
       ))}
     </div>
   );
 }
 
-export default async function MarketingLayout({
+export default async function PortalMarketingLayout({
   children,
   params,
-}: MarketingLayoutProps) {
+}: PortalMarketingLayoutProps) {
   const { siteId } = await params;
+  const user = await requirePortalAuth();
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { permissions } = await verifyPortalModuleAccess(
+    user,
+    siteId,
+    "marketing",
+    "canManageMarketing",
+  );
 
-  if (!user) redirect("/login");
-
-  const { data: site } = await supabase
-    .from("sites")
-    .select("id, name")
-    .eq("id", siteId)
-    .single();
-
-  if (!site) notFound();
-
-  const hasAccess = await isModuleEnabledForSite(siteId, "marketing");
-  if (!hasAccess) {
-    redirect(
-      `/dashboard/sites/${siteId}?tab=modules&message=marketing_not_installed`,
-    );
-  }
+  const portalBase = `/portal/sites/${siteId}/marketing`;
 
   return (
     <div className="flex flex-col h-full">
       {/* Sticky header */}
-      <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
+      <div className="border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-10">
         <div className="container">
           {/* Row 1: Back + Title + Quick actions */}
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-4">
-              <Link href={`/dashboard/sites/${siteId}?tab=marketing`}>
+              <Link href={`/portal/sites/${siteId}`}>
                 <Button variant="ghost" size="sm">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back to Site
@@ -78,13 +65,13 @@ export default async function MarketingLayout({
             </div>
 
             <div className="flex items-center gap-2">
-              <Link href={`/dashboard/sites/${siteId}/marketing/campaigns/new`}>
+              <Link href={`${portalBase}/campaigns/new`}>
                 <Button size="sm">
                   <Plus className="h-4 w-4 mr-2" />
                   New Campaign
                 </Button>
               </Link>
-              <Link href={`/dashboard/sites/${siteId}/marketing/sequences/new`}>
+              <Link href={`${portalBase}/sequences/new`}>
                 <Button variant="outline" size="sm">
                   <GitBranch className="h-4 w-4 mr-2" />
                   New Sequence
@@ -96,7 +83,7 @@ export default async function MarketingLayout({
           {/* Row 2: Navigation tabs */}
           <div className="flex items-center -mb-px overflow-x-auto scrollbar-thin scrollbar-thumb-muted">
             <Suspense fallback={<NavSkeleton />}>
-              <MarketingNav siteId={siteId} />
+              <MarketingNav siteId={siteId} basePath={portalBase} />
             </Suspense>
           </div>
         </div>

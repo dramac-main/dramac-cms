@@ -16,6 +16,7 @@ import {
   TrendingUp,
   ArrowUpRight,
   ArrowDownRight,
+  Mail,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -72,7 +73,8 @@ export default async function PortalDashboard() {
     dashboardData?.ecommerce ||
     dashboardData?.bookings ||
     dashboardData?.crm ||
-    dashboardData?.automation;
+    dashboardData?.automation ||
+    dashboardData?.marketing;
 
   return (
     <div className="space-y-8">
@@ -449,6 +451,47 @@ export default async function PortalDashboard() {
                   >
                     <Link href={`/portal/sites/${primarySiteId}/automation`}>
                       View Workflows
+                      <ArrowRight className="h-4 w-4 ml-1" />
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Marketing Card */}
+            {dashboardData?.marketing && primarySiteId && (
+              <Card className="relative overflow-hidden">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Marketing
+                  </CardTitle>
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-3xl font-bold">
+                      {dashboardData.marketing.activeSubscribers}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      subscribers
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                    <div className="flex justify-between col-span-2">
+                      <span className="text-muted-foreground">Campaigns</span>
+                      <span className="font-medium">
+                        {dashboardData.marketing.totalCampaigns}
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    asChild
+                  >
+                    <Link href={`/portal/sites/${primarySiteId}/marketing`}>
+                      View Marketing
                       <ArrowRight className="h-4 w-4 ml-1" />
                     </Link>
                   </Button>
