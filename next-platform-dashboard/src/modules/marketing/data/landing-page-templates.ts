@@ -712,4 +712,1043 @@ export const LANDING_PAGE_TEMPLATES: LandingPageTemplate[] = [
       ),
     ],
   },
+  // ============================================================================
+  // ADDITIONAL HIGH-CONVERTING TEMPLATES
+  // ============================================================================
+  {
+    id: "course-enrollment",
+    name: "Course / Workshop Enrollment",
+    description:
+      "Enroll students in an online course, workshop, or training programme with a persuasive, structured layout.",
+    category: "Education",
+    thumbnail: "/images/templates/course-enrollment.png",
+    defaultSeo: {
+      metaTitle: "Enroll Now — Transform Your Skills",
+      metaDescription:
+        "Join our comprehensive course and gain the skills top professionals use. Limited seats available.",
+    },
+    blocks: [
+      block(
+        "hero",
+        {
+          heading: "Master New Skills in Just 4 Weeks",
+          subheading:
+            "A step-by-step programme designed for busy professionals. No prior experience needed.",
+          buttonText: "Enroll Now",
+          buttonAction: "scroll_to_form",
+          backgroundStyle: "gradient",
+        },
+        0,
+      ),
+      block(
+        "social_proof",
+        {
+          heading: "Join a Growing Community",
+          stats: [
+            { value: "3,200+", label: "Graduates" },
+            { value: "4.8/5", label: "Student Rating" },
+            { value: "92%", label: "Completion Rate" },
+          ],
+        },
+        1,
+      ),
+      block(
+        "features",
+        {
+          heading: "What You'll Master",
+          items: [
+            {
+              icon: "lightbulb",
+              title: "Core Foundations",
+              description:
+                "Build a rock-solid understanding of the fundamentals from day one.",
+            },
+            {
+              icon: "zap",
+              title: "Hands-On Projects",
+              description:
+                "Apply what you learn with real-world projects and exercises.",
+            },
+            {
+              icon: "users",
+              title: "Community & Support",
+              description:
+                "Get help from instructors and connect with fellow learners.",
+            },
+            {
+              icon: "star",
+              title: "Certificate of Completion",
+              description:
+                "Earn a recognised certificate to showcase your new skills.",
+            },
+          ],
+        },
+        2,
+      ),
+      block(
+        "video",
+        {
+          heading: "Watch a Free Preview",
+          videoUrl: "",
+          videoType: "youtube",
+        },
+        3,
+      ),
+      block(
+        "testimonials",
+        {
+          heading: "Hear From Our Graduates",
+          items: [
+            {
+              name: "Amara N.",
+              role: "Project Manager",
+              quote:
+                "This course gave me skills I use every single day at work. Completely worth the investment.",
+            },
+            {
+              name: "Chen W.",
+              role: "Freelancer",
+              quote:
+                "I went from beginner to confident practitioner in under a month. The support was incredible.",
+            },
+            {
+              name: "Rachel S.",
+              role: "Entrepreneur",
+              quote:
+                "Clear, well-structured, and practical. I've already recommended it to my entire team.",
+            },
+          ],
+        },
+        4,
+      ),
+      block(
+        "pricing",
+        {
+          heading: "Choose Your Learning Path",
+          plans: [
+            {
+              name: "Self-Paced",
+              price: "$97",
+              features: [
+                "Full course access",
+                "Downloadable resources",
+                "Community forum access",
+                "Certificate of completion",
+              ],
+            },
+            {
+              name: "Guided",
+              price: "$197",
+              features: [
+                "Everything in Self-Paced",
+                "Weekly live coaching calls",
+                "Personal feedback on projects",
+                "Priority email support",
+              ],
+              highlighted: true,
+            },
+          ],
+        },
+        5,
+      ),
+      block(
+        "faq",
+        {
+          heading: "Common Questions",
+          items: [
+            {
+              question: "How long do I have access to the course?",
+              answer:
+                "You get lifetime access. Learn at your own pace, revisit any module whenever you need.",
+            },
+            {
+              question: "What if I'm a complete beginner?",
+              answer:
+                "Perfect — the course starts from scratch. No prior experience or special software required.",
+            },
+            {
+              question: "Is there a money-back guarantee?",
+              answer:
+                "Yes, a full 30-day money-back guarantee. If it's not right for you, just let us know.",
+            },
+            {
+              question: "Will I receive a certificate?",
+              answer:
+                "Yes. Upon completing all modules, you'll receive a downloadable certificate.",
+            },
+          ],
+        },
+        6,
+      ),
+      block(
+        "cta",
+        {
+          heading: "Ready to Start Learning?",
+          description:
+            "Join 3,200+ graduates who transformed their careers. Enroll today.",
+          buttonText: "Enroll Now",
+          buttonAction: "scroll_to_form",
+        },
+        7,
+      ),
+      block(
+        "optin_form",
+        {
+          heading: "Secure Your Seat",
+          description:
+            "Enter your details to get started. You'll receive instant access.",
+          buttonText: "Enroll Now",
+          fields: ["email", "first_name"],
+        },
+        8,
+      ),
+    ],
+  },
+  {
+    id: "app-download",
+    name: "App Download",
+    description:
+      "Drive mobile or desktop app downloads with a clean, feature-focused layout.",
+    category: "Software",
+    thumbnail: "/images/templates/app-download.png",
+    defaultSeo: {
+      metaTitle: "Download Our App — Free",
+      metaDescription:
+        "Get the app that thousands of people rely on every day. Available on all platforms.",
+    },
+    blocks: [
+      block(
+        "hero",
+        {
+          heading: "The App That Simplifies Your Life",
+          subheading:
+            "Available on iOS, Android, and Web. Download free and get started in seconds.",
+          buttonText: "Download Now — It's Free",
+          buttonAction: "scroll_to_form",
+          backgroundStyle: "gradient",
+        },
+        0,
+      ),
+      block(
+        "social_proof",
+        {
+          heading: "Loved by Thousands",
+          stats: [
+            { value: "50K+", label: "Downloads" },
+            { value: "4.7★", label: "App Store Rating" },
+            { value: "120+", label: "Countries" },
+          ],
+        },
+        1,
+      ),
+      block(
+        "features",
+        {
+          heading: "Why People Love It",
+          items: [
+            {
+              icon: "zap",
+              title: "Blazing Fast",
+              description:
+                "Loads instantly. No lag, no waiting. Built for speed.",
+            },
+            {
+              icon: "shield",
+              title: "Private & Secure",
+              description:
+                "We never sell your data. End-to-end encryption on everything.",
+            },
+            {
+              icon: "globe",
+              title: "Works Offline",
+              description:
+                "Use the app even without internet. Your data syncs when you're back online.",
+            },
+          ],
+        },
+        2,
+      ),
+      block(
+        "gallery",
+        {
+          heading: "Screenshots",
+          items: [],
+          columns: 3,
+        },
+        3,
+      ),
+      block(
+        "testimonials",
+        {
+          heading: "What Users Say",
+          items: [
+            {
+              name: "Priya D.",
+              role: "Daily User",
+              quote:
+                "I use this app every single day. It's simple, fast, and does exactly what I need.",
+            },
+            {
+              name: "Tom H.",
+              role: "Tech Reviewer",
+              quote:
+                "One of the best-designed apps I've reviewed this year. Clean and intuitive.",
+            },
+          ],
+        },
+        4,
+      ),
+      block(
+        "faq",
+        {
+          heading: "Frequently Asked Questions",
+          items: [
+            {
+              question: "Is the app really free?",
+              answer:
+                "Yes. The core app is completely free. Optional premium features are available for power users.",
+            },
+            {
+              question: "Which platforms are supported?",
+              answer:
+                "iOS 15+, Android 10+, and all modern web browsers. Mac and Windows desktop apps coming soon.",
+            },
+            {
+              question: "How do I get support?",
+              answer:
+                "Tap the help icon in the app or email our support team. We typically respond within 2 hours.",
+            },
+          ],
+        },
+        5,
+      ),
+      block(
+        "cta",
+        {
+          heading: "Ready to Get Started?",
+          description: "Download now — it takes less than 30 seconds.",
+          buttonText: "Get the App",
+        },
+        6,
+      ),
+    ],
+  },
+  {
+    id: "agency-services",
+    name: "Agency / Services",
+    description:
+      "Showcase your agency or professional services and generate qualified leads.",
+    category: "Services",
+    thumbnail: "/images/templates/agency-services.png",
+    defaultSeo: {
+      metaTitle: "Professional Services That Deliver Results",
+      metaDescription:
+        "Partner with our experienced team to grow your business. Book a free consultation today.",
+    },
+    blocks: [
+      block(
+        "hero",
+        {
+          heading: "We Help Businesses Grow — Predictably",
+          subheading:
+            "Strategy, execution, and results. Our team has helped 500+ businesses increase revenue.",
+          buttonText: "Get a Free Quote",
+          buttonAction: "scroll_to_form",
+          backgroundStyle: "dark",
+        },
+        0,
+      ),
+      block(
+        "social_proof",
+        {
+          heading: "Trusted by Industry Leaders",
+          stats: [
+            { value: "500+", label: "Projects Delivered" },
+            { value: "98%", label: "Client Retention" },
+            { value: "15+", label: "Years in Business" },
+            { value: "$50M+", label: "Revenue Generated" },
+          ],
+        },
+        1,
+      ),
+      block(
+        "features",
+        {
+          heading: "Our Services",
+          items: [
+            {
+              icon: "rocket",
+              title: "Growth Strategy",
+              description:
+                "Data-driven strategies tailored to your market and objectives.",
+            },
+            {
+              icon: "globe",
+              title: "Digital Marketing",
+              description:
+                "SEO, paid ads, content marketing, and social media that convert.",
+            },
+            {
+              icon: "zap",
+              title: "Brand Development",
+              description:
+                "Build a brand identity that stands out and builds trust.",
+            },
+            {
+              icon: "shield",
+              title: "Technology Solutions",
+              description:
+                "Web apps, mobile apps, and systems that scale with your business.",
+            },
+          ],
+        },
+        2,
+      ),
+      block(
+        "testimonials",
+        {
+          heading: "Client Results",
+          items: [
+            {
+              name: "Michael T.",
+              role: "CEO, TechStart Inc.",
+              quote:
+                "They doubled our leads in 3 months. The ROI was clear from month one.",
+            },
+            {
+              name: "Sandra K.",
+              role: "Director, GreenLeaf Solutions",
+              quote:
+                "Professional, responsive, and strategic. Our best agency partnership by far.",
+            },
+            {
+              name: "James R.",
+              role: "Founder, Urban Eats",
+              quote:
+                "From zero online presence to 1,000+ customers a month. Absolutely transformed our business.",
+            },
+          ],
+        },
+        3,
+      ),
+      block(
+        "faq",
+        {
+          heading: "Questions? We've Got Answers",
+          items: [
+            {
+              question: "How long does a typical project take?",
+              answer:
+                "Most projects are delivered within 4–8 weeks. We'll give you a clear timeline during our initial consultation.",
+            },
+            {
+              question: "Do you work with small businesses?",
+              answer:
+                "Absolutely. We work with businesses of all sizes, from startups to established enterprises.",
+            },
+            {
+              question: "What's your pricing like?",
+              answer:
+                "We offer flexible packages starting from project-based pricing. Book a free consultation for a custom quote.",
+            },
+          ],
+        },
+        4,
+      ),
+      block(
+        "cta",
+        {
+          heading: "Let's Build Something Great Together",
+          description:
+            "Book a free strategy call and discover how we can help you grow.",
+          buttonText: "Get Your Free Quote",
+        },
+        5,
+      ),
+      block(
+        "optin_form",
+        {
+          heading: "Request a Free Consultation",
+          description:
+            "Fill in your details and one of our strategists will be in touch within 24 hours.",
+          buttonText: "Get My Free Quote",
+          fields: ["email", "first_name", "last_name", "phone", "company"],
+        },
+        6,
+      ),
+    ],
+  },
+  {
+    id: "newsletter",
+    name: "Newsletter Signup",
+    description:
+      "A minimal, focused page designed to maximise email newsletter subscriptions.",
+    category: "Lead Generation",
+    thumbnail: "/images/templates/newsletter.png",
+    defaultSeo: {
+      metaTitle: "Join Our Newsletter — Stay Ahead",
+      metaDescription:
+        "Get weekly insights, tips, and exclusive content delivered straight to your inbox. Free forever.",
+    },
+    blocks: [
+      block(
+        "hero",
+        {
+          heading: "Stay Ahead of the Curve",
+          subheading:
+            "Join 8,000+ subscribers who get actionable insights every week. No spam, no fluff — just value.",
+          buttonText: "Subscribe Free",
+          buttonAction: "scroll_to_form",
+          backgroundStyle: "gradient",
+        },
+        0,
+      ),
+      block(
+        "features",
+        {
+          heading: "What You'll Get Every Week",
+          items: [
+            {
+              icon: "lightbulb",
+              title: "Expert Analysis",
+              description:
+                "Deep dives into trends that matter, written by practitioners.",
+            },
+            {
+              icon: "zap",
+              title: "Quick-Win Tips",
+              description:
+                "Actionable advice you can implement in under 5 minutes.",
+            },
+            {
+              icon: "gift",
+              title: "Exclusive Resources",
+              description:
+                "Templates, checklists, and tools only available to subscribers.",
+            },
+          ],
+        },
+        1,
+      ),
+      block(
+        "social_proof",
+        {
+          heading: "",
+          stats: [
+            { value: "8,000+", label: "Subscribers" },
+            { value: "52%", label: "Open Rate" },
+            { value: "Every Tuesday", label: "Delivery" },
+          ],
+        },
+        2,
+      ),
+      block(
+        "testimonials",
+        {
+          heading: "What Readers Say",
+          items: [
+            {
+              name: "Alex P.",
+              role: "Product Manager",
+              quote:
+                "This is the one newsletter I actually open every week. Consistently valuable.",
+            },
+            {
+              name: "Maria C.",
+              role: "Startup Founder",
+              quote:
+                "Short, sharp, and always relevant. It's become part of my Tuesday morning routine.",
+            },
+          ],
+        },
+        3,
+      ),
+      block(
+        "optin_form",
+        {
+          heading: "Join 8,000+ Subscribers",
+          description:
+            "One email per week. Unsubscribe at any time. Your inbox, your rules.",
+          buttonText: "Subscribe — It's Free",
+          fields: ["email"],
+        },
+        4,
+      ),
+    ],
+  },
+  {
+    id: "fitness-health",
+    name: "Fitness / Health Programme",
+    description:
+      "Promote a fitness plan, health programme, or wellness product with before-after social proof.",
+    category: "Health & Fitness",
+    thumbnail: "/images/templates/fitness-health.png",
+    defaultSeo: {
+      metaTitle: "Transform Your Body in 30 Days",
+      metaDescription:
+        "Join thousands who've achieved their fitness goals with our proven programme. Start your transformation today.",
+    },
+    blocks: [
+      block(
+        "hero",
+        {
+          heading: "Transform Your Body in 30 Days",
+          subheading:
+            "A proven, step-by-step programme for busy people. No gym required. No equipment needed.",
+          buttonText: "Start My Transformation",
+          buttonAction: "scroll_to_form",
+          backgroundStyle: "dark",
+        },
+        0,
+      ),
+      block(
+        "social_proof",
+        {
+          heading: "Real Results, Real People",
+          stats: [
+            { value: "12,000+", label: "Transformations" },
+            { value: "4.9/5", label: "Average Rating" },
+            { value: "30 Days", label: "Programme Length" },
+          ],
+        },
+        1,
+      ),
+      block(
+        "features",
+        {
+          heading: "What's Included",
+          items: [
+            {
+              icon: "check",
+              title: "Daily Workout Plans",
+              description:
+                "15–30 minute home workouts for all fitness levels. Follow along with video.",
+            },
+            {
+              icon: "check",
+              title: "Nutrition Guide",
+              description:
+                "Simple meal plans with recipes that take less than 20 minutes to prepare.",
+            },
+            {
+              icon: "check",
+              title: "Progress Tracking",
+              description:
+                "Weekly check-ins, measurements, and photos to track your transformation.",
+            },
+            {
+              icon: "check",
+              title: "Community Support",
+              description:
+                "Join our private group of 12,000+ members for motivation and accountability.",
+            },
+          ],
+        },
+        2,
+      ),
+      block(
+        "testimonials",
+        {
+          heading: "Success Stories",
+          items: [
+            {
+              name: "Jessica M.",
+              role: "Lost 8kg in 30 days",
+              quote:
+                "I've tried dozens of programmes. This is the first one I actually finished — and the results speak for themselves.",
+            },
+            {
+              name: "David O.",
+              role: "Gained confidence and energy",
+              quote:
+                "Not just about losing weight. I sleep better, have more energy, and feel stronger than ever.",
+            },
+            {
+              name: "Priya K.",
+              role: "Busy mum of 3",
+              quote:
+                "As a working mum, I needed something quick and realistic. This was perfect. 20 minutes a day changed everything.",
+            },
+          ],
+        },
+        3,
+      ),
+      block(
+        "countdown",
+        {
+          heading: "Next Group Starts In",
+          targetDate: new Date(
+            Date.now() + 5 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+          style: "cards",
+        },
+        4,
+      ),
+      block(
+        "faq",
+        {
+          heading: "Your Questions Answered",
+          items: [
+            {
+              question: "Do I need gym equipment?",
+              answer:
+                "No. Every workout uses your body weight only. You can do them in your living room.",
+            },
+            {
+              question: "I'm a complete beginner. Is this for me?",
+              answer:
+                "Yes! The programme has beginner, intermediate, and advanced variations for every exercise.",
+            },
+            {
+              question: "What if I don't see results?",
+              answer:
+                "We offer a full money-back guarantee. If you follow the plan and don't see results, we'll refund you.",
+            },
+            {
+              question: "How much time does it take per day?",
+              answer:
+                "15–30 minutes, depending on the workout. Designed for people with busy schedules.",
+            },
+          ],
+        },
+        5,
+      ),
+      block(
+        "cta",
+        {
+          heading: "Your Transformation Starts Today",
+          description:
+            "12,000 people already made the change. Will you be next?",
+          buttonText: "Start My Journey",
+        },
+        6,
+      ),
+      block(
+        "optin_form",
+        {
+          heading: "Join the Next Challenge",
+          description:
+            "Enter your details to secure your place. You'll receive instant access to the starter guide.",
+          buttonText: "Start My Transformation",
+          fields: ["email", "first_name"],
+        },
+        7,
+      ),
+    ],
+  },
+  {
+    id: "real-estate",
+    name: "Property / Real Estate",
+    description:
+      "Showcase a property listing, development, or real estate service with a professional layout.",
+    category: "Real Estate",
+    thumbnail: "/images/templates/real-estate.png",
+    defaultSeo: {
+      metaTitle: "Exclusive Property Listing — View Details",
+      metaDescription:
+        "Explore this stunning property with full details, floor plans, and virtual tour. Schedule a viewing today.",
+    },
+    blocks: [
+      block(
+        "hero",
+        {
+          heading: "Your Dream Home Awaits",
+          subheading:
+            "Premium property in a prime location. Modern finishes, spacious living, and breathtaking views.",
+          buttonText: "Schedule a Viewing",
+          buttonAction: "scroll_to_form",
+          backgroundStyle: "image",
+        },
+        0,
+      ),
+      block(
+        "features",
+        {
+          heading: "Property Highlights",
+          items: [
+            {
+              icon: "check",
+              title: "3+ Bedrooms",
+              description:
+                "Spacious bedrooms with built-in wardrobes and natural light.",
+            },
+            {
+              icon: "check",
+              title: "Modern Kitchen",
+              description:
+                "Fully fitted kitchen with premium appliances and granite countertops.",
+            },
+            {
+              icon: "check",
+              title: "24/7 Security",
+              description:
+                "Gated community with CCTV, boom gate, and on-site security.",
+            },
+            {
+              icon: "check",
+              title: "Prime Location",
+              description:
+                "Minutes from schools, shopping centres, and major transport links.",
+            },
+          ],
+        },
+        1,
+      ),
+      block(
+        "gallery",
+        {
+          heading: "Photo Gallery",
+          items: [],
+          columns: 3,
+        },
+        2,
+      ),
+      block(
+        "video",
+        {
+          heading: "Virtual Tour",
+          videoUrl: "",
+          videoType: "youtube",
+        },
+        3,
+      ),
+      block(
+        "social_proof",
+        {
+          heading: "",
+          stats: [
+            { value: "15+", label: "Units Sold" },
+            { value: "4", label: "Show Houses This Month" },
+            { value: "2", label: "Units Remaining" },
+          ],
+        },
+        4,
+      ),
+      block(
+        "faq",
+        {
+          heading: "Property FAQs",
+          items: [
+            {
+              question: "What financing options are available?",
+              answer:
+                "We work with multiple banks and building societies to help you find the best mortgage rates. Pre-approval assistance available.",
+            },
+            {
+              question: "When can I move in?",
+              answer:
+                "Ready for immediate occupation. Completed units available for viewing and handover within 30 days of purchase.",
+            },
+            {
+              question: "Are there any body corporate / HOA fees?",
+              answer:
+                "Yes. The monthly levy covers security, garden maintenance, and communal area upkeep. Full breakdown available on request.",
+            },
+          ],
+        },
+        5,
+      ),
+      block(
+        "cta",
+        {
+          heading: "Only 2 Units Remaining",
+          description:
+            "Properties at this address are selling fast. Don't miss your chance.",
+          buttonText: "Book a Viewing",
+        },
+        6,
+      ),
+      block(
+        "optin_form",
+        {
+          heading: "Schedule a Viewing",
+          description:
+            "Enter your details and our property consultant will contact you within 24 hours.",
+          buttonText: "Book My Viewing",
+          fields: ["email", "first_name", "last_name", "phone"],
+        },
+        7,
+      ),
+    ],
+  },
+  {
+    id: "event-ticket",
+    name: "Event / Conference",
+    description:
+      "Sell tickets or registrations for an event, conference, or meetup with urgency and social proof.",
+    category: "Events",
+    thumbnail: "/images/templates/event-ticket.png",
+    defaultSeo: {
+      metaTitle: "Join the Biggest Event of the Year",
+      metaDescription:
+        "Secure your ticket now. World-class speakers, hands-on workshops, and unmatched networking.",
+    },
+    blocks: [
+      block(
+        "hero",
+        {
+          heading: "The Event Every Professional Needs to Attend",
+          subheading:
+            "2 days. 20+ speakers. Unlimited networking. One event that changes everything.",
+          buttonText: "Get Your Ticket",
+          buttonAction: "scroll_to_form",
+          backgroundStyle: "dark",
+        },
+        0,
+      ),
+      block(
+        "countdown",
+        {
+          heading: "Event Starts In",
+          targetDate: new Date(
+            Date.now() + 14 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+          style: "cards",
+        },
+        1,
+      ),
+      block(
+        "social_proof",
+        {
+          heading: "",
+          stats: [
+            { value: "2,000+", label: "Expected Attendees" },
+            { value: "20+", label: "Expert Speakers" },
+            { value: "15+", label: "Workshops" },
+          ],
+        },
+        2,
+      ),
+      block(
+        "features",
+        {
+          heading: "What to Expect",
+          items: [
+            {
+              icon: "star",
+              title: "Keynote Speakers",
+              description:
+                "Hear from industry leaders and thought leaders who are shaping the future.",
+            },
+            {
+              icon: "users",
+              title: "Networking",
+              description:
+                "Connect with professionals from 50+ companies and build lasting relationships.",
+            },
+            {
+              icon: "lightbulb",
+              title: "Hands-On Workshops",
+              description:
+                "Participate in interactive sessions and leave with practical takeaways.",
+            },
+            {
+              icon: "gift",
+              title: "Swag & Surprises",
+              description:
+                "Every attendee receives a welcome pack, lunch, and exclusive resources.",
+            },
+          ],
+        },
+        3,
+      ),
+      block(
+        "testimonials",
+        {
+          heading: "From Past Attendees",
+          items: [
+            {
+              name: "Alice B.",
+              role: "Product Lead",
+              quote:
+                "Best industry event I've attended. The speakers were phenomenal and the connections invaluable.",
+            },
+            {
+              name: "Robert M.",
+              role: "CTO",
+              quote:
+                "Walked away with a notebook full of ideas and three new partnerships. Worth every penny.",
+            },
+          ],
+        },
+        4,
+      ),
+      block(
+        "pricing",
+        {
+          heading: "Ticket Options",
+          plans: [
+            {
+              name: "General Admission",
+              price: "$149",
+              features: [
+                "Access to all talks",
+                "Lunch included",
+                "Welcome pack",
+                "Networking areas",
+              ],
+            },
+            {
+              name: "VIP Pass",
+              price: "$349",
+              features: [
+                "Everything in General",
+                "Front-row seating",
+                "VIP lounge access",
+                "Speaker meet & greet",
+                "Exclusive workshops",
+              ],
+              highlighted: true,
+            },
+          ],
+        },
+        5,
+      ),
+      block(
+        "faq",
+        {
+          heading: "Event FAQs",
+          items: [
+            {
+              question: "Where is the event held?",
+              answer:
+                "The venue details will be emailed to all ticket holders 7 days before the event.",
+            },
+            {
+              question: "Can I get a refund?",
+              answer:
+                "Full refunds are available up to 7 days before the event. After that, tickets can be transferred to another person.",
+            },
+            {
+              question: "Is there a virtual attendance option?",
+              answer:
+                "Yes, a livestream option is available for all General Admission talks. VIP workshops are in-person only.",
+            },
+          ],
+        },
+        6,
+      ),
+      block(
+        "cta",
+        {
+          heading: "Seats Are Filling Fast",
+          description:
+            "Last year's event sold out 2 weeks early. Secure your spot now.",
+          buttonText: "Get My Ticket",
+        },
+        7,
+      ),
+      block(
+        "optin_form",
+        {
+          heading: "Register Now",
+          description:
+            "Secure your ticket today. You'll receive confirmation and event details by email.",
+          buttonText: "Register for the Event",
+          fields: ["email", "first_name", "last_name"],
+        },
+        8,
+      ),
+    ],
+  },
 ];

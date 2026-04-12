@@ -229,11 +229,11 @@ function TestimonialsBlock({ content }: { content: Record<string, unknown> }) {
                   <p className="font-medium text-sm">
                     {String(item.name || "Anonymous")}
                   </p>
-                  {item.role && (
+                  {item.role ? (
                     <p className="text-xs text-muted-foreground">
                       {String(item.role)}
                     </p>
-                  )}
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -394,7 +394,8 @@ function getEmbedUrl(url: string, type: string): string | null {
 
 function GalleryBlock({ content }: { content: Record<string, unknown> }) {
   const heading = String(content.heading || "");
-  const images = Array.isArray(content.images) ? content.images : [];
+  // Support both 'items' (from editor) and 'images' (legacy) field names
+  const images = Array.isArray(content.items) ? content.items : Array.isArray(content.images) ? content.images : [];
   const columns = Number(content.columns || 3);
 
   return (

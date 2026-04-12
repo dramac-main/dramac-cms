@@ -60,6 +60,8 @@ const BLOCK_ICONS: Record<string, React.ElementType> = {
   faq: ListChecks,
   pricing: Star,
   social_proof: MessageSquareQuote,
+  text: Type,
+  image: Image,
 };
 
 const BLOCK_LABELS: Record<string, string> = {
@@ -74,6 +76,8 @@ const BLOCK_LABELS: Record<string, string> = {
   faq: "FAQ Section",
   pricing: "Pricing Table",
   social_proof: "Social Proof",
+  text: "Text Block",
+  image: "Image Block",
 };
 
 // ============================================================================
@@ -250,6 +254,10 @@ function getBlockSubtitle(block: LandingPageBlock): string {
       return (c.heading as string) || "Click to edit pricing";
     case "social_proof":
       return (c.heading as string) || "Click to edit social proof";
+    case "text":
+      return (c.heading as string) || "Click to edit text block";
+    case "image":
+      return (c.alt as string) || (c.caption as string) || "Click to edit image";
     default:
       return "Click to edit";
   }
@@ -297,6 +305,10 @@ function BlockForm({ type, content, onUpdate }: BlockFormProps) {
       return (
         <SocialProofForm content={content} set={set} onUpdate={onUpdate} />
       );
+    case "text":
+      return <TextBlockForm content={content} set={set} />;
+    case "image":
+      return <ImageBlockForm content={content} set={set} />;
     default:
       return (
         <p className="text-sm text-muted-foreground">
@@ -803,6 +815,16 @@ function OptinFormForm({
             </label>
           ))}
         </div>
+      </Field>
+      <Field label="Linked Form ID (optional)">
+        <Input
+          value={(content.formId as string) || ""}
+          onChange={(e) => set("formId", e.target.value)}
+          placeholder="Paste a Marketing Form ID to track submissions"
+        />
+        <p className="text-xs text-muted-foreground mt-1">
+          Link to a Marketing Form to save submissions and add subscribers automatically.
+        </p>
       </Field>
     </div>
   );
@@ -1318,6 +1340,76 @@ function PricingForm({
 interface SocialProofStat {
   value: string;
   label: string;
+}
+
+// ============================================================================
+// TEXT BLOCK FORM
+// ============================================================================
+
+function TextBlockForm({
+  content,
+  set,
+}: {
+  content: Record<string, unknown>;
+  set: SetFn;
+}) {
+  return (
+    <div className="space-y-4">
+      <Field label="Heading (optional)">
+        <Input
+          value={(content.heading as string) || ""}
+          onChange={(e) => set("heading", e.target.value)}
+          placeholder="e.g. About Us"
+        />
+      </Field>
+      <Field label="Body Text">
+        <Textarea
+          value={(content.text as string) || ""}
+          onChange={(e) => set("text", e.target.value)}
+          placeholder="Enter your text content here..."
+          rows={6}
+        />
+      </Field>
+    </div>
+  );
+}
+
+// ============================================================================
+// IMAGE BLOCK FORM
+// ============================================================================
+
+function ImageBlockForm({
+  content,
+  set,
+}: {
+  content: Record<string, unknown>;
+  set: SetFn;
+}) {
+  return (
+    <div className="space-y-4">
+      <Field label="Image URL">
+        <Input
+          value={(content.url as string) || ""}
+          onChange={(e) => set("url", e.target.value)}
+          placeholder="https://example.com/image.jpg"
+        />
+      </Field>
+      <Field label="Alt Text">
+        <Input
+          value={(content.alt as string) || ""}
+          onChange={(e) => set("alt", e.target.value)}
+          placeholder="Describe this image for accessibility"
+        />
+      </Field>
+      <Field label="Caption (optional)">
+        <Input
+          value={(content.caption as string) || ""}
+          onChange={(e) => set("caption", e.target.value)}
+          placeholder="Optional caption text"
+        />
+      </Field>
+    </div>
+  );
 }
 
 function SocialProofForm({

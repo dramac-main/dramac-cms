@@ -57,6 +57,7 @@ interface LandingPageListClientProps {
   pageSize: number;
   currentStatus?: string;
   currentSearch?: string;
+  basePath?: string;
 }
 
 export function LandingPageListClient({
@@ -67,11 +68,12 @@ export function LandingPageListClient({
   pageSize,
   currentStatus,
   currentSearch,
+  basePath: basePathProp,
 }: LandingPageListClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState(currentSearch || "");
-  const basePath = `/dashboard/sites/${siteId}/marketing/landing-pages`;
+  const basePath = basePathProp || `/dashboard/sites/${siteId}/marketing/landing-pages`;
   const totalPages = Math.ceil(total / pageSize);
 
   function applyFilters(status?: string, searchVal?: string) {

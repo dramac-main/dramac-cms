@@ -13,11 +13,13 @@ interface LandingPageListProps {
     search?: string;
     page?: string;
   };
+  basePath?: string;
 }
 
 export async function LandingPageList({
   siteId,
   filters,
+  basePath,
 }: LandingPageListProps) {
   const page = parseInt(filters.page || "1", 10);
   const pageSize = 20;
@@ -38,6 +40,7 @@ export async function LandingPageList({
       pageSize={pageSize}
       currentStatus={filters.status}
       currentSearch={filters.search}
+      basePath={basePath}
     />
   );
 }

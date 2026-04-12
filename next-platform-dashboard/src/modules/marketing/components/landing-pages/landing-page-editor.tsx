@@ -23,6 +23,10 @@ import {
   FormInput,
   Loader2,
   Eye,
+  Monitor,
+  Tablet,
+  Smartphone,
+  ExternalLink,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -66,6 +70,8 @@ const BLOCK_TYPES = [
   { type: "faq", label: "FAQ Section", icon: ListChecks },
   { type: "pricing", label: "Pricing Table", icon: Star },
   { type: "social_proof", label: "Social Proof", icon: MessageSquareQuote },
+  { type: "text", label: "Text Block", icon: Type },
+  { type: "image", label: "Image Block", icon: Image },
 ] as const;
 
 interface LandingPageEditorProps {
@@ -98,6 +104,11 @@ export function LandingPageEditor({
   );
 
   const isEdit = !!landingPage;
+
+  // Preview viewport state
+  const [previewViewport, setPreviewViewport] = useState<
+    "desktop" | "tablet" | "mobile"
+  >("desktop");
 
   // Warn before navigating away with unsaved work
   const hasUnsavedChanges = !!(title || description || blocks.length > 0);
@@ -242,6 +253,18 @@ export function LandingPageEditor({
           )}
         </div>
         <div className="flex gap-2">
+          {isEdit && landingPage?.status === "published" && (
+            <Button variant="outline" size="sm" asChild>
+              <a
+                href={`/api/marketing/lp/${siteId}/${landingPage.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                View Live
+              </a>
+            </Button>
+          )}
           {isEdit && landingPage?.status === "draft" && (
             <Button
               variant="outline"
@@ -396,13 +419,61 @@ export function LandingPageEditor({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">Live Preview</CardTitle>
-              <Badge variant="outline" className="text-xs">
-                {blocks.length} block{blocks.length !== 1 ? "s" : ""}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center border rounded-lg overflow-hidden">
+                  {(
+                    [
+                      { id: "desktop", icon: Monitor, label: "Desktop" },
+                      { id: "tablet", icon: Tablet, label: "Tablet" },
+                      { id: "mobile", icon: Smartphone, label: "Mobile" },
+                    ] as const
+                  ).map(({ id, icon: Icon, label }) => (
+                    <button
+                      key={id}
+                      onClick={() => setPreviewViewport(id)}
+                      className={`p-1.5 transition-colors ${
+                        previewViewport === id
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-muted"
+                      }`}
+                      title={label}
+                    >
+                      <Icon className="h-4 w-4" />
+                    </button>
+                  ))}
+                </div>
+                <Badge variant="outline" className="text-xs">
+                  {blocks.length} block{blocks.length !== 1 ? "s" : ""}
+                </Badge>
+                {isEdit && landingPage?.status === "published" && (
+                  <a
+                    href={`/api/marketing/lp/${siteId}/${slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    View Live
+                  </a>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="border-t rounded-b-lg overflow-hidden bg-white dark:bg-gray-950">
-                <BlockRenderer blocks={blocks} />
+              <div className="border-t flex justify-center bg-muted/30 p-4">
+                <div
+                  className="transition-all duration-300 ease-in-out bg-white dark:bg-gray-950 shadow-lg rounded-lg overflow-hidden overflow-y-auto"
+                  style={{
+                    width:
+                      previewViewport === "mobile"
+                        ? "375px"
+                        : previewViewport === "tablet"
+                          ? "768px"
+                          : "100%",
+                    maxHeight: "70vh",
+                  }}
+                >
+                  <BlockRenderer blocks={blocks} />
+                </div>
               </div>
             </CardContent>
           </Card>

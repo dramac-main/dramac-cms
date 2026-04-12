@@ -209,7 +209,14 @@ export type LandingPageTemplateId =
   | "sale-promo"
   | "ebook-download"
   | "free-trial"
-  | "consultation";
+  | "consultation"
+  | "course-enrollment"
+  | "app-download"
+  | "agency-services"
+  | "newsletter"
+  | "fitness-health"
+  | "real-estate"
+  | "event-ticket";
 
 export interface LandingPageTemplate {
   id: LandingPageTemplateId;
