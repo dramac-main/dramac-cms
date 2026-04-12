@@ -1113,6 +1113,61 @@ Supports both physical and digital products with variant management, inventory t
     createdAt: new Date("2026-01-25"),
     updatedAt: new Date("2026-01-25"),
   },
+  // MARKETING
+  {
+    id: "mod_mktmod01_marketing",
+    slug: "marketing",
+    name: "Marketing Suite",
+    description: "Email campaigns, sequences, funnels, and subscriber management for your site.",
+    longDescription: `
+Run professional email marketing campaigns, build automated sequences, and track funnels — all from your dashboard.
+
+## Features
+- Email campaign builder with templates
+- Mailing lists and subscriber management
+- Drip sequences with conditional logic
+- Funnel tracking and conversion analytics
+- Audience segmentation and tagging
+- UTM tracking and attribution
+- Engagement scoring
+- Integration with CRM contacts
+    `,
+    version: "1.0.0",
+    icon: "Mail",
+    screenshots: ["/modules/marketing/screenshot-campaigns.png", "/modules/marketing/screenshot-sequences.png"],
+    category: "marketing",
+    tags: ["marketing", "email", "campaigns", "sequences", "funnels", "subscribers", "newsletters"],
+    author: {
+      name: "DRAMAC",
+      website: "https://dramacagency.com",
+      verified: true,
+    },
+    pricing: {
+      type: "free",
+      amount: 0,
+      currency: DEFAULT_CURRENCY,
+    },
+    features: [
+      "Email campaigns",
+      "Template library",
+      "Mailing lists",
+      "Subscriber management",
+      "Drip sequences",
+      "Funnel tracking",
+      "Audience segmentation",
+      "UTM attribution",
+      "Engagement scoring",
+      "CRM integration",
+      "Campaign analytics",
+      "Bounce & complaint handling",
+    ],
+    status: "active",
+    rating: 4.7,
+    reviewCount: 18,
+    installCount: 156,
+    createdAt: new Date("2026-07-01"),
+    updatedAt: new Date("2026-07-01"),
+  },
 ];
 
 // Category metadata for catalog display (array format for marketplace UI)

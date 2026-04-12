@@ -63,6 +63,7 @@ export function PortalSidebar({
     canManageQuotes: user.canManageQuotes,
     canManageAgents: user.canManageAgents,
     canManageCustomers: user.canManageCustomers,
+    canManageMarketing: user.canManageMarketing,
     canEditContent: user.canEditContent,
   };
 

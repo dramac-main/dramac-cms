@@ -31,6 +31,7 @@ export interface PortalTeamMember {
   canManageQuotes: boolean;
   canManageAgents: boolean;
   canManageCustomers: boolean;
+  canManageMarketing: boolean;
   notes: string | null;
   invitedAt: string | null;
   lastActiveAt: string | null;
@@ -58,6 +59,7 @@ export interface CreateTeamMemberInput {
   canManageQuotes?: boolean;
   canManageAgents?: boolean;
   canManageCustomers?: boolean;
+  canManageMarketing?: boolean;
   notes?: string;
 }
 
@@ -98,6 +100,7 @@ function mapToTeamMember(data: Record<string, unknown>): PortalTeamMember {
     canManageQuotes: (data.can_manage_quotes as boolean) || false,
     canManageAgents: (data.can_manage_agents as boolean) || false,
     canManageCustomers: (data.can_manage_customers as boolean) || false,
+    canManageMarketing: (data.can_manage_marketing as boolean) || false,
     notes: (data.notes as string) || null,
     invitedAt: (data.invited_at as string) || null,
     lastActiveAt: (data.last_active_at as string) || null,
@@ -213,6 +216,7 @@ export async function createPortalTeamMember(
       can_manage_quotes: input.canManageQuotes || false,
       can_manage_agents: input.canManageAgents || false,
       can_manage_customers: input.canManageCustomers || false,
+      can_manage_marketing: input.canManageMarketing || false,
       notes: input.notes || null,
       invited_at: new Date().toISOString(),
     })
@@ -314,6 +318,8 @@ export async function updatePortalTeamMember(
     updateData.can_manage_agents = input.canManageAgents;
   if (input.canManageCustomers !== undefined)
     updateData.can_manage_customers = input.canManageCustomers;
+  if (input.canManageMarketing !== undefined)
+    updateData.can_manage_marketing = input.canManageMarketing;
   if (input.notes !== undefined) updateData.notes = input.notes || null;
 
   const { error } = await supabase
@@ -515,6 +521,7 @@ export async function getPortalOwner(): Promise<PortalTeamMember | null> {
     canManageQuotes: true,
     canManageAgents: true,
     canManageCustomers: true,
+    canManageMarketing: true,
     notes: null,
     invitedAt: null,
     lastActiveAt: null,

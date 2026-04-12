@@ -24,6 +24,7 @@ export interface PortalContextValue {
     canManageQuotes: boolean;
     canManageAgents: boolean;
     canManageCustomers: boolean;
+    canManageMarketing: boolean;
   };
   siteId: string;
 }

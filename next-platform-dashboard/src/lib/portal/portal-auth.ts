@@ -25,6 +25,7 @@ export interface PortalUser {
   canManageQuotes: boolean;
   canManageAgents: boolean;
   canManageCustomers: boolean;
+  canManageMarketing: boolean;
 }
 
 /**
@@ -63,7 +64,8 @@ export async function getPortalUser(): Promise<PortalUser | null> {
       can_manage_automation,
       can_manage_quotes,
       can_manage_agents,
-      can_manage_customers
+      can_manage_customers,
+      can_manage_marketing
     `,
     )
     .eq("portal_user_id", user.id)
@@ -101,6 +103,7 @@ export async function getPortalUser(): Promise<PortalUser | null> {
     canManageQuotes: client.can_manage_quotes ?? false,
     canManageAgents: client.can_manage_agents ?? false,
     canManageCustomers: client.can_manage_customers ?? false,
+    canManageMarketing: client.can_manage_marketing ?? false,
   };
 }
 
@@ -183,7 +186,8 @@ export async function getPortalSession(): Promise<{
         can_manage_automation,
         can_manage_quotes,
         can_manage_agents,
-        can_manage_customers
+      can_manage_customers,
+      can_manage_marketing
       `,
       )
       .eq("id", impersonation.clientId);
@@ -216,6 +220,7 @@ export async function getPortalSession(): Promise<{
           canManageQuotes: client.can_manage_quotes ?? false,
           canManageAgents: client.can_manage_agents ?? false,
           canManageCustomers: client.can_manage_customers ?? false,
+          canManageMarketing: client.can_manage_marketing ?? false,
         },
         isImpersonating: true,
         impersonatorEmail: impersonation.impersonatorEmail,
@@ -449,6 +454,7 @@ export async function updatePortalPermissions(
     canManageQuotes?: boolean;
     canManageAgents?: boolean;
     canManageCustomers?: boolean;
+    canManageMarketing?: boolean;
   },
 ): Promise<{ success: boolean; error?: string }> {
   const admin = createAdminClient();
@@ -478,6 +484,8 @@ export async function updatePortalPermissions(
     updateData.can_manage_agents = permissions.canManageAgents;
   if (permissions.canManageCustomers !== undefined)
     updateData.can_manage_customers = permissions.canManageCustomers;
+  if (permissions.canManageMarketing !== undefined)
+    updateData.can_manage_marketing = permissions.canManageMarketing;
 
   const { error } = await admin
     .from("clients")

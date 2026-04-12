@@ -44,6 +44,9 @@ export const PERMISSIONS = {
   // Content level
   EDIT_CONTENT: "edit_content",
   VIEW_ANALYTICS: "view_analytics",
+
+  // Module-specific
+  MANAGE_MARKETING: "manage_marketing",
 } as const;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
@@ -67,6 +70,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     PERMISSIONS.PUBLISH_SITES,
     PERMISSIONS.EDIT_CONTENT,
     PERMISSIONS.VIEW_ANALYTICS,
+    PERMISSIONS.MANAGE_MARKETING,
   ],
   agency_admin: [
     PERMISSIONS.INVITE_TEAM_MEMBERS,
@@ -79,6 +83,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     PERMISSIONS.PUBLISH_SITES,
     PERMISSIONS.EDIT_CONTENT,
     PERMISSIONS.VIEW_ANALYTICS,
+    PERMISSIONS.MANAGE_MARKETING,
   ],
   agency_member: [
     PERMISSIONS.VIEW_CLIENTS,

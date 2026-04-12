@@ -63,6 +63,7 @@ export default async function PortalProductsPage({ params }: PageProps) {
           canManageQuotes: permissions.canManageQuotes,
           canManageAgents: permissions.canManageAgents,
           canManageCustomers: permissions.canManageCustomers,
+          canManageMarketing: permissions.canManageMarketing,
         },
         siteId,
       }}

@@ -23,6 +23,7 @@ export interface EffectivePortalPermissions {
   canManageQuotes: boolean;
   canManageAgents: boolean;
   canManageCustomers: boolean;
+  canManageMarketing: boolean;
 }
 
 // =============================================================================
@@ -44,14 +45,14 @@ export async function getEffectivePermissions(
     supabase
       .from("clients")
       .select(
-        "can_view_analytics, can_edit_content, can_view_invoices, can_manage_live_chat, can_manage_orders, can_manage_products, can_manage_bookings, can_manage_crm, can_manage_automation, can_manage_quotes, can_manage_agents, can_manage_customers",
+        "can_view_analytics, can_edit_content, can_view_invoices, can_manage_live_chat, can_manage_orders, can_manage_products, can_manage_bookings, can_manage_crm, can_manage_automation, can_manage_quotes, can_manage_agents, can_manage_customers, can_manage_marketing",
       )
       .eq("id", clientId)
       .single(),
     supabase
       .from("client_site_permissions")
       .select(
-        "can_view, can_edit_content, can_view_analytics, can_publish, can_manage_live_chat, can_manage_orders, can_manage_products, can_manage_bookings, can_manage_crm, can_manage_automation, can_manage_quotes, can_manage_agents, can_manage_customers",
+        "can_view, can_edit_content, can_view_analytics, can_publish, can_manage_live_chat, can_manage_orders, can_manage_products, can_manage_bookings, can_manage_crm, can_manage_automation, can_manage_quotes, can_manage_agents, can_manage_customers, can_manage_marketing",
       )
       .eq("client_id", clientId)
       .eq("site_id", siteId)
@@ -77,6 +78,7 @@ export async function getEffectivePermissions(
       canManageQuotes: false,
       canManageAgents: false,
       canManageCustomers: false,
+      canManageMarketing: false,
     };
   }
 
@@ -136,6 +138,10 @@ export async function getEffectivePermissions(
     canManageCustomers: resolve(
       sitePerm?.can_manage_customers,
       client.can_manage_customers,
+    ),
+    canManageMarketing: resolve(
+      sitePerm?.can_manage_marketing,
+      client.can_manage_marketing,
     ),
   };
 }

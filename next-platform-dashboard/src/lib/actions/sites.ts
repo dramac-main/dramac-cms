@@ -7,11 +7,12 @@ import { createSiteSchema, updateSiteSchema } from "@/lib/validations/site";
 import type { SiteFilters } from "@/types/site";
 import type { Json } from "@/types/database";
 import { bootstrapLiveChatAgent } from "@/modules/live-chat/lib/bootstrap-agent";
+import { seedMarketingSettings } from "@/modules/marketing/lib/marketing-bootstrap";
 
 // Core modules that are auto-enabled on every new site.
 // These form the foundation: CRM for contacts, Automation for workflows,
-// Live Chat for real-time communication.
-const CORE_MODULE_SLUGS = ["crm", "automation", "live-chat"] as const;
+// Live Chat for real-time communication, Marketing for campaigns.
+const CORE_MODULE_SLUGS = ["crm", "automation", "live-chat", "marketing"] as const;
 
 // Get all sites for the current organization
 export async function getSites(filters?: SiteFilters) {
@@ -296,6 +297,13 @@ async function installCoreModules(
         );
         await seedDefaultDepartments(siteId).catch((err) =>
           console.error("[Sites] Failed to seed default departments:", err),
+        );
+      }
+
+      // Step 3b: For Marketing — seed default settings so campaigns can send immediately.
+      if (mod.slug === "marketing") {
+        await seedMarketingSettings(siteId).catch((err) =>
+          console.error("[Sites] Failed to seed marketing settings:", err),
         );
       }
     } catch (err) {

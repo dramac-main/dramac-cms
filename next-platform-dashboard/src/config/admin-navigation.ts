@@ -25,6 +25,7 @@ import {
   Blocks,
   DollarSign,
   Globe,
+  Mail,
   type LucideIcon,
 } from "lucide-react";
 
@@ -50,6 +51,7 @@ export const adminNavigationItems: AdminNavItem[] = [
   { name: "Module Studio", href: "/admin/modules/studio", icon: Blocks, group: "Management" },
   { name: "Domain Pricing", href: "/admin/pricing", icon: DollarSign, group: "Management" },
   { name: "Domain Controls", href: "/admin/domains", icon: Globe, group: "Management" },
+  { name: "Marketing Health", href: "/admin/marketing", icon: Mail, group: "Management" },
   
   // Revenue & Analytics
   { name: "Subscriptions", href: "/admin/subscriptions", icon: CreditCard, group: "Revenue" },

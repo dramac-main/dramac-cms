@@ -142,6 +142,7 @@ export default async function PortalConversationViewPage({
           canManageQuotes: permissions.canManageQuotes,
           canManageAgents: permissions.canManageAgents,
           canManageCustomers: permissions.canManageCustomers,
+          canManageMarketing: permissions.canManageMarketing,
         },
         siteId,
       }}

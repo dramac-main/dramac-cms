@@ -86,6 +86,7 @@ export default async function PortalConversationsPage({ params }: PageProps) {
           canManageQuotes: permissions.canManageQuotes,
           canManageAgents: permissions.canManageAgents,
           canManageCustomers: permissions.canManageCustomers,
+          canManageMarketing: permissions.canManageMarketing,
         },
         siteId,
       }}

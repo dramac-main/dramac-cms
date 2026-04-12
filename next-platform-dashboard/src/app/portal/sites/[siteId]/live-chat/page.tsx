@@ -100,6 +100,7 @@ export default async function PortalLiveChatOverviewPage({
           canManageQuotes: permissions.canManageQuotes,
           canManageAgents: permissions.canManageAgents,
           canManageCustomers: permissions.canManageCustomers,
+          canManageMarketing: permissions.canManageMarketing,
         },
         siteId,
       }}

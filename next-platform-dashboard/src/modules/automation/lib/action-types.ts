@@ -2400,6 +2400,296 @@ export const ACTION_REGISTRY = {
       },
     },
   },
+
+  // ── Marketing Module Actions ───────────────────────────────────────
+  marketing: {
+    send_campaign: {
+      id: "marketing.send_campaign",
+      name: "Send Campaign",
+      description: "Trigger sending a marketing campaign to its audience",
+      category: "marketing",
+      icon: "Mail",
+      inputs: {
+        campaign_id: {
+          type: "string" as const,
+          required: true,
+          description: "Campaign ID to send",
+        },
+      },
+      outputs: {
+        success: {
+          type: "boolean" as const,
+          description: "Whether the campaign was queued for sending",
+        },
+        total_recipients: {
+          type: "number" as const,
+          description: "Number of recipients queued",
+        },
+      },
+    },
+    add_subscriber: {
+      id: "marketing.add_subscriber",
+      name: "Add Subscriber",
+      description: "Add a new subscriber or update existing",
+      category: "marketing",
+      icon: "UserPlus",
+      inputs: {
+        email: {
+          type: "string" as const,
+          required: true,
+          description: "Subscriber email address",
+        },
+        first_name: {
+          type: "string" as const,
+          required: false,
+          description: "First name",
+        },
+        last_name: {
+          type: "string" as const,
+          required: false,
+          description: "Last name",
+        },
+        tags: {
+          type: "string" as const,
+          required: false,
+          description: "Comma-separated tags to apply",
+        },
+      },
+      outputs: {
+        subscriber_id: {
+          type: "string" as const,
+          description: "Created/updated subscriber ID",
+        },
+        is_new: {
+          type: "boolean" as const,
+          description: "Whether this is a new subscriber",
+        },
+      },
+    },
+    tag_subscriber: {
+      id: "marketing.tag_subscriber",
+      name: "Tag Subscriber",
+      description: "Add tags to a subscriber",
+      category: "marketing",
+      icon: "Tag",
+      inputs: {
+        subscriber_id: {
+          type: "string" as const,
+          required: true,
+          description: "Subscriber ID",
+        },
+        tags: {
+          type: "string" as const,
+          required: true,
+          description: "Comma-separated tags to add",
+        },
+      },
+      outputs: {
+        success: {
+          type: "boolean" as const,
+          description: "Whether tags were applied",
+        },
+      },
+    },
+    enroll_in_sequence: {
+      id: "marketing.enroll_in_sequence",
+      name: "Enroll in Sequence",
+      description: "Enroll a subscriber in an email sequence",
+      category: "marketing",
+      icon: "ListOrdered",
+      inputs: {
+        subscriber_id: {
+          type: "string" as const,
+          required: true,
+          description: "Subscriber ID to enroll",
+        },
+        sequence_id: {
+          type: "string" as const,
+          required: true,
+          description: "Sequence ID to enroll in",
+        },
+      },
+      outputs: {
+        enrollment_id: {
+          type: "string" as const,
+          description: "Created enrollment ID",
+        },
+        success: {
+          type: "boolean" as const,
+          description: "Whether enrollment was successful",
+        },
+      },
+    },
+    remove_from_sequence: {
+      id: "marketing.remove_from_sequence",
+      name: "Remove from Sequence",
+      description: "Remove a subscriber from an active sequence",
+      category: "marketing",
+      icon: "ListX",
+      inputs: {
+        subscriber_id: {
+          type: "string" as const,
+          required: true,
+          description: "Subscriber ID to remove",
+        },
+        sequence_id: {
+          type: "string" as const,
+          required: true,
+          description: "Sequence ID to remove from",
+        },
+      },
+      outputs: {
+        success: {
+          type: "boolean" as const,
+          description: "Whether removal was successful",
+        },
+      },
+    },
+    add_to_list: {
+      id: "marketing.add_to_list",
+      name: "Add to List",
+      description: "Add a subscriber to a mailing list",
+      category: "marketing",
+      icon: "ListPlus",
+      inputs: {
+        subscriber_id: {
+          type: "string" as const,
+          required: true,
+          description: "Subscriber ID",
+        },
+        list_id: {
+          type: "string" as const,
+          required: true,
+          description: "Mailing list ID",
+        },
+      },
+      outputs: {
+        success: {
+          type: "boolean" as const,
+          description: "Whether subscriber was added to the list",
+        },
+      },
+    },
+    remove_from_list: {
+      id: "marketing.remove_from_list",
+      name: "Remove from List",
+      description: "Remove a subscriber from a mailing list",
+      category: "marketing",
+      icon: "ListMinus",
+      inputs: {
+        subscriber_id: {
+          type: "string" as const,
+          required: true,
+          description: "Subscriber ID",
+        },
+        list_id: {
+          type: "string" as const,
+          required: true,
+          description: "Mailing list ID",
+        },
+      },
+      outputs: {
+        success: {
+          type: "boolean" as const,
+          description: "Whether subscriber was removed from the list",
+        },
+      },
+    },
+    update_engagement_score: {
+      id: "marketing.update_engagement_score",
+      name: "Update Engagement Score",
+      description: "Recalculate and update a subscriber's engagement score",
+      category: "marketing",
+      icon: "TrendingUp",
+      inputs: {
+        subscriber_id: {
+          type: "string" as const,
+          required: true,
+          description: "Subscriber ID",
+        },
+        score_delta: {
+          type: "number" as const,
+          required: false,
+          description: "Score adjustment (positive or negative)",
+        },
+      },
+      outputs: {
+        new_score: {
+          type: "number" as const,
+          description: "Updated engagement score",
+        },
+      },
+    },
+    sms_send: {
+      id: "marketing.sms_send",
+      name: "Send SMS",
+      description: "Send an SMS message to a contact",
+      category: "marketing",
+      icon: "Smartphone",
+      inputs: {
+        phone: {
+          type: "string" as const,
+          required: true,
+          description: "Phone number in E.164 format",
+        },
+        message: {
+          type: "string" as const,
+          required: true,
+          description: "SMS message body (max 1600 chars)",
+        },
+      },
+      outputs: {
+        message_id: {
+          type: "string" as const,
+          description: "Provider message ID",
+        },
+        success: {
+          type: "boolean" as const,
+          description: "Whether the SMS was queued",
+        },
+      },
+    },
+    whatsapp_send_template: {
+      id: "marketing.whatsapp_send_template",
+      name: "Send WhatsApp Template",
+      description: "Send a WhatsApp template message to a contact",
+      category: "marketing",
+      icon: "MessageCircle",
+      inputs: {
+        phone: {
+          type: "string" as const,
+          required: true,
+          description: "Phone number in E.164 format",
+        },
+        template_name: {
+          type: "string" as const,
+          required: true,
+          description: "Approved WhatsApp template name",
+        },
+        language_code: {
+          type: "string" as const,
+          required: false,
+          description: "Template language code (default: en_US)",
+          default: "en_US",
+        },
+        parameters: {
+          type: "array" as const,
+          required: false,
+          description: "Template body parameter values",
+        },
+      },
+      outputs: {
+        message_id: {
+          type: "string" as const,
+          description: "WhatsApp message ID",
+        },
+        success: {
+          type: "boolean" as const,
+          description: "Whether the message was sent",
+        },
+      },
+    },
+  },
 } as const;
 
 // ============================================================================
@@ -2472,6 +2762,12 @@ export const ACTION_CATEGORIES = [
     name: "Domains",
     icon: "Globe",
     description: "Domain registration, DNS, email, and transfer actions",
+  },
+  {
+    id: "marketing",
+    name: "Marketing",
+    icon: "Mail",
+    description: "Campaigns, subscribers, sequences, SMS, WhatsApp, and lists",
   },
 ] as const;
 

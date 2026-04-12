@@ -1,12 +1,377 @@
 # Active Context
 
-**Last Updated**: April 11, 2026
+**Last Updated**: July 2026
 
 ## Current State
 
 The DRAMAC CMS platform is **production-ready**. All core waves (1-5) are complete, including all 6 business modules, DRAMAC Studio, client portal, billing, domain/email systems, and AI website designer. The platform is deployed at https://app.dramacagency.com.
 
-## Most Recent Changes (Latest Commits)
+## Current Focus: Marketing Module — COMPLETE ✅
+
+### Status: ALL 6 SESSIONS COMPLETE — MKT-01 through MKT-12 Done
+
+All 12 marketing phases are fully implemented across 6 sessions. The marketing module is 100% complete.
+
+**Session 6 delivered:** MKT-10 (Super Admin Marketing View), MKT-11 (Client Portal Marketing Views), MKT-12 (Social Media Integration). This was the FINAL session.
+
+### Implementation Plan: 6 Sessions
+
+| Session | Phases                   | Focus                                                             | Status         |
+| ------- | ------------------------ | ----------------------------------------------------------------- | -------------- |
+| 1       | MKT-01                   | Database foundation (15 tables, module registration, permissions) | ✅ Complete    |
+| 2       | MKT-02 + MKT-03          | Campaign engine + email analytics (backend)                       | ✅ Complete    |
+| 3       | MKT-04 + MKT-05          | Drip sequences + marketing hub dashboard + campaign UI            | ✅ Complete    |
+| 4       | MKT-06 + MKT-07          | Landing pages, forms + blog enhancements                          | ✅ Complete    |
+| 5       | MKT-08 + MKT-09          | SMS/WhatsApp channels + AI intelligence                           | ✅ Complete    |
+| 6       | MKT-10 + MKT-11 + MKT-12 | Super admin + client portal + social media                        | ✅ Complete    |
+
+### MKT-01 Deliverables (Completed)
+
+**Database (Supabase migrations applied):**
+
+- `mkt_01_marketing_module_foundation` — 15 `mod_mktmod01_*` tables with indexes, RLS policies, triggers
+- `mkt_01_crm_client_marketing_columns` — Added `email_opt_in`, `sms_opt_in`, `marketing_consent_date`, `consent_source` to CRM contacts; `can_manage_marketing` to clients + client_site_permissions
+- Module registered in `modules_v2` (slug: `marketing`, type: `widget`, pricing: `free`)
+
+**Files Created (7 new):**
+
+- `src/modules/marketing/types/campaign-types.ts` — Campaign, EmailTemplate, Audience, Subscriber, MailingList, ListSubscriber, CampaignSend, CampaignLink
+- `src/modules/marketing/types/sequence-types.ts` — Sequence, SequenceStep, SequenceEnrollment, ConversionGoal
+- `src/modules/marketing/types/funnel-types.ts` — Funnel, FunnelStep, FunnelVisit, UtmParams
+- `src/modules/marketing/types/analytics-types.ts` — MarketingSettings, SendingStats, Attribution
+- `src/modules/marketing/types/index.ts` — barrel re-export
+- `src/modules/marketing/lib/marketing-bootstrap.ts` — `seedMarketingSettings(siteId)` for site creation
+- `src/modules/marketing/lib/marketing-constants.ts` — MKT_TABLES, status configs, transitions, labels, limits
+
+**Files Modified (14):**
+
+- `src/lib/actions/sites.ts` — Added `"marketing"` to CORE_MODULE_SLUGS, bootstrap call
+- `src/types/roles.ts` — `MANAGE_MARKETING` permission, added to agency_owner/admin
+- `src/config/portal-navigation.ts` — `canManageMarketing` in PortalUserPermissions, marketing nav item
+- `src/lib/portal/portal-auth.ts` — `canManageMarketing` in PortalUser, getPortalUser, impersonation, updateClientPermissions
+- `src/lib/portal/portal-team-service.ts` — `canManageMarketing` in TeamMember, create/update/mapRow
+- `src/lib/portal/portal-permissions.ts` — `canManageMarketing` in EffectivePortalPermissions, select/default/resolve
+- `src/lib/portal/portal-module-registry.ts` — Marketing module registration with Mail icon
+- `src/config/admin-navigation.ts` — "Marketing Health" admin nav item
+- `src/modules/automation/lib/event-types.ts` — 18 marketing events (campaign/email/subscriber/sequence)
+- `src/modules/automation/lib/action-types.ts` — 8 marketing actions + category
+- `src/lib/modules/module-catalog.ts` — Marketing Suite catalog entry
+
+### MKT-02 + MKT-03 Deliverables (Completed — Session 2)
+
+**Server Actions (4 files):**
+
+- `actions/campaign-actions.ts` — Campaign CRUD + status transitions + schedule + duplicate + test email + send
+- `actions/template-actions.ts` — Email template CRUD + duplicate (protects system templates)
+- `actions/audience-actions.ts` — Audience CRUD + Mailing List CRUD + list subscriber management
+- `actions/subscriber-actions.ts` — Subscriber CRUD + bulk import (batches of 100) + bulk tag + active count
+
+**Services (5 files):**
+
+- `services/email-campaign-service.ts` — Core sending engine: batch processing (50/batch, 1s delay), A/B variant round-robin, click tracking injection, open pixel injection, pause-checking
+- `services/audience-resolver.ts` — Resolves audiences: all_subscribers, all_contacts, list, segment, custom, crm_segment
+- `services/template-renderer.ts` — {{merge_variable}} replacement, extractMergeVariables(), htmlToPlainText()
+- `services/tracking-utils.ts` — HMAC-SHA256 signed tokens for open/click/unsubscribe tracking
+- `services/engagement-scoring.ts` — Score 0-100 (Cold/Cool/Warm/Hot/On Fire), updates subscriber + CRM contact
+- `services/export-utils.ts` — CSV export for campaign reports, link performance, subscriber lists
+
+**Analytics Actions:**
+
+- `actions/analytics-actions.ts` — getCampaignReport, getCampaignOpensTimeline, getABTestResults, getCampaignRecipients, getMarketingAnalytics (aggregate), getSubscriberGrowth, getContactEngagement
+
+**API Routes (5 files):**
+
+- `/api/marketing/webhooks/resend/route.ts` — Handles delivered/opened/clicked/bounced/complained
+- `/api/marketing/unsubscribe/[token]/route.ts` — GET (info) + POST (process) with CRM sync
+- `/api/marketing/track/open/[token]/route.ts` — 1x1 transparent GIF pixel, async open recording
+- `/api/marketing/track/click/[token]/route.ts` — URL validation, click recording, 302 redirect
+- `/api/cron/marketing-scheduler/route.ts` — Processes scheduled campaigns due for sending
+
+**Database Migration:**
+
+- `increment_campaign_stat` RPC function (atomic counter updates, SQL injection protected)
+- `marketing_engagement_score` column on CRM contacts
+- `engagement_score` column on subscribers
+
+**TypeScript:** Zero marketing-related errors.
+
+### MKT-04 + MKT-05 + Campaign UI Deliverables (Completed — Session 3)
+
+**Route Pages (10 new files):**
+
+- `marketing/layout.tsx` — Auth guard + module access check
+- `marketing/page.tsx` — Marketing Hub landing (redirects to hub dashboard)
+- `marketing/campaigns/page.tsx` — Campaign list with server data loading
+- `marketing/campaigns/new/page.tsx` — New campaign wizard
+- `marketing/campaigns/[campaignId]/page.tsx` — Campaign detail with metrics
+- `marketing/sequences/page.tsx` — Sequence list with filter passthrough
+- `marketing/sequences/new/page.tsx` — New sequence builder
+- `marketing/sequences/[sequenceId]/page.tsx` — Sequence detail with enrollments (Promise.all)
+- `marketing/subscribers/page.tsx` — Subscriber manager with server data loading (getSubscribers + getMailingLists)
+- `marketing/templates/page.tsx` — Template library with server data loading (getTemplates)
+
+**Hub Dashboard Components (3 new files):**
+
+- `components/hub/marketing-hub-skeleton.tsx`
+- `components/hub/marketing-hub-dashboard.tsx` — Server component, 6 parallel data queries
+- `components/hub/marketing-hub-client.tsx` — Stats cards, quick actions, recent campaigns, active sequences
+
+**Campaign UI Components (6 new files):**
+
+- `components/campaigns/campaign-list-skeleton.tsx`
+- `components/campaigns/campaign-list.tsx` — Server component
+- `components/campaigns/campaign-list-client.tsx` — Filters, search, pagination, actions
+- `components/campaigns/campaign-detail-skeleton.tsx`
+- `components/campaigns/campaign-detail.tsx` — Status-aware detail with metrics, tabs
+- `components/campaigns/campaign-wizard.tsx` — 4-step wizard (type, content, audience, schedule)
+
+**Email Editor (1 new file):**
+
+- `components/email-editor/email-editor.tsx` — Block-based with 8 types, properties panels, preview, undo/redo
+
+**Sequence Actions (1 new file):**
+
+- `actions/sequence-actions.ts` — getSequences, getSequence, createSequence, updateSequence, deleteSequence, updateSequenceStatus, getSequenceEnrollments, enrollSubscriber, exitEnrollment
+
+**Sequence UI Components (6 new files):**
+
+- `components/sequences/sequence-list-skeleton.tsx`
+- `components/sequences/sequence-list.tsx` — Server component with filters prop
+- `components/sequences/sequence-list-client.tsx` — Search, status filter, step summary cards, enrollment stats, pagination
+- `components/sequences/sequence-detail-skeleton.tsx`
+- `components/sequences/sequence-detail.tsx` — 4 stat cards, step timeline with colored icons, enrollments table
+- `components/sequences/sequence-builder.tsx` — Visual builder with settings sidebar + step builder (5 step types)
+
+**Subscriber Components (2 new files):**
+
+- `components/subscribers/subscriber-manager-skeleton.tsx`
+- `components/subscribers/subscriber-manager.tsx` — Tabs (subscribers + mailing lists), add/import/create dialogs, CSV parsing
+
+**Template Components (2 new files):**
+
+- `components/templates/template-library-skeleton.tsx`
+- `components/templates/template-library.tsx` — Grid with HTML preview thumbnails, category filter, create/duplicate/delete
+
+**Sequence Execution Engine (1 new file):**
+
+- `services/sequence-engine.ts` — processSequences(), enrollContact(), step type handlers (email/delay/condition/action/split), condition evaluation
+
+**Automation Templates (1 new file):**
+
+- `data/automation-templates.ts` — 5 pre-built sequence templates (Welcome Series, Lead Nurture, Post-Purchase, Re-engagement, Event Reminder)
+
+**Cron Job Updated:**
+
+- `/api/cron/marketing-scheduler/route.ts` — Now processes both campaigns AND drip sequences
+
+**Total: 33 new files + 5 files modified (4 TSC fixes + cron update)**
+
+**TypeScript:** Zero marketing-related errors (42 baseline pre-existing errors unchanged).
+
+### MKT-06 + MKT-07 Deliverables (Completed — Session 4)
+
+**Database Migration (applied via Supabase MCP):**
+
+- `mkt_06_landing_pages_and_forms` — 4 new tables: `mod_mktmod01_landing_pages`, `mod_mktmod01_landing_page_visits`, `mod_mktmod01_forms`, `mod_mktmod01_form_submissions` with indexes, RLS, triggers
+
+**Types (2 new files):**
+
+- `types/landing-page-types.ts` — LandingPage, LandingPageVisit, MarketingForm, FormSubmission, FormField, FormTrigger, SuccessAction, LandingPageBlock, SeoConfig, LandingPageConversionGoal, LandingPageTemplate, UtmParamsData
+- `types/blog-marketing-types.ts` — BlogCTABlock, BlogCTATemplate, BlogSubscribeConfig, EmailBlock, BlogToEmailResult, ContentScore, ContentRecommendation, RSSFeedConfig, RSSItem, BlogAutoShareConfig
+
+**Data (2 new files):**
+
+- `data/landing-page-templates.ts` — 8 pre-built landing page templates (lead-magnet, webinar, product-launch, coming-soon, sale-promo, ebook-download, free-trial, consultation)
+- `data/blog-cta-templates.ts` — 5 CTA templates + DEFAULT_SUBSCRIBE_CONFIG
+
+**Server Actions (3 new files):**
+
+- `actions/landing-page-actions.ts` — CRUD + status transitions + duplicate + visit tracking
+- `actions/form-actions.ts` — CRUD + submissions + embed code generation + stats
+- `actions/blog-marketing-actions.ts` — blogHtmlToEmailBlocks, convertBlogToEmail, createBlogDigestCampaign
+
+**Lib (2 new files):**
+
+- `lib/blog-seo-scoring.ts` — calculateContentScore engine (readability 30%, SEO 40%, engagement 30%)
+- `src/lib/map-db-record.ts` — Shared snake_case→camelCase utility (mapRecord, mapRecords)
+
+**Landing Page Components (6 new files):**
+
+- `components/landing-pages/landing-page-list.tsx` — Server component
+- `components/landing-pages/landing-page-list-client.tsx` — Client with filters/search/pagination
+- `components/landing-pages/landing-page-list-skeleton.tsx` — Skeleton fallback
+- `components/landing-pages/landing-page-editor.tsx` — Visual editor with blocks/templates/SEO tabs
+
+**Form Components (4 new files):**
+
+- `components/forms/form-list.tsx` — Server component
+- `components/forms/form-list-client.tsx` — Client with filters
+- `components/forms/form-list-skeleton.tsx` — Skeleton fallback
+- `components/forms/form-builder.tsx` — Visual form builder with fields/behavior/embed tabs
+
+**Blog Marketing Components (6 new files):**
+
+- `components/blog-marketing/blog-cta-block-renderer.tsx` — 4 visual styles (banner, card, inline, sidebar)
+- `components/blog-marketing/blog-cta-block-editor.tsx` — Sheet editor with Details/Templates/Preview tabs
+- `components/blog-marketing/blog-subscribe-widget.tsx` — Newsletter opt-in with 3 placements
+- `components/blog-marketing/blog-seo-score-panel.tsx` — Visual SEO scoring with progress bars + recommendations
+- `components/blog-marketing/blog-share-as-email-button.tsx` — One-click blog-to-email campaign conversion
+- `components/blog-marketing/index.ts` — Barrel export
+
+**Dashboard Route Pages (6 new files):**
+
+- `marketing/landing-pages/page.tsx` — Landing page list
+- `marketing/landing-pages/new/page.tsx` — New landing page editor
+- `marketing/landing-pages/[id]/page.tsx` — Edit landing page
+- `marketing/forms/page.tsx` — Form list
+- `marketing/forms/new/page.tsx` — New form builder
+- `marketing/forms/[formId]/page.tsx` — Edit form
+
+**API Routes (3 new files):**
+
+- `/api/marketing/forms/submit/[formId]/route.ts` — Public form submission endpoint
+- `/api/marketing/forms/embed/[formId]/route.ts` — Embeddable form HTML/JS
+- `/api/blog/[siteId]/rss/route.ts` — RSS 2.0 XML feed with Atom/media namespaces
+
+**Files Modified (2):**
+
+- `components/hub/marketing-hub-client.tsx` — Added Landing Pages + Opt-In Forms cards to quick actions grid (6-card layout)
+- `lib/marketing-constants.ts` — Added 4 MKT_TABLES entries, form type/status labels, MARKETING_LIMITS updates
+
+**Total: ~30 new files + 2 files modified**
+
+**TypeScript:** Zero marketing-related errors (42 baseline pre-existing errors unchanged).
+
+### MKT-08 + MKT-09 Deliverables (Completed — Session 5)
+
+**Types (2 new files, 2 modified):**
+
+- `types/sms-whatsapp-types.ts` — SMSProvider, WhatsAppProvider, SMSConfig, WhatsAppConfig, SMSDeliveryLog, WhatsAppDeliveryLog, SubjectLineInput/Suggestion, EmailContentInput/Result, SendTimeRecommendation, AudienceSuggestion, CampaignDraft, MarketingInsight
+- `types/index.ts` — Added `export * from "./sms-whatsapp-types"`
+- `types/sequence-types.ts` — Extended SequenceStepType with `"sms" | "whatsapp"`
+
+**AI Services (4 new files):**
+
+- `services/subject-line-ai.ts` — `generateSubjectLines()` (5 suggestions, haiku), `generatePreviewText()`
+- `services/email-content-ai.ts` — `generateEmailContent()` (sonnet), `improveEmailText()` (haiku)
+- `services/send-time-optimizer.ts` — `getOptimalSendTime()` (historical analysis, fallback Tuesday 10AM), `formatSendTimeRecommendation()`
+- `services/audience-ai.ts` — `suggestAudiences()` (haiku, 3-5 segments), default audience fallback
+- `services/campaign-briefing-ai.ts` — `generateCampaignFromBrief()` (sonnet, NL→campaign draft), `generateMarketingInsights()` (haiku, stats-based)
+
+**SMS/WhatsApp Services (2 new files):**
+
+- `services/sms-provider.ts` — TwilioSMSProvider, `getSMSProvider()`, `calculateSMSSegments()`, `personalizeSMS()`
+- `services/whatsapp-provider.ts` — MetaWhatsAppProvider, `getWhatsAppProvider()`, `getWhatsAppTemplates()`
+
+**Server Actions (2 new files):**
+
+- `actions/sms-actions.ts` — `sendSMSMessage()`, `sendWhatsAppTemplateMessage()`, `getWhatsAppTemplateList()`, `getSMSWhatsAppSettings()`, `updateSMSSettings()`, `updateWhatsAppSettings()`, `sendSMSCampaignBatch()`
+- `actions/ai-marketing-actions.ts` — `aiGenerateSubjectLines`, `aiGeneratePreviewText`, `aiGenerateEmailContent`, `aiImproveEmailText`, `aiGetOptimalSendTime`, `aiSuggestAudiences`, `aiGenerateCampaignFromBrief`, `aiGetMarketingInsights`
+
+**Components (2 new files):**
+
+- `components/campaigns/sms-campaign-composer.tsx` — SMS campaign creator with character counting, segment calculation, personalization preview (green bubble UI), audience selector
+- `components/settings/sms-whatsapp-settings.tsx` — Tabbed settings (Twilio SMS + Meta WhatsApp), credential management with masked tokens, status badges
+
+**Route Pages (1 new file):**
+
+- `marketing/sms/new/page.tsx` — New SMS campaign page
+
+**API Routes (2 new files):**
+
+- `/api/marketing/webhooks/sms-status/route.ts` — Twilio SMS status callbacks (queued/sent/delivered/failed/undelivered), daily stats tracking, automation events
+- `/api/marketing/webhooks/whatsapp-status/route.ts` — Meta WhatsApp status callbacks (GET verification + POST status), handles sent/delivered/read/failed, automation events
+
+**Files Modified (6):**
+
+- `lib/marketing-constants.ts` — Added `sendingStats` to MKT_TABLES, `sms`/`whatsapp` to SEQUENCE_STEP_TYPE_LABELS, SMS/WhatsApp limits to MARKETING_LIMITS
+- `components/sequences/sequence-builder.tsx` — Added SMS/WhatsApp step types with icons (Smartphone/MessageCircle), colors, SmsStepConfig (message + char counter), WhatsAppStepConfig (template name + language)
+- `components/forms/form-builder.tsx` — Added `addPhoneOptInField()` (phone + SMS opt-in checkbox), quick buttons in empty state + footer
+- `components/campaigns/campaign-wizard.tsx` — Added WhatsApp type option, SMS/WhatsApp content editors, updated `canProceed()` validation
+- `components/email-editor/email-editor.tsx` — Added AI Improve button to text block config (dynamic import, prompt-based, Sparkles icon)
+- `components/hub/marketing-hub-client.tsx` — Added AIInsightsSection component (lazy-loaded insights, type icons, priority badges)
+- `src/modules/automation/lib/action-types.ts` — Added `sms_send` and `whatsapp_send_template` actions to marketing category, updated category description
+
+**Total: ~16 new files + 7 files modified**
+
+**TypeScript:** Zero marketing-related errors (42 baseline pre-existing errors unchanged).
+
+**Key Technical Details for Session 5:**
+- AI models: `AI_MODELS.haiku` for suggestions/improvements, `AI_MODELS.sonnet` for content generation
+- AI pattern: Direct `anthropic.messages.create()` calls, JSON output via regex extraction
+- SMS: Twilio REST API with segment calculation (GSM-7: 160 chars/segment, UCS-2: 70 chars/segment)
+- WhatsApp: Meta Cloud API v18.0, template-based messaging (required by Meta policy)
+- Webhooks: Twilio sends URL-encoded form data, Meta sends JSON with nested entry/changes/statuses structure
+- Meta webhook verification: GET with hub.mode/hub.verify_token/hub.challenge `module_type` IN ('widget','app','integration','system','custom'), `db_isolation` IN ('none','tables','schema'), `pricing_type` must be 'free' for core modules
+- Column is `icon` not `icon_name` in modules_v2
+- All existing core modules use: `module_type='widget', db_isolation='none', pricing_type='free'`
+- `decodeClickToken()` returns `originalUrl` not `url` — must destructure correctly
+- Tracking tokens use HMAC-SHA256 with truncated 8-char signature, Base64URL encoding
+- Secret from: `MARKETING_TRACKING_SECRET` || `NEXTAUTH_SECRET` || fallback
+
+### Key Files
+
+- **Master Guide**: `/phases/PHASE-MKT-MASTER-GUIDE.md` — Full specification for all 12 phases
+- **Session Brief**: `/phases/PHASE-MKT-SESSION-BRIEF.md` — Copy-paste prompts for each session
+- **DB table prefix**: `mod_mktmod01_*` (17 tables — 15 original + 2 social)
+- **Module slug**: `marketing`
+
+### Architecture Decisions
+
+- Marketing USES the automation engine (logAutomationEvent), doesn't replace it
+- Marketing = WHAT/WHO/WHEN; Automation = HOW
+- All changes additive — no existing code refactored
+- CORE_MODULE_SLUGS now: `["crm", "automation", "live-chat", "marketing"]`
+
+### MKT-10 + MKT-11 + MKT-12 Deliverables (Completed — Session 6, FINAL)
+
+**MKT-10: Super Admin Marketing View (5 new files):**
+
+- `types/admin-types.ts` — PlatformEmailHealth, SiteSendingVolume, PlatformSendingLimits, AdminAlertThresholds, PlatformHealthReport, HealthIncident, HealthStatus
+- `services/admin-safety.ts` — checkPlatformHealth(), getTopSitesByVolume(), pauseSiteMarketing(), resumeSiteMarketing(), enforceAutoSafety(), calculateReputationScore()
+- `actions/admin-marketing-actions.ts` — getPlatformHealthReport(), runAutoSafety(), adminPauseSiteMarketing(), adminResumeSiteMarketing(), getAdminTopSites() with requireSuperAdmin() helper
+- `components/admin/admin-marketing-dashboard.tsx` — Health metrics, threshold alerts, top sites table, pause/resume dialog
+- `src/app/(dashboard)/admin/marketing/page.tsx` — Admin page with super_admin guard
+
+**MKT-11: Client Portal Marketing Views (8 new pages + 1 component + 12 modified files):**
+
+- Updated `src/lib/portal/portal-context.tsx` — Added `canManageMarketing` to permissions
+- Updated 11 existing portal pages to include `canManageMarketing` permission in PortalProvider
+- Portal pages: marketing hub, campaigns list, campaigns/new, campaigns/[id], sequences, subscribers, analytics, forms
+- `components/portal/portal-analytics-dashboard.tsx` — Aggregated email analytics client component
+
+**MKT-12: Social Media Integration (12 new files + 3 modified + 1 DB migration):**
+
+Types & Constants:
+- `types/social-types.ts` — SocialPlatform, SocialConnection, SocialPost, CalendarEvent, UTMParams, caption AI types, SOCIAL_PLATFORM_LIMITS, CALENDAR_EVENT_COLORS
+- Modified `types/index.ts` — Added admin-types + social-types exports
+- Modified `lib/marketing-constants.ts` — Added socialConnections + socialPosts to MKT_TABLES
+
+Actions:
+- `actions/social-actions.ts` — Full CRUD for connections + posts, calendar event aggregation, scheduled post processing
+
+Services:
+- `services/social-publisher.ts` — UTM parameter handling, multi-platform publish foundation
+- `services/blog-auto-share.ts` — Auto-share blog posts to connected social platforms
+- `services/social-caption-ai.ts` — AI caption generation (Claude Haiku), multi-platform captions, fallback templates
+
+Components:
+- `components/social/social-post-composer.tsx` — Multi-platform composer with character counting, scheduling
+- `components/social/social-connections-settings.tsx` — Connection management with add/disconnect/delete
+- `components/social/content-calendar.tsx` — Month view calendar with color-coded events
+- `components/social/social-posts-list.tsx` — Post list with status badges, platform tags, actions
+
+Dashboard Route Pages:
+- `marketing/social/page.tsx` — Social posts list + connections settings (tabbed)
+- `marketing/social/new/page.tsx` — New social post composer
+- `marketing/calendar/page.tsx` — Content calendar view
+
+DB Migration:
+- `mkt_12_social_media_tables` — 2 tables (mod_mktmod01_social_connections, mod_mktmod01_social_posts) with indexes + RLS
+
+**Total Session 6: ~25 new files + 14 modified files + 1 DB migration. Zero new TypeScript errors (21 pre-existing marketing errors unchanged).**
+
+## Previous Changes
 
 ### Blog Editor Overhaul + Agency Support Tickets (commit 49bc38e4, afdd04d4)
 

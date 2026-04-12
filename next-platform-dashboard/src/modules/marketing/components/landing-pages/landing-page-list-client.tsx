@@ -1,0 +1,302 @@
+/**
+ * Landing Page List Client Component
+ * Phase MKT-06: Landing Pages & Opt-In Forms
+ *
+ * Renders landing page cards with status filtering, search, and pagination.
+ */
+"use client";
+
+import { useState, useTransition } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  Search,
+  FileText,
+  MoreHorizontal,
+  Copy,
+  Trash2,
+  Eye,
+  Globe,
+  BarChart3,
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  LANDING_PAGE_STATUS_CONFIG,
+  LANDING_PAGE_STATUS_LABELS,
+} from "../../lib/marketing-constants";
+import {
+  deleteLandingPage,
+  duplicateLandingPage,
+  updateLandingPageStatus,
+} from "../../actions/landing-page-actions";
+import type { LandingPage, LandingPageStatus } from "../../types";
+
+interface LandingPageListClientProps {
+  siteId: string;
+  landingPages: LandingPage[];
+  total: number;
+  currentPage: number;
+  pageSize: number;
+  currentStatus?: string;
+  currentSearch?: string;
+}
+
+export function LandingPageListClient({
+  siteId,
+  landingPages,
+  total,
+  currentPage,
+  pageSize,
+  currentStatus,
+  currentSearch,
+}: LandingPageListClientProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [search, setSearch] = useState(currentSearch || "");
+  const basePath = `/dashboard/sites/${siteId}/marketing/landing-pages`;
+  const totalPages = Math.ceil(total / pageSize);
+
+  function applyFilters(status?: string, searchVal?: string) {
+    const params = new URLSearchParams();
+    if (status && status !== "all") params.set("status", status);
+    if (searchVal) params.set("search", searchVal);
+    const qs = params.toString();
+    startTransition(() => {
+      router.push(`${basePath}${qs ? `?${qs}` : ""}`);
+    });
+  }
+
+  async function handleDuplicate(id: string) {
+    try {
+      await duplicateLandingPage(id);
+      router.refresh();
+    } catch {
+      // Could add toast
+    }
+  }
+
+  async function handleDelete(id: string) {
+    try {
+      await deleteLandingPage(id);
+      router.refresh();
+    } catch {
+      // Could add toast
+    }
+  }
+
+  async function handlePublish(id: string) {
+    try {
+      await updateLandingPageStatus(id, "published");
+      router.refresh();
+    } catch {
+      // Could add toast
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold">Landing Pages</h2>
+          <p className="text-sm text-muted-foreground">
+            {total} page{total !== 1 ? "s" : ""}
+          </p>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search landing pages..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") applyFilters(currentStatus, search);
+            }}
+            className="pl-9"
+          />
+        </div>
+        <Select
+          value={currentStatus || "all"}
+          onValueChange={(v) => applyFilters(v, search)}
+        >
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="All Statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            {Object.entries(LANDING_PAGE_STATUS_LABELS).map(([key, label]) => (
+              <SelectItem key={key} value={key}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Landing Page List */}
+      {landingPages.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <FileText className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium">No landing pages found</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              {currentStatus || currentSearch
+                ? "Try adjusting your filters"
+                : "Create your first landing page to capture leads"}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-2">
+          {landingPages.map((page) => {
+            const status = (page.status as LandingPageStatus) || "draft";
+            const config = LANDING_PAGE_STATUS_CONFIG[status];
+            return (
+              <Card
+                key={page.id}
+                className="hover:border-primary/30 transition-colors"
+              >
+                <CardContent className="flex items-center justify-between p-4">
+                  <Link
+                    href={`${basePath}/${page.id}`}
+                    className="flex-1 min-w-0"
+                  >
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {page.title}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          /{page.slug}
+                          {page.description ? ` — ${page.description}` : ""}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+
+                  <div className="flex items-center gap-3 ml-4">
+                    {(page.totalVisits || 0) > 0 && (
+                      <div className="text-right hidden md:block">
+                        <p className="text-xs text-muted-foreground">
+                          <BarChart3 className="inline h-3 w-3 mr-1" />
+                          {page.totalVisits?.toLocaleString()} visits
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {page.totalConversions?.toLocaleString()} conversions
+                        </p>
+                      </div>
+                    )}
+
+                    <Badge
+                      variant="secondary"
+                      className={`${config?.bgColor} ${config?.color}`}
+                    >
+                      {config?.label || status}
+                    </Badge>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem asChild>
+                          <Link href={`${basePath}/${page.id}`}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            Edit Page
+                          </Link>
+                        </DropdownMenuItem>
+                        {status === "draft" && (
+                          <DropdownMenuItem
+                            onClick={() => handlePublish(page.id)}
+                          >
+                            <Globe className="mr-2 h-4 w-4" />
+                            Publish
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem
+                          onClick={() => handleDuplicate(page.id)}
+                        >
+                          <Copy className="mr-2 h-4 w-4" />
+                          Duplicate
+                        </DropdownMenuItem>
+                        {status === "draft" && (
+                          <DropdownMenuItem
+                            onClick={() => handleDelete(page.id)}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={currentPage <= 1 || isPending}
+            onClick={() => {
+              const params = new URLSearchParams();
+              if (currentStatus) params.set("status", currentStatus);
+              if (currentSearch) params.set("search", currentSearch);
+              params.set("page", String(currentPage - 1));
+              router.push(`${basePath}?${params.toString()}`);
+            }}
+          >
+            Previous
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={currentPage >= totalPages || isPending}
+            onClick={() => {
+              const params = new URLSearchParams();
+              if (currentStatus) params.set("status", currentStatus);
+              if (currentSearch) params.set("search", currentSearch);
+              params.set("page", String(currentPage + 1));
+              router.push(`${basePath}?${params.toString()}`);
+            }}
+          >
+            Next
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}

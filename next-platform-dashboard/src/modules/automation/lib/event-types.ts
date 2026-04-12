@@ -365,6 +365,36 @@ export const EVENT_REGISTRY = {
       consolidated: "ai_agent.memory.consolidated",
     },
   },
+
+  // ── Marketing Module ────────────────────────────────────────────────
+  marketing: {
+    campaign: {
+      created: "marketing.campaign.created",
+      updated: "marketing.campaign.updated",
+      scheduled: "marketing.campaign.scheduled",
+      started: "marketing.campaign.started",
+      completed: "marketing.campaign.completed",
+      paused: "marketing.campaign.paused",
+      cancelled: "marketing.campaign.cancelled",
+    },
+    email: {
+      sent: "marketing.email.sent",
+      delivered: "marketing.email.delivered",
+      opened: "marketing.email.opened",
+      clicked: "marketing.email.clicked",
+      bounced: "marketing.email.bounced",
+      complained: "marketing.email.complained",
+    },
+    subscriber: {
+      subscribed: "marketing.subscriber.subscribed",
+      unsubscribed: "marketing.subscriber.unsubscribed",
+      tagged: "marketing.subscriber.tagged",
+    },
+    sequence: {
+      enrolled: "marketing.sequence.enrolled",
+      completed: "marketing.sequence.completed",
+    },
+  },
 } as const;
 
 // ============================================================================

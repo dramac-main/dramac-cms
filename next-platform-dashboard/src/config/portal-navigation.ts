@@ -51,6 +51,7 @@ export interface PortalUserPermissions {
   canManageQuotes: boolean;
   canManageAgents: boolean;
   canManageCustomers: boolean;
+  canManageMarketing: boolean;
 }
 
 /**
@@ -147,6 +148,14 @@ export function getPortalNavigationGroups(
         title: "Automation",
         href: siteUrl("automation")!,
         icon: Zap,
+      });
+    }
+
+    if (hasModule("marketing") && permissions.canManageMarketing) {
+      operationsItems.push({
+        title: "Marketing",
+        href: siteUrl("marketing")!,
+        icon: Mail,
       });
     }
 

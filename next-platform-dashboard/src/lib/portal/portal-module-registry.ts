@@ -16,6 +16,7 @@ import {
   Receipt,
   UserCog,
   Bot,
+  Mail,
   type LucideIcon,
 } from "lucide-react";
 import type { EffectivePortalPermissions } from "./portal-permissions";
@@ -183,6 +184,21 @@ registerPortalModule({
       label: "Automation",
       href: (siteId) => `/portal/sites/${siteId}/automation`,
       icon: Zap,
+    },
+  ],
+});
+
+// Marketing
+registerPortalModule({
+  moduleSlug: "marketing",
+  displayName: "Marketing",
+  icon: Mail,
+  permissionKey: "canManageMarketing",
+  navItems: [
+    {
+      label: "Marketing",
+      href: (siteId) => `/portal/sites/${siteId}/marketing`,
+      icon: Mail,
     },
   ],
 });
