@@ -114,6 +114,7 @@ export function CampaignWizard({ siteId }: CampaignWizardProps) {
           fromName: fromName.trim() || undefined,
           fromEmail: fromEmail.trim() || undefined,
           replyTo: replyTo.trim() || undefined,
+          contentHtml: contentHtml.trim() || undefined,
           tags: tags
             .split(",")
             .map((t) => t.trim())
@@ -121,7 +122,11 @@ export function CampaignWizard({ siteId }: CampaignWizardProps) {
         });
 
         if (sendImmediately) {
-          await sendCampaignNow(siteId, (campaign as any).id);
+          const result = await sendCampaignNow(siteId, (campaign as any).id);
+          if (!result.success) {
+            setError(result.error || "Failed to send campaign");
+            return;
+          }
         }
 
         router.push(
@@ -491,10 +496,10 @@ export function CampaignWizard({ siteId }: CampaignWizardProps) {
                   <p className="text-xs font-medium text-muted-foreground mb-2">
                     Content Preview
                   </p>
-                  <div className="border rounded-lg p-4 bg-white max-h-48 overflow-y-auto">
+                  <div className="border rounded-lg p-4 bg-white text-black max-h-48 overflow-y-auto">
                     <div
                       dangerouslySetInnerHTML={{ __html: contentHtml }}
-                      className="prose prose-sm max-w-none"
+                      className="prose prose-sm max-w-none **:text-black!"
                     />
                   </div>
                 </div>

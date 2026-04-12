@@ -2,7 +2,6 @@
 
 import { useState, useTransition, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
-import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -36,7 +35,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  ArrowLeft,
   Plus,
   Search,
   Users,
@@ -153,13 +151,6 @@ export function SubscriberManager({
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <Link
-          href={basePath}
-          className="text-muted-foreground hover:text-foreground mb-2 inline-flex items-center text-sm"
-        >
-          <ArrowLeft className="mr-1 h-4 w-4" />
-          Back to Marketing
-        </Link>
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Subscribers</h1>

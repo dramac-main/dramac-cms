@@ -66,13 +66,13 @@ Think of it as a hub-and-spoke pattern: Hub → Section → Back to Hub.
     - **Email:** `mary@testcompany.com`
     - **First Name:** `Mary`
     - **Last Name:** `Mwale`
-12. Click **"Add Subscriber"**
+12. Click **"Add "**
 13. ✅ Both Jack and Mary should be in the table
 14. Try the search box — type `jack` in the **"Search by email or name..."** field
 15. ✅ Only Jack's row should show
 16. Clear the search box
 
-**Test the mailing lists:**
+**Test the mailing listsSubscriber:**
 
 17. Click the **"Lists"** tab
 18. You should see an empty state: "No mailing lists" / "Create lists to organize your subscribers"

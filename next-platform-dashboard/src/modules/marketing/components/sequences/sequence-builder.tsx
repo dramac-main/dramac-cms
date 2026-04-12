@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useTransition } from "react";
 import { useRouter, useParams } from "next/navigation";
-import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -24,7 +23,6 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import {
-  ArrowLeft,
   Plus,
   Trash2,
   GripVertical,
@@ -72,13 +70,13 @@ const STEP_ICONS: Record<SequenceStepType, React.ReactNode> = {
 };
 
 const STEP_COLORS: Record<SequenceStepType, string> = {
-  email: "border-blue-200 bg-blue-50",
-  sms: "border-green-200 bg-green-50",
-  whatsapp: "border-teal-200 bg-teal-50",
-  delay: "border-amber-200 bg-amber-50",
-  condition: "border-purple-200 bg-purple-50",
-  action: "border-emerald-200 bg-emerald-50",
-  split: "border-pink-200 bg-pink-50",
+  email: "border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950",
+  sms: "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950",
+  whatsapp: "border-teal-200 bg-teal-50 dark:border-teal-800 dark:bg-teal-950",
+  delay: "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950",
+  condition: "border-purple-200 bg-purple-50 dark:border-purple-800 dark:bg-purple-950",
+  action: "border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950",
+  split: "border-pink-200 bg-pink-50 dark:border-pink-800 dark:bg-pink-950",
 };
 
 function generateId(): string {
@@ -252,13 +250,6 @@ export function SequenceBuilder({
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <Link
-          href={basePath}
-          className="text-muted-foreground hover:text-foreground mb-2 inline-flex items-center text-sm"
-        >
-          <ArrowLeft className="mr-1 h-4 w-4" />
-          Back to Sequences
-        </Link>
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold tracking-tight">
             {isEdit ? "Edit Sequence" : "New Sequence"}
@@ -505,12 +496,12 @@ export function SequenceBuilder({
                 return (
                   <div
                     key={step.id}
-                    className={`rounded-lg border-2 p-4 ${STEP_COLORS[step.type] || "border-gray-200 bg-gray-50"}`}
+                    className={`rounded-lg border-2 p-4 ${STEP_COLORS[step.type] || "border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900"}`}
                   >
                     {/* Step Header */}
                     <div className="flex items-center gap-2">
                       <GripVertical className="text-muted-foreground h-4 w-4 shrink-0 cursor-grab" />
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white dark:bg-muted shadow-sm">
                         {STEP_ICONS[step.type]}
                       </div>
                       <div className="min-w-0 flex-1">
@@ -568,7 +559,7 @@ export function SequenceBuilder({
 
                     {/* Step Config (Expanded) */}
                     {isExpanded && (
-                      <div className="mt-4 space-y-3 rounded-md bg-white p-4">
+                      <div className="mt-4 space-y-3 rounded-md bg-white dark:bg-muted p-4">
                         <div>
                           <Label>Step Name</Label>
                           <Input

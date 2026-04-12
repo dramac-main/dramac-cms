@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { useRouter, useParams } from "next/navigation";
-import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -14,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  ArrowLeft,
   Play,
   Pause,
   Archive,
@@ -132,13 +130,6 @@ export function SequenceDetail({
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <Link
-          href={`${basePath}/sequences`}
-          className="text-muted-foreground hover:text-foreground mb-2 inline-flex items-center text-sm"
-        >
-          <ArrowLeft className="mr-1 h-4 w-4" />
-          Back to Sequences
-        </Link>
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-3">

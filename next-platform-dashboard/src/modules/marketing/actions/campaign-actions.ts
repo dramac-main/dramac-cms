@@ -125,6 +125,7 @@ export async function createCampaign(
     replyTo?: string;
     templateId?: string;
     audienceId?: string;
+    contentHtml?: string;
     tags?: string[];
   },
 ): Promise<Campaign> {
@@ -144,6 +145,7 @@ export async function createCampaign(
       reply_to: input.replyTo || null,
       template_id: input.templateId || null,
       audience_id: input.audienceId || null,
+      content_html: input.contentHtml || null,
       status: "draft",
       ab_test_enabled: false,
       total_recipients: 0,
