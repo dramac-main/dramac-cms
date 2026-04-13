@@ -395,7 +395,11 @@ function getEmbedUrl(url: string, type: string): string | null {
 function GalleryBlock({ content }: { content: Record<string, unknown> }) {
   const heading = String(content.heading || "");
   // Support both 'items' (from editor) and 'images' (legacy) field names
-  const images = Array.isArray(content.items) ? content.items : Array.isArray(content.images) ? content.images : [];
+  const images = Array.isArray(content.items)
+    ? content.items
+    : Array.isArray(content.images)
+      ? content.images
+      : [];
   const columns = Number(content.columns || 3);
 
   return (
@@ -421,7 +425,11 @@ function GalleryBlock({ content }: { content: Record<string, unknown> }) {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={String(typeof img === "string" ? img : img.url || "")}
-                  alt={String(typeof img === "string" ? `Image ${i + 1}` : img.alt || `Image ${i + 1}`)}
+                  alt={String(
+                    typeof img === "string"
+                      ? `Image ${i + 1}`
+                      : img.alt || `Image ${i + 1}`,
+                  )}
                   className="w-full h-full object-cover"
                 />
               </div>

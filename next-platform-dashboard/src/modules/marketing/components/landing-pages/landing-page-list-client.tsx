@@ -73,7 +73,8 @@ export function LandingPageListClient({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState(currentSearch || "");
-  const basePath = basePathProp || `/dashboard/sites/${siteId}/marketing/landing-pages`;
+  const basePath =
+    basePathProp || `/dashboard/sites/${siteId}/marketing/landing-pages`;
   const totalPages = Math.ceil(total / pageSize);
 
   function applyFilters(status?: string, searchVal?: string) {
@@ -92,7 +93,9 @@ export function LandingPageListClient({
       router.refresh();
       toast.success("Landing page duplicated");
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to duplicate landing page");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to duplicate landing page",
+      );
     }
   }
 
@@ -102,7 +105,9 @@ export function LandingPageListClient({
       router.refresh();
       toast.success("Landing page deleted");
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete landing page");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to delete landing page",
+      );
     }
   }
 
@@ -112,7 +117,9 @@ export function LandingPageListClient({
       router.refresh();
       toast.success("Landing page published");
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to publish landing page");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to publish landing page",
+      );
     }
   }
 
@@ -238,7 +245,12 @@ export function LandingPageListClient({
 
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Page actions">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          aria-label="Page actions"
+                        >
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>

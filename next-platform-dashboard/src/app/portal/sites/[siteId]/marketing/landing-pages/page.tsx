@@ -57,7 +57,11 @@ export default async function PortalLandingPagesPage({
       }}
     >
       <Suspense fallback={<LandingPageListSkeleton />}>
-        <LandingPageList siteId={siteId} filters={filters} basePath={`/portal/sites/${siteId}/marketing/landing-pages`} />
+        <LandingPageList
+          siteId={siteId}
+          filters={filters}
+          basePath={`/portal/sites/${siteId}/marketing/landing-pages`}
+        />
       </Suspense>
     </PortalProvider>
   );

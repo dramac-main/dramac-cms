@@ -15,6 +15,7 @@ import type {
   LandingPageStatus,
   LandingPageBlock,
   SeoConfig,
+  StyleConfig,
 } from "../types";
 
 async function getModuleClient() {
@@ -112,6 +113,7 @@ export async function createLandingPage(input: {
   slug: string;
   description?: string;
   contentJson?: LandingPageBlock[];
+  styleConfig?: StyleConfig;
   formConfig?: Record<string, unknown>;
   seoConfig?: SeoConfig;
   conversionGoal?: string;
@@ -131,6 +133,7 @@ export async function createLandingPage(input: {
       slug: input.slug.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
       description: input.description || null,
       content_json: input.contentJson || [],
+      style_config: input.styleConfig || {},
       form_config: input.formConfig || null,
       seo_config: input.seoConfig || {},
       conversion_goal: input.conversionGoal || "form_submit",
@@ -165,6 +168,7 @@ export async function updateLandingPage(
     slug?: string;
     description?: string;
     contentJson?: LandingPageBlock[];
+    styleConfig?: StyleConfig;
     formConfig?: Record<string, unknown> | null;
     seoConfig?: SeoConfig;
     conversionGoal?: string;
@@ -180,6 +184,8 @@ export async function updateLandingPage(
     updateData.description = updates.description;
   if (updates.contentJson !== undefined)
     updateData.content_json = updates.contentJson;
+  if (updates.styleConfig !== undefined)
+    updateData.style_config = updates.styleConfig;
   if (updates.formConfig !== undefined)
     updateData.form_config = updates.formConfig;
   if (updates.seoConfig !== undefined)
@@ -262,6 +268,7 @@ export async function duplicateLandingPage(
     slug: `${original.slug}-copy-${Date.now()}`,
     description: original.description || undefined,
     contentJson: original.contentJson,
+    styleConfig: original.styleConfig || undefined,
     formConfig: original.formConfig || undefined,
     seoConfig: original.seoConfig,
     conversionGoal: original.conversionGoal,

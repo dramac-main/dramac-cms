@@ -44,7 +44,60 @@ export interface SeoConfig {
   ogTitle?: string;
   ogDescription?: string;
   noIndex?: boolean;
+  canonicalUrl?: string;
 }
+
+// ============================================================================
+// LANDING PAGE STYLE CONFIG
+// ============================================================================
+
+export interface StyleConfig {
+  /** Primary brand color (hex) — used for buttons, accents, links */
+  primaryColor?: string;
+  /** Secondary color (hex) — used for gradients, backgrounds */
+  secondaryColor?: string;
+  /** Heading text color (hex) */
+  headingColor?: string;
+  /** Body text color (hex) */
+  bodyColor?: string;
+  /** Page background color (hex) */
+  backgroundColor?: string;
+  /** Font family for headings */
+  headingFont?: string;
+  /** Font family for body text */
+  bodyFont?: string;
+  /** Border radius token: 'none' | 'sm' | 'md' | 'lg' | 'full' */
+  borderRadius?: string;
+  /** Custom CSS (advanced users) */
+  customCss?: string;
+}
+
+export const DEFAULT_STYLE_CONFIG: StyleConfig = {
+  primaryColor: "#2563eb",
+  secondaryColor: "#7c3aed",
+  headingColor: "#111827",
+  bodyColor: "#4b5563",
+  backgroundColor: "#ffffff",
+  headingFont: "system-ui, -apple-system, sans-serif",
+  bodyFont: "system-ui, -apple-system, sans-serif",
+  borderRadius: "md",
+};
+
+export const FONT_OPTIONS = [
+  { value: "system-ui, -apple-system, sans-serif", label: "System Default" },
+  { value: "'Inter', sans-serif", label: "Inter" },
+  { value: "'DM Sans', sans-serif", label: "DM Sans" },
+  { value: "'Plus Jakarta Sans', sans-serif", label: "Plus Jakarta Sans" },
+  { value: "'Poppins', sans-serif", label: "Poppins" },
+  { value: "'Montserrat', sans-serif", label: "Montserrat" },
+  { value: "'Lato', sans-serif", label: "Lato" },
+  { value: "'Roboto', sans-serif", label: "Roboto" },
+  { value: "'Open Sans', sans-serif", label: "Open Sans" },
+  { value: "'Playfair Display', serif", label: "Playfair Display" },
+  { value: "'Merriweather', serif", label: "Merriweather" },
+  { value: "'Georgia', serif", label: "Georgia" },
+  { value: "'Fira Code', monospace", label: "Fira Code" },
+];
 
 export interface LandingPage {
   id: string;
@@ -54,6 +107,7 @@ export interface LandingPage {
   description?: string | null;
   status: LandingPageStatus;
   contentJson: LandingPageBlock[];
+  styleConfig?: StyleConfig | null;
   formConfig?: Record<string, unknown> | null;
   seoConfig: SeoConfig;
   conversionGoal: LandingPageConversionGoal | string;

@@ -6,7 +6,7 @@
  */
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import { toast } from "sonner";
@@ -27,6 +27,7 @@ import {
   Tablet,
   Smartphone,
   ExternalLink,
+  Palette,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -49,14 +50,15 @@ import {
 } from "../../actions/landing-page-actions";
 import { LANDING_PAGE_TEMPLATES } from "../../data/landing-page-templates";
 import { BlockList } from "./block-editor";
-import { BlockRenderer } from "./block-renderer";
 import type {
   LandingPage,
   LandingPageBlock,
   LandingPageBlockType,
   SeoConfig,
   LandingPageTemplate,
+  StyleConfig,
 } from "../../types";
+import { DEFAULT_STYLE_CONFIG, FONT_OPTIONS } from "../../types/landing-page-types";
 
 const BLOCK_TYPES = [
   { type: "hero", label: "Hero Section", icon: Type },
@@ -102,6 +104,9 @@ export function LandingPageEditor({
   const [seoConfig, setSeoConfig] = useState<SeoConfig>(
     landingPage?.seoConfig || { metaTitle: "", metaDescription: "" },
   );
+  const [styleConfig, setStyleConfig] = useState<StyleConfig>(
+    (landingPage?.styleConfig as StyleConfig) || { ...DEFAULT_STYLE_CONFIG },
+  );
 
   const isEdit = !!landingPage;
 
@@ -109,6 +114,36 @@ export function LandingPageEditor({
   const [previewViewport, setPreviewViewport] = useState<
     "desktop" | "tablet" | "mobile"
   >("desktop");
+
+  // Preview HTML via shared renderer
+  const [previewHtml, setPreviewHtml] = useState<string>("");
+  const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const fetchPreview = useCallback(async () => {
+    if (blocks.length === 0) {
+      setPreviewHtml("");
+      return;
+    }
+    try {
+      const res = await fetch("/api/marketing/lp/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ blocks, seo: seoConfig, styleConfig, title }),
+      });
+      if (res.ok) {
+        const html = await res.text();
+        setPreviewHtml(html);
+      }
+    } catch {
+      // Silently fail preview fetch
+    }
+  }, [blocks, seoConfig, styleConfig, title]);
+
+  useEffect(() => {
+    clearTimeout(previewTimerRef.current);
+    previewTimerRef.current = setTimeout(fetchPreview, 600);
+    return () => clearTimeout(previewTimerRef.current);
+  }, [fetchPreview]);
 
   // Warn before navigating away with unsaved work
   const hasUnsavedChanges = !!(title || description || blocks.length > 0);
@@ -196,6 +231,7 @@ export function LandingPageEditor({
           contentJson: blocks,
           conversionGoal,
           seoConfig,
+          styleConfig,
         });
         if (result.error) {
           setError(result.error);
@@ -212,6 +248,7 @@ export function LandingPageEditor({
           contentJson: blocks,
           conversionGoal,
           seoConfig,
+          styleConfig,
         });
         if (result.error) {
           setError(result.error);
@@ -300,6 +337,10 @@ export function LandingPageEditor({
           <TabsTrigger value="preview">
             <Eye className="mr-1.5 h-4 w-4" />
             Preview
+          </TabsTrigger>
+          <TabsTrigger value="design">
+            <Palette className="mr-1.5 h-4 w-4" />
+            Design
           </TabsTrigger>
           <TabsTrigger value="seo">SEO</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
@@ -461,7 +502,7 @@ export function LandingPageEditor({
             <CardContent className="p-0">
               <div className="border-t flex justify-center bg-muted/30 p-4">
                 <div
-                  className="transition-all duration-300 ease-in-out bg-white dark:bg-gray-950 shadow-lg rounded-lg overflow-hidden overflow-y-auto"
+                  className="transition-all duration-300 ease-in-out bg-white shadow-lg rounded-lg overflow-hidden"
                   style={{
                     width:
                       previewViewport === "mobile"
@@ -469,14 +510,165 @@ export function LandingPageEditor({
                         : previewViewport === "tablet"
                           ? "768px"
                           : "100%",
-                    maxHeight: "70vh",
+                    height: "70vh",
                   }}
                 >
-                  <BlockRenderer blocks={blocks} />
+                  {previewHtml ? (
+                    <iframe
+                      srcDoc={previewHtml}
+                      title="Landing page preview"
+                      className="w-full h-full border-0"
+                      sandbox="allow-scripts"
+                    />
+                  ) : blocks.length === 0 ? (
+                    <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                      Add blocks to see a preview
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Loading preview…
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Design Tab */}
+        <TabsContent value="design" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Colors */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Colours</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {([
+                  { key: "primaryColor", label: "Primary Colour" },
+                  { key: "secondaryColor", label: "Secondary Colour" },
+                  { key: "headingColor", label: "Heading Colour" },
+                  { key: "bodyColor", label: "Body Text Colour" },
+                  { key: "backgroundColor", label: "Background Colour" },
+                ] as const).map(({ key, label }) => (
+                  <div key={key} className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={styleConfig[key]}
+                      onChange={(e) =>
+                        setStyleConfig({ ...styleConfig, [key]: e.target.value })
+                      }
+                      className="h-9 w-12 rounded border cursor-pointer"
+                    />
+                    <div className="flex-1">
+                      <Label className="text-sm">{label}</Label>
+                      <Input
+                        value={styleConfig[key]}
+                        onChange={(e) =>
+                          setStyleConfig({ ...styleConfig, [key]: e.target.value })
+                        }
+                        className="h-7 text-xs mt-1 font-mono"
+                        placeholder="#000000"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* Typography & Shape */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Typography & Shape</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Heading Font</Label>
+                  <Select
+                    value={styleConfig.headingFont}
+                    onValueChange={(v) =>
+                      setStyleConfig({ ...styleConfig, headingFont: v })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {FONT_OPTIONS.map((f) => (
+                        <SelectItem key={f.value} value={f.value}>
+                          {f.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Body Font</Label>
+                  <Select
+                    value={styleConfig.bodyFont}
+                    onValueChange={(v) =>
+                      setStyleConfig({ ...styleConfig, bodyFont: v })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {FONT_OPTIONS.map((f) => (
+                        <SelectItem key={f.value} value={f.value}>
+                          {f.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Border Radius</Label>
+                  <Select
+                    value={styleConfig.borderRadius}
+                    onValueChange={(v) =>
+                      setStyleConfig({ ...styleConfig, borderRadius: v })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None (square)</SelectItem>
+                      <SelectItem value="sm">Small</SelectItem>
+                      <SelectItem value="md">Medium</SelectItem>
+                      <SelectItem value="lg">Large</SelectItem>
+                      <SelectItem value="full">Full (pill)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Custom CSS</Label>
+                  <Textarea
+                    value={styleConfig.customCss || ""}
+                    onChange={(e) =>
+                      setStyleConfig({ ...styleConfig, customCss: e.target.value })
+                    }
+                    placeholder="/* Override any style */\n.lp-hero { ... }"
+                    rows={5}
+                    className="font-mono text-xs"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Reset button */}
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setStyleConfig({ ...DEFAULT_STYLE_CONFIG })}
+            >
+              Reset to Defaults
+            </Button>
+          </div>
         </TabsContent>
 
         {/* SEO Tab */}

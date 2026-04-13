@@ -257,7 +257,9 @@ function getBlockSubtitle(block: LandingPageBlock): string {
     case "text":
       return (c.heading as string) || "Click to edit text block";
     case "image":
-      return (c.alt as string) || (c.caption as string) || "Click to edit image";
+      return (
+        (c.alt as string) || (c.caption as string) || "Click to edit image"
+      );
     default:
       return "Click to edit";
   }
@@ -823,7 +825,8 @@ function OptinFormForm({
           placeholder="Paste a Marketing Form ID to track submissions"
         />
         <p className="text-xs text-muted-foreground mt-1">
-          Link to a Marketing Form to save submissions and add subscribers automatically.
+          Link to a Marketing Form to save submissions and add subscribers
+          automatically.
         </p>
       </Field>
     </div>
