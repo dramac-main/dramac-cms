@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CraftRenderer } from "./craft-renderer";
@@ -8,6 +8,9 @@ import { LiveChatWidgetInjector } from "@/components/renderer/live-chat-widget-i
 import { EcommerceCartInjector } from "@/components/renderer/ecommerce-cart-injector";
 import { EcommerceSeoInjector } from "@/modules/ecommerce/components/ecommerce-seo-injector";
 import { DOMAINS } from "@/lib/constants/domains";
+import { mapRecord } from "@/lib/map-db-record";
+import { MKT_TABLES } from "@/modules/marketing/lib/marketing-constants";
+import type { LPBrandingOverride } from "@/modules/marketing/types/lp-builder-types";
 
 // Known module slugs that have Studio components
 const KNOWN_MODULE_SLUGS = [
@@ -215,6 +218,34 @@ export async function generateMetadata({
     }
   }
 
+  // ──────────────────────────────────────────────────────────────────────────
+  // LANDING PAGE SEO — Phase LPB-03
+  //
+  // LP-specific metadata from seoConfig (noIndex, canonical URL override,
+  // Twitter card). LP base metadata (title, description, OG image) is
+  // already handled above from data.page.seoTitle/seoDescription/seoImage.
+  // ──────────────────────────────────────────────────────────────────────────
+  if ("landingPage" in data && data.landingPage) {
+    const lpSeo = (data as any).landingPage.seoConfig;
+    if (lpSeo) {
+      // noIndex override from LP seo config
+      if (lpSeo.noIndex) {
+        metadata.robots = { index: false, follow: false };
+      }
+      // Canonical URL override from LP seo config
+      if (lpSeo.canonicalUrl) {
+        metadata.alternates = { canonical: lpSeo.canonicalUrl };
+      }
+    }
+    // Twitter card for LPs
+    metadata.twitter = {
+      card: data.page.seoImage ? "summary_large_image" : "summary",
+      title: data.page.seoTitle || data.page.name,
+      description: data.page.seoDescription || undefined,
+      images: data.page.seoImage ? [data.page.seoImage] : undefined,
+    };
+  }
+
   return metadata;
 }
 
@@ -413,11 +444,313 @@ async function generateEcommercePage(slug: string, siteId: string) {
   return null;
 }
 
+// ──────────────────────────────────────────────────────────────────────────
+// LANDING PAGE DATA FETCHER — Phase LPB-03
+//
+// Fetches a published landing page by slug and returns it in a format
+// compatible with the existing SitePage rendering pipeline.
+// Handles time constraints, max conversions, and expired redirect logic.
+// ──────────────────────────────────────────────────────────────────────────
+
+/** Merge LP branding override over site settings */
+function mergeLPBranding(
+  siteSettings: Record<string, unknown> | null,
+  brandingOverride?: LPBrandingOverride | null,
+): Record<string, unknown> {
+  if (!brandingOverride) return siteSettings || {};
+
+  const merged = { ...(siteSettings || {}) };
+
+  if (brandingOverride.primaryColor)
+    merged.primary_color = brandingOverride.primaryColor;
+  if (brandingOverride.secondaryColor)
+    merged.secondary_color = brandingOverride.secondaryColor;
+  if (brandingOverride.accentColor)
+    merged.accent_color = brandingOverride.accentColor;
+  if (brandingOverride.backgroundColor)
+    merged.background_color = brandingOverride.backgroundColor;
+  if (brandingOverride.textColor)
+    merged.text_color = brandingOverride.textColor;
+  if (brandingOverride.fontHeading)
+    merged.font_heading = brandingOverride.fontHeading;
+  if (brandingOverride.fontBody) merged.font_body = brandingOverride.fontBody;
+
+  return merged;
+}
+
+async function getLandingPageData(
+  site: any,
+  lpSlug: string,
+  supabase: ReturnType<typeof createAdminClient>,
+) {
+  const { data: lp, error } = await (supabase as any)
+    .from(MKT_TABLES.landingPages)
+    .select("*")
+    .eq("site_id", site.id)
+    .eq("slug", lpSlug)
+    .eq("status", "published")
+    .single();
+
+  if (error || !lp) return null;
+
+  const mappedLp = mapRecord<Record<string, any>>(lp);
+
+  // Check time constraints — skip for evergreen LPs
+  if (!mappedLp.isEvergreen) {
+    const now = new Date();
+    if (mappedLp.startsAt && new Date(mappedLp.startsAt) > now) return null;
+    if (mappedLp.endsAt && new Date(mappedLp.endsAt) < now) {
+      if (mappedLp.expiredRedirectUrl) {
+        redirect(mappedLp.expiredRedirectUrl);
+      }
+      return null;
+    }
+  }
+
+  // Check max conversions
+  if (
+    mappedLp.maxConversions &&
+    mappedLp.totalConversions >= mappedLp.maxConversions
+  ) {
+    if (mappedLp.expiredRedirectUrl) {
+      redirect(mappedLp.expiredRedirectUrl);
+    }
+    return null;
+  }
+
+  // Site settings and branding
+  const siteSettings = site.settings || {};
+  const brandingOverride = mappedLp.brandingOverride as
+    | LPBrandingOverride
+    | null
+    | undefined;
+  const mergedSettings = mergeLPBranding(siteSettings, brandingOverride);
+  const themeSettings = mergedSettings.theme || siteSettings.theme || null;
+
+  // Determine content: Studio format vs legacy
+  const useStudio = !!mappedLp.useStudioFormat && mappedLp.contentStudio;
+  let content: string | null = null;
+
+  if (useStudio) {
+    // Studio format — JSON content tree
+    content =
+      typeof mappedLp.contentStudio === "string"
+        ? mappedLp.contentStudio
+        : JSON.stringify(mappedLp.contentStudio);
+  } else if (mappedLp.contentJson) {
+    // Legacy block format — handled by old renderer (keep backward compat)
+    // Return null content so the legacy API route continues to serve these
+    // TODO: In a future phase, render legacy blocks inline too
+    content = null;
+  }
+
+  // Header/footer: if enabled, inject Navbar/Footer from homepage
+  const showHeader = !!mappedLp.showHeader;
+  const showFooter = !!mappedLp.showFooter;
+
+  if (content && (showHeader || showFooter)) {
+    const parsedContent =
+      typeof content === "string" ? JSON.parse(content) : content;
+    const components = parsedContent?.components as
+      | Record<
+          string,
+          { type?: string; parentId?: string; [k: string]: unknown }
+        >
+      | undefined;
+    const rootObj = parsedContent?.root as { children?: string[] } | undefined;
+
+    if (components && rootObj?.children) {
+      // Find homepage to get its Navbar/Footer
+      const pages = site.pages || [];
+      const homepage = pages.find((p: any) => p.is_homepage);
+
+      if (homepage) {
+        let homeContent: Record<string, unknown> | null = null;
+        if (homepage.page_content) {
+          if (
+            Array.isArray(homepage.page_content) &&
+            homepage.page_content.length > 0
+          ) {
+            homeContent = homepage.page_content[0].content as Record<
+              string,
+              unknown
+            >;
+          } else if (
+            typeof homepage.page_content === "object" &&
+            "content" in homepage.page_content
+          ) {
+            homeContent = (
+              homepage.page_content as { content: Record<string, unknown> }
+            ).content;
+          }
+        }
+
+        if (homeContent) {
+          const homeComponents = homeContent.components as
+            | Record<
+                string,
+                { id?: string; type?: string; [k: string]: unknown }
+              >
+            | undefined;
+
+          if (homeComponents) {
+            const mutableContent = JSON.parse(
+              JSON.stringify(parsedContent),
+            ) as {
+              root: { children: string[] };
+              components: Record<string, unknown>;
+            };
+
+            if (showHeader) {
+              const navbarEntry = Object.entries(homeComponents).find(
+                ([, comp]) => comp?.type === "Navbar",
+              );
+              if (navbarEntry) {
+                const [navKey, navComp] = navbarEntry;
+                mutableContent.components[navKey] = {
+                  ...navComp,
+                  parentId: "root",
+                };
+                mutableContent.root.children.unshift(navKey);
+              }
+            }
+
+            if (showFooter) {
+              const footerEntry = Object.entries(homeComponents).find(
+                ([, comp]) => comp?.type === "Footer",
+              );
+              if (footerEntry) {
+                const [footerKey, footerComp] = footerEntry;
+                mutableContent.components[footerKey] = {
+                  ...footerComp,
+                  parentId: "root",
+                };
+                mutableContent.root.children.push(footerKey);
+              }
+            }
+
+            content = JSON.stringify(mutableContent);
+          }
+        }
+      }
+    }
+  }
+
+  // Fetch installed modules (needed for module-aware navbar/footer rendering)
+  let modules: InstalledModuleInfo[] = [];
+  try {
+    const { data: installations } = await supabase
+      .from("site_module_installations")
+      .select("id, module_id, is_enabled, installed_at, settings")
+      .eq("site_id", site.id)
+      .eq("is_enabled", true);
+
+    if (installations && installations.length > 0) {
+      const moduleIds = installations.map((d: any) => d.module_id);
+      const { data: modulesData } = await supabase
+        .from("modules_v2")
+        .select("id, name, slug, current_version, category, icon, status")
+        .in("id", moduleIds);
+
+      if (modulesData) {
+        const moduleMap = new Map(modulesData.map((m: any) => [m.id, m]));
+        for (const row of installations) {
+          const mod = moduleMap.get((row as any).module_id);
+          if (
+            mod &&
+            ((mod as any).status === "published" ||
+              (mod as any).status === "active")
+          ) {
+            modules.push({
+              id: (mod as any).id,
+              name: (mod as any).name,
+              slug: (mod as any).slug,
+              status: (row as any).is_enabled ? "active" : "inactive",
+              version: (mod as any).current_version || "1.0.0",
+              category: (mod as any).category,
+              icon: (mod as any).icon || undefined,
+              hasStudioComponents: KNOWN_MODULE_SLUGS.includes(
+                (mod as any).slug,
+              ),
+            });
+          }
+        }
+      }
+    }
+  } catch {
+    // Module fetch failed — LP still renders without module nav
+  }
+
+  // Blog flag for smart navigation
+  try {
+    const { getSiteBlogInfo } = await import("@/lib/blog/blog-api");
+    const blogInfo = await getSiteBlogInfo(site.id);
+    if (blogInfo.hasPosts) {
+      (mergedSettings as Record<string, unknown>)._hasBlog = true;
+    }
+  } catch {
+    // Skip blog nav injection
+  }
+
+  // Build SEO config from LP
+  const seoConfig = mappedLp.seoConfig as Record<string, any> | null;
+
+  return {
+    type: "landing-page" as const,
+    site: {
+      id: site.id,
+      name: site.name,
+      subdomain: site.subdomain,
+      customDomain: site.custom_domain,
+      settings: mergedSettings,
+    },
+    page: {
+      id: mappedLp.id,
+      name: mappedLp.title,
+      slug: `lp/${lpSlug}`,
+      isHomepage: false,
+      seoTitle: seoConfig?.metaTitle || mappedLp.title,
+      seoDescription:
+        seoConfig?.metaDescription || mappedLp.description || null,
+      seoImage: seoConfig?.ogImage || null,
+    },
+    content: content,
+    themeSettings: themeSettings as Record<string, unknown> | null,
+    modules,
+    // LP-specific fields
+    landingPage: {
+      id: mappedLp.id,
+      siteId: site.id as string,
+      slug: lpSlug,
+      useStudioFormat: !!mappedLp.useStudioFormat,
+      showHeader,
+      showFooter,
+      brandingOverride: brandingOverride || null,
+      customScripts: (mappedLp.customScripts as string) || "",
+      seoConfig: seoConfig || null,
+      conversionGoal: mappedLp.conversionGoal as string,
+    },
+  };
+}
+
 async function processData(
   site: any,
   pageSlug: string,
   supabase: ReturnType<typeof createAdminClient>,
 ) {
+  // ──────────────────────────────────────────────────────────────────────────
+  // LANDING PAGE ROUTING — Phase LPB-03
+  //
+  // Intercept /lp/[slug] URLs and serve published landing pages via the
+  // Studio renderer pipeline. Supports both Studio-format and legacy
+  // block-based LPs with a dual render path.
+  // ──────────────────────────────────────────────────────────────────────────
+  const stripped = pageSlug.replace(/^\/+/, "");
+  if (stripped.startsWith("lp/") && stripped.length > 3) {
+    const lpSlug = stripped.slice(3); // Remove "lp/" prefix
+    return getLandingPageData(site, lpSlug, supabase);
+  }
+
   // Find the requested page
   // IMPORTANT: Normalize slug comparison to handle both with and without leading slashes
   const pages = site.pages || [];
@@ -817,6 +1150,82 @@ export default async function SitePage({ params }: SitePageProps) {
   if (!data) {
     notFound();
   }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // LANDING PAGE RENDER PATH — Phase LPB-03
+  // ──────────────────────────────────────────────────────────────────────────
+  const isLandingPage = "landingPage" in data && !!(data as any).landingPage;
+
+  if (isLandingPage) {
+    const lp = (data as any).landingPage as {
+      id: string;
+      siteId: string;
+      slug: string;
+      useStudioFormat: boolean;
+      showHeader: boolean;
+      showFooter: boolean;
+      brandingOverride: LPBrandingOverride | null;
+      customScripts: string;
+      seoConfig: Record<string, any> | null;
+      conversionGoal: string;
+    };
+
+    // Legacy block-based LP — redirect to old API route
+    if (!lp.useStudioFormat || !data.content) {
+      redirect(`/api/marketing/lp/${lp.siteId}/${lp.slug}`);
+    }
+
+    // Parse custom scripts (JSON: { head?: string; body?: string })
+    let headScripts = "";
+    let bodyScripts = "";
+    if (lp.customScripts) {
+      try {
+        const scripts =
+          typeof lp.customScripts === "string"
+            ? JSON.parse(lp.customScripts)
+            : lp.customScripts;
+        headScripts = scripts.head || "";
+        bodyScripts = scripts.body || "";
+      } catch {
+        // Invalid JSON — treat as body script
+        bodyScripts = lp.customScripts;
+      }
+    }
+
+    return (
+      <>
+        {/* Inject head scripts (analytics, tracking pixels) */}
+        {headScripts && (
+          <script
+            dangerouslySetInnerHTML={{ __html: headScripts }}
+            suppressHydrationWarning
+          />
+        )}
+        <CraftRenderer
+          content={data.content}
+          themeSettings={data.themeSettings}
+          siteSettings={data.site.settings}
+          siteId={data.site.id}
+          modules={data.modules}
+          isLandingPage
+          landingPageId={lp.id}
+        />
+        {/* Module injector for LP (Navbar/Footer need module-aware rendering) */}
+        <ModuleInjector siteId={data.site.id} />
+        {/* Inject body scripts (conversion pixels, chat widgets) */}
+        {bodyScripts && (
+          <script
+            dangerouslySetInnerHTML={{ __html: bodyScripts }}
+            suppressHydrationWarning
+          />
+        )}
+      </>
+    );
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // REGULAR PAGE RENDER PATH
+  // ──────────────────────────────────────────────────────────────────────────
 
   // No content state
   if (!data.content) {

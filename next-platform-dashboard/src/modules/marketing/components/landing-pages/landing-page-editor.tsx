@@ -58,7 +58,10 @@ import type {
   LandingPageTemplate,
   StyleConfig,
 } from "../../types";
-import { DEFAULT_STYLE_CONFIG, FONT_OPTIONS } from "../../types/landing-page-types";
+import {
+  DEFAULT_STYLE_CONFIG,
+  FONT_OPTIONS,
+} from "../../types/landing-page-types";
 
 const BLOCK_TYPES = [
   { type: "hero", label: "Hero Section", icon: Type },
@@ -545,19 +548,24 @@ export function LandingPageEditor({
                 <CardTitle className="text-base">Colours</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {([
-                  { key: "primaryColor", label: "Primary Colour" },
-                  { key: "secondaryColor", label: "Secondary Colour" },
-                  { key: "headingColor", label: "Heading Colour" },
-                  { key: "bodyColor", label: "Body Text Colour" },
-                  { key: "backgroundColor", label: "Background Colour" },
-                ] as const).map(({ key, label }) => (
+                {(
+                  [
+                    { key: "primaryColor", label: "Primary Colour" },
+                    { key: "secondaryColor", label: "Secondary Colour" },
+                    { key: "headingColor", label: "Heading Colour" },
+                    { key: "bodyColor", label: "Body Text Colour" },
+                    { key: "backgroundColor", label: "Background Colour" },
+                  ] as const
+                ).map(({ key, label }) => (
                   <div key={key} className="flex items-center gap-3">
                     <input
                       type="color"
                       value={styleConfig[key]}
                       onChange={(e) =>
-                        setStyleConfig({ ...styleConfig, [key]: e.target.value })
+                        setStyleConfig({
+                          ...styleConfig,
+                          [key]: e.target.value,
+                        })
                       }
                       className="h-9 w-12 rounded border cursor-pointer"
                     />
@@ -566,7 +574,10 @@ export function LandingPageEditor({
                       <Input
                         value={styleConfig[key]}
                         onChange={(e) =>
-                          setStyleConfig({ ...styleConfig, [key]: e.target.value })
+                          setStyleConfig({
+                            ...styleConfig,
+                            [key]: e.target.value,
+                          })
                         }
                         className="h-7 text-xs mt-1 font-mono"
                         placeholder="#000000"
@@ -648,7 +659,10 @@ export function LandingPageEditor({
                   <Textarea
                     value={styleConfig.customCss || ""}
                     onChange={(e) =>
-                      setStyleConfig({ ...styleConfig, customCss: e.target.value })
+                      setStyleConfig({
+                        ...styleConfig,
+                        customCss: e.target.value,
+                      })
                     }
                     placeholder="/* Override any style */\n.lp-hero { ... }"
                     rows={5}

@@ -17,6 +17,7 @@ import type {
   SeoConfig,
   StyleConfig,
 } from "../types";
+import type { LPBrandingOverride } from "../types/lp-builder-types";
 
 async function getModuleClient() {
   const supabase = await createClient();
@@ -118,6 +119,20 @@ export async function createLandingPage(input: {
   seoConfig?: SeoConfig;
   conversionGoal?: string;
   templateId?: string;
+  // Studio format (LPB-01)
+  contentStudio?: unknown;
+  useStudioFormat?: boolean;
+  showHeader?: boolean;
+  showFooter?: boolean;
+  brandingOverride?: LPBrandingOverride | null;
+  customScripts?: string;
+  redirectUrl?: string;
+  conversionValue?: number;
+  maxConversions?: number | null;
+  isEvergreen?: boolean;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  expiredRedirectUrl?: string;
 }): Promise<{ landingPage: LandingPage | null; error: string | null }> {
   const supabase = await getModuleClient();
 
@@ -125,21 +140,47 @@ export async function createLandingPage(input: {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const insertData: Record<string, unknown> = {
+    site_id: input.siteId,
+    title: input.title,
+    slug: input.slug.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
+    description: input.description || null,
+    content_json: input.contentJson || [],
+    style_config: input.styleConfig || {},
+    form_config: input.formConfig || null,
+    seo_config: input.seoConfig || {},
+    conversion_goal: input.conversionGoal || "form_submit",
+    template_id: input.templateId || null,
+    created_by: user?.id || null,
+  };
+
+  // Studio format fields (LPB-01)
+  if (input.contentStudio !== undefined)
+    insertData.content_studio = input.contentStudio;
+  if (input.useStudioFormat !== undefined)
+    insertData.use_studio_format = input.useStudioFormat;
+  if (input.showHeader !== undefined) insertData.show_header = input.showHeader;
+  if (input.showFooter !== undefined) insertData.show_footer = input.showFooter;
+  if (input.brandingOverride !== undefined)
+    insertData.branding_override = input.brandingOverride;
+  if (input.customScripts !== undefined)
+    insertData.custom_scripts = input.customScripts;
+  if (input.redirectUrl !== undefined)
+    insertData.redirect_url = input.redirectUrl;
+  if (input.conversionValue !== undefined)
+    insertData.conversion_value = input.conversionValue;
+  if (input.maxConversions !== undefined)
+    insertData.max_conversions = input.maxConversions;
+  if (input.isEvergreen !== undefined)
+    insertData.is_evergreen = input.isEvergreen;
+  if (input.startsAt !== undefined) insertData.starts_at = input.startsAt;
+  if (input.endsAt !== undefined) insertData.ends_at = input.endsAt;
+  if (input.expiredRedirectUrl !== undefined)
+    insertData.expired_redirect_url = input.expiredRedirectUrl;
+
   const { data, error } = await supabase
     .from(MKT_TABLES.landingPages)
-    .insert({
-      site_id: input.siteId,
-      title: input.title,
-      slug: input.slug.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
-      description: input.description || null,
-      content_json: input.contentJson || [],
-      style_config: input.styleConfig || {},
-      form_config: input.formConfig || null,
-      seo_config: input.seoConfig || {},
-      conversion_goal: input.conversionGoal || "form_submit",
-      template_id: input.templateId || null,
-      created_by: user?.id || null,
-    })
+    .insert(insertData)
     .select("*")
     .single();
 
@@ -172,6 +213,20 @@ export async function updateLandingPage(
     formConfig?: Record<string, unknown> | null;
     seoConfig?: SeoConfig;
     conversionGoal?: string;
+    // Studio format (LPB-01)
+    contentStudio?: unknown;
+    useStudioFormat?: boolean;
+    showHeader?: boolean;
+    showFooter?: boolean;
+    brandingOverride?: LPBrandingOverride | null;
+    customScripts?: string;
+    redirectUrl?: string;
+    conversionValue?: number;
+    maxConversions?: number | null;
+    isEvergreen?: boolean;
+    startsAt?: string | null;
+    endsAt?: string | null;
+    expiredRedirectUrl?: string;
   },
 ): Promise<{ landingPage: LandingPage | null; error: string | null }> {
   const supabase = await getModuleClient();
@@ -192,6 +247,32 @@ export async function updateLandingPage(
     updateData.seo_config = updates.seoConfig;
   if (updates.conversionGoal !== undefined)
     updateData.conversion_goal = updates.conversionGoal;
+
+  // Studio format fields (LPB-01)
+  if (updates.contentStudio !== undefined)
+    updateData.content_studio = updates.contentStudio;
+  if (updates.useStudioFormat !== undefined)
+    updateData.use_studio_format = updates.useStudioFormat;
+  if (updates.showHeader !== undefined)
+    updateData.show_header = updates.showHeader;
+  if (updates.showFooter !== undefined)
+    updateData.show_footer = updates.showFooter;
+  if (updates.brandingOverride !== undefined)
+    updateData.branding_override = updates.brandingOverride;
+  if (updates.customScripts !== undefined)
+    updateData.custom_scripts = updates.customScripts;
+  if (updates.redirectUrl !== undefined)
+    updateData.redirect_url = updates.redirectUrl;
+  if (updates.conversionValue !== undefined)
+    updateData.conversion_value = updates.conversionValue;
+  if (updates.maxConversions !== undefined)
+    updateData.max_conversions = updates.maxConversions;
+  if (updates.isEvergreen !== undefined)
+    updateData.is_evergreen = updates.isEvergreen;
+  if (updates.startsAt !== undefined) updateData.starts_at = updates.startsAt;
+  if (updates.endsAt !== undefined) updateData.ends_at = updates.endsAt;
+  if (updates.expiredRedirectUrl !== undefined)
+    updateData.expired_redirect_url = updates.expiredRedirectUrl;
 
   const { data, error } = await supabase
     .from(MKT_TABLES.landingPages)

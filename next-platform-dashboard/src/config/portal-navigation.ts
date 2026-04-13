@@ -52,6 +52,7 @@ export interface PortalUserPermissions {
   canManageAgents: boolean;
   canManageCustomers: boolean;
   canManageMarketing: boolean;
+  canManageInvoices: boolean;
 }
 
 /**
@@ -156,6 +157,14 @@ export function getPortalNavigationGroups(
         title: "Marketing",
         href: siteUrl("marketing")!,
         icon: Mail,
+      });
+    }
+
+    if (hasModule("invoicing") && permissions.canManageInvoices) {
+      operationsItems.push({
+        title: "Invoicing",
+        href: siteUrl("invoicing")!,
+        icon: Receipt,
       });
     }
 

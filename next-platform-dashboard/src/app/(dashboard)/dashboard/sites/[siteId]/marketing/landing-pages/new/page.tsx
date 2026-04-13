@@ -1,10 +1,11 @@
 /**
  * New Landing Page Page
- * Phase MKT-06: Landing Pages & Opt-In Forms
+ * Phase LPB-02: Studio LP Editor — Template Picker + Create
  */
 import type { Metadata } from "next";
 import { PLATFORM } from "@/lib/constants/platform";
-import { LandingPageEditor } from "@/modules/marketing/components/landing-pages/landing-page-editor";
+import { getSite } from "@/lib/actions/sites";
+import { LPNewPageClient } from "@/modules/marketing/components/landing-pages/lp-new-page-client";
 
 export const metadata: Metadata = {
   title: `New Landing Page | ${PLATFORM.name}`,
@@ -17,10 +18,7 @@ interface NewLandingPageProps {
 
 export default async function NewLandingPage({ params }: NewLandingPageProps) {
   const { siteId } = await params;
+  const site = await getSite(siteId);
 
-  return (
-    <div className="flex-1 p-6">
-      <LandingPageEditor siteId={siteId} />
-    </div>
-  );
+  return <LPNewPageClient siteId={siteId} siteName={site.name} />;
 }

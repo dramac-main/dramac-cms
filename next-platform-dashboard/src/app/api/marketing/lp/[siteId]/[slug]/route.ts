@@ -139,4 +139,3 @@ async function trackVisit(
     column_name: "total_visits",
   });
 }
-

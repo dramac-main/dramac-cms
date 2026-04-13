@@ -9,13 +9,16 @@
  *
  * @phase STUDIO-27 - Platform Integration & Puck Removal
  * @phase ECOM-51 - StorefrontProvider Integration
+ * @phase LPB-03 - Landing Page Public Serving
  */
 
+import { useEffect } from "react";
 import { StudioRenderer } from "@/lib/studio/engine/renderer";
 import type { InstalledModuleInfo } from "@/types/studio-module";
 import { StorefrontProvider } from "@/modules/ecommerce/context/storefront-context";
 import { StorefrontAuthProvider } from "@/modules/ecommerce/context/storefront-auth-context";
 import { StorefrontAuthDialogProvider } from "@/modules/ecommerce/studio/components/StorefrontAuthDialog";
+import { initLPTracking } from "@/modules/marketing/lib/lp-tracking-client";
 
 interface CraftRendererProps {
   content: string;
@@ -24,6 +27,9 @@ interface CraftRendererProps {
   siteId?: string;
   pageId?: string;
   modules?: InstalledModuleInfo[];
+  // LP mode props — Phase LPB-03
+  isLandingPage?: boolean;
+  landingPageId?: string;
 }
 
 export function CraftRenderer({
@@ -33,7 +39,15 @@ export function CraftRenderer({
   siteId,
   pageId,
   modules,
+  isLandingPage,
+  landingPageId,
 }: CraftRendererProps) {
+  // ── LP Visit + Engagement Tracking — Phase LPB-08 ──────────────────────
+  useEffect(() => {
+    if (!isLandingPage || !landingPageId || !siteId) return;
+    initLPTracking(siteId, landingPageId);
+  }, [isLandingPage, landingPageId, siteId]);
+
   // Always wrap in StorefrontProvider to maintain a consistent component tree.
   // Conditional wrapping causes React error #310 ("Rendered more hooks than
   // during the previous render") because StorefrontProvider has hooks inside it.

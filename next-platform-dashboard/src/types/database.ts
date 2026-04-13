@@ -2593,6 +2593,7 @@ export type Database = {
           can_manage_bookings: boolean | null;
           can_manage_crm: boolean | null;
           can_manage_customers: boolean | null;
+          can_manage_invoices: boolean | null;
           can_manage_live_chat: boolean | null;
           can_manage_marketing: boolean | null;
           can_manage_orders: boolean | null;
@@ -2613,6 +2614,7 @@ export type Database = {
           can_manage_bookings?: boolean | null;
           can_manage_crm?: boolean | null;
           can_manage_customers?: boolean | null;
+          can_manage_invoices?: boolean | null;
           can_manage_live_chat?: boolean | null;
           can_manage_marketing?: boolean | null;
           can_manage_orders?: boolean | null;
@@ -2633,6 +2635,7 @@ export type Database = {
           can_manage_bookings?: boolean | null;
           can_manage_crm?: boolean | null;
           can_manage_customers?: boolean | null;
+          can_manage_invoices?: boolean | null;
           can_manage_live_chat?: boolean | null;
           can_manage_marketing?: boolean | null;
           can_manage_orders?: boolean | null;
@@ -2672,6 +2675,7 @@ export type Database = {
           can_manage_bookings: boolean | null;
           can_manage_crm: boolean | null;
           can_manage_customers: boolean | null;
+          can_manage_invoices: boolean | null;
           can_manage_live_chat: boolean | null;
           can_manage_marketing: boolean | null;
           can_manage_orders: boolean | null;
@@ -2705,6 +2709,7 @@ export type Database = {
           can_manage_bookings?: boolean | null;
           can_manage_crm?: boolean | null;
           can_manage_customers?: boolean | null;
+          can_manage_invoices?: boolean | null;
           can_manage_live_chat?: boolean | null;
           can_manage_marketing?: boolean | null;
           can_manage_orders?: boolean | null;
@@ -2738,6 +2743,7 @@ export type Database = {
           can_manage_bookings?: boolean | null;
           can_manage_crm?: boolean | null;
           can_manage_customers?: boolean | null;
+          can_manage_invoices?: boolean | null;
           can_manage_live_chat?: boolean | null;
           can_manage_marketing?: boolean | null;
           can_manage_orders?: boolean | null;

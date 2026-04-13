@@ -26,6 +26,7 @@ export interface PortalUser {
   canManageAgents: boolean;
   canManageCustomers: boolean;
   canManageMarketing: boolean;
+  canManageInvoices: boolean;
 }
 
 /**
@@ -65,7 +66,8 @@ export async function getPortalUser(): Promise<PortalUser | null> {
       can_manage_quotes,
       can_manage_agents,
       can_manage_customers,
-      can_manage_marketing
+      can_manage_marketing,
+      can_manage_invoices
     `,
     )
     .eq("portal_user_id", user.id)
@@ -104,6 +106,7 @@ export async function getPortalUser(): Promise<PortalUser | null> {
     canManageAgents: client.can_manage_agents ?? false,
     canManageCustomers: client.can_manage_customers ?? false,
     canManageMarketing: client.can_manage_marketing ?? false,
+    canManageInvoices: client.can_manage_invoices ?? false,
   };
 }
 
@@ -187,7 +190,8 @@ export async function getPortalSession(): Promise<{
         can_manage_quotes,
         can_manage_agents,
       can_manage_customers,
-      can_manage_marketing
+      can_manage_marketing,
+      can_manage_invoices
       `,
       )
       .eq("id", impersonation.clientId);
@@ -221,6 +225,7 @@ export async function getPortalSession(): Promise<{
           canManageAgents: client.can_manage_agents ?? false,
           canManageCustomers: client.can_manage_customers ?? false,
           canManageMarketing: client.can_manage_marketing ?? false,
+          canManageInvoices: client.can_manage_invoices ?? false,
         },
         isImpersonating: true,
         impersonatorEmail: impersonation.impersonatorEmail,

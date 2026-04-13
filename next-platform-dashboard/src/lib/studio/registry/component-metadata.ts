@@ -2159,6 +2159,212 @@ export const COMPONENT_METADATA: ComponentMetadata[] = [
       suggestedWith: ["Card", "Stats", "Features", "Timeline"],
     },
   },
+
+  // =========================================================================
+  // LANDING PAGE COMPONENTS (Phase LPB-01)
+  // =========================================================================
+
+  // LPHero
+  {
+    type: "LPHero",
+    label: "LP Hero Section",
+    category: "landing-page",
+    description:
+      "Conversion-focused hero with 6 layout variants (split, full-bleed, video, gradient, minimal)",
+    acceptsChildren: false,
+    keywords: [
+      "hero",
+      "landing-page",
+      "conversion",
+      "split-layout",
+      "headline",
+      "cta",
+      "full-bleed",
+      "video-background",
+    ],
+    ai: {
+      description:
+        "A high-converting hero section for landing pages with 6 layout variants: split-left, split-right, full-bleed, video-bg, gradient-overlay, and minimal. Supports headline, subheadline, CTA buttons, background images/video, overlay controls, and optional embedded form.",
+      usageGuidelines:
+        "Use as the first section on a landing page. Choose split variants for image-text combos, full-bleed for impactful visuals, video-bg for engaging backgrounds, gradient-overlay for text-heavy heroes, or minimal for simplicity.",
+      suggestedWith: ["LPForm", "LPLogoBar", "LPTrustBadges", "LPCountdown"],
+    },
+  },
+
+  // LPForm
+  {
+    type: "LPForm",
+    label: "LP Lead Form",
+    category: "landing-page",
+    description:
+      "Advanced lead capture form with conditional fields and CRM integration",
+    acceptsChildren: false,
+    keywords: [
+      "form",
+      "landing-page",
+      "lead-capture",
+      "conversion",
+      "email",
+      "subscribe",
+      "signup",
+    ],
+    ai: {
+      description:
+        "A configurable lead capture form with variants (inline, card, floating, slide-in, minimal), multi-field support, submit handling, and integration with the subscriber/CRM pipeline.",
+      usageGuidelines:
+        "Place within or after the hero section. Use 'card' variant for standalone forms, 'inline' for embedded in hero, 'floating' for overlays. Keep fields minimal for higher conversion rates.",
+      suggestedWith: ["LPHero", "LPTrustBadges", "LPCountdown"],
+    },
+  },
+
+  // LPLogoBar
+  {
+    type: "LPLogoBar",
+    label: "Logo Bar",
+    category: "landing-page",
+    description: '"As Seen On" / partner logo display bar',
+    acceptsChildren: false,
+    keywords: [
+      "logos",
+      "trust",
+      "social-proof",
+      "partners",
+      "as-seen-on",
+      "clients",
+      "brands",
+    ],
+    ai: {
+      description:
+        "A social proof logo bar showing partner/client logos with scroll, grid, or carousel variants. Supports grayscale mode and configurable spacing.",
+      usageGuidelines:
+        "Place below the hero section for immediate social proof. Use grayscale for a subtle, professional look. Works well with 5-10 logos.",
+      suggestedWith: ["LPHero", "LPTrustBadges", "LPTestimonialWall"],
+    },
+  },
+
+  // LPTrustBadges
+  {
+    type: "LPTrustBadges",
+    label: "Trust Badges",
+    category: "landing-page",
+    description: "Security, guarantee, and certification badges",
+    acceptsChildren: false,
+    keywords: [
+      "trust",
+      "security",
+      "badges",
+      "conversion",
+      "guarantee",
+      "certification",
+      "ssl",
+    ],
+    ai: {
+      description:
+        "Trust signal badges (security, guarantee, certifications) in horizontal, grid, or inline layouts. Uses Lucide icons with configurable colors and optional descriptions.",
+      usageGuidelines:
+        "Place near forms or CTAs to reduce friction. Use 3-5 badges max. Green icons signal trust. Keep descriptions short.",
+      suggestedWith: ["LPForm", "LPHero", "LPPricingTable"],
+    },
+  },
+
+  // LPCountdown
+  {
+    type: "LPCountdown",
+    label: "Countdown Timer",
+    category: "landing-page",
+    description: "Urgency countdown with evergreen or fixed date modes",
+    acceptsChildren: false,
+    keywords: [
+      "countdown",
+      "urgency",
+      "timer",
+      "conversion",
+      "scarcity",
+      "deadline",
+      "offer",
+    ],
+    ai: {
+      description:
+        "A countdown timer with fixed-date or evergreen (per-visitor) modes. Variants: boxes, inline, minimal, circular. Supports expiry actions (hide, redirect, show message) and urgency text.",
+      usageGuidelines:
+        "Place near CTAs to create urgency. Evergreen mode uses localStorage for per-visitor timers. Use sparingly and honestly — fake urgency erodes trust.",
+      suggestedWith: ["LPHero", "LPFloatingCTA", "LPPricingTable"],
+    },
+  },
+
+  // LPTestimonialWall
+  {
+    type: "LPTestimonialWall",
+    label: "Testimonial Wall",
+    category: "landing-page",
+    description: "Grid/carousel of testimonials with photos and ratings",
+    acceptsChildren: false,
+    keywords: [
+      "testimonials",
+      "social-proof",
+      "reviews",
+      "quotes",
+      "ratings",
+      "carousel",
+      "masonry",
+    ],
+    ai: {
+      description:
+        "A testimonial display component with grid, carousel, masonry, or single-featured variants. Shows name, role, company, quote text, avatar photo, and star ratings.",
+      usageGuidelines:
+        "Place in the middle of the page to reinforce credibility. Use real testimonials with photos for max impact. 3-6 testimonials is optimal.",
+      suggestedWith: ["LPLogoBar", "LPTrustBadges", "LPPricingTable"],
+    },
+  },
+
+  // LPPricingTable
+  {
+    type: "LPPricingTable",
+    label: "Pricing Table",
+    category: "landing-page",
+    description: "Side-by-side pricing comparison with highlighted plan",
+    acceptsChildren: false,
+    keywords: [
+      "pricing",
+      "plans",
+      "comparison",
+      "table",
+      "popular",
+      "features",
+      "subscription",
+    ],
+    ai: {
+      description:
+        "A pricing comparison component with cards, table, or minimal variants. Supports highlighted popular plan, feature lists, and CTA buttons per plan.",
+      usageGuidelines:
+        "Place near the bottom of the page, after trust signals and testimonials. Highlight one plan as popular. Keep features to 5-8 per plan for readability.",
+      suggestedWith: ["LPTestimonialWall", "LPTrustBadges", "LPCountdown"],
+    },
+  },
+
+  // LPFloatingCTA
+  {
+    type: "LPFloatingCTA",
+    label: "Floating CTA Bar",
+    category: "landing-page",
+    description: "Sticky bottom bar with CTA button and urgency text",
+    acceptsChildren: false,
+    keywords: [
+      "cta",
+      "sticky",
+      "floating",
+      "conversion",
+      "bottom-bar",
+      "urgency",
+    ],
+    ai: {
+      description:
+        "A floating/sticky CTA bar that appears after scrolling. Positioned at bottom or top with text, CTA button, optional countdown, and configurable scroll trigger threshold.",
+      usageGuidelines:
+        "Use one per page. Set showAfterScroll to 20-30% for best effect. Keep text short and compelling. Works well with countdown for urgency.",
+      suggestedWith: ["LPHero", "LPCountdown", "LPForm"],
+    },
+  },
 ];
 
 /**

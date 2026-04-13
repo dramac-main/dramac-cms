@@ -1,6 +1,6 @@
 /**
  * Admin Navigation Configuration
- * 
+ *
  * Navigation items for the admin panel sidebar.
  * Used by the unified Sidebar component with variant="admin"
  * Grouped for clarity: Overview, Management, Revenue, System
@@ -26,6 +26,7 @@ import {
   DollarSign,
   Globe,
   Mail,
+  LayoutTemplate,
   type LucideIcon,
 } from "lucide-react";
 
@@ -39,30 +40,131 @@ export interface AdminNavItem {
 
 export const adminNavigationItems: AdminNavItem[] = [
   // Overview
-  { name: "Overview", href: "/admin", icon: LayoutDashboard, group: "Overview" },
-  
+  {
+    name: "Overview",
+    href: "/admin",
+    icon: LayoutDashboard,
+    group: "Overview",
+  },
+
   // Management
-  { name: "Agencies", href: "/admin/agencies", icon: Building2, group: "Management" },
+  {
+    name: "Agencies",
+    href: "/admin/agencies",
+    icon: Building2,
+    group: "Management",
+  },
   { name: "Users", href: "/admin/users", icon: Users, group: "Management" },
-  { name: "Modules", href: "/admin/modules", icon: Package, group: "Management" },
-  { name: "Module Pricing", href: "/admin/modules/pricing", icon: Coins, group: "Management" },
-  { name: "Module Requests", href: "/admin/modules/requests", icon: Inbox, group: "Management" },
-  { name: "Module Analytics", href: "/admin/modules/analytics", icon: BarChart3, group: "Management" },
-  { name: "Module Studio", href: "/admin/modules/studio", icon: Blocks, group: "Management" },
-  { name: "Domain Pricing", href: "/admin/pricing", icon: DollarSign, group: "Management" },
-  { name: "Domain Controls", href: "/admin/domains", icon: Globe, group: "Management" },
-  { name: "Marketing Health", href: "/admin/marketing", icon: Mail, group: "Management" },
-  
+  {
+    name: "Modules",
+    href: "/admin/modules",
+    icon: Package,
+    group: "Management",
+  },
+  {
+    name: "Module Pricing",
+    href: "/admin/modules/pricing",
+    icon: Coins,
+    group: "Management",
+  },
+  {
+    name: "Module Requests",
+    href: "/admin/modules/requests",
+    icon: Inbox,
+    group: "Management",
+  },
+  {
+    name: "Module Analytics",
+    href: "/admin/modules/analytics",
+    icon: BarChart3,
+    group: "Management",
+  },
+  {
+    name: "Module Studio",
+    href: "/admin/modules/studio",
+    icon: Blocks,
+    group: "Management",
+  },
+  {
+    name: "Domain Pricing",
+    href: "/admin/pricing",
+    icon: DollarSign,
+    group: "Management",
+  },
+  {
+    name: "Domain Controls",
+    href: "/admin/domains",
+    icon: Globe,
+    group: "Management",
+  },
+  {
+    name: "Marketing Health",
+    href: "/admin/marketing",
+    icon: Mail,
+    group: "Management",
+  },
+  {
+    name: "LP Health",
+    href: "/admin/landing-pages",
+    icon: LayoutTemplate,
+    group: "Management",
+  },
+
   // Revenue & Analytics
-  { name: "Subscriptions", href: "/admin/subscriptions", icon: CreditCard, group: "Revenue" },
-  { name: "Billing & Revenue", href: "/admin/billing/revenue", icon: TrendingUp, group: "Revenue" },
-  { name: "Agency Analytics", href: "/admin/agencies/analytics", icon: BarChart3, group: "Revenue" },
-  { name: "Platform Analytics", href: "/admin/analytics", icon: PieChart, group: "Revenue" },
-  
+  {
+    name: "Subscriptions",
+    href: "/admin/subscriptions",
+    icon: CreditCard,
+    group: "Revenue",
+  },
+  {
+    name: "Billing & Revenue",
+    href: "/admin/billing/revenue",
+    icon: TrendingUp,
+    group: "Revenue",
+  },
+  {
+    name: "Agency Analytics",
+    href: "/admin/agencies/analytics",
+    icon: BarChart3,
+    group: "Revenue",
+  },
+  {
+    name: "Platform Analytics",
+    href: "/admin/analytics",
+    icon: PieChart,
+    group: "Revenue",
+  },
+
   // System
-  { name: "Activity Log", href: "/admin/activity", icon: Activity, group: "System" },
-  { name: "Audit Log", href: "/admin/audit", icon: FileSearch, group: "System" },
-  { name: "System Health", href: "/admin/health", icon: AlertTriangle, group: "System" },
-  { name: "Module Testing", href: "/admin/modules/testing", icon: FlaskConical, group: "System" },
-  { name: "Settings", href: "/admin/settings", icon: Settings, group: "System" },
+  {
+    name: "Activity Log",
+    href: "/admin/activity",
+    icon: Activity,
+    group: "System",
+  },
+  {
+    name: "Audit Log",
+    href: "/admin/audit",
+    icon: FileSearch,
+    group: "System",
+  },
+  {
+    name: "System Health",
+    href: "/admin/health",
+    icon: AlertTriangle,
+    group: "System",
+  },
+  {
+    name: "Module Testing",
+    href: "/admin/modules/testing",
+    icon: FlaskConical,
+    group: "System",
+  },
+  {
+    name: "Settings",
+    href: "/admin/settings",
+    icon: Settings,
+    group: "System",
+  },
 ];

@@ -2689,6 +2689,67 @@ export const ACTION_REGISTRY = {
         },
       },
     },
+
+    // LP Builder actions (Phase LPB-01)
+    create_landing_page: {
+      id: "marketing.create_landing_page",
+      name: "Create Landing Page",
+      description: "Create a new landing page from a template",
+      category: "marketing",
+      icon: "Rocket",
+      inputs: {
+        site_id: {
+          type: "string" as const,
+          required: true,
+          description: "Site ID to create the LP under",
+        },
+        title: {
+          type: "string" as const,
+          required: true,
+          description: "Landing page title",
+        },
+        slug: {
+          type: "string" as const,
+          required: true,
+          description: "URL slug for the landing page",
+        },
+        template_id: {
+          type: "string" as const,
+          required: false,
+          description: "Template ID to base the LP on",
+        },
+      },
+      outputs: {
+        landing_page_id: {
+          type: "string" as const,
+          description: "Created landing page ID",
+        },
+      },
+    },
+    publish_landing_page: {
+      id: "marketing.publish_landing_page",
+      name: "Publish Landing Page",
+      description: "Publish a landing page (set status to published)",
+      category: "marketing",
+      icon: "Globe",
+      inputs: {
+        landing_page_id: {
+          type: "string" as const,
+          required: true,
+          description: "Landing page ID to publish",
+        },
+      },
+      outputs: {
+        success: {
+          type: "boolean" as const,
+          description: "Whether the LP was published",
+        },
+        url: {
+          type: "string" as const,
+          description: "Published LP URL",
+        },
+      },
+    },
   },
 } as const;
 

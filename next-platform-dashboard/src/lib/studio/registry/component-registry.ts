@@ -1,6 +1,6 @@
 /**
  * DRAMAC Studio Component Registry
- * 
+ *
  * Central registry for all editor components.
  * Supports core components and dynamic module components.
  */
@@ -30,19 +30,104 @@ export interface CategoryInfo {
 // =============================================================================
 
 export const CATEGORIES: CategoryInfo[] = [
-  { id: "layout", label: "Layout", icon: "LayoutGrid", order: 1, description: "Structural components" },
-  { id: "typography", label: "Typography", icon: "Type", order: 2, description: "Text and headings" },
-  { id: "buttons", label: "Buttons", icon: "MousePointer", order: 3, description: "Clickable elements" },
-  { id: "media", label: "Media", icon: "Image", order: 4, description: "Images, videos, maps" },
-  { id: "sections", label: "Sections", icon: "Layers", order: 5, description: "Pre-built sections" },
-  { id: "navigation", label: "Navigation", icon: "Menu", order: 6, description: "Menus and footers" },
-  { id: "forms", label: "Forms", icon: "FormInput", order: 7, description: "Form elements" },
-  { id: "content", label: "Content", icon: "FileText", order: 8, description: "Rich content blocks" },
-  { id: "interactive", label: "Interactive", icon: "Sparkles", order: 9, description: "Animated elements" },
-  { id: "marketing", label: "Marketing", icon: "Megaphone", order: 10, description: "Conversion elements" },
-  { id: "ecommerce", label: "E-Commerce", icon: "ShoppingCart", order: 11, description: "Store components" },
-  { id: "3d", label: "3D & Effects", icon: "Box", order: 12, description: "3D and visual effects" },
-  { id: "module", label: "Modules", icon: "Puzzle", order: 99, description: "From installed modules" },
+  {
+    id: "layout",
+    label: "Layout",
+    icon: "LayoutGrid",
+    order: 1,
+    description: "Structural components",
+  },
+  {
+    id: "typography",
+    label: "Typography",
+    icon: "Type",
+    order: 2,
+    description: "Text and headings",
+  },
+  {
+    id: "buttons",
+    label: "Buttons",
+    icon: "MousePointer",
+    order: 3,
+    description: "Clickable elements",
+  },
+  {
+    id: "media",
+    label: "Media",
+    icon: "Image",
+    order: 4,
+    description: "Images, videos, maps",
+  },
+  {
+    id: "sections",
+    label: "Sections",
+    icon: "Layers",
+    order: 5,
+    description: "Pre-built sections",
+  },
+  {
+    id: "navigation",
+    label: "Navigation",
+    icon: "Menu",
+    order: 6,
+    description: "Menus and footers",
+  },
+  {
+    id: "forms",
+    label: "Forms",
+    icon: "FormInput",
+    order: 7,
+    description: "Form elements",
+  },
+  {
+    id: "content",
+    label: "Content",
+    icon: "FileText",
+    order: 8,
+    description: "Rich content blocks",
+  },
+  {
+    id: "interactive",
+    label: "Interactive",
+    icon: "Sparkles",
+    order: 9,
+    description: "Animated elements",
+  },
+  {
+    id: "marketing",
+    label: "Marketing",
+    icon: "Megaphone",
+    order: 10,
+    description: "Conversion elements",
+  },
+  {
+    id: "landing-page",
+    label: "Landing Page",
+    icon: "Rocket",
+    order: 10.5,
+    description: "High-converting LP components",
+  },
+  {
+    id: "ecommerce",
+    label: "E-Commerce",
+    icon: "ShoppingCart",
+    order: 11,
+    description: "Store components",
+  },
+  {
+    id: "3d",
+    label: "3D & Effects",
+    icon: "Box",
+    order: 12,
+    description: "3D and visual effects",
+  },
+  {
+    id: "module",
+    label: "Modules",
+    icon: "Puzzle",
+    order: 99,
+    description: "From installed modules",
+  },
 ];
 
 // =============================================================================
@@ -68,7 +153,11 @@ class ComponentRegistry {
   /**
    * Register a component definition
    */
-  register(definition: ComponentDefinition, source: "core" | "module" = "core", moduleId?: string): void {
+  register(
+    definition: ComponentDefinition,
+    source: "core" | "module" = "core",
+    moduleId?: string,
+  ): void {
     const entry: ComponentRegistryEntry = {
       definition,
       source,
@@ -85,13 +174,19 @@ class ComponentRegistry {
       this.moduleComponents.get(moduleId)!.add(definition.type);
     }
 
-    console.debug(`[Registry] Registered component: ${definition.type} (${source})`);
+    console.debug(
+      `[Registry] Registered component: ${definition.type} (${source})`,
+    );
   }
 
   /**
    * Register multiple components
    */
-  registerAll(definitions: ComponentDefinition[], source: "core" | "module" = "core", moduleId?: string): void {
+  registerAll(
+    definitions: ComponentDefinition[],
+    source: "core" | "module" = "core",
+    moduleId?: string,
+  ): void {
     for (const definition of definitions) {
       this.register(definition, source, moduleId);
     }
@@ -214,8 +309,9 @@ class ComponentRegistry {
    * Get all categories with components
    */
   getActiveCategories(): CategoryInfo[] {
-    return CATEGORIES.filter((cat) => this.getByCategory(cat.id).length > 0)
-      .sort((a, b) => a.order - b.order);
+    return CATEGORIES.filter(
+      (cat) => this.getByCategory(cat.id).length > 0,
+    ).sort((a, b) => a.order - b.order);
   }
 
   /**
@@ -291,14 +387,18 @@ class ComponentRegistry {
    * Get core component count
    */
   get coreCount(): number {
-    return Array.from(this.components.values()).filter((e) => e.source === "core").length;
+    return Array.from(this.components.values()).filter(
+      (e) => e.source === "core",
+    ).length;
   }
 
   /**
    * Get module component count
    */
   get moduleCount(): number {
-    return Array.from(this.components.values()).filter((e) => e.source === "module").length;
+    return Array.from(this.components.values()).filter(
+      (e) => e.source === "module",
+    ).length;
   }
 }
 
@@ -316,7 +416,11 @@ export const componentRegistry = new ComponentRegistry();
  * Create a component definition with defaults
  */
 export function defineComponent(
-  partial: Partial<ComponentDefinition> & Pick<ComponentDefinition, "type" | "label" | "category" | "icon" | "render">
+  partial: Partial<ComponentDefinition> &
+    Pick<
+      ComponentDefinition,
+      "type" | "label" | "category" | "icon" | "render"
+    >,
 ): ComponentDefinition {
   return {
     fields: {},

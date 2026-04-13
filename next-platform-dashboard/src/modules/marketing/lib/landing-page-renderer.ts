@@ -300,7 +300,11 @@ function renderTestimonials(c: Record<string, unknown>): string {
       <div class="lp-quote-mark">&ldquo;</div>
       <p class="lp-quote-text">${esc(String(item.quote || item.text || ""))}</p>
       <div class="lp-quote-author">
-        <div class="lp-avatar">${esc(String(item.name || "?").charAt(0).toUpperCase())}</div>
+        <div class="lp-avatar">${esc(
+          String(item.name || "?")
+            .charAt(0)
+            .toUpperCase(),
+        )}</div>
         <div>
           <p class="lp-author-name">${esc(String(item.name || "Anonymous"))}</p>
           ${item.role ? `<p class="lp-author-role">${esc(String(item.role))}</p>` : ""}

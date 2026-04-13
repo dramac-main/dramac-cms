@@ -8,11 +8,12 @@ import type { SiteFilters } from "@/types/site";
 import type { Json } from "@/types/database";
 import { bootstrapLiveChatAgent } from "@/modules/live-chat/lib/bootstrap-agent";
 import { seedMarketingSettings } from "@/modules/marketing/lib/marketing-bootstrap";
+import { seedDefaultInvoicingSettings } from "@/modules/invoicing/lib/invoicing-bootstrap";
 
 // Core modules that are auto-enabled on every new site.
 // These form the foundation: CRM for contacts, Automation for workflows,
 // Live Chat for real-time communication, Marketing for campaigns.
-const CORE_MODULE_SLUGS = ["crm", "automation", "live-chat", "marketing"] as const;
+const CORE_MODULE_SLUGS = ["crm", "automation", "live-chat", "marketing", "invoicing"] as const;
 
 // Get all sites for the current organization
 export async function getSites(filters?: SiteFilters) {
@@ -304,6 +305,13 @@ async function installCoreModules(
       if (mod.slug === "marketing") {
         await seedMarketingSettings(siteId).catch((err) =>
           console.error("[Sites] Failed to seed marketing settings:", err),
+        );
+      }
+
+      // Step 3c: For Invoicing — seed default settings, VAT rate, and expense categories.
+      if (mod.slug === "invoicing") {
+        await seedDefaultInvoicingSettings(siteId).catch((err) =>
+          console.error("[Sites] Failed to seed invoicing settings:", err),
         );
       }
     } catch (err) {

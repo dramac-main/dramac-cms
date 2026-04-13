@@ -123,6 +123,18 @@ import {
   CursorEffectRender,
 } from "@/lib/studio/blocks/renders";
 
+// Import LP-specific render components (Phase LPB-01)
+import {
+  LPHeroRender,
+  LPFormRender,
+  LPLogoBarRender,
+  LPTrustBadgesRender,
+  LPCountdownRender,
+  LPTestimonialWallRender,
+  LPPricingTableRender,
+  LPFloatingCTARender,
+} from "@/components/studio/blocks/landing-page";
+
 // =============================================================================
 // LAYOUT COMPONENTS
 // =============================================================================
@@ -27593,6 +27605,1196 @@ const effectsComponents: ComponentDefinition[] = [
 ];
 
 // =============================================================================
+// LANDING PAGE COMPONENTS (Phase LPB-01)
+// =============================================================================
+
+const landingPageComponents: ComponentDefinition[] = [
+  defineComponent({
+    type: "LPHero",
+    label: "LP Hero Section",
+    description:
+      "Conversion-focused hero with 6 layout variants (split, full-bleed, video, gradient, minimal)",
+    category: "landing-page",
+    icon: "Rocket",
+    render: LPHeroRender,
+    fieldGroups: [
+      {
+        id: "content",
+        label: "Content",
+        icon: "Type",
+        fields: [
+          "preheadline",
+          "headline",
+          "subheadline",
+          "ctaText",
+          "ctaUrl",
+          "ctaSecondaryText",
+          "ctaSecondaryUrl",
+          "benefitsJson",
+        ],
+        defaultExpanded: true,
+      },
+      {
+        id: "layout",
+        label: "Layout",
+        icon: "Layout",
+        fields: [
+          "variant",
+          "minHeight",
+          "verticalAlign",
+          "textAlign",
+          "contentMaxWidth",
+          "paddingTop",
+          "paddingBottom",
+        ],
+        defaultExpanded: true,
+      },
+      {
+        id: "media",
+        label: "Media",
+        icon: "Image",
+        fields: [
+          "heroImage",
+          "backgroundImage",
+          "videoUrl",
+          "overlayColor",
+          "overlayOpacity",
+        ],
+        defaultExpanded: false,
+      },
+      {
+        id: "form",
+        label: "Embedded Form",
+        icon: "FormInput",
+        fields: ["showForm", "formPosition"],
+        defaultExpanded: false,
+      },
+    ],
+    fields: {
+      variant: {
+        type: "select",
+        label: "Hero Variant",
+        defaultValue: "split-left",
+        options: [
+          { label: "Split Left", value: "split-left" },
+          { label: "Split Right", value: "split-right" },
+          { label: "Full Bleed", value: "full-bleed" },
+          { label: "Video Background", value: "video-bg" },
+          { label: "Gradient Overlay", value: "gradient-overlay" },
+          { label: "Minimal", value: "minimal" },
+        ],
+      },
+      preheadline: {
+        type: "text",
+        label: "Pre-Headline",
+        defaultValue: "",
+      },
+      headline: {
+        type: "text",
+        label: "Headline",
+        defaultValue: "Your Headline Here",
+      },
+      subheadline: {
+        type: "textarea",
+        label: "Subheadline",
+        defaultValue: "Supporting text that explains your offer",
+      },
+      ctaText: { type: "text", label: "CTA Text", defaultValue: "Get Started" },
+      ctaUrl: { type: "text", label: "CTA URL", defaultValue: "#" },
+      ctaSecondaryText: {
+        type: "text",
+        label: "Secondary CTA Text",
+        defaultValue: "",
+      },
+      ctaSecondaryUrl: {
+        type: "text",
+        label: "Secondary CTA URL",
+        defaultValue: "",
+      },
+      benefitsJson: {
+        type: "textarea",
+        label: "Benefits (JSON array)",
+        defaultValue:
+          '["Free 14-day trial","No credit card required","Cancel anytime"]',
+      },
+      heroImage: {
+        type: "text",
+        label: "Hero Image URL (split variants)",
+        defaultValue: "",
+      },
+      backgroundImage: {
+        type: "text",
+        label: "Background Image URL",
+        defaultValue: "",
+      },
+      videoUrl: { type: "text", label: "Video URL", defaultValue: "" },
+      overlayColor: {
+        type: "color",
+        label: "Overlay Color",
+        defaultValue: "#000000",
+      },
+      overlayOpacity: {
+        type: "number",
+        label: "Overlay Opacity (0-100)",
+        defaultValue: "40",
+      },
+      showForm: {
+        type: "select",
+        label: "Show Form",
+        defaultValue: "false",
+        options: [
+          { label: "Yes", value: "true" },
+          { label: "No", value: "false" },
+        ],
+      },
+      formPosition: {
+        type: "select",
+        label: "Form Position",
+        defaultValue: "right",
+        options: [
+          { label: "Right", value: "right" },
+          { label: "Left", value: "left" },
+          { label: "Overlay", value: "overlay" },
+          { label: "Below", value: "below" },
+        ],
+      },
+      minHeight: {
+        type: "select",
+        label: "Min Height",
+        defaultValue: "auto",
+        options: [
+          { label: "Auto", value: "auto" },
+          { label: "Full Screen", value: "screen" },
+          { label: "80%", value: "80vh" },
+          { label: "60%", value: "60vh" },
+        ],
+      },
+      verticalAlign: {
+        type: "select",
+        label: "Vertical Align",
+        defaultValue: "center",
+        options: [
+          { label: "Top", value: "top" },
+          { label: "Center", value: "center" },
+          { label: "Bottom", value: "bottom" },
+        ],
+      },
+      textAlign: {
+        type: "select",
+        label: "Text Align",
+        defaultValue: "left",
+        options: [
+          { label: "Left", value: "left" },
+          { label: "Center", value: "center" },
+          { label: "Right", value: "right" },
+        ],
+      },
+      contentMaxWidth: {
+        type: "select",
+        label: "Content Max Width",
+        defaultValue: "xl",
+        options: [
+          { label: "Small (640px)", value: "sm" },
+          { label: "Medium (768px)", value: "md" },
+          { label: "Large (1024px)", value: "lg" },
+          { label: "XL (1280px)", value: "xl" },
+          { label: "Full", value: "full" },
+        ],
+      },
+      paddingTop: {
+        type: "number",
+        label: "Padding Top (px)",
+        defaultValue: "80",
+      },
+      paddingBottom: {
+        type: "number",
+        label: "Padding Bottom (px)",
+        defaultValue: "80",
+      },
+    },
+  }),
+
+  defineComponent({
+    type: "LPForm",
+    label: "LP Lead Form",
+    description:
+      "Advanced lead capture form with conditional fields, validation, CRM integration, and automation events",
+    category: "landing-page",
+    icon: "FormInput",
+    render: LPFormRender,
+    fieldGroups: [
+      {
+        id: "content",
+        label: "Content",
+        icon: "Type",
+        fields: [
+          "title",
+          "subtitle",
+          "submitButtonText",
+          "submitButtonStyle",
+          "submitButtonFullWidth",
+          "submitButtonColor",
+        ],
+        defaultExpanded: true,
+      },
+      {
+        id: "layout",
+        label: "Layout",
+        icon: "Layout",
+        fields: ["variant", "direction", "columns"],
+        defaultExpanded: true,
+      },
+      {
+        id: "style",
+        label: "Style",
+        icon: "Palette",
+        fields: ["cardBackground", "cardBorderRadius", "cardShadow"],
+        defaultExpanded: false,
+      },
+      {
+        id: "fields",
+        label: "Form Fields",
+        icon: "ListOrdered",
+        fields: ["fieldsJson"],
+        defaultExpanded: false,
+      },
+      {
+        id: "success",
+        label: "Success Action",
+        icon: "CheckCircle",
+        fields: ["successAction", "successMessage", "successRedirectUrl"],
+        defaultExpanded: false,
+      },
+      {
+        id: "integration",
+        label: "Integration",
+        icon: "Plug",
+        fields: [
+          "createSubscriber",
+          "subscriberTagsJson",
+          "mailingListId",
+          "createCrmContact",
+        ],
+        defaultExpanded: false,
+      },
+      {
+        id: "security",
+        label: "Security & Privacy",
+        icon: "Shield",
+        fields: [
+          "enableHoneypot",
+          "showGdprConsent",
+          "gdprConsentText",
+          "rateLimitPerHour",
+        ],
+        defaultExpanded: false,
+      },
+    ],
+    fields: {
+      variant: {
+        type: "select",
+        label: "Form Variant",
+        defaultValue: "card",
+        options: [
+          { label: "Inline", value: "inline" },
+          { label: "Card", value: "card" },
+          { label: "Floating", value: "floating" },
+          { label: "Slide-In", value: "slide-in" },
+          { label: "Minimal", value: "minimal" },
+        ],
+      },
+      title: {
+        type: "text",
+        label: "Title",
+        defaultValue: "Get Started Today",
+      },
+      subtitle: { type: "text", label: "Subtitle", defaultValue: "" },
+      submitButtonText: {
+        type: "text",
+        label: "Submit Button",
+        defaultValue: "Submit",
+      },
+      submitButtonStyle: {
+        type: "select",
+        label: "Button Style",
+        defaultValue: "solid",
+        options: [
+          { label: "Solid", value: "solid" },
+          { label: "Gradient", value: "gradient" },
+          { label: "Outline", value: "outline" },
+        ],
+      },
+      submitButtonFullWidth: {
+        type: "select",
+        label: "Full Width Button",
+        defaultValue: "true",
+        options: [
+          { label: "Yes", value: "true" },
+          { label: "No", value: "false" },
+        ],
+      },
+      submitButtonColor: {
+        type: "color",
+        label: "Button Color",
+        defaultValue: "",
+      },
+      successAction: {
+        type: "select",
+        label: "On Success",
+        defaultValue: "message",
+        options: [
+          { label: "Show Message", value: "message" },
+          { label: "Redirect", value: "redirect" },
+          { label: "Close", value: "close" },
+        ],
+      },
+      successMessage: {
+        type: "text",
+        label: "Success Message",
+        defaultValue: "Thank you! We'll be in touch soon.",
+      },
+      successRedirectUrl: {
+        type: "text",
+        label: "Redirect URL",
+        defaultValue: "",
+      },
+      direction: {
+        type: "select",
+        label: "Direction",
+        defaultValue: "vertical",
+        options: [
+          { label: "Vertical", value: "vertical" },
+          { label: "Horizontal", value: "horizontal" },
+        ],
+      },
+      columns: { type: "number", label: "Columns (1-4)", defaultValue: "1" },
+      cardBackground: {
+        type: "color",
+        label: "Card Background",
+        defaultValue: "#ffffff",
+      },
+      cardBorderRadius: {
+        type: "select",
+        label: "Border Radius",
+        defaultValue: "lg",
+        options: [
+          { label: "None", value: "none" },
+          { label: "Small", value: "sm" },
+          { label: "Medium", value: "md" },
+          { label: "Large", value: "lg" },
+          { label: "XL", value: "xl" },
+        ],
+      },
+      cardShadow: {
+        type: "select",
+        label: "Shadow",
+        defaultValue: "md",
+        options: [
+          { label: "None", value: "none" },
+          { label: "Small", value: "sm" },
+          { label: "Medium", value: "md" },
+          { label: "Large", value: "lg" },
+          { label: "XL", value: "xl" },
+        ],
+      },
+      fieldsJson: {
+        type: "textarea",
+        label: "Fields (JSON)",
+        defaultValue:
+          '[{"id":"email","type":"email","label":"Email","placeholder":"Enter your email","required":true}]',
+      },
+      createSubscriber: {
+        type: "select",
+        label: "Create Subscriber",
+        defaultValue: "true",
+        options: [
+          { label: "Yes", value: "true" },
+          { label: "No", value: "false" },
+        ],
+      },
+      subscriberTagsJson: {
+        type: "text",
+        label: "Subscriber Tags (comma-separated)",
+        defaultValue: "",
+      },
+      mailingListId: {
+        type: "text",
+        label: "Mailing List ID",
+        defaultValue: "",
+      },
+      createCrmContact: {
+        type: "select",
+        label: "Create CRM Contact",
+        defaultValue: "true",
+        options: [
+          { label: "Yes", value: "true" },
+          { label: "No", value: "false" },
+        ],
+      },
+      enableHoneypot: {
+        type: "select",
+        label: "Enable Honeypot (spam protection)",
+        defaultValue: "true",
+        options: [
+          { label: "Yes", value: "true" },
+          { label: "No", value: "false" },
+        ],
+      },
+      showGdprConsent: {
+        type: "select",
+        label: "Show GDPR Consent",
+        defaultValue: "false",
+        options: [
+          { label: "Yes", value: "true" },
+          { label: "No", value: "false" },
+        ],
+      },
+      gdprConsentText: {
+        type: "text",
+        label: "GDPR Consent Text",
+        defaultValue:
+          "I agree to receive communications and accept the privacy policy.",
+      },
+      rateLimitPerHour: {
+        type: "number",
+        label: "Rate Limit (per hour per IP)",
+        defaultValue: "10",
+      },
+    },
+  }),
+
+  defineComponent({
+    type: "LPLogoBar",
+    label: "Logo Bar",
+    description: '"As Seen On" / partner logo display bar',
+    category: "landing-page",
+    icon: "Building2",
+    render: LPLogoBarRender,
+    fieldGroups: [
+      {
+        id: "content",
+        label: "Content",
+        icon: "Type",
+        fields: ["title", "logosJson"],
+        defaultExpanded: true,
+      },
+      {
+        id: "style",
+        label: "Style",
+        icon: "Palette",
+        fields: [
+          "variant",
+          "grayscale",
+          "maxHeight",
+          "fullWidth",
+          "backgroundColor",
+          "paddingY",
+        ],
+        defaultExpanded: false,
+      },
+    ],
+    fields: {
+      title: { type: "text", label: "Title", defaultValue: "Trusted By" },
+      logosJson: {
+        type: "textarea",
+        label: "Logos (JSON)",
+        defaultValue: "[]",
+        description: "Array of { imageUrl, altText, link }",
+      },
+      variant: {
+        type: "select",
+        label: "Variant",
+        defaultValue: "scroll",
+        options: [
+          { label: "Scroll", value: "scroll" },
+          { label: "Grid", value: "grid" },
+          { label: "Carousel", value: "carousel" },
+        ],
+      },
+      grayscale: {
+        type: "select",
+        label: "Grayscale",
+        defaultValue: "true",
+        options: [
+          { label: "Yes", value: "true" },
+          { label: "No", value: "false" },
+        ],
+      },
+      maxHeight: {
+        type: "number",
+        label: "Max Logo Height (px)",
+        defaultValue: "40",
+      },
+      fullWidth: {
+        type: "select",
+        label: "Full Width",
+        defaultValue: "false",
+        options: [
+          { label: "Yes", value: "true" },
+          { label: "No", value: "false" },
+        ],
+      },
+      backgroundColor: {
+        type: "color",
+        label: "Background Color",
+        defaultValue: "#f9fafb",
+      },
+      paddingY: {
+        type: "number",
+        label: "Vertical Padding (px)",
+        defaultValue: "32",
+      },
+    },
+  }),
+
+  defineComponent({
+    type: "LPTrustBadges",
+    label: "Trust Badges",
+    description: "Security, guarantee, and certification badges",
+    category: "landing-page",
+    icon: "ShieldCheck",
+    render: LPTrustBadgesRender,
+    fieldGroups: [
+      {
+        id: "content",
+        label: "Content",
+        icon: "Type",
+        fields: ["heading", "badgesJson"],
+        defaultExpanded: true,
+      },
+      {
+        id: "style",
+        label: "Style",
+        icon: "Palette",
+        fields: [
+          "variant",
+          "iconSize",
+          "iconColor",
+          "showDescriptions",
+          "backgroundColor",
+          "paddingY",
+        ],
+        defaultExpanded: false,
+      },
+    ],
+    fields: {
+      heading: {
+        type: "text",
+        label: "Heading",
+        defaultValue: "",
+        description: "Optional heading above badges",
+      },
+      badgesJson: {
+        type: "textarea",
+        label: "Badges (JSON)",
+        defaultValue:
+          '[{"icon":"Shield","title":"Secure","description":"256-bit SSL encryption"},{"icon":"CheckCircle","title":"Guaranteed","description":"30-day money-back guarantee"}]',
+        description: "Array of { icon, title, description }",
+      },
+      variant: {
+        type: "select",
+        label: "Layout",
+        defaultValue: "horizontal",
+        options: [
+          { label: "Horizontal", value: "horizontal" },
+          { label: "Grid", value: "grid" },
+          { label: "Inline", value: "inline" },
+        ],
+      },
+      iconSize: {
+        type: "select",
+        label: "Icon Size",
+        defaultValue: "md",
+        options: [
+          { label: "Small", value: "sm" },
+          { label: "Medium", value: "md" },
+          { label: "Large", value: "lg" },
+        ],
+      },
+      iconColor: {
+        type: "color",
+        label: "Icon Color",
+        defaultValue: "#16a34a",
+      },
+      showDescriptions: {
+        type: "select",
+        label: "Show Descriptions",
+        defaultValue: "true",
+        options: [
+          { label: "Yes", value: "true" },
+          { label: "No", value: "false" },
+        ],
+      },
+      backgroundColor: {
+        type: "color",
+        label: "Background",
+        defaultValue: "#ffffff",
+      },
+      paddingY: {
+        type: "number",
+        label: "Vertical Padding (px)",
+        defaultValue: "32",
+      },
+    },
+  }),
+
+  defineComponent({
+    type: "LPCountdown",
+    label: "Countdown Timer",
+    description: "Urgency countdown with evergreen or fixed date modes",
+    category: "landing-page",
+    icon: "Timer",
+    render: LPCountdownRender,
+    fieldGroups: [
+      {
+        id: "content",
+        label: "Content",
+        icon: "Type",
+        fields: ["urgencyText", "expiredMessage"],
+        defaultExpanded: true,
+      },
+      {
+        id: "timer",
+        label: "Timer Settings",
+        icon: "Clock",
+        fields: [
+          "mode",
+          "targetDate",
+          "evergreenDays",
+          "evergreenHours",
+          "evergreenMinutes",
+          "variant",
+          "showLabels",
+          "showSeconds",
+          "labelStyle",
+        ],
+        defaultExpanded: true,
+      },
+      {
+        id: "expiry",
+        label: "Expiry Behavior",
+        icon: "AlertTriangle",
+        fields: ["expiredAction", "expiredRedirectUrl"],
+        defaultExpanded: false,
+      },
+      {
+        id: "style",
+        label: "Style",
+        icon: "Palette",
+        fields: ["accentColor", "backgroundColor", "textColor", "paddingY"],
+        defaultExpanded: false,
+      },
+    ],
+    fields: {
+      mode: {
+        type: "select",
+        label: "Mode",
+        defaultValue: "evergreen",
+        options: [
+          { label: "Fixed Date", value: "fixed" },
+          { label: "Evergreen (per visitor)", value: "evergreen" },
+        ],
+      },
+      targetDate: {
+        type: "text",
+        label: "Target Date (ISO)",
+        defaultValue: "",
+      },
+      evergreenDays: {
+        type: "number",
+        label: "Evergreen Days",
+        defaultValue: "3",
+      },
+      evergreenHours: {
+        type: "number",
+        label: "Evergreen Hours",
+        defaultValue: "0",
+      },
+      evergreenMinutes: {
+        type: "number",
+        label: "Evergreen Minutes",
+        defaultValue: "0",
+      },
+      variant: {
+        type: "select",
+        label: "Style",
+        defaultValue: "boxes",
+        options: [
+          { label: "Boxes", value: "boxes" },
+          { label: "Inline", value: "inline" },
+          { label: "Minimal", value: "minimal" },
+          { label: "Circular", value: "circular" },
+        ],
+      },
+      showLabels: {
+        type: "select",
+        label: "Show Labels",
+        defaultValue: "true",
+        options: [
+          { label: "Yes", value: "true" },
+          { label: "No", value: "false" },
+        ],
+      },
+      showSeconds: {
+        type: "select",
+        label: "Show Seconds",
+        defaultValue: "true",
+        options: [
+          { label: "Yes", value: "true" },
+          { label: "No", value: "false" },
+        ],
+      },
+      labelStyle: {
+        type: "select",
+        label: "Label Style",
+        defaultValue: "full",
+        options: [
+          { label: "Full (Days, Hours...)", value: "full" },
+          { label: "Short (D, H...)", value: "short" },
+          { label: "Single Letter", value: "single-letter" },
+        ],
+      },
+      urgencyText: {
+        type: "text",
+        label: "Urgency Text",
+        defaultValue: "Offer ends in:",
+      },
+      expiredAction: {
+        type: "select",
+        label: "Expired Action",
+        defaultValue: "hide",
+        options: [
+          { label: "Hide", value: "hide" },
+          { label: "Redirect", value: "redirect" },
+          { label: "Show Message", value: "show-message" },
+        ],
+      },
+      expiredMessage: {
+        type: "text",
+        label: "Expired Message",
+        defaultValue: "This offer has expired.",
+      },
+      expiredRedirectUrl: {
+        type: "text",
+        label: "Expired Redirect URL",
+        defaultValue: "",
+      },
+      accentColor: {
+        type: "color",
+        label: "Accent Color",
+        defaultValue: "",
+        description: "Leave empty to use site primary color",
+      },
+      backgroundColor: {
+        type: "color",
+        label: "Background",
+        defaultValue: "",
+      },
+      textColor: {
+        type: "color",
+        label: "Text Color",
+        defaultValue: "",
+      },
+      paddingY: {
+        type: "number",
+        label: "Vertical Padding (px)",
+        defaultValue: "48",
+      },
+    },
+  }),
+
+  defineComponent({
+    type: "LPTestimonialWall",
+    label: "Testimonial Wall",
+    description: "Grid/carousel of testimonials with photos and ratings",
+    category: "landing-page",
+    icon: "MessageSquareQuote",
+    render: LPTestimonialWallRender,
+    fieldGroups: [
+      {
+        id: "content",
+        label: "Content",
+        icon: "Type",
+        fields: ["title", "subtitle", "testimonialsJson"],
+        defaultExpanded: true,
+      },
+      {
+        id: "layout",
+        label: "Layout",
+        icon: "Layout",
+        fields: [
+          "variant",
+          "columns",
+          "maxVisible",
+          "autoPlay",
+          "autoPlayInterval",
+        ],
+        defaultExpanded: true,
+      },
+      {
+        id: "style",
+        label: "Style",
+        icon: "Palette",
+        fields: [
+          "cardStyle",
+          "showRatings",
+          "showImages",
+          "showQuoteIcon",
+          "backgroundColor",
+          "paddingY",
+        ],
+        defaultExpanded: false,
+      },
+    ],
+    fields: {
+      title: {
+        type: "text",
+        label: "Title",
+        defaultValue: "What Our Customers Say",
+      },
+      subtitle: {
+        type: "text",
+        label: "Subtitle",
+        defaultValue: "",
+      },
+      testimonialsJson: {
+        type: "textarea",
+        label: "Testimonials (JSON)",
+        defaultValue:
+          '[{"name":"Jane Doe","role":"CEO","company":"Acme Inc","text":"This product transformed our business.","rating":5}]',
+        description: "Array of { name, role, company, text, imageUrl, rating }",
+      },
+      variant: {
+        type: "select",
+        label: "Layout",
+        defaultValue: "grid",
+        options: [
+          { label: "Grid", value: "grid" },
+          { label: "Carousel", value: "carousel" },
+          { label: "Masonry", value: "masonry" },
+          { label: "Single Featured", value: "single-featured" },
+        ],
+      },
+      columns: { type: "number", label: "Columns (1-4)", defaultValue: "3" },
+      maxVisible: { type: "number", label: "Max Visible", defaultValue: "6" },
+      autoPlay: {
+        type: "select",
+        label: "Auto Play (carousel)",
+        defaultValue: "true",
+        options: [
+          { label: "Yes", value: "true" },
+          { label: "No", value: "false" },
+        ],
+      },
+      autoPlayInterval: {
+        type: "number",
+        label: "Auto Play Interval (ms)",
+        defaultValue: "5000",
+      },
+      cardStyle: {
+        type: "select",
+        label: "Card Style",
+        defaultValue: "default",
+        options: [
+          { label: "Default", value: "default" },
+          { label: "Bordered", value: "bordered" },
+          { label: "Shadow", value: "shadow" },
+          { label: "Flat", value: "flat" },
+        ],
+      },
+      showRatings: {
+        type: "select",
+        label: "Show Ratings",
+        defaultValue: "true",
+        options: [
+          { label: "Yes", value: "true" },
+          { label: "No", value: "false" },
+        ],
+      },
+      showImages: {
+        type: "select",
+        label: "Show Images",
+        defaultValue: "true",
+        options: [
+          { label: "Yes", value: "true" },
+          { label: "No", value: "false" },
+        ],
+      },
+      showQuoteIcon: {
+        type: "select",
+        label: "Show Quote Icon",
+        defaultValue: "false",
+        options: [
+          { label: "Yes", value: "true" },
+          { label: "No", value: "false" },
+        ],
+      },
+      backgroundColor: {
+        type: "color",
+        label: "Background",
+        defaultValue: "#ffffff",
+      },
+      paddingY: {
+        type: "number",
+        label: "Vertical Padding (px)",
+        defaultValue: "48",
+      },
+    },
+  }),
+
+  defineComponent({
+    type: "LPPricingTable",
+    label: "Pricing Table",
+    description: "Side-by-side pricing comparison with highlighted plan",
+    category: "landing-page",
+    icon: "CreditCard",
+    render: LPPricingTableRender,
+    fieldGroups: [
+      {
+        id: "content",
+        label: "Content",
+        icon: "Type",
+        fields: ["title", "subtitle", "plansJson"],
+        defaultExpanded: true,
+      },
+      {
+        id: "layout",
+        label: "Layout",
+        icon: "Layout",
+        fields: ["variant", "columns"],
+        defaultExpanded: true,
+      },
+      {
+        id: "style",
+        label: "Style",
+        icon: "Palette",
+        fields: [
+          "highlightPopular",
+          "showAnnualToggle",
+          "annualDiscount",
+          "accentColor",
+          "backgroundColor",
+          "paddingY",
+        ],
+        defaultExpanded: false,
+      },
+    ],
+    fields: {
+      title: {
+        type: "text",
+        label: "Title",
+        defaultValue: "Simple, Transparent Pricing",
+      },
+      subtitle: {
+        type: "text",
+        label: "Subtitle",
+        defaultValue: "Choose the plan that works for you",
+      },
+      plansJson: {
+        type: "textarea",
+        label: "Plans (JSON)",
+        defaultValue:
+          '[{"name":"Starter","price":"K0","period":"/mo","features":[{"text":"Feature 1","included":true},{"text":"Feature 2","included":true}],"ctaText":"Get Started","ctaUrl":"#"},{"name":"Pro","price":"K299","annualPrice":"K249","period":"/mo","features":[{"text":"Feature 1","included":true},{"text":"Feature 2","included":true},{"text":"Feature 3","included":true}],"ctaText":"Go Pro","ctaUrl":"#","isPopular":true,"badgeText":"Most Popular"}]',
+        description:
+          "Array of { name, description, price, annualPrice, period, features: [{text, included}], ctaText, ctaUrl, isPopular, badgeText }",
+      },
+      variant: {
+        type: "select",
+        label: "Style",
+        defaultValue: "cards",
+        options: [
+          { label: "Cards", value: "cards" },
+          { label: "Table", value: "table" },
+          { label: "Minimal", value: "minimal" },
+        ],
+      },
+      columns: { type: "number", label: "Columns", defaultValue: "3" },
+      highlightPopular: {
+        type: "select",
+        label: "Highlight Popular",
+        defaultValue: "true",
+        options: [
+          { label: "Yes", value: "true" },
+          { label: "No", value: "false" },
+        ],
+      },
+      showAnnualToggle: {
+        type: "select",
+        label: "Annual Toggle",
+        defaultValue: "false",
+        options: [
+          { label: "Yes", value: "true" },
+          { label: "No", value: "false" },
+        ],
+      },
+      annualDiscount: {
+        type: "number",
+        label: "Annual Discount %",
+        defaultValue: "20",
+      },
+      accentColor: {
+        type: "color",
+        label: "Accent Color",
+        defaultValue: "",
+        description: "Leave empty to use site primary color",
+      },
+      backgroundColor: {
+        type: "color",
+        label: "Background",
+        defaultValue: "",
+      },
+      paddingY: {
+        type: "number",
+        label: "Vertical Padding (px)",
+        defaultValue: "48",
+      },
+    },
+  }),
+
+  defineComponent({
+    type: "LPFloatingCTA",
+    label: "Floating CTA Bar",
+    description: "Sticky bottom bar with CTA button and urgency text",
+    category: "landing-page",
+    icon: "PanelBottom",
+    render: LPFloatingCTARender,
+    fieldGroups: [
+      {
+        id: "content",
+        label: "Content",
+        icon: "Type",
+        fields: ["text", "ctaText", "ctaUrl", "scrollToId"],
+        defaultExpanded: true,
+      },
+      {
+        id: "behavior",
+        label: "Behavior",
+        icon: "Settings",
+        fields: [
+          "showAfterScroll",
+          "position",
+          "dismissible",
+          "showOnMobile",
+          "animation",
+        ],
+        defaultExpanded: true,
+      },
+      {
+        id: "countdown",
+        label: "Countdown",
+        icon: "Clock",
+        fields: ["showCountdown", "countdownDate"],
+        defaultExpanded: false,
+      },
+      {
+        id: "style",
+        label: "Style",
+        icon: "Palette",
+        fields: [
+          "backgroundColor",
+          "textColor",
+          "ctaBackgroundColor",
+          "ctaTextColor",
+        ],
+        defaultExpanded: false,
+      },
+    ],
+    fields: {
+      text: {
+        type: "text",
+        label: "Text",
+        defaultValue: "Limited time offer!",
+      },
+      ctaText: { type: "text", label: "CTA Text", defaultValue: "Claim Now" },
+      ctaUrl: { type: "text", label: "CTA URL", defaultValue: "#" },
+      scrollToId: {
+        type: "text",
+        label: "Scroll to Element ID",
+        defaultValue: "",
+        description:
+          "Smooth scroll to this element ID instead of navigating to CTA URL",
+      },
+      showAfterScroll: {
+        type: "number",
+        label: "Show After Scroll %",
+        defaultValue: "20",
+      },
+      position: {
+        type: "select",
+        label: "Position",
+        defaultValue: "bottom",
+        options: [
+          { label: "Bottom", value: "bottom" },
+          { label: "Top", value: "top" },
+        ],
+      },
+      dismissible: {
+        type: "select",
+        label: "Dismissible",
+        defaultValue: "true",
+        options: [
+          { label: "Yes", value: "true" },
+          { label: "No", value: "false" },
+        ],
+      },
+      showOnMobile: {
+        type: "select",
+        label: "Show on Mobile",
+        defaultValue: "true",
+        options: [
+          { label: "Yes", value: "true" },
+          { label: "No", value: "false" },
+        ],
+      },
+      animation: {
+        type: "select",
+        label: "Animation",
+        defaultValue: "slide",
+        options: [
+          { label: "Slide", value: "slide" },
+          { label: "Fade", value: "fade" },
+          { label: "None", value: "none" },
+        ],
+      },
+      showCountdown: {
+        type: "select",
+        label: "Show Countdown",
+        defaultValue: "false",
+        options: [
+          { label: "Yes", value: "true" },
+          { label: "No", value: "false" },
+        ],
+      },
+      countdownDate: {
+        type: "text",
+        label: "Countdown Date (ISO)",
+        defaultValue: "",
+      },
+      backgroundColor: {
+        type: "color",
+        label: "Background",
+        defaultValue: "#1e293b",
+      },
+      textColor: {
+        type: "color",
+        label: "Text Color",
+        defaultValue: "#ffffff",
+      },
+      ctaBackgroundColor: {
+        type: "color",
+        label: "CTA Background",
+        defaultValue: "#ffffff",
+      },
+      ctaTextColor: {
+        type: "color",
+        label: "CTA Text Color",
+        defaultValue: "",
+      },
+    },
+  }),
+];
+
+// =============================================================================
 // REGISTER ALL COMPONENTS
 // =============================================================================
 
@@ -27612,6 +28814,7 @@ export function registerCoreComponents(): void {
     ...interactiveComponents,
     ...uiComponents,
     ...marketingComponents,
+    ...landingPageComponents,
     ...effectsComponents,
   ];
 
@@ -27638,5 +28841,6 @@ export {
   interactiveComponents,
   uiComponents,
   marketingComponents,
+  landingPageComponents,
   effectsComponents,
 };

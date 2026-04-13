@@ -69,6 +69,22 @@ STEP 2 — PRODUCE THE MASTER IMPLEMENTATION GUIDE
 
 Create a file: /phases/PHASE-[PREFIX]-MASTER-GUIDE.md
 
+⚠️ CRITICAL — BUILD THIS GUIDE IN SECTIONS, NOT ALL AT ONCE:
+  This document will be 3,000–8,000+ lines. Do NOT attempt to generate it in a single output — you will hit output limits, stall, and produce nothing.
+
+  Instead, build it incrementally in this order:
+  1. First output: Header Block → Critical Platform Rules → Table of Contents → Architecture Context → Access Control Design → Existing Code Integration Points
+  2. Second output: Phase definitions — write 2-3 phases at a time (start with Phase 1, then continue)
+  3. Third output: Remaining phases, continuing where you left off
+  4. Final output: Automation Integration → Cross-Module Integration Reference → Testing Requirements → Module Registration Checklist
+
+  Rules for incremental generation:
+  - After each section, CONFIRM what was written and state what comes next
+  - Each section must be COMPLETE — no placeholders, no "TBD", no skeleton outlines to fill later
+  - Writing in parts lets you give MORE detail per phase, not less — use that advantage
+  - If a session ends mid-guide, note exactly where you stopped so the next session can continue
+  - The file should be created on the first output, then appended to with each subsequent section
+
 The guide MUST follow this exact structure (matching the proven Marketing module pattern):
 
 ### Header Block

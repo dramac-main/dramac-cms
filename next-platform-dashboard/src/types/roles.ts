@@ -47,6 +47,7 @@ export const PERMISSIONS = {
 
   // Module-specific
   MANAGE_MARKETING: "manage_marketing",
+  MANAGE_INVOICING: "manage_invoicing",
 } as const;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
@@ -71,6 +72,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     PERMISSIONS.EDIT_CONTENT,
     PERMISSIONS.VIEW_ANALYTICS,
     PERMISSIONS.MANAGE_MARKETING,
+    PERMISSIONS.MANAGE_INVOICING,
   ],
   agency_admin: [
     PERMISSIONS.INVITE_TEAM_MEMBERS,
@@ -84,6 +86,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     PERMISSIONS.EDIT_CONTENT,
     PERMISSIONS.VIEW_ANALYTICS,
     PERMISSIONS.MANAGE_MARKETING,
+    PERMISSIONS.MANAGE_INVOICING,
   ],
   agency_member: [
     PERMISSIONS.VIEW_CLIENTS,

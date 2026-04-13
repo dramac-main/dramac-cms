@@ -394,6 +394,13 @@ export const EVENT_REGISTRY = {
       enrolled: "marketing.sequence.enrolled",
       completed: "marketing.sequence.completed",
     },
+    landing_page: {
+      published: "marketing.landing_page.published",
+      visited: "marketing.landing_page.visited",
+      form_submitted: "marketing.landing_page.form_submitted",
+      conversion: "marketing.landing_page.conversion",
+      migrated: "marketing.landing_page.migrated",
+    },
   },
 } as const;
 

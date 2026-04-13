@@ -159,6 +159,7 @@ function PortalLayoutInner({
     canManageAgents: user.canManageAgents,
     canManageCustomers: user.canManageCustomers,
     canManageMarketing: user.canManageMarketing,
+    canManageInvoices: user.canManageInvoices,
   };
 
   // Get navigation groups based on permissions and installed modules

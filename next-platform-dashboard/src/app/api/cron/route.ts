@@ -66,6 +66,7 @@ export async function GET(request: NextRequest) {
   await dispatch("socialPublish", "/api/social/publish");
   await dispatch("socialSync", "/api/social/sync");
   await dispatch("abandonedCarts", "/api/cron/abandoned-carts");
+  await dispatch("recurringInvoices", "/api/invoicing/recurring/process");
 
   // Resume paused automation workflows (delay steps, waiting steps)
   try {

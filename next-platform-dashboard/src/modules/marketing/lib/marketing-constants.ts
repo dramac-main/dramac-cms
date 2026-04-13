@@ -38,6 +38,10 @@ export const MKT_TABLES = {
   sendingStats: "mod_mktmod01_sending_stats",
   socialConnections: "mod_mktmod01_social_connections",
   socialPosts: "mod_mktmod01_social_posts",
+  // LP Builder Pro (Phase LPB-01)
+  lpFormSubmissions: "mod_mktmod01_lp_form_submissions",
+  lpVisits: "mod_mktmod01_lp_visits",
+  lpTemplates: "mod_mktmod01_lp_templates",
 } as const;
 
 // ─── Campaign Status ───────────────────────────────────────────

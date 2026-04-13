@@ -1,6 +1,6 @@
 /**
  * DRAMAC Studio Type Definitions
- * 
+ *
  * Core types for the Studio editor data structures.
  * Designed for compatibility with existing Puck data format.
  */
@@ -40,7 +40,7 @@ export interface RootProps {
 export interface StudioPageData {
   /** Schema version for migrations */
   version: "1.0";
-  
+
   /** Root configuration */
   root: {
     id: "root";
@@ -48,10 +48,10 @@ export interface StudioPageData {
     props: RootProps;
     children: string[]; // Top-level component IDs
   };
-  
+
   /** All components indexed by ID */
   components: Record<string, StudioComponent>;
-  
+
   /** Named drop zones for nested components */
   zones?: Record<string, string[]>;
 }
@@ -63,15 +63,15 @@ export interface StudioPageData {
 /**
  * Interactive states for components
  */
-export type ComponentState = 'default' | 'hover' | 'active' | 'focus';
+export type ComponentState = "default" | "hover" | "active" | "focus";
 
 /**
  * Transition settings for state changes
  */
 export interface TransitionSettings {
-  property: 'all' | 'transform' | 'opacity' | 'colors' | 'shadow' | 'none';
+  property: "all" | "transform" | "opacity" | "colors" | "shadow" | "none";
   duration: number; // milliseconds
-  easing: 'ease' | 'ease-in' | 'ease-out' | 'ease-in-out' | 'linear';
+  easing: "ease" | "ease-in" | "ease-out" | "ease-in-out" | "linear";
   delay?: number; // milliseconds
 }
 
@@ -79,9 +79,9 @@ export interface TransitionSettings {
  * Default transition settings
  */
 export const DEFAULT_TRANSITION: TransitionSettings = {
-  property: 'all',
+  property: "all",
   duration: 200,
-  easing: 'ease-out',
+  easing: "ease-out",
   delay: 0,
 };
 
@@ -91,39 +91,39 @@ export const DEFAULT_TRANSITION: TransitionSettings = {
  */
 export const STATE_EDITABLE_PROPERTIES = [
   // Colors
-  'backgroundColor',
-  'color',
-  'borderColor',
-  'outlineColor',
-  
+  "backgroundColor",
+  "color",
+  "borderColor",
+  "outlineColor",
+
   // Transform
-  'scale',
-  'scaleX',
-  'scaleY',
-  'rotate',
-  'translateX',
-  'translateY',
-  'skewX',
-  'skewY',
-  
+  "scale",
+  "scaleX",
+  "scaleY",
+  "rotate",
+  "translateX",
+  "translateY",
+  "skewX",
+  "skewY",
+
   // Opacity
-  'opacity',
-  
+  "opacity",
+
   // Shadows
-  'boxShadow',
-  'textShadow',
-  
+  "boxShadow",
+  "textShadow",
+
   // Borders
-  'borderWidth',
-  'borderStyle',
-  
+  "borderWidth",
+  "borderStyle",
+
   // Outline (for focus)
-  'outlineWidth',
-  'outlineStyle',
-  'outlineOffset',
+  "outlineWidth",
+  "outlineStyle",
+  "outlineOffset",
 ] as const;
 
-export type StateEditableProperty = typeof STATE_EDITABLE_PROPERTIES[number];
+export type StateEditableProperty = (typeof STATE_EDITABLE_PROPERTIES)[number];
 
 /**
  * State overrides (partial props that override default)
@@ -133,7 +133,9 @@ export type StateOverrides = Partial<Record<StateEditableProperty, unknown>>;
 /**
  * Helper to check if a property can be edited per state
  */
-export function isStateEditableProperty(property: string): property is StateEditableProperty {
+export function isStateEditableProperty(
+  property: string,
+): property is StateEditableProperty {
   return STATE_EDITABLE_PROPERTIES.includes(property as StateEditableProperty);
 }
 
@@ -142,12 +144,12 @@ export function isStateEditableProperty(property: string): property is StateEdit
  */
 export function getEffectiveProps(
   component: StudioComponent,
-  state: ComponentState
+  state: ComponentState,
 ): Record<string, unknown> {
-  if (state === 'default' || !component.states?.[state]) {
+  if (state === "default" || !component.states?.[state]) {
     return component.props;
   }
-  
+
   return {
     ...component.props,
     ...component.states[state],
@@ -164,35 +166,35 @@ export function getEffectiveProps(
 export interface StudioComponent {
   /** Unique identifier */
   id: string;
-  
+
   /** Component type (matches registry key) */
   type: string;
-  
+
   /** Component properties */
   props: Record<string, unknown>;
-  
+
   /** Child component IDs (for containers) */
   children?: string[];
-  
+
   /** Parent component ID */
   parentId?: string;
-  
+
   /** Zone ID if inside a named zone */
   zoneId?: string;
-  
+
   /** Prevent editing */
   locked?: boolean;
-  
+
   /** Hide in canvas (but keep in data) */
   hidden?: boolean;
-  
+
   /** State-specific property overrides (PHASE-STUDIO-22) */
   states?: {
     hover?: StateOverrides;
     active?: StateOverrides;
     focus?: StateOverrides;
   };
-  
+
   /** Transition settings for state changes (PHASE-STUDIO-22) */
   transition?: TransitionSettings;
 }
@@ -238,108 +240,110 @@ export interface FieldOption {
 export interface FieldDefinition {
   /** Field type */
   type: FieldType;
-  
+
   /** Field key (property name) - used when iterating as array */
   key?: string;
-  
+
   /** Display label */
   label: string;
-  
+
   /** Help text */
   description?: string;
-  
+
   /** Default value */
   defaultValue?: unknown;
-  
+
   /** Is this field required? */
   required?: boolean;
-  
+
   /** Options for select/radio */
   options?: FieldOption[];
-  
+
   /** Minimum value (number) */
   min?: number;
-  
+
   /** Maximum value (number) */
   max?: number;
-  
+
   /** Step increment (number) */
   step?: number;
-  
+
   /** Number of rows (textarea) */
   rows?: number;
-  
+
   /** Accepted MIME types (image) */
   accepts?: string[];
-  
+
   /** Nested field definitions (object type) */
   fields?: Record<string, FieldDefinition>;
-  
+
   /** Item field definitions (array type) */
   itemFields?: Record<string, FieldDefinition>;
-  
+
   /** Show per-breakpoint controls */
   responsive?: boolean;
-  
+
   /** Custom field renderer */
   render?: ComponentType<FieldRenderProps>;
-  
+
   /** Group name for organizing in UI */
   group?: string;
-  
+
   /** Conditional visibility - shorthand { field: value } or explicit format */
-  showWhen?: Record<string, unknown> | {
-    field: string;
-    value: unknown;
-  };
-  
+  showWhen?:
+    | Record<string, unknown>
+    | {
+        field: string;
+        value: unknown;
+      };
+
   /** Placeholder text for input fields */
   placeholder?: string;
-  
+
   /** Whether to show a slider (for number fields) */
   showSlider?: boolean;
-  
+
   /** Preset colors for color field */
   presets?: { name: string; value: string }[];
-  
+
   /** Allow custom color input */
   allowCustom?: boolean;
-  
+
   /** Allow external URLs (for URL fields) */
   allowExternal?: boolean;
-  
+
   /** Validate URL format */
   validateUrl?: boolean;
-  
+
   /**
    * Custom field type identifier for module-specific fields.
    * Format: "moduleSlug:fieldType" (e.g., "ecommerce:product-selector")
    * Only used when type is "custom"
    */
   customType?: string;
-  
+
   /**
    * Additional options for custom fields.
    * Passed to the custom field component.
    */
   customOptions?: Record<string, unknown>;
-  
+
   /**
    * API endpoint for fetching field data.
    * If provided, the custom field can use this to fetch options.
    */
   dataEndpoint?: string;
-  
+
   /**
    * Whether the field supports multiple selection.
    */
   multiple?: boolean;
-  
+
   /**
    * Whether to allow clearing the selection.
    */
   clearable?: boolean;
-  
+
   /**
    * Whether the field supports search/filtering.
    */
@@ -370,6 +374,7 @@ export type ComponentCategory =
   | "ecommerce"
   | "interactive"
   | "marketing"
+  | "landing-page"
   | "content"
   | "3d"
   | "module";
@@ -380,10 +385,10 @@ export type ComponentCategory =
 export interface ComponentAIConfig {
   /** Description for AI context */
   description: string;
-  
+
   /** Which props AI can modify */
   canModify: string[];
-  
+
   /** Suggested quick actions */
   suggestions?: string[];
 }
@@ -394,10 +399,10 @@ export interface ComponentAIConfig {
 export interface ComponentModuleSource {
   /** Module ID */
   id: string;
-  
+
   /** Module display name */
   name: string;
-  
+
   /** Module icon */
   icon?: string;
 }
@@ -408,13 +413,13 @@ export interface ComponentModuleSource {
 export interface DropZoneConfig {
   /** Zone identifier */
   id: string;
-  
+
   /** Display name */
   label?: string;
-  
+
   /** Allowed component types (empty = all) */
   allowedTypes?: string[];
-  
+
   /** Maximum children */
   maxChildren?: number;
 }
@@ -430,25 +435,25 @@ export type ZoneId = `${string}:${string}`;
 export interface ZoneDefinition {
   /** Display name for the zone (e.g., "Header", "Content", "Footer") */
   label: string;
-  
+
   /** List of allowed component types. If undefined, all components allowed */
   allowedComponents?: string[];
-  
+
   /** Whether the zone accepts child components */
   acceptsChildren: boolean;
-  
+
   /** Minimum number of children required */
   minChildren?: number;
-  
+
   /** Maximum number of children allowed */
   maxChildren?: number;
-  
+
   /** Component type to auto-add when zone is created */
   defaultComponent?: string;
-  
+
   /** Custom styling for the zone container */
   className?: string;
-  
+
   /** Placeholder text when zone is empty */
   placeholder?: string;
 }
@@ -456,12 +461,14 @@ export interface ZoneDefinition {
 /**
  * Parse zone ID into parent and zone name
  */
-export function parseZoneId(zoneId: string): { parentId: string; zoneName: string } | null {
-  const colonIndex = zoneId.indexOf(':');
+export function parseZoneId(
+  zoneId: string,
+): { parentId: string; zoneName: string } | null {
+  const colonIndex = zoneId.indexOf(":");
   if (colonIndex === -1) return null;
-  return { 
-    parentId: zoneId.slice(0, colonIndex), 
-    zoneName: zoneId.slice(colonIndex + 1) 
+  return {
+    parentId: zoneId.slice(0, colonIndex),
+    zoneName: zoneId.slice(colonIndex + 1),
   };
 }
 
@@ -478,75 +485,75 @@ export function createZoneId(parentId: string, zoneName: string): ZoneId {
 export interface ComponentDefinition {
   /** Unique type identifier */
   type: string;
-  
+
   /** Display name */
   label: string;
-  
+
   /** Description for tooltip */
   description?: string;
-  
+
   /** Sidebar category */
   category: ComponentCategory;
-  
+
   /** Icon name (lucide-react) */
   icon: string;
-  
+
   /** Field definitions */
   fields: Record<string, FieldDefinition>;
-  
+
   /** Default prop values */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   defaultProps: Record<string, any>;
-  
+
   /** React component for rendering */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   render: ComponentType<any>;
-  
+
   /** Does this component accept children? */
   acceptsChildren?: boolean;
-  
+
   /** What component types can be children? */
   allowedChildren?: string[];
-  
+
   /** What component types can be children (alias) */
   allowedChildTypes?: string[];
-  
+
   /** Named drop zones (legacy array format) */
   dropZones?: DropZoneConfig[];
-  
+
   /** Named drop zones keyed by zone name (Phase STUDIO-19) */
   zones?: Record<string, ZoneDefinition>;
-  
+
   /** AI configuration */
   ai?: ComponentAIConfig;
-  
+
   /** AI context string (shorthand for simple AI descriptions) */
   aiContext?: string;
-  
+
   /** Module source (if from a module) */
   module?: ComponentModuleSource;
-  
+
   /** Preview thumbnail URL */
   thumbnail?: string;
-  
+
   /** Search keywords */
   keywords?: string[];
-  
+
   /** Is this a container component? */
   isContainer?: boolean;
-  
+
   /** Can this component be deleted? */
   canDelete?: boolean;
-  
+
   /** Can this component be duplicated? */
   canDuplicate?: boolean;
-  
+
   /** Can this component be moved? */
   canMove?: boolean;
-  
+
   /** Layout direction for container children (vertical or horizontal) */
   layoutDirection?: "vertical" | "horizontal";
-  
+
   /** Field groups for organizing in properties panel */
   fieldGroups?: FieldGroup[];
 }
@@ -569,9 +576,9 @@ export type SpacingValue = {
  * Responsive value wrapper - stores different values per breakpoint
  */
 export type ResponsiveValue<T> = {
-  mobile: T;      // REQUIRED - this is the base/default
-  tablet?: T;     // Optional override for tablet
-  desktop?: T;    // Optional override for desktop
+  mobile: T; // REQUIRED - this is the base/default
+  tablet?: T; // Optional override for tablet
+  desktop?: T; // Optional override for desktop
 };
 
 /**
@@ -613,7 +620,9 @@ export interface FieldEditorProps<T = FieldValue> {
 /**
  * Field editor component type
  */
-export type FieldEditorComponent<T = FieldValue> = React.ComponentType<FieldEditorProps<T>>;
+export type FieldEditorComponent<T = FieldValue> = React.ComponentType<
+  FieldEditorProps<T>
+>;
 
 /**
  * Field group for organizing related fields
@@ -656,10 +665,10 @@ export const BREAKPOINTS: Record<Breakpoint, BreakpointConfig> = {
 export interface SelectionState {
   /** Currently selected component ID */
   componentId: string | null;
-  
+
   /** Multi-select component IDs */
   componentIds: string[];
-  
+
   /** Is multi-select mode active? */
   isMultiSelect: boolean;
 }
@@ -684,25 +693,25 @@ export interface PanelState {
 export interface UIState {
   /** Current breakpoint */
   breakpoint: Breakpoint;
-  
+
   /** Canvas zoom level (1 = 100%) */
   zoom: number;
-  
+
   /** Panel visibility */
   panels: PanelState;
-  
+
   /** Editor mode */
   mode: EditorMode;
-  
+
   /** Is dragging a component? */
   isDragging: boolean;
-  
+
   /** Component being dragged (from library) */
   draggedType: string | null;
-  
+
   /** Show grid overlay */
   showGrid: boolean;
-  
+
   /** Show component outlines */
   showOutlines: boolean;
 }
@@ -713,10 +722,10 @@ export interface UIState {
 export interface HistoryEntry {
   /** Timestamp */
   timestamp: number;
-  
+
   /** Action description */
   action: string;
-  
+
   /** Page data snapshot */
   data: StudioPageData;
 }
@@ -771,16 +780,21 @@ export interface PuckDataFormat {
     type: string;
     props: Record<string, unknown>;
   }>;
-  zones?: Record<string, Array<{
-    type: string;
-    props: Record<string, unknown>;
-  }>>;
+  zones?: Record<
+    string,
+    Array<{
+      type: string;
+      props: Record<string, unknown>;
+    }>
+  >;
 }
 
 /**
  * Convert Puck format to Studio format
  */
-export function migrateFromPuckFormat(puckData: PuckDataFormat): StudioPageData {
+export function migrateFromPuckFormat(
+  puckData: PuckDataFormat,
+): StudioPageData {
   const studioData: StudioPageData = {
     version: "1.0",
     root: {
@@ -832,17 +846,18 @@ export function migrateFromPuckFormat(puckData: PuckDataFormat): StudioPageData 
  */
 export function validatePageData(data: unknown): data is StudioPageData {
   if (!data || typeof data !== "object") return false;
-  
+
   const pageData = data as Record<string, unknown>;
-  
+
   if (pageData.version !== "1.0") return false;
   if (!pageData.root || typeof pageData.root !== "object") return false;
-  if (!pageData.components || typeof pageData.components !== "object") return false;
-  
+  if (!pageData.components || typeof pageData.components !== "object")
+    return false;
+
   const root = pageData.root as Record<string, unknown>;
   if (root.id !== "root") return false;
   if (!Array.isArray(root.children)) return false;
-  
+
   return true;
 }
 
@@ -965,7 +980,7 @@ export interface TypographyValue {
   fontWeight?: number;
   lineHeight?: string;
   letterSpacing?: string;
-  textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+  textTransform?: "none" | "uppercase" | "lowercase" | "capitalize";
 }
 
 /**
@@ -983,9 +998,9 @@ export interface ImageValue {
  */
 export interface LinkValue {
   href: string;
-  target?: '_blank' | '_self';
+  target?: "_blank" | "_self";
   pageId?: string;
-  type?: 'page' | 'url' | 'email' | 'phone';
+  type?: "page" | "url" | "email" | "phone";
 }
 
 /**
@@ -1021,7 +1036,7 @@ export interface ImageFieldEditorProps extends BaseFieldEditorProps<ImageValue> 
  * Link field props
  */
 export interface LinkFieldEditorProps extends BaseFieldEditorProps<LinkValue> {
-  allowedTypes?: Array<'page' | 'url' | 'email' | 'phone'>;
+  allowedTypes?: Array<"page" | "url" | "email" | "phone">;
   siteId?: string;
 }
 
@@ -1053,7 +1068,9 @@ export interface ArrayFieldEditorProps extends BaseFieldEditorProps<unknown[]> {
 /**
  * Object field props
  */
-export interface ObjectFieldEditorProps extends BaseFieldEditorProps<Record<string, unknown>> {
+export interface ObjectFieldEditorProps extends BaseFieldEditorProps<
+  Record<string, unknown>
+> {
   fields: Record<string, FieldDefinition>;
   collapsible?: boolean;
 }

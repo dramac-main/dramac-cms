@@ -1168,6 +1168,64 @@ Run professional email marketing campaigns, build automated sequences, and track
     createdAt: new Date("2026-07-01"),
     updatedAt: new Date("2026-07-01"),
   },
+
+  // INVOICING & FINANCE
+  {
+    id: "invoicing",
+    slug: "invoicing",
+    name: "Invoicing & Finance",
+    description: "Professional invoicing, payment tracking, recurring billing, expense management, and financial intelligence.",
+    longDescription: `
+Complete invoicing and financial management for agencies and businesses.
+Create professional invoices, track payments, manage recurring billing,
+handle expenses, and generate financial reports.
+
+## Features
+- Invoice creation with PDF generation
+- Partial payment tracking
+- Recurring invoices with auto-billing
+- Credit notes and refunds
+- Expense tracking with receipt upload
+- Vendor management and purchase orders
+- Financial dashboard and reports
+- Multi-currency support
+- Online payment links
+- AI financial intelligence
+    `,
+    version: "1.0.0",
+    icon: "Receipt",
+    screenshots: [],
+    category: "invoicing",
+    tags: ["invoicing", "finance", "payments", "billing", "expenses", "vendors", "reports"],
+    author: {
+      name: "DRAMAC",
+      website: "https://dramacagency.com",
+      verified: true,
+    },
+    pricing: {
+      type: "free",
+      amount: 0,
+      currency: DEFAULT_CURRENCY,
+    },
+    features: [
+      "Invoice creation with PDF generation",
+      "Partial payment tracking",
+      "Recurring invoices & auto-billing",
+      "Credit notes & refunds",
+      "Expense tracking & receipt upload",
+      "Vendor management & purchase orders",
+      "Financial dashboard & reports",
+      "Multi-currency support",
+      "Online payment links",
+      "AI financial intelligence",
+    ],
+    status: "active",
+    rating: 4.9,
+    reviewCount: 0,
+    installCount: 0,
+    createdAt: new Date("2026-07-15"),
+    updatedAt: new Date("2026-07-15"),
+  },
 ];
 
 // Category metadata for catalog display (array format for marketplace UI)
@@ -1185,6 +1243,7 @@ export const MODULE_CATEGORIES: { id: string; label: string; icon: string; descr
   { id: "crm", label: "CRM", icon: "Building2", description: "Customer relationship management" },
   { id: "blog", label: "Content", icon: "Newspaper", description: "CMS and publishing" },
   { id: "integrations", label: "Integrations", icon: "Link", description: "Connect third-party apps" },
+  { id: "invoicing", label: "Invoicing", icon: "Receipt", description: "Invoicing and financial management" },
 ];
 
 // Helper functions

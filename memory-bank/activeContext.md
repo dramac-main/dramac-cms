@@ -6,7 +6,297 @@
 
 The DRAMAC CMS platform is **production-ready**. All core waves (1-5) are complete, including all 6 business modules, DRAMAC Studio, client portal, billing, domain/email systems, and AI website designer. The platform is deployed at https://app.dramacagency.com.
 
-## Current Focus: Marketing Module — Production Quality Review ✅ COMPLETE
+## Current Focus: LP Builder Pro — ALL 11 PHASES COMPLETE ✅
+
+### Phase LPB-10: Super Admin Health View + Client Portal LP Management — Session 7
+
+**Admin-level LP monitoring across all sites + portal LP management for clients.**
+
+#### Deliverables (10 files: 8 new + 2 modified)
+
+- **`migrations/lpb-10-admin-portal-views.sql`** (APPLIED) — Materialized view `mod_mktmod01_lp_admin_stats`, unique index, refresh function
+- **`migrations/lpb-11-migration-utilities.sql`** (APPLIED) — `migrated_at` + `migration_source` columns, index on unmigrated pages
+- **`lp-builder-types.ts`** (ENHANCED) — 6 new types: LPAdminSiteStats, LPPlatformStats, PortalLandingPage, BlockMigrationResult, MigrationProgress, MigrationStatus
+- **`admin-landing-pages.ts`** (NEW ~200 lines) — 5 functions: requireSuperAdmin, getLPPlatformStats, getLPAdminSiteStats, refreshLPAdminStats, getAdminLPList, adminArchiveLP
+- **`portal-landing-pages.ts`** (NEW ~80 lines) — getPortalLandingPages + getPortalLPStats with portal auth + canManageMarketing gate
+- **`lp-admin-dashboard.tsx`** (NEW ~200 lines) — 6 stat cards, studio migration progress bar, search, refresh
+- **`lp-admin-table.tsx`** (NEW ~180 lines) — Per-site DataTable with sortable columns, dropdown actions, pagination
+- **`portal-lp-list.tsx`** (NEW ~140 lines) — 4 stat cards, LP card grid with View Live buttons
+- **`admin/landing-pages/page.tsx`** (NEW) — Server component with super_admin auth guard
+- **`admin-navigation.ts`** (MODIFIED) — Added "LP Health" entry with LayoutTemplate icon
+- Portal page already existed at `portal/sites/[siteId]/marketing/landing-pages/page.tsx` from prior session
+
+### Phase LPB-11: Migration — Block Format to Studio Format — Session 7
+
+**Deterministic block→studio conversion engine with preview, batch migration, and revert.**
+
+#### Deliverables (7 files: 5 new + 2 modified)
+
+- **`lp-migration-engine.ts`** (NEW ~470 lines) — 13 block converters: hero→LPHero, features→Section+Columns, testimonials→LPTestimonialWall, pricing→Section+Columns, faq→LPFAQ, countdown→LPCountdown, video→LPVideoBackground, gallery→Section+Images, optin_form→LPForm, cta→Section+Heading+Button, social_proof→LPLogoBar/LPTrustBadges, text→Section+Text, image→Section+Image
+- **`lp-migration.ts`** (NEW ~230 lines) — 5 server actions: getMigrationStatus, previewBlockMigration, migrateLP, migrateSiteLPs, revertMigration. Fires `marketing.landing_page.migrated` automation event
+- **`lp-migration-panel.tsx`** (NEW ~260 lines) — Migration status bar, "Migrate All", per-LP table with Preview/Migrate/Revert
+- **`lp-migration-preview-dialog.tsx`** (NEW ~130 lines) — Side-by-side JSON comparison, warnings, "Looks Good — Migrate"
+- **`migration-preview/route.ts`** (NEW) — POST /api/marketing/lp/migration-preview
+- **`landing-pages/page.tsx`** (ENHANCED) — Added "Migration" tab (shown when legacy LPs exist)
+- **`event-types.ts`** (MODIFIED) — Added `migrated: "marketing.landing_page.migrated"` to landing_page events
+
+**TSC: 104 errors (down from 106 baseline) — zero errors in any new/modified files.**
+
+## Previous Focus: Invoicing Module — INV-05 + INV-06 COMPLETE ✅
+
+### Phase INV-05: Credit Notes & Adjustments — COMPLETE
+
+**Full credit note lifecycle: CRUD, issue from invoice, apply to invoice, void with reversal, client credit balance tracking.**
+
+#### Deliverables (10 files: 9 new + 1 modified)
+
+- **`credit-actions.ts`** (NEW ~350 lines) — 9 server actions: createCreditNote, getCreditNotes, getCreditNote, updateCreditNote, issueCreditNote, applyCreditToInvoice, voidCreditNote, getClientCreditBalance, getCreditNoteStats
+- **`credit-status-badge.tsx`** (NEW) — Status badge with color coding for draft/issued/partially_applied/fully_applied/void
+- **`client-credit-balance.tsx`** (NEW) — Balance display card with available/applied/total breakdown
+- **`credit-apply-dialog.tsx`** (NEW) — Dialog to apply credit to invoice with amount validation
+- **`credit-list.tsx`** (NEW) — Paginated credit note table with status/search filters, AmountDisplay
+- **`credit-form.tsx`** (NEW) — Create/edit form with line items, calculateLineItemTotals, linked invoice picker
+- **`credit-detail.tsx`** (NEW) — Full detail with tabs (Items/Applications/Activity), issue/apply/void actions
+- **`credits/page.tsx`** (NEW) — CreditNoteStats + CreditList with Suspense skeleton
+- **`credits/new/page.tsx`** (NEW) — CreditForm mode="create" with Suspense skeleton
+- **`credits/[creditId]/page.tsx`** (NEW) — CreditDetail with Suspense skeleton
+
+### Phase INV-06: Expense Tracking, Categories & Receipt Upload — COMPLETE
+
+**Full expense lifecycle: CRUD, categories with color/hierarchy, receipt upload to Supabase Storage, approval workflow, billable expense conversion to invoice items.**
+
+#### Deliverables (14 files: 11 new + 3 modified)
+
+- **`expense-actions.ts`** (NEW ~650 lines) — 13 server actions: CRUD, approve/reject, convertToInvoiceItem, getExpenseStats, category CRUD (create/update/delete + list)
+- **`receipt-upload.tsx`** (NEW) — Supabase Storage upload to `invoicing-receipts` bucket with preview/delete
+- **`expense-status-badge.tsx`** (NEW) — Status badge for draft/pending/approved/rejected/billed
+- **`expense-stats-card.tsx`** (NEW) — Stats Overview card with total/pending/approved/billable amounts
+- **`expense-list.tsx`** (NEW) — Paginated expense table with status/billable/search filters
+- **`expense-form.tsx`** (NEW) — Create/edit form with amount (K prefix), category dropdown, payment method, receipt upload, billable toggle with ContactInvoicePicker
+- **`expense-detail.tsx`** (NEW) — Full detail with tabs (Details/Receipt/Activity), approve/reject/delete, billing sidebar
+- **`expense-category-manager.tsx`** (NEW) — Category CRUD with 10 preset colors, parent/child tree, dialog create/edit
+- **`billable-expense-selector.tsx`** (NEW) — Multi-select dialog for approved unbilled expenses → invoice item conversion
+- **`expenses/page.tsx`** (NEW) — ExpenseStatsCard + ExpenseList with Suspense skeleton
+- **`expenses/new/page.tsx`** (NEW) — ExpenseForm mode="create" with Suspense skeleton
+- **`expenses/[expenseId]/page.tsx`** (NEW) — ExpenseDetail with Suspense skeleton
+- **`invoicing-nav.tsx`** (MODIFIED) — Added Credits (CreditCard icon) + Expenses (Receipt icon) nav items
+- **`invoice-detail.tsx`** (MODIFIED) — Added Apply Credit button + CreditApplyDialog, Add Expenses button + BillableExpenseSelector
+
+**TSC: Only 1 pre-existing error (invoices/new/page.tsx missing mode prop from INV-02 session) — zero new errors from INV-05 or INV-06.**
+
+### Next Steps
+
+- **INV-07**: Financial Dashboard, Reports & P&L Statements
+- **INV-08**: Tax Management, Multi-Currency & Compliance
+- Continue through INV-09 → INV-14 per master guide
+
+## Previous Focus: Invoicing Module — INV-03 + INV-04 COMPLETE ✅
+
+### Phase INV-03: Payment Recording, Partial Payments & Refunds — COMPLETE
+
+**Full payment lifecycle: recording, partial payments, refunds, proof uploads, payment methods, automation events.**
+
+### Phase INV-04: Recurring Invoices & Subscription Billing — COMPLETE
+
+**Full recurring invoice system: templates, scheduling, auto-generation, cron processing, 7 frequencies.**
+
+**Pages (3 new):**
+
+- `recurring/page.tsx` — RecurringList with Suspense
+- `recurring/new/page.tsx` — RecurringForm with Suspense
+- `recurring/[recurringId]/page.tsx` — RecurringDetail with Suspense
+
+**Nav Updated:**
+
+- **`invoicing-nav.tsx`** — Added DollarSign + Repeat icons, "Payments" and "Recurring" nav items
+
+**TSC: 102 errors (baseline) — zero new errors from INV-03 or INV-04**
+
+### Next Steps
+
+- **INV-05**: Credit Notes & Adjustments
+- **INV-06**: Expense Tracking, Categories & Receipt Upload
+- **INV-07**: Financial Dashboard, Reports & P&L Statements
+- Continue through INV-08 → INV-14 per master guide
+
+## Previous Focus: Landing Page Builder Pro — LPB-08 + LPB-09 (Session 6)
+
+### Phase LPB-08: Analytics & Conversion Tracking — COMPLETE
+
+### Phase LPB-09: AI Landing Page Generator — COMPLETE
+
+#### TSC: 102 errors (baseline), zero from LPB-08/LPB-09 files
+
+### Key Lessons from LPB-08 + LPB-09
+
+- `z.record(z.unknown())` needs 2 args in this Zod version: `z.record(z.string(), z.unknown())`
+- `Set<string>` explicit type needed when comparing AI-generated strings against `as const` values
+- sendBeacon sends `text/plain` content type — API must handle both JSON and text/plain parsing
+- Vercel AI SDK `generateObject` handles Zod schema validation natively — no manual parsing needed
+- LPAnalyticsSummary.conversionRate is already a percentage (not 0-1 ratio)
+  - useCountdown() hook, per-component localStorage evergreen key
+  - 4 variants: boxes, inline, minimal, circular (SVG stroke-dasharray)
+  - evergreenMinutes, showSeconds, redirect on expiry
+
+4. **`lp-testimonial-wall-render.tsx`** (~330 lines) — Social proof testimonials
+   - parseTestimonials() JSON, TestimonialCard sub-component
+   - 4 variants: grid, carousel (auto-play), masonry (CSS columns), single-featured
+   - cardStyle (default/bordered/shadow/flat), showQuoteIcon
+
+5. **`lp-pricing-table-render.tsx`** (~400 lines) — Pricing comparison
+   - PlanFeature {text, included} structure, parsePlans() JSON
+   - 3 variants: cards, table (feature matrix), minimal
+   - Monthly/annual toggle with animated switch, annualDiscount badge
+
+6. **`lp-floating-cta-render.tsx`** (~225 lines) — Sticky CTA bar
+   - Dismissible with localStorage memory, scrollToId smooth scroll
+   - showOnMobile toggle, animation options (slide/fade/none)
+   - ctaBackgroundColor/ctaTextColor props, role="complementary" a11y
+
+#### Registry Updates (core-components.ts):
+
+- All 6 defineComponent() registrations expanded with new fields matching component props
+- Added: paddingY, fullWidth, showSeconds, evergreenMinutes, iconSize, heading, cardStyle, showQuoteIcon, autoPlay, autoPlayInterval, scrollToId, dismissible, showOnMobile, animation, accentColor, textColor, ctaBackgroundColor, ctaTextColor, etc.
+
+### Phase LPB-07: Template Library — Session 5 Results
+
+**14 system seed templates created, integrated with getLPTemplates action.**
+
+#### Templates Created (`src/modules/marketing/data/lp-studio-templates.ts`):
+
+1. **Lead Magnet Download** (lead-gen) — Hero + TrustBadges + Form + TestimonialWall
+2. **Webinar Registration** (webinar) — Hero + Countdown + LogoBar + Form
+3. **Product Launch** (product-launch) — Hero + LogoBar + TestimonialWall + PricingTable + TrustBadges
+4. **Coming Soon** (coming-soon) — Hero + Countdown (circular) + Form
+5. **Flash Sale** (sale-promo) — Hero + Countdown (evergreen) + TrustBadges + FloatingCTA
+6. **eBook Download** (ebook-download) — Hero (split-right) + TestimonialWall (single-featured) + Form
+7. **Free Trial Sign-Up** (free-trial) — Hero + LogoBar + PricingTable (trial vs after) + Form + TrustBadges
+8. **Free Consultation** (consultation) — Hero + TestimonialWall (carousel) + Form + TrustBadges (grid)
+9. **SaaS Product Page** (saas-signup) — Hero + LogoBar + PricingTable (3-tier) + TestimonialWall
+10. **Newsletter Sign-Up** (newsletter) — Hero + Form (inline) + TestimonialWall (masonry)
+11. **Event Registration** (event-registration) — Hero + Countdown + LogoBar + PricingTable (tickets) + Form
+12. **Online Course** (course-enrollment) — Hero + TestimonialWall + PricingTable (2-tier) + TrustBadges
+13. **Agency Services** (agency-services) — Hero + LogoBar + TestimonialWall (carousel) + Form + TrustBadges
+14. **Property Listing** (real-estate) — Hero + TrustBadges + PricingTable (units) + Form + FloatingCTA
+
+#### Integration (`lp-builder-actions.ts`):
+
+- `getLPTemplates()` now merges DB templates with `LP_SYSTEM_TEMPLATES` (seed data), deduplicating by ID
+- `getLPTemplate()` checks seed templates first (no DB round-trip for system templates)
+- System templates use `id: "system-<slug>"` format, `isSystem: true`
+
+#### TypeScript Status: 101 errors (down from 203 baseline) — **zero LP-related errors**
+
+**Session 3 (LPB-03) completed with zero new TypeScript errors (101 total, down from 182 baseline).**
+
+#### What was delivered:
+
+**Modified Files:**
+
+- `src/app/site/[domain]/[[...slug]]/page.tsx` — 4 major additions:
+  1. Added imports: `redirect`, `mapRecord`, `MKT_TABLES`, `LPBrandingOverride`
+  2. `getLandingPageData()` function (~200 lines): fetches published LP by slug, checks time/conversion constraints, merges branding, handles Studio vs legacy content, injects Navbar/Footer from homepage when showHeader/showFooter enabled, fetches modules, returns tagged result with `type: "landing-page"` discriminator
+  3. `mergeLPBranding()` helper: merges LP branding override over site settings (only overrides non-null fields)
+  4. LP routing branch in `processData()`: detects `lp/` prefix, calls getLandingPageData, short-circuits before page lookup
+  5. LP SEO metadata in `generateMetadata()`: handles noIndex, canonicalUrl, Twitter card from seoConfig
+  6. LP render path in `SitePage` component: detects LP data, redirects legacy LPs to old API route, renders Studio LPs via CraftRenderer with tracking props, injects custom scripts (head/body)
+
+- `src/app/site/[domain]/[[...slug]]/craft-renderer.tsx` — LP visit tracking:
+  1. Added `isLandingPage` and `landingPageId` props
+  2. Added useEffect for client-side visit tracking on LP load
+  3. Added helper functions: `getOrCreateVisitorId()`, `getSessionId()`, `getUtmParams()`, `getDeviceType()`
+
+**New Files Created:**
+
+- `src/app/api/marketing/lp/track/route.ts` (~130 lines) — POST endpoint for LP visit tracking. Validates inputs, sanitizes strings, checks visitor uniqueness, inserts into `mod_mktmod01_lp_visits`, increments LP visit counter via `increment_lp_visit` RPC (falls back to manual increment)
+- `migrations/lpb-03-increment-lp-visit.sql` — `increment_lp_visit(lp_id uuid)` RPC function for atomic counter increment. Applied to Supabase.
+
+#### Key Architecture Decisions:
+
+- LP routing intercepts in `processData()` BEFORE any page lookup (short-circuits early)
+- Tagged union return: `type: "landing-page"` discriminator distinguishes LP data from page data
+- Legacy (non-Studio) LPs return `content: null` → triggers redirect to old API route `/api/marketing/lp/[siteId]/[slug]`
+- Header/footer injection reuses homepage Navbar/Footer components (same pattern as shared injection)
+- Branding merge only overrides non-null fields from LP's `brandingOverride`
+- Visit tracking is best-effort (fire-and-forget from client useEffect)
+- Custom scripts parsed as JSON `{head?, body?}` with dangerouslySetInnerHTML injection
+- Module injectors still render for LP pages (needed for module-aware navbar/footer)
+- `increment_lp_visit` RPC with COALESCE for null-safe counter increment
+
+### Phase LPB-02: Studio LP Editor — DONE (Previous Session)
+
+#### What was delivered in LPB-02:
+
+**5 Client Components Created:**
+
+- `src/modules/marketing/components/landing-pages/lp-settings-panel.tsx` (~480 lines) — Right sidebar panel with 8 accordion sections: URL & Details, Branding, Header/Footer, SEO, Conversion, UTM Tracking, Schedule, Custom Scripts
+- `src/modules/marketing/components/landing-pages/lp-template-picker.tsx` (~180 lines) — Dialog for template selection with "Start from Scratch", category tabs, template grid
+- `src/modules/marketing/components/landing-pages/lp-editor-page.tsx` (~330 lines) — Full-page LP editor wrapping Studio builder. RightPanel switches between PropertiesPanel (component selected) and LPSettingsPanel (nothing selected). Saves via updateLandingPage with all LP-specific fields.
+- `src/modules/marketing/components/landing-pages/lp-list-enhanced.tsx` (~340 lines) — Table-based list with analytics columns (Visits, Conversions, Rate), dropdown actions, status filtering, search, pagination
+- `src/modules/marketing/components/landing-pages/lp-analytics-dashboard.tsx` (~320 lines) — Summary cards, LineChart/BarChart/PieChart via recharts, recent submissions table
+
+**1 Additional Client Component (for new page flow):**
+
+- `src/modules/marketing/components/landing-pages/lp-new-page-client.tsx` (~85 lines) — Template picker wrapper that creates LP via createLandingPage and redirects to edit page
+
+**3 Route Pages Updated:**
+
+- `src/app/(dashboard)/.../landing-pages/page.tsx` — Now uses LPListEnhanced with analytics summary, site info (name, subdomain, custom_domain)
+- `src/app/(dashboard)/.../landing-pages/new/page.tsx` — Now shows template picker via LPNewPageClient
+- `src/app/(dashboard)/.../landing-pages/[id]/page.tsx` — Now shows LPAnalyticsDashboard instead of legacy editor
+
+**1 Route Page Created:**
+
+- `src/app/(dashboard)/.../landing-pages/[id]/edit/page.tsx` — Full Studio LP editor with auth check, site fetch, LP fetch → LPEditorPage
+
+#### Key Architecture Decisions:
+
+- Used existing `[id]` dynamic route (not `[lpId]`) to avoid route conflicts
+- `[id]/page.tsx` → Analytics dashboard, `[id]/edit/page.tsx` → Studio editor
+- LandingPage → LandingPageStudio cast via `as unknown as LandingPageStudio` (same DB columns, different TS types)
+- Editor initializes with Studio data format detection (same as StudioProvider pattern)
+- getLPAnalyticsSummary(siteId) returns Record<string, {visits, conversions, rate}> — merged into list data
+
+#### TSC: 3 errors found and fixed:
+
+- `LPUtmConfig` cast needed intermediate `unknown` step
+- `setLpConversionGoal` type narrowing for string → union type
+- `templateId: null` → `undefined` for optional param
+
+### Phase Plan (remaining 10 phases across 6 sessions):
+
+| Session | Phases          | Focus                                             |
+| ------- | --------------- | ------------------------------------------------- |
+| 1       | LPB-01          | ✅ COMPLETE — Database, types, component registry |
+| 2       | LPB-02          | ✅ COMPLETE — Studio LP Editor, list, analytics   |
+| 3       | LPB-03          | ✅ COMPLETE — URL routing, visit tracking, SEO    |
+| 4       | LPB-04 + LPB-05 | Hero components + advanced form system            |
+| 5       | LPB-06 + LPB-07 | Conversion components + template library          |
+| 6       | LPB-08 + LPB-09 | Analytics/tracking + AI LP generator              |
+| 7       | LPB-10 + LPB-11 | Admin/portal + migration tooling                  |
+
+### Key Architecture Decisions:
+
+- NOT a new module — overhauls existing LP feature within Marketing (`mod_mktmod01_`)
+- LP components register in `component-registry.ts` and render via `ComponentRenderer` pipeline
+- LPs serve at `/lp/[slug]` on site domain (replaces API route pattern)
+- Site branding inherited by default via `resolveBrandColors()`, with full override
+- `Columns` component enables split layouts (hero+form side-by-side)
+- Both legacy and studio render paths coexist during migration period
+
+### Critical Path Corrections (from implementation):
+
+- Master Guide references `src/lib/studio/engine/` but actual paths are `src/lib/studio/registry/`
+- No separate `component-definitions.ts` — definitions live in `core-components.ts`
+- `presetOptions` is an object with named arrays (`.padding`, `.maxWidth`, etc.), NOT a callable function
+
+### Next Steps:
+
+- Begin Session 4 (LPB-04 + LPB-05): Hero components (6 variants) + advanced form system
+- Apply `increment_lp_visit` migration to production when deploying (already applied to dev DB)
+- Use Session Brief universal prompt to start each implementation session
+
+## Previous Focus: Marketing Module — Production Quality Review ✅ COMPLETE
 
 ### Status: All 7 phases completed — XSS, type safety, accessibility, UX all hardened
 
@@ -14,17 +304,18 @@ The DRAMAC CMS platform is **production-ready**. All core waves (1-5) are comple
 
 **Production Quality Review — 7 Phases Completed:**
 
-| Phase | Focus | Files Modified | Key Fixes |
-|-------|-------|----------------|-----------|
-| 1 | Hub & Navigation UX | 4 files | Auto-scroll nav, responsive grids, tooltips, onboarding state |
-| 2 | Campaign System | 3 files | 2 XSS fixes (iframe sandbox), AlertDialog, types, locale |
-| 3 | Sequences | 3 files | AlertDialog, Tooltip, pagination spinners, typed props |
-| 4 | Subscriber & Template | 2 files | 2 XSS fixes, AlertDialog×2, ListType, locale fix |
-| 5 | Landing Pages & Forms | 4 files | 8 `any` types removed, 13 aria-labels, 3 error handlers |
-| 6 | Social & Calendar | 5 files | 5 error handlers, 3 aria-labels, 2 Record types |
-| 7 | Portal & Admin | 6 files | 2 XSS fixes (email editor), 4 error handlers, 8 aria-labels |
+| Phase | Focus                 | Files Modified | Key Fixes                                                     |
+| ----- | --------------------- | -------------- | ------------------------------------------------------------- |
+| 1     | Hub & Navigation UX   | 4 files        | Auto-scroll nav, responsive grids, tooltips, onboarding state |
+| 2     | Campaign System       | 3 files        | 2 XSS fixes (iframe sandbox), AlertDialog, types, locale      |
+| 3     | Sequences             | 3 files        | AlertDialog, Tooltip, pagination spinners, typed props        |
+| 4     | Subscriber & Template | 2 files        | 2 XSS fixes, AlertDialog×2, ListType, locale fix              |
+| 5     | Landing Pages & Forms | 4 files        | 8 `any` types removed, 13 aria-labels, 3 error handlers       |
+| 6     | Social & Calendar     | 5 files        | 5 error handlers, 3 aria-labels, 2 Record types               |
+| 7     | Portal & Admin        | 6 files        | 2 XSS fixes (email editor), 4 error handlers, 8 aria-labels   |
 
 **Total Fixes Applied:**
+
 - **6 XSS vulnerabilities fixed** — All `dangerouslySetInnerHTML` replaced with `<iframe srcDoc sandbox="">` (campaign-detail, campaign-wizard, template-library×2, email-editor×2)
 - **~20 `catch (err: any)` → `catch (err: unknown)`** with `err instanceof Error` pattern
 - **~15 `any` types removed** — `Record<string, unknown>`, proper type imports, `Number()` wrapping
