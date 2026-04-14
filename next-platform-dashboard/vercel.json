@@ -11,6 +11,14 @@
     {
       "path": "/api/cron",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/invoicing/recurring/process",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/invoicing/overdue/check",
+      "schedule": "0 7 * * *"
     }
   ]
 }

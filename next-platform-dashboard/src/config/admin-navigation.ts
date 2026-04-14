@@ -27,6 +27,7 @@ import {
   Globe,
   Mail,
   LayoutTemplate,
+  Receipt,
   type LucideIcon,
 } from "lucide-react";
 
@@ -107,6 +108,12 @@ export const adminNavigationItems: AdminNavItem[] = [
     name: "LP Health",
     href: "/admin/landing-pages",
     icon: LayoutTemplate,
+    group: "Management",
+  },
+  {
+    name: "Invoicing Health",
+    href: "/admin/modules/invoicing",
+    icon: Receipt,
     group: "Management",
   },
 

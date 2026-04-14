@@ -21,7 +21,7 @@ export default async function NewInvoicePage({ params }: NewInvoicePageProps) {
   return (
     <div className="flex-1 p-6">
       <Suspense fallback={<Skeleton className="h-[600px] w-full" />}>
-        <InvoiceForm siteId={siteId} />
+        <InvoiceForm siteId={siteId} mode="create" />
       </Suspense>
     </div>
   );

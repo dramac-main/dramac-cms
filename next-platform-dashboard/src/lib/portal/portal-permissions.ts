@@ -13,6 +13,7 @@ export interface EffectivePortalPermissions {
   canViewAnalytics: boolean;
   canEditContent: boolean;
   canViewInvoices: boolean;
+  canManageInvoices: boolean;
   canPublish: boolean;
   canManageLiveChat: boolean;
   canManageOrders: boolean;
@@ -68,6 +69,7 @@ export async function getEffectivePermissions(
       canViewAnalytics: false,
       canEditContent: false,
       canViewInvoices: false,
+      canManageInvoices: false,
       canPublish: false,
       canManageLiveChat: false,
       canManageOrders: false,
@@ -105,6 +107,7 @@ export async function getEffectivePermissions(
       false,
     ),
     canViewInvoices: resolve(null, client.can_view_invoices, true),
+    canManageInvoices: resolve(null, client.can_view_invoices, true),
     canPublish: resolve(sitePerm?.can_publish, null, false),
     canManageLiveChat: resolve(
       sitePerm?.can_manage_live_chat,

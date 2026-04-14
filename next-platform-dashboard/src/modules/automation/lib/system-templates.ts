@@ -1475,6 +1475,262 @@ const CHAT_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
 ];
 
 // ============================================================================
+// INVOICING SYSTEM TEMPLATES
+// ============================================================================
+
+const INVOICING_SYSTEM_TEMPLATES: WorkflowTemplate[] = [
+  {
+    id: "system-invoice-overdue-reminder",
+    name: "Invoice Overdue Reminder",
+    description:
+      "When an invoice becomes overdue, waits 1 day then sends a reminder email. If still unpaid after 7 days, sends a firmer reminder. After 14 more days, notifies the agency owner.",
+    category: "System — Invoicing",
+    icon: "Clock",
+    complexity: "advanced",
+    estimatedSetupTime: "0 minutes",
+    tags: ["system", "invoicing", "overdue", "reminder", "email"],
+    isSystem: true,
+    systemEventType: "accounting.invoice.overdue",
+    defaultActive: true,
+    pack: "essential-communications",
+    trigger: {
+      type: "event",
+      config: { event_type: "accounting.invoice.overdue" },
+    },
+    steps: [
+      {
+        step_type: "delay",
+        action_type: "delay.wait",
+        action_config: { duration: 1, unit: "days" },
+        name: "Wait 1 Day",
+      },
+      {
+        step_type: "action",
+        action_type: "email.send",
+        action_config: {
+          to: "{{trigger.contactEmail}}",
+          subject:
+            "Friendly Reminder — Invoice {{trigger.invoiceNumber}} is Past Due",
+          body: "Hi {{trigger.contactName}},\n\nThis is a friendly reminder that invoice {{trigger.invoiceNumber}} for {{trigger.amountDueFormatted}} was due on {{trigger.dueDate}}.\n\nPlease arrange payment at your earliest convenience.\n\nThank you.",
+        },
+        name: "Send Friendly Reminder Email",
+      },
+      {
+        step_type: "delay",
+        action_type: "delay.wait",
+        action_config: { duration: 7, unit: "days" },
+        name: "Wait 7 Days",
+      },
+      {
+        step_type: "condition",
+        action_type: "condition.check",
+        action_config: {
+          field: "trigger.status",
+          operator: "in",
+          value: ["overdue", "sent", "viewed", "partial"],
+        },
+        name: "Check If Still Unpaid",
+      },
+      {
+        step_type: "action",
+        action_type: "email.send",
+        action_config: {
+          to: "{{trigger.contactEmail}}",
+          subject:
+            "Second Notice — Invoice {{trigger.invoiceNumber}} is Now Overdue",
+          body: "Hi {{trigger.contactName}},\n\nInvoice {{trigger.invoiceNumber}} for {{trigger.amountDueFormatted}} is now significantly overdue. The original due date was {{trigger.dueDate}}.\n\nPlease arrange immediate payment to avoid any further action.\n\nThank you.",
+        },
+        name: "Send Firmer Reminder Email",
+      },
+      {
+        step_type: "delay",
+        action_type: "delay.wait",
+        action_config: { duration: 14, unit: "days" },
+        name: "Wait 14 Days",
+      },
+      {
+        step_type: "action",
+        action_type: "notification.in_app_targeted",
+        action_config: {
+          title: "Overdue Invoice Escalation",
+          message:
+            "Invoice {{trigger.invoiceNumber}} ({{trigger.amountDueFormatted}}) has been overdue for 22+ days. Client: {{trigger.contactName}}",
+          type: "warning",
+          target_role: "owner",
+          link: "/invoicing/invoices/{{trigger.invoiceId}}",
+        },
+        name: "Notify Agency Owner",
+      },
+    ],
+  },
+  {
+    id: "system-invoice-payment-confirmation",
+    name: "Payment Confirmation",
+    description:
+      "When a payment is received, sends a receipt email to the client. If the invoice is fully paid, updates the CRM contact tag to Active Client.",
+    category: "System — Invoicing",
+    icon: "CreditCard",
+    complexity: "simple",
+    estimatedSetupTime: "0 minutes",
+    tags: ["system", "invoicing", "payment", "receipt", "email"],
+    isSystem: true,
+    systemEventType: "accounting.payment.received",
+    defaultActive: true,
+    pack: "essential-communications",
+    trigger: {
+      type: "event",
+      config: { event_type: "accounting.payment.received" },
+    },
+    steps: [
+      {
+        step_type: "action",
+        action_type: "email.send",
+        action_config: {
+          to: "{{trigger.contactEmail}}",
+          subject:
+            "Payment Received — Invoice {{trigger.invoiceNumber}}",
+          body: "Hi {{trigger.contactName}},\n\nWe have received your payment of {{trigger.amountPaidFormatted}} for invoice {{trigger.invoiceNumber}}.\n\n{{#if trigger.fullyPaid}}This invoice is now fully paid. Thank you!{{else}}Remaining balance: {{trigger.remainingBalanceFormatted}}{{/if}}\n\nThank you for your prompt payment.",
+        },
+        name: "Send Receipt Email",
+      },
+      {
+        step_type: "condition",
+        action_type: "condition.check",
+        action_config: {
+          field: "trigger.fullyPaid",
+          operator: "equals",
+          value: true,
+        },
+        name: "Check If Fully Paid",
+      },
+      {
+        step_type: "action",
+        action_type: "crm.tag_contact",
+        action_config: {
+          contact_id: "{{trigger.contactId}}",
+          tag: "Active Client",
+          action: "add",
+        },
+        name: "Tag as Active Client",
+      },
+    ],
+  },
+  {
+    id: "system-invoice-recurring-generated",
+    name: "Recurring Invoice Generated",
+    description:
+      "When a recurring invoice is generated, logs the activity. If auto-send is enabled, automatically sends the invoice to the client.",
+    category: "System — Invoicing",
+    icon: "RefreshCw",
+    complexity: "simple",
+    estimatedSetupTime: "0 minutes",
+    tags: ["system", "invoicing", "recurring", "auto-send"],
+    isSystem: true,
+    systemEventType: "accounting.invoice.created",
+    defaultActive: true,
+    pack: "essential-communications",
+    trigger: {
+      type: "event",
+      config: { event_type: "accounting.invoice.created" },
+    },
+    steps: [
+      {
+        step_type: "condition",
+        action_type: "condition.check",
+        action_config: {
+          field: "trigger.source",
+          operator: "equals",
+          value: "recurring",
+        },
+        name: "Check If From Recurring",
+      },
+      {
+        step_type: "action",
+        action_type: "notification.in_app_targeted",
+        action_config: {
+          title: "Recurring Invoice Generated",
+          message:
+            "Invoice {{trigger.invoiceNumber}} was auto-generated from recurring schedule for {{trigger.contactName}}",
+          type: "info",
+          target_role: "owner",
+          link: "/invoicing/invoices/{{trigger.invoiceId}}",
+        },
+        name: "Log — Notify Owner",
+      },
+      {
+        step_type: "condition",
+        action_type: "condition.check",
+        action_config: {
+          field: "trigger.autoSend",
+          operator: "equals",
+          value: true,
+        },
+        name: "Check If Auto-Send Enabled",
+      },
+      {
+        step_type: "action",
+        action_type: "email.send",
+        action_config: {
+          to: "{{trigger.contactEmail}}",
+          subject:
+            "Invoice {{trigger.invoiceNumber}} from {{trigger.companyName}}",
+          body: "Hi {{trigger.contactName}},\n\nPlease find your invoice {{trigger.invoiceNumber}} for {{trigger.amountDueFormatted}} due on {{trigger.dueDate}}.\n\nThank you for your continued business.",
+        },
+        name: "Auto-Send Invoice Email",
+      },
+    ],
+  },
+  {
+    id: "system-invoice-new-client-followup",
+    name: "New Client Invoice Follow-Up",
+    description:
+      "When an invoice is sent, waits 3 days and checks if it has been viewed. If not viewed, sends a follow-up email to the client.",
+    category: "System — Invoicing",
+    icon: "Send",
+    complexity: "moderate",
+    estimatedSetupTime: "0 minutes",
+    tags: ["system", "invoicing", "follow-up", "email"],
+    isSystem: true,
+    systemEventType: "accounting.invoice.sent",
+    defaultActive: true,
+    pack: "essential-communications",
+    trigger: {
+      type: "event",
+      config: { event_type: "accounting.invoice.sent" },
+    },
+    steps: [
+      {
+        step_type: "delay",
+        action_type: "delay.wait",
+        action_config: { duration: 3, unit: "days" },
+        name: "Wait 3 Days",
+      },
+      {
+        step_type: "condition",
+        action_type: "condition.check",
+        action_config: {
+          field: "trigger.status",
+          operator: "not_in",
+          value: ["viewed", "paid", "partial"],
+        },
+        name: "Check If Not Viewed",
+      },
+      {
+        step_type: "action",
+        action_type: "email.send",
+        action_config: {
+          to: "{{trigger.contactEmail}}",
+          subject:
+            "Following Up — Invoice {{trigger.invoiceNumber}}",
+          body: "Hi {{trigger.contactName}},\n\nWe sent invoice {{trigger.invoiceNumber}} for {{trigger.amountDueFormatted}} a few days ago and wanted to make sure you received it.\n\nThe payment is due on {{trigger.dueDate}}. Please let us know if you have any questions.\n\nThank you.",
+        },
+        name: "Send Follow-Up Email",
+      },
+    ],
+  },
+];
+
+// ============================================================================
 // COMBINED EXPORT
 // ============================================================================
 
@@ -1488,6 +1744,7 @@ export const SYSTEM_WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
   ...QUOTE_SYSTEM_TEMPLATES,
   ...FORM_SYSTEM_TEMPLATES,
   ...CHAT_SYSTEM_TEMPLATES,
+  ...INVOICING_SYSTEM_TEMPLATES,
 ];
 
 /**

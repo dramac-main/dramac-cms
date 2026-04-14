@@ -55,6 +55,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { CurrencySelector } from "./currency-selector";
 
 interface InvoicingSettingsFormProps {
   siteId: string;
@@ -296,11 +297,10 @@ export function InvoicingSettingsForm({ siteId }: InvoicingSettingsFormProps) {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <Label htmlFor="currency">Currency</Label>
-                  <Input
-                    id="currency"
+                  <CurrencySelector
                     value={form.defaultCurrency}
-                    onChange={(e) =>
-                      setForm({ ...form, defaultCurrency: e.target.value })
+                    onValueChange={(v) =>
+                      setForm({ ...form, defaultCurrency: v })
                     }
                   />
                 </div>

@@ -1,32 +1,110 @@
 /**
  * Invoicing Module - Report Types
  *
- * Phase INV-01: Database Foundation
+ * Phase INV-01 + INV-07: Financial reports, dashboards, P&L.
  *
  * Types for financial reports and dashboards.
+ * ALL amounts in CENTS (integers).
  */
 
 // ============================================================================
-// REPORT TYPES
+// DASHBOARD METRICS (INV-07)
+// ============================================================================
+
+export interface DashboardMetrics {
+  totalRevenue: number;
+  totalOutstanding: number;
+  totalOverdue: number;
+  overdueCount: number;
+  totalExpenses: number;
+  netProfit: number;
+  invoicesSent: number;
+  invoicesPaid: number;
+  averagePaymentDays: number;
+  collectionRate: number;
+  revenueThisMonth: number;
+  revenueLastMonth: number;
+  revenueGrowthPercent: number;
+  // Accounts Payable (INV-14)
+  totalBillsOutstanding: number;
+  totalBillsOverdue: number;
+  totalBillsPaidThisPeriod: number;
+  activePurchaseOrders: number;
+  netCashPosition: number;
+}
+
+// ============================================================================
+// REVENUE BY PERIOD
+// ============================================================================
+
+export interface RevenueByPeriod {
+  period: string;
+  invoiced: number;
+  collected: number;
+  expenses: number;
+}
+
+// ============================================================================
+// CASH FLOW REPORT
+// ============================================================================
+
+export interface CashFlowReport {
+  periods: CashFlowPeriodEntry[];
+  totalIn: number;
+  totalOut: number;
+  netCashFlow: number;
+}
+
+export interface CashFlowPeriodEntry {
+  period: string;
+  cashIn: number;
+  cashOut: number;
+  net: number;
+}
+
+// ============================================================================
+// PROFIT & LOSS
 // ============================================================================
 
 export interface ProfitAndLoss {
-  period: string;
-  revenue: number;
-  expenses: number;
+  period: { start: string; end: string };
+  income: {
+    total: number;
+    byCategory: { category: string; amount: number }[];
+  };
+  expenses: {
+    total: number;
+    byCategory: { category: string; amount: number }[];
+  };
   netProfit: number;
-  revenueByCategory: Record<string, number>;
-  expensesByCategory: Record<string, number>;
+  netProfitMargin: number;
 }
 
+// ============================================================================
+// AR AGING REPORT
+// ============================================================================
+
 export interface ARAgingReport {
+  summary: {
+    current: number;
+    days1to30: number;
+    days31to60: number;
+    days61to90: number;
+    days90plus: number;
+    total: number;
+  };
+  byClient: ARAgingClientRow[];
+}
+
+export interface ARAgingClientRow {
+  clientName: string;
+  contactId: string;
   current: number;
-  overdue1to30: number;
-  overdue31to60: number;
-  overdue61to90: number;
-  overdue90Plus: number;
-  totalOutstanding: number;
-  invoices: ARAgingInvoice[];
+  days1to30: number;
+  days31to60: number;
+  days61to90: number;
+  days90plus: number;
+  total: number;
 }
 
 export interface ARAgingInvoice {
@@ -39,8 +117,12 @@ export interface ARAgingInvoice {
   bucket: "current" | "1-30" | "31-60" | "61-90" | "90+";
 }
 
+// ============================================================================
+// TAX SUMMARY
+// ============================================================================
+
 export interface TaxSummary {
-  period: string;
+  period: { start: string; end: string };
   taxCollected: number;
   taxPaid: number;
   netTaxOwed: number;
@@ -56,11 +138,16 @@ export interface TaxSummaryByRate {
   net: number;
 }
 
+// ============================================================================
+// EXPENSE REPORT
+// ============================================================================
+
 export interface ExpenseReport {
-  period: string;
+  period: { start: string; end: string };
   totalExpenses: number;
   byCategory: ExpenseByCategory[];
   byVendor: ExpenseByVendor[];
+  byMonth: ExpenseByMonth[];
 }
 
 export interface ExpenseByCategory {
@@ -78,26 +165,66 @@ export interface ExpenseByVendor {
   count: number;
 }
 
-export interface RevenueByPeriod {
-  periods: RevenuePeriodEntry[];
-  total: number;
-  average: number;
+export interface ExpenseByMonth {
+  month: string;
+  amount: number;
+  count: number;
 }
 
-export interface RevenuePeriodEntry {
-  period: string;
-  invoiced: number;
-  collected: number;
+// ============================================================================
+// TOP CLIENTS
+// ============================================================================
+
+export interface TopClient {
+  contactId: string;
+  clientName: string;
+  totalInvoiced: number;
+  totalPaid: number;
   outstanding: number;
+  invoiceCount: number;
 }
 
-export interface CashFlowReport {
-  period: string;
-  cashIn: number;
-  cashOut: number;
-  netCashFlow: number;
-  entries: CashFlowEntry[];
+// ============================================================================
+// CHART DATA TYPES
+// ============================================================================
+
+export interface InvoiceStatusDistribution {
+  status: string;
+  label: string;
+  count: number;
+  amount: number;
+  color: string;
 }
+
+export interface PaymentMethodDistribution {
+  method: string;
+  label: string;
+  amount: number;
+  count: number;
+  color: string;
+}
+
+// ============================================================================
+// DATE RANGE FILTER
+// ============================================================================
+
+export type DateRangePreset =
+  | "this_month"
+  | "last_month"
+  | "this_quarter"
+  | "this_year"
+  | "last_year"
+  | "custom";
+
+export interface DateRange {
+  start: string;
+  end: string;
+  preset: DateRangePreset;
+}
+
+// ============================================================================
+// DEPRECATED (kept for backward compatibility)
+// ============================================================================
 
 export interface CashFlowEntry {
   date: string;
@@ -108,21 +235,9 @@ export interface CashFlowEntry {
   entityId: string;
 }
 
-// ============================================================================
-// DASHBOARD METRICS
-// ============================================================================
-
-export interface DashboardMetrics {
-  totalRevenue: number;
-  totalExpenses: number;
-  netIncome: number;
-  totalOutstanding: number;
-  totalOverdue: number;
-  invoiceCount: number;
-  paidInvoiceCount: number;
-  overdueInvoiceCount: number;
-  averagePaymentDays: number;
-  revenueThisMonth: number;
-  revenueLastMonth: number;
-  revenueGrowthPercent: number;
+export interface RevenuePeriodEntry {
+  period: string;
+  invoiced: number;
+  collected: number;
+  outstanding: number;
 }

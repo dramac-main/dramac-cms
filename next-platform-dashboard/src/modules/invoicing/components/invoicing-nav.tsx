@@ -12,6 +12,11 @@ import {
   Repeat,
   CreditCard,
   Receipt,
+  BarChart3,
+  Sparkles,
+  Building2,
+  FileStack,
+  ClipboardList,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -27,6 +32,18 @@ export function InvoicingNav({ siteId }: InvoicingNavProps) {
   const activeRef = useRef<HTMLAnchorElement>(null);
 
   const navItems = [
+    {
+      href: base,
+      label: "Dashboard",
+      icon: LayoutDashboard,
+      exact: true,
+    },
+    {
+      href: `${base}/reports`,
+      label: "Reports",
+      icon: BarChart3,
+      exact: false,
+    },
     {
       href: `${base}/invoices`,
       label: "Invoices",
@@ -58,6 +75,30 @@ export function InvoicingNav({ siteId }: InvoicingNavProps) {
       exact: false,
     },
     { href: `${base}/items`, label: "Items", icon: Package, exact: true },
+    {
+      href: `${base}/insights`,
+      label: "Insights",
+      icon: Sparkles,
+      exact: false,
+    },
+    {
+      href: `${base}/vendors`,
+      label: "Vendors",
+      icon: Building2,
+      exact: false,
+    },
+    {
+      href: `${base}/bills`,
+      label: "Bills",
+      icon: FileStack,
+      exact: false,
+    },
+    {
+      href: `${base}/purchase-orders`,
+      label: "Purchase Orders",
+      icon: ClipboardList,
+      exact: false,
+    },
     {
       href: `${base}/settings`,
       label: "Settings",

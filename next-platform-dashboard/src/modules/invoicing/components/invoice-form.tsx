@@ -26,6 +26,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { CurrencySelector } from "./currency-selector";
 
 interface InvoiceFormProps {
   siteId: string;
@@ -272,18 +273,10 @@ export function InvoiceForm({ siteId, invoice, mode }: InvoiceFormProps) {
               </div>
               <div>
                 <Label htmlFor="currency">Currency</Label>
-                <Select value={currency} onValueChange={setCurrency}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ZMW">ZMW (K)</SelectItem>
-                    <SelectItem value="USD">USD ($)</SelectItem>
-                    <SelectItem value="GBP">GBP (£)</SelectItem>
-                    <SelectItem value="EUR">EUR (€)</SelectItem>
-                    <SelectItem value="ZAR">ZAR (R)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <CurrencySelector
+                  value={currency}
+                  onValueChange={setCurrency}
+                />
               </div>
             </div>
             <div className="mt-4">

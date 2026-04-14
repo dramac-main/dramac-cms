@@ -47,10 +47,12 @@ import {
   CircleX,
   Phone,
   Mail,
-  FileText
+  FileText,
+  Receipt
 } from 'lucide-react'
 import type { DealUpdate, PipelineStage, Activity } from '../../types/crm-types'
 import { CreateActivityDialog } from '../dialogs/create-activity-dialog'
+import { createInvoiceFromDeal } from '@/modules/invoicing/actions/crm-integration-actions'
 
 import { DEFAULT_LOCALE, DEFAULT_CURRENCY, DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
 interface DealDetailSheetProps {
@@ -109,7 +111,7 @@ export function DealDetailSheet({
   open,
   onOpenChange
 }: DealDetailSheetProps) {
-  const { deals, contacts, companies, pipelines, editDeal, removeDeal, getStages } = useCRM()
+  const { deals, contacts, companies, pipelines, editDeal, removeDeal, getStages, siteId } = useCRM()
   const { activities } = useDealActivities(dealId || '')
   
   // State
@@ -282,6 +284,24 @@ export function DealDetailSheet({
                 >
                   <CircleX className="h-4 w-4 mr-1" />
                   Mark Lost
+                </Button>
+              </div>
+            )}
+            {deal.status === 'won' && (
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onClick={async () => {
+                    const result = await createInvoiceFromDeal(deal.id, siteId)
+                    if (result.redirectUrl) {
+                      window.location.href = result.redirectUrl
+                    }
+                  }}
+                >
+                  <Receipt className="h-4 w-4 mr-1" />
+                  Create Invoice
                 </Button>
               </div>
             )}

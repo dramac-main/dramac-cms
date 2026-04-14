@@ -48,6 +48,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { ContactUpdate, ContactStatus, Activity } from '../../types/crm-types'
 import { CreateActivityDialog } from '../dialogs/create-activity-dialog'
+import { ContactFinanceTab } from '@/modules/invoicing/components/crm/contact-finance-tab'
 
 interface ContactDetailSheetProps {
   contactId: string | null
@@ -96,7 +97,7 @@ export function ContactDetailSheet({
   open,
   onOpenChange
 }: ContactDetailSheetProps) {
-  const { contacts, companies, editContact, removeContact } = useCRM()
+  const { contacts, companies, editContact, removeContact, siteId } = useCRM()
   const { activities } = useContactActivities(contactId || '')
   
   // State
@@ -223,6 +224,7 @@ export function ContactDetailSheet({
               <TabsTrigger value="activities" className="flex-1">
                 Activities ({activities.length})
               </TabsTrigger>
+              <TabsTrigger value="finance" className="flex-1">Finance</TabsTrigger>
             </TabsList>
             
             <TabsContent value="details" className="mt-4 space-y-4">
@@ -473,6 +475,12 @@ export function ContactDetailSheet({
                 <div className="text-center py-8 text-muted-foreground">
                   No activities logged yet
                 </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="finance" className="mt-4">
+              {contactId && (
+                <ContactFinanceTab contactId={contactId} siteId={siteId} />
               )}
             </TabsContent>
           </Tabs>

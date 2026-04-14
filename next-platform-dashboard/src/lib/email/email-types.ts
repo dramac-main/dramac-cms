@@ -71,7 +71,12 @@ export type EmailType =
   // Support Tickets
   | "support_ticket_created"
   | "support_ticket_replied"
-  | "support_ticket_closed";
+  | "support_ticket_closed"
+  // Invoicing
+  | "invoice_sent_customer"
+  | "invoice_payment_received_customer"
+  | "invoice_overdue_reminder"
+  | "invoice_late_fee_applied";
 
 export interface EmailRecipient {
   email: string;
@@ -143,6 +148,10 @@ export function isValidEmailType(type: string): type is EmailType {
     "support_ticket_created",
     "support_ticket_replied",
     "support_ticket_closed",
+    "invoice_sent_customer",
+    "invoice_payment_received_customer",
+    "invoice_overdue_reminder",
+    "invoice_late_fee_applied",
   ];
   return validTypes.includes(type as EmailType);
 }

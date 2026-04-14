@@ -2751,6 +2751,155 @@ export const ACTION_REGISTRY = {
       },
     },
   },
+
+  // ============================================================================
+  // INVOICING ACTIONS
+  // ============================================================================
+  invoicing: {
+    send_invoice: {
+      id: "invoicing.send_invoice",
+      name: "Send Invoice",
+      description: "Send an invoice to the client via email",
+      category: "invoicing",
+      icon: "Send",
+      inputs: {
+        invoice_id: {
+          type: "string" as const,
+          required: true,
+          description: "Invoice ID to send",
+        },
+        message: {
+          type: "string" as const,
+          required: false,
+          description: "Optional message to include in the email",
+        },
+      },
+      outputs: {
+        success: {
+          type: "boolean" as const,
+          description: "Whether the invoice was sent",
+        },
+      },
+    },
+    send_reminder: {
+      id: "invoicing.send_reminder",
+      name: "Send Payment Reminder",
+      description: "Send a payment reminder for an overdue or unpaid invoice",
+      category: "invoicing",
+      icon: "Bell",
+      inputs: {
+        invoice_id: {
+          type: "string" as const,
+          required: true,
+          description: "Invoice ID to send reminder for",
+        },
+        reminder_type: {
+          type: "string" as const,
+          required: false,
+          description: "Reminder type: gentle, firm, or final",
+        },
+      },
+      outputs: {
+        success: {
+          type: "boolean" as const,
+          description: "Whether the reminder was sent",
+        },
+      },
+    },
+    apply_late_fee: {
+      id: "invoicing.apply_late_fee",
+      name: "Apply Late Fee",
+      description: "Apply a late fee to an overdue invoice",
+      category: "invoicing",
+      icon: "AlertTriangle",
+      inputs: {
+        invoice_id: {
+          type: "string" as const,
+          required: true,
+          description: "Invoice ID to apply late fee to",
+        },
+        fee_amount_cents: {
+          type: "number" as const,
+          required: false,
+          description: "Fee amount in cents (uses default if not specified)",
+        },
+        fee_percentage: {
+          type: "number" as const,
+          required: false,
+          description: "Fee as percentage of outstanding amount",
+        },
+      },
+      outputs: {
+        success: {
+          type: "boolean" as const,
+          description: "Whether the late fee was applied",
+        },
+        new_total_cents: {
+          type: "number" as const,
+          description: "New invoice total after late fee",
+        },
+      },
+    },
+    mark_as_written_off: {
+      id: "invoicing.mark_as_written_off",
+      name: "Write Off Invoice",
+      description: "Mark an invoice as written off (bad debt)",
+      category: "invoicing",
+      icon: "XCircle",
+      inputs: {
+        invoice_id: {
+          type: "string" as const,
+          required: true,
+          description: "Invoice ID to write off",
+        },
+        reason: {
+          type: "string" as const,
+          required: false,
+          description: "Reason for writing off the invoice",
+        },
+      },
+      outputs: {
+        success: {
+          type: "boolean" as const,
+          description: "Whether the invoice was written off",
+        },
+      },
+    },
+    create_from_template: {
+      id: "invoicing.create_from_template",
+      name: "Create Invoice from Template",
+      description: "Create a new invoice using a saved template",
+      category: "invoicing",
+      icon: "FileText",
+      inputs: {
+        template_id: {
+          type: "string" as const,
+          required: true,
+          description: "Template ID to use",
+        },
+        client_id: {
+          type: "string" as const,
+          required: true,
+          description: "Client ID to create the invoice for",
+        },
+        due_days: {
+          type: "number" as const,
+          required: false,
+          description: "Days until due (defaults to template setting)",
+        },
+      },
+      outputs: {
+        success: {
+          type: "boolean" as const,
+          description: "Whether the invoice was created",
+        },
+        invoice_id: {
+          type: "string" as const,
+          description: "Created invoice ID",
+        },
+      },
+    },
+  },
 } as const;
 
 // ============================================================================
@@ -2829,6 +2978,12 @@ export const ACTION_CATEGORIES = [
     name: "Marketing",
     icon: "Mail",
     description: "Campaigns, subscribers, sequences, SMS, WhatsApp, and lists",
+  },
+  {
+    id: "invoicing",
+    name: "Invoicing",
+    icon: "Receipt",
+    description: "Send invoices, reminders, apply fees, and manage payments",
   },
 ] as const;
 

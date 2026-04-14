@@ -198,6 +198,7 @@ export interface CreateBillLineItemInput {
   unit?: string | null;
   unitPrice: number;
   taxRateId?: string | null;
+  taxRate?: number;
 }
 
 export interface CreatePurchaseOrderInput {
@@ -209,4 +210,50 @@ export interface CreatePurchaseOrderInput {
   notes?: string | null;
   internalNotes?: string | null;
   tags?: string[];
+  lineItems?: PurchaseOrderLineItem[];
+}
+
+// ============================================================================
+// PURCHASE ORDER LINE ITEMS (stored in metadata.lineItems JSON)
+// ============================================================================
+
+export interface PurchaseOrderLineItem {
+  name: string;
+  description?: string | null;
+  quantity: number;
+  unit?: string | null;
+  unitPrice: number; // CENTS
+  taxRateId?: string | null;
+  taxRate?: number;
+  taxAmount?: number; // CENTS
+  subtotal: number; // CENTS
+  total: number; // CENTS
+}
+
+// ============================================================================
+// STATS TYPES (INV-14)
+// ============================================================================
+
+export interface VendorStats {
+  totalBilled: number; // CENTS
+  totalPaid: number; // CENTS
+  totalOutstanding: number; // CENTS
+  billCount: number;
+  poCount: number;
+  avgPaymentDays: number;
+  activePurchaseOrders: number;
+}
+
+export interface BillStats {
+  totalBilled: number; // CENTS
+  totalPaid: number; // CENTS
+  totalOutstanding: number; // CENTS
+  totalOverdue: number; // CENTS
+  billCount: number;
+  overdueCount: number;
+  draftCount: number;
+  approvedCount: number;
+  partialCount: number;
+  paidCount: number;
+  totalCount: number;
 }

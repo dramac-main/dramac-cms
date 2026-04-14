@@ -13,3 +13,5 @@ export * from "./vendor-types";
 export * from "./tax-types";
 export * from "./activity-types";
 export * from "./report-types";
+export * from "./ai-types";
+export * from "./admin-types";

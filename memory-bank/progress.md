@@ -90,7 +90,7 @@
 
 ---
 
-## Wave 8: Invoicing & Financial Management Module — IN PROGRESS 🔨
+## Wave 8: Invoicing & Financial Management Module — ALL 14 PHASES COMPLETE ✅
 
 | Phase  | Description                                                       | Status      |
 | ------ | ----------------------------------------------------------------- | ----------- |
@@ -100,14 +100,14 @@
 | INV-04 | Recurring Invoices & Subscription Billing                         | ✅ Complete |
 | INV-05 | Credit Notes & Adjustments                                        | ✅ Complete |
 | INV-06 | Expense Tracking, Categories & Receipt Upload                     | ✅ Complete |
-| INV-07 | Financial Dashboard, Reports & P&L Statements                     | 📋 Planned  |
-| INV-08 | Tax Management, Multi-Currency & Compliance                       | 📋 Planned  |
-| INV-09 | Client Portal — Invoice Viewing, Online Payment & Statements      | 📋 Planned  |
-| INV-10 | Email Notifications, Reminders & Overdue Management               | 📋 Planned  |
-| INV-11 | AI Financial Intelligence & Insights                              | 📋 Planned  |
-| INV-12 | Super Admin Controls & Platform-Level Configuration               | 📋 Planned  |
-| INV-13 | Cross-Module Deep Integration (CRM, E-Com, Booking, Auto, Mkt)    | 📋 Planned  |
-| INV-14 | Vendor Management, Purchase Orders & Bills                        | 📋 Planned  |
+| INV-07 | Financial Dashboard, Reports & P&L Statements                     | ✅ Complete |
+| INV-08 | Tax Management, Multi-Currency & Compliance                       | ✅ Complete |
+| INV-09 | Client Portal — Invoice Viewing, Online Payment & Statements      | ✅ Complete |
+| INV-10 | Email Notifications, Reminders & Overdue Management               | ✅ Complete |
+| INV-11 | AI Financial Intelligence & Insights                              | ✅ Complete |
+| INV-12 | Super Admin Controls & Platform-Level Configuration               | ✅ Complete |
+| INV-13 | Cross-Module Deep Integration (CRM, E-Com, Booking, Auto, Mkt)    | ✅ Complete |
+| INV-14 | Vendor Management, Purchase Orders & Bills                        | ✅ Complete |
 
 **INV-01 Deliverables (Session 1)**: 18 DB tables + RLS + triggers via 1 migration (`inv_01_database_foundation_v2`), 13 new files (10 types + constants + bootstrap + utils), 9 existing files modified (module-catalog, sites.ts, portal-navigation, roles, auto-install, portal-layout-client, portal-sidebar, portal-auth, database.ts). `clients.can_manage_invoices` + `client_site_permissions.can_manage_invoices` columns added. Zero invoicing TypeScript errors.
 
@@ -116,6 +116,26 @@
 **INV-03 Deliverables (Session 3)**: 10 files (9 new + 1 modified). `payment-actions.ts` (7 functions: recordPayment, getPayments, getPayment, updatePayment, deletePayment, recordRefund, getPaymentSummary). 7 components (payment-form, refund-form, payment-list, payment-detail, payment-method-icon, payment-summary-card, payment-proof-upload). 1 page (payments). Modified invoice-detail.tsx (Record Payment/Refund buttons + sidebar). 4 automation events (payment.recorded, payment.updated, payment.deleted, refund.recorded). Payment receipt email via Resend. Zero new TSC errors.
 
 **INV-04 Deliverables (Session 3)**: 13 files (12 new + 1 modified). `recurring-actions.ts` (9 functions: CRUD + pause/resume/generateNow/getUpcomingGenerations + calculateNextDate utility). `recurring-engine-service.ts` (cron processor). API route + cron dispatch integration. 5 components (frequency-selector, recurring-schedule-preview, recurring-list, recurring-form, recurring-detail). 3 pages (list, new, detail). Nav updated with Payments + Recurring tabs. 7 frequency types (weekly/biweekly/monthly/quarterly/semi_annually/annually/custom). Auto-send on generation. Zero new TSC errors (102 baseline maintained).
+
+**INV-05 + INV-06 Deliverables (Sessions 4-5)**: Credit Notes (9 actions, 6 components, 3 pages) + Expenses (13 actions, 8 components, 3 pages, 2 integrations: e-commerce bills + recurring expense generation). Zero new TSC errors.
+
+**INV-07 Deliverables (Session 5)**: Financial Dashboard, Reports & P&L Statements. 27 files total (26 new + 2 modified).
+
+- `report-types.ts` (REPLACED) — All INV-07 types: DashboardMetrics, RevenueByPeriod, CashFlowReport, ProfitAndLoss, ARAgingReport, TaxSummary, ExpenseReport, TopClient, PaymentMethodDistribution, InvoiceStatusDistribution, DateRange
+- `report-actions.ts` (NEW ~1050 lines) — 12 server actions: getDashboardMetrics, getRevenueByPeriod, getCashFlowReport, getProfitAndLoss, getARAgingReport, getTaxSummary, getExpenseReport, getTopClients, getPaymentMethodDistribution, getInvoiceStatusDistribution, exportReportCSV, fetchRecentInvoices
+- 18 components: metric-card, date-range-filter, revenue-chart, cash-flow-chart, invoice-status-chart, payment-method-chart, revenue-widget, outstanding-widget, overdue-widget, recent-invoices-widget, finance-dashboard, report-hub, pnl-report, ar-aging-report, tax-summary-report, expense-report, top-clients-report, revenue-trends-report
+- 8 pages: invoicing/page.tsx (MODIFIED: redirect→FinanceDashboard), reports/page.tsx, reports/pnl, reports/aging, reports/tax, reports/expenses, reports/top-clients, reports/revenue
+- invoicing-nav.tsx (MODIFIED): Added Dashboard + Reports nav items with LayoutDashboard/BarChart3 icons
+- Recharts 3.7.0 for all charts (AreaChart, BarChart, PieChart). Tooltip formatter `as any` pattern for strict typing.
+- Zero new TSC errors (102 baseline maintained).
+
+**INV-08 Deliverables (Session 6)**: Tax Management, Multi-Currency & Compliance. 9 files (7 new + 2 modified). tax-calculation-service.ts (inclusive/exclusive/compound tax engine), currency-service.ts (10 currencies, exchange rates via frankfurter.app), tax-actions.ts (CRUD + compliance reporting), tax-rate-manager.tsx, currency-selector.tsx, exchange-rate-display.tsx, tax-breakdown.tsx, invoice-form.tsx (CurrencySelector integration), invoicing-settings-form.tsx (CurrencySelector integration). Zero new TSC errors.
+
+**INV-09 Deliverables (Session 6)**: Client Portal — Invoice Viewing, Online Payment & Statements. 19 files (17 new + 2 platform modifications). statement-actions.ts (5 functions + 3 interfaces), 8 portal components (overview, list, detail, payment history, statement, credit notes, public invoice view, public payment form), 6 portal pages, 2 API routes (pay + receipt). Added canManageInvoices to EffectivePortalPermissions and PortalContextValue. Zero new TSC errors (102 baseline maintained).
+
+**INV-10 Deliverables (Session 7)**: Email Notifications, Reminders & Overdue Management. 7 files (5 new + 2 modified). overdue-service.ts (cron processor with 7/14/30 day reminder schedule, late fee engine, automation events), email-service.ts (4 email types with 3 urgency tiers), cron route with CRON_SECRET auth, vercel.json (2 new crons), email-types.ts (4 invoicing types), system-templates.ts (4 invoicing automation templates: overdue reminder, payment confirmation, recurring generated, new client follow-up). Zero new TSC errors.
+
+**INV-11 Deliverables (Session 7)**: AI Financial Intelligence & Insights. 11 files (10 new + 1 modified). ai-types.ts (10 types), ai-actions.ts (~700 lines: 10 server actions — cash flow forecast, payment prediction, client risk score, optimizations, expense categorization, financial Q&A, description generation, financial summary, AI insights, usage status + in-memory cache + 50/day rate limiting + 6 data loaders), 7 components (ai-insights-panel, cash-flow-forecast-chart, client-risk-badge, financial-chatbox, smart-categorizer, invoice-suggestions, insights-hub), 1 page, invoicing-nav.tsx (Insights tab with Sparkles icon). Sonnet for complex analysis, Haiku for fast tasks. Zero new TSC errors (102 baseline maintained).
 
 **Key files:** `/phases/PHASE-INV-MASTER-GUIDE.md` (3,263 lines — full spec), `/phases/PHASE-INV-SESSION-BRIEF.md` (9-session plan + prompts)
 
@@ -159,27 +179,33 @@
 
 ## Key Milestones (Chronological)
 
-| Date     | Milestone                                                                                                                       |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Jan 2026 | Core platform + module marketplace infrastructure                                                                               |
-| Feb 2026 | DRAMAC Studio (replaced Puck), brand color system, AI designer overhaul                                                         |
-| Feb 2026 | All 6 business modules implemented                                                                                              |
-| Feb 2026 | Client portal complete (15 phases)                                                                                              |
-| Mar 2026 | E-Commerce core overhaul (22 sub-phases), quotation system                                                                      |
-| Mar 2026 | Cross-module integration, automation wiring, customer context bridge                                                            |
-| Mar 2026 | Storefront auth rewrite (bcrypt multi-tenant)                                                                                   |
-| Apr 2026 | Blog system overhaul, agency support tickets, portal data scoping audit                                                         |
-| Jul 2026 | Marketing Module MKT-01: Database foundation, types, permissions, automation integration                                        |
-| Jul 2026 | Marketing Module MKT-02 + MKT-03: Campaign engine + email analytics backend (16 files, 1 migration)                             |
-| Jul 2026 | Marketing Module MKT-10/11/12: Super admin, portal views, social media — ALL 12 PHASES COMPLETE                                 |
-| Jul 2026 | Invoicing Module: Master Guide (3,263 lines, 14 phases) + Session Brief — PLANNING COMPLETE                                     |
-| Jul 2026 | Invoicing Module INV-01: Database foundation, 18 tables, module registration, types, permissions                                |
-| Jul 2026 | Invoicing Module INV-02: Invoice CRUD, PDF, settings, items catalog, 17 components, 7 pages                                     |
-| Jul 2026 | Invoicing Module INV-03+INV-04: Payments (7 actions, 7 components) + Recurring (9 actions, engine, cron, 5 components, 3 pages) |
+| Date     | Milestone                                                                                                                                       |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Jan 2026 | Core platform + module marketplace infrastructure                                                                                               |
+| Feb 2026 | DRAMAC Studio (replaced Puck), brand color system, AI designer overhaul                                                                         |
+| Feb 2026 | All 6 business modules implemented                                                                                                              |
+| Feb 2026 | Client portal complete (15 phases)                                                                                                              |
+| Mar 2026 | E-Commerce core overhaul (22 sub-phases), quotation system                                                                                      |
+| Mar 2026 | Cross-module integration, automation wiring, customer context bridge                                                                            |
+| Mar 2026 | Storefront auth rewrite (bcrypt multi-tenant)                                                                                                   |
+| Apr 2026 | Blog system overhaul, agency support tickets, portal data scoping audit                                                                         |
+| Jul 2026 | Marketing Module MKT-01: Database foundation, types, permissions, automation integration                                                        |
+| Jul 2026 | Marketing Module MKT-02 + MKT-03: Campaign engine + email analytics backend (16 files, 1 migration)                                             |
+| Jul 2026 | Marketing Module MKT-10/11/12: Super admin, portal views, social media — ALL 12 PHASES COMPLETE                                                 |
+| Jul 2026 | Invoicing Module: Master Guide (3,263 lines, 14 phases) + Session Brief — PLANNING COMPLETE                                                     |
+| Jul 2026 | Invoicing Module INV-01: Database foundation, 18 tables, module registration, types, permissions                                                |
+| Jul 2026 | Invoicing Module INV-02: Invoice CRUD, PDF, settings, items catalog, 17 components, 7 pages                                                     |
+| Jul 2026 | Invoicing Module INV-03+INV-04: Payments (7 actions, 7 components) + Recurring (9 actions, engine, cron, 5 components, 3 pages)                 |
 | Jul 2026 | Invoicing Module INV-05: Credit Notes (9 actions, 6 components, 3 pages) + INV-06: Expenses (13 actions, 8 components, 3 pages, 2 integrations) |
-| Jul 2026 | LP Builder Pro LPB-06+LPB-07: 6 conversion component rewrites + 14 system templates — Session 5                                 |
-| Jul 2026 | LP Builder Pro LPB-08+LPB-09: Analytics/tracking + AI LP generator — Session 6                                                  |
-| Jul 2026 | LP Builder Pro LPB-10+LPB-11: Admin/Portal views + Migration tooling — Session 7 (FINAL) — ALL 11 LPB PHASES COMPLETE           |
+| Jul 2026 | Invoicing Module INV-07: Financial Dashboard, Reports & P&L (12 server actions, 18 components, 8 pages, nav update, landing page change)        |
+| Jul 2026 | LP Builder Pro LPB-06+LPB-07: 6 conversion component rewrites + 14 system templates — Session 5                                                 |
+| Jul 2026 | LP Builder Pro LPB-08+LPB-09: Analytics/tracking + AI LP generator — Session 6                                                                  |
+| Jul 2026 | LP Builder Pro LPB-10+LPB-11: Admin/Portal views + Migration tooling — Session 7 (FINAL) — ALL 11 LPB PHASES COMPLETE                           |
+| Jul 2026 | Invoicing Module INV-10: Email Notifications, Reminders & Overdue Management (7 files, 2 cron jobs, 4 automation templates)                         |
+| Jul 2026 | Invoicing Module INV-11: AI Financial Intelligence & Insights (11 files, 10 AI actions, 7 components, Claude Sonnet/Haiku)                          |
+| Jul 2026 | Invoicing Module INV-12: Super Admin Controls (8 files — admin dashboard, site table, feature flags, admin pages, admin nav)                            |
+| Jul 2026 | Invoicing Module INV-13: Cross-Module Deep Integration (12 files — CRM finance tab, deal-to-invoice, e-com/booking integration, 15 automation events, 5 actions, 9 marketing filters, 7 email templates) |
+| Jul 2026 | Invoicing Module INV-14: Vendor Management, Purchase Orders & Bills — SESSION 9 FINAL (22 files — vendor CRUD, PO lifecycle, bill management, payment recording, PO email, PDF export) — ALL 14 INV PHASES COMPLETE |
 
 ---
 
@@ -229,7 +255,108 @@
 
 ---
 
-## Latest Update: LP Builder Pro — Phases LPB-10 + LPB-11 COMPLETE ✅ (ALL 11 PHASES DONE)
+## Latest Update: Invoicing Module — ALL 14 PHASES COMPLETE ✅
+
+### Phase INV-14: Vendor Management, Purchase Orders & Bills — Session 9 (FINAL)
+
+**FINAL invoicing session. Accounts Payable: vendor CRUD, purchase order lifecycle, bill management, PO email via Resend, PDF export.**
+
+**Deliverables (~22 files: 17 new + 5 modified):**
+
+- **`vendor-types.ts`** (MODIFIED) — Extended BillStats, VendorStats, CreateBillLineItemInput
+- **`vendor-actions.ts`** (NEW ~400 lines) — 6 server actions: getVendors, getVendor, createVendor, updateVendor, deleteVendor, getVendorStats
+- **`purchase-order-actions.ts`** (NEW ~450 lines) — 9 server actions: CRUD, sendPurchaseOrder (Resend email), approve/receive/cancel
+- **`bill-actions.ts`** (NEW ~700 lines) — 11 server actions: CRUD, approveBill, recordBillPayment, getBillPayments, voidBill, getBillStats, getOverdueBills
+- **10 components**: vendor-list, vendor-form, vendor-detail, purchase-order-list, purchase-order-form, purchase-order-detail, purchase-order-pdf, bill-list, bill-form, bill-detail, bill-payment-dialog
+- **12 pages**: vendors (list/new/detail/edit) + purchase-orders (list/new/detail/edit) + bills (list/new/detail/edit)
+- **5 files modified**: invoicing-nav.tsx, report-types.ts, report-actions.ts, event-types.ts, vendor-types.ts
+
+**TSC: 101 errors (baseline) — zero new errors from INV-14.**
+
+**Key architectural decisions:**
+- Form components use `vendorId?`/`billId?`/`purchaseOrderId?` props and load data internally via useEffect (consistent pattern)
+- PO line items stored in `metadata.lineItems` JSON (no DB table)
+- BillStatus: "draft" | "received" | "partial" | "paid" | "overdue" | "void" (no "approved" or "cancelled")
+- Bill approval sets status to "received" (matching type)
+- All amounts in cents, ZMW default, K currency symbol
+
+### Previous: Phase INV-12 + INV-13 — Session 8
+
+**Admin-level invoicing monitoring, per-site metrics, feature flags, global defaults.**
+
+**Deliverables:**
+
+1. **`admin-types.ts`** (NEW) — PlatformInvoicingStats, SiteInvoicingOverview, UsageTrend, InvoicingFeatureFlag, GlobalInvoicingDefaults
+2. **`types/index.ts`** (MODIFIED) — Added admin-types barrel export
+3. **`admin-actions.ts`** (NEW ~600 lines) — getSuperAdminClient(), getInvoicingPlatformStats(), getInvoicingSiteOverview(), getInvoicingUsageTrends(), updateGlobalInvoicingDefaults(), toggleInvoicingFeature(), getInvoicingFeatureFlags()
+4. **`admin-invoicing-dashboard.tsx`** (NEW) — 4 metric cards, status table, top sites, usage trends
+5. **`admin-site-table.tsx`** (NEW) — Paginated table, PAGE_SIZE=10, 7 columns
+6. **`admin-feature-flags.tsx`** (NEW) — Feature flags grouped by category with Switch toggles
+7. **`admin/modules/invoicing/page.tsx`** (NEW) — Super admin dashboard page
+8. **`admin/modules/invoicing/settings/page.tsx`** (NEW) — Super admin settings page
+9. **`admin-navigation.ts`** (MODIFIED) — Added Receipt icon + "Invoicing Health" nav entry
+
+### Phase INV-13: Cross-Module Deep Integration — Session 8
+
+**CRM financial profiles, deal-to-invoice conversion, e-commerce/booking integrations, 15 automation events, 5 automation actions, marketing audience filters, email templates.**
+
+**Deliverables:**
+
+1. **`crm-integration-actions.ts`** (NEW ~280 lines) — getContactFinancialProfile(), createInvoiceFromContact(), createInvoiceFromDeal()
+2. **`contact-finance-tab.tsx`** (NEW) — Contact finance summary: risk rating, recent invoices/payments, Create Invoice
+3. **`contact-detail-sheet.tsx`** (MODIFIED) — Added Finance TabsTrigger + ContactFinanceTab content
+4. **`deal-detail-sheet.tsx`** (MODIFIED) — Added "Create Invoice" button for won deals (Receipt icon)
+5. **`ecommerce-integration-actions.ts`** (NEW) — createInvoiceFromOrder(), createCreditNoteFromRefund()
+6. **`booking-integration-actions.ts`** (NEW) — createInvoiceFromBooking(), linkBookingDepositPayment()
+7. **`event-types.ts`** (MODIFIED) — 15 accounting EventDefinitions (invoice.created/sent/viewed/paid/partial_payment/overdue/cancelled, payment.received/failed/refunded, expense.created/approved/rejected, client.created/updated) + 15 payload variable entries
+8. **`action-types.ts`** (MODIFIED) — Invoicing category (5 actions: send_invoice, send_reminder, apply_late_fee, mark_as_written_off, create_from_template) + ACTION_CATEGORIES entry
+9. **`audience-filters.ts`** (NEW) — 9 financial audience filters + helper functions
+10. **`integration-settings.tsx`** (NEW) — CRM/E-Commerce/Booking toggle settings component
+11. **`branded-templates.ts`** (MODIFIED) — 7 new email templates (3 support ticket + 4 invoicing)
+
+**TSC: 102 errors (baseline maintained) — zero new errors from INV-12 or INV-13.**
+
+---
+
+## Previous Update: Invoicing Module — Phases INV-10 + INV-11 COMPLETE ✅
+
+### Phase INV-10: Email Notifications, Reminders & Overdue Management — Session 7
+
+**Automated overdue detection cron, multi-tier reminder emails (7/14/30 day), late fee application, 4 automation workflow templates.**
+
+**Deliverables:**
+
+1. **`overdue-service.ts`** (NEW ~290 lines) — `checkOverdueInvoices()` with `processSiteOverdue()`, `markInvoiceOverdue()`, `checkAndSendReminder()` [7/14/30 day schedule], `checkAndApplyLateFee()` with grace period. Fires `accounting.invoice.overdue` automation event
+2. **`email-service.ts`** (NEW ~280 lines) — `sendInvoiceEmail()` with 4 types (invoice_sent, payment_received, overdue_reminder, late_fee_applied), 3 urgency tiers for overdue, company branding
+3. **`/api/invoicing/overdue/check/route.ts`** (NEW) — GET endpoint for Vercel Cron with CRON_SECRET auth
+4. **`vercel.json`** (MODIFIED) — Added 2 cron entries: recurring processing at 6AM UTC, overdue check at 7AM UTC
+5. **`email-types.ts`** (MODIFIED) — Added 4 invoicing email types to union + validTypes
+6. **`system-templates.ts`** (MODIFIED) — Added 4 `INVOICING_SYSTEM_TEMPLATES` (overdue reminder workflow, payment confirmation, recurring generated, new client follow-up) + spread into combined export
+
+### Phase INV-11: AI Financial Intelligence & Insights — Session 7
+
+**Claude-powered financial intelligence: cash flow forecasting, client risk scoring, expense categorization, financial chatbot, smart suggestions.**
+
+**Deliverables:**
+
+1. **`ai-types.ts`** (NEW) — 10 types: CashFlowForecast, CashFlowForecastMonth, ClientRiskScore, ClientRiskFactors, PaymentPrediction, Optimization, ExpenseCategorization, FinancialAnswer, AiInsight, AiUsageStatus
+2. **`types/index.ts`** (MODIFIED) — Added ai-types barrel export
+3. **`ai-actions.ts`** (NEW ~700 lines) — 10 server actions (getCashFlowForecast, getPaymentPrediction, getClientRiskScore, suggestInvoiceOptimizations, categorizeExpense, askFinancialQuestion, generateInvoiceDescription, getFinancialSummary, getAiInsights, getAiUsageStatus). Helpers: callClaude<T>(), callClaudeText(), checkAiUsage() (50/day/site). In-memory TTL cache. 6 data loaders + 4 serializers. Sonnet for complex analysis, Haiku for fast tasks
+4. **`ai-insights-panel.tsx`** (NEW) — Dashboard widget: 3 insight types, severity badges, dismiss/action
+5. **`cash-flow-forecast-chart.tsx`** (NEW) — Recharts AreaChart: Income/Expenses/Net Cash, confidence %, alerts
+6. **`client-risk-badge.tsx`** (NEW) — Green/amber/red badge with shield icons, tooltip details
+7. **`financial-chatbox.tsx`** (NEW) — Chat UI with suggested questions, inline data rendering
+8. **`smart-categorizer.tsx`** (NEW) — AI category suggestion with confidence coloring
+9. **`invoice-suggestions.tsx`** (NEW) — Optimization suggestions with type-specific icons, impact badges
+10. **`insights-hub.tsx`** (NEW) — Page compositor: forecast chart + insights panel + suggestions + chatbox
+11. **`invoicing/insights/page.tsx`** (NEW) — Thin wrapper for InsightsHub
+12. **`invoicing-nav.tsx`** (MODIFIED) — Added "Insights" tab with Sparkles icon
+
+**TSC: 102 errors (baseline maintained) — zero new errors from INV-10 or INV-11.**
+
+---
+
+## Previous Update: LP Builder Pro — Phases LPB-10 + LPB-11 COMPLETE ✅ (ALL 11 PHASES DONE) (ALL 11 PHASES DONE)
 
 ### Phase LPB-10: Super Admin Health View + Client Portal LP Management — Session 7
 

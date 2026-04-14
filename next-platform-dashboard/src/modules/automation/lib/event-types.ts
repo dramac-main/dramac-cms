@@ -402,6 +402,19 @@ export const EVENT_REGISTRY = {
       migrated: "marketing.landing_page.migrated",
     },
   },
+  accounts_payable: {
+    bill: {
+      created: "accounts_payable.bill.created",
+      approved: "accounts_payable.bill.approved",
+      payment_recorded: "accounts_payable.bill.payment_recorded",
+    },
+    purchase_order: {
+      created: "accounts_payable.purchase_order.created",
+      sent: "accounts_payable.purchase_order.sent",
+      received: "accounts_payable.purchase_order.received",
+      cancelled: "accounts_payable.purchase_order.cancelled",
+    },
+  },
 } as const;
 
 // ============================================================================
@@ -1599,6 +1612,196 @@ export function getAllEventDefinitions(): EventDefinition[] {
     },
   );
 
+  // ============================================================
+  // ACCOUNTING / INVOICING EVENTS
+  // ============================================================
+  events.push(
+    // --- Invoice events ---
+    {
+      id: EVENT_REGISTRY.accounting.invoice.created,
+      category: "accounting",
+      entity: "invoice",
+      action: "created",
+      name: "Invoice Created",
+      description: "Triggered when a new invoice is created",
+    },
+    {
+      id: EVENT_REGISTRY.accounting.invoice.sent,
+      category: "accounting",
+      entity: "invoice",
+      action: "sent",
+      name: "Invoice Sent",
+      description: "Triggered when an invoice is sent to the client",
+    },
+    {
+      id: EVENT_REGISTRY.accounting.invoice.viewed,
+      category: "accounting",
+      entity: "invoice",
+      action: "viewed",
+      name: "Invoice Viewed",
+      description: "Triggered when a client views an invoice",
+    },
+    {
+      id: EVENT_REGISTRY.accounting.invoice.paid,
+      category: "accounting",
+      entity: "invoice",
+      action: "paid",
+      name: "Invoice Paid",
+      description: "Triggered when an invoice is fully paid",
+    },
+    {
+      id: EVENT_REGISTRY.accounting.invoice.partial_payment,
+      category: "accounting",
+      entity: "invoice",
+      action: "partial_payment",
+      name: "Invoice Partial Payment",
+      description: "Triggered when a partial payment is received for an invoice",
+    },
+    {
+      id: EVENT_REGISTRY.accounting.invoice.overdue,
+      category: "accounting",
+      entity: "invoice",
+      action: "overdue",
+      name: "Invoice Overdue",
+      description: "Triggered when an invoice passes its due date without full payment",
+    },
+    {
+      id: EVENT_REGISTRY.accounting.invoice.cancelled,
+      category: "accounting",
+      entity: "invoice",
+      action: "cancelled",
+      name: "Invoice Cancelled",
+      description: "Triggered when an invoice is cancelled or voided",
+    },
+    // --- Payment events ---
+    {
+      id: EVENT_REGISTRY.accounting.payment.received,
+      category: "accounting",
+      entity: "payment",
+      action: "received",
+      name: "Payment Received",
+      description: "Triggered when a payment is successfully received",
+    },
+    {
+      id: EVENT_REGISTRY.accounting.payment.failed,
+      category: "accounting",
+      entity: "payment",
+      action: "failed",
+      name: "Payment Failed",
+      description: "Triggered when a payment attempt fails",
+    },
+    {
+      id: EVENT_REGISTRY.accounting.payment.refunded,
+      category: "accounting",
+      entity: "payment",
+      action: "refunded",
+      name: "Payment Refunded",
+      description: "Triggered when a payment is refunded",
+    },
+    // --- Expense events ---
+    {
+      id: EVENT_REGISTRY.accounting.expense.created,
+      category: "accounting",
+      entity: "expense",
+      action: "created",
+      name: "Expense Created",
+      description: "Triggered when a new expense is recorded",
+    },
+    {
+      id: EVENT_REGISTRY.accounting.expense.approved,
+      category: "accounting",
+      entity: "expense",
+      action: "approved",
+      name: "Expense Approved",
+      description: "Triggered when an expense is approved",
+    },
+    {
+      id: EVENT_REGISTRY.accounting.expense.rejected,
+      category: "accounting",
+      entity: "expense",
+      action: "rejected",
+      name: "Expense Rejected",
+      description: "Triggered when an expense is rejected",
+    },
+    // --- Client events ---
+    {
+      id: EVENT_REGISTRY.accounting.client.created,
+      category: "accounting",
+      entity: "client",
+      action: "created",
+      name: "Client Created",
+      description: "Triggered when a new invoicing client is created",
+    },
+    {
+      id: EVENT_REGISTRY.accounting.client.updated,
+      category: "accounting",
+      entity: "client",
+      action: "updated",
+      name: "Client Updated",
+      description: "Triggered when a client record is updated",
+    },
+  );
+
+  // ── Accounts Payable (INV-14) ──────────────────────────────
+  events.push(
+    {
+      id: EVENT_REGISTRY.accounts_payable.bill.created,
+      category: "accounts_payable",
+      entity: "bill",
+      action: "created",
+      name: "Bill Created",
+      description: "Triggered when a new vendor bill is created",
+    },
+    {
+      id: EVENT_REGISTRY.accounts_payable.bill.approved,
+      category: "accounts_payable",
+      entity: "bill",
+      action: "approved",
+      name: "Bill Approved",
+      description: "Triggered when a vendor bill is approved for payment",
+    },
+    {
+      id: EVENT_REGISTRY.accounts_payable.bill.payment_recorded,
+      category: "accounts_payable",
+      entity: "bill",
+      action: "payment_recorded",
+      name: "Bill Payment Recorded",
+      description: "Triggered when a payment is recorded against a vendor bill",
+    },
+    {
+      id: EVENT_REGISTRY.accounts_payable.purchase_order.created,
+      category: "accounts_payable",
+      entity: "purchase_order",
+      action: "created",
+      name: "Purchase Order Created",
+      description: "Triggered when a new purchase order is created",
+    },
+    {
+      id: EVENT_REGISTRY.accounts_payable.purchase_order.sent,
+      category: "accounts_payable",
+      entity: "purchase_order",
+      action: "sent",
+      name: "Purchase Order Sent",
+      description: "Triggered when a purchase order is sent to a vendor",
+    },
+    {
+      id: EVENT_REGISTRY.accounts_payable.purchase_order.received,
+      category: "accounts_payable",
+      entity: "purchase_order",
+      action: "received",
+      name: "Purchase Order Received",
+      description: "Triggered when goods from a purchase order are marked as received",
+    },
+    {
+      id: EVENT_REGISTRY.accounts_payable.purchase_order.cancelled,
+      category: "accounts_payable",
+      entity: "purchase_order",
+      action: "cancelled",
+      name: "Purchase Order Cancelled",
+      description: "Triggered when a purchase order is cancelled",
+    },
+  );
+
   return events;
 }
 
@@ -1857,6 +2060,166 @@ const EVENT_PAYLOAD_VARIABLES: Record<string, EventVariable[]> = {
   "live_chat.conversation.assigned": [
     { key: "visitorName", label: "Visitor Name", type: "string" },
     { key: "conversationId", label: "Conversation ID", type: "string" },
+  ],
+
+  // --- Accounting / Invoicing events ---
+  "accounting.invoice.created": [
+    { key: "invoiceNumber", label: "Invoice Number", type: "string" },
+    { key: "clientName", label: "Client Name", type: "string" },
+    { key: "clientEmail", label: "Client Email", type: "string" },
+    { key: "totalAmountCents", label: "Total Amount (cents)", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "dueDate", label: "Due Date", type: "string" },
+    { key: "invoiceId", label: "Invoice ID", type: "string" },
+  ],
+  "accounting.invoice.sent": [
+    { key: "invoiceNumber", label: "Invoice Number", type: "string" },
+    { key: "clientName", label: "Client Name", type: "string" },
+    { key: "clientEmail", label: "Client Email", type: "string" },
+    { key: "totalAmountCents", label: "Total Amount (cents)", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "invoiceId", label: "Invoice ID", type: "string" },
+  ],
+  "accounting.invoice.viewed": [
+    { key: "invoiceNumber", label: "Invoice Number", type: "string" },
+    { key: "clientName", label: "Client Name", type: "string" },
+    { key: "invoiceId", label: "Invoice ID", type: "string" },
+  ],
+  "accounting.invoice.paid": [
+    { key: "invoiceNumber", label: "Invoice Number", type: "string" },
+    { key: "clientName", label: "Client Name", type: "string" },
+    { key: "clientEmail", label: "Client Email", type: "string" },
+    { key: "totalAmountCents", label: "Total Amount (cents)", type: "number" },
+    { key: "amountPaidCents", label: "Amount Paid (cents)", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "paymentMethod", label: "Payment Method", type: "string" },
+    { key: "invoiceId", label: "Invoice ID", type: "string" },
+  ],
+  "accounting.invoice.partial_payment": [
+    { key: "invoiceNumber", label: "Invoice Number", type: "string" },
+    { key: "clientName", label: "Client Name", type: "string" },
+    { key: "totalAmountCents", label: "Total Amount (cents)", type: "number" },
+    { key: "amountPaidCents", label: "Amount Paid (cents)", type: "number" },
+    { key: "remainingCents", label: "Remaining (cents)", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "invoiceId", label: "Invoice ID", type: "string" },
+  ],
+  "accounting.invoice.overdue": [
+    { key: "invoiceNumber", label: "Invoice Number", type: "string" },
+    { key: "clientName", label: "Client Name", type: "string" },
+    { key: "clientEmail", label: "Client Email", type: "string" },
+    { key: "totalAmountCents", label: "Total Amount (cents)", type: "number" },
+    { key: "outstandingCents", label: "Outstanding (cents)", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "dueDate", label: "Due Date", type: "string" },
+    { key: "daysOverdue", label: "Days Overdue", type: "number" },
+    { key: "invoiceId", label: "Invoice ID", type: "string" },
+  ],
+  "accounting.invoice.cancelled": [
+    { key: "invoiceNumber", label: "Invoice Number", type: "string" },
+    { key: "clientName", label: "Client Name", type: "string" },
+    { key: "totalAmountCents", label: "Total Amount (cents)", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "invoiceId", label: "Invoice ID", type: "string" },
+  ],
+  "accounting.payment.received": [
+    { key: "invoiceNumber", label: "Invoice Number", type: "string" },
+    { key: "clientName", label: "Client Name", type: "string" },
+    { key: "clientEmail", label: "Client Email", type: "string" },
+    { key: "amountCents", label: "Amount (cents)", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "paymentMethod", label: "Payment Method", type: "string" },
+    { key: "paymentId", label: "Payment ID", type: "string" },
+  ],
+  "accounting.payment.failed": [
+    { key: "invoiceNumber", label: "Invoice Number", type: "string" },
+    { key: "clientName", label: "Client Name", type: "string" },
+    { key: "amountCents", label: "Amount (cents)", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "failureReason", label: "Failure Reason", type: "string" },
+  ],
+  "accounting.payment.refunded": [
+    { key: "invoiceNumber", label: "Invoice Number", type: "string" },
+    { key: "clientName", label: "Client Name", type: "string" },
+    { key: "refundAmountCents", label: "Refund Amount (cents)", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "reason", label: "Reason", type: "string" },
+  ],
+  "accounting.expense.created": [
+    { key: "expenseDescription", label: "Description", type: "string" },
+    { key: "amountCents", label: "Amount (cents)", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "categoryName", label: "Category", type: "string" },
+    { key: "vendorName", label: "Vendor", type: "string" },
+    { key: "expenseId", label: "Expense ID", type: "string" },
+  ],
+  "accounting.expense.approved": [
+    { key: "expenseDescription", label: "Description", type: "string" },
+    { key: "amountCents", label: "Amount (cents)", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "approvedBy", label: "Approved By", type: "string" },
+    { key: "expenseId", label: "Expense ID", type: "string" },
+  ],
+  "accounting.expense.rejected": [
+    { key: "expenseDescription", label: "Description", type: "string" },
+    { key: "amountCents", label: "Amount (cents)", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "rejectedBy", label: "Rejected By", type: "string" },
+    { key: "rejectionReason", label: "Rejection Reason", type: "string" },
+    { key: "expenseId", label: "Expense ID", type: "string" },
+  ],
+  "accounting.client.created": [
+    { key: "clientName", label: "Client Name", type: "string" },
+    { key: "clientEmail", label: "Client Email", type: "string" },
+    { key: "clientId", label: "Client ID", type: "string" },
+  ],
+  "accounting.client.updated": [
+    { key: "clientName", label: "Client Name", type: "string" },
+    { key: "clientEmail", label: "Client Email", type: "string" },
+    { key: "clientId", label: "Client ID", type: "string" },
+  ],
+  // ── Accounts Payable (INV-14) ──────────────────────────────
+  "accounts_payable.bill.created": [
+    { key: "billNumber", label: "Bill Number", type: "string" },
+    { key: "vendorName", label: "Vendor Name", type: "string" },
+    { key: "total", label: "Total Amount", type: "number" },
+    { key: "currency", label: "Currency", type: "string" },
+    { key: "billId", label: "Bill ID", type: "string" },
+  ],
+  "accounts_payable.bill.approved": [
+    { key: "billNumber", label: "Bill Number", type: "string" },
+    { key: "vendorName", label: "Vendor Name", type: "string" },
+    { key: "total", label: "Total Amount", type: "number" },
+    { key: "billId", label: "Bill ID", type: "string" },
+  ],
+  "accounts_payable.bill.payment_recorded": [
+    { key: "billNumber", label: "Bill Number", type: "string" },
+    { key: "vendorName", label: "Vendor Name", type: "string" },
+    { key: "paymentAmount", label: "Payment Amount", type: "number" },
+    { key: "amountDue", label: "Amount Still Due", type: "number" },
+    { key: "billId", label: "Bill ID", type: "string" },
+  ],
+  "accounts_payable.purchase_order.created": [
+    { key: "poNumber", label: "PO Number", type: "string" },
+    { key: "vendorName", label: "Vendor Name", type: "string" },
+    { key: "total", label: "Total Amount", type: "number" },
+    { key: "purchaseOrderId", label: "Purchase Order ID", type: "string" },
+  ],
+  "accounts_payable.purchase_order.sent": [
+    { key: "poNumber", label: "PO Number", type: "string" },
+    { key: "vendorName", label: "Vendor Name", type: "string" },
+    { key: "vendorEmail", label: "Vendor Email", type: "string" },
+    { key: "purchaseOrderId", label: "Purchase Order ID", type: "string" },
+  ],
+  "accounts_payable.purchase_order.received": [
+    { key: "poNumber", label: "PO Number", type: "string" },
+    { key: "vendorName", label: "Vendor Name", type: "string" },
+    { key: "purchaseOrderId", label: "Purchase Order ID", type: "string" },
+  ],
+  "accounts_payable.purchase_order.cancelled": [
+    { key: "poNumber", label: "PO Number", type: "string" },
+    { key: "vendorName", label: "Vendor Name", type: "string" },
+    { key: "purchaseOrderId", label: "Purchase Order ID", type: "string" },
   ],
 };
 

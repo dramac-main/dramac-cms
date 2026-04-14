@@ -6,7 +6,126 @@
 
 The DRAMAC CMS platform is **production-ready**. All core waves (1-5) are complete, including all 6 business modules, DRAMAC Studio, client portal, billing, domain/email systems, and AI website designer. The platform is deployed at https://app.dramacagency.com.
 
-## Current Focus: LP Builder Pro — ALL 11 PHASES COMPLETE ✅
+## Latest: Invoicing Module — ALL 14 PHASES COMPLETE ✅ (Session 9 Final)
+
+### Phase INV-14: Vendor Management, Purchase Orders & Bills — COMPLETE
+
+**FINAL invoicing session. Full Accounts Payable: vendor CRUD, purchase order lifecycle (draft→sent→acknowledged→received→cancelled), bill management with payment recording, PO-to-email via Resend, PDF export.**
+
+#### Deliverables (~22 files: 17 new + 5 modified)
+
+**Types (extended):**
+- **`vendor-types.ts`** (MODIFIED) — Extended BillStats (draftCount, approvedCount, partialCount, paidCount, totalCount), VendorStats (activePurchaseOrders), CreateBillLineItemInput (taxRate?)
+
+**Server Actions (3 new):**
+- **`vendor-actions.ts`** (NEW ~400 lines) — getVendors, getVendor, createVendor, updateVendor, deleteVendor, getVendorStats
+- **`purchase-order-actions.ts`** (NEW ~450 lines) — getPurchaseOrders, getPurchaseOrder, createPurchaseOrder, updatePurchaseOrder, deletePurchaseOrder, sendPurchaseOrder (Resend email), approvePurchaseOrder, receivePurchaseOrder, cancelPurchaseOrder
+- **`bill-actions.ts`** (NEW ~700 lines) — getBills, getBill, createBill, updateBill, deleteBill, approveBill, recordBillPayment, getBillPayments, voidBill, getBillStats, getOverdueBills
+
+**Components (10 new):**
+- **`vendor-list.tsx`** — Paginated vendor table with stats, search
+- **`vendor-form.tsx`** — Create/edit form with vendorId? prop pattern (loads data internally via useEffect)
+- **`vendor-detail.tsx`** — Full detail with bills, POs, expenses tabs
+- **`purchase-order-list.tsx`** — PO table with status badges, filters
+- **`purchase-order-form.tsx`** — Create/edit with purchaseOrderId? prop pattern, line items editor
+- **`purchase-order-detail.tsx`** — Full PO detail with line items, status actions, timeline
+- **`purchase-order-pdf.tsx`** — Print-ready A4 PDF with @media print, forwardRef
+- **`bill-list.tsx`** — Bill table with status/vendor filters
+- **`bill-form.tsx`** — Create/edit with billId? prop pattern, line items, vendor picker
+- **`bill-detail.tsx`** — Full bill detail with payments, line items, status actions
+- **`bill-payment-dialog.tsx`** — Payment recording dialog (amount, method, reference)
+
+**Pages (12 new):**
+- Vendors: list, new, [vendorId] detail, [vendorId]/edit
+- Purchase Orders: list, new, [purchaseOrderId] detail, [purchaseOrderId]/edit
+- Bills: list, new, [billId] detail, [billId]/edit
+
+**Modified:**
+- **`invoicing-nav.tsx`** — Added Vendors, Purchase Orders, Bills nav items
+- **`report-types.ts`** — Added AP report types
+- **`report-actions.ts`** — Added AP metrics to financial dashboard
+- **`event-types.ts`** — Added 7 AP automation events (vendor.created, bill.created/approved/paid/overdue, po.created/sent)
+
+**TSC: 101 errors (baseline unchanged) — zero new errors from INV-14.**
+
+### Invoicing Module Summary — ALL 14 PHASES COMPLETE
+
+| Phase | Description | Session | Status |
+|-------|-------------|---------|--------|
+| INV-01 | Database Foundation (18 tables) | 1 | ✅ |
+| INV-02 | Invoice CRUD, PDF, Settings | 2 | ✅ |
+| INV-03 | Payments, Partial Payments, Refunds | 3 | ✅ |
+| INV-04 | Recurring Invoices & Subscription Billing | 3 | ✅ |
+| INV-05 | Credit Notes & Adjustments | 4 | ✅ |
+| INV-06 | Expense Tracking & Receipt Upload | 4 | ✅ |
+| INV-07 | Financial Dashboard, Reports & P&L | 5 | ✅ |
+| INV-08 | Tax Management & Multi-Currency | 6 | ✅ |
+| INV-09 | Client Portal Invoicing | 6 | ✅ |
+| INV-10 | Email Notifications & Overdue Management | 7 | ✅ |
+| INV-11 | AI Financial Intelligence | 7 | ✅ |
+| INV-12 | Super Admin Controls | 8 | ✅ |
+| INV-13 | Cross-Module Deep Integration | 8 | ✅ |
+| INV-14 | Vendor Management, POs & Bills | 9 | ✅ |
+
+**Total: ~180+ files, 18 DB tables, 120+ server actions, 100+ components, 50+ pages.**
+
+### Phase INV-12: Super Admin Controls & Platform-Level Configuration — COMPLETE
+
+**Super admin invoicing dashboard, per-site metrics, feature flags, global defaults.**
+
+#### Deliverables (8 files: 6 new + 2 modified)
+
+- **`admin-types.ts`** (NEW) — PlatformInvoicingStats, SiteInvoicingOverview, UsageTrend, InvoicingFeatureFlag, GlobalInvoicingDefaults
+- **`types/index.ts`** (MODIFIED) — Added admin-types barrel export
+- **`admin-actions.ts`** (NEW ~600 lines) — getSuperAdminClient(), getInvoicingPlatformStats(), getInvoicingSiteOverview(), getInvoicingUsageTrends(), updateGlobalInvoicingDefaults(), toggleInvoicingFeature(), getInvoicingFeatureFlags()
+- **`admin-invoicing-dashboard.tsx`** (NEW) — 4 metric cards, status table, top sites, trends
+- **`admin-site-table.tsx`** (NEW) — Paginated table, PAGE_SIZE=10, 7 columns
+- **`admin-feature-flags.tsx`** (NEW) — Feature flags grouped by category with Switch toggles
+- **`admin/modules/invoicing/page.tsx`** (NEW) — Super admin dashboard page
+- **`admin/modules/invoicing/settings/page.tsx`** (NEW) — Super admin settings page
+- **`admin-navigation.ts`** (MODIFIED) — Added Receipt icon + "Invoicing Health" nav entry
+
+### Phase INV-13: Cross-Module Deep Integration — COMPLETE
+
+**CRM financial profiles, deal-to-invoice, e-commerce order-to-invoice, booking integration, automation events/actions, marketing audience filters, integration settings.**
+
+#### Deliverables (12 files: 8 new + 4 modified)
+
+**CRM Integration:**
+- **`crm-integration-actions.ts`** (NEW ~280 lines) — getContactFinancialProfile(), createInvoiceFromContact(), createInvoiceFromDeal()
+- **`contact-finance-tab.tsx`** (NEW) — Summary cards, risk rating, recent invoices/payments, Create Invoice button
+- **`contact-detail-sheet.tsx`** (MODIFIED) — Added Finance tab with ContactFinanceTab component
+- **`deal-detail-sheet.tsx`** (MODIFIED) — Added "Create Invoice" button for won deals
+
+**E-Commerce Integration:**
+- **`ecommerce-integration-actions.ts`** (NEW) — createInvoiceFromOrder(), createCreditNoteFromRefund()
+
+**Booking Integration:**
+- **`booking-integration-actions.ts`** (NEW) — createInvoiceFromBooking(), linkBookingDepositPayment()
+
+**Automation Deep Integration:**
+- **`event-types.ts`** (MODIFIED) — Added 15 accounting EventDefinitions + 15 payload variable entries
+- **`action-types.ts`** (MODIFIED) — Added invoicing category (5 actions: send_invoice, send_reminder, apply_late_fee, mark_as_written_off, create_from_template) + ACTION_CATEGORIES entry
+
+**Marketing Audience Filters:**
+- **`audience-filters.ts`** (NEW) — 9 financial audience filters (total_invoiced, total_paid, outstanding_balance, etc.) + helper functions
+
+**Integration Settings:**
+- **`integration-settings.tsx`** (NEW) — IntegrationSettings component with CRM/E-Commerce/Booking toggles
+
+**Email Templates:**
+- **`branded-templates.ts`** (MODIFIED) — Added 7 new email templates: 3 support ticket (created/replied/closed) + 4 invoicing (sent/payment_received/overdue_reminder/late_fee_applied)
+
+**TSC: 101 errors (improved from 102 baseline after fixing 1 invoicing error in crm-integration-actions.ts) — zero new errors from INV-12 or INV-13.**
+
+### Next Steps
+
+- **INV-14**: Vendor Management, Purchase Orders & Bills — Session 9 (FINAL)
+  - Prompt ready at `/phases/PHASE-INV-SESSION-09-PROMPT.md`
+  - ~20 new files + ~5 modified files
+  - After this, ALL 14 invoicing phases are COMPLETE
+
+## Previous Focus: LP Builder Pro — ALL 11 PHASES COMPLETE ✅
 
 ### Phase LPB-10: Super Admin Health View + Client Portal LP Management — Session 7
 
@@ -86,9 +205,27 @@ The DRAMAC CMS platform is **production-ready**. All core waves (1-5) are comple
 
 ### Next Steps
 
-- **INV-07**: Financial Dashboard, Reports & P&L Statements
 - **INV-08**: Tax Management, Multi-Currency & Compliance
-- Continue through INV-09 → INV-14 per master guide
+- **INV-09**: Client Portal — Invoice Viewing, Online Payment & Statements
+- Continue through INV-10 → INV-14 per master guide
+
+## Latest: Invoicing Module — INV-07 Financial Dashboard COMPLETE ✅
+
+### Phase INV-07: Financial Dashboard, Reports & P&L Statements — COMPLETE
+
+**Full financial reporting layer: landing dashboard with KPI widgets, 6 report pages (P&L, AR aging, tax summary, expenses, top clients, revenue trends), CSV export, date range filtering.**
+
+#### Deliverables (27 files: 26 new + 2 modified)
+
+- **`report-types.ts`** (REPLACED) — All INV-07 types: DashboardMetrics, RevenueByPeriod, CashFlowReport, ProfitAndLoss, ARAgingReport, TaxSummary, ExpenseReport, TopClient, PaymentMethodDistribution, InvoiceStatusDistribution, DateRange
+- **`report-actions.ts`** (NEW ~1050 lines) — 12 server actions: getDashboardMetrics, getRevenueByPeriod, getCashFlowReport, getProfitAndLoss, getARAgingReport, getTaxSummary, getExpenseReport, getTopClients, getPaymentMethodDistribution, getInvoiceStatusDistribution, exportReportCSV, fetchRecentInvoices
+- **18 components**: metric-card, date-range-filter, revenue-chart, cash-flow-chart, invoice-status-chart, payment-method-chart, revenue-widget, outstanding-widget, overdue-widget, recent-invoices-widget, finance-dashboard (main landing), report-hub (card links), pnl-report, ar-aging-report, tax-summary-report, expense-report, top-clients-report, revenue-trends-report
+- **8 pages**: invoicing/page.tsx (MODIFIED: redirect→FinanceDashboard), reports/page.tsx, reports/pnl, reports/aging, reports/tax, reports/expenses, reports/top-clients, reports/revenue
+- **invoicing-nav.tsx** (MODIFIED): Added Dashboard + Reports nav items as first two entries (LayoutDashboard, BarChart3 icons)
+- Recharts 3.7.0 for all chart visualizations (AreaChart, BarChart, PieChart donut)
+- Tooltip formatter `as any` pattern for Recharts 3.x strict typing
+
+**TSC: 102 errors (baseline) — zero new errors from INV-07.**
 
 ## Previous Focus: Invoicing Module — INV-03 + INV-04 COMPLETE ✅
 

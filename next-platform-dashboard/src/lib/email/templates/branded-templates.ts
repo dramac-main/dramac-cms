@@ -1506,6 +1506,133 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
     text: (data) =>
       `Quote Amendment Requested\n\n${data.customerName || "A customer"} has requested changes to quote #${data.quoteNumber}.\n\nRequested Changes:\n${data.amendmentNotes || "N/A"}\n\n${data.dashboardUrl ? `Review: ${data.dashboardUrl}` : ""}`,
   },
+
+  // ─── Support Tickets ───────────────────────────────────────────
+  support_ticket_created: {
+    subject: (data) => `Support Ticket #${data.ticketNumber} Created`,
+    html: (data, b) =>
+      baseEmailTemplate(
+        b,
+        `<h1 style="${EMAIL_STYLES.heading}">Support Ticket Created</h1>
+        <p style="${EMAIL_STYLES.text}">Your support ticket <strong>#${data.ticketNumber}</strong> has been created.</p>
+        ${emailInfoBox([
+          { label: "Subject", value: String(data.subject || "N/A") },
+          { label: "Ticket", value: `#${data.ticketNumber || ""}` },
+          { label: "Priority", value: String(data.priority || "Normal") },
+        ])}
+        <p style="${EMAIL_STYLES.text}">We'll get back to you as soon as possible.</p>
+        ${data.ticketUrl ? emailButton(b, String(data.ticketUrl), "View Ticket") : ""}`,
+        `Support ticket #${data.ticketNumber} created`,
+      ),
+    text: (data) =>
+      `Support Ticket Created\n\nYour ticket #${data.ticketNumber} has been created.\nSubject: ${data.subject || "N/A"}\nPriority: ${data.priority || "Normal"}\n\n${data.ticketUrl ? `View: ${data.ticketUrl}` : ""}`,
+  },
+  support_ticket_replied: {
+    subject: (data) => `Reply on Support Ticket #${data.ticketNumber}`,
+    html: (data, b) =>
+      baseEmailTemplate(
+        b,
+        `<h1 style="${EMAIL_STYLES.heading}">New Reply on Your Ticket</h1>
+        <p style="${EMAIL_STYLES.text}">There's a new reply on support ticket <strong>#${data.ticketNumber}</strong>.</p>
+        <div style="background:#f3f4f6;border-radius:8px;padding:16px;margin:16px 0;">
+          <p style="margin:0;color:#374151;">${data.replyPreview || "A new response has been posted."}</p>
+        </div>
+        ${data.ticketUrl ? emailButton(b, String(data.ticketUrl), "View Reply") : ""}`,
+        `Reply on ticket #${data.ticketNumber}`,
+      ),
+    text: (data) =>
+      `New Reply on Ticket #${data.ticketNumber}\n\n${data.replyPreview || "A new response has been posted."}\n\n${data.ticketUrl ? `View: ${data.ticketUrl}` : ""}`,
+  },
+  support_ticket_closed: {
+    subject: (data) => `Support Ticket #${data.ticketNumber} Closed`,
+    html: (data, b) =>
+      baseEmailTemplate(
+        b,
+        `<h1 style="${EMAIL_STYLES.heading}">Ticket Closed</h1>
+        <p style="${EMAIL_STYLES.text}">Support ticket <strong>#${data.ticketNumber}</strong> has been closed.</p>
+        <p style="${EMAIL_STYLES.text}">If you need further assistance, you can reopen this ticket or create a new one.</p>
+        ${data.ticketUrl ? emailButton(b, String(data.ticketUrl), "View Ticket") : ""}`,
+        `Ticket #${data.ticketNumber} closed`,
+      ),
+    text: (data) =>
+      `Ticket #${data.ticketNumber} Closed\n\nYour support ticket has been closed. If you need further help, you can reopen it or create a new one.\n\n${data.ticketUrl ? `View: ${data.ticketUrl}` : ""}`,
+  },
+
+  // ─── Invoicing ────────────────────────────────────────────────
+  invoice_sent_customer: {
+    subject: (data) => `Invoice #${data.invoiceNumber} from ${data.businessName || "us"}`,
+    html: (data, b) =>
+      baseEmailTemplate(
+        b,
+        `<h1 style="${EMAIL_STYLES.heading}">You Have a New Invoice</h1>
+        <p style="${EMAIL_STYLES.text}">Invoice <strong>#${data.invoiceNumber}</strong> has been sent to you.</p>
+        ${emailInfoBox([
+          { label: "Invoice", value: `#${data.invoiceNumber || ""}` },
+          { label: "Amount", value: String(data.formattedTotal || data.total || "N/A") },
+          { label: "Due Date", value: String(data.dueDate || "N/A") },
+        ])}
+        ${data.viewUrl ? emailButton(b, String(data.viewUrl), "View & Pay Invoice") : ""}`,
+        `Invoice #${data.invoiceNumber}`,
+      ),
+    text: (data) =>
+      `Invoice #${data.invoiceNumber}\n\nAmount: ${data.formattedTotal || data.total || "N/A"}\nDue: ${data.dueDate || "N/A"}\n\n${data.viewUrl ? `View & Pay: ${data.viewUrl}` : ""}`,
+  },
+  invoice_payment_received_customer: {
+    subject: (data) => `Payment Received for Invoice #${data.invoiceNumber}`,
+    html: (data, b) =>
+      baseEmailTemplate(
+        b,
+        `<h1 style="${EMAIL_STYLES.heading}">Payment Received</h1>
+        <p style="${EMAIL_STYLES.text}">Thank you! We've received your payment for invoice <strong>#${data.invoiceNumber}</strong>.</p>
+        ${emailInfoBox([
+          { label: "Invoice", value: `#${data.invoiceNumber || ""}` },
+          { label: "Amount Paid", value: String(data.formattedAmount || data.amount || "N/A") },
+          { label: "Payment Method", value: String(data.paymentMethod || "N/A") },
+        ])}
+        ${data.receiptUrl ? emailButton(b, String(data.receiptUrl), "View Receipt") : ""}`,
+        `Payment received for invoice #${data.invoiceNumber}`,
+      ),
+    text: (data) =>
+      `Payment Received\n\nInvoice: #${data.invoiceNumber}\nAmount: ${data.formattedAmount || data.amount || "N/A"}\nMethod: ${data.paymentMethod || "N/A"}\n\n${data.receiptUrl ? `Receipt: ${data.receiptUrl}` : ""}`,
+  },
+  invoice_overdue_reminder: {
+    subject: (data) => `Reminder: Invoice #${data.invoiceNumber} is Overdue`,
+    html: (data, b) =>
+      baseEmailTemplate(
+        b,
+        `<h1 style="${EMAIL_STYLES.heading}">Invoice Overdue</h1>
+        <p style="${EMAIL_STYLES.text}">Invoice <strong>#${data.invoiceNumber}</strong> was due on <strong>${data.dueDate || "a previous date"}</strong> and remains unpaid.</p>
+        ${emailInfoBox([
+          { label: "Invoice", value: `#${data.invoiceNumber || ""}` },
+          { label: "Amount Due", value: String(data.formattedAmountDue || data.amountDue || "N/A") },
+          { label: "Days Overdue", value: String(data.daysOverdue || "N/A") },
+        ])}
+        <p style="${EMAIL_STYLES.text}">Please make your payment at your earliest convenience to avoid any late fees.</p>
+        ${data.viewUrl ? emailButton(b, String(data.viewUrl), "Pay Now") : ""}`,
+        `Invoice #${data.invoiceNumber} overdue reminder`,
+      ),
+    text: (data) =>
+      `Invoice Overdue\n\nInvoice #${data.invoiceNumber} was due on ${data.dueDate || "a previous date"}.\nAmount Due: ${data.formattedAmountDue || data.amountDue || "N/A"}\nDays Overdue: ${data.daysOverdue || "N/A"}\n\nPlease pay promptly.\n\n${data.viewUrl ? `Pay: ${data.viewUrl}` : ""}`,
+  },
+  invoice_late_fee_applied: {
+    subject: (data) => `Late Fee Applied to Invoice #${data.invoiceNumber}`,
+    html: (data, b) =>
+      baseEmailTemplate(
+        b,
+        `<h1 style="${EMAIL_STYLES.heading}">Late Fee Applied</h1>
+        <p style="${EMAIL_STYLES.text}">A late fee has been applied to invoice <strong>#${data.invoiceNumber}</strong>.</p>
+        ${emailInfoBox([
+          { label: "Invoice", value: `#${data.invoiceNumber || ""}` },
+          { label: "Late Fee", value: String(data.formattedLateFee || data.lateFee || "N/A") },
+          { label: "New Total", value: String(data.formattedNewTotal || data.newTotal || "N/A") },
+        ])}
+        <p style="${EMAIL_STYLES.text}">Please settle this invoice promptly to prevent further charges.</p>
+        ${data.viewUrl ? emailButton(b, String(data.viewUrl), "View Invoice") : ""}`,
+        `Late fee on invoice #${data.invoiceNumber}`,
+      ),
+    text: (data) =>
+      `Late Fee Applied\n\nInvoice: #${data.invoiceNumber}\nLate Fee: ${data.formattedLateFee || data.lateFee || "N/A"}\nNew Total: ${data.formattedNewTotal || data.newTotal || "N/A"}\n\nPlease settle promptly.\n\n${data.viewUrl ? `View: ${data.viewUrl}` : ""}`,
+  },
 };
 
 /**
