@@ -1,7 +1,20 @@
 # Progress: Platform Status Tracker
 
-**Last Updated**: April 11, 2026  
-**Overall Status**: Production-Ready — All Core Waves Complete
+**Last Updated**: July 2026  
+**Overall Status**: Production-Ready — All Core Waves Complete, Deployed on Vercel
+
+---
+
+## Vercel Route Limit Fix ✅
+
+| Attempt | Commit   | Approach                          | Vercel Routes | Result |
+| ------- | -------- | --------------------------------- | ------------- | ------ |
+| 1       | 9d5e6e75 | Remove 13 test/debug/redirect     | 2064          | ❌     |
+| 2       | 4f6247a0 | Move headers to middleware + rm10 | 2054          | ❌     |
+| 3       | c9fd5209 | Catch-all consolidation (20→2)    | 2058          | ❌     |
+| 4       | b812a12c | Delete 19 unused API routes       | <2048         | ✅     |
+
+**Key lesson**: Catch-all routes `[...path]` generate ~12 Vercel route entries each. Consolidating routes into catch-alls INCREASES counts. Delete unused routes instead.
 
 ---
 

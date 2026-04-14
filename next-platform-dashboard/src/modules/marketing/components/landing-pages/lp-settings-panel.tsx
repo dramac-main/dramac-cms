@@ -7,6 +7,7 @@
  */
 "use client";
 
+import { DOMAINS } from "@/lib/constants/domains";
 import { useState, useCallback } from "react";
 import {
   Accordion,
@@ -84,7 +85,7 @@ function buildPreviewUrl(
 ): string {
   const domain =
     siteCustomDomain ||
-    (siteSubdomain ? `${siteSubdomain}.dramac.app` : "yoursite.com");
+    (siteSubdomain ? `${siteSubdomain}.${DOMAINS.SITES_BASE}` : "yoursite.com");
   return `https://${domain}/lp/${slug}`;
 }
 

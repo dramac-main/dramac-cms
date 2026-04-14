@@ -7,6 +7,7 @@
  */
 "use client";
 
+import { DOMAINS } from "@/lib/constants/domains";
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -93,7 +94,7 @@ function getLpUrl(
   siteCustomDomain?: string | null,
 ): string | null {
   const domain =
-    siteCustomDomain || (siteSubdomain ? `${siteSubdomain}.dramac.app` : null);
+    siteCustomDomain || (siteSubdomain ? `${siteSubdomain}.${DOMAINS.SITES_BASE}` : null);
   return domain ? `https://${domain}/lp/${slug}` : null;
 }
 

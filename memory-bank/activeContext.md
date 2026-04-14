@@ -4,9 +4,39 @@
 
 ## Current State
 
-The DRAMAC CMS platform is **production-ready**. All core waves (1-5) are complete, including all 6 business modules, DRAMAC Studio, client portal, billing, domain/email systems, and AI website designer. The platform is deployed at https://app.dramacagency.com.
+The DRAMAC CMS platform is **production-ready** and **deployed**. All core waves (1-5) are complete, including all 6 business modules, DRAMAC Studio, client portal, billing, domain/email systems, and AI website designer. The platform is deployed at https://app.dramacagency.com.
 
-## Latest: Invoicing Module — ALL 14 PHASES COMPLETE ✅ (Session 9 Final)
+## Latest: Vercel Route Limit Fix — RESOLVED ✅
+
+**Committed**: `b812a12c` — Vercel deployment now READY (was ERROR for 4 attempts).
+
+### Problem
+
+Vercel deployment failed with "Maximum number of routes exceeded. Max is 2048, received 2058." Three prior attempts (commits `9d5e6e75`, `4f6247a0`, `c9fd5209`) failed — the catch-all consolidation approach was **counterproductive** (each catch-all generates ~12 Vercel routes vs ~2 for individual routes).
+
+### Solution
+
+Deleted 19 completely unused API route files (verified zero frontend fetch references via comprehensive grep):
+
+- `api/editor/ai/*` (4 routes) — legacy Puck editor
+- `api/modules/v2/*` (8 routes) — superseded v2 endpoints
+- `api/portal/modules/` + `[id]/` — unused (only `/request` is alive)
+- `api/portal/widgets/`, `api/activity/`, `api/safety/check/`, `api/purchases/balance-check/`, `api/ai/website-designer/stream/`
+
+### Results
+
+- Route manifest: 541 → 522 entries (12 static + 7 dynamic removed)
+- Vercel deployment: READY (was 2058 routes, now under 2048)
+- Build: succeeds locally and on Vercel
+
+### Key Lesson
+
+- **Catch-all routes (`[...path]`) generate ~12 Vercel route entries each.** Consolidating many routes into a catch-all INCREASES Vercel route count. Deleting unused routes is the right approach.
+- For future growth: monitor route count and delete unused routes before hitting 2048 again.
+
+---
+
+## Previous: Invoicing Module — ALL 14 PHASES COMPLETE ✅ (Session 9 Final)
 
 **Committed & pushed**: `952107b0` — `feat(invoicing): complete INV-05 through INV-14 (Sessions 4-9)`
 

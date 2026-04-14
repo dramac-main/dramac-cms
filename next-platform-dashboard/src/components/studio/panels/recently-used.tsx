@@ -44,18 +44,15 @@ export function RecentlyUsed({
   }
   
   return (
-    <div className="border-b border-border">
-      {/* Header */}
-      <div className="flex items-center gap-2 px-3 py-2.5">
-        <Clock className="h-4 w-4 text-muted-foreground" />
-        <span className="flex-1 text-sm font-medium">Recently Used</span>
-        <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-          {definitions.length}
-        </span>
+    <div className="border-b border-border/50">
+      {/* Header — minimal */}
+      <div className="flex items-center gap-1.5 px-3 py-2">
+        <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+        <span className="flex-1 text-xs font-medium text-foreground/80">Recent</span>
       </div>
       
-      {/* Compact component cards */}
-      <div className="flex flex-wrap gap-2 px-3 pb-3">
+      {/* Compact grid */}
+      <div className="flex flex-wrap gap-1.5 px-3 pb-2.5">
         {definitions.map((definition) => (
           <ComponentCard
             key={definition.type}

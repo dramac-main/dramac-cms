@@ -1,7 +1,8 @@
 /**
  * DRAMAC Studio Category Accordion
  * 
- * Collapsible category section for the component library.
+ * Collapsible category with a compact grid layout for components.
+ * Clean, Webflow-inspired design with minimal visual weight.
  */
 
 "use client";
@@ -52,8 +53,8 @@ export function CategoryAccordion({
   }
   
   return (
-    <div className="border-b border-border last:border-b-0">
-      {/* Header */}
+    <div className="border-b border-border/50 last:border-b-0">
+      {/* Header — clean, minimal */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -64,39 +65,38 @@ export function CategoryAccordion({
           }
         }}
         className={cn(
-          "flex w-full items-center gap-2 px-3 py-2.5 text-left",
+          "flex w-full items-center gap-2 px-3 py-2 text-left",
           "hover:bg-muted/50 transition-colors",
           "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
         )}
         aria-expanded={isOpen}
         aria-controls={`category-${category.id}`}
       >
-        {/* Expand/Collapse Icon */}
-        {isOpen ? (
-          <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-        ) : (
-          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-        )}
+        {/* Chevron */}
+        <ChevronRight className={cn(
+          "h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200",
+          isOpen && "rotate-90"
+        )} />
         
         {/* Category Icon */}
-        <CategoryIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+        <CategoryIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         
         {/* Category Name */}
-        <span className="flex-1 text-sm font-medium">
+        <span className="flex-1 text-xs font-medium text-foreground/80">
           {category.label}
         </span>
         
-        {/* Count Badge */}
-        <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+        {/* Count — subtle */}
+        <span className="text-[10px] tabular-nums text-muted-foreground/60">
           {components.length}
         </span>
       </button>
       
-      {/* Content */}
+      {/* Content — grid layout */}
       {isOpen && (
         <div
           id={`category-${category.id}`}
-          className="space-y-2 px-3 pb-3"
+          className="grid grid-cols-3 gap-1.5 px-3 pb-3 pt-1"
         >
           {components.map((definition) => (
             <ComponentCard

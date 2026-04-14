@@ -1,10 +1,9 @@
 /**
  * DRAMAC Studio Component Library
  * 
- * The left panel showing all available components and symbols.
- * Supports search, categories, and drag-to-canvas.
- * Includes module components when modules are installed.
- * Updated in PHASE-STUDIO-25 to include Symbols tab.
+ * Clean left panel with grid-based component browser.
+ * Inspired by Webflow/Framer: compact icon grid, minimal chrome.
+ * Supports search, categories, drag-to-canvas, and symbols.
  */
 
 "use client";
@@ -133,19 +132,19 @@ export function ComponentLibrary() {
         onCollapse={() => togglePanel("left")}
       />
       
-      {/* Tabs for Components vs Symbols */}
+      {/* Tabs */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "components" | "symbols")} className="flex flex-1 flex-col overflow-hidden">
-        <div className="border-b border-border px-3 pt-2">
-          <TabsList className="w-full h-9 bg-muted/50">
-            <TabsTrigger value="components" className="flex-1 text-xs gap-1.5">
-              <Layers className="h-3.5 w-3.5" />
-              Components
+        <div className="border-b border-border px-3 pt-1.5 pb-1.5">
+          <TabsList className="w-full h-8 bg-muted/40">
+            <TabsTrigger value="components" className="flex-1 text-[11px] gap-1 h-7">
+              <Layers className="h-3 w-3" />
+              Elements
             </TabsTrigger>
-            <TabsTrigger value="symbols" className="flex-1 text-xs gap-1.5">
-              <Box className="h-3.5 w-3.5" />
+            <TabsTrigger value="symbols" className="flex-1 text-[11px] gap-1 h-7">
+              <Box className="h-3 w-3" />
               Symbols
               {symbolCount > 0 && (
-                <span className="ml-1 text-[10px] bg-primary/20 text-primary px-1.5 rounded-full">
+                <span className="ml-0.5 text-[9px] bg-primary/20 text-primary px-1 rounded-full">
                   {symbolCount}
                 </span>
               )}
@@ -155,26 +154,25 @@ export function ComponentLibrary() {
         
         {/* Components Tab */}
         <TabsContent value="components" className="flex-1 flex flex-col overflow-hidden m-0 p-0">
-          {/* Search */}
-          <div className="p-3 border-b border-border">
+          {/* Search — compact */}
+          <div className="p-2 border-b border-border/50">
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search components..."
+                placeholder="Search elements..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="h-9 pl-8 pr-8 text-sm"
+                className="h-8 pl-7 pr-7 text-xs bg-muted/30 border-border/50"
               />
               {searchQuery && (
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                  className="absolute right-0.5 top-1/2 -translate-y-1/2 h-6 w-6"
                   onClick={clearSearch}
                 >
-                  <X className="h-4 w-4" />
-                  <span className="sr-only">Clear search</span>
+                  <X className="h-3.5 w-3.5" />
                 </Button>
               )}
             </div>
@@ -183,46 +181,48 @@ export function ComponentLibrary() {
           {/* Component List */}
           <ScrollArea className="flex-1">
             {filteredComponents !== null ? (
-              // Search results
-              <div className="p-3">
+              /* Search results — grid layout */
+              <div className="p-2">
                 {filteredComponents.length === 0 ? (
                   <div className="py-8 text-center">
-                    <p className="text-sm text-muted-foreground">
-                      No components found for &quot;{searchQuery}&quot;
+                    <p className="text-xs text-muted-foreground">
+                      No results for &quot;{searchQuery}&quot;
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <p className="text-xs text-muted-foreground mb-3">
+                  <>
+                    <p className="text-[10px] text-muted-foreground mb-2 px-1">
                       {filteredComponents.length} result{filteredComponents.length !== 1 ? "s" : ""}
                     </p>
-                    {filteredComponents.map((definition) => (
-                      <ComponentCard
-                        key={definition.type}
-                        definition={definition}
-                        onDoubleClick={() => handleQuickAdd(definition.type)}
-                      />
-                    ))}
-                  </div>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {filteredComponents.map((definition) => (
+                        <ComponentCard
+                          key={definition.type}
+                          definition={definition}
+                          onDoubleClick={() => handleQuickAdd(definition.type)}
+                        />
+                      ))}
+                    </div>
+                  </>
                 )}
               </div>
             ) : (
-              // Category view
+              /* Category view */
               <div>
-                {/* Module Loading Indicator */}
+                {/* Module Loading */}
                 {isLoadingModules && (
-                  <div className="flex items-center gap-2 px-3 py-2 border-b border-border bg-muted/50">
-                    <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">Loading module components...</span>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-border/50 bg-muted/30">
+                    <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                    <span className="text-[10px] text-muted-foreground">Loading modules...</span>
                   </div>
                 )}
                 
-                {/* Module Components Badge */}
+                {/* Module Badge */}
                 {moduleComponentCount > 0 && !isLoadingModules && (
-                  <div className="flex items-center gap-2 px-3 py-2 border-b border-border bg-primary/5">
-                    <Package className="h-3.5 w-3.5 text-primary" />
-                    <span className="text-xs text-primary">
-                      {moduleComponentCount} module component{moduleComponentCount !== 1 ? "s" : ""} loaded
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-border/50 bg-primary/5">
+                    <Package className="h-3 w-3 text-primary" />
+                    <span className="text-[10px] text-primary">
+                      {moduleComponentCount} module element{moduleComponentCount !== 1 ? "s" : ""}
                     </span>
                   </div>
                 )}
@@ -250,12 +250,12 @@ export function ComponentLibrary() {
             )}
           </ScrollArea>
           
-          {/* Footer - Component count */}
-          <div className="border-t border-border p-2 text-center">
-            <p className="text-xs text-muted-foreground">
-              {componentRegistry.count} components available
+          {/* Footer — minimal */}
+          <div className="border-t border-border/50 px-3 py-1.5 text-center">
+            <p className="text-[10px] text-muted-foreground/60">
+              {componentRegistry.count} elements
               {moduleComponentCount > 0 && (
-                <span className="text-primary"> ({moduleComponentCount} from modules)</span>
+                <> &middot; {moduleComponentCount} from modules</>
               )}
             </p>
           </div>

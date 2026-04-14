@@ -10,6 +10,7 @@
  */
 "use client";
 
+import { DOMAINS } from "@/lib/constants/domains";
 import { useEffect, useCallback, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -351,7 +352,7 @@ export function LPEditorPage({
   const handlePreview = useCallback(() => {
     const domain =
       siteCustomDomain ||
-      (siteSubdomain ? `${siteSubdomain}.dramac.app` : null);
+      (siteSubdomain ? `${siteSubdomain}.${DOMAINS.SITES_BASE}` : null);
     if (domain) {
       window.open(`https://${domain}/lp/${lpSlug}`, "_blank");
     } else {

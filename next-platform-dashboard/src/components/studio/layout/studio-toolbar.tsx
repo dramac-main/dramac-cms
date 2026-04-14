@@ -1,11 +1,9 @@
 /**
  * DRAMAC Studio Toolbar
  * 
- * Top toolbar with common editor actions.
- * Updated in PHASE-STUDIO-18 with responsive preview controls.
- * Updated in PHASE-STUDIO-20 with keyboard shortcuts button.
- * Updated in PHASE-STUDIO-26 with Help and What's New panels.
- * Updated in PHASE-STUDIO-29 with AI button functionality and toolbar cleanup.
+ * Clean, industry-standard toolbar inspired by Webflow/Framer/Figma.
+ * 3-section layout: Left (nav), Center (viewport), Right (actions).
+ * Secondary tools grouped in popovers to keep the bar uncluttered.
  */
 
 "use client";
@@ -39,6 +37,8 @@ import {
   MessageSquare,
   HelpCircle,
   Zap,
+  SlidersHorizontal,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,6 +48,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Tooltip,
   TooltipContent,
@@ -79,7 +84,7 @@ interface StudioToolbarProps {
 }
 
 // =============================================================================
-// VIEWPORT ICONS
+// VIEWPORT CONFIG
 // =============================================================================
 
 const viewportIcons: Record<Breakpoint, typeof Monitor> = {
@@ -87,6 +92,43 @@ const viewportIcons: Record<Breakpoint, typeof Monitor> = {
   tablet: Tablet,
   mobile: Smartphone,
 };
+
+// =============================================================================
+// SAVE STATUS BADGE
+// =============================================================================
+
+function SaveStatusBadge({ saveStatus, isDirty }: { saveStatus: string; isDirty: boolean }) {
+  switch (saveStatus) {
+    case "saving":
+      return (
+        <div className="flex items-center gap-1 text-muted-foreground">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          <span className="text-[11px]">Saving</span>
+        </div>
+      );
+    case "saved":
+      return (
+        <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
+          <Cloud className="h-3 w-3" />
+          <span className="text-[11px]">Saved</span>
+        </div>
+      );
+    case "error":
+      return (
+        <div className="flex items-center gap-1 text-destructive">
+          <CloudOff className="h-3 w-3" />
+          <span className="text-[11px]">Error</span>
+        </div>
+      );
+    default:
+      return isDirty ? (
+        <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+          <div className="h-1.5 w-1.5 rounded-full bg-current" />
+          <span className="text-[11px]">Unsaved</span>
+        </div>
+      ) : null;
+  }
+}
 
 // =============================================================================
 // COMPONENT
@@ -105,8 +147,6 @@ export const StudioToolbar = memo(function StudioToolbar({
   // Store hooks
   const isDirty = useEditorStore((s) => s.isDirty);
   const { canUndo: historyCanUndo, canRedo: historyCanRedo } = useHistoryState();
-  
-  // Get panel state directly from store (panels are NOT persisted)
   const panels = useUIStore((s) => s.panels);
   const breakpoint = useUIStore((s) => s.breakpoint);
   const togglePanel = useUIStore((s) => s.togglePanel);
@@ -115,142 +155,87 @@ export const StudioToolbar = memo(function StudioToolbar({
   const toggleLiveEffects = useUIStore((s) => s.toggleLiveEffects);
   const zoom = useUIStore((s) => s.zoom);
   
-  // AI Page Generator state
+  // Dialogs
   const [showPageGenerator, setShowPageGenerator] = useState(false);
-  
-  // Template Browser state (PHASE-STUDIO-24)
   const [showTemplateBrowser, setShowTemplateBrowser] = useState(false);
 
   // Handlers
   const handleUndo = useCallback(() => undo(), []);
   const handleRedo = useCallback(() => redo(), []);
 
-  // Save status indicator
-  const renderSaveStatus = () => {
-    switch (saveStatus) {
-      case "saving":
-        return (
-          <div className="flex items-center gap-1.5 text-muted-foreground">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            <span className="text-xs">Saving...</span>
-          </div>
-        );
-      case "saved":
-        return (
-          <div className="flex items-center gap-1.5 text-green-600 dark:text-green-400">
-            <Cloud className="h-3.5 w-3.5" />
-            <span className="text-xs">Saved</span>
-          </div>
-        );
-      case "error":
-        return (
-          <div className="flex items-center gap-1.5 text-destructive">
-            <CloudOff className="h-3.5 w-3.5" />
-            <span className="text-xs">Error</span>
-          </div>
-        );
-      default:
-        return isDirty ? (
-          <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
-            <div className="h-2 w-2 rounded-full bg-current" />
-            <span className="text-xs">Unsaved</span>
-          </div>
-        ) : null;
-    }
-  };
-
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="flex h-full items-center justify-between px-2">
-        {/* Left Section: Navigation & History */}
-        <div className="flex items-center gap-1">
-          {/* Back to Site */}
+      <div className="flex h-full items-center justify-between px-2 gap-2">
+        
+        {/* ─── LEFT: Navigation, History, Add ─── */}
+        <div className="flex items-center gap-0.5 min-w-0">
+          {/* Back */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" asChild>
                 <Link href={`/dashboard/sites/${siteId}/pages`}>
                   <ArrowLeft className="h-4 w-4" />
-                  <span className="sr-only">Back to pages</span>
                 </Link>
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Back to pages</TooltipContent>
+            <TooltipContent side="bottom">Back to pages</TooltipContent>
           </Tooltip>
 
-          <Separator orientation="vertical" className="mx-1 h-6" />
-
-          {/* Page Info */}
-          <div className="flex flex-col px-2">
-            <span className="text-xs text-muted-foreground">{siteName}</span>
-            <span className="text-sm font-medium leading-tight">{pageTitle}</span>
+          {/* Page Info — compact */}
+          <div className="flex items-center gap-1.5 px-1.5 min-w-0 max-w-45">
+            <div className="min-w-0">
+              <p className="text-[11px] text-muted-foreground truncate leading-none">{siteName}</p>
+              <p className="text-xs font-medium truncate leading-tight">{pageTitle}</p>
+            </div>
+            <SaveStatusBadge saveStatus={saveStatus} isDirty={isDirty} />
           </div>
 
-          <Separator orientation="vertical" className="mx-1 h-6" />
+          <Separator orientation="vertical" className="mx-0.5 h-5" />
 
-          {/* Undo/Redo */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={handleUndo}
-                disabled={!historyCanUndo}
-              >
-                <Undo2 className="h-4 w-4" />
-                <span className="sr-only">Undo</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Undo (⌘Z)</TooltipContent>
-          </Tooltip>
+          {/* Undo / Redo */}
+          <div className="flex items-center">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleUndo} disabled={!historyCanUndo}>
+                  <Undo2 className="h-3.5 w-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Undo (Ctrl+Z)</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleRedo} disabled={!historyCanRedo}>
+                  <Redo2 className="h-3.5 w-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Redo (Ctrl+Shift+Z)</TooltipContent>
+            </Tooltip>
+          </div>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={handleRedo}
-                disabled={!historyCanRedo}
-              >
-                <Redo2 className="h-4 w-4" />
-                <span className="sr-only">Redo</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Redo (⌘⇧Z)</TooltipContent>
-          </Tooltip>
+          <Separator orientation="vertical" className="mx-0.5 h-5" />
 
-          <Separator orientation="vertical" className="mx-1 h-6" />
-
-          {/* Add Section Button (PHASE-STUDIO-24) */}
+          {/* Add Section */}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-1.5"
+                className="h-7 gap-1 px-2 text-xs"
                 onClick={() => setShowTemplateBrowser(true)}
                 data-template-button
               >
-                <LayoutGrid className="h-4 w-4" />
-                <span className="hidden sm:inline">Add Section</span>
+                <Plus className="h-3.5 w-3.5" />
+                <span className="hidden md:inline">Add</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Browse section templates</TooltipContent>
+            <TooltipContent side="bottom">Add section template</TooltipContent>
           </Tooltip>
-
-          <Separator orientation="vertical" className="mx-1 h-6" />
-
-          {/* Save Status */}
-          <div className="px-2">
-            {renderSaveStatus()}
-          </div>
         </div>
 
-        {/* Center Section: Device, Dimensions, Zoom & AI */}
+        {/* ─── CENTER: Viewport & Zoom ─── */}
         <div className="flex items-center gap-1" data-responsive-controls>
-          {/* Viewport Toggle */}
-          <div className="flex items-center rounded-md border border-border p-0.5">
+          {/* Viewport Toggle — the main responsive breakpoint switcher */}
+          <div className="flex items-center rounded-lg border border-border bg-muted/40 p-0.5">
             {(["desktop", "tablet", "mobile"] as Breakpoint[]).map((size) => {
               const Icon = viewportIcons[size];
               return (
@@ -259,62 +244,62 @@ export const StudioToolbar = memo(function StudioToolbar({
                   pressed={breakpoint === size}
                   onPressedChange={() => setBreakpoint(size)}
                   size="sm"
-                  className="h-7 w-7 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                  className="h-6 w-7 rounded-md data-[state=on]:bg-background data-[state=on]:shadow-sm data-[state=on]:text-foreground"
                 >
-                  <Icon className="h-4 w-4" />
-                  <span className="sr-only">{size} view</span>
+                  <Icon className="h-3.5 w-3.5" />
                 </Toggle>
               );
             })}
           </div>
 
-          <Separator orientation="vertical" className="mx-1 h-6" />
-
-          {/* Device Selector (PHASE-STUDIO-18) */}
-          <DeviceSelector />
-          
-          {/* Dimensions Input (PHASE-STUDIO-18) */}
-          <DimensionsInput />
-
-          <Separator orientation="vertical" className="mx-1 h-6" />
-
-          {/* Zoom Controls (PHASE-STUDIO-18) */}
+          {/* Zoom Controls — compact inline */}
           <ZoomControls />
 
-          <Separator orientation="vertical" className="mx-2 h-6" />
-
-          {/* AI Generate Page Button */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="gap-1.5"
-                onClick={() => setShowPageGenerator(true)}
-                data-ai-generate
-              >
-                <Wand2 className="h-4 w-4 text-primary" />
-                <span>Generate Page</span>
+          {/* Advanced Viewport Options — collapsed into popover */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-7 w-7">
+                <SlidersHorizontal className="h-3.5 w-3.5" />
               </Button>
-            </TooltipTrigger>
-            <TooltipContent>Generate page with AI</TooltipContent>
-          </Tooltip>
+            </PopoverTrigger>
+            <PopoverContent align="center" className="w-auto p-3 space-y-3">
+              <div className="space-y-2">
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Device & Dimensions</p>
+                <DeviceSelector />
+                <DimensionsInput />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-medium">Live Effects</p>
+                  <p className="text-[11px] text-muted-foreground">Parallax, animations</p>
+                </div>
+                <Toggle
+                  pressed={liveEffects}
+                  onPressedChange={toggleLiveEffects}
+                  size="sm"
+                  className={`h-7 w-7 ${liveEffects ? 'bg-primary text-primary-foreground' : ''}`}
+                  disabled={zoom !== 1}
+                >
+                  <Zap className="h-3.5 w-3.5" />
+                </Toggle>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
 
-          {/* AI Dropdown Menu (PHASE-STUDIO-29) */}
+        {/* ─── RIGHT: AI, Panels, Actions ─── */}
+        <div className="flex items-center gap-0.5">
+          {/* AI — single dropdown for all AI features */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="gap-1.5" 
-                data-ai-button
-              >
-                <Sparkles className="h-4 w-4 text-primary" />
-                <span>AI</span>
+              <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs" data-ai-button>
+                <Sparkles className="h-3.5 w-3.5 text-violet-500" />
+                <span className="hidden lg:inline">AI</span>
                 <ChevronDown className="h-3 w-3 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="w-48">
+            <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={() => setShowPageGenerator(true)}>
                 <Wand2 className="mr-2 h-4 w-4" />
                 Generate Page
@@ -327,97 +312,56 @@ export const StudioToolbar = memo(function StudioToolbar({
                 AI Assistant
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => {
-                toast.info("AI-powered suggestions are being configured for your account.");
-              }}>
+              <DropdownMenuItem onClick={() => toast.info("Smart Suggestions are being configured for your account.")}>
                 <Sparkles className="mr-2 h-4 w-4" />
                 Smart Suggestions
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => {
-                toast.info("Quick actions will be available once your site has content.");
-              }}>
-                <HelpCircle className="mr-2 h-4 w-4" />
-                Quick Actions
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
 
-        {/* Right Section: Actions & Panels */}
-        <div className="flex items-center gap-1">
-          {/* Panel Toggles */}
-          <div className="flex items-center rounded-md border border-border p-0.5">
+          <Separator orientation="vertical" className="mx-0.5 h-5" />
+
+          {/* Panel Toggles — compact pill group */}
+          <div className="flex items-center rounded-lg border border-border bg-muted/40 p-0.5">
             <Toggle
               pressed={panels.left}
               onPressedChange={() => togglePanel("left")}
               size="sm"
-              className="h-7 w-7"
-              title="Toggle components panel (⌘\)"
+              className="h-6 w-7 rounded-md data-[state=on]:bg-background data-[state=on]:shadow-sm"
+              title="Components (Ctrl+\)"
             >
-              <PanelLeft className="h-4 w-4" />
+              <PanelLeft className="h-3.5 w-3.5" />
             </Toggle>
             <Toggle
               pressed={panels.bottom}
               onPressedChange={() => togglePanel("bottom")}
               size="sm"
-              className="h-7 w-7"
-              title="Toggle bottom panel (⌘J)"
+              className="h-6 w-7 rounded-md data-[state=on]:bg-background data-[state=on]:shadow-sm"
+              title="Layers (Ctrl+J)"
             >
-              <PanelBottom className="h-4 w-4" />
+              <PanelBottom className="h-3.5 w-3.5" />
             </Toggle>
             <Toggle
               pressed={panels.right}
               onPressedChange={() => togglePanel("right")}
               size="sm"
-              className="h-7 w-7"
-              title="Toggle properties panel (⌘⇧\)"
+              className="h-6 w-7 rounded-md data-[state=on]:bg-background data-[state=on]:shadow-sm"
+              title="Properties (Ctrl+Shift+\)"
             >
-              <PanelRight className="h-4 w-4" />
+              <PanelRight className="h-3.5 w-3.5" />
             </Toggle>
           </div>
 
-          <Separator orientation="vertical" className="mx-1 h-6" />
-          
-          {/* Live Effects Toggle */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Toggle
-                pressed={liveEffects}
-                onPressedChange={toggleLiveEffects}
-                size="sm"
-                className={`h-8 gap-1.5 px-2 ${liveEffects ? 'bg-primary text-primary-foreground' : ''}`}
-                title={zoom !== 1 ? "Live effects require 100% zoom" : "Toggle live effects (parallax, animations)"}
-                disabled={zoom !== 1}
-              >
-                <Zap className="h-4 w-4" />
-                <span className="hidden sm:inline text-xs">Live</span>
-              </Toggle>
-            </TooltipTrigger>
-            <TooltipContent>
-              {zoom !== 1 
-                ? "Set zoom to 100% to enable live effects" 
-                : liveEffects 
-                  ? "Disable live effects (parallax, animations)" 
-                  : "Enable live effects (parallax, animations)"}
-            </TooltipContent>
-          </Tooltip>
-
-          <Separator orientation="vertical" className="mx-1 h-6" />
+          <Separator orientation="vertical" className="mx-0.5 h-5" />
 
           {/* Preview */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1.5"
-                onClick={onPreview}
-              >
-                <Eye className="h-4 w-4" />
-                <span className="hidden sm:inline">Preview</span>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onPreview}>
+                <Eye className="h-3.5 w-3.5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Preview page (⌘P)</TooltipContent>
+            <TooltipContent side="bottom">Preview (Ctrl+P)</TooltipContent>
           </Tooltip>
 
           {/* Save */}
@@ -425,116 +369,77 @@ export const StudioToolbar = memo(function StudioToolbar({
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
-                size="sm"
-                className="gap-1.5"
+                size="icon"
+                className="h-7 w-7"
                 onClick={onSave}
                 disabled={saveStatus === "saving" || !isDirty}
                 data-save-button
               >
                 {saveStatus === "saving" ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
-                  <Save className="h-4 w-4" />
+                  <Save className="h-3.5 w-3.5" />
                 )}
-                <span className="hidden sm:inline">Save</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Save changes (⌘S)</TooltipContent>
+            <TooltipContent side="bottom">Save (Ctrl+S)</TooltipContent>
           </Tooltip>
 
-          {/* Publish */}
+          {/* Publish — primary CTA */}
           <Button
             variant="default"
             size="sm"
-            className="gap-1.5"
+            className="h-7 gap-1 px-3 text-xs font-medium"
             onClick={onPublish}
           >
-            <Play className="h-4 w-4" />
-            <span>Publish</span>
+            <Play className="h-3 w-3" />
+            Publish
           </Button>
 
-          {/* Command Palette Trigger (PHASE-STUDIO-20) */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => useUIStore.getState().setCommandPaletteOpen(true)}
-              >
-                <Command className="h-4 w-4" />
-                <span className="sr-only">Command palette</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Command Palette (⌘K)</TooltipContent>
-          </Tooltip>
-
-          {/* Keyboard Shortcuts (PHASE-STUDIO-20) */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => useUIStore.getState().setShortcutsPanelOpen(true)}
-              >
-                <Keyboard className="h-4 w-4" />
-                <span className="sr-only">Keyboard shortcuts</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Keyboard Shortcuts (⌘?)</TooltipContent>
-          </Tooltip>
-
-          {/* What's New (PHASE-STUDIO-26) */}
-          <WhatsNewPanel />
-
-          {/* Help Panel (PHASE-STUDIO-26) */}
-          <HelpPanel />
-
-          {/* More Actions */}
+          {/* More — everything else lives here */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="h-4 w-4" />
-                <span className="sr-only">More actions</span>
+              <Button variant="ghost" size="icon" className="h-7 w-7">
+                <MoreHorizontal className="h-3.5 w-3.5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem onClick={() => useUIStore.getState().setCommandPaletteOpen(true)}>
+                <Command className="mr-2 h-4 w-4" />
+                Command Palette
+                <span className="ml-auto text-[11px] text-muted-foreground">Ctrl+K</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => useUIStore.getState().setShortcutsPanelOpen(true)}>
+                <Keyboard className="mr-2 h-4 w-4" />
+                Keyboard Shortcuts
+                <span className="ml-auto text-[11px] text-muted-foreground">Ctrl+?</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem>
                 <Settings className="mr-2 h-4 w-4" />
-                Page settings
+                Page Settings
               </DropdownMenuItem>
               <DropdownMenuItem>
-                SEO settings
+                <LayoutGrid className="mr-2 h-4 w-4" />
+                SEO Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                Duplicate page
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                Export HTML
-              </DropdownMenuItem>
+              <DropdownMenuItem>Duplicate Page</DropdownMenuItem>
+              <DropdownMenuItem>Export HTML</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">
-                Delete page
-              </DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive">Delete Page</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* What's New — subtle dot indicator */}
+          <WhatsNewPanel />
+          <HelpPanel />
         </div>
       </div>
       
-      {/* AI Page Generator Dialog */}
-      <AIPageGenerator
-        isOpen={showPageGenerator}
-        onClose={() => setShowPageGenerator(false)}
-      />
-      
-      {/* Template Browser Dialog (PHASE-STUDIO-24) */}
-      <TemplateBrowser
-        open={showTemplateBrowser}
-        onOpenChange={setShowTemplateBrowser}
-        insertPosition="end"
-      />
+      {/* Dialogs */}
+      <AIPageGenerator isOpen={showPageGenerator} onClose={() => setShowPageGenerator(false)} />
+      <TemplateBrowser open={showTemplateBrowser} onOpenChange={setShowTemplateBrowser} insertPosition="end" />
     </TooltipProvider>
   );
 });

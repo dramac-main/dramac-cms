@@ -263,8 +263,6 @@ async function getSiteData(domain: string, pageSlug: string) {
   // Check if this is a platform subdomain (*.SITES_BASE)
   if (domain.endsWith(`.${DOMAINS.SITES_BASE}`)) {
     subdomain = domain.split(".")[0]; // Extract first part
-  } else if (domain.endsWith(".dramac.app")) {
-    subdomain = domain.split(".")[0]; // Extract first part
   }
 
   // Try to find site by custom domain first, then by subdomain

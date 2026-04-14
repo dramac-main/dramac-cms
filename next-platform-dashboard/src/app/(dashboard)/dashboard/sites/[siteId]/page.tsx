@@ -26,6 +26,7 @@ import {
   Bot,
   Wand2,
   Mail,
+  Receipt,
 } from "lucide-react";
 import { getSiteUrl, getSiteDomain } from "@/lib/utils/site-url";
 import { PLATFORM } from "@/lib/constants/platform";
@@ -67,6 +68,7 @@ export default async function SiteDetailPage({
   const hasEcommerce = enabledModules.has("ecommerce");
   const hasLiveChat = enabledModules.has("live-chat");
   const hasMarketing = enabledModules.has("marketing");
+  const hasInvoicing = enabledModules.has("invoicing");
 
   // Build valid tabs list based on enabled modules
   const validTabs = ["overview", "pages", "blog", "modules", "analytics"];
@@ -78,6 +80,7 @@ export default async function SiteDetailPage({
   if (hasAutomation) validTabs.push("automation");
   if (hasAIAgents) validTabs.push("ai-agents");
   if (hasMarketing) validTabs.push("marketing");
+  if (hasInvoicing) validTabs.push("invoicing");
 
   const defaultTab = tab && validTabs.includes(tab) ? tab : "overview";
 
@@ -146,6 +149,9 @@ export default async function SiteDetailPage({
           )}
           {hasMarketing && (
             <TabsTrigger value="marketing">Marketing</TabsTrigger>
+          )}
+          {hasInvoicing && (
+            <TabsTrigger value="invoicing">Invoicing</TabsTrigger>
           )}
         </TabsList>
 
@@ -331,6 +337,29 @@ export default async function SiteDetailPage({
                   <Button size="lg" className="mt-4">
                     <Mail className="mr-2 h-4 w-4" />
                     Open Marketing Dashboard
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </TabsContent>
+        )}
+
+        {hasInvoicing && (
+          <TabsContent value="invoicing">
+            <div className="rounded-lg border bg-card p-8 text-center">
+              <div className="mx-auto max-w-md space-y-4">
+                <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Receipt className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold">Invoicing & Finance</h3>
+                <p className="text-muted-foreground">
+                  Create and manage invoices, track payments, handle expenses,
+                  vendors, purchase orders, and financial reports.
+                </p>
+                <Link href={`/dashboard/sites/${site.id}/invoicing`}>
+                  <Button size="lg" className="mt-4">
+                    <Receipt className="mr-2 h-4 w-4" />
+                    Open Invoicing Dashboard
                   </Button>
                 </Link>
               </div>

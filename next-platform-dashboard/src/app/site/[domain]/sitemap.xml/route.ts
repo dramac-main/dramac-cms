@@ -21,13 +21,11 @@ export async function GET(
   // Check if it's a custom domain or subdomain
   const isSubdomain =
     domain.endsWith(`.${DOMAINS.SITES_BASE}`) ||
-    domain.endsWith(".dramac.app") ||
     !domain.includes(".");
 
   if (isSubdomain) {
     const subdomain = domain
-      .replace(`.${DOMAINS.SITES_BASE}`, "")
-      .replace(".dramac.app", "");
+      .replace(`.${DOMAINS.SITES_BASE}`, "");
     const { data } = await supabase
       .from("sites")
       .select("id, subdomain, custom_domain, sitemap_enabled, published")

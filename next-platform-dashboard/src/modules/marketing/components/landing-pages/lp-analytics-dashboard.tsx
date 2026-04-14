@@ -8,6 +8,7 @@
  */
 "use client";
 
+import { DOMAINS } from "@/lib/constants/domains";
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -143,7 +144,7 @@ export function LPAnalyticsDashboard({
     LP_STATUS_CONFIG[landingPage.status as keyof typeof LP_STATUS_CONFIG] ||
     LP_STATUS_CONFIG.draft;
   const domain =
-    siteCustomDomain || (siteSubdomain ? `${siteSubdomain}.dramac.app` : null);
+    siteCustomDomain || (siteSubdomain ? `${siteSubdomain}.${DOMAINS.SITES_BASE}` : null);
   const liveUrl = domain ? `https://${domain}/lp/${landingPage.slug}` : null;
 
   // Refresh analytics when date range changes
