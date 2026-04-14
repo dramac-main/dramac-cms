@@ -17,18 +17,17 @@ type RouteModule = {
 };
 
 const handlers: Record<string, () => Promise<RouteModule>> = {
-  "checkout": () => import("../checkout/handler"),
-  "invoices": () => import("../invoices/handler"),
-  "products": () => import("../products/handler"),
-  "subscription": () => import("../subscription/handler"),
+  checkout: () => import("../checkout/handler"),
+  invoices: () => import("../invoices/handler"),
+  products: () => import("../products/handler"),
+  subscription: () => import("../subscription/handler"),
   "subscription/cancel": () => import("../subscription/cancel/handler"),
   "subscription/pause": () => import("../subscription/pause/handler"),
-  "subscription/reactivate": () =>
-    import("../subscription/reactivate/handler"),
+  "subscription/reactivate": () => import("../subscription/reactivate/handler"),
   "subscription/resume": () => import("../subscription/resume/handler"),
   "subscription/update-payment": () =>
     import("../subscription/update-payment/handler"),
-  "usage": () => import("../usage/handler"),
+  usage: () => import("../usage/handler"),
   "verify-price": () => import("../verify-price/handler"),
 };
 

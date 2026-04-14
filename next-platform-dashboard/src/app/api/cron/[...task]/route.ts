@@ -17,12 +17,12 @@ type RouteHandler = {
 const handlers: Record<string, () => Promise<RouteHandler>> = {
   "abandoned-carts": () => import("../abandoned-carts/handler"),
   "auto-close-chats": () => import("../auto-close-chats/handler"),
-  "chat": () => import("../chat/handler"),
+  chat: () => import("../chat/handler"),
   "domain-auto-renew": () => import("../domain-auto-renew/handler"),
   "domain-expiry-notifications": () =>
     import("../domain-expiry-notifications/handler"),
   "domain-health": () => import("../domain-health/handler"),
-  "domains": () => import("../domains/handler"),
+  domains: () => import("../domains/handler"),
   "marketing-scheduler": () => import("../marketing-scheduler/handler"),
   "resellerclub-sync": () => import("../resellerclub-sync/handler"),
 };
