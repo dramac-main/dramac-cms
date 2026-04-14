@@ -8,6 +8,8 @@ The DRAMAC CMS platform is **production-ready**. All core waves (1-5) are comple
 
 ## Latest: Invoicing Module — ALL 14 PHASES COMPLETE ✅ (Session 9 Final)
 
+**Committed & pushed**: `952107b0` — `feat(invoicing): complete INV-05 through INV-14 (Sessions 4-9)`
+
 ### Phase INV-14: Vendor Management, Purchase Orders & Bills — COMPLETE
 
 **FINAL invoicing session. Full Accounts Payable: vendor CRUD, purchase order lifecycle (draft→sent→acknowledged→received→cancelled), bill management with payment recording, PO-to-email via Resend, PDF export.**

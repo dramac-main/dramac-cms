@@ -5,6 +5,7 @@ import { INV_TABLES } from "../lib/invoicing-constants";
 import {
   calculateLineItemTotals,
   calculateInvoiceTotals,
+  calculateNextDate,
 } from "../lib/invoicing-utils";
 import { generateNextDocumentNumber } from "../services/invoice-number-service";
 import { emitAutomationEvent } from "@/modules/automation/lib/automation-engine";
@@ -73,64 +74,6 @@ function computeRecurringLineItem(
     tax_rate_id: item.taxRateId || null,
     tax_rate: 0,
   };
-}
-
-/**
- * Calculate the next generation date based on frequency.
- */
-export function calculateNextDate(
-  currentDate: string,
-  frequency: RecurringFrequency,
-  customIntervalDays?: number | null,
-): string {
-  const date = new Date(currentDate);
-
-  switch (frequency) {
-    case "weekly":
-      date.setDate(date.getDate() + 7);
-      break;
-    case "biweekly":
-      date.setDate(date.getDate() + 14);
-      break;
-    case "monthly": {
-      const day = date.getDate();
-      date.setMonth(date.getMonth() + 1);
-      // Handle months with fewer days (e.g., Jan 31 -> Feb 28)
-      if (date.getDate() !== day) {
-        date.setDate(0); // Last day of previous month
-      }
-      break;
-    }
-    case "quarterly": {
-      const qDay = date.getDate();
-      date.setMonth(date.getMonth() + 3);
-      if (date.getDate() !== qDay) {
-        date.setDate(0);
-      }
-      break;
-    }
-    case "semi_annually": {
-      const sDay = date.getDate();
-      date.setMonth(date.getMonth() + 6);
-      if (date.getDate() !== sDay) {
-        date.setDate(0);
-      }
-      break;
-    }
-    case "annually": {
-      const aDay = date.getDate();
-      date.setFullYear(date.getFullYear() + 1);
-      if (date.getDate() !== aDay) {
-        date.setDate(0);
-      }
-      break;
-    }
-    case "custom":
-      date.setDate(date.getDate() + (customIntervalDays || 30));
-      break;
-  }
-
-  return date.toISOString().split("T")[0];
 }
 
 // ─── Filter / Pagination Types ─────────────────────────────────

@@ -7,6 +7,7 @@
  */
 
 import { DEFAULT_INVOICING_SETTINGS } from "./invoicing-constants";
+import type { RecurringFrequency } from "../types/recurring-types";
 
 /**
  * Format an amount in cents to a display string.
@@ -118,6 +119,63 @@ export function daysUntilDue(dueDate: string): number {
   const now = new Date();
   const diffMs = due.getTime() - now.getTime();
   return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+}
+
+/**
+ * Calculate the next generation date based on frequency.
+ */
+export function calculateNextDate(
+  currentDate: string,
+  frequency: RecurringFrequency,
+  customIntervalDays?: number | null,
+): string {
+  const date = new Date(currentDate);
+
+  switch (frequency) {
+    case "weekly":
+      date.setDate(date.getDate() + 7);
+      break;
+    case "biweekly":
+      date.setDate(date.getDate() + 14);
+      break;
+    case "monthly": {
+      const day = date.getDate();
+      date.setMonth(date.getMonth() + 1);
+      if (date.getDate() !== day) {
+        date.setDate(0);
+      }
+      break;
+    }
+    case "quarterly": {
+      const qDay = date.getDate();
+      date.setMonth(date.getMonth() + 3);
+      if (date.getDate() !== qDay) {
+        date.setDate(0);
+      }
+      break;
+    }
+    case "semi_annually": {
+      const sDay = date.getDate();
+      date.setMonth(date.getMonth() + 6);
+      if (date.getDate() !== sDay) {
+        date.setDate(0);
+      }
+      break;
+    }
+    case "annually": {
+      const aDay = date.getDate();
+      date.setFullYear(date.getFullYear() + 1);
+      if (date.getDate() !== aDay) {
+        date.setDate(0);
+      }
+      break;
+    }
+    case "custom":
+      date.setDate(date.getDate() + (customIntervalDays || 30));
+      break;
+  }
+
+  return date.toISOString().split("T")[0];
 }
 
 /**
