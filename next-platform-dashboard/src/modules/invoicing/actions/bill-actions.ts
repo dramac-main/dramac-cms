@@ -115,9 +115,7 @@ export async function getBills(
   }
   if (filters?.overdue) {
     const today = new Date().toISOString().split("T")[0];
-    query = query
-      .lt("due_date", today)
-      .not("status", "in", '("paid","void")');
+    query = query.lt("due_date", today).not("status", "in", '("paid","void")');
   }
 
   const sortBy = pagination?.sortBy || "created_at";
@@ -342,7 +340,10 @@ export async function updateBill(
     updates.amount_due = total; // draft bills have 0 paid
 
     // Replace all line items
-    await supabase.from(INV_TABLES.billLineItems).delete().eq("bill_id", billId);
+    await supabase
+      .from(INV_TABLES.billLineItems)
+      .delete()
+      .eq("bill_id", billId);
 
     const items = lineItems.map((li, idx) => {
       const liSubtotal = li.quantity * li.unitPrice;
@@ -557,17 +558,21 @@ export async function recordBillPayment(
   );
 
   try {
-    await emitAutomationEvent(bill.site_id, "accounting.bill.payment_recorded", {
-      billNumber: bill.bill_number,
-      vendorId: bill.vendor_id,
-      paymentAmountCents: input.amount,
-      totalAmountCents: bill.total,
-      amountDueCents: Math.max(0, newAmountDue),
-      currency: bill.currency,
-      paymentMethod: input.paymentMethod,
-      status: newStatus,
-      billId,
-    });
+    await emitAutomationEvent(
+      bill.site_id,
+      "accounting.bill.payment_recorded",
+      {
+        billNumber: bill.bill_number,
+        vendorId: bill.vendor_id,
+        paymentAmountCents: input.amount,
+        totalAmountCents: bill.total,
+        amountDueCents: Math.max(0, newAmountDue),
+        currency: bill.currency,
+        paymentMethod: input.paymentMethod,
+        status: newStatus,
+        billId,
+      },
+    );
   } catch {
     // non-critical
   }

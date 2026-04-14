@@ -174,11 +174,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Block test/debug pages in production
-  if (pathname.startsWith("/test-") || pathname.startsWith("/debug-")) {
-    if (process.env.NODE_ENV === "production") {
-      return NextResponse.rewrite(new URL("/404", request.url));
-    }
+  // Legacy domain settings redirects (pages removed to reduce Vercel route count)
+  if (pathname.startsWith("/dashboard/settings/domains")) {
+    const newPath = pathname.replace("/dashboard/settings/domains", "/dashboard/domains/settings");
+    return NextResponse.redirect(new URL(newPath, request.url), 301);
   }
 
   // Preview routes - always accessible (for editor preview)

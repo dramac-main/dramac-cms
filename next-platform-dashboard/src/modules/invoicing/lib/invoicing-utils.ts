@@ -86,7 +86,12 @@ export function calculateLineItemTotals(
  * Calculate invoice-level totals from line items.
  */
 export function calculateInvoiceTotals(
-  lineItems: Array<{ subtotal: number; discountAmount: number; taxAmount: number; total: number }>,
+  lineItems: Array<{
+    subtotal: number;
+    discountAmount: number;
+    taxAmount: number;
+    total: number;
+  }>,
   invoiceDiscountType: "percentage" | "fixed" | null,
   invoiceDiscountValue: number,
 ): {

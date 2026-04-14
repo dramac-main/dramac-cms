@@ -108,7 +108,11 @@ export async function getVendors(
 export async function getVendor(
   vendorId: string,
 ): Promise<
-  Vendor & { bills: Bill[]; purchaseOrders: PurchaseOrder[]; expenses: Expense[] }
+  Vendor & {
+    bills: Bill[];
+    purchaseOrders: PurchaseOrder[];
+    expenses: Expense[];
+  }
 > {
   const supabase = await getModuleClient();
 
@@ -234,7 +238,9 @@ export async function updateVendor(
     throw new Error("Vendor not found");
   }
 
-  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  const updates: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
   if (input.name !== undefined) updates.name = input.name.trim();
   if (input.email !== undefined) updates.email = input.email || null;
   if (input.phone !== undefined) updates.phone = input.phone || null;
@@ -243,7 +249,8 @@ export async function updateVendor(
   if (input.city !== undefined) updates.city = input.city || null;
   if (input.state !== undefined) updates.state = input.state || null;
   if (input.country !== undefined) updates.country = input.country;
-  if (input.postalCode !== undefined) updates.postal_code = input.postalCode || null;
+  if (input.postalCode !== undefined)
+    updates.postal_code = input.postalCode || null;
   if (input.taxId !== undefined) updates.tax_id = input.taxId || null;
   if (input.currency !== undefined) updates.currency = input.currency;
   if (input.paymentTermsDays !== undefined)

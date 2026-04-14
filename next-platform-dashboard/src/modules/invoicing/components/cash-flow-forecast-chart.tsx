@@ -82,17 +82,11 @@ export function CashFlowForecastChart({
           onClick={loadForecast}
           disabled={loading}
         >
-          {loading ? (
-            <Loader2 className="h-3 w-3 animate-spin" />
-          ) : (
-            "Generate"
-          )}
+          {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : "Generate"}
         </Button>
       </CardHeader>
       <CardContent>
-        {loading && !forecast && (
-          <Skeleton className="h-[300px] w-full" />
-        )}
+        {loading && !forecast && <Skeleton className="h-[300px] w-full" />}
 
         {error && (
           <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground gap-2">
@@ -107,7 +101,9 @@ export function CashFlowForecastChart({
         {!loading && !error && !forecast && (
           <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground gap-2">
             <TrendingUp className="h-8 w-8" />
-            <p className="text-sm">Click Generate to create a cash flow forecast</p>
+            <p className="text-sm">
+              Click Generate to create a cash flow forecast
+            </p>
           </div>
         )}
 
@@ -124,9 +120,13 @@ export function CashFlowForecastChart({
                   }
                 />
                 <Tooltip
-                  formatter={((value: number) =>
-                    formatInvoiceAmount(Math.round(value * 100), currency)
-                  ) as any}
+                  formatter={
+                    ((value: number) =>
+                      formatInvoiceAmount(
+                        Math.round(value * 100),
+                        currency,
+                      )) as any
+                  }
                   labelFormatter={((label: string) => `Month: ${label}`) as any}
                 />
                 <Legend />
@@ -157,7 +157,9 @@ export function CashFlowForecastChart({
 
             {/* Summary & Alerts */}
             {forecast.summary && (
-              <p className="text-sm text-muted-foreground">{forecast.summary}</p>
+              <p className="text-sm text-muted-foreground">
+                {forecast.summary}
+              </p>
             )}
 
             {forecast.alerts.length > 0 && (

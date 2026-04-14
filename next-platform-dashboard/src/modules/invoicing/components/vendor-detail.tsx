@@ -5,9 +5,16 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Vendor, Bill, PurchaseOrder, VendorStats } from "../types";
 import type { Expense } from "../types/expense-types";
-import { getVendor, deleteVendor, getVendorStats } from "../actions/vendor-actions";
+import {
+  getVendor,
+  deleteVendor,
+  getVendorStats,
+} from "../actions/vendor-actions";
 import { AmountDisplay } from "./amount-display";
-import { BILL_STATUS_LABELS, PO_STATUS_LABELS } from "../lib/invoicing-constants";
+import {
+  BILL_STATUS_LABELS,
+  PO_STATUS_LABELS,
+} from "../lib/invoicing-constants";
 import {
   Table,
   TableBody,
@@ -56,7 +63,12 @@ interface VendorDetailProps {
 export function VendorDetail({ siteId, vendorId }: VendorDetailProps) {
   const router = useRouter();
   const [vendor, setVendor] = useState<
-    (Vendor & { bills?: Bill[]; purchaseOrders?: PurchaseOrder[]; expenses?: Expense[] }) | null
+    | (Vendor & {
+        bills?: Bill[];
+        purchaseOrders?: PurchaseOrder[];
+        expenses?: Expense[];
+      })
+    | null
   >(null);
   const [stats, setStats] = useState<VendorStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -143,8 +155,8 @@ export function VendorDetail({ siteId, vendorId }: VendorDetailProps) {
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete Vendor</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will soft-delete &quot;{vendor.name}&quot;. This action cannot
-                  be undone if there are unpaid bills.
+                  This will soft-delete &quot;{vendor.name}&quot;. This action
+                  cannot be undone if there are unpaid bills.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -197,7 +209,9 @@ export function VendorDetail({ siteId, vendorId }: VendorDetailProps) {
           <Card>
             <CardContent className="pt-4">
               <p className="text-xs text-muted-foreground">Active POs</p>
-              <p className="text-lg font-semibold">{stats.activePurchaseOrders}</p>
+              <p className="text-lg font-semibold">
+                {stats.activePurchaseOrders}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -246,7 +260,13 @@ export function VendorDetail({ siteId, vendorId }: VendorDetailProps) {
                 <div className="flex items-start gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
                   <span>
-                    {[vendor.address, vendor.city, vendor.state, vendor.postalCode, vendor.country]
+                    {[
+                      vendor.address,
+                      vendor.city,
+                      vendor.state,
+                      vendor.postalCode,
+                      vendor.country,
+                    ]
                       .filter(Boolean)
                       .join(", ")}
                   </span>
@@ -388,7 +408,8 @@ export function VendorDetail({ siteId, vendorId }: VendorDetailProps) {
           <TabsContent value="pos">
             <Card>
               <CardContent className="pt-4">
-                {!vendor.purchaseOrders || vendor.purchaseOrders.length === 0 ? (
+                {!vendor.purchaseOrders ||
+                vendor.purchaseOrders.length === 0 ? (
                   <p className="text-center py-8 text-muted-foreground">
                     No purchase orders for this vendor yet.{" "}
                     <Link

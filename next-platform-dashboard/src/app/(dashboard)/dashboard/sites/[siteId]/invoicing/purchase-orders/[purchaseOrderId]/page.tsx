@@ -23,7 +23,10 @@ export default async function PurchaseOrderDetailPage({
   return (
     <div className="flex-1 p-6">
       <Suspense fallback={<Skeleton className="h-[600px] w-full" />}>
-        <PurchaseOrderDetail siteId={siteId} purchaseOrderId={purchaseOrderId} />
+        <PurchaseOrderDetail
+          siteId={siteId}
+          purchaseOrderId={purchaseOrderId}
+        />
       </Suspense>
     </div>
   );

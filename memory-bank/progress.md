@@ -179,32 +179,32 @@
 
 ## Key Milestones (Chronological)
 
-| Date     | Milestone                                                                                                                                       |
-| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Jan 2026 | Core platform + module marketplace infrastructure                                                                                               |
-| Feb 2026 | DRAMAC Studio (replaced Puck), brand color system, AI designer overhaul                                                                         |
-| Feb 2026 | All 6 business modules implemented                                                                                                              |
-| Feb 2026 | Client portal complete (15 phases)                                                                                                              |
-| Mar 2026 | E-Commerce core overhaul (22 sub-phases), quotation system                                                                                      |
-| Mar 2026 | Cross-module integration, automation wiring, customer context bridge                                                                            |
-| Mar 2026 | Storefront auth rewrite (bcrypt multi-tenant)                                                                                                   |
-| Apr 2026 | Blog system overhaul, agency support tickets, portal data scoping audit                                                                         |
-| Jul 2026 | Marketing Module MKT-01: Database foundation, types, permissions, automation integration                                                        |
-| Jul 2026 | Marketing Module MKT-02 + MKT-03: Campaign engine + email analytics backend (16 files, 1 migration)                                             |
-| Jul 2026 | Marketing Module MKT-10/11/12: Super admin, portal views, social media — ALL 12 PHASES COMPLETE                                                 |
-| Jul 2026 | Invoicing Module: Master Guide (3,263 lines, 14 phases) + Session Brief — PLANNING COMPLETE                                                     |
-| Jul 2026 | Invoicing Module INV-01: Database foundation, 18 tables, module registration, types, permissions                                                |
-| Jul 2026 | Invoicing Module INV-02: Invoice CRUD, PDF, settings, items catalog, 17 components, 7 pages                                                     |
-| Jul 2026 | Invoicing Module INV-03+INV-04: Payments (7 actions, 7 components) + Recurring (9 actions, engine, cron, 5 components, 3 pages)                 |
-| Jul 2026 | Invoicing Module INV-05: Credit Notes (9 actions, 6 components, 3 pages) + INV-06: Expenses (13 actions, 8 components, 3 pages, 2 integrations) |
-| Jul 2026 | Invoicing Module INV-07: Financial Dashboard, Reports & P&L (12 server actions, 18 components, 8 pages, nav update, landing page change)        |
-| Jul 2026 | LP Builder Pro LPB-06+LPB-07: 6 conversion component rewrites + 14 system templates — Session 5                                                 |
-| Jul 2026 | LP Builder Pro LPB-08+LPB-09: Analytics/tracking + AI LP generator — Session 6                                                                  |
-| Jul 2026 | LP Builder Pro LPB-10+LPB-11: Admin/Portal views + Migration tooling — Session 7 (FINAL) — ALL 11 LPB PHASES COMPLETE                           |
-| Jul 2026 | Invoicing Module INV-10: Email Notifications, Reminders & Overdue Management (7 files, 2 cron jobs, 4 automation templates)                         |
-| Jul 2026 | Invoicing Module INV-11: AI Financial Intelligence & Insights (11 files, 10 AI actions, 7 components, Claude Sonnet/Haiku)                          |
-| Jul 2026 | Invoicing Module INV-12: Super Admin Controls (8 files — admin dashboard, site table, feature flags, admin pages, admin nav)                            |
-| Jul 2026 | Invoicing Module INV-13: Cross-Module Deep Integration (12 files — CRM finance tab, deal-to-invoice, e-com/booking integration, 15 automation events, 5 actions, 9 marketing filters, 7 email templates) |
+| Date     | Milestone                                                                                                                                                                                                           |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Jan 2026 | Core platform + module marketplace infrastructure                                                                                                                                                                   |
+| Feb 2026 | DRAMAC Studio (replaced Puck), brand color system, AI designer overhaul                                                                                                                                             |
+| Feb 2026 | All 6 business modules implemented                                                                                                                                                                                  |
+| Feb 2026 | Client portal complete (15 phases)                                                                                                                                                                                  |
+| Mar 2026 | E-Commerce core overhaul (22 sub-phases), quotation system                                                                                                                                                          |
+| Mar 2026 | Cross-module integration, automation wiring, customer context bridge                                                                                                                                                |
+| Mar 2026 | Storefront auth rewrite (bcrypt multi-tenant)                                                                                                                                                                       |
+| Apr 2026 | Blog system overhaul, agency support tickets, portal data scoping audit                                                                                                                                             |
+| Jul 2026 | Marketing Module MKT-01: Database foundation, types, permissions, automation integration                                                                                                                            |
+| Jul 2026 | Marketing Module MKT-02 + MKT-03: Campaign engine + email analytics backend (16 files, 1 migration)                                                                                                                 |
+| Jul 2026 | Marketing Module MKT-10/11/12: Super admin, portal views, social media — ALL 12 PHASES COMPLETE                                                                                                                     |
+| Jul 2026 | Invoicing Module: Master Guide (3,263 lines, 14 phases) + Session Brief — PLANNING COMPLETE                                                                                                                         |
+| Jul 2026 | Invoicing Module INV-01: Database foundation, 18 tables, module registration, types, permissions                                                                                                                    |
+| Jul 2026 | Invoicing Module INV-02: Invoice CRUD, PDF, settings, items catalog, 17 components, 7 pages                                                                                                                         |
+| Jul 2026 | Invoicing Module INV-03+INV-04: Payments (7 actions, 7 components) + Recurring (9 actions, engine, cron, 5 components, 3 pages)                                                                                     |
+| Jul 2026 | Invoicing Module INV-05: Credit Notes (9 actions, 6 components, 3 pages) + INV-06: Expenses (13 actions, 8 components, 3 pages, 2 integrations)                                                                     |
+| Jul 2026 | Invoicing Module INV-07: Financial Dashboard, Reports & P&L (12 server actions, 18 components, 8 pages, nav update, landing page change)                                                                            |
+| Jul 2026 | LP Builder Pro LPB-06+LPB-07: 6 conversion component rewrites + 14 system templates — Session 5                                                                                                                     |
+| Jul 2026 | LP Builder Pro LPB-08+LPB-09: Analytics/tracking + AI LP generator — Session 6                                                                                                                                      |
+| Jul 2026 | LP Builder Pro LPB-10+LPB-11: Admin/Portal views + Migration tooling — Session 7 (FINAL) — ALL 11 LPB PHASES COMPLETE                                                                                               |
+| Jul 2026 | Invoicing Module INV-10: Email Notifications, Reminders & Overdue Management (7 files, 2 cron jobs, 4 automation templates)                                                                                         |
+| Jul 2026 | Invoicing Module INV-11: AI Financial Intelligence & Insights (11 files, 10 AI actions, 7 components, Claude Sonnet/Haiku)                                                                                          |
+| Jul 2026 | Invoicing Module INV-12: Super Admin Controls (8 files — admin dashboard, site table, feature flags, admin pages, admin nav)                                                                                        |
+| Jul 2026 | Invoicing Module INV-13: Cross-Module Deep Integration (12 files — CRM finance tab, deal-to-invoice, e-com/booking integration, 15 automation events, 5 actions, 9 marketing filters, 7 email templates)            |
 | Jul 2026 | Invoicing Module INV-14: Vendor Management, Purchase Orders & Bills — SESSION 9 FINAL (22 files — vendor CRUD, PO lifecycle, bill management, payment recording, PO email, PDF export) — ALL 14 INV PHASES COMPLETE |
 
 ---
@@ -274,6 +274,7 @@
 **TSC: 101 errors (baseline) — zero new errors from INV-14.**
 
 **Key architectural decisions:**
+
 - Form components use `vendorId?`/`billId?`/`purchaseOrderId?` props and load data internally via useEffect (consistent pattern)
 - PO line items stored in `metadata.lineItems` JSON (no DB table)
 - BillStatus: "draft" | "received" | "partial" | "paid" | "overdue" | "void" (no "approved" or "cancelled")

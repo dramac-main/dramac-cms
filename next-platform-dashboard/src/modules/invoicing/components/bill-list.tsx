@@ -118,9 +118,7 @@ export function BillList({ siteId }: BillListProps) {
             </SelectContent>
           </Select>
         </div>
-        <Link
-          href={`/dashboard/sites/${siteId}/invoicing/bills/new`}
-        >
+        <Link href={`/dashboard/sites/${siteId}/invoicing/bills/new`}>
           <Button size="sm">
             <Plus className="h-4 w-4 mr-1.5" />
             New Bill
@@ -158,8 +156,8 @@ export function BillList({ siteId }: BillListProps) {
             </TableHeader>
             <TableBody>
               {bills.map((bill) => {
-                const cfg = BILL_STATUS_CONFIG[bill.status] ||
-                  BILL_STATUS_CONFIG.draft;
+                const cfg =
+                  BILL_STATUS_CONFIG[bill.status] || BILL_STATUS_CONFIG.draft;
                 return (
                   <TableRow
                     key={bill.id}
@@ -173,9 +171,7 @@ export function BillList({ siteId }: BillListProps) {
                     <TableCell className="font-medium">
                       {bill.billNumber}
                     </TableCell>
-                    <TableCell>
-                      {(bill as any).vendor?.name || "—"}
-                    </TableCell>
+                    <TableCell>{(bill as any).vendor?.name || "—"}</TableCell>
                     <TableCell>
                       <Badge
                         variant="outline"

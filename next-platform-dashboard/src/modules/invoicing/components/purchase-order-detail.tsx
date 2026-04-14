@@ -3,7 +3,12 @@
 import { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { PurchaseOrder, PurchaseOrderLineItem, Bill, Vendor } from "../types";
+import type {
+  PurchaseOrder,
+  PurchaseOrderLineItem,
+  Bill,
+  Vendor,
+} from "../types";
 import {
   getPurchaseOrder,
   sendPurchaseOrder,
@@ -291,11 +296,7 @@ export function PurchaseOrderDetail({
             po.status !== "draft" && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    disabled={isPending}
-                  >
+                  <Button variant="destructive" size="sm" disabled={isPending}>
                     <XCircle className="h-4 w-4 mr-1.5" />
                     Cancel PO
                   </Button>
@@ -325,11 +326,7 @@ export function PurchaseOrderDetail({
               </AlertDialog>
             )}
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => window.print()}
-          >
+          <Button variant="outline" size="sm" onClick={() => window.print()}>
             <Printer className="h-4 w-4 mr-1.5" />
             Print
           </Button>
@@ -430,7 +427,10 @@ export function PurchaseOrderDetail({
                 <div className="w-64 space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Subtotal:</span>
-                    <AmountDisplay amount={po.subtotal} currency={po.currency} />
+                    <AmountDisplay
+                      amount={po.subtotal}
+                      currency={po.currency}
+                    />
                   </div>
                   {po.taxAmount > 0 && (
                     <div className="flex justify-between">

@@ -60,9 +60,7 @@ export function BillForm({ siteId, billId }: BillFormProps) {
   const [vendors, setVendors] = useState<Vendor[]>([]);
 
   // Form
-  const [vendorId, setVendorId] = useState(
-    searchParams.get("vendorId") || "",
-  );
+  const [vendorId, setVendorId] = useState(searchParams.get("vendorId") || "");
   const [vendorBillReference, setVendorBillReference] = useState("");
   const [issueDate, setIssueDate] = useState(
     new Date().toISOString().split("T")[0],
@@ -164,17 +162,19 @@ export function BillForm({ siteId, billId }: BillFormProps) {
     startTransition(async () => {
       try {
         if (billId) {
-          await updateBill(billId, {
-            vendorBillReference: vendorBillReference || undefined,
-            issueDate,
-            dueDate: dueDate || undefined,
-            currency,
-            notes: notes || undefined,
-          }, items);
-          toast.success("Bill updated");
-          router.push(
-            `/dashboard/sites/${siteId}/invoicing/bills/${billId}`,
+          await updateBill(
+            billId,
+            {
+              vendorBillReference: vendorBillReference || undefined,
+              issueDate,
+              dueDate: dueDate || undefined,
+              currency,
+              notes: notes || undefined,
+            },
+            items,
           );
+          toast.success("Bill updated");
+          router.push(`/dashboard/sites/${siteId}/invoicing/bills/${billId}`);
         } else {
           const input: CreateBillInput = {
             vendorId,
@@ -192,9 +192,7 @@ export function BillForm({ siteId, billId }: BillFormProps) {
           );
         }
       } catch (err) {
-        toast.error(
-          err instanceof Error ? err.message : "Failed to save bill",
-        );
+        toast.error(err instanceof Error ? err.message : "Failed to save bill");
       }
     });
   };
@@ -337,10 +335,7 @@ export function BillForm({ siteId, billId }: BillFormProps) {
             {lineItems.map((li, idx) => {
               const c = calcLine(li);
               return (
-                <div
-                  key={idx}
-                  className="grid grid-cols-12 gap-2 items-center"
-                >
+                <div key={idx} className="grid grid-cols-12 gap-2 items-center">
                   <Input
                     className="col-span-4"
                     placeholder="Description"
@@ -405,12 +400,7 @@ export function BillForm({ siteId, billId }: BillFormProps) {
               );
             })}
 
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={addLine}
-            >
+            <Button type="button" variant="outline" size="sm" onClick={addLine}>
               <Plus className="h-4 w-4 mr-1.5" />
               Add Line
             </Button>

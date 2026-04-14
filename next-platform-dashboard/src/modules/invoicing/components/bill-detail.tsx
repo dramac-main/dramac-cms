@@ -4,18 +4,16 @@ import { useState, useEffect, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Bill, BillLineItem, Vendor } from "../types";
-import { getBill, approveBill, voidBill, deleteBill } from "../actions/bill-actions";
+import {
+  getBill,
+  approveBill,
+  voidBill,
+  deleteBill,
+} from "../actions/bill-actions";
 import { BillPaymentDialog } from "./bill-payment-dialog";
 import { AmountDisplay } from "./amount-display";
-import {
-  BILL_STATUS_CONFIG,
-} from "../lib/invoicing-constants";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { BILL_STATUS_CONFIG } from "../lib/invoicing-constants";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -90,9 +88,7 @@ export function BillDetail({ siteId, billId }: BillDetailProps) {
           loadBill();
         }
       } catch (err) {
-        toast.error(
-          err instanceof Error ? err.message : "Action failed",
-        );
+        toast.error(err instanceof Error ? err.message : "Action failed");
       }
     });
   };
@@ -129,9 +125,7 @@ export function BillDetail({ siteId, billId }: BillDetailProps) {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <Link
-            href={`/dashboard/sites/${siteId}/invoicing/bills`}
-          >
+          <Link href={`/dashboard/sites/${siteId}/invoicing/bills`}>
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4" />
             </Button>
@@ -167,10 +161,7 @@ export function BillDetail({ siteId, billId }: BillDetailProps) {
               <Button
                 size="sm"
                 onClick={() =>
-                  handleAction(
-                    () => approveBill(billId),
-                    "Bill approved",
-                  )
+                  handleAction(() => approveBill(billId), "Bill approved")
                 }
                 disabled={isPending}
               >
@@ -192,10 +183,7 @@ export function BillDetail({ siteId, billId }: BillDetailProps) {
               variant="outline"
               size="sm"
               onClick={() =>
-                handleAction(
-                  () => voidBill(billId),
-                  "Bill voided",
-                )
+                handleAction(() => voidBill(billId), "Bill voided")
               }
               disabled={isPending}
             >
@@ -435,9 +423,7 @@ export function BillDetail({ siteId, billId }: BillDetailProps) {
               )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Created</span>
-                <span>
-                  {new Date(bill.createdAt).toLocaleDateString()}
-                </span>
+                <span>{new Date(bill.createdAt).toLocaleDateString()}</span>
               </div>
             </CardContent>
           </Card>

@@ -96,9 +96,7 @@ export function BillPaymentDialog({
       setOpen(false);
       onSuccess?.();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to record payment",
-      );
+      setError(err instanceof Error ? err.message : "Failed to record payment");
     } finally {
       setSaving(false);
     }

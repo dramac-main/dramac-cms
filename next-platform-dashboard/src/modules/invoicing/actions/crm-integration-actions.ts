@@ -89,9 +89,7 @@ export async function getContactFinancialProfile(
   );
 
   // Get payments for recent list
-  const invoiceIds = allInvoices
-    .slice(0, 20)
-    .map((i: { id: string }) => i.id);
+  const invoiceIds = allInvoices.slice(0, 20).map((i: { id: string }) => i.id);
 
   let recentPayments: ContactFinancialProfile["recentPayments"] = [];
   if (invoiceIds.length > 0) {
@@ -145,10 +143,10 @@ export async function getContactFinancialProfile(
 
     if (allPayments && allPayments.length > 0) {
       const invoiceIssueMap = new Map<string, number>(
-        paidInvoices.map((i: { id: string; issue_date: string }) => [
-          i.id,
-          new Date(i.issue_date).getTime(),
-        ] as [string, number]),
+        paidInvoices.map(
+          (i: { id: string; issue_date: string }) =>
+            [i.id, new Date(i.issue_date).getTime()] as [string, number],
+        ),
       );
 
       let totalDays = 0;
@@ -189,23 +187,25 @@ export async function getContactFinancialProfile(
   }
 
   // Recent invoices (last 5)
-  const recentInvoices = allInvoices.slice(0, 5).map(
-    (i: {
-      id: string;
-      invoice_number: string;
-      status: string;
-      total: number;
-      amount_due: number;
-      due_date: string;
-    }) => ({
-      id: i.id,
-      invoiceNumber: i.invoice_number,
-      status: i.status,
-      total: i.total,
-      amountDue: i.amount_due,
-      dueDate: i.due_date,
-    }),
-  );
+  const recentInvoices = allInvoices
+    .slice(0, 5)
+    .map(
+      (i: {
+        id: string;
+        invoice_number: string;
+        status: string;
+        total: number;
+        amount_due: number;
+        due_date: string;
+      }) => ({
+        id: i.id,
+        invoiceNumber: i.invoice_number,
+        status: i.status,
+        total: i.total,
+        amountDue: i.amount_due,
+        dueDate: i.due_date,
+      }),
+    );
 
   // Last dates
   const lastInvoiceDate =
@@ -273,7 +273,8 @@ export async function createInvoiceFromDeal(
       .single();
 
     if (contact) {
-      contactName = `${contact.first_name || ""} ${contact.last_name || ""}`.trim();
+      contactName =
+        `${contact.first_name || ""} ${contact.last_name || ""}`.trim();
       contactEmail = contact.email || "";
     }
   }

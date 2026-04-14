@@ -29,9 +29,9 @@ Read **both** sections before implementing anything.
 
 ## Session Scope
 
-| Phase | Title | Estimated Files | Complexity |
-|-------|-------|-----------------|------------|
-| INV-14 | Vendor Management, Purchase Orders & Bills | ~20 new files + ~5 modified | HIGH |
+| Phase  | Title                                      | Estimated Files             | Complexity |
+| ------ | ------------------------------------------ | --------------------------- | ---------- |
+| INV-14 | Vendor Management, Purchase Orders & Bills | ~20 new files + ~5 modified | HIGH       |
 
 ---
 
@@ -42,6 +42,7 @@ Read **both** sections before implementing anything.
 **File**: `src/modules/invoicing/types/vendor-types.ts`
 
 Already defines:
+
 - `Vendor` interface (full entity)
 - `Bill` interface (with optional `vendor` and `lineItems` relations)
 - `BillLineItem` interface
@@ -51,6 +52,7 @@ Already defines:
 - `CreateVendorInput`, `CreateBillInput`, `CreateBillLineItemInput`, `CreatePurchaseOrderInput`
 
 **IMPORTANT**: `PurchaseOrder` currently has NO `lineItems` field. You will need to either:
+
 - Add a `PurchaseOrderLineItem` type (if using a separate PO line items table — check if `mod_invmod01_purchase_order_line_items` exists in DB), OR
 - Reuse `BillLineItem` structure for PO lines and add a `lineItems?: BillLineItem[]` relation to `PurchaseOrder`.
 
@@ -59,6 +61,7 @@ The master guide does NOT define a `purchase_order_line_items` table — PO line
 ### Database Tables — COMPLETE (from INV-01)
 
 Table constants in `src/modules/invoicing/lib/invoicing-constants.ts`:
+
 - `mod_invmod01_vendors`
 - `mod_invmod01_bills`
 - `mod_invmod01_bill_line_items`
@@ -70,6 +73,7 @@ Table constants in `src/modules/invoicing/lib/invoicing-constants.ts`:
 **File**: `src/modules/invoicing/services/invoice-number-service.ts`
 
 Function `generateNextDocumentNumber(siteId, docType)` already supports:
+
 - `"bill"` → uses `bill_prefix` + `bill_next_number` from settings
 - `"po"` → uses `po_prefix` + `po_next_number` from settings
 
@@ -81,17 +85,17 @@ Settings already contain `bill_prefix`, `bill_next_number`, `po_prefix`, `po_nex
 
 ### References for Patterns
 
-| What | File Path | Use For |
-|------|-----------|---------|
-| Invoice PDF template | `src/modules/invoicing/components/invoice-pdf-template.tsx` | PO PDF template pattern |
-| Payment form (record payment) | `src/modules/invoicing/components/payment-form.tsx` | Bill payment dialog pattern |
-| Invoice list component | `src/modules/invoicing/components/invoice-list.tsx` | Bill/vendor list pattern |
-| Invoice detail component | `src/modules/invoicing/components/invoice-detail.tsx` | Bill/vendor detail pattern |
-| Invoice form component | `src/modules/invoicing/components/invoice-form.tsx` | Bill/PO form pattern |
-| Invoice actions (CRUD) | `src/modules/invoicing/actions/invoice-actions.ts` | Server action structure |
-| Payment actions | `src/modules/invoicing/actions/payment-actions.ts` | Bill payment action pattern |
-| Expense category manager | `src/modules/invoicing/components/expense-category-manager.tsx` | Category UX pattern |
-| Billable expense selector | `src/modules/invoicing/components/billable-expense-selector.tsx` | Already exists |
+| What                          | File Path                                                        | Use For                     |
+| ----------------------------- | ---------------------------------------------------------------- | --------------------------- |
+| Invoice PDF template          | `src/modules/invoicing/components/invoice-pdf-template.tsx`      | PO PDF template pattern     |
+| Payment form (record payment) | `src/modules/invoicing/components/payment-form.tsx`              | Bill payment dialog pattern |
+| Invoice list component        | `src/modules/invoicing/components/invoice-list.tsx`              | Bill/vendor list pattern    |
+| Invoice detail component      | `src/modules/invoicing/components/invoice-detail.tsx`            | Bill/vendor detail pattern  |
+| Invoice form component        | `src/modules/invoicing/components/invoice-form.tsx`              | Bill/PO form pattern        |
+| Invoice actions (CRUD)        | `src/modules/invoicing/actions/invoice-actions.ts`               | Server action structure     |
+| Payment actions               | `src/modules/invoicing/actions/payment-actions.ts`               | Bill payment action pattern |
+| Expense category manager      | `src/modules/invoicing/components/expense-category-manager.tsx`  | Category UX pattern         |
+| Billable expense selector     | `src/modules/invoicing/components/billable-expense-selector.tsx` | Already exists              |
 
 ---
 
@@ -101,20 +105,21 @@ Settings already contain `bill_prefix`, `bill_next_number`, `po_prefix`, `po_nex
 
 **New file**: `src/modules/invoicing/actions/vendor-actions.ts`
 
-| Function | Parameters | Returns | Description |
-|----------|-----------|---------|-------------|
-| `getVendors` | `siteId, filters?, pagination?` | `{ vendors: Vendor[], total: number }` | Paginated vendor list with search, status filter |
-| `getVendor` | `vendorId` | `Vendor & { bills: Bill[], purchaseOrders: PurchaseOrder[], expenses: Expense[] }` | Full vendor with related records |
-| `createVendor` | `siteId, input: CreateVendorInput` | `Vendor` | Create vendor with all fields |
-| `updateVendor` | `vendorId, input` | `Vendor` | Update vendor details |
-| `deleteVendor` | `vendorId` | `void` | Soft delete (set `is_active = false`). Fail if has unpaid bills |
-| `getVendorStats` | `vendorId` | `VendorStats` | Summary: total billed, paid, outstanding, avg payment time |
+| Function         | Parameters                         | Returns                                                                            | Description                                                     |
+| ---------------- | ---------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `getVendors`     | `siteId, filters?, pagination?`    | `{ vendors: Vendor[], total: number }`                                             | Paginated vendor list with search, status filter                |
+| `getVendor`      | `vendorId`                         | `Vendor & { bills: Bill[], purchaseOrders: PurchaseOrder[], expenses: Expense[] }` | Full vendor with related records                                |
+| `createVendor`   | `siteId, input: CreateVendorInput` | `Vendor`                                                                           | Create vendor with all fields                                   |
+| `updateVendor`   | `vendorId, input`                  | `Vendor`                                                                           | Update vendor details                                           |
+| `deleteVendor`   | `vendorId`                         | `void`                                                                             | Soft delete (set `is_active = false`). Fail if has unpaid bills |
+| `getVendorStats` | `vendorId`                         | `VendorStats`                                                                      | Summary: total billed, paid, outstanding, avg payment time      |
 
 **Add `VendorStats` type** to `vendor-types.ts`:
+
 ```typescript
 export interface VendorStats {
-  totalBilled: number;    // CENTS
-  totalPaid: number;      // CENTS
+  totalBilled: number; // CENTS
+  totalPaid: number; // CENTS
   totalOutstanding: number; // CENTS
   billCount: number;
   poCount: number;
@@ -126,22 +131,23 @@ export interface VendorStats {
 
 **New file**: `src/modules/invoicing/actions/purchase-order-actions.ts`
 
-| Function | Parameters | Returns | Description |
-|----------|-----------|---------|-------------|
-| `getPurchaseOrders` | `siteId, filters?, pagination?` | `{ purchaseOrders: PurchaseOrder[], total: number }` | Paginated PO list |
-| `getPurchaseOrder` | `purchaseOrderId` | `PurchaseOrder with vendor, linked bills` | Full PO with related data |
-| `createPurchaseOrder` | `siteId, input` | `PurchaseOrder` | Create PO with line items, auto-generate PO number |
-| `updatePurchaseOrder` | `purchaseOrderId, input` | `PurchaseOrder` | Update PO (only if draft) |
-| `deletePurchaseOrder` | `purchaseOrderId` | `void` | Delete PO (only if draft) |
-| `sendPurchaseOrder` | `purchaseOrderId` | `void` | Send PO to vendor via email, status → 'sent' |
-| `approvePurchaseOrder` | `purchaseOrderId` | `void` | Mark PO as acknowledged |
-| `convertToBill` | `purchaseOrderId` | `Bill` | Convert received PO to bill (copy line items) |
-| `markAsReceived` | `purchaseOrderId` | `void` | Mark goods/services received |
-| `cancelPurchaseOrder` | `purchaseOrderId` | `void` | Cancel PO |
+| Function               | Parameters                      | Returns                                              | Description                                        |
+| ---------------------- | ------------------------------- | ---------------------------------------------------- | -------------------------------------------------- |
+| `getPurchaseOrders`    | `siteId, filters?, pagination?` | `{ purchaseOrders: PurchaseOrder[], total: number }` | Paginated PO list                                  |
+| `getPurchaseOrder`     | `purchaseOrderId`               | `PurchaseOrder with vendor, linked bills`            | Full PO with related data                          |
+| `createPurchaseOrder`  | `siteId, input`                 | `PurchaseOrder`                                      | Create PO with line items, auto-generate PO number |
+| `updatePurchaseOrder`  | `purchaseOrderId, input`        | `PurchaseOrder`                                      | Update PO (only if draft)                          |
+| `deletePurchaseOrder`  | `purchaseOrderId`               | `void`                                               | Delete PO (only if draft)                          |
+| `sendPurchaseOrder`    | `purchaseOrderId`               | `void`                                               | Send PO to vendor via email, status → 'sent'       |
+| `approvePurchaseOrder` | `purchaseOrderId`               | `void`                                               | Mark PO as acknowledged                            |
+| `convertToBill`        | `purchaseOrderId`               | `Bill`                                               | Convert received PO to bill (copy line items)      |
+| `markAsReceived`       | `purchaseOrderId`               | `void`                                               | Mark goods/services received                       |
+| `cancelPurchaseOrder`  | `purchaseOrderId`               | `void`                                               | Cancel PO                                          |
 
 Use `generateNextDocumentNumber(siteId, "po")` from `invoice-number-service.ts`.
 
 **PO Line Items Approach**: Since the DB has no separate PO line items table, store line items in `metadata.lineItems` as a JSON array. Define a `PurchaseOrderLineItem` interface:
+
 ```typescript
 export interface PurchaseOrderLineItem {
   name: string;
@@ -152,8 +158,8 @@ export interface PurchaseOrderLineItem {
   taxRateId?: string | null;
   taxRate?: number;
   taxAmount?: number; // CENTS
-  subtotal: number;   // CENTS
-  total: number;       // CENTS
+  subtotal: number; // CENTS
+  total: number; // CENTS
 }
 ```
 
@@ -161,33 +167,35 @@ export interface PurchaseOrderLineItem {
 
 **New file**: `src/modules/invoicing/actions/bill-actions.ts`
 
-| Function | Parameters | Returns | Description |
-|----------|-----------|---------|-------------|
-| `getBills` | `siteId, filters?, pagination?` | `{ bills: Bill[], total: number }` | Paginated bill list |
-| `getBill` | `billId` | `Bill with line items, vendor, payments, activities` | Full bill detail |
-| `createBill` | `siteId, input: CreateBillInput` | `Bill` | Create bill with line items, auto-generate bill number |
-| `updateBill` | `billId, input` | `Bill` | Update bill (cannot update if paid) |
-| `deleteBill` | `billId` | `void` | Delete bill (only if draft, no payments) |
-| `recordBillPayment` | `billId, input` | `void` | Record payment against bill (partial or full) |
-| `voidBill` | `billId, reason` | `void` | Void bill — reverse any payments |
-| `approveBill` | `billId` | `void` | Approve bill for payment |
-| `getBillStats` | `siteId, dateRange?` | `BillStats` | Summary: total billed, paid, outstanding, overdue |
+| Function            | Parameters                       | Returns                                              | Description                                            |
+| ------------------- | -------------------------------- | ---------------------------------------------------- | ------------------------------------------------------ |
+| `getBills`          | `siteId, filters?, pagination?`  | `{ bills: Bill[], total: number }`                   | Paginated bill list                                    |
+| `getBill`           | `billId`                         | `Bill with line items, vendor, payments, activities` | Full bill detail                                       |
+| `createBill`        | `siteId, input: CreateBillInput` | `Bill`                                               | Create bill with line items, auto-generate bill number |
+| `updateBill`        | `billId, input`                  | `Bill`                                               | Update bill (cannot update if paid)                    |
+| `deleteBill`        | `billId`                         | `void`                                               | Delete bill (only if draft, no payments)               |
+| `recordBillPayment` | `billId, input`                  | `void`                                               | Record payment against bill (partial or full)          |
+| `voidBill`          | `billId, reason`                 | `void`                                               | Void bill — reverse any payments                       |
+| `approveBill`       | `billId`                         | `void`                                               | Approve bill for payment                               |
+| `getBillStats`      | `siteId, dateRange?`             | `BillStats`                                          | Summary: total billed, paid, outstanding, overdue      |
 
 Use `generateNextDocumentNumber(siteId, "bill")` from `invoice-number-service.ts`.
 
 **Add `BillStats` type** to `vendor-types.ts`:
+
 ```typescript
 export interface BillStats {
-  totalBilled: number;      // CENTS
-  totalPaid: number;        // CENTS
+  totalBilled: number; // CENTS
+  totalPaid: number; // CENTS
   totalOutstanding: number; // CENTS
-  totalOverdue: number;     // CENTS
+  totalOverdue: number; // CENTS
   billCount: number;
   overdueCount: number;
 }
 ```
 
 **Bill Payment Logic** (mirrors invoice payment from INV-03):
+
 ```
 1. Validate: amount > 0, bill exists, bill not void
 2. Create payment record (or activity entry tracking bill payment)
@@ -205,51 +213,52 @@ export interface BillStats {
 
 **Directory**: `src/modules/invoicing/components/vendors/`
 
-| Component | File | Description |
-|-----------|------|-------------|
-| `VendorList` | `vendor-list.tsx` | Paginated table — name, email, total billed, outstanding, status badge. Search + active/inactive filter |
-| `VendorForm` | `vendor-form.tsx` | Create/edit form — name, email, phone, address fields, tax ID, payment terms, bank details (name, account, branch), mobile money number, notes, tags. Use React Hook Form + Zod |
-| `VendorDetail` | `vendor-detail.tsx` | Vendor profile — info card at top, then Tabs: Bills, Purchase Orders, Expenses, Activity |
+| Component      | File                | Description                                                                                                                                                                     |
+| -------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `VendorList`   | `vendor-list.tsx`   | Paginated table — name, email, total billed, outstanding, status badge. Search + active/inactive filter                                                                         |
+| `VendorForm`   | `vendor-form.tsx`   | Create/edit form — name, email, phone, address fields, tax ID, payment terms, bank details (name, account, branch), mobile money number, notes, tags. Use React Hook Form + Zod |
+| `VendorDetail` | `vendor-detail.tsx` | Vendor profile — info card at top, then Tabs: Bills, Purchase Orders, Expenses, Activity                                                                                        |
 
 ### 5. Components — Purchase Orders (4 files)
 
 **Directory**: `src/modules/invoicing/components/purchase-orders/`
 
-| Component | File | Description |
-|-----------|------|-------------|
-| `PurchaseOrderList` | `purchase-order-list.tsx` | Paginated table — PO#, vendor name, total, status badge, date. Filters: vendor, status, date range |
-| `PurchaseOrderForm` | `purchase-order-form.tsx` | Create/edit PO — vendor select, line items editor (name, qty, unit price, tax), expected delivery date, shipping address, notes. Follow invoice form pattern for line items |
-| `PurchaseOrderDetail` | `purchase-order-detail.tsx` | Full PO view — line items table, totals, status timeline, actions toolbar (Send, Approve, Mark Received, Convert to Bill, Cancel) |
-| `PurchaseOrderPdf` | `purchase-order-pdf.tsx` | Print-friendly PO view. Follow `invoice-pdf-template.tsx` pattern exactly: company letterhead, vendor details, PO number, date, expected delivery, line items table, totals, notes. Use `@media print` styling |
+| Component             | File                        | Description                                                                                                                                                                                                    |
+| --------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PurchaseOrderList`   | `purchase-order-list.tsx`   | Paginated table — PO#, vendor name, total, status badge, date. Filters: vendor, status, date range                                                                                                             |
+| `PurchaseOrderForm`   | `purchase-order-form.tsx`   | Create/edit PO — vendor select, line items editor (name, qty, unit price, tax), expected delivery date, shipping address, notes. Follow invoice form pattern for line items                                    |
+| `PurchaseOrderDetail` | `purchase-order-detail.tsx` | Full PO view — line items table, totals, status timeline, actions toolbar (Send, Approve, Mark Received, Convert to Bill, Cancel)                                                                              |
+| `PurchaseOrderPdf`    | `purchase-order-pdf.tsx`    | Print-friendly PO view. Follow `invoice-pdf-template.tsx` pattern exactly: company letterhead, vendor details, PO number, date, expected delivery, line items table, totals, notes. Use `@media print` styling |
 
 ### 6. Components — Bills (4 files)
 
 **Directory**: `src/modules/invoicing/components/bills/`
 
-| Component | File | Description |
-|-----------|------|-------------|
-| `BillList` | `bill-list.tsx` | Paginated table — bill#, vendor name, total, due date, status badge, amount_due. Filters: vendor, status, date range |
-| `BillForm` | `bill-form.tsx` | Create/edit bill — vendor select, vendor bill reference, line items (with expense category per line), due date, attachment upload, linked PO select, notes. Follow invoice form pattern |
-| `BillDetail` | `bill-detail.tsx` | Full bill view — line items, totals, payment history, linked PO, attachment preview, activity log, actions (Approve, Record Payment, Void) |
-| `BillPaymentDialog` | `bill-payment-dialog.tsx` | Record payment dialog — amount (prefill with amount_due), date, payment method, reference, notes. Mirror the existing `payment-form.tsx` pattern |
+| Component           | File                      | Description                                                                                                                                                                             |
+| ------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BillList`          | `bill-list.tsx`           | Paginated table — bill#, vendor name, total, due date, status badge, amount_due. Filters: vendor, status, date range                                                                    |
+| `BillForm`          | `bill-form.tsx`           | Create/edit bill — vendor select, vendor bill reference, line items (with expense category per line), due date, attachment upload, linked PO select, notes. Follow invoice form pattern |
+| `BillDetail`        | `bill-detail.tsx`         | Full bill view — line items, totals, payment history, linked PO, attachment preview, activity log, actions (Approve, Record Payment, Void)                                              |
+| `BillPaymentDialog` | `bill-payment-dialog.tsx` | Record payment dialog — amount (prefill with amount_due), date, payment method, reference, notes. Mirror the existing `payment-form.tsx` pattern                                        |
 
 ### 7. Pages (9 pages)
 
 **All under** `src/app/(dashboard)/dashboard/sites/[siteId]/invoicing/`
 
-| Route | Page File | Component |
-|-------|-----------|-----------|
-| `/invoicing/vendors/` | `vendors/page.tsx` | `<VendorList>` |
-| `/invoicing/vendors/new/` | `vendors/new/page.tsx` | `<VendorForm mode="create">` |
-| `/invoicing/vendors/[vendorId]/` | `vendors/[vendorId]/page.tsx` | `<VendorDetail>` |
-| `/invoicing/bills/` | `bills/page.tsx` | `<BillList>` |
-| `/invoicing/bills/new/` | `bills/new/page.tsx` | `<BillForm mode="create">` |
-| `/invoicing/bills/[billId]/` | `bills/[billId]/page.tsx` | `<BillDetail>` |
-| `/invoicing/purchase-orders/` | `purchase-orders/page.tsx` | `<PurchaseOrderList>` |
-| `/invoicing/purchase-orders/new/` | `purchase-orders/new/page.tsx` | `<PurchaseOrderForm mode="create">` |
-| `/invoicing/purchase-orders/[poId]/` | `purchase-orders/[poId]/page.tsx` | `<PurchaseOrderDetail>` |
+| Route                                | Page File                         | Component                           |
+| ------------------------------------ | --------------------------------- | ----------------------------------- |
+| `/invoicing/vendors/`                | `vendors/page.tsx`                | `<VendorList>`                      |
+| `/invoicing/vendors/new/`            | `vendors/new/page.tsx`            | `<VendorForm mode="create">`        |
+| `/invoicing/vendors/[vendorId]/`     | `vendors/[vendorId]/page.tsx`     | `<VendorDetail>`                    |
+| `/invoicing/bills/`                  | `bills/page.tsx`                  | `<BillList>`                        |
+| `/invoicing/bills/new/`              | `bills/new/page.tsx`              | `<BillForm mode="create">`          |
+| `/invoicing/bills/[billId]/`         | `bills/[billId]/page.tsx`         | `<BillDetail>`                      |
+| `/invoicing/purchase-orders/`        | `purchase-orders/page.tsx`        | `<PurchaseOrderList>`               |
+| `/invoicing/purchase-orders/new/`    | `purchase-orders/new/page.tsx`    | `<PurchaseOrderForm mode="create">` |
+| `/invoicing/purchase-orders/[poId]/` | `purchase-orders/[poId]/page.tsx` | `<PurchaseOrderDetail>`             |
 
 **Page pattern** — follow existing invoicing pages exactly:
+
 ```tsx
 // Example: vendors/page.tsx
 import { VendorList } from "@/modules/invoicing/components/vendors/vendor-list";
@@ -285,15 +294,16 @@ import { Building2, ClipboardList, FileStack } from "lucide-react";
 **File to modify**: `src/modules/invoicing/types/report-types.ts`
 
 Add AP (Accounts Payable) fields to `DashboardMetrics`:
+
 ```typescript
 export interface DashboardMetrics {
   // ... existing fields (keep all)
   // NEW — Accounts Payable
-  totalBillsOutstanding: number;  // CENTS
-  totalBillsOverdue: number;     // CENTS
+  totalBillsOutstanding: number; // CENTS
+  totalBillsOverdue: number; // CENTS
   totalBillsPaidThisPeriod: number; // CENTS
-  activePurchaseOrders: number;  // count
-  netCashPosition: number;       // receivables - payables, CENTS
+  activePurchaseOrders: number; // count
+  netCashPosition: number; // receivables - payables, CENTS
 }
 ```
 
@@ -307,21 +317,22 @@ Update `getDashboardMetrics()` to query bills table for AP metrics. Add bills da
 
 Add these event definitions to the `accounting` category (follow the exact same pattern as existing `accounting.invoice.*` events):
 
-| Event | When |
-|-------|------|
-| `accounting.bill.created` | Bill recorded |
-| `accounting.bill.approved` | Bill approved for payment |
-| `accounting.bill.paid` | Bill fully paid |
-| `accounting.bill.overdue` | Bill past due date |
-| `accounting.purchase_order.created` | PO created |
-| `accounting.purchase_order.sent` | PO sent to vendor |
-| `accounting.purchase_order.received` | Goods/services received |
+| Event                                | When                      |
+| ------------------------------------ | ------------------------- |
+| `accounting.bill.created`            | Bill recorded             |
+| `accounting.bill.approved`           | Bill approved for payment |
+| `accounting.bill.paid`               | Bill fully paid           |
+| `accounting.bill.overdue`            | Bill past due date        |
+| `accounting.purchase_order.created`  | PO created                |
+| `accounting.purchase_order.sent`     | PO sent to vendor         |
+| `accounting.purchase_order.received` | Goods/services received   |
 
 Add corresponding payload variables for each event (follow the same `variables` array pattern used by existing `accounting.invoice.*` events).
 
 ### 11. PO Email to Vendor
 
 When `sendPurchaseOrder` is called:
+
 1. Render branded HTML email with PO details (PO#, items, total, expected delivery)
 2. Send via Resend to vendor email
 3. Subject: `"Purchase Order {{po_number}} from {{company_name}}"`
@@ -340,10 +351,10 @@ Ensure `VendorStats`, `BillStats`, and `PurchaseOrderLineItem` are exported (the
 
 ## File Path Correction Table
 
-| Master Guide Says | Actual Path |
-|-------------------|-------------|
-| `navigation.ts` (for nav update) | `src/modules/invoicing/components/invoicing-nav.tsx` |
-| PO line items table | Does NOT exist — use `metadata.lineItems` JSON approach |
+| Master Guide Says                      | Actual Path                                                                    |
+| -------------------------------------- | ------------------------------------------------------------------------------ |
+| `navigation.ts` (for nav update)       | `src/modules/invoicing/components/invoicing-nav.tsx`                           |
+| PO line items table                    | Does NOT exist — use `metadata.lineItems` JSON approach                        |
 | PDF template at `components/invoices/` | `src/modules/invoicing/components/invoice-pdf-template.tsx` (flat, not nested) |
 
 ---
@@ -393,6 +404,7 @@ Ensure `VendorStats`, `BillStats`, and `PurchaseOrderLineItem` are exported (the
 ## TSC Verification
 
 After completing all work, run:
+
 ```bash
 npx tsc --noEmit 2>&1 | Select-String "error TS" | Measure-Object | Select-Object -ExpandProperty Count
 ```
@@ -400,6 +412,7 @@ npx tsc --noEmit 2>&1 | Select-String "error TS" | Measure-Object | Select-Objec
 **Expected**: ≤ 101 errors (current pre-existing baseline). **Zero** from invoicing module files.
 
 Also verify no invoicing-specific errors:
+
 ```bash
 npx tsc --noEmit 2>&1 | Select-String "invoicing|vendor|bill|purchase-order"
 ```
@@ -411,6 +424,7 @@ npx tsc --noEmit 2>&1 | Select-String "invoicing|vendor|bill|purchase-order"
 ## After Completion
 
 Update `/memory-bank/activeContext.md` and `/memory-bank/progress.md` to reflect:
+
 - INV-14 COMPLETE
 - **ALL 14 PHASES COMPLETE** — Invoicing & Financial Management module is DONE
 - Total files created across all sessions

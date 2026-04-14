@@ -19,7 +19,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Plus, ChevronLeft, ChevronRight, Search, Building2 } from "lucide-react";
+import {
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  Building2,
+} from "lucide-react";
 
 interface VendorListProps {
   siteId: string;
@@ -159,7 +165,9 @@ export function VendorList({ siteId }: VendorListProps) {
                   </TableCell>
                   <TableCell className="text-right font-medium">
                     <AmountDisplay
-                      amount={(vendor.totalBilled || 0) - (vendor.totalPaid || 0)}
+                      amount={
+                        (vendor.totalBilled || 0) - (vendor.totalPaid || 0)
+                      }
                       currency={vendor.currency || "ZMW"}
                     />
                   </TableCell>

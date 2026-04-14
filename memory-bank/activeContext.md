@@ -17,14 +17,17 @@ The DRAMAC CMS platform is **production-ready**. All core waves (1-5) are comple
 #### Deliverables (~22 files: 17 new + 5 modified)
 
 **Types (extended):**
+
 - **`vendor-types.ts`** (MODIFIED) — Extended BillStats (draftCount, approvedCount, partialCount, paidCount, totalCount), VendorStats (activePurchaseOrders), CreateBillLineItemInput (taxRate?)
 
 **Server Actions (3 new):**
+
 - **`vendor-actions.ts`** (NEW ~400 lines) — getVendors, getVendor, createVendor, updateVendor, deleteVendor, getVendorStats
 - **`purchase-order-actions.ts`** (NEW ~450 lines) — getPurchaseOrders, getPurchaseOrder, createPurchaseOrder, updatePurchaseOrder, deletePurchaseOrder, sendPurchaseOrder (Resend email), approvePurchaseOrder, receivePurchaseOrder, cancelPurchaseOrder
 - **`bill-actions.ts`** (NEW ~700 lines) — getBills, getBill, createBill, updateBill, deleteBill, approveBill, recordBillPayment, getBillPayments, voidBill, getBillStats, getOverdueBills
 
 **Components (10 new):**
+
 - **`vendor-list.tsx`** — Paginated vendor table with stats, search
 - **`vendor-form.tsx`** — Create/edit form with vendorId? prop pattern (loads data internally via useEffect)
 - **`vendor-detail.tsx`** — Full detail with bills, POs, expenses tabs
@@ -38,11 +41,13 @@ The DRAMAC CMS platform is **production-ready**. All core waves (1-5) are comple
 - **`bill-payment-dialog.tsx`** — Payment recording dialog (amount, method, reference)
 
 **Pages (12 new):**
+
 - Vendors: list, new, [vendorId] detail, [vendorId]/edit
 - Purchase Orders: list, new, [purchaseOrderId] detail, [purchaseOrderId]/edit
 - Bills: list, new, [billId] detail, [billId]/edit
 
 **Modified:**
+
 - **`invoicing-nav.tsx`** — Added Vendors, Purchase Orders, Bills nav items
 - **`report-types.ts`** — Added AP report types
 - **`report-actions.ts`** — Added AP metrics to financial dashboard
@@ -52,22 +57,22 @@ The DRAMAC CMS platform is **production-ready**. All core waves (1-5) are comple
 
 ### Invoicing Module Summary — ALL 14 PHASES COMPLETE
 
-| Phase | Description | Session | Status |
-|-------|-------------|---------|--------|
-| INV-01 | Database Foundation (18 tables) | 1 | ✅ |
-| INV-02 | Invoice CRUD, PDF, Settings | 2 | ✅ |
-| INV-03 | Payments, Partial Payments, Refunds | 3 | ✅ |
-| INV-04 | Recurring Invoices & Subscription Billing | 3 | ✅ |
-| INV-05 | Credit Notes & Adjustments | 4 | ✅ |
-| INV-06 | Expense Tracking & Receipt Upload | 4 | ✅ |
-| INV-07 | Financial Dashboard, Reports & P&L | 5 | ✅ |
-| INV-08 | Tax Management & Multi-Currency | 6 | ✅ |
-| INV-09 | Client Portal Invoicing | 6 | ✅ |
-| INV-10 | Email Notifications & Overdue Management | 7 | ✅ |
-| INV-11 | AI Financial Intelligence | 7 | ✅ |
-| INV-12 | Super Admin Controls | 8 | ✅ |
-| INV-13 | Cross-Module Deep Integration | 8 | ✅ |
-| INV-14 | Vendor Management, POs & Bills | 9 | ✅ |
+| Phase  | Description                               | Session | Status |
+| ------ | ----------------------------------------- | ------- | ------ |
+| INV-01 | Database Foundation (18 tables)           | 1       | ✅     |
+| INV-02 | Invoice CRUD, PDF, Settings               | 2       | ✅     |
+| INV-03 | Payments, Partial Payments, Refunds       | 3       | ✅     |
+| INV-04 | Recurring Invoices & Subscription Billing | 3       | ✅     |
+| INV-05 | Credit Notes & Adjustments                | 4       | ✅     |
+| INV-06 | Expense Tracking & Receipt Upload         | 4       | ✅     |
+| INV-07 | Financial Dashboard, Reports & P&L        | 5       | ✅     |
+| INV-08 | Tax Management & Multi-Currency           | 6       | ✅     |
+| INV-09 | Client Portal Invoicing                   | 6       | ✅     |
+| INV-10 | Email Notifications & Overdue Management  | 7       | ✅     |
+| INV-11 | AI Financial Intelligence                 | 7       | ✅     |
+| INV-12 | Super Admin Controls                      | 8       | ✅     |
+| INV-13 | Cross-Module Deep Integration             | 8       | ✅     |
+| INV-14 | Vendor Management, POs & Bills            | 9       | ✅     |
 
 **Total: ~180+ files, 18 DB tables, 120+ server actions, 100+ components, 50+ pages.**
 
@@ -94,28 +99,35 @@ The DRAMAC CMS platform is **production-ready**. All core waves (1-5) are comple
 #### Deliverables (12 files: 8 new + 4 modified)
 
 **CRM Integration:**
+
 - **`crm-integration-actions.ts`** (NEW ~280 lines) — getContactFinancialProfile(), createInvoiceFromContact(), createInvoiceFromDeal()
 - **`contact-finance-tab.tsx`** (NEW) — Summary cards, risk rating, recent invoices/payments, Create Invoice button
 - **`contact-detail-sheet.tsx`** (MODIFIED) — Added Finance tab with ContactFinanceTab component
 - **`deal-detail-sheet.tsx`** (MODIFIED) — Added "Create Invoice" button for won deals
 
 **E-Commerce Integration:**
+
 - **`ecommerce-integration-actions.ts`** (NEW) — createInvoiceFromOrder(), createCreditNoteFromRefund()
 
 **Booking Integration:**
+
 - **`booking-integration-actions.ts`** (NEW) — createInvoiceFromBooking(), linkBookingDepositPayment()
 
 **Automation Deep Integration:**
+
 - **`event-types.ts`** (MODIFIED) — Added 15 accounting EventDefinitions + 15 payload variable entries
 - **`action-types.ts`** (MODIFIED) — Added invoicing category (5 actions: send_invoice, send_reminder, apply_late_fee, mark_as_written_off, create_from_template) + ACTION_CATEGORIES entry
 
 **Marketing Audience Filters:**
+
 - **`audience-filters.ts`** (NEW) — 9 financial audience filters (total_invoiced, total_paid, outstanding_balance, etc.) + helper functions
 
 **Integration Settings:**
+
 - **`integration-settings.tsx`** (NEW) — IntegrationSettings component with CRM/E-Commerce/Booking toggles
 
 **Email Templates:**
+
 - **`branded-templates.ts`** (MODIFIED) — Added 7 new email templates: 3 support ticket (created/replied/closed) + 4 invoicing (sent/payment_received/overdue_reminder/late_fee_applied)
 
 **TSC: 101 errors (improved from 102 baseline after fixing 1 invoicing error in crm-integration-actions.ts) — zero new errors from INV-12 or INV-13.**

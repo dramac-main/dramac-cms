@@ -152,9 +152,7 @@ export async function getPurchaseOrder(
     .single();
 
   if (error || !data) {
-    throw new Error(
-      `Purchase order not found: ${error?.message || "No data"}`,
-    );
+    throw new Error(`Purchase order not found: ${error?.message || "No data"}`);
   }
 
   const po = mapRecord<PurchaseOrder>(data);
@@ -386,9 +384,8 @@ export async function sendPurchaseOrder(
   // Send email to vendor if email exists
   if (po.vendor?.email) {
     try {
-      const { getResend, isEmailEnabled, getEmailFrom } = await import(
-        "@/lib/email/resend-client"
-      );
+      const { getResend, isEmailEnabled, getEmailFrom } =
+        await import("@/lib/email/resend-client");
       if (isEmailEnabled()) {
         const resend = getResend();
         if (!resend) return;
@@ -521,9 +518,7 @@ export async function approvePurchaseOrder(
 
 // ─── markAsReceived ────────────────────────────────────────────
 
-export async function markAsReceived(
-  purchaseOrderId: string,
-): Promise<void> {
+export async function markAsReceived(purchaseOrderId: string): Promise<void> {
   const supabase = await getModuleClient();
 
   const { data: po } = await supabase
@@ -575,9 +570,7 @@ export async function markAsReceived(
 
 // ─── convertToBill ─────────────────────────────────────────────
 
-export async function convertToBill(
-  purchaseOrderId: string,
-): Promise<Bill> {
+export async function convertToBill(purchaseOrderId: string): Promise<Bill> {
   const supabase = await getModuleClient();
 
   const { data: po } = await supabase
@@ -604,14 +597,12 @@ export async function convertToBill(
   }
 
   // Generate bill number
-  const { generateNextDocumentNumber: genBillNum } = await import(
-    "../services/invoice-number-service"
-  );
+  const { generateNextDocumentNumber: genBillNum } =
+    await import("../services/invoice-number-service");
   const billNumber = await genBillNum(po.site_id, "bill");
 
   // Copy PO line items to bill line items
-  const poLineItems: PurchaseOrderLineItem[] =
-    po.metadata?.lineItems || [];
+  const poLineItems: PurchaseOrderLineItem[] = po.metadata?.lineItems || [];
 
   // Create the bill
   const dueDate = new Date();

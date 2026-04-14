@@ -3,9 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { INV_TABLES } from "../lib/invoicing-constants";
 import { calculateNextDate } from "../lib/invoicing-utils";
-import {
-  _generateInvoiceFromTemplate,
-} from "../actions/recurring-actions";
+import { _generateInvoiceFromTemplate } from "../actions/recurring-actions";
 import { emitAutomationEvent } from "@/modules/automation/lib/automation-engine";
 
 // ═══════════════════════════════════════════════════════════════

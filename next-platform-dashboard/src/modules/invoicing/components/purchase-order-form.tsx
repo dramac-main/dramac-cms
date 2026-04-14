@@ -57,7 +57,9 @@ export function PurchaseOrderForm({
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [loading, setLoading] = useState(!!purchaseOrderId);
-  const [purchaseOrder, setPurchaseOrder] = useState<PurchaseOrder | null>(null);
+  const [purchaseOrder, setPurchaseOrder] = useState<PurchaseOrder | null>(
+    null,
+  );
 
   // Vendor picker
   const [vendors, setVendors] = useState<Vendor[]>([]);
@@ -84,7 +86,9 @@ export function PurchaseOrderForm({
         setShippingAddress(po.shippingAddress || "");
         setNotes(po.notes || "");
         setInternalNotes(po.internalNotes || "");
-        const existing = (po.metadata as any)?.lineItems as PurchaseOrderLineItem[] | undefined;
+        const existing = (po.metadata as any)?.lineItems as
+          | PurchaseOrderLineItem[]
+          | undefined;
         if (existing && existing.length > 0) setLineItems(existing);
       })
       .catch(() => {})
@@ -104,7 +108,9 @@ export function PurchaseOrderForm({
   const [internalNotes, setInternalNotes] = useState("");
 
   // Line items
-  const [lineItems, setLineItems] = useState<PurchaseOrderLineItem[]>([emptyLineItem()]);
+  const [lineItems, setLineItems] = useState<PurchaseOrderLineItem[]>([
+    emptyLineItem(),
+  ]);
 
   const updateLineItem = (
     index: number,
@@ -116,15 +122,14 @@ export function PurchaseOrderForm({
       const item = { ...updated[index], [field]: value };
       // Recalculate
       item.subtotal = item.quantity * item.unitPrice;
-      item.taxAmount = Math.round(item.subtotal * (item.taxRate || 0) / 100);
+      item.taxAmount = Math.round((item.subtotal * (item.taxRate || 0)) / 100);
       item.total = item.subtotal + item.taxAmount;
       updated[index] = item;
       return updated;
     });
   };
 
-  const addLineItem = () =>
-    setLineItems((prev) => [...prev, emptyLineItem()]);
+  const addLineItem = () => setLineItems((prev) => [...prev, emptyLineItem()]);
 
   const removeLineItem = (index: number) =>
     setLineItems((prev) => prev.filter((_, i) => i !== index));
@@ -303,7 +308,9 @@ export function PurchaseOrderForm({
                 <div>
                   <Input
                     value={li.name}
-                    onChange={(e) => updateLineItem(idx, "name", e.target.value)}
+                    onChange={(e) =>
+                      updateLineItem(idx, "name", e.target.value)
+                    }
                     placeholder="Item name"
                     className="text-sm"
                   />
@@ -350,7 +357,10 @@ export function PurchaseOrderForm({
                   className="text-sm"
                 />
                 <div className="text-sm py-2 text-muted-foreground text-right">
-                  <AmountDisplay amount={li.taxAmount || 0} currency={currency} />
+                  <AmountDisplay
+                    amount={li.taxAmount || 0}
+                    currency={currency}
+                  />
                 </div>
                 <div className="text-sm py-2 font-medium text-right">
                   <AmountDisplay amount={li.total} currency={currency} />

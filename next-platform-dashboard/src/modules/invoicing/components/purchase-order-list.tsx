@@ -27,7 +27,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, ChevronLeft, ChevronRight, Search, ClipboardList } from "lucide-react";
+import {
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  ClipboardList,
+} from "lucide-react";
 
 interface PurchaseOrderListProps {
   siteId: string;
@@ -74,7 +80,9 @@ export function PurchaseOrderList({ siteId }: PurchaseOrderListProps) {
           </p>
         </div>
         <Button asChild>
-          <Link href={`/dashboard/sites/${siteId}/invoicing/purchase-orders/new`}>
+          <Link
+            href={`/dashboard/sites/${siteId}/invoicing/purchase-orders/new`}
+          >
             <Plus className="h-4 w-4 mr-1.5" />
             New Purchase Order
           </Link>
@@ -192,10 +200,7 @@ export function PurchaseOrderList({ siteId }: PurchaseOrderListProps) {
                       {po.expectedDate || "—"}
                     </TableCell>
                     <TableCell className="text-right font-medium">
-                      <AmountDisplay
-                        amount={po.total}
-                        currency={po.currency}
-                      />
+                      <AmountDisplay amount={po.total} currency={po.currency} />
                     </TableCell>
                   </TableRow>
                 );

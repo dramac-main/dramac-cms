@@ -1655,7 +1655,8 @@ export function getAllEventDefinitions(): EventDefinition[] {
       entity: "invoice",
       action: "partial_payment",
       name: "Invoice Partial Payment",
-      description: "Triggered when a partial payment is received for an invoice",
+      description:
+        "Triggered when a partial payment is received for an invoice",
     },
     {
       id: EVENT_REGISTRY.accounting.invoice.overdue,
@@ -1663,7 +1664,8 @@ export function getAllEventDefinitions(): EventDefinition[] {
       entity: "invoice",
       action: "overdue",
       name: "Invoice Overdue",
-      description: "Triggered when an invoice passes its due date without full payment",
+      description:
+        "Triggered when an invoice passes its due date without full payment",
     },
     {
       id: EVENT_REGISTRY.accounting.invoice.cancelled,
@@ -1790,7 +1792,8 @@ export function getAllEventDefinitions(): EventDefinition[] {
       entity: "purchase_order",
       action: "received",
       name: "Purchase Order Received",
-      description: "Triggered when goods from a purchase order are marked as received",
+      description:
+        "Triggered when goods from a purchase order are marked as received",
     },
     {
       id: EVENT_REGISTRY.accounts_payable.purchase_order.cancelled,
@@ -2141,7 +2144,11 @@ const EVENT_PAYLOAD_VARIABLES: Record<string, EventVariable[]> = {
   "accounting.payment.refunded": [
     { key: "invoiceNumber", label: "Invoice Number", type: "string" },
     { key: "clientName", label: "Client Name", type: "string" },
-    { key: "refundAmountCents", label: "Refund Amount (cents)", type: "number" },
+    {
+      key: "refundAmountCents",
+      label: "Refund Amount (cents)",
+      type: "number",
+    },
     { key: "currency", label: "Currency", type: "string" },
     { key: "reason", label: "Reason", type: "string" },
   ],
