@@ -105,7 +105,7 @@ export default async function ModulePricingPage() {
             <p className="text-sm text-muted-foreground mb-4">
               Subscribe to client-level or site-level modules to configure pricing
             </p>
-            <Link href="/marketplace/v2" className="text-primary hover:underline">
+            <Link href="/marketplace" className="text-primary hover:underline">
               Browse Marketplace
             </Link>
           </CardContent>

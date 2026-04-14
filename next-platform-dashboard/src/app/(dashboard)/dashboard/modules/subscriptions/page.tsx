@@ -90,7 +90,7 @@ export default async function AgencyModulesPage() {
             </Link>
           </Button>
           <Button asChild>
-            <Link href="/marketplace/v2">
+            <Link href="/marketplace">
               <Plus className="h-4 w-4 mr-2" />
               Browse Marketplace
             </Link>
@@ -158,7 +158,7 @@ export default async function AgencyModulesPage() {
               Browse the marketplace to find modules for your agency and clients
             </p>
             <Button asChild>
-              <Link href="/marketplace/v2">Browse Marketplace</Link>
+              <Link href="/marketplace">Browse Marketplace</Link>
             </Button>
           </CardContent>
         </Card>

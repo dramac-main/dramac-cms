@@ -8,7 +8,76 @@ import {
 
 const DEBUG = process.env.NODE_ENV !== "production";
 
+/**
+ * Apply response headers that were previously in next.config.ts headers().
+ * Moved here to reduce Vercel route count (headers in config each consume a route entry).
+ */
+function applyResponseHeaders(response: NextResponse, pathname: string): NextResponse {
+  // Skip redirect responses — browser follows redirect, destination page gets its own headers
+  if (response.status >= 300 && response.status < 400) {
+    return response;
+  }
+
+  const isEmbed = pathname.startsWith("/embed/") || pathname === "/embed";
+  const isEmbedJs = isEmbed && pathname.endsWith(".js");
+  const isCheckout = /^\/(pricing|dashboard\/billing|settings\/billing)/.test(pathname);
+
+  // Pattern 1: Cache embed JS scripts at CDN edge
+  if (isEmbedJs) {
+    response.headers.set("Cache-Control", "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400");
+    response.headers.set("Access-Control-Allow-Origin", "*");
+    response.headers.set("Content-Type", "application/javascript; charset=utf-8");
+  }
+
+  // Pattern 2: Security headers for non-embed, non-checkout routes
+  if (!isEmbed && !isCheckout) {
+    response.headers.set("X-Frame-Options", "DENY");
+    response.headers.set("X-Content-Type-Options", "nosniff");
+    response.headers.set("Referrer-Policy", "origin-when-cross-origin");
+    response.headers.set("Content-Security-Policy", "worker-src 'self' blob: https://cdn.jsdelivr.net;");
+  }
+
+  // Pattern 3: Paddle checkout requires permissive CSP for overlay checkout
+  if (isCheckout) {
+    response.headers.set("X-Content-Type-Options", "nosniff");
+    response.headers.set("Referrer-Policy", "origin-when-cross-origin");
+    response.headers.set("Content-Security-Policy", [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.paddle.com https://*.paddle.com blob:",
+      "style-src 'self' 'unsafe-inline' https://cdn.paddle.com https://*.paddle.com",
+      "img-src 'self' data: blob: https://*.paddle.com https://cdn.paddle.com https://*.supabase.co",
+      "font-src 'self' data: https://cdn.paddle.com https://*.paddle.com",
+      "frame-src 'self' https://*.paddle.com https://sandbox-buy.paddle.com https://buy.paddle.com",
+      "connect-src 'self' https://*.paddle.com https://sandbox-api.paddle.com https://api.paddle.com https://*.supabase.co wss://*.supabase.co",
+      "worker-src 'self' blob:",
+    ].join("; "));
+  }
+
+  // Pattern 4: CORS and permissive CSP for embed routes
+  if (isEmbed) {
+    response.headers.set("Access-Control-Allow-Origin", "*");
+    response.headers.set("Access-Control-Allow-Methods", "GET, OPTIONS");
+    response.headers.set("Access-Control-Allow-Headers", "Content-Type");
+    response.headers.set("Content-Security-Policy", [
+      "frame-ancestors *",
+      "default-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob:",
+      "img-src * data: blob:",
+      "font-src * data:",
+      "connect-src 'self' https: wss:",
+      "worker-src 'self' blob:",
+    ].join("; "));
+  }
+
+  return response;
+}
+
 export async function proxy(request: NextRequest) {
+  const response = await proxyCore(request);
+  return applyResponseHeaders(response, request.nextUrl.pathname);
+}
+
+async function proxyCore(request: NextRequest) {
   const hostname = request.headers.get("host") || "";
   const pathname = request.nextUrl.pathname;
 

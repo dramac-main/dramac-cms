@@ -83,7 +83,7 @@ export default async function ModuleRequestsPage() {
                 </Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link href="/marketplace/v2">
+                <Link href="/marketplace">
                   Browse Marketplace
                 </Link>
               </Button>

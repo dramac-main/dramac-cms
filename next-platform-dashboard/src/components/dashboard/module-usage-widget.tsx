@@ -110,7 +110,7 @@ const ModuleUsageWidget = React.forwardRef<HTMLDivElement, ModuleUsageWidgetProp
           <Package className="h-10 w-10 text-muted-foreground/50 mb-3" />
           <p className="text-sm text-muted-foreground">No modules installed yet</p>
           <Link 
-            href="/marketplace/v2" 
+            href="/marketplace" 
             className="text-sm text-primary hover:underline mt-1"
           >
             Browse Marketplace

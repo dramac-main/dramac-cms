@@ -133,7 +133,7 @@ export default async function ClientModulesPage({ params }: PageProps) {
             </div>
           </div>
           <Button variant="outline" asChild>
-            <Link href="/marketplace/v2">
+            <Link href="/marketplace">
               Browse Marketplace
             </Link>
           </Button>
@@ -209,7 +209,7 @@ export default async function ClientModulesPage({ params }: PageProps) {
                   Subscribe to client-level modules in the marketplace to make them available here
                 </p>
                 <Button asChild>
-                  <Link href="/marketplace/v2">Browse Marketplace</Link>
+                  <Link href="/marketplace">Browse Marketplace</Link>
                 </Button>
               </CardContent>
             </Card>

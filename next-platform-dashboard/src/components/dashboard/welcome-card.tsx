@@ -38,7 +38,7 @@ const quickTips = [
   {
     icon: Clock,
     text: "Schedule social media posts to keep your clients engaged",
-    link: "/marketplace/v2",
+    link: "/marketplace",
   },
 ];
 
