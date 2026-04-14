@@ -2,7 +2,13 @@ import { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Coins, Info, ArrowLeft } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Link from "next/link";
 import { MarkupPricingList } from "@/components/modules/agency/markup-pricing-list";
@@ -17,7 +23,9 @@ export default async function ModulePricingPage() {
   const supabase = await createClient();
 
   // Get current user's agency
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase
@@ -60,7 +68,7 @@ export default async function ModulePricingPage() {
         .single();
 
       return { ...sub, module: sourceModule };
-    })
+    }),
   );
 
   // Filter to ONLY client/site level modules (these are resellable to clients)
@@ -75,8 +83,8 @@ export default async function ModulePricingPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <Link 
-          href="/dashboard/modules/subscriptions" 
+        <Link
+          href="/dashboard/modules/subscriptions"
           className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-4"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -92,8 +100,9 @@ export default async function ModulePricingPage() {
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          <strong>How markup works:</strong> You pay the wholesale price, add your markup, 
-          and clients pay your retail price. You keep 100% of the markup as profit!
+          <strong>How markup works:</strong> You pay the wholesale price, add
+          your markup, and clients pay your retail price. You keep 100% of the
+          markup as profit!
         </AlertDescription>
       </Alert>
 
@@ -103,7 +112,8 @@ export default async function ModulePricingPage() {
             <Coins className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="font-medium mb-1">No resellable modules</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Subscribe to client-level or site-level modules to configure pricing
+              Subscribe to client-level or site-level modules to configure
+              pricing
             </p>
             <Link href="/marketplace" className="text-primary hover:underline">
               Browse Marketplace

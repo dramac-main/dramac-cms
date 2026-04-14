@@ -4,7 +4,18 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Sparkles, ArrowUpRight, Lightbulb, TrendingUp, Clock, Sunrise, Sun, Sunset, Moon, type LucideIcon } from "lucide-react";
+import {
+  Sparkles,
+  ArrowUpRight,
+  Lightbulb,
+  TrendingUp,
+  Clock,
+  Sunrise,
+  Sun,
+  Sunset,
+  Moon,
+  type LucideIcon,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -20,7 +31,8 @@ const planColors: Record<string, string> = {
   free: "bg-muted text-muted-foreground",
   starter: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
   pro: "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400",
-  enterprise: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  enterprise:
+    "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
 };
 
 // Tips to show randomly
@@ -54,9 +66,9 @@ function getGreeting(): { greeting: string; Icon: LucideIcon } {
   return { greeting: "Good night", Icon: Moon };
 }
 
-export function WelcomeCard({ 
-  userName, 
-  agencyName, 
+export function WelcomeCard({
+  userName,
+  agencyName,
   subscriptionPlan,
   showTips = true,
 }: WelcomeCardProps) {
@@ -66,7 +78,9 @@ export function WelcomeCard({
   const { greeting, Icon } = getGreeting();
 
   // Pick a random tip on mount using lazy initialization
-  const [randomTip] = useState(() => quickTips[Math.floor(Math.random() * quickTips.length)]);
+  const [randomTip] = useState(
+    () => quickTips[Math.floor(Math.random() * quickTips.length)],
+  );
 
   return (
     <motion.div
@@ -77,50 +91,58 @@ export function WelcomeCard({
       <Card className="relative overflow-hidden border-primary/10">
         {/* Animated gradient background */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
-        <div 
+        <div
           className="absolute inset-0 opacity-50"
           style={{
-            background: "radial-gradient(circle at 80% 20%, hsl(var(--primary) / 0.1) 0%, transparent 50%)",
+            background:
+              "radial-gradient(circle at 80% 20%, hsl(var(--primary) / 0.1) 0%, transparent 50%)",
           }}
         />
-        
+
         <CardContent className="relative pt-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="space-y-1">
-              <motion.h1 
+              <motion.h1
                 className="text-2xl font-bold tracking-tight"
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1, duration: 0.3 }}
               >
-                {greeting}, {displayName}! <Icon className="inline w-6 h-6 ml-1" strokeWidth={1.5} />
+                {greeting}, {displayName}!{" "}
+                <Icon className="inline w-6 h-6 ml-1" strokeWidth={1.5} />
               </motion.h1>
-              <motion.div 
+              <motion.div
                 className="flex flex-wrap items-center gap-2 text-muted-foreground"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2, duration: 0.3 }}
               >
                 {agencyName && (
-                  <span className="font-medium text-foreground">{agencyName}</span>
+                  <span className="font-medium text-foreground">
+                    {agencyName}
+                  </span>
                 )}
                 {subscriptionPlan && (
-                  <Badge variant="secondary" className={cn("capitalize", planColor)}>
+                  <Badge
+                    variant="secondary"
+                    className={cn("capitalize", planColor)}
+                  >
                     {subscriptionPlan} Plan
                   </Badge>
                 )}
               </motion.div>
-              <motion.p 
+              <motion.p
                 className="text-sm text-muted-foreground pt-1"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3, duration: 0.3 }}
               >
-                Here&apos;s an overview of your platform activity and quick actions.
+                Here&apos;s an overview of your platform activity and quick
+                actions.
               </motion.p>
             </div>
-            
-            <motion.div 
+
+            <motion.div
               className="flex gap-2"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -149,7 +171,7 @@ export function WelcomeCard({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.3 }}
             >
-              <Link 
+              <Link
                 href={randomTip.link}
                 className="group flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >

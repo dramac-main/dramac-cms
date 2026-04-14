@@ -18,7 +18,9 @@ export default async function AgencyModulesPage() {
   const supabase = await createClient();
 
   // Get current user's agency
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase
@@ -60,14 +62,18 @@ export default async function AgencyModulesPage() {
         .single();
 
       return { ...sub, module: sourceModule };
-    })
+    }),
   );
 
   // Calculate stats
-  const activeSubscriptions = enrichedSubscriptions.filter((s: any) => s.status === "active") || [];
-  const totalMonthlyCost = activeSubscriptions.reduce((sum: number, sub: any) => {
-    return sum + ((sub.module as any)?.wholesale_price_monthly || 0);
-  }, 0);
+  const activeSubscriptions =
+    enrichedSubscriptions.filter((s: any) => s.status === "active") || [];
+  const totalMonthlyCost = activeSubscriptions.reduce(
+    (sum: number, sub: any) => {
+      return sum + ((sub.module as any)?.wholesale_price_monthly || 0);
+    },
+    0,
+  );
 
   return (
     <div className="space-y-6">
@@ -109,11 +115,13 @@ export default async function AgencyModulesPage() {
           <CardContent>
             <div className="flex items-center gap-2">
               <Package className="h-5 w-5 text-primary" />
-              <span className="text-2xl font-bold">{activeSubscriptions.length}</span>
+              <span className="text-2xl font-bold">
+                {activeSubscriptions.length}
+              </span>
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -137,7 +145,7 @@ export default async function AgencyModulesPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Link 
+            <Link
               href="/dashboard/modules/pricing"
               className="flex items-center gap-2 text-green-700 dark:text-green-300 hover:underline"
             >
@@ -163,7 +171,9 @@ export default async function AgencyModulesPage() {
           </CardContent>
         </Card>
       ) : (
-        <SubscriptionList subscriptions={enrichedSubscriptions as any[] || []} />
+        <SubscriptionList
+          subscriptions={(enrichedSubscriptions as any[]) || []}
+        />
       )}
     </div>
   );

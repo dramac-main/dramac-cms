@@ -2,7 +2,13 @@ import { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Package, ArrowLeft, Users } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -14,10 +20,12 @@ interface PageProps {
   params: Promise<{ clientId: string }>;
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { clientId } = await params;
   const supabase = await createClient();
-  
+
   const { data: client } = await supabase
     .from("clients")
     .select("name")
@@ -35,7 +43,9 @@ export default async function ClientModulesPage({ params }: PageProps) {
   const supabase = await createClient();
 
   // Get current user's agency
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase
@@ -51,10 +61,12 @@ export default async function ClientModulesPage({ params }: PageProps) {
   // Get client details
   const { data: client, error: clientError } = await supabase
     .from("clients")
-    .select(`
+    .select(
+      `
       *,
       agency:agencies(id, name)
-    `)
+    `,
+    )
     .eq("id", clientId)
     .eq("agency_id", profile.agency_id)
     .single();
@@ -92,16 +104,22 @@ export default async function ClientModulesPage({ params }: PageProps) {
     moduleMap = new Map((modules || []).map((m: any) => [m.id, m]));
   }
 
-  const installedModulesList = ((rawInstalled as any[]) || []).map((i: any) => ({
-    ...i,
-    module: moduleMap.get(i.module_id) || null,
-  }));
-  const installedModuleIds = new Set(installedModulesList.map((m: any) => m.module_id));
+  const installedModulesList = ((rawInstalled as any[]) || []).map(
+    (i: any) => ({
+      ...i,
+      module: moduleMap.get(i.module_id) || null,
+    }),
+  );
+  const installedModuleIds = new Set(
+    installedModulesList.map((m: any) => m.module_id),
+  );
 
-  const agencySubscriptions = ((rawSubscriptions as any[]) || []).map((s: any) => ({
-    ...s,
-    module: moduleMap.get(s.module_id) || null,
-  }));
+  const agencySubscriptions = ((rawSubscriptions as any[]) || []).map(
+    (s: any) => ({
+      ...s,
+      module: moduleMap.get(s.module_id) || null,
+    }),
+  );
 
   // Filter to client-level modules that aren't already installed
   const availableSubscriptions = agencySubscriptions.filter((sub: any) => {
@@ -113,8 +131,8 @@ export default async function ClientModulesPage({ params }: PageProps) {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <Link 
-          href={`/dashboard/clients/${clientId}`} 
+        <Link
+          href={`/dashboard/clients/${clientId}`}
           className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-4"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -133,9 +151,7 @@ export default async function ClientModulesPage({ params }: PageProps) {
             </div>
           </div>
           <Button variant="outline" asChild>
-            <Link href="/marketplace">
-              Browse Marketplace
-            </Link>
+            <Link href="/marketplace">Browse Marketplace</Link>
           </Button>
         </div>
       </div>
@@ -151,11 +167,13 @@ export default async function ClientModulesPage({ params }: PageProps) {
           <CardContent>
             <div className="flex items-center gap-2">
               <Package className="h-5 w-5 text-primary" />
-              <span className="text-2xl font-bold">{installedModulesList.length}</span>
+              <span className="text-2xl font-bold">
+                {installedModulesList.length}
+              </span>
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -176,7 +194,9 @@ export default async function ClientModulesPage({ params }: PageProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <span className="text-2xl font-bold">{availableSubscriptions.length}</span>
+            <span className="text-2xl font-bold">
+              {availableSubscriptions.length}
+            </span>
           </CardContent>
         </Card>
       </div>
@@ -193,9 +213,9 @@ export default async function ClientModulesPage({ params }: PageProps) {
         </TabsList>
 
         <TabsContent value="installed" className="mt-4">
-          <ClientModulesList 
-            modules={installedModulesList} 
-            clientId={clientId} 
+          <ClientModulesList
+            modules={installedModulesList}
+            clientId={clientId}
           />
         </TabsContent>
 
@@ -206,7 +226,8 @@ export default async function ClientModulesPage({ params }: PageProps) {
                 <Package className="h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="font-medium mb-1">No modules available</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Subscribe to client-level modules in the marketplace to make them available here
+                  Subscribe to client-level modules in the marketplace to make
+                  them available here
                 </p>
                 <Button asChild>
                   <Link href="/marketplace">Browse Marketplace</Link>
@@ -214,7 +235,7 @@ export default async function ClientModulesPage({ params }: PageProps) {
               </CardContent>
             </Card>
           ) : (
-            <AvailableModulesGrid 
+            <AvailableModulesGrid
               subscriptions={availableSubscriptions}
               clientId={clientId}
               agencyId={profile.agency_id}

@@ -1,9 +1,25 @@
 import { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { MessageSquare, Plus, Clock, CircleCheck, CircleX, AlertCircle, Search, ThumbsUp, LucideIcon } from "lucide-react";
+import {
+  MessageSquare,
+  Plus,
+  Clock,
+  CircleCheck,
+  CircleX,
+  AlertCircle,
+  Search,
+  ThumbsUp,
+  LucideIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
@@ -14,11 +30,18 @@ export const metadata: Metadata = {
   description: "View your module requests",
 };
 
-const statusConfig: Record<string, { icon: LucideIcon; label: string; color: string }> = {
+const statusConfig: Record<
+  string,
+  { icon: LucideIcon; label: string; color: string }
+> = {
   submitted: { icon: Clock, label: "Submitted", color: "bg-gray-500" },
   reviewing: { icon: Search, label: "Under Review", color: "bg-blue-500" },
   approved: { icon: CircleCheck, label: "Approved", color: "bg-green-500" },
-  in_progress: { icon: AlertCircle, label: "In Development", color: "bg-yellow-500" },
+  in_progress: {
+    icon: AlertCircle,
+    label: "In Development",
+    color: "bg-yellow-500",
+  },
   completed: { icon: CircleCheck, label: "Completed", color: "bg-green-600" },
   rejected: { icon: CircleX, label: "Rejected", color: "bg-red-500" },
 };
@@ -27,7 +50,9 @@ export default async function ModuleRequestsPage() {
   const supabase = await createClient();
 
   // Get current user's agency
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase
@@ -73,7 +98,7 @@ export default async function ModuleRequestsPage() {
             <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="font-medium mb-1">No module requests yet</h3>
             <p className="text-sm text-muted-foreground mb-4 max-w-md">
-              Have an idea for a module that doesn't exist yet? Submit a request 
+              Have an idea for a module that doesn't exist yet? Submit a request
               and our team will review it.
             </p>
             <div className="flex gap-2">
@@ -83,9 +108,7 @@ export default async function ModuleRequestsPage() {
                 </Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link href="/marketplace">
-                  Browse Marketplace
-                </Link>
+                <Link href="/marketplace">Browse Marketplace</Link>
               </Button>
             </div>
           </CardContent>
@@ -93,7 +116,8 @@ export default async function ModuleRequestsPage() {
       ) : (
         <div className="space-y-4">
           {requestsList.map((request: any) => {
-            const status = statusConfig[request.status] || statusConfig.submitted;
+            const status =
+              statusConfig[request.status] || statusConfig.submitted;
             const StatusIcon = status.icon;
 
             return (
@@ -103,7 +127,10 @@ export default async function ModuleRequestsPage() {
                     <div>
                       <CardTitle className="text-lg">{request.title}</CardTitle>
                       <CardDescription>
-                        Submitted {formatDistanceToNow(new Date(request.submitted_at), { addSuffix: true })}
+                        Submitted{" "}
+                        {formatDistanceToNow(new Date(request.submitted_at), {
+                          addSuffix: true,
+                        })}
                       </CardDescription>
                     </div>
                     <Badge className={status.color}>
@@ -117,9 +144,15 @@ export default async function ModuleRequestsPage() {
                     {request.description}
                   </p>
                   <div className="flex items-center gap-4 text-sm">
-                    <Badge variant="outline">{request.suggested_install_level || "client"}</Badge>
-                    <Badge variant="outline">{request.suggested_category || "general"}</Badge>
-                    <Badge variant="outline" className="capitalize">{request.priority || "normal"} priority</Badge>
+                    <Badge variant="outline">
+                      {request.suggested_install_level || "client"}
+                    </Badge>
+                    <Badge variant="outline">
+                      {request.suggested_category || "general"}
+                    </Badge>
+                    <Badge variant="outline" className="capitalize">
+                      {request.priority || "normal"} priority
+                    </Badge>
                     {request.upvotes > 0 && (
                       <span className="flex items-center gap-1 text-muted-foreground">
                         <ThumbsUp className="h-3 w-3" />
@@ -129,7 +162,9 @@ export default async function ModuleRequestsPage() {
                   </div>
                   {request.admin_notes && (
                     <div className="mt-4 pt-4 border-t">
-                      <p className="text-xs text-muted-foreground mb-1">Admin Notes:</p>
+                      <p className="text-xs text-muted-foreground mb-1">
+                        Admin Notes:
+                      </p>
                       <p className="text-sm">{request.admin_notes}</p>
                     </div>
                   )}
