@@ -1,11 +1,11 @@
 /**
  * DRAMAC CMS - Paddle Billing Types
- * 
+ *
  * Phase EM-59: Paddle Billing Integration
- * 
+ *
  * Paddle is the primary billing provider for DRAMAC CMS.
  * Supports Zambia payouts via Payoneer/Wise.
- * 
+ *
  * @see phases/enterprise-modules/PHASE-EM-59A-PADDLE-BILLING.md
  */
 
@@ -13,32 +13,32 @@
 // Enums & Basic Types
 // ============================================================================
 
-export type PaddleSubscriptionStatus = 
-  | 'trialing'
-  | 'active'
-  | 'past_due'
-  | 'paused'
-  | 'canceled';
+export type PaddleSubscriptionStatus =
+  | "trialing"
+  | "active"
+  | "past_due"
+  | "paused"
+  | "canceled";
 
-export type BillingCycle = 'monthly' | 'yearly';
+export type BillingCycle = "monthly" | "yearly";
 
-export type PlanType = 'starter' | 'pro' | 'enterprise' | 'addon';
+export type PlanType = "starter" | "growth" | "agency";
 
-export type TransactionOrigin = 
-  | 'subscription_recurring'
-  | 'subscription_charge'
-  | 'subscription_payment_method_change'
-  | 'web'
-  | 'api';
+export type TransactionOrigin =
+  | "subscription_recurring"
+  | "subscription_charge"
+  | "subscription_payment_method_change"
+  | "web"
+  | "api";
 
-export type TransactionStatus = 
-  | 'draft'
-  | 'ready'
-  | 'billed'
-  | 'paid'
-  | 'completed'
-  | 'canceled'
-  | 'past_due';
+export type TransactionStatus =
+  | "draft"
+  | "ready"
+  | "billed"
+  | "paid"
+  | "completed"
+  | "canceled"
+  | "past_due";
 
 // ============================================================================
 // Core Entities
@@ -81,7 +81,14 @@ export interface PaddleSubscription {
   currency: string | null;
   included_automation_runs: number | null;
   included_ai_actions: number | null;
-  included_api_calls: number | null;
+  included_email_sends: number | null;
+  email_sends_current_period: number | null;
+  file_storage_used_bytes: number | null;
+  trial_ends_at: string | null;
+  trial_started_at: string | null;
+  is_trial: boolean | null;
+  subscription_plan_type: string | null;
+  billing_cycle_type: string | null;
   discount_id: string | null;
   discount_percentage: number | null;
   discount_ends_at: string | null;
@@ -143,11 +150,14 @@ export interface UsageDaily {
   automation_runs: number;
   ai_actions: number;
   api_calls: number;
-  usage_by_site: Record<string, {
-    automation_runs: number;
-    ai_actions: number;
-    api_calls: number;
-  }>;
+  usage_by_site: Record<
+    string,
+    {
+      automation_runs: number;
+      ai_actions: number;
+      api_calls: number;
+    }
+  >;
   created_at: string;
 }
 
@@ -199,7 +209,7 @@ export interface PaddleProduct {
   paddle_product_id: string | null;
   paddle_price_id: string | null;
   plan_type: PlanType;
-  billing_cycle: BillingCycle | 'one_time' | null;
+  billing_cycle: BillingCycle | "one_time" | null;
   price_cents: number;
   currency: string | null;
   included_automation_runs: number | null;
@@ -226,14 +236,16 @@ export interface PricingTier {
   yearlyPrice: number;
   features: string[];
   limits: {
-    modules: number;
     sites: number;
     teamMembers: number;
     automationRuns: number;
     aiActions: number;
-    apiCalls: number;
+    emailSends: number;
+    fileStorageMb: number;
   };
   popular?: boolean;
+  trialDays?: number;
+  whiteLabel?: boolean;
 }
 
 // ============================================================================
@@ -253,19 +265,19 @@ export interface PaddleWebhook {
   created_at: string;
 }
 
-export type PaddleWebhookEventType = 
-  | 'subscription.created'
-  | 'subscription.updated'
-  | 'subscription.canceled'
-  | 'subscription.paused'
-  | 'subscription.resumed'
-  | 'subscription.past_due'
-  | 'subscription.activated'
-  | 'transaction.billed'
-  | 'transaction.completed'
-  | 'transaction.payment_failed'
-  | 'customer.created'
-  | 'customer.updated';
+export type PaddleWebhookEventType =
+  | "subscription.created"
+  | "subscription.updated"
+  | "subscription.canceled"
+  | "subscription.paused"
+  | "subscription.resumed"
+  | "subscription.past_due"
+  | "subscription.activated"
+  | "transaction.billed"
+  | "transaction.completed"
+  | "transaction.payment_failed"
+  | "customer.created"
+  | "customer.updated";
 
 // ============================================================================
 // Composite Types for UI
@@ -331,8 +343,8 @@ export interface ReportUsageParams {
 export interface LegacyBillingSubscription {
   id: string;
   agency_id: string;
-  stripe_subscription_id?: string;        // Old Stripe field
-  lemonsqueezy_subscription_id?: string;  // Old LemonSqueezy field
+  stripe_subscription_id?: string; // Old Stripe field
+  lemonsqueezy_subscription_id?: string; // Old LemonSqueezy field
   status: string;
   billing_cycle: string;
   quantity: number;

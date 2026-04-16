@@ -27,6 +27,7 @@ const handlers: Record<string, () => Promise<RouteModule>> = {
   "subscription/resume": () => import("../subscription/resume/handler"),
   "subscription/update-payment": () =>
     import("../subscription/update-payment/handler"),
+  "trial-status": () => import("../../trial-status/handler"),
   usage: () => import("../usage/handler"),
   "verify-price": () => import("../verify-price/handler"),
 };

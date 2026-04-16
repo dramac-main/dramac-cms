@@ -1,32 +1,37 @@
 /**
  * Paddle Billing Client Setup
- * 
+ *
  * Phase EM-59: Paddle Billing Integration
- * 
+ *
  * Paddle is the primary billing provider for DRAMAC CMS.
  * Supports Zambia payouts via Payoneer/Wise.
- * 
+ *
  * Payout route: Paddle → Payoneer/Wise → Zambia Bank
- * 
+ *
  * @see phases/enterprise-modules/PHASE-EM-59A-PADDLE-BILLING.md
  */
 
 // Note: The Paddle Node SDK should be installed via: pnpm add @paddle/paddle-node-sdk
 // For frontend: pnpm add @paddle/paddle-js
 
-import { Paddle, Environment } from '@paddle/paddle-node-sdk';
+import { Paddle, Environment } from "@paddle/paddle-node-sdk";
 
-import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from "@/lib/locale-config";
 // ============================================================================
 // Environment Validation
 // ============================================================================
 
 if (!process.env.PADDLE_API_KEY) {
-  console.warn('[Paddle] PADDLE_API_KEY not set - billing features will be disabled');
+  console.warn(
+    "[Paddle] PADDLE_API_KEY not set - billing features will be disabled",
+  );
 }
 
 // Determine environment from either variable (support both naming conventions)
-const paddleEnvironment = process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT || process.env.PADDLE_ENVIRONMENT || 'sandbox';
+const paddleEnvironment =
+  process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT ||
+  process.env.PADDLE_ENVIRONMENT ||
+  "sandbox";
 
 // ============================================================================
 // Paddle Client
@@ -38,9 +43,10 @@ const paddleEnvironment = process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT || process.
  */
 export const paddle = process.env.PADDLE_API_KEY
   ? new Paddle(process.env.PADDLE_API_KEY, {
-      environment: paddleEnvironment === 'sandbox'
-        ? Environment.sandbox
-        : Environment.production
+      environment:
+        paddleEnvironment === "sandbox"
+          ? Environment.sandbox
+          : Environment.production,
     })
   : null;
 
@@ -52,7 +58,7 @@ export const isPaddleConfigured = !!process.env.PADDLE_API_KEY;
 /**
  * Check if using sandbox environment
  */
-export const isPaddleSandbox = paddleEnvironment === 'sandbox';
+export const isPaddleSandbox = paddleEnvironment === "sandbox";
 
 // ============================================================================
 // Product & Price IDs
@@ -61,47 +67,51 @@ export const isPaddleSandbox = paddleEnvironment === 'sandbox';
 /**
  * Paddle Product and Price IDs
  * These are configured in the Paddle dashboard and should match .env values
- * 
+ *
  * Falls back to NEXT_PUBLIC_* variants when server-side PADDLE_PRICE_* are not set
  * to ensure webhook plan detection uses the same price IDs as client-side checkout
  */
 export const PADDLE_IDS = {
   products: {
-    starter: process.env.PADDLE_PRODUCT_STARTER || '',
-    pro: process.env.PADDLE_PRODUCT_PRO || '',
+    starter: process.env.PADDLE_PRODUCT_STARTER || "",
+    growth: process.env.PADDLE_PRODUCT_GROWTH || "",
+    agency: process.env.PADDLE_PRODUCT_AGENCY || "",
   },
   prices: {
-    starter_monthly: process.env.PADDLE_PRICE_STARTER_MONTHLY || process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER_MONTHLY || '',
-    starter_yearly: process.env.PADDLE_PRICE_STARTER_YEARLY || process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER_YEARLY || '',
-    pro_monthly: process.env.PADDLE_PRICE_PRO_MONTHLY || process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO_MONTHLY || '',
-    pro_yearly: process.env.PADDLE_PRICE_PRO_YEARLY || process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO_YEARLY || '',
-    // Overage prices for metered billing
-    automation_overage: process.env.PADDLE_PRICE_AUTOMATION_OVERAGE || '',
-    ai_overage: process.env.PADDLE_PRICE_AI_OVERAGE || '',
-    api_overage: process.env.PADDLE_PRICE_API_OVERAGE || '',
-  }
+    starter_monthly: process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER_MONTHLY || "",
+    starter_yearly: process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER_YEARLY || "",
+    growth_monthly: process.env.NEXT_PUBLIC_PADDLE_PRICE_GROWTH_MONTHLY || "",
+    growth_yearly: process.env.NEXT_PUBLIC_PADDLE_PRICE_GROWTH_YEARLY || "",
+    agency_monthly: process.env.NEXT_PUBLIC_PADDLE_PRICE_AGENCY_MONTHLY || "",
+    agency_yearly: process.env.NEXT_PUBLIC_PADDLE_PRICE_AGENCY_YEARLY || "",
+    // Overage prices for metered billing (server-side only)
+    automation_overage: process.env.PADDLE_PRICE_AUTOMATION_OVERAGE || "",
+    ai_overage: process.env.PADDLE_PRICE_AI_OVERAGE || "",
+    email_overage: process.env.PADDLE_PRICE_EMAIL_OVERAGE || "",
+    storage_overage: process.env.PADDLE_PRICE_STORAGE_OVERAGE || "",
+  },
 } as const;
 
 // ============================================================================
 // Plan Mappings
 // ============================================================================
 
-export type PlanType = 'starter' | 'pro' | 'enterprise';
-export type BillingCycle = 'monthly' | 'yearly';
+export type PlanType = "starter" | "growth" | "agency";
+export type BillingCycle = "monthly" | "yearly";
 
 export interface PlanConfig {
   priceId: string;
   productId: string;
   name: string;
   amount: number; // in cents
-  interval: 'month' | 'year';
+  interval: "month" | "year";
   includedUsage: {
     automationRuns: number;
     aiActions: number;
-    apiCalls: number;
+    emailSends: number;
+    fileStorageMb: number; // in MB
   };
   limits: {
-    modules: number;
     sites: number;
     teamMembers: number;
   };
@@ -109,137 +119,223 @@ export interface PlanConfig {
 }
 
 /**
- * Plan configurations with included usage and limits
+ * Plan configurations with included usage and limits (v5 pricing)
  */
 export const PLAN_CONFIGS: Record<string, PlanConfig> = {
   starter_monthly: {
     priceId: PADDLE_IDS.prices.starter_monthly,
     productId: PADDLE_IDS.products.starter,
-    name: 'Starter Monthly',
+    name: "Starter",
     amount: 2900, // $29.00
-    interval: 'month',
+    interval: "month",
     includedUsage: {
-      automationRuns: 1000,
-      aiActions: 500,
-      apiCalls: 10000,
+      automationRuns: 2000,
+      aiActions: 1000,
+      emailSends: 2000,
+      fileStorageMb: 5120, // 5 GB
     },
     limits: {
-      modules: 3,
-      sites: 1,
+      sites: 5,
       teamMembers: 3,
     },
     features: [
-      '3 modules',
-      '1 site',
-      '3 team members',
-      'Basic support',
-      '1,000 automation runs/mo',
-      '500 AI actions/mo',
+      "All 7 modules included",
+      "5 websites",
+      "3 team members",
+      "1,000 AI actions/mo",
+      "2,000 email sends/mo",
+      "2,000 automation runs/mo",
+      "5 GB file storage",
+      "Custom domains",
+      "Chiko AI assistant",
+      "Community support",
     ],
   },
   starter_yearly: {
     priceId: PADDLE_IDS.prices.starter_yearly,
     productId: PADDLE_IDS.products.starter,
-    name: 'Starter Yearly',
-    amount: 29000, // $290.00
-    interval: 'year',
+    name: "Starter",
+    amount: 29000, // $290.00/yr
+    interval: "year",
     includedUsage: {
-      automationRuns: 12000,
-      aiActions: 6000,
-      apiCalls: 120000,
+      automationRuns: 24000,
+      aiActions: 12000,
+      emailSends: 24000,
+      fileStorageMb: 5120,
     },
     limits: {
-      modules: 3,
-      sites: 1,
+      sites: 5,
       teamMembers: 3,
     },
     features: [
-      '3 modules',
-      '1 site',
-      '3 team members',
-      'Basic support',
-      '12,000 automation runs/yr',
-      '6,000 AI actions/yr',
-      'Save 17%',
+      "All 7 modules included",
+      "5 websites",
+      "3 team members",
+      "12,000 AI actions/yr",
+      "24,000 email sends/yr",
+      "24,000 automation runs/yr",
+      "5 GB file storage",
+      "Custom domains",
+      "Chiko AI assistant",
+      "Community support",
+      "Save 2 months free",
     ],
   },
-  pro_monthly: {
-    priceId: PADDLE_IDS.prices.pro_monthly,
-    productId: PADDLE_IDS.products.pro,
-    name: 'Pro Monthly',
-    amount: 9900, // $99.00
-    interval: 'month',
+  growth_monthly: {
+    priceId: PADDLE_IDS.prices.growth_monthly,
+    productId: PADDLE_IDS.products.growth,
+    name: "Growth",
+    amount: 7900, // $79.00
+    interval: "month",
     includedUsage: {
-      automationRuns: 10000,
-      aiActions: 5000,
-      apiCalls: 100000,
+      automationRuns: 15000,
+      aiActions: 3000,
+      emailSends: 10000,
+      fileStorageMb: 20480, // 20 GB
     },
     limits: {
-      modules: 10,
-      sites: 5,
-      teamMembers: 10,
+      sites: 15,
+      teamMembers: 8,
     },
     features: [
-      '10 modules',
-      '5 sites',
-      '10 team members',
-      'Priority support',
-      'Custom domain',
-      'White-label',
-      '10,000 automation runs/mo',
-      '5,000 AI actions/mo',
-      '50% overage discount',
+      "All 7 modules included",
+      "15 websites",
+      "8 team members",
+      "3,000 AI actions/mo",
+      "10,000 email sends/mo",
+      "15,000 automation runs/mo",
+      "20 GB file storage",
+      "Custom domains",
+      "Chiko AI assistant",
+      "14-day free trial",
+      "Priority email support",
     ],
   },
-  pro_yearly: {
-    priceId: PADDLE_IDS.prices.pro_yearly,
-    productId: PADDLE_IDS.products.pro,
-    name: 'Pro Yearly',
-    amount: 99000, // $990.00
-    interval: 'year',
+  growth_yearly: {
+    priceId: PADDLE_IDS.prices.growth_yearly,
+    productId: PADDLE_IDS.products.growth,
+    name: "Growth",
+    amount: 79000, // $790.00/yr
+    interval: "year",
     includedUsage: {
-      automationRuns: 120000,
-      aiActions: 60000,
-      apiCalls: 1200000,
+      automationRuns: 180000,
+      aiActions: 36000,
+      emailSends: 120000,
+      fileStorageMb: 20480,
     },
     limits: {
-      modules: 10,
-      sites: 5,
-      teamMembers: 10,
+      sites: 15,
+      teamMembers: 8,
     },
     features: [
-      '10 modules',
-      '5 sites',
-      '10 team members',
-      'Priority support',
-      'Custom domain',
-      'White-label',
-      '120,000 automation runs/yr',
-      '60,000 AI actions/yr',
-      '50% overage discount',
-      'Save 17%',
+      "All 7 modules included",
+      "15 websites",
+      "8 team members",
+      "36,000 AI actions/yr",
+      "120,000 email sends/yr",
+      "180,000 automation runs/yr",
+      "20 GB file storage",
+      "Custom domains",
+      "Chiko AI assistant",
+      "14-day free trial",
+      "Priority email support",
+      "Save 2 months free",
+    ],
+  },
+  agency_monthly: {
+    priceId: PADDLE_IDS.prices.agency_monthly,
+    productId: PADDLE_IDS.products.agency,
+    name: "Agency",
+    amount: 14900, // $149.00
+    interval: "month",
+    includedUsage: {
+      automationRuns: 75000,
+      aiActions: 15000,
+      emailSends: 40000,
+      fileStorageMb: 76800, // 75 GB
+    },
+    limits: {
+      sites: 30,
+      teamMembers: 20,
+    },
+    features: [
+      "All 7 modules included",
+      "30 websites",
+      "20 team members",
+      "15,000 AI actions/mo",
+      "40,000 email sends/mo",
+      "75,000 automation runs/mo",
+      "75 GB file storage",
+      "Custom domains",
+      "Chiko AI assistant",
+      "Full white-label",
+      "Custom dashboard domain",
+      "Priority + chat support",
+    ],
+  },
+  agency_yearly: {
+    priceId: PADDLE_IDS.prices.agency_yearly,
+    productId: PADDLE_IDS.products.agency,
+    name: "Agency",
+    amount: 149000, // $1,490.00/yr
+    interval: "year",
+    includedUsage: {
+      automationRuns: 900000,
+      aiActions: 180000,
+      emailSends: 480000,
+      fileStorageMb: 76800,
+    },
+    limits: {
+      sites: 30,
+      teamMembers: 20,
+    },
+    features: [
+      "All 7 modules included",
+      "30 websites",
+      "20 team members",
+      "180,000 AI actions/yr",
+      "480,000 email sends/yr",
+      "900,000 automation runs/yr",
+      "75 GB file storage",
+      "Custom domains",
+      "Chiko AI assistant",
+      "Full white-label",
+      "Custom dashboard domain",
+      "Priority + chat support",
+      "Save 2 months free",
     ],
   },
 };
 
 /**
- * Overage rates per plan type (in dollars)
+ * Overage rates per plan type (in dollars per unit)
  */
-export const OVERAGE_RATES = {
+export const OVERAGE_RATES: Record<
+  PlanType,
+  {
+    automationRuns: number;
+    aiActions: number;
+    emailSends: number;
+    fileStorageMb: number;
+  }
+> = {
   starter: {
-    automationRuns: 0.001,  // $0.001 per run
-    aiActions: 0.005,       // $0.005 per action
-    apiCalls: 0.0001,       // $0.0001 per call
+    automationRuns: 0.002, // $2 per 1K runs
+    aiActions: 0.01, // $10 per 1K actions
+    emailSends: 0.002, // $2 per 1K sends
+    fileStorageMb: 0.0005, // $0.50 per GB ($0.0005 per MB)
   },
-  pro: {
-    automationRuns: 0.0005, // $0.0005 per run (50% discount)
-    aiActions: 0.0025,      // $0.0025 per action (50% discount)
-    apiCalls: 0.00005,      // $0.00005 per call (50% discount)
+  growth: {
+    automationRuns: 0.002,
+    aiActions: 0.01,
+    emailSends: 0.002,
+    fileStorageMb: 0.0005,
   },
-  enterprise: {
-    automationRuns: 0,      // Unlimited
-    aiActions: 0,           // Unlimited
-    apiCalls: 0,            // Unlimited
+  agency: {
+    automationRuns: 0.001, // 50% discount for top tier
+    aiActions: 0.008,
+    emailSends: 0.0015,
+    fileStorageMb: 0.0004,
   },
 };
 
@@ -252,7 +348,7 @@ export const OVERAGE_RATES = {
  */
 export function getPlanConfig(
   planType: PlanType,
-  billingCycle: BillingCycle
+  billingCycle: BillingCycle,
 ): PlanConfig | undefined {
   const key = `${planType}_${billingCycle}`;
   return PLAN_CONFIGS[key];
@@ -263,7 +359,7 @@ export function getPlanConfig(
  */
 export function getPriceId(
   planType: PlanType,
-  billingCycle: BillingCycle
+  billingCycle: BillingCycle,
 ): string | undefined {
   const config = getPlanConfig(planType, billingCycle);
   return config?.priceId;
@@ -278,7 +374,10 @@ export function getPlanTypeFromPriceId(priceId: string): {
 } | null {
   for (const [key, config] of Object.entries(PLAN_CONFIGS)) {
     if (config.priceId === priceId) {
-      const [planType, billingCycle] = key.split('_') as [PlanType, BillingCycle];
+      const [planType, billingCycle] = key.split("_") as [
+        PlanType,
+        BillingCycle,
+      ];
       return { planType, billingCycle };
     }
   }
@@ -288,26 +387,61 @@ export function getPlanTypeFromPriceId(priceId: string): {
 /**
  * Format price for display
  */
-export function formatPrice(cents: number, currency: string = DEFAULT_CURRENCY): string {
+export function formatPrice(
+  cents: number,
+  currency: string = DEFAULT_CURRENCY,
+): string {
   return new Intl.NumberFormat(DEFAULT_LOCALE, {
-    style: 'currency',
+    style: "currency",
     currency,
   }).format(cents / 100);
 }
 
 /**
- * Calculate overage cost
+ * Calculate overage cost for a billing period
  */
 export function calculateOverageCost(
   planType: PlanType,
   overageAutomationRuns: number,
   overageAiActions: number,
-  overageApiCalls: number
+  overageEmailSends: number,
+  overageFileStorageMb: number,
 ): number {
   const rates = OVERAGE_RATES[planType];
   return (
-    (overageAutomationRuns * rates.automationRuns) +
-    (overageAiActions * rates.aiActions) +
-    (overageApiCalls * rates.apiCalls)
+    overageAutomationRuns * rates.automationRuns +
+    overageAiActions * rates.aiActions +
+    overageEmailSends * rates.emailSends +
+    overageFileStorageMb * rates.fileStorageMb
   );
+}
+
+/**
+ * Get plan limits by plan type
+ */
+export function getPlanLimits(planType: PlanType): {
+  sites: number;
+  teamMembers: number;
+  whiteLabel: boolean;
+} {
+  const monthlyConfig = getPlanConfig(planType, "monthly");
+  return {
+    sites: monthlyConfig?.limits.sites ?? 0,
+    teamMembers: monthlyConfig?.limits.teamMembers ?? 0,
+    whiteLabel: planType === "agency",
+  };
+}
+
+/**
+ * Check if white-label is enabled for a plan
+ */
+export function isWhiteLabelEnabled(planType: PlanType): boolean {
+  return planType === "agency";
+}
+
+/**
+ * Get plans eligible for a free trial
+ */
+export function getTrialEligiblePlans(): PlanType[] {
+  return ["growth"];
 }

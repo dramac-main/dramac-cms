@@ -156,6 +156,29 @@
 
 ---
 
+## Wave 9: Billing System V5 — ALL 10 PHASES COMPLETE ✅
+
+| Phase  | Description                                               | Status              |
+| ------ | --------------------------------------------------------- | ------------------- |
+| BIL-01 | Pricing Config Rework (3 tiers, DB schema, env vars)      | ✅ Complete         |
+| BIL-02 | Pricing Page Redesign (3-tier layout, comparison table)   | ✅ Complete         |
+| BIL-03 | Checkout & Trial (Paddle.js, trial service, success page) | ✅ Complete         |
+| BIL-04 | Billing Dashboard (usage overview, alerts, plan card)     | ✅ Complete         |
+| BIL-05 | Usage Metering & Enforcement (email/storage tracking)     | ✅ Complete         |
+| BIL-06 | Plan Upgrades & Downgrades (validation, proration)        | ✅ Complete         |
+| BIL-07 | Payment Methods & Cancellation (4-step cancel flow)       | ✅ Complete         |
+| BIL-08 | Overage Billing Engine (calculate, report to Paddle)      | ✅ Complete         |
+| BIL-09 | Super Admin Revenue Dashboard (MRR/ARR, churn analytics)  | ✅ Complete (Ses 6) |
+| BIL-10 | Chiko AI Business Assistant (module queries, chat UI)     | ✅ Complete (Ses 6) |
+
+**Session 6 (BIL-09+10 — FINAL)**: BIL-09: AdminRevenueOverview component with 4 stat cards, MRR history line chart, plan distribution pie chart, trial funnel, cancellation reasons, costs vs revenue. 7 admin server actions + types in billing-actions.ts. Admin billing page + revenue page updated. BIL-10: Chiko AI with Claude Haiku 4.5. Query builder (7 categories, keyword classifier, agency-scoped). API endpoint (auth, usage limits, Claude call, conversation persistence). Chat UI (quick actions, message history, auto-scroll). Dashboard page + navigation integration. chiko_conversations table + RLS via Supabase MCP. Carry-over: CancellationFlow wired into CurrentPlanCard. TSC: 197 errors (baseline maintained).
+
+**Key files:** `/phases/PHASE-BIL-MASTER-GUIDE.md` (full spec), `/phases/PHASE-BIL-SESSION-BRIEF.md` (6-session plan + prompts), `/docs/PRICING-STRATEGY-V5.md` (cost model + pricing)
+
+**Pricing**: Starter $29/mo ($290/yr), Growth $79/mo ($790/yr), Agency $149/mo ($1,490/yr). All 7 modules every plan, white-label Agency only, 14-day trial Growth only. Projected 68-85% net margins.
+
+---
+
 ## Wave 6: Industry Verticals — Planned
 
 | Phase | Description        | Status             |
@@ -219,6 +242,7 @@
 | Jul 2026 | Invoicing Module INV-12: Super Admin Controls (8 files — admin dashboard, site table, feature flags, admin pages, admin nav)                                                                                        |
 | Jul 2026 | Invoicing Module INV-13: Cross-Module Deep Integration (12 files — CRM finance tab, deal-to-invoice, e-com/booking integration, 15 automation events, 5 actions, 9 marketing filters, 7 email templates)            |
 | Jul 2026 | Invoicing Module INV-14: Vendor Management, Purchase Orders & Bills — SESSION 9 FINAL (22 files — vendor CRUD, PO lifecycle, bill management, payment recording, PO email, PDF export) — ALL 14 INV PHASES COMPLETE |
+| Jul 2026 | Billing V4: Pricing Strategy ($19/$49/$99), Master Guide (10 phases), Session Brief (6 sessions) — PLANNING COMPLETE                                                                                                |
 
 ---
 

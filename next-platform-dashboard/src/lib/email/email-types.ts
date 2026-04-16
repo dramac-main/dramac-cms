@@ -87,6 +87,10 @@ export interface SendEmailOptions {
   to: EmailRecipient | EmailRecipient[];
   type: EmailType;
   data: Record<string, unknown>;
+  /** Agency ID for billing usage tracking (BIL-05). If provided, email counts toward agency quota. */
+  agencyId?: string;
+  /** If true, don't count this email toward the agency's email quota (e.g., system alerts, platform notifications). */
+  isSystemEmail?: boolean;
 }
 
 export interface EmailResult {

@@ -13,38 +13,44 @@ import {
   Play,
   ExternalLink,
   Loader2,
+  ArrowUpRight,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { PlanChangeDialog } from "./plan-change-dialog";
+import { CancellationFlow } from "./cancellation-flow";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import {
-  cancelSubscriptionPaddle,
   pauseSubscriptionPaddle,
   resumeSubscriptionPaddle,
 } from "@/lib/paddle/billing-actions";
+import { PLAN_CONFIGS, formatPrice, type PlanType } from "@/lib/paddle/client";
 import type { Subscription, SubscriptionStatus } from "@/types/payments";
 
-// Paddle plan lookup (replaces LemonSqueezy plans.ts dependency)
-function getPaddlePlanName(planId: string): { name: string; description: string; limits: { sites: number; clients: number; storage_gb: number; ai_generations: number; team_members: number } } {
-  const plans: Record<string, { name: string; description: string; limits: { sites: number; clients: number; storage_gb: number; ai_generations: number; team_members: number } }> = {
-    starter: { name: "Starter", description: "Perfect for small teams getting started", limits: { sites: 1, clients: 10, storage_gb: 5, ai_generations: 500, team_members: 3 } },
-    pro: { name: "Pro", description: "For growing businesses that need more power", limits: { sites: 5, clients: 50, storage_gb: 25, ai_generations: 5000, team_members: 10 } },
-    enterprise: { name: "Enterprise", description: "For large organizations with custom requirements", limits: { sites: -1, clients: -1, storage_gb: 100, ai_generations: -1, team_members: -1 } },
-    free: { name: "Free", description: "Get started for free", limits: { sites: 1, clients: 3, storage_gb: 0.5, ai_generations: 5, team_members: 1 } },
+// v5 plan lookup using PLAN_CONFIGS
+function getPaddlePlanInfo(planId: string, billingCycle: string = "monthly") {
+  const key = `${planId}_${billingCycle}`;
+  const config = PLAN_CONFIGS[key] || PLAN_CONFIGS[`${planId}_monthly`];
+  if (config) {
+    return {
+      name: config.name,
+      amount: config.amount,
+      interval: config.interval,
+      description: config.features[0] || "",
+      limits: config.limits,
+      usage: config.includedUsage,
+    };
+  }
+  // Fallback for unknown plans
+  return {
+    name: planId ? planId.charAt(0).toUpperCase() + planId.slice(1) : "Free",
+    amount: 0,
+    interval: "month" as const,
+    description: "No active plan",
+    limits: { sites: 1, teamMembers: 1 },
+    usage: { automationRuns: 0, aiActions: 0, emailSends: 0, fileStorageMb: 0 },
   };
-  return plans[planId] || plans.free;
 }
 
 interface CurrentPlanCardProps {
@@ -52,44 +58,85 @@ interface CurrentPlanCardProps {
   agencyId?: string;
   usage?: {
     sites: number;
-    clients: number;
-    storage_gb: number;
-    ai_generations: number;
+    teamMembers: number;
+    emailSends: number;
+    automationRuns: number;
+    aiActions: number;
+    fileStorageMb: number;
   };
 }
 
-const statusConfig: Record<SubscriptionStatus, { icon: typeof CircleCheck; color: string; bg: string; label: string }> = {
-  active: { icon: CircleCheck, color: "text-green-500", bg: "bg-green-100", label: "Active" },
-  on_trial: { icon: Crown, color: "text-blue-500", bg: "bg-blue-100", label: "Trial" },
-  paused: { icon: Pause, color: "text-yellow-500", bg: "bg-yellow-100", label: "Paused" },
-  past_due: { icon: AlertCircle, color: "text-orange-500", bg: "bg-orange-100", label: "Past Due" },
-  cancelled: { icon: CircleX, color: "text-red-500", bg: "bg-red-100", label: "Cancelled" },
-  expired: { icon: CircleX, color: "text-gray-500", bg: "bg-gray-100", label: "Expired" },
-  unpaid: { icon: AlertCircle, color: "text-red-500", bg: "bg-red-100", label: "Unpaid" },
+const statusConfig: Record<
+  SubscriptionStatus,
+  { icon: typeof CircleCheck; color: string; bg: string; label: string }
+> = {
+  active: {
+    icon: CircleCheck,
+    color: "text-green-500",
+    bg: "bg-green-100",
+    label: "Active",
+  },
+  on_trial: {
+    icon: Crown,
+    color: "text-blue-500",
+    bg: "bg-blue-100",
+    label: "Trial",
+  },
+  paused: {
+    icon: Pause,
+    color: "text-yellow-500",
+    bg: "bg-yellow-100",
+    label: "Paused",
+  },
+  past_due: {
+    icon: AlertCircle,
+    color: "text-orange-500",
+    bg: "bg-orange-100",
+    label: "Past Due",
+  },
+  cancelled: {
+    icon: CircleX,
+    color: "text-red-500",
+    bg: "bg-red-100",
+    label: "Cancelled",
+  },
+  expired: {
+    icon: CircleX,
+    color: "text-gray-500",
+    bg: "bg-gray-100",
+    label: "Expired",
+  },
+  unpaid: {
+    icon: AlertCircle,
+    color: "text-red-500",
+    bg: "bg-red-100",
+    label: "Unpaid",
+  },
 };
 
-export function CurrentPlanCard({ subscription, agencyId, usage }: CurrentPlanCardProps) {
+export function CurrentPlanCard({
+  subscription,
+  agencyId,
+  usage,
+}: CurrentPlanCardProps) {
   const [isLoading, setIsLoading] = useState<string | null>(null);
-  
-  const planInfo = getPaddlePlanName(subscription?.plan_id || "free");
-  const status: SubscriptionStatus = (subscription?.status as SubscriptionStatus) || "active";
+  const [planChangeOpen, setPlanChangeOpen] = useState(false);
+
+  const billingCycle = (subscription as any)?.billing_cycle || "monthly";
+  const planInfo = getPaddlePlanInfo(
+    subscription?.plan_id || "free",
+    billingCycle,
+  );
+  const status: SubscriptionStatus =
+    (subscription?.status as SubscriptionStatus) || "active";
   const statusInfo = statusConfig[status] || statusConfig.active;
   const StatusIcon = statusInfo.icon;
 
-  const handleCancel = async () => {
-    if (!agencyId) { toast.error("No agency found"); return; }
-    setIsLoading("cancel");
-    const result = await cancelSubscriptionPaddle(agencyId);
-    if (!result.success) {
-      toast.error(result.error || "Failed to cancel");
-    } else {
-      toast.success("Subscription cancelled. You'll have access until the end of the billing period.");
-    }
-    setIsLoading(null);
-  };
-
   const handlePause = async () => {
-    if (!agencyId) { toast.error("No agency found"); return; }
+    if (!agencyId) {
+      toast.error("No agency found");
+      return;
+    }
     setIsLoading("pause");
     const result = await pauseSubscriptionPaddle(agencyId);
     if (!result.success) {
@@ -101,7 +148,10 @@ export function CurrentPlanCard({ subscription, agencyId, usage }: CurrentPlanCa
   };
 
   const handleResume = async () => {
-    if (!agencyId) { toast.error("No agency found"); return; }
+    if (!agencyId) {
+      toast.error("No agency found");
+      return;
+    }
     setIsLoading("resume");
     const result = await resumeSubscriptionPaddle(agencyId);
     if (!result.success) {
@@ -115,13 +165,20 @@ export function CurrentPlanCard({ subscription, agencyId, usage }: CurrentPlanCa
   const handleManageBilling = async () => {
     setIsLoading("portal");
     try {
-      const res = await fetch("/api/billing/paddle/subscription/update-payment", {
-        method: "POST",
-      }).then(r => r.json()).catch(() => null);
+      const res = await fetch(
+        "/api/billing/paddle/subscription/update-payment",
+        {
+          method: "POST",
+        },
+      )
+        .then((r) => r.json())
+        .catch(() => null);
       if (res?.url) {
         window.open(res.url, "_blank");
       } else {
-        toast.error("Billing portal not available. Visit the billing settings page.");
+        toast.error(
+          "Billing portal not available. Visit the billing settings page.",
+        );
       }
     } catch {
       toast.error("Failed to open billing portal");
@@ -132,9 +189,11 @@ export function CurrentPlanCard({ subscription, agencyId, usage }: CurrentPlanCa
   // Use provided usage or defaults
   const currentUsage = usage || {
     sites: 0,
-    clients: 0,
-    storage_gb: 0,
-    ai_generations: 0,
+    teamMembers: 0,
+    emailSends: 0,
+    automationRuns: 0,
+    aiActions: 0,
+    fileStorageMb: 0,
   };
 
   return (
@@ -152,8 +211,21 @@ export function CurrentPlanCard({ subscription, agencyId, usage }: CurrentPlanCa
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <h3 className="text-2xl font-bold">{planInfo?.name || "Free"}</h3>
-            <p className="text-muted-foreground">{planInfo?.description}</p>
+            <h3 className="text-2xl font-bold">{planInfo.name || "Free"}</h3>
+            {planInfo.amount > 0 && (
+              <p className="text-muted-foreground">
+                {formatPrice(planInfo.amount)}/
+                {planInfo.interval === "year" ? "year" : "month"}
+                {billingCycle === "yearly" && (
+                  <span className="text-green-600 ml-2 text-xs font-medium">
+                    Save 2 months
+                  </span>
+                )}
+              </p>
+            )}
+            {planInfo.amount === 0 && (
+              <p className="text-muted-foreground">{planInfo.description}</p>
+            )}
           </div>
 
           {subscription && (
@@ -164,7 +236,10 @@ export function CurrentPlanCard({ subscription, agencyId, usage }: CurrentPlanCa
                     {subscription.cancelled_at ? "Access until" : "Renews on"}
                   </span>
                   <span>
-                    {format(new Date(subscription.current_period_end), "MMMM d, yyyy")}
+                    {format(
+                      new Date(subscription.current_period_end),
+                      "MMMM d, yyyy",
+                    )}
                   </span>
                 </div>
               )}
@@ -172,7 +247,10 @@ export function CurrentPlanCard({ subscription, agencyId, usage }: CurrentPlanCa
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Trial ends</span>
                   <span>
-                    {format(new Date(subscription.trial_ends_at), "MMMM d, yyyy")}
+                    {format(
+                      new Date(subscription.trial_ends_at),
+                      "MMMM d, yyyy",
+                    )}
                   </span>
                 </div>
               )}
@@ -180,69 +258,77 @@ export function CurrentPlanCard({ subscription, agencyId, usage }: CurrentPlanCa
           )}
 
           <div className="flex flex-wrap gap-2 pt-4">
-            {subscription && (subscription as any).paddle_subscription_id && status !== "cancelled" && status !== "expired" && (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={handleManageBilling}
-                  disabled={isLoading === "portal"}
-                >
-                  {isLoading === "portal" && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Manage Billing
-                </Button>
-
-                {status === "paused" ? (
-                  <Button onClick={handleResume} disabled={isLoading === "resume"}>
-                    {isLoading === "resume" && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    <Play className="w-4 h-4 mr-2" />
-                    Resume
+            {subscription &&
+              (subscription as any).paddle_subscription_id &&
+              status !== "cancelled" &&
+              status !== "expired" && (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => setPlanChangeOpen(true)}
+                  >
+                    <ArrowUpRight className="w-4 h-4 mr-2" />
+                    Change Plan
                   </Button>
-                ) : (
-                  <>
+
+                  <Button
+                    variant="outline"
+                    onClick={handleManageBilling}
+                    disabled={isLoading === "portal"}
+                  >
+                    {isLoading === "portal" && (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    )}
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Manage Billing
+                  </Button>
+
+                  {status === "paused" ? (
                     <Button
-                      variant="outline"
-                      onClick={handlePause}
-                      disabled={isLoading === "pause"}
+                      onClick={handleResume}
+                      disabled={isLoading === "resume"}
                     >
-                      {isLoading === "pause" && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                      <Pause className="w-4 h-4 mr-2" />
-                      Pause
+                      {isLoading === "resume" && (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      )}
+                      <Play className="w-4 h-4 mr-2" />
+                      Resume
                     </Button>
+                  ) : (
+                    <>
+                      <Button
+                        variant="outline"
+                        onClick={handlePause}
+                        disabled={isLoading === "pause"}
+                      >
+                        {isLoading === "pause" && (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        )}
+                        <Pause className="w-4 h-4 mr-2" />
+                        Pause
+                      </Button>
 
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
+                      <CancellationFlow
+                        agencyId={agencyId!}
+                        currentPlan={
+                          (subscription!.plan_id || "starter") as PlanType
+                        }
+                        billingCycle={billingCycle}
+                        periodEndDate={
+                          subscription!.current_period_end || undefined
+                        }
+                      >
                         <Button variant="destructive">Cancel</Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Cancel Subscription?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            You&apos;ll continue to have access until the end of your current
-                            billing period. After that, you&apos;ll be downgraded to the Free
-                            plan.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Keep Subscription</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={handleCancel}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          >
-                            {isLoading === "cancel" && (
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            )}
-                            Yes, Cancel
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </>
-                )}
-              </>
-            )}
+                      </CancellationFlow>
+                    </>
+                  )}
+                </>
+              )}
 
-            {(!subscription || !(subscription as any).paddle_subscription_id || status === "cancelled" || status === "expired") && (
+            {(!subscription ||
+              !(subscription as any).paddle_subscription_id ||
+              status === "cancelled" ||
+              status === "expired") && (
               <Link href="#plans">
                 <Button>Upgrade Now</Button>
               </Link>
@@ -260,27 +346,50 @@ export function CurrentPlanCard({ subscription, agencyId, usage }: CurrentPlanCa
           <UsageItem
             label="Websites"
             used={currentUsage.sites}
-            limit={planInfo?.limits.sites || 1}
+            limit={planInfo.limits.sites || 1}
           />
           <UsageItem
-            label="Clients"
-            used={currentUsage.clients}
-            limit={planInfo?.limits.clients || 1}
+            label="Team Members"
+            used={currentUsage.teamMembers}
+            limit={planInfo.limits.teamMembers || 1}
+          />
+          <UsageItem
+            label="Email Sends"
+            used={currentUsage.emailSends}
+            limit={planInfo.usage.emailSends || 0}
+            unit="/month"
+          />
+          <UsageItem
+            label="AI Actions"
+            used={currentUsage.aiActions}
+            limit={planInfo.usage.aiActions || 0}
+            unit="/month"
+          />
+          <UsageItem
+            label="Automation Runs"
+            used={currentUsage.automationRuns}
+            limit={planInfo.usage.automationRuns || 0}
+            unit="/month"
           />
           <UsageItem
             label="Storage"
-            used={currentUsage.storage_gb}
-            limit={planInfo?.limits.storage_gb || 0.5}
+            used={Math.round((currentUsage.fileStorageMb / 1024) * 10) / 10}
+            limit={Math.round((planInfo.usage.fileStorageMb / 1024) * 10) / 10}
             unit="GB"
-          />
-          <UsageItem
-            label="AI Generations"
-            used={currentUsage.ai_generations}
-            limit={planInfo?.limits.ai_generations || 5}
-            unit="/month"
           />
         </CardContent>
       </Card>
+
+      {/* Plan Change Dialog (BIL-06) */}
+      {agencyId && subscription && (
+        <PlanChangeDialog
+          open={planChangeOpen}
+          onOpenChange={setPlanChangeOpen}
+          currentPlan={(subscription.plan_id || "starter") as PlanType}
+          currentBillingCycle={billingCycle}
+          agencyId={agencyId}
+        />
+      )}
     </div>
   );
 }
@@ -310,8 +419,8 @@ function UsageItem({
             isAtLimit
               ? "text-destructive font-medium"
               : isNearLimit
-              ? "text-orange-500 font-medium"
-              : ""
+                ? "text-orange-500 font-medium"
+                : ""
           }
         >
           {used}
@@ -327,8 +436,8 @@ function UsageItem({
             isAtLimit
               ? "[&>div]:bg-destructive"
               : isNearLimit
-              ? "[&>div]:bg-orange-500"
-              : ""
+                ? "[&>div]:bg-orange-500"
+                : ""
           }`}
         />
       )}

@@ -1,25 +1,33 @@
 /**
  * Paddle Subscription Service
- * 
+ *
  * Phase EM-59: Paddle Billing Integration
- * 
+ *
  * Manages subscription lifecycle including:
  * - Creating customers
  * - Managing subscriptions
  * - Plan changes (upgrades/downgrades)
  * - Cancellations and pauses
- * 
+ *
  * NOTE: The Paddle tables (paddle_subscriptions, paddle_customers, paddle_transactions)
  * must be created by running the migration: migrations/em-59-paddle-billing.sql
- * 
+ *
  * After running the migration, regenerate Supabase types with:
  *   npx supabase gen types typescript --project-id <your-project-id> > src/types/supabase.ts
- * 
+ *
  * @see phases/enterprise-modules/PHASE-EM-59A-PADDLE-BILLING.md
  */
 
-import { paddle, isPaddleConfigured, PADDLE_IDS, PLAN_CONFIGS, getPlanConfig } from './client';
-import { createAdminClient } from '@/lib/supabase/admin';
+import {
+  paddle,
+  isPaddleConfigured,
+  PADDLE_IDS,
+  PLAN_CONFIGS,
+  getPlanConfig,
+  getPlanLimits,
+  type PlanType,
+} from "./client";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   PaddleSubscription,
   PaddleCustomer,
@@ -27,7 +35,7 @@ import type {
   PaddleProduct,
   BillingOverview,
   UsageStats,
-} from '@/types/paddle';
+} from "@/types/paddle";
 
 // ============================================================================
 // Types
@@ -36,8 +44,8 @@ import type {
 export interface CreateSubscriptionParams {
   agencyId: string;
   email: string;
-  planType: 'starter' | 'pro';
-  billingCycle: 'monthly' | 'yearly';
+  planType: PlanType;
+  billingCycle: "monthly" | "yearly";
   name?: string;
   customData?: Record<string, unknown>;
 }
@@ -56,7 +64,8 @@ export interface SubscriptionDetails {
   includedUsage: {
     automationRuns: number;
     aiActions: number;
-    apiCalls: number;
+    emailSends: number;
+    fileStorageMb: number;
   };
 }
 
@@ -73,37 +82,42 @@ export class SubscriptionService {
    */
   async getSubscription(agencyId: string): Promise<SubscriptionDetails | null> {
     // First, try to get from local database
-    const { data, error } = await this.supabase.from('paddle_subscriptions')
-      .select('*')
-      .eq('agency_id', agencyId)
-      .in('status', ['active', 'trialing', 'past_due'])
+    const { data, error } = await this.supabase
+      .from("paddle_subscriptions")
+      .select("*")
+      .eq("agency_id", agencyId)
+      .in("status", ["active", "trialing", "past_due"])
       .maybeSingle();
-    
+
     if (error) {
-      console.error('[Paddle] Error fetching subscription:', error);
+      console.error("[Paddle] Error fetching subscription:", error);
     }
-    
+
     // If found in database, return it
     if (data) {
       return {
         id: data.id,
         paddleSubscriptionId: data.paddle_subscription_id,
         planType: data.plan_type,
-        billingCycle: data.billing_cycle ?? 'monthly',
+        billingCycle: data.billing_cycle ?? "monthly",
         status: data.status,
         currentPeriodStart: new Date(data.current_period_start ?? Date.now()),
         currentPeriodEnd: new Date(data.current_period_end ?? Date.now()),
         cancelAtPeriodEnd: data.cancel_at_period_end ?? false,
         unitPrice: data.unit_price,
-        currency: data.currency ?? 'USD', // Paddle billing currency - USD for platform billing
+        currency: data.currency ?? "USD", // Paddle billing currency - USD for platform billing
         includedUsage: {
           automationRuns: data.included_automation_runs ?? 0,
           aiActions: data.included_ai_actions ?? 0,
-          apiCalls: data.included_api_calls ?? 0,
+          emailSends: (data as any).included_email_sends ?? 0,
+          fileStorageMb: this.getIncludedStorageMb(
+            data.plan_type,
+            data.billing_cycle,
+          ),
         },
       };
     }
-    
+
     // No local record - try to fetch from Paddle API directly
     // This handles the case where webhooks haven't been received yet
     const syncedSubscription = await this.syncSubscriptionFromPaddle(agencyId);
@@ -114,120 +128,149 @@ export class SubscriptionService {
    * Sync subscription from Paddle API
    * Fetches active subscriptions for the customer and syncs to local database
    */
-  async syncSubscriptionFromPaddle(agencyId: string): Promise<SubscriptionDetails | null> {
+  async syncSubscriptionFromPaddle(
+    agencyId: string,
+  ): Promise<SubscriptionDetails | null> {
     if (!paddle) {
-      console.warn('[Paddle] Paddle not configured, cannot sync from API');
+      console.warn("[Paddle] Paddle not configured, cannot sync from API");
       return null;
     }
-    
+
     try {
       // Get customer from local database (need both the internal ID and paddle ID)
-      const { data: customer } = await this.supabase.from('paddle_customers')
-        .select('id, paddle_customer_id')
-        .eq('agency_id', agencyId)
+      const { data: customer } = await this.supabase
+        .from("paddle_customers")
+        .select("id, paddle_customer_id")
+        .eq("agency_id", agencyId)
         .maybeSingle();
-      
+
       if (!customer?.paddle_customer_id) {
-        console.log('[Paddle] No customer found for agency:', agencyId);
+        console.log("[Paddle] No customer found for agency:", agencyId);
         return null;
       }
-      
-      console.log('[Paddle] Syncing subscriptions for customer:', customer.paddle_customer_id);
-      
+
+      console.log(
+        "[Paddle] Syncing subscriptions for customer:",
+        customer.paddle_customer_id,
+      );
+
       // Fetch subscriptions from Paddle API
       const subscriptionCollection = await paddle.subscriptions.list({
         customerId: [customer.paddle_customer_id],
-        status: ['active', 'trialing', 'past_due'],
+        status: ["active", "trialing", "past_due"],
       });
-      
+
       // Get the first subscription from the iterator
       let paddleSub = null;
       for await (const sub of subscriptionCollection) {
         paddleSub = sub;
         break; // Just get the first one
       }
-      
+
       if (!paddleSub) {
-        console.log('[Paddle] No active subscriptions found in Paddle');
+        console.log("[Paddle] No active subscriptions found in Paddle");
         return null;
       }
-      
-      console.log('[Paddle] Found subscription in Paddle:', paddleSub.id, paddleSub.status);
-      
+
+      console.log(
+        "[Paddle] Found subscription in Paddle:",
+        paddleSub.id,
+        paddleSub.status,
+      );
+
       // Determine plan type from price ID
-      const priceId = paddleSub.items?.[0]?.price?.id || '';
-      const productId = paddleSub.items?.[0]?.price?.productId || '';
+      const priceId = paddleSub.items?.[0]?.price?.id || "";
+      const productId = paddleSub.items?.[0]?.price?.productId || "";
       const planType = this.getPlanTypeFromPriceId(priceId);
       const billingCycle = this.getBillingCycleFromPriceId(priceId);
       const planConfig = getPlanConfig(planType, billingCycle);
-      
+
       // Extract unit price (in smallest currency unit, e.g., cents)
-      const unitPrice = parseInt(paddleSub.items?.[0]?.price?.unitPrice?.amount || '0', 10);
-      const currency = paddleSub.currencyCode || 'USD'; // Paddle billing currency
-      
+      const unitPrice = parseInt(
+        paddleSub.items?.[0]?.price?.unitPrice?.amount || "0",
+        10,
+      );
+      const currency = paddleSub.currencyCode || "USD"; // Paddle billing currency
+
       // Save to local database - use correct column names from schema
       const { data: insertedSub, error: insertError } = await this.supabase
-        .from('paddle_subscriptions')
-        .upsert({
-          agency_id: agencyId,
-          customer_id: customer.id, // Use the internal UUID, not the paddle ID
-          paddle_subscription_id: paddleSub.id,
-          paddle_product_id: productId,
-          paddle_price_id: priceId,
-          plan_type: planType,
-          billing_cycle: billingCycle,
-          status: paddleSub.status,
-          unit_price: unitPrice,
-          currency: currency,
-          current_period_start: paddleSub.currentBillingPeriod?.startsAt,
-          current_period_end: paddleSub.currentBillingPeriod?.endsAt,
-          cancel_at_period_end: paddleSub.scheduledChange?.action === 'cancel',
-          included_automation_runs: planConfig?.includedUsage?.automationRuns ?? 0,
-          included_ai_actions: planConfig?.includedUsage?.aiActions ?? 0,
-          included_api_calls: planConfig?.includedUsage?.apiCalls ?? 0,
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'paddle_subscription_id',
-        })
+        .from("paddle_subscriptions")
+        .upsert(
+          {
+            agency_id: agencyId,
+            customer_id: customer.id, // Use the internal UUID, not the paddle ID
+            paddle_subscription_id: paddleSub.id,
+            paddle_product_id: productId,
+            paddle_price_id: priceId,
+            plan_type: planType,
+            billing_cycle: billingCycle,
+            status: paddleSub.status,
+            unit_price: unitPrice,
+            currency: currency,
+            current_period_start: paddleSub.currentBillingPeriod?.startsAt,
+            current_period_end: paddleSub.currentBillingPeriod?.endsAt,
+            cancel_at_period_end:
+              paddleSub.scheduledChange?.action === "cancel",
+            included_automation_runs:
+              planConfig?.includedUsage?.automationRuns ?? 0,
+            included_ai_actions: planConfig?.includedUsage?.aiActions ?? 0,
+            included_email_sends: planConfig?.includedUsage?.emailSends ?? 0,
+            updated_at: new Date().toISOString(),
+          },
+          {
+            onConflict: "paddle_subscription_id",
+          },
+        )
         .select()
         .single();
-      
+
       if (insertError) {
-        console.error('[Paddle] Error saving synced subscription:', insertError);
+        console.error(
+          "[Paddle] Error saving synced subscription:",
+          insertError,
+        );
         // Still return the data from Paddle even if save fails
       } else {
-        console.log('[Paddle] Successfully synced subscription to database:', insertedSub?.id);
+        console.log(
+          "[Paddle] Successfully synced subscription to database:",
+          insertedSub?.id,
+        );
       }
-      
+
       // Also update agency subscription status
       await this.supabase
-        .from('agencies')
+        .from("agencies")
         .update({
           subscription_status: paddleSub.status,
           subscription_plan: planType,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', agencyId);
-      
+        .eq("id", agencyId);
+
       return {
         id: insertedSub?.id || paddleSub.id,
         paddleSubscriptionId: paddleSub.id,
         planType: planType,
         billingCycle: billingCycle,
         status: paddleSub.status,
-        currentPeriodStart: new Date(paddleSub.currentBillingPeriod?.startsAt || Date.now()),
-        currentPeriodEnd: new Date(paddleSub.currentBillingPeriod?.endsAt || Date.now()),
-        cancelAtPeriodEnd: paddleSub.scheduledChange?.action === 'cancel',
+        currentPeriodStart: new Date(
+          paddleSub.currentBillingPeriod?.startsAt || Date.now(),
+        ),
+        currentPeriodEnd: new Date(
+          paddleSub.currentBillingPeriod?.endsAt || Date.now(),
+        ),
+        cancelAtPeriodEnd: paddleSub.scheduledChange?.action === "cancel",
         unitPrice: unitPrice,
         currency: currency,
         includedUsage: {
           automationRuns: planConfig?.includedUsage?.automationRuns ?? 0,
           aiActions: planConfig?.includedUsage?.aiActions ?? 0,
-          apiCalls: planConfig?.includedUsage?.apiCalls ?? 0,
+          emailSends: planConfig?.includedUsage?.emailSends ?? 0,
+          fileStorageMb: planConfig?.includedUsage?.fileStorageMb ?? 0,
         },
       };
     } catch (err) {
-      console.error('[Paddle] Error syncing subscription from Paddle:', err);
+      console.error("[Paddle] Error syncing subscription from Paddle:", err);
       return null;
     }
   }
@@ -235,23 +278,30 @@ export class SubscriptionService {
   /**
    * Determine plan type from Paddle price ID
    */
-  private getPlanTypeFromPriceId(priceId: string): 'starter' | 'pro' {
+  private getPlanTypeFromPriceId(priceId: string): PlanType {
     const starterPrices = [
       process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER_MONTHLY,
       process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER_YEARLY,
     ];
-    return starterPrices.includes(priceId) ? 'starter' : 'pro';
+    const growthPrices = [
+      process.env.NEXT_PUBLIC_PADDLE_PRICE_GROWTH_MONTHLY,
+      process.env.NEXT_PUBLIC_PADDLE_PRICE_GROWTH_YEARLY,
+    ];
+    if (starterPrices.includes(priceId)) return "starter";
+    if (growthPrices.includes(priceId)) return "growth";
+    return "agency";
   }
 
   /**
    * Determine billing cycle from Paddle price ID
    */
-  private getBillingCycleFromPriceId(priceId: string): 'monthly' | 'yearly' {
+  private getBillingCycleFromPriceId(priceId: string): "monthly" | "yearly" {
     const yearlyPrices = [
       process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER_YEARLY,
-      process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO_YEARLY,
+      process.env.NEXT_PUBLIC_PADDLE_PRICE_GROWTH_YEARLY,
+      process.env.NEXT_PUBLIC_PADDLE_PRICE_AGENCY_YEARLY,
     ];
-    return yearlyPrices.includes(priceId) ? 'yearly' : 'monthly';
+    return yearlyPrices.includes(priceId) ? "yearly" : "monthly";
   }
 
   /**
@@ -260,45 +310,45 @@ export class SubscriptionService {
   async getOrCreateCustomer(
     agencyId: string,
     email: string,
-    name?: string
+    name?: string,
   ): Promise<{ customerId: string; isNew: boolean }> {
     // Check for existing customer
-    const { data: existing } = await this.supabase.from('paddle_customers')
-      .select('id, paddle_customer_id')
-      .eq('agency_id', agencyId)
+    const { data: existing } = await this.supabase
+      .from("paddle_customers")
+      .select("id, paddle_customer_id")
+      .eq("agency_id", agencyId)
       .maybeSingle();
-    
+
     if (existing) {
       return {
         customerId: existing.paddle_customer_id,
         isNew: false,
       };
     }
-    
+
     // Create new customer in Paddle
     if (!paddle) {
-      throw new Error('Paddle is not configured');
+      throw new Error("Paddle is not configured");
     }
-    
+
     const customer = await paddle.customers.create({
       email,
       name: name || undefined,
     });
-    
+
     // Save to database
-    const { error } = await this.supabase.from('paddle_customers')
-      .insert({
-        agency_id: agencyId,
-        paddle_customer_id: customer.id,
-        email,
-        name,
-      });
-    
+    const { error } = await this.supabase.from("paddle_customers").insert({
+      agency_id: agencyId,
+      paddle_customer_id: customer.id,
+      email,
+      name,
+    });
+
     if (error) {
-      console.error('[Paddle] Error creating customer record:', error);
+      console.error("[Paddle] Error creating customer record:", error);
       throw error;
     }
-    
+
     return {
       customerId: customer.id,
       isNew: true,
@@ -309,16 +359,17 @@ export class SubscriptionService {
    * Get customer by agency ID
    */
   async getCustomerByAgency(agencyId: string): Promise<PaddleCustomer | null> {
-    const { data, error } = await this.supabase.from('paddle_customers')
-      .select('*')
-      .eq('agency_id', agencyId)
+    const { data, error } = await this.supabase
+      .from("paddle_customers")
+      .select("*")
+      .eq("agency_id", agencyId)
       .maybeSingle();
-    
+
     if (error) {
-      console.error('[Paddle] Error fetching customer:', error);
+      console.error("[Paddle] Error fetching customer:", error);
       return null;
     }
-    
+
     return data as PaddleCustomer | null;
   }
 
@@ -333,19 +384,23 @@ export class SubscriptionService {
     agencyId: string;
   }> {
     // Get price ID
-    const planKey = `${params.planType}_${params.billingCycle}` as keyof typeof PLAN_CONFIGS;
+    const planKey =
+      `${params.planType}_${params.billingCycle}` as keyof typeof PLAN_CONFIGS;
     const planConfig = PLAN_CONFIGS[planKey];
-    
+
     if (!planConfig || !planConfig.priceId) {
-      throw new Error(`Invalid plan: ${params.planType} ${params.billingCycle}`);
+      throw new Error(
+        `Invalid plan: ${params.planType} ${params.billingCycle}`,
+      );
     }
-    
+
     // Try to get existing customer
-    const { data: existingCustomer } = await this.supabase.from('paddle_customers')
-      .select('paddle_customer_id')
-      .eq('agency_id', params.agencyId)
+    const { data: existingCustomer } = await this.supabase
+      .from("paddle_customers")
+      .select("paddle_customer_id")
+      .eq("agency_id", params.agencyId)
       .maybeSingle();
-    
+
     return {
       priceId: planConfig.priceId,
       customerId: existingCustomer?.paddle_customer_id || null,
@@ -359,59 +414,62 @@ export class SubscriptionService {
    */
   async cancelSubscription(
     agencyId: string,
-    immediately: boolean = false
+    immediately: boolean = false,
   ): Promise<void> {
     // Get subscription
-    const { data: sub } = await this.supabase.from('paddle_subscriptions')
-      .select('paddle_subscription_id, id')
-      .eq('agency_id', agencyId)
-      .in('status', ['active', 'trialing', 'past_due'])
+    const { data: sub } = await this.supabase
+      .from("paddle_subscriptions")
+      .select("paddle_subscription_id, id")
+      .eq("agency_id", agencyId)
+      .in("status", ["active", "trialing", "past_due"])
       .maybeSingle();
-    
+
     if (!sub) {
-      throw new Error('No active subscription found');
+      throw new Error("No active subscription found");
     }
-    
+
     if (!paddle) {
-      throw new Error('Paddle is not configured');
+      throw new Error("Paddle is not configured");
     }
-    
+
     if (immediately) {
       // Cancel immediately
       await paddle.subscriptions.cancel(sub.paddle_subscription_id, {
-        effectiveFrom: 'immediately',
+        effectiveFrom: "immediately",
       });
-      
+
       // Update local record
-      await this.supabase.from('paddle_subscriptions')
+      await this.supabase
+        .from("paddle_subscriptions")
         .update({
-          status: 'canceled',
+          status: "canceled",
           canceled_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
-        .eq('id', sub.id);
-      
+        .eq("id", sub.id);
+
       // Update agency
       await this.supabase
-        .from('agencies')
+        .from("agencies")
         .update({
-          subscription_status: 'canceled',
+          subscription_status: "canceled",
           updated_at: new Date().toISOString(),
         })
-        .eq('id', agencyId);
+        .eq("id", agencyId);
     } else {
       // Cancel at end of billing period
       await paddle.subscriptions.cancel(sub.paddle_subscription_id, {
-        effectiveFrom: 'next_billing_period',
+        effectiveFrom: "next_billing_period",
       });
-      
+
       // Update local record
-      await this.supabase.from('paddle_subscriptions')
+      await this.supabase
+        .from("paddle_subscriptions")
         .update({
           cancel_at_period_end: true,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', sub.id);
+        .eq("id", sub.id);
     }
   }
 
@@ -419,22 +477,23 @@ export class SubscriptionService {
    * Pause subscription
    */
   async pauseSubscription(agencyId: string): Promise<void> {
-    const { data: sub } = await this.supabase.from('paddle_subscriptions')
-      .select('paddle_subscription_id')
-      .eq('agency_id', agencyId)
-      .in('status', ['active', 'trialing'])
+    const { data: sub } = await this.supabase
+      .from("paddle_subscriptions")
+      .select("paddle_subscription_id")
+      .eq("agency_id", agencyId)
+      .in("status", ["active", "trialing"])
       .maybeSingle();
-    
+
     if (!sub) {
-      throw new Error('No active subscription found');
+      throw new Error("No active subscription found");
     }
-    
+
     if (!paddle) {
-      throw new Error('Paddle is not configured');
+      throw new Error("Paddle is not configured");
     }
-    
+
     await paddle.subscriptions.pause(sub.paddle_subscription_id, {
-      effectiveFrom: 'next_billing_period',
+      effectiveFrom: "next_billing_period",
     });
   }
 
@@ -442,22 +501,23 @@ export class SubscriptionService {
    * Resume paused subscription
    */
   async resumeSubscription(agencyId: string): Promise<void> {
-    const { data: sub } = await this.supabase.from('paddle_subscriptions')
-      .select('paddle_subscription_id')
-      .eq('agency_id', agencyId)
-      .eq('status', 'paused')
+    const { data: sub } = await this.supabase
+      .from("paddle_subscriptions")
+      .select("paddle_subscription_id")
+      .eq("agency_id", agencyId)
+      .eq("status", "paused")
       .maybeSingle();
-    
+
     if (!sub) {
-      throw new Error('No paused subscription found');
+      throw new Error("No paused subscription found");
     }
-    
+
     if (!paddle) {
-      throw new Error('Paddle is not configured');
+      throw new Error("Paddle is not configured");
     }
-    
+
     await paddle.subscriptions.resume(sub.paddle_subscription_id, {
-      effectiveFrom: 'immediately',
+      effectiveFrom: "immediately",
     });
   }
 
@@ -465,32 +525,229 @@ export class SubscriptionService {
    * Undo scheduled cancellation
    */
   async undoCancelSubscription(agencyId: string): Promise<void> {
-    const { data: sub } = await this.supabase.from('paddle_subscriptions')
-      .select('paddle_subscription_id, id')
-      .eq('agency_id', agencyId)
-      .eq('cancel_at_period_end', true)
+    const { data: sub } = await this.supabase
+      .from("paddle_subscriptions")
+      .select("paddle_subscription_id, id")
+      .eq("agency_id", agencyId)
+      .eq("cancel_at_period_end", true)
       .maybeSingle();
-    
+
     if (!sub) {
-      throw new Error('No subscription scheduled for cancellation');
+      throw new Error("No subscription scheduled for cancellation");
     }
-    
+
     if (!paddle) {
-      throw new Error('Paddle is not configured');
+      throw new Error("Paddle is not configured");
     }
-    
+
     // Remove scheduled change
     await paddle.subscriptions.update(sub.paddle_subscription_id, {
       scheduledChange: null,
     });
-    
+
     // Update local record
-    await this.supabase.from('paddle_subscriptions')
+    await this.supabase
+      .from("paddle_subscriptions")
       .update({
         cancel_at_period_end: false,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', sub.id);
+      .eq("id", sub.id);
+  }
+
+  /**
+   * Validate whether a downgrade is allowed
+   * Checks if current usage exceeds target plan limits
+   * Phase BIL-06: Plan Upgrades & Downgrades
+   */
+  async validateDowngrade(
+    agencyId: string,
+    targetPlan: PlanType,
+  ): Promise<{
+    allowed: boolean;
+    blockers: Array<{
+      resource: string;
+      current: number;
+      limit: number;
+      message: string;
+    }>;
+  }> {
+    const targetLimits = getPlanLimits(targetPlan);
+    const blockers: Array<{
+      resource: string;
+      current: number;
+      limit: number;
+      message: string;
+    }> = [];
+
+    // Check site count
+    const { count: siteCount } = await this.supabase
+      .from("sites")
+      .select("*", { count: "exact", head: true })
+      .eq("agency_id", agencyId);
+
+    if ((siteCount || 0) > targetLimits.sites) {
+      blockers.push({
+        resource: "Websites",
+        current: siteCount || 0,
+        limit: targetLimits.sites,
+        message: `Please archive ${(siteCount || 0) - targetLimits.sites} site(s) before downgrading`,
+      });
+    }
+
+    // Check team member count
+    const { count: memberCount } = await this.supabase
+      .from("agency_members")
+      .select("*", { count: "exact", head: true })
+      .eq("agency_id", agencyId);
+
+    if ((memberCount || 0) > targetLimits.teamMembers) {
+      blockers.push({
+        resource: "Team Members",
+        current: memberCount || 0,
+        limit: targetLimits.teamMembers,
+        message: `Please remove ${(memberCount || 0) - targetLimits.teamMembers} team member(s) before downgrading`,
+      });
+    }
+
+    // Check file storage
+    const { data: agency } = await this.supabase
+      .from("agencies")
+      .select("file_storage_used_bytes")
+      .eq("id", agencyId)
+      .maybeSingle();
+
+    const storageMb = Math.round(
+      ((agency as any)?.file_storage_used_bytes ?? 0) / (1024 * 1024),
+    );
+    const targetStorageMb =
+      PLAN_CONFIGS[`${targetPlan}_monthly`]?.includedUsage?.fileStorageMb ?? 0;
+
+    if (storageMb > targetStorageMb && targetStorageMb > 0) {
+      blockers.push({
+        resource: "File Storage",
+        current: storageMb,
+        limit: targetStorageMb,
+        message: `Please reduce storage by ${storageMb - targetStorageMb}MB before downgrading`,
+      });
+    }
+
+    return { allowed: blockers.length === 0, blockers };
+  }
+
+  /**
+   * Preview a plan change with proration details
+   * Phase BIL-06: Plan Upgrades & Downgrades
+   */
+  async previewPlanChange(
+    agencyId: string,
+    newPlanType: PlanType,
+    newBillingCycle: "monthly" | "yearly",
+  ): Promise<{
+    currentAmount: number;
+    newAmount: number;
+    proratedCredit: number;
+    amountDue: number;
+    effectiveDate: string;
+  }> {
+    // Get current subscription
+    const { data: sub } = await this.supabase
+      .from("paddle_subscriptions")
+      .select(
+        "paddle_subscription_id, plan_type, billing_cycle, unit_price, current_period_end",
+      )
+      .eq("agency_id", agencyId)
+      .in("status", ["active", "trialing", "past_due"])
+      .maybeSingle();
+
+    if (!sub) {
+      throw new Error("No active subscription found");
+    }
+
+    const planKey =
+      `${newPlanType}_${newBillingCycle}` as keyof typeof PLAN_CONFIGS;
+    const newPlanConfig = PLAN_CONFIGS[planKey];
+
+    if (!newPlanConfig) {
+      throw new Error(`Invalid plan: ${newPlanType} ${newBillingCycle}`);
+    }
+
+    const currentAmount = sub.unit_price || 0;
+    const newAmount = newPlanConfig.amount * 100; // Convert to cents
+
+    // Determine if upgrade (immediate) or downgrade (end of period)
+    const currentLevel = this.getPlanLevel(sub.plan_type);
+    const newLevel = this.getPlanLevel(newPlanType);
+    const isUpgrade = newLevel > currentLevel;
+
+    if (isUpgrade) {
+      // Simple proration estimate: credit for remaining days on current plan
+      const now = new Date();
+      const periodEnd = new Date(sub.current_period_end || now);
+      const periodStart = new Date(
+        periodEnd.getTime() - 30 * 24 * 60 * 60 * 1000,
+      ); // Approx 30 days
+      const totalDays = Math.max(
+        1,
+        (periodEnd.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      const remainingDays = Math.max(
+        0,
+        (periodEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+      );
+
+      const proratedCredit = Math.round(
+        (currentAmount / totalDays) * remainingDays,
+      );
+      const amountDue = Math.max(0, newAmount - proratedCredit);
+
+      return {
+        currentAmount,
+        newAmount,
+        proratedCredit,
+        amountDue,
+        effectiveDate: now.toISOString(),
+      };
+    } else {
+      // Downgrade: takes effect at end of period, no charge now
+      return {
+        currentAmount,
+        newAmount,
+        proratedCredit: 0,
+        amountDue: 0,
+        effectiveDate: sub.current_period_end || new Date().toISOString(),
+      };
+    }
+  }
+
+  /**
+   * Get included storage in MB for a plan type from PLAN_CONFIGS
+   */
+  private getIncludedStorageMb(
+    planType: string,
+    billingCycle?: string | null,
+  ): number {
+    const cycle = billingCycle || "monthly";
+    const configKey = `${planType}_${cycle}`;
+    const config =
+      PLAN_CONFIGS[configKey] || PLAN_CONFIGS[`${planType}_monthly`];
+    return config?.includedUsage?.fileStorageMb ?? 0;
+  }
+
+  /**
+   * Get plan level for comparison
+   */
+  private getPlanLevel(planType: string): number {
+    switch (planType) {
+      case "agency":
+        return 3;
+      case "growth":
+        return 2;
+      case "starter":
+        return 1;
+      default:
+        return 0;
+    }
   }
 
   /**
@@ -498,60 +755,69 @@ export class SubscriptionService {
    */
   async changePlan(
     agencyId: string,
-    newPlanType: 'starter' | 'pro',
-    newBillingCycle: 'monthly' | 'yearly',
-    prorate: boolean = true
+    newPlanType: PlanType,
+    newBillingCycle: "monthly" | "yearly",
+    prorate: boolean = true,
   ): Promise<void> {
-    const { data: sub } = await this.supabase.from('paddle_subscriptions')
-      .select('paddle_subscription_id, plan_type, billing_cycle')
-      .eq('agency_id', agencyId)
-      .in('status', ['active', 'trialing', 'past_due'])
+    const { data: sub } = await this.supabase
+      .from("paddle_subscriptions")
+      .select("paddle_subscription_id, plan_type, billing_cycle")
+      .eq("agency_id", agencyId)
+      .in("status", ["active", "trialing", "past_due"])
       .maybeSingle();
-    
+
     if (!sub) {
-      throw new Error('No active subscription found');
+      throw new Error("No active subscription found");
     }
-    
+
     // Validate plan change
-    if (sub.plan_type === newPlanType && sub.billing_cycle === newBillingCycle) {
-      throw new Error('Already on this plan');
+    if (
+      sub.plan_type === newPlanType &&
+      sub.billing_cycle === newBillingCycle
+    ) {
+      throw new Error("Already on this plan");
     }
-    
-    const planKey = `${newPlanType}_${newBillingCycle}` as keyof typeof PLAN_CONFIGS;
+
+    const planKey =
+      `${newPlanType}_${newBillingCycle}` as keyof typeof PLAN_CONFIGS;
     const newPlanConfig = PLAN_CONFIGS[planKey];
-    
+
     if (!newPlanConfig || !newPlanConfig.priceId) {
       throw new Error(`Invalid plan: ${newPlanType} ${newBillingCycle}`);
     }
-    
+
     if (!paddle) {
-      throw new Error('Paddle is not configured');
+      throw new Error("Paddle is not configured");
     }
-    
+
     await paddle.subscriptions.update(sub.paddle_subscription_id, {
       items: [{ priceId: newPlanConfig.priceId, quantity: 1 }],
       prorationBillingMode: prorate
-        ? 'prorated_immediately'
-        : 'full_next_billing_period',
+        ? "prorated_immediately"
+        : "full_next_billing_period",
     });
   }
 
   /**
    * Get invoices for an agency
    */
-  async getInvoices(agencyId: string, limit: number = 10): Promise<PaddleTransaction[]> {
-    const { data, error } = await this.supabase.from('paddle_transactions')
-      .select('*')
-      .eq('agency_id', agencyId)
-      .in('status', ['completed', 'paid', 'billed'])
-      .order('created_at', { ascending: false })
+  async getInvoices(
+    agencyId: string,
+    limit: number = 10,
+  ): Promise<PaddleTransaction[]> {
+    const { data, error } = await this.supabase
+      .from("paddle_transactions")
+      .select("*")
+      .eq("agency_id", agencyId)
+      .in("status", ["completed", "paid", "billed"])
+      .order("created_at", { ascending: false })
       .limit(limit);
-    
+
     if (error) {
-      console.error('[Paddle] Error fetching invoices:', error);
+      console.error("[Paddle] Error fetching invoices:", error);
       return [];
     }
-    
+
     return (data || []) as PaddleTransaction[];
   }
 
@@ -561,41 +827,47 @@ export class SubscriptionService {
   async getBillingOverview(agencyId: string): Promise<BillingOverview> {
     // Parallel fetch all billing data
     const [subscription, customer, transactions, products] = await Promise.all([
-      this.supabase.from('paddle_subscriptions')
-        .select('*')
-        .eq('agency_id', agencyId)
-        .in('status', ['active', 'trialing', 'past_due', 'paused'])
+      this.supabase
+        .from("paddle_subscriptions")
+        .select("*")
+        .eq("agency_id", agencyId)
+        .in("status", ["active", "trialing", "past_due", "paused"])
         .maybeSingle()
         .then((r: any) => r.data),
-      
-      this.supabase.from('paddle_customers')
-        .select('*')
-        .eq('agency_id', agencyId)
+
+      this.supabase
+        .from("paddle_customers")
+        .select("*")
+        .eq("agency_id", agencyId)
         .maybeSingle()
         .then((r: any) => r.data),
-      
-      this.supabase.from('paddle_transactions')
-        .select('*')
-        .eq('agency_id', agencyId)
-        .in('status', ['completed', 'paid', 'billed'])
-        .order('created_at', { ascending: false })
+
+      this.supabase
+        .from("paddle_transactions")
+        .select("*")
+        .eq("agency_id", agencyId)
+        .in("status", ["completed", "paid", "billed"])
+        .order("created_at", { ascending: false })
         .limit(10)
         .then((r: any) => r.data || []),
-      
-      this.supabase.from('paddle_products')
-        .select('*')
-        .eq('is_active', true)
-        .order('display_order')
+
+      this.supabase
+        .from("paddle_products")
+        .select("*")
+        .eq("is_active", true)
+        .order("display_order")
         .then((r: any) => r.data || []),
     ]);
-    
+
     // Get usage if subscription exists
     let usage: UsageStats | null = null;
     if (subscription) {
       // Use any cast for RPC call to functions not in types yet
-      const { data: usageData } = await (this.supabase as any)
-        .rpc('get_current_period_usage', { p_agency_id: agencyId });
-      
+      const { data: usageData } = await (this.supabase as any).rpc(
+        "get_current_period_usage",
+        { p_agency_id: agencyId },
+      );
+
       if (usageData && usageData.length > 0) {
         const u = usageData[0] as any;
         usage = {
@@ -605,15 +877,24 @@ export class SubscriptionService {
           included_automation_runs: subscription.included_automation_runs,
           included_ai_actions: subscription.included_ai_actions,
           included_api_calls: subscription.included_api_calls,
-          overage_automation_runs: Math.max(0, u.automation_runs - subscription.included_automation_runs),
-          overage_ai_actions: Math.max(0, u.ai_actions - subscription.included_ai_actions),
-          overage_api_calls: Math.max(0, u.api_calls - subscription.included_api_calls),
+          overage_automation_runs: Math.max(
+            0,
+            u.automation_runs - subscription.included_automation_runs,
+          ),
+          overage_ai_actions: Math.max(
+            0,
+            u.ai_actions - subscription.included_ai_actions,
+          ),
+          overage_api_calls: Math.max(
+            0,
+            u.api_calls - subscription.included_api_calls,
+          ),
           period_start: subscription.current_period_start,
           period_end: subscription.current_period_end,
         };
       }
     }
-    
+
     return {
       subscription,
       customer,
@@ -627,16 +908,17 @@ export class SubscriptionService {
    * Get products/pricing for display
    */
   async getProducts(): Promise<PaddleProduct[]> {
-    const { data, error } = await this.supabase.from('paddle_products')
-      .select('*')
-      .eq('is_active', true)
-      .order('display_order');
-    
+    const { data, error } = await this.supabase
+      .from("paddle_products")
+      .select("*")
+      .eq("is_active", true)
+      .order("display_order");
+
     if (error) {
-      console.error('[Paddle] Error fetching products:', error);
+      console.error("[Paddle] Error fetching products:", error);
       return [];
     }
-    
+
     return (data || []) as PaddleProduct[];
   }
 
@@ -644,11 +926,12 @@ export class SubscriptionService {
    * Check if agency has active subscription
    */
   async hasActiveSubscription(agencyId: string): Promise<boolean> {
-    const { count } = await this.supabase.from('paddle_subscriptions')
-      .select('*', { count: 'exact', head: true })
-      .eq('agency_id', agencyId)
-      .in('status', ['active', 'trialing']);
-    
+    const { count } = await this.supabase
+      .from("paddle_subscriptions")
+      .select("*", { count: "exact", head: true })
+      .eq("agency_id", agencyId)
+      .in("status", ["active", "trialing"]);
+
     return (count || 0) > 0;
   }
 
@@ -656,14 +939,15 @@ export class SubscriptionService {
    * Get subscription status for agency
    */
   async getSubscriptionStatus(agencyId: string): Promise<string> {
-    const { data } = await this.supabase.from('paddle_subscriptions')
-      .select('status')
-      .eq('agency_id', agencyId)
-      .order('created_at', { ascending: false })
+    const { data } = await this.supabase
+      .from("paddle_subscriptions")
+      .select("status")
+      .eq("agency_id", agencyId)
+      .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    
-    return data?.status || 'free';
+
+    return data?.status || "free";
   }
 
   /**
@@ -672,52 +956,57 @@ export class SubscriptionService {
    */
   async reactivateSubscription(agencyId: string): Promise<void> {
     // Get the subscription that's scheduled for cancellation
-    const { data: sub } = await this.supabase.from('paddle_subscriptions')
-      .select('paddle_subscription_id, id, status, cancel_at_period_end')
-      .eq('agency_id', agencyId)
-      .or('cancel_at_period_end.eq.true,status.eq.canceled')
+    const { data: sub } = await this.supabase
+      .from("paddle_subscriptions")
+      .select("paddle_subscription_id, id, status, cancel_at_period_end")
+      .eq("agency_id", agencyId)
+      .or("cancel_at_period_end.eq.true,status.eq.canceled")
       .maybeSingle();
-    
+
     if (!sub) {
-      throw new Error('No subscription found to reactivate');
+      throw new Error("No subscription found to reactivate");
     }
-    
+
     if (!paddle) {
-      throw new Error('Paddle is not configured');
+      throw new Error("Paddle is not configured");
     }
-    
+
     // If subscription is still active but scheduled to cancel, just undo the cancellation
-    if (sub.cancel_at_period_end && sub.status !== 'canceled') {
+    if (sub.cancel_at_period_end && sub.status !== "canceled") {
       await this.undoCancelSubscription(agencyId);
       return;
     }
-    
+
     // If fully canceled, need to create a new subscription
-    if (sub.status === 'canceled') {
-      throw new Error('Subscription is fully canceled. Please create a new subscription.');
+    if (sub.status === "canceled") {
+      throw new Error(
+        "Subscription is fully canceled. Please create a new subscription.",
+      );
     }
-    
+
     // Try to resume if paused
-    if (sub.status === 'paused') {
+    if (sub.status === "paused") {
       await paddle.subscriptions.resume(sub.paddle_subscription_id, {
-        effectiveFrom: 'immediately',
+        effectiveFrom: "immediately",
       });
-      
+
       // Update local record
-      await this.supabase.from('paddle_subscriptions')
+      await this.supabase
+        .from("paddle_subscriptions")
         .update({
-          status: 'active',
+          status: "active",
           updated_at: new Date().toISOString(),
         })
-        .eq('id', sub.id);
-      
+        .eq("id", sub.id);
+
       // Update agency
-      await this.supabase.from('agencies')
+      await this.supabase
+        .from("agencies")
         .update({
-          subscription_status: 'active',
+          subscription_status: "active",
           updated_at: new Date().toISOString(),
         })
-        .eq('id', agencyId);
+        .eq("id", agencyId);
     }
   }
 
@@ -727,37 +1016,79 @@ export class SubscriptionService {
    */
   async getUpdatePaymentUrl(agencyId: string): Promise<string | null> {
     // Get subscription
-    const { data: sub } = await this.supabase.from('paddle_subscriptions')
-      .select('paddle_subscription_id')
-      .eq('agency_id', agencyId)
-      .in('status', ['active', 'trialing', 'past_due', 'paused'])
+    const { data: sub } = await this.supabase
+      .from("paddle_subscriptions")
+      .select("paddle_subscription_id")
+      .eq("agency_id", agencyId)
+      .in("status", ["active", "trialing", "past_due", "paused"])
       .maybeSingle();
-    
+
     if (!sub) {
-      throw new Error('No active subscription found');
+      throw new Error("No active subscription found");
     }
-    
+
     if (!paddle) {
-      throw new Error('Paddle is not configured');
+      throw new Error("Paddle is not configured");
     }
-    
+
     try {
       // Get the subscription from Paddle to get the update URL
-      const subscription = await paddle.subscriptions.get(sub.paddle_subscription_id);
-      
+      const subscription = await paddle.subscriptions.get(
+        sub.paddle_subscription_id,
+      );
+
       // Paddle's update payment URL is typically accessed via the management URLs
       // The subscription object contains management_urls.update_payment_method
       const managementUrls = (subscription as any).managementUrls;
       if (managementUrls?.updatePaymentMethod) {
         return managementUrls.updatePaymentMethod;
       }
-      
+
       // Fallback: Generate a checkout URL with existing customer for payment update
       // This is handled via the Paddle.js overlay on the frontend
       return null;
     } catch (error) {
-      console.error('[Paddle] Error getting update payment URL:', error);
-      throw new Error('Unable to get payment update URL');
+      console.error("[Paddle] Error getting update payment URL:", error);
+      throw new Error("Unable to get payment update URL");
+    }
+  }
+
+  /**
+   * Get payment method update transaction for Paddle.js overlay
+   * Phase BIL-07: Payment Methods & Cancellation
+   *
+   * Returns a transaction ID to open Paddle.Checkout.open({ transactionId })
+   */
+  async getPaymentUpdateTransaction(
+    agencyId: string,
+  ): Promise<{ transactionId: string } | null> {
+    const { data: sub } = await this.supabase
+      .from("paddle_subscriptions")
+      .select("paddle_subscription_id")
+      .eq("agency_id", agencyId)
+      .in("status", ["active", "trialing", "past_due", "paused"])
+      .maybeSingle();
+
+    if (!sub) {
+      throw new Error("No active subscription found");
+    }
+
+    if (!paddle) {
+      throw new Error("Paddle is not configured");
+    }
+
+    try {
+      const transaction =
+        await paddle.subscriptions.getPaymentMethodChangeTransaction(
+          sub.paddle_subscription_id,
+        );
+      return { transactionId: (transaction as any).id };
+    } catch (error) {
+      console.error(
+        "[Paddle] Error getting payment update transaction:",
+        error,
+      );
+      return null;
     }
   }
 
@@ -773,38 +1104,45 @@ export class SubscriptionService {
     };
   }> {
     // Get local subscription record
-    const { data: localSub } = await this.supabase.from('paddle_subscriptions')
-      .select('*')
-      .eq('agency_id', agencyId)
-      .in('status', ['active', 'trialing', 'past_due', 'paused'])
+    const { data: localSub } = await this.supabase
+      .from("paddle_subscriptions")
+      .select("*")
+      .eq("agency_id", agencyId)
+      .in("status", ["active", "trialing", "past_due", "paused"])
       .maybeSingle();
-    
+
     if (!localSub) {
       return { subscription: null };
     }
-    
+
     // Get fresh data from Paddle if available
     if (paddle && localSub.paddle_subscription_id) {
       try {
-        const paddleSub = await paddle.subscriptions.get(localSub.paddle_subscription_id);
+        const paddleSub = await paddle.subscriptions.get(
+          localSub.paddle_subscription_id,
+        );
         const managementUrls = (paddleSub as any).managementUrls;
-        
+
         return {
-          subscription: localSub as PaddleSubscription,
-          managementUrls: managementUrls ? {
-            cancel: managementUrls.cancel,
-            updatePaymentMethod: managementUrls.updatePaymentMethod,
-          } : undefined,
+          subscription: localSub as unknown as PaddleSubscription,
+          managementUrls: managementUrls
+            ? {
+                cancel: managementUrls.cancel,
+                updatePaymentMethod: managementUrls.updatePaymentMethod,
+              }
+            : undefined,
         };
       } catch (error) {
-        console.error('[Paddle] Error fetching subscription from Paddle:', error);
+        console.error(
+          "[Paddle] Error fetching subscription from Paddle:",
+          error,
+        );
       }
     }
-    
-    return { subscription: localSub as PaddleSubscription };
+
+    return { subscription: localSub as unknown as PaddleSubscription };
   }
 }
 
 // Export singleton instance
 export const subscriptionService = new SubscriptionService();
-

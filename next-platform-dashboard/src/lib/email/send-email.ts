@@ -73,6 +73,19 @@ export async function sendEmail(options: SendEmailOptions): Promise<EmailResult>
     }
 
     console.log(`[Email] Successfully sent ${options.type} email, ID: ${data?.id}`);
+
+    // BIL-05: Track email usage for billing
+    if (options.agencyId && !options.isSystemEmail) {
+      try {
+        const { trackEmailSend } = await import("@/lib/paddle/email-usage");
+        const recipientCount = Array.isArray(options.to) ? options.to.length : 1;
+        await trackEmailSend(options.agencyId, recipientCount);
+      } catch (trackError) {
+        // Don't fail the email send if tracking fails
+        console.error("[Email] Usage tracking error:", trackError);
+      }
+    }
+
     return { success: true, messageId: data?.id };
   } catch (error) {
     console.error("[Email] Send error:", error);

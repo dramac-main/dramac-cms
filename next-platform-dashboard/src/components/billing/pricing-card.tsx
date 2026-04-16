@@ -1,24 +1,31 @@
 /**
  * Pricing Card Component
- * 
+ *
  * Phase EM-59B: Paddle Billing Integration - UI, Portal & Operations
- * 
+ *
  * Displays a pricing plan card with features, usage limits, and checkout button.
  * Integrates with Paddle.js for checkout flow.
- * 
+ *
  * @see phases/enterprise-modules/PHASE-EM-59B-PADDLE-BILLING.md
  */
 
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Check, Sparkles } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { openPaddleCheckout } from '@/lib/paddle/paddle-client';
-import { formatCurrency } from '@/lib/locale-config';
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Check, Sparkles } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { openPaddleCheckout } from "@/lib/paddle/paddle-client";
+import { formatCurrency } from "@/lib/locale-config";
 
 // ============================================================================
 // Types
@@ -36,20 +43,22 @@ export interface PricingPlan {
   usage: {
     automationRuns: number;
     aiActions: number;
-    apiCalls: number;
+    emailSends: number;
+    fileStorageMb: number;
   };
   limits: {
-    modules: number | 'Unlimited';
-    sites: number | 'Unlimited';
-    teamMembers: number | 'Unlimited';
+    sites: number;
+    teamMembers: number;
   };
   popular?: boolean;
   badge?: string;
+  trialDays?: number;
+  whiteLabel?: boolean;
 }
 
 interface PricingCardProps {
   plan: PricingPlan;
-  billingCycle: 'monthly' | 'yearly';
+  billingCycle: "monthly" | "yearly";
   currentPlan?: string;
   agencyId?: string;
   email?: string;
@@ -66,50 +75,65 @@ export function PricingCard({
   currentPlan,
   agencyId,
   email,
-  onSelect
+  onSelect,
 }: PricingCardProps) {
   const [loading, setLoading] = useState(false);
-  
-  const price = billingCycle === 'yearly' ? plan.priceYearly : plan.priceMonthly;
-  const priceId = billingCycle === 'yearly' ? plan.paddlePriceIdYearly : plan.paddlePriceIdMonthly;
+
+  const price =
+    billingCycle === "yearly" ? plan.priceYearly : plan.priceMonthly;
+  const monthlyEquivalent =
+    billingCycle === "yearly"
+      ? Math.round(plan.priceYearly / 12)
+      : plan.priceMonthly;
+  const priceId =
+    billingCycle === "yearly"
+      ? plan.paddlePriceIdYearly
+      : plan.paddlePriceIdMonthly;
   const isCurrentPlan = currentPlan === plan.id;
-  const savings = billingCycle === 'yearly' 
-    ? Math.round((1 - plan.priceYearly / (plan.priceMonthly * 12)) * 100) 
-    : 0;
-  
+
   const handleSubscribe = async () => {
-    console.log('[PricingCard] handleSubscribe called for plan:', plan.id);
-    console.log('[PricingCard] Current state:', { agencyId, email, priceId, billingCycle });
-    
+    console.log("[PricingCard] handleSubscribe called for plan:", plan.id);
+    console.log("[PricingCard] Current state:", {
+      agencyId,
+      email,
+      priceId,
+      billingCycle,
+    });
+
     if (!agencyId || !email) {
       // Redirect to signup/login
-      console.log('[PricingCard] No agencyId or email, redirecting to signup');
-      window.location.href = '/signup?plan=' + plan.id;
+      console.log("[PricingCard] No agencyId or email, redirecting to signup");
+      window.location.href = "/signup?plan=" + plan.id;
       return;
     }
-    
+
     // Validate priceId before attempting checkout
-    if (!priceId || priceId.trim() === '') {
-      console.error('[PricingCard] Missing priceId for plan:', plan.id, 'cycle:', billingCycle);
-      alert('Configuration error: Price ID not found. Please contact support.');
+    if (!priceId || priceId.trim() === "") {
+      console.error(
+        "[PricingCard] Missing priceId for plan:",
+        plan.id,
+        "cycle:",
+        billingCycle,
+      );
+      alert("Configuration error: Price ID not found. Please contact support.");
       return;
     }
-    
-    console.log('[PricingCard] Creating server-backed checkout:', { 
-      plan: plan.id, 
-      priceId, 
-      billingCycle, 
-      agencyId, 
-      email 
+
+    console.log("[PricingCard] Creating server-backed checkout:", {
+      plan: plan.id,
+      priceId,
+      billingCycle,
+      agencyId,
+      email,
     });
-    
+
     setLoading(true);
     try {
       // Call server-backed checkout API for validation and customer checks
-      const response = await fetch('/api/billing/paddle/checkout', {
-        method: 'POST',
+      const response = await fetch("/api/billing/paddle/checkout", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           planType: plan.id,
@@ -117,41 +141,49 @@ export function PricingCard({
           agencyId,
         }),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create checkout');
+        throw new Error(errorData.error || "Failed to create checkout");
       }
-      
+
       const checkoutData = await response.json();
-      
+
       if (!checkoutData.success || !checkoutData.data?.priceId) {
-        throw new Error('Invalid checkout data received');
+        throw new Error("Invalid checkout data received");
       }
-      
-      console.log('[PricingCard] Server checkout validated, opening Paddle overlay');
-      
+
+      console.log(
+        "[PricingCard] Server checkout validated, opening Paddle overlay",
+      );
+
       // Open Paddle checkout with validated data
       await openPaddleCheckout({
         priceId: checkoutData.data.priceId,
         agencyId: checkoutData.data.agencyId,
         email: checkoutData.data.customerEmail || email,
       });
-      
+
       onSelect?.(plan.id);
     } catch (error) {
-      console.error('[PricingCard] Checkout error:', error);
-      alert(error instanceof Error ? error.message : 'Failed to open checkout. Please try again.');
+      console.error("[PricingCard] Checkout error:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to open checkout. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
   };
-  
+
   return (
-    <Card className={cn(
-      'relative flex flex-col',
-      plan.popular && 'border-primary shadow-lg scale-105 z-10'
-    )}>
+    <Card
+      className={cn(
+        "relative flex flex-col",
+        plan.popular && "border-primary shadow-lg scale-105 z-10",
+      )}
+    >
       {plan.popular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <Badge className="bg-primary">
@@ -160,43 +192,67 @@ export function PricingCard({
           </Badge>
         </div>
       )}
-      
+
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           {plan.name}
-          {plan.badge && (
-            <Badge variant="secondary">{plan.badge}</Badge>
-          )}
+          <div className="flex gap-1.5">
+            {plan.trialDays && (
+              <Badge
+                variant="outline"
+                className="text-blue-600 border-blue-200"
+              >
+                {plan.trialDays}-day free trial
+              </Badge>
+            )}
+            {plan.whiteLabel && (
+              <Badge
+                variant="outline"
+                className="text-purple-600 border-purple-200"
+              >
+                White-label
+              </Badge>
+            )}
+            {plan.badge && <Badge variant="secondary">{plan.badge}</Badge>}
+          </div>
         </CardTitle>
         <CardDescription>{plan.description}</CardDescription>
       </CardHeader>
-      
+
       <CardContent className="flex-1">
         {/* Pricing */}
         <div className="mb-6">
           <div className="flex items-baseline gap-1">
-            <span className="text-4xl font-bold">{formatCurrency(price, 'USD')}</span>
-            <span className="text-muted-foreground">
-              /{billingCycle === 'yearly' ? 'year' : 'month'}
+            <span className="text-4xl font-bold">
+              {formatCurrency(monthlyEquivalent, "USD")}
             </span>
+            <span className="text-muted-foreground">/month</span>
           </div>
-          {billingCycle === 'yearly' && savings > 0 && (
+          {billingCycle === "yearly" && (
             <p className="text-sm text-green-600 mt-1">
-              Save {savings}% vs monthly
+              {formatCurrency(price, "USD")}/year &mdash; Save 2 months free
             </p>
           )}
         </div>
-        
+
         {/* Usage Limits */}
         <div className="mb-4 p-3 bg-muted rounded-lg">
           <p className="text-sm font-medium mb-2">Included Usage</p>
           <ul className="text-sm space-y-1 text-muted-foreground">
-            <li>{plan.usage.automationRuns.toLocaleString()} automation runs/mo</li>
+            <li>
+              {plan.usage.automationRuns.toLocaleString()} automation runs/mo
+            </li>
             <li>{plan.usage.aiActions.toLocaleString()} AI actions/mo</li>
-            <li>{plan.usage.apiCalls.toLocaleString()} API calls/mo</li>
+            <li>{plan.usage.emailSends.toLocaleString()} email sends/mo</li>
+            <li>
+              {plan.usage.fileStorageMb >= 1024
+                ? `${Math.round(plan.usage.fileStorageMb / 1024)} GB`
+                : `${plan.usage.fileStorageMb} MB`}{" "}
+              file storage
+            </li>
           </ul>
         </div>
-        
+
         {/* Features */}
         <ul className="space-y-2">
           {plan.features.map((feature, index) => (
@@ -206,31 +262,31 @@ export function PricingCard({
             </li>
           ))}
         </ul>
-        
+
         {/* Limits */}
         <div className="mt-4 pt-4 border-t">
           <ul className="text-sm text-muted-foreground space-y-1">
-            <li>
-              {plan.limits.modules === 'Unlimited' ? 'Unlimited' : plan.limits.modules} modules
-            </li>
-            <li>
-              {plan.limits.sites === 'Unlimited' ? 'Unlimited' : plan.limits.sites} sites
-            </li>
-            <li>
-              {plan.limits.teamMembers === 'Unlimited' ? 'Unlimited' : plan.limits.teamMembers} team members
-            </li>
+            <li>All 7 modules included</li>
+            <li>{plan.limits.sites} websites</li>
+            <li>{plan.limits.teamMembers} team members</li>
           </ul>
         </div>
       </CardContent>
-      
+
       <CardFooter>
         <Button
           className="w-full"
-          variant={plan.popular ? 'default' : 'outline'}
+          variant={plan.popular ? "default" : "outline"}
           disabled={isCurrentPlan || loading}
           onClick={handleSubscribe}
         >
-          {isCurrentPlan ? 'Current Plan' : loading ? 'Loading...' : 'Get Started'}
+          {isCurrentPlan
+            ? "Current Plan"
+            : loading
+              ? "Loading..."
+              : plan.trialDays
+                ? "Start Free Trial"
+                : "Get Started"}
         </Button>
       </CardFooter>
     </Card>

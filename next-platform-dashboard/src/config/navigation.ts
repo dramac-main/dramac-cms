@@ -15,6 +15,7 @@ import {
   Server,
   Sliders,
   Ticket,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 
@@ -114,6 +115,12 @@ export const mainNavigation: NavGroup[] = [
   {
     title: "Account",
     items: [
+      {
+        title: "Chiko AI",
+        href: "/dashboard/chiko",
+        icon: Sparkles,
+        dataTour: "chiko",
+      },
       {
         title: "Billing",
         href: "/dashboard/billing",

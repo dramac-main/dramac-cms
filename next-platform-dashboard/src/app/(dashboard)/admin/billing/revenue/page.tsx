@@ -1,20 +1,23 @@
 /**
  * Admin Revenue Analytics Page
- * 
- * PHASE-DS-05: Billing & Revenue Dashboards
- * 
- * Comprehensive revenue analytics including:
- * - Revenue overview and trends
- * - Subscription metrics
- * - Billing activity feed
+ *
+ * Phase BIL-09: Super Admin Revenue Dashboard
+ *
+ * Deep-dive revenue analytics with tabs:
+ * - Revenue overview & trends (existing DS-05 component)
+ * - Subscription metrics (existing DS-05 component)
+ * - Billing activity feed (existing DS-05 component)
  */
 
 import { Metadata } from "next";
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 import {
   RevenueOverviewComponent,
   SubscriptionMetricsComponent,
@@ -29,8 +32,10 @@ export const metadata: Metadata = {
 
 async function verifyAccess() {
   const supabase = await createClient();
-  
-  const { data: { user } } = await supabase.auth.getUser();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase
@@ -62,11 +67,19 @@ export default async function AdminRevenueAnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Revenue Analytics</h1>
-        <p className="text-muted-foreground">
-          Financial metrics, subscription analytics, and billing activity
-        </p>
+      <div className="flex items-center gap-4">
+        <Link href="/admin/billing">
+          <Button variant="ghost" size="sm">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+        </Link>
+        <div>
+          <h1 className="text-2xl font-bold">Revenue Analytics</h1>
+          <p className="text-muted-foreground">
+            Financial metrics, subscription analytics, and billing activity
+          </p>
+        </div>
       </div>
 
       <Tabs defaultValue="revenue" className="space-y-6">
